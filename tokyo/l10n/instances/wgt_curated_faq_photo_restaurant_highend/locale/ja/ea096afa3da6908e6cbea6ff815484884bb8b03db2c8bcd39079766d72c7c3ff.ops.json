@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "予約する"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "アメリカのB&amp;Bならではの魅力と心地よさをご体験ください。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Chef Pierre よくある質問"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "プライベートダイニング、ワインテイスティング、シェフズテーブルなど、多彩なダイニング体験をご用意しています。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "どのようなダイニング体験がありますか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "ご予約をおすすめしています。ご予約は最大30日前から承ります。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "予約ポリシーを教えてください。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "はい。ドレスコードはスマートカジュアルです。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "ドレスコードはありますか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "はい。ロマンチックなダイニングプランやグループ向けのダイニング体験をご用意しています。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "特別なダイニングプランはありますか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "キャンセル料を避けるため、キャンセルは24時間前までにお願いいたします。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "キャンセルポリシーを教えてください。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "はい。ベジタリアン、ヴィーガン、グルテンフリー、ナッツ不使用など、さまざまな食事制限に対応可能です。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "食事制限への対応は可能ですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "ダイニング体験"
+    }
+  ],
+  "v": 1
+}

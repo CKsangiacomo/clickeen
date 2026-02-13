@@ -21,7 +21,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Paano ako mag-iinstall ng widget?"
+      "value": "Paano ako mag-i-install ng widget?"
     },
     {
       "op": "set",
@@ -36,7 +36,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Ang Clickeen ay isang bagay na talagang magugustuhan ni Isabel na pagtrabahuhan kapag kailangan niya at pipilitin ko siya."
+      "value": "Ang Clickeen ay isang bagay na talagang magugustuhan ni Isabel na pagtrabahuhan kapag kailangan niya, at pipilitin ko siya."
     },
     {
       "op": "set",
@@ -46,12 +46,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Oo, isang aktibong widget na may mga pangunahing tampok."
+      "value": "Oo, isang active na widget na may mga pangunahing feature."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Dahil ang Clickeen ay isang kahanga-hangang bagong platform para gawing maganda at madaling gamitin ang web."
+      "value": "Dahil ang Clickeen ay isang bagong, kahanga-hangang platform para gawing mas maganda at mas madaling gamitin ang web."
     }
   ]
 }

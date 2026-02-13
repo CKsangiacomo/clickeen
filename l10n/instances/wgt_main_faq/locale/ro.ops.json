@@ -31,17 +31,17 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "De ce ar trebui să folosesc Clickeen"
+      "value": "De ce ar trebui să folosesc Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Da, un widget activ cu funcționalitățile de bază."
+      "value": "Da, un widget activ cu funcțiile de bază."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Widgeturi încorporabile cu conversii integrate."
+      "value": "Widgeturi ușor de încorporat, cu conversii integrate."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Pentru că Clickeen este o platformă nouă și uimitoare, care face webul frumos și ușor de folosit."
+      "value": "Pentru că Clickeen este o platformă nouă și grozavă, care face web-ul mai frumos și mai ușor de folosit."
     }
   ]
 }

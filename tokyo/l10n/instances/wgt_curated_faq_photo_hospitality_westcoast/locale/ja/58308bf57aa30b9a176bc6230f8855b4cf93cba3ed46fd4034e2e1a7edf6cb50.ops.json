@@ -10,22 +10,22 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "アメリカのB&Bの魅力と心地よさをご体感ください。"
+      "value": "アメリカのB&Bならではの魅力と心地よさをご体感ください。"
     },
     {
       "op": "set",
       "path": "header.title",
-      "value": "B&B（ベッド＆ブレックファスト）よくある質問"
+      "value": "B&B よくある質問"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">スタンダード</a>、<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">デラックス</a>、<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">スイート</a>をご用意しています。"
+      "value": "<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">スタンダード</a>、<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">デラックス</a>、<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">スイート</a>など、さまざまなお部屋をご用意しています。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "どのようなお部屋がありますか？"
+      "value": "どんな種類の客室がありますか？"
     },
     {
       "op": "set",
@@ -35,7 +35,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "チェックイン／チェックアウトの時間は？"
+      "value": "チェックイン／チェックアウトの時間は何時ですか？"
     },
     {
       "op": "set",
@@ -45,12 +45,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "朝食は含まれますか？"
+      "value": "朝食は含まれていますか？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "はい、ロマンチックな<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">getaway packages</a>や、<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">家族向けのオプション</a>をご用意しています。"
+      "value": "はい。ロマンチックな<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">ゲッタウェイパッケージ</a>や、<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">ご家族向けのプラン</a>をご用意しています。"
     },
     {
       "op": "set",
@@ -60,7 +60,7 @@
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "よくある質問"
+      "value": "よくあるご質問"
     }
   ],
   "v": 1

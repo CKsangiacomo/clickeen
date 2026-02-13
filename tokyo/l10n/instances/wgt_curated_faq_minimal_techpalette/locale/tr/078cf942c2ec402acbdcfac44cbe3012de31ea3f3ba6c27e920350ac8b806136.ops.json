@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ive Engineering ile iletişime geçin"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Mühendislik çözümleri ve hizmetleri için ilk tercihiniz."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering SSS"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering, yenilikçi mühendislik çözümleri ve hizmetlerinde uzmanlaşmış küresel bir firmadır."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ive Engineering nedir?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Bize ulaşın, projenizin ihtiyaçlarını paylaşın; size hizmet seçeneklerimizde adım adım rehberlik edelim."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Ive Engineering’in hizmetlerini kullanmaya nasıl başlayabilirim?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Evet, Ive Engineering proje gereksinimlerinizi daha iyi anlamak için ücretsiz danışmanlık sunar."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Danışmanlık hizmeti var mı?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering, en güncel çözümler, deneyimli uzmanlar ve size özel hizmetlerle mühendislik ihtiyaçlarınızı karşılar."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Mühendislik ihtiyaçlarım için neden Ive Engineering’i seçmeliyim?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Tüm Sorular"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering, tüm proje ve hizmetlerinde inovasyon, dürüstlük ve mükemmeliyeti temel alır."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Ive Engineering’in temel değerleri nelerdir?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "İletişim sayfamızda yer alan web sitemiz, e-posta adresimiz veya telefon numaramız üzerinden Ive Engineering’e ulaşabilirsiniz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Ive Engineering ile nasıl iletişime geçebilirim?"
+    }
+  ],
+  "v": 1
+}

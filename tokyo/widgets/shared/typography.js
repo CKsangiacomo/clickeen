@@ -2,6 +2,7 @@
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
   const SIZE_PRESETS = new Set(['xs', 's', 'm', 'l', 'xl', 'custom']);
+  const LOCALE_PARAM = 'locale';
   const GLOBAL_ROLE_SCALES = Object.freeze({
     title: Object.freeze({ xs: '20px', s: '28px', m: '36px', l: '44px', xl: '60px' }),
     body: Object.freeze({ xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' }),
@@ -38,30 +39,238 @@
     button: 'var(--lh-tight)',
   });
 
+  const SCRIPT_TYPOGRAPHY_PROFILES = Object.freeze({
+    latin: Object.freeze({
+      preferScriptFirst: false,
+      normalLineHeights: Object.freeze({}),
+    }),
+    japanese: Object.freeze({
+      preferScriptFirst: true,
+      normalLineHeights: Object.freeze({
+        title: '1.28',
+        section: '1.3',
+        question: '1.38',
+        body: '1.58',
+        answer: '1.62',
+        button: '1.24',
+      }),
+    }),
+    korean: Object.freeze({
+      preferScriptFirst: true,
+      normalLineHeights: Object.freeze({
+        title: '1.26',
+        section: '1.3',
+        question: '1.36',
+        body: '1.54',
+        answer: '1.58',
+        button: '1.22',
+      }),
+    }),
+    zhHans: Object.freeze({
+      preferScriptFirst: true,
+      normalLineHeights: Object.freeze({
+        title: '1.24',
+        section: '1.28',
+        question: '1.34',
+        body: '1.52',
+        answer: '1.56',
+        button: '1.2',
+      }),
+    }),
+    zhHant: Object.freeze({
+      preferScriptFirst: true,
+      normalLineHeights: Object.freeze({
+        title: '1.24',
+        section: '1.28',
+        question: '1.34',
+        body: '1.52',
+        answer: '1.56',
+        button: '1.2',
+      }),
+    }),
+  });
+
   const curatedFonts = {
-    Cookie: 'Cookie',
-    'Cormorant Garamond': 'Cormorant+Garamond:ital,wght@0,300..700;1,300..700',
-    'Crimson Text': 'Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700',
-    Gabriela: 'Gabriela',
-    'Homemade Apple': 'Homemade+Apple',
-    Inter: 'Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900',
-    Lato: 'Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900',
-    'Libre Baskerville': 'Libre+Baskerville:ital,wght@0,400..700;1,400..700',
-    Lora: 'Lora:ital,wght@0,400..700;1,400..700',
-    Manrope: 'Manrope:wght@200..800',
-    Michroma: 'Michroma',
-    Montserrat: 'Montserrat:ital,wght@0,100..900;1,100..900',
-    'Open Sans': 'Open+Sans:ital,wght@0,300..800;1,300..800',
-    'Permanent Marker': 'Permanent+Marker',
-    'Playfair Display': 'Playfair+Display:ital,wght@0,400..900;1,400..900',
-    Raleway: 'Raleway:ital,wght@0,100..900;1,100..900',
-    Roboto: 'Roboto:ital,wght@0,100..900;1,100..900',
-    'Shadows Into Light': 'Shadows+Into+Light',
+    Inter: Object.freeze({
+      spec: 'Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900',
+      familyClass: 'sans',
+    }),
+    Manrope: Object.freeze({
+      spec: 'Manrope:wght@200..800',
+      familyClass: 'sans',
+    }),
+    'Open Sans': Object.freeze({
+      spec: 'Open+Sans:ital,wght@0,300..800;1,300..800',
+      familyClass: 'sans',
+    }),
+    Lato: Object.freeze({
+      spec: 'Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900',
+      familyClass: 'sans',
+    }),
+    Roboto: Object.freeze({
+      spec: 'Roboto:ital,wght@0,100..900;1,100..900',
+      familyClass: 'sans',
+    }),
+    Montserrat: Object.freeze({
+      spec: 'Montserrat:ital,wght@0,100..900;1,100..900',
+      familyClass: 'sans',
+    }),
+    Raleway: Object.freeze({
+      spec: 'Raleway:ital,wght@0,100..900;1,100..900',
+      familyClass: 'sans',
+    }),
+    'Libre Baskerville': Object.freeze({
+      spec: 'Libre+Baskerville:ital,wght@0,400..700;1,400..700',
+      familyClass: 'serif',
+    }),
+    Lora: Object.freeze({
+      spec: 'Lora:ital,wght@0,400..700;1,400..700',
+      familyClass: 'serif',
+    }),
+    'Cormorant Garamond': Object.freeze({
+      spec: 'Cormorant+Garamond:ital,wght@0,300..700;1,300..700',
+      familyClass: 'serif',
+    }),
+    'Crimson Text': Object.freeze({
+      spec: 'Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700',
+      familyClass: 'serif',
+    }),
+    Gabriela: Object.freeze({
+      spec: 'Gabriela',
+      familyClass: 'serif',
+    }),
+    Michroma: Object.freeze({
+      spec: 'Michroma',
+      familyClass: 'sans',
+    }),
+    'Playfair Display': Object.freeze({
+      spec: 'Playfair+Display:ital,wght@0,400..900;1,400..900',
+      familyClass: 'serif',
+    }),
+    Cookie: Object.freeze({
+      spec: 'Cookie',
+      familyClass: 'sans',
+    }),
+    'Homemade Apple': Object.freeze({
+      spec: 'Homemade+Apple',
+      familyClass: 'sans',
+    }),
+    'Permanent Marker': Object.freeze({
+      spec: 'Permanent+Marker',
+      familyClass: 'sans',
+    }),
+    'Shadows Into Light': Object.freeze({
+      spec: 'Shadows+Into+Light',
+      familyClass: 'sans',
+    }),
   };
 
+  const scriptFonts = {
+    'Noto Sans': 'Noto+Sans:wght@100..900',
+    'Noto Serif': 'Noto+Serif:wght@100..900',
+    'Noto Sans JP': 'Noto+Sans+JP:wght@100..900',
+    'Noto Serif JP': 'Noto+Serif+JP:wght@200..900',
+    'Noto Sans KR': 'Noto+Sans+KR:wght@100..900',
+    'Noto Serif KR': 'Noto+Serif+KR:wght@200..900',
+    'Noto Sans SC': 'Noto+Sans+SC:wght@100..900',
+    'Noto Serif SC': 'Noto+Serif+SC:wght@200..900',
+    'Noto Sans TC': 'Noto+Sans+TC:wght@100..900',
+    'Noto Serif TC': 'Noto+Serif+TC:wght@200..900',
+    'Noto Sans Arabic': 'Noto+Sans+Arabic:wght@100..900',
+    'Noto Naskh Arabic': 'Noto+Naskh+Arabic:wght@400..700',
+    'Noto Sans Hebrew': 'Noto+Sans+Hebrew:wght@100..900',
+    'Noto Serif Hebrew': 'Noto+Serif+Hebrew:wght@100..900',
+    'Noto Sans Thai': 'Noto+Sans+Thai:wght@100..900',
+    'Noto Serif Thai': 'Noto+Serif+Thai:wght@100..900',
+    'Noto Sans Devanagari': 'Noto+Sans+Devanagari:wght@100..900',
+    'Noto Serif Devanagari': 'Noto+Serif+Devanagari:wght@100..900',
+    'Noto Sans Bengali': 'Noto+Sans+Bengali:wght@100..900',
+    'Noto Serif Bengali': 'Noto+Serif+Bengali:wght@100..900',
+  };
+
+  function scriptProfile(preloadFamilies, fallbackFamilies) {
+    return Object.freeze({
+      preloadFamilies: Object.freeze(preloadFamilies),
+      fallbackFamilies: Object.freeze(fallbackFamilies),
+    });
+  }
+
+  const SCRIPT_FALLBACK_MATRIX = Object.freeze({
+    latin: Object.freeze({
+      sans: scriptProfile([], []),
+      serif: scriptProfile([], []),
+    }),
+    japanese: Object.freeze({
+      sans: scriptProfile(
+        ['Noto Sans JP'],
+        ['Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', 'MS PGothic'],
+      ),
+      serif: scriptProfile(['Noto Serif JP'], ['Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', 'MS PMincho']),
+    }),
+    korean: Object.freeze({
+      sans: scriptProfile(['Noto Sans KR'], ['Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'AppleGothic']),
+      serif: scriptProfile(['Noto Serif KR'], ['Noto Serif KR', 'Batang', 'AppleMyungjo', 'Malgun Gothic']),
+    }),
+    zhHans: Object.freeze({
+      sans: scriptProfile(['Noto Sans SC'], ['Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Heiti SC', 'SimHei']),
+      serif: scriptProfile(['Noto Serif SC'], ['Noto Serif SC', 'Songti SC', 'STSong', 'SimSun']),
+    }),
+    zhHant: Object.freeze({
+      sans: scriptProfile(
+        ['Noto Sans TC'],
+        ['Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', 'PMingLiU'],
+      ),
+      serif: scriptProfile(['Noto Serif TC'], ['Noto Serif TC', 'PMingLiU', 'MingLiU', 'Songti TC']),
+    }),
+    arabic: Object.freeze({
+      sans: scriptProfile(['Noto Sans Arabic'], ['Noto Sans Arabic', 'Tahoma', 'Arial']),
+      serif: scriptProfile(['Noto Naskh Arabic'], ['Noto Naskh Arabic', 'Amiri', 'Traditional Arabic']),
+    }),
+    hebrew: Object.freeze({
+      sans: scriptProfile(['Noto Sans Hebrew'], ['Noto Sans Hebrew', 'Arial']),
+      serif: scriptProfile(['Noto Serif Hebrew'], ['Noto Serif Hebrew', 'Times New Roman']),
+    }),
+    thai: Object.freeze({
+      sans: scriptProfile(['Noto Sans Thai'], ['Noto Sans Thai', 'Tahoma', 'Arial']),
+      serif: scriptProfile(['Noto Serif Thai'], ['Noto Serif Thai', 'Tahoma', 'Arial']),
+    }),
+    devanagari: Object.freeze({
+      sans: scriptProfile(['Noto Sans Devanagari'], ['Noto Sans Devanagari', 'Nirmala UI', 'Mangal', 'Arial']),
+      serif: scriptProfile(['Noto Serif Devanagari'], ['Noto Serif Devanagari', 'Nirmala UI', 'Mangal', 'Arial']),
+    }),
+    bengali: Object.freeze({
+      sans: scriptProfile(['Noto Sans Bengali'], ['Noto Sans Bengali', 'Nirmala UI', 'Vrinda', 'Arial']),
+      serif: scriptProfile(['Noto Serif Bengali'], ['Noto Serif Bengali', 'Nirmala UI', 'Vrinda', 'Arial']),
+    }),
+    cyrillic: Object.freeze({
+      sans: scriptProfile(['Noto Sans'], ['Noto Sans', 'Arial']),
+      serif: scriptProfile(['Noto Serif'], ['Noto Serif', 'Georgia', 'Times New Roman']),
+    }),
+  });
+
+  const ARABIC_LANGS = new Set(['ar', 'fa', 'ur', 'ps', 'sd', 'ug', 'ku', 'ckb', 'ks']);
+  const HEBREW_LANGS = new Set(['he', 'yi']);
+  const THAI_LANGS = new Set(['th']);
+  const DEVANAGARI_LANGS = new Set(['hi', 'mr', 'ne', 'sa']);
+  const BENGALI_LANGS = new Set(['bn', 'as']);
+  const CYRILLIC_LANGS = new Set([
+    'ru',
+    'uk',
+    'bg',
+    'mk',
+    'sr',
+    'be',
+    'kk',
+    'ky',
+    'mn',
+    'tg',
+    'tt',
+  ]);
+
   function allowedWeightsForFamily(family) {
-    const spec = curatedFonts[family];
-    if (!spec) return null;
+    const meta = curatedFonts[family];
+    if (!meta) return null;
+    const spec = meta.spec;
     const idx = spec.indexOf('wght@');
     if (idx === -1) return ['400'];
     const segment = spec.slice(idx + 'wght@'.length);
@@ -93,8 +302,9 @@
   }
 
   function allowedStylesForFamily(family) {
-    const spec = curatedFonts[family];
-    if (!spec) return null;
+    const meta = curatedFonts[family];
+    if (!meta) return null;
+    const spec = meta.spec;
     const supportsItalic = spec.includes('ital,') || spec.includes('ital@');
     return supportsItalic ? ['normal', 'italic'] : ['normal'];
   }
@@ -157,7 +367,18 @@
     throw new Error(`[CKTypography] Role "${roleKey}" trackingCustom must be a number or CSS length`);
   }
 
-  function resolveLineHeightValue(roleKey, role) {
+  function resolveScriptTypographyProfile(script) {
+    return SCRIPT_TYPOGRAPHY_PROFILES[script] || SCRIPT_TYPOGRAPHY_PROFILES.latin;
+  }
+
+  function resolveScriptNormalLineHeight(script, roleKey) {
+    const profile = resolveScriptTypographyProfile(script);
+    if (!profile || !profile.normalLineHeights) return null;
+    const value = profile.normalLineHeights[roleKey];
+    return typeof value === 'string' && value.trim() ? value.trim() : null;
+  }
+
+  function resolveLineHeightValue(roleKey, role, script) {
     const presetValue =
       typeof role.lineHeightPreset === 'string' && role.lineHeightPreset.trim()
         ? role.lineHeightPreset.trim()
@@ -167,6 +388,8 @@
     }
 
     if (presetValue === 'normal') {
+      const scriptValue = resolveScriptNormalLineHeight(script, roleKey);
+      if (scriptValue) return scriptValue;
       return DEFAULT_ROLE_LINE_HEIGHT[roleKey] || 'normal';
     }
     if (presetValue !== 'custom') {
@@ -198,13 +421,31 @@
 
   const loadedFonts = new Set();
 
-  function ensureFontLoaded(family) {
-    const spec = curatedFonts[family];
-    if (!spec) {
-      throw new Error(`[CKTypography] Unknown font family "${family}"`);
+  function normalizeLocaleTag(value) {
+    if (typeof value !== 'string') return '';
+    return value.trim().toLowerCase().replace(/_/g, '-');
+  }
+
+  function toFontFamilyToken(family) {
+    const trimmed = String(family || '').trim();
+    if (!trimmed) return '';
+    if (
+      trimmed.includes(',') ||
+      trimmed.startsWith('"') ||
+      trimmed.startsWith("'") ||
+      trimmed.startsWith('var(') ||
+      trimmed.startsWith('calc(') ||
+      trimmed.startsWith('clamp(')
+    ) {
+      return trimmed;
     }
+    return /\s/.test(trimmed) ? `"${trimmed}"` : trimmed;
+  }
+
+  function ensureGoogleFontLoaded(family, spec) {
+    if (!spec) return;
     if (loadedFonts.has(family)) return;
-    const id = `ck-font-${family.replace(/\s+/g, '-').toLowerCase()}`;
+    const id = `ck-font-${String(family).replace(/\s+/g, '-').toLowerCase()}`;
     if (document.getElementById(id)) {
       loadedFonts.add(family);
       return;
@@ -217,7 +458,191 @@
     loadedFonts.add(family);
   }
 
-  function applyTypography(typography, root, roleConfig) {
+  function ensureFontLoaded(family) {
+    const meta = curatedFonts[family];
+    if (!meta) {
+      throw new Error(`[CKTypography] Unknown font family "${family}"`);
+    }
+    ensureGoogleFontLoaded(family, meta.spec);
+  }
+
+  function ensureScriptFontLoaded(family) {
+    const spec = scriptFonts[family];
+    if (!spec) return;
+    ensureGoogleFontLoaded(family, spec);
+  }
+
+  function normalizePublicId(value) {
+    if (typeof value !== 'string') return '';
+    return value.trim();
+  }
+
+  function resolvePublicId(root, runtimeContext) {
+    const fromContext = normalizePublicId(runtimeContext && runtimeContext.publicId);
+    if (fromContext) return fromContext;
+
+    const own = normalizePublicId(root.getAttribute('data-ck-public-id'));
+    if (own) return own;
+
+    const rootNode = root.getRootNode();
+    if (rootNode instanceof ShadowRoot && rootNode.host instanceof HTMLElement) {
+      const fromHost = normalizePublicId(rootNode.host.getAttribute('data-ck-public-id'));
+      if (fromHost) return fromHost;
+    }
+
+    const ancestor = root.closest('[data-ck-public-id]');
+    if (ancestor instanceof HTMLElement) {
+      const fromAncestor = normalizePublicId(ancestor.getAttribute('data-ck-public-id'));
+      if (fromAncestor) return fromAncestor;
+    }
+
+    const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
+    if (global) {
+      const fromGlobal = normalizePublicId(global.publicId);
+      if (fromGlobal) return fromGlobal;
+    }
+
+    return '';
+  }
+
+  function readLocaleFromElement(el) {
+    if (!(el instanceof HTMLElement)) return '';
+    const ckLocale = normalizeLocaleTag(el.getAttribute('data-ck-locale'));
+    if (ckLocale) return ckLocale;
+    return normalizeLocaleTag(el.getAttribute('data-locale'));
+  }
+
+  function resolveLocaleFromQuery() {
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      return normalizeLocaleTag(params.get(LOCALE_PARAM));
+    } catch {
+      return '';
+    }
+  }
+
+  function resolveLocaleFromPayload(publicId) {
+    if (publicId && window.CK_WIDGETS && typeof window.CK_WIDGETS === 'object') {
+      const keyed = window.CK_WIDGETS[publicId];
+      if (keyed && typeof keyed === 'object') {
+        const fromKeyed = normalizeLocaleTag(keyed.locale);
+        if (fromKeyed) return fromKeyed;
+      }
+    }
+
+    const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
+    return normalizeLocaleTag(global && global.locale);
+  }
+
+  function resolveRuntimeLocale(root, runtimeContext) {
+    const fromContext = normalizeLocaleTag(runtimeContext && runtimeContext.locale);
+    if (fromContext) return fromContext;
+
+    const fromRoot = readLocaleFromElement(root);
+    if (fromRoot) return fromRoot;
+
+    const ancestor = root.closest('[data-ck-locale], [data-locale]');
+    if (ancestor instanceof HTMLElement) {
+      const fromAncestor = readLocaleFromElement(ancestor);
+      if (fromAncestor) return fromAncestor;
+    }
+
+    const docEl = root.ownerDocument && root.ownerDocument.documentElement;
+    if (docEl instanceof HTMLElement) {
+      const fromDocAttr = normalizeLocaleTag(docEl.getAttribute('data-locale'));
+      if (fromDocAttr) return fromDocAttr;
+    }
+
+    const fromPayload = resolveLocaleFromPayload(resolvePublicId(root, runtimeContext));
+    if (fromPayload) return fromPayload;
+
+    const fromQuery = resolveLocaleFromQuery();
+    if (fromQuery) return fromQuery;
+
+    if (docEl instanceof HTMLElement) {
+      const fromDocLang = normalizeLocaleTag(docEl.lang);
+      if (fromDocLang) return fromDocLang;
+    }
+
+    return '';
+  }
+
+  function resolveScriptProfile(locale) {
+    const normalized = normalizeLocaleTag(locale);
+    if (!normalized) return 'latin';
+
+    const parts = normalized.split('-').filter(Boolean);
+    if (parts.includes('hans')) return 'zhHans';
+    if (parts.includes('hant')) return 'zhHant';
+    if (parts.includes('jpan')) return 'japanese';
+    if (parts.includes('kore')) return 'korean';
+    if (parts.includes('arab')) return 'arabic';
+    if (parts.includes('hebr')) return 'hebrew';
+    if (parts.includes('thai')) return 'thai';
+    if (parts.includes('deva')) return 'devanagari';
+    if (parts.includes('beng')) return 'bengali';
+    if (parts.includes('cyrl')) return 'cyrillic';
+
+    const primary = parts[0] || '';
+    if (primary === 'ja') return 'japanese';
+    if (primary === 'ko') return 'korean';
+    if (primary === 'zh') {
+      if (parts.includes('tw') || parts.includes('hk') || parts.includes('mo')) return 'zhHant';
+      return 'zhHans';
+    }
+    if (ARABIC_LANGS.has(primary)) return 'arabic';
+    if (HEBREW_LANGS.has(primary)) return 'hebrew';
+    if (THAI_LANGS.has(primary)) return 'thai';
+    if (DEVANAGARI_LANGS.has(primary)) return 'devanagari';
+    if (BENGALI_LANGS.has(primary)) return 'bengali';
+    if (CYRILLIC_LANGS.has(primary)) return 'cyrillic';
+    return 'latin';
+  }
+
+  function uniqueFontStack(tokens) {
+    const out = [];
+    const seen = new Set();
+    tokens.forEach((token) => {
+      const trimmed = String(token || '').trim();
+      if (!trimmed) return;
+      const key = trimmed.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(trimmed);
+    });
+    return out;
+  }
+
+  function resolveFamilyClass(family) {
+    const meta = curatedFonts[family];
+    if (!meta) return 'sans';
+    return meta.familyClass === 'serif' ? 'serif' : 'sans';
+  }
+
+  function resolveScriptClassProfile(script, familyClass) {
+    const matrix = SCRIPT_FALLBACK_MATRIX[script] || SCRIPT_FALLBACK_MATRIX.latin;
+    return matrix[familyClass] || matrix.sans || SCRIPT_FALLBACK_MATRIX.latin.sans;
+  }
+
+  function resolveFallbackTailTokens(familyClass) {
+    if (familyClass === 'serif') return ['serif'];
+    return ['var(--font-ui)', 'sans-serif'];
+  }
+
+  function resolveFamilyValue(family, script) {
+    const familyClass = resolveFamilyClass(family);
+    const profile = resolveScriptClassProfile(script, familyClass);
+    const typoProfile = resolveScriptTypographyProfile(script);
+    profile.preloadFamilies.forEach((fallbackFamily) => ensureScriptFontLoaded(fallbackFamily));
+
+    const selectedToken = toFontFamilyToken(family);
+    const scriptTokens = profile.fallbackFamilies.map((fallbackFamily) => toFontFamilyToken(fallbackFamily));
+    const headTokens = typoProfile.preferScriptFirst ? [...scriptTokens, selectedToken] : [selectedToken, ...scriptTokens];
+    const tokens = uniqueFontStack([...headTokens, ...resolveFallbackTailTokens(familyClass)]);
+    return tokens.join(', ');
+  }
+
+  function applyTypography(typography, root, roleConfig, runtimeContext) {
     if (!(root instanceof HTMLElement)) {
       throw new Error('[CKTypography] root must be an HTMLElement');
     }
@@ -230,6 +655,15 @@
     if (!window.CSS || typeof window.CSS.supports !== 'function') {
       throw new Error('[CKTypography] Missing CSS.supports');
     }
+
+    const runtimeLocale = resolveRuntimeLocale(root, runtimeContext);
+    if (runtimeLocale) {
+      root.setAttribute('data-ck-locale', runtimeLocale);
+      const docEl = root.ownerDocument && root.ownerDocument.documentElement;
+      if (docEl instanceof HTMLElement) docEl.lang = runtimeLocale;
+    }
+
+    const runtimeScript = resolveScriptProfile(runtimeLocale);
 
     const globalFamily = typography.globalFamily;
     if (typeof globalFamily !== 'string' || !globalFamily.trim()) {
@@ -368,9 +802,10 @@
         sizeValue = `${String(sizeValue).trim()}px`;
       }
       const trackingValue = resolveTrackingValue(roleKey, role);
-      const lineHeightValue = resolveLineHeightValue(roleKey, role);
+      const lineHeightValue = resolveLineHeightValue(roleKey, role, runtimeScript);
 
-      root.style.setProperty(`--typo-${varKey}-family`, family);
+      const familyValue = resolveFamilyValue(family, runtimeScript);
+      root.style.setProperty(`--typo-${varKey}-family`, familyValue);
       root.style.setProperty(`--typo-${varKey}-size`, sizeValue);
       root.style.setProperty(`--typo-${varKey}-weight`, weight);
       root.style.setProperty(`--typo-${varKey}-style`, fontStyle);

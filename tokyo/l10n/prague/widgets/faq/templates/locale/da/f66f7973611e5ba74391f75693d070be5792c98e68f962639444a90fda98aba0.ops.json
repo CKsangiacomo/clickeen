@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-skabeloner – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Start med en professionelt designet FAQ-skabelon. Tilpas alt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Start med en stilretning – ikke et tomt lærred."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vælg et gennemarbejdet FAQ-udgangspunkt, og finjustér derefter hver detalje, så det passer til dit brand på få minutter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Én FAQ-widget. Uendeligt mange looks."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Skift mellem Liquid Glass, Pure Canvas, Rebel Blocks og Enterprise Prime uden at omskrive dine svar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Lys tilstand. Mørk tilstand. Enhver tilstand—det er din tilstand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Skabeloner er kun startlinjen. Du styrer målstregen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Designfrihed, indbygget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Fra layouts og visuelle finishes til typografiske roller – hver designbeslutning kan styres i editoren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layouts, på din måde"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Kontrol over udseendet uden grænser"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografisk præcision"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Mange layout-systemer, ikke kun ét. Struktur pr. breakpoint. Uafhængig padding og afstand for desktop/mobil. Styr kolonner, stakning, justering og reflow—helt præcist."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Afrunding pr. hjørne. Kanter med brugerdefinerede farver. Skygger udenpå og indeni (koblede eller uafhængige pr. side). Gradient-, billed- eller videobaggrunde. Fuld visuel kontrol."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Seks forskellige roller (overskrift, brødtekst, spørgsmål, svar, knap, sektion). Vælg mellem 17 Google Fonts. Vægt, stil, størrelse—alt kan tilpasses pr. rolle. Dynamiske skalaer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Skift layout med det samme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Vælg Accordion, List eller Cards – og skift når som helst uden at bygge dit indhold om."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Interaktionsdesign inkluderet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Hover-, aktiv- og fokus-tilstande er indbygget, så din FAQ føles gennemført på alle enheder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografi, der føles rigtig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Brug dine egne skrifttyper eller vores bibliotek, og finjustér hierarkiet for overskrifter, spørgsmål, svar og CTA’er."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Mørk tilstand er automatisk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Din FAQ tilpasser sig automatisk lyse og mørke sektioner, så designet altid føles naturligt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Mobil perfektion"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Trykfelter, afstande og layout forbliver letlæselige på mobil, tablet og desktop."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Byg din FAQ i tre trin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Vælg en stil at starte med, finjustér alle detaljer, og udgiv én version, der opdateres overalt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Vælg en stil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Tilpas alt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Udgiv"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Start med den skabelon, der passer til dit brand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Justér layout, afstande, farver, radius og typografi i den visuelle editor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Send én opdatering, og den går live overalt, hvor din FAQ er indlejret."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Start med en skabelon. Gør den til din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Vælg en skabelon, tilpas den til dit brand, og lancer din FAQ-widget gratis."
+    }
+  ],
+  "v": 1
+}

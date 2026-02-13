@@ -6,12 +6,12 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "Preguntas Frecuentes"
+      "value": "Preguntas frecuentes"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Todas las Preguntas"
+      "value": "Todas las preguntas"
     },
     {
       "op": "set",
@@ -36,22 +36,22 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Sí, un widget activo con funciones principales."
+      "value": "Sí, un widget activo con funciones esenciales."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Widgets integrables con conversiones incorporadas."
+      "value": "Widgets integrables con conversiones incluidas."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Copia el código de integración y pégalo antes de </body> en tu sitio."
+      "value": "Copia el código de inserción y pégalo antes de </body> en tu sitio."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Porque Clickeen es una nueva y asombrosa plataforma para hacer la web hermosa y fácil de usar."
+      "value": "Porque Clickeen es una nueva plataforma increíble para hacer que la web sea bonita y fácil de usar."
     }
   ]
 }

@@ -15,12 +15,14 @@ import EmbedCarousel from '../blocks/embed-carousel/embed-carousel.astro';
 import FeatureExplorer from '../blocks/feature-explorer/feature-explorer.astro';
 import MobileShowcase from '../blocks/mobile-showcase/mobile-showcase.astro';
 import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
+import LocalCuratedDrawer from './LocalCuratedDrawer.astro';
 import { pragueT } from '../lib/i18n';
 import { getPragueMarket } from '../lib/markets';
 import {
   chooseOverviewHeroLocales,
   chooseShowcaseTiles,
   localeLabel,
+  resolveOverviewHeroNamedLocaleCount,
   resolveTokyoInstanceLocales,
   sortLocaleOptions,
 } from '../lib/instanceL10n';
@@ -44,7 +46,26 @@ type Props = {
   primaryCta: { label: string; href: string };
 };
 
+type CuratedSlot = {
+  blockId: string;
+  blockType: string;
+  target: 'block' | 'item' | 'item-public-id';
+  itemIndex?: number;
+  label: string;
+  currentPublicId: string;
+};
+
+type CuratedBlock = {
+  blockId: string;
+  blockType: string;
+  blockIndex: number;
+  label: string;
+  slots: CuratedSlot[];
+};
+
 const { blocks, widget, market, locale, activeSubpage = 'overview', primaryCta } = Astro.props;
+const localHosts = new Set(['localhost', '127.0.0.1', '::1']);
+const localCuratedDrawerEnabled = import.meta.env.DEV && localHosts.has(Astro.url.hostname);
 const hasExplicitLocaleShowcase = blocks.some((b) => b && b.type === 'locale-showcase');
 const explicitShowcasePublicId =
   blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.curatedRef?.publicId === 'string')?.curatedRef?.publicId ??
@@ -55,45 +76,138 @@ const showcasePublicId =
   `wgt_main_${widget}`;
 const defaultShowcaseTitle = await pragueT(locale, 'prague.localeShowcase.title');
 const defaultShowcaseSubtitle = await pragueT(locale, 'prague.localeShowcase.subtitle');
+const marketConfig = getPragueMarket(market);
 
 const instanceLocalesRaw = await resolveTokyoInstanceLocales(showcasePublicId).catch(() => null);
-const instanceLocales = instanceLocalesRaw ? sortLocaleOptions(instanceLocalesRaw) : ['en', 'es', 'ja'];
+const fallbackInstanceLocales = marketConfig?.locales?.length ? marketConfig.locales : ['en', 'es', 'zh-hans', 'ja'];
+const instanceLocales = instanceLocalesRaw ? sortLocaleOptions(instanceLocalesRaw) : sortLocaleOptions(fallbackInstanceLocales);
 const showcaseTiles = chooseShowcaseTiles(instanceLocales);
 const showcaseTileEntries = showcaseTiles.map((code) => ({ code, label: localeLabel(code, locale) }));
 const showcaseOptionEntries = instanceLocales.map((code) => ({ code, label: localeLabel(code, locale) }));
-const marketConfig = getPragueMarket(market);
-const overviewHeroLocaleSelection = chooseOverviewHeroLocales({ market: marketConfig, instanceLocales, max: 3 });
+const overviewHeroLocalePool = marketConfig?.locales?.length ? marketConfig.locales : instanceLocales;
+const overviewHeroNamedLocaleCount = resolveOverviewHeroNamedLocaleCount(marketConfig);
+const overviewHeroLocaleSelection = chooseOverviewHeroLocales({
+  market: marketConfig,
+  instanceLocales: overviewHeroLocalePool,
+  max: overviewHeroNamedLocaleCount,
+});
 const overviewHeroSubheadOne = await pragueT(locale, 'prague.hero.overview.subheadOne');
 const overviewHeroSubheadTwo = await pragueT(locale, 'prague.hero.overview.subheadTwo');
 const overviewHeroSubheadMany = await pragueT(locale, 'prague.hero.overview.subheadMany');
 const heroPrimaryCta = primaryCta;
+const OVERVIEW_HERO_TOTAL_LOCALES = 29;
 
-function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availableCount: number }): string | null {
+function formatLocaleNameList(labels: string[]): string {
+  if (!labels.length) return '';
+  if (labels.length === 1) return labels[0] || '';
+  return labels.join(', ');
+}
+
+function renderOverviewHeroSubheadline(args: { selectedLocales: string[] }): string | null {
   const selected = args.selectedLocales;
   if (selected.length === 0) return null;
   const labels = selected.map((code) => localeLabel(code, locale));
   const lang1 = labels[0] || '';
   const lang2 = labels[1] || '';
-  const more = Math.max(0, Number(args.availableCount || 0) - selected.length);
   if (selected.length === 1 || !lang2) {
     return overviewHeroSubheadOne.replace('{lang1}', lang1);
   }
-  if (more <= 0) {
+  if (selected.length === 2) {
     return overviewHeroSubheadTwo.replace('{lang1}', lang1).replace('{lang2}', lang2);
   }
+  const more = Math.max(0, OVERVIEW_HERO_TOTAL_LOCALES - selected.length);
+  const trailingLanguages = formatLocaleNameList(labels.slice(1));
   return overviewHeroSubheadMany
     .replace('{lang1}', lang1)
-    .replace('{lang2}', lang2)
+    .replace('{lang2}', trailingLanguages)
     .replace('{more}', String(more));
 }
+
+function asPublicId(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function hasOwnKey(value: unknown, key: string): boolean {
+  if (!value || typeof value !== 'object') return false;
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function collectCuratedBlocks(inputBlocks: Block[]): CuratedBlock[] {
+  const curatedBlocks: CuratedBlock[] = [];
+
+  inputBlocks.forEach((block, blockIndex) => {
+    if (!block || typeof block !== 'object') return;
+    const blockId = String(block.id || '').trim();
+    const blockType = String(block.type || '').trim();
+    if (!blockId || !blockType) return;
+
+    const slots: CuratedSlot[] = [];
+
+    if (hasOwnKey(block, 'curatedRef')) {
+      const blockCuratedPublicId = asPublicId((block as any)?.curatedRef?.publicId);
+      slots.push({
+        blockId,
+        blockType,
+        target: 'block',
+        label: 'Block instance',
+        currentPublicId: blockCuratedPublicId,
+      });
+    }
+
+    const items = Array.isArray((block as any).items) ? ((block as any).items as any[]) : [];
+    items.forEach((item, itemIndex) => {
+      if (!item || typeof item !== 'object') return;
+      if (hasOwnKey(item, 'curatedRef')) {
+        const itemPublicId = asPublicId((item as any)?.curatedRef?.publicId);
+        const itemTitle = typeof (item as any)?.curatedRef?.title === 'string' ? String((item as any).curatedRef.title).trim() : '';
+        const itemLabelSuffix = itemTitle ? ` (${itemTitle})` : '';
+        slots.push({
+          blockId,
+          blockType,
+          target: 'item',
+          itemIndex,
+          label: `Item ${itemIndex + 1}${itemLabelSuffix}`,
+          currentPublicId: itemPublicId,
+        });
+        return;
+      }
+
+      if (hasOwnKey(item, 'publicId')) {
+        const directPublicId = asPublicId((item as any).publicId);
+        slots.push({
+          blockId,
+          blockType,
+          target: 'item-public-id',
+          itemIndex,
+          label: `Item ${itemIndex + 1}`,
+          currentPublicId: directPublicId,
+        });
+      }
+    });
+
+    curatedBlocks.push({
+      blockId,
+      blockType,
+      blockIndex,
+      label: `${blockType} block`,
+      slots,
+    });
+  });
+
+  return curatedBlocks;
+}
+
+const localCuratedBlocks = collectCuratedBlocks(blocks);
+const localCuratedSlotCount = localCuratedBlocks.reduce((sum, block) => sum + block.slots.length, 0);
 ---
 
 {blocks.map((block) => {
   if (!block || !block.type) return null;
+  let rendered: any = null;
   switch (block.type) {
     case 'big-bang': {
       const copy = block.copy ?? {};
-      return (
+      rendered = (
         <BigBang
           headline={String(copy.headline ?? '')}
           body={String(copy.body ?? '')}
@@ -101,6 +215,7 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           secondaryCta={undefined}
         />
       );
+      break;
     }
     case 'hero': {
       const copy = block.copy ?? {};
@@ -135,13 +250,9 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
         activeSubpage === 'overview' && mappedHeroItems.length === 0
           ? renderOverviewHeroSubheadline({
               selectedLocales: overviewHeroLocales,
-              availableCount:
-                overviewHeroLocaleSelection.availableLocales.length > 0
-                  ? overviewHeroLocaleSelection.availableLocales.length
-                  : instanceLocales.length,
             })
           : null;
-      return (
+      rendered = (
         <Hero
           headline={String(copy.headline ?? '')}
           subheadline={dynamicOverviewSubheadline || String(copy.subheadline ?? '')}
@@ -157,6 +268,7 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           <WidgetSubnav slot="subnav" market={market} locale={locale} widget={widget} active={activeSubpage} variant="inline" />
         </Hero>
       );
+      break;
     }
     case 'split': {
       const copy = block.copy ?? {};
@@ -165,7 +277,7 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
         block.curatedRef && typeof block.curatedRef.embedMode === 'string' ? String(block.curatedRef.embedMode) : '';
       const curatedEmbedMode = curatedEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
       const layout = typeof (block as any).layout === 'string' ? (block as any).layout : '';
-      return (
+      rendered = (
         <Split
           headline={String(copy.headline ?? '')}
           subheadline={String(copy.subheadline ?? '')}
@@ -179,11 +291,12 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           }
         />
       );
+      break;
     }
     case 'split-carousel': {
       const copy = block.copy ?? {};
       const layout = typeof (block as any).layout === 'string' ? (block as any).layout : '';
-      return (
+      rendered = (
         <SplitCarousel
           headline={String(copy.headline ?? '')}
           subheadline={String(copy.subheadline ?? '')}
@@ -199,10 +312,11 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           })}
         />
       );
+      break;
     }
     case 'steps': {
       const copy = block.copy ?? {};
-      return (
+      rendered = (
         <Steps
           widget={widget}
           title={copy.title as string}
@@ -212,11 +326,12 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           ctaHref={heroPrimaryCta.href}
         />
       );
+      break;
     }
     case 'subpage-cards': {
       const copy = block.copy ?? {};
       const links = Array.isArray((block as any).links) ? ((block as any).links as any[]) : [];
-      return (
+      rendered = (
         <SubpageCards
           widget={widget}
           market={market}
@@ -227,10 +342,11 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           links={links as { page: 'templates' | 'examples' | 'features'; iconName?: string }[]}
         />
       );
+      break;
     }
     case 'control-moat': {
       const copy = block.copy ?? {};
-      return (
+      rendered = (
         <ControlMoat
           widget={widget}
           title={copy.title as string}
@@ -240,10 +356,11 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           ctaHref={heroPrimaryCta.href}
         />
       );
+      break;
     }
     case 'global-moat': {
       const copy = block.copy ?? {};
-      return (
+      rendered = (
         <GlobalMoat
           widget={widget}
           title={copy.title as string}
@@ -253,10 +370,11 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           ctaHref={heroPrimaryCta.href}
         />
       );
+      break;
     }
     case 'platform-strip': {
       const copy = block.copy ?? {};
-      return (
+      rendered = (
         <PlatformStrip
           widget={widget}
           title={copy.title as string}
@@ -266,20 +384,22 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           ctaHref={heroPrimaryCta.href}
         />
       );
+      break;
     }
     case 'cta-bottom-block': {
       const copy = block.copy ?? {};
-      return (
+      rendered = (
         <Cta
           headline={String(copy.headline ?? '')}
           subheadline={String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
         />
       );
+      break;
     }
     case 'minibob': {
       const copy = block.copy ?? {};
-      return (
+      rendered = (
         <>
           <Minibob
             widget={widget}
@@ -299,13 +419,14 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           ) : null}
         </>
       );
+      break;
     }
     case 'locale-showcase': {
       const copy = block.copy ?? {};
       const title = typeof copy.title === 'string' && copy.title.trim() ? String(copy.title) : defaultShowcaseTitle;
       const subtitle =
         typeof copy.subtitle === 'string' && copy.subtitle.trim() ? String(copy.subtitle) : defaultShowcaseSubtitle;
-      return (
+      rendered = (
         <LocaleShowcase
           publicId={showcasePublicId}
           title={title}
@@ -314,33 +435,37 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
           options={showcaseOptionEntries}
         />
       );
+      break;
     }
     case 'embed-carousel': {
       const copy = block.copy ?? {};
-      return (
+      rendered = (
         <EmbedCarousel
           items={(block as any).items ?? []}
           options={(block as any).options ?? {}}
         />
       );
+      break;
     }
     case 'mobile-showcase': {
       const copy = block.copy ?? {};
-      return (
+      rendered = (
         <MobileShowcase
           items={(block as any).items ?? []}
           options={(block as any).options ?? {}}
         />
       );
+      break;
     }
     case 'feature-explorer': {
       const copy = block.copy ?? {};
-      return (
+      rendered = (
         <FeatureExplorer
           categories={(block as any).categories ?? []}
           options={(block as any).options ?? {}}
         />
       );
+      break;
     }
     case 'navmeta':
     case 'page-meta':
@@ -348,4 +473,9 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availa
     default:
       throw new Error(`[prague] No renderer for block type \"${block.type}\"`);
   }
+
+  return rendered;
 })}
+{localCuratedDrawerEnabled && localCuratedBlocks.length > 0 && localCuratedSlotCount > 0 ? (
+  <LocalCuratedDrawer widget={widget} page={activeSubpage} blocks={localCuratedBlocks} />
+) : null}

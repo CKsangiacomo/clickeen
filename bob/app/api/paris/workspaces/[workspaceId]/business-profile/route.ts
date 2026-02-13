@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveParisBaseUrl } from '../../../../../../lib/env/paris';
+import {
+  fetchWithTimeout,
+  proxyErrorResponse,
+  resolveParisBaseOrResponse,
+  withParisDevAuthorization,
+} from '../../../../../../lib/api/paris/proxy-helpers';
 
 export const runtime = 'edge';
 
@@ -9,29 +14,8 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id',
 } as const;
 
-const PARIS_DEV_JWT = process.env.PARIS_DEV_JWT;
-
-function resolveParisBaseOrResponse() {
-  try {
-    return { ok: true as const, baseUrl: resolveParisBaseUrl() };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { ok: false as const, response: NextResponse.json({ error: 'MISCONFIGURED', message }, { status: 500, headers: CORS_HEADERS }) };
-  }
-}
-
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
-}
-
-async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs = 5000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
 }
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ workspaceId: string }> }) {
@@ -40,12 +24,11 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ workspa
     return NextResponse.json({ error: 'INVALID_WORKSPACE_ID' }, { status: 400, headers: CORS_HEADERS });
   }
 
-  const paris = resolveParisBaseOrResponse();
+  const paris = resolveParisBaseOrResponse(CORS_HEADERS);
   if (!paris.ok) return paris.response;
 
   const url = `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/business-profile`;
-  const headers: HeadersInit = {};
-  if (PARIS_DEV_JWT) headers['Authorization'] = `Bearer ${PARIS_DEV_JWT}`;
+  const headers = withParisDevAuthorization(new Headers());
 
   try {
     const res = await fetchWithTimeout(url, { method: 'GET', headers, cache: 'no-store' });
@@ -58,8 +41,6 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ workspa
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const status = error instanceof Error && error.name === 'AbortError' ? 504 : 502;
-    return NextResponse.json({ error: 'PARIS_PROXY_ERROR', message }, { status, headers: CORS_HEADERS });
+    return proxyErrorResponse(error, CORS_HEADERS);
   }
 }

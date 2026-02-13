@@ -55,6 +55,7 @@ export type WidgetRow = {
 
 export type WorkspaceRow = {
   id: string;
+  account_id: string;
   tier: 'free' | 'tier1' | 'tier2' | 'tier3';
   name: string;
   slug: string;

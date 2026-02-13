@@ -6,7 +6,7 @@ import { parseLimitsSpec } from '@clickeen/ck-policy';
 
 export const runtime = 'edge';
 
-export async function GET(_req: NextRequest, ctx: { params: Promise<{ widgetname: string }> }) {
+export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname: string }> }) {
   const { widgetname } = await ctx.params;
   if (!widgetname) {
     return NextResponse.json(
@@ -18,7 +18,9 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ widgetname
   try {
     const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
     const specUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/spec.json`;
-    const res = await fetch(specUrl, { cache: 'no-store' });
+    const cacheBust = req.nextUrl.searchParams.has('ts') || req.nextUrl.searchParams.has('_t');
+    const fetchInit: RequestInit = { cache: cacheBust ? 'no-store' : 'default' };
+    const res = await fetch(specUrl, fetchInit);
     if (!res.ok) {
       if (res.status === 404) {
         return NextResponse.json(
@@ -36,7 +38,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ widgetname
     const compiled = await compileWidgetServer(widgetJson);
     const limitsUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/limits.json`;
     let limits = null;
-    const limitsRes = await fetch(limitsUrl, { cache: 'no-store' });
+    const limitsRes = await fetch(limitsUrl, fetchInit);
     if (limitsRes.ok) {
       limits = parseLimitsSpec(await limitsRes.json());
     } else if (limitsRes.status !== 404) {

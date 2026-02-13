@@ -6,12 +6,12 @@
     {
       "op": "set",
       "path": "timer.headline",
-      "value": "Çok geç olmadan %50 indirim kazanın 🎯"
+      "value": "Çok geç olmadan %50 indirimden yararlanın 🎯"
     },
     {
       "op": "set",
       "path": "actions.during.text",
-      "value": "Şimdi satın al"
+      "value": "Hemen satın alın"
     }
   ]
 }

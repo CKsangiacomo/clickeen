@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontakt Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Din foretrukne partner til ingeniørløsninger og -services."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering FAQ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering er en global virksomhed med speciale i innovative ingeniørløsninger og -services."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Hvad er Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Kontakt os, fortæl om dit projekt og dine behov, så guider vi dig gennem vores ydelser."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hvordan kommer jeg i gang med at bruge Ive Engineerings services?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, Ive Engineering tilbyder gratis konsultationer, så vi bedre kan forstå dine projektkrav."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Er der mulighed for en konsultation?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering leverer banebrydende løsninger, erfarne specialister og skræddersyede ydelser, der matcher dine konkrete ingeniørbehov."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Hvorfor skal jeg vælge Ive Engineering til mine ingeniørbehov?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alle spørgsmål"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering vægter innovation, integritet og ekspertise i alle projekter og services."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Hvad er Ive Engineerings kerneværdier?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Du kan kontakte Ive Engineering via vores website, e-mail eller telefonnummeret, der står på vores kontaktside."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Hvordan kan jeg komme i kontakt med Ive Engineering?"
+    }
+  ],
+  "v": 1
+}

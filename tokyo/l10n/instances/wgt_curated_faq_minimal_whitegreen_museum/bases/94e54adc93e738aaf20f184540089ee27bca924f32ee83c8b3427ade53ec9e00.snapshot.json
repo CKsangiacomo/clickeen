@@ -1,0 +1,23 @@
+{
+  "baseFingerprint": "94e54adc93e738aaf20f184540089ee27bca924f32ee83c8b3427ade53ec9e00",
+  "publicId": "wgt_curated_faq_minimal_whitegreen_museum",
+  "snapshot": {
+    "cta.label": "Make a reservation",
+    "header.subtitleHtml": "Discover the charm and comfort of our USA bed and breakfast.",
+    "header.title": "Soho Art Gallery FAQs",
+    "sections.0.faqs.0.answer": "We feature contemporary art from <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">local</a> and i<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">nternational artists</a> .",
+    "sections.0.faqs.0.question": "What types of art are displayed?",
+    "sections.0.faqs.1.answer": "The gallery is open Tuesday to Sunday from 10 AM to 6 PM.",
+    "sections.0.faqs.1.question": "What are the gallery hours?",
+    "sections.0.faqs.2.answer": "Admission is free, but donations are appreciated.",
+    "sections.0.faqs.2.question": "Is there an admission fee?",
+    "sections.0.faqs.3.answer": "Yes, you can purchase art directly from the gallery.",
+    "sections.0.faqs.3.question": "Can I purchase art at the gallery?",
+    "sections.0.faqs.4.answer": "Check our website for information on upcoming exhibitions and events.",
+    "sections.0.faqs.4.question": "Are there any upcoming events?",
+    "sections.0.faqs.5.answer": "Yes, we offer private event hosting for a fee.",
+    "sections.0.faqs.5.question": "Can I host a private event at the gallery?",
+    "sections.0.title": "Gallery Information"
+  },
+  "v": 1
+}

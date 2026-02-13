@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Prenota un tavolo"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Scopri il fascino e il comfort del nostro bed & breakfast negli USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ di Chef Pierre"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Offriamo diverse esperienze di ristorazione, tra cui cene private, degustazioni di vini ed esperienze al tavolo dello chef."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Quali tipi di esperienze di ristorazione sono disponibili?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "La prenotazione è consigliata e può essere effettuata fino a 30 giorni in anticipo."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Quali sono le politiche di prenotazione?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Sì, è richiesto un dress code smart casual."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "È previsto un dress code?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Sì, offriamo pacchetti per cene romantiche ed esperienze di gruppo."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Offrite pacchetti speciali per la cena?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Per evitare l'addebito di una penale, le cancellazioni devono essere effettuate con almeno 24 ore di anticipo."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Qual è la vostra politica di cancellazione?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Sì, possiamo soddisfare diverse esigenze alimentari, inclusi opzioni vegetariane, vegane, senza glutine e senza frutta a guscio."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Offrite alternative per esigenze alimentari specifiche?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Esperienza gastronomica"
+    }
+  ],
+  "v": 1
+}

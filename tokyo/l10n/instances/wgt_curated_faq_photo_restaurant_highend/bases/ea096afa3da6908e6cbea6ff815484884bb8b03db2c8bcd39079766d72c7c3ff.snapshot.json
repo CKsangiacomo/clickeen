@@ -1,0 +1,23 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "publicId": "wgt_curated_faq_photo_restaurant_highend",
+  "snapshot": {
+    "cta.label": "Make a reservation",
+    "header.subtitleHtml": "Discover the charm and comfort of our USA bed and breakfast.",
+    "header.title": "Chef Pierre FAQs",
+    "sections.0.faqs.0.answer": "We offer a variety of dining experiences including private dining, wine tastings, and chef's table experiences.",
+    "sections.0.faqs.0.question": "What types of dining experiences are available?",
+    "sections.0.faqs.1.answer": "Reservations are recommended and can be made up to 30 days in advance.",
+    "sections.0.faqs.1.question": "What are the reservation policies?",
+    "sections.0.faqs.2.answer": "Yes, we have a smart casual dress code.",
+    "sections.0.faqs.2.question": "Is there a dress code?",
+    "sections.0.faqs.3.answer": "Yes, we offer romantic dining packages and group dining experiences.",
+    "sections.0.faqs.3.question": "Do you offer any special dining packages?",
+    "sections.0.faqs.4.answer": "Cancellations must be made 24 hours in advance to avoid a fee.",
+    "sections.0.faqs.4.question": "What is your cancellation policy?",
+    "sections.0.faqs.5.answer": "Yes, we can accommodate various dietary needs including vegetarian, vegan, gluten-free, and nut-free options.",
+    "sections.0.faqs.5.question": "Do you offer any dietary accommodations?",
+    "sections.0.title": "Dining Experience"
+  },
+  "v": 1
+}

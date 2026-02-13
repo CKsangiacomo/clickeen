@@ -10,17 +10,17 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "Entdecken Sie den Charme und Komfort unseres Bed and Breakfast in den USA."
+      "value": "Entdecken Sie den Charme und Komfort unseres Bed & Breakfast in den USA."
     },
     {
       "op": "set",
       "path": "header.title",
-      "value": "Bed and Breakfast – FAQs"
+      "value": "Bed-and-Breakfast-FAQs"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Wir bieten verschiedene Zimmerkategorien an, darunter <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Standard</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Deluxe</a> , und <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Suiten</a> ."
+      "value": "Wir bieten eine Auswahl an Zimmern, darunter <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Standard</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Deluxe</a> , und <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Suiten</a> ."
     },
     {
       "op": "set",
@@ -35,7 +35,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Wann sind Check-in und Check-out?"
+      "value": "Welche Check-in- und Check-out-Zeiten gelten?"
     },
     {
       "op": "set",

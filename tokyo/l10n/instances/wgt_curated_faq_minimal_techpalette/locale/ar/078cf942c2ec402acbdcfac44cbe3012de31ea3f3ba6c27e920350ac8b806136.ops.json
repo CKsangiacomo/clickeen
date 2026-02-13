@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "تواصل مع Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "وجهتك الأولى للحلول والخدمات الهندسية."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "الأسئلة الشائعة لـ Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering شركة عالمية متخصصة في تقديم حلول وخدمات هندسية مبتكرة."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "ما هي Ive Engineering؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "كل ما عليك هو التواصل معنا، ومناقشة احتياجات مشروعك، وسنرشدك إلى خدماتنا المناسبة."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "كيف أبدأ باستخدام خدمات Ive Engineering؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "نعم، توفر Ive Engineering استشارات مجانية لفهم متطلبات مشروعك بشكل أفضل."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "هل تتوفر استشارة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "تقدم Ive Engineering حلولًا متقدمة، وفريقًا من الخبراء ذوي الخبرة، وخدمات مُصممة خصيصًا لتلبية احتياجاتك الهندسية."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "لماذا أختار Ive Engineering لاحتياجاتي الهندسية؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "جميع الأسئلة"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "تؤمن Ive Engineering بالابتكار والنزاهة والتميز في جميع مشاريعها وخدماتها."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "ما القيم الأساسية لدى Ive Engineering؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "يمكنك التواصل مع Ive Engineering عبر موقعنا الإلكتروني أو البريد الإلكتروني أو رقم الهاتف المذكور في صفحة التواصل."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "كيف يمكنني التواصل مع Ive Engineering؟"
+    }
+  ],
+  "v": 1
+}

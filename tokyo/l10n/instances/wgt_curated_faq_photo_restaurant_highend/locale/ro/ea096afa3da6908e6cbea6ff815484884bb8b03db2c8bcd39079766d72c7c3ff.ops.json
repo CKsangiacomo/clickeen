@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Fă o rezervare"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Descoperă farmecul și confortul pensiunii noastre din SUA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Întrebări frecvente Chef Pierre"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Oferim o varietate de experiențe culinare, inclusiv cine private, degustări de vin și experiențe la masa chef-ului."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ce tipuri de experiențe culinare sunt disponibile?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Recomandăm rezervarea și o poți face cu până la 30 de zile în avans."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Care sunt politicile de rezervare?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Da, avem un cod vestimentar smart casual."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Există un cod vestimentar?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Da, oferim pachete pentru cine romantice și experiențe de grup."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Oferiți pachete speciale pentru masă?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Anulările trebuie făcute cu 24 de ore în avans pentru a evita o taxă."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Care este politica de anulare?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Da, putem ține cont de diverse cerințe alimentare, inclusiv opțiuni vegetariene, vegane, fără gluten și fără nuci."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Oferiți opțiuni pentru restricții alimentare?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Experiență culinară"
+    }
+  ],
+  "v": 1
+}

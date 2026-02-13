@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Reserver"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Opplev sjarmen og komforten på vårt USA bed & breakfast."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Chef Pierre – vanlige spørsmål"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Vi tilbyr ulike matopplevelser, blant annet privat bespisning, vinsmaking og Chef’s Table-opplevelser."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Hvilke typer matopplevelser tilbyr dere?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Vi anbefaler å reservere, og du kan bestille opptil 30 dager i forveien."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hvilke regler gjelder for reservasjoner?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, vi har en smart casual-kleskode."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Er det kleskode?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ja, vi tilbyr romantiske spisepakker og opplegg for grupper."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Tilbyr dere noen spesielle spisepakker?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Avbestilling må gjøres senest 24 timer i forveien for å unngå gebyr."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Hva er avbestillingsreglene deres?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Ja, vi kan tilrettelegge for ulike kostholdsbehov, inkludert vegetar, vegansk, glutenfritt og nøttefritt."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Tilbyr dere tilrettelegging for kosthold?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Matopplevelse"
+    }
+  ],
+  "v": 1
+}

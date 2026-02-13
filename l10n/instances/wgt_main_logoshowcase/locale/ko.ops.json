@@ -6,12 +6,12 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "저희 고객사들"
+      "value": "함께한 고객사"
     },
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "전 세계 팀들의 신뢰를 받고 있습니다."
+      "value": "전 세계 팀이 신뢰하는 서비스입니다."
     },
     {
       "op": "set",

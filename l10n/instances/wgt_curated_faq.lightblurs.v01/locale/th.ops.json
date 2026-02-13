@@ -21,37 +21,37 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "ฉันจะติดตั้งวิดเจ็ตได้อย่างไร?"
+      "value": "ติดตั้งวิดเจ็ตอย่างไร?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "มีแผนฟรีหรือไม่?"
+      "value": "มีแพ็กเกจฟรีไหม?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "ทำไมฉันควรใช้ Clickeen"
+      "value": "ทำไมถึงควรใช้ Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen เป็นสิ่งที่ Isabel จะชอบมากที่จะทำงานให้เมื่อเธอต้องทำ และฉันจะบังคับเธอ"
+      "value": "Clickeen คือสิ่งที่ Isabel จะชอบทำงานด้วยมากเมื่อเธอจำเป็นต้องทำ และฉันจะบังคับเธอ"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "คัดลอกโค้ดสำหรับฝัง (embed code) แล้ววางไว้ก่อน </body> บนเว็บไซต์ของคุณ"
+      "value": "คัดลอกโค้ดฝัง (embed) แล้ววางก่อน </body> บนเว็บไซต์ของคุณ"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "ใช่ วิดเจ็ตที่ใช้งานอยู่ 1 ตัวพร้อมฟีเจอร์หลัก"
+      "value": "มี—ใช้งานวิดเจ็ตได้ 1 ตัว พร้อมฟีเจอร์หลัก"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "เพราะ Clickeen เป็นแพลตฟอร์มใหม่ที่ยอดเยี่ยมในการทำให้เว็บสวยงามและใช้งานง่าย"
+      "value": "เพราะ Clickeen คือแพลตฟอร์มใหม่ที่ยอดเยี่ยม ช่วยให้เว็บสวยขึ้นและใช้งานง่ายขึ้น"
     }
   ]
 }

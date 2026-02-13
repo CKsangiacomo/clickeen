@@ -313,7 +313,7 @@ function previewFromDataUrl(
   setPreview(state, { kind, previewUrl: kind === 'doc' ? undefined : url, name, ext, hasFile: true });
 }
 
-function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta | null) {
+function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta | null = null) {
   let key = String(raw ?? '').trim();
   if (key === 'transparent') key = '';
   const placeholder = state.headerValue?.dataset.placeholder ?? '';
@@ -457,7 +457,23 @@ function guessNameFromUrl(url: string): string {
   const cleaned = url.split('?')[0];
   const parts = cleaned.split('/').filter(Boolean);
   if (!parts.length) return '';
-  return parts[parts.length - 1];
+  const filename = parts[parts.length - 1];
+  const stem = filename.replace(/\.[^.]+$/, '').toLowerCase();
+  if (stem === 'original' || stem === 'grayscale') {
+    const legacyAssetId = parts.length >= 2 ? parts[parts.length - 2] : '';
+    const nestedAssetId = parts.length >= 3 ? parts[parts.length - 3] : '';
+    const assetId = /^[a-f0-9-]{8,}$/i.test(nestedAssetId)
+      ? nestedAssetId
+      : /^[a-f0-9-]{8,}$/i.test(legacyAssetId)
+        ? legacyAssetId
+        : '';
+    if (assetId) {
+      const ext = guessExtFromName(filename);
+      const shortId = assetId.replace(/-/g, '').slice(0, 8);
+      return ext ? `asset-${shortId}.${ext}` : `asset-${shortId}`;
+    }
+  }
+  return filename;
 }
 
 function captureNativeValue(input: HTMLInputElement): DropdownUploadState['nativeValue'] {

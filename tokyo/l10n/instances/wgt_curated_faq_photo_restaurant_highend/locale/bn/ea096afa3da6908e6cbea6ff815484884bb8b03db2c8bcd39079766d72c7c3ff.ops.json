@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "রিজার্ভেশন করুন"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "আমাদের USA বেড অ্যান্ড ব্রেকফাস্টের আকর্ষণ ও আরাম আবিষ্কার করুন।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Chef Pierre-এর FAQ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "আমরা বিভিন্ন ধরনের ডাইনিং অভিজ্ঞতা দিই—প্রাইভেট ডাইনিং, ওয়াইন টেস্টিং, এবং শেফ’স টেবিল অভিজ্ঞতা।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "কোন ধরনের ডাইনিং অভিজ্ঞতা পাওয়া যায়?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "রিজার্ভেশন করার পরামর্শ দেওয়া হয় এবং সর্বোচ্চ ৩০ দিন আগে পর্যন্ত করা যায়।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "রিজার্ভেশন নীতি কী?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "হ্যাঁ, আমাদের স্মার্ট ক্যাজুয়াল ড্রেস কোড আছে।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "কোনো ড্রেস কোড আছে কি?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "হ্যাঁ, আমরা রোমান্টিক ডাইনিং প্যাকেজ এবং গ্রুপ ডাইনিং অভিজ্ঞতা অফার করি।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "কোনো বিশেষ ডাইনিং প্যাকেজ আছে কি?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "ফি এড়াতে বাতিলকরণ ২৪ ঘণ্টা আগে করতে হবে।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "আপনাদের বাতিলকরণ নীতি কী?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "হ্যাঁ, আমরা ভেজিটেরিয়ান, ভেগান, গ্লুটেন-ফ্রি এবং নাট-ফ্রি অপশনসহ বিভিন্ন খাদ্যাভ্যাসের প্রয়োজন অনুযায়ী ব্যবস্থা করতে পারি।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "খাদ্যাভ্যাস অনুযায়ী কোনো ব্যবস্থা আছে কি?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "ডাইনিং অভিজ্ঞতা"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Neem contact op met Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Jouw vaste partner voor engineeringoplossingen en -diensten."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering FAQ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering is een wereldwijd bedrijf dat zich specialiseert in innovatieve engineeringoplossingen en -diensten."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Wat is Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Neem eenvoudig contact met ons op, bespreek je projectbehoeften en we begeleiden je bij onze diensten."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hoe begin ik met de diensten van Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, Ive Engineering biedt gratis consultaties aan om je projectvereisten beter te begrijpen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Is er een consultatie beschikbaar?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering levert vooruitstrevende oplossingen, ervaren professionals en maatwerkdiensten die aansluiten op jouw specifieke engineeringbehoeften."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Waarom zou ik voor Ive Engineering kiezen voor mijn engineeringbehoeften?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alle vragen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering hecht waarde aan innovatie, integriteit en excellentie in al zijn projecten en diensten."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Wat zijn de kernwaarden van Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Je kunt Ive Engineering bereiken via onze website, e-mail of het telefoonnummer op onze contactpagina."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Hoe kan ik contact opnemen met Ive Engineering?"
+    }
+  ],
+  "v": 1
+}

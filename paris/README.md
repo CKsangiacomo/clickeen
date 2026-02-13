@@ -7,6 +7,7 @@ Cloudflare Worker API service (dev).
 - `GET /api/healthz`
 - `GET /api/instances`
 - `GET /api/curated-instances`
+  - optional query: `includeConfig=0|1` (default `1`; set `0` for lightweight list responses without `config`)
 - `GET /api/workspaces/:workspaceId/instances`
 - `POST /api/workspaces/:workspaceId/instances`
 - `GET /api/workspaces/:workspaceId/instance/:publicId`

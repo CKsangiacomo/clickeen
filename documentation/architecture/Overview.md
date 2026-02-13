@@ -353,7 +353,7 @@ All widgets use shared modules from `tokyo/widgets/shared/`:
 | `header.js` | `CKHeader.applyHeader(state, widgetRoot)` | Shared header (title/subtitle/CTA) behavior + CSS vars |
 | `surface.js` | `CKSurface.applyCardWrapper(cardwrapper, scopeEl)` | Shared card wrapper vars (border/shadow/radius + inside-shadow layer placement) |
 | `stagePod.js` | `CKStagePod.applyStagePod(stage, pod, scopeEl)` | Stage/pod layout, padding, radius, alignment |
-| `typography.js` | `CKTypography.applyTypography(typography, root, roleConfig)` | Typography with dynamic Google Fonts (17 curated fonts) |
+| `typography.js` | `CKTypography.applyTypography(typography, root, roleConfig, runtimeContext?)` | Typography with dynamic Google Fonts (18 curated fonts), category-grouped picker in Bob, and locale/script fallback stacks resolved by family class (`sans`/`serif`) |
 | `branding.js` | *(self-executing)* | Injects "Made with Clickeen" backlink + reacts to state updates |
 
 ### Stage/Pod Architecture

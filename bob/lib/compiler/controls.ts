@@ -168,6 +168,7 @@ function parseControlOptions(args: {
   const options = parsed
     .map((opt) => {
       if (!opt || typeof opt !== 'object') return null;
+      if ('isGroupHeader' in opt && (opt as any).isGroupHeader === true) return null;
       const label = 'label' in opt ? String((opt as any).label) : '';
       const value = 'value' in opt ? String((opt as any).value) : '';
       if (!label && !value) return null;

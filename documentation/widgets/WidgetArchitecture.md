@@ -86,6 +86,7 @@ postMessage payload (Bob -> preview):
   type: 'ck:state-update',
   widgetname: 'faq',
   state: { /* full instance JSON */ },
+  locale: 'ja',
   device: 'desktop',
   theme: 'light'
 }
@@ -98,7 +99,7 @@ Location: `tokyo/widgets/shared/`
 
 | Module | Export | Purpose |
 | --- | --- | --- |
-| `typography.js` | `window.CKTypography.applyTypography(typo, el, roleMap)` | Apply typography roles |
+| `typography.js` | `window.CKTypography.applyTypography(typo, el, roleMap, runtimeContext?)` | Apply typography roles with locale/script-aware fallback stacks that respect the selected family class (`sans` vs `serif`); CJK locales use script-first stacks and tuned default line-height values for readability |
 | `stagePod.js` | `window.CKStagePod.applyStagePod(stage, pod, el)` | Apply Stage/Pod layout |
 | `fill.js` | `window.CKFill.*` | Fill normalization + color/gradient/image/video helpers |
 | `header.js` | `window.CKHeader.applyHeader(state, widgetRoot)` | Shared header block (title/subtitle/CTA) |

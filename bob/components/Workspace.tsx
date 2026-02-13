@@ -5,6 +5,7 @@ import { useWidgetSession } from '../lib/session/useWidgetSession';
 export function Workspace() {
   const session = useWidgetSession();
   const { compiled, instanceData, previewData, preview, setPreview, meta } = session;
+  const locale = session.locale.activeLocale;
   const device = preview.device;
   const theme = preview.theme;
   const host = preview.host;
@@ -17,10 +18,10 @@ export function Workspace() {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeHasState, setIframeHasState] = useState(false);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
-  const latestRef = useRef({ compiled, instanceData: runtimeData, device, theme });
+  const latestRef = useRef({ compiled, instanceData: runtimeData, device, theme, locale });
   useEffect(() => {
-    latestRef.current = { compiled, instanceData: runtimeData, device, theme };
-  }, [compiled, runtimeData, device, theme]);
+    latestRef.current = { compiled, instanceData: runtimeData, device, theme, locale };
+  }, [compiled, runtimeData, device, theme, locale]);
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';
@@ -76,6 +77,7 @@ export function Workspace() {
           type: 'ck:state-update',
           widgetname: nextCompiled.widgetname,
           state: snapshot.instanceData,
+          locale: snapshot.locale,
           device: snapshot.device,
           theme: snapshot.theme,
         },
@@ -104,12 +106,13 @@ export function Workspace() {
       type: 'ck:state-update',
       widgetname: compiled.widgetname,
       state: runtimeData,
+      locale,
       device,
       theme,
     };
 
     iframeWindow.postMessage(message, '*');
-  }, [hasWidget, compiled, runtimeData, device, theme, iframeLoaded]);
+  }, [hasWidget, compiled, runtimeData, locale, device, theme, iframeLoaded]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

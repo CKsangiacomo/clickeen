@@ -1,0 +1,217 @@
+{
+  "baseFingerprint": "4409bdca90edbb1fcae9aff7c928cc8991a16f322e222eb5b4b60b6075ecf5eb",
+  "baseUpdatedAt": "2026-02-12T02:06:51.338Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.nav.widgets",
+      "value": "উইজেটস"
+    },
+    {
+      "op": "set",
+      "path": "strings.nav.viewAllWidgets",
+      "value": "সব উইজেট দেখুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.overview",
+      "value": "সংক্ষিপ্ত বিবরণ"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.templates",
+      "value": "টেমপ্লেট"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.examples",
+      "value": "উদাহরণ"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.features",
+      "value": "ফিচার"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.pricing",
+      "value": "মূল্য"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.createFree",
+      "value": "ফ্রি তৈরি করুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.seeTemplates",
+      "value": "টেমপ্লেট দেখুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.common.comingSoon",
+      "value": "শিগগিরই আসছে।"
+    },
+    {
+      "op": "set",
+      "path": "strings.creative.useThisWidgetOnYourWebsite",
+      "value": "আপনার ওয়েবসাইটে এই উইজেট ব্যবহার করুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.title",
+      "value": "সব ভাষায় কথা বলার জন্যই ডিজাইন করা"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.subtitle",
+      "value": "একই কিউরেটেড উইজেট। তিনটি লোকেল। একটাই কোডপাথ।"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.share",
+      "value": "শেয়ার করুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copy",
+      "value": "লিংক কপি করুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copied",
+      "value": "কপি হয়েছে"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.more",
+      "value": "আরও"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sms",
+      "value": "এসএমএস"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.email",
+      "value": "ইমেইল"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.whatsapp",
+      "value": "WhatsApp"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.telegram",
+      "value": "Telegram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.signal",
+      "value": "Signal"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.messenger",
+      "value": "Messenger"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.wechat",
+      "value": "WeChat"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.line",
+      "value": "LINE"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.slack",
+      "value": "Slack"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.teams",
+      "value": "Teams"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.discord",
+      "value": "Discord"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.x",
+      "value": "X"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.linkedin",
+      "value": "LinkedIn"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.facebook",
+      "value": "Facebook"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.reddit",
+      "value": "Reddit"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.instagram",
+      "value": "Instagram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.tiktok",
+      "value": "TikTok"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.title",
+      "value": "Clickeen উইজেট"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.text",
+      "value": "আপনার ওয়েবসাইটে এই উইজেট ব্যবহার করুন।"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionMessageTitle",
+      "value": "মেসেজ হিসেবে এই উইজেট টেমপ্লেট পাঠান"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionSocialTitle",
+      "value": "সোশালে এই উইজেট টেমপ্লেট শেয়ার করুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.brand",
+      "value": "Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.pricing",
+      "value": "মূল্য"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.widgets",
+      "value": "উইজেটস"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.rights",
+      "value": "সমস্ত অধিকার সংরক্ষিত।"
+    }
+  ],
+  "v": 1
+}

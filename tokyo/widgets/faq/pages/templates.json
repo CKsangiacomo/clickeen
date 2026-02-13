@@ -22,25 +22,25 @@
       "items": [
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq_lightblurs_generic",
+            "publicId": "wgt_curated_faq_minimal_techpalette",
             "title": "Liquid Glass"
           }
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq_lightblurs_generic",
+            "publicId": "wgt_curated_faq_minimal_whitegreen_museum",
             "title": "Pure Canvas"
           }
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq_lightblurs_generic",
+            "publicId": "wgt_curated_faq_photo_restaurant_highend",
             "title": "Rebel Blocks"
           }
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq_lightblurs_generic",
+            "publicId": "wgt_curated_faq_photo_hospitality_westcoast",
             "title": "Enterprise Prime"
           }
         }
@@ -63,13 +63,13 @@
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq_photo_hospitality_westcoast",
+            "publicId": "wgt_curated_faq_photo_restaurant_highend",
             "title": "Pure Canvas"
           }
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq_minimal_techpalette",
+            "publicId": "wgt_curated_faq_photo_hospitality_westcoast",
             "title": "Rebel Blocks"
           }
         },

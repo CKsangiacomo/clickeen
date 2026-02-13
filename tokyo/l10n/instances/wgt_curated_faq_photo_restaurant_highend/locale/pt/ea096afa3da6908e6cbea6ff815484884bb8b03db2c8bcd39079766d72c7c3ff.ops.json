@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Fazer uma reserva"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Descubra o charme e o conforto do nosso bed and breakfast nos EUA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Perguntas frequentes do Chef Pierre"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Oferecemos várias experiências gastronómicas, incluindo refeições privadas, provas de vinhos e experiências à mesa do chef."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Que tipos de experiências gastronómicas estão disponíveis?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Recomendamos reserva, que pode ser feita com até 30 dias de antecedência."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Quais são as políticas de reserva?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Sim, temos um código de vestuário smart casual."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Existe um código de vestuário?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Sim, oferecemos pacotes de jantar romântico e experiências de refeições para grupos."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Oferecem algum pacote especial de refeições?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Os cancelamentos devem ser feitos com 24 horas de antecedência para evitar uma taxa."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Qual é a vossa política de cancelamento?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Sim, conseguimos atender a várias necessidades alimentares, incluindo opções vegetarianas, vegan, sem glúten e sem frutos secos."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Oferecem adaptações para restrições alimentares?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Experiência gastronómica"
+    }
+  ],
+  "v": 1
+}

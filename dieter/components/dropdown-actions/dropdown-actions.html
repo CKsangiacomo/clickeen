@@ -39,6 +39,9 @@
     </div>
     <div class="diet-popover__body diet-dropdown-actions__menu">
       {{#each options}}
+      {{#if isGroupHeader}}
+      <div class="diet-dropdown-actions__group-label overline-small" role="presentation">{{label}}</div>
+      {{else}}
       <button
         type="button"
         class="diet-btn-menuactions diet-dropdown-actions__menuaction{{#if selected}} is-selected{{/if}}"
@@ -51,7 +54,12 @@
         role="option"
         {{#if selected}}aria-selected="true" data-selected="true"{{/if}}
       >
-        <span class="diet-btn-menuactions__label {{bodyClass}}">{{label}}</span>
+        <span class="diet-btn-menuactions__label {{bodyClass}}">
+          <span class="diet-dropdown-actions__menuaction-text">{{label}}</span>
+          {{#if badge}}
+          <span class="diet-dropdown-actions__badge caption">{{badge}}</span>
+          {{/if}}
+        </span>
         <span class="diet-btn-menuactions__icon" aria-hidden="true">
           <span
             class="diet-dropdown-actions__check diet-btn-ic"
@@ -63,6 +71,7 @@
           </span>
         </span>
       </button>
+      {{/if}}
       {{/each}}
     </div>
     {{#if applyActions}}

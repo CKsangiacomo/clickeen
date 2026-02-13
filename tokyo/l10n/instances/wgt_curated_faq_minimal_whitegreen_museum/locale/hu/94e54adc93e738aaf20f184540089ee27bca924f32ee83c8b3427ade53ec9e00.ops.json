@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "94e54adc93e738aaf20f184540089ee27bca924f32ee83c8b3427ade53ec9e00",
+  "baseUpdatedAt": "2026-02-12T17:01:21.211684+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Foglalás"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Fedezze fel USA-beli panziónk hangulatát és kényelmét."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Soho Art Gallery GYIK"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Kortárs műveket mutatunk be <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">helyi</a> és i<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">nternacionális művészektől</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Milyen típusú műalkotások láthatók?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "A galéria keddtől vasárnapig 10:00–18:00 között tart nyitva."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Mikor van nyitva a galéria?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "A belépés ingyenes, de az adományokat szívesen fogadjuk."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Van belépődíj?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Igen, a műveket közvetlenül a galériában is megvásárolhatja."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Vásárolhatok műalkotást a galériában?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "A közelgő kiállításokról és programokról a weboldalunkon talál információt."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Vannak közelgő események?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Igen, térítés ellenében vállalunk zártkörű rendezvények lebonyolítását."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Tarthatok zártkörű eseményt a galériában?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Galéria-információk"
+    }
+  ],
+  "v": 1
+}

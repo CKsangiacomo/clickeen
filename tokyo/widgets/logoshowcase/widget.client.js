@@ -349,7 +349,6 @@
     const tileEl = isClickable ? document.createElement('a') : document.createElement('div');
     tileEl.className = 'ck-logoshowcase__logo';
     tileEl.setAttribute('data-role', 'logo');
-    tileEl.setAttribute('data-ck-surface', 'cardwrapper');
 
     const altText = String(logo.alt || '').trim();
     const nameText = String(logo.name || '').trim();
@@ -755,7 +754,7 @@
 
   let lastStripsSignature = '';
 
-  function applyState(state) {
+  function applyState(state, runtimeContext) {
     assertLogoShowcaseState(state);
 
     if (!window.CKStagePod?.applyStagePod) {
@@ -766,11 +765,16 @@
     if (!window.CKTypography?.applyTypography) {
       throw new Error('[LogoShowcase] Missing CKTypography.applyTypography');
     }
-    window.CKTypography.applyTypography(state.typography, lsRoot, {
-      title: { varKey: 'title' },
-      body: { varKey: 'body' },
-      button: { varKey: 'button' },
-    });
+    window.CKTypography.applyTypography(
+      state.typography,
+      lsRoot,
+      {
+        title: { varKey: 'title' },
+        body: { varKey: 'body' },
+        button: { varKey: 'button' },
+      },
+      { locale: runtimeContext && runtimeContext.locale, publicId: resolvedPublicId },
+    );
 
     lsRoot.setAttribute('data-type', state.type);
     if (state.type === 'carousel') {
@@ -806,7 +810,7 @@
     if (!msg || msg.type !== 'ck:state-update') return;
     if (msg.widgetname && msg.widgetname !== 'logoshowcase') return;
     if (resolvedPublicId && msg.publicId && msg.publicId !== resolvedPublicId) return;
-    applyState(msg.state);
+    applyState(msg.state, { locale: msg.locale });
   });
 
   const keyedPayload =
@@ -817,6 +821,9 @@
     typeof window.CK_WIDGETS[resolvedPublicId] === 'object'
       ? window.CK_WIDGETS[resolvedPublicId]
       : null;
+  const initialLocale =
+    (keyedPayload && typeof keyedPayload.locale === 'string' && keyedPayload.locale) ||
+    (window.CK_WIDGET && typeof window.CK_WIDGET.locale === 'string' ? window.CK_WIDGET.locale : '');
   const initialState = (keyedPayload && keyedPayload.state) || (window.CK_WIDGET && window.CK_WIDGET.state);
-  if (initialState) applyState(initialState);
+  if (initialState) applyState(initialState, { locale: initialLocale });
 })();

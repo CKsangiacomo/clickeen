@@ -3,6 +3,5 @@
   "coreui.actions.cancel": "Cancel",
   "coreui.actions.manageItems": "Manage {item}",
   "coreui.actions.reorderItems": "Reorder {item}",
-  "coreui.sections.itemLayout": "{item} layout",
   "coreui.actions.save": "Save"
 }

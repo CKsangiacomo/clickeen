@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ive Engineeringに問い合わせる"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "エンジニアリングのソリューションとサービスならお任せください。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering よくあるご質問"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineeringは、革新的なエンジニアリングのソリューションとサービスを提供するグローバル企業です。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ive Engineeringとは何ですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "まずはお気軽にご連絡ください。プロジェクトの要件をお伺いし、提供サービスをご案内します。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Ive Engineeringのサービス利用はどう始めればいいですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "はい。Ive Engineeringでは、プロジェクト要件をより深く理解するための無料相談をご用意しています。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "相談は可能ですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "最先端のソリューション、経験豊富なプロフェッショナル、そしてニーズに合わせたサービスで、貴社のエンジニアリング課題に最適な提案を行います。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "エンジニアリングの相談先として、なぜIve Engineeringを選ぶべきですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "すべての質問"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineeringは、あらゆるプロジェクトとサービスにおいて、イノベーション、誠実さ、卓越性を重視しています。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Ive Engineeringのコアバリューは何ですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Ive Engineeringへは、当社Webサイト、メール、またはお問い合わせページに記載の電話番号からご連絡いただけます。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Ive Engineeringにはどう連絡すればいいですか？"
+    }
+  ],
+  "v": 1
+}

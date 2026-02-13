@@ -10,17 +10,17 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "ABD’deki butik pansiyonumuzun sıcaklığını ve konforunu keşfedin."
+      "value": "ABD’deki oda kahvaltımızın sıcaklığını ve konforunu keşfedin."
     },
     {
       "op": "set",
       "path": "header.title",
-      "value": "Pansiyon SSS"
+      "value": "Oda Kahvaltı SSS"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Standart</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Deluxe</a> ve <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Süit</a> olmak üzere farklı oda seçenekleri sunuyoruz."
+      "value": "<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">standart</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> ve <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suit</a> dahil olmak üzere farklı oda seçenekleri sunuyoruz."
     },
     {
       "op": "set",

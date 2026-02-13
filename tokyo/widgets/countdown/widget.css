@@ -189,7 +189,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: var(--space-4) var(--space-5);
-  background: var(--ck-cardwrapper-inside-fade, none), var(--countdown-item-bg, var(--color-system-gray-5));
+  background: var(--countdown-item-bg, var(--color-system-gray-5));
   border: var(--ck-cardwrapper-border-width, 0px) solid var(--ck-cardwrapper-border-color, transparent);
   box-shadow: var(--ck-cardwrapper-shadow, none);
   border-radius: var(--ck-cardwrapper-radius, var(--control-radius-md));
@@ -211,7 +211,7 @@ body {
   justify-content: center;
   min-width: 72px;
   padding: var(--space-3) var(--space-4);
-  background: var(--ck-cardwrapper-inside-fade, none), var(--countdown-item-bg, var(--color-system-gray-5));
+  background: var(--countdown-item-bg, var(--color-system-gray-5));
   border: var(--ck-cardwrapper-border-width, 0px) solid var(--ck-cardwrapper-border-color, transparent);
   box-shadow: var(--ck-cardwrapper-shadow, none);
   border-radius: var(--ck-cardwrapper-radius, var(--control-radius-md));

@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "94e54adc93e738aaf20f184540089ee27bca924f32ee83c8b3427ade53ec9e00",
+  "baseUpdatedAt": "2026-02-12T17:01:21.211684+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Reserver"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Oppdag sjarmen og komforten ved vårt B&B i USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Soho Art Gallery – FAQ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Vi viser samtidskunst fra <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">lokale</a> og i<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">nternasjonale kunstnere</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Hvilke typer kunst vises?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Galleriet er åpent tirsdag til søndag fra kl. 10.00 til 18.00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hva er åpningstidene?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Inngangen er gratis, men donasjoner settes pris på."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Koster det noe å komme inn?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ja, du kan kjøpe kunst direkte fra galleriet."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Kan jeg kjøpe kunst i galleriet?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Sjekk nettsiden vår for informasjon om kommende utstillinger og arrangementer."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Er det noen kommende arrangementer?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Ja, vi tilbyr utleie til private arrangementer mot en avgift."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Kan jeg arrangere et privat event i galleriet?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Gallerinformasjon"
+    }
+  ],
+  "v": 1
+}

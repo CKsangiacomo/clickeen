@@ -41,7 +41,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Inbäddningsbara widgetar med inbyggda konverteringar."
+      "value": "Inbäddningsbara widgets med inbyggda konverteringar."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "För att Clickeen är en fantastisk ny plattform som gör webben vacker och enkel att använda."
+      "value": "För att Clickeen är en fantastisk ny plattform som gör webben snyggare och enklare att använda."
     }
   ]
 }

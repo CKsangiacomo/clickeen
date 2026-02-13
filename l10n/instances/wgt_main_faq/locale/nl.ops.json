@@ -6,12 +6,12 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "Veelgestelde Vragen"
+      "value": "Veelgestelde vragen"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Alle Vragen"
+      "value": "Alle vragen"
     },
     {
       "op": "set",
@@ -31,27 +31,27 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Waarom zou ik Clickeen gebruiken"
+      "value": "Waarom zou ik Clickeen gebruiken?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Ja, één actieve widget met kernfuncties."
+      "value": "Ja, één actieve widget met basisfuncties."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Insluitbare widgets met ingebouwde conversies."
+      "value": "Insluitbare widgets met conversies ingebouwd."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Kopieer de insluitcode en plak deze vóór </body> op je site."
+      "value": "Kopieer de insluitcode en plak deze op je site vóór </body>."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Omdat Clickeen een geweldig nieuw platform is om het web mooi en gebruiksvriendelijk te maken."
+      "value": "Omdat Clickeen een geweldig nieuw platform is om het web mooi én gebruiksvriendelijk te maken."
     }
   ]
 }

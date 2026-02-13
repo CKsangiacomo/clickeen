@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "立即预订"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "探索我们美国民宿的魅力与舒适。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Chef Pierre 常见问题"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "我们提供多种用餐体验，包括私人用餐、葡萄酒品鉴以及主厨餐桌体验。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "有哪些用餐体验可选？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "建议提前预订，最早可提前 30 天预订。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "预订政策是什么？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "是的，我们的着装要求为休闲正装（Smart Casual）。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "有着装要求吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "有的，我们提供浪漫用餐套餐以及团体用餐体验。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "有提供特别的用餐套餐吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "如需取消，请至少提前 24 小时操作，以免产生费用。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "取消政策是什么？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "是的，我们可满足多种饮食需求，包括素食、纯素、无麸质以及无坚果选项。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "可以提供饮食需求安排吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "用餐体验"
+    }
+  ],
+  "v": 1
+}

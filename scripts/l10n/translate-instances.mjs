@@ -138,6 +138,7 @@ async function translateWithSanFrancisco({ locale, chunkKey, baseFingerprint, ba
 }
 
 async function main() {
+  const translateAll = process.argv.includes('--all');
   await loadDotenvIfPresent();
 
   if (!(await fileExists(INSTANCES_ROOT))) {
@@ -187,10 +188,12 @@ async function main() {
         .map((d) => d.name.replace(/\.ops\.json$/, '').toLowerCase()),
     );
 
-    const missing = targetLocales.filter((l) => !existingLocales.has(l));
-    if (!missing.length) continue;
+    const localesToTranslate = (translateAll
+      ? targetLocales.filter((l) => l !== 'en')
+      : targetLocales.filter((l) => l !== 'en' && !existingLocales.has(l)));
+    if (!localesToTranslate.length) continue;
 
-    for (const locale of missing) {
+    for (const locale of localesToTranslate) {
       const translatableOps = ops.filter((op) => shouldTranslateOp({ publicId, op }));
       const items = translatableOps.map((op) => ({
         path: op.path,

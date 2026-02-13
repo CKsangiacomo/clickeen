@@ -2,10 +2,8 @@
 // Specs should declare defaults.typography.roles + defaults.typography.roleScales; the compiler injects the panel using this helper.
 
 import {
-  CK_TYPOGRAPHY_FONTS,
   CK_TYPOGRAPHY_WEIGHT_OPTIONS,
-  getCkTypographyAllowedStyles,
-  getCkTypographyAllowedWeights,
+  buildCkTypographyFamilyOptions,
 } from '../../edit/typography-fonts';
 
 export const TYPOGRAPHY_SIZE_OPTIONS = [
@@ -40,7 +38,7 @@ export const TYPOGRAPHY_LINE_HEIGHT_OPTIONS = [
   { label: 'Custom', value: 'custom' },
 ];
 
-function encodeOptions(options: Array<Record<string, string>>): string {
+function encodeOptions(options: unknown[]): string {
   return JSON.stringify(options).replace(/"/g, '&quot;');
 }
 
@@ -48,14 +46,7 @@ export function buildTypographyPanel(args: {
   roles: Record<string, unknown>;
   roleScales?: Record<string, Record<string, string>>;
 }): string[] {
-  const fontsOptions = encodeOptions(
-    CK_TYPOGRAPHY_FONTS.map((font) => ({
-      label: font,
-      value: font,
-      weights: getCkTypographyAllowedWeights(font).join(','),
-      styles: getCkTypographyAllowedStyles(font).join(','),
-    })),
-  );
+  const fontsOptions = encodeOptions(buildCkTypographyFamilyOptions());
   const sizeOptions = encodeOptions(TYPOGRAPHY_SIZE_OPTIONS);
   const styleOptions = encodeOptions(TYPOGRAPHY_STYLE_OPTIONS);
   const weightOptions = encodeOptions(CK_TYPOGRAPHY_WEIGHT_OPTIONS);

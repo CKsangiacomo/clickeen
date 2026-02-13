@@ -17,6 +17,10 @@ export type PragueStringsJob = {
 };
 
 type TranslationItem = { path: string; value: string };
+type RichtextAnchorSignature = {
+  href: string | null;
+  hasVisibleText: boolean;
+};
 
 type OpenAIResponse = {
   output_text?: string;
@@ -25,13 +29,16 @@ type OpenAIResponse = {
   model?: string;
 };
 
-const PROMPT_VERSION = 'l10n.prague.strings.v1@2026-01-15';
+const PROMPT_VERSION = 'l10n.prague.strings.v1@2026-02-13.2';
 const POLICY_VERSION = 'l10n.ops.v1';
 
 const MAX_ITEMS = 250;
 const MAX_INPUT_CHARS = 12000;
 const MAX_TOKENS = 2000;
 const TIMEOUT_MS = 90_000;
+const BRACE_PLACEHOLDER_PATTERN = /\{\{[^{}]+\}\}|\{[^{}]+\}/g;
+const COLON_PLACEHOLDER_PATTERN = /(^|[^a-zA-Z0-9_])(:[a-zA-Z_][a-zA-Z0-9_]*)/g;
+const HTML_TAG_PATTERN = /<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?>/g;
 
 export function isPragueStringsJob(value: unknown): value is PragueStringsJob {
   if (!isRecord(value)) return false;
@@ -76,12 +83,194 @@ function buildSystemPrompt(locale: string, chunkKey: string, blockKind: string):
     '- Preserve paths exactly.',
     '- Preserve URLs, emails, brand names, and placeholders (e.g. {token}, {{token}}, :token).',
     '- For richtext values, preserve existing HTML tags and attributes; do not add new tags.',
+    '- For richtext links, keep every meaningful linked phrase as linked text in output (do not move link text outside <a> tags).',
     '- Write in natural, native marketing copy for the target locale (not literal translation).',
     '- If literal wording sounds awkward, rewrite idiomatically while preserving intent.',
     '- Prefer concise, fluent, modern phrasing suitable for a product website.',
+    '- Preserve acronym style from source; do not add parenthetical expansions that are not present in source text.',
+    '- Especially for heading/title strings: keep standalone acronyms standalone (e.g. keep "B&B", do not expand to "B&B (...)").',
     '- Keep output length reasonably close to source unless natural phrasing requires otherwise.',
     '- Silently self-check fluency before final output.',
   ].join('\n');
+}
+
+function extractPlaceholders(value: string): string[] {
+  const placeholders: string[] = [];
+  const braceMatches = value.match(BRACE_PLACEHOLDER_PATTERN) ?? [];
+  placeholders.push(...braceMatches);
+  COLON_PLACEHOLDER_PATTERN.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = COLON_PLACEHOLDER_PATTERN.exec(value)) !== null) {
+    placeholders.push(match[2]);
+  }
+  return placeholders;
+}
+
+function buildCountMap(values: string[]): Map<string, number> {
+  const map = new Map<string, number>();
+  values.forEach((value) => {
+    const count = map.get(value) ?? 0;
+    map.set(value, count + 1);
+  });
+  return map;
+}
+
+function countMapsEqual(a: Map<string, number>, b: Map<string, number>): boolean {
+  if (a.size !== b.size) return false;
+  for (const [key, value] of a.entries()) {
+    if (b.get(key) !== value) return false;
+  }
+  return true;
+}
+
+function assertPlaceholderParity(args: {
+  source: string;
+  translated: string;
+  path: string;
+  provider: string;
+}) {
+  const sourceTokens = extractPlaceholders(args.source);
+  const translatedTokens = extractPlaceholders(args.translated);
+  const sourceMap = buildCountMap(sourceTokens);
+  const translatedMap = buildCountMap(translatedTokens);
+  if (!countMapsEqual(sourceMap, translatedMap)) {
+    throw new HttpError(502, {
+      code: 'PROVIDER_ERROR',
+      provider: args.provider,
+      message: `Placeholder mismatch at path: ${args.path}`,
+    });
+  }
+}
+
+function normalizeTagToken(raw: string): string | null {
+  const trimmed = raw.trim().toLowerCase();
+  const tagMatch = trimmed.match(/^<\s*(\/)?\s*([a-z][a-z0-9-]*)(?:\s[^>]*)?(\/)?\s*>$/i);
+  if (!tagMatch) return null;
+  const isClosing = Boolean(tagMatch[1]);
+  const tag = tagMatch[2];
+  const isSelfClosing = Boolean(tagMatch[3]) || trimmed.endsWith('/>');
+  if (isClosing) return `</${tag}>`;
+  if (isSelfClosing) return `<${tag}/>`;
+  return `<${tag}>`;
+}
+
+function extractTagTokens(value: string): string[] {
+  const matches = value.match(HTML_TAG_PATTERN) ?? [];
+  return matches
+    .map((tag) => normalizeTagToken(tag))
+    .filter((token): token is string => Boolean(token));
+}
+
+function assertRichtextTagParity(args: {
+  source: string;
+  translated: string;
+  path: string;
+  provider: string;
+}) {
+  const sourceTags = extractTagTokens(args.source);
+  const translatedTags = extractTagTokens(args.translated);
+  if (sourceTags.length !== translatedTags.length) {
+    throw new HttpError(502, {
+      code: 'PROVIDER_ERROR',
+      provider: args.provider,
+      message: `Richtext tag mismatch at path: ${args.path}`,
+    });
+  }
+  for (let i = 0; i < sourceTags.length; i += 1) {
+    if (sourceTags[i] !== translatedTags[i]) {
+      throw new HttpError(502, {
+        code: 'PROVIDER_ERROR',
+        provider: args.provider,
+        message: `Richtext tag mismatch at path: ${args.path}`,
+      });
+    }
+  }
+}
+
+function extractAnchorHref(attrs: string): string | null {
+  const match = attrs.match(/\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i);
+  const href = (match?.[1] ?? match?.[2] ?? match?.[3] ?? '').trim();
+  return href || null;
+}
+
+function stripHtmlToVisibleText(value: string): string {
+  return value.replace(/<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?>/g, '').replace(/&nbsp;/gi, ' ').trim();
+}
+
+function extractRichtextAnchors(value: string): RichtextAnchorSignature[] {
+  const anchors: RichtextAnchorSignature[] = [];
+  const pattern = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(value)) !== null) {
+    const attrs = match[1] ?? '';
+    const innerHtml = match[2] ?? '';
+    anchors.push({
+      href: extractAnchorHref(attrs),
+      hasVisibleText: stripHtmlToVisibleText(innerHtml).length > 0,
+    });
+  }
+  return anchors;
+}
+
+function assertRichtextAnchorParity(args: {
+  source: string;
+  translated: string;
+  path: string;
+  provider: string;
+}) {
+  const sourceAnchors = extractRichtextAnchors(args.source);
+  if (sourceAnchors.length === 0) return;
+  const translatedAnchors = extractRichtextAnchors(args.translated);
+  if (sourceAnchors.length !== translatedAnchors.length) {
+    throw new HttpError(502, {
+      code: 'PROVIDER_ERROR',
+      provider: args.provider,
+      message: `Richtext anchor count mismatch at path: ${args.path}`,
+    });
+  }
+  for (let i = 0; i < sourceAnchors.length; i += 1) {
+    if (sourceAnchors[i].hasVisibleText !== translatedAnchors[i].hasVisibleText) {
+      throw new HttpError(502, {
+        code: 'PROVIDER_ERROR',
+        provider: args.provider,
+        message: `Richtext anchor text mismatch at path: ${args.path}`,
+      });
+    }
+    if (sourceAnchors[i].href !== translatedAnchors[i].href) {
+      throw new HttpError(502, {
+        code: 'PROVIDER_ERROR',
+        provider: args.provider,
+        message: `Richtext anchor href mismatch at path: ${args.path}`,
+      });
+    }
+  }
+}
+
+function assertTranslationSafety(
+  expected: PragueStringsJob['items'][number],
+  translatedValue: string,
+  provider: string,
+) {
+  assertPlaceholderParity({
+    source: expected.value,
+    translated: translatedValue,
+    path: expected.path,
+    provider,
+  });
+  if (expected.type === 'richtext') {
+    assertRichtextTagParity({
+      source: expected.value,
+      translated: translatedValue,
+      path: expected.path,
+      provider,
+    });
+    assertRichtextAnchorParity({
+      source: expected.value,
+      translated: translatedValue,
+      path: expected.path,
+      provider,
+    });
+  }
 }
 
 function buildUserPrompt(items: PragueStringsJob['items']): string {
@@ -255,6 +444,7 @@ export async function executePragueStringsTranslate(job: PragueStringsJob, env: 
     if (!actual || actual.path !== expected.path || typeof actual.value !== 'string') {
       throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: `Unexpected path at index ${i}` });
     }
+    assertTranslationSafety(expected, actual.value, 'openai');
   }
 
   await writeLog(env, job, {

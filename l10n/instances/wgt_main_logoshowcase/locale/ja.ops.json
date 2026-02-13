@@ -6,12 +6,12 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "当社のクライアントの一部"
+      "value": "導入企業の一例"
     },
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "世界中のチームから信頼されています。"
+      "value": "世界中のチームに信頼されています。"
     },
     {
       "op": "set",

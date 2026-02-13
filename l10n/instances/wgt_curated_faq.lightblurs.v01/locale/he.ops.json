@@ -21,22 +21,22 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "איך מתקינים וידג'ט?"
+      "value": "איך מתקינים ווידג'ט?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "האם יש תוכנית חינמית?"
+      "value": "יש תוכנית חינמית?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "למה כדאי לי להשתמש ב-Clickeen"
+      "value": "למה כדאי לי להשתמש ב‑Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen הוא משהו שאיזבל ממש תאהב לעבוד בשבילו כשהיא תצטרך, ואני אכריח אותה."
+      "value": "Clickeen הוא משהו שאיזבל ממש תאהב לעבוד עליו כשצריך, ואני אכריח אותה."
     },
     {
       "op": "set",
@@ -46,12 +46,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "כן, וידג'ט פעיל אחד עם תכונות הליבה."
+      "value": "כן — ווידג'ט פעיל אחד עם תכונות הליבה."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "כי Clickeen היא פלטפורמה חדשה ומדהימה שהופכת את האינטרנט ליפה וקל לשימוש."
+      "value": "כי Clickeen היא פלטפורמה חדשה ומדהימה שהופכת את הרשת ליפה יותר וקלה יותר לשימוש."
     }
   ]
 }

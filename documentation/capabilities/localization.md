@@ -109,7 +109,9 @@ This is not “manual editing of locales” — it’s the expected artifact reg
 - Convergence gate for the canonical local stack: `pnpm gate:l10n` (polls `/publish/status` + `/l10n/status` for the curated/main instance set and fails on non-finite convergence, terminal failures, stalled blocked states, or freshness mismatches).
 - Cron retries include stale `queued`/`running` rows (stale in-flight recovery), and publish-triggered enqueue respects `failed.nextAttemptAt` backoff unless explicitly forced.
 - San Francisco runs the localization agent, translating only `changedPaths`, removing `removedPaths`, and emitting set-only ops.
-- San Francisco batches translation payloads and validates placeholder/tag parity before writing locale ops.
+- Localization prompts preserve source acronym style and must not introduce parenthetical acronym expansions absent from source (especially heading/title strings).
+- San Francisco batches translation payloads and validates placeholder/tag parity plus richtext anchor integrity (text-bearing link parity + href parity) before writing locale ops; richtext items that fail parity auto-fallback to segment translation.
+- San Francisco Prague-string translation (`/v1/l10n/translate`) also enforces placeholder/tag/anchor parity for richtext items before returning translated outputs.
 - San Francisco bypasses LLM calls for obvious non-linguistic literals (URLs, emails, numeric/symbol-only strings) and carries them through unchanged.
 - San Francisco reports job status back to Paris via `POST /api/l10n/jobs/report` (`running | succeeded | failed | superseded`).
 - Paris stores overlays in Supabase (`widget_instance_overlays`, layer + layer_key).

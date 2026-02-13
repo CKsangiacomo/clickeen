@@ -21,7 +21,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "什麼是 Clickeen？"
+      "value": "Clickeen 是什麼？"
     },
     {
       "op": "set",
@@ -31,27 +31,27 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "為什麼我應該使用 Clickeen？"
+      "value": "為什麼要使用 Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "是的，提供一個具有核心功能的主動小工具。"
+      "value": "有，提供 1 個啟用中的小工具與核心功能。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "內建轉換功能的嵌入式小工具。"
+      "value": "可嵌入的小工具，內建提升轉換的功能。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "複製嵌入代碼並貼到您網站 </body> 標籤之前。"
+      "value": "複製嵌入程式碼，並貼到你網站的 </body> 之前。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "因為 Clickeen 是一個令人驚嘆的新平台，能讓網路變得美觀且易於使用。"
+      "value": "因為 Clickeen 是全新又出色的平台，讓網路更美觀、也更好用。"
     }
   ]
 }

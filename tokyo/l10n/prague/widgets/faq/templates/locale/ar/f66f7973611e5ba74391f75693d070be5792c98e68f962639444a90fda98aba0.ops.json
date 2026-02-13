@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "قوالب الأسئلة الشائعة - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "ابدأ بقالب أسئلة شائعة مُصمَّم باحتراف. خصّص كل شيء."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ابدأ باتجاه تصميم واضح، لا بصفحة فارغة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "اختر نقطة انطلاق مصقولة لصفحة الأسئلة الشائعة، ثم اضبط كل تفصيلة لتناسب علامتك التجارية خلال دقائق."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "ودجت FAQ واحد. إطلالات بلا حدود."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "انتقل بين Liquid Glass وPure Canvas وRebel Blocks وEnterprise Prime دون إعادة كتابة إجاباتك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "الوضع الفاتح. الوضع الداكن. أي وضع—هو وضعك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "القوالب ليست سوى خط البداية. أنت من يتحكم بخط النهاية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "حرية التصميم، مدمجة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "من أنظمة التخطيط إلى اللمسات البصرية وأدوار الخطوط، يمكنك التحكم بكل قرار تصميمي داخل المحرّر."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "تخطيطات بطريقتك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "تحكم بالمظهر بلا حدود"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "دقة الطباعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "أنظمة تخطيط متعددة، وليست نظامًا واحدًا. بنية لكل نقطة توقف. حشوة ومسافات مستقلة لسطح المكتب/الجوال. تحكم بالأعمدة والتكديس والمحاذاة وإعادة التدفق—بدقة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "نصف قطر لكل زاوية. حدود بألوان مخصّصة. ظلال خارجية وداخلية (مرتبطة أو مستقلة لكل جانب). خلفيات متدرجة أو صور أو فيديو. سيطرة بصرية كاملة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "ستة أدوار مميزة (عنوان، نص، سؤال، جواب، زر، قسم). اختر من 17 خطًا من Google Fonts. الوزن والنمط والحجم—كلها قابلة للتخصيص لكل دور. مقاييس ديناميكية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "بدّل التخطيطات فورًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "اختر بين الأكورديون أو القائمة أو البطاقات وبدّل في أي وقت دون إعادة بناء المحتوى."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "تصميم التفاعل مُضمّن"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "حالات التحويم والنشط والتركيز مدمجة تلقائيًا، لتبدو صفحة الأسئلة الشائعة مصقولة على كل جهاز."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "خطوط تشعر بأنها صحيحة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "استخدم خطوطك أو مكتبتنا، ثم اضبط التسلسل الهرمي للعناوين والأسئلة والإجابات وأزرار الدعوة للإجراء."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "الوضع الداكن تلقائي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "تتكيّف صفحة الأسئلة الشائعة تلقائيًا مع الأقسام الفاتحة أو الداكنة ليبدو التصميم دائمًا طبيعيًا مع الموقع."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "إتقان الجوال"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "تبقى مناطق النقر والمسافات والتخطيط واضحة وسهلة القراءة على الهواتف والأجهزة اللوحية وشاشات سطح المكتب."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "أنشئ صفحة الأسئلة الشائعة في ثلاث خطوات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "اختر أسلوبًا للبدء، واضبط كل التفاصيل، وانشر نسخة واحدة تُحدَّث في كل مكان."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "اختر أسلوبًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "خصّص كل شيء"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "انشر"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "ابدأ من القالب الذي يناسب علامتك التجارية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "عدّل التخطيط والمسافات والألوان ونصف القطر والطباعة في المحرّر المرئي."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "أجرِ تحديثًا واحدًا وسيظهر مباشرةً في كل مكان تم تضمين صفحة الأسئلة الشائعة فيه."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "ابدأ بقالب. واجعله بطابعك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "اختر أي قالب، ومواءمه مع علامتك التجارية، وأطلق ودجت الأسئلة الشائعة مجانًا."
+    }
+  ],
+  "v": 1
+}

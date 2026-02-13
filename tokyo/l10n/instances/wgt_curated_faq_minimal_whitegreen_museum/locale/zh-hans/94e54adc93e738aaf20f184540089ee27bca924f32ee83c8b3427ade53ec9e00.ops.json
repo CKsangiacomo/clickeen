@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "94e54adc93e738aaf20f184540089ee27bca924f32ee83c8b3427ade53ec9e00",
+  "baseUpdatedAt": "2026-02-12T17:01:21.211684+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "立即预订"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "探索我们美国民宿的独特魅力与舒适体验。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Soho 艺术画廊常见问题"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "我们展出来自 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">本地</a> 和 i<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">国际艺术家</a> 的当代艺术作品。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "这里展示哪些类型的艺术作品？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "画廊营业时间为周二至周日 10:00–18:00。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "画廊开放时间是？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "入场免费，欢迎随喜捐赠。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "需要门票吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "可以，您可直接在画廊购买艺术作品。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "可以在画廊购买艺术品吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "请访问我们的网站，查看即将举办的展览与活动信息。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "近期有活动安排吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "可以，我们提供付费的私人活动包场服务。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "我可以在画廊举办私人活动吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "画廊信息"
+    }
+  ],
+  "v": 1
+}

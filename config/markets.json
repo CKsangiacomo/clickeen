@@ -10,7 +10,8 @@
         "tier1Locales": [
           "en",
           "es",
-          "zh-hans"
+          "zh-hans",
+          "ja"
         ],
         "regionalFallbackLocales": [
           "pt",

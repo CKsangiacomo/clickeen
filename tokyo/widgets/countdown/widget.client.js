@@ -501,7 +501,7 @@
   let hasDuringCta = false;
   let hasAfterLink = false;
 
-  function applyState(state) {
+  function applyState(state, runtimeContext) {
     assertCountdownState(state);
     currentState = state;
 
@@ -513,13 +513,18 @@
     if (!window.CKTypography?.applyTypography) {
       throw new Error('[Countdown] Missing CKTypography.applyTypography');
     }
-    window.CKTypography.applyTypography(state.typography, countdownRoot, {
-      title: { varKey: 'title' },
-      body: { varKey: 'body' },
-      timer: { varKey: 'timer' },
-      label: { varKey: 'label' },
-      button: { varKey: 'button' },
-    });
+    window.CKTypography.applyTypography(
+      state.typography,
+      countdownRoot,
+      {
+        title: { varKey: 'title' },
+        body: { varKey: 'body' },
+        timer: { varKey: 'timer' },
+        label: { varKey: 'label' },
+        button: { varKey: 'button' },
+      },
+      { locale: runtimeContext && runtimeContext.locale, publicId: resolvedPublicId },
+    );
 
     if (!window.CKHeader?.applyHeader) {
       throw new Error('[Countdown] Missing CKHeader.applyHeader');
@@ -829,7 +834,7 @@
     if (!data || typeof data !== 'object') return;
     if (data.type !== 'ck:state-update') return;
     if (data.widgetname !== 'countdown') return;
-    applyState(data.state);
+    applyState(data.state, { locale: data.locale });
     syncTimerScheduler(data.state);
   });
 
@@ -841,9 +846,12 @@
       typeof window.CK_WIDGETS[resolvedPublicId] === 'object'
       ? window.CK_WIDGETS[resolvedPublicId]
       : null;
+  const initialLocale =
+    (keyedPayload && typeof keyedPayload.locale === 'string' && keyedPayload.locale) ||
+    (window.CK_WIDGET && typeof window.CK_WIDGET.locale === 'string' ? window.CK_WIDGET.locale : '');
   const initialState = (keyedPayload && keyedPayload.state) || (window.CK_WIDGET && window.CK_WIDGET.state);
   if (initialState) {
-    applyState(initialState);
+    applyState(initialState, { locale: initialLocale });
     syncTimerScheduler(initialState);
   }
 })();

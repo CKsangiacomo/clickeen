@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "احجز الآن"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "اكتشف سحر وراحة دار الضيافة لدينا في الولايات المتحدة."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "الأسئلة الشائعة للشيف Pierre"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "نقدّم مجموعة متنوعة من تجارب الطعام، بما في ذلك العشاء الخاص، وتذوّق النبيذ، وتجربة طاولة الشيف."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "ما أنواع تجارب الطعام المتاحة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "نوصي بالحجز، ويمكن إجراؤه قبل الموعد حتى 30 يومًا."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "ما سياسات الحجز؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "نعم، لدينا قواعد لباس أنيق غير رسمي."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "هل توجد قواعد للّباس؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "نعم، نقدّم باقات عشاء رومانسية وتجارب عشاء للمجموعات."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "هل تقدّمون أي باقات طعام خاصة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "يجب إجراء الإلغاء قبل 24 ساعة لتجنب الرسوم."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "ما سياسة الإلغاء لديكم؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "نعم، يمكننا تلبية احتياجات غذائية متنوعة، بما في ذلك خيارات نباتية، ونباتية صرف، وخالية من الغلوتين، وخالية من المكسرات."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "هل توفّرون تلبية لاحتياجات غذائية خاصة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "تجربة الطعام"
+    }
+  ],
+  "v": 1
+}

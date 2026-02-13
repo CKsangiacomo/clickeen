@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Szablony FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Zacznij od profesjonalnie zaprojektowanego szablonu FAQ. Dostosuj wszystko."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Zacznij od kierunku stylistycznego, nie od pustego płótna."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Wybierz dopracowany punkt wyjścia dla FAQ, a potem w kilka minut dopasuj każdy detal do swojej marki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Jeden widget FAQ. Nieskończenie wiele odsłon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Przechodź między Liquid Glass, Pure Canvas, Rebel Blocks i Enterprise Prime bez przepisywania odpowiedzi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Tryb jasny. Tryb ciemny. Dowolny tryb — to Twój tryb."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Szablony to tylko linia startu. Ty kontrolujesz metę."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Wolność projektowania — wbudowana."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Od systemów układu, przez wykończenia wizualne, po role typografii — każdą decyzję projektową ustawisz w edytorze."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Układy po Twojemu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Kontrola wyglądu bez ograniczeń"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Precyzja typografii"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Wiele systemów układów, nie jeden. Struktura per breakpoint. Niezależny padding i odstępy dla desktopu i mobile. Kontroluj kolumny, układanie, wyrównanie i reflow — co do szczegółu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Promień zaokrąglenia dla każdego rogu. Obramowania z własnymi kolorami. Cienie na zewnątrz i wewnątrz (powiązane lub niezależne dla każdej strony). Tła gradientowe, obrazowe lub wideo. Pełna kontrola wizualna."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Sześć odrębnych ról (nagłówek, treść, pytanie, odpowiedź, przycisk, sekcja). Wybieraj spośród 17 czcionek Google Fonts. Grubość, styl, rozmiar — wszystko konfigurowalne dla każdej roli. Dynamiczne skale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Zmieniaj układ natychmiast"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Wybierz Accordion, List lub Cards i przełączaj w dowolnym momencie — bez przebudowy treści."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Projekt interakcji w pakiecie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Stany hover, active i focus są wbudowane, więc Twoje FAQ wygląda dopracowanie na każdym urządzeniu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografia, która pasuje"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Użyj własnych fontów lub naszej biblioteki i dopracuj hierarchię dla nagłówków, pytań, odpowiedzi i CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Tryb ciemny jest automatyczny"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Twoje FAQ automatycznie dopasowuje się do jasnych i ciemnych sekcji, więc zawsze wygląda jak natywna część strony."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Perfekcja na mobile"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Pola dotyku, odstępy i układ pozostają czytelne na telefonach, tabletach i ekranach desktopowych."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Zbuduj swoje FAQ w trzech krokach"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Wybierz styl startowy, dopracuj każdy detal i opublikuj jedną wersję, która aktualizuje się wszędzie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Wybierz styl"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Dostosuj wszystko"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Opublikuj"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Zacznij od szablonu, który pasuje do Twojej marki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Dopasuj układ, odstępy, kolory, zaokrąglenia i typografię w edytorze wizualnym."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Wprowadź jedną aktualizację, a od razu pojawi się wszędzie tam, gdzie osadzone jest Twoje FAQ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Zacznij od szablonu. Dopasuj go do siebie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Wybierz dowolny szablon, dopasuj go do swojej marki i uruchom widget FAQ za darmo."
+    }
+  ],
+  "v": 1
+}

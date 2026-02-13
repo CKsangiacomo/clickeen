@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Hubungi Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Andalan Anda untuk solusi dan layanan engineering."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering adalah perusahaan global yang berfokus pada solusi dan layanan engineering inovatif."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Apa itu Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Cukup hubungi kami, ceritakan kebutuhan proyek Anda, dan kami akan memandu Anda melalui pilihan layanan kami."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Bagaimana cara mulai menggunakan layanan Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ya, Ive Engineering menyediakan konsultasi gratis untuk memahami kebutuhan proyek Anda dengan lebih baik."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Apakah tersedia konsultasi?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering menghadirkan solusi terdepan, profesional berpengalaman, dan layanan yang disesuaikan untuk memenuhi kebutuhan engineering spesifik Anda."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Mengapa saya harus memilih Ive Engineering untuk kebutuhan engineering saya?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Semua Pertanyaan"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering menjunjung inovasi, integritas, dan keunggulan dalam setiap proyek dan layanannya."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Apa nilai-nilai inti Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Anda dapat menghubungi Ive Engineering melalui situs web kami, email, atau nomor telepon yang tercantum di halaman kontak kami."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Bagaimana cara menghubungi Ive Engineering?"
+    }
+  ],
+  "v": 1
+}

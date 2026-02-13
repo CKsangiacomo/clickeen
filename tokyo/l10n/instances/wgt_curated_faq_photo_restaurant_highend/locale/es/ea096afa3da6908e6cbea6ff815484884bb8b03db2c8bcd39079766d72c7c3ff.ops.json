@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Hacer una reserva"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Descubre el encanto y la comodidad de nuestro bed and breakfast en EE. UU."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Preguntas frecuentes de Chef Pierre"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ofrecemos una variedad de experiencias gastronómicas, como cenas privadas, catas de vino y experiencias en la mesa del chef."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "¿Qué tipos de experiencias gastronómicas están disponibles?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Se recomiendan las reservas y pueden hacerse con hasta 30 días de antelación."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "¿Cuáles son las políticas de reserva?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Sí, tenemos un código de vestimenta smart casual."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "¿Hay código de vestimenta?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Sí, ofrecemos paquetes de cena romántica y experiencias gastronómicas para grupos."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "¿Ofrecen paquetes gastronómicos especiales?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Las cancelaciones deben realizarse con 24 horas de antelación para evitar un cargo."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "¿Cuál es su política de cancelación?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Sí, podemos adaptarnos a diversas necesidades dietéticas, incluidas opciones vegetarianas, veganas, sin gluten y sin frutos secos."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "¿Ofrecen adaptaciones dietéticas?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Experiencia gastronómica"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontaktujte Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Vaše jistota pro inženýrská řešení a služby."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering je globální firma zaměřená na inovativní inženýrská řešení a služby."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Co je Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Stačí se nám ozvat, probrat potřeby vašeho projektu a my vás provedeme nabídkou našich služeb."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Jak začít využívat služby Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ano, Ive Engineering nabízí bezplatné konzultace, abychom lépe porozuměli požadavkům vašeho projektu."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Je k dispozici konzultace?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering přináší špičková řešení, zkušené odborníky a služby na míru, aby pokryla vaše konkrétní inženýrské potřeby."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Proč si pro své inženýrské potřeby vybrat Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Všechny otázky"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering si ve všech projektech a službách zakládá na inovaci, integritě a excelenci."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Jaké jsou klíčové hodnoty Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Ive Engineering můžete kontaktovat přes náš web, e-mailem nebo na telefonním čísle uvedeném na stránce Kontakt."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Jak mohu Ive Engineering kontaktovat?"
+    }
+  ],
+  "v": 1
+}

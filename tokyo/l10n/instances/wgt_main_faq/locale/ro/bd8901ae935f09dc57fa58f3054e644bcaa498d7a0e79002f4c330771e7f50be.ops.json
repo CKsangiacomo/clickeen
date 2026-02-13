@@ -5,7 +5,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen este o platformă SaaS de widgeturi care îți permite să adaugi pe site widgeturi finisate, cu performanță ridicată, în câteva minute—fără muncă serioasă de dezvoltare."
+      "value": "Clickeen este o platformă SaaS de widgeturi care îți permite să adaugi pe site widgeturi elegante, rapide și bine optimizate în doar câteva minute—fără muncă grea de dezvoltare."
     },
     {
       "op": "set",
@@ -15,12 +15,12 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "Widgeturi moderne pentru site-uri—se lansează rapid, se personalizează ușor și sunt create să te ajute să convertești."
+      "value": "Widgeturi moderne pentru site—rapid de lansat, ușor de personalizat și create pentru a crește conversiile."
     },
     {
       "op": "set",
       "path": "cta.label",
-      "value": "Contactați-ne"
+      "value": "Contactează-ne"
     },
     {
       "op": "set",
@@ -35,7 +35,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Creează widgetul, copiază codul de încorporare și lipește-l chiar înainte de tagul de închidere </body> pe site-ul tău. Modificările pe care le faci în Clickeen se actualizează instant."
+      "value": "Creează widgetul, copiază codul de embed și lipește-l chiar înainte de tagul de închidere </body> pe site-ul tău. Modificările pe care le faci în Clickeen se actualizează instant."
     },
     {
       "op": "set",
@@ -45,7 +45,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Lansează mai repede cu controale flexibile de design, actualizări simple și performanță fiabilă—astfel echipa ta poate livra îmbunătățiri fără să întrețină cod personalizat."
+      "value": "Lansezi mai repede cu controale flexibile de design, actualizări simple și performanță fiabilă—astfel echipa ta poate livra îmbunătățiri fără să întrețină cod personalizat."
     },
     {
       "op": "set",

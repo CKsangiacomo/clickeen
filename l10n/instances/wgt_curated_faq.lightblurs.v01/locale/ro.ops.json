@@ -36,12 +36,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen este ceva pentru care lui Isabel îi va plăcea foarte mult să lucreze atunci când trebuie, iar eu o voi forța."
+      "value": "Clickeen este ceva pentru care lui Isabel îi va plăcea foarte mult să lucreze atunci când va trebui, iar eu o voi obliga."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Copiază codul de încorporare și lipește-l înainte de </body> pe site-ul tău."
+      "value": "Copiază codul de embed și lipește-l înainte de </body> pe site-ul tău."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Pentru că Clickeen este o platformă nouă și uimitoare, care face web-ul frumos și ușor de folosit."
+      "value": "Pentru că Clickeen este o platformă nouă și grozavă, care face webul mai frumos și mai ușor de folosit."
     }
   ]
 }

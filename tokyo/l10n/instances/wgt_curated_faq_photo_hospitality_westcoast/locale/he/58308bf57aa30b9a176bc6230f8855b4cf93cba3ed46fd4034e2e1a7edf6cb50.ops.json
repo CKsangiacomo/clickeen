@@ -10,17 +10,17 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "גלו את הקסם והנוחות של ה-B&amp;B שלנו בארה״ב."
+      "value": "גלו את הקסם והנוחות של ה‑B&B שלנו בארה\"ב."
     },
     {
       "op": "set",
       "path": "header.title",
-      "value": "שאלות נפוצות על B&amp;B"
+      "value": "שאלות נפוצות על B&B"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "אנו מציעים מגוון חדרים, כולל <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">סטנדרט</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">דלוקס</a> , ו-<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">סוויטות</a> ."
+      "value": "אנחנו מציעים מגוון חדרים, כולל <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">סטנדרט</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">דלוקס</a> , ו<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">סוויטות</a> ."
     },
     {
       "op": "set",
@@ -30,7 +30,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "הצ׳ק-אין בשעה 15:00 והצ׳ק-אאוט עד 11:00."
+      "value": "צ׳ק-אין ב‑15:00 וצ׳ק-אאוט עד 11:00."
     },
     {
       "op": "set",
@@ -40,17 +40,17 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "כן, ארוחת בוקר חינם כלולה בשהייה."
+      "value": "כן, ארוחת בוקר ללא תשלום כלולה בשהות."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "האם ארוחת בוקר כלולה?"
+      "value": "האם ארוחת הבוקר כלולה?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "כן, אנחנו מציעים חבילות נופש רומנטיות <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">getaway packages</a> וכן <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">אפשרויות שמתאימות למשפחות.</a>"
+      "value": "כן, אנחנו מציעים <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">חבילות חופשה רומנטיות</a> וגם <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">אפשרויות ידידותיות למשפחות.</a>"
     },
     {
       "op": "set",

@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "เทมเพลต FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "เริ่มต้นด้วยเทมเพลต FAQ ที่ออกแบบโดยมืออาชีพ ปรับแต่งได้ทุกอย่าง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "เริ่มจากทิศทางสไตล์ ไม่ใช่ผืนผ้าใบว่างเปล่า"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "เลือกเทมเพลต FAQ ที่ดูดีเป็นจุดเริ่มต้น แล้วปรับทุกรายละเอียดให้เข้ากับแบรนด์ของคุณได้ภายในไม่กี่นาที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "วิดเจ็ต FAQ เดียว ลุคไม่รู้จบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "สลับไปมาระหว่าง Liquid Glass, Pure Canvas, Rebel Blocks และ Enterprise Prime ได้ โดยไม่ต้องเขียนคำตอบใหม่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "โหมดสว่าง โหมดมืด โหมดไหนก็ได้ นี่คือโหมดของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "เทมเพลตเป็นแค่เส้นสตาร์ต คุณเป็นคนกำหนดเส้นชัย"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "อิสระด้านดีไซน์ มีมาให้ในตัว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "ตั้งแต่ระบบเลย์เอาต์ งานฟินิช ไปจนถึงบทบาทตัวอักษร ทุกการตัดสินใจด้านดีไซน์ควบคุมได้ในเอ디เตอร์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "เลย์เอาต์ ในแบบของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "ควบคุมรูปลักษณ์ได้แบบไร้ขีดจำกัด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "ความแม่นยำด้านตัวอักษร"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "มีหลายระบบเลย์เอาต์ ไม่ใช่แค่แบบเดียว โครงสร้างแยกตามเบรกพอยต์ ระยะ padding และ spacing แยกเดสก์ท็อป/มือถือ ควบคุมคอลัมน์ การซ้อน การจัดแนว และการ reflow—ได้อย่างแม่นยำ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "กำหนดรัศมีมุมแยกแต่ละมุม เส้นขอบพร้อมสีที่กำหนดเอง เงาด้านนอกและด้านใน (ลิงก์กันหรือแยกตามแต่ละด้าน) พื้นหลังแบบไล่เฉด รูปภาพ หรือวิดีโอ อำนาจการควบคุมภาพล้วนๆ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "6 บทบาทที่แตกต่าง (หัวข้อ เนื้อหา คำถาม คำตอบ ปุ่ม เซกชัน) เลือกจาก Google Fonts 17 แบบ น้ำหนัก สไตล์ ขนาด—ปรับแต่งได้ตามบทบาท สเกลแบบไดนามิก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "สลับเลย์เอาต์ได้ทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "เลือก Accordion, List หรือ Cards แล้วสลับได้ทุกเมื่อโดยไม่ต้องสร้างคอนเทนต์ใหม่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "มี Interaction design ให้แล้ว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "มีสถานะ hover, active และ focus ในตัว เพื่อให้ FAQ ดูเนี้ยบในทุกอุปกรณ์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "ตัวอักษรที่ใช่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "ใช้ฟอนต์ของคุณเองหรือจากไลบรารีของเรา แล้วปรับลำดับชั้นให้ลงตัวสำหรับหัวข้อ คำถาม คำตอบ และ CTA"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "โหมดมืดทำงานอัตโนมัติ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "FAQ ของคุณปรับตามโซนสว่างหรือมืดโดยอัตโนมัติ เพื่อให้ดีไซน์ดูกลมกลืนเสมอ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "มือถือที่สมบูรณ์แบบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "ขนาดพื้นที่แตะ ระยะห่าง และเลย์เอาต์ยังอ่านง่ายทั้งบนมือถือ แท็บเล็ต และเดสก์ท็อป"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "สร้าง FAQ ของคุณใน 3 ขั้นตอน"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "เลือกสไตล์เริ่มต้น ปรับละเอียดทุกจุด แล้วเผยแพร่เวอร์ชันเดียวที่อัปเดตได้ทุกที่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "เลือกสไตล์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "ปรับแต่งได้ทุกอย่าง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "เผยแพร่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "เริ่มจากเทมเพลตที่เข้ากับแบรนด์ของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "ปรับเลย์เอาต์ ระยะห่าง สี มุมโค้ง และตัวอักษรได้ในเอ디เตอร์แบบภาพ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "อัปเดตครั้งเดียว แล้วขึ้นใช้งานทันทีทุกที่ที่ฝัง FAQ ของคุณไว้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "เริ่มจากเทมเพลต แล้วทำให้เป็นสไตล์คุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "เลือกเทมเพลตไหนก็ได้ ปรับให้เข้ากับแบรนด์ แล้วเปิดใช้งานวิดเจ็ต FAQ ได้ฟรี"
+    }
+  ],
+  "v": 1
+}

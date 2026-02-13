@@ -36,22 +36,22 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen là thứ mà Isabel sẽ rất thích làm việc cho nó khi cô ấy phải làm và tôi sẽ ép cô ấy."
+      "value": "Clickeen là thứ mà Isabel sẽ thật sự thích làm việc cho nó khi cần, còn tôi thì sẽ ép cô ấy."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Sao chép mã nhúng và dán nó trước </body> trên trang web của bạn."
+      "value": "Sao chép mã nhúng và dán vào trước </body> trên website của bạn."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Có, một widget đang hoạt động với các tính năng cốt lõi."
+      "value": "Có, 1 widget đang hoạt động với các tính năng cốt lõi."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Vì Clickeen là một nền tảng mới tuyệt vời giúp làm cho web đẹp và dễ sử dụng."
+      "value": "Vì Clickeen là một nền tảng mới tuyệt vời giúp web đẹp hơn và dễ dùng hơn."
     }
   ]
 }

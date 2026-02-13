@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ive Engineering से संपर्क करें"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "इंजीनियरिंग समाधानों और सेवाओं के लिए आपका भरोसेमंद साथी।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering FAQ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering एक वैश्विक फर्म है, जो नवोन्मेषी इंजीनियरिंग समाधानों और सेवाओं में विशेषज्ञता रखती है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ive Engineering क्या है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "बस हमसे संपर्क करें, अपनी प्रोजेक्ट ज़रूरतें साझा करें, और हम आपको हमारी सेवाओं के विकल्पों के बारे में मार्गदर्शन करेंगे।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "मैं Ive Engineering की सेवाएँ शुरू कैसे करूँ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "हाँ, Ive Engineering आपकी प्रोजेक्ट आवश्यकताओं को बेहतर समझने के लिए निःशुल्क परामर्श देता है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "क्या परामर्श उपलब्ध है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering अत्याधुनिक समाधान, अनुभवी विशेषज्ञ, और आपकी विशिष्ट इंजीनियरिंग ज़रूरतों के अनुसार तैयार सेवाएँ प्रदान करता है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "अपनी इंजीनियरिंग ज़रूरतों के लिए मुझे Ive Engineering क्यों चुनना चाहिए?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "सभी प्रश्न"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering अपने सभी प्रोजेक्ट्स और सेवाओं में नवाचार, ईमानदारी, और उत्कृष्टता को महत्व देता है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Ive Engineering के मूल मूल्य क्या हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "आप हमारी वेबसाइट, ईमेल, या संपर्क पेज पर दिए गए फ़ोन नंबर के माध्यम से Ive Engineering से संपर्क कर सकते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "मैं Ive Engineering से संपर्क कैसे कर सकता/सकती हूँ?"
+    }
+  ],
+  "v": 1
+}

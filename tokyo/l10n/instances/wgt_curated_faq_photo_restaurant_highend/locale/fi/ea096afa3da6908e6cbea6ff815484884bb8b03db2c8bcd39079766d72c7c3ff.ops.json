@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Tee varaus"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Tutustu USA:n bed & breakfast -majoituksemme viehätykseen ja mukavuuteen."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Chef Pierren usein kysytyt kysymykset"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Tarjoamme monipuolisia ruokailuelämyksiä, kuten yksityisruokailua, viininmaistajaisia ja Chef’s Table -elämyksiä."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Millaisia ruokailuelämyksiä on saatavilla?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Suosittelemme varausta, ja varauksen voi tehdä enintään 30 päivää etukäteen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Mitkä ovat varauskäytäntönne?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Kyllä, meillä on smart casual -pukukoodi."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Onko pukukoodia?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Kyllä, tarjoamme romanttisia ruokailupaketteja sekä ryhmäruokailuelämyksiä."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Tarjoatteko erityisiä ruokailupaketteja?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Peruutus on tehtävä vähintään 24 tuntia etukäteen, jotta vältytään maksulta."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Mikä on peruutuskäytäntönne?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Kyllä, voimme huomioida erilaiset ruokavaliot, kuten kasvis-, vegaani-, gluteenittomat ja pähkinättömät vaihtoehdot."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Onko saatavilla ruokavaliorajoitukset huomioivia vaihtoehtoja?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Ruokailuelämys"
+    }
+  ],
+  "v": 1
+}

@@ -36,22 +36,22 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen ist etwas, für das Isabel wirklich gerne arbeiten wird, wenn sie muss, und ich werde sie dazu zwingen."
+      "value": "Clickeen ist etwas, woran Isabel wirklich gern arbeiten wird, wenn sie muss – und ich werde sie dazu zwingen."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Kopieren Sie den Einbettungscode und fügen Sie ihn vor </body> auf Ihrer Website ein."
+      "value": "Kopiere den Embed-Code und füge ihn auf deiner Website vor </body> ein."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Ja, ein aktives Widget mit Kernfunktionen."
+      "value": "Ja – ein aktives Widget mit den wichtigsten Funktionen."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Weil Clickeen eine fantastische neue Plattform ist, um das Web schön und einfach zu bedienen zu machen."
+      "value": "Weil Clickeen eine großartige neue Plattform ist, die das Web schöner und einfacher nutzbar macht."
     }
   ]
 }

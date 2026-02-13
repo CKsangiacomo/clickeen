@@ -30,21 +30,703 @@
       "values": {
         "stage.background": {
           "type": "color",
-          "color": "var(--color-system-black)"
+          "color": "#2a2a2a"
         },
         "pod.background": {
           "type": "color",
           "color": "var(--color-system-black)"
         },
         "appearance.itemBackground": {
-          "type": "color",
-          "color": "var(--color-system-gray)"
+          "type": "none"
         },
         "appearance.textColor": {
           "type": "color",
+          "color": "var(--color-system-black)"
+        },
+        "typography.globalFamily": "Inter",
+        "stage.canvas": {
+          "mode": "viewport",
+          "width": 0,
+          "height": 0
+        },
+        "stage.shadow": {
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "alpha": 18,
+          "color": "#000000",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "stage.padding": {
+          "mobile": {
+            "all": 24,
+            "top": 24,
+            "left": 24,
+            "right": 24,
+            "bottom": 24,
+            "linked": true
+          },
+          "desktop": {
+            "all": 80,
+            "top": 120,
+            "left": 80,
+            "right": 80,
+            "bottom": 120,
+            "linked": false
+          }
+        },
+        "stage.alignment": "center",
+        "stage.insideShadow": {
+          "all": {
+            "x": -8,
+            "y": 0,
+            "blur": 24,
+            "alpha": 63,
+            "color": "#ffffff",
+            "inset": true,
+            "spread": 40,
+            "enabled": true
+          },
+          "top": {
+            "x": -8,
+            "y": 0,
+            "blur": 24,
+            "alpha": 63,
+            "color": "#ffffff",
+            "inset": true,
+            "spread": 40,
+            "enabled": false
+          },
+          "left": {
+            "x": -8,
+            "y": 0,
+            "blur": 24,
+            "alpha": 63,
+            "color": "#ffffff",
+            "inset": true,
+            "spread": 40,
+            "enabled": false
+          },
+          "layer": "below-content",
+          "right": {
+            "x": -8,
+            "y": 0,
+            "blur": 24,
+            "alpha": 63,
+            "color": "#ffffff",
+            "inset": true,
+            "spread": 40,
+            "enabled": false
+          },
+          "bottom": {
+            "x": -8,
+            "y": 31,
+            "blur": 120,
+            "alpha": 39,
+            "color": "#a2845e",
+            "inset": true,
+            "spread": 40,
+            "enabled": true
+          },
+          "linked": false
+        },
+        "pod.radius": "none",
+        "pod.shadow": {
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "alpha": 18,
+          "color": "#000000",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "pod.padding": {
+          "mobile": {
+            "all": 28,
+            "top": 28,
+            "left": 28,
+            "right": 28,
+            "bottom": 28,
+            "linked": true
+          },
+          "desktop": {
+            "all": 80,
+            "top": 80,
+            "left": 80,
+            "right": 80,
+            "bottom": 80,
+            "linked": true
+          }
+        },
+        "pod.radiusBL": "none",
+        "pod.radiusBR": "none",
+        "pod.radiusTL": "none",
+        "pod.radiusTR": "none",
+        "pod.widthMode": "full",
+        "pod.contentWidth": 960,
+        "pod.insideShadow": {
+          "all": {
+            "x": 0,
+            "y": 0,
+            "blur": 24,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": 0,
+            "enabled": false
+          },
+          "top": {
+            "x": 0,
+            "y": 12,
+            "blur": 16,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": -12,
+            "enabled": false
+          },
+          "left": {
+            "x": 12,
+            "y": 0,
+            "blur": 16,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": -12,
+            "enabled": false
+          },
+          "layer": "below-content",
+          "right": {
+            "x": -12,
+            "y": 0,
+            "blur": 16,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": -12,
+            "enabled": false
+          },
+          "bottom": {
+            "x": 0,
+            "y": -12,
+            "blur": 16,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": -12,
+            "enabled": false
+          },
+          "linked": true
+        },
+        "pod.radiusLinked": true,
+        "appearance.itemCard": {
+          "border": {
+            "color": "#e0f1e5",
+            "width": 1,
+            "enabled": true
+          },
+          "radius": "2xl",
+          "shadow": {
+            "x": 5,
+            "y": 14,
+            "blur": 16,
+            "alpha": 17,
+            "color": "#35aebb",
+            "inset": false,
+            "spread": 0,
+            "enabled": true
+          },
+          "radiusBL": "2xl",
+          "radiusBR": "2xl",
+          "radiusTL": "2xl",
+          "radiusTR": "2xl",
+          "radiusLinked": true
+        },
+        "appearance.ctaBorder": {
+          "enabled": true,
+          "width": 1,
+          "color": "#ffffff"
+        },
+        "appearance.ctaRadius": "md",
+        "appearance.iconColor": {
+          "type": "color",
+          "color": "#378049"
+        },
+        "appearance.iconStyle": "plus",
+        "appearance.linkStyle": "underline",
+        "appearance.podBorder": {
+          "color": "var(--color-system-gray-5)",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.cardwrapper": {
+          "border": {
+            "color": "#efeff2",
+            "width": 1,
+            "enabled": false
+          },
+          "radius": "none",
+          "shadow": {
+            "x": 7,
+            "y": 7,
+            "blur": 16,
+            "alpha": 13,
+            "color": "#007aff",
+            "inset": false,
+            "spread": 0,
+            "enabled": false
+          },
+          "radiusBL": "none",
+          "radiusBR": "none",
+          "radiusTL": "none",
+          "radiusTR": "none",
+          "insideShadow": {
+            "all": {
+              "x": 0,
+              "y": 0,
+              "blur": 24,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": 0,
+              "enabled": false
+            },
+            "top": {
+              "x": 0,
+              "y": 12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "left": {
+              "x": 12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "layer": "below-content",
+            "right": {
+              "x": -12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "bottom": {
+              "x": 0,
+              "y": -12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "linked": true
+          },
+          "radiusLinked": true
+        },
+        "appearance.ctaIconSize": 16,
+        "appearance.ctaTextColor": {
+          "type": "color",
           "color": "var(--color-system-white)"
         },
-        "typography.globalFamily": "Inter"
+        "appearance.ctaBackground": {
+          "type": "none"
+        },
+        "appearance.ctaSizePreset": "custom",
+        "appearance.linkTextColor": {
+          "type": "color",
+          "color": "var(--color-system-blue)"
+        },
+        "appearance.ctaPaddingBlock": 12,
+        "appearance.ctaPaddingInline": 16,
+        "appearance.ctaPaddingLinked": false,
+        "appearance.ctaIconSizePreset": "m",
+        "appearance.linkHighlightColor": {
+          "type": "color",
+          "color": "color-mix(in oklab, var(--color-system-blue), transparent 82%)"
+        },
+        "appearance.linkUnderlineColor": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "typography.roles": {
+          "body": {
+            "color": {
+              "type": "color",
+              "color": "#ffffff"
+            },
+            "family": "Inter",
+            "weight": "400",
+            "fontStyle": "normal",
+            "sizeCustom": 14,
+            "sizePreset": "m",
+            "trackingCustom": 0,
+            "trackingPreset": "normal",
+            "lineHeightCustom": 1.4,
+            "lineHeightPreset": "normal"
+          },
+          "title": {
+            "color": {
+              "type": "color",
+              "color": "#ffffff"
+            },
+            "family": "Inter",
+            "weight": "400",
+            "fontStyle": "normal",
+            "sizeCustom": "24px",
+            "sizePreset": "l",
+            "trackingCustom": 0,
+            "trackingPreset": "normal",
+            "lineHeightCustom": 1.4,
+            "lineHeightPreset": "normal"
+          },
+          "answer": {
+            "color": {
+              "type": "color",
+              "color": "#ffffff"
+            },
+            "family": "Inter",
+            "weight": "400",
+            "fontStyle": "normal",
+            "sizeCustom": "15px",
+            "sizePreset": "l",
+            "trackingCustom": 0,
+            "trackingPreset": "normal",
+            "lineHeightCustom": 1.4,
+            "lineHeightPreset": "tight"
+          },
+          "button": {
+            "color": "var(--color-system-white)",
+            "family": "Inter",
+            "weight": "600",
+            "fontStyle": "normal",
+            "sizeCustom": 14,
+            "sizePreset": "m",
+            "trackingCustom": 0,
+            "trackingPreset": "normal",
+            "lineHeightCustom": 1.4,
+            "lineHeightPreset": "normal"
+          },
+          "section": {
+            "color": {
+              "type": "color",
+              "color": "#ffffff"
+            },
+            "family": "Inter",
+            "weight": "600",
+            "fontStyle": "normal",
+            "sizeCustom": "14px",
+            "sizePreset": "m",
+            "trackingCustom": 0,
+            "trackingPreset": "normal",
+            "lineHeightCustom": 1.4,
+            "lineHeightPreset": "normal"
+          },
+          "question": {
+            "color": {
+              "type": "color",
+              "color": "#ffffff"
+            },
+            "family": "Inter",
+            "weight": "600",
+            "fontStyle": "normal",
+            "sizeCustom": "16px",
+            "sizePreset": "l",
+            "trackingCustom": 0,
+            "trackingPreset": "normal",
+            "lineHeightCustom": 1.4,
+            "lineHeightPreset": "normal"
+          }
+        },
+        "typography.roleScales": {
+          "body": {
+            "l": "22px",
+            "m": "18px",
+            "s": "16px",
+            "xl": "24px",
+            "xs": "14px"
+          },
+          "title": {
+            "l": "44px",
+            "m": "36px",
+            "s": "28px",
+            "xl": "60px",
+            "xs": "20px"
+          },
+          "answer": {
+            "l": "22px",
+            "m": "18px",
+            "s": "16px",
+            "xl": "24px",
+            "xs": "14px"
+          },
+          "button": {
+            "l": "20px",
+            "m": "18px",
+            "s": "15px",
+            "xl": "24px",
+            "xs": "13px"
+          },
+          "section": {
+            "l": "16px",
+            "m": "14px",
+            "s": "13px",
+            "xl": "18px",
+            "xs": "12px"
+          },
+          "question": {
+            "l": "22px",
+            "m": "18px",
+            "s": "16px",
+            "xl": "24px",
+            "xs": "14px"
+          }
+        },
+        "typography.roles.title.family": "Inter",
+        "typography.roles.title.sizePreset": "l",
+        "typography.roles.title.sizeCustom": "24px",
+        "typography.roles.title.fontStyle": "normal",
+        "typography.roles.title.weight": "400",
+        "typography.roles.title.color": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "typography.roles.title.lineHeightPreset": "normal",
+        "typography.roles.title.lineHeightCustom": 1.4,
+        "typography.roles.title.trackingPreset": "normal",
+        "typography.roles.title.trackingCustom": 0,
+        "typography.roles.body.family": "Inter",
+        "typography.roles.body.sizePreset": "m",
+        "typography.roles.body.sizeCustom": 14,
+        "typography.roles.body.fontStyle": "normal",
+        "typography.roles.body.weight": "400",
+        "typography.roles.body.color": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "typography.roles.body.lineHeightPreset": "normal",
+        "typography.roles.body.lineHeightCustom": 1.4,
+        "typography.roles.body.trackingPreset": "normal",
+        "typography.roles.body.trackingCustom": 0,
+        "typography.roles.section.family": "Inter",
+        "typography.roles.section.sizePreset": "m",
+        "typography.roles.section.sizeCustom": "14px",
+        "typography.roles.section.fontStyle": "normal",
+        "typography.roles.section.weight": "600",
+        "typography.roles.section.color": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "typography.roles.section.lineHeightPreset": "normal",
+        "typography.roles.section.lineHeightCustom": 1.4,
+        "typography.roles.section.trackingPreset": "normal",
+        "typography.roles.section.trackingCustom": 0,
+        "typography.roles.question.family": "Inter",
+        "typography.roles.question.sizePreset": "s",
+        "typography.roles.question.sizeCustom": "16px",
+        "typography.roles.question.fontStyle": "normal",
+        "typography.roles.question.weight": "600",
+        "typography.roles.question.color": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "typography.roles.question.lineHeightPreset": "normal",
+        "typography.roles.question.lineHeightCustom": 1.4,
+        "typography.roles.question.trackingPreset": "normal",
+        "typography.roles.question.trackingCustom": 0,
+        "typography.roles.answer.family": "Inter",
+        "typography.roles.answer.sizePreset": "m",
+        "typography.roles.answer.sizeCustom": "15px",
+        "typography.roles.answer.fontStyle": "normal",
+        "typography.roles.answer.weight": "400",
+        "typography.roles.answer.color": {
+          "type": "color",
+          "color": "rgba(255, 255, 255, 0.73)"
+        },
+        "typography.roles.answer.lineHeightPreset": "tight",
+        "typography.roles.answer.lineHeightCustom": 1.4,
+        "typography.roles.answer.trackingPreset": "normal",
+        "typography.roles.answer.trackingCustom": 0,
+        "typography.roles.button.family": "Inter",
+        "typography.roles.button.sizePreset": "m",
+        "typography.roles.button.sizeCustom": 14,
+        "typography.roles.button.fontStyle": "normal",
+        "typography.roles.button.weight": "600",
+        "typography.roles.button.color": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "typography.roles.button.lineHeightPreset": "normal",
+        "typography.roles.button.lineHeightCustom": 1.4,
+        "typography.roles.button.trackingPreset": "normal",
+        "typography.roles.button.trackingCustom": 0,
+        "pod.padding.desktop.linked": true,
+        "pod.padding.desktop.all": 80,
+        "pod.padding.desktop.top": 80,
+        "pod.padding.desktop.right": 80,
+        "pod.padding.desktop.bottom": 80,
+        "pod.padding.desktop.left": 80,
+        "pod.padding.mobile.linked": true,
+        "pod.padding.mobile.all": 28,
+        "pod.padding.mobile.top": 28,
+        "pod.padding.mobile.right": 28,
+        "pod.padding.mobile.bottom": 28,
+        "pod.padding.mobile.left": 28,
+        "stage.canvas.mode": "viewport",
+        "stage.canvas.width": 0,
+        "stage.canvas.height": 0,
+        "stage.padding.desktop.linked": false,
+        "stage.padding.desktop.all": 80,
+        "stage.padding.desktop.top": 60,
+        "stage.padding.desktop.right": 40,
+        "stage.padding.desktop.bottom": 60,
+        "stage.padding.desktop.left": 40,
+        "stage.padding.mobile.linked": true,
+        "stage.padding.mobile.all": 24,
+        "stage.padding.mobile.top": 24,
+        "stage.padding.mobile.right": 24,
+        "stage.padding.mobile.bottom": 24,
+        "stage.padding.mobile.left": 24,
+        "appearance.cardwrapper.radiusLinked": true,
+        "appearance.cardwrapper.radius": "none",
+        "appearance.cardwrapper.radiusTL": "none",
+        "appearance.cardwrapper.radiusTR": "none",
+        "appearance.cardwrapper.radiusBR": "none",
+        "appearance.cardwrapper.radiusBL": "none",
+        "appearance.cardwrapper.border": {
+          "color": "#efeff2",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.cardwrapper.shadow": {
+          "x": 7,
+          "y": 7,
+          "blur": 16,
+          "alpha": 13,
+          "color": "#007aff",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "stage.insideShadow.linked": true,
+        "stage.insideShadow.layer": "below-content",
+        "stage.insideShadow.all": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.top": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.right": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.bottom": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.left": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "pod.insideShadow.linked": true,
+        "pod.insideShadow.layer": "below-content",
+        "pod.insideShadow.all": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.top": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.right": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.bottom": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.left": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        }
       }
     },
     {
@@ -54,24 +736,369 @@
         "stage.background": {
           "type": "gradient",
           "gradient": {
-            "css": "linear-gradient(135deg, var(--color-system-blue), var(--color-system-purple))"
+            "kind": "linear",
+            "angle": 135,
+            "stops": [
+              {
+                "color": "#d256ce",
+                "position": 0.15332015222386347
+              },
+              {
+                "color": "#ffdede",
+                "position": 50
+              },
+              {
+                "color": "#227de1",
+                "position": 100
+              }
+            ]
           }
         },
         "pod.background": {
           "type": "gradient",
           "gradient": {
-            "css": "linear-gradient(135deg, var(--color-system-blue), var(--color-system-purple))"
+            "kind": "linear",
+            "angle": 258,
+            "stops": [
+              {
+                "color": "#eafffe",
+                "position": 0
+              },
+              {
+                "color": "#eeccff",
+                "position": 49.51526085261776
+              },
+              {
+                "color": "#b2faff",
+                "position": 100
+              }
+            ]
           }
         },
         "appearance.itemBackground": {
-          "type": "color",
-          "color": "var(--color-system-indigo)"
+          "type": "gradient",
+          "gradient": {
+            "kind": "linear",
+            "angle": 183,
+            "stops": [
+              {
+                "color": "#ffe6e4",
+                "position": 1.0619095427129492
+              },
+              {
+                "color": "#ffffff",
+                "position": 99.5444952199245
+              }
+            ]
+          }
         },
         "appearance.textColor": {
           "type": "color",
           "color": "var(--color-system-white)"
         },
-        "typography.globalFamily": "Montserrat"
+        "typography.globalFamily": "Montserrat",
+        "typography.roles.title.family": "Montserrat",
+        "typography.roles.title.sizePreset": "l",
+        "typography.roles.title.sizeCustom": "24px",
+        "typography.roles.title.fontStyle": "normal",
+        "typography.roles.title.weight": "400",
+        "typography.roles.title.color": {
+          "type": "color",
+          "color": "#212121"
+        },
+        "typography.roles.title.lineHeightPreset": "normal",
+        "typography.roles.title.lineHeightCustom": 1.4,
+        "typography.roles.title.trackingPreset": "normal",
+        "typography.roles.title.trackingCustom": 0,
+        "typography.roles.body.family": "Montserrat",
+        "typography.roles.body.sizePreset": "m",
+        "typography.roles.body.sizeCustom": 14,
+        "typography.roles.body.fontStyle": "normal",
+        "typography.roles.body.weight": "400",
+        "typography.roles.body.color": {
+          "type": "color",
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)"
+        },
+        "typography.roles.body.lineHeightPreset": "normal",
+        "typography.roles.body.lineHeightCustom": 1.4,
+        "typography.roles.body.trackingPreset": "normal",
+        "typography.roles.body.trackingCustom": 0,
+        "typography.roles.section.family": "Montserrat",
+        "typography.roles.section.sizePreset": "m",
+        "typography.roles.section.sizeCustom": "14px",
+        "typography.roles.section.fontStyle": "normal",
+        "typography.roles.section.weight": "600",
+        "typography.roles.section.color": {
+          "type": "color",
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
+        },
+        "typography.roles.section.lineHeightPreset": "normal",
+        "typography.roles.section.lineHeightCustom": 1.4,
+        "typography.roles.section.trackingPreset": "normal",
+        "typography.roles.section.trackingCustom": 0,
+        "typography.roles.question.family": "Montserrat",
+        "typography.roles.question.sizePreset": "s",
+        "typography.roles.question.sizeCustom": "16px",
+        "typography.roles.question.fontStyle": "normal",
+        "typography.roles.question.weight": "600",
+        "typography.roles.question.color": {
+          "type": "color",
+          "color": "var(--color-system-black)"
+        },
+        "typography.roles.question.lineHeightPreset": "normal",
+        "typography.roles.question.lineHeightCustom": 1.4,
+        "typography.roles.question.trackingPreset": "normal",
+        "typography.roles.question.trackingCustom": 0,
+        "typography.roles.answer.family": "Montserrat",
+        "typography.roles.answer.sizePreset": "m",
+        "typography.roles.answer.sizeCustom": "15px",
+        "typography.roles.answer.fontStyle": "normal",
+        "typography.roles.answer.weight": "400",
+        "typography.roles.answer.color": {
+          "type": "color",
+          "color": "rgba(33, 33, 33, 0.78)"
+        },
+        "typography.roles.answer.lineHeightPreset": "tight",
+        "typography.roles.answer.lineHeightCustom": 1.4,
+        "typography.roles.answer.trackingPreset": "normal",
+        "typography.roles.answer.trackingCustom": 0,
+        "typography.roles.button.family": "Montserrat",
+        "typography.roles.button.sizePreset": "m",
+        "typography.roles.button.sizeCustom": 14,
+        "typography.roles.button.fontStyle": "normal",
+        "typography.roles.button.weight": "600",
+        "typography.roles.button.color": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "typography.roles.button.lineHeightPreset": "normal",
+        "typography.roles.button.lineHeightCustom": 1.4,
+        "typography.roles.button.trackingPreset": "normal",
+        "typography.roles.button.trackingCustom": 0,
+        "pod.widthMode": "full",
+        "pod.contentWidth": 960,
+        "pod.padding.desktop.linked": true,
+        "pod.padding.desktop.all": 80,
+        "pod.padding.desktop.top": 80,
+        "pod.padding.desktop.right": 80,
+        "pod.padding.desktop.bottom": 80,
+        "pod.padding.desktop.left": 80,
+        "pod.padding.mobile.linked": true,
+        "pod.padding.mobile.all": 28,
+        "pod.padding.mobile.top": 28,
+        "pod.padding.mobile.right": 28,
+        "pod.padding.mobile.bottom": 28,
+        "pod.padding.mobile.left": 28,
+        "stage.alignment": "center",
+        "stage.canvas.mode": "viewport",
+        "stage.canvas.width": 0,
+        "stage.canvas.height": 0,
+        "stage.padding.desktop.linked": false,
+        "stage.padding.desktop.all": 80,
+        "stage.padding.desktop.top": 60,
+        "stage.padding.desktop.right": 40,
+        "stage.padding.desktop.bottom": 60,
+        "stage.padding.desktop.left": 40,
+        "stage.padding.mobile.linked": true,
+        "stage.padding.mobile.all": 24,
+        "stage.padding.mobile.top": 24,
+        "stage.padding.mobile.right": 24,
+        "stage.padding.mobile.bottom": 24,
+        "stage.padding.mobile.left": 24,
+        "appearance.iconStyle": "plus",
+        "appearance.iconColor": {
+          "type": "color",
+          "color": "#378049"
+        },
+        "appearance.ctaSizePreset": "custom",
+        "appearance.ctaPaddingLinked": false,
+        "appearance.ctaPaddingInline": 16,
+        "appearance.ctaPaddingBlock": 12,
+        "appearance.ctaBackground": {
+          "type": "color",
+          "color": "#212121"
+        },
+        "appearance.ctaTextColor": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "appearance.ctaBorder": {
+          "color": "var(--color-system-blue)",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.ctaRadius": "md",
+        "appearance.ctaIconSizePreset": "m",
+        "appearance.ctaIconSize": 16,
+        "appearance.linkStyle": "underline",
+        "appearance.linkUnderlineColor": {
+          "type": "color",
+          "color": "var(--color-system-blue)"
+        },
+        "appearance.linkHighlightColor": {
+          "type": "color",
+          "color": "color-mix(in oklab, var(--color-system-blue), transparent 82%)"
+        },
+        "appearance.linkTextColor": {
+          "type": "color",
+          "color": "var(--color-system-blue)"
+        },
+        "appearance.cardwrapper.radiusLinked": true,
+        "appearance.cardwrapper.radius": "none",
+        "appearance.cardwrapper.radiusTL": "none",
+        "appearance.cardwrapper.radiusTR": "none",
+        "appearance.cardwrapper.radiusBR": "none",
+        "appearance.cardwrapper.radiusBL": "none",
+        "appearance.cardwrapper.border": {
+          "color": "#efeff2",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.cardwrapper.shadow": {
+          "x": 7,
+          "y": 7,
+          "blur": 16,
+          "alpha": 13,
+          "color": "#007aff",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "stage.shadow": {
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "alpha": 18,
+          "color": "#000000",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "stage.insideShadow.linked": true,
+        "stage.insideShadow.layer": "below-content",
+        "stage.insideShadow.all": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.top": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.right": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.bottom": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.left": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "appearance.podBorder": {
+          "color": "var(--color-system-gray-5)",
+          "width": 1,
+          "enabled": false
+        },
+        "pod.shadow": {
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "alpha": 18,
+          "color": "#000000",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "pod.insideShadow.linked": true,
+        "pod.insideShadow.layer": "below-content",
+        "pod.insideShadow.all": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.top": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.right": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.bottom": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.left": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.radiusLinked": true,
+        "pod.radius": "none",
+        "pod.radiusTL": "none",
+        "pod.radiusTR": "none",
+        "pod.radiusBR": "none",
+        "pod.radiusBL": "none"
       }
     },
     {
@@ -85,20 +1112,319 @@
           }
         },
         "pod.background": {
-          "type": "gradient",
-          "gradient": {
-            "css": "linear-gradient(135deg, var(--color-system-blue-5), var(--color-system-purple-4))"
-          }
+          "type": "color",
+          "color": "#fffafa"
         },
         "appearance.itemBackground": {
-          "type": "color",
-          "color": "var(--color-system-white)"
+          "type": "none"
         },
         "appearance.textColor": {
           "type": "color",
           "color": "var(--color-system-indigo-contrast)"
         },
-        "typography.globalFamily": "Lora"
+        "typography.globalFamily": "Lora",
+        "typography.roles.title.family": "Lora",
+        "typography.roles.title.sizePreset": "l",
+        "typography.roles.title.sizeCustom": "24px",
+        "typography.roles.title.fontStyle": "normal",
+        "typography.roles.title.weight": "400",
+        "typography.roles.title.color": {
+          "type": "color",
+          "color": "#636295"
+        },
+        "typography.roles.title.lineHeightPreset": "normal",
+        "typography.roles.title.lineHeightCustom": 1.4,
+        "typography.roles.title.trackingPreset": "normal",
+        "typography.roles.title.trackingCustom": 0,
+        "typography.roles.body.family": "Lora",
+        "typography.roles.body.sizePreset": "m",
+        "typography.roles.body.sizeCustom": 14,
+        "typography.roles.body.fontStyle": "normal",
+        "typography.roles.body.weight": "400",
+        "typography.roles.body.color": {
+          "type": "color",
+          "color": "rgba(99, 98, 149, 0.55)"
+        },
+        "typography.roles.body.lineHeightPreset": "normal",
+        "typography.roles.body.lineHeightCustom": 1.4,
+        "typography.roles.body.trackingPreset": "normal",
+        "typography.roles.body.trackingCustom": 0,
+        "typography.roles.section.family": "Lora",
+        "typography.roles.section.sizePreset": "m",
+        "typography.roles.section.sizeCustom": "14px",
+        "typography.roles.section.fontStyle": "normal",
+        "typography.roles.section.weight": "600",
+        "typography.roles.section.color": {
+          "type": "color",
+          "color": "rgba(99, 98, 149, 0.75)"
+        },
+        "typography.roles.section.lineHeightPreset": "normal",
+        "typography.roles.section.lineHeightCustom": 1.4,
+        "typography.roles.section.trackingPreset": "normal",
+        "typography.roles.section.trackingCustom": 0,
+        "typography.roles.question.family": "Lora",
+        "typography.roles.question.sizePreset": "s",
+        "typography.roles.question.sizeCustom": "16px",
+        "typography.roles.question.fontStyle": "normal",
+        "typography.roles.question.weight": "600",
+        "typography.roles.question.color": {
+          "type": "color",
+          "color": "#636295"
+        },
+        "typography.roles.question.lineHeightPreset": "normal",
+        "typography.roles.question.lineHeightCustom": 1.4,
+        "typography.roles.question.trackingPreset": "normal",
+        "typography.roles.question.trackingCustom": 0,
+        "typography.roles.answer.family": "Lora",
+        "typography.roles.answer.sizePreset": "m",
+        "typography.roles.answer.sizeCustom": "15px",
+        "typography.roles.answer.fontStyle": "normal",
+        "typography.roles.answer.weight": "400",
+        "typography.roles.answer.color": {
+          "type": "color",
+          "color": "rgba(33, 33, 33, 0.78)"
+        },
+        "typography.roles.answer.lineHeightPreset": "tight",
+        "typography.roles.answer.lineHeightCustom": 1.4,
+        "typography.roles.answer.trackingPreset": "normal",
+        "typography.roles.answer.trackingCustom": 0,
+        "typography.roles.button.family": "Lora",
+        "typography.roles.button.sizePreset": "m",
+        "typography.roles.button.sizeCustom": 14,
+        "typography.roles.button.fontStyle": "normal",
+        "typography.roles.button.weight": "600",
+        "typography.roles.button.color": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "typography.roles.button.lineHeightPreset": "normal",
+        "typography.roles.button.lineHeightCustom": 1.4,
+        "typography.roles.button.trackingPreset": "normal",
+        "typography.roles.button.trackingCustom": 0,
+        "pod.widthMode": "full",
+        "pod.contentWidth": 960,
+        "pod.padding.desktop.linked": true,
+        "pod.padding.desktop.all": 80,
+        "pod.padding.desktop.top": 80,
+        "pod.padding.desktop.right": 80,
+        "pod.padding.desktop.bottom": 80,
+        "pod.padding.desktop.left": 80,
+        "pod.padding.mobile.linked": true,
+        "pod.padding.mobile.all": 28,
+        "pod.padding.mobile.top": 28,
+        "pod.padding.mobile.right": 28,
+        "pod.padding.mobile.bottom": 28,
+        "pod.padding.mobile.left": 28,
+        "stage.alignment": "center",
+        "stage.canvas.mode": "viewport",
+        "stage.canvas.width": 0,
+        "stage.canvas.height": 0,
+        "stage.padding.desktop.linked": false,
+        "stage.padding.desktop.all": 80,
+        "stage.padding.desktop.top": 60,
+        "stage.padding.desktop.right": 40,
+        "stage.padding.desktop.bottom": 60,
+        "stage.padding.desktop.left": 40,
+        "stage.padding.mobile.linked": true,
+        "stage.padding.mobile.all": 24,
+        "stage.padding.mobile.top": 24,
+        "stage.padding.mobile.right": 24,
+        "stage.padding.mobile.bottom": 24,
+        "stage.padding.mobile.left": 24,
+        "appearance.iconStyle": "plus",
+        "appearance.iconColor": {
+          "type": "color",
+          "color": "#378049"
+        },
+        "appearance.ctaSizePreset": "custom",
+        "appearance.ctaPaddingLinked": false,
+        "appearance.ctaPaddingInline": 16,
+        "appearance.ctaPaddingBlock": 12,
+        "appearance.ctaBackground": {
+          "type": "color",
+          "color": "#212121"
+        },
+        "appearance.ctaTextColor": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "appearance.ctaBorder": {
+          "color": "var(--color-system-blue)",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.ctaRadius": "md",
+        "appearance.ctaIconSizePreset": "m",
+        "appearance.ctaIconSize": 16,
+        "appearance.linkStyle": "underline",
+        "appearance.linkUnderlineColor": {
+          "type": "color",
+          "color": "var(--color-system-blue)"
+        },
+        "appearance.linkHighlightColor": {
+          "type": "color",
+          "color": "color-mix(in oklab, var(--color-system-blue), transparent 82%)"
+        },
+        "appearance.linkTextColor": {
+          "type": "color",
+          "color": "var(--color-system-blue)"
+        },
+        "appearance.cardwrapper.radiusLinked": true,
+        "appearance.cardwrapper.radius": "none",
+        "appearance.cardwrapper.radiusTL": "none",
+        "appearance.cardwrapper.radiusTR": "none",
+        "appearance.cardwrapper.radiusBR": "none",
+        "appearance.cardwrapper.radiusBL": "none",
+        "appearance.cardwrapper.border": {
+          "color": "#efeff2",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.cardwrapper.shadow": {
+          "x": 7,
+          "y": 7,
+          "blur": 16,
+          "alpha": 13,
+          "color": "#007aff",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "stage.shadow": {
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "alpha": 18,
+          "color": "#000000",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "stage.insideShadow.linked": true,
+        "stage.insideShadow.layer": "below-content",
+        "stage.insideShadow.all": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.top": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.right": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.bottom": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.left": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "appearance.podBorder": {
+          "color": "var(--color-system-gray-5)",
+          "width": 1,
+          "enabled": false
+        },
+        "pod.shadow": {
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "alpha": 18,
+          "color": "#000000",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "pod.insideShadow.linked": true,
+        "pod.insideShadow.layer": "below-content",
+        "pod.insideShadow.all": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.top": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.right": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.bottom": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.left": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.radiusLinked": true,
+        "pod.radius": "none",
+        "pod.radiusTL": "none",
+        "pod.radiusTR": "none",
+        "pod.radiusBR": "none",
+        "pod.radiusBL": "none"
       }
     },
     {
@@ -115,13 +1441,315 @@
         },
         "appearance.itemBackground": {
           "type": "color",
-          "color": "var(--color-system-brown)"
+          "color": "#212121"
         },
         "appearance.textColor": {
           "type": "color",
           "color": "var(--color-system-black)"
         },
-        "typography.globalFamily": "Permanent Marker"
+        "typography.globalFamily": "Permanent Marker",
+        "typography.roles.title.family": "Permanent Marker",
+        "typography.roles.title.sizePreset": "l",
+        "typography.roles.title.sizeCustom": "24px",
+        "typography.roles.title.fontStyle": "normal",
+        "typography.roles.title.weight": "400",
+        "typography.roles.title.color": {
+          "type": "color",
+          "color": "#212121"
+        },
+        "typography.roles.title.lineHeightPreset": "normal",
+        "typography.roles.title.lineHeightCustom": 1.4,
+        "typography.roles.title.trackingPreset": "normal",
+        "typography.roles.title.trackingCustom": 0,
+        "typography.roles.body.family": "Permanent Marker",
+        "typography.roles.body.sizePreset": "m",
+        "typography.roles.body.sizeCustom": 14,
+        "typography.roles.body.fontStyle": "normal",
+        "typography.roles.body.weight": "400",
+        "typography.roles.body.color": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "typography.roles.body.lineHeightPreset": "normal",
+        "typography.roles.body.lineHeightCustom": 1.4,
+        "typography.roles.body.trackingPreset": "normal",
+        "typography.roles.body.trackingCustom": 0,
+        "typography.roles.section.family": "Permanent Marker",
+        "typography.roles.section.sizePreset": "m",
+        "typography.roles.section.sizeCustom": "14px",
+        "typography.roles.section.fontStyle": "normal",
+        "typography.roles.section.weight": "400",
+        "typography.roles.section.color": {
+          "type": "color",
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
+        },
+        "typography.roles.section.lineHeightPreset": "normal",
+        "typography.roles.section.lineHeightCustom": 1.4,
+        "typography.roles.section.trackingPreset": "normal",
+        "typography.roles.section.trackingCustom": 0,
+        "typography.roles.question.family": "Permanent Marker",
+        "typography.roles.question.sizePreset": "s",
+        "typography.roles.question.sizeCustom": "16px",
+        "typography.roles.question.fontStyle": "normal",
+        "typography.roles.question.weight": "400",
+        "typography.roles.question.color": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "typography.roles.question.lineHeightPreset": "normal",
+        "typography.roles.question.lineHeightCustom": 1.4,
+        "typography.roles.question.trackingPreset": "normal",
+        "typography.roles.question.trackingCustom": 0,
+        "typography.roles.answer.family": "Permanent Marker",
+        "typography.roles.answer.sizePreset": "m",
+        "typography.roles.answer.sizeCustom": "15px",
+        "typography.roles.answer.fontStyle": "normal",
+        "typography.roles.answer.weight": "400",
+        "typography.roles.answer.color": {
+          "type": "color",
+          "color": "#ff9500"
+        },
+        "typography.roles.answer.lineHeightPreset": "tight",
+        "typography.roles.answer.lineHeightCustom": 1.4,
+        "typography.roles.answer.trackingPreset": "normal",
+        "typography.roles.answer.trackingCustom": 0,
+        "typography.roles.button.family": "Permanent Marker",
+        "typography.roles.button.sizePreset": "m",
+        "typography.roles.button.sizeCustom": 14,
+        "typography.roles.button.fontStyle": "normal",
+        "typography.roles.button.weight": "400",
+        "typography.roles.button.color": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "typography.roles.button.lineHeightPreset": "normal",
+        "typography.roles.button.lineHeightCustom": 1.4,
+        "typography.roles.button.trackingPreset": "normal",
+        "typography.roles.button.trackingCustom": 0,
+        "pod.widthMode": "full",
+        "pod.contentWidth": 960,
+        "pod.padding.desktop.linked": true,
+        "pod.padding.desktop.all": 80,
+        "pod.padding.desktop.top": 80,
+        "pod.padding.desktop.right": 80,
+        "pod.padding.desktop.bottom": 80,
+        "pod.padding.desktop.left": 80,
+        "pod.padding.mobile.linked": true,
+        "pod.padding.mobile.all": 28,
+        "pod.padding.mobile.top": 28,
+        "pod.padding.mobile.right": 28,
+        "pod.padding.mobile.bottom": 28,
+        "pod.padding.mobile.left": 28,
+        "stage.alignment": "center",
+        "stage.canvas.mode": "viewport",
+        "stage.canvas.width": 0,
+        "stage.canvas.height": 0,
+        "stage.padding.desktop.linked": false,
+        "stage.padding.desktop.all": 80,
+        "stage.padding.desktop.top": 60,
+        "stage.padding.desktop.right": 40,
+        "stage.padding.desktop.bottom": 60,
+        "stage.padding.desktop.left": 40,
+        "stage.padding.mobile.linked": true,
+        "stage.padding.mobile.all": 24,
+        "stage.padding.mobile.top": 24,
+        "stage.padding.mobile.right": 24,
+        "stage.padding.mobile.bottom": 24,
+        "stage.padding.mobile.left": 24,
+        "appearance.iconStyle": "plus",
+        "appearance.iconColor": {
+          "type": "color",
+          "color": "#ff9500"
+        },
+        "appearance.ctaSizePreset": "custom",
+        "appearance.ctaPaddingLinked": false,
+        "appearance.ctaPaddingInline": 16,
+        "appearance.ctaPaddingBlock": 12,
+        "appearance.ctaBackground": {
+          "type": "color",
+          "color": "#212121"
+        },
+        "appearance.ctaTextColor": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "appearance.ctaBorder": {
+          "color": "var(--color-system-blue)",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.ctaRadius": "md",
+        "appearance.ctaIconSizePreset": "m",
+        "appearance.ctaIconSize": 16,
+        "appearance.linkStyle": "underline",
+        "appearance.linkUnderlineColor": {
+          "type": "color",
+          "color": "var(--color-system-blue)"
+        },
+        "appearance.linkHighlightColor": {
+          "type": "color",
+          "color": "color-mix(in oklab, var(--color-system-blue), transparent 82%)"
+        },
+        "appearance.linkTextColor": {
+          "type": "color",
+          "color": "var(--color-system-blue)"
+        },
+        "appearance.cardwrapper.radiusLinked": true,
+        "appearance.cardwrapper.radius": "none",
+        "appearance.cardwrapper.radiusTL": "none",
+        "appearance.cardwrapper.radiusTR": "none",
+        "appearance.cardwrapper.radiusBR": "none",
+        "appearance.cardwrapper.radiusBL": "none",
+        "appearance.cardwrapper.border": {
+          "color": "#efeff2",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.cardwrapper.shadow": {
+          "x": 7,
+          "y": 7,
+          "blur": 16,
+          "alpha": 13,
+          "color": "#007aff",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "stage.shadow": {
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "alpha": 18,
+          "color": "#000000",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "stage.insideShadow.linked": true,
+        "stage.insideShadow.layer": "below-content",
+        "stage.insideShadow.all": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.top": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.right": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.bottom": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "stage.insideShadow.left": {
+          "x": -8,
+          "y": 0,
+          "blur": 24,
+          "alpha": 63,
+          "color": "#ffffff",
+          "inset": true,
+          "spread": 40,
+          "enabled": false
+        },
+        "appearance.podBorder": {
+          "color": "var(--color-system-gray-5)",
+          "width": 1,
+          "enabled": false
+        },
+        "pod.shadow": {
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "alpha": 18,
+          "color": "#000000",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "pod.insideShadow.linked": true,
+        "pod.insideShadow.layer": "below-content",
+        "pod.insideShadow.all": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.top": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.right": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.bottom": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.insideShadow.left": {
+          "x": 12,
+          "y": 10,
+          "blur": 35,
+          "alpha": 38,
+          "color": "#212121",
+          "inset": true,
+          "spread": -35,
+          "enabled": false
+        },
+        "pod.radiusLinked": true,
+        "pod.radius": "none",
+        "pod.radiusTL": "none",
+        "pod.radiusTR": "none",
+        "pod.radiusBR": "none",
+        "pod.radiusBL": "none"
       }
     },
     {

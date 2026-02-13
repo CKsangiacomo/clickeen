@@ -21,7 +21,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "如何安裝小工具？"
+      "value": "我該如何安裝小工具？"
     },
     {
       "op": "set",
@@ -36,22 +36,22 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen 是 Isabel 將會非常喜歡為之工作的東西，當她必須這樣做時，我會強迫她。"
+      "value": "Clickeen 是 Isabel 在不得不做的時候會很喜歡替它工作的東西，而我會逼她。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "複製嵌入代碼並將其貼上到您網站上的 </body> 之前。"
+      "value": "複製嵌入程式碼，並貼到你網站的 </body> 之前。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "是的，一個具有核心功能的主動小工具。"
+      "value": "有，一個啟用中的小工具，含核心功能。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "因為 Clickeen 是一個令人驚嘆的新平台，讓網路變得美麗且易於使用。"
+      "value": "因為 Clickeen 是一個令人驚豔的新平台，讓網頁更美觀，也更好用。"
     }
   ]
 }

@@ -6,7 +6,7 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "よくある質問"
+      "value": "よくあるご質問"
     },
     {
       "op": "set",
@@ -21,7 +21,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "ウィジェットのインストール方法は？"
+      "value": "ウィジェットはどうやって設置しますか？"
     },
     {
       "op": "set",
@@ -31,27 +31,27 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "なぜClickeenを使うべきですか？"
+      "value": "Clickeenを使うべき理由は？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeenは、Isabelが働かなければならないときに本当に好きになるものであり、私は彼女に強制します。"
+      "value": "Clickeenは、必要になったらIsabelがきっと喜んで働くことになって、私が彼女に無理やりやらせるやつです。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "埋め込みコードをコピーして、サイトの</body>の前に貼り付けてください。"
+      "value": "埋め込みコードをコピーし、サイトの</body>の直前に貼り付けてください。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "はい、コア機能を備えた1つのアクティブなウィジェットが利用可能です。"
+      "value": "はい。主要機能を備えたアクティブなウィジェットを1つ利用できます。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Clickeenは、ウェブを美しく使いやすくするための素晴らしい新しいプラットフォームだからです。"
+      "value": "Clickeenは、Webを美しく、使いやすくするための素晴らしい新しいプラットフォームだからです。"
     }
   ]
 }

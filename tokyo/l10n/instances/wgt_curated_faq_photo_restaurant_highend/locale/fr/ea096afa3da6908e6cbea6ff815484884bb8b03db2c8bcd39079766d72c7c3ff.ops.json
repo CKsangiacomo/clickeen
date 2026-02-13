@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Réserver"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Découvrez le charme et le confort de notre bed & breakfast aux États-Unis."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ du Chef Pierre"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Nous proposons une variété d’expériences culinaires, notamment des repas privés, des dégustations de vins et des expériences à la table du chef."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Quels types d’expériences culinaires sont proposés ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Les réservations sont recommandées et peuvent être effectuées jusqu’à 30 jours à l’avance."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Quelles sont vos conditions de réservation ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Oui, une tenue smart casual est requise."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Y a-t-il un code vestimentaire ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Oui, nous proposons des formules romantiques ainsi que des expériences de groupe."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Proposez-vous des formules spéciales ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Les annulations doivent être effectuées 24 heures à l’avance afin d’éviter des frais."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Quelle est votre politique d’annulation ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Oui, nous pouvons répondre à divers besoins alimentaires, notamment avec des options végétariennes, véganes, sans gluten et sans fruits à coque."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Proposez-vous des adaptations alimentaires ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Expérience culinaire"
+    }
+  ],
+  "v": 1
+}

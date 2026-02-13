@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "যোগাযোগ করুন "
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "সবচেয়ে বেশি জিজ্ঞাসিত প্রশ্নগুলোর উত্তর এখানে খুঁজে নিন।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "সচরাচর জিজ্ঞাসিত প্রশ্ন"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing একটি SaaS কোম্পানি, যা মার্কেটিং অটোমেশন-এ বিশেষজ্ঞ। ইমেইল ক্যাম্পেইন, গ্রাহক সেগমেন্টেশন এবং অ্যানালিটিক্সের জন্য এটি উন্নত টুল সরবরাহ করে।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Liquid Marketing কী?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "সহজভাবে সাইন আপ করুন, আপনার ডেটা ইন্টিগ্রেট করুন, আর আমাদের ব্যবহারবান্ধব প্ল্যাটফর্মে স্বয়ংক্রিয় ক্যাম্পেইন তৈরি করা শুরু করুন।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "আমি কীভাবে Liquid Marketing ব্যবহার শুরু করব?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "হ্যাঁ, Liquid Marketing মৌলিক ফিচারগুলোর অ্যাক্সেসসহ একটি ফ্রি ট্রায়াল দেয়। আরও উন্নত সুবিধার জন্য আপগ্রেড করুন।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing সহজে ব্যবহারযোগ্য অটোমেশন টুল, বিস্তারিত অ্যানালিটিক্স এবং দারুণ কাস্টমার সাপোর্টসহ একটি শক্তিশালী প্ল্যাটফর্ম দেয়—যা মার্কেটিং কার্যক্রম আরও সহজ ও গুছিয়ে নিতে চাওয়া ব্যবসাগুলোর জন্য আদর্শ।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "আমার মার্কেটিং প্রয়োজনের জন্য কেন Liquid Marketing বেছে নেব?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "ফ্রি ট্রায়াল কি আছে?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "সব প্রশ্ন"
+    }
+  ],
+  "v": 1
+}

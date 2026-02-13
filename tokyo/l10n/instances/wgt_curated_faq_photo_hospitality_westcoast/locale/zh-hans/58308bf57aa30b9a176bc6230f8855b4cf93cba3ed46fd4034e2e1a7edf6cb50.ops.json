@@ -10,7 +10,7 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "探索我们美国民宿的魅力与舒适。"
+      "value": "探索我们美国民宿的独特魅力与舒适体验。"
     },
     {
       "op": "set",
@@ -20,12 +20,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "我们提供多种房型，包括 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">标准房</a>、<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">豪华房</a>，以及 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">套房</a>。"
+      "value": "我们提供多种房型，包括 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">标准房</a>、 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">豪华房</a>，以及 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">套房</a>。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "有哪些房型可选？"
+      "value": "有哪些房型可供选择？"
     },
     {
       "op": "set",
@@ -35,12 +35,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "入住和退房时间分别是几点？"
+      "value": "入住和退房时间是什么时候？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "是的，住宿包含免费早餐。"
+      "value": "是的，入住期间包含免费早餐。"
     },
     {
       "op": "set",
@@ -50,12 +50,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "是的，我们提供浪漫的 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">度假套餐</a>，以及 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">适合家庭的选择。</a>"
+      "value": "是的，我们提供浪漫的 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">度假套餐</a>，以及 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">适合全家出行的选择。</a>"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "有提供任何特别套餐吗？"
+      "value": "你们提供特别套餐吗？"
     },
     {
       "op": "set",

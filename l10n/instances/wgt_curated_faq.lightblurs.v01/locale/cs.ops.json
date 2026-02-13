@@ -31,17 +31,17 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Proč bych měl/a používat Clickeen"
+      "value": "Proč bych měl(a) používat Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen je něco, co bude Isabel opravdu ráda dělat, až bude muset, a já ji k tomu donutím."
+      "value": "Clickeen je něco, pro co bude Isabel opravdu ráda pracovat, když bude muset – a já ji k tomu donutím."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Zkopírujte vkládací kód a vložte jej na svůj web před </body>."
+      "value": "Zkopírujte vložený kód a vložte ho na svůj web před </body>."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Protože Clickeen je úžasná nová platforma, která dělá web krásným a snadno použitelným."
+      "value": "Protože Clickeen je úžasná nová platforma, díky které bude web krásný a snadno použitelný."
     }
   ]
 }

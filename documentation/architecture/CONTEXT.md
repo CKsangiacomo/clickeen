@@ -201,7 +201,7 @@ All widgets use shared modules from `tokyo/widgets/shared/`:
 | `header.js` | `CKHeader.applyHeader(state, widgetRoot)` | Shared header (title/subtitle/CTA) behavior + CSS vars |
 | `surface.js` | `CKSurface.applyCardWrapper(cardwrapper, scopeEl)` | Shared card wrapper vars (border/shadow/radius + inside-shadow layer placement) |
 | `stagePod.js` | `CKStagePod.applyStagePod(stage, pod, scopeEl)` | Stage/pod layout (background, padding, radius, alignment) |
-| `typography.js` | `CKTypography.applyTypography(typography, root, roleConfig)` | Typography roles with dynamic Google Fonts loading |
+| `typography.js` | `CKTypography.applyTypography(typography, root, roleConfig, runtimeContext?)` | Typography roles with dynamic Google Fonts + locale/script-aware fallback stacks |
 | `branding.js` | *(self-executing)* | Injects "Made with Clickeen" badge + reacts to state updates |
 
 ### Stage/Pod Architecture
@@ -221,8 +221,10 @@ Bob's compiler (`bob/lib/compiler/`) auto-generates shared functionality:
 - **Panel Grouping** — Layout clusters are normalized to `Widget layout`, `Item layout`, `Pod layout`, and `Stage layout` (when applicable). Surface clusters in Appearance are split into `Stage appearance` and `Pod appearance` (instead of a mixed Stage/Pod block).
 
 **Curated Typography:**
-- 17 Google Fonts with weight/style specifications
+- 18 curated Google Fonts with weight/style specifications
+- Font picker grouped by family category (`Sans`, `Serif`, `Display`, `Script`, `Handwritten`) with usage badges (`Body-safe`, `Heading-only`)
 - Dynamic loading via `CKTypography.applyTypography()`
+- Locale/script fallback is class-aware (`sans` vs `serif`) for CJK/Arabic/Hebrew/Thai/Devanagari/Bengali/Cyrillic; CJK applies script-first stacks and script-tuned normal line-height defaults
 - Role-based size presets (xs/s/m/l/xl/custom)
 - Canonical role scales are enforced globally for shared roles (`title`, `body`, `section`/Eyebrow, `question`/Item title, `answer`/Item body, `button`) so existing and new instances stay aligned.
 

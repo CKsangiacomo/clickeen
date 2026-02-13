@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Liên hệ Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Điểm đến tin cậy cho các giải pháp và dịch vụ kỹ thuật."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Câu hỏi thường gặp về Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering là công ty toàn cầu, chuyên cung cấp các giải pháp và dịch vụ kỹ thuật đổi mới."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ive Engineering là gì?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Chỉ cần liên hệ với chúng tôi, chia sẻ nhu cầu dự án, và chúng tôi sẽ tư vấn các gói dịch vụ phù hợp."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Tôi bắt đầu sử dụng dịch vụ của Ive Engineering như thế nào?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Có. Ive Engineering cung cấp tư vấn miễn phí để hiểu rõ hơn yêu cầu dự án của bạn."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Có dịch vụ tư vấn không?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering mang đến giải pháp tiên tiến, đội ngũ giàu kinh nghiệm và dịch vụ thiết kế riêng để đáp ứng đúng nhu cầu kỹ thuật của bạn."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Vì sao tôi nên chọn Ive Engineering cho nhu cầu kỹ thuật của mình?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Tất cả câu hỏi"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering đề cao đổi mới, chính trực và sự xuất sắc trong mọi dự án và dịch vụ."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Giá trị cốt lõi của Ive Engineering là gì?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Bạn có thể liên hệ Ive Engineering qua website, email hoặc số điện thoại được cung cấp trên trang liên hệ của chúng tôi."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Tôi có thể liên hệ Ive Engineering bằng cách nào?"
+    }
+  ],
+  "v": 1
+}

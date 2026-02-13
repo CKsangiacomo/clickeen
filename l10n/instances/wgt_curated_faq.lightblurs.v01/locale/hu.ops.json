@@ -6,7 +6,7 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "Gyakran Ismételt Kérdések"
+      "value": "Gyakran ismételt kérdések"
     },
     {
       "op": "set",
@@ -16,7 +16,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Mi a Clickeen?"
+      "value": "Mi az a Clickeen?"
     },
     {
       "op": "set",
@@ -31,27 +31,27 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Miért érdemes a Clickeen-t használnom?"
+      "value": "Miért érdemes a Clickeent használnom?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "A Clickeen valami olyasmi, amin Isabel nagyon szívesen fog dolgozni, amikor muszáj neki, én pedig erre rákényszerítem."
+      "value": "A Clickeen olyasmi, amit Isabel nagyon fog szeretni csinálni, amikor muszáj lesz neki, én pedig rá fogom kényszeríteni."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Másold ki a beágyazási kódot, és illeszd be a webhelyeden a </body> elé."
+      "value": "Másold ki a beágyazási kódot, és illeszd be az oldaladon a </body> elé."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Igen, egy aktív widget az alapfunkciókkal."
+      "value": "Igen, egy aktív widgetet az alapfunkciókkal."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Mert a Clickeen egy lenyűgöző új platform, amely szebbé és könnyebben használhatóvá teszi a webet."
+      "value": "Mert a Clickeen egy elképesztő, új platform, amellyel a web szebb és könnyebben használható lesz."
     }
   ]
 }

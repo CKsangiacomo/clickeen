@@ -15,7 +15,7 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "Perguntas frequentes sobre o Bed and Breakfast"
+      "value": "FAQs do Bed and Breakfast"
     },
     {
       "op": "set",
@@ -30,7 +30,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "O check-in é às 15:00 e o check-out é até às 11:00."
+      "value": "O check-in é às 15:00 e o check-out até às 11:00."
     },
     {
       "op": "set",
@@ -50,12 +50,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Sim, oferecemos pacotes românticos para <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">escapadinhas</a> e <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">opções para toda a família.</a>"
+      "value": "Sim, oferecemos <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">pacotes românticos para escapadinhas</a> e <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">opções ideais para famílias.</a>"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Têm algum pacote especial?"
+      "value": "Oferecem algum pacote especial?"
     },
     {
       "op": "set",

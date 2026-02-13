@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "ติดต่อ Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "ตัวช่วยหลักของคุณสำหรับโซลูชันและบริการด้านวิศวกรรม"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "คำถามที่พบบ่อยของ Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering คือบริษัทระดับโลกที่เชี่ยวชาญด้านโซลูชันและบริการวิศวกรรมเชิงนวัตกรรม"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ive Engineering คืออะไร?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "เพียงติดต่อเรา บอกความต้องการของโปรเจกต์ แล้วเราจะช่วยแนะนำบริการที่เหมาะกับคุณ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "จะเริ่มใช้บริการของ Ive Engineering ได้อย่างไร?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "มี Ive Engineering มีบริการให้คำปรึกษาฟรีเพื่อทำความเข้าใจความต้องการของโปรเจกต์คุณให้ดียิ่งขึ้น"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "มีบริการให้คำปรึกษาหรือไม่?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering มอบโซลูชันล้ำสมัย ทีมผู้เชี่ยวชาญมากประสบการณ์ และบริการที่ปรับให้เหมาะกับความต้องการด้านวิศวกรรมของคุณโดยเฉพาะ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "ทำไมควรเลือก Ive Engineering สำหรับความต้องการด้านวิศวกรรมของฉัน?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "คำถามทั้งหมด"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering ให้ความสำคัญกับนวัตกรรม ความซื่อสัตย์ และความเป็นเลิศในทุกโปรเจกต์และบริการ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "ค่านิยมหลักของ Ive Engineering คืออะไร?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "คุณสามารถติดต่อ Ive Engineering ผ่านเว็บไซต์ อีเมล หรือหมายเลขโทรศัพท์ที่ระบุไว้ในหน้าติดต่อเรา"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "จะติดต่อ Ive Engineering ได้อย่างไร?"
+    }
+  ],
+  "v": 1
+}

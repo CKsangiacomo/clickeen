@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ota yhteyttä Ive Engineeringiin"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Luotettava kumppanisi insinööriratkaisuihin ja -palveluihin."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering – UKK"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering on maailmanlaajuinen yritys, joka on erikoistunut innovatiivisiin insinööriratkaisuihin ja -palveluihin."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Mikä on Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Ota meihin yhteyttä, kerro projektisi tarpeista, ja autamme sinua löytämään sopivat palvelut."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Miten pääsen alkuun Ive Engineeringin palveluissa?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Kyllä. Ive Engineering tarjoaa maksuttomia konsultaatioita, jotta ymmärrämme projektisi vaatimukset paremmin."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Onko konsultaatio saatavilla?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering tarjoaa huippuluokan ratkaisuja, kokeneita asiantuntijoita ja räätälöityjä palveluja juuri sinun insinööritarpeisiisi."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Miksi valitsisin Ive Engineeringin insinööritarpeisiini?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Kaikki kysymykset"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineeringille tärkeitä arvoja ovat innovaatio, rehellisyys ja huippuosaaminen kaikissa projekteissa ja palveluissa."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Mitkä ovat Ive Engineeringin ydinarvot?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Saat Ive Engineeringiin yhteyden verkkosivujemme kautta sekä yhteydenottosivulla annettuun sähköpostiin tai puhelinnumeroon."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Miten voin ottaa yhteyttä Ive Engineeringiin?"
+    }
+  ],
+  "v": 1
+}

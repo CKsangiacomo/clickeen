@@ -64,10 +64,14 @@ type RichtextSegmentPlan = {
   parts: RichtextSegmentPart[];
   segments: TranslationItem[];
 };
+type RichtextAnchorSignature = {
+  href: string | null;
+  hasVisibleText: boolean;
+};
 
 type L10nGenerateStatus = 'running' | 'succeeded' | 'failed' | 'superseded';
 
-const PROMPT_VERSION = 'l10n.instance.v1@2026-02-09.1';
+const PROMPT_VERSION = 'l10n.instance.v1@2026-02-13.2';
 const POLICY_VERSION = 'l10n.ops.v1';
 
 const MAX_BATCH_ITEMS = 80;
@@ -144,9 +148,12 @@ function buildSystemPrompt(locale: string): string {
     '- Preserve paths exactly.',
     '- Preserve URLs, emails, brand names, and placeholders (e.g. {token}, {{token}}, :token).',
     '- For richtext values, preserve existing HTML tags and attributes; do not add new tags.',
+    '- For richtext links, keep every meaningful linked phrase as linked text in output (do not move link text outside <a> tags).',
     '- Write in natural, native product/UI copy for the target locale (not literal translation).',
     '- If literal wording sounds awkward, rewrite idiomatically while preserving intent.',
     '- Prefer concise, fluent phrasing that reads as originally written in the locale.',
+    '- Preserve acronym style from source; do not add parenthetical expansions that are not present in source text.',
+    '- Especially for heading/title strings: keep standalone acronyms standalone (e.g. keep "B&B", do not expand to "B&B (...)").',
     '- Keep output length reasonably close to source unless natural phrasing requires otherwise.',
     '- Silently self-check fluency before final output.',
   ].join('\n');
@@ -484,6 +491,65 @@ function assertRichtextTagParity(args: {
   }
 }
 
+function extractAnchorHref(attrs: string): string | null {
+  const match = attrs.match(/\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i);
+  const href = (match?.[1] ?? match?.[2] ?? match?.[3] ?? '').trim();
+  return href || null;
+}
+
+function stripHtmlToVisibleText(value: string): string {
+  return value.replace(/<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?>/g, '').replace(/&nbsp;/gi, ' ').trim();
+}
+
+function extractRichtextAnchors(value: string): RichtextAnchorSignature[] {
+  const anchors: RichtextAnchorSignature[] = [];
+  const pattern = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(value)) !== null) {
+    const attrs = match[1] ?? '';
+    const innerHtml = match[2] ?? '';
+    anchors.push({
+      href: extractAnchorHref(attrs),
+      hasVisibleText: stripHtmlToVisibleText(innerHtml).length > 0,
+    });
+  }
+  return anchors;
+}
+
+function assertRichtextAnchorParity(args: {
+  source: string;
+  translated: string;
+  path: string;
+  provider: string;
+}) {
+  const sourceAnchors = extractRichtextAnchors(args.source);
+  if (sourceAnchors.length === 0) return;
+  const translatedAnchors = extractRichtextAnchors(args.translated);
+  if (sourceAnchors.length !== translatedAnchors.length) {
+    throw new HttpError(502, {
+      code: 'PROVIDER_ERROR',
+      provider: args.provider,
+      message: `Richtext anchor count mismatch at path: ${args.path}`,
+    });
+  }
+  for (let i = 0; i < sourceAnchors.length; i += 1) {
+    if (sourceAnchors[i].hasVisibleText !== translatedAnchors[i].hasVisibleText) {
+      throw new HttpError(502, {
+        code: 'PROVIDER_ERROR',
+        provider: args.provider,
+        message: `Richtext anchor text mismatch at path: ${args.path}`,
+      });
+    }
+    if (sourceAnchors[i].href !== translatedAnchors[i].href) {
+      throw new HttpError(502, {
+        code: 'PROVIDER_ERROR',
+        provider: args.provider,
+        message: `Richtext anchor href mismatch at path: ${args.path}`,
+      });
+    }
+  }
+}
+
 function assertTranslationSafety(
   expected: TranslationItem,
   translatedValue: string,
@@ -497,6 +563,12 @@ function assertTranslationSafety(
   });
   if (expected.type === 'richtext') {
     assertRichtextTagParity({
+      source: expected.value,
+      translated: translatedValue,
+      path: expected.path,
+      provider,
+    });
+    assertRichtextAnchorParity({
       source: expected.value,
       translated: translatedValue,
       path: expected.path,

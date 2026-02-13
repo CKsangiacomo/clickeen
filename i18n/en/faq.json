@@ -18,11 +18,5 @@
   "faq.labels.itemBottomLeftRadius": "{item} bottom-left radius",
   "faq.labels.itemBorder": "{item} border",
   "faq.labels.itemShadow": "{item} shadow",
-  "faq.labels.itemOutsideShadow": "{item} outside shadow",
-  "faq.labels.linkItemInsideShadows": "Link {item} inside shadows",
-  "faq.labels.itemInsideShadow": "{item} inside shadow",
-  "faq.labels.itemInsideShadowTop": "{item} inside shadow (top)",
-  "faq.labels.itemInsideShadowRight": "{item} inside shadow (right)",
-  "faq.labels.itemInsideShadowBottom": "{item} inside shadow (bottom)",
-  "faq.labels.itemInsideShadowLeft": "{item} inside shadow (left)"
+  "faq.labels.itemOutsideShadow": "{item} outside shadow"
 }

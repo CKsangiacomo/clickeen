@@ -172,13 +172,13 @@ Even with geography as a non-concept, prioritization still matters for:
 
 ### The Challenge
 
-Curated Google Fonts (17 fonts) are Latin-script focused. Asian, Cyrillic, and Arabic scripts need different fonts.
+Curated Google Fonts (18 fonts) are Latin-script focused. Asian, Cyrillic, and Arabic scripts need different fonts.
 
 ### Font Strategy
 
 | Script | Languages | Font Approach |
 |--------|-----------|---------------|
-| **Latin** | EN, ES, PT, DE, FR, IT, NL | Current 17 curated fonts |
+| **Latin** | EN, ES, PT, DE, FR, IT, NL | Current 18 curated fonts |
 | **Cyrillic** | Russian, Ukrainian | Subset of current + additions |
 | **Japanese** | Japanese | Noto Sans JP, M PLUS 1p |
 | **Korean** | Korean | Noto Sans KR, Pretendard |

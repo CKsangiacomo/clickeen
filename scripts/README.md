@@ -52,6 +52,7 @@ Purpose: quick reference for repo scripts (what they do + how to run).
   - Run: `node scripts/l10n/pull.mjs`, `node scripts/l10n/push.mjs`
 - `l10n/translate-instances.mjs` — generate missing locale overlays for checked-in instances via local San Francisco translator.
   - Run: `node scripts/l10n/translate-instances.mjs`
+  - Force refresh all non-EN locale overlays: `node scripts/l10n/translate-instances.mjs --all`
 - `prague-l10n/verify.mjs` / `prague-l10n/translate.mjs` — Prague overlay verify/translate.
   - Run: `node scripts/prague-l10n/verify.mjs`, `node scripts/prague-l10n/translate.mjs`
   - Env: `PRAGUE_L10N_TRANSLATE_CONCURRENCY` (default `4`, locale-level parallelism)

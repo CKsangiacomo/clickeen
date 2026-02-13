@@ -443,7 +443,7 @@
                 `
               : '';
             return `
-              <li class="ck-faq__item" data-role="faq-item" data-ck-surface="cardwrapper" id="${escapeHtml(anchorId)}">
+              <li class="ck-faq__item" data-role="faq-item" id="${escapeHtml(anchorId)}">
                 <${questionTag} class="ck-faq__q" data-role="faq-question" ${questionAttrs}>
                   <span class="ck-faq__q-text" data-role="faq-question-text">${qText}</span>
                   ${iconMarkup}
@@ -581,7 +581,7 @@
     }
   });
 
-  function applyState(state) {
+  function applyState(state, runtimeContext) {
     assertFaqState(state);
     lastState = state;
 
@@ -593,14 +593,19 @@
     if (!window.CKTypography?.applyTypography) {
       throw new Error('[FAQ] Missing CKTypography.applyTypography');
     }
-    window.CKTypography.applyTypography(state.typography, faqRoot, {
-      title: { varKey: 'title' },
-      body: { varKey: 'body' },
-      section: { varKey: 'section' },
-      question: { varKey: 'question' },
-      answer: { varKey: 'answer' },
-      button: { varKey: 'button' },
-    });
+    window.CKTypography.applyTypography(
+      state.typography,
+      faqRoot,
+      {
+        title: { varKey: 'title' },
+        body: { varKey: 'body' },
+        section: { varKey: 'section' },
+        question: { varKey: 'question' },
+        answer: { varKey: 'answer' },
+        button: { varKey: 'button' },
+      },
+      { locale: runtimeContext && runtimeContext.locale, publicId: resolvedPublicId },
+    );
 
     if (!window.CKHeader?.applyHeader) {
       throw new Error('[FAQ] Missing CKHeader.applyHeader');
@@ -724,7 +729,7 @@
     const data = event.data;
     if (!data || data.type !== 'ck:state-update') return;
     if (data.widgetname !== 'faq') return;
-    applyState(data.state);
+    applyState(data.state, { locale: data.locale });
   });
 
   function containsUrl(value) {
@@ -813,6 +818,9 @@
     typeof window.CK_WIDGETS[resolvedPublicId] === 'object'
       ? window.CK_WIDGETS[resolvedPublicId]
       : null;
+  const initialLocale =
+    (keyedPayload && typeof keyedPayload.locale === 'string' && keyedPayload.locale) ||
+    (window.CK_WIDGET && typeof window.CK_WIDGET.locale === 'string' ? window.CK_WIDGET.locale : '');
   const initialState = (keyedPayload && keyedPayload.state) || (window.CK_WIDGET && window.CK_WIDGET.state);
-  if (initialState) applyState(initialState);
+  if (initialState) applyState(initialState, { locale: initialLocale });
 })();

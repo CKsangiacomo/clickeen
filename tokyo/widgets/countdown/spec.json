@@ -287,60 +287,6 @@
           "spread": 0,
           "enabled": false
         },
-        "insideShadow": {
-          "linked": true,
-          "layer": "below-content",
-          "all": {
-            "x": 0,
-            "y": 0,
-            "blur": 24,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": 0,
-            "enabled": false
-          },
-          "top": {
-            "x": 0,
-            "y": 12,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          },
-          "right": {
-            "x": -12,
-            "y": 0,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          },
-          "bottom": {
-            "x": 0,
-            "y": -12,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          },
-          "left": {
-            "x": 12,
-            "y": 0,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          }
-        },
         "radiusBL": "2xl",
         "radiusBR": "2xl",
         "radiusTL": "2xl",
@@ -534,13 +480,6 @@
     "    <tooldrawer-field-appearance-item group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusBL' label='Tile bottom-left radius' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusBL}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
     "    <tooldrawer-field-appearance-item group-label='' type='dropdown-border' size='md' path='appearance.cardwrapper.border' label='Timer tile border' value='{{appearance.cardwrapper.border}}' />",
     "    <tooldrawer-field-appearance-item group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.shadow' label='Timer tile outside shadow' value='{{appearance.cardwrapper.shadow}}' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='toggle' size='md' path='appearance.cardwrapper.insideShadow.linked' label='Link timer tile inside shadows' value='{{appearance.cardwrapper.insideShadow.linked}}' default='true' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.insideShadow.layer' label='Inside shadow layer' value='{{appearance.cardwrapper.insideShadow.layer}}' options='[{&quot;label&quot;:&quot;Show below content&quot;,&quot;value&quot;:&quot;below-content&quot;},{&quot;label&quot;:&quot;Show above content&quot;,&quot;value&quot;:&quot;above-content&quot;}]' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.insideShadow.all' label='Timer tile inside shadow' value='{{appearance.cardwrapper.insideShadow.all}}' show-if=\"appearance.cardwrapper.insideShadow.linked == true\" />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-shadow' axis='y' size='md' path='appearance.cardwrapper.insideShadow.top' label='Timer tile inside shadow (top)' value='{{appearance.cardwrapper.insideShadow.top}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-shadow' axis='x' size='md' path='appearance.cardwrapper.insideShadow.right' label='Timer tile inside shadow (right)' value='{{appearance.cardwrapper.insideShadow.right}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-shadow' axis='y' size='md' path='appearance.cardwrapper.insideShadow.bottom' label='Timer tile inside shadow (bottom)' value='{{appearance.cardwrapper.insideShadow.bottom}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-shadow' axis='x' size='md' path='appearance.cardwrapper.insideShadow.left' label='Timer tile inside shadow (left)' value='{{appearance.cardwrapper.insideShadow.left}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster label='Stage/Pod'>",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",

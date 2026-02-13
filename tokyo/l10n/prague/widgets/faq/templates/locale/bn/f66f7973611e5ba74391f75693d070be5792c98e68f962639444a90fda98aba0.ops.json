@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ টেমপ্লেট - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "প্রো-ডিজাইন করা FAQ টেমপ্লেট দিয়ে শুরু করুন। সবকিছু কাস্টমাইজ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "খালি ক্যানভাস নয়—একটি স্টাইল ডিরেকশন দিয়ে শুরু করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "একটি পরিপাটি FAQ টেমপ্লেট দিয়ে শুরু করুন, তারপর মিনিটেই আপনার ব্র্যান্ডের সঙ্গে মিলিয়ে প্রতিটি ডিটেইল ঠিকঠাক করে নিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "একটি FAQ উইজেট। অসীম লুক।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "উত্তরগুলো আবার না লিখেই Liquid Glass, Pure Canvas, Rebel Blocks, আর Enterprise Prime—সব স্টাইলে সহজে বদলান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "লাইট মোড। ডার্ক মোড। যেকোনো মোড—এটাই আপনার মোড।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "টেমপ্লেট শুধু শুরুর রেখা। ফিনিশ আপনার নিয়ন্ত্রণে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "ডিজাইন স্বাধীনতা, বিল্ট-ইন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "লেআউট সিস্টেম থেকে ভিজুয়াল ফিনিশ ও টাইপোগ্রাফির রোল—ডিজাইনের প্রতিটি সিদ্ধান্তই এডিটরে নিয়ন্ত্রণযোগ্য।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "লেআউট, আপনার মতো করে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "সীমাহীন অ্যাপিয়ারেন্স কন্ট্রোল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "টাইপোগ্রাফি প্রিসিশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "একটি নয়, অনেক লেআউট সিস্টেম। প্রতি ব্রেকপয়েন্টে স্ট্রাকচার। ডেস্কটপ/মোবাইলে আলাদা প্যাডিং ও স্পেসিং। কলাম, স্ট্যাকিং, অ্যালাইনমেন্ট, এবং রিফ্লো—একদম নিখুঁতভাবে নিয়ন্ত্রণ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "প্রতি-কোণার রেডিয়াস। কাস্টম রঙের বর্ডার। বাইরে ও ভেতরের শ্যাডো (লিঙ্কড বা প্রতি-সাইডে আলাদা)। গ্রেডিয়েন্ট, ইমেজ, বা ভিডিও ব্যাকগ্রাউন্ড। সম্পূর্ণ ভিজ্যুয়াল কর্তৃত্ব।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "ছয়টি আলাদা রোল (headline, body, question, answer, button, section)। 17টি Google Fonts থেকে বেছে নিন। ওজন, স্টাইল, সাইজ—প্রতি রোলে সবকিছু কাস্টমাইজেবল। ডায়নামিক স্কেল।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "মুহূর্তেই লেআউট বদলান"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Accordion, List, বা Cards বেছে নিন—কনটেন্ট নতুন করে না বানিয়েই যেকোনো সময় সুইচ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "ইন্টারঅ্যাকশন ডিজাইন অন্তর্ভুক্ত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "হোভার, অ্যাকটিভ ও ফোকাস স্টেট বিল্ট-ইন—তাই যেকোনো ডিভাইসে আপনার FAQ দেখায় পরিপাটি ও প্রফেশনাল।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "যে টাইপ একদম ঠিক লাগে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "নিজের ফন্ট ব্যবহার করুন বা আমাদের লাইব্রেরি থেকে নিন—তারপর হেডলাইন, প্রশ্ন, উত্তর ও CTA-এর হায়ারার্কি ঠিকঠাক টিউন করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "ডার্ক মোড স্বয়ংক্রিয়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "লাইট বা ডার্ক সেকশনের সাথে আপনার FAQ স্বয়ংক্রিয়ভাবে মানিয়ে যায়—ডিজাইন সবসময়ই নেটিভ লাগে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "মোবাইলে পারফেকশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "ট্যাপ টার্গেট, স্পেসিং ও লেআউট ফোন, ট্যাবলেট এবং ডেস্কটপ—সব স্ক্রিনেই পড়তে সুবিধাজনক থাকে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "তিন ধাপে আপনার FAQ তৈরি করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "শুরুর স্টাইল বেছে নিন, প্রতিটি ডিটেইল ফাইন-টিউন করুন, আর একটি ভার্সন প্রকাশ করুন—যা সবখানেই আপডেট হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "একটি স্টাইল বাছুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "সবকিছু কাস্টমাইজ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "প্রকাশ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "আপনার ব্র্যান্ডের সাথে মানানসই টেমপ্লেট দিয়ে শুরু করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "ভিজুয়াল এডিটরে লেআউট, স্পেসিং, রং, রেডিয়াস এবং টাইপোগ্রাফি ঠিক করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "একবার আপডেট দিন—যেখানেই আপনার FAQ এম্বেড করা আছে, সবখানেই তা সাথে সাথে লাইভ হবে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "টেমপ্লেট দিয়ে শুরু করুন। নিজের মতো করে তুলুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "যেকোনো টেমপ্লেট বেছে নিন, ব্র্যান্ডের সাথে মিলিয়ে নিন, আর বিনামূল্যে আপনার FAQ উইজেট চালু করুন।"
+    }
+  ],
+  "v": 1
+}

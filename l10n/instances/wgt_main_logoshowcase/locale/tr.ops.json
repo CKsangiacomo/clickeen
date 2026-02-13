@@ -6,12 +6,12 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "Bazı müşterilerimiz"
+      "value": "Müşterilerimizden bazıları"
     },
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "Dünya çapında ekipler tarafından güvenilir."
+      "value": "Dünya genelinde ekiplerin güvendiği bir çözüm."
     },
     {
       "op": "set",

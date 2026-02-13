@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "94e54adc93e738aaf20f184540089ee27bca924f32ee83c8b3427ade53ec9e00",
+  "baseUpdatedAt": "2026-02-12T17:01:21.211684+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "예약하기"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "미국식 B&B에서 느끼는 매력과 편안함을 만나보세요."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Soho Art Gallery FAQ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">로컬</a> 및 i<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">해외 아티스트</a>의 컨템포러리 아트를 선보입니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "어떤 종류의 작품을 전시하나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "갤러리는 화요일부터 일요일까지 오전 10시부터 오후 6시까지 운영합니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "갤러리 운영 시간은 어떻게 되나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "입장은 무료이며, 기부는 감사히 받습니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "입장료가 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "네, 갤러리에서 작품을 직접 구매하실 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "갤러리에서 작품을 구매할 수 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "다가오는 전시 및 이벤트 정보는 웹사이트에서 확인해 주세요."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "예정된 이벤트가 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "네, 유료로 프라이빗 이벤트 대관을 제공합니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "갤러리에서 프라이빗 이벤트를 진행할 수 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "갤러리 안내"
+    }
+  ],
+  "v": 1
+}

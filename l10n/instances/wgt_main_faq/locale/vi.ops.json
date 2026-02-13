@@ -26,22 +26,22 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "Tôi cài đặt widget như thế nào?"
+      "value": "Cách cài đặt một widget?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Vì sao tôi nên dùng Clickeen"
+      "value": "Vì sao nên dùng Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Có, một widget đang hoạt động với các tính năng cốt lõi."
+      "value": "Có, 1 widget đang hoạt động với các tính năng cốt lõi."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Các widget có thể nhúng với chuyển đổi được tích hợp sẵn."
+      "value": "Widget nhúng sẵn, tích hợp tối ưu chuyển đổi."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Vì Clickeen là một nền tảng mới tuyệt vời giúp web trở nên đẹp mắt và dễ sử dụng."
+      "value": "Vì Clickeen là một nền tảng mới tuyệt vời giúp web đẹp hơn và dễ sử dụng hơn."
     }
   ]
 }

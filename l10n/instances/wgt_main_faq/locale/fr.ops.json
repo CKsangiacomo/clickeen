@@ -6,22 +6,22 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "Questions Fréquemment Posées"
+      "value": "Questions fréquentes"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Toutes les Questions"
+      "value": "Toutes les questions"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Existe-t-il un plan gratuit ?"
+      "value": "Existe-t-il une offre gratuite ?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Qu'est-ce que Clickeen ?"
+      "value": "Qu’est-ce que Clickeen ?"
     },
     {
       "op": "set",
@@ -31,27 +31,27 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Pourquoi devrais-je utiliser Clickeen"
+      "value": "Pourquoi utiliser Clickeen ?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Oui, un widget actif avec les fonctionnalités de base."
+      "value": "Oui, un widget actif avec les fonctionnalités essentielles."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Widgets intégrables avec des conversions intégrées."
+      "value": "Des widgets intégrables avec des conversions intégrées."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Copiez le code d'intégration et collez-le avant </body> sur votre site."
+      "value": "Copiez le code d’intégration et collez-le avant </body> sur votre site."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Parce que Clickeen est une nouvelle plateforme incroyable pour rendre le web beau et facile à utiliser."
+      "value": "Parce que Clickeen est une nouvelle plateforme formidable pour rendre le web beau et facile à utiliser."
     }
   ]
 }

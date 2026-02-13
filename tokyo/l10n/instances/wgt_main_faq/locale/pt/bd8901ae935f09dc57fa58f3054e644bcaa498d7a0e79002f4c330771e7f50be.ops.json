@@ -10,7 +10,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "O que é o Clickeen?"
+      "value": "O que é a Clickeen?"
     },
     {
       "op": "set",
@@ -25,42 +25,42 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Porquê usar o Clickeen em vez de criar widgets de raiz?"
+      "value": "Por que usar a Clickeen em vez de criar widgets do zero?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "O Clickeen é uma plataforma SaaS de widgets que permite adicionar widgets polidos e de alto desempenho ao seu website em minutos — sem precisar de um grande trabalho de desenvolvimento."
+      "value": "A Clickeen é uma plataforma SaaS de widgets que permite adicionar widgets polidos e de alta performance ao seu site em minutos — sem precisar de um grande esforço de desenvolvimento."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Sim. O plano Free inclui 1 widget ativo com funcionalidades essenciais para que possa experimentar o Clickeen num site em produção."
+      "value": "Sim. O plano Free inclui 1 widget ativo com recursos essenciais para você testar a Clickeen em um site ao vivo."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Crie o seu widget, copie o código de incorporação e cole-o imediatamente antes da tag de fecho </body> no seu website. As alterações que fizer no Clickeen são atualizadas instantaneamente."
+      "value": "Crie seu widget, copie o código de incorporação e cole-o imediatamente antes da tag de fechamento </body> no seu site. As alterações feitas na Clickeen são atualizadas instantaneamente."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Lance mais depressa com controlos de design flexíveis, atualizações simples e desempenho fiável — para que a sua equipa possa entregar melhorias sem manter código personalizado."
+      "value": "Lance mais rápido com controles de design flexíveis, atualizações simples e performance confiável — para que sua equipe entregue melhorias sem precisar manter código personalizado."
     },
     {
       "op": "set",
       "path": "cta.label",
-      "value": "Contate-nos"
+      "value": "Fale conosco"
     },
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "Widgets modernos para websites — rápidos de lançar, fáceis de personalizar e feitos para ajudar a converter."
+      "value": "Widgets modernos para sites — rápidos de lançar, fáceis de personalizar e criados para ajudar você a converter."
     },
     {
       "op": "set",
       "path": "header.title",
-      "value": "Perguntas frequentes"
+      "value": "FAQs"
     }
   ],
   "v": 1

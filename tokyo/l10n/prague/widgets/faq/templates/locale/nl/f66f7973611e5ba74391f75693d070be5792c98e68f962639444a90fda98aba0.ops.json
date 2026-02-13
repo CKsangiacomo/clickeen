@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-sjablonen - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Begin met een professioneel ontworpen FAQ-sjabloon. Pas alles aan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Begin met een stijlrichting, niet met een leeg canvas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Kies een verzorgde FAQ-basis, en stem daarna elk detail in minuten af op je merk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Eén FAQ-widget. Oneindig veel looks."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Schakel moeiteloos tussen Liquid Glass, Pure Canvas, Rebel Blocks en Enterprise Prime zonder je antwoorden te herschrijven."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Lichte modus. Donkere modus. Elke modus—het is jouw modus."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Sjablonen zijn slechts de startlijn. Jij bepaalt de finish."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Ontwerpvrijheid, ingebouwd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Van layouts en visuele afwerking tot typografierollen: elke ontwerpkeuze is in de editor volledig te beheren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layouts, op jouw manier"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Uiterlijkcontrole zonder grenzen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografische precisie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Veel layoutsysteem, niet één. Structuur per breakpoint. Onafhankelijke desktop/mobile padding en spacing. Beheer kolommen, stapeling, uitlijning en reflow—precies."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Radius per hoek. Randen met aangepaste kleuren. Schaduwen buiten en binnen (gekoppeld of per zijde onafhankelijk). Achtergronden met verloop, afbeelding of video. Volledige visuele autoriteit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Zes verschillende rollen (kop, body, vraag, antwoord, knop, sectie). Kies uit 17 Google Fonts. Gewicht, stijl, grootte—alles aanpasbaar per rol. Dynamische schalen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Wissel layouts direct"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Kies Accordion, List of Cards en wissel wanneer je wilt, zonder je content opnieuw op te bouwen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Interactie-ontwerp inbegrepen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Hover-, active- en focus-states zijn ingebouwd, zodat je FAQ op elk apparaat strak en verzorgd aanvoelt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografie die goed voelt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Gebruik je eigen fonts of onze bibliotheek en stem de hiërarchie af voor koppen, vragen, antwoorden en CTA’s."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Donkere modus gaat automatisch"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Je FAQ past zich automatisch aan lichte of donkere secties aan, zodat het ontwerp altijd native aanvoelt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Mobiele perfectie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Tap-doelen, spacing en layout blijven leesbaar op telefoons, tablets en desktops."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Bouw je FAQ in drie stappen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Kies een startstijl, finetune elk detail en publiceer één versie die overal wordt bijgewerkt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Kies een stijl"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Pas alles aan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publiceer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Begin met de template die bij je merk past."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Pas layout, spacing, kleuren, radius en typografie aan in de visuele editor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Voer één update door en die staat direct live overal waar je FAQ is ingebed."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Begin met een template. Maak ’m van jou."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kies een template, laat ’m matchen met je merk en lanceer je FAQ-widget gratis."
+    }
+  ],
+  "v": 1
+}

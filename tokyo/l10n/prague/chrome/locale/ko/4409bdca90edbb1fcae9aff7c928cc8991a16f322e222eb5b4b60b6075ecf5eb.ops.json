@@ -1,0 +1,217 @@
+{
+  "baseFingerprint": "4409bdca90edbb1fcae9aff7c928cc8991a16f322e222eb5b4b60b6075ecf5eb",
+  "baseUpdatedAt": "2026-02-12T02:06:51.338Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.nav.widgets",
+      "value": "위젯"
+    },
+    {
+      "op": "set",
+      "path": "strings.nav.viewAllWidgets",
+      "value": "모든 위젯 보기"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.overview",
+      "value": "개요"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.templates",
+      "value": "템플릿"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.examples",
+      "value": "예시"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.features",
+      "value": "기능"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.pricing",
+      "value": "요금제"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.createFree",
+      "value": "무료로 만들기"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.seeTemplates",
+      "value": "템플릿 보기"
+    },
+    {
+      "op": "set",
+      "path": "strings.common.comingSoon",
+      "value": "곧 공개됩니다."
+    },
+    {
+      "op": "set",
+      "path": "strings.creative.useThisWidgetOnYourWebsite",
+      "value": "웹사이트에 이 위젯을 적용해 보세요"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.title",
+      "value": "어떤 언어로도 자연스럽게"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.subtitle",
+      "value": "엄선된 동일한 위젯. 3개 로케일. 하나의 코드 경로."
+    },
+    {
+      "op": "set",
+      "path": "strings.share.share",
+      "value": "공유"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copy",
+      "value": "링크 복사"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copied",
+      "value": "복사됨"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.more",
+      "value": "더보기"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sms",
+      "value": "SMS"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.email",
+      "value": "이메일"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.whatsapp",
+      "value": "WhatsApp"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.telegram",
+      "value": "Telegram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.signal",
+      "value": "Signal"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.messenger",
+      "value": "Messenger"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.wechat",
+      "value": "WeChat"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.line",
+      "value": "LINE"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.slack",
+      "value": "Slack"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.teams",
+      "value": "Teams"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.discord",
+      "value": "Discord"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.x",
+      "value": "X"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.linkedin",
+      "value": "LinkedIn"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.facebook",
+      "value": "Facebook"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.reddit",
+      "value": "Reddit"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.instagram",
+      "value": "Instagram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.tiktok",
+      "value": "TikTok"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.title",
+      "value": "Clickeen 위젯"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.text",
+      "value": "웹사이트에 이 위젯을 적용해 보세요."
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionMessageTitle",
+      "value": "이 위젯 템플릿을 메시지로 보내기"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionSocialTitle",
+      "value": "이 위젯 템플릿을 소셜에 공유하기"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.brand",
+      "value": "Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.pricing",
+      "value": "요금제"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.widgets",
+      "value": "위젯"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.rights",
+      "value": "All rights reserved."
+    }
+  ],
+  "v": 1
+}

@@ -60,6 +60,8 @@
 - Fetches instance config from Paris.
 - Loads widget allowlist from Tokyo (`/widgets/{widgetType}/localization.json`).
 - Translates only `changedPaths`, removes `removedPaths`, and writes set-only ops to Paris (layer=locale).
+- Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
+- Richtext safety validation enforces placeholder parity, HTML tag parity, and anchor integrity (text-bearing link + href parity); failed richtext parity falls back to segment translation.
 - Paris preserves user overrides in layer=user and enqueues publish to Tokyo-worker.
 - Job schema v2 includes `agentId`, `grant`, `baseFingerprint`, `changedPaths`, `removedPaths`, and optional `baseUpdatedAt` metadata.
 - SF verifies the Paris-minted grant and `agent:*` cap before executing l10n jobs.
@@ -72,6 +74,8 @@
 - Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT` is `local` or `dev`; disabled elsewhere).
 - Auth: `Authorization: Bearer ${PARIS_DEV_JWT}`.
 - Used by `scripts/prague-l10n/translate.mjs` to translate Prague base content.
+- Prague-string prompts preserve source acronym style and do not add parenthetical acronym expansions that are absent in source text.
+- Prague-string safety validation enforces placeholder parity, HTML tag parity, and anchor integrity for richtext items.
 - Returns translated items; the caller writes overlay files under `tokyo/l10n/prague/**`.
 - Provider: OpenAI via shared policy router (curated profile default: `gpt-5.2`; env overrides still apply).
 

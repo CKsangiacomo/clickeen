@@ -83,7 +83,6 @@ If a widget exposes `appearance.cardwrapper.*` controls (border/shadow/radius fo
   - `--ck-cardwrapper-border-width`
   - `--ck-cardwrapper-border-color`
   - `--ck-cardwrapper-shadow`
-  - `--ck-cardwrapper-inside-fade`
   - `--ck-cardwrapper-radius`
 
 MUST
@@ -91,8 +90,6 @@ MUST
 - Apply card wrapper vars via `CKSurface.applyCardWrapper(...)` on every state update.
 - Reference only `--ck-cardwrapper-*` vars in `widget.css` for card wrapper styling.
   - `--ck-cardwrapper-shadow` maps to `appearance.cardwrapper.shadow` (outside elevation only).
-  - `--ck-cardwrapper-inside-fade` maps to `appearance.cardwrapper.insideShadow.*` when `appearance.cardwrapper.insideShadow.layer == "below-content"`.
-- If `appearance.cardwrapper.insideShadow.layer == "above-content"`, item containers MUST declare `data-ck-surface="cardwrapper"` so `CKSurface` can render the shared overlay layer.
 
 MUST NOT
 - Reimplement border/shadow/radius math per widget (use `CKSurface`).
@@ -101,7 +98,8 @@ MUST NOT
 ### 3) Typography (required if any text renders)
 MUST
 - Define `defaults.typography.roles` for all visible text parts.
-- Call `window.CKTypography.applyTypography(state.typography, root, roleMap)`.
+- Call `window.CKTypography.applyTypography(state.typography, root, roleMap, runtimeContext?)`.
+  - Pass runtime locale when available (for example `{ locale: msg.locale, publicId: resolvedPublicId }`) so script-aware fallback chains are deterministic.
 - Use typography CSS vars in `widget.css` (no ad-hoc fonts).
 
 MUST NOT
@@ -280,15 +278,20 @@ MUST NOT
     throw new Error('[widget] widget.client.js must execute inside [data-role="root"]');
   }
 
-  function applyState(state) {
+  function applyState(state, runtimeContext) {
     if (!state || typeof state !== 'object') return;
 
     if (window.CKStagePod) window.CKStagePod.applyStagePod(state.stage, state.pod, root);
     if (window.CKTypography) {
-      window.CKTypography.applyTypography(state.typography, root, {
-        title: { varKey: 'title' },
-        body: { varKey: 'body' }
-      });
+      window.CKTypography.applyTypography(
+        state.typography,
+        root,
+        {
+          title: { varKey: 'title' },
+          body: { varKey: 'body' }
+        },
+        { locale: runtimeContext && runtimeContext.locale }
+      );
     }
 
     const title = root.querySelector('[data-role="title"]');
@@ -300,11 +303,11 @@ MUST NOT
   window.addEventListener('message', (event) => {
     const msg = event.data;
     if (!msg || msg.type !== 'ck:state-update') return;
-    applyState(msg.state);
+    applyState(msg.state, { locale: msg.locale });
   });
 
   if (window.CK_WIDGET && window.CK_WIDGET.state) {
-    applyState(window.CK_WIDGET.state);
+    applyState(window.CK_WIDGET.state, { locale: window.CK_WIDGET.locale });
   }
 })();
 ```

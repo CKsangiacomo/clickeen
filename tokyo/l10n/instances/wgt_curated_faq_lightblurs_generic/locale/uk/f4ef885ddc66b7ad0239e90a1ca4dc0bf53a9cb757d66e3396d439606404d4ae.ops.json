@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Зв’яжіться з нами"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Тут ви знайдете відповіді на найпоширеніші запитання."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Поширені запитання"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing — SaaS-компанія, що спеціалізується на маркетинговій автоматизації та пропонує розширені інструменти для email-кампаній, сегментації клієнтів і аналітики."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Що таке Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Просто зареєструйтеся, підключіть свої дані та почніть створювати автоматизовані кампанії на нашій інтуїтивній платформі."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Як почати користуватися Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Так, Liquid Marketing пропонує безкоштовний пробний період із доступом до базових функцій. Для розширених можливостей можна перейти на вищий тариф."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing надає потужну платформу зі зручними інструментами автоматизації, детальною аналітикою та відмінною підтримкою, тож це ідеальний вибір для бізнесу, який хоче оптимізувати маркетинг."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Чому варто обрати Liquid Marketing для моїх маркетингових потреб?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Чи є безкоштовний пробний період?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Усі запитання"
+    }
+  ],
+  "v": 1
+}

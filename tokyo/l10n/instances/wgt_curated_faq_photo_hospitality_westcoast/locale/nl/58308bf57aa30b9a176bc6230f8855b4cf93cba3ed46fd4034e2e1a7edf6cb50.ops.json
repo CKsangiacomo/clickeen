@@ -10,27 +10,27 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "Ontdek de charme en het comfort van onze bed & breakfast in de VS."
+      "value": "Ontdek de charme en het comfort van onze B&B in de VS."
     },
     {
       "op": "set",
       "path": "header.title",
-      "value": "Veelgestelde vragen over onze bed & breakfast"
+      "value": "Veelgestelde vragen over Bed & Breakfast"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "We bieden verschillende kamertypes aan, waaronder <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">standaard</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> en <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a>."
+      "value": "We bieden verschillende kamertypes, waaronder <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">standaard</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> en <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a>."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Welke kamertypes zijn beschikbaar?"
+      "value": "Welke kamertypes zijn er beschikbaar?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Inchecken kan vanaf 15:00 uur en uitchecken kan tot 11:00 uur."
+      "value": "Inchecken kan vanaf 15:00 en uitchecken is uiterlijk om 11:00."
     },
     {
       "op": "set",
@@ -40,7 +40,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Ja, een gratis ontbijt is inbegrepen bij je verblijf."
+      "value": "Ja, er is een gratis ontbijt inbegrepen bij je verblijf."
     },
     {
       "op": "set",
@@ -50,7 +50,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Ja, we bieden romantische <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">arrangementen voor een korte getaway</a> en <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">gezinsvriendelijke opties.</a>"
+      "value": "Ja, we bieden romantische <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">arrangementen voor een weekendje weg</a> en <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">gezinsvriendelijke opties.</a>"
     },
     {
       "op": "set",

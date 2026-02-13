@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Šablony FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Začněte s profesionálně navrženou šablonou FAQ. Přizpůsobte si úplně všechno."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Začněte se stylovým směrem, ne s prázdným plátnem."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vyberte si propracovaný základ pro FAQ a pak během pár minut doladíte každý detail tak, aby seděl vaší značce."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Jeden FAQ widget. Nekonečně variant."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Přepínejte mezi Liquid Glass, Pure Canvas, Rebel Blocks a Enterprise Prime bez přepisování odpovědí."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Světlý režim. Tmavý režim. Jakýkoli režim — je to váš režim."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Šablony jsou jen startovní čára. Cíl máte pod kontrolou vy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Svoboda designu, rovnou v základu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Od rozvržení přes vizuální detaily až po typografické role — každé designové rozhodnutí máte v editoru pod kontrolou."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Rozvržení podle vás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Kontrola vzhledu bez limitů"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografická přesnost"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Více systémů rozvržení, ne jen jeden. Struktura pro každý breakpoint. Nezávislé odsazení a mezery pro desktop a mobil. Ovládejte sloupce, skládání, zarovnání i přelévání — přesně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Poloměr zaoblení pro každý roh. Ohraničení s vlastními barvami. Stíny vně i uvnitř (svázané nebo nezávislé pro každou stranu). Pozadí s přechodem, obrázkem nebo videem. Naprostá vizuální kontrola."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Šest jasně oddělených rolí (nadpis, text, otázka, odpověď, tlačítko, sekce). Vyberte si ze 17 Google Fonts. Tloušťka, styl, velikost — vše nastavitelné pro každou roli. Dynamické škálování."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Okamžitě měňte rozvržení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Vyberte Akordeon, Seznam nebo Karty a kdykoli přepněte bez přestavby obsahu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Interakční design v ceně"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Stavy hover, active i focus jsou součástí, takže vaše FAQ působí vyladěně na každém zařízení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Písmo, které sedí"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Použijte vlastní fonty nebo naši knihovnu a dolaďte hierarchii pro nadpisy, otázky, odpovědi i CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Tmavý režim je automatický"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Vaše FAQ se automaticky přizpůsobí světlým i tmavým sekcím, aby design vždy působil přirozeně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Dokonalost na mobilu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Klikatelné plochy, rozestupy i layout zůstávají přehledné na telefonech, tabletech i desktopu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Vytvořte své FAQ ve třech krocích"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Vyberte výchozí styl, dolaďte každý detail a publikujte jednu verzi, která se aktualizuje všude."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Vyberte styl"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Přizpůsobte vše"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publikujte"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Začněte šablonou, která sedí vaší značce."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Upravte rozvržení, rozestupy, barvy, zaoblení i typografii ve vizuálním editoru."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Proveďte jednu aktualizaci a projeví se všude, kde máte FAQ vložené."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Začněte šablonou. Udělejte si ji po svém."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Vyberte libovolnou šablonu, slaďte ji se svou značkou a spusťte svůj FAQ widget zdarma."
+    }
+  ],
+  "v": 1
+}

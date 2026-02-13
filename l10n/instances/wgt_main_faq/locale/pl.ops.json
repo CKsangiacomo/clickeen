@@ -6,7 +6,7 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "Często zadawane pytania"
+      "value": "Najczęściej zadawane pytania"
     },
     {
       "op": "set",
@@ -16,7 +16,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Czy istnieje darmowy plan?"
+      "value": "Czy jest dostępny darmowy plan?"
     },
     {
       "op": "set",
@@ -31,27 +31,27 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Dlaczego powinienem używać Clickeen"
+      "value": "Dlaczego warto korzystać z Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Tak, jeden aktywny widget z podstawowymi funkcjami."
+      "value": "Tak — jeden aktywny widget z podstawowymi funkcjami."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Osadzalne widgety z wbudowanymi konwersjami."
+      "value": "Widgety do osadzenia z wbudowanymi konwersjami."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Skopiuj kod embed i wklej go przed </body> na swojej stronie."
+      "value": "Skopiuj kod osadzenia i wklej go na swojej stronie przed </body>."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Ponieważ Clickeen to niesamowita nowa platforma, aby uczynić sieć piękną i łatwą w użyciu."
+      "value": "Bo Clickeen to świetna nowa platforma, dzięki której web staje się piękny i łatwy w użyciu."
     }
   ]
 }

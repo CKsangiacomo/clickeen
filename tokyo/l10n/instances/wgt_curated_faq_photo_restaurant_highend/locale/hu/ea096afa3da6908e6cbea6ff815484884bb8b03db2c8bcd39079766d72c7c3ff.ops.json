@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Asztalfoglalás"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Fedezze fel USA-beli panziónk báját és kényelmét."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Chef Pierre GYIK"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Számos étkezési élményt kínálunk, többek között privát vacsorát, borkóstolókat és chef’s table élményeket."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Milyen étkezési élmények érhetők el?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Az asztalfoglalás ajánlott, és legfeljebb 30 nappal előre lehetséges."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Mik a foglalási szabályok?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Igen, smart casual öltözködés ajánlott."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Van öltözködési előírás?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Igen, kínálunk romantikus vacsoracsomagokat és csoportos étkezési lehetőségeket."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Kínálnak különleges vacsoracsomagokat?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "A lemondást a díj elkerülése érdekében legalább 24 órával előre kell jelezni."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Mi a lemondási szabályzatuk?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Igen, többféle étrendi igényt is figyelembe tudunk venni, beleértve a vegetáriánus, vegán, gluténmentes és dióféléktől mentes opciókat."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Tudnak biztosítani speciális étrend szerinti opciókat?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Étkezési élmény"
+    }
+  ],
+  "v": 1
+}

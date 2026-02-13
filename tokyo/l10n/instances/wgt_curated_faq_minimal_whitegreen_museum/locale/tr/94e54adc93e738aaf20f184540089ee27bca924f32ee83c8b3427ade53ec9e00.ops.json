@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "94e54adc93e738aaf20f184540089ee27bca924f32ee83c8b3427ade53ec9e00",
+  "baseUpdatedAt": "2026-02-12T17:01:21.211684+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Rezervasyon yap"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "ABD’deki oda-kahvaltı tesisimizin cazibesini ve konforunu keşfedin."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Soho Sanat Galerisi SSS"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">yerel</a> ve i<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">uluslararası sanatçılardan</a> çağdaş sanat eserleri sergiliyoruz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Hangi tür sanat eserleri sergileniyor?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Galeri, salıdan pazara 10.00–18.00 saatleri arasında açıktır."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Galeri çalışma saatleri nedir?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Giriş ücretsizdir; ancak bağışlar memnuniyetle kabul edilir."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Giriş ücreti var mı?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Evet, sanat eserlerini doğrudan galeriden satın alabilirsiniz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Galeride sanat eseri satın alabilir miyim?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Yaklaşan sergiler ve etkinliklerle ilgili bilgi için web sitemizi ziyaret edin."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Yakında bir etkinlik var mı?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Evet, ücret karşılığında özel etkinlik organizasyonu yapıyoruz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Galeride özel bir etkinlik düzenleyebilir miyim?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Galeri Bilgileri"
+    }
+  ],
+  "v": 1
+}

@@ -488,60 +488,6 @@
           "spread": 0,
           "enabled": false
         },
-        "insideShadow": {
-          "linked": true,
-          "layer": "below-content",
-          "all": {
-            "x": 0,
-            "y": 0,
-            "blur": 24,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": 0,
-            "enabled": false
-          },
-          "top": {
-            "x": 0,
-            "y": 12,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          },
-          "right": {
-            "x": -12,
-            "y": 0,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          },
-          "bottom": {
-            "x": 0,
-            "y": -12,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          },
-          "left": {
-            "x": 12,
-            "y": 0,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          }
-        },
         "radiusBL": "4xl",
         "radiusBR": "4xl",
         "radiusTL": "4xl",
@@ -684,13 +630,6 @@
     "    <tooldrawer-field-appearance-item-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusBL' label='Logo tile bottom-left radius' label-key='logoshowcase.labels.itemBottomLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusBL}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
     "    <tooldrawer-field-appearance-item-card group-label='' type='dropdown-border' size='md' path='appearance.cardwrapper.border' label='Logo tile border' label-key='logoshowcase.labels.itemBorder' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.border}}' />",
     "    <tooldrawer-field-appearance-item-card group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.shadow' label='Logo tile outside shadow' label-key='logoshowcase.labels.itemOutsideShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.shadow}}' />",
-    "    <tooldrawer-field-appearance-item-card group-label='' type='toggle' size='md' path='appearance.cardwrapper.insideShadow.linked' label='Link logo tile inside shadows' label-key='logoshowcase.labels.linkItemInsideShadows' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.linked}}' default='true' />",
-    "    <tooldrawer-field-appearance-item-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.insideShadow.layer' label='Inside shadow layer' value='{{appearance.cardwrapper.insideShadow.layer}}' options='[{&quot;label&quot;:&quot;Show below content&quot;,&quot;value&quot;:&quot;below-content&quot;},{&quot;label&quot;:&quot;Show above content&quot;,&quot;value&quot;:&quot;above-content&quot;}]' />",
-    "    <tooldrawer-field-appearance-item-card group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.insideShadow.all' label='Logo tile inside shadow' label-key='logoshowcase.labels.itemInsideShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.all}}' show-if=\"appearance.cardwrapper.insideShadow.linked == true\" />",
-    "    <tooldrawer-field-appearance-item-card group-label='' type='dropdown-shadow' axis='y' size='md' path='appearance.cardwrapper.insideShadow.top' label='Logo tile inside shadow (top)' label-key='logoshowcase.labels.itemInsideShadowTop' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.top}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-appearance-item-card group-label='' type='dropdown-shadow' axis='x' size='md' path='appearance.cardwrapper.insideShadow.right' label='Logo tile inside shadow (right)' label-key='logoshowcase.labels.itemInsideShadowRight' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.right}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-appearance-item-card group-label='' type='dropdown-shadow' axis='y' size='md' path='appearance.cardwrapper.insideShadow.bottom' label='Logo tile inside shadow (bottom)' label-key='logoshowcase.labels.itemInsideShadowBottom' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.bottom}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-appearance-item-card group-label='' type='dropdown-shadow' axis='x' size='md' path='appearance.cardwrapper.insideShadow.left' label='Logo tile inside shadow (left)' label-key='logoshowcase.labels.itemInsideShadowLeft' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.left}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster label='Stage/Pod'>",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",

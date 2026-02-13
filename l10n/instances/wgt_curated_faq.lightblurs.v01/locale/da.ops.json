@@ -26,7 +26,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "Er der en gratis plan?"
+      "value": "Findes der en gratis plan?"
     },
     {
       "op": "set",
@@ -36,7 +36,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen er noget, som Isabel virkelig vil elske at arbejde for, når hun er nødt til det, og jeg vil tvinge hende."
+      "value": "Clickeen er noget, som Isabel virkelig kommer til at elske at arbejde på, når hun skal – og jeg tvinger hende."
     },
     {
       "op": "set",
@@ -46,12 +46,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Ja, én aktiv widget med kernefunktioner."
+      "value": "Ja – én aktiv widget med kernefunktioner."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Fordi Clickeen er en fantastisk ny platform, der gør nettet smukt og nemt at bruge."
+      "value": "Fordi Clickeen er en fantastisk ny platform, der gør webbet smukt og nemt at bruge."
     }
   ]
 }

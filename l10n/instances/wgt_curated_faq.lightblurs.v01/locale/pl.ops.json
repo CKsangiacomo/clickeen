@@ -21,7 +21,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Jak zainstalować widget?"
+      "value": "Jak zainstalować widżet?"
     },
     {
       "op": "set",
@@ -31,27 +31,27 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Dlaczego powinienem używać Clickeen"
+      "value": "Dlaczego warto korzystać z Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen to coś, co Isabel naprawdę pokocha, kiedy będzie musiała dla niego pracować, a ja ją do tego zmuszę."
+      "value": "Clickeen to coś, przy czym Isabel naprawdę spodoba się pracować, kiedy będzie musiała — a ja ją do tego zmuszę."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Skopiuj kod embed i wklej go przed </body> na swojej stronie."
+      "value": "Skopiuj kod osadzenia i wklej go na swojej stronie tuż przed </body>."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Tak, jeden aktywny widget z podstawowymi funkcjami."
+      "value": "Tak — jeden aktywny widżet z podstawowymi funkcjami."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Ponieważ Clickeen to niesamowita nowa platforma, która sprawia, że sieć jest piękna i łatwa w użyciu."
+      "value": "Bo Clickeen to świetna, nowa platforma, która sprawia, że web jest piękniejszy i łatwiejszy w użyciu."
     }
   ]
 }

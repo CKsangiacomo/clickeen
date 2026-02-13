@@ -209,6 +209,16 @@ export default defineConfig({
               return;
             }
 
+            const defaultPlatformAccountId = (
+              process.env.CK_PLATFORM_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100'
+            ).trim();
+            const ownerAccountId = String(payload?.ownerAccountId || defaultPlatformAccountId).trim();
+            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ownerAccountId)) {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }));
+              return;
+            }
+
             const defaults = payload?.defaults;
             if (!defaults || typeof defaults !== 'object' || Array.isArray(defaults)) {
               res.statusCode = 422;
@@ -588,6 +598,7 @@ export default defineConfig({
                 return (
                   u.pathname.startsWith('/workspace-assets/') ||
                   u.pathname.startsWith('/curated-assets/') ||
+                  u.pathname.startsWith('/assets/accounts/') ||
                   u.pathname.startsWith('/widgets/')
                 );
               } catch {
@@ -633,7 +644,7 @@ export default defineConfig({
                   issues.push({
                     path: nodePath,
                     message:
-                      'local-only URL found (localhost/127.0.0.1). Promotion requires local Tokyo URLs (http://localhost:4000/workspace-assets/*, /curated-assets/*, or /widgets/*).',
+                      'local-only URL found (localhost/127.0.0.1). Promotion requires local Tokyo URLs (http://localhost:4000/workspace-assets/*, /curated-assets/*, /assets/accounts/*, or /widgets/*).',
                   });
                 }
                 return;
@@ -675,7 +686,11 @@ export default defineConfig({
               const requiresUpload = localUrlRefs.some((ref) => {
                 try {
                   const u = new URL(ref.primaryUrl);
-                  return u.pathname.startsWith('/workspace-assets/') || u.pathname.startsWith('/curated-assets/');
+                  return (
+                    u.pathname.startsWith('/workspace-assets/') ||
+                    u.pathname.startsWith('/curated-assets/') ||
+                    u.pathname.startsWith('/assets/accounts/')
+                  );
                 } catch {
                   return true;
                 }
@@ -723,15 +738,19 @@ export default defineConfig({
                   'content-type': contentType,
                   'x-filename': filenameFromUrl(sourceUrl),
                   'x-variant': 'original',
+                  'x-account-id': ownerAccountId,
+                  'x-source': 'promotion',
                 };
 
                 if (source.pathname.startsWith('/workspace-assets/')) {
-                  endpoint = '/workspace-assets/upload';
+                  endpoint = '/assets/upload';
                   headers['x-workspace-id'] = workspaceId;
                 } else if (source.pathname.startsWith('/curated-assets/')) {
-                  endpoint = '/curated-assets/upload';
+                  endpoint = '/assets/upload';
                   headers['x-public-id'] = publicId;
                   headers['x-widget-type'] = widgetType;
+                } else if (source.pathname.startsWith('/assets/accounts/')) {
+                  endpoint = '/assets/upload';
                 } else {
                   throw new Error(`Unsupported local Tokyo asset path: ${source.pathname}`);
                 }
@@ -746,7 +765,20 @@ export default defineConfig({
                   throw new Error(text || `Cloud Tokyo upload failed (HTTP ${uploadRes.status})`);
                 }
                 const json = await readJson(uploadRes);
-                const url = typeof json?.url === 'string' ? json.url.trim() : '';
+                const keyCandidate =
+                  typeof json?.key === 'string'
+                    ? json.key.trim()
+                    : typeof json?.relativePath === 'string'
+                      ? json.relativePath.trim()
+                      : '';
+                const directUrl = typeof json?.url === 'string' ? json.url.trim() : '';
+                const url =
+                  directUrl ||
+                  (keyCandidate
+                    ? /^https?:\/\//i.test(keyCandidate)
+                      ? keyCandidate
+                      : `${cloudTokyoBase}/${keyCandidate.replace(/^\/+/, '')}`
+                    : '');
                 if (!url) throw new Error('Cloud Tokyo upload response missing url');
                 cache.set(sourceUrl, url);
                 return url;

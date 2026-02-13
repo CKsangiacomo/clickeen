@@ -5,7 +5,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen är en widget-SaaS-plattform som låter dig lägga till snygga, högpresterande widgets på din webbplats på bara några minuter – utan omfattande utvecklingsarbete."
+      "value": "Clickeen är en widgetbaserad SaaS-plattform som låter dig lägga till snygga, högpresterande widgets på din webbplats på bara några minuter – utan tungt utvecklingsarbete."
     },
     {
       "op": "set",
@@ -25,7 +25,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Ja. Gratisplanen inkluderar 1 aktiv widget med grundläggande funktioner, så att du kan testa Clickeen på en live-webbplats."
+      "value": "Ja. Gratisplanen inkluderar 1 aktiv widget med grundläggande funktioner, så att du kan testa Clickeen på en live-sajt."
     },
     {
       "op": "set",
@@ -45,7 +45,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Lansera snabbare med flexibla designinställningar, enkla uppdateringar och pålitlig prestanda – så att teamet kan leverera förbättringar utan att behöva underhålla egen kod."
+      "value": "Lansera snabbare med flexibla designkontroller, enkla uppdateringar och pålitlig prestanda – så att teamet kan leverera förbättringar utan att underhålla egen kod."
     },
     {
       "op": "set",

@@ -16,7 +16,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Ücretsiz bir plan var mı?"
+      "value": "Ücretsiz plan var mı?"
     },
     {
       "op": "set",
@@ -26,7 +26,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "Bir widget nasıl kurulur?"
+      "value": "Bir widget’ı nasıl yüklerim?"
     },
     {
       "op": "set",
@@ -36,22 +36,22 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Evet, temel özelliklerle birlikte bir aktif widget."
+      "value": "Evet; temel özelliklere sahip 1 aktif widget."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Yerleşik dönüşümlerle gömülebilir widget'lar."
+      "value": "Dönüşüm odaklı, sitenize gömülebilen widget’lar."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Gömme kodunu kopyalayın ve sitenizde </body> etiketinden önce yapıştırın."
+      "value": "Gömme kodunu kopyalayın ve sitenizde </body> etiketinden hemen önce yapıştırın."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Çünkü Clickeen, web'i güzel ve kullanımı kolay hale getirmek için harika bir yeni platformdur."
+      "value": "Çünkü Clickeen, web’i daha güzel ve kullanımı daha kolay hale getiren harika yeni bir platform."
     }
   ]
 }

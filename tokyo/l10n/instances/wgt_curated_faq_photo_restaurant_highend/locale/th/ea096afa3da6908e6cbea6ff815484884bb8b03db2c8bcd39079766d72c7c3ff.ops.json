@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "จองโต๊ะ"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "ค้นพบเสน่ห์และความสบายของที่พักแบบ bed and breakfast ในสหรัฐอเมริกาของเรา"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "คำถามที่พบบ่อยของ Chef Pierre"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "เรามีประสบการณ์การรับประทานอาหารหลากหลายรูปแบบ รวมถึงดินเนอร์แบบส่วนตัว การชิมไวน์ และประสบการณ์เชฟเทเบิล"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "มีประสบการณ์การรับประทานอาหารแบบใดบ้าง?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "แนะนำให้จองล่วงหน้า และสามารถจองได้ล่วงหน้าสูงสุด 30 วัน"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "มีนโยบายการจองอย่างไร?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "มี เรากำหนดการแต่งกายแบบสมาร์ทแคชชวล"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "มีข้อกำหนดเรื่องการแต่งกายไหม?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "มี เรามีแพ็กเกจดินเนอร์โรแมนติกและประสบการณ์รับประทานอาหารแบบกลุ่ม"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "มีแพ็กเกจดินเนอร์พิเศษหรือไม่?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "ต้องยกเลิกอย่างน้อย 24 ชั่วโมงล่วงหน้าเพื่อหลีกเลี่ยงค่าธรรมเนียม"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "นโยบายการยกเลิกคืออะไร?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "มี เรารองรับความต้องการด้านอาหารหลากหลาย รวมถึงมังสวิรัติ วีแกน ปลอดกลูเตน และปลอดถั่ว"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "มีบริการรองรับข้อจำกัดด้านอาหารหรือไม่?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "ประสบการณ์การรับประทานอาหาร"
+    }
+  ],
+  "v": 1
+}

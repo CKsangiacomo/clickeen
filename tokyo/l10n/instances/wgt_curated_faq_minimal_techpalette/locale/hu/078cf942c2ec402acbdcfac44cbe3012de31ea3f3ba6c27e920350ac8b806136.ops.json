@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kapcsolatfelvétel az Ive Engineeringgel"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Mérnöki megoldások és szolgáltatások, amikre mindig számíthatsz."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering GYIK"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Az Ive Engineering egy globális vállalat, amely innovatív mérnöki megoldásokra és szolgáltatásokra specializálódott."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Mi az az Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Vedd fel velünk a kapcsolatot, beszéljük át a projekted igényeit, és végigvezetünk a szolgáltatásainkon."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hogyan kezdhetem el igénybe venni az Ive Engineering szolgáltatásait?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Igen, az Ive Engineering ingyenes konzultációt biztosít, hogy jobban megértsük a projekted követelményeit."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Van lehetőség konzultációra?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Az Ive Engineering élvonalbeli megoldásokat, tapasztalt szakembereket és az egyedi mérnöki igényeidhez igazított szolgáltatásokat nyújt."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Miért válasszam az Ive Engineeringet a mérnöki igényeimhez?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Minden kérdés"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Az Ive Engineering minden projektjében és szolgáltatásában az innovációt, az integritást és a kiválóságot tartja szem előtt."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Melyek az Ive Engineering alapértékei?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Az Ive Engineeringet a weboldalunkon, e-mailben vagy a kapcsolat oldalon megadott telefonszámon érheted el."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Hogyan léphetek kapcsolatba az Ive Engineeringgel?"
+    }
+  ],
+  "v": 1
+}

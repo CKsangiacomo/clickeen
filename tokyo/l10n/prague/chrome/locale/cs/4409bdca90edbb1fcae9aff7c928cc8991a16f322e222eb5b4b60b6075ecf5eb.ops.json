@@ -1,0 +1,217 @@
+{
+  "baseFingerprint": "4409bdca90edbb1fcae9aff7c928cc8991a16f322e222eb5b4b60b6075ecf5eb",
+  "baseUpdatedAt": "2026-02-12T02:06:51.338Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.nav.widgets",
+      "value": "Widgety"
+    },
+    {
+      "op": "set",
+      "path": "strings.nav.viewAllWidgets",
+      "value": "Zobrazit všechny widgety"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.overview",
+      "value": "Přehled"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.templates",
+      "value": "Šablony"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.examples",
+      "value": "Ukázky"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.features",
+      "value": "Funkce"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.pricing",
+      "value": "Ceník"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.createFree",
+      "value": "Vytvořit zdarma"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.seeTemplates",
+      "value": "Zobrazit šablony"
+    },
+    {
+      "op": "set",
+      "path": "strings.common.comingSoon",
+      "value": "Již brzy."
+    },
+    {
+      "op": "set",
+      "path": "strings.creative.useThisWidgetOnYourWebsite",
+      "value": "Použijte tento widget na svém webu"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.title",
+      "value": "Navrženo tak, aby mluvilo každým jazykem"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.subtitle",
+      "value": "Stejně vyladěný widget. Tři jazyky. Jeden kód."
+    },
+    {
+      "op": "set",
+      "path": "strings.share.share",
+      "value": "Sdílet"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copy",
+      "value": "Kopírovat odkaz"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copied",
+      "value": "Zkopírováno"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.more",
+      "value": "Více"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sms",
+      "value": "SMS"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.email",
+      "value": "E-mail"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.whatsapp",
+      "value": "WhatsApp"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.telegram",
+      "value": "Telegram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.signal",
+      "value": "Signal"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.messenger",
+      "value": "Messenger"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.wechat",
+      "value": "WeChat"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.line",
+      "value": "LINE"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.slack",
+      "value": "Slack"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.teams",
+      "value": "Teams"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.discord",
+      "value": "Discord"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.x",
+      "value": "X"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.linkedin",
+      "value": "LinkedIn"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.facebook",
+      "value": "Facebook"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.reddit",
+      "value": "Reddit"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.instagram",
+      "value": "Instagram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.tiktok",
+      "value": "TikTok"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.title",
+      "value": "Widget Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.text",
+      "value": "Použijte tento widget na svém webu."
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionMessageTitle",
+      "value": "Odeslat tuto šablonu widgetu jako zprávu"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionSocialTitle",
+      "value": "Sdílet tuto šablonu widgetu na sociálních sítích"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.brand",
+      "value": "Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.pricing",
+      "value": "Ceník"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.widgets",
+      "value": "Widgety"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.rights",
+      "value": "Všechna práva vyhrazena."
+    }
+  ],
+  "v": 1
+}

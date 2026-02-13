@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Buat reservasi"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Temukan pesona dan kenyamanan bed and breakfast kami di USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ Chef Pierre"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Kami menawarkan beragam pengalaman bersantap, termasuk private dining, wine tasting, dan pengalaman chef’s table."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Jenis pengalaman bersantap apa saja yang tersedia?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Reservasi disarankan dan dapat dibuat hingga 30 hari sebelumnya."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Bagaimana kebijakan reservasi Anda?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ya, kami menerapkan dress code smart casual."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Apakah ada dress code?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ya, kami menawarkan paket makan malam romantis dan pengalaman bersantap untuk grup."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Apakah Anda menyediakan paket bersantap khusus?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Pembatalan harus dilakukan 24 jam sebelumnya untuk menghindari biaya."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Apa kebijakan pembatalan Anda?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Ya, kami dapat mengakomodasi berbagai kebutuhan diet, termasuk opsi vegetarian, vegan, bebas gluten, dan bebas kacang."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Apakah Anda menyediakan akomodasi diet tertentu?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Pengalaman Bersantap"
+    }
+  ],
+  "v": 1
+}

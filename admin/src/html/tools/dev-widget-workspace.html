@@ -226,6 +226,17 @@
       min-inline-size: 240px;
     }
 
+    .dev-widget-workspace-header #widget-selector {
+      flex: 0 0 160px;
+      inline-size: 160px;
+      min-inline-size: 160px;
+      max-inline-size: 160px;
+    }
+
+    .dev-widget-workspace-header #widget-selector .diet-textfield__control {
+      box-shadow: var(--shadow-floating);
+    }
+
     .dev-widget-workspace-header .diet-dropdown {
       position: relative;
     }
@@ -345,6 +356,13 @@
     .dev-widget-workspace-header .diet-dropdown__option.is-selected {
       background: color-mix(in oklab, var(--color-system-blue), transparent 88%);
       color: var(--color-system-blue);
+    }
+
+    .dev-widget-workspace-header .dev-widget-workspace__empty-option {
+      border-radius: var(--control-radius-md);
+      padding: var(--space-2) var(--space-3);
+      color: color-mix(in oklab, var(--color-text), transparent 35%);
+      background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 12%);
     }
 
     .dev-widget-workspace__modal {
@@ -541,6 +559,11 @@
       <span class="dev-widget-workspace__l10n-meta" id="l10n-status-meta"></span>
       <span class="dev-widget-workspace__l10n-tooltip" id="l10n-status-tooltip"></span>
     </div>
+    <div class="diet-textfield" data-size="md" id="widget-selector" style="display: none">
+      <label class="diet-textfield__control">
+        <select id="widget-select" class="diet-textfield__field" aria-label="Widget"></select>
+      </label>
+    </div>
     <div
       class="diet-dropdown"
       id="instance-dropdown"
@@ -555,9 +578,9 @@
         tabindex="0"
         aria-haspopup="listbox"
         aria-expanded="false"
+        aria-label="Select instance"
       >
-        <span class="diet-dropdown__value" data-label="Instance">
-          <span class="diet-dropdown__value-label label">Instance</span>
+        <span class="diet-dropdown__value">
           <span class="diet-dropdown__value-choice body" id="current-instance-label"
             >Loading...</span
           >
@@ -790,22 +813,29 @@
 
     const TOKYO_BASE = resolveTokyoBaseUrl();
     const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
+    const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
     // v1: curated instances live in the single Clickeen-owned workspace in dev, which is ck-dev.
     // In prod this will point at the Clickeen marketing workspace.
     const CLICKEEN_WORKSPACE_ID = DEV_WORKSPACE_ID;
     let currentPublicId = null;
+    let selectedWidgetSlug = null;
     let instances = [];
     let isOpen = false;
     const isLocalDevStudio =
       window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
     const dropdown = document.getElementById('instance-dropdown');
+    const widgetSelector = document.getElementById('widget-selector');
+    const widgetSelect = document.getElementById('widget-select');
     const control = document.getElementById('instance-dropdown-control');
     const valueField = document.getElementById('instance-dropdown-value');
     const menu = document.getElementById('instance-dropdown-menu');
     const iframe = document.getElementById('bob-iframe');
     const currentLabel = document.getElementById('current-instance-label');
     const compiledCache = new Map();
+    const compiledPromiseCache = new Map();
+    const instanceConfigPromiseCache = new Map();
+    let sendInstanceSeq = 0;
     const superadminActions = document.getElementById('superadmin-actions');
     const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
     const superadminUpdateTheme = document.getElementById('superadmin-update-theme');
@@ -836,6 +866,7 @@
     let l10nStatusTimer = null;
 
     const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
+    const THEME_UPDATE_LAST_ID_STORAGE = 'ck.devstudio.theme.update.lastThemeId';
 
     let curatedModalState = null;
     let themeModalState = null;
@@ -1154,11 +1185,12 @@
 
     function attachDropdown() {
       const header = document.querySelector('.devstudio-page__header');
-      if (!header || !dropdown) {
+      if (!header || !dropdown || !widgetSelector) {
         requestAnimationFrame(attachDropdown);
         return;
       }
       header.classList.add('dev-widget-workspace-header');
+      header.appendChild(widgetSelector);
       dropdown.style.display = 'inline-block';
       header.appendChild(dropdown);
     }
@@ -1174,49 +1206,122 @@
       return parts[parts.length - 1].toLowerCase();
     }
 
+    function formatWidgetLabel(widgetSlug) {
+      const slug = normalizeWidgetname(widgetSlug);
+      if (!slug) return 'Unknown';
+      return slug
+        .split(/[_-]+/g)
+        .filter(Boolean)
+        .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
+        .join(' ');
+    }
+
+    function listWidgetSlugs() {
+      return Array.from(
+        new Set(instances.map((inst) => inst.widgetSlug).filter((slug) => typeof slug === 'string' && slug)),
+      ).sort((a, b) => a.localeCompare(b));
+    }
+
+    function getScopedInstances() {
+      if (!selectedWidgetSlug) return instances;
+      return instances.filter((inst) => inst.widgetSlug === selectedWidgetSlug);
+    }
+
+    function syncWidgetSelector() {
+      if (!(widgetSelect instanceof HTMLSelectElement)) return;
+      const widgetSlugs = listWidgetSlugs();
+      widgetSelect.replaceChildren();
+      widgetSlugs.forEach((widgetSlug) => {
+        const option = document.createElement('option');
+        option.value = widgetSlug;
+        option.textContent = formatWidgetLabel(widgetSlug);
+        widgetSelect.appendChild(option);
+      });
+      if (!widgetSlugs.length) {
+        selectedWidgetSlug = null;
+        if (widgetSelector instanceof HTMLElement) widgetSelector.style.display = 'none';
+        return;
+      }
+      if (!selectedWidgetSlug || !widgetSlugs.includes(selectedWidgetSlug)) {
+        selectedWidgetSlug = widgetSlugs[0];
+      }
+      widgetSelect.value = selectedWidgetSlug;
+      if (widgetSelector instanceof HTMLElement) {
+        widgetSelector.style.display = widgetSlugs.length > 1 ? 'block' : 'none';
+      }
+    }
+
+    function syncSelectedWidgetForPublicId(publicId) {
+      const selected = instances.find((inst) => inst.publicId === publicId);
+      const widgetSlug = selected?.widgetSlug || normalizeWidgetname(selected?.widgetname);
+      if (!widgetSlug) return;
+      if (widgetSlug === selectedWidgetSlug) return;
+      selectedWidgetSlug = widgetSlug;
+      syncWidgetSelector();
+    }
+
     async function ensureCompiledWidget(widgetname) {
       const slug = normalizeWidgetname(widgetname);
       if (!slug) throw new Error(`Cannot normalize widget name: ${widgetname}`);
       if (compiledCache.has(slug)) return compiledCache.get(slug);
-      const res = await fetch(`${BOB_ORIGIN}/api/widgets/${slug}/compiled`, { cache: 'no-store' });
-      if (!res.ok) {
-        let details = '';
-        try {
-          const text = await res.text();
-          if (text) {
-            try {
-              const parsed = JSON.parse(text);
-              if (parsed && typeof parsed === 'object' && 'error' in parsed) {
-                details = String(parsed.error || '');
-              } else {
+      if (compiledPromiseCache.has(slug)) return compiledPromiseCache.get(slug);
+
+      const promise = (async () => {
+        const res = await fetch(`${BOB_ORIGIN}/api/widgets/${slug}/compiled`, { cache: 'no-store' });
+        if (!res.ok) {
+          let details = '';
+          try {
+            const text = await res.text();
+            if (text) {
+              try {
+                const parsed = JSON.parse(text);
+                if (parsed && typeof parsed === 'object' && 'error' in parsed) {
+                  details = String(parsed.error || '');
+                } else {
+                  details = text;
+                }
+              } catch {
                 details = text;
               }
-            } catch {
-              details = text;
             }
-          }
-        } catch {}
-        const suffix = details ? ` → ${details}` : '';
-        throw new Error(`Failed to compile widget ${widgetname} (${res.status})${suffix}`);
-      }
-      const json = await res.json();
-      compiledCache.set(slug, json);
-      return json;
+          } catch {}
+          const suffix = details ? ` → ${details}` : '';
+          throw new Error(`Failed to compile widget ${widgetname} (${res.status})${suffix}`);
+        }
+        const json = await res.json();
+        compiledCache.set(slug, json);
+        return json;
+      })().finally(() => {
+        compiledPromiseCache.delete(slug);
+      });
+
+      compiledPromiseCache.set(slug, promise);
+      return promise;
     }
 
     async function fetchInstanceConfig(publicId) {
-      const res = await fetch(
-        `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&subject=devstudio&_t=${Date.now()}`,
-        { cache: 'no-store' },
-      );
-      if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
-      const json = await res.json();
-      return json?.config ?? null;
+      if (instanceConfigPromiseCache.has(publicId)) {
+        return instanceConfigPromiseCache.get(publicId);
+      }
+      const promise = (async () => {
+        const res = await fetch(
+          `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&subject=devstudio&_t=${Date.now()}`,
+          { cache: 'no-store' },
+        );
+        if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
+        const json = await res.json();
+        return json?.config ?? null;
+      })().finally(() => {
+        instanceConfigPromiseCache.delete(publicId);
+      });
+
+      instanceConfigPromiseCache.set(publicId, promise);
+      return promise;
     }
 
     async function fetchInstances() {
       console.log('[DevStudio] Fetching instances from Paris');
-      const res = await fetch(`${PARIS_API}/curated-instances?_t=${Date.now()}`, {
+      const res = await fetch(`${PARIS_API}/curated-instances?includeConfig=0&_t=${Date.now()}`, {
         cache: 'no-store',
       });
       if (!res.ok) {
@@ -1245,49 +1350,57 @@
         meta: normalizeCuratedMeta(inst.meta ?? null),
       }));
 
-      const uniqueWidgetnames = Array.from(
-        new Set(instances.map((inst) => inst.widgetSlug || inst.widgetname)),
-      );
       if (instances.length === 0) {
+        selectedWidgetSlug = null;
         currentPublicId = null;
         currentLabel.textContent = 'No instances yet';
         valueField.value = '';
+        menu.innerHTML = '';
         dropdown.style.display = 'none';
+        if (widgetSelector instanceof HTMLElement) widgetSelector.style.display = 'none';
         return;
       }
+      dropdown.style.display = 'inline-block';
 
-      const compileResults = await Promise.allSettled(
-        uniqueWidgetnames.map((widgetname) => ensureCompiledWidget(widgetname)),
-      );
-      const compileErrors = compileResults.filter((result) => result.status === 'rejected');
-      if (compileErrors.length > 0) {
-        console.error(
-          '[DevStudio] Failed to compile one or more widgets; instance list will still load',
-          compileErrors,
-        );
+      if (!instances.some((inst) => inst.publicId === currentPublicId)) {
+        currentPublicId = instances[0].publicId;
       }
+      syncSelectedWidgetForPublicId(currentPublicId);
+      syncWidgetSelector();
 
-      currentPublicId = currentPublicId || instances[0].publicId;
+      const scopedInstances = getScopedInstances();
+      if (!scopedInstances.some((inst) => inst.publicId === currentPublicId)) {
+        currentPublicId = scopedInstances[0]?.publicId || instances[0].publicId;
+      }
 
       console.log('[DevStudio] Current publicId', currentPublicId, 'instances', instances.length);
       updateCurrentLabel();
       renderInstances();
-      try {
-        await sendInstanceToIframe(currentPublicId);
-      } catch (error) {
+      sendInstanceToIframe(currentPublicId).catch((error) => {
         console.error('[DevStudio] Failed to load initial instance into Bob', error);
-      }
+      });
       refreshL10nStatus(currentPublicId).catch(() => {});
     }
 
     function updateCurrentLabel() {
+      if (!currentPublicId) {
+        currentLabel.textContent = 'No instances yet';
+        valueField.value = '';
+        return;
+      }
       const current = instances.find((inst) => inst.publicId === currentPublicId);
       currentLabel.textContent = current?.label || currentPublicId;
       valueField.value = currentPublicId;
     }
 
     function renderInstances() {
-      menu.innerHTML = instances
+      const scopedInstances = getScopedInstances();
+      if (!scopedInstances.length) {
+        menu.innerHTML = '<div class="dev-widget-workspace__empty-option body-s">No instances</div>';
+        return;
+      }
+
+      menu.innerHTML = scopedInstances
         .map((inst) => {
           const selected = inst.publicId === currentPublicId;
           return `
@@ -1319,6 +1432,7 @@
     }
 
     function switchInstance(publicId) {
+      syncSelectedWidgetForPublicId(publicId);
       currentPublicId = publicId;
       isOpen = false;
       dropdown.setAttribute('data-state', 'closed');
@@ -1533,12 +1647,19 @@
       );
     }
 
-    async function promoteInstanceToCloud({ workspaceId, widgetType, publicId, config, status }) {
+    async function promoteInstanceToCloud({
+      workspaceId,
+      widgetType,
+      publicId,
+      config,
+      status,
+      ownerAccountId = PLATFORM_ACCOUNT_ID,
+    }) {
       if (!isLocalDevStudio) return { ok: false, skipped: true };
       const res = await fetch(`/api/promote-instance?_t=${Date.now()}`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ workspaceId, widgetType, publicId, config, status }),
+        body: JSON.stringify({ workspaceId, widgetType, publicId, config, status, ownerAccountId }),
       });
       const text = await res.text().catch(() => '');
       if (!res.ok) {
@@ -1648,6 +1769,7 @@
 
     async function uploadTokyoAsset({
       scope,
+      accountId,
       workspaceId,
       widgetType,
       publicId,
@@ -1659,13 +1781,18 @@
       headers.set('content-type', blob.type || 'application/octet-stream');
       headers.set('x-filename', filename || 'upload.bin');
       headers.set('x-variant', variant);
+      if (scope !== 'widget') {
+        if (!accountId) throw new Error('[DevStudio] Missing accountId for account asset upload');
+        headers.set('x-account-id', accountId);
+        headers.set('x-source', 'devstudio');
+      }
 
       let endpoint = '';
       if (scope === 'workspace') {
         if (!workspaceId)
           throw new Error('[DevStudio] Missing workspaceId for workspace asset upload');
         headers.set('x-workspace-id', workspaceId);
-        endpoint = `${TOKYO_BASE}/workspace-assets/upload`;
+        endpoint = `${TOKYO_BASE}/assets/upload`;
       } else if (scope === 'curated') {
         if (!publicId) throw new Error('[DevStudio] Missing publicId for curated asset upload');
         const normalized =
@@ -1676,7 +1803,7 @@
         if (!normalized) throw new Error('[DevStudio] Missing widgetType for curated asset upload');
         headers.set('x-public-id', publicId);
         headers.set('x-widget-type', normalized);
-        endpoint = `${TOKYO_BASE}/curated-assets/upload`;
+        endpoint = `${TOKYO_BASE}/assets/upload`;
       } else if (scope === 'widget') {
         const normalized =
           normalizeWidgetname(widgetType) ||
@@ -1702,14 +1829,27 @@
         );
       }
       const json = text ? JSON.parse(text) : null;
-      const url = json?.url;
-      if (!url || typeof url !== 'string') throw new Error('[DevStudio] Asset upload missing url');
-      return url;
+      const keyCandidate =
+        typeof json?.key === 'string'
+          ? json.key.trim()
+          : typeof json?.relativePath === 'string'
+            ? json.relativePath.trim()
+            : '';
+      const directUrl = typeof json?.url === 'string' ? json.url.trim() : '';
+      const normalizedUrl =
+        directUrl ||
+        (keyCandidate
+          ? /^https?:\/\//i.test(keyCandidate)
+            ? keyCandidate
+            : `${TOKYO_BASE.replace(/\/+$/, '')}/${keyCandidate.replace(/^\/+/, '')}`
+          : '');
+      if (!normalizedUrl) throw new Error('[DevStudio] Asset upload missing url');
+      return normalizedUrl;
     }
 
     async function persistConfigAssetsToTokyo(
       config,
-      { scope, workspaceId, widgetType, publicId },
+      { scope, accountId, workspaceId, widgetType, publicId },
     ) {
       if (!config || typeof config !== 'object') return config;
 
@@ -1725,6 +1865,7 @@
             const filename = `upload.${ext}`;
             const uploadedUrl = await uploadTokyoAsset({
               scope,
+              accountId,
               workspaceId,
               widgetType,
               publicId,
@@ -1848,28 +1989,72 @@
       return text ? JSON.parse(text) : null;
     }
 
-    function getValueAtPath(obj, path) {
-      if (!obj || !path) return undefined;
-      return path.split('.').reduce((acc, key) => {
-        if (!acc || typeof acc !== 'object') return undefined;
-        return acc[key];
-      }, obj);
+    function readConfigValueAtPath(config, path) {
+      if (!config || typeof config !== 'object' || Array.isArray(config)) return undefined;
+      const segments = String(path || '')
+        .split('.')
+        .filter(Boolean);
+      if (!segments.length) return undefined;
+      let current = config;
+      for (const segment of segments) {
+        if (!current || typeof current !== 'object' || Array.isArray(current)) return undefined;
+        if (!Object.prototype.hasOwnProperty.call(current, segment)) return undefined;
+        current = current[segment];
+      }
+      return current;
     }
 
-    function buildThemeValuesFromConfig(config) {
-      const paths = [
-        'stage.background',
-        'pod.background',
-        'appearance.itemBackground',
-        'appearance.textColor',
-        'typography.globalFamily',
-      ];
+    function buildThemeValuesFromConfig(config, compiled) {
       const values = {};
-      paths.forEach((path) => {
-        const value = getValueAtPath(config, path);
-        if (value !== undefined) values[path] = value;
+      const controls = Array.isArray(compiled?.controls) ? compiled.controls : [];
+      const allowedPrefixes = ['stage.', 'pod.', 'appearance.', 'typography.'];
+      const tokenPathPattern = /(^|\.)__[^.]+__(\.|$)/;
+
+      controls.forEach((control) => {
+        if (!control || typeof control !== 'object') return;
+        const path = typeof control.path === 'string' ? control.path.trim() : '';
+        if (!path) return;
+        if (path === 'appearance.theme') return;
+        if (!allowedPrefixes.some((prefix) => path.startsWith(prefix))) return;
+        if (tokenPathPattern.test(path)) return;
+        if (Object.prototype.hasOwnProperty.call(values, path)) return;
+        const value = readConfigValueAtPath(config, path);
+        if (value === undefined) return;
+        values[path] = cloneJson(value);
       });
+
       return values;
+    }
+
+    function normalizeColorFillValue(raw) {
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        return cloneJson(raw);
+      }
+      if (typeof raw !== 'string') return raw;
+      const color = raw.trim();
+      if (!color) return raw;
+      if (color.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(color);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            return cloneJson(parsed);
+          }
+        } catch {}
+      }
+      return { type: 'color', color };
+    }
+
+    function normalizeThemeValuesForCompiledControls(values, compiled) {
+      const normalized = cloneJson(values);
+      const controls = Array.isArray(compiled?.controls) ? compiled.controls : [];
+      controls.forEach((control) => {
+        if (!control || typeof control !== 'object') return;
+        if (control.type !== 'dropdown-fill') return;
+        const path = typeof control.path === 'string' ? control.path : '';
+        if (!path || !Object.prototype.hasOwnProperty.call(normalized, path)) return;
+        normalized[path] = normalizeColorFillValue(normalized[path]);
+      });
+      return normalized;
     }
 
     async function listTokyoThemes() {
@@ -1901,6 +2086,17 @@
       if (!normalizedThemes.length) return Promise.resolve(null);
 
       themeModalSelect.replaceChildren();
+      const hasDefaultTheme =
+        Boolean(defaultThemeId) && normalizedThemes.some((theme) => theme.id === defaultThemeId);
+      if (!hasDefaultTheme) {
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Select theme to overwrite...';
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        placeholder.hidden = true;
+        themeModalSelect.appendChild(placeholder);
+      }
       normalizedThemes.forEach((theme) => {
         const opt = document.createElement('option');
         opt.value = theme.id;
@@ -1908,9 +2104,7 @@
         themeModalSelect.appendChild(opt);
       });
 
-      const initial = normalizedThemes.some((t) => t.id === defaultThemeId)
-        ? defaultThemeId
-        : normalizedThemes[0]?.id || '';
+      const initial = hasDefaultTheme ? defaultThemeId : '';
       themeModalSelect.value = initial;
 
       themeModal.hidden = false;
@@ -1944,10 +2138,34 @@
       return text ? JSON.parse(text) : null;
     }
 
-    async function updateThemeFromEditor(widgetSlug) {
+    async function updateThemeFromEditor() {
+      if (!currentPublicId) {
+        throw new Error('[DevStudio] Select an instance first.');
+      }
+      const current = instances.find((inst) => inst.publicId === currentPublicId);
+      const widgetSlug = current?.widgetSlug || normalizeWidgetname(current?.widgetname);
+      if (!widgetSlug) {
+        throw new Error('[DevStudio] Unable to resolve widget type from the selected instance.');
+      }
+
+      const localHostRegex = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i;
+      if (!localHostRegex.test(BOB_ORIGIN)) {
+        throw new Error(
+          '[DevStudio] Update Theme requires local Bob (http://localhost:3000). Remote Bob does not reflect local Tokyo theme edits.',
+        );
+      }
+
+      const themeAssetPublicId =
+        isCuratedPublicId(currentPublicId) || currentPublicId.startsWith('wgt_main_')
+          ? currentPublicId
+          : `wgt_main_${widgetSlug}`;
+
       const exported = await exportInstanceDataFromBob({
-        persistAssets: false,
+        persistAssets: true,
         exportMode: 'current',
+        assetScope: 'curated',
+        assetPublicId: themeAssetPublicId,
+        assetWidgetType: widgetSlug,
       });
       const config = exported?.instanceData;
       if (!config || typeof config !== 'object') {
@@ -1957,24 +2175,38 @@
       const editorThemeId = String(config?.appearance?.theme || '')
         .trim()
         .toLowerCase();
-      const themes = await listTokyoThemes().catch(() => null);
+      const themes = await listTokyoThemes();
+      const lastThemeId = String(sessionStorage.getItem(THEME_UPDATE_LAST_ID_STORAGE) || '')
+        .trim()
+        .toLowerCase();
+      const hasEditorTheme =
+        Boolean(editorThemeId) &&
+        editorThemeId !== 'custom' &&
+        themes.some((theme) => theme.id === editorThemeId);
+      const hasLastTheme =
+        Boolean(lastThemeId) &&
+        lastThemeId !== 'custom' &&
+        themes.some((theme) => theme.id === lastThemeId);
       const defaultThemeId =
-        editorThemeId && editorThemeId !== 'custom' ? editorThemeId : themes?.[0]?.id || '';
+        hasEditorTheme ? editorThemeId : hasLastTheme ? lastThemeId : '';
       if (!themes?.length) throw new Error('[DevStudio] Theme list not found.');
       const themeId = await openThemeModal({ themes, defaultThemeId });
       if (!themeId) throw new Error('[DevStudio] Canceled');
-
-      const values = buildThemeValuesFromConfig(config);
+      const compiled = await ensureCompiledWidget(widgetSlug);
+      const values = buildThemeValuesFromConfig(config, compiled);
       if (!Object.keys(values).length) {
         throw new Error('[DevStudio] Theme values not found in current config.');
       }
 
-      const cleanedValues = stripTokyoBaseFromConfig(cloneJson(values), TOKYO_BASE);
+      const normalizedValues = normalizeThemeValuesForCompiledControls(values, compiled);
+      const cleanedValues = stripTokyoBaseFromConfig(cloneJson(normalizedValues), TOKYO_BASE);
       await updateTokyoTheme({ themeId, values: cleanedValues });
+      sessionStorage.setItem(THEME_UPDATE_LAST_ID_STORAGE, themeId);
       compiledCache.delete(widgetSlug);
       if (currentPublicId) {
         await sendInstanceToIframe(currentPublicId);
       }
+      alert(`[DevStudio] Theme "${themeId}" updated from current editor state.`);
       return { themeId, values: cleanedValues };
     }
 
@@ -2249,8 +2481,7 @@
 
     superadminUpdateTheme?.addEventListener('click', async () => {
       try {
-        const widgetSlug = requireWidgetSlugForAction();
-        await updateThemeFromEditor(widgetSlug);
+        await updateThemeFromEditor();
       } catch (err) {
         alert(err instanceof Error ? err.message : String(err));
       }
@@ -2453,6 +2684,8 @@
       if (!publicId) {
         throw new Error('[DevStudio] Missing publicId for sendInstanceToIframe');
       }
+      const requestSeq = ++sendInstanceSeq;
+      const totalStart = performance.now();
 
       const target = iframe.contentWindow;
       if (!target) {
@@ -2470,10 +2703,29 @@
       }
 
       let compiled = compiledCache.get(slug);
-      if (!compiled) {
-        compiled = await ensureCompiledWidget(instance.widgetname);
-      }
-      const config = await fetchInstanceConfig(publicId);
+      const hasInlineConfig = Boolean(
+        instance.config && typeof instance.config === 'object' && !Array.isArray(instance.config),
+      );
+      const compiledStart = performance.now();
+      const compiledPromise = compiled
+        ? Promise.resolve({ value: compiled, durationMs: performance.now() - compiledStart })
+        : ensureCompiledWidget(instance.widgetname).then((nextCompiled) => ({
+            value: nextCompiled,
+            durationMs: performance.now() - compiledStart,
+          }));
+
+      const configStart = performance.now();
+      const configPromise = hasInlineConfig
+        ? Promise.resolve({ value: instance.config, durationMs: performance.now() - configStart })
+        : fetchInstanceConfig(publicId).then((nextConfig) => ({
+            value: nextConfig,
+            durationMs: performance.now() - configStart,
+          }));
+
+      const [compiledResult, configResult] = await Promise.all([compiledPromise, configPromise]);
+      if (requestSeq !== sendInstanceSeq) return;
+      compiled = compiledResult.value;
+      const config = configResult.value;
       instance.config = config;
       console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
       target.postMessage(
@@ -2482,18 +2734,56 @@
           subjectMode: 'devstudio',
           publicId,
           workspaceId: DEV_WORKSPACE_ID,
+          ownerAccountId: PLATFORM_ACCOUNT_ID,
           widgetname: slug,
           compiled,
           instanceData: config ?? null,
         },
         BOB_ORIGIN,
       );
+      console.log('[DevStudio] Instance load timings', {
+        publicId,
+        compileMs: Math.round(compiledResult.durationMs),
+        configMs: Math.round(configResult.durationMs),
+        totalMs: Math.round(performance.now() - totalStart),
+      });
     }
 
     function setOpen(nextState) {
       isOpen = nextState;
       dropdown.setAttribute('data-state', isOpen ? 'open' : 'closed');
       control.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    if (widgetSelect instanceof HTMLSelectElement) {
+      widgetSelect.addEventListener(
+        'change',
+        () => {
+          const nextWidgetSlug = normalizeWidgetname(widgetSelect.value);
+          if (!nextWidgetSlug) return;
+          if (nextWidgetSlug === selectedWidgetSlug) return;
+          selectedWidgetSlug = nextWidgetSlug;
+
+          const scopedInstances = getScopedInstances();
+          const nextPublicId = scopedInstances.some((inst) => inst.publicId === currentPublicId)
+            ? currentPublicId
+            : scopedInstances[0]?.publicId || null;
+          const instanceChanged = nextPublicId !== currentPublicId;
+          currentPublicId = nextPublicId;
+
+          setOpen(false);
+          updateCurrentLabel();
+          renderInstances();
+
+          if (currentPublicId && instanceChanged) {
+            sendInstanceToIframe(currentPublicId).catch((error) => {
+              console.error('[DevStudio] Failed to send instance to Bob', error);
+            });
+          }
+          refreshL10nStatus(currentPublicId).catch(() => {});
+        },
+        { signal: abortController.signal },
+      );
     }
 
     control.addEventListener(

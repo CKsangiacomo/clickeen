@@ -25,7 +25,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Che tipologie di camere sono disponibili?"
+      "value": "Quali tipi di camere sono disponibili?"
     },
     {
       "op": "set",
@@ -50,7 +50,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Sì, offriamo romantici <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">pacchetti per una fuga</a> e <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">opzioni adatte alle famiglie.</a>"
+      "value": "Sì, proponiamo romantici <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">pacchetti fuga</a> e <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">opzioni adatte alle famiglie.</a>"
     },
     {
       "op": "set",

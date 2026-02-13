@@ -15,12 +15,12 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "Preguntas frecuentes del bed and breakfast"
+      "value": "Preguntas frecuentes sobre Bed and Breakfast"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Ofrecemos una variedad de habitaciones, incluidas <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">estándar</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> y <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a> ."
+      "value": "Ofrecemos una variedad de habitaciones, incluidas <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">estándar</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> y <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a>."
     },
     {
       "op": "set",
@@ -30,7 +30,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "El check-in es a las 3:00 p. m. y el check-out hasta las 11:00 a. m."
+      "value": "El check-in es a las 15:00 y el check-out hasta las 11:00."
     },
     {
       "op": "set",
@@ -50,17 +50,17 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Sí, ofrecemos <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">paquetes de escapadas románticas</a> y <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">opciones ideales para familias.</a>"
+      "value": "Sí, ofrecemos <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">paquetes para una escapada romántica</a> y <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">opciones ideales para familias.</a>"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "¿Ofrecen algún paquete especial?"
+      "value": "¿Ofrecéis paquetes especiales?"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Preguntas frecuentes"
+      "value": "Preguntas habituales"
     }
   ],
   "v": 1

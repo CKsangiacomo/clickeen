@@ -36,7 +36,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen er noe Isabel virkelig kommer til å elske å jobbe for når hun må, og jeg kommer til å tvinge henne."
+      "value": "Clickeen er noe Isabel virkelig kommer til å elske å jobbe med når hun må – og jeg kommer til å tvinge henne."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Fordi Clickeen er en fantastisk ny plattform som gjør nettet vakkert og enkelt å bruke."
+      "value": "Fordi Clickeen er en fantastisk ny plattform som gjør weben vakker og enkel å bruke."
     }
   ]
 }

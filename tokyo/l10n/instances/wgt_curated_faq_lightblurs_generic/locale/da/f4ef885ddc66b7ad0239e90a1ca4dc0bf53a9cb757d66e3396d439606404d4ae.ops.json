@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontakt os"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Find svarene på de mest stillede spørgsmål her."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ofte stillede spørgsmål"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing er en SaaS-virksomhed med speciale i marketing automation og tilbyder avancerede værktøjer til e-mailkampagner, kundesegmentering og analyse."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Hvad er Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Opret dig, integrér dine data, og begynd at oprette automatiserede kampagner med vores intuitive platform."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hvordan kommer jeg i gang med at bruge Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, Liquid Marketing tilbyder en gratis prøveperiode med adgang til grundlæggende funktioner. Opgradér for flere avancerede muligheder."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing leverer en stærk platform med brugervenlige automatiseringsværktøjer, detaljerede analyser og fremragende kundesupport – ideelt for virksomheder, der vil effektivisere deres marketingindsats."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Hvorfor skal jeg vælge Liquid Marketing til mine marketingbehov?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Er der en gratis prøveperiode?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alle spørgsmål"
+    }
+  ],
+  "v": 1
+}

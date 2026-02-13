@@ -10,17 +10,17 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "Khám phá nét duyên dáng và sự thoải mái tại bed and breakfast ở USA của chúng tôi."
+      "value": "Khám phá nét duyên dáng và sự thoải mái tại nhà nghỉ B&B của chúng tôi ở Mỹ."
     },
     {
       "op": "set",
       "path": "header.title",
-      "value": "Câu hỏi thường gặp về Bed and Breakfast"
+      "value": "Câu hỏi thường gặp về B&B"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Chúng tôi có nhiều loại phòng, gồm <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">tiêu chuẩn</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">cao cấp</a>, và <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suite</a>."
+      "value": "Chúng tôi có nhiều hạng phòng đa dạng gồm <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">tiêu chuẩn</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">cao cấp</a> và <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suite</a>."
     },
     {
       "op": "set",
@@ -30,17 +30,17 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Nhận phòng lúc 15:00 và trả phòng trước 11:00."
+      "value": "Nhận phòng từ 15:00 và trả phòng trước 11:00."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Giờ nhận phòng và trả phòng là khi nào?"
+      "value": "Giờ nhận phòng và trả phòng là mấy giờ?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Có, bữa sáng miễn phí đã bao gồm trong thời gian lưu trú của bạn."
+      "value": "Có, bữa sáng miễn phí đã bao gồm trong kỳ lưu trú của bạn."
     },
     {
       "op": "set",
@@ -50,17 +50,17 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Có, chúng tôi có các gói <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">nghỉ dưỡng lãng mạn</a> và <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">lựa chọn phù hợp cho gia đình.</a>"
+      "value": "Có, chúng tôi cung cấp các <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">gói nghỉ dưỡng lãng mạn</a> và <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">lựa chọn thân thiện cho gia đình.</a>"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Bên bạn có các gói ưu đãi đặc biệt nào không?"
+      "value": "Bạn có gói ưu đãi đặc biệt nào không?"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Câu hỏi thường gặp"
+      "value": "Câu hỏi phổ biến"
     }
   ],
   "v": 1

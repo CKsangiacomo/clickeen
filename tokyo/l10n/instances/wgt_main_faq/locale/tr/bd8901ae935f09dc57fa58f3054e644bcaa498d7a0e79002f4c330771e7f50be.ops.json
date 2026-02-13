@@ -30,7 +30,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen, dakikalar içinde web sitenize şık ve yüksek performanslı widget’lar eklemenizi sağlayan bir widget SaaS platformudur—zahmetli geliştirme işleri gerekmez."
+      "value": "Clickeen, dakikalar içinde web sitenize şık ve yüksek performanslı widget’lar eklemenizi sağlayan bir widget SaaS platformudur—yoğun geliştirme işi gerekmez."
     },
     {
       "op": "set",
@@ -40,12 +40,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Widget’ınızı oluşturun, gömme kodunu kopyalayın ve web sitenizde kapanış </body> etiketinin hemen öncesine yapıştırın. Clickeen’de yaptığınız değişiklikler anında güncellenir."
+      "value": "Widget’ınızı oluşturun, yerleştirme kodunu kopyalayın ve web sitenizde kapanış </body> etiketinden hemen önce yapıştırın. Clickeen’de yaptığınız değişiklikler anında güncellenir."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Esnek tasarım kontrolleri, kolay güncellemeler ve güvenilir performansla daha hızlı yayına çıkın—ekibiniz özel kodu sürdürmek zorunda kalmadan iyileştirmeleri hızla yayınlasın."
+      "value": "Esnek tasarım kontrolleri, kolay güncellemeler ve güvenilir performansla daha hızlı yayına çıkın—ekibiniz özel kodu bakımını üstlenmeden iyileştirmeleri hızlıca yayınlayabilsin."
     },
     {
       "op": "set",
@@ -55,7 +55,7 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "Modern web sitesi bileşenleri—hızlıca yayına alın, kolayca özelleştirin ve dönüşümünüzü artırmak için tasarlandı."
+      "value": "Modern web sitesi widget’ları—hızlıca yayına alın, kolayca özelleştirin ve dönüşüm artırmak için tasarlandı."
     },
     {
       "op": "set",

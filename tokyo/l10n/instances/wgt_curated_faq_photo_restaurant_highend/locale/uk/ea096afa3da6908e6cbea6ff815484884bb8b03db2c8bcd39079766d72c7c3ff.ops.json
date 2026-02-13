@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Забронювати"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Відкрийте для себе шарм і затишок нашого американського B&B."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Питання та відповіді від шефа Pierre"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ми пропонуємо різноманітні формати: приватні вечері, дегустації вин та вечерю за столом шефа."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Які формати гастрономічних подій доступні?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Рекомендуємо бронювати заздалегідь; бронювання доступне за 30 днів до дати."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Які у вас правила бронювання?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Так, у нас діє дрескод smart casual."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Чи є дрескод?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Так, ми пропонуємо романтичні пакети та формати для груп."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Чи є у вас спеціальні пакети для вечері?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Скасування потрібно зробити щонайменше за 24 години, щоб уникнути стягнення."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Яка у вас політика скасування?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Так, враховуємо різні дієтичні потреби, зокрема вегетаріанські, веганські, безглютенові та безгоріхові опції."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Чи передбачені дієтичні опції?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Гастрономічні враження"
+    }
+  ],
+  "v": 1
+}

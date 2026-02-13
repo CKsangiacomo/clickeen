@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contactează Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Partenerul tău de încredere pentru soluții și servicii de inginerie."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Întrebări frecvente Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering este o companie globală specializată în soluții și servicii de inginerie inovatoare."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ce este Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Contactează-ne, discută-nevoile proiectului tău, iar noi te vom ghida prin opțiunile noastre de servicii."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Cum încep să folosesc serviciile Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Da, Ive Engineering oferă consultanțe gratuite pentru a înțelege mai bine cerințele proiectului tău."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Este disponibilă o consultanță?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering oferă soluții de ultimă generație, profesioniști cu experiență și servicii personalizate, adaptate nevoilor tale specifice de inginerie."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "De ce să aleg Ive Engineering pentru nevoile mele de inginerie?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Toate întrebările"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering pune preț pe inovație, integritate și excelență în toate proiectele și serviciile sale."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Care sunt valorile de bază ale Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Poți contacta Ive Engineering prin website, e-mail sau la numărul de telefon indicat pe pagina noastră de contact."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Cum pot lua legătura cu Ive Engineering?"
+    }
+  ],
+  "v": 1
+}

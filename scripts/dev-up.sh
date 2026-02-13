@@ -475,7 +475,7 @@ done
 echo "[dev-up] Starting Tokyo CDN stub on 4000"
 (
   cd "$ROOT_DIR/tokyo"
-  start_detached "$LOG_DIR/tokyo.dev.log" env PORT=4000 node dev-server.mjs
+  start_detached "$LOG_DIR/tokyo.dev.log" env PORT=4000 TOKYO_WORKER_BASE_URL="http://localhost:8791" node dev-server.mjs
   TOKYO_PID="$STARTED_PID"
   echo "[dev-up] Tokyo PID: $TOKYO_PID"
   register_pid "tokyo" "$TOKYO_PID" "4000" "$LOG_DIR/tokyo.dev.log"

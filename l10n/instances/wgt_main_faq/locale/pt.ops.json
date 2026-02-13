@@ -11,7 +11,7 @@
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Todas as Perguntas"
+      "value": "Todas as perguntas"
     },
     {
       "op": "set",
@@ -31,12 +31,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Por que devo usar o Clickeen?"
+      "value": "Por que devo usar o Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Sim, um widget ativo com recursos principais."
+      "value": "Sim — um widget ativo com recursos essenciais."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Porque o Clickeen é uma nova plataforma incrível para tornar a web bonita e fácil de usar."
+      "value": "Porque o Clickeen é uma nova plataforma incrível para deixar a web bonita e fácil de usar."
     }
   ]
 }

@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alle Fragen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Was ist Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Wie starte ich mit Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Gibt es eine kostenlose Testversion?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Warum sollte ich Liquid Marketing für meine Marketingbedürfnisse wählen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing ist ein SaaS-Unternehmen mit Schwerpunkt auf Marketing-Automatisierung und bietet fortschrittliche Tools für E-Mail-Kampagnen, Kundensegmentierung und Analysen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Einfach registrieren, Ihre Daten integrieren und mit unserer intuitiven Plattform automatisierte Kampagnen erstellen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, Liquid Marketing bietet eine kostenlose Testversion mit Zugriff auf grundlegende Funktionen. Für erweiterte Möglichkeiten können Sie upgraden."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing bietet eine leistungsstarke Plattform mit benutzerfreundlichen Automatisierungstools, detaillierten Analysen und exzellentem Kundensupport – ideal für Unternehmen, die ihre Marketingprozesse effizienter gestalten möchten."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontaktieren Sie uns "
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Hier finden Sie Antworten auf die am häufigsten gestellten Fragen."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Häufig gestellte Fragen"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,217 @@
+{
+  "baseFingerprint": "4409bdca90edbb1fcae9aff7c928cc8991a16f322e222eb5b4b60b6075ecf5eb",
+  "baseUpdatedAt": "2026-02-12T02:06:51.338Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.nav.widgets",
+      "value": "Mga widget"
+    },
+    {
+      "op": "set",
+      "path": "strings.nav.viewAllWidgets",
+      "value": "Tingnan lahat ng widget"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.overview",
+      "value": "Pangkalahatang-ideya"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.templates",
+      "value": "Mga template"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.examples",
+      "value": "Mga halimbawa"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.features",
+      "value": "Mga feature"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.pricing",
+      "value": "Presyo"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.createFree",
+      "value": "Gumawa nang libre"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.seeTemplates",
+      "value": "Tingnan ang mga template"
+    },
+    {
+      "op": "set",
+      "path": "strings.common.comingSoon",
+      "value": "Paparating na."
+    },
+    {
+      "op": "set",
+      "path": "strings.creative.useThisWidgetOnYourWebsite",
+      "value": "Gamitin ang widget na ito sa iyong website"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.title",
+      "value": "Dinisenyo para magsalita ng bawat wika"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.subtitle",
+      "value": "Parehong curated na widget. Tatlong locale. Isang codepath."
+    },
+    {
+      "op": "set",
+      "path": "strings.share.share",
+      "value": "I-share"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copy",
+      "value": "Kopyahin ang link"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copied",
+      "value": "Nakopya na"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.more",
+      "value": "Higit pa"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sms",
+      "value": "SMS"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.email",
+      "value": "Email"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.whatsapp",
+      "value": "WhatsApp"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.telegram",
+      "value": "Telegram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.signal",
+      "value": "Signal"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.messenger",
+      "value": "Messenger"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.wechat",
+      "value": "WeChat"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.line",
+      "value": "LINE"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.slack",
+      "value": "Slack"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.teams",
+      "value": "Teams"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.discord",
+      "value": "Discord"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.x",
+      "value": "X"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.linkedin",
+      "value": "LinkedIn"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.facebook",
+      "value": "Facebook"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.reddit",
+      "value": "Reddit"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.instagram",
+      "value": "Instagram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.tiktok",
+      "value": "TikTok"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.title",
+      "value": "Clickeen widget"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.text",
+      "value": "Gamitin ang widget na ito sa iyong website."
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionMessageTitle",
+      "value": "Ipadala ang template ng widget na ito bilang mensahe"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionSocialTitle",
+      "value": "I-share ang template ng widget na ito sa social media"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.brand",
+      "value": "Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.pricing",
+      "value": "Presyo"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.widgets",
+      "value": "Mga widget"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.rights",
+      "value": "Nakalaan ang lahat ng karapatan."
+    }
+  ],
+  "v": 1
+}

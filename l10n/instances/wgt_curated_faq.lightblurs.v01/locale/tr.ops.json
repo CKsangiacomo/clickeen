@@ -21,7 +21,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Bir widget nasıl kurulur?"
+      "value": "Bir widget’ı nasıl yüklerim?"
     },
     {
       "op": "set",
@@ -36,7 +36,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen, Isabel'in çalışmak zorunda olduğunda gerçekten seveceği ve benim onu zorlayacağım bir şeydir."
+      "value": "Clickeen, Isabel’in mecbur kaldığında gerçekten çalışmayı seveceği bir şey; ben de onu buna zorlayacağım."
     },
     {
       "op": "set",
@@ -46,12 +46,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Evet, temel özelliklerle birlikte bir aktif widget."
+      "value": "Evet; temel özelliklerle 1 aktif widget."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Çünkü Clickeen, web'i güzel ve kullanımı kolay hale getirmek için harika bir yeni platformdur."
+      "value": "Çünkü Clickeen, web’i daha güzel ve kullanımı daha kolay hale getirmek için harika yeni bir platform."
     }
   ]
 }

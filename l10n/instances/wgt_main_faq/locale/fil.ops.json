@@ -36,12 +36,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Oo, isang aktibong widget na may mga pangunahing feature."
+      "value": "Oo, may isang aktibong widget na may mga pangunahing feature."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Mga na-e-embed na widget na may built-in na conversions."
+      "value": "Mga widget na puwedeng i-embed na may built-in na conversions."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Dahil ang Clickeen ay isang kahanga-hangang bagong platform para gawing maganda at madaling gamitin ang web."
+      "value": "Dahil ang Clickeen ay isang kahanga-hangang bagong platform para gawing mas maganda at mas madaling gamitin ang web."
     }
   ]
 }

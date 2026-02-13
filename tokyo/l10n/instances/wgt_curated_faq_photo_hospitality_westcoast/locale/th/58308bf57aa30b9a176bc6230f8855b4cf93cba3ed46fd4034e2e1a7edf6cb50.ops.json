@@ -10,37 +10,37 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "ค้นพบเสน่ห์และความสบายของที่พักแบบเบดแอนด์เบรกฟาสต์ของเราในสหรัฐอเมริกา"
+      "value": "สัมผัสเสน่ห์และความสบายของเบดแอนด์เบรกฟาสต์ในสหรัฐอเมริกาของเรา"
     },
     {
       "op": "set",
       "path": "header.title",
-      "value": "คำถามที่พบบ่อยเกี่ยวกับเบดแอนด์เบรกฟาสต์"
+      "value": "คำถามที่พบบ่อยเกี่ยวกับ Bed and Breakfast"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "เรามีห้องพักหลายแบบ ได้แก่ <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">standard</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> และ <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a> ."
+      "value": "เรามีห้องพักหลากหลายรูปแบบ รวมถึง <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Standard</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Deluxe</a> , และ <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Suite</a> ."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "มีห้องพักแบบไหนให้เลือกบ้าง?"
+      "value": "มีห้องพักประเภทไหนให้เลือกบ้าง?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "เช็กอินเวลา 15:00 น. และเช็กเอาต์ภายในเวลา 11:00 น."
+      "value": "เช็กอินได้ตั้งแต่ 15:00 น. และเช็กเอาต์ภายใน 11:00 น."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "เวลาเช็กอินและเช็กเอาต์คือเมื่อไหร่?"
+      "value": "เวลาเช็กอินและเช็กเอาต์คือกี่โมง?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "ใช่ มีอาหารเช้าฟรีรวมอยู่ในการเข้าพักของคุณ"
+      "value": "ใช่ รวมอาหารเช้าฟรีตลอดการเข้าพัก"
     },
     {
       "op": "set",
@@ -50,7 +50,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "มีค่ะ เรามีแพ็กเกจทริปพักผ่อนสุดโรแมนติก <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">getaway packages</a> และ <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">ตัวเลือกที่เหมาะสำหรับครอบครัว</a>"
+      "value": "มีค่ะ เรามี <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">แพ็กเกจทริปพักผ่อนสุดโรแมนติก</a> และ <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">ตัวเลือกสำหรับครอบครัว</a>"
     },
     {
       "op": "set",

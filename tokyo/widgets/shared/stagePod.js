@@ -117,7 +117,7 @@
     if (!shadow || typeof shadow !== 'object') return 0;
     const axis = side === 'left' || side === 'right' ? toNumber(shadow.x, 0) : toNumber(shadow.y, 0);
     const blur = toNumber(shadow.blur, 0);
-    const spread = toNumber(shadow.spread, 0);
+    const spread = Math.max(0, toNumber(shadow.spread, 0));
     return clampNumber(Math.abs(axis) + blur + spread, 0, 400);
   }
 
@@ -328,14 +328,15 @@
     const layer = ensureInsideShadowLayer(container);
     const next = typeof shadow === 'string' && shadow.trim() ? shadow.trim() : 'none';
     const layerPlacement = resolveInsideShadowLayer(opts && opts.layer);
+    const isAbove = layerPlacement === INSIDE_SHADOW_LAYER_ABOVE;
     layer.style.background = next;
-    layer.style.zIndex = layerPlacement === INSIDE_SHADOW_LAYER_ABOVE ? '2' : '1';
+    layer.style.zIndex = isAbove ? '20' : '1';
     layer.hidden = next === 'none';
 
     const contentEl = opts && opts.contentEl instanceof HTMLElement ? opts.contentEl : null;
     if (contentEl) {
       contentEl.style.position = 'relative';
-      contentEl.style.zIndex = layerPlacement === INSIDE_SHADOW_LAYER_ABOVE ? '1' : '2';
+      contentEl.style.zIndex = isAbove ? '10' : '2';
     }
   }
 

@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "94e54adc93e738aaf20f184540089ee27bca924f32ee83c8b3427ade53ec9e00",
+  "baseUpdatedAt": "2026-02-12T17:01:21.211684+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "आरक्षण करें"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "हमारे USA बेड एंड ब्रेकफास्ट का आकर्षण और आराम अनुभव करें।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Soho Art Gallery FAQs"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "हम <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">स्थानीय</a> और i<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">अंतरराष्ट्रीय कलाकारों</a> की समकालीन कला प्रदर्शित करते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "किस प्रकार की कला प्रदर्शित की जाती है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "गैलरी मंगलवार से रविवार, सुबह 10 बजे से शाम 6 बजे तक खुली रहती है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "गैलरी के खुलने का समय क्या है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "प्रवेश निःशुल्क है, लेकिन दान का स्वागत है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "क्या प्रवेश शुल्क है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "हाँ, आप गैलरी से सीधे कला कृतियाँ खरीद सकते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "क्या मैं गैलरी में कला खरीद सकता/सकती हूँ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "आगामी प्रदर्शनियों और इवेंट्स की जानकारी के लिए हमारी वेबसाइट देखें।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "क्या कोई आगामी इवेंट्स हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "हाँ, हम शुल्क के साथ निजी इवेंट होस्टिंग की सुविधा देते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "क्या मैं गैलरी में निजी इवेंट आयोजित कर सकता/सकती हूँ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "गैलरी जानकारी"
+    }
+  ],
+  "v": 1
+}

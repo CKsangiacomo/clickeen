@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ive Engineering kontaktieren"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Ihre erste Adresse für Engineering-Lösungen und Services."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering FAQ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering ist ein globales Unternehmen, das sich auf innovative Engineering-Lösungen und Services spezialisiert hat."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Was ist Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Kontaktieren Sie uns einfach, besprechen Sie Ihre Projektanforderungen – und wir führen Sie durch unser Leistungsangebot."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Wie starte ich mit den Services von Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, Ive Engineering bietet kostenlose Beratungsgespräche an, um Ihre Projektanforderungen besser zu verstehen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Gibt es eine Beratung?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering liefert modernste Lösungen, erfahrene Expert:innen und maßgeschneiderte Services, die genau zu Ihren Engineering-Anforderungen passen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Warum sollte ich Ive Engineering für meine Engineering-Anforderungen wählen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alle Fragen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering steht in allen Projekten und Services für Innovation, Integrität und Exzellenz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Was sind die Kernwerte von Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Sie erreichen Ive Engineering über unsere Website, per E-Mail oder über die Telefonnummer auf unserer Kontaktseite."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Wie kann ich Ive Engineering kontaktieren?"
+    }
+  ],
+  "v": 1
+}

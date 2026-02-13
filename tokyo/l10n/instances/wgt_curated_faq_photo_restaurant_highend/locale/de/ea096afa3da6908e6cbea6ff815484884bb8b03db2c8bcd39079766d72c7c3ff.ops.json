@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Reservierung vornehmen"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Entdecken Sie den Charme und Komfort unseres Bed & Breakfast in den USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Chef Pierre – FAQs"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Wir bieten eine Vielzahl an kulinarischen Erlebnissen, darunter Private Dining, Weinverkostungen und Chef’s Table."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Welche Arten von kulinarischen Erlebnissen gibt es?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Reservierungen werden empfohlen und können bis zu 30 Tage im Voraus vorgenommen werden."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Wie sind Ihre Reservierungsrichtlinien?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, bei uns gilt Smart Casual."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Gibt es einen Dresscode?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ja, wir bieten romantische Dinner-Pakete sowie Angebote für Gruppen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Bieten Sie besondere Dinner-Pakete an?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Stornierungen müssen mindestens 24 Stunden im Voraus erfolgen, um Gebühren zu vermeiden."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Wie lautet Ihre Stornierungsrichtlinie?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Ja, wir können verschiedene Ernährungsbedürfnisse berücksichtigen, darunter vegetarisch, vegan, glutenfrei und nussfrei."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Bieten Sie Optionen bei speziellen Ernährungsbedürfnissen an?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Kulinarisches Erlebnis"
+    }
+  ],
+  "v": 1
+}

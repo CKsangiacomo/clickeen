@@ -11,12 +11,12 @@
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "جميع الأسئلة"
+      "value": "كل الأسئلة"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "هل هناك خطة مجانية؟"
+      "value": "هل توجد خطة مجانية؟"
     },
     {
       "op": "set",
@@ -26,32 +26,32 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "كيف أقوم بتثبيت عنصر واجهة المستخدم؟"
+      "value": "كيف أقوم بتثبيت ويدجت؟"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "لماذا يجب أن أستخدم Clickeen"
+      "value": "لماذا ينبغي أن أستخدم Clickeen؟"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "نعم، عنصر واجهة مستخدم نشط واحد مع الميزات الأساسية."
+      "value": "نعم، ويدجت واحدة نشطة مع الميزات الأساسية."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "عناصر واجهة المستخدم القابلة للتضمين مع تحويلات مدمجة."
+      "value": "ويدجت قابلة للتضمين مع أدوات تحويل مدمجة."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "انسخ كود التضمين والصقه قبل </body> في موقعك."
+      "value": "انسخ كود التضمين والصقه قبل </body> على موقعك."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "لأن Clickeen هو منصة جديدة مذهلة لجعل الويب جميلاً وسهل الاستخدام."
+      "value": "لأن Clickeen منصة جديدة رائعة تجعل الويب أجمل وأسهل استخدامًا."
     }
   ]
 }

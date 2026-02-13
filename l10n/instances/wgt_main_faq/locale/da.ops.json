@@ -36,22 +36,22 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Ja, én aktiv widget med kernefunktioner."
+      "value": "Ja – én aktiv widget med kernefunktioner."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Indlejringsbare widgets med indbyggede konverteringer."
+      "value": "Indlejrede widgets med indbyggede konverteringer."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Kopiér indlejringskoden, og indsæt den før </body> på dit website."
+      "value": "Kopiér indlejringskoden, og indsæt den før </body> på dit site."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Fordi Clickeen er en fantastisk ny platform, der gør webbet smukt og nemt at bruge."
+      "value": "Fordi Clickeen er en fantastisk ny platform, der gør nettet smukt og nemt at bruge."
     }
   ]
 }

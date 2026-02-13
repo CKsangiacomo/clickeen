@@ -149,6 +149,39 @@ export function chooseOverviewHeroLocales(args: OverviewHeroLocalesArgs): { loca
   return { locales: selected.slice(0, max), availableLocales };
 }
 
+const OVERVIEW_HERO_MIN_NAMED_LOCALES = 2;
+const OVERVIEW_HERO_MAX_NAMED_LOCALES = 4;
+
+function clampOverviewHeroNamedLocaleCount(value: number): number {
+  return Math.min(OVERVIEW_HERO_MAX_NAMED_LOCALES, Math.max(OVERVIEW_HERO_MIN_NAMED_LOCALES, value));
+}
+
+export function resolveOverviewHeroNamedLocaleCount(market: PragueMarket | null): number {
+  if (!market) return 3;
+
+  const strategy = market.overviewHero.strategy;
+  if (strategy === 'tier1') {
+    return clampOverviewHeroNamedLocaleCount(market.overviewHero.tier1Locales.length);
+  }
+
+  const marketLocales = new Set(
+    market.locales.map((localeCode) => normalizeLocaleToken(localeCode)).filter((localeCode): localeCode is string => Boolean(localeCode)),
+  );
+  const priority = Array.from(
+    new Set(
+      [
+        market.overviewHero.nativeLocale ?? market.defaultLocale,
+        'en',
+        ...market.overviewHero.regionalFallbackLocales,
+      ]
+        .map((localeCode) => normalizeLocaleToken(localeCode))
+        .filter((localeCode): localeCode is string => Boolean(localeCode)),
+    ),
+  );
+  const inMarketPriorityCount = priority.filter((localeCode) => marketLocales.has(localeCode)).length;
+  return clampOverviewHeroNamedLocaleCount(inMarketPriorityCount);
+}
+
 export function sortLocaleOptions(locales: string[]): string[] {
   const unique = Array.from(new Set(locales.map((l) => normalizeLocaleToken(l)).filter((l): l is string => Boolean(l))));
   const pinned = ['en', 'es', 'ja'];

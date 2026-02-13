@@ -6,12 +6,12 @@
     {
       "op": "set",
       "path": "timer.headline",
-      "value": "Obtenha 50% de desconto antes que seja tarde 🎯"
+      "value": "Aproveite 50% de desconto antes que seja tarde demais 🎯"
     },
     {
       "op": "set",
       "path": "actions.during.text",
-      "value": "Compre agora"
+      "value": "Comprar agora"
     }
   ]
 }

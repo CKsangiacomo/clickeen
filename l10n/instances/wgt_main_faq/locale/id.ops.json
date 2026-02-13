@@ -41,7 +41,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Widget yang bisa disematkan dengan konversi bawaan."
+      "value": "Widget yang bisa disematkan dengan fitur konversi bawaan."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Karena Clickeen adalah platform baru yang luar biasa untuk membuat web menjadi indah dan mudah digunakan."
+      "value": "Karena Clickeen adalah platform baru yang luar biasa untuk membuat web lebih indah dan mudah digunakan."
     }
   ]
 }

@@ -31,12 +31,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Varför ska jag använda Clickeen"
+      "value": "Varför ska jag använda Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen är något som Isabel verkligen kommer att älska att arbeta för när hon måste, och jag kommer att tvinga henne."
+      "value": "Clickeen är något som Isabel verkligen kommer att gilla att jobba med när hon måste, och jag kommer att tvinga henne."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "För att Clickeen är en fantastisk ny plattform som gör webben vacker och enkel att använda."
+      "value": "För att Clickeen är en fantastisk ny plattform som gör webben snygg och enkel att använda."
     }
   ]
 }

@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Rezervasyon yap"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "ABD'deki pansiyonumuzun sıcaklığını ve konforunu keşfedin."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Şef Pierre SSS"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Özel yemek, şarap tadımı ve şef masası gibi farklı yemek deneyimleri sunuyoruz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Hangi tür yemek deneyimleri mevcut?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Rezervasyon önerilir ve 30 gün öncesine kadar yapılabilir."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Rezervasyon politikalarınız nedir?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Evet, smart casual bir giyim kuralımız var."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Bir kıyafet kuralı var mı?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Evet, romantik yemek paketleri ve grup yemek deneyimleri sunuyoruz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Özel yemek paketleri sunuyor musunuz?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ücret alınmaması için iptallerin 24 saat önceden yapılması gerekir."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "İptal politikanız nedir?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Evet; vejetaryen, vegan, glutensiz ve kuruyemişsiz seçenekler dahil çeşitli beslenme ihtiyaçlarına uyum sağlayabiliyoruz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Beslenme tercihleri için seçenek sunuyor musunuz?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Yemek Deneyimi"
+    }
+  ],
+  "v": 1
+}

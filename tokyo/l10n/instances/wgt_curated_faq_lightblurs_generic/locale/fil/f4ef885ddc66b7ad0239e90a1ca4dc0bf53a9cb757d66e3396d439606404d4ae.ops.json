@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Makipag-ugnayan sa amin"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Makikita rito ang mga sagot sa mga pinakakaraniwang tanong."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Mga madalas itanong"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ang Liquid Marketing ay isang SaaS company na dalubhasa sa marketing automation, na nag-aalok ng mga advanced na tool para sa email campaigns, customer segmentation, at analytics."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ano ang Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Mag-sign up lang, i-integrate ang iyong data, at magsimulang gumawa ng automated campaigns gamit ang aming intuitive na platform."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Paano ako magsisimulang gamitin ang Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Oo, nag-aalok ang Liquid Marketing ng libreng trial na may access sa mga basic na feature. Mag-upgrade para sa mas advanced na capabilities."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Nagbibigay ang Liquid Marketing ng matibay na platform na may madaling gamiting automation tools, detalyadong analytics, at mahusay na customer support—kaya ideal ito para sa mga negosyong gustong gawing mas streamlined ang kanilang marketing efforts."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Bakit dapat kong piliin ang Liquid Marketing para sa aking mga pangangailangan sa marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "May libreng trial ba?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Lahat ng Tanong"
+    }
+  ],
+  "v": 1
+}

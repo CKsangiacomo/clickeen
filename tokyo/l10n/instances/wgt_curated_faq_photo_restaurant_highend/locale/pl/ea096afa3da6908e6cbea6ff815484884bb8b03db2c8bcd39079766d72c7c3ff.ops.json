@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Zarezerwuj"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Odkryj urok i komfort naszego amerykańskiego pensjonatu B&B."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ Szefa Kuchni Pierre’a"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Oferujemy różnorodne doświadczenia kulinarne, w tym prywatne kolacje, degustacje win oraz kolacje przy stole szefa kuchni."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Jakie rodzaje doświadczeń kulinarnych są dostępne?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Rekomendujemy wcześniejszą rezerwację. Można jej dokonać nawet 30 dni przed planowaną wizytą."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Jakie są zasady rezerwacji?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Tak, obowiązuje strój smart casual."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Czy obowiązuje dress code?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Tak, oferujemy romantyczne pakiety kolacyjne oraz opcje dla grup."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Czy oferujecie specjalne pakiety kolacyjne?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Aby uniknąć opłaty, anulowanie rezerwacji należy zgłosić co najmniej 24 godziny wcześniej."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Jaka jest polityka anulowania rezerwacji?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Tak, uwzględniamy różne potrzeby dietetyczne, w tym opcje wegetariańskie, wegańskie, bezglutenowe i bez orzechów."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Czy oferujecie dania uwzględniające specjalne wymagania dietetyczne?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Doświadczenie kulinarne"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Hubungi kami "
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Temukan jawaban atas pertanyaan yang paling sering diajukan di sini."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Pertanyaan yang Sering Diajukan"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing adalah perusahaan SaaS yang berfokus pada otomatisasi pemasaran, menawarkan alat canggih untuk kampanye email, segmentasi pelanggan, dan analitik."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Cukup daftar, integrasikan data Anda, lalu mulai membuat kampanye otomatis dengan platform kami yang intuitif."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Apa itu Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Bagaimana cara mulai menggunakan Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ya, Liquid Marketing menyediakan uji coba gratis dengan akses ke fitur dasar. Tingkatkan paket untuk kemampuan yang lebih canggih."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing menghadirkan platform yang andal dengan alat otomatisasi yang mudah digunakan, analitik yang mendetail, serta dukungan pelanggan yang sangat baik—ideal untuk bisnis yang ingin menyederhanakan upaya pemasaran mereka."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Mengapa saya harus memilih Liquid Marketing untuk kebutuhan pemasaran saya?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Apakah tersedia uji coba gratis?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Semua Pertanyaan"
+    }
+  ],
+  "v": 1
+}

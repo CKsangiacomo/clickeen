@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Plantillas de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Empieza con una plantilla de FAQ diseñada por profesionales. Personalízalo todo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Empieza con una dirección de estilo, no con un lienzo en blanco."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Elige un punto de partida de FAQ ya pulido y ajusta cada detalle para que encaje con tu marca en minutos."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Un widget de FAQ. Infinitas apariencias."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Cambia entre Liquid Glass, Pure Canvas, Rebel Blocks y Enterprise Prime sin tener que reescribir tus respuestas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Modo claro. Modo oscuro. Cualquier modo: es tu modo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Las plantillas son solo la línea de salida. Tú controlas la meta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Libertad de diseño, integrada."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Desde sistemas de diseño y acabados visuales hasta roles tipográficos, puedes controlar cada decisión de diseño en el editor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Diseños, a tu manera"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Control de apariencia sin límites"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Precisión tipográfica"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Muchos sistemas de diseño, no uno solo. Estructura por breakpoint. Relleno y espaciado independientes para escritorio/móvil. Controla columnas, apilado, alineación y reflujo—al detalle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Radio por esquina. Bordes con colores personalizados. Sombras externas e internas (vinculadas o independientes por lado). Fondos con degradado, imagen o vídeo. Autoridad visual total."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Seis roles distintos (titular, cuerpo, pregunta, respuesta, botón, sección). Elige entre 17 Google Fonts. Grosor, estilo, tamaño: todo personalizable por rol. Escalas dinámicas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Cambia de diseño al instante"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Elige Acordeón, Lista o Tarjetas y cambia cuando quieras sin reconstruir tu contenido."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Diseño de interacción incluido"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Estados de hover, activo y foco integrados para que tu FAQ se vea pulida en cualquier dispositivo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Tipografía que se siente bien"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Usa tus propias fuentes o nuestra biblioteca y ajusta la jerarquía para titulares, preguntas, respuestas y CTAs."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "El modo oscuro es automático"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Tu FAQ se adapta automáticamente a secciones claras u oscuras para que el diseño siempre se sienta nativo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Perfección en móvil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Áreas táctiles, espaciado y diseño se mantienen legibles en móviles, tablets y pantallas de escritorio."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Crea tu FAQ en tres pasos"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Elige un estilo inicial, ajusta cada detalle y publica una sola versión que se actualiza en todas partes."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Elige un estilo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Personaliza todo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publica"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Empieza con la plantilla que encaje con tu marca."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Ajusta el diseño, el espaciado, los colores, el radio y la tipografía en el editor visual."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Publica una sola actualización y se reflejará en todos los lugares donde tengas tu FAQ incrustada."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Empieza con una plantilla. Hazla tuya."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Elige cualquier plantilla, adáptala a tu marca y lanza tu widget de FAQ gratis."
+    }
+  ],
+  "v": 1
+}

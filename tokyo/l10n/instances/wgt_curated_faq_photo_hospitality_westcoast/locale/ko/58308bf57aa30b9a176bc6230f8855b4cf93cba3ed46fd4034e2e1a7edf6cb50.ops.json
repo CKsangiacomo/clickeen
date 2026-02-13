@@ -10,7 +10,7 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "미국식 B&B의 매력과 편안함을 경험해 보세요."
+      "value": "미국 B&B의 매력과 편안함을 만나보세요."
     },
     {
       "op": "set",
@@ -20,17 +20,17 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">standard</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> , 그리고 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a> 등 다양한 객실을 제공합니다."
+      "value": "<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">스탠다드</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">디럭스</a>, 그리고 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">스위트</a> 등 다양한 객실을 제공합니다."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "어떤 객실 유형이 있나요?"
+      "value": "어떤 객실 타입이 있나요?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "체크인은 오후 3시이며, 체크아웃은 오전 11시까지입니다."
+      "value": "체크인은 오후 3시, 체크아웃은 오전 11시까지입니다."
     },
     {
       "op": "set",
@@ -40,7 +40,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "네, 숙박 시 무료 조식이 포함됩니다."
+      "value": "네, 숙박에는 무료 조식이 포함됩니다."
     },
     {
       "op": "set",
@@ -50,7 +50,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "네, 로맨틱한 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">휴양 패키지</a>와 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">가족 친화적 옵션도 준비되어 있습니다.</a>"
+      "value": "네, 로맨틱한 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">겟어웨이 패키지</a>와 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">가족 친화 옵션</a>을 제공합니다."
     },
     {
       "op": "set",

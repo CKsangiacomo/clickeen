@@ -6,7 +6,7 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "Beberapa klien kami"
+      "value": "Sebagian klien kami"
     },
     {
       "op": "set",

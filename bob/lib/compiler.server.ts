@@ -4,6 +4,7 @@ import { buildWidgetAssets } from './compiler/assets';
 import { compileControlsFromPanels, expandTooldrawerClusters, groupKeyToLabel } from './compiler/controls';
 import { buildContext, loadComponentStencil, renderComponentStencil } from './compiler/stencils';
 import { buildStagePodCornerAppearanceFields, buildStagePodLayoutPanelFields } from './compiler/modules/stagePod';
+import { normalizeWidgetNormalizationSpec } from './compiler/modules/normalization';
 import {
   buildHeaderAppearancePanelFields,
   buildHeaderContentPanelFields,
@@ -616,6 +617,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   const displayName = (typeof widgetJson.displayName === 'string' && widgetJson.displayName.trim()) || widgetname;
   const rawItemKey = widgetJson.itemKey;
   const itemKey = typeof rawItemKey === 'string' && rawItemKey.trim() ? rawItemKey.trim() : null;
+  const normalization = normalizeWidgetNormalizationSpec(widgetJson.normalization);
 
   const tokyoBase = resolveTokyoBaseUrl();
   const htmlWithGenerated = buildHtmlWithGeneratedPanels(widgetJson);
@@ -757,6 +759,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     panels: renderedPanels,
     controls,
     ...(presets ? { presets } : {}),
+    ...(normalization ? { normalization } : {}),
     assets,
   };
 }

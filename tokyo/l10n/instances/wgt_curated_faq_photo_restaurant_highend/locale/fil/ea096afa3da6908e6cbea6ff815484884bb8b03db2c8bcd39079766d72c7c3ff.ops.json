@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Magpa-reserba"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Tuklasin ang alindog at ginhawa ng aming bed and breakfast sa USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Mga FAQ ni Chef Pierre"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Nag-aalok kami ng iba’t ibang dining experience, kabilang ang private dining, wine tasting, at chef’s table."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Anong mga uri ng dining experience ang available?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Inirerekomenda ang reservation at puwedeng magpa-book hanggang 30 araw nang mas maaga."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Ano ang mga patakaran sa reservation?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Oo, may smart casual kaming dress code."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "May dress code ba?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Oo, nag-aalok kami ng romantic dining packages at group dining experiences."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "May inaalok ba kayong espesyal na dining package?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Dapat mag-cancel 24 oras bago ang reservation para maiwasan ang bayad."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Ano ang patakaran ninyo sa pag-cancel?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Oo, kaya naming i-accommodate ang iba’t ibang dietary needs, kabilang ang vegetarian, vegan, gluten-free, at nut-free na options."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "May inaalok ba kayong dietary accommodations?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Dining Experience"
+    }
+  ],
+  "v": 1
+}

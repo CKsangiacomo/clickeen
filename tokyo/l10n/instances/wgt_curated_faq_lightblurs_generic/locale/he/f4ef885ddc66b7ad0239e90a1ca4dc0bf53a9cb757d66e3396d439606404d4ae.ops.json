@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "צרו קשר"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "כאן תמצאו תשובות לשאלות הנפוצות ביותר."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "שאלות נפוצות"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing היא חברת SaaS המתמחה באוטומציה שיווקית, ומציעה כלים מתקדמים לקמפיינים באימייל, סגמנטציה של לקוחות ואנליטיקה."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "פשוט נרשמים, משלבים את הנתונים שלכם ומתחילים ליצור קמפיינים אוטומטיים באמצעות הפלטפורמה האינטואיטיבית שלנו."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "מה זה Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "איך מתחילים להשתמש ב-Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "כן, Liquid Marketing מציעה תקופת ניסיון חינמית עם גישה לפיצ’רים בסיסיים. לשדרוג לקבלת יכולות מתקדמות יותר."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing מספקת פלטפורמה חזקה עם כלי אוטומציה קלים לשימוש, אנליטיקה מפורטת ותמיכת לקוחות מצוינת—מה שהופך אותה לאידיאלית לעסקים שרוצים לייעל את מאמצי השיווק שלהם."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "למה כדאי לבחור ב-Liquid Marketing לצרכי השיווק שלי?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "האם יש תקופת ניסיון חינמית?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "כל השאלות"
+    }
+  ],
+  "v": 1
+}

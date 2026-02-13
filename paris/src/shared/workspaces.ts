@@ -5,7 +5,7 @@ import { ckError } from './errors';
 
 export async function loadWorkspaceById(env: Env, workspaceId: string): Promise<WorkspaceRow | null> {
   const params = new URLSearchParams({
-    select: 'id,tier,name,slug,website_url,l10n_locales',
+    select: 'id,account_id,tier,name,slug,website_url,l10n_locales',
     id: `eq.${workspaceId}`,
     limit: '1',
   });

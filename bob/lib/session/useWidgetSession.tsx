@@ -28,6 +28,7 @@ import {
   type AllowlistEntry,
   type LocalizationOp,
 } from '../l10n/instance';
+import { applyWidgetNormalizationRules } from '../compiler/modules/normalization';
 import { resolveTokyoBaseUrl } from '../env/tokyo';
 
 type UpdateMeta = {
@@ -99,6 +100,7 @@ type SessionState = {
   meta: {
     publicId?: string;
     workspaceId?: string;
+    ownerAccountId?: string;
     widgetname?: string;
     label?: string;
   } | null;
@@ -113,6 +115,7 @@ type WidgetBootstrapMessage = {
   enforcement?: unknown;
   publicId?: string;
   workspaceId?: string;
+  ownerAccountId?: string;
   label?: string;
   subjectMode?: SubjectMode;
 };
@@ -134,6 +137,15 @@ const GLOBAL_TYPOGRAPHY_ROLE_SCALES: Record<string, Record<'xs' | 's' | 'm' | 'l
   answer: { xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' },
   button: { xs: '13px', s: '15px', m: '18px', l: '20px', xl: '24px' },
 };
+
+function applyWidgetNormalizations(
+  normalization: CompiledWidget['normalization'],
+  config: Record<string, unknown>,
+): Record<string, unknown> {
+  const next = applyWidgetNormalizationRules(config, normalization);
+  enforceGlobalTypographyRoleScales(next);
+  return next;
+}
 
 function enforceGlobalTypographyRoleScales(config: Record<string, unknown>) {
   const typography = config.typography;
@@ -460,13 +472,14 @@ function useWidgetSessionInternal() {
     const defaults = compiled.defaults as Record<string, unknown>;
     let resolved: Record<string, unknown> = structuredClone(nextState);
 
-    resolved = applyDefaultsIntoConfig(defaults, resolved);
+    resolved = applyDefaultsIntoConfig(compiled.normalization, defaults, resolved);
     resolved = sanitizeConfig({
       config: resolved,
       limits: compiled.limits ?? null,
       policy: snapshot.policy,
       context: 'load',
     });
+    resolved = applyWidgetNormalizations(compiled.normalization, resolved);
 
     const baseNext = resolved;
     const instanceNext =
@@ -594,8 +607,10 @@ function useWidgetSessionInternal() {
         return applied;
       }
 
+      const normalizedData = applyWidgetNormalizations(compiled.normalization, applied.data);
+
       const violations = evaluateLimits({
-        config: applied.data,
+        config: normalizedData,
         limits: compiled.limits ?? null,
         policy: state.policy,
         context: 'ops',
@@ -636,8 +651,8 @@ function useWidgetSessionInternal() {
       setState((prev) => ({
         ...prev,
         undoSnapshot: prev.instanceData,
-        instanceData: applied.data,
-        baseInstanceData: applied.data,
+        instanceData: normalizedData,
+        baseInstanceData: normalizedData,
         isDirty: true,
         error: null,
         upsell: null,
@@ -714,8 +729,10 @@ function useWidgetSessionInternal() {
       return applied;
     }
 
+    const normalizedData = applyWidgetNormalizations(compiled.normalization, applied.data);
+
     const violations = evaluateLimits({
-      config: applied.data,
+      config: normalizedData,
       limits: compiled.limits ?? null,
       policy: snapshot.policy,
       context: 'ops',
@@ -727,7 +744,7 @@ function useWidgetSessionInternal() {
 
     setState((prev) => ({
       ...prev,
-      previewData: applied.data,
+      previewData: normalizedData,
       previewOps: opsToApply,
     }));
 
@@ -1292,6 +1309,7 @@ function useWidgetSessionInternal() {
 
       let resolved: Record<string, unknown> = {};
       let nextWorkspaceId = message.workspaceId;
+      let nextOwnerAccountId = message.ownerAccountId;
       let nextEnforcement: EnforcementState | null = normalizeEnforcement(message.enforcement);
 
       const nextSubjectMode: SubjectMode = message.subjectMode ?? resolveSubjectModeFromUrl();
@@ -1327,19 +1345,23 @@ function useWidgetSessionInternal() {
         else nextPolicy = resolveDevPolicy(nextSubjectMode);
         nextEnforcement = normalizeEnforcement(json.enforcement);
         nextWorkspaceId = message.workspaceId;
+        if (typeof json?.ownerAccountId === 'string' && json.ownerAccountId.trim()) {
+          nextOwnerAccountId = json.ownerAccountId.trim();
+        }
       } else {
         resolved = incoming == null ? structuredClone(defaults) : structuredClone(incoming);
         if (!message.policy) nextPolicy = resolveDevPolicy(nextSubjectMode);
       }
 
       nextPolicy = enforceReadOnlyPolicy(nextPolicy);
-      resolved = applyDefaultsIntoConfig(defaults, resolved);
+      resolved = applyDefaultsIntoConfig(compiled.normalization, defaults, resolved);
       resolved = sanitizeConfig({
         config: resolved,
         limits: compiled.limits ?? null,
         policy: nextPolicy,
         context: 'load',
       });
+      resolved = applyWidgetNormalizations(compiled.normalization, resolved);
 
       setState((prev) => ({
         ...prev,
@@ -1364,6 +1386,7 @@ function useWidgetSessionInternal() {
         meta: {
           publicId: message.publicId,
           workspaceId: nextWorkspaceId,
+          ownerAccountId: nextOwnerAccountId,
           widgetname: compiled.widgetname,
           label: message.label ?? compiled.displayName,
         },
@@ -1390,7 +1413,11 @@ function useWidgetSessionInternal() {
     }
   }, []);
 
-  function applyDefaultsIntoConfig(defaults: Record<string, unknown>, config: Record<string, unknown>) {
+  function applyDefaultsIntoConfig(
+    normalization: CompiledWidget['normalization'],
+    defaults: Record<string, unknown>,
+    config: Record<string, unknown>,
+  ) {
     const merge = (defaultsValue: unknown, targetValue: unknown): void => {
       if (!defaultsValue || typeof defaultsValue !== 'object' || Array.isArray(defaultsValue)) return;
       if (!targetValue || typeof targetValue !== 'object' || Array.isArray(targetValue)) return;
@@ -1408,8 +1435,7 @@ function useWidgetSessionInternal() {
     };
 
     merge(defaults, config);
-    enforceGlobalTypographyRoleScales(config);
-    return config;
+    return applyWidgetNormalizations(normalization, config);
   }
 
   const dismissUpsell = useCallback(() => {
@@ -1431,6 +1457,7 @@ function useWidgetSessionInternal() {
   const publish = useCallback(async () => {
     const publicId = state.meta?.publicId;
     const workspaceId = state.meta?.workspaceId;
+    const accountId = state.meta?.ownerAccountId;
     const widgetType = state.meta?.widgetname;
     if (!publicId || !workspaceId) {
       setState((prev) => ({
@@ -1443,6 +1470,13 @@ function useWidgetSessionInternal() {
       setState((prev) => ({
         ...prev,
         error: { source: 'publish', message: 'coreui.errors.widgetType.invalid' },
+      }));
+      return;
+    }
+    if (!accountId) {
+      setState((prev) => ({
+        ...prev,
+        error: { source: 'publish', message: 'coreui.errors.accountId.invalid' },
       }));
       return;
     }
@@ -1486,10 +1520,12 @@ function useWidgetSessionInternal() {
     try {
       const isCurated = isCuratedPublicId(publicId);
       const persisted = await persistConfigAssetsToTokyo(state.baseInstanceData, {
+        accountId,
         scope: isCurated ? 'curated' : 'workspace',
         workspaceId,
         publicId,
         widgetType,
+        source: 'bob.publish',
       });
       const res = await fetch(
         `/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
@@ -1581,6 +1617,7 @@ function useWidgetSessionInternal() {
     state.baseInstanceData,
     state.meta?.publicId,
     state.meta?.workspaceId,
+    state.meta?.ownerAccountId,
     state.meta?.widgetname,
     state.policy,
   ]);
@@ -1654,6 +1691,8 @@ function useWidgetSessionInternal() {
       enforcement: instanceJson.enforcement,
       publicId: instanceJson.publicId ?? publicId,
       workspaceId,
+      ownerAccountId:
+        typeof instanceJson.ownerAccountId === 'string' ? instanceJson.ownerAccountId : undefined,
       label: instanceJson.publicId ?? publicId,
       subjectMode: subject,
     });
@@ -1753,17 +1792,23 @@ function useWidgetSessionInternal() {
                   const publicId = (data as DevstudioExportInstanceDataMessage).assetPublicId || snapshot.meta?.publicId;
                   const widgetType = (data as DevstudioExportInstanceDataMessage).assetWidgetType || snapshot.meta?.widgetname;
                   const workspaceId = snapshot.meta?.workspaceId;
+                  const accountId = snapshot.meta?.ownerAccountId;
                   if (exportScope === 'workspace' && !workspaceId) {
                     throw new Error('[Bob] Missing workspaceId for asset persistence');
                   }
                   if (exportScope === 'curated' && (!publicId || !widgetType)) {
                     throw new Error('[Bob] Missing publicId or widgetType for curated asset persistence');
                   }
+                  if (!accountId) {
+                    throw new Error('[Bob] Missing accountId for asset persistence');
+                  }
                   return persistConfigAssetsToTokyo(baseData, {
+                    accountId,
                     scope: exportScope,
                     workspaceId,
                     publicId,
                     widgetType,
+                    source: 'bob.export',
                   });
                 })()
               : baseData;

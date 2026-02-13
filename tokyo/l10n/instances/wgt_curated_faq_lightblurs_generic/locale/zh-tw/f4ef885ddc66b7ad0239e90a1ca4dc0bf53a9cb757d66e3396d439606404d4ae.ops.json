@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "所有問題"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "什麼是 Liquid Marketing？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "我該如何開始使用 Liquid Marketing？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "有提供免費試用嗎？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "為什麼我的行銷需求應該選擇 Liquid Marketing？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing 是一家專注於行銷自動化的 SaaS 公司，提供進階工具，涵蓋電子郵件行銷活動、客戶分眾與數據分析。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "只要註冊、整合你的資料，就能透過我們直覺的平台開始建立自動化行銷活動。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "有的，Liquid Marketing 提供可使用基本功能的免費試用。升級即可解鎖更進階的能力。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing 提供強大平台，具備易用的自動化工具、詳盡的分析報表與優質客服支援，是想要精簡行銷流程的企業理想選擇。"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "聯絡我們 "
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "在這裡找到最常見問題的解答。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "常見問題"
+    }
+  ],
+  "v": 1
+}

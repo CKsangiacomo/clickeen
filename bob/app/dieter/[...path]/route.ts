@@ -52,14 +52,16 @@ async function proxy(request: NextRequest, prefix: string, pathSegments: string[
     return NextResponse.json({ error: 'MISCONFIGURED', message }, { status: 500 });
   }
 
-  const res = await fetch(url, { method, headers: buildConditionalHeaders(request), cache: 'no-store' });
+  const cacheBust = request.nextUrl.searchParams.has('ts');
+  const res = await fetch(url, {
+    method,
+    headers: buildConditionalHeaders(request),
+    cache: cacheBust ? 'no-store' : 'default',
+  });
   const headers = copyUpstreamHeaders(res);
 
   // Explicit cache bust (opt-in via query param).
-  if (request.nextUrl.searchParams.has('ts')) {
-    headers.set('Cache-Control', 'no-store');
-  }
-  if (process.env.NODE_ENV === 'development') {
+  if (cacheBust) {
     headers.set('Cache-Control', 'no-store');
   }
 

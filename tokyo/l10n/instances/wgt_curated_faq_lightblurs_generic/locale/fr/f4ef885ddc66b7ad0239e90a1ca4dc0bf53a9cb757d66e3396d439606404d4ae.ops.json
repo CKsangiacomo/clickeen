@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Toutes les questions"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Qu’est-ce que Liquid Marketing ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Comment commencer à utiliser Liquid Marketing ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Existe-t-il un essai gratuit ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Pourquoi choisir Liquid Marketing pour mes besoins marketing ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing est une entreprise SaaS spécialisée dans l’automatisation marketing, qui propose des outils avancés pour les campagnes e-mail, la segmentation client et l’analyse des performances."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Inscrivez-vous, connectez vos données, puis lancez la création de campagnes automatisées grâce à notre plateforme intuitive."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Oui, Liquid Marketing propose un essai gratuit donnant accès aux fonctionnalités de base. Passez à une offre supérieure pour bénéficier de fonctionnalités plus avancées."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing offre une plateforme robuste avec des outils d’automatisation simples à prendre en main, des analyses détaillées et un excellent support client — idéale pour les entreprises qui souhaitent rationaliser leurs actions marketing."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Nous contacter "
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Retrouvez ici les réponses aux questions les plus fréquemment posées."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Questions fréquemment posées"
+    }
+  ],
+  "v": 1
+}

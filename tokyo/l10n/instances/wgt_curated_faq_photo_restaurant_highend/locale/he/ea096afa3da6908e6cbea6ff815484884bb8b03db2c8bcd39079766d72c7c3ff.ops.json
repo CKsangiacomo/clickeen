@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "הזמן מקום"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "גלו את הקסם והנוחות של ה-B&amp;B שלנו בארה\"ב."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "שאלות נפוצות – שף פייר"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "אנו מציעים מגוון חוויות קולינריות, כולל אירוח פרטי, טעימות יין וחוויית שולחן השף."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "אילו סוגי חוויות קולינריות זמינות?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "מומלץ להזמין מראש, וניתן לבצע הזמנה עד 30 ימים מראש."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "מהן מדיניות ההזמנות?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "כן, קוד הלבוש הוא אלגנטי-קז'ואל."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "האם יש קוד לבוש?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "כן, אנו מציעים חבילות ארוחה רומנטיות וחוויות אירוח לקבוצות."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "האם אתם מציעים חבילות אוכל מיוחדות?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "יש לבטל 24 שעות מראש כדי להימנע מחיוב."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "מהי מדיניות הביטול שלכם?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "כן, נוכל להתאים למגוון צרכים תזונתיים, כולל אפשרויות צמחוניות, טבעוניות, ללא גלוטן וללא אגוזים."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "האם אתם מציעים התאמות תזונתיות?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "חוויה קולינרית"
+    }
+  ],
+  "v": 1
+}

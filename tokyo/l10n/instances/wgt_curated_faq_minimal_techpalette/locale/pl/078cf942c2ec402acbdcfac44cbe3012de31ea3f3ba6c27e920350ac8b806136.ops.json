@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Skontaktuj się z Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Twoje pierwsze miejsce po rozwiązania i usługi inżynieryjne."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering to globalna firma specjalizująca się w innowacyjnych rozwiązaniach i usługach inżynieryjnych."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Czym jest Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Wystarczy, że skontaktujesz się z nami, opowiesz o potrzebach swojego projektu, a my przeprowadzimy Cię przez naszą ofertę usług."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Jak zacząć korzystać z usług Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Tak, Ive Engineering oferuje bezpłatne konsultacje, aby lepiej zrozumieć wymagania Twojego projektu."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Czy dostępna jest konsultacja?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering zapewnia nowoczesne rozwiązania, doświadczonych specjalistów oraz dopasowane usługi, które odpowiadają na Twoje konkretne potrzeby inżynieryjne."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Dlaczego warto wybrać Ive Engineering do realizacji moich potrzeb inżynieryjnych?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Wszystkie pytania"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering ceni innowacyjność, rzetelność i dążenie do doskonałości we wszystkich projektach i usługach."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Jakie są kluczowe wartości Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Możesz skontaktować się z Ive Engineering przez naszą stronę internetową, e-mail lub numer telefonu podany na stronie kontaktowej."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Jak mogę skontaktować się z Ive Engineering?"
+    }
+  ],
+  "v": 1
+}

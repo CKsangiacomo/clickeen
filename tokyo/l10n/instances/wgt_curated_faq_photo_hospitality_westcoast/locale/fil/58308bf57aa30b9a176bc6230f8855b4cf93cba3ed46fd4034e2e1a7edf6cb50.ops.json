@@ -20,7 +20,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Nag-aalok kami ng iba’t ibang uri ng kuwarto, kabilang ang <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">standard</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a>, at <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a>."
+      "value": "Nag-aalok kami ng iba’t ibang uri ng kuwarto kabilang ang <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">standard</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> , at <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a> ."
     },
     {
       "op": "set",
@@ -35,7 +35,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Ano ang oras ng check-in at check-out?"
+      "value": "Anong oras ang check-in at check-out?"
     },
     {
       "op": "set",
@@ -50,12 +50,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Oo, nag-aalok kami ng mga romantic <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">getaway packages</a> at <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">mga opsyong angkop para sa pamilya.</a>"
+      "value": "Oo, nag-aalok kami ng mga romantikong <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">getaway packages</a> at <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">mga opsyong pang-pamilya.</a>"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "May inaalok ba kayong mga special package?"
+      "value": "May inaalok ba kayong mga espesyal na package?"
     },
     {
       "op": "set",

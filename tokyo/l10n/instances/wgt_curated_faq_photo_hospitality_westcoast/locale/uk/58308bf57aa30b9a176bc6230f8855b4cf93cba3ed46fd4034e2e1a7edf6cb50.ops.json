@@ -10,17 +10,17 @@
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "Відкрийте для себе затишок і комфорт нашого американського bed and breakfast."
+      "value": "Відкрийте для себе затишок і комфорт нашого B&B у США."
     },
     {
       "op": "set",
       "path": "header.title",
-      "value": "Поширені запитання про Bed and Breakfast"
+      "value": "Поширені запитання про B&B"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Ми пропонуємо різні категорії номерів: <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">стандарт</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">делюкс</a>, а також <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">люкси</a>."
+      "value": "Ми пропонуємо різні категорії номерів, зокрема <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">стандартні</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">делюкс</a> , а також <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">люкси</a> ."
     },
     {
       "op": "set",
@@ -35,7 +35,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "О котрій заїзд і виїзд?"
+      "value": "Який час заїзду та виїзду?"
     },
     {
       "op": "set",
@@ -50,7 +50,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Так, ми пропонуємо романтичні <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">пакети для відпочинку</a> та <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">варіанти для сімей з дітьми.</a>"
+      "value": "Так, ми пропонуємо романтичні <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">пакети для відпочинку</a> та <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">варіанти для сімей із дітьми.</a>"
     },
     {
       "op": "set",

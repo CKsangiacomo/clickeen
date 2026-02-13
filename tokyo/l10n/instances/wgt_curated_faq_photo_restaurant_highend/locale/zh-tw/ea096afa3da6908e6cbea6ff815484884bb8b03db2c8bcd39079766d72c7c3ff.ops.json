@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "立即訂位"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "探索我們位於美國的民宿，感受迷人風情與舒適體驗。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Chef Pierre 常見問題"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "我們提供多元用餐體驗，包括包廂／私人用餐、葡萄酒品鑑，以及主廚餐桌體驗。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "有哪些用餐體驗可選？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "建議提前訂位，最早可於 30 天前預約。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "訂位規則是什麼？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "是的，我們採智慧休閒（Smart Casual）著裝規範。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "有服裝規定嗎？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "有的，我們提供浪漫用餐方案與團體用餐體驗。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "有提供特別的用餐方案嗎？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "為避免產生費用，請於 24 小時前取消訂位。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "取消政策是什麼？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "有的，我們可配合多種飲食需求，包括素食、全素、無麩質與無堅果選項。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "可以配合特殊飲食需求嗎？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "用餐體驗"
+    }
+  ],
+  "v": 1
+}

@@ -11,7 +11,7 @@
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "所有问题"
+      "value": "全部问题"
     },
     {
       "op": "set",
@@ -31,27 +31,27 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "为什么我应该使用 Clickeen"
+      "value": "为什么要使用 Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen 是 Isabel 在不得不做的时候会很喜欢去做的事情，而我会逼她。"
+      "value": "Clickeen 是一个 Isabel 在不得不做的时候会非常喜欢为之工作的东西，而我会逼她去做。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "复制嵌入代码并将其粘贴到你网站的 </body> 之前。"
+      "value": "复制嵌入代码，并将其粘贴到你的网站 </body> 之前。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "有，一个可用的小组件，包含核心功能。"
+      "value": "有，一个启用中的小组件，包含核心功能。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "因为 Clickeen 是一个很棒的新平台，能让网络更美观、更易用。"
+      "value": "因为 Clickeen 是一个令人惊艳的新平台，让网页更美观、也更易用。"
     }
   ]
 }

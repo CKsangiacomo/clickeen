@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "전체 질문"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Liquid Marketing이란 무엇인가요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Liquid Marketing은 어떻게 시작하나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "무료 체험이 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "마케팅에 Liquid Marketing을 선택해야 하는 이유는 무엇인가요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing은 마케팅 자동화에 특화된 SaaS 기업으로, 이메일 캠페인, 고객 세분화, 분석을 위한 고급 도구를 제공합니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "가입한 뒤 데이터를 연동하고, 직관적인 플랫폼에서 자동화 캠페인을 바로 만들어 시작하면 됩니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "네, Liquid Marketing은 기본 기능을 이용할 수 있는 무료 체험을 제공합니다. 더 고급 기능이 필요하면 업그레이드하세요."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing은 사용하기 쉬운 자동화 도구, 상세한 분석, 뛰어난 고객 지원을 갖춘 탄탄한 플랫폼으로, 마케팅 업무를 효율화하려는 기업에 이상적입니다."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "문의하기 "
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "자주 묻는 질문에 대한 답변을 여기에서 확인하세요."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "자주 묻는 질문"
+    }
+  ],
+  "v": 1
+}

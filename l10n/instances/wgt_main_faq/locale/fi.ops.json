@@ -16,7 +16,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Onko ilmainen paketti saatavilla?"
+      "value": "Onko tarjolla ilmainen paketti?"
     },
     {
       "op": "set",
@@ -31,22 +31,22 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Miksi minun pitäisi käyttää Clickeeniä"
+      "value": "Miksi minun kannattaa käyttää Clickeeniä"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Kyllä, yksi aktiivinen widget perusominaisuuksilla."
+      "value": "Kyllä — yksi aktiivinen widget keskeisillä ominaisuuksilla."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Upotettavia widgettejä, joissa konversiot ovat sisäänrakennettuina."
+      "value": "Upotettavat widgetit, joissa konversiot ovat sisäänrakennettuina."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Kopioi upotuskoodi ja liitä se sivustollasi ennen </body>-tagia."
+      "value": "Kopioi upotuskoodi ja liitä se sivustollasi juuri ennen </body>-tagia."
     },
     {
       "op": "set",

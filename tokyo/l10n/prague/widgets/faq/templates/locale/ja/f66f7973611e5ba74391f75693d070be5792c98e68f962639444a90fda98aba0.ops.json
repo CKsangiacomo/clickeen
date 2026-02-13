@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQテンプレート - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "プロがデザインしたFAQテンプレートからスタート。すべてをカスタマイズできます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "真っ白なキャンバスではなく、デザインの方向性から始めましょう。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "洗練されたFAQテンプレートをベースに選び、あとは細部までブランドに合わせて数分で調整できます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "FAQウィジェットはひとつ。見た目は無限。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Liquid Glass、Pure Canvas、Rebel Blocks、Enterprise Primeを、回答を書き直さずに行き来できます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "ライトモード。ダークモード。どんなモードでも、あなたのモード。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "テンプレートはスタートラインにすぎません。ゴールを決めるのはあなたです。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "デザインの自由を、標準搭載。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "レイアウトシステムから質感、タイポグラフィの役割まで。あらゆるデザイン要素をエディターで自在にコントロールできます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "レイアウトは思いのまま"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "外観コントロールに制限なし"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "タイポグラフィの精密さ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "レイアウトシステムは1つではなく複数。ブレークポイントごとの構造。デスクトップ/モバイルで独立した余白と間隔。カラム、積み重ね、整列、リフローを—狙い通りにコントロール。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "角ごとの角丸。カスタムカラーの境界線。外側/内側のシャドウ（各辺で連動または独立）。グラデーション、画像、動画の背景。見た目を完全に掌握。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "6つの明確な役割（見出し、本文、質問、回答、ボタン、セクション）。17種類のGoogle Fontsから選択。太さ、スタイル、サイズ—役割ごとにすべてカスタマイズ可能。ダイナミックなスケール。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "レイアウトを即切り替え"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "アコーディオン、リスト、カードから選び、コンテンツを作り直さずにいつでも切り替え可能です。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "インタラクションデザインも込み"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "ホバー、アクティブ、フォーカスの状態を標準搭載。どのデバイスでも洗練されたFAQに仕上がります。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "しっくりくる文字組み"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "自社フォントもライブラリも利用可能。見出し、質問、回答、CTAの階層を整えて最適化できます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "ダークモードは自動"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "FAQは明るいセクション／暗いセクションに自動で馴染み、いつでも自然なデザインになります。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "モバイルも完璧"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "タップ領域、余白、レイアウトを最適化し、スマホ・タブレット・デスクトップで読みやすさを保ちます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "3ステップでFAQを作成"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "スタイルを選び、細部まで調整し、一度公開すればどこでも同じFAQが更新されます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "スタイルを選ぶ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "すべてカスタマイズ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "公開する"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "ブランドに合うテンプレートから始められます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "ビジュアルエディターでレイアウト、余白、色、角丸、タイポグラフィを調整できます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "更新は一度でOK。FAQが埋め込まれているすべての場所に反映されます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "テンプレートから始めて、あなたのブランドに。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "好きなテンプレートを選び、ブランドに合わせて調整し、FAQウィジェットを無料で公開しましょう。"
+    }
+  ],
+  "v": 1
+}

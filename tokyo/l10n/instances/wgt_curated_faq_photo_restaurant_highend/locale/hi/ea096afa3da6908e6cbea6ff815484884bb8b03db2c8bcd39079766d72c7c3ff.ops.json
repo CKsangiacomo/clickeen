@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "आरक्षण करें"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "हमारे USA बेड एंड ब्रेकफास्ट के आकर्षण और आराम का अनुभव करें।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Chef Pierre FAQs"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "हम निजी डाइनिंग, वाइन टेस्टिंग और शेफ्स टेबल जैसे कई तरह के डाइनिंग अनुभव प्रदान करते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "कौन-कौन से डाइनिंग अनुभव उपलब्ध हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "आरक्षण की सलाह दी जाती है और 30 दिनों तक अग्रिम बुकिंग की जा सकती है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "आरक्षण की नीतियां क्या हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "हाँ, हमारा ड्रेस कोड स्मार्ट कैज़ुअल है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "क्या ड्रेस कोड है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "हाँ, हम रोमांटिक डाइनिंग पैकेज और ग्रुप डाइनिंग अनुभव उपलब्ध कराते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "क्या आप कोई विशेष डाइनिंग पैकेज देते हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "शुल्क से बचने के लिए रद्दीकरण 24 घंटे पहले करना होगा।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "आपकी रद्दीकरण नीति क्या है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "हाँ, हम शाकाहारी, वीगन, ग्लूटेन-फ्री और नट-फ्री विकल्पों सहित विभिन्न आहार आवश्यकताओं का ध्यान रख सकते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "क्या आप आहार संबंधी आवश्यकताओं के अनुसार विकल्प उपलब्ध कराते हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "डाइनिंग अनुभव"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,217 @@
+{
+  "baseFingerprint": "4409bdca90edbb1fcae9aff7c928cc8991a16f322e222eb5b4b60b6075ecf5eb",
+  "baseUpdatedAt": "2026-02-12T02:06:51.338Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.nav.widgets",
+      "value": "小组件"
+    },
+    {
+      "op": "set",
+      "path": "strings.nav.viewAllWidgets",
+      "value": "查看全部小组件"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.overview",
+      "value": "概览"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.templates",
+      "value": "模板"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.examples",
+      "value": "示例"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.features",
+      "value": "功能"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.pricing",
+      "value": "定价"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.createFree",
+      "value": "免费创建"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.seeTemplates",
+      "value": "查看模板"
+    },
+    {
+      "op": "set",
+      "path": "strings.common.comingSoon",
+      "value": "即将上线。"
+    },
+    {
+      "op": "set",
+      "path": "strings.creative.useThisWidgetOnYourWebsite",
+      "value": "在你的网站上使用这个小组件"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.title",
+      "value": "为每一种语言而生"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.subtitle",
+      "value": "同一精选小组件。三种语言环境。一套代码。"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.share",
+      "value": "分享"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copy",
+      "value": "复制链接"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copied",
+      "value": "已复制"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.more",
+      "value": "更多"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sms",
+      "value": "短信"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.email",
+      "value": "电子邮件"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.whatsapp",
+      "value": "WhatsApp"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.telegram",
+      "value": "Telegram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.signal",
+      "value": "Signal"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.messenger",
+      "value": "Messenger"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.wechat",
+      "value": "微信"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.line",
+      "value": "LINE"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.slack",
+      "value": "Slack"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.teams",
+      "value": "Teams"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.discord",
+      "value": "Discord"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.x",
+      "value": "X"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.linkedin",
+      "value": "LinkedIn"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.facebook",
+      "value": "Facebook"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.reddit",
+      "value": "Reddit"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.instagram",
+      "value": "Instagram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.tiktok",
+      "value": "TikTok"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.title",
+      "value": "Clickeen 小组件"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.text",
+      "value": "在你的网站上使用这个小组件。"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionMessageTitle",
+      "value": "通过消息发送此小组件模板"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionSocialTitle",
+      "value": "在社交平台分享此小组件模板"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.brand",
+      "value": "Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.pricing",
+      "value": "定价"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.widgets",
+      "value": "小组件"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.rights",
+      "value": "保留所有权利。"
+    }
+  ],
+  "v": 1
+}

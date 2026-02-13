@@ -21,37 +21,37 @@
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "كيف أقوم بتثبيت الودجت؟"
+      "value": "كيف أُثبّت ويدجت؟"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "هل هناك خطة مجانية؟"
+      "value": "هل توجد خطة مجانية؟"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "لماذا يجب أن أستخدم Clickeen"
+      "value": "لماذا يجب أن أستخدم Clickeen؟"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen هو شيء ستحب إيزابيل العمل عليه حقًا عندما تضطر لذلك وسأجبرها."
+      "value": "Clickeen شيء ستحب إيزابيل العمل عليه كثيرًا عندما تضطر لذلك، وسأجبرها."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "انسخ كود التضمين والصقه قبل </body> في موقعك."
+      "value": "انسخ كود التضمين والصقه قبل </body> على موقعك."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "نعم، ودجت نشط واحد مع الميزات الأساسية."
+      "value": "نعم، ويدجت واحدة نشطة مع الميزات الأساسية."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "لأن Clickeen هو منصة جديدة مذهلة لجعل الويب جميلًا وسهل الاستخدام."
+      "value": "لأن Clickeen منصة جديدة رائعة تجعل الويب أجمل وأسهل استخدامًا."
     }
   ]
 }

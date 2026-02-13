@@ -19,6 +19,8 @@ What it does:
 - Embeds Bob in an iframe (default or via `?bob=http://localhost:3000`).
 - Loads instances via Bob’s `/api/paris/*` proxy (DevStudio never calls Paris directly).
 - In **DevStudio Local only**, shows local-only actions (update defaults, reset instance from JSON, create curated instance, refresh Prague preview, translate locales).
+- Uses a 2-step selector in Widget Workspace: pick `Widget` first, then pick an instance from that widget’s scoped list.
+- Instance list fetch uses `GET /api/curated-instances?includeConfig=0` and lazy-loads each instance config on selection.
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
 

@@ -11,7 +11,7 @@
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Todas as Perguntas"
+      "value": "Todas as perguntas"
     },
     {
       "op": "set",
@@ -31,12 +31,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Por que devo usar o Clickeen?"
+      "value": "Porque devo usar o Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen é algo que a Isabel vai realmente adorar trabalhar quando tiver que trabalhar, e eu vou obrigá-la."
+      "value": "O Clickeen é algo para a Isabel adorar trabalhar quando tiver de ser — e eu vou obrigá-la."
     },
     {
       "op": "set",
@@ -46,7 +46,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Sim, um widget ativo com recursos principais."
+      "value": "Sim: um widget ativo com as funcionalidades essenciais."
     },
     {
       "op": "set",

@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveParisBaseUrl } from '../../../../lib/env/paris';
+import {
+  fetchWithTimeout,
+  proxyErrorResponse,
+  resolveParisBaseOrResponse,
+  shouldEnforceSuperadmin,
+  withParisDevAuthorization,
+} from '../../../../lib/api/paris/proxy-helpers';
 
 export const runtime = 'edge';
 
@@ -9,48 +15,17 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id, x-ck-superadmin-key',
 } as const;
 
-const PARIS_DEV_JWT = process.env.PARIS_DEV_JWT;
 const CK_SUPERADMIN_KEY = process.env.CK_SUPERADMIN_KEY;
-
-function shouldEnforceSuperadmin(request: NextRequest): boolean {
-  if (!CK_SUPERADMIN_KEY) return false;
-  if (process.env.NODE_ENV === 'development') return false;
-  const host = (request.headers.get('host') || '').toLowerCase();
-  if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) return false;
-  return true;
-}
-
-function resolveParisBaseOrResponse() {
-  try {
-    return { ok: true as const, baseUrl: resolveParisBaseUrl() };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return {
-      ok: false as const,
-      response: NextResponse.json({ error: 'MISCONFIGURED', message }, { status: 500, headers: CORS_HEADERS }),
-    };
-  }
-}
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs = 5000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 export async function POST(request: NextRequest) {
-  const paris = resolveParisBaseOrResponse();
+  const paris = resolveParisBaseOrResponse(CORS_HEADERS);
   if (!paris.ok) return paris.response;
 
-  if (shouldEnforceSuperadmin(request)) {
+  if (shouldEnforceSuperadmin(request, CK_SUPERADMIN_KEY)) {
     const provided = (request.headers.get('x-ck-superadmin-key') || '').trim();
     if (!provided || provided !== CK_SUPERADMIN_KEY) {
       return NextResponse.json(
@@ -78,12 +53,7 @@ export async function POST(request: NextRequest) {
 
   const url = `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/website-creative?subject=${encodeURIComponent(subject)}`;
 
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-  if (PARIS_DEV_JWT) {
-    headers['Authorization'] = `Bearer ${PARIS_DEV_JWT}`;
-  }
+  const headers = withParisDevAuthorization(new Headers({ 'content-type': 'application/json' }));
 
   try {
     const body = await request.text();
@@ -103,11 +73,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const status = error instanceof Error && error.name === 'AbortError' ? 504 : 502;
-    return NextResponse.json(
-      { error: 'PARIS_PROXY_ERROR', message },
-      { status, headers: CORS_HEADERS },
-    );
+    return proxyErrorResponse(error, CORS_HEADERS);
   }
 }

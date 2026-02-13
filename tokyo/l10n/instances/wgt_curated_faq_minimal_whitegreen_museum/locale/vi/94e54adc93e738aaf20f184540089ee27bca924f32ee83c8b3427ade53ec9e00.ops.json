@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "94e54adc93e738aaf20f184540089ee27bca924f32ee83c8b3427ade53ec9e00",
+  "baseUpdatedAt": "2026-02-12T17:01:21.211684+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Đặt chỗ"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Khám phá nét quyến rũ và sự tiện nghi tại B&B của chúng tôi ở Mỹ."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Câu hỏi thường gặp về Phòng trưng bày Nghệ thuật Soho"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Chúng tôi trưng bày nghệ thuật đương đại từ <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">nghệ sĩ địa phương</a> và i<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">nghệ sĩ quốc tế</a> ."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Tại đây trưng bày những loại hình nghệ thuật nào?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Phòng trưng bày mở cửa từ thứ Ba đến Chủ nhật, 10:00–18:00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Giờ mở cửa của phòng trưng bày là gì?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Vào cửa miễn phí, nhưng chúng tôi rất trân trọng mọi khoản đóng góp."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Có phí vào cửa không?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Có, bạn có thể mua tác phẩm trực tiếp tại phòng trưng bày."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Tôi có thể mua tác phẩm nghệ thuật tại phòng trưng bày không?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Hãy xem website của chúng tôi để cập nhật thông tin về các triển lãm và sự kiện sắp diễn ra."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Sắp tới có sự kiện nào không?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Có, chúng tôi nhận tổ chức sự kiện riêng theo phí."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Tôi có thể tổ chức sự kiện riêng tại phòng trưng bày không?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Thông tin phòng trưng bày"
+    }
+  ],
+  "v": 1
+}

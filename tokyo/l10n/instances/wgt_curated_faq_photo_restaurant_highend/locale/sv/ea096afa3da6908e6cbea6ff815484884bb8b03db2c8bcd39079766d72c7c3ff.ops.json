@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "ea096afa3da6908e6cbea6ff815484884bb8b03db2c8bcd39079766d72c7c3ff",
+  "baseUpdatedAt": "2026-02-12T15:06:27.312177+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Boka bord"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Upptäck charmen och komforten på vårt bed and breakfast i USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Chef Pierre – vanliga frågor"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Vi erbjuder en rad olika matupplevelser, bland annat privata middagar, vinprovningar och Chef’s Table-upplevelser."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Vilka typer av matupplevelser erbjuder ni?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Vi rekommenderar att du bokar i förväg. Bokningar kan göras upp till 30 dagar innan."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Vilka bokningsregler gäller?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, vi har klädkoden smart casual."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Finns det någon klädkod?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ja, vi erbjuder romantiska middagsupplägg samt matupplevelser för grupper."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Erbjuder ni några specialpaket för middagar?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Avbokning måste ske minst 24 timmar i förväg för att undvika avgift."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Vad har ni för avbokningspolicy?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Ja, vi kan anpassa oss efter olika kostbehov, inklusive vegetariskt, veganskt, glutenfritt och nötfritt."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Erbjuder ni anpassningar för särskilda kostbehov?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Matupplevelse"
+    }
+  ],
+  "v": 1
+}

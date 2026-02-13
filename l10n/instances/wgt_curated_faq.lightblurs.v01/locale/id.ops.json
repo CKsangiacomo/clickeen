@@ -31,17 +31,17 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Mengapa saya harus menggunakan Clickeen"
+      "value": "Kenapa saya harus menggunakan Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen adalah sesuatu yang Isabel akan sangat suka kerjakan ketika ia harus, dan saya akan memaksanya."
+      "value": "Clickeen adalah sesuatu yang Isabel akan sangat suka kerjakan saat ia harus, dan saya akan memaksanya."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Salin kode sematan dan tempelkan sebelum </body> di situs Anda."
+      "value": "Salin kode embed lalu tempelkan sebelum </body> di situs Anda."
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Karena Clickeen adalah platform baru yang luar biasa untuk membuat web menjadi indah dan mudah digunakan."
+      "value": "Karena Clickeen adalah platform baru yang luar biasa untuk membuat web lebih indah dan mudah digunakan."
     }
   ]
 }

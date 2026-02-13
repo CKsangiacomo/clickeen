@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "94e54adc93e738aaf20f184540089ee27bca924f32ee83c8b3427ade53ec9e00",
+  "baseUpdatedAt": "2026-02-12T17:01:21.211684+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "রিজার্ভ করুন"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "আমাদের USA বেড অ্যান্ড ব্রেকফাস্টের আকর্ষণ ও আরাম উপভোগ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Soho Art Gallery FAQs"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "আমরা <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">স্থানীয়</a> এবং i<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">আন্তর্জাতিক শিল্পীদের</a> সমকালীন শিল্পকর্ম প্রদর্শন করি।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "কোন ধরনের শিল্পকর্ম প্রদর্শিত হয়?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "গ্যালারি মঙ্গলবার থেকে রবিবার, সকাল ১০টা থেকে সন্ধ্যা ৬টা পর্যন্ত খোলা থাকে।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "গ্যালারির খোলার সময় কী?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "প্রবেশ ফ্রি, তবে অনুদান স্বাগত।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "প্রবেশমূল্য আছে কি?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "হ্যাঁ, আপনি গ্যালারি থেকে সরাসরি শিল্পকর্ম কিনতে পারেন।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "আমি কি গ্যালারিতে শিল্পকর্ম কিনতে পারি?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "আসন্ন প্রদর্শনী ও ইভেন্ট সম্পর্কে জানতে আমাদের ওয়েবসাইট দেখুন।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "কোনো আসন্ন ইভেন্ট আছে কি?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "হ্যাঁ, নির্ধারিত ফি’র বিনিময়ে আমরা প্রাইভেট ইভেন্ট হোস্টিং দিই।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "আমি কি গ্যালারিতে প্রাইভেট ইভেন্ট আয়োজন করতে পারি?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "গ্যালারি তথ্য"
+    }
+  ],
+  "v": 1
+}

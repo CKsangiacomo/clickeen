@@ -262,8 +262,18 @@ export async function handleCuratedInstances(req: Request, env: Env) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
+  const requestUrl = new URL(req.url);
+  const includeConfigParam = String(requestUrl.searchParams.get('includeConfig') ?? '1')
+    .trim()
+    .toLowerCase();
+  const includeConfig = !['0', 'false', 'no'].includes(includeConfigParam);
+
+  const selectFields = includeConfig
+    ? 'public_id,widget_type,status,config,created_at,updated_at,kind,meta'
+    : 'public_id,widget_type,status,created_at,updated_at,kind,meta';
+
   const params = new URLSearchParams({
-    select: 'public_id,widget_type,status,config,created_at,updated_at,kind,meta',
+    select: selectFields,
     order: 'created_at.desc',
     limit: '100',
   });
@@ -274,19 +284,21 @@ export async function handleCuratedInstances(req: Request, env: Env) {
     return json({ error: 'DB_ERROR', details }, { status: 500 });
   }
 
-  const rows = ((await res.json()) as CuratedInstanceRow[]).filter(Boolean);
+  type CuratedListRow = Omit<CuratedInstanceRow, 'config'> & { config?: Record<string, unknown> };
+  const rows = ((await res.json()) as CuratedListRow[]).filter(Boolean);
   const instances = rows.map((row) => {
     const meta = readCuratedMeta(row.meta);
-    return {
+    const base = {
       publicId: row.public_id,
       widgetname: row.widget_type || 'unknown',
       displayName: formatCuratedDisplayName(meta, row.public_id),
-      config: row.config,
       meta,
     };
+    if (!includeConfig) return base;
+    return { ...base, config: row.config ?? null };
   });
 
-  return json({ instances });
+  return json({ instances, includeConfig });
 }
 
 export async function handleGetInstance(req: Request, env: Env, publicId: string) {

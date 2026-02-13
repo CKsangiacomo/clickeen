@@ -82,6 +82,16 @@
   gap: var(--space-2, 0.5rem);
 }
 
+.diet-dropdown-actions__group-label {
+  margin: 0;
+  padding: var(--space-2, 0.5rem) var(--space-2, 0.5rem) var(--space-1, 0.25rem);
+  color: color-mix(in oklab, var(--color-system-black), var(--state-muted-mix, 45%));
+}
+
+.diet-dropdown-actions__menuaction + .diet-dropdown-actions__group-label {
+  margin-top: var(--space-1, 0.25rem);
+}
+
 .diet-dropdown-actions__footer {
   display: flex;
   gap: var(--space-2, 0.5rem);
@@ -95,6 +105,26 @@
 
 .diet-dropdown-actions__menuaction {
   border-radius: var(--control-radius-sm, 0.3125rem);
+}
+
+.diet-dropdown-actions__menuaction .diet-btn-menuactions__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  min-inline-size: 0;
+}
+
+.diet-dropdown-actions__menuaction-text {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diet-dropdown-actions__badge {
+  margin-inline-start: auto;
+  flex: 0 0 auto;
+  color: color-mix(in oklab, var(--color-system-black), var(--state-muted-mix, 35%));
 }
 
 .diet-dropdown-actions__check {

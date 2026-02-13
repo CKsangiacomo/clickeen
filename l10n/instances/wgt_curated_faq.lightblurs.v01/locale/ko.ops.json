@@ -11,17 +11,17 @@
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "모든 질문"
+      "value": "전체 질문"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Clickeen이 무엇인가요?"
+      "value": "Clickeen이란 무엇인가요?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "위젯을 어떻게 설치하나요?"
+      "value": "위젯은 어떻게 설치하나요?"
     },
     {
       "op": "set",
@@ -31,27 +31,27 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "왜 Clickeen을 사용해야 하나요?"
+      "value": "왜 Clickeen을 사용해야 하나요"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen은 Isabel이 꼭 일해야 할 때 정말 좋아하게 될 것이며, 제가 그녀를 강제할 것입니다."
+      "value": "Clickeen은 이사벨이 어쩔 수 없이 일해야 할 때 정말 좋아할 만한 무언가고, 저는 그녀를 억지로 시킬 거예요."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "임베드 코드를 복사하여 사이트의 </body> 태그 앞에 붙여넣으세요."
+      "value": "임베드 코드를 복사해 사이트의 </body> 앞에 붙여넣으세요."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "네, 핵심 기능을 갖춘 하나의 활성 위젯이 무료로 제공됩니다."
+      "value": "네, 핵심 기능이 포함된 활성 위젯 1개를 무료로 사용할 수 있어요."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Clickeen은 웹을 아름답고 사용하기 쉽게 만드는 놀라운 새로운 플랫폼이기 때문입니다."
+      "value": "Clickeen은 웹을 더 아름답고 쉽게 만들기 위한 놀라운 새 플랫폼이기 때문입니다."
     }
   ]
 }

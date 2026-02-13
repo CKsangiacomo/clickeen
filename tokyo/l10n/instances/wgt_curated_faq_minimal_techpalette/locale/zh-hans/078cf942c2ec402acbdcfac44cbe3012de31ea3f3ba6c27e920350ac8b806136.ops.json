@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "联系 Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "工程解决方案与服务的一站式首选。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering 常见问题"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering 是一家全球性公司，专注于创新工程解决方案与服务。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "什么是 Ive Engineering？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "只需联系我们，沟通您的项目需求，我们会带您了解并选择合适的服务方案。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "如何开始使用 Ive Engineering 的服务？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "是的，Ive Engineering 提供免费咨询，帮助更深入了解您的项目需求。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "有提供咨询服务吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering 提供前沿解决方案、经验丰富的专业团队，以及量身定制的服务，满足您的具体工程需求。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "为什么我的工程需求要选择 Ive Engineering？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "全部问题"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering 在所有项目与服务中秉持创新、诚信与卓越。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Ive Engineering 的核心价值观是什么？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "您可以通过我们的网站、电子邮件或联系页提供的电话号码与 Ive Engineering 取得联系。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "如何联系 Ive Engineering？"
+    }
+  ],
+  "v": 1
+}

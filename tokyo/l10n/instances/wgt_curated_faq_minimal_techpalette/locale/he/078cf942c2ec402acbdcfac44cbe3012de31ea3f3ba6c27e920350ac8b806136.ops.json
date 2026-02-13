@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "078cf942c2ec402acbdcfac44cbe3012de31ea3f3ba6c27e920350ac8b806136",
+  "baseUpdatedAt": "2026-02-12T04:40:38.065008+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "יצירת קשר עם Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "הכתובת שלכם לפתרונות ושירותי הנדסה."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "שאלות נפוצות – Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering היא חברה גלובלית המתמחה בפתרונות ושירותי הנדסה חדשניים."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "מהי Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "פשוט פנו אלינו, ספרו לנו מה צרכי הפרויקט שלכם, ואנחנו נלווה אתכם בבחירת השירותים המתאימים."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "איך מתחילים להשתמש בשירותים של Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "כן, Ive Engineering מציעה ייעוץ ראשוני ללא עלות כדי להבין טוב יותר את דרישות הפרויקט שלכם."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "האם יש ייעוץ זמין?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering מספקת פתרונות מתקדמים, צוות מקצועי ומנוסה ושירותים מותאמים אישית כדי לענות על צרכי ההנדסה הייחודיים שלכם."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "למה לבחור ב-Ive Engineering לצורכי ההנדסה שלי?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "כל השאלות"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ive Engineering מחויבת לחדשנות, יושרה ומצוינות בכל הפרויקטים והשירותים שלה."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "מהם ערכי הליבה של Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "אפשר ליצור קשר עם Ive Engineering דרך האתר שלנו, באימייל או באמצעות מספר הטלפון שמופיע בעמוד יצירת הקשר."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "איך אפשר ליצור קשר עם Ive Engineering?"
+    }
+  ],
+  "v": 1
+}

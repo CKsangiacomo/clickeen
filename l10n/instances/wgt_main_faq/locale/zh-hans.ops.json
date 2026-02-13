@@ -16,7 +16,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "有免费方案吗？"
+      "value": "有免费套餐吗？"
     },
     {
       "op": "set",
@@ -26,22 +26,22 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "如何安装小组件？"
+      "value": "我该如何安装小组件？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "为什么要使用 Clickeen"
+      "value": "为什么要用 Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "有，一个启用中的小组件，包含核心功能。"
+      "value": "有的，免费可启用 1 个小组件，并包含核心功能。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "内置转化功能的可嵌入式小组件。"
+      "value": "可嵌入的网站小组件，自带转化能力。"
     },
     {
       "op": "set",
@@ -51,7 +51,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "因为 Clickeen 是一个令人惊艳的全新平台，让网页更美观且更易用。"
+      "value": "因为 Clickeen 是一个令人惊艳的新平台，让网页更美观、更易用。"
     }
   ]
 }

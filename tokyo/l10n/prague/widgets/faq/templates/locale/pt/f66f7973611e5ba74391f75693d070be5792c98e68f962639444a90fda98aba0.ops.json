@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Modelos de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Comece com um modelo de FAQ com design profissional. Personalize tudo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Comece com uma direção de estilo, não com uma tela em branco."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Escolha um ponto de partida de FAQ já refinado e ajuste cada detalhe ao seu branding em minutos."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Um widget de FAQ. Visuais infinitos."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Alterne entre Liquid Glass, Pure Canvas, Rebel Blocks e Enterprise Prime sem reescrever as respostas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Modo claro. Modo escuro. Qualquer modo, é o seu modo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Os modelos são apenas a linha de partida. Você controla a chegada."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Liberdade de design, já integrada."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "De sistemas de layout a acabamentos visuais e funções tipográficas, cada decisão de design pode ser controlada no editor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layouts, do seu jeito"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Controle de aparência sem limites"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Precisão tipográfica"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Muitos sistemas de layout, não apenas um. Estrutura por breakpoint. Padding e espaçamento independentes para desktop e mobile. Controle colunas, empilhamento, alinhamento e reflow — com precisão."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Raio por canto. Bordas com cores personalizadas. Sombras externas e internas (vinculadas ou independentes por lado). Fundos com gradiente, imagem ou vídeo. Autoridade visual total."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Seis papéis distintos (título, corpo, pergunta, resposta, botão, seção). Escolha entre 17 Google Fonts. Peso, estilo, tamanho — tudo personalizável por papel. Escalas dinâmicas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Troque de layout instantaneamente"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Escolha Acordeão, Lista ou Cartões e mude quando quiser, sem reconstruir o conteúdo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Design de interação incluído"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Estados de hover, ativo e foco já vêm incluídos, para que a sua FAQ tenha um acabamento impecável em qualquer dispositivo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Tipografia que parece certa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Use as suas fontes ou a nossa biblioteca e ajuste a hierarquia para títulos, perguntas, respostas e CTAs."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "O modo escuro é automático"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "A sua FAQ adapta-se automaticamente a secções claras ou escuras, para que o design pareça sempre nativo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Perfeição no mobile"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Áreas de toque, espaçamento e layout mantêm-se legíveis em telemóveis, tablets e ecrãs de computador."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Crie a sua FAQ em três passos"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Escolha um estilo de base, ajuste cada detalhe e publique uma versão que se atualiza em todo o lado."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Escolha um estilo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Personalize tudo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publique"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Comece com o modelo que combina com a sua marca."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Ajuste layout, espaçamento, cores, raio e tipografia no editor visual."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Faça uma atualização e ela entra no ar em todos os locais onde a sua FAQ está incorporada."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Comece com um modelo. Torne-o seu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Escolha qualquer modelo, adapte-o à sua marca e lance o seu widget de FAQ gratuitamente."
+    }
+  ],
+  "v": 1
+}

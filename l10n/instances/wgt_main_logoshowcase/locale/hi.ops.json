@@ -6,17 +6,17 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "हमारे कुछ ग्राहक"
+      "value": "हमारे कुछ क्लाइंट्स"
     },
     {
       "op": "set",
       "path": "header.subtitleHtml",
-      "value": "दुनिया भर की टीमों द्वारा विश्वसनीय।"
+      "value": "दुनिया भर की टीमों का भरोसा."
     },
     {
       "op": "set",
       "path": "cta.label",
-      "value": "हमसे संपर्क करें"
+      "value": "संपर्क करें"
     },
     {
       "op": "set",

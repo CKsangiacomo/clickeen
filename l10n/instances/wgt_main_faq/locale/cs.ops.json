@@ -16,7 +16,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Je k dispozici bezplatný plán?"
+      "value": "Je k dispozici bezplatný tarif?"
     },
     {
       "op": "set",
@@ -31,7 +31,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Proč bych měl(a) používat Clickeen"
+      "value": "Proč používat Clickeen?"
     },
     {
       "op": "set",
@@ -46,12 +46,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Zkopírujte vkládací kód a vložte jej na svůj web před </body>."
+      "value": "Zkopírujte vkládací kód a vložte ho na svůj web před </body>."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Protože Clickeen je úžasná nová platforma, díky které je web krásný a snadno použitelný."
+      "value": "Protože Clickeen je skvělá nová platforma, díky které je web krásný a snadno použitelný."
     }
   ]
 }

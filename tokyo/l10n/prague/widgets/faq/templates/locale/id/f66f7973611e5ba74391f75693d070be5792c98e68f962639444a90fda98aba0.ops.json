@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "f66f7973611e5ba74391f75693d070be5792c98e68f962639444a90fda98aba0",
+  "baseUpdatedAt": "2026-02-12T17:38:58.722Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Template FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Mulai dengan template FAQ yang dirancang secara profesional. Kustomisasi semuanya."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Mulai dari arahan gaya, bukan kanvas kosong."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Pilih template FAQ yang sudah rapi sebagai titik awal, lalu sesuaikan setiap detail agar selaras dengan brand Anda dalam hitungan menit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Satu widget FAQ. Tampilan tak terbatas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Beralih antara Liquid Glass, Pure Canvas, Rebel Blocks, dan Enterprise Prime tanpa menulis ulang jawaban Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Mode terang. Mode gelap. Mode apa pun, itu mode kamu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Template hanyalah garis start. Kamu yang menentukan garis akhirnya."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Kebebasan desain, sudah terpasang."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Dari sistem layout, finishing visual, hingga peran tipografi—setiap keputusan desain bisa Anda kendalikan di editor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layout sesuai caramu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Kontrol tampilan tanpa batas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Presisi tipografi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Banyak sistem layout, bukan satu. Struktur per breakpoint. Padding dan spasi desktop/mobile yang independen. Atur kolom, penumpukan, perataan, dan reflow—dengan presisi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Radius per sudut. Border dengan warna kustom. Bayangan di luar dan di dalam (tertaut atau independen per sisi). Latar gradien, gambar, atau video. Kendali visual sepenuhnya."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Enam peran berbeda (headline, body, pertanyaan, jawaban, tombol, bagian). Pilih dari 17 Google Fonts. Berat, gaya, ukuran—semuanya dapat dikustomisasi per peran. Skala dinamis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Ganti layout seketika"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Pilih Accordion, List, atau Cards dan ganti kapan saja tanpa membangun ulang konten Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Desain interaksi sudah termasuk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Status hover, aktif, dan fokus sudah tersedia bawaan, jadi FAQ Anda terasa rapi di setiap perangkat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Tipografi yang terasa pas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Gunakan font Anda sendiri atau dari library kami, lalu atur hierarki untuk judul, pertanyaan, jawaban, dan CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Mode gelap otomatis"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "FAQ Anda otomatis menyesuaikan bagian terang atau gelap, sehingga desainnya selalu terasa menyatu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Sempurna di mobile"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Area tap, jarak, dan tata letak tetap nyaman dibaca di ponsel, tablet, dan desktop."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Bangun FAQ Anda dalam tiga langkah"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Pilih gaya awal, atur detailnya sampai pas, lalu publikasikan satu versi yang diperbarui di mana saja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Pilih gaya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Kustomisasi semuanya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publikasikan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Mulai dari template yang paling sesuai dengan brand Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Sesuaikan layout, jarak, warna, radius, dan tipografi di editor visual."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Dorong satu pembaruan dan itu akan langsung live di semua tempat FAQ Anda disematkan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Mulai dari template. Jadikan milik Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Pilih template apa pun, sesuaikan dengan brand Anda, dan luncurkan widget FAQ Anda gratis."
+    }
+  ],
+  "v": 1
+}

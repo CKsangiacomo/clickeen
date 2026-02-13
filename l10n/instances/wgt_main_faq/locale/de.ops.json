@@ -16,7 +16,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Gibt es einen kostenlosen Plan?"
+      "value": "Gibt es einen kostenlosen Tarif?"
     },
     {
       "op": "set",
@@ -31,27 +31,27 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Warum sollte ich Clickeen verwenden?"
+      "value": "Warum sollte ich Clickeen nutzen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Ja, ein aktives Widget mit Kernfunktionen."
+      "value": "Ja – ein aktives Widget mit den wichtigsten Funktionen."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Einbettbare Widgets mit integrierten Konversionen."
+      "value": "Einbettbare Widgets mit integrierter Conversion."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Kopieren Sie den Einbettungscode und fügen Sie ihn vor </body> auf Ihrer Website ein."
+      "value": "Kopiere den Einbettungscode und füge ihn auf deiner Website vor </body> ein."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Weil Clickeen eine fantastische neue Plattform ist, um das Web schön und einfach zu bedienen zu machen."
+      "value": "Weil Clickeen eine großartige neue Plattform ist, die das Web schöner macht und einfacher bedienbar."
     }
   ]
 }

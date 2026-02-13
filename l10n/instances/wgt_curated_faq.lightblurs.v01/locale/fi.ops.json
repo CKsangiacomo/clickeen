@@ -16,7 +16,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Mikä on Clickeen?"
+      "value": "Mikä Clickeen on?"
     },
     {
       "op": "set",
@@ -31,12 +31,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Miksi minun pitäisi käyttää Clickeenia"
+      "value": "Miksi minun kannattaisi käyttää Clickeeniä"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen on jotain, jonka parissa Isabel todella tulee rakastamaan työskennellä silloin kun hänen on pakko, ja minä pakotan hänet."
+      "value": "Clickeen on jotain, jossa Isabel tulee oikeasti rakastamaan työskennellä silloin kun hänen on pakko, ja minä pakotan hänet."
     },
     {
       "op": "set",

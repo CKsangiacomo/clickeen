@@ -1,0 +1,62 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "baseUpdatedAt": "2026-02-12T04:20:28.079031+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kapcsolat"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Itt találod a leggyakrabban feltett kérdésekre adott válaszokat."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Gyakran ismételt kérdések"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "A Liquid Marketing egy SaaS vállalat, amely marketingautomatizálásra specializálódott, és fejlett eszközöket kínál e-mail kampányokhoz, ügyfélszegmentáláshoz és analitikához."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Mi az a Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Egyszerűen regisztrálj, integráld az adataidat, és kezdd el az automatizált kampányok készítését az intuitív platformunkon."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hogyan kezdhetem el használni a Liquid Marketinget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Igen, a Liquid Marketing ingyenes próbaidőszakot kínál az alapfunkciók elérésével. A haladóbb lehetőségekért válts magasabb csomagra."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "A Liquid Marketing egy erős platformot kínál könnyen használható automatizálási eszközökkel, részletes analitikával és kiváló ügyféltámogatással, így ideális azoknak a vállalkozásoknak, amelyek szeretnék egyszerűsíteni marketingtevékenységüket."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Miért a Liquid Marketinget válasszam a marketingigényeimhez?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Elérhető ingyenes próbaidőszak?"
+    }
+  ],
+  "v": 1
+}

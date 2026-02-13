@@ -1,13 +1,36 @@
 {
   "widgetname": "faq",
   "itemKey": "faq.item",
+  "normalization": {
+    "idRules": [
+      {
+        "arrayPath": "sections",
+        "idKey": "id",
+        "seedKey": "title",
+        "fallbackPrefix": "section"
+      },
+      {
+        "arrayPath": "sections[].faqs",
+        "idKey": "id",
+        "seedKey": "question",
+        "fallbackPrefix": "faq"
+      }
+    ],
+    "coerceRules": [
+      {
+        "path": "sections[].faqs[].defaultOpen",
+        "type": "boolean",
+        "default": false
+      }
+    ]
+  },
   "defaults": {
     "cta": {
       "href": "https://example.com",
       "label": "Contact us",
-      "openMode": "same-tab",
       "enabled": true,
       "iconName": "arrowshape.turn.up.right",
+      "openMode": "same-tab",
       "iconEnabled": true,
       "iconPlacement": "right"
     },
@@ -22,7 +45,7 @@
         "y": 8,
         "blur": 24,
         "alpha": 18,
-        "color": "#000000",
+        "color": "#ff3b30",
         "inset": false,
         "spread": 0,
         "enabled": false
@@ -37,11 +60,11 @@
           "linked": true
         },
         "desktop": {
-          "all": 52,
-          "top": 52,
-          "left": 52,
-          "right": 52,
-          "bottom": 52,
+          "all": 60,
+          "top": 60,
+          "left": 60,
+          "right": 60,
+          "bottom": 60,
           "linked": true
         }
       },
@@ -55,10 +78,7 @@
         "color": "var(--color-system-white)"
       },
       "contentWidth": 960,
-      "radiusLinked": true,
       "insideShadow": {
-        "linked": true,
-        "layer": "below-content",
         "all": {
           "x": 0,
           "y": 0,
@@ -79,6 +99,17 @@
           "spread": -12,
           "enabled": false
         },
+        "left": {
+          "x": 12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "layer": "below-content",
         "right": {
           "x": -12,
           "y": 0,
@@ -99,17 +130,9 @@
           "spread": -12,
           "enabled": false
         },
-        "left": {
-          "x": 12,
-          "y": 0,
-          "blur": 16,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": true,
-          "spread": -12,
-          "enabled": false
-        }
-      }
+        "linked": true
+      },
+      "radiusLinked": true
     },
     "seo": {
       "businessType": "online-service",
@@ -122,6 +145,16 @@
         "width": 0,
         "height": 0
       },
+      "shadow": {
+        "x": 0,
+        "y": 8,
+        "blur": 24,
+        "alpha": 18,
+        "color": "#000000",
+        "inset": false,
+        "spread": 0,
+        "enabled": false
+      },
       "padding": {
         "mobile": {
           "all": 24,
@@ -132,11 +165,11 @@
           "linked": true
         },
         "desktop": {
-          "all": 80,
-          "top": 80,
-          "left": 80,
-          "right": 80,
-          "bottom": 80,
+          "all": 40,
+          "top": 40,
+          "left": 40,
+          "right": 40,
+          "bottom": 40,
           "linked": true
         }
       },
@@ -146,8 +179,6 @@
         "color": "#d1d1d6"
       },
       "insideShadow": {
-        "linked": true,
-        "layer": "below-content",
         "all": {
           "x": 0,
           "y": 0,
@@ -168,6 +199,17 @@
           "spread": -12,
           "enabled": false
         },
+        "left": {
+          "x": 12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "layer": "below-content",
         "right": {
           "x": -12,
           "y": 0,
@@ -188,40 +230,21 @@
           "spread": -12,
           "enabled": false
         },
-        "left": {
-          "x": 12,
-          "y": 0,
-          "blur": 16,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": true,
-          "spread": -12,
-          "enabled": false
-        }
-      },
-      "shadow": {
-        "x": 0,
-        "y": 8,
-        "blur": 24,
-        "alpha": 18,
-        "color": "#000000",
-        "inset": false,
-        "spread": 0,
-        "enabled": false
+        "linked": true
       }
     },
     "title": "Frequently Asked Questions",
     "header": {
       "gap": 28,
-      "title": "Frequently Asked Questions",
+      "title": "FAQs",
       "enabled": true,
       "textGap": 4,
       "innerGap": 16,
       "alignment": "left",
       "placement": "top",
       "ctaPlacement": "right",
-      "showSubtitle": true,
-      "subtitleHtml": "Polished design, effortless updates, and SEO foundations—ready for any language."
+      "showSubtitle": false,
+      "subtitleHtml": "Modern website widgets—fast to launch, easy to customize, and built to help you convert."
     },
     "layout": {
       "gap": 16,
@@ -234,11 +257,11 @@
       "itemPadding": 20,
       "itemPaddingTop": 20,
       "itemPaddingLeft": 20,
+      "itemQaGapCustom": 8,
+      "itemQaGapPreset": "s",
       "itemPaddingRight": 20,
       "itemPaddingBottom": 20,
-      "itemPaddingLinked": true,
-      "itemQaGapPreset": "s",
-      "itemQaGapCustom": 8
+      "itemPaddingLinked": true
     },
     "seoGeo": {
       "enabled": false
@@ -260,30 +283,30 @@
         "faqs": [
           {
             "id": "q1",
-            "answer": "Clickeen is something that will make Margherita very very rich and alkways works.",
+            "answer": "Clickeen is a widget SaaS platform that lets you add polished, high-performing widgets to your website in minutes—no heavy dev work required.",
             "question": "What is Clickeen?",
             "defaultOpen": false
           },
           {
             "id": "q2",
-            "answer": "Yes, one active widget with core features.",
-            "question": "Is there a free plan?",
+            "answer": "Yes. The Free plan includes 1 active widget with essential features so you can try Clickeen on a live site.",
+            "question": "Do you offer a free plan?",
             "defaultOpen": false
           },
           {
             "id": "q3",
-            "answer": "Copy the embed code and paste it before </body> on your site.",
-            "question": "How do I install a widget?",
+            "answer": "Create your widget, copy the embed code, and paste it right before the closing </body> tag on your website. Changes you make in Clickeen update instantly.",
+            "question": "How do I install a widget on my site?",
             "defaultOpen": false
           },
           {
             "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
-            "answer": "Because Clickeen is an amazing new platform to make the web beautiful and easy to use.",
-            "question": "Why should I use Clickeen",
+            "answer": "Launch faster with flexible design controls, simple updates, and reliable performance—so your team can ship improvements without maintaining custom code.",
+            "question": "Why use Clickeen instead of building widgets from scratch?",
             "defaultOpen": false
           }
         ],
-        "title": "General questions"
+        "title": "Getting started"
       }
     ],
     "showTitle": true,
@@ -334,23 +357,20 @@
         },
         "radius": "2xl",
         "shadow": {
-          "x": 7,
-          "y": 7,
-          "blur": 16,
-          "alpha": 13,
-          "color": "#007aff",
+          "x": 23,
+          "y": 12,
+          "blur": 21,
+          "alpha": 38,
+          "color": "#e5e5ea",
           "inset": false,
-          "spread": 0,
+          "spread": -5,
           "enabled": true
         },
         "radiusBL": "2xl",
         "radiusBR": "2xl",
         "radiusTL": "2xl",
         "radiusTR": "2xl",
-        "radiusLinked": true,
         "insideShadow": {
-          "linked": true,
-          "layer": "below-content",
           "all": {
             "x": 0,
             "y": 0,
@@ -371,6 +391,17 @@
             "spread": -12,
             "enabled": false
           },
+          "left": {
+            "x": 12,
+            "y": 0,
+            "blur": 16,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": -12,
+            "enabled": false
+          },
+          "layer": "below-content",
           "right": {
             "x": -12,
             "y": 0,
@@ -391,22 +422,14 @@
             "spread": -12,
             "enabled": false
           },
-          "left": {
-            "x": 12,
-            "y": 0,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          }
-        }
+          "linked": true
+        },
+        "radiusLinked": true
       },
       "ctaIconSize": 16,
       "ctaTextColor": "var(--color-system-white)",
       "ctaBackground": "var(--color-system-blue)",
-      "ctaSizePreset": "m",
+      "ctaSizePreset": "custom",
       "linkTextColor": "var(--color-system-blue)",
       "itemBackground": {
         "type": "color",
@@ -414,7 +437,7 @@
       },
       "ctaPaddingBlock": 12,
       "ctaPaddingInline": 16,
-      "ctaPaddingLinked": true,
+      "ctaPaddingLinked": false,
       "ctaIconSizePreset": "m",
       "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
       "linkUnderlineColor": "var(--color-system-blue)"
@@ -427,7 +450,11 @@
           "weight": "400",
           "fontStyle": "normal",
           "sizeCustom": 14,
-          "sizePreset": "l"
+          "sizePreset": "s",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.4,
+          "lineHeightPreset": "normal"
         },
         "title": {
           "color": {
@@ -438,7 +465,11 @@
           "weight": "600",
           "fontStyle": "normal",
           "sizeCustom": "24px",
-          "sizePreset": "l"
+          "sizePreset": "m",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.4,
+          "lineHeightPreset": "normal"
         },
         "answer": {
           "color": {
@@ -449,7 +480,11 @@
           "weight": "400",
           "fontStyle": "normal",
           "sizeCustom": "15px",
-          "sizePreset": "m"
+          "sizePreset": "s",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.4,
+          "lineHeightPreset": "normal"
         },
         "button": {
           "color": "var(--color-system-white)",
@@ -457,7 +492,11 @@
           "weight": "600",
           "fontStyle": "normal",
           "sizeCustom": 14,
-          "sizePreset": "m"
+          "sizePreset": "s",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.4,
+          "lineHeightPreset": "normal"
         },
         "section": {
           "color": {
@@ -468,7 +507,11 @@
           "weight": "400",
           "fontStyle": "normal",
           "sizeCustom": "14px",
-          "sizePreset": "s"
+          "sizePreset": "s",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.4,
+          "lineHeightPreset": "normal"
         },
         "question": {
           "color": {
@@ -479,7 +522,11 @@
           "weight": "600",
           "fontStyle": "normal",
           "sizeCustom": "16px",
-          "sizePreset": "m"
+          "sizePreset": "s",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.4,
+          "lineHeightPreset": "normal"
         }
       },
       "roleScales": {
@@ -491,10 +538,10 @@
           "xs": "14px"
         },
         "title": {
-          "l": "38px",
-          "m": "28px",
-          "s": "24px",
-          "xl": "48px",
+          "l": "44px",
+          "m": "36px",
+          "s": "28px",
+          "xl": "60px",
           "xs": "20px"
         },
         "answer": {
@@ -528,7 +575,7 @@
       },
       "globalFamily": "Inter"
     },
-    "displayCategoryTitles": true
+    "displayCategoryTitles": false
   },
   "html": [
     "<bob-panel id='content'>",
@@ -586,13 +633,6 @@
     "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusBL' label='Q&A card bottom-left radius' label-key='faq.labels.itemBottomLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusBL}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
     "    <tooldrawer-field-appearance-card group-label='' type='dropdown-border' size='md' path='appearance.cardwrapper.border' label='Q&A card border' label-key='faq.labels.itemBorder' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.border}}' />",
     "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.shadow' label='Q&A card outside shadow' label-key='faq.labels.itemOutsideShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.shadow}}' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='toggle' size='md' path='appearance.cardwrapper.insideShadow.linked' label='Link Q&A card inside shadows' label-key='faq.labels.linkItemInsideShadows' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.linked}}' default='true' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.insideShadow.layer' label='Inside shadow layer' value='{{appearance.cardwrapper.insideShadow.layer}}' options='[{&quot;label&quot;:&quot;Show below content&quot;,&quot;value&quot;:&quot;below-content&quot;},{&quot;label&quot;:&quot;Show above content&quot;,&quot;value&quot;:&quot;above-content&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.insideShadow.all' label='Q&A card inside shadow' label-key='faq.labels.itemInsideShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.all}}' show-if=\"appearance.cardwrapper.insideShadow.linked == true\" />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' axis='y' size='md' path='appearance.cardwrapper.insideShadow.top' label='Q&A card inside shadow (top)' label-key='faq.labels.itemInsideShadowTop' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.top}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' axis='x' size='md' path='appearance.cardwrapper.insideShadow.right' label='Q&A card inside shadow (right)' label-key='faq.labels.itemInsideShadowRight' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.right}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' axis='y' size='md' path='appearance.cardwrapper.insideShadow.bottom' label='Q&A card inside shadow (bottom)' label-key='faq.labels.itemInsideShadowBottom' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.bottom}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' axis='x' size='md' path='appearance.cardwrapper.insideShadow.left' label='Q&A card inside shadow (left)' label-key='faq.labels.itemInsideShadowLeft' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.left}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster label='Stage/Pod'>",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",

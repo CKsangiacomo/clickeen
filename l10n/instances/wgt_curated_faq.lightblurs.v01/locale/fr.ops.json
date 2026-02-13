@@ -6,7 +6,7 @@
     {
       "op": "set",
       "path": "header.title",
-      "value": "Questions Fréquemment Posées"
+      "value": "Foire aux questions"
     },
     {
       "op": "set",
@@ -16,7 +16,7 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Qu'est-ce que Clickeen ?"
+      "value": "Qu’est-ce que Clickeen ?"
     },
     {
       "op": "set",
@@ -26,32 +26,32 @@
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "Y a-t-il un plan gratuit ?"
+      "value": "Existe-t-il une offre gratuite ?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Pourquoi devrais-je utiliser Clickeen"
+      "value": "Pourquoi utiliser Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen est quelque chose qu'Isabel adorera vraiment pour lequel travailler quand elle devra le faire et je la forcerai."
+      "value": "Clickeen, c’est un truc pour lequel Isabel va vraiment adorer travailler quand elle devra le faire, et je vais l’y forcer."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Copiez le code d'intégration et collez-le avant </body> sur votre site."
+      "value": "Copiez le code d’intégration et collez-le juste avant </body> sur votre site."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Oui, un widget actif avec les fonctionnalités principales."
+      "value": "Oui : un widget actif avec les fonctionnalités essentielles."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Parce que Clickeen est une nouvelle plateforme incroyable pour rendre le web beau et facile à utiliser."
+      "value": "Parce que Clickeen est une nouvelle plateforme géniale pour rendre le web beau et facile à utiliser."
     }
   ]
 }
