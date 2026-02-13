@@ -8,7 +8,8 @@ Runtime code + `supabase/migrations/` are operational truth; any mismatch here i
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
 **Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/widgets` (widget catalog; dev auth), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`, `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/publish/status?subject=devstudio|minibob|workspace`, `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=devstudio|minibob|workspace`, `POST /api/l10n/jobs/report`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/workspaces/:workspaceId/website-creative` (devstudio; local-only), `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (metering; HMAC-signed), `POST /api/submit/:publicId` (501).
-**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_overlays`, `l10n_generate_state`, `l10n_base_snapshots`, `workspace_business_profiles`, `instance_enforcement_state`.
+**Also shipped (account asset domain):** `GET /api/accounts/:accountId/assets`, `GET /api/accounts/:accountId/assets/:assetId`, `DELETE /api/accounts/:accountId/assets/:assetId` (dev/internal auth).
+**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `accounts`, `account_assets`, `account_asset_variants`, `widget_instance_overlays`, `l10n_generate_state`, `l10n_base_snapshots`, `workspace_business_profiles`, `instance_enforcement_state`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all non-public endpoints are gated by `PARIS_DEV_JWT` (public `/api/instance/:publicId` is published-only unless dev auth is present).
 
 ## Runtime Reality (this repo snapshot)
@@ -20,6 +21,7 @@ Paris in this repo is a **dev-focused Worker** with a deliberately small surface
 - Instance creation is implemented (`POST /api/instance`) for **internal DevStudio Local** workflows (superadmin), not as a user-facing product API.
 - Instance reads/writes use Supabase REST with the service role.
 - Paris requires `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
+- Paris exposes account asset domain APIs (list/get/delete) backed by `account_assets` and `account_asset_variants`.
 - AI is handled via:
   - `POST /api/ai/grant` (mint short-lived signed grants)
   - `POST /api/ai/outcome` (forward outcome events to San Francisco `/v1/outcome`)
@@ -107,6 +109,17 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `GET /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` — Loads an instance only if it belongs to `workspaceId` (404 if not found).
 - `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` — Updates an instance only if it belongs to `workspaceId` (404 if not found).
 - `POST /api/workspaces/:workspaceId/website-creative` — DevStudio-only local helper that ensures/opens a curated “website creative” instance for Prague blocks. Requires `subject=devstudio` and is **local-only** (`ENV_STAGE=local`).
+
+### Account asset domain endpoints (shipped)
+
+- `GET /api/accounts/:accountId/assets` — Lists non-deleted assets for one account (`includeDeleted=1` optional for internal tooling).
+- `GET /api/accounts/:accountId/assets/:assetId` — Returns one account-owned asset with variant metadata.
+- `DELETE /api/accounts/:accountId/assets/:assetId` — Soft-deletes one asset (`deleted_at` set); purge is handled by Tokyo Worker retention endpoint.
+
+Rules:
+- Ownership is explicit (`accountId`), never inferred from workspace/publicId.
+- Auth is internal/dev in this repo snapshot (`PARIS_DEV_JWT` + `x-account-id` actor guard).
+- Curated platform assets are owned by `PLATFORM_ACCOUNT_ID` and are excluded from customer quota views by default.
 
 ### Curated vs user instance routing
 

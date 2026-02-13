@@ -53,7 +53,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | **Michael** | `supabase/` | Supabase Postgres | Database with RLS | ✅ Active |
 | **Dieter** | `dieter/` | (build artifact) | Design system: tokens, 16+ components | ✅ Active |
 | **Tokyo** | `tokyo/` | Cloudflare R2 | Widget definitions (runtime + contracts), Dieter assets, shared runtime | ✅ Active |
-| **Tokyo Worker** | `tokyo-worker/` | Cloudflare Workers + Queues | Asset uploads + l10n publisher | ✅ Active |
+| **Tokyo Worker** | `tokyo-worker/` | Cloudflare Workers + Queues | Account-owned asset uploads, l10n publisher, render snapshots | ✅ Active |
 
 ---
 
@@ -150,7 +150,10 @@ Each release proceeds in 3 steps:
 - Prague website base copy lives in `tokyo/widgets/*/pages/*.json` (single source per page), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 #### Tokyo Worker (Workers + Queues)
+- Handles canonical account-owned uploads (`POST /assets/upload`) and stores metadata in Michael (`account_assets`, `account_asset_variants`).
+- Serves canonical account asset reads (`GET /assets/accounts/**`), while legacy `workspace-assets`/`curated-assets` writes are removed (`410`).
 - Reads `widget_instance_overlays` from Supabase (layered), merges `ops + user_ops` for layer=user, and publishes overlays to Tokyo/R2.
+- Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
 - `/healthz`, `/v1/execute`, `/v1/outcome`, queue consumer for non-blocking log writes.

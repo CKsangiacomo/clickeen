@@ -151,6 +151,24 @@ Workspace
 
 **Widgets belong to workspaces, not users.** If an editor leaves, their widgets stay.
 
+## Account Layer (Shipped for Asset Ownership)
+
+PRD 046 introduced an account layer above workspaces for uploads and asset metering:
+
+```
+account
+  ├── workspaces
+  │   ├── widget instances (workspace-owned)
+  │   └── members/roles (workspace boundary)
+  └── account-owned assets
+```
+
+Key boundary rules:
+- Workspaces remain the collaboration boundary (roles, comments, instance ownership).
+- Accounts are the ownership/metering boundary for uploads (`/assets/upload` -> `account_id` required).
+- `workspaces.account_id` is now required and deterministic.
+- Curated platform content is owned by `PLATFORM_ACCOUNT_ID` while remaining globally readable.
+
 ---
 
 ## Commenting System

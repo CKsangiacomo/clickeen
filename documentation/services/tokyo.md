@@ -109,7 +109,7 @@ Build command (repo root):
 - `pnpm build:l10n`
 
 Cloud-dev:
-- `tokyo-worker` provides a Cloudflare Worker for workspace asset uploads + serving:
+- `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
   - `POST /assets/upload` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; required header: `x-account-id`; optional trace headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`)
   - `POST /assets/purge-deleted` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; retention purge for soft-deleted account assets)
   - `GET /assets/accounts/**` (public, cacheable; canonical account-owned asset reads)

@@ -2,7 +2,7 @@
 
 ## Identity
 - Tier: Supporting
-- Purpose: Serve workspace assets and materialize **instance** localization overlays + **published render snapshots** into Tokyo/R2.
+- Purpose: Serve account-owned assets and materialize **instance** localization overlays + **published render snapshots** into Tokyo/R2.
 
 ## Interfaces
 - `POST /assets/upload` (auth required; account-owned uploads; writes to R2 + Supabase metadata)

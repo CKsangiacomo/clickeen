@@ -1,6 +1,6 @@
 # PRD 45 — Architecture Convergence and Scalability Hardening (Bob ↔ Paris ↔ Tokyo)
 
-**Status:** PLANNING (pre-execution)  
+**Status:** EXECUTED (validated in local on 2026-02-13)  
 **Date:** 2026-02-12  
 **Owner:** Product Dev Team  
 **Reviewers:** Product Dev Team peers + Human Architect  
@@ -22,6 +22,16 @@ This PRD proposes a focused architecture hardening cycle on five issues identifi
 
 This is a convergence PRD: no speculative platform rewrite, no product churn, no migration theater.  
 The goal is to remove concrete architecture debt that blocks scaling across many widgets and multiple concurrent AI teams.
+
+### 0.1 Execution outcome (local validation, 2026-02-13)
+
+1. Workstream A shipped: FAQ normalization is contract-driven from widget spec; no `widgetname === 'faq'` branch remains in Bob session orchestration.
+2. Workstream B shipped: Bob Paris route boilerplate is consolidated via shared proxy helpers.
+3. Workstream C shipped: local mutable Tokyo l10n flows run through worker-compatible contract with non-recursive bridge handling.
+4. Workstream D shipped: Paris l10n/workspaces domains are decomposed with reduced file size and preserved endpoint behavior.
+5. Workstream E shipped (partial from original draft): blanket local no-store behavior was removed in Bob proxy paths; explicit cache-bust (`?ts`) remains no-store.
+6. Deferred from original Workstream E draft: explicit startup prewarm and dedicated compiled-route memoization layer are not shipped in this cycle.
+7. PRD 46 superseded upload path details from this PRD: canonical upload write path is now `POST /assets/upload`; legacy write endpoints (`/workspace-assets/upload`, `/curated-assets/upload`) are removed (`410`) and read-compat only.
 
 ---
 
@@ -198,9 +208,8 @@ Duplicate implementations for uploads/l10n create local-cloud drift risk and dup
    - Current local bridge uses `TOKYO_L10N_HTTP_BASE` (worker -> dev-server).
    - Avoid request loops/recursion when dev-server starts proxying l10n paths to worker.
    - Explicitly gate l10n cutover on validated non-recursive topology.
-4. Phase C1 (safe cutover): proxy upload endpoints first:
-   - `POST /workspace-assets/upload`
-   - `POST /curated-assets/upload`
+4. Phase C1 (safe cutover): proxy canonical upload endpoint first:
+   - `POST /assets/upload`
 5. Phase C2 (gated cutover): proxy l10n endpoints only after C0 is complete:
    - `POST|DELETE /l10n/instances/:publicId/:layer/:layerKey`
    - `POST|DELETE /l10n/instances/:publicId/index`
@@ -298,7 +307,7 @@ Rationale: start with high-leverage low-semantics changes, then tackle contract/
 
 1. No widget-specific branch remains in `useWidgetSession` for FAQ normalization.
 2. Bob Paris proxy endpoints preserve existing status/body behavior for success and error paths.
-3. Upload mutable routes resolve through worker path in local (`/workspace-assets/upload`, `/curated-assets/upload`).
+3. Upload mutable routes resolve through worker path in local via canonical `POST /assets/upload` (legacy write paths now return `410`).
 4. L10n mutable routes resolve through worker path in local only after Phase 0 gates are complete, with no recursive loop behavior.
 5. Worker and local route contracts are explicitly aligned for status/body/error shape on mutable endpoints.
 6. Paris l10n/workspaces endpoint contracts remain unchanged while file decomposition lands.
@@ -406,7 +415,7 @@ Reviewer format:
 
 ---
 
-## 11) Decision log (pre-execution)
+## 11) Decision log
 
 1. We prioritize contract-based normalization over hard-coded widget conditionals.
 2. We consolidate route behavior before deeper domain refactors.
@@ -426,7 +435,7 @@ Reviewer format:
 
 ---
 
-## 13) 02-Executing Entry Gates (must pass before move)
+## 13) 02-Executing Entry Gates (historical record)
 
 1. Workstream C Phase 0 prerequisites are implemented and verified:
    - Worker route parity added for local-required l10n mutable paths.
@@ -436,8 +445,7 @@ Reviewer format:
    - Phase 3a: upload parity cutover.
    - Phase 3b: l10n parity cutover (gated).
 3. Route parity matrix is recorded for mutable Tokyo endpoints (status/body/error contract), including:
-   - `/workspace-assets/upload`
-   - `/curated-assets/upload`
+   - `/assets/upload`
    - `/l10n/instances/:publicId/:layer/:layerKey` (POST/DELETE)
    - `/l10n/instances/:publicId/index` (POST/DELETE)
    - `/l10n/instances/:publicId/bases/:baseFingerprint` (POST)

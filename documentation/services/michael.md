@@ -9,6 +9,7 @@ The schema is defined by:
 - `supabase/migrations/20260105000000__workspaces.sql`
 - `supabase/migrations/20260117090000__curated_widget_instances.sql`
 - `supabase/migrations/20260118090000__widget_instances_user_only.sql`
+- `supabase/migrations/20260213160000__accounts_asset_domain_phase0.sql`
 
 If this document conflicts with those files, the SQL wins.
 
@@ -46,7 +47,47 @@ Core columns:
 - `widget_type` (text) — denormalized widget type (validated against Tokyo registry at write time)
 - `kind` (text) — `baseline` | `curated`
 - `status` (text) — `published` | `unpublished`
+- `owner_account_id` (uuid) — FK to `accounts.id` (platform-owned curated rows currently map to `PLATFORM_ACCOUNT_ID`)
 - `config` (jsonb) — required object
+
+### `accounts`
+Canonical account identity table used for ownership and upload metering.
+
+Core columns:
+- `id` (uuid) — canonical account identity (opaque ID)
+- `status` (text) — `active` | `disabled`
+- `is_platform` (boolean) — platform-owned account marker
+- `created_at`, `updated_at` (timestamptz)
+
+Seeded platform account:
+- `00000000-0000-0000-0000-000000000100` (`is_platform=true`)
+
+### `account_assets`
+Logical metadata for uploaded account-owned assets.
+
+Core columns:
+- `asset_id` (uuid) — logical asset identity
+- `account_id` (uuid) — FK to `accounts.id` (ownership key)
+- `workspace_id` (uuid, nullable) — trace metadata FK to `workspaces.id`
+- `public_id` (text, nullable) — trace metadata
+- `widget_type` (text, nullable) — trace metadata
+- `source` (text) — `bob.publish|bob.export|devstudio|promotion|api`
+- `original_filename`, `normalized_filename`, `content_type` (text)
+- `size_bytes` (bigint)
+- `sha256` (text, nullable)
+- `deleted_at` (timestamptz, nullable) — soft-delete marker
+- `created_at`, `updated_at` (timestamptz)
+
+### `account_asset_variants`
+Physical storage mapping for account asset variants (for example `original`, and future optimized variants).
+
+Core columns:
+- `asset_id` (uuid) + `account_id` (uuid) — FK pair to `account_assets`
+- `variant` (text)
+- `r2_key` (text, unique)
+- `filename`, `content_type` (text)
+- `size_bytes` (bigint)
+- `created_at` (timestamptz)
 
 ### `widget_instance_overlays` (current)
 Canonical layered overlays for instances (curated + user).
@@ -75,11 +116,16 @@ One row per workspace/team (Figma model). Workspaces own instances.
 
 Core columns:
 - `id` (uuid) — internal
+- `account_id` (uuid) — FK to `accounts.id` (ownership roll-up for assets/metering)
 - `tier` (text) — `free` | `tier1` | `tier2` | `tier3`
 - `name` (text)
 - `slug` (text) — URL-safe workspace slug
 - `website_url` (text, nullable) — workspace setting used by Copilot/personalization context (action-gated; not tier-flagged)
 - `l10n_locales` (jsonb, nullable) — workspace **active locales** (non‑EN; EN is implied). Paris uses this set (bounded by tier entitlements + subject policy) to decide which locale overlays to generate/publish.
+
+Notes:
+- Workspace remains the collaboration boundary (`workspace_members`, `widget_instances.workspace_id`).
+- Account is the ownership/metering boundary for uploads and asset domain APIs.
 
 ### `workspace_members`
 One row per user membership (roles).
@@ -99,6 +145,7 @@ This table exists even if the full UI/UX ships later.
 - **No partial configs**: `config` is required and must be a JSON object (not `null`, not an array).
 - **No legacy states**: only `published` / `unpublished` exist (no `draft`, no `inactive`).
 - **No extra “template system”**: Michael does not have a templates table. “Templates” are instances.
+- **Account-owned uploads**: every uploaded asset row must have non-null `account_id`; ownership is never inferred from scope names.
 
 ## Instance Taxonomy (3 kinds of instances)
 
@@ -185,6 +232,10 @@ Local DB is Supabase CLI + Docker:
   - `widget_instances.public_id` (stable string ID)
   - `widget_instances.workspace_id` (required)
   - `widget_instances.config` (the JSON blob you care about)
+- The durable contract for uploaded assets is:
+  - `account_assets.asset_id`
+  - `account_assets.account_id`
+  - `account_asset_variants.r2_key`
 
 ## What Michael Does NOT Do (by design)
 
@@ -199,6 +250,11 @@ Those concerns are intentionally outside Michael’s scope right now so the edit
 Migration `supabase/migrations/20260105000000__workspaces.sql` inserts two deterministic workspaces for dev:
 - `ck-dev` (`00000000-0000-0000-0000-000000000001`) — internal dev workspace (tier3)
 - `ck-demo` (`00000000-0000-0000-0000-000000000002`) — MiniBob demo workspace (free)
+
+Migration `supabase/migrations/20260213160000__accounts_asset_domain_phase0.sql` binds these to the seeded platform account:
+- `PLATFORM_ACCOUNT_ID = 00000000-0000-0000-0000-000000000100`
+- `workspaces.slug IN ('ck-dev','ck-demo') -> workspaces.account_id = PLATFORM_ACCOUNT_ID`
+- `curated_widget_instances.owner_account_id` backfilled to `PLATFORM_ACCOUNT_ID`
 
 DevStudio assumes `ck-dev` has its **workspace active locales** configured explicitly (no runtime fallbacks):
 - `supabase/migrations/20260209090000__seed_ck_dev_l10n_locales.sql` seeds `workspaces.l10n_locales` for `ck-dev` to all supported non‑EN locales (EN is implied).

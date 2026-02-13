@@ -1,6 +1,6 @@
 # PRD 46 — Account-Owned Asset Domain and Upload Convergence
 
-**Status:** EXECUTING (in progress)
+**Status:** EXECUTED (validated in local on 2026-02-13)
 **Date:** 2026-02-13
 **Owner:** Product Dev Team
 **Reviewers:** Product Dev Team peers + Human Architect
@@ -21,6 +21,15 @@ Current implementation splits identity and routing across `workspace-assets` and
 This PRD replaces scope-first uploads with account-first uploads, introduces an account-scoped asset domain, and standardizes contracts so DevStudio and product flows use the same pipeline.
 
 This PRD does **not** change the existing multi-tenant collaboration model: workspaces remain the canonical boundary for membership/roles and user-instance ownership.
+
+### 0.1 Execution outcome (local validation, 2026-02-13)
+
+1. Phase 0 DB foundation is present locally: `accounts`, `workspaces.account_id`, `curated_widget_instances.owner_account_id`, `account_assets`, `account_asset_variants`.
+2. Canonical upload contract is active: `POST /assets/upload` writes account-owned paths under `/assets/accounts/{accountId}/...`.
+3. Legacy write endpoints are removed and fail visibly: `POST /workspace-assets/upload` and `POST /curated-assets/upload` return `410`.
+4. Bob and DevStudio now use account-first upload semantics with explicit `x-account-id`.
+5. Paris account asset APIs are active (`GET list`, `GET by assetId`, `DELETE soft-delete`) and scoped by account identity.
+6. Upload budgets are keyed by account scope (`acct:{accountId}`), with platform-owned curated flows mapped to `PLATFORM_ACCOUNT_ID`.
 
 ---
 

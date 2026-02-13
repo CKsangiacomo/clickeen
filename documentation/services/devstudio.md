@@ -50,7 +50,9 @@ Notes:
 - Curated IDs are locale-free; do not create `wgt_curated_*.<locale>` variants. Locale is a runtime query param.
 - Curated metadata lives in `curated_widget_instances.meta`: `{ styleName, styleSlug, variants? }`.
 - DevStudio create flow keeps this intentionally minimal: required instance name + optional `variant`/`sub-variant`.
-- Curated assets (including `wgt_main_*`) are stored under `tokyo/curated-assets/{widgetType}/{publicId}/...` and served from Tokyo CDN.
+- DevStudio uploads through the canonical Tokyo account route (`POST /assets/upload`) with explicit `x-account-id`.
+- Curated/main flows use `PLATFORM_ACCOUNT_ID`; resulting URLs are canonical account paths (`/assets/accounts/{accountId}/{assetId}/{variant}/{filename}`).
+- Legacy `workspace-assets`/`curated-assets` write paths are removed (`410`) and remain read-compat only.
 - Curated actions export the current editor state from Bob (not the last published config).
 
 ## Troubleshooting
