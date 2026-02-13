@@ -116,7 +116,6 @@ function sanitizeUploadFilename(filename: string | null, ext: string, variant?: 
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  // Avoid opaque duplicate segments like "original/original.jpg".
   const safeStemBase = normalizedStem || 'upload';
   const safeStem = (safeStemBase === variantStem ? 'file' : safeStemBase).slice(0, 64);
   const safeExt = String(ext || '')
