@@ -282,6 +282,49 @@ wait_for_url() {
   return 1
 }
 
+prewarm_bob_routes() {
+  if [ "${DEV_UP_SKIP_PREWARM:-0}" = "1" ] || [ "${DEV_UP_SKIP_PREWARM:-}" = "true" ]; then
+    echo "[dev-up] Skipping Bob prewarm (DEV_UP_SKIP_PREWARM set)"
+    return 0
+  fi
+
+  local bob_base="http://localhost:3000"
+  local widgets_dir="$ROOT_DIR/tokyo/widgets"
+  local failed=0
+  local widget_dir widget
+
+  if [ ! -d "$widgets_dir" ]; then
+    return 0
+  fi
+
+  echo "[dev-up] Prewarming Bob compile and asset routes"
+  for widget_dir in "$widgets_dir"/*; do
+    [ -d "$widget_dir" ] || continue
+    widget="$(basename "$widget_dir")"
+
+    if ! curl -sf "$bob_base/api/widgets/$widget/compiled" >/dev/null 2>&1; then
+      echo "[dev-up] Prewarm warning: failed GET /api/widgets/$widget/compiled"
+      failed=1
+    fi
+
+    if ! curl -sf "$bob_base/widgets/$widget/widget.html" >/dev/null 2>&1; then
+      echo "[dev-up] Prewarm warning: failed GET /widgets/$widget/widget.html"
+      failed=1
+    fi
+  done
+
+  if ! curl -sf "$bob_base/dieter/tokens/tokens.css" >/dev/null 2>&1; then
+    echo "[dev-up] Prewarm warning: failed GET /dieter/tokens/tokens.css"
+    failed=1
+  fi
+
+  if [ "$failed" = "1" ]; then
+    echo "[dev-up] Bob prewarm completed with warnings (non-blocking)"
+  else
+    echo "[dev-up] Bob prewarm completed"
+  fi
+}
+
 start_detached() {
   local log_file="$1"
   shift
@@ -595,6 +638,7 @@ echo "[dev-up] Starting Bob (3000)"
   register_pid "bob" "$BOB_PID" "3000" "$LOG_DIR/bob.dev.log"
 )
 wait_for_url "http://localhost:3000" "Bob" "$LOG_DIR/bob.dev.log"
+prewarm_bob_routes
 
 echo "[dev-up] Starting DevStudio (5173)"
 (

@@ -29,8 +29,8 @@ The goal is to remove concrete architecture debt that blocks scaling across many
 2. Workstream B shipped: Bob Paris route boilerplate is consolidated via shared proxy helpers.
 3. Workstream C shipped: local mutable Tokyo l10n flows run through worker-compatible contract with non-recursive bridge handling.
 4. Workstream D shipped: Paris l10n/workspaces domains are decomposed with reduced file size and preserved endpoint behavior.
-5. Workstream E shipped (partial from original draft): blanket local no-store behavior was removed in Bob proxy paths; explicit cache-bust (`?ts`) remains no-store.
-6. Deferred from original Workstream E draft: explicit startup prewarm and dedicated compiled-route memoization layer are not shipped in this cycle.
+5. Workstream E shipped: blanket local no-store behavior was removed in Bob proxy paths; explicit cache-bust (`?ts`) remains no-store.
+6. Workstream E completion: local startup now prewarms Bob compile + widget/dieter asset routes, and compiled widget endpoint now memoizes by widget + source freshness signals.
 7. PRD 46 superseded upload path details from this PRD: canonical upload write path is now `POST /assets/upload`; legacy write endpoints (`/workspace-assets/upload`, `/curated-assets/upload`) are removed (`410`) and read-compat only.
 
 ---
