@@ -71,8 +71,11 @@ Local dev:
 - `tokyo/dev-server.mjs` serves `/i18n/*` from `tokyo/i18n/*`.
 - `tokyo/dev-server.mjs` serves `/workspace-assets/*` from `tokyo/workspace-assets/*` (gitignored).
 - `tokyo/dev-server.mjs` serves `/curated-assets/*` from `tokyo/curated-assets/*` (gitignored).
-- `tokyo/dev-server.mjs` proxies `/arsenale/o/*` reads to `tokyo-worker` for canonical account-owned assets.
+- `tokyo/dev-server.mjs` serves canonical account assets from `tokyo/arsenale/o/*` (gitignored) when `TOKYO_ASSET_BACKEND=mirror` (default local mode).
+- `tokyo/dev-server.mjs` mirrors successful `POST /assets/upload` writes to `tokyo/arsenale/o/*` while still proxying the upload to `tokyo-worker` for metadata/budget enforcement.
+- `tokyo/dev-server.mjs` can be switched to pure worker mode (`TOKYO_ASSET_BACKEND=worker`) to proxy `/arsenale/o/*` reads directly to `tokyo-worker`.
 - `tokyo/dev-server.mjs` also accepts `/assets/accounts/*` as backward-compatible read alias.
+- One-time local mirror bootstrap for already-uploaded assets: `node scripts/infra/sync-local-arsenale-mirror.mjs`.
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` (so Venice can fetch published render snapshots from the same Tokyo origin).
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
