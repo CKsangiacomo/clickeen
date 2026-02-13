@@ -77,7 +77,10 @@ Local dev:
 - `tokyo/dev-server.mjs` can be switched to pure worker mode (`TOKYO_ASSET_BACKEND=worker`) to proxy `/arsenale/o/*` reads directly to `tokyo-worker`.
 - `tokyo/dev-server.mjs` also accepts `/assets/accounts/*` as backward-compatible read alias.
 - One-time local mirror bootstrap for already-uploaded assets: `node scripts/infra/sync-local-arsenale-mirror.mjs`.
-- Legacy curated local files cleanup (after audit confirms zero legacy refs): `node scripts/infra/prune-local-legacy-curated-assets.mjs`.
+- Curated asset canonical migration tool supports both environments:
+  - Local: `MIGRATION_TARGET=local node scripts/infra/migrate-curated-assets-to-arsenale.mjs`
+  - Cloud-dev: `MIGRATION_TARGET=cloud-dev node scripts/infra/migrate-curated-assets-to-arsenale.mjs`
+- Legacy local files cleanup (`tokyo/curated-assets` + `tokyo/workspace-assets`, after audit confirms zero legacy refs): `node scripts/infra/prune-local-legacy-curated-assets.mjs`.
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` (so Venice can fetch published render snapshots from the same Tokyo origin).
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).

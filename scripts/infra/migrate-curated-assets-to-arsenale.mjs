@@ -7,10 +7,11 @@ import crypto from 'node:crypto';
 
 const ROOT = process.cwd();
 const PLATFORM_ACCOUNT_ID = String(process.env.CK_PLATFORM_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100').trim();
-const TOKYO_BASE = String(process.env.TOKYO_BASE_URL || 'http://localhost:4000')
+const MIGRATION_TARGET = String(process.env.MIGRATION_TARGET || 'local').trim().toLowerCase();
+const DRY_RUN = String(process.env.DRY_RUN || '').trim() === '1';
+const LOCAL_TOKYO_BASE = String(process.env.LOCAL_TOKYO_BASE_URL || 'http://localhost:4000')
   .trim()
   .replace(/\/+$/, '');
-const DRY_RUN = String(process.env.DRY_RUN || '').trim() === '1';
 
 function parseDotEnvValue(envPath, key) {
   const raw = fs.readFileSync(envPath, 'utf8');
@@ -45,6 +46,35 @@ function readLocalSupabaseEnv() {
     apiUrl: String(env.API_URL || '').trim().replace(/\/+$/, ''),
     serviceRoleKey: String(env.SERVICE_ROLE_KEY || '').trim(),
   };
+}
+
+function readCloudDevSupabaseEnv(envPath) {
+  return {
+    apiUrl: String(parseDotEnvValue(envPath, 'SUPABASE_URL') || '').trim().replace(/\/+$/, ''),
+    serviceRoleKey: String(parseDotEnvValue(envPath, 'SUPABASE_SERVICE_ROLE_KEY') || '').trim(),
+  };
+}
+
+function resolveRuntimeContext(envPath) {
+  if (MIGRATION_TARGET === 'local') {
+    const supabaseEnv = readLocalSupabaseEnv();
+    const tokyoBase = String(process.env.TOKYO_BASE_URL || 'http://localhost:4000')
+      .trim()
+      .replace(/\/+$/, '');
+    const tokyoJwt = String(process.env.TOKYO_DEV_JWT || parseDotEnvValue(envPath, 'TOKYO_DEV_JWT')).trim();
+    return { label: 'local', supabaseEnv, tokyoBase, tokyoJwt };
+  }
+
+  if (MIGRATION_TARGET === 'cloud-dev') {
+    const supabaseEnv = readCloudDevSupabaseEnv(envPath);
+    const tokyoBase = String(process.env.TOKYO_BASE_URL || parseDotEnvValue(envPath, 'CK_CLOUD_TOKYO_BASE_URL'))
+      .trim()
+      .replace(/\/+$/, '');
+    const tokyoJwt = String(process.env.TOKYO_DEV_JWT || parseDotEnvValue(envPath, 'TOKYO_DEV_JWT')).trim();
+    return { label: 'cloud-dev', supabaseEnv, tokyoBase, tokyoJwt };
+  }
+
+  throw new Error(`[migrate-curated-assets] Unsupported MIGRATION_TARGET: ${MIGRATION_TARGET}`);
 }
 
 function extractPrimaryUrl(raw) {
@@ -135,6 +165,35 @@ async function loadCuratedInstances(ctx) {
   return Array.isArray(rows) ? rows : [];
 }
 
+function extractCanonicalPathsFromConfig(config) {
+  const text = JSON.stringify(config || {});
+  const out = new Set();
+  for (const match of text.matchAll(/\/arsenale\/o\/[^"'\\s)]+/g)) {
+    const raw = String(match[0] || '').trim();
+    if (raw) out.add(raw);
+  }
+  for (const match of text.matchAll(/\/assets\/accounts\/[^"'\\s)]+/g)) {
+    const raw = String(match[0] || '').trim();
+    if (!raw) continue;
+    out.add(raw.replace(/^\/assets\/accounts\//, '/arsenale/o/'));
+  }
+  return Array.from(out);
+}
+
+async function buildLocalCuratedCanonicalIndex() {
+  const supabaseEnv = readLocalSupabaseEnv();
+  if (!supabaseEnv.apiUrl || !supabaseEnv.serviceRoleKey) return new Map();
+  const rows = await loadCuratedInstances(supabaseEnv).catch(() => []);
+  const index = new Map();
+  rows.forEach((row) => {
+    const publicId = String(row?.public_id || '').trim();
+    if (!publicId) return;
+    const paths = extractCanonicalPathsFromConfig(row?.config);
+    if (paths.length > 0) index.set(publicId, paths);
+  });
+  return index;
+}
+
 async function patchCuratedConfig(ctx, publicId, nextConfig) {
   const params = new URLSearchParams({ public_id: `eq.${publicId}` });
   const res = await supabaseFetch(ctx, `/rest/v1/curated_widget_instances?${params.toString()}`, {
@@ -150,26 +209,48 @@ async function patchCuratedConfig(ctx, publicId, nextConfig) {
 
 async function uploadViaCanonical({
   tokyoJwt,
+  tokyoBase,
+  localTokyoBase,
   accountId,
   publicId,
   widgetType,
   sourcePath,
+  fallbackSourcePaths,
   urlCache,
 }) {
   if (urlCache.has(sourcePath)) return urlCache.get(sourcePath);
-  const sourceUrl = `${TOKYO_BASE}${sourcePath}`;
-  const sourceRes = await fetch(sourceUrl, { method: 'GET' });
+  let resolvedSourcePath = sourcePath;
+  let sourceRes = await fetch(`${tokyoBase}${resolvedSourcePath}`, { method: 'GET' });
+
+  if (
+    !sourceRes.ok &&
+    sourceRes.status === 404 &&
+    Array.isArray(fallbackSourcePaths) &&
+    fallbackSourcePaths.length > 0
+  ) {
+    for (const candidatePath of fallbackSourcePaths) {
+      const candidate = String(candidatePath || '').trim();
+      if (!candidate) continue;
+      const candidateRes = await fetch(`${localTokyoBase}${candidate}`, { method: 'GET' });
+      if (candidateRes.ok) {
+        sourceRes = candidateRes;
+        resolvedSourcePath = candidate;
+        break;
+      }
+    }
+  }
+
   if (!sourceRes.ok) {
     const detail = await sourceRes.text().catch(() => '');
-    throw new Error(`[migrate-curated-assets] Failed to fetch source ${sourcePath} (${sourceRes.status}): ${detail}`);
+    throw new Error(`[migrate-curated-assets] Failed to fetch source ${resolvedSourcePath} (${sourceRes.status}): ${detail}`);
   }
 
   const bytes = await sourceRes.arrayBuffer();
-  if (bytes.byteLength === 0) throw new Error(`[migrate-curated-assets] Source asset is empty: ${sourcePath}`);
+  if (bytes.byteLength === 0) throw new Error(`[migrate-curated-assets] Source asset is empty: ${resolvedSourcePath}`);
   const contentType = sourceRes.headers.get('content-type') || 'application/octet-stream';
-  const filename = filenameFromPath(sourcePath, contentType);
+  const filename = filenameFromPath(resolvedSourcePath, contentType);
 
-  const uploadRes = await fetch(`${TOKYO_BASE}/assets/upload?_t=${Date.now()}_${crypto.randomUUID()}`, {
+  const uploadRes = await fetch(`${tokyoBase}/assets/upload?_t=${Date.now()}_${crypto.randomUUID()}`, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${tokyoJwt}`,
@@ -186,13 +267,13 @@ async function uploadViaCanonical({
   const text = await uploadRes.text().catch(() => '');
   if (!uploadRes.ok) {
     throw new Error(
-      `[migrate-curated-assets] Upload failed for ${sourcePath} (${uploadRes.status})${text ? `: ${text}` : ''}`,
+      `[migrate-curated-assets] Upload failed for ${resolvedSourcePath} (${uploadRes.status})${text ? `: ${text}` : ''}`,
     );
   }
   const payload = text ? JSON.parse(text) : {};
   const key = typeof payload?.key === 'string' ? payload.key.trim() : '';
   if (!key) {
-    throw new Error(`[migrate-curated-assets] Missing key from upload response for ${sourcePath}`);
+    throw new Error(`[migrate-curated-assets] Missing key from upload response for ${resolvedSourcePath}`);
   }
   const normalized = key.startsWith('/') ? key : `/${key}`;
   urlCache.set(sourcePath, normalized);
@@ -206,6 +287,9 @@ function cloneJson(value) {
 async function migrateInstanceConfig({
   instance,
   tokyoJwt,
+  tokyoBase,
+  localTokyoBase,
+  localCanonicalIndex,
   urlCache,
   dryRun,
 }) {
@@ -238,10 +322,14 @@ async function migrateInstanceConfig({
       }
       const uploadedPath = await uploadViaCanonical({
         tokyoJwt,
+        tokyoBase,
+        localTokyoBase,
         accountId,
         publicId,
         widgetType,
         sourcePath: candidatePath,
+        fallbackSourcePaths:
+          MIGRATION_TARGET === 'cloud-dev' ? localCanonicalIndex.get(publicId) || [] : [],
         urlCache,
       });
       migrated += 1;
@@ -277,15 +365,17 @@ function hasLegacyAssetPath(rawConfig) {
 }
 
 async function main() {
-  const supabaseEnv = readLocalSupabaseEnv();
-  if (!supabaseEnv.apiUrl || !supabaseEnv.serviceRoleKey) {
-    throw new Error('[migrate-curated-assets] Could not resolve local Supabase API_URL/SERVICE_ROLE_KEY');
-  }
-
   const envPath = path.join(ROOT, '.env.local');
-  const tokyoJwt = String(process.env.TOKYO_DEV_JWT || parseDotEnvValue(envPath, 'TOKYO_DEV_JWT')).trim();
-  if (!tokyoJwt) {
-    throw new Error('[migrate-curated-assets] TOKYO_DEV_JWT is required (set env or .env.local)');
+  const ctx = resolveRuntimeContext(envPath);
+  const supabaseEnv = ctx.supabaseEnv;
+  if (!supabaseEnv.apiUrl || !supabaseEnv.serviceRoleKey) {
+    throw new Error(`[migrate-curated-assets] Could not resolve Supabase API_URL/SERVICE_ROLE_KEY for target=${ctx.label}`);
+  }
+  if (!ctx.tokyoBase) {
+    throw new Error(`[migrate-curated-assets] TOKYO_BASE_URL unresolved for target=${ctx.label}`);
+  }
+  if (!ctx.tokyoJwt) {
+    throw new Error(`[migrate-curated-assets] TOKYO_DEV_JWT is required for target=${ctx.label}`);
   }
 
   const rows = await loadCuratedInstances(supabaseEnv);
@@ -299,9 +389,18 @@ async function main() {
   let patched = 0;
   let migratedUrls = 0;
   let canonicalizedUrls = 0;
+  const localCanonicalIndex = MIGRATION_TARGET === 'cloud-dev' ? await buildLocalCuratedCanonicalIndex() : new Map();
 
   for (const row of candidates) {
-    const result = await migrateInstanceConfig({ instance: row, tokyoJwt, urlCache, dryRun: DRY_RUN });
+    const result = await migrateInstanceConfig({
+      instance: row,
+      tokyoJwt: ctx.tokyoJwt,
+      tokyoBase: ctx.tokyoBase,
+      localTokyoBase: LOCAL_TOKYO_BASE,
+      localCanonicalIndex,
+      urlCache,
+      dryRun: DRY_RUN,
+    });
     if (!result.changed) continue;
     migratedUrls += result.migrated;
     canonicalizedUrls += result.canonicalized;
@@ -310,12 +409,12 @@ async function main() {
     }
     patched += 1;
     console.log(
-      `[migrate-curated-assets] ${row.public_id}: migrated=${result.migrated}, canonicalized=${result.canonicalized}, dryRun=${DRY_RUN ? '1' : '0'}`,
+      `[migrate-curated-assets] target=${ctx.label} ${row.public_id}: migrated=${result.migrated}, canonicalized=${result.canonicalized}, dryRun=${DRY_RUN ? '1' : '0'}`,
     );
   }
 
   console.log(
-    `[migrate-curated-assets] done: instancesPatched=${patched}, uploadedReferences=${migratedUrls}, aliasCanonicalized=${canonicalizedUrls}, dryRun=${DRY_RUN ? '1' : '0'}`,
+    `[migrate-curated-assets] target=${ctx.label} done: instancesPatched=${patched}, uploadedReferences=${migratedUrls}, aliasCanonicalized=${canonicalizedUrls}, dryRun=${DRY_RUN ? '1' : '0'}`,
   );
 }
 

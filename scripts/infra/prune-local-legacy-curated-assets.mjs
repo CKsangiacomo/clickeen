@@ -5,7 +5,10 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 
 const ROOT = process.cwd();
-const CURATED_DIR = path.join(ROOT, 'tokyo', 'curated-assets');
+const LEGACY_DIRS = [
+  path.join(ROOT, 'tokyo', 'curated-assets'),
+  path.join(ROOT, 'tokyo', 'workspace-assets'),
+];
 const DRY_RUN = String(process.env.DRY_RUN || '').trim() === '1';
 
 function readLocalSupabaseEnv() {
@@ -85,27 +88,38 @@ function countFilesRecursive(dirPath) {
 async function main() {
   const ctx = readLocalSupabaseEnv();
   if (!ctx.apiUrl || !ctx.serviceRoleKey) {
-    throw new Error('[prune-legacy-curated] Could not resolve local Supabase API_URL/SERVICE_ROLE_KEY');
+    throw new Error('[prune-legacy-assets] Could not resolve local Supabase API_URL/SERVICE_ROLE_KEY');
   }
 
   const refs = await countLegacyRefs(ctx);
   if (refs > 0) {
-    throw new Error(`[prune-legacy-curated] Aborting: found ${refs} legacy asset references in instance configs.`);
+    throw new Error(`[prune-legacy-assets] Aborting: found ${refs} legacy asset references in instance configs.`);
   }
 
-  const files = countFilesRecursive(CURATED_DIR);
-  if (!files) {
-    console.log('[prune-legacy-curated] Nothing to prune (tokyo/curated-assets already empty).');
+  const fileCounts = LEGACY_DIRS.map((dir) => ({ dir, files: countFilesRecursive(dir) }));
+  const totalFiles = fileCounts.reduce((acc, item) => acc + item.files, 0);
+  if (!totalFiles) {
+    console.log('[prune-legacy-assets] Nothing to prune (legacy directories already empty).');
     return;
   }
 
   if (DRY_RUN) {
-    console.log(`[prune-legacy-curated] DRY_RUN=1 refs=0 filesToDelete=${files} path=tokyo/curated-assets`);
+    const details = fileCounts
+      .map((item) => `${path.relative(ROOT, item.dir)}=${item.files}`)
+      .join(' ');
+    console.log(`[prune-legacy-assets] DRY_RUN=1 refs=0 filesToDelete=${totalFiles} ${details}`);
     return;
   }
 
-  fs.rmSync(CURATED_DIR, { recursive: true, force: true });
-  console.log(`[prune-legacy-curated] Deleted tokyo/curated-assets (${files} files).`);
+  fileCounts.forEach((item) => {
+    if (item.files > 0) {
+      fs.rmSync(item.dir, { recursive: true, force: true });
+    }
+  });
+  const details = fileCounts
+    .map((item) => `${path.relative(ROOT, item.dir)}=${item.files}`)
+    .join(' ');
+  console.log(`[prune-legacy-assets] Deleted legacy directories (${details}).`);
 }
 
 main().catch((err) => {
