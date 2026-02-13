@@ -1493,16 +1493,10 @@ async function persistAccountAssetMetadata(args: {
   contentType: string;
   sizeBytes: number;
   sha256: string;
-  workspaceId?: string | null;
-  publicId?: string | null;
-  widgetType?: string | null;
 }): Promise<void> {
   const assetRow = {
     asset_id: args.assetId,
     account_id: args.accountId,
-    workspace_id: args.workspaceId ?? null,
-    public_id: args.publicId ?? null,
-    widget_type: args.widgetType ?? null,
     source: args.source,
     original_filename: args.originalFilename,
     normalized_filename: args.normalizedFilename,
@@ -1935,9 +1929,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       contentType,
       sizeBytes: body.byteLength,
       sha256: await sha256Hex(body),
-      workspaceId: workspaceId || null,
-      publicId,
-      widgetType,
     });
   } catch (error) {
     await env.TOKYO_R2.delete(key);

@@ -15,6 +15,10 @@ import { asBearerToken, assertDevAuth, requireEnv } from '../../shared/auth';
 import { normalizeLocaleList } from '../../shared/l10n';
 import { supabaseFetch } from '../../shared/supabase';
 import {
+  AssetUsageValidationError,
+  syncAccountAssetUsageForInstance,
+} from '../../shared/assetUsage';
+import {
   asTrimmedString,
   assertConfig,
   assertMeta,
@@ -425,6 +429,8 @@ export async function handleCreateInstance(req: Request, env: Env) {
   const publicId = publicIdResult.value!;
   const workspaceId = workspaceIdRaw as string;
   const config = configResult.value!;
+  const workspace = await loadWorkspaceById(env, workspaceId).catch(() => null);
+  if (!workspace) return json({ error: 'WORKSPACE_NOT_FOUND' }, { status: 404 });
   const requestedStatus = statusResult.value;
   const meta = metaResult.value;
   const kind = inferInstanceKindFromPublicId(publicId);
@@ -514,6 +520,35 @@ export async function handleCreateInstance(req: Request, env: Env) {
     }
   }
 
+  try {
+    await syncAccountAssetUsageForInstance({
+      env,
+      accountId: workspace.account_id,
+      publicId,
+      config,
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    if (error instanceof AssetUsageValidationError) {
+      return ckError(
+        {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.payload.invalid',
+          detail,
+        },
+        422,
+      );
+    }
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.db.writeFailed',
+        detail,
+      },
+      500,
+    );
+  }
+
   return handleGetInstance(req, env, publicId);
 }
 
@@ -525,6 +560,8 @@ export async function handleUpdateInstance(req: Request, env: Env, publicId: str
   const workspaceIdResult = assertWorkspaceId(url.searchParams.get('workspaceId'));
   if (!workspaceIdResult.ok) return workspaceIdResult.response;
   const workspaceId = workspaceIdResult.value;
+  const workspace = await loadWorkspaceById(env, workspaceId).catch(() => null);
+  if (!workspace) return json({ error: 'WORKSPACE_NOT_FOUND' }, { status: 404 });
 
   let payload: UpdatePayload;
   try {
@@ -592,6 +629,37 @@ export async function handleUpdateInstance(req: Request, env: Env, publicId: str
     if (!patchRes.ok) {
       const details = await readJson(patchRes);
       return json({ error: 'DB_ERROR', details }, { status: 500 });
+    }
+  }
+
+  if (config !== undefined) {
+    try {
+      await syncAccountAssetUsageForInstance({
+        env,
+        accountId: workspace.account_id,
+        publicId,
+        config,
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      if (error instanceof AssetUsageValidationError) {
+        return ckError(
+          {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.payload.invalid',
+            detail,
+          },
+          422,
+        );
+      }
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail,
+        },
+        500,
+      );
     }
   }
 

@@ -68,15 +68,16 @@ Logical metadata for uploaded account-owned assets.
 Core columns:
 - `asset_id` (uuid) — logical asset identity
 - `account_id` (uuid) — FK to `accounts.id` (ownership key)
-- `workspace_id` (uuid, nullable) — trace metadata FK to `workspaces.id`
-- `public_id` (text, nullable) — trace metadata
-- `widget_type` (text, nullable) — trace metadata
 - `source` (text) — `bob.publish|bob.export|devstudio|promotion|api`
 - `original_filename`, `normalized_filename`, `content_type` (text)
 - `size_bytes` (bigint)
 - `sha256` (text, nullable)
 - `deleted_at` (timestamptz, nullable) — soft-delete marker
 - `created_at`, `updated_at` (timestamptz)
+
+Notes:
+- `workspace_id/public_id/widget_type` remain nullable legacy trace columns for backward compatibility, but are no longer the primary "where used" source.
+- New usage truth lives in `account_asset_usage` (below).
 
 ### `account_asset_variants`
 Physical storage mapping for account asset variants (for example `original`, and future optimized variants).
@@ -88,6 +89,21 @@ Core columns:
 - `filename`, `content_type` (text)
 - `size_bytes` (bigint)
 - `created_at` (timestamptz)
+
+### `account_asset_usage`
+Canonical "where used" mapping between account-owned assets and instance config paths.
+
+Core columns:
+- `account_id` (uuid)
+- `asset_id` (uuid)
+- `public_id` (text) — instance identity (`wgt_*`)
+- `config_path` (text) — deterministic config path (for example `config.sections[0].image.fill`)
+- `created_at`, `updated_at` (timestamptz)
+
+Rules:
+- Uniqueness key: `(account_id, asset_id, public_id, config_path)`.
+- FK to `(asset_id, account_id)` in `account_assets` with cascade on delete.
+- Paris automatically rewrites usage rows on instance config create/update (no manual reconciliation step).
 
 ### `widget_instance_overlays` (current)
 Canonical layered overlays for instances (curated + user).
@@ -236,6 +252,7 @@ Local DB is Supabase CLI + Docker:
   - `account_assets.asset_id`
   - `account_assets.account_id`
   - `account_asset_variants.r2_key`
+  - `account_asset_usage.{public_id,config_path}` for deterministic usage mapping
 
 ## What Michael Does NOT Do (by design)
 

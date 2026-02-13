@@ -27,6 +27,10 @@
 - Paris for queueing publish jobs
 - Venice for render snapshot generation (Tokyo-worker fetches Venice dynamic endpoints; Venice remains the only renderer)
 
+Asset-domain note:
+- Tokyo-worker persists canonical ownership/file metadata in `account_assets` + `account_asset_variants`.
+- Instance/path usage mapping is maintained by Paris in `account_asset_usage` during instance config writes.
+
 ## Deployment
 - Cloudflare Workers + Queues
 - Queue names: `instance-l10n-publish-{env}` (`local`, `cloud-dev`, `prod`)

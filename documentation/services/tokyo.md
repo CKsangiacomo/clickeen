@@ -132,6 +132,10 @@ Cloud-dev:
 Security rule (executed):
 - `TOKYO_DEV_JWT` must never be used from a browser. DevStudio promotion uses it server-side (local Vite middleware).
 
+Asset-domain note:
+- Tokyo upload metadata is ownership/file-centric (`account_assets`, `account_asset_variants`).
+- "Where used" indexing is maintained by Paris in `account_asset_usage` from instance config writes.
+
 ## Links
 - Back: ../../CONTEXT.md
 - Tokyo Worker: documentation/services/tokyo-worker.md

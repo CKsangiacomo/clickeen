@@ -151,6 +151,7 @@ Each release proceeds in 3 steps:
 
 #### Tokyo Worker (Workers + Queues)
 - Handles canonical account-owned uploads (`POST /assets/upload`) and stores metadata in Michael (`account_assets`, `account_asset_variants`).
+- Asset usage ("where used") is tracked by Paris in `account_asset_usage` on instance config writes.
 - Serves canonical account asset reads (`GET /arsenale/o/**`, with `GET /assets/accounts/**` read alias), while legacy `workspace-assets`/`curated-assets` writes are removed (`410`).
 - Reads `widget_instance_overlays` from Supabase (layered), merges `ops + user_ops` for layer=user, and publishes overlays to Tokyo/R2.
 - Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path.

@@ -38,6 +38,15 @@ type AccountAssetVariantRow = {
   created_at: string;
 };
 
+type AccountAssetUsageRow = {
+  account_id: string;
+  asset_id: string;
+  public_id: string;
+  config_path: string;
+  created_at: string;
+  updated_at: string;
+};
+
 function assertAccountId(value: string) {
   const trimmed = String(value || '').trim();
   if (!trimmed || !isUuid(trimmed)) {
@@ -94,8 +103,16 @@ function normalizeAssetVariant(row: AccountAssetVariantRow, tokyoBase: string | 
 function normalizeAccountAsset(
   row: AccountAssetRow,
   variants: AccountAssetVariantRow[],
+  usageRows: AccountAssetUsageRow[],
   tokyoBase: string | null,
 ) {
+  const usage = usageRows.map((item) => ({
+    publicId: item.public_id,
+    configPath: item.config_path,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  }));
+
   return {
     assetId: row.asset_id,
     accountId: row.account_id,
@@ -111,6 +128,8 @@ function normalizeAccountAsset(
     deletedAt: row.deleted_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    usageCount: usage.length,
+    usedBy: usage,
     variants: variants.map((variant) => normalizeAssetVariant(variant, tokyoBase)),
   };
 }
@@ -165,6 +184,39 @@ async function loadVariantsByAssetIds(
     throw new Error(`[ParisWorker] Failed to load account asset variants (${res.status}): ${JSON.stringify(details)}`);
   }
   const rows = (await res.json()) as AccountAssetVariantRow[];
+  rows.forEach((row) => {
+    const current = out.get(row.asset_id);
+    if (current) current.push(row);
+    else out.set(row.asset_id, [row]);
+  });
+  return out;
+}
+
+async function loadUsageByAssetIds(
+  env: Env,
+  accountId: string,
+  assetIds: string[],
+): Promise<Map<string, AccountAssetUsageRow[]>> {
+  const out = new Map<string, AccountAssetUsageRow[]>();
+  if (assetIds.length === 0) return out;
+
+  const params = new URLSearchParams({
+    select: 'account_id,asset_id,public_id,config_path,created_at,updated_at',
+    account_id: `eq.${accountId}`,
+    asset_id: `in.(${assetIds.join(',')})`,
+    order: 'updated_at.desc',
+    limit: '5000',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_asset_usage?${params.toString()}`, {
+    method: 'GET',
+  });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(
+      `[ParisWorker] Failed to load account asset usage (${res.status}): ${JSON.stringify(details)}`,
+    );
+  }
+  const rows = (await res.json()) as AccountAssetUsageRow[];
   rows.forEach((row) => {
     const current = out.get(row.asset_id);
     if (current) current.push(row);
@@ -240,11 +292,17 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
     const assets = (await res.json()) as AccountAssetRow[];
     const assetIds = assets.map((asset) => asset.asset_id).filter(Boolean);
     const variantsByAssetId = await loadVariantsByAssetIds(env, accountId, assetIds);
+    const usageByAssetId = await loadUsageByAssetIds(env, accountId, assetIds);
 
     return json({
       accountId,
       assets: assets.map((asset) =>
-        normalizeAccountAsset(asset, variantsByAssetId.get(asset.asset_id) ?? [], tokyoBase),
+        normalizeAccountAsset(
+          asset,
+          variantsByAssetId.get(asset.asset_id) ?? [],
+          usageByAssetId.get(asset.asset_id) ?? [],
+          tokyoBase,
+        ),
       ),
       pagination: {
         limit,
@@ -283,9 +341,15 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
     if (!asset) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
 
     const variantsByAssetId = await loadVariantsByAssetIds(env, accountId, [assetId]);
+    const usageByAssetId = await loadUsageByAssetIds(env, accountId, [assetId]);
     return json({
       accountId,
-      asset: normalizeAccountAsset(asset, variantsByAssetId.get(assetId) ?? [], tokyoBase),
+      asset: normalizeAccountAsset(
+        asset,
+        variantsByAssetId.get(assetId) ?? [],
+        usageByAssetId.get(assetId) ?? [],
+        tokyoBase,
+      ),
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);

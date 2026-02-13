@@ -27,6 +27,10 @@ import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { loadWidgetLocalizationAllowlist } from '../../shared/l10n';
 import { consumeBudget } from '../../shared/budgets';
 import {
+  AssetUsageValidationError,
+  syncAccountAssetUsageForInstance,
+} from '../../shared/assetUsage';
+import {
   allowCuratedWrites,
   assertPublicId,
   assertWidgetType,
@@ -686,6 +690,37 @@ export async function handleWorkspaceUpdateInstance(
   }
 
   if (updatedInstance) {
+    if (config !== undefined) {
+      try {
+        await syncAccountAssetUsageForInstance({
+          env,
+          accountId: workspace.account_id,
+          publicId,
+          config,
+        });
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        if (error instanceof AssetUsageValidationError) {
+          return ckError(
+            {
+              kind: 'VALIDATION',
+              reasonKey: 'coreui.errors.payload.invalid',
+              detail,
+            },
+            422,
+          );
+        }
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail,
+          },
+          500,
+        );
+      }
+    }
+
     const shouldTrigger =
       config !== undefined || (status === 'published' && updatedInstance.status === 'published');
     if (shouldTrigger && updatedInstance.status === 'published') {
@@ -1104,6 +1139,35 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
   }
 
   if (createdInstance) {
+    try {
+      await syncAccountAssetUsageForInstance({
+        env,
+        accountId: workspace.account_id,
+        publicId,
+        config: createdInstance.config,
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      if (error instanceof AssetUsageValidationError) {
+        return ckError(
+          {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.payload.invalid',
+            detail,
+          },
+          422,
+        );
+      }
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail,
+        },
+        500,
+      );
+    }
+
     const createdKind = resolveInstanceKind(createdInstance);
     if (createdKind === 'curated' && createdInstance.status === 'published') {
       const enqueue = await enqueueRenderSnapshot(env, {
@@ -1400,6 +1464,35 @@ export async function handleWorkspaceEnsureWebsiteCreative(
   }
   if (!existing) {
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.notFound' }, 500);
+  }
+
+  try {
+    await syncAccountAssetUsageForInstance({
+      env,
+      accountId: workspace.account_id,
+      publicId,
+      config: existing.config,
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    if (error instanceof AssetUsageValidationError) {
+      return ckError(
+        {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.payload.invalid',
+          detail,
+        },
+        422,
+      );
+    }
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.db.writeFailed',
+        detail,
+      },
+      500,
+    );
   }
 
   return json({ creativeKey, publicId }, { status: 200 });

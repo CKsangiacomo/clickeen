@@ -206,10 +206,10 @@ Required headers:
 
 Optional trace headers:
 
-1. `x-workspace-id`
-2. `x-public-id`
-3. `x-widget-type`
-4. `x-source` (`bob.publish|bob.export|devstudio|promotion|api`)
+1. `x-source` (`bob.publish|bob.export|devstudio|promotion|api`)
+2. `x-workspace-id` (compat/debug only; not ownership authority)
+3. `x-public-id` (compat/debug only; not ownership authority)
+4. `x-widget-type` (compat/debug only; not ownership authority)
 
 Response shape (canonical):
 
@@ -365,18 +365,15 @@ Required columns:
 
 1. `asset_id uuid primary key`
 2. `account_id uuid not null references accounts(id)`
-3. `workspace_id uuid null references workspaces(id) on delete set null` (trace)
-4. `public_id text null` (trace)
-5. `widget_type text null` (trace)
-6. `source text not null` (`bob.publish|bob.export|devstudio|promotion|api`)
-7. `original_filename text not null`
-8. `normalized_filename text not null`
-9. `content_type text not null`
-10. `size_bytes bigint not null`
-11. `sha256 text null` (optimization, not required for first cutover gate)
-12. `deleted_at timestamptz null` (soft-delete marker)
-13. `created_at timestamptz not null default now()`
-14. `updated_at timestamptz not null default now()`
+3. `source text not null` (`bob.publish|bob.export|devstudio|promotion|api`)
+4. `original_filename text not null`
+5. `normalized_filename text not null`
+6. `content_type text not null`
+7. `size_bytes bigint not null`
+8. `sha256 text null` (optimization, not required for first cutover gate)
+9. `deleted_at timestamptz null` (soft-delete marker)
+10. `created_at timestamptz not null default now()`
+11. `updated_at timestamptz not null default now()`
 
 Required indexes:
 
@@ -384,18 +381,49 @@ Required indexes:
 2. `(account_id, asset_id)`
 3. optional `(account_id, sha256)`
 
-### 5.5.1 Trace metadata policy (scope and retention)
+Legacy compatibility note:
 
-Trace fields in `account_assets` are operational metadata, not presentation data.
+1. Existing nullable trace columns (`workspace_id`, `public_id`, `widget_type`) may remain physically present during migration windows for backward compatibility.
+2. They are not the authoritative source for "where used" and are not required for canonical upload success.
 
-1. `workspace_id` + `source` are used for attribution, debugging, and deterministic migration/rewrite diagnostics.
-2. `public_id` + `widget_type` are used for reverse lookup during publish/export/promote rewrite paths.
-3. Retention policy:
-   - active assets keep trace metadata.
+### 5.5.1 Asset metadata policy (scope and retention)
+
+`account_assets` is ownership/file metadata, not instance-usage mapping.
+
+1. `source` supports attribution/debugging for upload origin.
+2. Retention policy:
+   - active assets keep metadata.
    - soft-deleted assets are purged (DB rows + R2 objects) after a 30-day retention window.
-4. Trace metadata is never used as ownership authority; `account_id` remains the only ownership key.
+3. Ownership authority is only `account_id`.
 
-### 5.6 New table: `account_asset_variants`
+### 5.6 New table: `account_asset_usage`
+
+Purpose: canonical "where used" mapping per account-owned asset.
+
+Required columns:
+
+1. `account_id uuid not null`
+2. `asset_id uuid not null`
+3. `public_id text not null`
+4. `config_path text not null`
+5. `created_at timestamptz not null default now()`
+6. `updated_at timestamptz not null default now()`
+
+Required constraints/indexes:
+
+1. primary key `(account_id, asset_id, public_id, config_path)`
+2. FK `(asset_id, account_id)` -> `account_assets(asset_id, account_id)` with cascade delete
+3. index `(account_id, public_id)`
+4. index `(account_id, asset_id)`
+5. `public_id` and `config_path` non-empty checks
+
+Runtime contract:
+
+1. Paris rewrites usage rows on each instance config create/update.
+2. Usage extraction traverses JSON config and CSS `url(...)` strings for canonical account asset URLs.
+3. Cross-account references are rejected fail-visible.
+
+### 5.7 New table: `account_asset_variants`
 
 Purpose: map logical assets to Tokyo object keys per variant.
 
@@ -415,11 +443,11 @@ Required constraints:
 1. unique `(asset_id, variant)`
 2. variant format check (`^[a-z0-9][a-z0-9_-]{0,31}$`)
 
-### 5.7 Required RLS policy posture (pre-GA)
+### 5.8 Required RLS policy posture (pre-GA)
 
 For this PRD execution window:
 
-1. `accounts`, `account_assets`, `account_asset_variants` are service-role write surfaces.
+1. `accounts`, `account_assets`, `account_asset_usage`, `account_asset_variants` are service-role write surfaces.
 2. Account-scoped reads for product/UI flow through Paris APIs (server-authorized), not direct client SQL.
 3. No browser-direct write policy is introduced in this PRD.
 4. Curated instance global-read behavior remains unchanged; `owner_account_id` is an ownership primitive, not a new curated visibility gate.
@@ -763,7 +791,7 @@ Current:
 Target:
 
 1. Every upload has one explicit owner: `accountId`.
-2. `workspaceId/publicId/widgetType` become trace metadata only.
+2. Instance "where used" mapping is maintained in `account_asset_usage` (per `publicId` + `configPath`) from config writes.
 3. `accountId` is immutable and opaque.
 
 ### 15.3 Budget scope contract
