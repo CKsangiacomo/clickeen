@@ -13,7 +13,7 @@ function extractPrimaryUrl(raw: string): string | null {
   const v = String(raw || '').trim();
   if (!v) return null;
   if (/^(?:data|blob):/i.test(v) || /^https?:\/\//i.test(v)) return v;
-  if (/^\/(?:workspace-assets|curated-assets|assets\/accounts|arsenale\/o)\//i.test(v)) return v;
+  if (/^\/arsenale\/o\//i.test(v)) return v;
   const match = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
   if (match && match[2]) return match[2];
   return null;
@@ -45,35 +45,18 @@ function isNonPersistableUrl(rawUrl: string): boolean {
 function isLegacyTokyoAssetUrl(rawUrl: string): boolean {
   const v = String(rawUrl || '').trim();
   if (!v) return false;
-  if (/^\/workspace-assets\//i.test(v) || /^\/curated-assets\//i.test(v)) return true;
+  if (/^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(v)) return true;
   if (/^https?:\/\//i.test(v)) {
     try {
       const parsed = new URL(v);
-      return /^\/workspace-assets\//i.test(parsed.pathname) || /^\/curated-assets\//i.test(parsed.pathname);
+      return /^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(parsed.pathname);
     } catch {
       return false;
     }
   }
+  const match = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+  if (match?.[2]) return isLegacyTokyoAssetUrl(match[2]);
   return false;
-}
-
-function canonicalizeAccountAssetUrl(rawUrl: string): string {
-  const v = String(rawUrl || '').trim();
-  if (!v) return v;
-  if (/^\/assets\/accounts\//i.test(v)) return v.replace(/^\/assets\/accounts\//i, '/arsenale/o/');
-  if (/^https?:\/\//i.test(v)) {
-    try {
-      const parsed = new URL(v);
-      if (/^\/assets\/accounts\//i.test(parsed.pathname)) {
-        parsed.pathname = parsed.pathname.replace(/^\/assets\/accounts\//i, '/arsenale/o/');
-        return parsed.toString();
-      }
-      return v;
-    } catch {
-      return v;
-    }
-  }
-  return v;
 }
 
 function resolveFetchUrl(rawUrl: string): string {
@@ -228,12 +211,13 @@ export async function persistConfigAssetsToTokyo(
         }
       }
       const url = extractPrimaryUrl(node);
-      if (!url) return;
-      const canonicalizedUrl = canonicalizeAccountAssetUrl(url);
-      if (canonicalizedUrl && canonicalizedUrl !== url) {
-        return replacePrimaryUrl(node, canonicalizedUrl);
+      if (isLegacyTokyoAssetUrl(node)) {
+        throw new Error(
+          '[persistConfigAssetsToTokyo] Legacy Tokyo asset URL is not supported. Migrate to /arsenale/o/** first.'
+        );
       }
-      const requiresUpload = isNonPersistableUrl(url) || isLegacyTokyoAssetUrl(url);
+      if (!url) return;
+      const requiresUpload = isNonPersistableUrl(url);
       if (!requiresUpload) return;
 
       if (!cache.has(url)) {

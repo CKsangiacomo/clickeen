@@ -125,24 +125,38 @@ function sanitizeUploadFilename(filename: string | null, ext: string, variant?: 
 }
 
 const ACCOUNT_ASSET_CANONICAL_PREFIX = 'arsenale/o/';
-const ACCOUNT_ASSET_LEGACY_PREFIX = 'assets/accounts/';
 
 function buildAccountAssetKey(accountId: string, assetId: string, variant: string, filename: string): string {
-  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${variant}/${filename}`;
+  const normalizedVariant = String(variant || '').trim().toLowerCase();
+  if (normalizedVariant === 'original') {
+    return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
+  }
+  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${normalizedVariant}/${filename}`;
 }
 
-function normalizeAccountAssetReadKey(pathname: string): string | null {
-  const key = String(pathname || '').replace(/^\/+/, '');
-  if (key.startsWith(ACCOUNT_ASSET_CANONICAL_PREFIX)) return key;
-  if (key.startsWith(ACCOUNT_ASSET_LEGACY_PREFIX)) {
-    return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${key.slice(ACCOUNT_ASSET_LEGACY_PREFIX.length)}`;
+function normalizeCanonicalAccountAssetSuffix(suffix: string): string | null {
+  const parts = String(suffix || '')
+    .split('/')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  if (parts.length === 3) {
+    const [accountId, assetId, filename] = parts;
+    return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
+  }
+  if (parts.length === 4) {
+    const [accountId, assetId, variant, filename] = parts;
+    if (variant.toLowerCase() === 'original') {
+      return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
+    }
+    return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${variant}/${filename}`;
   }
   return null;
 }
 
-function toLegacyAccountAssetKey(canonicalKey: string): string | null {
-  if (!canonicalKey.startsWith(ACCOUNT_ASSET_CANONICAL_PREFIX)) return null;
-  return `${ACCOUNT_ASSET_LEGACY_PREFIX}${canonicalKey.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length)}`;
+function normalizeAccountAssetReadKey(pathname: string): string | null {
+  const key = String(pathname || '').replace(/^\/+/, '');
+  if (!key.startsWith(ACCOUNT_ASSET_CANONICAL_PREFIX)) return null;
+  return normalizeCanonicalAccountAssetSuffix(key.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length));
 }
 
 function guessContentTypeFromExt(ext: string): string {
@@ -290,13 +304,6 @@ function normalizePublicId(raw: string): string | null {
   const okUser = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i.test(value);
   if (!okMain && !okCurated && !okUser) return null;
   return value;
-}
-
-function normalizeCuratedPublicId(raw: string): string | null {
-  const value = normalizePublicId(raw);
-  if (!value) return null;
-  if (value.startsWith('wgt_curated_') || value.startsWith('wgt_main_')) return value;
-  return null;
 }
 
 function normalizeWidgetType(raw: string): string | null {
@@ -1276,41 +1283,6 @@ async function readKvCounter(kv: KVNamespace, key: string): Promise<number> {
   return Number.isFinite(value) && value >= 0 ? value : 0;
 }
 
-async function consumeWorkspaceBudget(args: {
-  env: Env;
-  workspaceId: string;
-  budgetKey: string;
-  max: number | null;
-  amount?: number;
-}): Promise<
-  | { ok: true; used: number; nextUsed: number }
-  | { ok: false; used: number; max: number; reasonKey: 'coreui.upsell.reason.budgetExceeded'; detail: string }
-> {
-  const amount = typeof args.amount === 'number' ? args.amount : 1;
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error('[tokyo] consumeWorkspaceBudget amount must be positive');
-  if (args.max == null) return { ok: true, used: 0, nextUsed: amount };
-  const max = Math.max(0, Math.floor(args.max));
-  const kv = args.env.USAGE_KV;
-  if (!kv) return { ok: true, used: 0, nextUsed: amount };
-
-  const periodKey = getUtcPeriodKey(new Date());
-  const counterKey = `usage.budget.v1.${args.budgetKey}.${periodKey}.ws:${args.workspaceId}`;
-  const used = await readKvCounter(kv, counterKey);
-  const nextUsed = used + amount;
-  if (nextUsed > max) {
-    return {
-      ok: false,
-      used,
-      max,
-      reasonKey: 'coreui.upsell.reason.budgetExceeded',
-      detail: `${args.budgetKey} budget exceeded (max=${max})`,
-    };
-  }
-
-  await kv.put(counterKey, String(nextUsed), { expirationTtl: 400 * 24 * 60 * 60 });
-  return { ok: true, used, nextUsed };
-}
-
 async function consumeAccountBudget(args: {
   env: Env;
   accountId: string;
@@ -1490,6 +1462,9 @@ async function persistAccountAssetMetadata(args: {
   env: Env;
   accountId: string;
   assetId: string;
+  workspaceId?: string | null;
+  publicId?: string | null;
+  widgetType?: string | null;
   variant: string;
   key: string;
   source: AccountAssetSource;
@@ -1502,6 +1477,9 @@ async function persistAccountAssetMetadata(args: {
   const assetRow = {
     asset_id: args.assetId,
     account_id: args.accountId,
+    workspace_id: args.workspaceId ?? null,
+    public_id: args.publicId ?? null,
+    widget_type: args.widgetType ?? null,
     source: args.source,
     original_filename: args.originalFilename,
     normalized_filename: args.normalizedFilename,
@@ -1926,6 +1904,9 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       env,
       accountId,
       assetId,
+      workspaceId: workspaceId || null,
+      publicId,
+      widgetType,
       variant,
       key,
       source,
@@ -1966,120 +1947,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   );
 }
 
-async function handleUploadWorkspaceAsset(req: Request, env: Env): Promise<Response> {
-  const authErr = requireDevAuth(req, env);
-  if (authErr) return authErr;
-
-  const workspaceId = (req.headers.get('x-workspace-id') || '').trim();
-  if (!workspaceId || !isUuid(workspaceId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 });
-  }
-
-  const tier = await loadWorkspaceTier(env, workspaceId).catch(() => null);
-
-  const variant = (req.headers.get('x-variant') || '').trim() || 'original';
-  if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.variant.invalid' } }, { status: 422 });
-  }
-
-  const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
-  const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
-  const ext = pickExtension(filename, contentType);
-  const safeFilename = sanitizeUploadFilename(filename, ext, variant);
-
-  const maxBytes = resolveUploadSizeLimitBytes(tier);
-  const contentLengthRaw = (req.headers.get('content-length') || '').trim();
-  const contentLength = contentLengthRaw ? Number.parseInt(contentLengthRaw, 10) : NaN;
-  if (maxBytes != null && Number.isFinite(contentLength) && contentLength > maxBytes) {
-    return json(
-      { error: { kind: 'DENY', reasonKey: 'coreui.upsell.reason.capReached', upsell: 'UP', detail: `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}` } },
-      { status: 413 },
-    );
-  }
-
-  const body = await req.arrayBuffer();
-  if (!body || body.byteLength === 0) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
-  }
-  if (maxBytes != null && body.byteLength > maxBytes) {
-    return json(
-      { error: { kind: 'DENY', reasonKey: 'coreui.upsell.reason.capReached', upsell: 'UP', detail: `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}` } },
-      { status: 413 },
-    );
-  }
-
-  const uploadsMax = resolveUploadsCountBudgetMax(tier);
-  const uploadsBytesMax = resolveUploadsBytesBudgetMax(tier);
-
-  const bytesBudget = await consumeWorkspaceBudget({
-    env,
-    workspaceId,
-    budgetKey: UPLOADS_BYTES_BUDGET_KEY,
-    max: uploadsBytesMax,
-    amount: body.byteLength,
-  });
-  if (!bytesBudget.ok) {
-    return json({ error: { kind: 'DENY', reasonKey: bytesBudget.reasonKey, upsell: 'UP', detail: bytesBudget.detail } }, { status: 403 });
-  }
-
-  const uploadBudget = await consumeWorkspaceBudget({
-    env,
-    workspaceId,
-    budgetKey: UPLOADS_COUNT_BUDGET_KEY,
-    max: uploadsMax,
-    amount: 1,
-  });
-  if (!uploadBudget.ok) {
-    return json({ error: { kind: 'DENY', reasonKey: uploadBudget.reasonKey, upsell: 'UP', detail: uploadBudget.detail } }, { status: 403 });
-  }
-
-  const assetId = crypto.randomUUID();
-  const key = `workspace-assets/${workspaceId}/${assetId}/${variant}/${safeFilename}`;
-  await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
-
-  const origin = new URL(req.url).origin;
-  const url = `${origin}/${key}`;
-  return json({ workspaceId, assetId, variant, ext, key, url }, { status: 200 });
-}
-
-async function handleUploadCuratedAsset(req: Request, env: Env): Promise<Response> {
-  const authErr = requireDevAuth(req, env);
-  if (authErr) return authErr;
-
-  const publicId = normalizeCuratedPublicId(req.headers.get('x-public-id') || '');
-  if (!publicId) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } }, { status: 422 });
-  }
-
-  const widgetType = normalizeWidgetType(req.headers.get('x-widget-type') || '');
-  if (!widgetType) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } }, { status: 422 });
-  }
-
-  const variant = (req.headers.get('x-variant') || '').trim() || 'original';
-  if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.variant.invalid' } }, { status: 422 });
-  }
-
-  const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
-  const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
-  const ext = pickExtension(filename, contentType);
-  const safeFilename = sanitizeUploadFilename(filename, ext, variant);
-
-  const body = await req.arrayBuffer();
-  if (!body || body.byteLength === 0) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
-  }
-
-  const assetId = crypto.randomUUID();
-  const key = `curated-assets/${widgetType}/${publicId}/${assetId}/${variant}/${safeFilename}`;
-  await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
-
-  const origin = new URL(req.url).origin;
-  const url = `${origin}/${key}`;
-  return json({ publicId, widgetType, assetId, variant, ext, key, url }, { status: 200 });
-}
-
 function respondImmutableR2Asset(key: string, obj: R2ObjectBody): Response {
   const ext = key.split('.').pop() || '';
   const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
@@ -2089,31 +1956,13 @@ function respondImmutableR2Asset(key: string, obj: R2ObjectBody): Response {
   return new Response(obj.body, { status: 200, headers });
 }
 
-async function handleGetWorkspaceAsset(req: Request, env: Env, key: string): Promise<Response> {
-  const obj = await env.TOKYO_R2.get(key);
-  if (!obj) return new Response('Not found', { status: 404 });
-  return respondImmutableR2Asset(key, obj);
-}
-
-async function handleGetCuratedAsset(req: Request, env: Env, key: string): Promise<Response> {
-  const obj = await env.TOKYO_R2.get(key);
-  if (!obj) return new Response('Not found', { status: 404 });
-  return respondImmutableR2Asset(key, obj);
-}
-
 async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
   const canonical = normalizeAccountAssetReadKey(key.startsWith('/') ? key : `/${key}`);
   if (!canonical) return new Response('Not found', { status: 404 });
 
   const canonicalObj = await env.TOKYO_R2.get(canonical);
   if (canonicalObj) return respondImmutableR2Asset(canonical, canonicalObj);
-
-  // Backward-compat read alias while old `assets/accounts/**` objects still exist.
-  const legacyKey = toLegacyAccountAssetKey(canonical);
-  if (!legacyKey) return new Response('Not found', { status: 404 });
-  const legacyObj = await env.TOKYO_R2.get(legacyKey);
-  if (!legacyObj) return new Response('Not found', { status: 404 });
-  return respondImmutableR2Asset(legacyKey, legacyObj);
+  return new Response('Not found', { status: 404 });
 }
 
 type RenderIndexEntry = { e: string; r: string; meta: string };
@@ -2447,45 +2296,15 @@ export default {
         return withCors(await handlePurgeDeletedAccountAssets(req, env));
       }
 
-      if (pathname === '/workspace-assets/upload') {
-        return withCors(
-          json(
-            { error: { kind: 'DENY', reasonKey: 'tokyo.errors.assets.legacyUploadRemoved', detail: 'Use POST /assets/upload' } },
-            { status: 410 },
-          ),
-        );
-      }
-
       if (pathname === '/assets/upload') {
         if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         return withCors(await handleUploadAccountAsset(req, env));
       }
 
-      if (pathname.startsWith('/arsenale/o/') || pathname.startsWith('/assets/accounts/')) {
+      if (pathname.startsWith('/arsenale/o/')) {
         if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         const key = pathname.replace(/^\//, '');
         return withCors(await handleGetAccountAsset(env, key));
-      }
-
-      if (pathname.startsWith('/workspace-assets/')) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const key = pathname.replace(/^\//, '');
-        return withCors(await handleGetWorkspaceAsset(req, env, key));
-      }
-
-      if (pathname === '/curated-assets/upload') {
-        return withCors(
-          json(
-            { error: { kind: 'DENY', reasonKey: 'tokyo.errors.assets.legacyUploadRemoved', detail: 'Use POST /assets/upload' } },
-            { status: 410 },
-          ),
-        );
-      }
-
-      if (pathname.startsWith('/curated-assets/')) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const key = pathname.replace(/^\//, '');
-        return withCors(await handleGetCuratedAsset(req, env, key));
       }
 
       const l10nIndexMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/index$/);

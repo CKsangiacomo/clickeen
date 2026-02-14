@@ -227,9 +227,11 @@ Implementation:
 - Upload proxy: `bob/app/api/assets/upload/route.ts` (proxies to Tokyo `POST /assets/upload`)
 
 Scopes:
-- **Canonical ownership**: every upload carries `x-account-id` and writes to `arsenale/o/{accountId}/{assetId}/{variant}/{filename}` (legacy `/assets/accounts/**` remains read-compatible)
+- **Canonical ownership**: every upload carries `x-account-id` and writes to canonical account paths:
+  - original variant: `arsenale/o/{accountId}/{assetId}/{filename}`
+  - non-original variants: `arsenale/o/{accountId}/{assetId}/{variant}/{filename}`
 - **Trace context (optional)**: `workspaceId`, `publicId`, `widgetType`, `source` are persisted for diagnostics/attribution only
-- Legacy writes (`/workspace-assets/upload`, `/curated-assets/upload`) are removed and fail visibly (`410`)
+- Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are rejected during persistence.
 
 ---
 

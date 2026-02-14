@@ -461,12 +461,17 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 function isTokyoAssetPath(pathname: string): boolean {
   return (
     pathname.startsWith('/arsenale/o/') ||
-    pathname.startsWith('/assets/accounts/') ||
-    pathname.startsWith('/workspace-assets/') ||
-    pathname.startsWith('/curated-assets/') ||
     pathname.startsWith('/widgets/') ||
     pathname.startsWith('/themes/') ||
     pathname.startsWith('/dieter/')
+  );
+}
+
+function isLegacyTokyoAssetPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/assets/accounts/') ||
+    pathname.startsWith('/workspace-assets/') ||
+    pathname.startsWith('/curated-assets/')
   );
 }
 
@@ -481,6 +486,9 @@ function rewriteAssetUrlsInDefaults(defaults: Record<string, unknown>, tokyoBase
       if (!primaryUrl || /^(?:data|blob):/i.test(primaryUrl)) return;
 
       if (primaryUrl.startsWith('/')) {
+        if (isLegacyTokyoAssetPath(primaryUrl)) {
+          throw new Error(`[Compiler] Legacy Tokyo asset path is not supported: ${primaryUrl}`);
+        }
         if (!isTokyoAssetPath(primaryUrl)) return;
         return replacePrimaryUrl(node, `${base}${primaryUrl}`);
       }
@@ -488,9 +496,15 @@ function rewriteAssetUrlsInDefaults(defaults: Record<string, unknown>, tokyoBase
       if (/^https?:\/\//i.test(primaryUrl)) {
         try {
           const parsed = new URL(primaryUrl);
+          if (isLegacyTokyoAssetPath(parsed.pathname)) {
+            throw new Error(`[Compiler] Legacy Tokyo asset path is not supported: ${parsed.pathname}`);
+          }
           if (!isTokyoAssetPath(parsed.pathname)) return;
           return replacePrimaryUrl(node, `${base}${parsed.pathname}`);
-        } catch {
+        } catch (error) {
+          if (error instanceof Error && error.message.startsWith('[Compiler] Legacy Tokyo asset path is not supported')) {
+            throw error;
+          }
           return;
         }
       }

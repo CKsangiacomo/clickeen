@@ -42,15 +42,9 @@
     "build:prague": "pnpm --filter @clickeen/prague build",
     "prague:l10n:translate": "node scripts/prague-l10n/translate.mjs",
     "prague:l10n:verify": "node scripts/prague-l10n/verify.mjs",
-    "prague:l10n:status": "node scripts/prague-l10n/status.mjs",
-    "prague:l10n:watch": "node scripts/prague-l10n/watch.mjs",
-    "prague:refresh": "node scripts/refresh-prague.mjs",
-    "prague:refresh:wait": "node scripts/refresh-prague.mjs --wait",
     "build:prague:global": "pnpm prague:l10n:translate && pnpm prague:l10n:verify && pnpm build:prague",
     "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs",
-    "prague:blocks:diff": "node scripts/prague-blocks/diff.mjs",
-    "prague:sync": "node scripts/prague-sync.mjs --publish --local",
-    "assets:converge": "node scripts/infra/assets-converge.mjs"
+    "prague:sync": "node scripts/prague-sync.mjs --publish --local"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

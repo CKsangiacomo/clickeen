@@ -1,0 +1,5715 @@
+{
+  "input": "/Users/piero_macpro/code/VS/clickeen/tooling/whisper/inbox/NaveenTransitionCall.m4a",
+  "model": "medium",
+  "task": "transcribe",
+  "language": "en",
+  "language_probability": 0.9211928844451904,
+  "segments": [
+    {
+      "start": 1.04,
+      "end": 4.04,
+      "text": "if you have noticed something like that."
+    },
+    {
+      "start": 4.04,
+      "end": 21.85,
+      "text": "You and so on and so forth, right?"
+    },
+    {
+      "start": 21.85,
+      "end": 26.85,
+      "text": "We sort of try something and then that doesn't work,"
+    },
+    {
+      "start": 26.85,
+      "end": 28.85,
+      "text": "then we try something else and that doesn't work,"
+    },
+    {
+      "start": 28.85,
+      "end": 30.85,
+      "text": "then we try something else."
+    },
+    {
+      "start": 30.85,
+      "end": 33.85,
+      "text": "So the first point is that both Neeraj and I,"
+    },
+    {
+      "start": 33.85,
+      "end": 37.85,
+      "text": "we keep sort of coming up with creative approaches"
+    },
+    {
+      "start": 37.85,
+      "end": 40.85,
+      "text": "on what can work, right?"
+    },
+    {
+      "start": 40.85,
+      "end": 44.85,
+      "text": "And the feedback that we are getting is the following."
+    },
+    {
+      "start": 44.85,
+      "end": 48.85,
+      "text": "Like, you know, one is on the product side,"
+    },
+    {
+      "start": 48.85,
+      "end": 53.85,
+      "text": "like, you know, there are two areas, right?"
+    },
+    {
+      "start": 53.85,
+      "end": 58.85,
+      "text": "Like, you know, which is the feedback is like, you know,"
+    },
+    {
+      "start": 58.85,
+      "end": 61.85,
+      "text": "when you and Linda, when you guys are working"
+    },
+    {
+      "start": 61.85,
+      "end": 64.85,
+      "text": "as a team individually, just the two of you,"
+    },
+    {
+      "start": 64.85,
+      "end": 67.85,
+      "text": "then sort of, you know, it is workable,"
+    },
+    {
+      "start": 67.85,
+      "end": 70.85,
+      "text": "but then like, sort of, you know,"
+    },
+    {
+      "start": 70.85,
+      "end": 73.85,
+      "text": "somebody needs to spend a lot of energy."
+    },
+    {
+      "start": 73.85,
+      "end": 75.85,
+      "text": "That's just the feedback we are hearing."
+    },
+    {
+      "start": 75.85,
+      "end": 79.85,
+      "text": "Then somebody needs to expend a lot of energy,"
+    },
+    {
+      "start": 79.85,
+      "end": 82.85,
+      "text": "like, you know, in managing you guys."
+    },
+    {
+      "start": 82.85,
+      "end": 85.85,
+      "text": "And that bandwidth, like, you know,"
+    },
+    {
+      "start": 85.85,
+      "end": 87.85,
+      "text": "we don't have that surplus bandwidth,"
+    },
+    {
+      "start": 87.85,
+      "end": 91.85,
+      "text": "like, you know, anywhere in the organization."
+    },
+    {
+      "start": 91.85,
+      "end": 95.85,
+      "text": "Like, when it was in product, then basically like,"
+    },
+    {
+      "start": 95.85,
+      "end": 98.85,
+      "text": "you know, Abhil had to like spend that bandwidth."
+    },
+    {
+      "start": 98.85,
+      "end": 100.85,
+      "text": "He doesn't have that bandwidth."
+    },
+    {
+      "start": 100.85,
+      "end": 103.85,
+      "text": "When we have it in like marketing,"
+    },
+    {
+      "start": 103.85,
+      "end": 106.85,
+      "text": "then either Deepak or, you know,"
+    },
+    {
+      "start": 106.85,
+      "end": 108.85,
+      "text": "Vikram has to spend that bandwidth."
+    },
+    {
+      "start": 108.85,
+      "end": 110.85,
+      "text": "They don't have that bandwidth."
+    },
+    {
+      "start": 110.85,
+      "end": 113.85,
+      "text": "And on the other hand, like, you know,"
+    },
+    {
+      "start": 113.85,
+      "end": 116.85,
+      "text": "in the past we tried sort of, you know,"
+    },
+    {
+      "start": 116.85,
+      "end": 120.85,
+      "text": "having you manage like a department or a team,"
+    },
+    {
+      "start": 120.85,
+      "end": 122.85,
+      "text": "whether it is product design or,"
+    },
+    {
+      "start": 122.85,
+      "end": 127.44,
+      "text": "and the feedback there is, like,"
+    },
+    {
+      "start": 127.44,
+      "end": 130.44,
+      "text": "there is just too much risk that we will again lose the team."
+    },
+    {
+      "start": 130.44,
+      "end": 131.44,
+      "text": "Right, right, right."
+    },
+    {
+      "start": 131.44,
+      "end": 133.44,
+      "text": "Yeah, but no, okay, okay."
+    },
+    {
+      "start": 133.44,
+      "end": 137.44,
+      "text": "But that's not kind of the conversation"
+    },
+    {
+      "start": 137.44,
+      "end": 141.44,
+      "text": "because I have been in this conversation"
+    },
+    {
+      "start": 141.44,
+      "end": 144.44,
+      "text": "more times than I can think of, right?"
+    },
+    {
+      "start": 144.44,
+      "end": 148.44,
+      "text": "So I've heard this from you more times than I can think of."
+    },
+    {
+      "start": 148.44,
+      "end": 150.44,
+      "text": "And I know it's,"
+    },
+    {
+      "start": 150.44,
+      "end": 153.44,
+      "text": "what the conversation that I wanted to have with Tiffany,"
+    },
+    {
+      "start": 153.44,
+      "end": 156.44,
+      "text": "that's why I reached out, was like,"
+    },
+    {
+      "start": 156.44,
+      "end": 159.44,
+      "text": "hey, the past,"
+    },
+    {
+      "start": 159.44,
+      "end": 165.44,
+      "text": "we have spent an uncountable number of hours,"
+    },
+    {
+      "start": 165.44,
+      "end": 167.44,
+      "text": "right, and energy."
+    },
+    {
+      "start": 167.44,
+      "end": 173.44,
+      "text": "And that's also like what affects me, right?"
+    },
+    {
+      "start": 173.44,
+      "end": 177.44,
+      "text": "So with her, I was more like,"
+    },
+    {
+      "start": 177.44,
+      "end": 180.44,
+      "text": "we also had this meeting, right, last year,"
+    },
+    {
+      "start": 180.44,
+      "end": 183.44,
+      "text": "the Step Out and Move On,"
+    },
+    {
+      "start": 183.44,
+      "end": 187.44,
+      "text": "about this or about some of this, right?"
+    },
+    {
+      "start": 187.44,
+      "end": 192.44,
+      "text": "So what the type of conversation that I had with her"
+    },
+    {
+      "start": 192.44,
+      "end": 196.44,
+      "text": "is like, what does the future look like?"
+    },
+    {
+      "start": 196.44,
+      "end": 199.44,
+      "text": "Because, you know,"
+    },
+    {
+      "start": 199.44,
+      "end": 205.44,
+      "text": "resurfacing 14 years of these conversations,"
+    },
+    {
+      "start": 205.44,
+      "end": 207.44,
+      "text": "it's not easy, right?"
+    },
+    {
+      "start": 207.44,
+      "end": 211.44,
+      "text": "So with her, I was like, okay,"
+    },
+    {
+      "start": 211.44,
+      "end": 215.44,
+      "text": "what, you know, this is not sustainable."
+    },
+    {
+      "start": 215.44,
+      "end": 220.44,
+      "text": "Even going through this kind of conversation is hard for me, right?"
+    },
+    {
+      "start": 220.44,
+      "end": 223.44,
+      "text": "So, and that's also one of the reasons it makes it unsustainable."
+    },
+    {
+      "start": 223.44,
+      "end": 227.44,
+      "text": "So with her, I was like, hey,"
+    },
+    {
+      "start": 227.44,
+      "end": 233.44,
+      "text": "what is the path forward to this?"
+    },
+    {
+      "start": 233.44,
+      "end": 234.44,
+      "text": "Right?"
+    },
+    {
+      "start": 234.44,
+      "end": 240.87,
+      "text": "Yeah, so I think like, so there are, like, if we level up, right,"
+    },
+    {
+      "start": 240.87,
+      "end": 244.87,
+      "text": "I think from what I can see is,"
+    },
+    {
+      "start": 244.87,
+      "end": 250.87,
+      "text": "I think there is certainly not a path within the design organization"
+    },
+    {
+      "start": 250.87,
+      "end": 253.87,
+      "text": "in terms of like marketing design."
+    },
+    {
+      "start": 253.87,
+      "end": 258.87,
+      "text": "I think there is a lot of, like, friction between you and JD,"
+    },
+    {
+      "start": 258.87,
+      "end": 265.87,
+      "text": "like, you know, to a point where it's gone to a point of no return, right?"
+    },
+    {
+      "start": 265.87,
+      "end": 268.87,
+      "text": "You know, that is what has happened."
+    },
+    {
+      "start": 268.87,
+      "end": 271.87,
+      "text": "So, so like, I think we understand that."
+    },
+    {
+      "start": 271.87,
+      "end": 274.87,
+      "text": "And like, hopefully you agree with that as well."
+    },
+    {
+      "start": 274.87,
+      "end": 277.87,
+      "text": "I am the one that actually raised it."
+    },
+    {
+      "start": 277.87,
+      "end": 282.87,
+      "text": "So, yeah, I mean, like, it's not just you, like, you know, she,"
+    },
+    {
+      "start": 282.87,
+      "end": 286.87,
+      "text": "like, you know, if we try to force the issue, she will also resign."
+    },
+    {
+      "start": 286.87,
+      "end": 290.87,
+      "text": "So, so it's like, so it's on both sides, right?"
+    },
+    {
+      "start": 290.87,
+      "end": 294.87,
+      "text": "So, so that is, so that's the point of no return over there."
+    },
+    {
+      "start": 294.87,
+      "end": 299.87,
+      "text": "Now, the second area on the product design side,"
+    },
+    {
+      "start": 299.87,
+      "end": 303.87,
+      "text": "sort of, you know, like, day to day is a point of no return."
+    },
+    {
+      "start": 303.87,
+      "end": 309.87,
+      "text": "Like, we certainly cannot have Anil, like, you know, work on,"
+    },
+    {
+      "start": 309.87,
+      "end": 313.87,
+      "text": "sort of, you know, you and Balaji are like,"
+    },
+    {
+      "start": 313.87,
+      "end": 315.87,
+      "text": "that is point of no return."
+    },
+    {
+      "start": 315.87,
+      "end": 323.34,
+      "text": "And we also cannot most 9% sure that Balaji or Rupa,"
+    },
+    {
+      "start": 323.34,
+      "end": 325.34,
+      "text": "they would not be okay reporting to you."
+    },
+    {
+      "start": 325.34,
+      "end": 334.22,
+      "text": "So, so that is also like the point that I was discussing today"
+    },
+    {
+      "start": 334.22,
+      "end": 340.22,
+      "text": "with Dave was the whole point that we set you up was like,"
+    },
+    {
+      "start": 340.22,
+      "end": 342.22,
+      "text": "hey, maybe he's our brand leader."
+    },
+    {
+      "start": 342.22,
+      "end": 345.22,
+      "text": "And like, he's like an agency."
+    },
+    {
+      "start": 345.22,
+      "end": 347.22,
+      "text": "He and Linda, they're an agency."
+    },
+    {
+      "start": 347.22,
+      "end": 351.22,
+      "text": "They drive the design direction like end to end."
+    },
+    {
+      "start": 351.22,
+      "end": 359.2,
+      "text": "But in that case, you have to report to like, either like"
+    },
+    {
+      "start": 359.2,
+      "end": 365.9,
+      "text": "a day, like, you know, and basically you are not involved in day to day."
+    },
+    {
+      "start": 365.9,
+      "end": 369.9,
+      "text": "So on day to day, sort of, you know, on the product side,"
+    },
+    {
+      "start": 369.9,
+      "end": 373.9,
+      "text": "like Anil is working directly with Balaji, Rupa and those guys."
+    },
+    {
+      "start": 373.9,
+      "end": 376.9,
+      "text": "And like, you know, on the design side,"
+    },
+    {
+      "start": 376.9,
+      "end": 379.9,
+      "text": "so on the designs, on the marketing side,"
+    },
+    {
+      "start": 379.9,
+      "end": 383.9,
+      "text": "sort of, you know, KD hires someone like, you know,"
+    },
+    {
+      "start": 383.9,
+      "end": 385.9,
+      "text": "and they run their own website."
+    },
+    {
+      "start": 385.9,
+      "end": 389.9,
+      "text": "What you are providing is you are providing the overall"
+    },
+    {
+      "start": 389.9,
+      "end": 394.9,
+      "text": "design guidelines, both on the website as well as the product design."
+    },
+    {
+      "start": 394.9,
+      "end": 398.9,
+      "text": "And basically, you are documenting it without worrying about,"
+    },
+    {
+      "start": 398.9,
+      "end": 400.9,
+      "text": "like, what is shipped or not shipped."
+    },
+    {
+      "start": 400.9,
+      "end": 403.9,
+      "text": "You don't care about what is shipped or not shipped."
+    },
+    {
+      "start": 403.9,
+      "end": 411.73,
+      "text": "So, yes."
+    },
+    {
+      "start": 411.73,
+      "end": 424.66,
+      "text": "So, yeah, we are sort of aware of these,"
+    },
+    {
+      "start": 424.66,
+      "end": 431.66,
+      "text": "you know, aspects of these dynamics and events."
+    },
+    {
+      "start": 431.66,
+      "end": 438.66,
+      "text": "So that's why, again, I reached out to Tiffany."
+    },
+    {
+      "start": 438.66,
+      "end": 442.66,
+      "text": "Again, in the sense the conversation was, you know,"
+    },
+    {
+      "start": 442.66,
+      "end": 449.66,
+      "text": "a lot has happened over 14 years, not just three years, one year, two weeks."
+    },
+    {
+      "start": 449.66,
+      "end": 453.66,
+      "text": "Fourteen years."
+    },
+    {
+      "start": 453.66,
+      "end": 459.66,
+      "text": "You know, on my side, right, it's been building up."
+    },
+    {
+      "start": 459.66,
+      "end": 468.66,
+      "text": "And then teams were removed, you know, with step up conversation,"
+    },
+    {
+      "start": 468.66,
+      "end": 474.66,
+      "text": "the motion, compensation change, bonus removed, right?"
+    },
+    {
+      "start": 474.66,
+      "end": 476.66,
+      "text": "Because that's also on my side."
+    },
+    {
+      "start": 476.66,
+      "end": 479.66,
+      "text": "It's not that that just happened on one side."
+    },
+    {
+      "start": 479.66,
+      "end": 487.66,
+      "text": "So, you know, when you put all together, right,"
+    },
+    {
+      "start": 487.66,
+      "end": 497.66,
+      "text": "it's not a situation that's sustainable in the future, like, forward."
+    },
+    {
+      "start": 497.66,
+      "end": 503.66,
+      "text": "So, you know, what I was asking her,"
+    },
+    {
+      "start": 503.66,
+      "end": 511.66,
+      "text": "is it possible to structure respectful, reasonable, you know, transition, right?"
+    },
+    {
+      "start": 511.66,
+      "end": 515.66,
+      "text": "That's what I was asking her."
+    },
+    {
+      "start": 515.66,
+      "end": 517.66,
+      "text": "So I think like there are two paths, right?"
+    },
+    {
+      "start": 517.66,
+      "end": 523.66,
+      "text": "And I'll give you both the paths and you can pick like any of those paths, right?"
+    },
+    {
+      "start": 523.66,
+      "end": 527.66,
+      "text": "There is one path where we structure a transition."
+    },
+    {
+      "start": 527.66,
+      "end": 529.66,
+      "text": "I'm very much open to that."
+    },
+    {
+      "start": 529.66,
+      "end": 531.66,
+      "text": "I'm not opposed to it at all."
+    },
+    {
+      "start": 531.66,
+      "end": 534.66,
+      "text": "So in that path, we figure out, like, you know,"
+    },
+    {
+      "start": 534.66,
+      "end": 538.66,
+      "text": "how do we hire a backfill, like, you know, in the current role,"
+    },
+    {
+      "start": 538.66,
+      "end": 541.66,
+      "text": "like, you know, how do we set that up for success?"
+    },
+    {
+      "start": 541.66,
+      "end": 545.66,
+      "text": "And then like, you know, how do we structure like the substance for you"
+    },
+    {
+      "start": 545.66,
+      "end": 547.66,
+      "text": "and like, you know, how do we transition?"
+    },
+    {
+      "start": 547.66,
+      "end": 548.66,
+      "text": "That's one path."
+    },
+    {
+      "start": 548.66,
+      "end": 550.66,
+      "text": "Like, I'm open to that."
+    },
+    {
+      "start": 550.66,
+      "end": 553.66,
+      "text": "And like, you know, if you prefer that, I'll be fully supportive."
+    },
+    {
+      "start": 553.66,
+      "end": 558.66,
+      "text": "And I'll be supportive not with any grudge, like, you know,"
+    },
+    {
+      "start": 558.66,
+      "end": 562.66,
+      "text": "I've been very fond of you for many, many, many years."
+    },
+    {
+      "start": 562.66,
+      "end": 567.66,
+      "text": "The only reason you've been here for 14 years is because one,"
+    },
+    {
+      "start": 567.66,
+      "end": 570.66,
+      "text": "you wanted to be here and two, Neeraj and I wanted you here."
+    },
+    {
+      "start": 570.66,
+      "end": 573.66,
+      "text": "There is no other reason, right?"
+    },
+    {
+      "start": 573.66,
+      "end": 578.66,
+      "text": "So that's the only reason and that's the only possible explanation."
+    },
+    {
+      "start": 578.66,
+      "end": 583.66,
+      "text": "I fought for you with the board members multiple times, multiple times."
+    },
+    {
+      "start": 583.66,
+      "end": 589.66,
+      "text": "So I think if the time has come and if you are fully sure of that,"
+    },
+    {
+      "start": 589.66,
+      "end": 595.66,
+      "text": "like, you know, then as a friend, I will not stop you at all."
+    },
+    {
+      "start": 595.66,
+      "end": 599.66,
+      "text": "I will basically be really happy that you do something else"
+    },
+    {
+      "start": 599.66,
+      "end": 602.66,
+      "text": "that keeps you better happy, like, more happy, whatever."
+    },
+    {
+      "start": 602.66,
+      "end": 604.66,
+      "text": "I think, you know, I'm totally fine with that."
+    },
+    {
+      "start": 604.66,
+      "end": 606.66,
+      "text": "So that's option one."
+    },
+    {
+      "start": 606.66,
+      "end": 609.66,
+      "text": "Like, you know, in that option, again, two things we should do."
+    },
+    {
+      "start": 609.66,
+      "end": 612.66,
+      "text": "One is we should backfill you first, like, you know,"
+    },
+    {
+      "start": 612.66,
+      "end": 615.66,
+      "text": "Deepak and his team, like, you know, they are not affected."
+    },
+    {
+      "start": 615.66,
+      "end": 618.66,
+      "text": "And then we should structure, like, the subjects and all of that"
+    },
+    {
+      "start": 618.66,
+      "end": 620.66,
+      "text": "so that you are not impacted."
+    },
+    {
+      "start": 620.66,
+      "end": 623.66,
+      "text": "So that's option one."
+    },
+    {
+      "start": 623.66,
+      "end": 627.66,
+      "text": "Option two is, like, you know, we have spent 14 years"
+    },
+    {
+      "start": 627.66,
+      "end": 630.66,
+      "text": "and as you can imagine, like, you know,"
+    },
+    {
+      "start": 630.66,
+      "end": 635.66,
+      "text": "investors also have, like, a timeline, right?"
+    },
+    {
+      "start": 635.66,
+      "end": 637.66,
+      "text": "Like, you know, there is no investor which will say,"
+    },
+    {
+      "start": 637.66,
+      "end": 640.66,
+      "text": "like, hey, go 20 years, 40 years."
+    },
+    {
+      "start": 640.66,
+      "end": 643.66,
+      "text": "Investors also have timelines."
+    },
+    {
+      "start": 643.66,
+      "end": 648.66,
+      "text": "So over the next year or two, like, some event will happen."
+    },
+    {
+      "start": 648.66,
+      "end": 654.13,
+      "text": "Some event will happen over the next year or two."
+    },
+    {
+      "start": 654.13,
+      "end": 656.13,
+      "text": "So we are becoming an agentic company."
+    },
+    {
+      "start": 656.13,
+      "end": 658.13,
+      "text": "Like, we are doing pretty well."
+    },
+    {
+      "start": 658.13,
+      "end": 661.13,
+      "text": "Like, you know, this year we will be, like, you know,"
+    },
+    {
+      "start": 661.13,
+      "end": 663.13,
+      "text": "fully agents, like, full agentic company."
+    },
+    {
+      "start": 663.13,
+      "end": 666.13,
+      "text": "So, like, you know, at that point, like, you know,"
+    },
+    {
+      "start": 666.13,
+      "end": 670.13,
+      "text": "obviously the multiples will be a lot higher than what any company."
+    },
+    {
+      "start": 670.13,
+      "end": 674.13,
+      "text": "If you go right now, you go to look at the valuations,"
+    },
+    {
+      "start": 674.13,
+      "end": 679.13,
+      "text": "like, UpSpot is down, like, probably, like, 70, 80 percent"
+    },
+    {
+      "start": 679.13,
+      "end": 681.13,
+      "text": "over the last few years."
+    },
+    {
+      "start": 681.13,
+      "end": 685.13,
+      "text": "Like, you know, in the last one year, they are down 60 percent."
+    },
+    {
+      "start": 685.13,
+      "end": 688.13,
+      "text": "Like, you know, Salesforce same, Threshworks same."
+    },
+    {
+      "start": 688.13,
+      "end": 691.13,
+      "text": "Like, I was looking at Threshworks down 60 percent,"
+    },
+    {
+      "start": 691.13,
+      "end": 695.13,
+      "text": "like, you know, last one year, 80 percent, like, last three,"
+    },
+    {
+      "start": 695.13,
+      "end": 696.13,
+      "text": "four, five years."
+    },
+    {
+      "start": 696.13,
+      "end": 699.13,
+      "text": "Like, every company is the same."
+    },
+    {
+      "start": 699.13,
+      "end": 702.13,
+      "text": "So, obviously, the market is brutal right now."
+    },
+    {
+      "start": 702.13,
+      "end": 704.13,
+      "text": "It does not matter where you go, what you do."
+    },
+    {
+      "start": 704.13,
+      "end": 709.13,
+      "text": "So, but, like, you know, if we can be a pure agentic company,"
+    },
+    {
+      "start": 709.13,
+      "end": 711.13,
+      "text": "could be, like, a lot better."
+    },
+    {
+      "start": 711.13,
+      "end": 715.13,
+      "text": "And, like, in a year or two, you will have your story complete"
+    },
+    {
+      "start": 715.13,
+      "end": 718.13,
+      "text": "rather than, sort of, you know, now going somewhere."
+    },
+    {
+      "start": 718.13,
+      "end": 722.13,
+      "text": "Because the reality is, and I'll come to that part as well,"
+    },
+    {
+      "start": 722.13,
+      "end": 725.13,
+      "text": "which will help you make a decision."
+    },
+    {
+      "start": 725.13,
+      "end": 728.13,
+      "text": "But the second part is, we create a role for you,"
+    },
+    {
+      "start": 728.13,
+      "end": 733.13,
+      "text": "which is like a brand role outside of day-to-day execution."
+    },
+    {
+      "start": 733.13,
+      "end": 737.13,
+      "text": "In that role as well, what we will need to do is,"
+    },
+    {
+      "start": 737.13,
+      "end": 740.13,
+      "text": "we will have to take you out of marketing."
+    },
+    {
+      "start": 740.13,
+      "end": 742.13,
+      "text": "And basically, like, have a backfill"
+    },
+    {
+      "start": 742.13,
+      "end": 744.13,
+      "text": "for KD who does the website."
+    },
+    {
+      "start": 744.13,
+      "end": 746.13,
+      "text": "So, you're not involved in website."
+    },
+    {
+      "start": 746.13,
+      "end": 748.13,
+      "text": "You're not involved in product."
+    },
+    {
+      "start": 748.13,
+      "end": 751.13,
+      "text": "But you are the brand leader, the overall design architect."
+    },
+    {
+      "start": 751.13,
+      "end": 754.13,
+      "text": "And you are doing, like, as an agency,"
+    },
+    {
+      "start": 754.13,
+      "end": 757.13,
+      "text": "you are doing, like, you know, the overall brand,"
+    },
+    {
+      "start": 757.13,
+      "end": 759.13,
+      "text": "whether it is T-shirt, whether it is direction,"
+    },
+    {
+      "start": 759.13,
+      "end": 763.13,
+      "text": "brand book, sort of, you know, website concepts,"
+    },
+    {
+      "start": 763.13,
+      "end": 767.13,
+      "text": "product concepts, agent concepts, like end-to-end."
+    },
+    {
+      "start": 767.13,
+      "end": 770.13,
+      "text": "That's what you and Linda are doing."
+    },
+    {
+      "start": 770.13,
+      "end": 774.13,
+      "text": "Like, in that format, you are not dealing with any of these guys."
+    },
+    {
+      "start": 774.13,
+      "end": 776.13,
+      "text": "You are not dealing with KD."
+    },
+    {
+      "start": 776.13,
+      "end": 777.13,
+      "text": "You are not dealing with Vikram."
+    },
+    {
+      "start": 777.13,
+      "end": 779.13,
+      "text": "You are not dealing with Deepav."
+    },
+    {
+      "start": 779.13,
+      "end": 780.13,
+      "text": "You are not dealing with any of them."
+    },
+    {
+      "start": 780.13,
+      "end": 782.13,
+      "text": "You are not dealing with Anil."
+    },
+    {
+      "start": 782.13,
+      "end": 785.13,
+      "text": "You are only dealing with Dave Neeraj and myself."
+    },
+    {
+      "start": 785.13,
+      "end": 787.13,
+      "text": "That's it."
+    },
+    {
+      "start": 787.13,
+      "end": 790.13,
+      "text": "So, that is the option two."
+    },
+    {
+      "start": 790.13,
+      "end": 794.7,
+      "text": "You can choose between option one and option two."
+    },
+    {
+      "start": 794.7,
+      "end": 795.7,
+      "text": "I will not influence you."
+    },
+    {
+      "start": 795.7,
+      "end": 796.7,
+      "text": "It will be your choice."
+    },
+    {
+      "start": 796.7,
+      "end": 799.7,
+      "text": "Now, let me also give you, like, you know,"
+    },
+    {
+      "start": 799.7,
+      "end": 803.7,
+      "text": "some other reality check."
+    },
+    {
+      "start": 803.7,
+      "end": 805.7,
+      "text": "Part of, like, you know, I don't know, like, you know,"
+    },
+    {
+      "start": 805.7,
+      "end": 806.7,
+      "text": "where the friction has been."
+    },
+    {
+      "start": 806.7,
+      "end": 810.7,
+      "text": "But part of what I am also hearing is, like, you know,"
+    },
+    {
+      "start": 810.7,
+      "end": 812.7,
+      "text": "the production has gone down a lot."
+    },
+    {
+      "start": 812.7,
+      "end": 816.7,
+      "text": "Like, you know, we have to be on his case every day,"
+    },
+    {
+      "start": 816.7,
+      "end": 817.7,
+      "text": "only then he produces."
+    },
+    {
+      "start": 817.7,
+      "end": 820.7,
+      "text": "And if I tell him to produce, like,"
+    },
+    {
+      "start": 820.7,
+      "end": 822.7,
+      "text": "like two items in a week,"
+    },
+    {
+      "start": 822.7,
+      "end": 825.7,
+      "text": "then he produces two items, not a third one."
+    },
+    {
+      "start": 825.7,
+      "end": 828.7,
+      "text": "So, like, you know, the reality of it is,"
+    },
+    {
+      "start": 828.7,
+      "end": 830.7,
+      "text": "we go anywhere you go right now."
+    },
+    {
+      "start": 830.7,
+      "end": 832.7,
+      "text": "I don't know if you want to retire."
+    },
+    {
+      "start": 832.7,
+      "end": 833.7,
+      "text": "Hopefully not."
+    },
+    {
+      "start": 833.7,
+      "end": 835.7,
+      "text": "Like, you know, but if you go somewhere,"
+    },
+    {
+      "start": 835.7,
+      "end": 838.7,
+      "text": "like, you know, right now, given how the market is,"
+    },
+    {
+      "start": 838.7,
+      "end": 840.7,
+      "text": "anywhere you go,"
+    },
+    {
+      "start": 840.7,
+      "end": 842.7,
+      "text": "it will going to be a lot of work,"
+    },
+    {
+      "start": 842.7,
+      "end": 846.7,
+      "text": "a lot of, like, heads down, like, you know, hard work."
+    },
+    {
+      "start": 846.7,
+      "end": 855.94,
+      "text": "So, as you choose between option one and option two,"
+    },
+    {
+      "start": 855.94,
+      "end": 857.94,
+      "text": "that will not be an alternative,"
+    },
+    {
+      "start": 857.94,
+      "end": 859.94,
+      "text": "neither at Berta, not somewhere else."
+    },
+    {
+      "start": 859.94,
+      "end": 863.94,
+      "text": "So, especially right now, given the market."
+    },
+    {
+      "start": 863.94,
+      "end": 866.94,
+      "text": "It's, it's, it's in the, you make this comment."
+    },
+    {
+      "start": 866.94,
+      "end": 871.94,
+      "text": "But, yeah, no, I think, you know, we,"
+    },
+    {
+      "start": 871.94,
+      "end": 873.94,
+      "text": "on that side, we derail,"
+    },
+    {
+      "start": 873.94,
+      "end": 877.94,
+      "text": "because it's very interesting that you say that to me, right?"
+    },
+    {
+      "start": 877.94,
+      "end": 882.45,
+      "text": "But I don't take the bait."
+    },
+    {
+      "start": 882.45,
+      "end": 885.45,
+      "text": "I think I don't take the bait in the sense that"
+    },
+    {
+      "start": 885.45,
+      "end": 890.45,
+      "text": "I just tell you that I've been doing this"
+    },
+    {
+      "start": 890.45,
+      "end": 893.45,
+      "text": "in this company for 14 years."
+    },
+    {
+      "start": 893.45,
+      "end": 895.45,
+      "text": "And I do fully agree with you."
+    },
+    {
+      "start": 895.45,
+      "end": 900.45,
+      "text": "The pace of execution is a fraction,"
+    },
+    {
+      "start": 900.45,
+      "end": 906.45,
+      "text": "is a fraction with the, on two digits"
+    },
+    {
+      "start": 906.45,
+      "end": 908.45,
+      "text": "of what it used to be."
+    },
+    {
+      "start": 908.45,
+      "end": 912.45,
+      "text": "And I can guarantee you it is not me."
+    },
+    {
+      "start": 912.45,
+      "end": 914.45,
+      "text": "I can guarantee you it is not me."
+    },
+    {
+      "start": 914.45,
+      "end": 920.45,
+      "text": "I leave it, I don't, I don't go into the whys,"
+    },
+    {
+      "start": 920.45,
+      "end": 924.45,
+      "text": "but trust me, I'm very on the piece every day."
+    },
+    {
+      "start": 924.45,
+      "end": 927.45,
+      "text": "I work with a lot of teams."
+    },
+    {
+      "start": 927.45,
+      "end": 929.45,
+      "text": "And I tell you this, again,"
+    },
+    {
+      "start": 929.45,
+      "end": 933.45,
+      "text": "as someone that has been here for a long time,"
+    },
+    {
+      "start": 933.45,
+      "end": 939.45,
+      "text": "the, the execution is a fraction of what it should be."
+    },
+    {
+      "start": 939.45,
+      "end": 945.73,
+      "text": "There is a lot of, how can I say it properly?"
+    },
+    {
+      "start": 945.73,
+      "end": 951.73,
+      "text": "There's a lot of hiding, but it's not me hiding."
+    },
+    {
+      "start": 951.73,
+      "end": 954.73,
+      "text": "That, I just tell you that."
+    },
+    {
+      "start": 954.73,
+      "end": 959.73,
+      "text": "And we know intention, it's not about me, right?"
+    },
+    {
+      "start": 959.73,
+      "end": 962.73,
+      "text": "I know that I'm very aware of what you said about me."
+    },
+    {
+      "start": 962.73,
+      "end": 968.73,
+      "text": "But I'm telling you, that is what I see."
+    },
+    {
+      "start": 968.73,
+      "end": 972.73,
+      "text": "And I tell you what I see based on a person"
+    },
+    {
+      "start": 972.73,
+      "end": 974.73,
+      "text": "that has been here for 14 years,"
+    },
+    {
+      "start": 974.73,
+      "end": 976.73,
+      "text": "has equity in the company,"
+    },
+    {
+      "start": 976.73,
+      "end": 978.73,
+      "text": "so has all the interest in the world,"
+    },
+    {
+      "start": 978.73,
+      "end": 982.73,
+      "text": "because no one else than me has more interest"
+    },
+    {
+      "start": 982.73,
+      "end": 984.73,
+      "text": "than this company is successful."
+    },
+    {
+      "start": 984.73,
+      "end": 988.73,
+      "text": "Nobody else, because I have equity, right?"
+    },
+    {
+      "start": 988.73,
+      "end": 993.73,
+      "text": "So that's the perspective that I'm giving you this feedback from, right?"
+    },
+    {
+      "start": 993.73,
+      "end": 997.73,
+      "text": "Then there is a lot of individuals right now in the company,"
+    },
+    {
+      "start": 997.73,
+      "end": 999.73,
+      "text": "way more than in the past,"
+    },
+    {
+      "start": 999.73,
+      "end": 1004.73,
+      "text": "that has no interest in the company's success."
+    },
+    {
+      "start": 1004.73,
+      "end": 1010.89,
+      "text": "And I leave it at that."
+    },
+    {
+      "start": 1010.89,
+      "end": 1012.89,
+      "text": "Yeah, so I think, again,"
+    },
+    {
+      "start": 1012.89,
+      "end": 1016.89,
+      "text": "Remember we talked about a lot, oh, is it a job?"
+    },
+    {
+      "start": 1016.89,
+      "end": 1018.89,
+      "text": "Or is it a, you know,"
+    },
+    {
+      "start": 1018.89,
+      "end": 1022.89,
+      "text": "we talked about it for many, many years and many, many times."
+    },
+    {
+      "start": 1022.89,
+      "end": 1027.89,
+      "text": "Now there's a significant part of our workforce"
+    },
+    {
+      "start": 1027.89,
+      "end": 1030.89,
+      "text": "for which Berta is a job,"
+    },
+    {
+      "start": 1030.89,
+      "end": 1032.89,
+      "text": "like any other job,"
+    },
+    {
+      "start": 1032.89,
+      "end": 1033.89,
+      "text": "like any other job."
+    },
+    {
+      "start": 1033.89,
+      "end": 1036.89,
+      "text": "And the job is a job."
+    },
+    {
+      "start": 1036.89,
+      "end": 1039.89,
+      "text": "And if they can hide,"
+    },
+    {
+      "start": 1039.89,
+      "end": 1042.89,
+      "text": "and if they can hide, they will hide."
+    },
+    {
+      "start": 1042.89,
+      "end": 1045.89,
+      "text": "And by the way, like, you know, Pietro, just so you know,"
+    },
+    {
+      "start": 1045.89,
+      "end": 1047.89,
+      "text": "I'm not disagreeing on that."
+    },
+    {
+      "start": 1047.89,
+      "end": 1048.89,
+      "text": "Just so you know,"
+    },
+    {
+      "start": 1048.89,
+      "end": 1052.89,
+      "text": "we are clamping down on that as well."
+    },
+    {
+      "start": 1052.89,
+      "end": 1058.89,
+      "text": "So today you saw like, you know, Samira moved on."
+    },
+    {
+      "start": 1058.89,
+      "end": 1061.89,
+      "text": "What do you think happened there?"
+    },
+    {
+      "start": 1061.89,
+      "end": 1063.89,
+      "text": "I'm not aware."
+    },
+    {
+      "start": 1063.89,
+      "end": 1064.89,
+      "text": "I don't know."
+    },
+    {
+      "start": 1064.89,
+      "end": 1067.89,
+      "text": "I just, I was just surprised."
+    },
+    {
+      "start": 1067.89,
+      "end": 1072.89,
+      "text": "So she has been with us for four and a half years."
+    },
+    {
+      "start": 1072.89,
+      "end": 1076.89,
+      "text": "And basically like, you know, again, too many heads,"
+    },
+    {
+      "start": 1076.89,
+      "end": 1078.89,
+      "text": "too many people hiding."
+    },
+    {
+      "start": 1078.89,
+      "end": 1081.89,
+      "text": "And basically we told Amaya, you choose, like, you know,"
+    },
+    {
+      "start": 1081.89,
+      "end": 1082.89,
+      "text": "who's running this apps."
+    },
+    {
+      "start": 1082.89,
+      "end": 1084.89,
+      "text": "Is it Ganesh? Is it her?"
+    },
+    {
+      "start": 1084.89,
+      "end": 1086.89,
+      "text": "He says it's Ganesh."
+    },
+    {
+      "start": 1086.89,
+      "end": 1087.89,
+      "text": "Like, okay, then move it out."
+    },
+    {
+      "start": 1087.89,
+      "end": 1092.86,
+      "text": "The last couple of months,"
+    },
+    {
+      "start": 1092.86,
+      "end": 1095.86,
+      "text": "we put her into like program management role,"
+    },
+    {
+      "start": 1095.86,
+      "end": 1097.86,
+      "text": "like, you know, under Navin DS."
+    },
+    {
+      "start": 1097.86,
+      "end": 1099.86,
+      "text": "And basically it didn't work out either."
+    },
+    {
+      "start": 1099.86,
+      "end": 1101.86,
+      "text": "And now she's gone."
+    },
+    {
+      "start": 1101.86,
+      "end": 1104.86,
+      "text": "And we obviously have made it very sort of, you know,"
+    },
+    {
+      "start": 1104.86,
+      "end": 1107.86,
+      "text": "very polite and like, you know, very respectable."
+    },
+    {
+      "start": 1107.86,
+      "end": 1113.65,
+      "text": "From that standpoint, you know, we are clamping down,"
+    },
+    {
+      "start": 1113.65,
+      "end": 1121.52,
+      "text": "you know, both Neeraj and I prideful of like, you know,"
+    },
+    {
+      "start": 1121.52,
+      "end": 1123.52,
+      "text": "we don't want to have sort of, you know,"
+    },
+    {
+      "start": 1123.52,
+      "end": 1125.52,
+      "text": "people parked over here."
+    },
+    {
+      "start": 1125.52,
+      "end": 1126.52,
+      "text": "And that sort of, you know,"
+    },
+    {
+      "start": 1126.52,
+      "end": 1130.52,
+      "text": "we are very clear irrespective of the level."
+    },
+    {
+      "start": 1130.52,
+      "end": 1133.52,
+      "text": "Like, you know, we don't care about like what level it is."
+    },
+    {
+      "start": 1133.52,
+      "end": 1140.52,
+      "text": "Like, you know, we don't want to have people parked over here."
+    },
+    {
+      "start": 1140.52,
+      "end": 1142.52,
+      "text": "So that is for sure."
+    },
+    {
+      "start": 1142.52,
+      "end": 1144.52,
+      "text": "Like, you know, you know that about us,"
+    },
+    {
+      "start": 1144.52,
+      "end": 1147.52,
+      "text": "like, you know, from the very beginning."
+    },
+    {
+      "start": 1147.52,
+      "end": 1148.52,
+      "text": "Right."
+    },
+    {
+      "start": 1148.52,
+      "end": 1151.52,
+      "text": "But again, going back to us,"
+    },
+    {
+      "start": 1151.52,
+      "end": 1153.52,
+      "text": "on that particular,"
+    },
+    {
+      "start": 1153.52,
+      "end": 1155.52,
+      "text": "on that particular what you said, right?"
+    },
+    {
+      "start": 1155.52,
+      "end": 1157.52,
+      "text": "That was, that is my response."
+    },
+    {
+      "start": 1157.52,
+      "end": 1163.52,
+      "text": "And it is not a response intended to like defend myself or something."
+    },
+    {
+      "start": 1163.52,
+      "end": 1167.52,
+      "text": "It is just, again, candid,"
+    },
+    {
+      "start": 1167.52,
+      "end": 1171.52,
+      "text": "candid something that I want to tell you as the CEO and founder,"
+    },
+    {
+      "start": 1171.52,
+      "end": 1175.52,
+      "text": "from the perspective of someone that's been here for a long time"
+    },
+    {
+      "start": 1175.52,
+      "end": 1182.52,
+      "text": "and is in a lot of these daily meetings on execution and all that."
+    },
+    {
+      "start": 1182.52,
+      "end": 1184.52,
+      "text": "That's what I think."
+    },
+    {
+      "start": 1184.52,
+      "end": 1186.52,
+      "text": "You know, like personally, I think like, you know,"
+    },
+    {
+      "start": 1186.52,
+      "end": 1190.52,
+      "text": "looking at everything like this is what I would say."
+    },
+    {
+      "start": 1190.52,
+      "end": 1193.52,
+      "text": "I would say sort of, you know,"
+    },
+    {
+      "start": 1193.52,
+      "end": 1196.52,
+      "text": "like I like, you know, between us, right?"
+    },
+    {
+      "start": 1196.52,
+      "end": 1200.52,
+      "text": "Like, you know, I have the full picture of like, you know,"
+    },
+    {
+      "start": 1200.52,
+      "end": 1203.52,
+      "text": "where we have been, where we have come from,"
+    },
+    {
+      "start": 1203.52,
+      "end": 1205.52,
+      "text": "like, you know, what has transpired."
+    },
+    {
+      "start": 1205.52,
+      "end": 1206.52,
+      "text": "We know everything."
+    },
+    {
+      "start": 1206.52,
+      "end": 1207.52,
+      "text": "We don't need to discuss."
+    },
+    {
+      "start": 1207.52,
+      "end": 1208.52,
+      "text": "Right."
+    },
+    {
+      "start": 1208.52,
+      "end": 1211.52,
+      "text": "We have all the context."
+    },
+    {
+      "start": 1211.52,
+      "end": 1215.52,
+      "text": "I personally would love for you to see through,"
+    },
+    {
+      "start": 1215.52,
+      "end": 1218.52,
+      "text": "like, you know, this over the next year or two until like,"
+    },
+    {
+      "start": 1218.52,
+      "end": 1220.52,
+      "text": "you know, we have exit."
+    },
+    {
+      "start": 1220.52,
+      "end": 1221.52,
+      "text": "Let's see."
+    },
+    {
+      "start": 1221.52,
+      "end": 1223.52,
+      "text": "Trust me."
+    },
+    {
+      "start": 1223.52,
+      "end": 1225.52,
+      "text": "For that, for that, like, you know,"
+    },
+    {
+      "start": 1225.52,
+      "end": 1229.52,
+      "text": "what I think could be like multiple things."
+    },
+    {
+      "start": 1229.52,
+      "end": 1230.52,
+      "text": "Those have not worked."
+    },
+    {
+      "start": 1230.52,
+      "end": 1233.52,
+      "text": "There is one thing that we have not tried,"
+    },
+    {
+      "start": 1233.52,
+      "end": 1238.52,
+      "text": "which I want to give it a go because it is sort of,"
+    },
+    {
+      "start": 1238.52,
+      "end": 1242.52,
+      "text": "you know, because it is an important area and because I think like,"
+    },
+    {
+      "start": 1242.52,
+      "end": 1244.52,
+      "text": "you know, we need that."
+    },
+    {
+      "start": 1244.52,
+      "end": 1246.52,
+      "text": "Like, you know, I would love to like, you know,"
+    },
+    {
+      "start": 1246.52,
+      "end": 1251.52,
+      "text": "put you as like in the brand roles, like, you know, under Dave."
+    },
+    {
+      "start": 1251.52,
+      "end": 1253.52,
+      "text": "I still need to talk to him, by the way."
+    },
+    {
+      "start": 1253.52,
+      "end": 1254.52,
+      "text": "I don't know."
+    },
+    {
+      "start": 1254.52,
+      "end": 1258.52,
+      "text": "Like, if he is good, hopefully he will be."
+    },
+    {
+      "start": 1258.52,
+      "end": 1264.52,
+      "text": "But like, you know, so now, like, you know, in that role, right?"
+    },
+    {
+      "start": 1264.52,
+      "end": 1266.52,
+      "text": "You are not working with anyone."
+    },
+    {
+      "start": 1266.52,
+      "end": 1268.52,
+      "text": "You are just working with me and Dave."
+    },
+    {
+      "start": 1268.52,
+      "end": 1269.52,
+      "text": "That's it."
+    },
+    {
+      "start": 1269.52,
+      "end": 1270.52,
+      "text": "Right."
+    },
+    {
+      "start": 1270.52,
+      "end": 1272.52,
+      "text": "Me, Dave, and probably Neeraj."
+    },
+    {
+      "start": 1272.52,
+      "end": 1273.52,
+      "text": "That's it."
+    },
+    {
+      "start": 1274.52,
+      "end": 1276.52,
+      "text": "And I would love that."
+    },
+    {
+      "start": 1276.52,
+      "end": 1277.52,
+      "text": "And I would love that."
+    },
+    {
+      "start": 1277.52,
+      "end": 1278.52,
+      "text": "I know you."
+    },
+    {
+      "start": 1278.52,
+      "end": 1280.52,
+      "text": "I know Dave."
+    },
+    {
+      "start": 1280.52,
+      "end": 1289.52,
+      "text": "You know, we have long history and we have nothing but respect for each other."
+    },
+    {
+      "start": 1289.52,
+      "end": 1290.52,
+      "text": "Right."
+    },
+    {
+      "start": 1290.52,
+      "end": 1291.52,
+      "text": "Yes."
+    },
+    {
+      "start": 1291.52,
+      "end": 1293.52,
+      "text": "That is, that is right."
+    },
+    {
+      "start": 1293.52,
+      "end": 1294.52,
+      "text": "No, no, no."
+    },
+    {
+      "start": 1294.52,
+      "end": 1299.95,
+      "text": "But the reason is also sort of, you know,"
+    },
+    {
+      "start": 1299.95,
+      "end": 1302.95,
+      "text": "there are two other reasons for this."
+    },
+    {
+      "start": 1302.95,
+      "end": 1308.95,
+      "text": "When it comes to like Anil, when it comes to Deepak, right?"
+    },
+    {
+      "start": 1308.95,
+      "end": 1310.95,
+      "text": "They are both like, you know,"
+    },
+    {
+      "start": 1310.95,
+      "end": 1316.95,
+      "text": "they have like a lot of experience in their own areas,"
+    },
+    {
+      "start": 1316.95,
+      "end": 1319.95,
+      "text": "but neither has an experience in your area."
+    },
+    {
+      "start": 1319.95,
+      "end": 1320.95,
+      "text": "Right."
+    },
+    {
+      "start": 1320.95,
+      "end": 1321.95,
+      "text": "You know?"
+    },
+    {
+      "start": 1321.95,
+      "end": 1322.95,
+      "text": "Then."
+    },
+    {
+      "start": 1322.95,
+      "end": 1325.95,
+      "text": "So like, so that's why, like, for example, Deepak,"
+    },
+    {
+      "start": 1325.95,
+      "end": 1329.95,
+      "text": "Deepak is your stereotypical like demand generation leader."
+    },
+    {
+      "start": 1329.95,
+      "end": 1330.95,
+      "text": "Right."
+    },
+    {
+      "start": 1330.95,
+      "end": 1331.95,
+      "text": "Right."
+    },
+    {
+      "start": 1331.95,
+      "end": 1332.95,
+      "text": "Like, you know,"
+    },
+    {
+      "start": 1332.95,
+      "end": 1335.95,
+      "text": "and I told him this today and I told Dave this today."
+    },
+    {
+      "start": 1335.95,
+      "end": 1340.95,
+      "text": "I'm like, look, when you think about design,"
+    },
+    {
+      "start": 1340.95,
+      "end": 1342.95,
+      "text": "if you as a CMO,"
+    },
+    {
+      "start": 1342.95,
+      "end": 1349.95,
+      "text": "if you are okay with eight or 10 different buttons in one frame,"
+    },
+    {
+      "start": 1349.95,
+      "end": 1355.95,
+      "text": "where you have like two or three different buttons that say watch demo,"
+    },
+    {
+      "start": 1355.95,
+      "end": 1358.95,
+      "text": "you have two or three different buttons that say watch pricing."
+    },
+    {
+      "start": 1358.95,
+      "end": 1362.95,
+      "text": "You have two different buttons, which is like basically like,"
+    },
+    {
+      "start": 1362.95,
+      "end": 1364.95,
+      "text": "you know, I'm talking about the same frame."
+    },
+    {
+      "start": 1364.95,
+      "end": 1368.95,
+      "text": "I've opened up a website in the same frame."
+    },
+    {
+      "start": 1368.95,
+      "end": 1370.95,
+      "text": "There are eight buttons over there."
+    },
+    {
+      "start": 1370.95,
+      "end": 1373.95,
+      "text": "If you as a CMO are okay with that,"
+    },
+    {
+      "start": 1373.95,
+      "end": 1378.95,
+      "text": "what that is telling me is you don't care about design as much."
+    },
+    {
+      "start": 1378.95,
+      "end": 1381.95,
+      "text": "What you care about is just conversion."
+    },
+    {
+      "start": 1381.95,
+      "end": 1384.95,
+      "text": "So then it is taking me back to like my Yahoo days,"
+    },
+    {
+      "start": 1385.95,
+      "end": 1387.95,
+      "text": "where you had like the flying fans,"
+    },
+    {
+      "start": 1387.95,
+      "end": 1390.95,
+      "text": "like the saucers like on the right side,"
+    },
+    {
+      "start": 1390.95,
+      "end": 1392.95,
+      "text": "like, you know, those ads,"
+    },
+    {
+      "start": 1392.95,
+      "end": 1395.95,
+      "text": "which were like gimmicky ads to like get the conversion."
+    },
+    {
+      "start": 1395.95,
+      "end": 1396.95,
+      "text": "Right."
+    },
+    {
+      "start": 1396.95,
+      "end": 1398.95,
+      "text": "Like, so, so you don't, you don't care about that."
+    },
+    {
+      "start": 1398.95,
+      "end": 1401.95,
+      "text": "Same with like on the design side,"
+    },
+    {
+      "start": 1401.95,
+      "end": 1404.95,
+      "text": "like, you know, it's they don't,"
+    },
+    {
+      "start": 1404.95,
+      "end": 1407.95,
+      "text": "they don't care as much like the PMs as well."
+    },
+    {
+      "start": 1407.95,
+      "end": 1409.95,
+      "text": "They don't care about like, you know, what is going on,"
+    },
+    {
+      "start": 1409.95,
+      "end": 1411.95,
+      "text": "how to make it great."
+    },
+    {
+      "start": 1411.95,
+      "end": 1413.95,
+      "text": "And good for you."
+    },
+    {
+      "start": 1413.95,
+      "end": 1415.95,
+      "text": "Or fortunately for you,"
+    },
+    {
+      "start": 1415.95,
+      "end": 1419.95,
+      "text": "I am obsessed with like, you know, design."
+    },
+    {
+      "start": 1419.95,
+      "end": 1421.95,
+      "text": "I spend like, if you go,"
+    },
+    {
+      "start": 1421.95,
+      "end": 1424.95,
+      "text": "if you go look at my calendar right now,"
+    },
+    {
+      "start": 1424.95,
+      "end": 1426.95,
+      "text": "if you looked at my calendar,"
+    },
+    {
+      "start": 1426.95,
+      "end": 1428.95,
+      "text": "I spend sort of, you know,"
+    },
+    {
+      "start": 1428.95,
+      "end": 1434.95,
+      "text": "at least two to three hours every night with designing."
+    },
+    {
+      "start": 1434.95,
+      "end": 1436.95,
+      "text": "Balaji, Rupa."
+    },
+    {
+      "start": 1436.95,
+      "end": 1441.95,
+      "text": "And every night I am spending two to three hours,"
+    },
+    {
+      "start": 1441.95,
+      "end": 1442.95,
+      "text": "you know, with them."
+    },
+    {
+      "start": 1442.95,
+      "end": 1444.95,
+      "text": "I know you for,"
+    },
+    {
+      "start": 1444.95,
+      "end": 1445.95,
+      "text": "you are the first,"
+    },
+    {
+      "start": 1445.95,
+      "end": 1449.95,
+      "text": "one of the first people that I met when I moved here."
+    },
+    {
+      "start": 1449.95,
+      "end": 1451.95,
+      "text": "So I've known him for 15 years."
+    },
+    {
+      "start": 1451.95,
+      "end": 1454.95,
+      "text": "And you are the most design-obsessed,"
+    },
+    {
+      "start": 1454.95,
+      "end": 1457.95,
+      "text": "one of the most design-obsessed people I can see."
+    },
+    {
+      "start": 1457.95,
+      "end": 1458.95,
+      "text": "Do you think I don't see the comments"
+    },
+    {
+      "start": 1458.95,
+      "end": 1460.95,
+      "text": "that he put in the R&D leadership group?"
+    },
+    {
+      "start": 1460.95,
+      "end": 1464.95,
+      "text": "The kind of, I use which from like going,"
+    },
+    {
+      "start": 1464.95,
+      "end": 1465.95,
+      "text": "because I see also like,"
+    },
+    {
+      "start": 1465.95,
+      "end": 1469.95,
+      "text": "I'm one of those that check glib as it pops, right?"
+    },
+    {
+      "start": 1469.95,
+      "end": 1472.95,
+      "text": "When glibs pops, I read a message."
+    },
+    {
+      "start": 1472.95,
+      "end": 1474.95,
+      "text": "I know, I know, I know."
+    },
+    {
+      "start": 1474.95,
+      "end": 1476.95,
+      "text": "So I can see,"
+    },
+    {
+      "start": 1476.95,
+      "end": 1480.95,
+      "text": "I can see that you are in three glibs at the same time."
+    },
+    {
+      "start": 1480.95,
+      "end": 1483.95,
+      "text": "You are in else stuff, posting about strategy,"
+    },
+    {
+      "start": 1483.95,
+      "end": 1485.95,
+      "text": "then you are in the sales and posting about,"
+    },
+    {
+      "start": 1485.95,
+      "end": 1487.95,
+      "text": "you know, executions, everybody."
+    },
+    {
+      "start": 1487.95,
+      "end": 1489.95,
+      "text": "And then you go and,"
+    },
+    {
+      "start": 1489.95,
+      "end": 1491.95,
+      "text": "and there's always, you know,"
+    },
+    {
+      "start": 1491.95,
+      "end": 1494.95,
+      "text": "a pixel perfection and Navin has seen somewhere"
+    },
+    {
+      "start": 1494.95,
+      "end": 1497.95,
+      "text": "and he is, so that is obsession."
+    },
+    {
+      "start": 1497.95,
+      "end": 1499.95,
+      "text": "It is good obsession."
+    },
+    {
+      "start": 1499.95,
+      "end": 1501.95,
+      "text": "So that is what I'm saying."
+    },
+    {
+      "start": 1501.95,
+      "end": 1503.95,
+      "text": "And what I also see is,"
+    },
+    {
+      "start": 1503.95,
+      "end": 1508.95,
+      "text": "I see like, you know, that same passion in Dave as well,"
+    },
+    {
+      "start": 1508.95,
+      "end": 1512.95,
+      "text": "because when I look at sort of, you know, him, right,"
+    },
+    {
+      "start": 1512.95,
+      "end": 1515.95,
+      "text": "and I look at like SK or I look at something else,"
+    },
+    {
+      "start": 1515.95,
+      "end": 1518.95,
+      "text": "like, you know, typically you would think like,"
+    },
+    {
+      "start": 1518.95,
+      "end": 1520.95,
+      "text": "you know, that the head of marketing"
+    },
+    {
+      "start": 1520.95,
+      "end": 1524.95,
+      "text": "or like someone else marketing people will be able to like,"
+    },
+    {
+      "start": 1524.95,
+      "end": 1526.95,
+      "text": "you know, they are supposed to create"
+    },
+    {
+      "start": 1526.95,
+      "end": 1528.95,
+      "text": "the most beautiful slides,"
+    },
+    {
+      "start": 1528.95,
+      "end": 1530.95,
+      "text": "like, you know, themselves, right?"
+    },
+    {
+      "start": 1530.95,
+      "end": 1533.95,
+      "text": "Whereas what I see over here is like, you know,"
+    },
+    {
+      "start": 1533.95,
+      "end": 1535.95,
+      "text": "when we have a deck,"
+    },
+    {
+      "start": 1535.95,
+      "end": 1536.95,
+      "text": "whether it is a boat deck,"
+    },
+    {
+      "start": 1536.95,
+      "end": 1537.95,
+      "text": "whether it is an SQ deck,"
+    },
+    {
+      "start": 1537.95,
+      "end": 1539.95,
+      "text": "whether it's an all hands deck,"
+    },
+    {
+      "start": 1539.95,
+      "end": 1544.95,
+      "text": "what I feel most comfortable after myself is like,"
+    },
+    {
+      "start": 1544.95,
+      "end": 1546.95,
+      "text": "you know, Dave, can you take care of the deck?"
+    },
+    {
+      "start": 1546.95,
+      "end": 1551.26,
+      "text": "You know, I also trust him."
+    },
+    {
+      "start": 1551.26,
+      "end": 1554.26,
+      "text": "He has that same high taste."
+    },
+    {
+      "start": 1554.26,
+      "end": 1558.26,
+      "text": "And basically like, you know, he's also looking for,"
+    },
+    {
+      "start": 1558.26,
+      "end": 1560.26,
+      "text": "like he values design."
+    },
+    {
+      "start": 1560.26,
+      "end": 1562.26,
+      "text": "He values design."
+    },
+    {
+      "start": 1562.26,
+      "end": 1563.26,
+      "text": "I know, I know."
+    },
+    {
+      "start": 1563.26,
+      "end": 1568.26,
+      "text": "He always, he always glips me directly all the time."
+    },
+    {
+      "start": 1568.26,
+      "end": 1572.5,
+      "text": "You know, I know that."
+    },
+    {
+      "start": 1572.5,
+      "end": 1577.5,
+      "text": "Like, you know, working with him and like owning the brand,"
+    },
+    {
+      "start": 1577.5,
+      "end": 1579.5,
+      "text": "basically what we are saying is,"
+    },
+    {
+      "start": 1579.5,
+      "end": 1581.5,
+      "text": "this is the message that we are giving you."
+    },
+    {
+      "start": 1581.5,
+      "end": 1584.5,
+      "text": "We are saying, and by the way,"
+    },
+    {
+      "start": 1584.5,
+      "end": 1586.5,
+      "text": "Pietro, all of this, right?"
+    },
+    {
+      "start": 1586.5,
+      "end": 1589.5,
+      "text": "I have not discussed with anyone yet."
+    },
+    {
+      "start": 1589.5,
+      "end": 1591.5,
+      "text": "Because I wanted to talk to you first,"
+    },
+    {
+      "start": 1591.5,
+      "end": 1593.5,
+      "text": "because like, you know, if your,"
+    },
+    {
+      "start": 1593.5,
+      "end": 1596.5,
+      "text": "if your decision is I want to like move on,"
+    },
+    {
+      "start": 1596.5,
+      "end": 1598.5,
+      "text": "then I don't want to have this discussion with anyone,"
+    },
+    {
+      "start": 1598.5,
+      "end": 1599.5,
+      "text": "right?"
+    },
+    {
+      "start": 1599.5,
+      "end": 1601.5,
+      "text": "So like, so the, so the,"
+    },
+    {
+      "start": 1601.5,
+      "end": 1604.5,
+      "text": "so the thing here is what,"
+    },
+    {
+      "start": 1604.5,
+      "end": 1607.5,
+      "text": "the reason I think it will be valuable for the company"
+    },
+    {
+      "start": 1607.5,
+      "end": 1608.5,
+      "text": "is the following."
+    },
+    {
+      "start": 1608.5,
+      "end": 1613.5,
+      "text": "To have like a czar who is basically controlling the"
+    },
+    {
+      "start": 1613.5,
+      "end": 1616.5,
+      "text": "overall brand for BirdEye across the board."
+    },
+    {
+      "start": 1616.5,
+      "end": 1618.5,
+      "text": "Like for example, yesterday,"
+    },
+    {
+      "start": 1618.5,
+      "end": 1621.5,
+      "text": "like Balaji was talking to me about like,"
+    },
+    {
+      "start": 1621.5,
+      "end": 1625.5,
+      "text": "like, you know, in this sort of new design system,"
+    },
+    {
+      "start": 1625.5,
+      "end": 1627.5,
+      "text": "like, you know, we are thinking about like,"
+    },
+    {
+      "start": 1627.5,
+      "end": 1628.5,
+      "text": "you know, next quarter, like, you know,"
+    },
+    {
+      "start": 1628.5,
+      "end": 1631.5,
+      "text": "moving to inter or this or that, like all of that stuff."
+    },
+    {
+      "start": 1631.5,
+      "end": 1633.5,
+      "text": "So the first thing I told him is like,"
+    },
+    {
+      "start": 1633.5,
+      "end": 1635.5,
+      "text": "go work with Pietro so that like, you know,"
+    },
+    {
+      "start": 1635.5,
+      "end": 1637.5,
+      "text": "we have consistency across website,"
+    },
+    {
+      "start": 1637.5,
+      "end": 1639.5,
+      "text": "across this, across that."
+    },
+    {
+      "start": 1639.5,
+      "end": 1642.5,
+      "text": "So for now, like, you know, as a design,"
+    },
+    {
+      "start": 1642.5,
+      "end": 1645.5,
+      "text": "as a design architect or as a brand,"
+    },
+    {
+      "start": 1645.5,
+      "end": 1650.29,
+      "text": "whether it is product,"
+    },
+    {
+      "start": 1650.29,
+      "end": 1652.29,
+      "text": "whether it is for a website,"
+    },
+    {
+      "start": 1652.29,
+      "end": 1654.29,
+      "text": "whether it is somewhere else."
+    },
+    {
+      "start": 1654.29,
+      "end": 1655.29,
+      "text": "Like, you know, one of the,"
+    },
+    {
+      "start": 1655.29,
+      "end": 1659.29,
+      "text": "one of my pet peeves is like our t-shirts,"
+    },
+    {
+      "start": 1659.29,
+      "end": 1660.29,
+      "text": "like, you know, that we,"
+    },
+    {
+      "start": 1660.29,
+      "end": 1663.29,
+      "text": "that we give, they are so ugly."
+    },
+    {
+      "start": 1663.29,
+      "end": 1666.63,
+      "text": "Like, you know, across, how can we,"
+    },
+    {
+      "start": 1666.63,
+      "end": 1667.63,
+      "text": "that's our brand."
+    },
+    {
+      "start": 1667.63,
+      "end": 1669.63,
+      "text": "Like, you know, what do we stand for?"
+    },
+    {
+      "start": 1669.63,
+      "end": 1671.63,
+      "text": "Like, do we stand for those ugly t-shirts,"
+    },
+    {
+      "start": 1671.63,
+      "end": 1679.98,
+      "text": "like, you know, that is something else."
+    },
+    {
+      "start": 1679.98,
+      "end": 1681.98,
+      "text": "Like, you know, Tiffany sitting in,"
+    },
+    {
+      "start": 1681.98,
+      "end": 1682.98,
+      "text": "like, you know, in Dallas,"
+    },
+    {
+      "start": 1682.98,
+      "end": 1684.98,
+      "text": "like, those guys are not as sophisticated."
+    },
+    {
+      "start": 1684.98,
+      "end": 1687.98,
+      "text": "Like, their tastes are not as sophisticated."
+    },
+    {
+      "start": 1687.98,
+      "end": 1693.28,
+      "text": "So police, like, you know,"
+    },
+    {
+      "start": 1693.28,
+      "end": 1695.28,
+      "text": "who basically can sort of, you know,"
+    },
+    {
+      "start": 1695.28,
+      "end": 1696.28,
+      "text": "own all of that."
+    },
+    {
+      "start": 1696.28,
+      "end": 1697.28,
+      "text": "Right."
+    },
+    {
+      "start": 1697.28,
+      "end": 1698.28,
+      "text": "You know."
+    },
+    {
+      "start": 1698.28,
+      "end": 1699.28,
+      "text": "Let's see this."
+    },
+    {
+      "start": 1699.28,
+      "end": 1701.28,
+      "text": "And I love what you're saying."
+    },
+    {
+      "start": 1701.28,
+      "end": 1702.28,
+      "text": "I love what you're saying."
+    },
+    {
+      "start": 1702.28,
+      "end": 1703.28,
+      "text": "I really like it."
+    },
+    {
+      "start": 1703.28,
+      "end": 1708.28,
+      "text": "Now, there's another aspect to this whole situation"
+    },
+    {
+      "start": 1708.28,
+      "end": 1712.28,
+      "text": "because again, it's so many layers right now."
+    },
+    {
+      "start": 1712.28,
+      "end": 1715.28,
+      "text": "And there's so many layers."
+    },
+    {
+      "start": 1715.28,
+      "end": 1716.28,
+      "text": "And the one layer,"
+    },
+    {
+      "start": 1716.28,
+      "end": 1717.28,
+      "text": "I know you told me,"
+    },
+    {
+      "start": 1717.28,
+      "end": 1718.28,
+      "text": "hey, you cannot bring it up all the time."
+    },
+    {
+      "start": 1718.28,
+      "end": 1719.28,
+      "text": "You cannot bring it up all the time."
+    },
+    {
+      "start": 1719.28,
+      "end": 1720.28,
+      "text": "You cannot bring it up."
+    },
+    {
+      "start": 1720.28,
+      "end": 1721.28,
+      "text": "And I am,"
+    },
+    {
+      "start": 1721.28,
+      "end": 1724.28,
+      "text": "and I apologize if I brought it up"
+    },
+    {
+      "start": 1724.28,
+      "end": 1726.28,
+      "text": "with a few different people."
+    },
+    {
+      "start": 1726.28,
+      "end": 1727.28,
+      "text": "Maybe not too many."
+    },
+    {
+      "start": 1727.28,
+      "end": 1728.28,
+      "text": "I brought it up with Anil."
+    },
+    {
+      "start": 1728.28,
+      "end": 1729.28,
+      "text": "I brought it up with Deepak."
+    },
+    {
+      "start": 1729.28,
+      "end": 1731.28,
+      "text": "And I brought it up with Young."
+    },
+    {
+      "start": 1731.28,
+      "end": 1732.28,
+      "text": "And you."
+    },
+    {
+      "start": 1732.28,
+      "end": 1733.28,
+      "text": "Which is my mom."
+    },
+    {
+      "start": 1733.28,
+      "end": 1734.28,
+      "text": "Right."
+    },
+    {
+      "start": 1735.28,
+      "end": 1736.28,
+      "text": "And,"
+    },
+    {
+      "start": 1737.28,
+      "end": 1738.28,
+      "text": "and you say,"
+    },
+    {
+      "start": 1738.28,
+      "end": 1740.28,
+      "text": "hey, say not two years."
+    },
+    {
+      "start": 1741.28,
+      "end": 1742.28,
+      "text": "You know,"
+    },
+    {
+      "start": 1743.28,
+      "end": 1746.28,
+      "text": "I'm living in that situation."
+    },
+    {
+      "start": 1746.28,
+      "end": 1747.28,
+      "text": "It's,"
+    },
+    {
+      "start": 1747.28,
+      "end": 1751.28,
+      "text": "I don't know if it's the easier one or the other one."
+    },
+    {
+      "start": 1751.28,
+      "end": 1754.66,
+      "text": "In the sense that,"
+    },
+    {
+      "start": 1754.66,
+      "end": 1755.66,
+      "text": "you know,"
+    },
+    {
+      "start": 1755.66,
+      "end": 1757.66,
+      "text": "in January,"
+    },
+    {
+      "start": 1758.66,
+      "end": 1761.66,
+      "text": "I don't remember if I told you that in January she got,"
+    },
+    {
+      "start": 1761.66,
+      "end": 1763.66,
+      "text": "she went into kidney failure."
+    },
+    {
+      "start": 1763.66,
+      "end": 1764.66,
+      "text": "Right."
+    },
+    {
+      "start": 1764.66,
+      "end": 1767.66,
+      "text": "She was out for two weeks."
+    },
+    {
+      "start": 1767.66,
+      "end": 1769.66,
+      "text": "And then she came back."
+    },
+    {
+      "start": 1769.66,
+      "end": 1770.66,
+      "text": "Then she came back."
+    },
+    {
+      "start": 1770.66,
+      "end": 1771.66,
+      "text": "Now she's,"
+    },
+    {
+      "start": 1771.66,
+      "end": 1773.66,
+      "text": "she's back."
+    },
+    {
+      "start": 1773.66,
+      "end": 1777.0,
+      "text": "But it's a situation."
+    },
+    {
+      "start": 1777.0,
+      "end": 1778.0,
+      "text": "It's,"
+    },
+    {
+      "start": 1778.0,
+      "end": 1779.0,
+      "text": "it's really hard."
+    },
+    {
+      "start": 1779.0,
+      "end": 1780.0,
+      "text": "Right."
+    },
+    {
+      "start": 1780.0,
+      "end": 1781.0,
+      "text": "And I've been here"
+    },
+    {
+      "start": 1782.0,
+      "end": 1783.0,
+      "text": "since 2011."
+    },
+    {
+      "start": 1783.0,
+      "end": 1784.0,
+      "text": "Right."
+    },
+    {
+      "start": 1784.0,
+      "end": 1785.0,
+      "text": "And I know,"
+    },
+    {
+      "start": 1785.0,
+      "end": 1786.0,
+      "text": "yeah,"
+    },
+    {
+      "start": 1786.0,
+      "end": 1787.0,
+      "text": "we call,"
+    },
+    {
+      "start": 1787.0,
+      "end": 1788.0,
+      "text": "what's up,"
+    },
+    {
+      "start": 1788.0,
+      "end": 1789.0,
+      "text": "and this and that."
+    },
+    {
+      "start": 1789.0,
+      "end": 1790.0,
+      "text": "But,"
+    },
+    {
+      "start": 1790.0,
+      "end": 1791.0,
+      "text": "and I go back,"
+    },
+    {
+      "start": 1791.0,
+      "end": 1792.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1792.0,
+      "end": 1793.0,
+      "text": "like in March,"
+    },
+    {
+      "start": 1793.0,
+      "end": 1794.0,
+      "text": "try to go back."
+    },
+    {
+      "start": 1794.0,
+      "end": 1795.0,
+      "text": "But it's man,"
+    },
+    {
+      "start": 1795.0,
+      "end": 1796.0,
+      "text": "it's,"
+    },
+    {
+      "start": 1797.0,
+      "end": 1798.0,
+      "text": "and I know,"
+    },
+    {
+      "start": 1798.0,
+      "end": 1800.0,
+      "text": "because she's 92."
+    },
+    {
+      "start": 1801.0,
+      "end": 1803.0,
+      "text": "I know,"
+    },
+    {
+      "start": 1803.0,
+      "end": 1805.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1805.0,
+      "end": 1807.0,
+      "text": "where I'm going."
+    },
+    {
+      "start": 1808.0,
+      "end": 1810.0,
+      "text": "And I've been trying to,"
+    },
+    {
+      "start": 1811.0,
+      "end": 1813.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1813.0,
+      "end": 1815.0,
+      "text": "sort of"
+    },
+    {
+      "start": 1815.0,
+      "end": 1816.0,
+      "text": "go,"
+    },
+    {
+      "start": 1816.0,
+      "end": 1817.0,
+      "text": "like,"
+    },
+    {
+      "start": 1817.0,
+      "end": 1818.0,
+      "text": "carve time."
+    },
+    {
+      "start": 1818.0,
+      "end": 1819.0,
+      "text": "Right."
+    },
+    {
+      "start": 1820.0,
+      "end": 1821.0,
+      "text": "But,"
+    },
+    {
+      "start": 1821.0,
+      "end": 1823.0,
+      "text": "it's been"
+    },
+    {
+      "start": 1823.0,
+      "end": 1824.0,
+      "text": "so difficult."
+    },
+    {
+      "start": 1825.0,
+      "end": 1826.0,
+      "text": "Right."
+    },
+    {
+      "start": 1826.0,
+      "end": 1827.0,
+      "text": "So difficult."
+    },
+    {
+      "start": 1828.0,
+      "end": 1829.0,
+      "text": "And one of the next thing,"
+    },
+    {
+      "start": 1829.0,
+      "end": 1830.0,
+      "text": "as I was thinking about it,"
+    },
+    {
+      "start": 1830.0,
+      "end": 1832.0,
+      "text": "because I put a lot of thinking,"
+    },
+    {
+      "start": 1832.0,
+      "end": 1833.0,
+      "text": "even, you know,"
+    },
+    {
+      "start": 1833.0,
+      "end": 1834.0,
+      "text": "getting,"
+    },
+    {
+      "start": 1834.0,
+      "end": 1835.0,
+      "text": "and like, you know,"
+    },
+    {
+      "start": 1835.0,
+      "end": 1836.0,
+      "text": "and finally"
+    },
+    {
+      "start": 1836.0,
+      "end": 1837.0,
+      "text": "calling Tiffany,"
+    },
+    {
+      "start": 1837.0,
+      "end": 1838.0,
+      "text": "and it's like,"
+    },
+    {
+      "start": 1838.0,
+      "end": 1839.0,
+      "text": "hey, if this ends,"
+    },
+    {
+      "start": 1839.0,
+      "end": 1840.0,
+      "text": "that's the first thing I do."
+    },
+    {
+      "start": 1841.0,
+      "end": 1842.0,
+      "text": "I take,"
+    },
+    {
+      "start": 1842.0,
+      "end": 1843.0,
+      "text": "I get a plane ticket to Italy."
+    },
+    {
+      "start": 1843.0,
+      "end": 1844.0,
+      "text": "I just go"
+    },
+    {
+      "start": 1844.0,
+      "end": 1845.0,
+      "text": "and just stay with her."
+    },
+    {
+      "start": 1846.0,
+      "end": 1847.0,
+      "text": "That's what,"
+    },
+    {
+      "start": 1847.0,
+      "end": 1848.0,
+      "text": "I don't give it,"
+    },
+    {
+      "start": 1848.0,
+      "end": 1849.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1849.0,
+      "end": 1850.0,
+      "text": "not,"
+    },
+    {
+      "start": 1850.0,
+      "end": 1851.0,
+      "text": "the first thing that I would do,"
+    },
+    {
+      "start": 1851.0,
+      "end": 1852.0,
+      "text": "right,"
+    },
+    {
+      "start": 1852.0,
+      "end": 1853.0,
+      "text": "if I'm not longer employed,"
+    },
+    {
+      "start": 1853.0,
+      "end": 1854.0,
+      "text": "a bird died."
+    },
+    {
+      "start": 1854.0,
+      "end": 1856.0,
+      "text": "I would not be on LinkedIn,"
+    },
+    {
+      "start": 1856.0,
+      "end": 1858.0,
+      "text": "bragging or looking for jobs."
+    },
+    {
+      "start": 1859.0,
+      "end": 1860.0,
+      "text": "You know,"
+    },
+    {
+      "start": 1860.0,
+      "end": 1862.0,
+      "text": "and it's not even about,"
+    },
+    {
+      "start": 1863.0,
+      "end": 1864.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1864.0,
+      "end": 1865.0,
+      "text": "it's not"
+    },
+    {
+      "start": 1865.0,
+      "end": 1866.0,
+      "text": "really about"
+    },
+    {
+      "start": 1866.0,
+      "end": 1867.0,
+      "text": "making an,"
+    },
+    {
+      "start": 1867.0,
+      "end": 1868.0,
+      "text": "I told her today,"
+    },
+    {
+      "start": 1868.0,
+      "end": 1869.0,
+      "text": "I think I used this word,"
+    },
+    {
+      "start": 1869.0,
+      "end": 1871.0,
+      "text": "and it just came out of my head."
+    },
+    {
+      "start": 1871.0,
+      "end": 1872.0,
+      "text": "I told her, like,"
+    },
+    {
+      "start": 1872.0,
+      "end": 1873.0,
+      "text": "it's not about"
+    },
+    {
+      "start": 1873.0,
+      "end": 1874.0,
+      "text": "having an exit."
+    },
+    {
+      "start": 1875.0,
+      "end": 1876.0,
+      "text": "You know,"
+    },
+    {
+      "start": 1876.0,
+      "end": 1877.0,
+      "text": "it's about"
+    },
+    {
+      "start": 1878.0,
+      "end": 1879.0,
+      "text": "kind of"
+    },
+    {
+      "start": 1879.0,
+      "end": 1880.0,
+      "text": "transitioning,"
+    },
+    {
+      "start": 1881.0,
+      "end": 1882.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1882.0,
+      "end": 1883.0,
+      "text": "in a respectful"
+    },
+    {
+      "start": 1883.0,
+      "end": 1884.0,
+      "text": "and reasonable,"
+    },
+    {
+      "start": 1884.0,
+      "end": 1885.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1885.0,
+      "end": 1886.0,
+      "text": "like way,"
+    },
+    {
+      "start": 1886.0,
+      "end": 1887.0,
+      "text": "like,"
+    },
+    {
+      "start": 1887.0,
+      "end": 1888.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1888.0,
+      "end": 1889.0,
+      "text": "that's,"
+    },
+    {
+      "start": 1889.0,
+      "end": 1890.0,
+      "text": "that's what I remember"
+    },
+    {
+      "start": 1890.0,
+      "end": 1891.0,
+      "text": "came out"
+    },
+    {
+      "start": 1891.0,
+      "end": 1892.0,
+      "text": "when I was talking to her."
+    },
+    {
+      "start": 1892.0,
+      "end": 1893.0,
+      "text": "And one of the,"
+    },
+    {
+      "start": 1893.0,
+      "end": 1894.0,
+      "text": "and she asked me like,"
+    },
+    {
+      "start": 1894.0,
+      "end": 1895.0,
+      "text": "oh, you want to retire?"
+    },
+    {
+      "start": 1895.0,
+      "end": 1896.0,
+      "text": "I was like,"
+    },
+    {
+      "start": 1896.0,
+      "end": 1897.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1897.0,
+      "end": 1898.0,
+      "text": "I don't know what I'm doing."
+    },
+    {
+      "start": 1898.0,
+      "end": 1899.0,
+      "text": "It's not,"
+    },
+    {
+      "start": 1899.0,
+      "end": 1900.0,
+      "text": "it's not about"
+    },
+    {
+      "start": 1900.0,
+      "end": 1901.0,
+      "text": "that."
+    },
+    {
+      "start": 1902.0,
+      "end": 1903.0,
+      "text": "It's about,"
+    },
+    {
+      "start": 1904.0,
+      "end": 1905.0,
+      "text": "I think on that side,"
+    },
+    {
+      "start": 1905.0,
+      "end": 1906.0,
+      "text": "right,"
+    },
+    {
+      "start": 1906.0,
+      "end": 1907.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1907.0,
+      "end": 1908.0,
+      "text": "do you have,"
+    },
+    {
+      "start": 1908.0,
+      "end": 1909.0,
+      "text": "there are two things,"
+    },
+    {
+      "start": 1909.0,
+      "end": 1910.0,
+      "text": "right?"
+    },
+    {
+      "start": 1910.0,
+      "end": 1911.0,
+      "text": "One is,"
+    },
+    {
+      "start": 1911.0,
+      "end": 1912.0,
+      "text": "I want to,"
+    },
+    {
+      "start": 1912.0,
+      "end": 1913.0,
+      "text": "like,"
+    },
+    {
+      "start": 1913.0,
+      "end": 1914.0,
+      "text": "like,"
+    },
+    {
+      "start": 1914.0,
+      "end": 1915.0,
+      "text": "let's sort of play it out,"
+    },
+    {
+      "start": 1915.0,
+      "end": 1916.0,
+      "text": "right?"
+    },
+    {
+      "start": 1916.0,
+      "end": 1917.0,
+      "text": "So let's say you,"
+    },
+    {
+      "start": 1917.0,
+      "end": 1918.0,
+      "text": "you've moved on."
+    },
+    {
+      "start": 1918.0,
+      "end": 1919.0,
+      "text": "Now,"
+    },
+    {
+      "start": 1919.0,
+      "end": 1920.0,
+      "text": "the next question is,"
+    },
+    {
+      "start": 1920.0,
+      "end": 1921.0,
+      "text": "like,"
+    },
+    {
+      "start": 1921.0,
+      "end": 1922.0,
+      "text": "do you"
+    },
+    {
+      "start": 1922.0,
+      "end": 1923.0,
+      "text": "look for a job?"
+    },
+    {
+      "start": 1923.0,
+      "end": 1924.0,
+      "text": "Do you not look for a job?"
+    },
+    {
+      "start": 1924.0,
+      "end": 1925.0,
+      "text": "Or do you just go to Italy"
+    },
+    {
+      "start": 1925.0,
+      "end": 1926.0,
+      "text": "and like,"
+    },
+    {
+      "start": 1926.0,
+      "end": 1927.0,
+      "text": "stay with your mom?"
+    },
+    {
+      "start": 1927.0,
+      "end": 1928.0,
+      "text": "Then the next question is,"
+    },
+    {
+      "start": 1928.0,
+      "end": 1929.0,
+      "text": "okay,"
+    },
+    {
+      "start": 1929.0,
+      "end": 1930.0,
+      "text": "like,"
+    },
+    {
+      "start": 1930.0,
+      "end": 1931.0,
+      "text": "which is reasonable,"
+    },
+    {
+      "start": 1931.0,
+      "end": 1932.0,
+      "text": "how long do you stay there?"
+    },
+    {
+      "start": 1932.0,
+      "end": 1933.0,
+      "text": "Do you stay there for a month?"
+    },
+    {
+      "start": 1933.0,
+      "end": 1934.0,
+      "text": "Three months?"
+    },
+    {
+      "start": 1934.0,
+      "end": 1935.0,
+      "text": "Six months?"
+    },
+    {
+      "start": 1935.0,
+      "end": 1936.0,
+      "text": "One year?"
+    },
+    {
+      "start": 1936.0,
+      "end": 1937.0,
+      "text": "Two years?"
+    },
+    {
+      "start": 1937.0,
+      "end": 1938.0,
+      "text": "Three months,"
+    },
+    {
+      "start": 1938.0,
+      "end": 1939.0,
+      "text": "for sure."
+    },
+    {
+      "start": 1939.0,
+      "end": 1940.0,
+      "text": "One to three months,"
+    },
+    {
+      "start": 1940.0,
+      "end": 1941.0,
+      "text": "for sure."
+    },
+    {
+      "start": 1941.0,
+      "end": 1942.0,
+      "text": "One to three months,"
+    },
+    {
+      "start": 1942.0,
+      "end": 1943.0,
+      "text": "for sure."
+    },
+    {
+      "start": 1943.0,
+      "end": 1944.0,
+      "text": "Like a short,"
+    },
+    {
+      "start": 1944.0,
+      "end": 1945.0,
+      "text": "I mean,"
+    },
+    {
+      "start": 1945.0,
+      "end": 1946.0,
+      "text": "it's not a long period."
+    },
+    {
+      "start": 1946.0,
+      "end": 1947.0,
+      "text": "It's not a short period."
+    },
+    {
+      "start": 1947.0,
+      "end": 1948.0,
+      "text": "And I plan to use,"
+    },
+    {
+      "start": 1948.0,
+      "end": 1949.0,
+      "text": "I have very little savings,"
+    },
+    {
+      "start": 1949.0,
+      "end": 1950.0,
+      "text": "right?"
+    },
+    {
+      "start": 1950.0,
+      "end": 1951.0,
+      "text": "I plan to use those."
+    },
+    {
+      "start": 1951.0,
+      "end": 1952.0,
+      "text": "I'm not desperate."
+    },
+    {
+      "start": 1952.0,
+      "end": 1953.0,
+      "text": "I'm not rich."
+    },
+    {
+      "start": 1953.0,
+      "end": 1954.0,
+      "text": "I'm not desperate."
+    },
+    {
+      "start": 1954.0,
+      "end": 1955.0,
+      "text": "You know,"
+    },
+    {
+      "start": 1955.0,
+      "end": 1956.0,
+      "text": "but,"
+    },
+    {
+      "start": 1956.0,
+      "end": 1957.0,
+      "text": "So then I think,"
+    },
+    {
+      "start": 1957.0,
+      "end": 1958.0,
+      "text": "like,"
+    },
+    {
+      "start": 1958.0,
+      "end": 1959.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1959.0,
+      "end": 1960.0,
+      "text": "that again,"
+    },
+    {
+      "start": 1960.0,
+      "end": 1961.0,
+      "text": "like,"
+    },
+    {
+      "start": 1961.0,
+      "end": 1962.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1962.0,
+      "end": 1963.0,
+      "text": "if you want to,"
+    },
+    {
+      "start": 1963.0,
+      "end": 1964.0,
+      "text": "you can do that here."
+    },
+    {
+      "start": 1964.0,
+      "end": 1965.0,
+      "text": "Like,"
+    },
+    {
+      "start": 1965.0,
+      "end": 1966.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1966.0,
+      "end": 1967.0,
+      "text": "move or,"
+    },
+    {
+      "start": 1967.0,
+      "end": 1968.0,
+      "text": "like,"
+    },
+    {
+      "start": 1968.0,
+      "end": 1969.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1969.0,
+      "end": 1970.0,
+      "text": "go there for,"
+    },
+    {
+      "start": 1970.0,
+      "end": 1971.0,
+      "text": "like,"
+    },
+    {
+      "start": 1971.0,
+      "end": 1972.0,
+      "text": "three months,"
+    },
+    {
+      "start": 1972.0,
+      "end": 1973.0,
+      "text": "like,"
+    },
+    {
+      "start": 1973.0,
+      "end": 1974.0,
+      "text": "take time off."
+    },
+    {
+      "start": 1974.0,
+      "end": 1975.0,
+      "text": "Like,"
+    },
+    {
+      "start": 1975.0,
+      "end": 1976.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1976.0,
+      "end": 1977.0,
+      "text": "go there for two,"
+    },
+    {
+      "start": 1977.0,
+      "end": 1978.0,
+      "text": "three months."
+    },
+    {
+      "start": 1978.0,
+      "end": 1979.0,
+      "text": "Like,"
+    },
+    {
+      "start": 1979.0,
+      "end": 1980.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1980.0,
+      "end": 1981.0,
+      "text": "that you can do anyway."
+    },
+    {
+      "start": 1981.0,
+      "end": 1982.0,
+      "text": "So I don't think,"
+    },
+    {
+      "start": 1982.0,
+      "end": 1983.0,
+      "text": "I don't think you should tie it."
+    },
+    {
+      "start": 1983.0,
+      "end": 1984.0,
+      "text": "I don't think you should tie it up."
+    },
+    {
+      "start": 1984.0,
+      "end": 1985.0,
+      "text": "Yeah, yeah."
+    },
+    {
+      "start": 1985.0,
+      "end": 1986.0,
+      "text": "I think the,"
+    },
+    {
+      "start": 1986.0,
+      "end": 1987.0,
+      "text": "yeah,"
+    },
+    {
+      "start": 1987.0,
+      "end": 1988.0,
+      "text": "I think the,"
+    },
+    {
+      "start": 1988.0,
+      "end": 1989.0,
+      "text": "I think,"
+    },
+    {
+      "start": 1989.0,
+      "end": 1990.0,
+      "text": "like,"
+    },
+    {
+      "start": 1990.0,
+      "end": 1991.0,
+      "text": "it's basically like,"
+    },
+    {
+      "start": 1991.0,
+      "end": 1992.0,
+      "text": "there are two,"
+    },
+    {
+      "start": 1992.0,
+      "end": 1993.0,
+      "text": "with a very clear mind,"
+    },
+    {
+      "start": 1993.0,
+      "end": 1994.0,
+      "text": "you should think about two options."
+    },
+    {
+      "start": 1994.0,
+      "end": 1995.0,
+      "text": "One,"
+    },
+    {
+      "start": 1995.0,
+      "end": 1996.0,
+      "text": "either time off from here,"
+    },
+    {
+      "start": 1996.0,
+      "end": 1997.0,
+      "text": "or like,"
+    },
+    {
+      "start": 1997.0,
+      "end": 1998.0,
+      "text": "you know,"
+    },
+    {
+      "start": 1998.0,
+      "end": 1999.0,
+      "text": "I'm no longer employed."
+    },
+    {
+      "start": 1999.0,
+      "end": 2000.0,
+      "text": "I can go."
+    },
+    {
+      "start": 2000.0,
+      "end": 2001.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2001.0,
+      "end": 2002.0,
+      "text": "like,"
+    },
+    {
+      "start": 2002.0,
+      "end": 2003.0,
+      "text": "spending time with your mom"
+    },
+    {
+      "start": 2003.0,
+      "end": 2005.0,
+      "text": "is an option in both the cases."
+    },
+    {
+      "start": 2005.0,
+      "end": 2006.0,
+      "text": "I don't think,"
+    },
+    {
+      "start": 2006.0,
+      "end": 2007.0,
+      "text": "like,"
+    },
+    {
+      "start": 2007.0,
+      "end": 2008.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2008.0,
+      "end": 2009.0,
+      "text": "that's the,"
+    },
+    {
+      "start": 2009.0,
+      "end": 2010.0,
+      "text": "that is better in one way or another."
+    },
+    {
+      "start": 2010.0,
+      "end": 2011.0,
+      "text": "The real options are,"
+    },
+    {
+      "start": 2011.0,
+      "end": 2012.0,
+      "text": "sort of,"
+    },
+    {
+      "start": 2012.0,
+      "end": 2013.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2013.0,
+      "end": 2014.0,
+      "text": "once you come back"
+    },
+    {
+      "start": 2014.0,
+      "end": 2016.0,
+      "text": "after spending time with your mom,"
+    },
+    {
+      "start": 2016.0,
+      "end": 2018.0,
+      "text": "in one case,"
+    },
+    {
+      "start": 2018.0,
+      "end": 2020.0,
+      "text": "you basically get into a new job."
+    },
+    {
+      "start": 2020.0,
+      "end": 2022.0,
+      "text": "It is a fresh start."
+    },
+    {
+      "start": 2022.0,
+      "end": 2023.0,
+      "text": "You are basically,"
+    },
+    {
+      "start": 2023.0,
+      "end": 2024.0,
+      "text": "like,"
+    },
+    {
+      "start": 2024.0,
+      "end": 2025.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2025.0,
+      "end": 2026.0,
+      "text": "all in,"
+    },
+    {
+      "start": 2026.0,
+      "end": 2027.0,
+      "text": "like,"
+    },
+    {
+      "start": 2027.0,
+      "end": 2028.0,
+      "text": "at another company,"
+    },
+    {
+      "start": 2028.0,
+      "end": 2029.0,
+      "text": "like,"
+    },
+    {
+      "start": 2029.0,
+      "end": 2030.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2030.0,
+      "end": 2031.0,
+      "text": "again,"
+    },
+    {
+      "start": 2031.0,
+      "end": 2032.0,
+      "text": "very little"
+    },
+    {
+      "start": 2032.0,
+      "end": 2033.0,
+      "text": "political capital with anyone."
+    },
+    {
+      "start": 2033.0,
+      "end": 2034.0,
+      "text": "So you're starting from zero,"
+    },
+    {
+      "start": 2034.0,
+      "end": 2035.0,
+      "text": "right?"
+    },
+    {
+      "start": 2035.0,
+      "end": 2036.0,
+      "text": "You are building it up,"
+    },
+    {
+      "start": 2036.0,
+      "end": 2037.0,
+      "text": "again."
+    },
+    {
+      "start": 2037.0,
+      "end": 2038.0,
+      "text": "And basically,"
+    },
+    {
+      "start": 2038.0,
+      "end": 2039.0,
+      "text": "like,"
+    },
+    {
+      "start": 2039.0,
+      "end": 2040.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2040.0,
+      "end": 2041.0,
+      "text": "in some ways,"
+    },
+    {
+      "start": 2041.0,
+      "end": 2042.0,
+      "text": "it's like,"
+    },
+    {
+      "start": 2042.0,
+      "end": 2043.0,
+      "text": "yeah,"
+    },
+    {
+      "start": 2043.0,
+      "end": 2044.0,
+      "text": "it's a clean start."
+    },
+    {
+      "start": 2044.0,
+      "end": 2045.0,
+      "text": "That's the positive."
+    },
+    {
+      "start": 2045.0,
+      "end": 2046.0,
+      "text": "And I'm sort of,"
+    },
+    {
+      "start": 2046.0,
+      "end": 2047.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2047.0,
+      "end": 2048.0,
+      "text": "working for the next"
+    },
+    {
+      "start": 2048.0,
+      "end": 2049.0,
+      "text": "10,"
+    },
+    {
+      "start": 2049.0,
+      "end": 2050.0,
+      "text": "15,"
+    },
+    {
+      "start": 2050.0,
+      "end": 2051.0,
+      "text": "20 years,"
+    },
+    {
+      "start": 2051.0,
+      "end": 2052.0,
+      "text": "whatever you want to work."
+    },
+    {
+      "start": 2052.0,
+      "end": 2053.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2053.0,
+      "end": 2054.0,
+      "text": "and there are positives there,"
+    },
+    {
+      "start": 2054.0,
+      "end": 2055.0,
+      "text": "there are negatives there."
+    },
+    {
+      "start": 2055.0,
+      "end": 2056.0,
+      "text": "The other is,"
+    },
+    {
+      "start": 2056.0,
+      "end": 2057.0,
+      "text": "like,"
+    },
+    {
+      "start": 2057.0,
+      "end": 2058.0,
+      "text": "hey,"
+    },
+    {
+      "start": 2058.0,
+      "end": 2059.0,
+      "text": "we have come so far,"
+    },
+    {
+      "start": 2059.0,
+      "end": 2060.0,
+      "text": "and we are at,"
+    },
+    {
+      "start": 2060.0,
+      "end": 2061.0,
+      "text": "like,"
+    },
+    {
+      "start": 2061.0,
+      "end": 2062.0,
+      "text": "five-yard line,"
+    },
+    {
+      "start": 2062.0,
+      "end": 2063.0,
+      "text": "like,"
+    },
+    {
+      "start": 2063.0,
+      "end": 2064.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2064.0,
+      "end": 2065.0,
+      "text": "any which way you look at it,"
+    },
+    {
+      "start": 2065.0,
+      "end": 2066.0,
+      "text": "like,"
+    },
+    {
+      "start": 2066.0,
+      "end": 2067.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2067.0,
+      "end": 2068.0,
+      "text": "and the most easiest way is,"
+    },
+    {
+      "start": 2068.0,
+      "end": 2069.0,
+      "text": "like,"
+    },
+    {
+      "start": 2069.0,
+      "end": 2070.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2070.0,
+      "end": 2071.0,
+      "text": "investors don't have,"
+    },
+    {
+      "start": 2071.0,
+      "end": 2072.0,
+      "text": "like,"
+    },
+    {
+      "start": 2072.0,
+      "end": 2073.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2073.0,
+      "end": 2074.0,
+      "text": "an unlimited timeline"
+    },
+    {
+      "start": 2074.0,
+      "end": 2075.0,
+      "text": "that they invest for."
+    },
+    {
+      "start": 2075.0,
+      "end": 2076.0,
+      "text": "So, like,"
+    },
+    {
+      "start": 2076.0,
+      "end": 2077.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2077.0,
+      "end": 2078.0,
+      "text": "we are getting there"
+    },
+    {
+      "start": 2078.0,
+      "end": 2079.0,
+      "text": "in that,"
+    },
+    {
+      "start": 2079.0,
+      "end": 2080.0,
+      "text": "in that zone."
+    },
+    {
+      "start": 2080.0,
+      "end": 2081.0,
+      "text": "And the company is doing well."
+    },
+    {
+      "start": 2081.0,
+      "end": 2082.0,
+      "text": "We are doing the best in our,"
+    },
+    {
+      "start": 2082.0,
+      "end": 2083.0,
+      "text": "sort of,"
+    },
+    {
+      "start": 2083.0,
+      "end": 2084.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2084.0,
+      "end": 2085.0,
+      "text": "67 million dollars in cash."
+    },
+    {
+      "start": 2085.0,
+      "end": 2086.0,
+      "text": "So, like,"
+    },
+    {
+      "start": 2086.0,
+      "end": 2087.0,
+      "text": "we are a ton of cash."
+    },
+    {
+      "start": 2087.0,
+      "end": 2088.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2088.0,
+      "end": 2089.0,
+      "text": "in fact,"
+    },
+    {
+      "start": 2089.0,
+      "end": 2090.0,
+      "text": "last year we started at 58."
+    },
+    {
+      "start": 2090.0,
+      "end": 2091.0,
+      "text": "Now we are 60."
+    },
+    {
+      "start": 2091.0,
+      "end": 2092.0,
+      "text": "So,"
+    },
+    {
+      "start": 2092.0,
+      "end": 2093.0,
+      "text": "in the last one year or so,"
+    },
+    {
+      "start": 2093.0,
+      "end": 2094.0,
+      "text": "we have generated"
+    },
+    {
+      "start": 2094.0,
+      "end": 2095.0,
+      "text": "10 million dollars in cash."
+    },
+    {
+      "start": 2095.0,
+      "end": 2096.0,
+      "text": "So,"
+    },
+    {
+      "start": 2096.0,
+      "end": 2097.0,
+      "text": "yeah,"
+    },
+    {
+      "start": 2097.0,
+      "end": 2098.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2098.0,
+      "end": 2099.0,
+      "text": "the company,"
+    },
+    {
+      "start": 2099.0,
+      "end": 2100.0,
+      "text": "the company is doing well."
+    },
+    {
+      "start": 2100.0,
+      "end": 2101.0,
+      "text": "Now,"
+    },
+    {
+      "start": 2101.0,
+      "end": 2102.0,
+      "text": "like,"
+    },
+    {
+      "start": 2102.0,
+      "end": 2103.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2103.0,
+      "end": 2104.0,
+      "text": "you get into,"
+    },
+    {
+      "start": 2104.0,
+      "end": 2105.0,
+      "text": "like,"
+    },
+    {
+      "start": 2105.0,
+      "end": 2106.0,
+      "text": "a role"
+    },
+    {
+      "start": 2106.0,
+      "end": 2107.0,
+      "text": "which does not"
+    },
+    {
+      "start": 2107.0,
+      "end": 2108.0,
+      "text": "test you out."
+    },
+    {
+      "start": 2108.0,
+      "end": 2109.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2109.0,
+      "end": 2110.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2110.0,
+      "end": 2111.0,
+      "text": "which is,"
+    },
+    {
+      "start": 2111.0,
+      "end": 2112.0,
+      "text": "like,"
+    },
+    {
+      "start": 2112.0,
+      "end": 2113.0,
+      "text": "nobody else."
+    },
+    {
+      "start": 2113.0,
+      "end": 2114.0,
+      "text": "And no day-to-day."
+    },
+    {
+      "start": 2114.0,
+      "end": 2115.0,
+      "text": "There is no day-to-day."
+    },
+    {
+      "start": 2115.0,
+      "end": 2116.0,
+      "text": "There is,"
+    },
+    {
+      "start": 2116.0,
+      "end": 2117.0,
+      "text": "like,"
+    },
+    {
+      "start": 2117.0,
+      "end": 2118.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2118.0,
+      "end": 2119.0,
+      "text": "we set up,"
+    },
+    {
+      "start": 2119.0,
+      "end": 2120.0,
+      "text": "like,"
+    },
+    {
+      "start": 2120.0,
+      "end": 2121.0,
+      "text": "sort of,"
+    },
+    {
+      "start": 2121.0,
+      "end": 2122.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2122.0,
+      "end": 2123.0,
+      "text": "two-week plans."
+    },
+    {
+      "start": 2123.0,
+      "end": 2124.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2124.0,
+      "end": 2125.0,
+      "text": "we set up,"
+    },
+    {
+      "start": 2125.0,
+      "end": 2126.0,
+      "text": "like,"
+    },
+    {
+      "start": 2126.0,
+      "end": 2127.0,
+      "text": "two-week spends."
+    },
+    {
+      "start": 2127.0,
+      "end": 2128.0,
+      "text": "There is just one meeting,"
+    },
+    {
+      "start": 2128.0,
+      "end": 2129.0,
+      "text": "like,"
+    },
+    {
+      "start": 2129.0,
+      "end": 2130.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2130.0,
+      "end": 2131.0,
+      "text": "every two weeks"
+    },
+    {
+      "start": 2131.0,
+      "end": 2132.0,
+      "text": "where you are basically,"
+    },
+    {
+      "start": 2132.0,
+      "end": 2133.0,
+      "text": "like,"
+    },
+    {
+      "start": 2133.0,
+      "end": 2134.0,
+      "text": "reviewing."
+    },
+    {
+      "start": 2134.0,
+      "end": 2135.0,
+      "text": "You and Linda are working on"
+    },
+    {
+      "start": 2135.0,
+      "end": 2136.0,
+      "text": "the direction of the company,"
+    },
+    {
+      "start": 2136.0,
+      "end": 2137.0,
+      "text": "like,"
+    },
+    {
+      "start": 2137.0,
+      "end": 2138.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2138.0,
+      "end": 2139.0,
+      "text": "the brand."
+    },
+    {
+      "start": 2139.0,
+      "end": 2140.0,
+      "text": "And,"
+    },
+    {
+      "start": 2140.0,
+      "end": 2141.0,
+      "text": "you are basically saying,"
+    },
+    {
+      "start": 2141.0,
+      "end": 2142.0,
+      "text": "like,"
+    },
+    {
+      "start": 2142.0,
+      "end": 2143.0,
+      "text": "hey,"
+    },
+    {
+      "start": 2143.0,
+      "end": 2144.0,
+      "text": "we are up-leveling the brand."
+    },
+    {
+      "start": 2144.0,
+      "end": 2145.0,
+      "text": "We are going to take"
+    },
+    {
+      "start": 2145.0,
+      "end": 2146.0,
+      "text": "a version of"
+    },
+    {
+      "start": 2146.0,
+      "end": 2147.0,
+      "text": "what is there,"
+    },
+    {
+      "start": 2147.0,
+      "end": 2148.0,
+      "text": "the messaging"
+    },
+    {
+      "start": 2148.0,
+      "end": 2149.0,
+      "text": "or whatever."
+    },
+    {
+      "start": 2149.0,
+      "end": 2150.0,
+      "text": "Whatever is there"
+    },
+    {
+      "start": 2150.0,
+      "end": 2151.0,
+      "text": "on the website,"
+    },
+    {
+      "start": 2151.0,
+      "end": 2152.0,
+      "text": "we are going to take it."
+    },
+    {
+      "start": 2152.0,
+      "end": 2153.0,
+      "text": "We are going to show,"
+    },
+    {
+      "start": 2153.0,
+      "end": 2154.0,
+      "text": "like,"
+    },
+    {
+      "start": 2154.0,
+      "end": 2155.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2155.0,
+      "end": 2156.0,
+      "text": "as an agency,"
+    },
+    {
+      "start": 2156.0,
+      "end": 2157.0,
+      "text": "how we can up-level it"
+    },
+    {
+      "start": 2157.0,
+      "end": 2158.0,
+      "text": "at the next level."
+    },
+    {
+      "start": 2158.0,
+      "end": 2159.0,
+      "text": "You review with me"
+    },
+    {
+      "start": 2159.0,
+      "end": 2160.0,
+      "text": "and Dave,"
+    },
+    {
+      "start": 2160.0,
+      "end": 2161.0,
+      "text": "and that's about it."
+    },
+    {
+      "start": 2161.0,
+      "end": 2162.0,
+      "text": "You don't need to,"
+    },
+    {
+      "start": 2162.0,
+      "end": 2163.0,
+      "text": "in that meeting,"
+    },
+    {
+      "start": 2163.0,
+      "end": 2164.0,
+      "text": "you don't even need"
+    },
+    {
+      "start": 2164.0,
+      "end": 2165.0,
+      "text": "Deepak or anyone else."
+    },
+    {
+      "start": 2165.0,
+      "end": 2166.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2166.0,
+      "end": 2167.0,
+      "text": "you just review with Dave"
+    },
+    {
+      "start": 2167.0,
+      "end": 2168.0,
+      "text": "and myself."
+    },
+    {
+      "start": 2168.0,
+      "end": 2169.0,
+      "text": "And, like,"
+    },
+    {
+      "start": 2169.0,
+      "end": 2170.0,
+      "text": "we are not saying,"
+    },
+    {
+      "start": 2170.0,
+      "end": 2171.0,
+      "text": "like,"
+    },
+    {
+      "start": 2171.0,
+      "end": 2172.0,
+      "text": "hey,"
+    },
+    {
+      "start": 2172.0,
+      "end": 2173.0,
+      "text": "this is the new"
+    },
+    {
+      "start": 2173.0,
+      "end": 2174.0,
+      "text": "design direction."
+    },
+    {
+      "start": 2174.0,
+      "end": 2175.0,
+      "text": "We basically tell"
+    },
+    {
+      "start": 2175.0,
+      "end": 2176.0,
+      "text": "Deepak and others,"
+    },
+    {
+      "start": 2176.0,
+      "end": 2177.0,
+      "text": "like,"
+    },
+    {
+      "start": 2177.0,
+      "end": 2178.0,
+      "text": "hey,"
+    },
+    {
+      "start": 2178.0,
+      "end": 2179.0,
+      "text": "take this"
+    },
+    {
+      "start": 2179.0,
+      "end": 2180.0,
+      "text": "with your designer."
+    },
+    {
+      "start": 2180.0,
+      "end": 2181.0,
+      "text": "And, again,"
+    },
+    {
+      "start": 2181.0,
+      "end": 2182.0,
+      "text": "we are not saying"
+    },
+    {
+      "start": 2182.0,
+      "end": 2183.0,
+      "text": "they don't have designers."
+    },
+    {
+      "start": 2183.0,
+      "end": 2184.0,
+      "text": "They have their entire"
+    },
+    {
+      "start": 2184.0,
+      "end": 2185.0,
+      "text": "web team"
+    },
+    {
+      "start": 2185.0,
+      "end": 2186.0,
+      "text": "that they need to manage."
+    },
+    {
+      "start": 2186.0,
+      "end": 2187.0,
+      "text": "You have nothing to do with it."
+    },
+    {
+      "start": 2187.0,
+      "end": 2188.0,
+      "text": "Like, you know,"
+    },
+    {
+      "start": 2188.0,
+      "end": 2189.0,
+      "text": "Katie can hire a designer."
+    },
+    {
+      "start": 2189.0,
+      "end": 2190.0,
+      "text": "We have already"
+    },
+    {
+      "start": 2190.0,
+      "end": 2191.0,
+      "text": "let Jeff go."
+    },
+    {
+      "start": 2191.0,
+      "end": 2192.0,
+      "text": "Like, you know,"
+    },
+    {
+      "start": 2192.0,
+      "end": 2193.0,
+      "text": "whether Katie works"
+    },
+    {
+      "start": 2193.0,
+      "end": 2194.0,
+      "text": "with Mutu"
+    },
+    {
+      "start": 2194.0,
+      "end": 2195.0,
+      "text": "or she has a"
+    },
+    {
+      "start": 2195.0,
+      "end": 2196.0,
+      "text": "designer over here."
+    },
+    {
+      "start": 2196.0,
+      "end": 2197.0,
+      "text": "Jeff is gone?"
+    },
+    {
+      "start": 2197.0,
+      "end": 2198.0,
+      "text": "Yeah,"
+    },
+    {
+      "start": 2198.0,
+      "end": 2199.0,
+      "text": "really?"
+    },
+    {
+      "start": 2199.0,
+      "end": 2200.0,
+      "text": "I think, like,"
+    },
+    {
+      "start": 2200.0,
+      "end": 2201.0,
+      "text": "I think,"
+    },
+    {
+      "start": 2201.0,
+      "end": 2202.0,
+      "text": "I didn't even know."
+    },
+    {
+      "start": 2202.0,
+      "end": 2203.0,
+      "text": "Yeah."
+    },
+    {
+      "start": 2203.0,
+      "end": 2204.0,
+      "text": "She didn't even mention."
+    },
+    {
+      "start": 2204.0,
+      "end": 2205.0,
+      "text": "Yeah."
+    },
+    {
+      "start": 2205.0,
+      "end": 2206.0,
+      "text": "I think, like,"
+    },
+    {
+      "start": 2206.0,
+      "end": 2207.0,
+      "text": "it is recent."
+    },
+    {
+      "start": 2207.0,
+      "end": 2208.0,
+      "text": "I don't know if,"
+    },
+    {
+      "start": 2208.0,
+      "end": 2209.0,
+      "text": "like, you know,"
+    },
+    {
+      "start": 2209.0,
+      "end": 2210.0,
+      "text": "when was his last day."
+    },
+    {
+      "start": 2210.0,
+      "end": 2211.0,
+      "text": "But I know he's gone."
+    },
+    {
+      "start": 2211.0,
+      "end": 2212.0,
+      "text": "So,"
+    },
+    {
+      "start": 2212.0,
+      "end": 2213.0,
+      "text": "yeah,"
+    },
+    {
+      "start": 2213.0,
+      "end": 2214.0,
+      "text": "so,"
+    },
+    {
+      "start": 2214.0,
+      "end": 2215.0,
+      "text": "so basically,"
+    },
+    {
+      "start": 2215.0,
+      "end": 2216.0,
+      "text": "like, you know,"
+    },
+    {
+      "start": 2216.0,
+      "end": 2217.0,
+      "text": "so Katie can have"
+    },
+    {
+      "start": 2217.0,
+      "end": 2218.0,
+      "text": "her own designer."
+    },
+    {
+      "start": 2218.0,
+      "end": 2219.0,
+      "text": "Like, you know,"
+    },
+    {
+      "start": 2219.0,
+      "end": 2220.0,
+      "text": "work with Mutu,"
+    },
+    {
+      "start": 2220.0,
+      "end": 2221.0,
+      "text": "whatever they want to do."
+    },
+    {
+      "start": 2221.0,
+      "end": 2222.0,
+      "text": "That is not"
+    },
+    {
+      "start": 2222.0,
+      "end": 2223.0,
+      "text": "your problem at all."
+    },
+    {
+      "start": 2223.0,
+      "end": 2224.0,
+      "text": "Right."
+    },
+    {
+      "start": 2224.0,
+      "end": 2225.0,
+      "text": "But,"
+    },
+    {
+      "start": 2225.0,
+      "end": 2226.0,
+      "text": "I see where you're going."
+    },
+    {
+      "start": 2226.0,
+      "end": 2227.0,
+      "text": "It's,"
+    },
+    {
+      "start": 2228.0,
+      "end": 2230.0,
+      "text": "flattering on one side."
+    },
+    {
+      "start": 2230.0,
+      "end": 2231.0,
+      "text": "It's"
+    },
+    {
+      "start": 2231.0,
+      "end": 2233.0,
+      "text": "the way I see it now."
+    },
+    {
+      "start": 2233.0,
+      "end": 2234.0,
+      "text": "Because, again,"
+    },
+    {
+      "start": 2234.0,
+      "end": 2235.0,
+      "text": "let me"
+    },
+    {
+      "start": 2235.0,
+      "end": 2237.0,
+      "text": "play ball here."
+    },
+    {
+      "start": 2237.0,
+      "end": 2238.0,
+      "text": "You know,"
+    },
+    {
+      "start": 2238.0,
+      "end": 2239.0,
+      "text": "it's"
+    },
+    {
+      "start": 2239.0,
+      "end": 2241.0,
+      "text": "really nice on one side."
+    },
+    {
+      "start": 2241.0,
+      "end": 2242.0,
+      "text": "Then I can"
+    },
+    {
+      "start": 2242.0,
+      "end": 2244.0,
+      "text": "immediately see in my head"
+    },
+    {
+      "start": 2244.0,
+      "end": 2245.0,
+      "text": "what,"
+    },
+    {
+      "start": 2245.0,
+      "end": 2246.0,
+      "text": "like,"
+    },
+    {
+      "start": 2246.0,
+      "end": 2247.0,
+      "text": "like the potential fire"
+    },
+    {
+      "start": 2247.0,
+      "end": 2248.0,
+      "text": "that this causes."
+    },
+    {
+      "start": 2248.0,
+      "end": 2249.0,
+      "text": "Right?"
+    },
+    {
+      "start": 2249.0,
+      "end": 2250.0,
+      "text": "If I'm an employee."
+    },
+    {
+      "start": 2250.0,
+      "end": 2251.0,
+      "text": "If I'm an employee."
+    },
+    {
+      "start": 2251.0,
+      "end": 2253.0,
+      "text": "Because I can immediately see,"
+    },
+    {
+      "start": 2253.0,
+      "end": 2254.0,
+      "text": "like, a lot of"
+    },
+    {
+      "start": 2254.0,
+      "end": 2255.0,
+      "text": "it's,"
+    },
+    {
+      "start": 2255.0,
+      "end": 2256.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2256.0,
+      "end": 2257.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2257.0,
+      "end": 2258.0,
+      "text": "in a way,"
+    },
+    {
+      "start": 2258.0,
+      "end": 2259.0,
+      "text": "the way I see it,"
+    },
+    {
+      "start": 2259.0,
+      "end": 2261.0,
+      "text": "it's almost like an advisor position."
+    },
+    {
+      "start": 2261.0,
+      "end": 2262.0,
+      "text": "Like, when you,"
+    },
+    {
+      "start": 2262.0,
+      "end": 2264.0,
+      "text": "remember when we hired Nisha?"
+    },
+    {
+      "start": 2264.0,
+      "end": 2265.0,
+      "text": "Correct."
+    },
+    {
+      "start": 2265.0,
+      "end": 2266.0,
+      "text": "Correct."
+    },
+    {
+      "start": 2266.0,
+      "end": 2267.0,
+      "text": "Sorry."
+    },
+    {
+      "start": 2267.0,
+      "end": 2268.0,
+      "text": "Okay."
+    },
+    {
+      "start": 2268.0,
+      "end": 2269.0,
+      "text": "Bring her in the room."
+    },
+    {
+      "start": 2269.0,
+      "end": 2270.0,
+      "text": "She,"
+    },
+    {
+      "start": 2270.0,
+      "end": 2271.0,
+      "text": "just speak."
+    },
+    {
+      "start": 2271.0,
+      "end": 2272.0,
+      "text": "She's not an employee."
+    },
+    {
+      "start": 2272.0,
+      "end": 2273.0,
+      "text": "She can say whatever the fuck she wants."
+    },
+    {
+      "start": 2273.0,
+      "end": 2274.0,
+      "text": "Right?"
+    },
+    {
+      "start": 2274.0,
+      "end": 2275.0,
+      "text": "And that's,"
+    },
+    {
+      "start": 2275.0,
+      "end": 2276.0,
+      "text": "and that's,"
+    },
+    {
+      "start": 2276.0,
+      "end": 2277.0,
+      "text": "that's obviously a good side of that."
+    },
+    {
+      "start": 2277.0,
+      "end": 2278.0,
+      "text": "So,"
+    },
+    {
+      "start": 2278.0,
+      "end": 2279.0,
+      "text": "maybe that's,"
+    },
+    {
+      "start": 2279.0,
+      "end": 2280.0,
+      "text": "that's"
+    },
+    {
+      "start": 2280.0,
+      "end": 2281.0,
+      "text": "also,"
+    },
+    {
+      "start": 2281.0,
+      "end": 2282.0,
+      "text": "like,"
+    },
+    {
+      "start": 2282.0,
+      "end": 2283.0,
+      "text": "something."
+    },
+    {
+      "start": 2283.0,
+      "end": 2284.0,
+      "text": "Because we want to,"
+    },
+    {
+      "start": 2284.0,
+      "end": 2285.0,
+      "text": "like, you know,"
+    },
+    {
+      "start": 2285.0,
+      "end": 2286.0,
+      "text": "the only reason"
+    },
+    {
+      "start": 2286.0,
+      "end": 2287.0,
+      "text": "to create this,"
+    },
+    {
+      "start": 2287.0,
+      "end": 2288.0,
+      "text": "like,"
+    },
+    {
+      "start": 2288.0,
+      "end": 2289.0,
+      "text": "the only reason"
+    },
+    {
+      "start": 2289.0,
+      "end": 2290.0,
+      "text": "to create this role,"
+    },
+    {
+      "start": 2290.0,
+      "end": 2291.0,
+      "text": "in my mind,"
+    },
+    {
+      "start": 2291.0,
+      "end": 2292.0,
+      "text": "like, you know,"
+    },
+    {
+      "start": 2292.0,
+      "end": 2293.0,
+      "text": "I've told you"
+    },
+    {
+      "start": 2293.0,
+      "end": 2294.0,
+      "text": "the benefits for you."
+    },
+    {
+      "start": 2294.0,
+      "end": 2295.0,
+      "text": "Right?"
+    },
+    {
+      "start": 2295.0,
+      "end": 2296.0,
+      "text": "Now,"
+    },
+    {
+      "start": 2296.0,
+      "end": 2297.0,
+      "text": "let me tell you the benefits for me"
+    },
+    {
+      "start": 2297.0,
+      "end": 2298.0,
+      "text": "and the company."
+    },
+    {
+      "start": 2298.0,
+      "end": 2299.0,
+      "text": "I want to create,"
+    },
+    {
+      "start": 2299.0,
+      "end": 2300.0,
+      "text": "like,"
+    },
+    {
+      "start": 2300.0,
+      "end": 2301.0,
+      "text": "an oversight,"
+    },
+    {
+      "start": 2301.0,
+      "end": 2302.0,
+      "text": "a quality oversight,"
+    },
+    {
+      "start": 2302.0,
+      "end": 2303.0,
+      "text": "which,"
+    },
+    {
+      "start": 2303.0,
+      "end": 2304.0,
+      "text": "like,"
+    },
+    {
+      "start": 2304.0,
+      "end": 2305.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2305.0,
+      "end": 2308.0,
+      "text": "you are the eyes and ears"
+    },
+    {
+      "start": 2308.0,
+      "end": 2309.0,
+      "text": "for that quality oversight,"
+    },
+    {
+      "start": 2309.0,
+      "end": 2310.0,
+      "text": "which is,"
+    },
+    {
+      "start": 2310.0,
+      "end": 2311.0,
+      "text": "like,"
+    },
+    {
+      "start": 2311.0,
+      "end": 2312.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2312.0,
+      "end": 2313.0,
+      "text": "if the website is broken"
+    },
+    {
+      "start": 2313.0,
+      "end": 2314.0,
+      "text": "or if something else is broken."
+    },
+    {
+      "start": 2314.0,
+      "end": 2315.0,
+      "text": "Right?"
+    },
+    {
+      "start": 2315.0,
+      "end": 2316.0,
+      "text": "Like, you know,"
+    },
+    {
+      "start": 2316.0,
+      "end": 2317.0,
+      "text": "there is a long list"
+    },
+    {
+      "start": 2317.0,
+      "end": 2318.0,
+      "text": "that,"
+    },
+    {
+      "start": 2318.0,
+      "end": 2319.0,
+      "text": "hey,"
+    },
+    {
+      "start": 2319.0,
+      "end": 2320.0,
+      "text": "this is not how it should be."
+    },
+    {
+      "start": 2320.0,
+      "end": 2321.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2321.0,
+      "end": 2322.0,
+      "text": "and you are discussing"
+    },
+    {
+      "start": 2322.0,
+      "end": 2323.0,
+      "text": "with us"
+    },
+    {
+      "start": 2323.0,
+      "end": 2324.0,
+      "text": "and the only person,"
+    },
+    {
+      "start": 2324.0,
+      "end": 2325.0,
+      "text": "like,"
+    },
+    {
+      "start": 2325.0,
+      "end": 2326.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2326.0,
+      "end": 2327.0,
+      "text": "you are asking,"
+    },
+    {
+      "start": 2327.0,
+      "end": 2328.0,
+      "text": "like,"
+    },
+    {
+      "start": 2328.0,
+      "end": 2329.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2329.0,
+      "end": 2330.0,
+      "text": "to fix this,"
+    },
+    {
+      "start": 2330.0,
+      "end": 2331.0,
+      "text": "is maybe Deepak"
+    },
+    {
+      "start": 2331.0,
+      "end": 2332.0,
+      "text": "in our presence,"
+    },
+    {
+      "start": 2332.0,
+      "end": 2333.0,
+      "text": "not even alone."
+    },
+    {
+      "start": 2333.0,
+      "end": 2334.0,
+      "text": "That's it."
+    },
+    {
+      "start": 2334.0,
+      "end": 2335.0,
+      "text": "You are basically saying,"
+    },
+    {
+      "start": 2335.0,
+      "end": 2336.0,
+      "text": "like,"
+    },
+    {
+      "start": 2336.0,
+      "end": 2337.0,
+      "text": "hey,"
+    },
+    {
+      "start": 2337.0,
+      "end": 2338.0,
+      "text": "you have hired me as,"
+    },
+    {
+      "start": 2338.0,
+      "end": 2339.0,
+      "text": "like,"
+    },
+    {
+      "start": 2339.0,
+      "end": 2340.0,
+      "text": "the brand head"
+    },
+    {
+      "start": 2340.0,
+      "end": 2341.0,
+      "text": "over here."
+    },
+    {
+      "start": 2341.0,
+      "end": 2342.0,
+      "text": "This is what is unacceptable"
+    },
+    {
+      "start": 2342.0,
+      "end": 2343.0,
+      "text": "from a brand standpoint."
+    },
+    {
+      "start": 2343.0,
+      "end": 2344.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2344.0,
+      "end": 2345.0,
+      "text": "you are not on the,"
+    },
+    {
+      "start": 2345.0,
+      "end": 2346.0,
+      "text": "like,"
+    },
+    {
+      "start": 2346.0,
+      "end": 2347.0,
+      "text": "the other thing"
+    },
+    {
+      "start": 2347.0,
+      "end": 2348.0,
+      "text": "over there is,"
+    },
+    {
+      "start": 2348.0,
+      "end": 2350.0,
+      "text": "you are not on a critical path"
+    },
+    {
+      "start": 2350.0,
+      "end": 2352.0,
+      "text": "in any area."
+    },
+    {
+      "start": 2352.0,
+      "end": 2353.0,
+      "text": "You are not."
+    },
+    {
+      "start": 2353.0,
+      "end": 2354.0,
+      "text": "Right."
+    },
+    {
+      "start": 2354.0,
+      "end": 2355.0,
+      "text": "So,"
+    },
+    {
+      "start": 2355.0,
+      "end": 2356.0,
+      "text": "so basically,"
+    },
+    {
+      "start": 2356.0,
+      "end": 2357.0,
+      "text": "like,"
+    },
+    {
+      "start": 2357.0,
+      "end": 2358.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2358.0,
+      "end": 2359.0,
+      "text": "you are not on a critical path"
+    },
+    {
+      "start": 2359.0,
+      "end": 2360.0,
+      "text": "and basically,"
+    },
+    {
+      "start": 2360.0,
+      "end": 2361.0,
+      "text": "like,"
+    },
+    {
+      "start": 2361.0,
+      "end": 2362.0,
+      "text": "sort of,"
+    },
+    {
+      "start": 2362.0,
+      "end": 2363.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2363.0,
+      "end": 2364.0,
+      "text": "the area where,"
+    },
+    {
+      "start": 2364.0,
+      "end": 2365.0,
+      "text": "sort of,"
+    },
+    {
+      "start": 2365.0,
+      "end": 2366.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2366.0,
+      "end": 2367.0,
+      "text": "the day-to-day execution,"
+    },
+    {
+      "start": 2367.0,
+      "end": 2368.0,
+      "text": "they handle on their own."
+    },
+    {
+      "start": 2368.0,
+      "end": 2369.0,
+      "text": "You are not,"
+    },
+    {
+      "start": 2369.0,
+      "end": 2370.0,
+      "text": "you are not involved"
+    },
+    {
+      "start": 2370.0,
+      "end": 2371.0,
+      "text": "at all."
+    },
+    {
+      "start": 2371.0,
+      "end": 2372.0,
+      "text": "KD has,"
+    },
+    {
+      "start": 2372.0,
+      "end": 2373.0,
+      "text": "I have a question,"
+    },
+    {
+      "start": 2373.0,
+      "end": 2374.0,
+      "text": "by the way."
+    },
+    {
+      "start": 2374.0,
+      "end": 2375.0,
+      "text": "This cannot happen,"
+    },
+    {
+      "start": 2375.0,
+      "end": 2376.0,
+      "text": "like,"
+    },
+    {
+      "start": 2376.0,
+      "end": 2377.0,
+      "text": "tomorrow."
+    },
+    {
+      "start": 2377.0,
+      "end": 2378.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2378.0,
+      "end": 2379.0,
+      "text": "KD needs to hire,"
+    },
+    {
+      "start": 2379.0,
+      "end": 2380.0,
+      "text": "or people needs to hire,"
+    },
+    {
+      "start": 2380.0,
+      "end": 2381.0,
+      "text": "like,"
+    },
+    {
+      "start": 2381.0,
+      "end": 2382.0,
+      "text": "a design person,"
+    },
+    {
+      "start": 2382.0,
+      "end": 2383.0,
+      "text": "like,"
+    },
+    {
+      "start": 2383.0,
+      "end": 2384.0,
+      "text": "a website design person"
+    },
+    {
+      "start": 2384.0,
+      "end": 2385.0,
+      "text": "as a backfill."
+    },
+    {
+      "start": 2385.0,
+      "end": 2386.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2386.0,
+      "end": 2387.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2387.0,
+      "end": 2388.0,
+      "text": "only then we can move you"
+    },
+    {
+      "start": 2388.0,
+      "end": 2389.0,
+      "text": "into this role."
+    },
+    {
+      "start": 2389.0,
+      "end": 2390.0,
+      "text": "Like,"
+    },
+    {
+      "start": 2390.0,
+      "end": 2391.0,
+      "text": "you know,"
+    },
+    {
+      "start": 2391.0,
+      "end": 2392.0,
+      "text": "so,"
+    },
+    {
+      "start": 2392.0,
+      "end": 2393.0,
+      "text": "so until then,"
+    },
+    {
+      "start": 2393.0,
+      "end": 2394.0,
+      "text": "we have to continue."
+    },
+    {
+      "start": 2394.0,
+      "end": 2395.0,
+      "text": "But,"
+    },
+    {
+      "start": 2395.0,
+      "end": 2396.0,
+      "text": "like,"
+    },
+    {
+      "start": 2396.0,
+      "end": 2397.0,
+      "text": "let's say that happens"
+    },
+    {
+      "start": 2397.0,
+      "end": 2398.0,
+      "text": "in the next 30 days."
+    },
+    {
+      "start": 2398.0,
+      "end": 2399.0,
+      "text": "But,"
+    },
+    {
+      "start": 2399.0,
+      "end": 2400.0,
+      "text": "after that,"
+    },
+    {
+      "start": 2400.0,
+      "end": 2401.0,
+      "text": "like,"
+    }
+  ],
+  "text": "if you have noticed something like that.\nYou and so on and so forth, right?\nWe sort of try something and then that doesn't work,\nthen we try something else and that doesn't work,\nthen we try something else.\nSo the first point is that both Neeraj and I,\nwe keep sort of coming up with creative approaches\non what can work, right?\nAnd the feedback that we are getting is the following.\nLike, you know, one is on the product side,\nlike, you know, there are two areas, right?\nLike, you know, which is the feedback is like, you know,\nwhen you and Linda, when you guys are working\nas a team individually, just the two of you,\nthen sort of, you know, it is workable,\nbut then like, sort of, you know,\nsomebody needs to spend a lot of energy.\nThat's just the feedback we are hearing.\nThen somebody needs to expend a lot of energy,\nlike, you know, in managing you guys.\nAnd that bandwidth, like, you know,\nwe don't have that surplus bandwidth,\nlike, you know, anywhere in the organization.\nLike, when it was in product, then basically like,\nyou know, Abhil had to like spend that bandwidth.\nHe doesn't have that bandwidth.\nWhen we have it in like marketing,\nthen either Deepak or, you know,\nVikram has to spend that bandwidth.\nThey don't have that bandwidth.\nAnd on the other hand, like, you know,\nin the past we tried sort of, you know,\nhaving you manage like a department or a team,\nwhether it is product design or,\nand the feedback there is, like,\nthere is just too much risk that we will again lose the team.\nRight, right, right.\nYeah, but no, okay, okay.\nBut that's not kind of the conversation\nbecause I have been in this conversation\nmore times than I can think of, right?\nSo I've heard this from you more times than I can think of.\nAnd I know it's,\nwhat the conversation that I wanted to have with Tiffany,\nthat's why I reached out, was like,\nhey, the past,\nwe have spent an uncountable number of hours,\nright, and energy.\nAnd that's also like what affects me, right?\nSo with her, I was more like,\nwe also had this meeting, right, last year,\nthe Step Out and Move On,\nabout this or about some of this, right?\nSo what the type of conversation that I had with her\nis like, what does the future look like?\nBecause, you know,\nresurfacing 14 years of these conversations,\nit's not easy, right?\nSo with her, I was like, okay,\nwhat, you know, this is not sustainable.\nEven going through this kind of conversation is hard for me, right?\nSo, and that's also one of the reasons it makes it unsustainable.\nSo with her, I was like, hey,\nwhat is the path forward to this?\nRight?\nYeah, so I think like, so there are, like, if we level up, right,\nI think from what I can see is,\nI think there is certainly not a path within the design organization\nin terms of like marketing design.\nI think there is a lot of, like, friction between you and JD,\nlike, you know, to a point where it's gone to a point of no return, right?\nYou know, that is what has happened.\nSo, so like, I think we understand that.\nAnd like, hopefully you agree with that as well.\nI am the one that actually raised it.\nSo, yeah, I mean, like, it's not just you, like, you know, she,\nlike, you know, if we try to force the issue, she will also resign.\nSo, so it's like, so it's on both sides, right?\nSo, so that is, so that's the point of no return over there.\nNow, the second area on the product design side,\nsort of, you know, like, day to day is a point of no return.\nLike, we certainly cannot have Anil, like, you know, work on,\nsort of, you know, you and Balaji are like,\nthat is point of no return.\nAnd we also cannot most 9% sure that Balaji or Rupa,\nthey would not be okay reporting to you.\nSo, so that is also like the point that I was discussing today\nwith Dave was the whole point that we set you up was like,\nhey, maybe he's our brand leader.\nAnd like, he's like an agency.\nHe and Linda, they're an agency.\nThey drive the design direction like end to end.\nBut in that case, you have to report to like, either like\na day, like, you know, and basically you are not involved in day to day.\nSo on day to day, sort of, you know, on the product side,\nlike Anil is working directly with Balaji, Rupa and those guys.\nAnd like, you know, on the design side,\nso on the designs, on the marketing side,\nsort of, you know, KD hires someone like, you know,\nand they run their own website.\nWhat you are providing is you are providing the overall\ndesign guidelines, both on the website as well as the product design.\nAnd basically, you are documenting it without worrying about,\nlike, what is shipped or not shipped.\nYou don't care about what is shipped or not shipped.\nSo, yes.\nSo, yeah, we are sort of aware of these,\nyou know, aspects of these dynamics and events.\nSo that's why, again, I reached out to Tiffany.\nAgain, in the sense the conversation was, you know,\na lot has happened over 14 years, not just three years, one year, two weeks.\nFourteen years.\nYou know, on my side, right, it's been building up.\nAnd then teams were removed, you know, with step up conversation,\nthe motion, compensation change, bonus removed, right?\nBecause that's also on my side.\nIt's not that that just happened on one side.\nSo, you know, when you put all together, right,\nit's not a situation that's sustainable in the future, like, forward.\nSo, you know, what I was asking her,\nis it possible to structure respectful, reasonable, you know, transition, right?\nThat's what I was asking her.\nSo I think like there are two paths, right?\nAnd I'll give you both the paths and you can pick like any of those paths, right?\nThere is one path where we structure a transition.\nI'm very much open to that.\nI'm not opposed to it at all.\nSo in that path, we figure out, like, you know,\nhow do we hire a backfill, like, you know, in the current role,\nlike, you know, how do we set that up for success?\nAnd then like, you know, how do we structure like the substance for you\nand like, you know, how do we transition?\nThat's one path.\nLike, I'm open to that.\nAnd like, you know, if you prefer that, I'll be fully supportive.\nAnd I'll be supportive not with any grudge, like, you know,\nI've been very fond of you for many, many, many years.\nThe only reason you've been here for 14 years is because one,\nyou wanted to be here and two, Neeraj and I wanted you here.\nThere is no other reason, right?\nSo that's the only reason and that's the only possible explanation.\nI fought for you with the board members multiple times, multiple times.\nSo I think if the time has come and if you are fully sure of that,\nlike, you know, then as a friend, I will not stop you at all.\nI will basically be really happy that you do something else\nthat keeps you better happy, like, more happy, whatever.\nI think, you know, I'm totally fine with that.\nSo that's option one.\nLike, you know, in that option, again, two things we should do.\nOne is we should backfill you first, like, you know,\nDeepak and his team, like, you know, they are not affected.\nAnd then we should structure, like, the subjects and all of that\nso that you are not impacted.\nSo that's option one.\nOption two is, like, you know, we have spent 14 years\nand as you can imagine, like, you know,\ninvestors also have, like, a timeline, right?\nLike, you know, there is no investor which will say,\nlike, hey, go 20 years, 40 years.\nInvestors also have timelines.\nSo over the next year or two, like, some event will happen.\nSome event will happen over the next year or two.\nSo we are becoming an agentic company.\nLike, we are doing pretty well.\nLike, you know, this year we will be, like, you know,\nfully agents, like, full agentic company.\nSo, like, you know, at that point, like, you know,\nobviously the multiples will be a lot higher than what any company.\nIf you go right now, you go to look at the valuations,\nlike, UpSpot is down, like, probably, like, 70, 80 percent\nover the last few years.\nLike, you know, in the last one year, they are down 60 percent.\nLike, you know, Salesforce same, Threshworks same.\nLike, I was looking at Threshworks down 60 percent,\nlike, you know, last one year, 80 percent, like, last three,\nfour, five years.\nLike, every company is the same.\nSo, obviously, the market is brutal right now.\nIt does not matter where you go, what you do.\nSo, but, like, you know, if we can be a pure agentic company,\ncould be, like, a lot better.\nAnd, like, in a year or two, you will have your story complete\nrather than, sort of, you know, now going somewhere.\nBecause the reality is, and I'll come to that part as well,\nwhich will help you make a decision.\nBut the second part is, we create a role for you,\nwhich is like a brand role outside of day-to-day execution.\nIn that role as well, what we will need to do is,\nwe will have to take you out of marketing.\nAnd basically, like, have a backfill\nfor KD who does the website.\nSo, you're not involved in website.\nYou're not involved in product.\nBut you are the brand leader, the overall design architect.\nAnd you are doing, like, as an agency,\nyou are doing, like, you know, the overall brand,\nwhether it is T-shirt, whether it is direction,\nbrand book, sort of, you know, website concepts,\nproduct concepts, agent concepts, like end-to-end.\nThat's what you and Linda are doing.\nLike, in that format, you are not dealing with any of these guys.\nYou are not dealing with KD.\nYou are not dealing with Vikram.\nYou are not dealing with Deepav.\nYou are not dealing with any of them.\nYou are not dealing with Anil.\nYou are only dealing with Dave Neeraj and myself.\nThat's it.\nSo, that is the option two.\nYou can choose between option one and option two.\nI will not influence you.\nIt will be your choice.\nNow, let me also give you, like, you know,\nsome other reality check.\nPart of, like, you know, I don't know, like, you know,\nwhere the friction has been.\nBut part of what I am also hearing is, like, you know,\nthe production has gone down a lot.\nLike, you know, we have to be on his case every day,\nonly then he produces.\nAnd if I tell him to produce, like,\nlike two items in a week,\nthen he produces two items, not a third one.\nSo, like, you know, the reality of it is,\nwe go anywhere you go right now.\nI don't know if you want to retire.\nHopefully not.\nLike, you know, but if you go somewhere,\nlike, you know, right now, given how the market is,\nanywhere you go,\nit will going to be a lot of work,\na lot of, like, heads down, like, you know, hard work.\nSo, as you choose between option one and option two,\nthat will not be an alternative,\nneither at Berta, not somewhere else.\nSo, especially right now, given the market.\nIt's, it's, it's in the, you make this comment.\nBut, yeah, no, I think, you know, we,\non that side, we derail,\nbecause it's very interesting that you say that to me, right?\nBut I don't take the bait.\nI think I don't take the bait in the sense that\nI just tell you that I've been doing this\nin this company for 14 years.\nAnd I do fully agree with you.\nThe pace of execution is a fraction,\nis a fraction with the, on two digits\nof what it used to be.\nAnd I can guarantee you it is not me.\nI can guarantee you it is not me.\nI leave it, I don't, I don't go into the whys,\nbut trust me, I'm very on the piece every day.\nI work with a lot of teams.\nAnd I tell you this, again,\nas someone that has been here for a long time,\nthe, the execution is a fraction of what it should be.\nThere is a lot of, how can I say it properly?\nThere's a lot of hiding, but it's not me hiding.\nThat, I just tell you that.\nAnd we know intention, it's not about me, right?\nI know that I'm very aware of what you said about me.\nBut I'm telling you, that is what I see.\nAnd I tell you what I see based on a person\nthat has been here for 14 years,\nhas equity in the company,\nso has all the interest in the world,\nbecause no one else than me has more interest\nthan this company is successful.\nNobody else, because I have equity, right?\nSo that's the perspective that I'm giving you this feedback from, right?\nThen there is a lot of individuals right now in the company,\nway more than in the past,\nthat has no interest in the company's success.\nAnd I leave it at that.\nYeah, so I think, again,\nRemember we talked about a lot, oh, is it a job?\nOr is it a, you know,\nwe talked about it for many, many years and many, many times.\nNow there's a significant part of our workforce\nfor which Berta is a job,\nlike any other job,\nlike any other job.\nAnd the job is a job.\nAnd if they can hide,\nand if they can hide, they will hide.\nAnd by the way, like, you know, Pietro, just so you know,\nI'm not disagreeing on that.\nJust so you know,\nwe are clamping down on that as well.\nSo today you saw like, you know, Samira moved on.\nWhat do you think happened there?\nI'm not aware.\nI don't know.\nI just, I was just surprised.\nSo she has been with us for four and a half years.\nAnd basically like, you know, again, too many heads,\ntoo many people hiding.\nAnd basically we told Amaya, you choose, like, you know,\nwho's running this apps.\nIs it Ganesh? Is it her?\nHe says it's Ganesh.\nLike, okay, then move it out.\nThe last couple of months,\nwe put her into like program management role,\nlike, you know, under Navin DS.\nAnd basically it didn't work out either.\nAnd now she's gone.\nAnd we obviously have made it very sort of, you know,\nvery polite and like, you know, very respectable.\nFrom that standpoint, you know, we are clamping down,\nyou know, both Neeraj and I prideful of like, you know,\nwe don't want to have sort of, you know,\npeople parked over here.\nAnd that sort of, you know,\nwe are very clear irrespective of the level.\nLike, you know, we don't care about like what level it is.\nLike, you know, we don't want to have people parked over here.\nSo that is for sure.\nLike, you know, you know that about us,\nlike, you know, from the very beginning.\nRight.\nBut again, going back to us,\non that particular,\non that particular what you said, right?\nThat was, that is my response.\nAnd it is not a response intended to like defend myself or something.\nIt is just, again, candid,\ncandid something that I want to tell you as the CEO and founder,\nfrom the perspective of someone that's been here for a long time\nand is in a lot of these daily meetings on execution and all that.\nThat's what I think.\nYou know, like personally, I think like, you know,\nlooking at everything like this is what I would say.\nI would say sort of, you know,\nlike I like, you know, between us, right?\nLike, you know, I have the full picture of like, you know,\nwhere we have been, where we have come from,\nlike, you know, what has transpired.\nWe know everything.\nWe don't need to discuss.\nRight.\nWe have all the context.\nI personally would love for you to see through,\nlike, you know, this over the next year or two until like,\nyou know, we have exit.\nLet's see.\nTrust me.\nFor that, for that, like, you know,\nwhat I think could be like multiple things.\nThose have not worked.\nThere is one thing that we have not tried,\nwhich I want to give it a go because it is sort of,\nyou know, because it is an important area and because I think like,\nyou know, we need that.\nLike, you know, I would love to like, you know,\nput you as like in the brand roles, like, you know, under Dave.\nI still need to talk to him, by the way.\nI don't know.\nLike, if he is good, hopefully he will be.\nBut like, you know, so now, like, you know, in that role, right?\nYou are not working with anyone.\nYou are just working with me and Dave.\nThat's it.\nRight.\nMe, Dave, and probably Neeraj.\nThat's it.\nAnd I would love that.\nAnd I would love that.\nI know you.\nI know Dave.\nYou know, we have long history and we have nothing but respect for each other.\nRight.\nYes.\nThat is, that is right.\nNo, no, no.\nBut the reason is also sort of, you know,\nthere are two other reasons for this.\nWhen it comes to like Anil, when it comes to Deepak, right?\nThey are both like, you know,\nthey have like a lot of experience in their own areas,\nbut neither has an experience in your area.\nRight.\nYou know?\nThen.\nSo like, so that's why, like, for example, Deepak,\nDeepak is your stereotypical like demand generation leader.\nRight.\nRight.\nLike, you know,\nand I told him this today and I told Dave this today.\nI'm like, look, when you think about design,\nif you as a CMO,\nif you are okay with eight or 10 different buttons in one frame,\nwhere you have like two or three different buttons that say watch demo,\nyou have two or three different buttons that say watch pricing.\nYou have two different buttons, which is like basically like,\nyou know, I'm talking about the same frame.\nI've opened up a website in the same frame.\nThere are eight buttons over there.\nIf you as a CMO are okay with that,\nwhat that is telling me is you don't care about design as much.\nWhat you care about is just conversion.\nSo then it is taking me back to like my Yahoo days,\nwhere you had like the flying fans,\nlike the saucers like on the right side,\nlike, you know, those ads,\nwhich were like gimmicky ads to like get the conversion.\nRight.\nLike, so, so you don't, you don't care about that.\nSame with like on the design side,\nlike, you know, it's they don't,\nthey don't care as much like the PMs as well.\nThey don't care about like, you know, what is going on,\nhow to make it great.\nAnd good for you.\nOr fortunately for you,\nI am obsessed with like, you know, design.\nI spend like, if you go,\nif you go look at my calendar right now,\nif you looked at my calendar,\nI spend sort of, you know,\nat least two to three hours every night with designing.\nBalaji, Rupa.\nAnd every night I am spending two to three hours,\nyou know, with them.\nI know you for,\nyou are the first,\none of the first people that I met when I moved here.\nSo I've known him for 15 years.\nAnd you are the most design-obsessed,\none of the most design-obsessed people I can see.\nDo you think I don't see the comments\nthat he put in the R&D leadership group?\nThe kind of, I use which from like going,\nbecause I see also like,\nI'm one of those that check glib as it pops, right?\nWhen glibs pops, I read a message.\nI know, I know, I know.\nSo I can see,\nI can see that you are in three glibs at the same time.\nYou are in else stuff, posting about strategy,\nthen you are in the sales and posting about,\nyou know, executions, everybody.\nAnd then you go and,\nand there's always, you know,\na pixel perfection and Navin has seen somewhere\nand he is, so that is obsession.\nIt is good obsession.\nSo that is what I'm saying.\nAnd what I also see is,\nI see like, you know, that same passion in Dave as well,\nbecause when I look at sort of, you know, him, right,\nand I look at like SK or I look at something else,\nlike, you know, typically you would think like,\nyou know, that the head of marketing\nor like someone else marketing people will be able to like,\nyou know, they are supposed to create\nthe most beautiful slides,\nlike, you know, themselves, right?\nWhereas what I see over here is like, you know,\nwhen we have a deck,\nwhether it is a boat deck,\nwhether it is an SQ deck,\nwhether it's an all hands deck,\nwhat I feel most comfortable after myself is like,\nyou know, Dave, can you take care of the deck?\nYou know, I also trust him.\nHe has that same high taste.\nAnd basically like, you know, he's also looking for,\nlike he values design.\nHe values design.\nI know, I know.\nHe always, he always glips me directly all the time.\nYou know, I know that.\nLike, you know, working with him and like owning the brand,\nbasically what we are saying is,\nthis is the message that we are giving you.\nWe are saying, and by the way,\nPietro, all of this, right?\nI have not discussed with anyone yet.\nBecause I wanted to talk to you first,\nbecause like, you know, if your,\nif your decision is I want to like move on,\nthen I don't want to have this discussion with anyone,\nright?\nSo like, so the, so the,\nso the thing here is what,\nthe reason I think it will be valuable for the company\nis the following.\nTo have like a czar who is basically controlling the\noverall brand for BirdEye across the board.\nLike for example, yesterday,\nlike Balaji was talking to me about like,\nlike, you know, in this sort of new design system,\nlike, you know, we are thinking about like,\nyou know, next quarter, like, you know,\nmoving to inter or this or that, like all of that stuff.\nSo the first thing I told him is like,\ngo work with Pietro so that like, you know,\nwe have consistency across website,\nacross this, across that.\nSo for now, like, you know, as a design,\nas a design architect or as a brand,\nwhether it is product,\nwhether it is for a website,\nwhether it is somewhere else.\nLike, you know, one of the,\none of my pet peeves is like our t-shirts,\nlike, you know, that we,\nthat we give, they are so ugly.\nLike, you know, across, how can we,\nthat's our brand.\nLike, you know, what do we stand for?\nLike, do we stand for those ugly t-shirts,\nlike, you know, that is something else.\nLike, you know, Tiffany sitting in,\nlike, you know, in Dallas,\nlike, those guys are not as sophisticated.\nLike, their tastes are not as sophisticated.\nSo police, like, you know,\nwho basically can sort of, you know,\nown all of that.\nRight.\nYou know.\nLet's see this.\nAnd I love what you're saying.\nI love what you're saying.\nI really like it.\nNow, there's another aspect to this whole situation\nbecause again, it's so many layers right now.\nAnd there's so many layers.\nAnd the one layer,\nI know you told me,\nhey, you cannot bring it up all the time.\nYou cannot bring it up all the time.\nYou cannot bring it up.\nAnd I am,\nand I apologize if I brought it up\nwith a few different people.\nMaybe not too many.\nI brought it up with Anil.\nI brought it up with Deepak.\nAnd I brought it up with Young.\nAnd you.\nWhich is my mom.\nRight.\nAnd,\nand you say,\nhey, say not two years.\nYou know,\nI'm living in that situation.\nIt's,\nI don't know if it's the easier one or the other one.\nIn the sense that,\nyou know,\nin January,\nI don't remember if I told you that in January she got,\nshe went into kidney failure.\nRight.\nShe was out for two weeks.\nAnd then she came back.\nThen she came back.\nNow she's,\nshe's back.\nBut it's a situation.\nIt's,\nit's really hard.\nRight.\nAnd I've been here\nsince 2011.\nRight.\nAnd I know,\nyeah,\nwe call,\nwhat's up,\nand this and that.\nBut,\nand I go back,\nyou know,\nlike in March,\ntry to go back.\nBut it's man,\nit's,\nand I know,\nbecause she's 92.\nI know,\nyou know,\nwhere I'm going.\nAnd I've been trying to,\nyou know,\nsort of\ngo,\nlike,\ncarve time.\nRight.\nBut,\nit's been\nso difficult.\nRight.\nSo difficult.\nAnd one of the next thing,\nas I was thinking about it,\nbecause I put a lot of thinking,\neven, you know,\ngetting,\nand like, you know,\nand finally\ncalling Tiffany,\nand it's like,\nhey, if this ends,\nthat's the first thing I do.\nI take,\nI get a plane ticket to Italy.\nI just go\nand just stay with her.\nThat's what,\nI don't give it,\nyou know,\nnot,\nthe first thing that I would do,\nright,\nif I'm not longer employed,\na bird died.\nI would not be on LinkedIn,\nbragging or looking for jobs.\nYou know,\nand it's not even about,\nyou know,\nit's not\nreally about\nmaking an,\nI told her today,\nI think I used this word,\nand it just came out of my head.\nI told her, like,\nit's not about\nhaving an exit.\nYou know,\nit's about\nkind of\ntransitioning,\nyou know,\nin a respectful\nand reasonable,\nyou know,\nlike way,\nlike,\nyou know,\nthat's,\nthat's what I remember\ncame out\nwhen I was talking to her.\nAnd one of the,\nand she asked me like,\noh, you want to retire?\nI was like,\nyou know,\nI don't know what I'm doing.\nIt's not,\nit's not about\nthat.\nIt's about,\nI think on that side,\nright,\nyou know,\ndo you have,\nthere are two things,\nright?\nOne is,\nI want to,\nlike,\nlike,\nlet's sort of play it out,\nright?\nSo let's say you,\nyou've moved on.\nNow,\nthe next question is,\nlike,\ndo you\nlook for a job?\nDo you not look for a job?\nOr do you just go to Italy\nand like,\nstay with your mom?\nThen the next question is,\nokay,\nlike,\nwhich is reasonable,\nhow long do you stay there?\nDo you stay there for a month?\nThree months?\nSix months?\nOne year?\nTwo years?\nThree months,\nfor sure.\nOne to three months,\nfor sure.\nOne to three months,\nfor sure.\nLike a short,\nI mean,\nit's not a long period.\nIt's not a short period.\nAnd I plan to use,\nI have very little savings,\nright?\nI plan to use those.\nI'm not desperate.\nI'm not rich.\nI'm not desperate.\nYou know,\nbut,\nSo then I think,\nlike,\nyou know,\nthat again,\nlike,\nyou know,\nif you want to,\nyou can do that here.\nLike,\nyou know,\nmove or,\nlike,\nyou know,\ngo there for,\nlike,\nthree months,\nlike,\ntake time off.\nLike,\nyou know,\ngo there for two,\nthree months.\nLike,\nyou know,\nthat you can do anyway.\nSo I don't think,\nI don't think you should tie it.\nI don't think you should tie it up.\nYeah, yeah.\nI think the,\nyeah,\nI think the,\nI think,\nlike,\nit's basically like,\nthere are two,\nwith a very clear mind,\nyou should think about two options.\nOne,\neither time off from here,\nor like,\nyou know,\nI'm no longer employed.\nI can go.\nLike,\nlike,\nspending time with your mom\nis an option in both the cases.\nI don't think,\nlike,\nyou know,\nthat's the,\nthat is better in one way or another.\nThe real options are,\nsort of,\nyou know,\nonce you come back\nafter spending time with your mom,\nin one case,\nyou basically get into a new job.\nIt is a fresh start.\nYou are basically,\nlike,\nyou know,\nall in,\nlike,\nat another company,\nlike,\nyou know,\nagain,\nvery little\npolitical capital with anyone.\nSo you're starting from zero,\nright?\nYou are building it up,\nagain.\nAnd basically,\nlike,\nyou know,\nin some ways,\nit's like,\nyeah,\nit's a clean start.\nThat's the positive.\nAnd I'm sort of,\nyou know,\nworking for the next\n10,\n15,\n20 years,\nwhatever you want to work.\nLike,\nand there are positives there,\nthere are negatives there.\nThe other is,\nlike,\nhey,\nwe have come so far,\nand we are at,\nlike,\nfive-yard line,\nlike,\nyou know,\nany which way you look at it,\nlike,\nyou know,\nand the most easiest way is,\nlike,\nyou know,\ninvestors don't have,\nlike,\nyou know,\nan unlimited timeline\nthat they invest for.\nSo, like,\nyou know,\nwe are getting there\nin that,\nin that zone.\nAnd the company is doing well.\nWe are doing the best in our,\nsort of,\nyou know,\n67 million dollars in cash.\nSo, like,\nwe are a ton of cash.\nLike,\nin fact,\nlast year we started at 58.\nNow we are 60.\nSo,\nin the last one year or so,\nwe have generated\n10 million dollars in cash.\nSo,\nyeah,\nyou know,\nthe company,\nthe company is doing well.\nNow,\nlike,\nyou know,\nyou get into,\nlike,\na role\nwhich does not\ntest you out.\nLike,\nyou know,\nwhich is,\nlike,\nnobody else.\nAnd no day-to-day.\nThere is no day-to-day.\nThere is,\nlike,\nyou know,\nwe set up,\nlike,\nsort of,\nyou know,\ntwo-week plans.\nLike,\nwe set up,\nlike,\ntwo-week spends.\nThere is just one meeting,\nlike,\nyou know,\nevery two weeks\nwhere you are basically,\nlike,\nreviewing.\nYou and Linda are working on\nthe direction of the company,\nlike,\nyou know,\nthe brand.\nAnd,\nyou are basically saying,\nlike,\nhey,\nwe are up-leveling the brand.\nWe are going to take\na version of\nwhat is there,\nthe messaging\nor whatever.\nWhatever is there\non the website,\nwe are going to take it.\nWe are going to show,\nlike,\nyou know,\nas an agency,\nhow we can up-level it\nat the next level.\nYou review with me\nand Dave,\nand that's about it.\nYou don't need to,\nin that meeting,\nyou don't even need\nDeepak or anyone else.\nLike,\nyou just review with Dave\nand myself.\nAnd, like,\nwe are not saying,\nlike,\nhey,\nthis is the new\ndesign direction.\nWe basically tell\nDeepak and others,\nlike,\nhey,\ntake this\nwith your designer.\nAnd, again,\nwe are not saying\nthey don't have designers.\nThey have their entire\nweb team\nthat they need to manage.\nYou have nothing to do with it.\nLike, you know,\nKatie can hire a designer.\nWe have already\nlet Jeff go.\nLike, you know,\nwhether Katie works\nwith Mutu\nor she has a\ndesigner over here.\nJeff is gone?\nYeah,\nreally?\nI think, like,\nI think,\nI didn't even know.\nYeah.\nShe didn't even mention.\nYeah.\nI think, like,\nit is recent.\nI don't know if,\nlike, you know,\nwhen was his last day.\nBut I know he's gone.\nSo,\nyeah,\nso,\nso basically,\nlike, you know,\nso Katie can have\nher own designer.\nLike, you know,\nwork with Mutu,\nwhatever they want to do.\nThat is not\nyour problem at all.\nRight.\nBut,\nI see where you're going.\nIt's,\nflattering on one side.\nIt's\nthe way I see it now.\nBecause, again,\nlet me\nplay ball here.\nYou know,\nit's\nreally nice on one side.\nThen I can\nimmediately see in my head\nwhat,\nlike,\nlike the potential fire\nthat this causes.\nRight?\nIf I'm an employee.\nIf I'm an employee.\nBecause I can immediately see,\nlike, a lot of\nit's,\nyou know,\nyou know,\nin a way,\nthe way I see it,\nit's almost like an advisor position.\nLike, when you,\nremember when we hired Nisha?\nCorrect.\nCorrect.\nSorry.\nOkay.\nBring her in the room.\nShe,\njust speak.\nShe's not an employee.\nShe can say whatever the fuck she wants.\nRight?\nAnd that's,\nand that's,\nthat's obviously a good side of that.\nSo,\nmaybe that's,\nthat's\nalso,\nlike,\nsomething.\nBecause we want to,\nlike, you know,\nthe only reason\nto create this,\nlike,\nthe only reason\nto create this role,\nin my mind,\nlike, you know,\nI've told you\nthe benefits for you.\nRight?\nNow,\nlet me tell you the benefits for me\nand the company.\nI want to create,\nlike,\nan oversight,\na quality oversight,\nwhich,\nlike,\nyou know,\nyou are the eyes and ears\nfor that quality oversight,\nwhich is,\nlike,\nyou know,\nif the website is broken\nor if something else is broken.\nRight?\nLike, you know,\nthere is a long list\nthat,\nhey,\nthis is not how it should be.\nLike,\nand you are discussing\nwith us\nand the only person,\nlike,\nyou know,\nyou are asking,\nlike,\nyou know,\nto fix this,\nis maybe Deepak\nin our presence,\nnot even alone.\nThat's it.\nYou are basically saying,\nlike,\nhey,\nyou have hired me as,\nlike,\nthe brand head\nover here.\nThis is what is unacceptable\nfrom a brand standpoint.\nLike,\nyou are not on the,\nlike,\nthe other thing\nover there is,\nyou are not on a critical path\nin any area.\nYou are not.\nRight.\nSo,\nso basically,\nlike,\nyou know,\nyou are not on a critical path\nand basically,\nlike,\nsort of,\nyou know,\nthe area where,\nsort of,\nyou know,\nthe day-to-day execution,\nthey handle on their own.\nYou are not,\nyou are not involved\nat all.\nKD has,\nI have a question,\nby the way.\nThis cannot happen,\nlike,\ntomorrow.\nLike,\nKD needs to hire,\nor people needs to hire,\nlike,\na design person,\nlike,\na website design person\nas a backfill.\nLike,\nyou know,\nonly then we can move you\ninto this role.\nLike,\nyou know,\nso,\nso until then,\nwe have to continue.\nBut,\nlike,\nlet's say that happens\nin the next 30 days.\nBut,\nafter that,\nlike,"
+}

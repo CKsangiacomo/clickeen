@@ -66,6 +66,4 @@ Logs/
 prague-strings/compiled/
 
 # User-uploaded assets (local dev only; served by Tokyo dev server)
-tokyo/workspace-assets/
-tokyo/curated-assets/
 tokyo/arsenale/

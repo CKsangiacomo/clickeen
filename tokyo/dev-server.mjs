@@ -387,8 +387,6 @@ function normalizeCanonicalArsenalePath(rawPath) {
   if (!value) return null;
   if (value.startsWith('/arsenale/o/')) return value;
   if (value.startsWith('arsenale/o/')) return `/${value}`;
-  if (value.startsWith('/assets/accounts/')) return value.replace(/^\/assets\/accounts\//, '/arsenale/o/');
-  if (value.startsWith('assets/accounts/')) return `/${value.replace(/^assets\/accounts\//, 'arsenale/o/')}`;
   if (/^https?:\/\//i.test(value)) {
     try {
       const parsed = new URL(value);
@@ -457,9 +455,6 @@ function shouldProxyMutableToWorker(req, pathname) {
     return true;
   }
   if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/arsenale/o/')) {
-    return TOKYO_ASSET_BACKEND_MODE === 'worker';
-  }
-  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/assets/accounts/')) {
     return TOKYO_ASSET_BACKEND_MODE === 'worker';
   }
   if ((req.method === 'POST' || req.method === 'DELETE') && pathname.startsWith('/l10n/instances/')) {
@@ -595,13 +590,10 @@ function serveStatic(req, res, prefix) {
   const relativePath = relativePathPosix; // keep naming for existing logic
   const cacheControlFor = () => {
     // Cache policy:
-    // - Workspace uploads are content-addressed by assetId; cache aggressively to avoid "flash" on load.
+    // - Account-owned uploads are content-addressed by assetId; cache aggressively to avoid "flash" on load.
     // - i18n bundles are content-hashed; cache aggressively (manifest is the short-TTL indirection layer).
     // - l10n overlays are content-addressed; cache aggressively (index.json is short-TTL).
     // - Dieter/widget assets are edited frequently in dev; allow caching but require revalidation to avoid staleness.
-    if (prefix === '/workspace-assets/') {
-      return 'public, max-age=31536000, immutable';
-    }
     if (prefix === '/arsenale/') {
       return 'public, max-age=31536000, immutable';
     }
@@ -685,12 +677,9 @@ const server = http.createServer((req, res) => {
   if (
     TOKYO_ASSET_BACKEND_MODE === 'mirror' &&
     (req.method === 'GET' || req.method === 'HEAD') &&
-    (pathname.startsWith('/arsenale/o/') || pathname.startsWith('/assets/accounts/'))
+    pathname.startsWith('/arsenale/o/')
   ) {
-    const canonicalPath = pathname.startsWith('/assets/accounts/')
-      ? pathname.replace(/^\/assets\/accounts\//, '/arsenale/o/')
-      : pathname;
-    serveArsenaleWithWorkerFallback(req, res, canonicalPath).catch((err) => {
+    serveArsenaleWithWorkerFallback(req, res, pathname).catch((err) => {
       res.statusCode = 502;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       sendJson(res, 502, {
@@ -743,17 +732,6 @@ const server = http.createServer((req, res) => {
         error: 'WORKER_PROXY_FAILED',
         detail: err instanceof Error ? err.message : 'Bad gateway',
       });
-    });
-    return;
-  }
-
-  if (req.method === 'POST' && pathname === '/workspace-assets/upload') {
-    sendJson(res, 410, {
-      error: {
-        kind: 'DENY',
-        reasonKey: 'tokyo.errors.assets.legacyUploadRemoved',
-        detail: 'Use POST /assets/upload',
-      },
     });
     return;
   }
@@ -991,25 +969,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === 'POST' && pathname === '/curated-assets/upload') {
-    sendJson(res, 410, {
-      error: {
-        kind: 'DENY',
-        reasonKey: 'tokyo.errors.assets.legacyUploadRemoved',
-        detail: 'Use POST /assets/upload',
-      },
-    });
-    return;
-  }
-
   if (
     serveStatic(req, res, '/dieter/') ||
     serveStatic(req, res, '/i18n/') ||
     serveStatic(req, res, '/l10n/') ||
     serveStatic(req, res, '/themes/') ||
-    serveStatic(req, res, '/widgets/') ||
-    serveStatic(req, res, '/workspace-assets/') ||
-    serveStatic(req, res, '/curated-assets/')
+    serveStatic(req, res, '/widgets/')
   ) {
     return;
   }

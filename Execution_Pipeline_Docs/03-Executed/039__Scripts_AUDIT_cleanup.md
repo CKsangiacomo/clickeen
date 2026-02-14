@@ -28,7 +28,7 @@ Legend:
 - `scripts/infra/ensure-queues.mjs` → workers workflow
 
 **Scripts with CI conflicts/warnings:**
-- `scripts/prague-l10n/watch.mjs` → do NOT run during CI deploys (race condition on overlay files)
+- `scripts/[retired]/prague-l10n-watch` → do NOT run during CI deploys (race condition on overlay files)
 
 **Known gaps exposed by CI/CD:**
 - **Safety gate:** `scripts/infra/ensure-queues.mjs` requires explicit `--write` to create queues; deploy scripts pass `--write` so CI can safely re-run.
@@ -102,21 +102,21 @@ Legend:
 - **Used or not:** **Used** (`pnpm build:l10n`).
 - **Services touched:** Local filesystem.
 
-## 11 - scripts/l10n/pull.mjs
+## 11 - scripts/[retired]/l10n-pull
 - **What it does:** Pulls curated overlays from Supabase into `l10n/instances`.
 - **Used or not:** **Ad‑hoc** (manual maintenance).
 - **Services touched:** Supabase REST (`widget_instance_overlays`).
 
-## 12 - scripts/l10n/push.mjs
+## 12 - scripts/[retired]/l10n-push
 - **What it does:** Pushes local l10n overlays to Supabase with allowlist checks.
 - **Used or not:** **Ad‑hoc** (manual maintenance).
 - **Services touched:** Supabase REST (writes overlays).
 
-## 13 - scripts/l10n/translate-instances.mjs
+## 13 - scripts/[retired]/l10n-translate-instances
 - **What it does:** Generates missing locale overlays for checked-in curated instances under `l10n/instances/**/locale/*.ops.json` by calling the local/dev San Francisco translate endpoint.
 - **Used or not:** **Ad‑hoc** (manual maintenance / locale expansion helper).
 - **Services touched:** San Francisco translate endpoint (local/dev), local filesystem (`l10n/instances`).
-- **Safety:** Does not write to Supabase; pushing overlays remains an explicit separate action (`scripts/l10n/push.mjs`).
+- **Safety:** Does not write to Supabase; pushing overlays remains an explicit separate action (`scripts/[retired]/l10n-push`).
 
 ## 14 - scripts/prague-l10n/lib.mjs
 - **What it does:** Shared helper library for Prague l10n translation/verify/migrate.
@@ -138,7 +138,7 @@ Legend:
 - **CI requirements:** Must exit non-zero on validation failure to block deployment.
 - **Idempotency:** Read-only; safe for repeated execution.
 
-## 17 - scripts/prague-l10n/watch.mjs
+## 17 - scripts/[retired]/prague-l10n-watch
 - **What it does:** Watches base/allowlist/overlay files and reruns translate/verify.
 - **Used or not:** **Ad‑hoc** (manual dev convenience). **NOT for CI.**
 - **Services touched:** San Francisco translation API (optional), local filesystem.
@@ -162,9 +162,9 @@ Legend:
 - **Used or not:** **Ad‑hoc** (no wiring).
 - **Services touched:** Local filesystem.
 
-## 21 - scripts/prague-blocks/diff.mjs
+## 21 - scripts/[retired]/prague-blocks-diff
 - **What it does:** Diffs `pages/*.json` between two roots (migration QA).
-- **Used or not:** **Used** via `pnpm prague:blocks:diff`.
+- **Used or not:** **Retired** in scripts cleanup pass.
 - **Services touched:** Local filesystem.
 
 ## 22 - scripts/prague-blocks/validate.mjs
@@ -174,7 +174,7 @@ Legend:
 - **CI requirements:** Must exit non-zero on validation failure to block deployment with malformed blocks.
 - **Idempotency:** Read-only; safe for repeated execution.
 
-## 23 - scripts/validate-sdr-allowlists.mjs
+## 23 - scripts/[retired]/validate-sdr-allowlists
 - **What it does:** Validates SDR allowlist paths exist + are string values in widget defaults.
 - **Used or not:** **Ad‑hoc/CI** (manual run; not in `dev-up.sh`).
 - **Services touched:** Local filesystem.
@@ -209,11 +209,6 @@ Legend:
 - **Used or not:** **Ad‑hoc/CI** (Cloudflare build pipeline).
 - **Services touched:** Local build toolchain (Vercel + next‑on‑pages).
 
-## 30 - scripts/infra/backfill-curated-instances.mjs
-- **What it does:** Reads `widget_instances` and writes/merges into `curated_widget_instances` (derived index).
-- **Used or not:** **Ad‑hoc** (manual maintenance).
-- **Services touched:** Supabase REST (service role; **writes with `--write`**, dry-run by default).
-
 ## 31 - scripts/infra/ensure-queues.mjs
 - **What it does:** Ensures Cloudflare Queues exist by creating missing queues.
 - **Used or not:** **Used** (wired into Paris/SanFrancisco/Tokyo-worker deploy scripts). **CI-Critical** (workers workflow prerequisite).
@@ -222,7 +217,7 @@ Legend:
 - **Idempotency:** Must not error if queues already exist (critical for CI re-runs). Script treats “already exists” responses as success.
 - **Safety:** Creates Cloudflare resources. Consider adding an explicit `--write` gate (and updating deploy scripts) if we want to prevent accidental local creation.
 
-## 32 - scripts/README.md
+## 32 - scripts/[retired]/README
 - **What it does:** Human documentation for scripts.
 - **Used or not:** **Ad‑hoc** (manual reference).
 - **Services touched:** None.

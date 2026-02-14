@@ -470,6 +470,7 @@ export async function handleCreateInstance(req: Request, env: Env) {
         public_id: publicId,
         widget_type: widgetType,
         kind: resolveCuratedRowKind(publicId),
+        owner_account_id: workspace.account_id,
         status,
         config,
         meta,
@@ -612,6 +613,7 @@ export async function handleUpdateInstance(req: Request, env: Env, publicId: str
     if (config !== undefined) update.config = config;
     if (isCurated) {
       update.status = 'published';
+      update.owner_account_id = workspace.account_id;
     } else if (status !== undefined) {
       update.status = status;
     }

@@ -229,6 +229,23 @@ export default defineConfig({
             const containsNonPersistableUrl = (value: string): boolean => {
               return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
             };
+            const containsLegacyTokyoAssetUrl = (value: string): boolean => {
+              const isLegacyPath = (candidate: string): boolean => {
+                const trimmed = String(candidate || '').trim();
+                if (!trimmed) return false;
+                if (/^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(trimmed)) return true;
+                if (!/^https?:\/\//i.test(trimmed)) return false;
+                try {
+                  return /^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(new URL(trimmed).pathname);
+                } catch {
+                  return false;
+                }
+              };
+
+              if (isLegacyPath(value)) return true;
+              const m = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+              return Boolean(m?.[2] && isLegacyPath(m[2]));
+            };
 
             const issues: Array<{ path: string; message: string }> = [];
             const visit = (node: any, nodePath: string) => {
@@ -237,6 +254,11 @@ export default defineConfig({
                   issues.push({
                     path: nodePath,
                     message: 'non-persistable URL scheme found (data:/blob:). Persist stable URLs/keys only.',
+                  });
+                } else if (containsLegacyTokyoAssetUrl(node)) {
+                  issues.push({
+                    path: nodePath,
+                    message: 'legacy Tokyo asset URL found. Use canonical /arsenale/o/{accountId}/{assetId}/... URLs only.',
                   });
                 }
                 return;
@@ -405,6 +427,23 @@ export default defineConfig({
             const containsNonPersistableUrl = (value: string): boolean => {
               return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
             };
+            const containsLegacyTokyoAssetUrl = (value: string): boolean => {
+              const isLegacyPath = (candidate: string): boolean => {
+                const trimmed = String(candidate || '').trim();
+                if (!trimmed) return false;
+                if (/^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(trimmed)) return true;
+                if (!/^https?:\/\//i.test(trimmed)) return false;
+                try {
+                  return /^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(new URL(trimmed).pathname);
+                } catch {
+                  return false;
+                }
+              };
+
+              if (isLegacyPath(value)) return true;
+              const m = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+              return Boolean(m?.[2] && isLegacyPath(m[2]));
+            };
 
             const issues: Array<{ path: string; message: string }> = [];
             const visit = (node: any, nodePath: string) => {
@@ -413,6 +452,11 @@ export default defineConfig({
                   issues.push({
                     path: nodePath,
                     message: 'non-persistable URL scheme found (data:/blob:). Persist stable URLs/keys only.',
+                  });
+                } else if (containsLegacyTokyoAssetUrl(node)) {
+                  issues.push({
+                    path: nodePath,
+                    message: 'legacy Tokyo asset URL found. Use canonical /arsenale/o/{accountId}/{assetId}/... URLs only.',
                   });
                 }
                 return;
@@ -567,6 +611,23 @@ export default defineConfig({
             const containsNonPersistableUrl = (value: string): boolean => {
               return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
             };
+            const containsLegacyTokyoAssetUrl = (value: string): boolean => {
+              const isLegacyPath = (candidate: string): boolean => {
+                const trimmed = String(candidate || '').trim();
+                if (!trimmed) return false;
+                if (/^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(trimmed)) return true;
+                if (!/^https?:\/\//i.test(trimmed)) return false;
+                try {
+                  return /^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(new URL(trimmed).pathname);
+                } catch {
+                  return false;
+                }
+              };
+
+              if (isLegacyPath(value)) return true;
+              const m = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+              return Boolean(m?.[2] && isLegacyPath(m[2]));
+            };
             const containsLocalOnlyUrl = (value: string): boolean => {
               return /(?:^|[\s("'=,])https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(?::\d+)?\//i.test(value);
             };
@@ -596,10 +657,7 @@ export default defineConfig({
                 const host = u.host.toLowerCase();
                 if (host !== 'localhost:4000' && host !== '127.0.0.1:4000') return false;
                 return (
-                  u.pathname.startsWith('/workspace-assets/') ||
-                  u.pathname.startsWith('/curated-assets/') ||
                   u.pathname.startsWith('/arsenale/o/') ||
-                  u.pathname.startsWith('/assets/accounts/') ||
                   u.pathname.startsWith('/widgets/')
                 );
               } catch {
@@ -636,6 +694,13 @@ export default defineConfig({
                   });
                   return;
                 }
+                if (containsLegacyTokyoAssetUrl(node)) {
+                  issues.push({
+                    path: nodePath,
+                    message: 'legacy Tokyo asset URL found. Use canonical /arsenale/o/{accountId}/{assetId}/... URLs only.',
+                  });
+                  return;
+                }
                 if (containsLocalOnlyUrl(node)) {
                   const primaryUrl = extractPrimaryUrl(node);
                   if (primaryUrl && isLocalPromotableUrl(primaryUrl)) {
@@ -645,7 +710,7 @@ export default defineConfig({
                   issues.push({
                     path: nodePath,
                     message:
-                      'local-only URL found (localhost/127.0.0.1). Promotion requires local Tokyo URLs (http://localhost:4000/workspace-assets/*, /curated-assets/*, /arsenale/o/*, /assets/accounts/*, or /widgets/*).',
+                      'local-only URL found (localhost/127.0.0.1). Promotion requires canonical local Tokyo URLs (http://localhost:4000/arsenale/o/* or /widgets/*).',
                   });
                 }
                 return;
@@ -687,12 +752,7 @@ export default defineConfig({
               const requiresUpload = localUrlRefs.some((ref) => {
                 try {
                   const u = new URL(ref.primaryUrl);
-                  return (
-                    u.pathname.startsWith('/workspace-assets/') ||
-                    u.pathname.startsWith('/curated-assets/') ||
-                    u.pathname.startsWith('/arsenale/o/') ||
-                    u.pathname.startsWith('/assets/accounts/')
-                  );
+                  return u.pathname.startsWith('/arsenale/o/');
                 } catch {
                   return true;
                 }
@@ -742,18 +802,12 @@ export default defineConfig({
                   'x-variant': 'original',
                   'x-account-id': ownerAccountId,
                   'x-source': 'promotion',
+                  'x-workspace-id': workspaceId,
+                  'x-public-id': publicId,
+                  'x-widget-type': widgetType,
                 };
 
-                if (source.pathname.startsWith('/workspace-assets/')) {
-                  endpoint = '/assets/upload';
-                  headers['x-workspace-id'] = workspaceId;
-                } else if (source.pathname.startsWith('/curated-assets/')) {
-                  endpoint = '/assets/upload';
-                  headers['x-public-id'] = publicId;
-                  headers['x-widget-type'] = widgetType;
-                } else if (source.pathname.startsWith('/arsenale/o/')) {
-                  endpoint = '/assets/upload';
-                } else if (source.pathname.startsWith('/assets/accounts/')) {
+                if (source.pathname.startsWith('/arsenale/o/')) {
                   endpoint = '/assets/upload';
                 } else {
                   throw new Error(`Unsupported local Tokyo asset path: ${source.pathname}`);

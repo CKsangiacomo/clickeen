@@ -655,6 +655,7 @@ export async function handleWorkspaceUpdateInstance(
   if (config !== undefined) update.config = config;
   if (isCurated) {
     update.status = 'published';
+    update.owner_account_id = workspace.account_id;
   } else if (status !== undefined) {
     update.status = status;
   }
@@ -952,6 +953,7 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         public_id: publicId,
         widget_type: widgetType,
         kind: resolveCuratedRowKind(publicId),
+        owner_account_id: workspace.account_id,
         status,
         config,
         meta,
@@ -1417,6 +1419,7 @@ export async function handleWorkspaceEnsureWebsiteCreative(
         public_id: publicId,
         widget_type: widgetType,
         kind: resolveCuratedRowKind(publicId),
+        owner_account_id: workspace.account_id,
         status: 'published',
         config: baselineConfig,
       }),
@@ -1441,7 +1444,11 @@ export async function handleWorkspaceEnsureWebsiteCreative(
       {
         method: 'PATCH',
         headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({ config: baselineConfig, kind: resolveCuratedRowKind(publicId) }),
+        body: JSON.stringify({
+          config: baselineConfig,
+          kind: resolveCuratedRowKind(publicId),
+          owner_account_id: workspace.account_id,
+        }),
       },
     );
     if (!patchRes.ok) {

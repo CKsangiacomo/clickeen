@@ -14,7 +14,7 @@ Current Architecture (ground truth)
 - Base content: `prague/content/base/v1/**`
 - Allowlists: `prague/content/allowlists/v1/**`
 - Overlays: `tokyo/l10n/prague/<pageId>/locale/<locale>/<baseFingerprint>.ops.json` plus `index.json`
-- Pipeline: `scripts/prague-l10n/translate.mjs`, `scripts/prague-l10n/verify.mjs`, `scripts/prague-l10n/watch.mjs`
+- Pipeline: `scripts/prague-l10n/translate.mjs`, `scripts/prague-l10n/verify.mjs`, `scripts/[retired]/prague-l10n-watch`
 - Runtime: `prague/src/lib/pragueL10n.ts`
 - Translation source: San Francisco `POST /v1/l10n/translate` (local only).
 

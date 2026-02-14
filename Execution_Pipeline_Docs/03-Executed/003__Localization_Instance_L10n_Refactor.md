@@ -488,9 +488,9 @@ Curated overlays must be reviewable in git.
 
 Two-way sync:
 1) Git -> Supabase:
-   - Use `node scripts/l10n/push.mjs` (requires SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY).
+   - Use `node scripts/[retired]/l10n-push` (requires SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY).
 2) Supabase -> Git:
-   - Use `node scripts/l10n/pull.mjs` to pull curated overlays from Supabase
+   - Use `node scripts/[retired]/l10n-pull` to pull curated overlays from Supabase
      and create a PR (useful when SF auto-generates).
 
 Priority:

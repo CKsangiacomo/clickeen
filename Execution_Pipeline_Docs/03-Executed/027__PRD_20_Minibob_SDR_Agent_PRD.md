@@ -461,7 +461,7 @@ Extend eval scripts with Minibob SDR scenarios and language tests.
 
 **Executed scope (code + docs):**
 - Added SDR allowlists for FAQ, Countdown, LogoShowcase (Tokyo).
-- Added allowlist validation script and validated (`scripts/validate-sdr-allowlists.mjs`).
+- Added allowlist validation script and validated (`scripts/[retired]/validate-sdr-allowlists`).
 - Implemented explicit ConversationLanguage override patterns in SDR agent.
 - CTA rendering handled in Bob (agent-returned CTA).
 - Updated docs: base config may be non-English; SDR allowlist guide; Minibob SDR integration.

@@ -23,8 +23,6 @@ Paris in this repo is a **dev-focused Worker** with a deliberately small surface
 - Paris requires `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
 - Paris exposes account asset domain APIs (list/get/delete) backed by `account_assets`, `account_asset_variants`, and `account_asset_usage` ("where used").
 - Paris automatically rewrites `account_asset_usage` rows on instance config create/update (workspace and legacy endpoints), so usage mapping is deterministic without manual reconcile jobs.
-- Operational recovery path (when configs are patched outside Paris): `INDEX_TARGET=local|cloud-dev node scripts/infra/reindex-account-asset-usage.mjs`.
-- End-to-end operational command: `pnpm assets:converge` (runs migration + reindex + audits; fail-visible).
 - AI is handled via:
   - `POST /api/ai/grant` (mint short-lived signed grants)
   - `POST /api/ai/outcome` (forward outcome events to San Francisco `/v1/outcome`)

@@ -80,7 +80,7 @@ If `seoGeo.enabled === true` and the host opts in with `data-ck-optimization="se
 ### 2.4 Verification gates
 Local verification commands must pass:
 - `node scripts/compile-all-widgets.mjs`
-- `node scripts/validate-sdr-allowlists.mjs countdown`
+- `node scripts/[retired]/validate-sdr-allowlists countdown`
 - (if any Prague pages changed) `node scripts/prague-l10n/verify.mjs`
 
 ---
@@ -273,7 +273,7 @@ Actions:
 - Keep CTA texts as `string`.
 
 Acceptance:
-- `node scripts/validate-sdr-allowlists.mjs countdown` passes.
+- `node scripts/[retired]/validate-sdr-allowlists countdown` passes.
 
 #### A8) Ensure localization allowlist is accurate
 **File:** `tokyo/widgets/countdown/localization.json`
@@ -377,7 +377,7 @@ Actions:
 
 1) `bash scripts/dev-up.sh`
 2) `node scripts/compile-all-widgets.mjs`
-3) `node scripts/validate-sdr-allowlists.mjs countdown`
+3) `node scripts/[retired]/validate-sdr-allowlists countdown`
 4) (if pages changed) `node scripts/prague-l10n/verify.mjs`
 5) Manual:
    - Bob: edit headline, timer modes, CTA text; preview updates live.

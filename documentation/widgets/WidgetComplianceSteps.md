@@ -225,8 +225,6 @@ Required checks
   - `node scripts/compile-all-widgets.mjs`
 - Defaults safety:
   - Defaults must not ship `data:` or `blob:` URLs (allowed only as user-edited/runtime values, never in `spec.json` defaults).
-- SDR allowlist validation (if applicable):
-  - `node scripts/validate-sdr-allowlists.mjs {widgetType}`
 - Prague pages/l10n verification (if pages changed):
   - `node scripts/prague-l10n/verify.mjs`
 

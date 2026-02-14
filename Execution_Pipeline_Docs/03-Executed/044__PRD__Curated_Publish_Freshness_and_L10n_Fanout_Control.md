@@ -224,7 +224,7 @@ Local services involved:
 
 Verification commands (local):
 - `node scripts/compile-all-widgets.mjs`
-- `node scripts/validate-sdr-allowlists.mjs`
+- `node scripts/[retired]/validate-sdr-allowlists`
 
 ### 6.1 DevStudio: add “Refresh Prague preview”
 **File:** `admin/src/html/tools/dev-widget-workspace.html`

@@ -21,15 +21,14 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isL10nBaseSnapshot = isL10n && normalized.includes('/bases/') && normalized.endsWith('.snapshot.json');
   const isI18n = normalized.startsWith('/i18n/');
   const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
-  const isWorkspaceAsset = normalized.startsWith('/workspace-assets/');
-  const isCuratedAsset = normalized.startsWith('/curated-assets/');
+  const isAccountAsset = normalized.startsWith('/arsenale/o/');
   const isRender = normalized.startsWith('/renders/');
   const isRenderIndex = isRender && normalized.endsWith('/index.json');
   const isRenderArtifact = isRender && !isRenderIndex;
   const isDieter = normalized.startsWith('/dieter/');
   const isWidget = normalized.startsWith('/widgets/');
 
-  if (isL10nOverlay || isL10nBaseSnapshot || isWorkspaceAsset || isCuratedAsset || isRenderArtifact) {
+  if (isL10nOverlay || isL10nBaseSnapshot || isAccountAsset || isRenderArtifact) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
   if (isI18n && !isI18nManifest) {

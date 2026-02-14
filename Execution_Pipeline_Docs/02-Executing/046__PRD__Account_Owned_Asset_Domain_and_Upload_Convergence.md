@@ -25,8 +25,8 @@ This PRD does **not** change the existing multi-tenant collaboration model: work
 ### 0.1 Execution outcome (local validation, 2026-02-13)
 
 1. Phase 0 DB foundation is present locally: `accounts`, `workspaces.account_id`, `curated_widget_instances.owner_account_id`, `account_assets`, `account_asset_variants`.
-2. Canonical upload contract is active: `POST /assets/upload` writes account-owned paths under `/arsenale/o/{accountId}/...` (legacy `/assets/accounts/**` remains read-compatible).
-3. Legacy write endpoints are removed and fail visibly: `POST /workspace-assets/upload` and `POST /curated-assets/upload` return `410`.
+2. Canonical upload contract is active: `POST /assets/upload` writes account-owned paths under `/arsenale/o/{accountId}/{assetId}/{filename}` for `original`, and `/arsenale/o/{accountId}/{assetId}/{variant}/{filename}` for non-original variants.
+3. Legacy asset routes are removed. Requests that use `/assets/accounts/**`, `/workspace-assets/**`, or `/curated-assets/**` fail fast.
 4. Bob and DevStudio now use account-first upload semantics with explicit `x-account-id`.
 5. Paris account asset APIs are active (`GET list`, `GET by assetId`, `DELETE soft-delete`) and scoped by account identity.
 6. Upload budgets are keyed by account scope (`acct:{accountId}`), with platform-owned curated flows mapped to `PLATFORM_ACCOUNT_ID`.
@@ -144,7 +144,7 @@ Design principle for this PRD:
 3. Standardize upload contract across Bob, DevStudio, Tokyo worker.
 4. Introduce account asset metadata domain in Michael.
 5. Move **upload meter keying** to account scope while preserving workspace-tier + subject policy gating.
-6. Keep compatibility for old asset URLs during migration.
+6. Reject legacy asset URL contracts (`/assets/accounts/**`, `/workspace-assets/**`, `/curated-assets/**`) and enforce canonical-only URLs.
 
 ### 3.2 Out-of-scope
 
@@ -180,15 +180,15 @@ Design principle for this PRD:
 
 All new uploads write to:
 
-`arsenale/o/{accountId}/{assetId}/{variant}/{filename}`
+`arsenale/o/{accountId}/{assetId}/{filename}` for original variant, and `arsenale/o/{accountId}/{assetId}/{variant}/{filename}` for non-original variants.
 
 Notes:
 
-1. Old paths remain readable during migration only:
-   - `/assets/accounts/**` (read alias to canonical namespace)
+1. Legacy paths are unsupported and must not be used:
+   - `/assets/accounts/**`
    - `/workspace-assets/**`
    - `/curated-assets/**`
-2. New write APIs stop writing to old roots after cutover.
+2. Canonical reads/writes are only served from `/arsenale/o/**`.
 
 ### 4.5 One upload API contract (worker-authoritative)
 
@@ -381,9 +381,9 @@ Required indexes:
 2. `(account_id, asset_id)`
 3. optional `(account_id, sha256)`
 
-Legacy compatibility note:
+Schema transition note:
 
-1. Existing nullable trace columns (`workspace_id`, `public_id`, `widget_type`) may remain physically present during migration windows for backward compatibility.
+1. Existing nullable trace columns (`workspace_id`, `public_id`, `widget_type`) may remain physically present during transition windows for diagnostics.
 2. They are not the authoritative source for "where used" and are not required for canonical upload success.
 
 ### 5.5.1 Asset metadata policy (scope and retention)
@@ -491,10 +491,12 @@ Single contract + single namespace eliminates path split and exception complexit
 
 1. Add handler `handleUploadAccountAsset`.
 2. Validate `x-account-id`, auth, variant, payload.
-3. Write to `arsenale/o/{accountId}/{assetId}/{variant}/{filename}`.
+3. Write to canonical account path:
+   - original variant: `arsenale/o/{accountId}/{assetId}/{filename}`
+   - non-original variants: `arsenale/o/{accountId}/{assetId}/{variant}/{filename}`.
 4. Emit canonical response shape.
-5. Keep `/assets/accounts/**`, `workspace-assets`, and `curated-assets` reads for compatibility.
-6. Mark old write endpoints as deprecated and eventually remove.
+5. Remove legacy read/write routes for `/assets/accounts/**`, `/workspace-assets/**`, and `/curated-assets/**`.
+6. Enforce fail-fast validation for legacy URLs in Bob/DevStudio/Paris persistence flows.
 
 ### Gate
 
@@ -636,9 +638,9 @@ Phase 0 deterministic gate:
 
 ## 7.5 Phase 5 — Decommission old write paths
 
-1. Remove `/workspace-assets/upload` and `/curated-assets/upload` writes.
-2. Keep legacy reads temporarily for compatibility window.
-3. Remove legacy reads only after measured zero references.
+1. Remove all legacy routes for `/workspace-assets/**`, `/curated-assets/**`, and `/assets/accounts/**`.
+2. Reject legacy paths everywhere (worker routes, compile/persist flows, promotion).
+3. Fail fast on legacy URLs so any stale data is surfaced and fixed immediately.
 
 ---
 
@@ -683,7 +685,7 @@ Phase 0 deterministic gate:
 1. Risk: ownership resolution gaps for some legacy flows.
    - Mitigation: explicit `ownerAccountId` required in Bob session bootstrap; fail-fast if missing.
 2. Risk: migration churn in configs with legacy URLs.
-   - Mitigation: staged rewrite on publish/export; compatibility reads retained.
+   - Mitigation: staged rewrite on publish/export/promote plus hard validation that blocks legacy URLs from persisting.
 3. Risk: budget regressions after scope-key change.
    - Mitigation: dual-read metrics during cutover + explicit account-scope counters.
 4. Risk: cross-team merge conflicts in high-traffic files.
@@ -701,18 +703,18 @@ Phase 0 deterministic gate:
 4. **Phase C:** Bob upload route migration to account-first.
 5. **Phase D:** DevStudio + promotion convergence.
 6. **Phase E:** Paris account asset APIs + config rewrite/backfill mechanics.
-7. **Phase F:** Budget scope migration to account + legacy write endpoint removal.
+7. **Phase F:** Budget scope migration to account + full legacy route/URL contract removal.
 
 ---
 
 ## 11) Rollback Strategy
 
-1. Keep legacy read routes available through execution phases.
-2. Feature-flag canonical upload path by environment toggle for short rollback window.
+1. No legacy route fallback is maintained during execution phases.
+2. Rollback uses deployment/version rollback of the canonical path only.
 3. If severe regressions appear:
-   - stop new-path writes
-   - revert to previous write handlers
-   - keep already uploaded new-path assets readable (no destructive delete)
+   - stop uploads at entrypoints
+   - ship targeted fixes on canonical contracts
+   - avoid destructive deletes; canonical objects remain readable
 
 ---
 
@@ -779,7 +781,8 @@ Target:
 1. Bob route does not accept ownership scope query.
 2. Ownership resolved as `accountId` in server context.
 3. Tokyo worker writes only to:
-   - `/arsenale/o/{accountId}/{assetId}/{variant}/{filename}`
+   - original variant: `/arsenale/o/{accountId}/{assetId}/{filename}`
+   - non-original variants: `/arsenale/o/{accountId}/{assetId}/{variant}/{filename}`
 
 ### 15.2 Identity resolution contract
 
@@ -813,7 +816,7 @@ Target:
 
 1. No Supabase resets.
 2. No bulk hard-delete of old assets during migration.
-3. Legacy asset URLs remain readable until cutover completion gate.
+3. Legacy asset URLs are treated as invalid input and must be migrated or removed.
 
 ### 16.2 Progressive rewrite algorithm
 
@@ -822,8 +825,7 @@ Applied during publish/export/promote:
 1. Traverse config values.
 2. For each URL-like value:
    - if already `/arsenale/o/...`, keep.
-   - if `/assets/accounts/...`, rewrite path to `/arsenale/o/...` (no re-upload).
-   - if `/workspace-assets/...` or `/curated-assets/...`, migrate.
+   - if `/assets/accounts/...`, `/workspace-assets/...`, or `/curated-assets/...`, migrate.
 3. Migration step:
    - fetch object bytes from old URL
    - upload via canonical account endpoint
@@ -834,8 +836,7 @@ Applied during publish/export/promote:
 
 1. Curated/main instances first (platform-owned and deterministic set).
 2. User instances second (opportunistic on publish + optional background batch).
-3. Remove legacy write endpoints only after:
-   - zero writes observed to old paths for defined burn-in window.
+3. Remove legacy routes and validators in a single cutover release; no burn-in compatibility window.
 
 ### 16.4 Idempotency and dedupe
 
@@ -863,7 +864,7 @@ Applied during publish/export/promote:
 1. DevStudio local upload -> Bob/Tokyo canonical path.
 2. Bob publish with blob/data URLs rewrites to canonical account URLs.
 3. Curated publish path uses `PLATFORM_ACCOUNT_ID` and succeeds.
-4. Legacy URL read compatibility still works.
+4. Legacy URL contracts fail fast in validation/compiler/persistence flows.
 
 ### 17.3 Integration validation (cloud-dev)
 
@@ -873,7 +874,7 @@ Applied during publish/export/promote:
 
 ### 17.4 Regression validation
 
-1. No regression in Prague/Venice renders when configs contain mixed old/new URLs.
+1. No regression in Prague/Venice renders with canonical URLs; legacy URLs are expected to fail validation.
 2. No regression in l10n publish/snapshot flows.
 3. No regression in existing non-upload budget counters.
 4. No regression in curated instance global-read behavior.
@@ -897,8 +898,8 @@ For every upload attempt, log:
 
 ### 18.2 KPIs for cutover
 
-1. `% writes to canonical path` (target 100% before legacy write removal).
-2. `legacy read hit rate` (must trend down before legacy read removal).
+1. `% writes to canonical path` (target 100%).
+2. `legacy URL validation failure count` (target approaches zero as stale configs are cleaned).
 3. `upload failure rate` split by source.
 4. `median/p95 upload latency`.
 5. `budget deny rate` split by profile.

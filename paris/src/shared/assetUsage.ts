@@ -22,13 +22,6 @@ export class AssetUsageValidationError extends Error {
   }
 }
 
-function normalizeAccountAssetPath(pathname: string): string {
-  if (pathname.startsWith('/assets/accounts/')) {
-    return pathname.replace(/^\/assets\/accounts\//, '/arsenale/o/');
-  }
-  return pathname;
-}
-
 function parseAccountAssetRef(raw: string): AccountAssetRef | null {
   const value = String(raw || '').trim();
   if (!value) return null;
@@ -46,8 +39,7 @@ function parseAccountAssetRef(raw: string): AccountAssetRef | null {
     return null;
   }
 
-  const normalized = normalizeAccountAssetPath(pathname);
-  const match = normalized.match(/^\/arsenale\/o\/([^/]+)\/([^/]+)\/[^/]+\/[^/]+$/);
+  const match = pathname.match(/^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/);
   if (!match) return null;
   const accountId = decodeURIComponent(match[1] || '').trim();
   const assetId = decodeURIComponent(match[2] || '').trim();

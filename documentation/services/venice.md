@@ -155,7 +155,7 @@ This keeps widget definitions portable and prevents hard-coded Tokyo origins ins
 
 **Cache policy (shipped):**
 - Path-aware caching is enforced in Venice (not pass-through):
-  - `l10n` overlays, `workspace-assets`, `curated-assets`: `force-cache` with 1-year revalidate.
+  - `l10n` overlays, `arsenale/o` account assets: `force-cache` with 1-year revalidate.
   - `i18n` bundles: `force-cache` with 1-year revalidate; `i18n/manifest.json`: short TTL (5 min).
   - `l10n` `index.json`: short TTL (5 min) for overlay metadata freshness.
   - `widgets/` + `dieter/`: short TTL (5 min) for fast iteration.
