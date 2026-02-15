@@ -1,6 +1,8 @@
 import { ControlPlaneShell } from '../../../components/control-plane-shell';
 import { ModuleSurface } from '../../../components/module-surface';
 
+export const runtime = 'edge';
+
 type InstancePageProps = {
   params: Promise<{ publicId: string }>;
 };

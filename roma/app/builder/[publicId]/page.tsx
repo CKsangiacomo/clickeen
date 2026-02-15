@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { ControlPlaneShell } from '../../../components/control-plane-shell';
 import { ModuleSurface } from '../../../components/module-surface';
 
+export const runtime = 'edge';
+
 type BuilderPageProps = {
   params: Promise<{ publicId: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
