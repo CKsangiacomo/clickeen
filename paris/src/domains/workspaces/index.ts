@@ -65,7 +65,7 @@ export async function handleWorkspaceInstanceRenderSnapshot(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -120,7 +120,7 @@ export async function handleWorkspaceInstanceRenderSnapshot(
 }
 
 export async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: string) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -138,7 +138,7 @@ export async function handleWorkspaceGetInstance(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -187,7 +187,7 @@ export async function handleWorkspaceInstancePublishStatus(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -489,7 +489,7 @@ export async function handleWorkspaceUpdateInstance(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -838,7 +838,7 @@ export async function handleWorkspaceUpdateInstance(
 }
 
 export async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId: string) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -1293,7 +1293,7 @@ export async function handleWorkspaceEnsureWebsiteCreative(
   env: Env,
   workspaceId: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   if ((env.ENV_STAGE || '').toLowerCase() !== 'local') {
@@ -1564,7 +1564,7 @@ export async function handleWorkspaceBusinessProfileGet(
   env: Env,
   workspaceId: string,
 ): Promise<Response> {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   try {
@@ -1586,7 +1586,7 @@ export async function handleWorkspaceBusinessProfileUpsert(
   env: Env,
   workspaceId: string,
 ): Promise<Response> {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   let body: unknown;

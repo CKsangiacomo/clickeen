@@ -7,17 +7,17 @@ Runtime code + `supabase/migrations/` are operational truth; any mismatch here i
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway + metering enforcement (usage is shipped; submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/widgets` (widget catalog; dev auth), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`, `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/publish/status?subject=devstudio|minibob|workspace`, `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=devstudio|minibob|workspace`, `POST /api/l10n/jobs/report`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/workspaces/:workspaceId/website-creative` (devstudio; local-only), `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (metering; HMAC-signed), `POST /api/submit/:publicId` (501).
-**Also shipped (account asset domain):** `GET /api/accounts/:accountId/assets`, `GET /api/accounts/:accountId/assets/:assetId`, `DELETE /api/accounts/:accountId/assets/:assetId` (dev/internal auth).
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/me`, `GET /api/widgets` (widget catalog), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId`, `GET /api/workspaces/:workspaceId/members`, `GET /api/workspaces/:workspaceId/policy`, `GET /api/workspaces/:workspaceId/entitlements`, `GET /api/workspaces/:workspaceId/ai/profile`, `GET /api/workspaces/:workspaceId/ai/limits`, `GET /api/workspaces/:workspaceId/ai/outcomes` (explicit unavailable contract in this snapshot), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`, `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/publish/status?subject=devstudio|minibob|workspace`, `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=devstudio|minibob|workspace`, `POST /api/l10n/jobs/report`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/workspaces/:workspaceId/website-creative` (devstudio; local-only), `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (metering; HMAC-signed), `POST /api/submit/:publicId` (501).
+**Also shipped (account/control-plane domain):** `POST /api/accounts`, `GET /api/accounts/:accountId`, `GET/POST /api/accounts/:accountId/workspaces`, `GET /api/accounts/:accountId/usage`, `GET /api/accounts/:accountId/assets`, `GET /api/accounts/:accountId/assets/:assetId`, `DELETE /api/accounts/:accountId/assets/:assetId`, `GET /api/accounts/:accountId/billing/summary`, `POST /api/accounts/:accountId/billing/checkout-session` (explicit not-configured contract), `POST /api/accounts/:accountId/billing/portal-session` (explicit not-configured contract), `POST /api/claims/minibob/complete`.
 **Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `accounts`, `account_assets`, `account_asset_variants`, `account_asset_usage`, `widget_instance_overlays`, `l10n_generate_state`, `l10n_base_snapshots`, `workspace_business_profiles`, `instance_enforcement_state`.
-**Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all non-public endpoints are gated by `PARIS_DEV_JWT` (public `/api/instance/:publicId` is published-only unless dev auth is present).
+**Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; non-public endpoints accept Supabase session JWT auth for Roma/control-plane flows and preserve `PARIS_DEV_JWT` for dev/internal compatibility (public `/api/instance/:publicId` is published-only unless dev auth is present).
 
 ## Runtime Reality (this repo snapshot)
 
 Paris in this repo is a **dev-focused Worker** with a deliberately small surface:
 
 - **Modular monolith:** Paris is organized by domain modules under `paris/src/domains/*` with shared utilities in `paris/src/shared/*`. It is a single Worker (no worker-to-worker microservices).
-- All non-public endpoints are gated by `PARIS_DEV_JWT` (dev-only auth; not the final production model). `GET /api/instance/:publicId` is public but published-only unless a valid dev token is supplied.
+- Non-public endpoints accept Supabase session JWT auth for Roma/control-plane flows; `PARIS_DEV_JWT` remains a dev/internal compatibility path. `GET /api/instance/:publicId` is public but published-only unless a valid dev token is supplied.
 - Instance creation is implemented (`POST /api/instance`) for **internal DevStudio Local** workflows (superadmin), not as a user-facing product API.
 - Instance reads/writes use Supabase REST with the service role.
 - Paris requires `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
@@ -111,6 +111,16 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` — Updates an instance only if it belongs to `workspaceId` (404 if not found).
 - `POST /api/workspaces/:workspaceId/website-creative` — DevStudio-only local helper that ensures/opens a curated “website creative” instance for Prague blocks. Requires `subject=devstudio` and is **local-only** (`ENV_STAGE=local`).
 
+### Identity bootstrap + claim (shipped)
+
+- `POST /api/accounts` — Supabase-only account bootstrap endpoint. Requires `Idempotency-Key`; creates account row + bootstrap-owner marker (KV).
+- `POST /api/accounts/:accountId/workspaces` — Supabase-only first-workspace (or additional workspace) create endpoint. Requires `Idempotency-Key`; accepts bootstrap-owner marker until first membership exists.
+- `POST /api/claims/minibob/complete` — Supabase-only claim completion endpoint. Requires `Idempotency-Key` and signed claim token.
+  - Token contract: `mbc.v1.<base64url(payloadJson)>.<hmacSha256Sig>`
+  - Signing secret: `MINIBOB_CLAIM_HMAC_SECRET` (fallback: `AI_GRANT_HMAC_SECRET`)
+  - Nonce replay protection: one-time nonce record in KV; cross-user or cross-workspace replay returns explicit deny.
+  - Deterministic outcome: rebind existing user instance to target workspace or materialize a user draft from baseline, then return canonical Roma builder route.
+
 ### Account asset domain endpoints (shipped)
 
 - `GET /api/accounts/:accountId/assets` — Lists non-deleted assets for one account (`includeDeleted=1` optional for internal tooling).
@@ -119,7 +129,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 
 Rules:
 - Ownership is explicit (`accountId`), never inferred from workspace/publicId.
-- Auth is internal/dev in this repo snapshot (`PARIS_DEV_JWT` + `x-account-id` actor guard).
+- Auth accepts Supabase session JWT for Roma control-plane flows; `PARIS_DEV_JWT` + actor headers remain available for dev/internal compatibility.
 - Curated platform assets are owned by `PLATFORM_ACCOUNT_ID` and are excluded from customer quota views by default.
 - Asset responses include deterministic usage mapping (`usageCount`, `usedBy[]`) from `account_asset_usage` with instance `publicId` + `configPath`.
 
@@ -204,10 +214,10 @@ Fallback (when custom domains aren’t configured yet): `{script}.workers.dev`
 
 - **Service Role Access**: Paris has `SUPABASE_SERVICE_ROLE_KEY` and can bypass RLS. Handlers MUST scope service-role usage to the smallest set of operations and MUST never expose this key to clients.
 - **No Public Secrets**: All server secrets live here, never exposed to client. Environment variables MUST remain server-only.
-- **Auth model (this repo snapshot):** All current non-public endpoints are gated by `PARIS_DEV_JWT` (dev/local only). `GET /api/instance/:publicId` is public but published-only unless a valid dev token is supplied. Production will validate Supabase Auth JWTs and workspace membership.
+- **Auth model (this repo snapshot):** non-public control-plane endpoints accept Supabase session JWT auth; `PARIS_DEV_JWT` remains available as a dev/internal compatibility path. `GET /api/instance/:publicId` is public but published-only unless a valid dev token is supplied.
 - **Rate limiting:** Not implemented in this repo snapshot (planned for write endpoints once usage/submissions ship).
 - **Front-door rule:** Third-party pages MUST NOT contact Paris directly. Browsers hit Venice only; Venice proxies to Paris over a server-to-server channel.
-- **CORS:** Intended production rule is an allowlist (Bob/Prague only). In this repo snapshot, treat `PARIS_DEV_JWT` as the primary gate.
+- **CORS:** Intended production rule is an allowlist (Bob/Prague only). In this repo snapshot, treat auth enforcement (`Supabase session JWT` + `PARIS_DEV_JWT` compatibility) as the primary gate.
 - **Transport Security**: Paris MUST enforce HTTPS, HSTS, and reject plaintext HTTP. Mutual TLS is not required but outbound fetches MUST verify certificates.
 
 ## Phase-1 API Endpoints

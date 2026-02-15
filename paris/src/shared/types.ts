@@ -3,11 +3,14 @@ import type { Policy, PolicyProfile, LimitsSpec, AiGrantPolicy } from '@clickeen
 export type Env = {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
+  SUPABASE_JWT_ISSUER?: string;
+  SUPABASE_JWT_AUDIENCE?: string;
   PARIS_DEV_JWT: string;
   TOKYO_BASE_URL?: string;
   TOKYO_WORKER_BASE_URL?: string;
   TOKYO_DEV_JWT?: string;
   AI_GRANT_HMAC_SECRET?: string;
+  MINIBOB_CLAIM_HMAC_SECRET?: string;
   SANFRANCISCO_BASE_URL?: string;
   ENVIRONMENT?: string;
   ENV_STAGE?: string;

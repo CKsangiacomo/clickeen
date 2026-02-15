@@ -47,6 +47,8 @@ type AccountAssetUsageRow = {
   updated_at: string;
 };
 
+type WorkspaceMembershipRole = 'viewer' | 'editor' | 'admin' | 'owner';
+
 function assertAccountId(value: string) {
   const trimmed = String(value || '').trim();
   if (!trimmed || !isUuid(trimmed)) {
@@ -144,6 +146,102 @@ function requireOwnedAccountHeader(req: Request, accountId: string) {
   }
   if (actorAccountId !== accountId) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.account.mismatch' }, 403);
+  }
+  return null;
+}
+
+function roleRank(role: string): number {
+  switch (role) {
+    case 'owner':
+      return 4;
+    case 'admin':
+      return 3;
+    case 'editor':
+      return 2;
+    case 'viewer':
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+async function resolveAccountMembershipRole(
+  env: Env,
+  accountId: string,
+  userId: string,
+): Promise<WorkspaceMembershipRole | null> {
+  const workspaceParams = new URLSearchParams({
+    select: 'id',
+    account_id: `eq.${accountId}`,
+    limit: '500',
+  });
+  const workspaceRes = await supabaseFetch(env, `/rest/v1/workspaces?${workspaceParams.toString()}`, { method: 'GET' });
+  if (!workspaceRes.ok) {
+    const details = await readJson(workspaceRes);
+    throw new Error(`[ParisWorker] Failed to resolve account workspaces (${workspaceRes.status}): ${JSON.stringify(details)}`);
+  }
+  const workspaces = (await workspaceRes.json()) as Array<{ id?: string }>;
+  const workspaceIds = workspaces
+    .map((row) => (typeof row.id === 'string' ? row.id : ''))
+    .filter((id) => Boolean(id));
+  if (workspaceIds.length === 0) return null;
+
+  const membershipParams = new URLSearchParams({
+    select: 'role',
+    user_id: `eq.${userId}`,
+    workspace_id: `in.(${workspaceIds.join(',')})`,
+    limit: '500',
+  });
+  const membershipRes = await supabaseFetch(env, `/rest/v1/workspace_members?${membershipParams.toString()}`, {
+    method: 'GET',
+  });
+  if (!membershipRes.ok) {
+    const details = await readJson(membershipRes);
+    throw new Error(
+      `[ParisWorker] Failed to resolve account membership (${membershipRes.status}): ${JSON.stringify(details)}`,
+    );
+  }
+  const memberships = (await membershipRes.json()) as Array<{ role?: string }>;
+  let highest: WorkspaceMembershipRole | null = null;
+  for (const membership of memberships) {
+    const role = typeof membership.role === 'string' ? membership.role : '';
+    if (!role) continue;
+    if (!highest || roleRank(role) > roleRank(highest)) {
+      highest = role as WorkspaceMembershipRole;
+    }
+  }
+  return highest;
+}
+
+async function authorizeAccountAccess(
+  req: Request,
+  env: Env,
+  accountId: string,
+  auth: { source: 'dev' | 'supabase'; principal?: { userId: string } },
+  requireAdminRole: boolean,
+): Promise<Response | null> {
+  if (auth.source === 'dev') {
+    return requireOwnedAccountHeader(req, accountId);
+  }
+
+  const userId = auth.principal?.userId;
+  if (!userId) {
+    return ckError({ kind: 'AUTH', reasonKey: 'coreui.errors.auth.required' }, 401);
+  }
+
+  let role: WorkspaceMembershipRole | null = null;
+  try {
+    role = await resolveAccountMembershipRole(env, accountId, userId);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
+  }
+
+  if (!role) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.account.mismatch' }, 403);
+  }
+  if (requireAdminRole && roleRank(role) < roleRank('admin')) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
   }
   return null;
 }
@@ -249,14 +347,14 @@ async function loadAccountAsset(
 }
 
 export async function handleAccountAssetsList(req: Request, env: Env, accountIdRaw: string) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const ownerError = requireOwnedAccountHeader(req, accountId);
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, false);
   if (ownerError) return ownerError;
 
   let account: AccountRow | null = null;
@@ -316,7 +414,7 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
 }
 
 export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const accountIdResult = assertAccountId(accountIdRaw);
@@ -327,7 +425,7 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
   if (!assetIdResult.ok) return assetIdResult.response;
   const assetId = assetIdResult.value;
 
-  const ownerError = requireOwnedAccountHeader(req, accountId);
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, false);
   if (ownerError) return ownerError;
 
   const includeDeleted = shouldIncludeDeleted(req);
@@ -358,7 +456,7 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
 }
 
 export async function handleAccountAssetDelete(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const accountIdResult = assertAccountId(accountIdRaw);
@@ -369,7 +467,7 @@ export async function handleAccountAssetDelete(req: Request, env: Env, accountId
   if (!assetIdResult.ok) return assetIdResult.response;
   const assetId = assetIdResult.value;
 
-  const ownerError = requireOwnedAccountHeader(req, accountId);
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, true);
   if (ownerError) return ownerError;
 
   try {

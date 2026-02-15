@@ -1,0 +1,385 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  background: var(--color-system-gray-6-step3, #f4f4f4);
+  color: var(--color-system-black, #131313);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.roma-shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.roma-shell--focus {
+  grid-template-columns: 220px 1fr;
+}
+
+.roma-shell__rail {
+  border-right: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 88%);
+  background: color-mix(in oklab, var(--color-system-white, #fff), var(--color-system-gray-6-step3, #f4f4f4) 15%);
+  padding: 14px;
+  overflow: auto;
+}
+
+.roma-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.roma-nav__link {
+  display: grid;
+  gap: 2px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+}
+
+.roma-nav__link:hover {
+  background: color-mix(in oklab, var(--color-system-black, #131313), transparent 96%);
+}
+
+.roma-nav__link--active {
+  background: color-mix(in oklab, var(--color-system-black, #131313), transparent 93%);
+  border-color: color-mix(in oklab, var(--color-system-black, #131313), transparent 85%);
+}
+
+.roma-nav__label {
+  font-size: var(--fs-14, 0.875rem);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.roma-nav__meta {
+  font-size: var(--fs-12, 0.75rem);
+  opacity: 0.72;
+  line-height: 1.3;
+}
+
+.roma-shell__main {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+}
+
+.roma-shell__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 90%);
+  background: color-mix(in oklab, var(--color-system-white, #fff), var(--color-system-gray-6-step3, #f4f4f4) 12%);
+}
+
+.roma-shell__topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.roma-shell__drawer {
+  display: none;
+}
+
+.roma-shell__drawer > summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: var(--fs-13, 0.8125rem);
+  font-weight: 600;
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 84%);
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: var(--color-system-white, #fff);
+}
+
+.roma-shell__drawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+.roma-nav--compact {
+  margin-top: 8px;
+  background: var(--color-system-white, #fff);
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 90%);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.roma-shell__search-wrap {
+  min-width: 220px;
+  max-width: 760px;
+  width: 100%;
+}
+
+.roma-shell__search {
+  width: 100%;
+  border-radius: 11px;
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 86%);
+  background: var(--color-system-white, #fff);
+  padding: 9px 12px;
+  font-size: var(--fs-13, 0.8125rem);
+}
+
+.roma-shell__search:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--color-system-blue, #3b82f6), transparent 55%);
+  outline-offset: 1px;
+}
+
+.roma-shell__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roma-btn {
+  border: none;
+  border-radius: 10px;
+  background: var(--color-system-black, #131313);
+  color: var(--color-system-white, #fff);
+  padding: 8px 12px;
+  font-size: var(--fs-13, 0.8125rem);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.roma-btn--inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roma-btn--ghost {
+  background: var(--color-system-white, #fff);
+  color: var(--color-system-black, #131313);
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 84%);
+}
+
+.roma-btn--danger {
+  background: color-mix(in oklab, #b42318, var(--color-system-black, #131313) 10%);
+  color: var(--color-system-white, #fff);
+}
+
+.roma-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.roma-shell__content {
+  padding: 18px 20px 22px;
+}
+
+.roma-shell__heading {
+  margin-bottom: 16px;
+}
+
+.roma-shell__heading h1 {
+  margin: 0;
+  font-size: var(--fs-32, 2rem);
+  line-height: 1.2;
+}
+
+.roma-shell__heading p {
+  margin: 8px 0 0;
+  font-size: var(--fs-14, 0.875rem);
+  opacity: 0.74;
+}
+
+.roma-module-surface {
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 88%);
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--color-system-white, #fff), var(--color-system-gray-6-step3, #f4f4f4) 8%);
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.roma-module-surface p {
+  margin: 0;
+  font-size: var(--fs-14, 0.875rem);
+  line-height: 1.5;
+}
+
+.roma-module-surface__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.roma-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.roma-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.roma-card {
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 88%);
+  background: var(--color-system-white, #fff);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.roma-card h2 {
+  margin: 0;
+  font-size: var(--fs-14, 0.875rem);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.roma-card p {
+  margin: 0;
+  font-size: var(--fs-13, 0.8125rem);
+  line-height: 1.4;
+}
+
+.roma-codeblock {
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 88%);
+  background: var(--color-system-white, #fff);
+  padding: 12px;
+}
+
+.roma-codeblock strong {
+  display: block;
+  font-size: var(--fs-12, 0.75rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  margin-bottom: 8px;
+}
+
+.roma-codeblock pre {
+  margin: 0;
+  overflow: auto;
+  font-size: var(--fs-12, 0.75rem);
+  line-height: 1.5;
+}
+
+.roma-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.roma-label {
+  font-size: var(--fs-13, 0.8125rem);
+  font-weight: 600;
+}
+
+.roma-select {
+  min-width: 240px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 86%);
+  background: var(--color-system-white, #fff);
+  padding: 8px 10px;
+  font-size: var(--fs-13, 0.8125rem);
+}
+
+.roma-input {
+  min-width: 240px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 86%);
+  background: var(--color-system-white, #fff);
+  padding: 8px 10px;
+  font-size: var(--fs-13, 0.8125rem);
+}
+
+.roma-select:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--color-system-blue, #3b82f6), transparent 55%);
+  outline-offset: 1px;
+}
+
+.roma-input:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--color-system-blue, #3b82f6), transparent 55%);
+  outline-offset: 1px;
+}
+
+.roma-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 88%);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-system-white, #fff);
+}
+
+.roma-table th,
+.roma-table td {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: var(--fs-13, 0.8125rem);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 90%);
+}
+
+.roma-table th {
+  font-weight: 600;
+  background: color-mix(in oklab, var(--color-system-gray-6-step3, #f4f4f4), var(--color-system-white, #fff) 45%);
+}
+
+.roma-table tr:last-child td {
+  border-bottom: none;
+}
+
+.roma-cell-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 980px) {
+  .roma-shell,
+  .roma-shell--focus {
+    grid-template-columns: 1fr;
+  }
+
+  .roma-shell__rail {
+    display: none;
+  }
+
+  .roma-shell__drawer {
+    display: block;
+  }
+
+  .roma-shell__topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .roma-shell__topbar-left {
+    width: 100%;
+  }
+
+  .roma-shell__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .roma-grid--three {
+    grid-template-columns: 1fr;
+  }
+
+  .roma-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

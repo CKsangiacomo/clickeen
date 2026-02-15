@@ -31,8 +31,10 @@ function getTokyoBaseUrl(): string {
 }
 
 function getPragueBuildId(): string | null {
-  const meta = String((import.meta as any)?.env?.PUBLIC_PRAGUE_BUILD_ID || '').trim();
-  const raw = meta || readEnv('PUBLIC_PRAGUE_BUILD_ID') || '';
+  const metaEnv = (import.meta as any)?.env || {};
+  const metaPublic = String(metaEnv.PUBLIC_PRAGUE_BUILD_ID || '').trim();
+  const metaCommit = String(metaEnv.CF_PAGES_COMMIT_SHA || '').trim();
+  const raw = metaPublic || metaCommit || readEnv('PUBLIC_PRAGUE_BUILD_ID') || readEnv('CF_PAGES_COMMIT_SHA') || '';
   return raw.trim() ? raw.trim() : null;
 }
 

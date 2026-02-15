@@ -34,6 +34,24 @@ import {
   handleAccountAssetsList,
 } from './domains/accounts';
 import {
+  handleAccountCreate,
+  handleAccountBillingCheckoutSession,
+  handleAccountBillingPortalSession,
+  handleAccountBillingSummary,
+  handleAccountGet,
+  handleAccountCreateWorkspace,
+  handleAccountUsage,
+  handleAccountWorkspaces,
+  handleMinibobClaimComplete,
+  handleWorkspaceAiLimits,
+  handleWorkspaceAiOutcomes,
+  handleWorkspaceAiProfile,
+  handleWorkspaceEntitlements,
+  handleWorkspaceGet,
+  handleWorkspaceMembers,
+  handleWorkspacePolicy,
+} from './domains/controlplane';
+import {
   handleL10nGenerateReport,
   handleL10nGenerateRetries,
   handleWorkspaceInstanceLayerDelete,
@@ -46,6 +64,7 @@ import {
   handleWorkspaceLocalesPut,
 } from './domains/l10n';
 import { handleFrozenResets, handleUsageEvent } from './domains/usage';
+import { handleMe } from './domains/identity';
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -55,6 +74,10 @@ export default {
 
       if (req.method === 'OPTIONS') return corsPreflight(req);
       if (pathname === '/api/healthz') return handleHealthz();
+      if (pathname === '/api/me') {
+        if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleMe(req, env);
+      }
 
       if (pathname === '/api/l10n/jobs/report') {
         if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
@@ -64,6 +87,16 @@ export default {
       if (pathname === '/api/usage') {
         if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleUsageEvent(req, env);
+      }
+
+      if (pathname === '/api/accounts') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleAccountCreate(req, env);
+      }
+
+      if (pathname === '/api/claims/minibob/complete') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleMinibobClaimComplete(req, env);
       }
 
       const submitMatch = pathname.match(/^\/api\/submit\/([^/]+)$/);
@@ -238,6 +271,91 @@ export default {
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
+      const workspaceMembersMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/members$/);
+      if (workspaceMembersMatch) {
+        const workspaceId = decodeURIComponent(workspaceMembersMatch[1]);
+        if (req.method === 'GET') return handleWorkspaceMembers(req, env, workspaceId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspacePolicyMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/policy$/);
+      if (workspacePolicyMatch) {
+        const workspaceId = decodeURIComponent(workspacePolicyMatch[1]);
+        if (req.method === 'GET') return handleWorkspacePolicy(req, env, workspaceId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceEntitlementsMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/entitlements$/);
+      if (workspaceEntitlementsMatch) {
+        const workspaceId = decodeURIComponent(workspaceEntitlementsMatch[1]);
+        if (req.method === 'GET') return handleWorkspaceEntitlements(req, env, workspaceId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceAiProfileMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/ai\/profile$/);
+      if (workspaceAiProfileMatch) {
+        const workspaceId = decodeURIComponent(workspaceAiProfileMatch[1]);
+        if (req.method === 'GET') return handleWorkspaceAiProfile(req, env, workspaceId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceAiLimitsMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/ai\/limits$/);
+      if (workspaceAiLimitsMatch) {
+        const workspaceId = decodeURIComponent(workspaceAiLimitsMatch[1]);
+        if (req.method === 'GET') return handleWorkspaceAiLimits(req, env, workspaceId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceAiOutcomesMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/ai\/outcomes$/);
+      if (workspaceAiOutcomesMatch) {
+        const workspaceId = decodeURIComponent(workspaceAiOutcomesMatch[1]);
+        if (req.method === 'GET') return handleWorkspaceAiOutcomes(req, env, workspaceId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceMatch = pathname.match(/^\/api\/workspaces\/([^/]+)$/);
+      if (workspaceMatch) {
+        const workspaceId = decodeURIComponent(workspaceMatch[1]);
+        if (req.method === 'GET') return handleWorkspaceGet(req, env, workspaceId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountWorkspacesMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/workspaces$/);
+      if (accountWorkspacesMatch) {
+        const accountId = decodeURIComponent(accountWorkspacesMatch[1]);
+        if (req.method === 'GET') return handleAccountWorkspaces(req, env, accountId);
+        if (req.method === 'POST') return handleAccountCreateWorkspace(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountUsageMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/usage$/);
+      if (accountUsageMatch) {
+        const accountId = decodeURIComponent(accountUsageMatch[1]);
+        if (req.method === 'GET') return handleAccountUsage(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountBillingSummaryMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/billing\/summary$/);
+      if (accountBillingSummaryMatch) {
+        const accountId = decodeURIComponent(accountBillingSummaryMatch[1]);
+        if (req.method === 'GET') return handleAccountBillingSummary(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountBillingCheckoutMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/billing\/checkout-session$/);
+      if (accountBillingCheckoutMatch) {
+        const accountId = decodeURIComponent(accountBillingCheckoutMatch[1]);
+        if (req.method === 'POST') return handleAccountBillingCheckoutSession(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountBillingPortalMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/billing\/portal-session$/);
+      if (accountBillingPortalMatch) {
+        const accountId = decodeURIComponent(accountBillingPortalMatch[1]);
+        if (req.method === 'POST') return handleAccountBillingPortalSession(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
       const accountAssetsMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/assets$/);
       if (accountAssetsMatch) {
         const accountId = decodeURIComponent(accountAssetsMatch[1]);
@@ -251,6 +369,13 @@ export default {
         const assetId = decodeURIComponent(accountAssetMatch[2]);
         if (req.method === 'GET') return handleAccountAssetGet(req, env, accountId, assetId);
         if (req.method === 'DELETE') return handleAccountAssetDelete(req, env, accountId, assetId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountMatch = pathname.match(/^\/api\/accounts\/([^/]+)$/);
+      if (accountMatch) {
+        const accountId = decodeURIComponent(accountMatch[1]);
+        if (req.method === 'GET') return handleAccountGet(req, env, accountId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

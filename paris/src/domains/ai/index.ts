@@ -392,7 +392,7 @@ export async function issueAiGrant(args: {
 }
 
 export async function handleAiGrant(req: Request, env: Env) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   let body: unknown;
@@ -619,7 +619,7 @@ function isOutcomeAttachPayload(value: unknown): value is {
 }
 
 export async function handleAiOutcome(req: Request, env: Env) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   let body: unknown;

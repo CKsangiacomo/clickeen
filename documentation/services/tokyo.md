@@ -11,7 +11,7 @@
   - `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
 - Serves localization overlays for instances (`tokyo/l10n/**`) materialized from Supabase overlays
 - Serves published render snapshots for Venice (`tokyo/renders/instances/**`) materialized by `tokyo-worker` (PRD 38)
-- Prague website base copy is repo-local in `tokyo/widgets/*/pages/*.json`; localized overlays are stored under `tokyo/l10n/prague/**` and fetched by Prague from `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/**` (Chrome UI strings remain in `prague/content/base/v1/chrome.json`).
+- Prague website base copy is repo-local in `tokyo/widgets/*/pages/*.json`; localized overlays are stored under `tokyo/l10n/prague/**` and fetched by Prague from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/**` (Chrome UI strings remain in `prague/content/base/v1/chrome.json`; build token defaults to `CF_PAGES_COMMIT_SHA`, with `PUBLIC_PRAGUE_BUILD_ID` as optional override).
 
 ## Dependencies
 - Used by: Venice, Bob, Prague

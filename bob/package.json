@@ -2,6 +2,10 @@
   "name": "@clickeen/bob",
   "private": true,
   "version": "0.0.0",
+  "exports": {
+    "./builder": "./components/BuilderApp.tsx",
+    "./bob-app.css": "./app/bob_app.css"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

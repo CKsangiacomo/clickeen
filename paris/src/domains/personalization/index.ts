@@ -257,7 +257,7 @@ async function dispatchPersonalizationOnboardingJob(args: {
 }
 
 export async function handlePersonalizationOnboardingCreate(req: Request, env: Env): Promise<Response> {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   let body: unknown;
@@ -323,7 +323,7 @@ export async function handlePersonalizationOnboardingCreate(req: Request, env: E
 }
 
 export async function handlePersonalizationOnboardingStatus(req: Request, env: Env, jobId: string): Promise<Response> {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const sfBaseUrl = asTrimmedString(env.SANFRANCISCO_BASE_URL);

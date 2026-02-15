@@ -194,6 +194,40 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  roma:
+    dependencies:
+      '@clickeen/bob':
+        specifier: workspace:*
+        version: link:../bob
+      next:
+        specifier: 15.5.2
+        version: 15.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@cloudflare/next-on-pages':
+        specifier: ^1.13.16
+        version: 1.13.16(@cloudflare/workers-types@4.20251228.0)(next@15.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(vercel@47.0.4(rollup@4.53.2))(wrangler@4.54.0(@cloudflare/workers-types@4.20251228.0))
+      '@types/node':
+        specifier: ^20.16.5
+        version: 20.19.25
+      '@types/react':
+        specifier: ^18.3.5
+        version: 18.3.26
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.26)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vercel:
+        specifier: 47.0.4
+        version: 47.0.4(rollup@4.53.2)
+
   sanfrancisco:
     dependencies:
       '@clickeen/ck-policy':
@@ -4837,6 +4871,7 @@ packages:
   tar@7.5.2:
     resolution: {integrity: sha512-7NyxrTE4Anh8km8iEy7o0QYPs+0JKBTj5ZaqHg6B39erLg0qYXN3BijtShwbsNSvQ+LN75+KV+C4QR/f6Gwnpg==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   throttleit@2.1.0:
     resolution: {integrity: sha512-nt6AMGKW1p/70DF/hGBdJB57B8Tspmbp5gfJ8ilhLnt7kkr2ye7hzD6NVG8GGErk2HWF34igrL2CXmNIkzKqKw==}

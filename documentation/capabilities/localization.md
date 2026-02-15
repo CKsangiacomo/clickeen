@@ -163,7 +163,7 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
     - `--local` in local dev (writes to Wrangler local R2)
 - Prague loads page JSON base copy and applies overlays at runtime via Tokyo fetch.
   - Runtime fetches are versioned for cache determinism:
-    - cloud-dev/prod: `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/...`
+    - cloud-dev/prod: `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/...` where `<build-token>` resolves to `CF_PAGES_COMMIT_SHA` (or `PUBLIC_PRAGUE_BUILD_ID` override)
     - local dev: `${PUBLIC_TOKYO_URL}/l10n/prague/...` (and the Tokyo dev server also rewrites `/l10n/v/<token>/...` → `/l10n/...` when needed)
 
 **Strict rules**
@@ -305,7 +305,7 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
 5. Publish overlays to Tokyo/R2:
    - Cloud-dev/prod (remote R2): `node scripts/prague-sync.mjs --publish --remote`
    - Local dev (wrangler local R2): `node scripts/prague-sync.mjs --publish --local`
-6. Prague reads page JSON base copy + Tokyo overlays from `tokyo/l10n/prague/**` (repo output) and fetches them at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/...` (cache-busted; token optional in local dev).
+6. Prague reads page JSON base copy + Tokyo overlays from `tokyo/l10n/prague/**` (repo output) and fetches them at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/...` (cache-busted; token optional in local dev; `<build-token>` resolves to `CF_PAGES_COMMIT_SHA` unless `PUBLIC_PRAGUE_BUILD_ID` is set).
 
 ### 1) Enforce locale-free curated instances in Michael
 

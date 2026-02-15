@@ -2,7 +2,7 @@
 
 STATUS: Runtime reality (this repo)
 Created: 2024-12-27
-Last updated: 2026-02-12
+Last updated: 2026-02-15
 
 ---
 
@@ -10,7 +10,7 @@ Last updated: 2026-02-12
 
 Prague is the marketing + SEO surface, implemented as an **Astro** app deployed on **Cloudflare Pages**. GA routing is **market+locale** and pages render server-side so Prague can apply deterministic overlays and emit canonical SEO tags.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` (single source of layout + base copy) and localized via Tokyo overlays (R2 keys under `tokyo/l10n/prague/**`, fetched at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
+In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` (single source of layout + base copy) and localized via Tokyo overlays (R2 keys under `tokyo/l10n/prague/**`, fetched at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 At build time, Prague:
 - enumerates widgets by scanning `tokyo/widgets/*` (excluding `_*/` and `shared/`)
@@ -69,7 +69,16 @@ Current repo behavior:
 
 ---
 
-## 1.4 Authoring Prague blocks (AI checklist)
+### 1.4 Create bridge route
+
+- `/{market}/{locale}/create` is a redirect bridge from Prague into Roma (`${PUBLIC_ROMA_URL}/home`).
+- Prague preserves incoming query params (including `claimToken` / `publicId`) and appends source context (`from=prague_create`, `market`, `locale`).
+- If `PUBLIC_ROMA_URL` is missing, this route fails visibly with `503` (no silent fallback).
+- Prague l10n cache token is resolved automatically from `CF_PAGES_COMMIT_SHA`; `PUBLIC_PRAGUE_BUILD_ID` is only an optional manual override.
+
+---
+
+## 1.5 Authoring Prague blocks (AI checklist)
 
 Prague widget pages are rendered from **block JSON** in Tokyo and localized via **Tokyo overlays**. When you add or edit blocks, keep these four filesystems in lockstep:
 
@@ -131,7 +140,7 @@ Localization is applied via page JSON + ops overlays:
 - overlays: `tokyo/l10n/prague/widgets/{widget}/locale/{locale}/{baseFingerprint}.ops.json`
 - overlays (subpages): `tokyo/l10n/prague/widgets/{widget}/{page}/locale/{locale}/{baseFingerprint}.ops.json`
 - Prague merges localized overlays into `blocks[].copy` at load time
-- Overlays are **set-only ops** gated by `baseFingerprint` and indexed via `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/{pageId}/index.json` (deterministic, no manifest fan‑out in app code).
+- Overlays are **set-only ops** gated by `baseFingerprint` and indexed via `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/{pageId}/index.json` (deterministic, no manifest fan‑out in app code).
 - Manual locale base variants are **not** part of the runtime contract in this repo snapshot; localization is overlay‑only.
 
 Validation:
@@ -156,6 +165,12 @@ Defaults (local/dev):
 - publicId is derived from the widget slug as `wgt_main_{widget}` (no override)
 - workspaceId override via env:
   - `PUBLIC_MINIBOB_WORKSPACE_ID` / `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>`
+
+MiniBob publish/signup handoff:
+- Prague requests current draft context from Bob iframe via postMessage (`devstudio:export-instance-data`).
+- Prague mints a signed claim token via `POST /api/minibob/claim-token`.
+- Prague redirects to the create/signup URL with `claimToken` + `publicId` query params.
+- Token signing uses `MINIBOB_CLAIM_HMAC_SECRET` (or `AI_GRANT_HMAC_SECRET` fallback) and emits `mbc.v1.<payload>.<signature>` for Paris claim verification.
 
 ---
 

@@ -137,7 +137,7 @@ async function applyL10nGenerateReport(args: { env: Env; report: L10nGenerateRep
 }
 
 export async function handleL10nGenerateReport(req: Request, env: Env): Promise<Response> {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   let payload: unknown;
@@ -556,7 +556,7 @@ export async function handleWorkspaceInstanceLayersList(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -603,7 +603,7 @@ export async function handleWorkspaceInstanceLayerGet(
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -664,7 +664,7 @@ export async function handleWorkspaceInstanceLayerUpsert(
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -1033,7 +1033,7 @@ export async function handleWorkspaceInstanceLayerDelete(
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -1155,7 +1155,7 @@ export async function handleWorkspaceInstanceL10nStatus(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -1240,7 +1240,7 @@ export async function handleWorkspaceInstanceL10nEnqueueSelected(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -1297,7 +1297,7 @@ export async function handleWorkspaceInstanceL10nEnqueueSelected(
 }
 
 export async function handleWorkspaceLocalesGet(req: Request, env: Env, workspaceId: string) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);
@@ -1313,7 +1313,7 @@ export async function handleWorkspaceLocalesGet(req: Request, env: Env, workspac
 }
 
 export async function handleWorkspaceLocalesPut(req: Request, env: Env, workspaceId: string) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const workspaceResult = await requireWorkspace(env, workspaceId);

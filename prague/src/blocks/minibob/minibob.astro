@@ -68,7 +68,13 @@ const bobOrigin = (() => {
 const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ?? undefined;
 ---
 
-<section id="minibob" class="ck-canvas" data-bob-origin={bobOrigin} data-create-href={createHref}>
+<section
+  id="minibob"
+  class="ck-canvas"
+  data-bob-origin={bobOrigin}
+  data-create-href={createHref}
+  data-public-id={publicId}
+>
   <div class="ck-minibobStage ck-stack ck-gap-tight">
     <PrimitiveRenderer primitives={headerPrimitives} />
     <div class="ck-minibobStage__personalize">
@@ -106,9 +112,123 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
 
     const expectedOrigin = root.dataset.bobOrigin || '';
     const signupHref = root.dataset.createHref || '';
+    const fallbackPublicId = (root.dataset.publicId || '').trim();
+    const CLAIM_TOKEN_ENDPOINT = '/api/minibob/claim-token';
+    const EXPORT_TIMEOUT_MS = 8000;
+    let claimInFlight = false;
 
     const iframe = root.querySelector('iframe.ck-minibob__iframe');
     if (!(iframe instanceof HTMLIFrameElement)) return;
+
+    const asRecord = (value) => (value && typeof value === 'object' && !Array.isArray(value) ? value : null);
+    const asText = (value) => (typeof value === 'string' ? value.trim() : '');
+
+    const nextRequestId = () => {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return `claim_${crypto.randomUUID()}`;
+      }
+      return `claim_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    };
+
+    async function exportClaimContextFromBob() {
+      if (!iframe.contentWindow) throw new Error('bob iframe not ready');
+
+      const requestId = nextRequestId();
+      const response = await new Promise((resolve, reject) => {
+        let timeoutId = null;
+
+        const done = (err, payload) => {
+          if (timeoutId != null) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          window.removeEventListener('message', onMessage);
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve(payload);
+        };
+
+        const onMessage = (event) => {
+          if (expectedOrigin && event.origin !== expectedOrigin) return;
+          if (event.source !== iframe.contentWindow) return;
+          const data = asRecord(event.data);
+          if (!data || data.type !== 'bob:export-instance-data') return;
+          if (asText(data.requestId) !== requestId) return;
+          if (data.ok !== true) {
+            done(new Error(asText(data.error) || 'bob export failed'));
+            return;
+          }
+          done(null, data);
+        };
+
+        timeoutId = window.setTimeout(() => {
+          done(new Error('bob export timeout'));
+        }, EXPORT_TIMEOUT_MS);
+
+        window.addEventListener('message', onMessage);
+        iframe.contentWindow.postMessage(
+          {
+            type: 'devstudio:export-instance-data',
+            requestId,
+            exportMode: 'current',
+            persistAssets: false,
+          },
+          expectedOrigin || '*',
+        );
+      });
+
+      const payload = asRecord(response);
+      const meta = asRecord(payload?.meta);
+      const publicId = asText(meta?.publicId) || fallbackPublicId;
+      if (!publicId) throw new Error('missing publicId for claim');
+
+      const widgetType = asText(meta?.widgetname) || undefined;
+      const isDirty = payload?.isDirty === true;
+      const draftConfig = isDirty ? asRecord(payload?.instanceData) : undefined;
+      if (isDirty && !draftConfig) {
+        throw new Error('missing draft config for dirty minibob session');
+      }
+
+      return {
+        publicId,
+        widgetType,
+        draftConfig,
+      };
+    }
+
+    async function mintClaimToken(input) {
+      const response = await fetch(CLAIM_TOKEN_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(input),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const detail = asRecord(payload);
+        throw new Error(asText(detail?.message) || asText(detail?.error) || `claim mint failed (${response.status})`);
+      }
+      const body = asRecord(payload);
+      const claimToken = asText(body?.claimToken);
+      if (!claimToken) throw new Error('claim mint returned empty token');
+      return claimToken;
+    }
+
+    function buildSignupUrl(baseHref, args) {
+      const url = new URL(baseHref, window.location.href);
+      url.searchParams.set('claimToken', args.claimToken);
+      url.searchParams.set('publicId', args.publicId);
+      return url.toString();
+    }
+
+    function surfaceClaimError(error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[prague:minibob] claim handoff failed', message);
+      window.alert(`Unable to continue signup from MiniBob right now. ${message}`);
+    }
 
     window.addEventListener('message', (event) => {
       if (expectedOrigin && event.origin !== expectedOrigin) return;
@@ -118,7 +238,19 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
       if (data.type !== 'bob:upsell') return;
       if (data.cta !== 'signup') return;
       if (!signupHref) return;
-      window.location.href = signupHref;
+
+      if (claimInFlight) return;
+      claimInFlight = true;
+
+      (async () => {
+        const claimInput = await exportClaimContextFromBob();
+        const claimToken = await mintClaimToken(claimInput);
+        const nextUrl = buildSignupUrl(signupHref, { claimToken, publicId: claimInput.publicId });
+        window.location.assign(nextUrl);
+      })().catch((error) => {
+        claimInFlight = false;
+        surfaceClaimError(error);
+      });
     });
   })();
 </script>

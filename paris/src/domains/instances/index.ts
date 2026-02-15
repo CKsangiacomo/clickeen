@@ -169,7 +169,7 @@ export async function resolveWidgetTypeForInstance(
 }
 
 export async function handleListWidgets(req: Request, env: Env) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const params = new URLSearchParams({
@@ -193,7 +193,7 @@ export async function handleListWidgets(req: Request, env: Env) {
 }
 
 export async function handleInstances(req: Request, env: Env) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const url = new URL(req.url);
@@ -263,7 +263,7 @@ function formatCuratedDisplayName(meta: Record<string, unknown> | null, fallback
 }
 
 export async function handleCuratedInstances(req: Request, env: Env) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const requestUrl = new URL(req.url);
@@ -381,7 +381,7 @@ function titleCase(input: string): string {
 }
 
 export async function handleCreateInstance(req: Request, env: Env) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   let payload: unknown;
@@ -554,7 +554,7 @@ export async function handleCreateInstance(req: Request, env: Env) {
 }
 
 export async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
-  const auth = assertDevAuth(req, env);
+  const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const url = new URL(req.url);

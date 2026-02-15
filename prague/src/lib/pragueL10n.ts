@@ -137,6 +137,20 @@ function readEnvStrictFlag(): string | undefined {
   return readEnv('PRAGUE_L10N_STRICT') || readEnv('PUBLIC_PRAGUE_L10N_STRICT');
 }
 
+function readEnvPragueBuildId(): string | undefined {
+  const metaAny = import.meta.env as any;
+  const metaPublic = String(metaAny.PUBLIC_PRAGUE_BUILD_ID || '').trim();
+  if (metaPublic) return metaPublic;
+  const metaCommit = String(metaAny.CF_PAGES_COMMIT_SHA || '').trim();
+  if (metaCommit) return metaCommit;
+
+  const envPublic = readEnv('PUBLIC_PRAGUE_BUILD_ID');
+  if (envPublic) return envPublic;
+  const envCommit = readEnv('CF_PAGES_COMMIT_SHA');
+  if (envCommit) return envCommit;
+  return undefined;
+}
+
 function getTokyoBaseUrl(): string {
   const raw = String(readEnvTokyoUrl() || '').trim();
   if (!raw) {
@@ -233,8 +247,7 @@ function encodePathSegments(pathStr: string): string {
 }
 
 function getTokyoL10nPrefix(): string {
-  const metaAny = import.meta.env as any;
-  const token = String(metaAny.PUBLIC_PRAGUE_BUILD_ID || '').trim();
+  const token = String(readEnvPragueBuildId() || '').trim();
   return token ? `/l10n/v/${encodeURIComponent(token)}` : '/l10n';
 }
 

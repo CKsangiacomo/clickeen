@@ -1,0 +1,61 @@
+---
+export const prerender = false;
+
+import { getPragueMarket } from '../../../../lib/markets';
+
+const { market, locale } = Astro.params;
+const url = Astro.url;
+
+if (!url.pathname.endsWith('/')) {
+  return Astro.redirect(`${url.pathname}/${url.search}`, 301);
+}
+
+const marketKey = String(market || '').trim().toLowerCase();
+const localeKey = String(locale || '').trim().toLowerCase();
+const marketConfig = getPragueMarket(marketKey);
+
+if (!marketConfig) {
+  return Astro.redirect(`/${url.search}`, 302);
+}
+
+if (!marketConfig.locales.includes(localeKey)) {
+  return Astro.redirect(`/${marketConfig.key}/${marketConfig.defaultLocale}/create/${url.search}`, 302);
+}
+
+const romaBase = String(import.meta.env.PUBLIC_ROMA_URL ?? process.env.PUBLIC_ROMA_URL ?? '')
+  .trim()
+  .replace(/\/+$/, '');
+
+if (romaBase) {
+  const target = new URL(`${romaBase}/home`);
+  url.searchParams.forEach((value, key) => {
+    target.searchParams.append(key, value);
+  });
+  target.searchParams.set('from', 'prague_create');
+  target.searchParams.set('market', marketConfig.key);
+  target.searchParams.set('locale', localeKey);
+  return Astro.redirect(target.toString(), 302);
+}
+
+Astro.response.status = 503;
+---
+
+<!doctype html>
+<html lang={localeKey || 'en'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clickeen create route unavailable</title>
+  </head>
+  <body>
+    <main style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width: 640px; margin: 64px auto; padding: 0 16px;">
+      <h1 style="font-size: 24px; line-height: 1.25; margin-bottom: 12px;">Create route unavailable</h1>
+      <p style="font-size: 16px; line-height: 1.5; margin-bottom: 8px;">
+        Prague cannot redirect to Roma because <code>PUBLIC_ROMA_URL</code> is not configured.
+      </p>
+      <p style="font-size: 14px; line-height: 1.5; opacity: 0.8;">
+        Configure <code>PUBLIC_ROMA_URL</code> in Prague runtime env and retry.
+      </p>
+    </main>
+  </body>
+</html>
