@@ -46,11 +46,8 @@ jobs:
       - name: Build Roma for Cloudflare Pages
         run: pnpm -C roma build:cf
 
-      - name: Recreate Roma Pages project with compatibility flags (cloud-dev)
-        run: |
-          set -euo pipefail
-          pnpm -C tokyo-worker exec wrangler pages project delete "$ROMA_PAGES_PROJECT" --yes || true
-          pnpm -C tokyo-worker exec wrangler pages project create "$ROMA_PAGES_PROJECT" --production-branch main --compatibility-date "2025-12-28" --compatibility-flags nodejs_compat
+      - name: Ensure Roma Pages project exists (cloud-dev)
+        run: pnpm -C tokyo-worker exec wrangler --cwd ../roma pages project create "$ROMA_PAGES_PROJECT" --production-branch main || true
 
       - name: Deploy Roma Pages (cloud-dev)
-        run: pnpm -C tokyo-worker exec wrangler pages deploy ../roma/.vercel/output/static --project-name "$ROMA_PAGES_PROJECT" --branch main --commit-dirty=true
+        run: pnpm -C tokyo-worker exec wrangler --cwd ../roma pages deploy .vercel/output/static --project-name "$ROMA_PAGES_PROJECT" --branch main --commit-dirty=true
