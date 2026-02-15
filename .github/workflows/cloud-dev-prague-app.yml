@@ -34,6 +34,7 @@ jobs:
       PUBLIC_VENICE_URL: https://venice.dev.clickeen.com
       PUBLIC_ROMA_URL: https://roma-dev.pages.dev
       PUBLIC_PRAGUE_BUILD_ID: ${{ github.sha }}
+      MINIBOB_CLAIM_HMAC_SECRET: ${{ secrets.MINIBOB_CLAIM_HMAC_SECRET }}
 
       PRAGUE_PAGES_PROJECT: prague-dev
       PRAGUE_BASE_URL: https://prague-dev.pages.dev
@@ -53,6 +54,9 @@ jobs:
 
       - name: Build Prague (includes overlay verify)
         run: pnpm -C prague build
+
+      - name: Sync Prague claim secret (cloud-dev)
+        run: printf '%s' "$MINIBOB_CLAIM_HMAC_SECRET" | pnpm -C tokyo-worker exec wrangler pages secret put MINIBOB_CLAIM_HMAC_SECRET --project-name "$PRAGUE_PAGES_PROJECT"
 
       - name: Deploy Prague Pages (cloud-dev)
         run: pnpm -C tokyo-worker exec wrangler pages deploy ../prague/dist --project-name "$PRAGUE_PAGES_PROJECT" --branch main --commit-dirty=true

@@ -21,6 +21,7 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      MINIBOB_CLAIM_HMAC_SECRET: ${{ secrets.MINIBOB_CLAIM_HMAC_SECRET }}
     steps:
       - uses: actions/checkout@v4
 
@@ -34,6 +35,9 @@ jobs:
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
+
+      - name: Sync Paris claim secret (cloud-dev)
+        run: printf '%s' "$MINIBOB_CLAIM_HMAC_SECRET" | pnpm -C paris exec wrangler secret put MINIBOB_CLAIM_HMAC_SECRET --env ""
 
       - name: Deploy paris-dev
         run: pnpm -C paris run deploy
