@@ -32,6 +32,7 @@ jobs:
       PUBLIC_PARIS_URL: https://paris.dev.clickeen.com
       PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
       PUBLIC_VENICE_URL: https://venice.dev.clickeen.com
+      PUBLIC_ROMA_URL: https://roma-dev.pages.dev
       PUBLIC_PRAGUE_BUILD_ID: ${{ github.sha }}
 
       PRAGUE_PAGES_PROJECT: prague-dev
