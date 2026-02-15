@@ -62,16 +62,25 @@ async function hmacSha256Base64Url(secret, message) {
   return base64UrlEncodeBytes(new Uint8Array(signature));
 }
 
-function resolveClaimSecret() {
-  const direct = asTrimmedString(process.env.MINIBOB_CLAIM_HMAC_SECRET);
+function readRuntimeEnvValue(runtimeEnv, key) {
+  if (!runtimeEnv || typeof runtimeEnv !== 'object') return '';
+  const value = runtimeEnv[key];
+  if (typeof value === 'string') return asTrimmedString(value);
+  if (value == null) return '';
+  return asTrimmedString(String(value));
+}
+
+function resolveClaimSecret(runtimeEnv) {
+  const direct = readRuntimeEnvValue(runtimeEnv, 'MINIBOB_CLAIM_HMAC_SECRET') || asTrimmedString(process.env.MINIBOB_CLAIM_HMAC_SECRET);
   if (direct) return direct;
-  const fallback = asTrimmedString(process.env.AI_GRANT_HMAC_SECRET);
+  const fallback = readRuntimeEnvValue(runtimeEnv, 'AI_GRANT_HMAC_SECRET') || asTrimmedString(process.env.AI_GRANT_HMAC_SECRET);
   if (fallback) return fallback;
   return '';
 }
 
-export async function POST({ request }) {
-  const secret = resolveClaimSecret();
+export async function POST({ request, locals }) {
+  const runtimeEnv = locals?.runtime?.env;
+  const secret = resolveClaimSecret(runtimeEnv);
   if (!secret) {
     return json(
       {
