@@ -1,0 +1,53 @@
+name: cloud-dev roma app deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "roma/**"
+      - "bob/components/BuilderApp.tsx"
+      - "bob/package.json"
+      - "scripts/build-roma-cf.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/cloud-dev-roma-app.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: cloud-dev-roma
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      PARIS_BASE_URL: https://paris.dev.clickeen.com
+      NEXT_PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
+
+      ROMA_PAGES_PROJECT: roma-dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: {}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Roma for Cloudflare Pages
+        run: pnpm -C roma build:cf
+
+      - name: Ensure Roma Pages project exists (cloud-dev)
+        run: pnpm -C tokyo-worker exec wrangler pages project create "$ROMA_PAGES_PROJECT" --production-branch main || true
+
+      - name: Deploy Roma Pages (cloud-dev)
+        run: pnpm -C tokyo-worker exec wrangler pages deploy ../roma/.vercel/output/static --project-name "$ROMA_PAGES_PROJECT" --branch main --commit-dirty=true
