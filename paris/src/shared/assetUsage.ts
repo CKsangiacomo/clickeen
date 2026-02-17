@@ -124,6 +124,41 @@ export async function syncAccountAssetUsageForInstance(args: {
     );
   }
 
+  if (refs.length > 0) {
+    const uniqueAssetIds = Array.from(new Set(refs.map((row) => row.assetId))).filter(Boolean);
+    const existingParams = new URLSearchParams({
+      select: 'asset_id',
+      account_id: `eq.${accountId}`,
+      asset_id: `in.(${uniqueAssetIds.join(',')})`,
+      limit: String(Math.max(uniqueAssetIds.length, 1)),
+    });
+    const existingRes = await supabaseFetch(
+      args.env,
+      `/rest/v1/account_assets?${existingParams.toString()}`,
+      { method: 'GET' },
+    );
+    if (!existingRes.ok) {
+      const details = await readJson(existingRes);
+      throw new Error(
+        `[ParisWorker] Failed to validate account assets (${existingRes.status}): ${JSON.stringify(details)}`,
+      );
+    }
+    const existingRows = (await existingRes.json().catch(() => null)) as Array<{ asset_id?: string }> | null;
+    const existingAssetIds = new Set(
+      Array.isArray(existingRows)
+        ? existingRows
+            .map((row) => (typeof row?.asset_id === 'string' ? row.asset_id.trim() : ''))
+            .filter((value): value is string => Boolean(value))
+        : [],
+    );
+    const missingRef = refs.find((row) => !existingAssetIds.has(row.assetId));
+    if (missingRef) {
+      throw new AssetUsageValidationError(
+        `Missing account asset reference at ${missingRef.configPath}: asset_id=${missingRef.assetId}`,
+      );
+    }
+  }
+
   const deleteParams = new URLSearchParams({
     account_id: `eq.${accountId}`,
     public_id: `eq.${publicId}`,

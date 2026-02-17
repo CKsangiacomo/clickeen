@@ -95,6 +95,7 @@ var Dieter = (() => {
 
   // components/dropdown-upload/dropdown-upload.ts
   var states = /* @__PURE__ */ new Map();
+  var ASSET_UNAVAILABLE_MESSAGE = "Asset URL is unavailable. Replace file to restore preview.";
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-upload",
     triggerSelector: ".diet-dropdown-upload__control",
@@ -191,6 +192,37 @@ var Dieter = (() => {
       state.metaInput.addEventListener("external-sync", () => syncFromInputs(state));
       state.metaInput.addEventListener("input", () => syncFromInputs(state));
     }
+    const handlePreviewMediaError = (kind, currentSrc) => {
+      const raw = state.input.value || "";
+      const expected = extractPrimaryUrl(raw) || "";
+      if (!expected || /^data:/i.test(expected) || /^blob:/i.test(expected)) return;
+      if (state.previewPanel.dataset.kind !== kind) return;
+      if (!sameAssetUrl(currentSrc, expected)) return;
+      const fallbackLabel = state.previewName.textContent?.trim() || "Asset unavailable";
+      setHeaderWithFile(state, fallbackLabel, true);
+      setError(state, ASSET_UNAVAILABLE_MESSAGE);
+    };
+    const handlePreviewMediaReady = (kind, currentSrc) => {
+      const raw = state.input.value || "";
+      const expected = extractPrimaryUrl(raw) || "";
+      if (!expected || state.previewPanel.dataset.kind !== kind) return;
+      if (!sameAssetUrl(currentSrc, expected)) return;
+      if ((state.previewError.textContent || "").trim() === ASSET_UNAVAILABLE_MESSAGE) {
+        clearError(state);
+      }
+    };
+    state.previewImg.addEventListener("error", () => {
+      handlePreviewMediaError("image", state.previewImg.currentSrc || state.previewImg.src || "");
+    });
+    state.previewImg.addEventListener("load", () => {
+      handlePreviewMediaReady("image", state.previewImg.currentSrc || state.previewImg.src || "");
+    });
+    state.previewVideoEl.addEventListener("error", () => {
+      handlePreviewMediaError("video", state.previewVideoEl.currentSrc || state.previewVideoEl.src || "");
+    });
+    state.previewVideoEl.addEventListener("loadeddata", () => {
+      handlePreviewMediaReady("video", state.previewVideoEl.currentSrc || state.previewVideoEl.src || "");
+    });
     const pickFile = (event) => {
       event.preventDefault();
       state.fileInput.value = "";
@@ -292,6 +324,22 @@ var Dieter = (() => {
   function looksLikeUrl(raw) {
     const url = extractPrimaryUrl(raw);
     return Boolean(url && (/^https?:\/\//i.test(url) || /^blob:/i.test(url) || url.startsWith("/")));
+  }
+  function sameAssetUrl(leftRaw, rightRaw) {
+    const left = normalizeUrlForCompare(leftRaw);
+    const right = normalizeUrlForCompare(rightRaw);
+    if (!left || !right) return false;
+    return left === right;
+  }
+  function normalizeUrlForCompare(raw) {
+    const value = String(raw || "").trim();
+    if (!value) return "";
+    try {
+      const parsed = new URL(value, window.location.href);
+      return parsed.toString();
+    } catch {
+      return value;
+    }
   }
   function previewFromUrl(state, raw, name, kindName, mime) {
     const url = extractPrimaryUrl(raw);

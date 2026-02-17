@@ -542,6 +542,21 @@
             ></span>
             <span class="diet-btn-ictxt__label body-s">Update Curated</span>
           </button>
+          <button
+            type="button"
+            class="diet-btn-ictxt dev-widget-workspace__action"
+            id="promote-curated-cloud"
+            data-size="md"
+            data-variant="secondary"
+            data-tone="gray4.4"
+          >
+            <span
+              class="diet-btn-ictxt__icon"
+              aria-hidden="true"
+              data-icon="square.and.arrow.up"
+            ></span>
+            <span class="diet-btn-ictxt__label body-s">Promote Cloud</span>
+          </button>
         </div>
       </div>
     </div>
@@ -844,6 +859,7 @@
     const superadminResetFromJson = document.getElementById('superadmin-reset-from-json');
     const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
     const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
+    const promoteCuratedCloudBtn = document.getElementById('promote-curated-cloud');
     const refreshPraguePreviewBtn = document.getElementById('refresh-prague-preview');
     const translateSelectedLocalesBtn = document.getElementById('translate-selected-locales');
     const l10nStatus = document.getElementById('l10n-status');
@@ -1331,13 +1347,14 @@
       return promise;
     }
 
-    async function fetchInstanceConfig(publicId) {
-      if (instanceConfigPromiseCache.has(publicId)) {
-        return instanceConfigPromiseCache.get(publicId);
+    async function fetchInstanceConfig(publicId, workspaceId = DEV_WORKSPACE_ID) {
+      const cacheKey = `${workspaceId}::${publicId}`;
+      if (instanceConfigPromiseCache.has(cacheKey)) {
+        return instanceConfigPromiseCache.get(cacheKey);
       }
       const promise = (async () => {
         const res = await fetch(
-          `${PARIS_API}/workspaces/${encodeURIComponent(DEV_WORKSPACE_ID)}/instance/${encodeURIComponent(
+          `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
             publicId,
           )}?subject=devstudio&_t=${Date.now()}`,
           { cache: 'no-store' },
@@ -1346,10 +1363,10 @@
         const json = await res.json();
         return json?.config ?? null;
       })().finally(() => {
-        instanceConfigPromiseCache.delete(publicId);
+        instanceConfigPromiseCache.delete(cacheKey);
       });
 
-      instanceConfigPromiseCache.set(publicId, promise);
+      instanceConfigPromiseCache.set(cacheKey, promise);
       return promise;
     }
 
@@ -1708,10 +1725,9 @@
           detail = parsed?.error?.detail || parsed?.error?.reasonKey || detail;
         } catch {}
         console.warn('[DevStudio] Cloud promote failed', { publicId, detail });
-        alert(`[DevStudio] Cloud promote failed for ${publicId}: ${detail}`);
         return { ok: false, error: detail };
       }
-      return { ok: true };
+      return { ok: true, detail: 'promoted' };
     }
 
     async function exportInstanceDataFromBob({
@@ -2476,14 +2492,6 @@
         meta,
       });
 
-      await promoteInstanceToCloud({
-        workspaceId: CLICKEEN_WORKSPACE_ID,
-        widgetType: curatedModalState.widgetSlug,
-        publicId,
-        config: sourceConfig,
-        status: 'published',
-      });
-
       closeCuratedModal();
       await refreshInstancesAndSelect(publicId);
     }
@@ -2497,6 +2505,40 @@
       }
     }
 
+    async function promoteCurrentInstanceToCloud() {
+      if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+      if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
+        throw new Error('[DevStudio] Select a curated/main instance first.');
+      }
+
+      const instance = instances.find((inst) => inst.publicId === currentPublicId);
+      const widgetSlug = instance?.widgetSlug || normalizeWidgetname(instance?.widgetname);
+      if (!widgetSlug) {
+        throw new Error('[DevStudio] Unable to resolve widget type from selected instance.');
+      }
+
+      const config = await fetchInstanceConfig(currentPublicId, CLICKEEN_WORKSPACE_ID);
+      if (!config || typeof config !== 'object') {
+        throw new Error('[DevStudio] Failed to read persisted local config before cloud promote.');
+      }
+
+      const promoted = await promoteInstanceToCloud({
+        workspaceId: CLICKEEN_WORKSPACE_ID,
+        widgetType: widgetSlug,
+        publicId: currentPublicId,
+        config,
+        status: 'published',
+      });
+
+      if (!promoted.ok) {
+        throw new Error(
+          `[DevStudio] Cloud promote failed for ${currentPublicId}: ${promoted.error || 'unknown error'}`,
+        );
+      }
+
+      alert(`[DevStudio] Cloud promote completed for ${currentPublicId}.`);
+    }
+
     if (isLocalDevStudio && superadminActions) {
       superadminActions.style.display = 'inline-flex';
     }
@@ -2505,13 +2547,6 @@
       try {
         const widgetSlug = requireWidgetSlugForAction();
         const result = await updateDefaultsMainInstanceFromEditor(widgetSlug);
-        await promoteInstanceToCloud({
-          workspaceId: CLICKEEN_WORKSPACE_ID,
-          widgetType: widgetSlug,
-          publicId: result.publicId,
-          config: result.config,
-          status: 'published',
-        });
         await refreshInstancesAndSelect(result.publicId);
       } catch (err) {
         alert(err instanceof Error ? err.message : String(err));
@@ -2530,13 +2565,6 @@
       try {
         const widgetSlug = requireWidgetSlugForAction();
         const result = await resetMainInstanceFromJson(widgetSlug);
-        await promoteInstanceToCloud({
-          workspaceId: CLICKEEN_WORKSPACE_ID,
-          widgetType: widgetSlug,
-          publicId: result.publicId,
-          config: result.config,
-          status: 'published',
-        });
         await refreshInstancesAndSelect(result.publicId);
       } catch (err) {
         alert(err instanceof Error ? err.message : String(err));
@@ -2559,17 +2587,28 @@
         if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
         const instance = instances.find((inst) => inst.publicId === currentPublicId);
         const result = await updateCuratedInstanceFromEditor(instance);
-        const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
-        await promoteInstanceToCloud({
-          workspaceId: CLICKEEN_WORKSPACE_ID,
-          widgetType: widgetSlug,
-          publicId: result.publicId,
-          config: result.config,
-          status: 'published',
-        });
         await refreshInstancesAndSelect(result.publicId);
       } catch (err) {
         alert(err instanceof Error ? err.message : String(err));
+      }
+    });
+
+    promoteCuratedCloudBtn?.addEventListener('click', async () => {
+      const labelEl = promoteCuratedCloudBtn?.querySelector('.diet-btn-ictxt__label');
+      const previousLabel = labelEl?.textContent || 'Promote Cloud';
+      try {
+        if (promoteCuratedCloudBtn) promoteCuratedCloudBtn.disabled = true;
+        if (labelEl) labelEl.textContent = 'Promoting...';
+        await promoteCurrentInstanceToCloud();
+        if (labelEl) labelEl.textContent = 'Promoted';
+        setTimeout(() => {
+          if (labelEl) labelEl.textContent = previousLabel;
+        }, 1400);
+      } catch (err) {
+        if (labelEl) labelEl.textContent = previousLabel;
+        alert(err instanceof Error ? err.message : String(err));
+      } finally {
+        if (promoteCuratedCloudBtn) promoteCuratedCloudBtn.disabled = false;
       }
     });
 

@@ -136,7 +136,7 @@ Instances are data (not code) and live in Paris/Michael. Assets live in Tokyo.
 Local changes do not auto-appear in cloud-dev. You must promote or deploy.
 
 1) **Curated instances + assets**:
-   - Use DevStudio promote flow (local DevStudio -> cloud Paris/Tokyo).
+   - Use DevStudio **Promote Cloud** action (local DevStudio -> cloud Paris/Tokyo).
    - Promotion rewrites local Tokyo URLs to cloud Tokyo URLs.
 2) **Prague/Bob/Roma/DevStudio**:
    - Code changes require Cloudflare deploys (Pages/Workers).

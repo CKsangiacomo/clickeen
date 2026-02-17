@@ -685,6 +685,9 @@ export default defineConfig({
               }
             };
 
+            const looksLikeJwt = (value: string): boolean =>
+              /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(String(value || '').trim());
+
             const visit = (node: any, nodePath: string) => {
               if (typeof node === 'string') {
                 if (containsNonPersistableUrl(node)) {
@@ -906,6 +909,20 @@ export default defineConfig({
                     kind: 'INTERNAL',
                     reasonKey: 'devstudio.errors.promote.missingCloudAuth',
                     detail: 'Missing CK_CLOUD_PARIS_DEV_JWT (or PARIS_DEV_JWT) in DevStudio Local env.',
+                  },
+                }),
+              );
+              return;
+            }
+            if (!looksLikeJwt(jwt)) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'devstudio.errors.promote.invalidCloudAuth',
+                    detail:
+                      'CK_CLOUD_PARIS_DEV_JWT (or PARIS_DEV_JWT fallback) does not look like a JWT. Use a valid cloud-dev JWT (header.payload.signature).',
                   },
                 }),
               );

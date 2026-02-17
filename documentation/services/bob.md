@@ -267,6 +267,9 @@ Operational baseline (local smoke, 2026-02-17):
 - `POST /api/assets/upload` (1x1 PNG, account/workspace trace headers): `~55ms`
 - End-to-end with Roma account asset APIs (list/delete) remained sub-100ms on warm services.
 
+Editor UX note:
+- `dropdown-upload` now surfaces an inline preview error when a persisted asset URL is unreachable (e.g. stale/deleted asset), so missing assets are explicit instead of appearing as a silent blank preview.
+
 ---
 
 ## Copilot (chat-first, ops-based)

@@ -37,6 +37,7 @@ type DropdownUploadState = {
 };
 
 const states = new Map<HTMLElement, DropdownUploadState>();
+const ASSET_UNAVAILABLE_MESSAGE = 'Asset URL is unavailable. Replace file to restore preview.';
 
 // IMPORTANT: keep this at module scope.
 // DevStudio (and some Bob flows) may call hydrators more than once over the same DOM.
@@ -160,6 +161,40 @@ function installHandlers(state: DropdownUploadState) {
     state.metaInput.addEventListener('external-sync', () => syncFromInputs(state));
     state.metaInput.addEventListener('input', () => syncFromInputs(state));
   }
+
+  const handlePreviewMediaError = (kind: Kind, currentSrc: string) => {
+    const raw = state.input.value || '';
+    const expected = extractPrimaryUrl(raw) || '';
+    if (!expected || /^data:/i.test(expected) || /^blob:/i.test(expected)) return;
+    if (state.previewPanel.dataset.kind !== kind) return;
+    if (!sameAssetUrl(currentSrc, expected)) return;
+    const fallbackLabel = state.previewName.textContent?.trim() || 'Asset unavailable';
+    setHeaderWithFile(state, fallbackLabel, true);
+    setError(state, ASSET_UNAVAILABLE_MESSAGE);
+  };
+
+  const handlePreviewMediaReady = (kind: Kind, currentSrc: string) => {
+    const raw = state.input.value || '';
+    const expected = extractPrimaryUrl(raw) || '';
+    if (!expected || state.previewPanel.dataset.kind !== kind) return;
+    if (!sameAssetUrl(currentSrc, expected)) return;
+    if ((state.previewError.textContent || '').trim() === ASSET_UNAVAILABLE_MESSAGE) {
+      clearError(state);
+    }
+  };
+
+  state.previewImg.addEventListener('error', () => {
+    handlePreviewMediaError('image', state.previewImg.currentSrc || state.previewImg.src || '');
+  });
+  state.previewImg.addEventListener('load', () => {
+    handlePreviewMediaReady('image', state.previewImg.currentSrc || state.previewImg.src || '');
+  });
+  state.previewVideoEl.addEventListener('error', () => {
+    handlePreviewMediaError('video', state.previewVideoEl.currentSrc || state.previewVideoEl.src || '');
+  });
+  state.previewVideoEl.addEventListener('loadeddata', () => {
+    handlePreviewMediaReady('video', state.previewVideoEl.currentSrc || state.previewVideoEl.src || '');
+  });
 
   const pickFile = (event: Event) => {
     event.preventDefault();
@@ -289,6 +324,24 @@ function isDataUrl(raw: string): boolean {
 function looksLikeUrl(raw: string): boolean {
   const url = extractPrimaryUrl(raw);
   return Boolean(url && (/^https?:\/\//i.test(url) || /^blob:/i.test(url) || url.startsWith('/')));
+}
+
+function sameAssetUrl(leftRaw: string, rightRaw: string): boolean {
+  const left = normalizeUrlForCompare(leftRaw);
+  const right = normalizeUrlForCompare(rightRaw);
+  if (!left || !right) return false;
+  return left === right;
+}
+
+function normalizeUrlForCompare(raw: string): string {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+  try {
+    const parsed = new URL(value, window.location.href);
+    return parsed.toString();
+  } catch {
+    return value;
+  }
 }
 
 function previewFromUrl(state: DropdownUploadState, raw: string, name: string, kindName: string, mime: string) {

@@ -172,7 +172,7 @@ Each release proceeds in 3 steps:
 - End-to-end flow:
   1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional workspace/public/widget trace headers).
   2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`).
-  3. Paris rewrites usage mappings (`account_asset_usage`) on instance config writes.
+  3. Paris validates account asset references on instance writes (fails fast on cross-account/missing refs) and rewrites usage mappings (`account_asset_usage`).
   4. Roma Assets reads/deletes via account endpoints (`/api/accounts/:accountId/assets*`) and optionally applies workspace projection.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
