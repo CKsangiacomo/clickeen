@@ -24,28 +24,10 @@ function UpsellPopupHost() {
 export function BuilderApp() {
   return (
     <WidgetSessionProvider>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100vh',
-          gap: 'var(--space-2)',
-          padding: 'var(--space-2)',
-          overflow: 'hidden',
-          backgroundColor: 'var(--color-system-gray-6-step3)',
-        }}
-      >
+      <div className="builder-app">
         <TopDrawer />
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '340px 1fr',
-            gap: 'var(--space-2)',
-            flex: 1,
-            overflow: 'hidden',
-          }}
-        >
+        <div className="builder-app__content">
           <ToolDrawer />
           <Workspace />
         </div>
@@ -54,4 +36,3 @@ export function BuilderApp() {
     </WidgetSessionProvider>
   );
 }
-

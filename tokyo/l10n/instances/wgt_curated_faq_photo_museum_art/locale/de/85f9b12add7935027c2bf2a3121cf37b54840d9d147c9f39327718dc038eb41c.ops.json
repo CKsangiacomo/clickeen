@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Reservierung vornehmen"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Entdecken Sie den Charme und Komfort unseres USA Bed & Breakfast."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQs zum Museum für moderne Kunst"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Wir bieten eine Vielzahl an <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Ausstellungen moderner Kunst</a> an, darunter Werke von <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">zeitgenössischen Künstler:innen</a>, Skulpturen und <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Installationen</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Welche Arten von Kunstausstellungen gibt es?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Das Museum ist täglich von 10:00 bis 18:00 Uhr geöffnet."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Wie sind die Öffnungszeiten?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Nein, alle Altersgruppen sind willkommen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Gibt es eine Altersbeschränkung?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ja, wir bieten Gruppenrabatte und Pakete für besondere Veranstaltungen an."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Bieten Sie spezielle Pakete an?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Stornierungen müssen 24 Stunden im Voraus erfolgen, um Gebühren zu vermeiden."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Wie lautet Ihre Stornierungsrichtlinie?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Ja, wir bieten Bildungstouren und Programme für Schulen und Gruppen an."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Bieten Sie Bildungsprogramme an?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Erlebnis im Museum für moderne Kunst"
+    }
+  ],
+  "v": 1
+}

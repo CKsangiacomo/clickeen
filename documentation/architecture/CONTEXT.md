@@ -65,13 +65,15 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 ### The Two-API-Call Pattern
 
-Bob makes EXACTLY 2 calls to Paris per editing session for **core instance config**:
-1. **Load**: `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when Bob mounts
-2. **Publish**: `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish
+Core base-config editing follows EXACTLY 2 Paris instance calls per open session:
+1. **Load**: `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` once per instance open (host-performed in Roma/DevStudio message boot, Bob-performed in URL boot).
+2. **Publish**: `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish (always from Bob).
 
 `subject` is required on workspace-scoped endpoints (`workspace`, `devstudio`, `minibob`) to resolve editor policy.
 
-In the browser these typically flow through Bob’s same-origin proxy (`/api/paris/instance/:publicId?workspaceId=...&subject=workspace`) which forwards to the workspace-scoped Paris endpoints.
+In the browser these flow through one of two host paths:
+- Bob URL boot path: Bob same-origin proxy (`/api/paris/workspaces/:workspaceId/instance/:publicId?subject=workspace`) forwards to the workspace-scoped Paris endpoints.
+- Roma/DevStudio message boot path: host fetches instance + compiled payload, then sends Bob a `ck:open-editor` message (Bob still enforces publish via the same Paris workspace endpoint).
 
 Localization is separate: Bob also calls workspace/instance locale endpoints when translating or applying overlay edits. Those writes are intentional and do **not** publish the base config.
 
@@ -139,6 +141,7 @@ curated_widget_instances.meta = {
 |--------|---------|---------|-----------|
 | **Prague** | Marketing site + gallery | Cloudflare Pages | `prague/` |
 | **Bob** | Widget builder app | Cloudflare Pages (Next.js) | `bob/` |
+| **Roma** | Product shell (workspace domains + Builder host orchestration) | Cloudflare Pages (Next.js) | `roma/` |
 | **Venice** | SSR embed runtime | Cloudflare Pages (Next.js Edge) | `venice/` |
 | **Paris** | HTTP API gateway | Cloudflare Workers | `paris/` |
 | **San Francisco** | AI Workforce OS (agents, learning) | Workers (D1/KV/R2/Queues) | `sanfrancisco/` |
@@ -153,6 +156,8 @@ curated_widget_instances.meta = {
 ## Glossary
 
 **Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, publishes via Paris (writes to Michael). Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot` (with legacy `/api/ai/sdr-copilot` compatibility where older deployments still run it).
+
+**Roma** — Product shell and workspace experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves active workspace context through `/api/bootstrap`, keeps short-lived workspace/account authz capsules for Paris calls, and opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle).
 
 **Venice** — SSR embed runtime. Fetches instance config via Paris and serves embeddable HTML. Third-party pages only ever talk to Venice; Paris is private.
 
@@ -267,6 +272,7 @@ Canonical reference:
 | System | Status | Notes |
 |--------|--------|-------|
 | Bob | ✅ Active | Compiler, ToolDrawer, Workspace, Ops engine |
+| Roma | ✅ Active | Domain shell, workspace bootstrap, widgets/templates/builder orchestration |
 | Tokyo | ✅ Active | FAQ widget with shared modules |
 | Paris | ✅ Active | Instance API, tokens, entitlements, submissions |
 | Venice | ✅ Active | SSR embed runtime (published-only), loader, asset proxy (usage/submissions are stubbed in this repo snapshot) |
@@ -301,7 +307,7 @@ pnpm build:dieter               # Build Dieter assets first
 pnpm build                      # Build all packages
 
 # Development
-bash scripts/dev-up.sh          # Start all (local): Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) (+ SF 3002 if enabled)
+bash scripts/dev-up.sh          # Start all (local): Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), Bob (3000), Roma (3004), DevStudio (5173), Prague (4321), Pitch (8790) (+ SF 3002 if enabled)
                                # Also builds Dieter + i18n and verifies Prague l10n overlays (auto-translates missing overlays when SF is running).
 pnpm dev:bob                    # Bob only
 pnpm dev:paris                  # Paris only
@@ -317,17 +323,23 @@ node scripts/compile-all-widgets.mjs
 
 **Local instance data (important):**
 - Instances are **not** created by scripts anymore.
-- In local dev, create/update instances explicitly from DevStudio Local (`http://localhost:5173/#/dieter/dev-widget-workspace`) via the superadmin actions.
+- In local dev, workspace user instances can be created/managed from Roma (`http://localhost:3004/widgets`) or DevStudio Local.
+- Curated/main authoring remains DevStudio Local superadmin actions (`http://localhost:5173/#/dieter/dev-widget-workspace`).
+
+**Local auth target (important):**
+- `bash scripts/dev-up.sh` uses local Supabase by default and ignores remote Supabase values in `.env.local`.
+- To force local services to use remote Supabase, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
+- Supabase session JWT issuer must match the Supabase project Paris is using; cross-project tokens are rejected (`AUTH_INVALID` issuer mismatch).
 
 ### Environments (Canonical)
 
-| Environment | Bob | Paris | Tokyo | San Francisco | DevStudio |
-|---|---|---|---|---|---|
-| **Local** | `http://localhost:3000` | `http://localhost:3001` | `http://localhost:4000` | (optional) `http://localhost:3002` | `http://localhost:5173` |
-| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://paris.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.dev.clickeen.com` |
-| **UAT** | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
-| **Limited GA** | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
-| **GA** | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
+| Environment | Bob | Roma | Paris | Tokyo | San Francisco | DevStudio |
+|---|---|---|---|---|---|---|
+| **Local** | `http://localhost:3000` | `http://localhost:3004` | `http://localhost:3001` | `http://localhost:4000` | (optional) `http://localhost:3002` | `http://localhost:5173` |
+| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://paris.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.dev.clickeen.com` |
+| **UAT** | `https://app.clickeen.com` | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
+| **Limited GA** | `https://app.clickeen.com` | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
+| **GA** | `https://app.clickeen.com` | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
 
 UAT / Limited GA / GA are **release stages** (account-level exposure controls), not separate infrastructure.
 

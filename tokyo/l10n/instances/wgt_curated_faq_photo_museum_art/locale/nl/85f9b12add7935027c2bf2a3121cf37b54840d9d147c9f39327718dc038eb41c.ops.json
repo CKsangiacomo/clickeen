@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Reserveer"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Ontdek de charme en het comfort van onze B&B in de VS."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Veelgestelde vragen over het Museum voor Moderne Kunst"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "We bieden een breed aanbod aan <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">moderne-kunsttentoonstellingen</a>, waaronder <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">hedendaagse kunstenaars</a>, sculpturen en <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">installaties</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Welke soorten kunsttentoonstellingen zijn er?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Het museum is dagelijks geopend van 10.00 tot 18.00 uur."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Wat zijn de openingstijden?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Nee, alle leeftijden zijn welkom."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Is er een leeftijdsgrens?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ja, we bieden groepskortingen en speciale arrangementen voor evenementen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Bieden jullie speciale arrangementen aan?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Annuleren moet 24 uur van tevoren om kosten te voorkomen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Wat is jullie annuleringsbeleid?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Ja, we bieden educatieve rondleidingen en programma’s voor scholen en groepen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Bieden jullie educatieve programma’s aan?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Beleving in het Museum voor Moderne Kunst"
+    }
+  ],
+  "v": 1
+}

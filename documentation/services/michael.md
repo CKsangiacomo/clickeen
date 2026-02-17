@@ -9,6 +9,7 @@ The schema is defined by:
 - `supabase/migrations/20260105000000__workspaces.sql`
 - `supabase/migrations/20260117090000__curated_widget_instances.sql`
 - `supabase/migrations/20260118090000__widget_instances_user_only.sql`
+- `supabase/migrations/20260216120000__widget_instances_display_name.sql`
 - `supabase/migrations/20260213160000__accounts_asset_domain_phase0.sql`
 
 If this document conflicts with those files, the SQL wins.
@@ -31,6 +32,7 @@ Core columns:
 - `widget_id` (uuid) — FK to `widgets.id`
 - `workspace_id` (uuid) — FK to `workspaces.id` (instances are workspace-owned)
 - `public_id` (text) — the **only** identifier that crosses system boundaries
+- `display_name` (text, nullable) — workspace-facing instance label (defaults to `public_id` when missing)
 - `kind` (text) — `user` (curated/baseline live in `curated_widget_instances`)
 - `status` (text) — `published` | `unpublished`
 - `config` (jsonb) — required object
@@ -76,8 +78,12 @@ Core columns:
 - `created_at`, `updated_at` (timestamptz)
 
 Notes:
-- `workspace_id/public_id/widget_type` remain nullable legacy trace columns for backward compatibility, but are no longer the primary "where used" source.
+- `workspace_id/public_id/widget_type` are nullable provenance columns (upload/source context), not ownership/read gates.
 - New usage truth lives in `account_asset_usage` (below).
+- Paris account asset projections map to this schema as:
+  - `view=all`: all active rows by `account_id`
+  - `view=created_in_workspace`: filter by provenance `workspace_id`
+  - `view=used_in_workspace`: filter by `account_asset_usage.public_id` set for instances in that workspace
 
 ### `account_asset_variants`
 Physical storage mapping for account asset variants (for example `original`, and future optimized variants).

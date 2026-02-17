@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Rezervasyon yap"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "ABD’deki oda kahvaltı tesisimizin cazibesini ve konforunu keşfedin."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Modern Sanat Müzesi SSS"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Modern sanat sergileri</a> dahil olmak üzere, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">çağdaş sanatçılar</a> , heykeller ve <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">enstalasyonlar</a> sunuyoruz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Hangi tür sanat sergileri mevcut?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Müze her gün 10:00 - 18:00 saatleri arasında açıktır."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Ziyaret saatleri nelerdir?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Hayır, her yaştan ziyaretçi kabul edilir."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Yaş sınırı var mı?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Evet, grup indirimleri ve özel etkinlik paketleri sunuyoruz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Herhangi bir özel paket sunuyor musunuz?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Ücret alınmaması için iptallerin 24 saat önceden yapılması gerekir."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "İptal politikanız nedir?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Evet, okullar ve gruplar için eğitim turları ve programlar sunuyoruz."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Herhangi bir eğitim programı sunuyor musunuz?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Modern Sanat Müzesi Deneyimi"
+    }
+  ],
+  "v": 1
+}

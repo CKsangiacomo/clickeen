@@ -58,6 +58,7 @@ tooling/sf-symbols/sources/
 
 # Tooling workspaces (not part of main pnpm workspace)
 tooling/sf-symbols/pnpm-lock.yaml
+tooling/whisper/
 
 # Misc
 .cache/

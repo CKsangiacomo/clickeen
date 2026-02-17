@@ -205,20 +205,26 @@ function applyReadOnlyState(container: HTMLElement, readOnly: boolean) {
   });
 }
 
-function ensureAssets(dieterAssets: { styles?: string[]; scripts?: string[] } | undefined): Promise<void> {
-  const stylePromises: Array<Promise<void>> = [];
-  if (dieterAssets?.styles) {
-    dieterAssets.styles.forEach((href) => stylePromises.push(loadStyle(href)));
-  }
-
+async function ensureAssets(dieterAssets: { styles?: string[]; scripts?: string[] } | undefined): Promise<void> {
+  const styleLoads = (dieterAssets?.styles || []).map((href) => loadStyle(href));
   const scriptList = dieterAssets?.scripts || [];
-  // Load scripts sequentially to preserve dependency order
+
+  // Load scripts sequentially to preserve dependency order.
   const scriptsPromise = scriptList.reduce<Promise<void>>(async (chain, src) => {
     await chain;
     await loadScript(src);
   }, Promise.resolve());
 
-  return Promise.all([...stylePromises, scriptsPromise]).then(() => undefined);
+  const settled = await Promise.allSettled([...styleLoads, scriptsPromise]);
+  const failures = settled.filter(
+    (entry): entry is PromiseRejectedResult => entry.status === 'rejected'
+  );
+
+  if (failures.length > 0 && process.env.NODE_ENV === 'development') {
+    failures.forEach((failure) => {
+      console.warn('[TdMenuContent] Dieter asset load warning', failure.reason);
+    });
+  }
 }
 
 function runHydrators(scope: HTMLElement) {

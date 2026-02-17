@@ -246,6 +246,39 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   }, [instanceLocales, activeLocaleToken]);
   const hasManualOverrides = Boolean(activeLocaleEntry?.hasUserOps);
 
+  const translationsStatus = useMemo(() => {
+    if (minibobTranslationsLocked) {
+      return { tone: 'unavailable', label: 'Upgrade required' };
+    }
+    if (workspaceLoading || instanceLoading || locale.loading) {
+      return { tone: 'pending', label: 'Loading' };
+    }
+    if (workspaceError || instanceError || locale.error) {
+      return { tone: 'unavailable', label: 'Unavailable' };
+    }
+    if (!hasInstance) {
+      return { tone: 'unavailable', label: 'No instance' };
+    }
+    if (isStale) {
+      return { tone: 'pending', label: 'Needs publish' };
+    }
+    if (availableLocales.length <= 1) {
+      return { tone: 'unavailable', label: 'EN only' };
+    }
+    return { tone: 'ready', label: 'Ready' };
+  }, [
+    availableLocales.length,
+    hasInstance,
+    instanceError,
+    instanceLoading,
+    isStale,
+    locale.error,
+    locale.loading,
+    minibobTranslationsLocked,
+    workspaceError,
+    workspaceLoading,
+  ]);
+
   useEffect(() => {
     if (!minibobTranslationsLocked) return;
     if (locale.activeLocale === locale.baseLocale) return;
@@ -286,12 +319,19 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   }, [publicId, activeLocale, locale.stale]);
 
   if (!hasInstance) {
-    return showSelector ? <div className="label-s label-muted">Load an instance from DevStudio to manage localization.</div> : null;
+    return showSelector ? <div className="label-s label-muted">No instance selected yet. Choose one from Widgets to manage localization.</div> : null;
   }
 
   return (
     <div className="tdmenucontent__cluster">
       <div className="tdmenucontent__cluster-body">
+        {showSelector && isTranslatePanel ? (
+          <div className="localization-header-status" data-tone={translationsStatus.tone}>
+            <span className="localization-header-status__label">Translations</span>
+            <span className="localization-header-status__dot" aria-hidden="true" />
+            <span className="localization-header-status__value">{translationsStatus.label}</span>
+          </div>
+        ) : null}
         {showSelector ? (
           <div
             role={minibobTranslationsLocked ? 'button' : undefined}

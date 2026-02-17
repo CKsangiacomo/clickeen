@@ -37,15 +37,17 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 
 ### Project Structure & Module Organization
 - `bob/` – Next.js widget editor UI; reads Dieter assets from `tokyo/dieter`.
+- `roma/` – Next.js product shell (workspace domains + Builder host orchestration).
 - `admin/` – Vite-based DevStudio showcase; docs generated via `scripts/`.
 - `dieter/` – Design system source (tokens, CSS, web components, `*.spec.json` fixtures).
-- `paris/` – Next.js API/service workspace (Supabase/Redis dependencies).
-- `venice/` & `prague/` – Edge runtime and marketing placeholders.
+- `paris/` – Cloudflare Worker API service workspace (Supabase-backed).
+- `venice/` – Next.js Edge embed runtime (Cloudflare Pages).
+- `prague/` – Astro marketing + SEO surface (Cloudflare Pages).
 - `documentation/` stores product/architecture context; `scripts/` has build helpers; `tokyo/` serves built Dieter assets for local use.
 
 ### Build, Test, and Development Commands
 - Install: `pnpm install` (workspace root).
-- Dev: `pnpm dev:bob`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`; `pnpm dev` runs them together via Turbo.
+- Dev: `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`; `pnpm dev` runs them together via Turbo.
 - Build: `pnpm build:dieter` first, then `pnpm build` (Turbo fan-out).
 - Lint/Typecheck: `pnpm lint`, `pnpm typecheck`; per-app linting with `pnpm --filter @clickeen/bob lint` or `.../devstudio lint`.
 - Tests: `pnpm test` (Turbo) or targeted `pnpm --filter @clickeen/devstudio test`.

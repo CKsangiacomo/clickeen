@@ -46,6 +46,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 |--------|-----------|--------|----------------|--------|
 | **Prague** | `prague/` | Cloudflare Pages | Marketing + SEO surface | ✅ Active |
 | **Bob** | `bob/` | Cloudflare Pages | Widget builder, compiler, ToolDrawer, preview | ✅ Active |
+| **Roma** | `roma/` | Cloudflare Pages | Product shell, workspace domains, Bob host orchestration | ✅ Active |
 | **Venice** | `venice/` | Cloudflare Pages (Next.js Edge) | SSR embed runtime, pixel, loader | ✅ Active |
 | **Paris** | `paris/` | Cloudflare Workers | HTTP API, instances, tokens, entitlements | ✅ Active |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration | ✅ Phase 1 |
@@ -85,6 +86,7 @@ Each release proceeds in 3 steps:
 | System | Cloud-dev | Production |
 |---|---|---|
 | **Bob** | `https://bob.dev.clickeen.com` | `https://app.clickeen.com` |
+| **Roma** | `https://roma.dev.clickeen.com` | `https://app.clickeen.com` |
 | **Prague** | `https://prague.dev.clickeen.com` (optional) | `https://clickeen.com` |
 | **DevStudio** | `https://devstudio.dev.clickeen.com` | (internal-only) |
 | **Paris** | `https://paris.dev.clickeen.com` | `https://paris.clickeen.com` |
@@ -100,7 +102,7 @@ Each release proceeds in 3 steps:
 
 | Primitive | Used by | Why |
 |---|---|---|
-| **Pages** | Prague, Bob, DevStudio | Static + Next.js-style app surfaces; simple deploy model |
+| **Pages** | Prague, Bob, Roma, DevStudio | Static + Next.js-style app surfaces; simple deploy model |
 | **Workers** | Paris, Venice, San Francisco (and Tokyo assets worker) | Edge HTTP services; consistent global runtime |
 | **R2** | Tokyo (assets), San Francisco (raw logs) | Cheap object storage, zero egress for CDN patterns |
 | **KV** | San Francisco (sessions), Atlas (read-only runtime cache) | Hot key/value state, TTLs |
@@ -130,10 +132,18 @@ Each release proceeds in 3 steps:
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
 - Bob proxies Paris under same-origin (`/api/paris/*`) using `PARIS_BASE_URL` (preferred).
 
+#### Roma (Pages)
+- Roma is the domain shell (`/home`, `/widgets`, `/templates`, `/builder`, ...).
+- Roma resolves identity/workspace/authz context through `/api/bootstrap` (proxy to Paris `/api/roma/bootstrap`), including workspace capsule, account capsule, and account entitlement snapshot.
+- Roma proxies Paris under same-origin (`/api/paris/*`) and injects short-lived authz headers:
+  - `x-ck-authz-capsule` for workspace-scoped calls
+  - `x-ck-account-capsule` for account-scoped calls
+- Roma Builder embeds Bob with `boot=message` and sends explicit `ck:open-editor` payloads after `bob:session-ready`.
+
 #### Paris (Workers)
 - Stateless API gateway to Michael (Supabase).
 - Public endpoints are under `/api/*`.
-- Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` (editor/dev tooling), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
+- Shipped in this repo snapshot: `GET /api/instance/:publicId` (public; user-owned rows are published-only), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` (editor/dev tooling), Roma domain endpoints (`GET /api/roma/bootstrap`, `GET /api/roma/widgets`, `GET /api/roma/templates`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
 - Layered l10n endpoints are canonical.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
@@ -156,6 +166,15 @@ Each release proceeds in 3 steps:
 - Reads `widget_instance_overlays` from Supabase (layered), merges `ops + user_ops` for layer=user, and publishes overlays to Tokyo/R2.
 - Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path.
 
+#### Asset ownership model (canonical)
+- Ownership boundary is account (`account_id`), not workspace.
+- Workspace is a projection boundary for UX queries (`used_in_workspace`, `created_in_workspace`), not an ownership boundary.
+- End-to-end flow:
+  1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional workspace/public/widget trace headers).
+  2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`).
+  3. Paris rewrites usage mappings (`account_asset_usage`) on instance config writes.
+  4. Roma Assets reads/deletes via account endpoints (`/api/accounts/:accountId/assets*`) and optionally applies workspace projection.
+
 #### San Francisco (Workers + D1/KV/R2/Queues)
 - `/healthz`, `/v1/execute`, `/v1/outcome`, queue consumer for non-blocking log writes.
 - Stores sessions in KV, raw logs in R2, indexes in D1.
@@ -167,6 +186,8 @@ Each release proceeds in 3 steps:
 | **Bob (Pages)** | `NEXT_PUBLIC_TOKYO_URL` | `https://tokyo.dev.clickeen.com` | `https://tokyo.clickeen.com` | Compiler fetches widget specs over HTTP (even locally) |
 | **Bob (Pages)** | `PARIS_BASE_URL` | `https://paris.dev.clickeen.com` | `https://paris.clickeen.com` | Bob’s same-origin proxy to Paris |
 | **Bob (Pages)** | `SANFRANCISCO_BASE_URL` | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Base URL for Copilot execution (San Francisco); some routes have local fallbacks |
+| **Roma (Pages)** | `PARIS_BASE_URL` | `https://paris.dev.clickeen.com` | `https://paris.clickeen.com` | Roma’s same-origin proxy to Paris |
+| **Roma (Pages)** | `NEXT_PUBLIC_BOB_URL` | `https://bob.dev.clickeen.com` | `https://app.clickeen.com` | Builder iframe origin fallback when no explicit `?bob=` override is provided |
 | **Paris (Workers)** | `SUPABASE_URL` | dev project | prod project | Service role access |
 | **Paris (Workers)** | `SUPABASE_SERVICE_ROLE_KEY` | dev key | prod key | Never exposed to browsers |
 | **Paris (Workers)** | `TOKYO_BASE_URL` | `https://tokyo.dev.clickeen.com` | `https://tokyo.clickeen.com` | Widget type validation + limits lookup |
@@ -179,10 +200,13 @@ Each release proceeds in 3 steps:
 **Hard security rule:**
 - `PARIS_DEV_JWT` is **local/dev-worker-only** and must never be set in Cloudflare Pages production env vars.
 
+**Local auth rule:**
+- In local development, Supabase JWT issuer must match the Supabase target Paris is running against (local by default via `dev-up`; remote only when `DEV_UP_USE_REMOTE_SUPABASE=1`).
+
 ### Cloudflare config checklist (what “done” looks like)
 
 **DNS & custom domains**
-- `bob.dev`, `paris.dev`, `tokyo.dev`, `venice.dev`, `sanfrancisco.dev`, `devstudio.dev` point at the corresponding Pages/Workers deployments.
+- `bob.dev`, `roma.dev`, `paris.dev`, `tokyo.dev`, `venice.dev`, `sanfrancisco.dev`, `devstudio.dev` point at the corresponding Pages/Workers deployments.
 - Production domains (`app`, `paris`, `tokyo`, `embed`, `sanfrancisco`) are configured similarly.
 
 **Pages build settings**
@@ -262,6 +286,11 @@ Each release proceeds in 3 steps:
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
+### Roma host flow (current)
+- Roma does not rely on Bob URL-bootstrap for normal Builder opens.
+- Roma resolves selected instance from URL path (`/builder/:publicId`) and keeps that as the single active selection source.
+- Roma preloads instance + compiled payload, then opens Bob via `ck:open-editor` in message mode (`boot=message`) and waits for ack/applied/fail responses.
+
 ### AI Copilot Flow (Minibob / Bob)
 
 Copilot execution is a separate, budgeted flow that never exposes provider keys to the browser.
@@ -310,7 +339,7 @@ Notes:
 
 ---
 
-## Bob's Two-API-Call Architecture
+## Base-Config Two-Call Architecture
 
 Base config exists in EXACTLY 2 places during editing:
 1. **Michael (database)** — Published version
@@ -318,11 +347,13 @@ Base config exists in EXACTLY 2 places during editing:
 
 **The Pattern:**
 ```
-1. Load:    GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace  → Bob gets published config
+1. Load:    GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace  → host (message boot) or Bob (URL boot) gets published config
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
 4. Publish: PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace  → Saves to Michael
 ```
+
+In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Publish still goes through the same workspace `PUT` endpoint.
 
 `subject` is required on workspace endpoints (`workspace`, `devstudio`, `minibob`) to resolve policy.
 
@@ -491,7 +522,7 @@ All third-party embed traffic terminates at Venice:
 ### 1. Editing Flow
 
 ```
-User opens widget → Bob GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace
+User opens widget → Host (Roma/DevStudio message boot) or Bob (URL boot) GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace
                   → Paris reads from Michael
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)

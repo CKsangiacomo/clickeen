@@ -9,9 +9,12 @@ This README is a quick operational guide. For the full endpoint and behavior con
 
 Core shipped endpoints in this repo snapshot include:
 - `GET /api/healthz`
-- `GET /api/me`
+- `GET /api/me` (`workspaceId` query optional; when provided, defaults are resolved only for that membership)
 - `POST /api/accounts` (Supabase session + `Idempotency-Key`)
-- `GET /api/instances`
+- `GET /api/roma/widgets?workspaceId=<uuid>` (Roma widgets domain list; metadata only, no instance `config` payload; includes active-workspace user instances plus account-owned curated/main starters)
+- `GET /api/roma/templates?workspaceId=<uuid>` (Roma templates domain list; all curated/main starters available to authenticated workspace members)
+- `POST /api/roma/widgets/duplicate` (Roma widgets command; duplicates a source instance into workspace-owned user instance server-side)
+- `DELETE /api/roma/instances/:publicId?workspaceId=<uuid>` (Roma widgets command; deletes workspace or account-owned curated instance when authorized)
 - `GET /api/curated-instances`
   - optional query: `includeConfig=0|1` (default `1`; set `0` for lightweight list responses without `config`)
 - `GET /api/workspaces/:workspaceId/instances`
@@ -19,8 +22,6 @@ Core shipped endpoints in this repo snapshot include:
 - `GET /api/workspaces/:workspaceId/instance/:publicId`
 - `PUT /api/workspaces/:workspaceId/instance/:publicId`
 - `GET /api/instance/:publicId`
-- `PUT /api/instance/:publicId`
-  - body supports: `{ config?: object, status?: 'published'|'unpublished' }` (curated is always `published`)
 - `GET /api/workspaces/:workspaceId`
 - `GET /api/workspaces/:workspaceId/members`
 - `GET /api/workspaces/:workspaceId/policy`
@@ -33,12 +34,18 @@ Core shipped endpoints in this repo snapshot include:
 - `POST /api/accounts/:accountId/workspaces` (Supabase session + `Idempotency-Key`)
 - `GET /api/accounts/:accountId/usage`
 - `GET /api/accounts/:accountId/assets`
-- `GET /api/accounts/:accountId/assets/:assetId`
+  - query projections:
+    - `view=all` (default account library)
+    - `view=used_in_workspace&workspaceId=<uuid>` (account assets currently used in that workspace)
+    - `view=created_in_workspace&workspaceId=<uuid>` (account assets created from that workspace)
+- `GET /api/accounts/:accountId/assets/:assetId` (supports the same optional `view/workspaceId` projection filters)
 - `DELETE /api/accounts/:accountId/assets/:assetId`
 - `GET /api/accounts/:accountId/billing/summary`
 - `POST /api/accounts/:accountId/billing/checkout-session` (explicit not-configured in this snapshot)
 - `POST /api/accounts/:accountId/billing/portal-session` (explicit not-configured in this snapshot)
-- `POST /api/claims/minibob/complete` (Supabase session + signed claim token + `Idempotency-Key`)
+- `POST /api/minibob/handoff/start` (public; stores server-side handoff snapshot and returns `handoffId`)
+- `POST /api/minibob/handoff/complete` (Supabase session + `handoffId` + `Idempotency-Key`)
+  - accepts only curated/base MiniBob source ids (`wgt_main_*` or `wgt_curated_*`) and always creates a new `wgt_*_u_*` record
 
 ## Curated vs user instances
 
@@ -49,17 +56,16 @@ Core shipped endpoints in this repo snapshot include:
 
 Public in this repo snapshot:
 - `GET /api/healthz`
-- `GET /api/instance/:publicId` (published-only unless valid dev auth is present)
+- `GET /api/instance/:publicId` (published-only for user-owned instances)
 - `POST /api/ai/minibob/session`
 
-Non-public endpoints require one of:
-- `Authorization: Bearer <Supabase session JWT>` (Roma/control-plane path)
-- `Authorization: Bearer ${PARIS_DEV_JWT}` (dev/internal compatibility path)
+Non-public product endpoints require:
+- `Authorization: Bearer <Supabase session JWT>`
 
 Strict Supabase-only productized bootstrap contracts:
 - `POST /api/accounts`
 - `POST /api/accounts/:accountId/workspaces`
-- `POST /api/claims/minibob/complete`
+- `POST /api/minibob/handoff/complete`
 
 Machine/internal endpoints can also use signature-based verification (for example metering and l10n job reporting).
 
@@ -67,9 +73,8 @@ Machine/internal endpoints can also use signature-based verification (for exampl
 
 - `SUPABASE_URL` (env var)
 - `SUPABASE_SERVICE_ROLE_KEY` (secret)
-- `AI_GRANT_HMAC_SECRET` (secret, used as claim-signing fallback)
-- `MINIBOB_CLAIM_HMAC_SECRET` (secret, optional explicit claim-signing secret)
-- `PARIS_DEV_JWT` (secret)
+- `AI_GRANT_HMAC_SECRET` (secret, AI grants/outcomes)
+- `PARIS_DEV_JWT` (secret, internal service-to-service paths only; not accepted for product auth)
 
 ## Local dev
 

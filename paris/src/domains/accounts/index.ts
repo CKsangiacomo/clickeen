@@ -1,6 +1,7 @@
 import type { Env } from '../../shared/types';
 import { ckError } from '../../shared/errors';
 import { assertDevAuth } from '../../shared/auth';
+import { readRomaAccountAuthzCapsuleHeader, verifyRomaAccountAuthzCapsule } from '../../shared/authz-capsule';
 import { json, readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
 import { isUuid } from '../../shared/validation';
@@ -48,6 +49,17 @@ type AccountAssetUsageRow = {
 };
 
 type WorkspaceMembershipRole = 'viewer' | 'editor' | 'admin' | 'owner';
+type AccountAssetView = 'all' | 'used_in_workspace' | 'created_in_workspace';
+
+type AccountAssetProjection = {
+  view: AccountAssetView;
+  workspaceId: string | null;
+};
+
+type WorkspaceAccountRow = {
+  id: string;
+  account_id: string;
+};
 
 function assertAccountId(value: string) {
   const trimmed = String(value || '').trim();
@@ -63,6 +75,48 @@ function assertAssetId(value: string) {
     return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' }, 422) };
   }
   return { ok: true as const, value: trimmed };
+}
+
+function assertWorkspaceId(value: string) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed || !isUuid(trimmed)) {
+    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' }, 422) };
+  }
+  return { ok: true as const, value: trimmed };
+}
+
+function resolveAccountAssetView(req: Request): { ok: true; projection: AccountAssetProjection } | { ok: false; response: Response } {
+  const url = new URL(req.url);
+  const rawView = (url.searchParams.get('view') || '').trim().toLowerCase();
+  const rawWorkspaceId = (url.searchParams.get('workspaceId') || '').trim();
+
+  let view: AccountAssetView = 'all';
+  if (!rawView || rawView === 'all') {
+    view = 'all';
+  } else if (rawView === 'used_in_workspace') {
+    view = 'used_in_workspace';
+  } else if (rawView === 'created_in_workspace') {
+    view = 'created_in_workspace';
+  } else {
+    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422) };
+  }
+
+  if (!rawWorkspaceId) {
+    if (view !== 'all') {
+      return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' }, 422) };
+    }
+    return { ok: true, projection: { view, workspaceId: null } };
+  }
+
+  const workspaceIdResult = assertWorkspaceId(rawWorkspaceId);
+  if (!workspaceIdResult.ok) return workspaceIdResult;
+  return {
+    ok: true,
+    projection: {
+      view,
+      workspaceId: workspaceIdResult.value,
+    },
+  };
 }
 
 function resolveListLimit(req: Request): number {
@@ -136,20 +190,6 @@ function normalizeAccountAsset(
   };
 }
 
-function requireOwnedAccountHeader(req: Request, accountId: string) {
-  const actorAccountId = (req.headers.get('x-account-id') || '').trim();
-  if (!actorAccountId) {
-    return ckError({ kind: 'AUTH', reasonKey: 'coreui.errors.accountId.required' }, 401);
-  }
-  if (!isUuid(actorAccountId)) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' }, 422);
-  }
-  if (actorAccountId !== accountId) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.account.mismatch' }, 403);
-  }
-  return null;
-}
-
 function roleRank(role: string): number {
   switch (role) {
     case 'owner':
@@ -217,16 +257,28 @@ async function authorizeAccountAccess(
   req: Request,
   env: Env,
   accountId: string,
-  auth: { source: 'dev' | 'supabase'; principal?: { userId: string } },
+  auth: { principal?: { userId: string } },
   requireAdminRole: boolean,
 ): Promise<Response | null> {
-  if (auth.source === 'dev') {
-    return requireOwnedAccountHeader(req, accountId);
-  }
-
   const userId = auth.principal?.userId;
   if (!userId) {
     return ckError({ kind: 'AUTH', reasonKey: 'coreui.errors.auth.required' }, 401);
+  }
+
+  const accountCapsule = readRomaAccountAuthzCapsuleHeader(req);
+  if (accountCapsule) {
+    const verified = await verifyRomaAccountAuthzCapsule(env, accountCapsule);
+    if (!verified.ok) {
+      return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+    }
+    const payload = verified.payload;
+    if (payload.userId !== userId || payload.accountId !== accountId) {
+      return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+    }
+    if (requireAdminRole && roleRank(payload.role) < roleRank('admin')) {
+      return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+    }
+    return null;
   }
 
   let role: WorkspaceMembershipRole | null = null;
@@ -259,6 +311,29 @@ async function loadAccount(env: Env, accountId: string): Promise<AccountRow | nu
   }
   const rows = (await res.json()) as AccountRow[];
   return rows?.[0] ?? null;
+}
+
+async function assertWorkspaceInAccount(
+  env: Env,
+  accountId: string,
+  workspaceId: string,
+): Promise<Response | null> {
+  const params = new URLSearchParams({
+    select: 'id,account_id',
+    id: `eq.${workspaceId}`,
+    account_id: `eq.${accountId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/workspaces?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
+  }
+  const rows = (await res.json()) as WorkspaceAccountRow[];
+  if (!rows?.[0]?.id) {
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404);
+  }
+  return null;
 }
 
 async function loadVariantsByAssetIds(
@@ -346,9 +421,50 @@ async function loadAccountAsset(
   return rows?.[0] ?? null;
 }
 
+async function loadWorkspaceInstancePublicIdSet(env: Env, workspaceId: string): Promise<Set<string>> {
+  const params = new URLSearchParams({
+    select: 'public_id',
+    workspace_id: `eq.${workspaceId}`,
+    limit: '5000',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(
+      `[ParisWorker] Failed to load workspace instances for asset usage (${res.status}): ${JSON.stringify(details)}`,
+    );
+  }
+  const rows = (await res.json()) as Array<{ public_id?: string }>;
+  const out = new Set<string>();
+  rows.forEach((row) => {
+    const publicId = typeof row.public_id === 'string' ? row.public_id : '';
+    if (publicId) out.add(publicId);
+  });
+  return out;
+}
+
+async function loadUsageByAssetIdsForWorkspace(
+  env: Env,
+  accountId: string,
+  workspaceId: string,
+  assetIds: string[],
+): Promise<Map<string, AccountAssetUsageRow[]>> {
+  const usageByAssetId = await loadUsageByAssetIds(env, accountId, assetIds);
+  if (usageByAssetId.size === 0) return usageByAssetId;
+  const workspacePublicIds = await loadWorkspaceInstancePublicIdSet(env, workspaceId);
+  if (workspacePublicIds.size === 0) return new Map<string, AccountAssetUsageRow[]>();
+
+  const filtered = new Map<string, AccountAssetUsageRow[]>();
+  usageByAssetId.forEach((rows, assetId) => {
+    const scopedRows = rows.filter((row) => workspacePublicIds.has(row.public_id));
+    if (scopedRows.length) filtered.set(assetId, scopedRows);
+  });
+  return filtered;
+}
+
 export async function handleAccountAssetsList(req: Request, env: Env, accountIdRaw: string) {
   const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
+  if ('response' in auth) return auth.response;
 
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
@@ -356,6 +472,10 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
 
   const ownerError = await authorizeAccountAccess(req, env, accountId, auth, false);
   if (ownerError) return ownerError;
+
+  const projectionResult = resolveAccountAssetView(req);
+  if (!projectionResult.ok) return projectionResult.response;
+  const projection = projectionResult.projection;
 
   let account: AccountRow | null = null;
   try {
@@ -368,6 +488,11 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
     return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
   }
 
+  if (projection.workspaceId) {
+    const workspaceScopeError = await assertWorkspaceInAccount(env, accountId, projection.workspaceId);
+    if (workspaceScopeError) return workspaceScopeError;
+  }
+
   const limit = resolveListLimit(req);
   const includeDeleted = shouldIncludeDeleted(req);
   const params = new URLSearchParams({
@@ -377,6 +502,9 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
     order: 'created_at.desc',
     limit: String(limit),
   });
+  if (projection.view === 'created_in_workspace' && projection.workspaceId) {
+    params.set('workspace_id', `eq.${projection.workspaceId}`);
+  }
   if (!includeDeleted) params.set('deleted_at', 'is.null');
 
   const tokyoBase = resolveTokyoAssetBase(env);
@@ -387,13 +515,22 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
       const details = await readJson(res);
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
     }
-    const assets = (await res.json()) as AccountAssetRow[];
+    let assets = (await res.json()) as AccountAssetRow[];
     const assetIds = assets.map((asset) => asset.asset_id).filter(Boolean);
     const variantsByAssetId = await loadVariantsByAssetIds(env, accountId, assetIds);
-    const usageByAssetId = await loadUsageByAssetIds(env, accountId, assetIds);
+    const usageByAssetId =
+      projection.view === 'used_in_workspace' && projection.workspaceId
+        ? await loadUsageByAssetIdsForWorkspace(env, accountId, projection.workspaceId, assetIds)
+        : await loadUsageByAssetIds(env, accountId, assetIds);
+
+    if (projection.view === 'used_in_workspace' && projection.workspaceId) {
+      assets = assets.filter((asset) => (usageByAssetId.get(asset.asset_id)?.length ?? 0) > 0);
+    }
 
     return json({
       accountId,
+      view: projection.view,
+      workspaceId: projection.workspaceId,
       assets: assets.map((asset) =>
         normalizeAccountAsset(
           asset,
@@ -415,7 +552,7 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
 
 export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
   const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
+  if ('response' in auth) return auth.response;
 
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
@@ -428,6 +565,10 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
   const ownerError = await authorizeAccountAccess(req, env, accountId, auth, false);
   if (ownerError) return ownerError;
 
+  const projectionResult = resolveAccountAssetView(req);
+  if (!projectionResult.ok) return projectionResult.response;
+  const projection = projectionResult.projection;
+
   const includeDeleted = shouldIncludeDeleted(req);
   const tokyoBase = resolveTokyoAssetBase(env);
 
@@ -435,17 +576,36 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
     const account = await loadAccount(env, accountId);
     if (!account) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
 
+    if (projection.workspaceId) {
+      const workspaceScopeError = await assertWorkspaceInAccount(env, accountId, projection.workspaceId);
+      if (workspaceScopeError) return workspaceScopeError;
+    }
+
     const asset = await loadAccountAsset(env, accountId, assetId, includeDeleted);
     if (!asset) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
 
     const variantsByAssetId = await loadVariantsByAssetIds(env, accountId, [assetId]);
-    const usageByAssetId = await loadUsageByAssetIds(env, accountId, [assetId]);
+    const usageByAssetId =
+      projection.view === 'used_in_workspace' && projection.workspaceId
+        ? await loadUsageByAssetIdsForWorkspace(env, accountId, projection.workspaceId, [assetId])
+        : await loadUsageByAssetIds(env, accountId, [assetId]);
+    const usageRows = usageByAssetId.get(assetId) ?? [];
+
+    if (projection.view === 'created_in_workspace' && projection.workspaceId && asset.workspace_id !== projection.workspaceId) {
+      return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
+    }
+    if (projection.view === 'used_in_workspace' && projection.workspaceId && usageRows.length === 0) {
+      return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
+    }
+
     return json({
       accountId,
+      view: projection.view,
+      workspaceId: projection.workspaceId,
       asset: normalizeAccountAsset(
         asset,
         variantsByAssetId.get(assetId) ?? [],
-        usageByAssetId.get(assetId) ?? [],
+        usageRows,
         tokyoBase,
       ),
     });
@@ -457,7 +617,7 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
 
 export async function handleAccountAssetDelete(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
   const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
+  if ('response' in auth) return auth.response;
 
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;

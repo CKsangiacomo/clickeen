@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  applySessionCookies,
   fetchWithTimeout,
   proxyErrorResponse,
   resolveParisBaseOrResponse,
+  resolveParisSession,
   shouldEnforceSuperadmin,
   withParisDevAuthorization,
 } from '../../../../../../../../lib/api/paris/proxy-helpers';
@@ -22,6 +24,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ workspaceId: string; publicId: string }> }) {
+  const session = await resolveParisSession(request);
+  if (!session.ok) return session.response;
+
   if (shouldEnforceSuperadmin(request, CK_SUPERADMIN_KEY)) {
     const provided = (request.headers.get('x-ck-superadmin-key') || '').trim();
     if (!provided || provided !== CK_SUPERADMIN_KEY) {
@@ -52,7 +57,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ worksp
   const subject = (requestUrl.searchParams.get('subject') || '').trim();
   if (subject) url.searchParams.set('subject', subject);
 
-  const headers = withParisDevAuthorization(new Headers());
+  const headers = withParisDevAuthorization(new Headers(), session.accessToken);
   headers.set('content-type', request.headers.get('content-type') || 'application/json');
   headers.set('x-request-id', request.headers.get('x-request-id') || crypto.randomUUID());
 
@@ -61,13 +66,14 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ worksp
   try {
     const res = await fetchWithTimeout(url.toString(), { method: 'POST', headers, body, cache: 'no-store' });
     const text = await res.text().catch(() => '');
-    return new NextResponse(text, {
+    const response = new NextResponse(text, {
       status: res.status,
       headers: {
         'Content-Type': res.headers.get('Content-Type') || 'application/json',
         ...CORS_HEADERS,
       },
     });
+    return applySessionCookies(response, request, session.setCookies);
   } catch (error) {
     return proxyErrorResponse(error, CORS_HEADERS);
   }

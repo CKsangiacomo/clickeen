@@ -10,12 +10,9 @@ import {
   handlePersonalizationPreviewStatus,
 } from './domains/personalization';
 import {
-  handleCreateInstance,
   handleCuratedInstances,
   handleGetInstance,
-  handleInstances,
   handleListWidgets,
-  handleUpdateInstance,
 } from './domains/instances';
 import {
   handleWorkspaceBusinessProfileGet,
@@ -42,7 +39,8 @@ import {
   handleAccountCreateWorkspace,
   handleAccountUsage,
   handleAccountWorkspaces,
-  handleMinibobClaimComplete,
+  handleMinibobHandoffStart,
+  handleMinibobHandoffComplete,
   handleWorkspaceAiLimits,
   handleWorkspaceAiOutcomes,
   handleWorkspaceAiProfile,
@@ -50,7 +48,12 @@ import {
   handleWorkspaceGet,
   handleWorkspaceMembers,
   handleWorkspacePolicy,
-} from './domains/controlplane';
+  handleRomaBootstrap,
+  handleRomaTemplates,
+  handleRomaWidgetDelete,
+  handleRomaWidgetDuplicate,
+  handleRomaWidgets,
+} from './domains/roma';
 import {
   handleL10nGenerateReport,
   handleL10nGenerateRetries,
@@ -79,6 +82,33 @@ export default {
         return handleMe(req, env);
       }
 
+      if (pathname === '/api/roma/bootstrap') {
+        if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleRomaBootstrap(req, env);
+      }
+
+      if (pathname === '/api/roma/widgets/duplicate') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleRomaWidgetDuplicate(req, env);
+      }
+
+      const romaInstanceMatch = pathname.match(/^\/api\/roma\/instances\/([^/]+)$/);
+      if (romaInstanceMatch) {
+        const publicId = decodeURIComponent(romaInstanceMatch[1]);
+        if (req.method === 'DELETE') return handleRomaWidgetDelete(req, env, publicId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      if (pathname === '/api/roma/widgets') {
+        if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleRomaWidgets(req, env);
+      }
+
+      if (pathname === '/api/roma/templates') {
+        if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleRomaTemplates(req, env);
+      }
+
       if (pathname === '/api/l10n/jobs/report') {
         if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleL10nGenerateReport(req, env);
@@ -94,9 +124,14 @@ export default {
         return handleAccountCreate(req, env);
       }
 
-      if (pathname === '/api/claims/minibob/complete') {
+      if (pathname === '/api/minibob/handoff/start') {
         if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-        return handleMinibobClaimComplete(req, env);
+        return handleMinibobHandoffStart(req, env);
+      }
+
+      if (pathname === '/api/minibob/handoff/complete') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleMinibobHandoffComplete(req, env);
       }
 
       const submitMatch = pathname.match(/^\/api\/submit\/([^/]+)$/);
@@ -384,26 +419,15 @@ export default {
         return handleListWidgets(req, env);
       }
 
-      if (pathname === '/api/instances') {
-        if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-        return handleInstances(req, env);
-      }
-
       if (pathname === '/api/curated-instances') {
         if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleCuratedInstances(req, env);
-      }
-
-      if (pathname === '/api/instance') {
-        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-        return handleCreateInstance(req, env);
       }
 
       const instanceMatch = pathname.match(/^\/api\/instance\/([^/]+)$/);
       if (instanceMatch) {
         const publicId = decodeURIComponent(instanceMatch[1]);
         if (req.method === 'GET') return handleGetInstance(req, env, publicId);
-        if (req.method === 'PUT') return handleUpdateInstance(req, env, publicId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

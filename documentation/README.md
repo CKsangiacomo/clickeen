@@ -21,6 +21,7 @@ documentation/
 │
 ├── services/                 # RUNTIME SYSTEMS
 │   ├── bob.md               # Editor
+│   ├── roma.md              # Product shell + Builder host
 │   ├── dieter.md            # Design system
 │   ├── devstudio.md         # Internal tools (admin)
 │   ├── tokyo.md             # Asset CDN
@@ -84,14 +85,14 @@ Use `documentation/` for authoritative behavior; use `Execution_Pipeline_Docs/` 
 
 This repo is operated by **1 human architect + multiple AI dev teams**. The system is modular and contract-driven so AIs can work in parallel safely.
 
-- **Modular surfaces:** widgets in `tokyo/widgets/`; services isolated under `bob/`, `admin/`, `prague/`, `paris/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
+- **Modular surfaces:** widgets in `tokyo/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `paris/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
 - **Explicit contracts:** `spec.json`, `agent.md`, `*.allowlist.json`, PRDs, and service docs define what is safe to change. If it is not in a contract, assume it is unsafe.
 - **Automation intent:** local changes are designed to propagate through the local stack automatically. Cloud-dev propagation is explicit (promote/deploy).
 - **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.
 
 ---
 
-## End-to-End Journey (widget folder → DevStudio/Bob/Prague → cloud-dev)
+## End-to-End Journey (widget folder → Roma/DevStudio/Bob/Prague → cloud-dev)
 
 ### A) Widget definition path (local)
 Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
@@ -103,18 +104,33 @@ Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `http://localhost:4000` in dev.
 3) **Local DevStudio** embeds Bob and reads the same Tokyo base:
    - `admin/src/html/tools/dev-widget-workspace.html` resolves Tokyo to `http://localhost:4000` on localhost.
-4) **Local Prague** loads widget marketing JSON from the repo:
+4) **Local Roma** resolves workspace bootstrap from local Paris and hosts Bob in message boot mode:
+   - `roma/app/api/bootstrap/route.ts` → local Paris `/api/roma/bootstrap`
+   - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`.
+5) **Local Prague** loads widget marketing JSON from the repo:
    - `prague/src/lib/markdown.ts` bundles `tokyo/widgets/**/pages/*.json`.
    - `PUBLIC_TOKYO_URL=http://localhost:4000` provides tokens + overlay fetch base.
 
-Result: editing `tokyo/widgets/**` immediately changes **local** Bob + DevStudio + Prague.
+Result: editing `tokyo/widgets/**` immediately changes **local** Bob + Roma + DevStudio + Prague.
+
+### A.1) Local auth issuer alignment (critical)
+Local app servers use the Supabase target chosen by `bash scripts/dev-up.sh`:
+- Default: local Supabase (`http://127.0.0.1:54321`)
+- Optional override: remote Supabase (`DEV_UP_USE_REMOTE_SUPABASE=1` + `.env.local` credentials)
+
+Invariant:
+- The Supabase JWT used against local Paris/Bob/Roma must be issued by the **same** Supabase project Paris is configured to use.
+- If you use a token from a different Supabase project, Paris returns `403 AUTH_INVALID issuer_mismatch` by design.
 
 ### B) Instance + asset path (local)
 Instances are data (not code) and live in Paris/Michael. Assets live in Tokyo.
 
-1) **DevStudio creates/edits instances** via Paris (local worker).
-2) **Assets** referenced in configs point at local Tokyo (localhost:4000).
-3) **Venice embeds** render curated/user instances using Paris + Tokyo (local URLs).
+1) **Roma + Bob handle workspace user-instance flows**:
+   - Roma Widgets/Templates can create/duplicate/delete user instances via Paris.
+   - Bob publish writes base config via workspace `PUT`.
+2) **DevStudio Local handles curated/main authoring** (superadmin-only actions) via Paris + Tokyo.
+3) **Assets** referenced in configs point at local Tokyo (localhost:4000).
+4) **Venice embeds** render curated/user instances using Paris + Tokyo (local URLs).
 
 ### C) Cloud-dev propagation (explicit)
 Local changes do not auto-appear in cloud-dev. You must promote or deploy.
@@ -122,9 +138,9 @@ Local changes do not auto-appear in cloud-dev. You must promote or deploy.
 1) **Curated instances + assets**:
    - Use DevStudio promote flow (local DevStudio -> cloud Paris/Tokyo).
    - Promotion rewrites local Tokyo URLs to cloud Tokyo URLs.
-2) **Prague/Bob/DevStudio**:
+2) **Prague/Bob/Roma/DevStudio**:
    - Code changes require Cloudflare deploys (Pages/Workers).
-   - Cloud Prague/Bob read `https://tokyo.dev.clickeen.com`, not your local filesystem.
+   - Cloud Prague/Bob/Roma read `https://tokyo.dev.clickeen.com`, not your local filesystem.
 3) **Marketing JSON updates**:
    - `tokyo/widgets/**/pages/*.json` updates require a Prague deployment to be visible in cloud-dev.
 
@@ -172,5 +188,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 - Compiler determinism: `node scripts/compile-all-widgets.mjs`
 - Quick grep for removed/renamed surfaces:
   - `rg -n "/api/ai/|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
+  - `rg -n "claims/minibob/complete|/api/workspaces/.*/assets|GET /api/instances|PUT /api/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`
+  - `rg -n "/api/roma/bootstrap|/api/roma/widgets|/api/minibob/handoff/start|/api/minibob/handoff/complete|/api/accounts/:accountId/assets" documentation --glob '*.md'`
 
 When drift is found: update docs to match the shipped code/config immediately; treat mismatches as P0 doc bugs.

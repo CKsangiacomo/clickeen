@@ -6,7 +6,8 @@ This repo contains the full Clickeen widget platform:
 - **admin/** — DevStudio tooling and component showcase (Vite). Hosts the widget workspace page that embeds Bob.
 - **dieter/** — Design system (tokens, CSS, web components). Built assets are served from **tokyo/**.
 - **tokyo/** — Local CDN stub serving Dieter assets and built widgets.
-- **paris/** — API service used by DevStudio for instances.
+- **paris/** — API service used by Bob/Roma/DevStudio for identity, policy, and instance data.
+- **roma/** — Product shell app (workspace domains + Builder orchestration into Bob).
 - **documentation/** — Platform and architecture notes.
 
 ## Architecture (high level)
@@ -19,9 +20,9 @@ This repo contains the full Clickeen widget platform:
    - Bob’s compile API (`/api/widgets/[widgetname]/compiled`) reads the widget spec and expands `<tooldrawer-field>` using Dieter templates/specs.
    - Icons are inlined server-side; compiled panels include final HTML plus deterministic Dieter assets (CSS/JS).
 
-3) **DevStudio → Bob flow**
-   - DevStudio fetches instances from Paris, then fetches the compiled widget from Bob’s API.
-   - DevStudio posts the compiled payload to Bob via `postMessage`; Bob renders panels, loads Dieter assets, hydrates, and binds state.
+3) **Host surface (DevStudio / Roma) → Bob flow**
+   - Host app fetches instance data from Paris and compiled payload from Bob’s compile API.
+   - Host posts an explicit `ck:open-editor` message; Bob renders panels, hydrates Dieter controls, and binds state.
 
 4) **Stage vs Pod fills**
    - Appearance panel exposes two dropdown-fill controls: `stage.background` (workspace backdrop) and `pod.background` (widget surface). Both use Dieter dropdown-fill.
@@ -31,7 +32,7 @@ This repo contains the full Clickeen widget platform:
 ```bash
 pnpm install
 pnpm build:dieter       # builds Dieter into tokyo/dieter
-./scripts/dev-up.sh     # starts Tokyo (4000), Paris (3001), Bob (3000), DevStudio (5173)
+./scripts/dev-up.sh     # starts Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), Bob (3000), Roma (3004), DevStudio (5173), Prague (4321), Pitch (8790), (+ SF 3002 when enabled)
 ```
 
 To force a full workspace rebuild before starting dev servers:
@@ -41,7 +42,7 @@ To force a full workspace rebuild before starting dev servers:
 ```
 
 Useful scripts:
-- `pnpm dev:bob`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`
+- `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`
 - `pnpm build` (after `pnpm build:dieter`)
 - `pnpm lint`, `pnpm typecheck`, `pnpm test`
 

@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "ביצוע הזמנה"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "גלו את הקסם והנוחות של ה-B&B שלנו בארה\"ב."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "שאלות נפוצות – מוזיאון לאמנות מודרנית"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "אנחנו מציעים מגוון תערוכות <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">אמנות מודרנית</a>, כולל <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">אמנים עכשוויים</a>, פסלים ו<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">מיצבים</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "אילו סוגי תערוכות אמנות זמינות?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "המוזיאון פתוח מדי יום בין 10:00 ל-18:00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "מהן שעות הביקור?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "לא, כל הגילאים מוזמנים."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "האם יש הגבלת גיל?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "כן, אנחנו מציעים הנחות לקבוצות וחבילות לאירועים מיוחדים."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "האם אתם מציעים חבילות מיוחדות?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "כדי להימנע מחיוב, יש לבצע ביטול לפחות 24 שעות מראש."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "מהי מדיניות הביטולים שלכם?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "כן, אנחנו מציעים סיורים ותכניות חינוכיות לבתי ספר ולקבוצות."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "האם אתם מציעים תכניות חינוכיות?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "חוויית מוזיאון לאמנות מודרנית"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Zarezerwuj"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Odkryj urok i komfort naszego USA bed and breakfast."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ Muzeum Sztuki Nowoczesnej"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Oferujemy różnorodne <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">wystawy sztuki nowoczesnej</a>, w tym prace <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">współczesnych artystów</a>, rzeźby oraz <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">instalacje</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Jakie rodzaje wystaw są dostępne?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Muzeum jest otwarte codziennie w godzinach 10:00–18:00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "W jakich godzinach można je zwiedzać?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Nie, zapraszamy osoby w każdym wieku."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Czy obowiązuje ograniczenie wiekowe?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Tak, oferujemy zniżki dla grup oraz pakiety na wydarzenia specjalne."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Czy oferujecie specjalne pakiety?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Aby uniknąć opłaty, anulowanie należy zgłosić z 24-godzinnym wyprzedzeniem."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Jaka jest polityka anulowania rezerwacji?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Tak, oferujemy wycieczki edukacyjne i programy dla szkół oraz grup."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Czy oferujecie programy edukacyjne?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Wizyta w Muzeum Sztuki Nowoczesnej"
+    }
+  ],
+  "v": 1
+}

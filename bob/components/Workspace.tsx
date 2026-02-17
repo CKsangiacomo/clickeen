@@ -17,6 +17,7 @@ export function Workspace() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeHasState, setIframeHasState] = useState(false);
+  const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const latestRef = useRef({ compiled, instanceData: runtimeData, device, theme, locale });
   useEffect(() => {
@@ -60,14 +61,11 @@ export function Workspace() {
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    setIframeLoaded(false);
-    setIframeHasState(false);
-    iframe.src = iframeSrc;
-    if (iframeSrc === 'about:blank') return;
-
+    const visibilityFallbackTimeout = window.setTimeout(() => setIframeHasState(true), 1500);
     let readyTimeout: number | null = null;
     const handleLoad = () => {
       setIframeLoaded(true);
+      setIframeLoadError(null);
       const snapshot = latestRef.current;
       const nextCompiled = snapshot.compiled;
       const iframeWindow = iframe.contentWindow;
@@ -88,10 +86,22 @@ export function Workspace() {
       if (readyTimeout != null) window.clearTimeout(readyTimeout);
       readyTimeout = window.setTimeout(() => setIframeHasState(true), 1000);
     };
+    const handleError = () => {
+      setIframeLoadError('Failed to load preview runtime');
+      setIframeHasState(true);
+    };
+
     iframe.addEventListener('load', handleLoad);
+    iframe.addEventListener('error', handleError);
+    setIframeLoaded(false);
+    setIframeHasState(false);
+    setIframeLoadError(null);
+    iframe.src = iframeSrc;
 
     return () => {
       iframe.removeEventListener('load', handleLoad);
+      iframe.removeEventListener('error', handleError);
+      window.clearTimeout(visibilityFallbackTimeout);
       if (readyTimeout != null) window.clearTimeout(readyTimeout);
     };
   }, [iframeSrc]);
@@ -123,6 +133,7 @@ export function Workspace() {
       if (!data || typeof data !== 'object') return;
       if (data.type === 'ck:ready') {
         setIframeHasState(true);
+        setIframeLoadError(null);
         return;
       }
       if (data.type !== 'ck:resize') return;
@@ -179,6 +190,16 @@ export function Workspace() {
         sandbox="allow-scripts allow-same-origin"
         style={iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined}
       />
+      {hasWidget && !iframeHasState ? (
+        <div className="workspace-status-overlay" role="status" aria-live="polite">
+          <span className="label-s">Loading preview...</span>
+        </div>
+      ) : null}
+      {hasWidget && iframeLoadError ? (
+        <div className="workspace-status-overlay workspace-status-overlay--error" role="alert">
+          <span className="label-s">{iframeLoadError}</span>
+        </div>
+      ) : null}
 
       <div className="workspace-overlay" aria-hidden={!hasWidget}>
         <div

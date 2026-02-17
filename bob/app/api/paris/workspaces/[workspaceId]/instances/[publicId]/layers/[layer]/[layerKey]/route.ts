@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  applySessionCookies,
   fetchWithTimeout,
+  resolveParisSession,
   resolveParisBaseOrResponse,
   withParisDevAuthorization,
 } from '../../../../../../../../../../lib/api/paris/proxy-helpers';
@@ -23,13 +25,15 @@ async function forwardToParis(
   publicId: string,
   layer: string,
   layerKey: string,
+  accessToken: string,
+  setCookies: Array<{ name: string; value: string; maxAge: number }> | undefined,
   init: RequestInit,
   timeoutMs = 5000
 ) {
   const paris = resolveParisBaseOrResponse(CORS_HEADERS);
   if (!paris.ok) return paris.response;
 
-  const headers = withParisDevAuthorization(new Headers(init.headers));
+  const headers = withParisDevAuthorization(new Headers(init.headers), accessToken);
   headers.set('Content-Type', headers.get('Content-Type') ?? 'application/json');
   headers.set('X-Request-ID', headers.get('X-Request-ID') ?? crypto.randomUUID());
 
@@ -56,13 +60,14 @@ async function forwardToParis(
       body = await res.text().catch(() => '');
     }
 
-    return new NextResponse(body, {
+    const response = new NextResponse(body, {
       status: res.status,
       headers: {
         'Content-Type': contentType || 'application/json',
         ...CORS_HEADERS,
       },
     });
+    return applySessionCookies(response, request, setCookies);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: 'PARIS_PROXY_ERROR', message }, { status: 502, headers: CORS_HEADERS });
@@ -73,32 +78,68 @@ export async function GET(
   request: NextRequest,
   ctx: { params: Promise<{ workspaceId: string; publicId: string; layer: string; layerKey: string }> }
 ) {
+  const session = await resolveParisSession(request);
+  if (!session.ok) return session.response;
+
   const { workspaceId, publicId, layer, layerKey } = await ctx.params;
   if (!workspaceId || !publicId || !layer || !layerKey) {
     return NextResponse.json({ error: 'INVALID_PARAMS' }, { status: 400, headers: CORS_HEADERS });
   }
-  return forwardToParis(request, workspaceId, publicId, layer, layerKey, { method: 'GET' });
+  return forwardToParis(
+    request,
+    workspaceId,
+    publicId,
+    layer,
+    layerKey,
+    session.accessToken,
+    session.setCookies,
+    { method: 'GET' },
+  );
 }
 
 export async function PUT(
   request: NextRequest,
   ctx: { params: Promise<{ workspaceId: string; publicId: string; layer: string; layerKey: string }> }
 ) {
+  const session = await resolveParisSession(request);
+  if (!session.ok) return session.response;
+
   const { workspaceId, publicId, layer, layerKey } = await ctx.params;
   if (!workspaceId || !publicId || !layer || !layerKey) {
     return NextResponse.json({ error: 'INVALID_PARAMS' }, { status: 400, headers: CORS_HEADERS });
   }
   const body = await request.text();
-  return forwardToParis(request, workspaceId, publicId, layer, layerKey, { method: 'PUT', body });
+  return forwardToParis(
+    request,
+    workspaceId,
+    publicId,
+    layer,
+    layerKey,
+    session.accessToken,
+    session.setCookies,
+    { method: 'PUT', body },
+  );
 }
 
 export async function DELETE(
   request: NextRequest,
   ctx: { params: Promise<{ workspaceId: string; publicId: string; layer: string; layerKey: string }> }
 ) {
+  const session = await resolveParisSession(request);
+  if (!session.ok) return session.response;
+
   const { workspaceId, publicId, layer, layerKey } = await ctx.params;
   if (!workspaceId || !publicId || !layer || !layerKey) {
     return NextResponse.json({ error: 'INVALID_PARAMS' }, { status: 400, headers: CORS_HEADERS });
   }
-  return forwardToParis(request, workspaceId, publicId, layer, layerKey, { method: 'DELETE' });
+  return forwardToParis(
+    request,
+    workspaceId,
+    publicId,
+    layer,
+    layerKey,
+    session.accessToken,
+    session.setCookies,
+    { method: 'DELETE' },
+  );
 }

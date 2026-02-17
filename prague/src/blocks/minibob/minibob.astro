@@ -44,7 +44,7 @@ const workspaceId = String(
   env[`PUBLIC_MINIBOB_WORKSPACE_ID_${widgetKey}`] ?? env.PUBLIC_MINIBOB_WORKSPACE_ID ?? DEV_WORKSPACE_ID,
 ).trim();
 const publicId = `wgt_main_${widget}`;
-const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?subject=minibob&minibob=true&workspaceId=${encodeURIComponent(workspaceId)}&publicId=${encodeURIComponent(publicId)}&locale=${encodeURIComponent(locale)}`;
+const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?boot=url&subject=minibob&workspaceId=${encodeURIComponent(workspaceId)}&publicId=${encodeURIComponent(publicId)}&locale=${encodeURIComponent(locale)}`;
 const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 const createHref = (() => {
   try {
@@ -113,9 +113,9 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
     const expectedOrigin = root.dataset.bobOrigin || '';
     const signupHref = root.dataset.createHref || '';
     const fallbackPublicId = (root.dataset.publicId || '').trim();
-    const CLAIM_TOKEN_ENDPOINT = '/api/minibob/claim-token';
+    const HANDOFF_START_ENDPOINT = '/api/minibob/handoff-start';
     const EXPORT_TIMEOUT_MS = 8000;
-    let claimInFlight = false;
+    let handoffInFlight = false;
 
     const iframe = root.querySelector('iframe.ck-minibob__iframe');
     if (!(iframe instanceof HTMLIFrameElement)) return;
@@ -125,12 +125,12 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
 
     const nextRequestId = () => {
       if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-        return `claim_${crypto.randomUUID()}`;
+        return `handoff_${crypto.randomUUID()}`;
       }
-      return `claim_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+      return `handoff_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
     };
 
-    async function exportClaimContextFromBob() {
+    async function exportHandoffContextFromBob() {
       if (!iframe.contentWindow) throw new Error('bob iframe not ready');
 
       const requestId = nextRequestId();
@@ -182,7 +182,7 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
       const payload = asRecord(response);
       const meta = asRecord(payload?.meta);
       const publicId = asText(meta?.publicId) || fallbackPublicId;
-      if (!publicId) throw new Error('missing publicId for claim');
+      if (!publicId) throw new Error('missing publicId for handoff');
 
       const widgetType = asText(meta?.widgetname) || undefined;
       const isDirty = payload?.isDirty === true;
@@ -198,8 +198,8 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
       };
     }
 
-    async function mintClaimToken(input) {
-      const response = await fetch(CLAIM_TOKEN_ENDPOINT, {
+    async function startHandoff(input) {
+      const response = await fetch(HANDOFF_START_ENDPOINT, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -209,24 +209,24 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
         const detail = asRecord(payload);
-        throw new Error(asText(detail?.message) || asText(detail?.error) || `claim mint failed (${response.status})`);
+        throw new Error(asText(detail?.message) || asText(detail?.error) || `handoff start failed (${response.status})`);
       }
       const body = asRecord(payload);
-      const claimToken = asText(body?.claimToken);
-      if (!claimToken) throw new Error('claim mint returned empty token');
-      return claimToken;
+      const handoffId = asText(body?.handoffId);
+      if (!handoffId) throw new Error('handoff start returned empty id');
+      return handoffId;
     }
 
     function buildSignupUrl(baseHref, args) {
       const url = new URL(baseHref, window.location.href);
-      url.searchParams.set('claimToken', args.claimToken);
+      url.searchParams.set('handoffId', args.handoffId);
       url.searchParams.set('publicId', args.publicId);
       return url.toString();
     }
 
-    function surfaceClaimError(error) {
+    function surfaceHandoffError(error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error('[prague:minibob] claim handoff failed', message);
+      console.error('[prague:minibob] minibob handoff failed', message);
       window.alert(`Unable to continue signup from MiniBob right now. ${message}`);
     }
 
@@ -239,17 +239,17 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
       if (data.cta !== 'signup') return;
       if (!signupHref) return;
 
-      if (claimInFlight) return;
-      claimInFlight = true;
+      if (handoffInFlight) return;
+      handoffInFlight = true;
 
       (async () => {
-        const claimInput = await exportClaimContextFromBob();
-        const claimToken = await mintClaimToken(claimInput);
-        const nextUrl = buildSignupUrl(signupHref, { claimToken, publicId: claimInput.publicId });
+        const handoffInput = await exportHandoffContextFromBob();
+        const handoffId = await startHandoff(handoffInput);
+        const nextUrl = buildSignupUrl(signupHref, { handoffId, publicId: handoffInput.publicId });
         window.location.assign(nextUrl);
       })().catch((error) => {
-        claimInFlight = false;
-        surfaceClaimError(error);
+        handoffInFlight = false;
+        surfaceHandoffError(error);
       });
     });
   })();

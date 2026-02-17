@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { resolveParisBaseUrl } from '../../../../lib/env/paris';
 import { WIDGET_COPILOT_AGENT_ALIAS, WIDGET_COPILOT_AGENT_IDS } from '@clickeen/ck-policy';
+import { resolveSessionBearer } from '../../../../lib/auth/session';
 
 export const runtime = 'edge';
 
@@ -8,8 +9,6 @@ const SANFRANCISCO_BASE_URL =
   process.env.SANFRANCISCO_BASE_URL ||
   process.env.NEXT_PUBLIC_SANFRANCISCO_URL ||
   '';
-
-const PARIS_DEV_JWT = process.env.PARIS_DEV_JWT;
 
 type RateLimitEntry = { count: number; resetAt: number };
 
@@ -184,6 +183,7 @@ function checkRateLimit(req: Request) {
 
 async function getAiGrant(args: {
   agentId: string;
+  accessToken: string;
   mode: 'editor' | 'ops';
   widgetType: string;
   sessionId: string;
@@ -204,8 +204,10 @@ async function getAiGrant(args: {
   }
 
   const baseUrl = parisBaseUrl.replace(/\/$/, '');
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  if (PARIS_DEV_JWT) headers['Authorization'] = `Bearer ${PARIS_DEV_JWT}`;
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${args.accessToken}`,
+  };
 
   const useMinibobGrant = args.subject === 'minibob';
 
@@ -366,7 +368,10 @@ async function executeOnSanFrancisco(args: { grant: string; agentId: string; inp
   return { ok: true as const, value: { requestId: asTrimmedString(payload?.requestId), result: payload?.result } };
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const session = await resolveSessionBearer(req);
+  if (!session.ok) return session.response;
+
   try {
     const resolved = await resolveSanFranciscoBaseUrl();
     if (!resolved) {
@@ -413,6 +418,7 @@ export async function POST(req: Request) {
 
     const grantRes = await getAiGrant({
       agentId: requestedAgentId,
+      accessToken: session.accessToken,
       mode: 'ops',
       widgetType,
       sessionId,

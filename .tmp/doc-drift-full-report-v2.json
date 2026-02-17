@@ -1,0 +1,822 @@
+{
+  "scannedDocs": 290,
+  "brokenMdLinks": [
+    {
+      "file": "admin/index.html",
+      "line": 10,
+      "ref": "/src/css/tokens.css"
+    },
+    {
+      "file": "admin/index.html",
+      "line": 11,
+      "ref": "/src/css/layout.css"
+    },
+    {
+      "file": "admin/index.html",
+      "line": 12,
+      "ref": "/src/css/tokens.css"
+    },
+    {
+      "file": "admin/index.html",
+      "line": 13,
+      "ref": "/src/css/layout.css"
+    },
+    {
+      "file": "admin/index.html",
+      "line": 14,
+      "ref": "/src/css/dieter-previews.css"
+    },
+    {
+      "file": "admin/index.html",
+      "line": 18,
+      "ref": "/src/main.ts"
+    },
+    {
+      "file": "admin/src/html/tools/dev-widget-workspace.html",
+      "line": 617,
+      "ref": "about:blank"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 4,
+      "ref": "t.type,t"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 4,
+      "ref": "data:text/javascript;base64"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 103,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 170,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 863,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 873,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 890,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 907,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1208,
+      "ref": "/contact/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1211,
+      "ref": "/pricing/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1214,
+      "ref": "/affiliate-program/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1220,
+      "ref": "/developers/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1224,
+      "ref": "/about/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1270,
+      "ref": "/abuse/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1284,
+      "ref": "/solutions/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1292,
+      "ref": "/tutorials/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1296,
+      "ref": "/integrations/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1300,
+      "ref": "/industries/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1304,
+      "ref": "/coming-soon-widgets/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1351,
+      "ref": "/terms-of-service/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/5+ Best FAQ Templates for Websites [Free].html",
+      "line": 1352,
+      "ref": "/privacy-policy/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/ELFSIGHTfaq/index.html",
+      "line": 10,
+      "ref": "/src/main.tsx"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/ELFSIGHTfaq_02/index.html",
+      "line": 10,
+      "ref": "/src/main.tsx"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 4,
+      "ref": "t.type,t"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 4,
+      "ref": "data:text/javascript;base64"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 113,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 180,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 923,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1134,
+      "ref": "/contact/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1137,
+      "ref": "/pricing/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1140,
+      "ref": "/affiliate-program/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1146,
+      "ref": "/developers/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1150,
+      "ref": "/about/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1196,
+      "ref": "/abuse/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1210,
+      "ref": "/solutions/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1218,
+      "ref": "/tutorials/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1222,
+      "ref": "/integrations/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1226,
+      "ref": "/industries/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1230,
+      "ref": "/coming-soon-widgets/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1277,
+      "ref": "/terms-of-service/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/TOP 6 website Accordion FAQ examples (in 2025).html",
+      "line": 1278,
+      "ref": "/privacy-policy/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 4,
+      "ref": "t.type,t"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 4,
+      "ref": "data:text/javascript;base64"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 118,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 185,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1209,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1308,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1374,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1462,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1500,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1563,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1576,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1590,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1613,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1658,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1703,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1748,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1793,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1838,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1900,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1917,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 1934,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns="
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2515,
+      "ref": "/contact/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2518,
+      "ref": "/pricing/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2521,
+      "ref": "/affiliate-program/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2527,
+      "ref": "/developers/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2531,
+      "ref": "/about/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2577,
+      "ref": "/abuse/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2591,
+      "ref": "/solutions/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2599,
+      "ref": "/tutorials/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2603,
+      "ref": "/integrations/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2607,
+      "ref": "/industries/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2611,
+      "ref": "/coming-soon-widgets/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2658,
+      "ref": "/terms-of-service/"
+    },
+    {
+      "file": "documentation/widgets/FAQ/CompetitorAnalysis/Website Accordion FAQ widget (Fast and easy) - Elfsight Apps.html",
+      "line": 2659,
+      "ref": "/privacy-policy/"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 3,
+      "ref": "t.type,t"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 3,
+      "ref": "data:text/javascript;base64"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 12,
+      "ref": "data:text/javascript;base64,CiAgICAgICAgICAgIGxldCBpc0lmcmFtZSA9ICh0b3AubG9jYXRpb24gIT0gc2VsZi5sb2NhdGlvbik7CgogICAgICAgICAgICBpZiAoaXNJZnJhbWUgJiYgISF+bG9jYXRpb24uc2VhcmNoLmluZGV4T2YoJ3Jlc2V0X2ZyYW1lPXRydWUnKSkgewogICAgICAgICAgICAgICAgdG9wLmxvY2F0aW9uLmhyZWYgPSBsb2NhdGlvbi5ocmVmLnJlcGxhY2UoJz9yZXNldF9mcmFtZT10cnVlJywgJycpOwogICAgICAgICAgICB9CiAgICAgICAg"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 91,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/js(1"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 102,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns=&#39;http://www.w3.org/2000/svg&#39;%20viewBox=&#39;0%200%200%200&#39;%3E%3C/svg%3E"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 889,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/get-template-thumbnail-picture(1"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 906,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/get-template-thumbnail-picture(2"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 923,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/get-template-thumbnail-picture(3"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 974,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/get-template-thumbnail-picture(4"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 991,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/get-template-thumbnail-picture(5"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 1008,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/get-template-thumbnail-picture(6"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 1025,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/get-template-thumbnail-picture(7"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 1042,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/get-template-thumbnail-picture(8"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 1059,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/get-template-thumbnail-picture(9"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 1076,
+      "ref": "data:image/svg+xml,%3Csvg%20xmlns=&#39;http://www.w3.org/2000/svg&#39;%20viewBox=&#39;0%200%20400%200&#39;%3E%3C/svg%3E"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 1349,
+      "ref": "/about/"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 1487,
+      "ref": "data:text/javascript;base64,CmRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoJ0RPTUNvbnRlbnRMb2FkZWQnLCBmdW5jdGlvbiAoKSB7CiAgICBpZiAodHlwZW9mIHZnc2VfZWRpdG9yX3NldHRpbmdzICE9PSAndW5kZWZpbmVkJyAmJiB2Z3NlX2VkaXRvcl9zZXR0aW5ncy5sYXN0X3Nlc3Npb25fZmlsdGVycykgewogICAgICAgIHZnc2VfZWRpdG9yX3NldHRpbmdzLmxhc3Rfc2Vzc2lvbl9maWx0ZXJzID0gW107CiAgICAgICAgY29uc29sZS5sb2coJ9Ck0LjQu9GM0YLRgNGLINGB0LHRgNC+0YjQtdC90Ysg0LDQstGC0L7QvNCw0YLQuNGH0LXRgdC60Lgg0L/RgNC4INC30LDQs9GA0YPQt9C60LUg0YHRgtGA0LDQvdC40YbRiy4nKTsKICAgIH0KfSk7Cg=="
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 1501,
+      "ref": "data:text/javascript;base64,Ci8qIDwhW0NEQVRBWyAqLwpjbGFzcyBSb2NrZXRCcm93c2VyQ29tcGF0aWJpbGl0eUNoZWNrZXIgewoKCWNvbnN0cnVjdG9yKCBvcHRpb25zICkgewoJCXRoaXMucGFzc2l2ZVN1cHBvcnRlZCA9IGZhbHNlOwoKCQl0aGlzLl9jaGVja1Bhc3NpdmVPcHRpb24oIHRoaXMgKTsKCQl0aGlzLm9wdGlvbnMgPSB0aGlzLnBhc3NpdmVTdXBwb3J0ZWQgPyBvcHRpb25zIDogZmFsc2U7Cgl9CgoJLyoqCgkgKiBJbml0aWFsaXplcyBicm93c2VyIGNoZWNrIGZvciBhZGRFdmVudExpc3RlbmVyIHBhc3NpdmUgb3B0aW9uLgoJICoKCSAqIEBsaW5rIGh0dHBzOi8vZGV2ZWxvcGVyLm1vemlsbGEub3JnL2VuLVVTL2RvY3MvV2ViL0FQSS9FdmVudFRhcmdldC9hZGRFdmVudExpc3RlbmVyI1NhZmVseV9kZXRlY3Rpbmdfb3B0aW9uX3N1cHBvcnQKCSAqIEBwcml2YXRlCgkgKgoJICogQHBhcmFtIHNlbGYgSW5zdGFuY2Ugb2YgdGhpcyBvYmplY3QuCgkgKiBAcmV0dXJucyB7Ym9vbGVhbn0KCSAqLwoJX2NoZWNrUGFzc2l2ZU9wdGlvbiggc2VsZiApIHsKCQl0cnkgewoJCQljb25zdCBvcHRpb25zID0gewoJCQkJLy8gVGhpcyBmdW5jdGlvbiB3aWxsIGJlIGNhbGxlZCB3aGVuIHRoZSBicm93c2VyIGF0dGVtcHRzIHRvIGFjY2VzcyB0aGUgcGFzc2l2ZSBwcm9wZXJ0eS4KCQkJCWdldCBwYXNzaXZlKCkgewoJCQkJCXNlbGYucGFzc2l2ZVN1cHBvcnRlZCA9IHRydWU7CgkJCQkJcmV0dXJuIGZhbHNlOwoJCQkJfQoJCQl9OwoKCQkJd2luZG93LmFkZEV2ZW50TGlzdGVuZXIoICd0ZXN0JywgbnVsbCwgb3B0aW9ucyApOwoJCQl3aW5kb3cucmVtb3ZlRXZlbnRMaXN0ZW5lciggJ3Rlc3QnLCBudWxsLCBvcHRpb25zICk7CgkJfSBjYXRjaCAoIGVyciApIHsKCQkJc2VsZi5wYXNzaXZlU3VwcG9ydGVkID0gZmFsc2U7CgkJfQoJfQoKCS8qKgoJICogQ2hlY2tzIGlmIHRoZSBicm93c2VyIHN1cHBvcnRzIHJlcXVlc3RJZGxlQ2FsbGJhY2sgYW5kIGNhbmNlbElkbGVDYWxsYmFjay4gSWYgbm8sIHNoaW1zIGl0cyBiZWhhdmlvciB3aXRoIGEgcG9seWZpbGxzLgoJICoKCSAqIEBsaW5rIEBsaW5rIGh0dHBzOi8vZGV2ZWxvcGVycy5nb29nbGUuY29tL3dlYi91cGRhdGVzLzIwMTUvMDgvdXNpbmctcmVxdWVzdGlkbGVjYWxsYmFjawoJICovCglpbml0UmVxdWVzdElkbGVDYWxsYmFjaygpIHsKCQlpZiAoICEgJ3JlcXVlc3RJZGxlQ2FsbGJhY2snIGluIHdpbmRvdyApIHsKCQkJd2luZG93LnJlcXVlc3RJZGxlQ2FsbGJhY2sgPSAoIGNiICkgPT4gewoJCQkJY29uc3Qgc3RhcnQgPSBEYXRlLm5vdygpOwoJCQkJcmV0dXJuIHNldFRpbWVvdXQoICgpID0+IHsKCQkJCQljYiggewoJCQkJCQlkaWRUaW1lb3V0OiBmYWxzZSwKCQkJCQkJdGltZVJlbWFpbmluZzogZnVuY3Rpb24gdGltZVJlbWFpbmluZygpIHsKCQkJCQkJCXJldHVybiBNYXRoLm1heCggMCwgNTAgLSAoIERhdGUubm93KCkgLSBzdGFydCApICk7CgkJCQkJCX0KCQkJCQl9ICk7CgkJCQl9LCAxICk7CgkJCX07CgkJfQoKCQlpZiAoICEgJ2NhbmNlbElkbGVDYWxsYmFjaycgaW4gd2luZG93ICkgewoJCQl3aW5kb3cuY2FuY2VsSWRsZUNhbGxiYWNrID0gKCBpZCApID0+IGNsZWFyVGltZW91dCggaWQgKTsKCQl9Cgl9CgoJLyoqCgkgKiBEZXRlY3RzIGlmIGRhdGEgc2F2ZXIgbW9kZSBpcyBvbi4KCSAqCgkgKiBAbGluayBodHRwczovL2RldmVsb3BlcnMuZ29vZ2xlLmNvbS93ZWIvZnVuZGFtZW50YWxzL3BlcmZvcm1hbmNlL29wdGltaXppbmctY29udGVudC1lZmZpY2llbmN5L3NhdmUtZGF0YS8jZGV0ZWN0aW5nX3RoZV9zYXZlLWRhdGFfc2V0dGluZwoJICoKCSAqIEByZXR1cm5zIHtib29sZWFufGJvb2xlYW59CgkgKi8KCWlzRGF0YVNhdmVyTW9kZU9uKCkgewoJCXJldHVybiAoCgkJCSdjb25uZWN0aW9uJyBpbiBuYXZpZ2F0b3IKCQkJJiYKCQkJdHJ1ZSA9PT0gbmF2aWdhdG9yLmNvbm5lY3Rpb24uc2F2ZURhdGEKCQkpOwoJfQoKCS8qKgoJICogQ2hlY2tzIGlmIHRoZSBicm93c2VyIHN1cHBvcnRzIGxpbmsgcHJlZmV0Y2guCgkgKgoJICogQHJldHVybnMge2Jvb2xlYW58Ym9vbGVhbn0KCSAqLwoJc3VwcG9ydHNMaW5rUHJlZmV0Y2goKSB7CgkJY29uc3QgZWxlbSA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoICdsaW5rJyApOwoJCXJldHVybiAoCgkJCWVsZW0ucmVsTGlzdAoJCQkmJgoJCQllbGVtLnJlbExpc3Quc3VwcG9ydHMKCQkJJiYKCQkJZWxlbS5yZWxMaXN0LnN1cHBvcnRzKCAncHJlZmV0Y2gnICkKCQkJJiYKCQkJd2luZG93LkludGVyc2VjdGlvbk9ic2VydmVyCgkJCSYmCgkJCSdpc0ludGVyc2VjdGluZycgaW4gSW50ZXJzZWN0aW9uT2JzZXJ2ZXJFbnRyeS5wcm90b3R5cGUKCQkpOwoJfQoKCWlzU2xvd0Nvbm5lY3Rpb24oKSB7CgkJcmV0dXJuICgKCQkJJ2Nvbm5lY3Rpb24nIGluIG5hdmlnYXRvcgoJCQkmJgoJCQknZWZmZWN0aXZlVHlwZScgaW4gbmF2aWdhdG9yLmNvbm5lY3Rpb24KCQkJJiYKCQkJKAoJCQkJJzJnJyA9PT0gbmF2aWdhdG9yLmNvbm5lY3Rpb24uZWZmZWN0aXZlVHlwZQoJCQkJfHwKCQkJCSdzbG93LTJnJyA9PT0gbmF2aWdhdG9yLmNvbm5lY3Rpb24uZWZmZWN0aXZlVHlwZQoJCQkpCgkJKQoJfQp9Ci8qIF1dPiAqLwo="
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 1619,
+      "ref": "data:text/javascript;base64,Ci8qIDwhW0NEQVRBWyAqLwpjbGFzcyBSb2NrZXRQcmVsb2FkTGlua3MgewoKCWNvbnN0cnVjdG9yKCBicm93c2VyLCBjb25maWcgKSB7CgkJdGhpcy5icm93c2VyID0gYnJvd3NlcjsKCQl0aGlzLmNvbmZpZyAgPSBjb25maWc7CgkJdGhpcy5vcHRpb25zID0gdGhpcy5icm93c2VyLm9wdGlvbnM7CgoJCXRoaXMucHJlZmV0Y2hlZCA9IG5ldyBTZXQ7CgkJdGhpcy5ldmVudFRpbWUgID0gbnVsbDsKCQl0aGlzLnRocmVzaG9sZCAgPSAxMTExOwoJCXRoaXMubnVtT25Ib3ZlciA9IDA7Cgl9CgoJLyoqCgkgKiBJbml0aWFsaXplcyB0aGUgaGFuZGxlci4KCSAqLwoJaW5pdCgpIHsKCQlpZiAoCgkJCSEgdGhpcy5icm93c2VyLnN1cHBvcnRzTGlua1ByZWZldGNoKCkKCQkJfHwKCQkJdGhpcy5icm93c2VyLmlzRGF0YVNhdmVyTW9kZU9uKCkKCQkJfHwKCQkJdGhpcy5icm93c2VyLmlzU2xvd0Nvbm5lY3Rpb24oKQoJCSkgewoJCQlyZXR1cm47CgkJfQoKCQl0aGlzLnJlZ2V4ID0gewoJCQlleGNsdWRlVXJpczogUmVnRXhwKCB0aGlzLmNvbmZpZy5leGNsdWRlVXJpcywgJ2knICksCgkJCWltYWdlczogUmVnRXhwKCAnLignICsgdGhpcy5jb25maWcuaW1hZ2VFeHQgKyAnKSQnLCAnaScgKSwKCQkJZmlsZUV4dDogUmVnRXhwKCAnLignICsgdGhpcy5jb25maWcuZmlsZUV4dCArICcpJCcsICdpJyApCgkJfTsKCgkJdGhpcy5faW5pdExpc3RlbmVycyggdGhpcyApOwoJfQoKCS8qKgoJICogSW5pdGlhbGl6ZXMgdGhlIGV2ZW50IGxpc3RlbmVycy4KCSAqCgkgKiBAcHJpdmF0ZQoJICoKCSAqIEBwYXJhbSBzZWxmIGluc3RhbmNlIG9mIHRoaXMgb2JqZWN0LCB1c2VkIGZvciBiaW5kaW5nICJ0aGlzIiB0byB0aGUgbGlzdGVuZXJzLgoJICovCglfaW5pdExpc3RlbmVycyggc2VsZiApIHsKCQkvLyBTZXR0aW5nIG9uSG92ZXJEZWxheSB0byAtMSBkaXNhYmxlcyB0aGUgIm9uLWhvdmVyIiBmZWF0dXJlLgoJCWlmICggdGhpcy5jb25maWcub25Ib3ZlckRlbGF5ID4gLTEgKSB7CgkJCWRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoICdtb3VzZW92ZXInLCBzZWxmLmxpc3RlbmVyLmJpbmQoIHNlbGYgKSwgc2VsZi5saXN0ZW5lck9wdGlvbnMgKTsKCQl9CgoJCWRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoICdtb3VzZWRvd24nLCBzZWxmLmxpc3RlbmVyLmJpbmQoIHNlbGYgKSwgc2VsZi5saXN0ZW5lck9wdGlvbnMgKTsKCQlkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCAndG91Y2hzdGFydCcsIHNlbGYubGlzdGVuZXIuYmluZCggc2VsZiApLCBzZWxmLmxpc3RlbmVyT3B0aW9ucyApOwoJfQoKCS8qKgoJICogRXZlbnQgbGlzdGVuZXIuIFByb2Nlc3NlcyB3aGVuIG5lYXIgb3Igb24gYSB2YWxpZCA8YT4gaHlwZXJsaW5rLgoJICoKCSAqIEBwYXJhbSBFdmVudCBldmVudCBFdmVudCBpbnN0YW5jZS4KCSAqLwoJbGlzdGVuZXIoIGV2ZW50ICkgewoJCWNvbnN0IGxpbmtFbGVtID0gZXZlbnQudGFyZ2V0LmNsb3Nlc3QoICdhJyApOwoJCWNvbnN0IHVybCAgICAgID0gdGhpcy5fcHJlcGFyZVVybCggbGlua0VsZW0gKTsKCQlpZiAoIG51bGwgPT09IHVybCApIHsKCQkJcmV0dXJuOwoJCX0KCgkJc3dpdGNoICggZXZlbnQudHlwZSApIHsKCQkJY2FzZSAnbW91c2Vkb3duJzoKCQkJY2FzZSAndG91Y2hzdGFydCc6CgkJCQl0aGlzLl9hZGRQcmVmZXRjaExpbmsoIHVybCApOwoJCQkJYnJlYWs7CgkJCWNhc2UgJ21vdXNlb3Zlcic6CgkJCQl0aGlzLl9lYXJseVByZWZldGNoKCBsaW5rRWxlbSwgdXJsLCAnbW91c2VvdXQnICk7CgkJfQoJfQoKCS8qKgoJICoKCSAqIEBwcml2YXRlCgkgKgoJICogQHBhcmFtIEVsZW1lbnR8bnVsbCBsaW5rRWxlbQoJICogQHBhcmFtIG9iamVjdCB1cmwKCSAqIEBwYXJhbSBzdHJpbmcgcmVzZXRFdmVudAoJICovCglfZWFybHlQcmVmZXRjaCggbGlua0VsZW0sIHVybCwgcmVzZXRFdmVudCApIHsKCQljb25zdCBkb1ByZWZldGNoID0gKCkgPT4gewoJCQlmYWxzZVRyaWdnZXIgPSBudWxsOwoKCQkJLy8gU3RhcnQgdGhlIHJhdGUgdGhyb3R0bGU6IDEgc2VjIHRpbWVvdXQuCgkJCWlmICggMCA9PT0gdGhpcy5udW1PbkhvdmVyICkgewoJCQkJc2V0VGltZW91dCggKCkgPT4gdGhpcy5udW1PbkhvdmVyID0gMCwgMTAwMCApOwoJCQl9CgkJCS8vIEJhaWwgb3V0IHdoZW4gZXhjZWVkaW5nIHRoZSByYXRlIHRocm90dGxlLgoJCQllbHNlIGlmICggdGhpcy5udW1PbkhvdmVyID4gdGhpcy5jb25maWcucmF0ZVRocm90dGxlICkgewoJCQkJcmV0dXJuOwoJCQl9CgoJCQl0aGlzLm51bU9uSG92ZXIrKzsKCQkJdGhpcy5fYWRkUHJlZmV0Y2hMaW5rKCB1cmwgKTsKCQl9OwoKCQkvLyBEZWxheSB0byBhdm9pZCBmYWxzZSB0cmlnZ2VycyBmb3IgaG92ZXIvdG91Y2gvdGFwLgoJCWxldCBmYWxzZVRyaWdnZXIgPSBzZXRUaW1lb3V0KCBkb1ByZWZldGNoLCB0aGlzLmNvbmZpZy5vbkhvdmVyRGVsYXkgKTsKCgkJLy8gT24gcmVzZXQgZXZlbnQsIHJlc2V0IHRoZSBmYWxzZSB0cmlnZ2VyIHRpbWVyLgoJCWNvbnN0IHJlc2V0ID0gKCkgPT4gewoJCQlsaW5rRWxlbS5yZW1vdmVFdmVudExpc3RlbmVyKCByZXNldEV2ZW50LCByZXNldCwgeyBwYXNzaXZlOiB0cnVlIH0gKTsKCQkJaWYgKCBudWxsID09PSBmYWxzZVRyaWdnZXIgKSB7CgkJCQlyZXR1cm47CgkJCX0KCgkJCWNsZWFyVGltZW91dCggZmFsc2VUcmlnZ2VyICk7CgkJCWZhbHNlVHJpZ2dlciA9IG51bGw7CgkJfTsKCQlsaW5rRWxlbS5hZGRFdmVudExpc3RlbmVyKCByZXNldEV2ZW50LCByZXNldCwgeyBwYXNzaXZlOiB0cnVlIH0gKTsKCX0KCgkvKioKCSAqIEFkZHMgYSA8bGluayByZWw9InByZWZldGNoIiBocmVmPSI8dXJsPiI+IGZvciB0aGUgZ2l2ZW4gVVJMLgoJICoKCSAqIEBwYXJhbSBzdHJpbmcgdXJsIFRoZSBHaXZlbiBVUkwgdG8gcHJlZmV0Y2guCgkgKi8KCV9hZGRQcmVmZXRjaExpbmsoIHVybCApIHsKCQl0aGlzLnByZWZldGNoZWQuYWRkKCB1cmwuaHJlZiApOwoKCQlyZXR1cm4gbmV3IFByb21pc2UoICggcmVzb2x2ZSwgcmVqZWN0ICkgPT4gewoJCQljb25zdCBlbGVtICAgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCAnbGluaycgKTsKCQkJZWxlbS5yZWwgICAgID0gJ3ByZWZldGNoJzsKCQkJZWxlbS5ocmVmICAgID0gdXJsLmhyZWY7CgkJCWVsZW0ub25sb2FkICA9IHJlc29sdmU7CgkJCWVsZW0ub25lcnJvciA9IHJlamVjdDsKCgkJCWRvY3VtZW50LmhlYWQuYXBwZW5kQ2hpbGQoIGVsZW0gKTsKCQl9ICkuY2F0Y2goKCkgPT4gewoJCQkvLyBpZ25vcmUgYW5kIGNvbnRpbnVlLgoJCX0pOwoJfQoKCS8qKgoJICogUHJlcGFyZXMgdGhlIHRhcmdldCBsaW5rJ3MgVVJMLgoJICoKCSAqIEBwcml2YXRlCgkgKgoJICogQHBhcmFtIEVsZW1lbnR8bnVsbCBsaW5rRWxlbSBJbnN0YW5jZSBvZiB0aGUgbGluayBlbGVtZW50LgoJICogQHJldHVybnMge251bGx8Kn0KCSAqLwoJX3ByZXBhcmVVcmwoIGxpbmtFbGVtICkgewoJCWlmICgKCQkJbnVsbCA9PT0gbGlua0VsZW0KCQkJfHwKCQkJdHlwZW9mIGxpbmtFbGVtICE9PSAnb2JqZWN0JwoJCQl8fAoJCQkhICdocmVmJyBpbiBsaW5rRWxlbQoJCQl8fAoJCQkvLyBMaW5rIHByZWZldGNoaW5nIG9ubHkgd29ya3Mgb24gaHR0cC9odHRwcyBwcm90b2NvbC4KCQkJWyAnaHR0cDonLCAnaHR0cHM6JyBdLmluZGV4T2YoIGxpbmtFbGVtLnByb3RvY29sICkgPT09IC0xCgkJKSB7CgkJCXJldHVybiBudWxsOwoJCX0KCgkJY29uc3Qgb3JpZ2luICAgPSBsaW5rRWxlbS5ocmVmLnN1YnN0cmluZyggMCwgdGhpcy5jb25maWcuc2l0ZVVybC5sZW5ndGggKTsKCQljb25zdCBwYXRobmFtZSA9IHRoaXMuX2dldFBhdGhuYW1lKCBsaW5rRWxlbS5ocmVmLCBvcmlnaW4gKTsKCQljb25zdCB1cmwgICAgICA9IHsKCQkJb3JpZ2luYWw6IGxpbmtFbGVtLmhyZWYsCgkJCXByb3RvY29sOiBsaW5rRWxlbS5wcm90b2NvbCwKCQkJb3JpZ2luOiBvcmlnaW4sCgkJCXBhdGhuYW1lOiBwYXRobmFtZSwKCQkJaHJlZjogb3JpZ2luICsgcGF0aG5hbWUKCQl9OwoKCQlyZXR1cm4gdGhpcy5faXNMaW5rT2soIHVybCApID8gdXJsIDogbnVsbDsKCX0KCgkvKioKCSAqIEdldHMgdGhlIFVSTCdzIHBhdGhuYW1lLiBOb3RlOiBlbnN1cmVzIHRoZSBwYXRobmFtZSBtYXRjaGVzIHRoZSBwZXJtYWxpbmsgc3RydWN0dXJlLgoJICoKCSAqIEBwcml2YXRlCgkgKgoJICogQHBhcmFtIG9iamVjdCB1cmwgSW5zdGFuY2Ugb2YgdGhlIFVSTC4KCSAqIEBwYXJhbSBzdHJpbmcgb3JpZ2luIFRoZSB0YXJnZXQgbGluayBocmVmJ3Mgb3JpZ2luLgoJICogQHJldHVybnMge3N0cmluZ30KCSAqLwoJX2dldFBhdGhuYW1lKCB1cmwsIG9yaWdpbiApIHsKCQlsZXQgcGF0aG5hbWUgPSBvcmlnaW4KCQkJPyB1cmwuc3Vic3RyaW5nKCB0aGlzLmNvbmZpZy5zaXRlVXJsLmxlbmd0aCApCgkJCTogdXJsOwoKCQlpZiAoICEgcGF0aG5hbWUuc3RhcnRzV2l0aCggJy8nICkgKSB7CgkJCXBhdGhuYW1lID0gJy8nICsgcGF0aG5hbWU7CgkJfQoKCQlpZiAoIHRoaXMuX3Nob3VsZEFkZFRyYWlsaW5nU2xhc2goIHBhdGhuYW1lICkgKSB7CgkJCXJldHVybiBwYXRobmFtZSArICcvJzsKCQl9CgoJCXJldHVybiBwYXRobmFtZTsKCX0KCglfc2hvdWxkQWRkVHJhaWxpbmdTbGFzaCggcGF0aG5hbWUgKSB7CgkJcmV0dXJuICgKCQkJdGhpcy5jb25maWcudXNlc1RyYWlsaW5nU2xhc2gKCQkJJiYKCQkJISBwYXRobmFtZS5lbmRzV2l0aCggJy8nICkKCQkJJiYKCQkJISB0aGlzLnJlZ2V4LmZpbGVFeHQudGVzdCggcGF0aG5hbWUgKQoJCSk7Cgl9CgoJLyoqCgkgKiBDaGVja3MgaWYgdGhlIGdpdmVuIGxpbmsgZWxlbWVudCBpcyBva2F5IHRvIHByb2Nlc3MuCgkgKgoJICogQHByaXZhdGUKCSAqCgkgKiBAcGFyYW0gb2JqZWN0IHVybCBVUkwgcGFydHMgb2JqZWN0LgoJICoKCSAqIEByZXR1cm5zIHtib29sZWFufQoJICovCglfaXNMaW5rT2soIHVybCApIHsKCQlpZiAoIG51bGwgPT09IHVybCB8fCB0eXBlb2YgdXJsICE9PSAnb2JqZWN0JyApIHsKCQkJcmV0dXJuIGZhbHNlOwoJCX0KCgkJcmV0dXJuICgKCQkJISB0aGlzLnByZWZldGNoZWQuaGFzKCB1cmwuaHJlZiApCgkJCSYmCgkJCXVybC5vcmlnaW4gPT09IHRoaXMuY29uZmlnLnNpdGVVcmwgLy8gaXMgYW4gaW50ZXJuYWwgZG9jdW1lbnQuCgkJCSYmCgkJCXVybC5ocmVmLmluZGV4T2YoICc/JyApID09PSAtMSAvLyBub3QgYSBxdWVyeSBzdHJpbmcuCgkJCSYmCgkJCXVybC5ocmVmLmluZGV4T2YoICcjJyApID09PSAtMSAvLyBub3QgYW4gYW5jaG9yLgoJCQkmJgoJCQkhIHRoaXMucmVnZXguZXhjbHVkZVVyaXMudGVzdCggdXJsLmhyZWYgKSAvLyBub3QgZXhjbHVkZWQuCgkJCSYmCgkJCSEgdGhpcy5yZWdleC5pbWFnZXMudGVzdCggdXJsLmhyZWYgKSAvLyBub3QgYW4gaW1hZ2UuCgkJKTsKCX0KCgkvKioKCSAqIE5hbWVkIHN0YXRpYyBjb25zdHJ1Y3RvciB0byBlbmNhcHN1bGF0ZSBob3cgdG8gY3JlYXRlIHRoZSBvYmplY3QuCgkgKi8KCXN0YXRpYyBydW4oKSB7CgkJLy8gQmFpbCBvdXQgaWYgdGhlIGNvbmZpZ3VyYXRpb24gbm90IHBhc3NlZCBmcm9tIHRoZSBzZXJ2ZXIuCgkJaWYgKCB0eXBlb2YgUm9ja2V0UHJlbG9hZExpbmtzQ29uZmlnID09PSAndW5kZWZpbmVkJyApIHsKCQkJcmV0dXJuOwoJCX0KCgkJY29uc3QgYnJvd3NlciAgPSBuZXcgUm9ja2V0QnJvd3NlckNvbXBhdGliaWxpdHlDaGVja2VyKCB7CgkJCWNhcHR1cmU6IHRydWUsCgkJCXBhc3NpdmU6IHRydWUKCQl9ICk7CgkJY29uc3QgaW5zdGFuY2UgPSBuZXcgUm9ja2V0UHJlbG9hZExpbmtzKCBicm93c2VyLCBSb2NrZXRQcmVsb2FkTGlua3NDb25maWcgKTsKCQlpbnN0YW5jZS5pbml0KCk7Cgl9Cn0KClJvY2tldFByZWxvYWRMaW5rcy5ydW4oKTsKLyogXV0+ICovCg=="
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/CompetitorAnalysis/15+ Top Logo Showcase Templates for Websites [free].html",
+      "line": 1966,
+      "ref": "./15+ Top Logo Showcase Templates for Websites [free]_files/0"
+    },
+    {
+      "file": "tooling/whisper/.venv/lib/python3.9/site-packages/onnxruntime/Privacy.md",
+      "line": 14,
+      "ref": "../README.md#binaries"
+    },
+    {
+      "file": "tooling/whisper/.venv/lib/python3.9/site-packages/onnxruntime/Privacy.md",
+      "line": 14,
+      "ref": "../onnxruntime/core/platform/telemetry.h"
+    },
+    {
+      "file": "tooling/whisper/.venv/lib/python3.9/site-packages/onnxruntime/Privacy.md",
+      "line": 19,
+      "ref": "../README.md#api-documentation"
+    },
+    {
+      "file": "tooling/whisper/.venv/lib/python3.9/site-packages/onnxruntime/Privacy.md",
+      "line": 20,
+      "ref": "./C_API.md#telemetry"
+    }
+  ],
+  "missingNodeScripts": [],
+  "missingPnpmScripts": [
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/026__Localization_PragueCopy_Base_Overlays_Manifest.md",
+      "line": 420,
+      "cmd": "pnpm prague:strings:watch",
+      "script": "prague:strings:watch"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "line": 325,
+      "cmd": "pnpm prague:strings:translate",
+      "script": "prague:strings:translate"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "line": 325,
+      "cmd": "pnpm prague:strings:compile",
+      "script": "prague:strings:compile"
+    }
+  ],
+  "missingScriptFiles": [
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/026__Localization_PragueCopy_Base_Overlays_Manifest.md",
+      "line": 335,
+      "ref": "scripts/prague-localize.mjs"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/026__Localization_PragueCopy_Base_Overlays_Manifest.md",
+      "line": 441,
+      "ref": "scripts/prague-localize.mjs"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 245,
+      "ref": "scripts/prague-l10n/migrate.mjs"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 246,
+      "ref": "scripts/prague-build.mjs"
+    }
+  ],
+  "missingRootPaths": [
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/026__Localization_PragueCopy_Base_Overlays_Manifest.md",
+      "line": 335,
+      "ref": "scripts/prague-localize.mjs"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/026__Localization_PragueCopy_Base_Overlays_Manifest.md",
+      "line": 441,
+      "ref": "scripts/prague-localize.mjs"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/029__PRD__18__Prague_Blocks_Composability_Uplevel__dup2.md",
+      "line": 104,
+      "ref": "prague/src/composition/"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/029__PRD__18__Prague_Blocks_Composability_Uplevel__dup2.md",
+      "line": 785,
+      "ref": "tooling/sf-policies/"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/032__PRD__Connectors__Universal_Data_Sources.md",
+      "line": 8,
+      "ref": "Execution_Pipeline_Docs/00-Strategy/007__PRD_Multitenancy_and_SubjectPolicy_System.md"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 52,
+      "ref": "/l10n/instances/:publicId/:layer/:layerKey"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 171,
+      "ref": "bob/lib/paris-proxy/core.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 449,
+      "ref": "/l10n/instances/:publicId/:layer/:layerKey"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 450,
+      "ref": "/l10n/instances/:publicId/index"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 451,
+      "ref": "/l10n/instances/:publicId/bases/:baseFingerprint"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 73,
+      "ref": "paris/app/api/instances/route.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 228,
+      "ref": "paris/app/api/instances/route.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 229,
+      "ref": "paris/lib/instances.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 235,
+      "ref": "paris/app/api/instances/route.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 237,
+      "ref": "paris/lib/instances.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/007__PRD_Multitenancy_and_SubjectPolicy_System.md",
+      "line": 391,
+      "ref": "/bob/workspaces/:workspaceId/instance/:publicId"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/008__PRD_System_User_Instance_Split.md",
+      "line": 14,
+      "ref": "Execution_Pipeline_Docs/02-Executing/003__Localization_Instance_L10n_Refactor.md"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/011__AGENTS_UPLEVEL_PLAN.md",
+      "line": 145,
+      "ref": "sanfrancisco/src/ai/callLLM.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/011__AGENTS_UPLEVEL_PLAN.md",
+      "line": 478,
+      "ref": "sanfrancisco/src/ai/callLLM.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/015__OpenPRDsExecution.md",
+      "line": 220,
+      "ref": "prague/src/lib/pragueStrings.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/019__Clickeen_Audit_Report.md",
+      "line": 69,
+      "ref": "sanfrancisco/src/agents/editorFaqAnswer.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/019__Clickeen_Audit_Report.md",
+      "line": 156,
+      "ref": "sanfrancisco/src/agents/editorFaqAnswer.ts"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 37,
+      "ref": "Execution_Pipeline_Docs/00-Strategy/009__PRD_Prague_Blocks_Components_Refactor.md"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 41,
+      "ref": "Execution_Pipeline_Docs/00-Strategy/010__PRD_Version_Limits_Assets_Localization.md"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 42,
+      "ref": "Execution_Pipeline_Docs/00-Strategy/014__Localization_Architecture_Update.md"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 43,
+      "ref": "Execution_Pipeline_Docs/00-Strategy/008__PRD_System_User_Instance_Split.md"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/031__PRD__Bob_Preview_Mode__Decouple_SEO_GEO.md",
+      "line": 30,
+      "ref": "/bob/preview-shadow?"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/031__PRD__Bob_Preview_Mode__Decouple_SEO_GEO.md",
+      "line": 115,
+      "ref": "/bob/preview-shadow"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/031__PRD__Bob_Preview_Mode__Decouple_SEO_GEO.md",
+      "line": 133,
+      "ref": "/bob/preview-shadow?"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/031__PRD__Bob_Preview_Mode__Decouple_SEO_GEO.md",
+      "line": 202,
+      "ref": "/bob/preview-shadow"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/031__PRD__Bob_Preview_Mode__Decouple_SEO_GEO.md",
+      "line": 207,
+      "ref": "/bob/preview-shadow"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/036__Prague_GA_Market_Routing_PRD_v0.2.md",
+      "line": 84,
+      "ref": "l10n/prague/"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/037__Elfsight_vs_Clickeen__Architecture_Learnings_Implementation.md",
+      "line": 212,
+      "ref": "bob/embed-wizard/"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/037__Elfsight_vs_Clickeen__Architecture_Learnings_Implementation.md",
+      "line": 215,
+      "ref": "venice/diagnostics"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 245,
+      "ref": "scripts/prague-l10n/migrate.mjs"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 246,
+      "ref": "scripts/prague-build.mjs"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 380,
+      "ref": "/dieter/components/[name]/"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 478,
+      "ref": "/dieter/components/[name]/"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 530,
+      "ref": "/dieter/components/[name]/"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 109,
+      "ref": "/l10n/status"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 142,
+      "ref": "/bob/preview-shadow"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 389,
+      "ref": "/bob/preview-shadow"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 182,
+      "ref": "/l10n/publish"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 118,
+      "ref": "/l10n/publish"
+    }
+  ],
+  "semanticFindings": [
+    {
+      "file": "AGENTS.md",
+      "finding": "AGENTS says paris is Next.js; runtime is Cloudflare Worker."
+    },
+    {
+      "file": "AGENTS.md",
+      "finding": "AGENTS says venice/prague are placeholders; both are active runtimes."
+    },
+    {
+      "file": "paris/README.md",
+      "finding": "README overstates auth: GET /api/instance/:publicId is public published-only unless dev auth."
+    },
+    {
+      "file": "prague/README.md",
+      "finding": "README claims scaffolded/first-page-only but Prague has multiple active routes."
+    },
+    {
+      "file": "venice/README.md",
+      "finding": "README claims placeholder but Venice has active embed runtime routes."
+    }
+  ]
+}

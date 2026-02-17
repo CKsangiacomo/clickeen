@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "রিজার্ভেশন করুন"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "আমাদের USA বেড অ্যান্ড ব্রেকফাস্টের আকর্ষণ ও আরাম উপভোগ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "আধুনিক আর্ট মিউজিয়াম FAQs"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "আমরা বিভিন্ন ধরনের <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">আধুনিক শিল্প প্রদর্শনী</a> অফার করি, যার মধ্যে রয়েছে <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">সমসাময়িক শিল্পীদের কাজ</a> , ভাস্কর্য এবং <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">ইনস্টলেশন</a> ।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "কোন ধরনের শিল্প প্রদর্শনী রয়েছে?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "মিউজিয়ামটি প্রতিদিন সকাল ১০টা থেকে সন্ধ্যা ৬টা পর্যন্ত খোলা থাকে।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "দর্শনার্থীদের সময়সূচি কী?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "না, সব বয়সের দর্শনার্থীরা স্বাগত।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "বয়সের কোনো সীমাবদ্ধতা আছে কি?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "হ্যাঁ, আমরা গ্রুপ ডিসকাউন্ট এবং বিশেষ ইভেন্ট প্যাকেজ অফার করি।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "আপনারা কি কোনো বিশেষ প্যাকেজ অফার করেন?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "ফি এড়াতে বাতিল করতে হলে ২৪ ঘণ্টা আগে জানাতে হবে।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "আপনাদের ক্যানসেলেশন নীতি কী?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "হ্যাঁ, আমরা স্কুল ও গ্রুপের জন্য শিক্ষামূলক ট্যুর এবং প্রোগ্রাম অফার করি।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "আপনারা কি কোনো শিক্ষামূলক প্রোগ্রাম অফার করেন?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "আধুনিক আর্ট মিউজিয়াম অভিজ্ঞতা"
+    }
+  ],
+  "v": 1
+}

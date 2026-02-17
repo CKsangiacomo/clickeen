@@ -10,7 +10,7 @@ export type Env = {
   TOKYO_WORKER_BASE_URL?: string;
   TOKYO_DEV_JWT?: string;
   AI_GRANT_HMAC_SECRET?: string;
-  MINIBOB_CLAIM_HMAC_SECRET?: string;
+  ROMA_AUTHZ_CAPSULE_SECRET?: string;
   SANFRANCISCO_BASE_URL?: string;
   ENVIRONMENT?: string;
   ENV_STAGE?: string;
@@ -27,6 +27,7 @@ export type InstanceKind = 'curated' | 'user';
 
 export type InstanceRow = {
   public_id: string;
+  display_name?: string | null;
   status: 'published' | 'unpublished';
   config: Record<string, unknown>;
   created_at: string;
@@ -77,6 +78,7 @@ export type WorkspaceBusinessProfileRow = {
 export type UpdatePayload = {
   config?: Record<string, unknown>;
   status?: 'published' | 'unpublished';
+  displayName?: string | null;
   meta?: Record<string, unknown> | null;
 };
 

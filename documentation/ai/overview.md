@@ -119,7 +119,7 @@ Keeping Paris and San Francisco separate prevents:
 ## High‑Level Data Flow
 
 ### Editor agents (inside Clickeen app)
-1) Bob loads an instance via Paris (`GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace`, typically via Bob’s `/api/paris/*` proxy).
+1) Instance snapshot is loaded via Paris (`GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace`): host-performed in Roma/DevStudio message boot, Bob-performed in URL boot.
 2) Bob requests a short‑lived **AI Grant** from Paris (`POST /api/ai/grant`) for that editing session.
 3) Bob calls San Francisco with `{ grant, agentId, input, context }`.
 4) San Francisco returns `{ ops[], usage }`.

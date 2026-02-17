@@ -132,7 +132,7 @@
     }
 
     #l10n-status {
-      display: inline-flex;
+      display: none;
       align-items: center;
       gap: var(--space-2);
       padding: 6px 10px;
@@ -812,6 +812,7 @@
     }
 
     const TOKYO_BASE = resolveTokyoBaseUrl();
+    const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
     const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
     const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
     // v1: curated instances live in the single Clickeen-owned workspace in dev, which is ck-dev.
@@ -821,6 +822,7 @@
     let selectedWidgetSlug = null;
     let instances = [];
     let isOpen = false;
+    let bobSessionId = '';
     const isLocalDevStudio =
       window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
@@ -872,6 +874,7 @@
     let themeModalState = null;
 
     const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
+    bobUrl.searchParams.set('boot', 'message');
     bobUrl.searchParams.set('subject', 'devstudio');
     if (!isLocalDevStudio) bobUrl.searchParams.set('readonly', '1');
     iframe.src = bobUrl.toString();
@@ -1161,7 +1164,36 @@
         if (event.origin !== BOB_ORIGIN) return;
         if (event.source !== iframe.contentWindow) return;
         const data = event.data;
-        if (data && data.type === 'bob:session-ready' && currentPublicId) {
+        if (data && data.type === 'bob:request-instance-switch') {
+          const publicId = typeof data.publicId === 'string' ? data.publicId.trim() : '';
+          if (!publicId) return;
+          if (!instances.some((inst) => inst.publicId === publicId)) return;
+          switchInstance(publicId);
+          return;
+        }
+        if (data && data.type === 'bob:instance-renamed') {
+          const publicId = typeof data.publicId === 'string' ? data.publicId.trim() : '';
+          const displayName = typeof data.displayName === 'string' ? data.displayName.trim() : '';
+          if (!publicId || !displayName) return;
+          const instance = instances.find((inst) => inst.publicId === publicId);
+          if (!instance) return;
+          instance.label = displayName;
+          updateCurrentLabel();
+          renderInstances();
+          return;
+        }
+        if (data && data.type === 'bob:session-ready') {
+          const sessionId = typeof data.sessionId === 'string' ? data.sessionId.trim() : '';
+          if (!sessionId) {
+            console.error('[DevStudio] bob:session-ready missing sessionId');
+            return;
+          }
+          if (data.bootMode && data.bootMode !== 'message') {
+            console.error('[DevStudio] Bob bootMode mismatch', data.bootMode);
+            return;
+          }
+          bobSessionId = sessionId;
+          if (!currentPublicId) return;
           console.log('[DevStudio] Received bob:session-ready, posting instance', currentPublicId);
           if (isPosting) return;
           isPosting = true;
@@ -1305,7 +1337,9 @@
       }
       const promise = (async () => {
         const res = await fetch(
-          `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&subject=devstudio&_t=${Date.now()}`,
+          `${PARIS_API}/workspaces/${encodeURIComponent(DEV_WORKSPACE_ID)}/instance/${encodeURIComponent(
+            publicId,
+          )}?subject=devstudio&_t=${Date.now()}`,
           { cache: 'no-store' },
         );
         if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
@@ -1345,7 +1379,10 @@
         publicId: inst.publicId,
         widgetname: inst.widgetname,
         widgetSlug: normalizeWidgetname(inst.widgetname),
-        label: inst.displayName || inst.publicId,
+        label:
+          typeof inst.displayName === 'string' && inst.displayName.trim()
+            ? inst.displayName.trim()
+            : DEFAULT_INSTANCE_DISPLAY_NAME,
         config: inst.config ?? null,
         meta: normalizeCuratedMeta(inst.meta ?? null),
       }));
@@ -1389,7 +1426,7 @@
         return;
       }
       const current = instances.find((inst) => inst.publicId === currentPublicId);
-      currentLabel.textContent = current?.label || currentPublicId;
+      currentLabel.textContent = current?.label || DEFAULT_INSTANCE_DISPLAY_NAME;
       valueField.value = currentPublicId;
     }
 
@@ -1589,7 +1626,7 @@
       meta,
     }) {
       const res = await superadminFetch(
-        `${PARIS_API}/instances?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+        `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instances?subject=devstudio&_t=${Date.now()}`,
         {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -1606,7 +1643,9 @@
 
     async function updateWorkspaceInstance({ workspaceId, publicId, config, status, meta }) {
       const res = await superadminFetch(
-        `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+        `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+          publicId,
+        )}?subject=devstudio&_t=${Date.now()}`,
         {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },
@@ -1623,7 +1662,7 @@
 
     async function ensureWorkspaceInstance({ workspaceId, widgetType, publicId, config, status }) {
       const res = await superadminFetch(
-        `${PARIS_API}/instances?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+        `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instances?subject=devstudio&_t=${Date.now()}`,
         {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -2696,6 +2735,10 @@
       if (!instance) {
         throw new Error(`[DevStudio] Instance not found for publicId ${publicId}`);
       }
+      const label =
+        typeof instance.label === 'string' && instance.label.trim()
+          ? instance.label.trim()
+          : DEFAULT_INSTANCE_DISPLAY_NAME;
 
       const slug = instance.widgetSlug || normalizeWidgetname(instance.widgetname);
       if (!slug) {
@@ -2728,24 +2771,108 @@
       const config = configResult.value;
       instance.config = config;
       console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
-      target.postMessage(
-        {
-          type: 'devstudio:load-instance',
-          subjectMode: 'devstudio',
-          publicId,
-          workspaceId: DEV_WORKSPACE_ID,
-          ownerAccountId: PLATFORM_ACCOUNT_ID,
-          widgetname: slug,
-          compiled,
-          instanceData: config ?? null,
-        },
-        BOB_ORIGIN,
-      );
+      await postOpenEditorAndWait(target, {
+        type: 'ck:open-editor',
+        subjectMode: 'devstudio',
+        publicId,
+        workspaceId: DEV_WORKSPACE_ID,
+        ownerAccountId: PLATFORM_ACCOUNT_ID,
+        label,
+        widgetname: slug,
+        compiled,
+        instanceData: config ?? null,
+      });
       console.log('[DevStudio] Instance load timings', {
         publicId,
         compileMs: Math.round(compiledResult.durationMs),
         configMs: Math.round(configResult.durationMs),
         totalMs: Math.round(performance.now() - totalStart),
+      });
+    }
+
+    async function postOpenEditorAndWait(target, messageBase) {
+      const sessionId = String(bobSessionId || '').trim();
+      if (!sessionId) {
+        throw new Error('[DevStudio] Bob session is not ready');
+      }
+      const requestId = crypto.randomUUID();
+      const message = { ...messageBase, requestId, sessionId };
+
+      await new Promise((resolve, reject) => {
+        let settled = false;
+        let acknowledged = false;
+        let attempts = 0;
+        let retryTimer = null;
+        let timeoutTimer = null;
+
+        const cleanup = () => {
+          if (retryTimer) clearTimeout(retryTimer);
+          if (timeoutTimer) clearTimeout(timeoutTimer);
+          window.removeEventListener('message', onMessage);
+        };
+
+        const fail = (error) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          reject(error);
+        };
+
+        const succeed = () => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          resolve();
+        };
+
+        const send = () => {
+          if (settled) return;
+          attempts += 1;
+          target.postMessage(message, BOB_ORIGIN);
+
+          if (!acknowledged) {
+            if (attempts >= 6) {
+              fail(new Error('[DevStudio] Timed out waiting for bob:open-editor-ack'));
+              return;
+            }
+            retryTimer = setTimeout(send, 250);
+          }
+        };
+
+        const onMessage = (event) => {
+          if (event.origin !== BOB_ORIGIN) return;
+          if (event.source !== iframe.contentWindow) return;
+          const data = event.data;
+          if (!data || typeof data !== 'object') return;
+          if (String(data.requestId || '') !== requestId) return;
+          if (String(data.sessionId || '') !== sessionId) return;
+
+          if (data.type === 'bob:open-editor-ack') {
+            acknowledged = true;
+            if (retryTimer) {
+              clearTimeout(retryTimer);
+              retryTimer = null;
+            }
+            return;
+          }
+
+          if (data.type === 'bob:open-editor-applied') {
+            succeed();
+            return;
+          }
+
+          if (data.type === 'bob:open-editor-failed') {
+            const reason = String(data.reasonKey || data.message || '[DevStudio] Bob failed to apply instance');
+            fail(new Error(reason));
+          }
+        };
+
+        timeoutTimer = setTimeout(
+          () => fail(new Error('[DevStudio] Timed out waiting for bob:open-editor-applied')),
+          7000,
+        );
+        window.addEventListener('message', onMessage);
+        send();
       });
     }
 

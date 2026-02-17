@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { resolveParisBaseUrl } from '../../../../lib/env/paris';
+import { resolveSessionBearer } from '../../../../lib/auth/session';
 
 export const runtime = 'edge';
-
-const PARIS_DEV_JWT = process.env.PARIS_DEV_JWT;
 
 const OUTCOME_EVENTS = new Set([
   'signup_started',
@@ -55,7 +54,10 @@ function isValidOutcomePayload(value: unknown): value is {
   return true;
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const session = await resolveSessionBearer(req);
+  if (!session.ok) return session.response;
+
   try {
     const body = (await req.json().catch(() => null)) as unknown;
     if (!isValidOutcomePayload(body)) {
@@ -77,8 +79,10 @@ export async function POST(req: Request) {
     }
 
     const url = `${parisBaseUrl.replace(/\/$/, '')}/api/ai/outcome`;
-    const headers: HeadersInit = { 'Content-Type': 'application/json' };
-    if (PARIS_DEV_JWT) headers['Authorization'] = `Bearer ${PARIS_DEV_JWT}`;
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.accessToken}`,
+    };
 
     const res = await fetch(url, {
       method: 'POST',

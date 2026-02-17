@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "आरक्षण करें"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "हमारे USA बेड एंड ब्रेकफास्ट के आकर्षण और आराम का अनुभव करें।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "आधुनिक कला संग्रहालय FAQs"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "हम <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">आधुनिक कला प्रदर्शनियों</a> की विविध रेंज पेश करते हैं, जिनमें <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">समकालीन कलाकार</a>, मूर्तियां और <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">इंस्टॉलेशन्स</a> शामिल हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "किस प्रकार की कला प्रदर्शनियां उपलब्ध हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "संग्रहालय रोज़ाना सुबह 10 बजे से शाम 6 बजे तक खुला रहता है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "दर्शक समय क्या हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "नहीं, सभी उम्र के लोगों का स्वागत है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "क्या उम्र की कोई सीमा है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "हाँ, हम समूह छूट और विशेष इवेंट पैकेज प्रदान करते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "क्या आप कोई विशेष पैकेज देते हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "शुल्क से बचने के लिए रद्दीकरण 24 घंटे पहले करना होगा।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "आपकी रद्दीकरण नीति क्या है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "हाँ, हम स्कूलों और समूहों के लिए शैक्षिक टूर और प्रोग्राम उपलब्ध कराते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "क्या आप कोई शैक्षिक कार्यक्रम देते हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "आधुनिक कला संग्रहालय अनुभव"
+    }
+  ],
+  "v": 1
+}

@@ -187,7 +187,7 @@ SanFrancisco only:
 
 Full stack (recommended):
 - `bash scripts/dev-up.sh`
-  - starts Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) and SanFrancisco (3002 if enabled)
+  - starts Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), Bob (3000), Roma (3004), DevStudio (5173), Prague (4321), Pitch (8790) and SanFrancisco (3002 if enabled)
 
 Useful checks:
 - `curl http://localhost:3002/healthz`

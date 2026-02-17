@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "إجراء حجز"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "اكتشف سحر وراحة فندق المبيت والإفطار لدينا في USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "الأسئلة الشائعة لمتحف الفن الحديث"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "نقدّم مجموعة متنوعة من <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">معارض الفن الحديث</a> بما في ذلك <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">فنانين معاصرين</a>، ومنحوتات، و<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">أعمال تركيبية</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "ما أنواع معارض الفن المتاحة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "المتحف مفتوح يوميًا من 10 صباحًا إلى 6 مساءً."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "ما هي ساعات الزيارة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "لا، نرحّب بجميع الأعمار."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "هل توجد قيود عمرية؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "نعم، نقدّم خصومات للمجموعات وباقات خاصة للفعاليات."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "هل تقدّمون أي باقات خاصة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "يجب إجراء الإلغاء قبل 24 ساعة لتجنّب الرسوم."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "ما سياسة الإلغاء لديكم؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "نعم، نقدّم جولات وبرامج تعليمية للمدارس والمجموعات."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "هل تقدّمون أي برامج تعليمية؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "تجربة متحف الفن الحديث"
+    }
+  ],
+  "v": 1
+}

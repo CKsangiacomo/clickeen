@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
-import type { CompiledWidget, WidgetPresets } from '../types';
+import type { CompiledWidget } from '../types';
 import type { ApplyWidgetOpsResult, WidgetOp, WidgetOpError } from '../ops';
 import { applyWidgetOps } from '../ops';
 import type { CopilotThread } from '../copilot/types';
@@ -75,7 +75,8 @@ type TokyoOverlay = {
   source: string | null;
 };
 
-type SubjectMode = 'devstudio' | 'minibob';
+type SubjectMode = 'devstudio' | 'minibob' | 'workspace';
+type BootMode = 'message' | 'url';
 
 type SessionState = {
   compiled: CompiledWidget | null;
@@ -106,8 +107,10 @@ type SessionState = {
   } | null;
 };
 
-type WidgetBootstrapMessage = {
-  type: 'devstudio:load-instance';
+type EditorOpenMessage = {
+  type: 'ck:open-editor';
+  requestId?: string;
+  sessionId?: string;
   widgetname: string;
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
@@ -120,15 +123,6 @@ type WidgetBootstrapMessage = {
   subjectMode?: SubjectMode;
 };
 
-type ThemeRegistry = {
-  themes: Array<{
-    id: string;
-    label: string;
-    values: Record<string, unknown>;
-  }>;
-};
-
-const themePresetCache = new Map<string, Promise<WidgetPresets | null>>();
 const GLOBAL_TYPOGRAPHY_ROLE_SCALES: Record<string, Record<'xs' | 's' | 'm' | 'l' | 'xl', string>> = {
   title: { xs: '20px', s: '28px', m: '36px', l: '44px', xl: '60px' },
   body: { xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' },
@@ -154,8 +148,43 @@ function enforceGlobalTypographyRoleScales(config: Record<string, unknown>) {
   const roles = typography.roles;
   if (!isPlainRecord(roles)) return;
 
+  const globalFamily =
+    typeof typography.globalFamily === 'string' && typography.globalFamily.trim()
+      ? typography.globalFamily.trim()
+      : 'Inter';
+
   Object.values(roles).forEach((roleValue) => {
     if (!isPlainRecord(roleValue)) return;
+    const family =
+      typeof roleValue.family === 'string' && roleValue.family.trim()
+        ? roleValue.family.trim()
+        : globalFamily;
+    roleValue.family = family;
+
+    const sizePreset =
+      typeof roleValue.sizePreset === 'string' && roleValue.sizePreset.trim()
+        ? roleValue.sizePreset.trim()
+        : 'm';
+    roleValue.sizePreset = sizePreset;
+
+    const weight =
+      typeof roleValue.weight === 'string' && roleValue.weight.trim()
+        ? roleValue.weight.trim()
+        : '400';
+    roleValue.weight = weight;
+
+    const fontStyle =
+      typeof roleValue.fontStyle === 'string' && roleValue.fontStyle.trim()
+        ? roleValue.fontStyle.trim()
+        : 'normal';
+    roleValue.fontStyle = fontStyle;
+
+    const color =
+      typeof roleValue.color === 'string' && roleValue.color.trim()
+        ? roleValue.color.trim()
+        : '#131313';
+    roleValue.color = color;
+
     const lineHeightPreset =
       typeof roleValue.lineHeightPreset === 'string' && roleValue.lineHeightPreset.trim()
         ? roleValue.lineHeightPreset.trim()
@@ -196,68 +225,6 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function normalizeThemeRegistry(raw: unknown): ThemeRegistry | null {
-  if (!isPlainRecord(raw)) return null;
-  const themesRaw = (raw as ThemeRegistry).themes;
-  if (!Array.isArray(themesRaw)) return null;
-
-  const themes: ThemeRegistry['themes'] = [];
-  const seen = new Set<string>();
-  themesRaw.forEach((theme) => {
-    if (!theme || typeof theme !== 'object') return;
-    const id = typeof (theme as any).id === 'string' ? (theme as any).id.trim() : '';
-    const label = typeof (theme as any).label === 'string' ? (theme as any).label.trim() : '';
-    const values = (theme as any).values;
-    if (!id || !label || !isPlainRecord(values) || seen.has(id)) return;
-    seen.add(id);
-    themes.push({ id, label, values });
-  });
-
-  return themes.length ? { themes } : null;
-}
-
-function filterThemeValues(values: Record<string, unknown>): Record<string, unknown> {
-  const allowed = ['stage.', 'pod.', 'appearance.', 'typography.'];
-  const filtered: Record<string, unknown> = {};
-  Object.entries(values).forEach(([key, value]) => {
-    if (!key || typeof key !== 'string') return;
-    if (!allowed.some((prefix) => key.startsWith(prefix))) return;
-    filtered[key] = value;
-  });
-  return filtered;
-}
-
-function buildThemePresets(registry: ThemeRegistry): WidgetPresets {
-  const values: Record<string, Record<string, unknown>> = {};
-  registry.themes.forEach((theme) => {
-    values[theme.id] = filterThemeValues(theme.values);
-  });
-  return {
-    'appearance.theme': {
-      customValue: 'custom',
-      values,
-    },
-  };
-}
-
-async function loadThemePresets(tokyoBase: string): Promise<WidgetPresets | null> {
-  const base = String(tokyoBase || '').trim().replace(/\/+$/, '');
-  if (!base) return null;
-  const cached = themePresetCache.get(base);
-  if (cached) return cached;
-
-  const promise = (async () => {
-    const res = await fetch(`${base}/themes/themes.json`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    const raw = await res.json().catch(() => null);
-    const registry = normalizeThemeRegistry(raw);
-    return registry ? buildThemePresets(registry) : null;
-  })().catch(() => null);
-
-  themePresetCache.set(base, promise);
-  return promise;
-}
-
 type DevstudioExportInstanceDataMessage = {
   type: 'devstudio:export-instance-data';
   requestId: string;
@@ -285,6 +252,34 @@ type BobPublishedMessage = {
   widgetType: string;
   status: 'published';
   config: Record<string, unknown>;
+};
+
+type BobSessionReadyMessage = {
+  type: 'bob:session-ready';
+  sessionId: string;
+  bootMode: BootMode;
+};
+
+type BobOpenEditorAckMessage = {
+  type: 'bob:open-editor-ack';
+  requestId: string;
+  sessionId: string;
+};
+
+type BobOpenEditorAppliedMessage = {
+  type: 'bob:open-editor-applied';
+  requestId: string;
+  sessionId: string;
+  publicId?: string;
+  widgetname?: string;
+};
+
+type BobOpenEditorFailedMessage = {
+  type: 'bob:open-editor-failed';
+  requestId?: string;
+  sessionId?: string;
+  reasonKey: string;
+  message?: string;
 };
 
 const DEFAULT_PREVIEW: PreviewSettings = {
@@ -341,11 +336,17 @@ function resolveSubjectModeFromUrl(): SubjectMode {
   if (typeof window === 'undefined') return 'devstudio';
   const params = new URLSearchParams(window.location.search);
   const subject = (params.get('subject') || '').trim().toLowerCase();
+  if (subject === 'workspace') return 'workspace';
   if (subject === 'minibob') return 'minibob';
   if (subject === 'devstudio') return 'devstudio';
-  // Backward compat: existing Minibob param.
-  if (params.get('minibob') === 'true') return 'minibob';
   return 'devstudio';
+}
+
+function resolveBootModeFromUrl(): BootMode {
+  if (typeof window === 'undefined') return 'message';
+  const params = new URLSearchParams(window.location.search);
+  const boot = (params.get('boot') || '').trim().toLowerCase();
+  return boot === 'url' ? 'url' : 'message';
 }
 
 function resolvePolicySubject(policy: Policy): 'devstudio' | 'minibob' | 'workspace' {
@@ -365,7 +366,8 @@ function resolveReadOnlyFromUrl(): boolean {
 
 function resolveDevPolicy(profile: SubjectMode): Policy {
   const role: Policy['role'] = resolveReadOnlyFromUrl() ? 'viewer' : 'editor';
-  return resolveCkPolicy({ profile, role });
+  const fallbackProfile = profile === 'workspace' ? 'free' : profile;
+  return resolveCkPolicy({ profile: fallbackProfile, role });
 }
 
 function enforceReadOnlyPolicy(policy: Policy): Policy {
@@ -458,6 +460,10 @@ function useWidgetSessionInternal() {
   const pendingMinibobInjectionRef = useRef<Record<string, unknown> | null>(null);
   const allowlistCacheRef = useRef<Map<string, AllowlistEntry[]>>(new Map());
   const localeRequestRef = useRef(0);
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const openRequestStatusRef = useRef<
+    Map<string, { status: 'processing' | 'applied' | 'failed'; publicId?: string; widgetname?: string; error?: string }>
+  >(new Map());
 
   useEffect(() => {
     previewOpsRef.current = state.previewOps;
@@ -1292,7 +1298,10 @@ function useWidgetSessionInternal() {
     }
   }, [setLocalePreview]);
 
-  const loadInstance = useCallback(async (message: WidgetBootstrapMessage) => {
+  const loadInstance = useCallback(
+    async (
+      message: EditorOpenMessage,
+    ): Promise<{ ok: true; publicId?: string; widgetname?: string } | { ok: false; error: string }> => {
     try {
       const compiled = message.compiled;
       if (!compiled) {
@@ -1311,6 +1320,7 @@ function useWidgetSessionInternal() {
       let nextWorkspaceId = message.workspaceId;
       let nextOwnerAccountId = message.ownerAccountId;
       let nextEnforcement: EnforcementState | null = normalizeEnforcement(message.enforcement);
+      let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
 
       const nextSubjectMode: SubjectMode = message.subjectMode ?? resolveSubjectModeFromUrl();
       let nextPolicy: Policy = resolveDevPolicy(nextSubjectMode);
@@ -1325,9 +1335,9 @@ function useWidgetSessionInternal() {
       }
 
       if (incoming == null && message.publicId && message.workspaceId && !message.policy) {
-        const url = `/api/paris/instance/${encodeURIComponent(message.publicId)}?workspaceId=${encodeURIComponent(
-          message.workspaceId
-        )}&subject=${encodeURIComponent(nextSubjectMode)}`;
+        const url = `/api/paris/workspaces/${encodeURIComponent(message.workspaceId)}/instance/${encodeURIComponent(
+          message.publicId
+        )}?subject=${encodeURIComponent(nextSubjectMode)}`;
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) throw new Error(`[useWidgetSession] Failed to load instance from Paris (HTTP ${res.status})`);
         const json = (await res.json().catch(() => null)) as any;
@@ -1348,9 +1358,16 @@ function useWidgetSessionInternal() {
         if (typeof json?.ownerAccountId === 'string' && json.ownerAccountId.trim()) {
           nextOwnerAccountId = json.ownerAccountId.trim();
         }
+        if (typeof json?.displayName === 'string' && json.displayName.trim()) {
+          nextLabel = json.displayName.trim();
+        }
       } else {
         resolved = incoming == null ? structuredClone(defaults) : structuredClone(incoming);
         if (!message.policy) nextPolicy = resolveDevPolicy(nextSubjectMode);
+      }
+
+      if (!nextLabel) {
+        nextLabel = String(message.publicId || '').trim() || 'Untitled widget';
       }
 
       nextPolicy = enforceReadOnlyPolicy(nextPolicy);
@@ -1388,9 +1405,14 @@ function useWidgetSessionInternal() {
           workspaceId: nextWorkspaceId,
           ownerAccountId: nextOwnerAccountId,
           widgetname: compiled.widgetname,
-          label: message.label ?? compiled.displayName,
+          label: nextLabel,
         },
       }));
+      return {
+        ok: true,
+        publicId: message.publicId,
+        widgetname: compiled.widgetname,
+      };
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
         console.error('[useWidgetSession] Failed to load instance', err, message);
@@ -1410,8 +1432,11 @@ function useWidgetSessionInternal() {
         locale: { ...DEFAULT_LOCALE_STATE },
         meta: null,
       }));
+      return { ok: false, error: messageText };
     }
-  }, []);
+    },
+    [],
+  );
 
   function applyDefaultsIntoConfig(
     normalization: CompiledWidget['normalization'],
@@ -1528,9 +1553,9 @@ function useWidgetSessionInternal() {
         source: 'bob.publish',
       });
       const res = await fetch(
-        `/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
-          workspaceId
-        )}&subject=${encodeURIComponent(subject)}`,
+        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+          publicId
+        )}?subject=${encodeURIComponent(subject)}`,
         {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },
@@ -1650,9 +1675,9 @@ function useWidgetSessionInternal() {
     if (!workspaceId || !publicId) return;
 
     const subject = resolveSubjectModeFromUrl();
-    const instanceUrl = `/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
-      workspaceId
-    )}&subject=${encodeURIComponent(subject)}`;
+    const instanceUrl = `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+      publicId
+    )}?subject=${encodeURIComponent(subject)}`;
     const instanceRes = await fetch(instanceUrl, { cache: 'no-store' });
     if (!instanceRes.ok) {
       throw new Error(`[useWidgetSession] Failed to load instance (HTTP ${instanceRes.status})`);
@@ -1669,6 +1694,10 @@ function useWidgetSessionInternal() {
     if (!widgetType) {
       throw new Error('[useWidgetSession] Missing widgetType in instance payload');
     }
+    const displayName =
+      typeof instanceJson.displayName === 'string' && instanceJson.displayName.trim()
+        ? instanceJson.displayName.trim()
+        : String(instanceJson.publicId ?? publicId).trim() || 'Untitled widget';
 
     const compiledRes = await fetch(`/api/widgets/${encodeURIComponent(widgetType)}/compiled`, { cache: 'no-store' });
     if (!compiledRes.ok) {
@@ -1676,14 +1705,9 @@ function useWidgetSessionInternal() {
     }
     const compiled = (await compiledRes.json().catch(() => null)) as CompiledWidget | null;
     if (!compiled) throw new Error('[useWidgetSession] Invalid compiled widget payload');
-    if (!compiled.presets || !compiled.presets['appearance.theme']) {
-      const themePresets = await loadThemePresets(resolveTokyoBaseUrl());
-      if (themePresets) {
-        compiled.presets = { ...(compiled.presets ?? {}), ...themePresets };
-      }
-    }
+
     await loadInstance({
-      type: 'devstudio:load-instance',
+      type: 'ck:open-editor',
       widgetname: widgetType,
       compiled,
       instanceData: instanceJson.config,
@@ -1693,7 +1717,7 @@ function useWidgetSessionInternal() {
       workspaceId,
       ownerAccountId:
         typeof instanceJson.ownerAccountId === 'string' ? instanceJson.ownerAccountId : undefined,
-      label: instanceJson.publicId ?? publicId,
+      label: displayName,
       subjectMode: subject,
     });
   }, [loadInstance]);
@@ -1763,16 +1787,150 @@ function useWidgetSessionInternal() {
     }));
   }, []);
 
+  const setInstanceLabel = useCallback((label: string) => {
+    const trimmed = String(label || '').trim();
+    setState((prev) => {
+      if (!prev.meta) return prev;
+      if (!trimmed) return prev;
+      return {
+        ...prev,
+        meta: {
+          ...prev.meta,
+          label: trimmed,
+        },
+      };
+    });
+  }, []);
+
   useEffect(() => {
+    const bootMode = resolveBootModeFromUrl();
+    const postToParent = (
+      payload:
+        | BobSessionReadyMessage
+        | BobOpenEditorAckMessage
+        | BobOpenEditorAppliedMessage
+        | BobOpenEditorFailedMessage
+        | BobExportInstanceDataResponseMessage
+        | BobPublishedMessage,
+      origin: string,
+    ) => {
+      try {
+        window.parent?.postMessage(payload, origin);
+      } catch {}
+    };
+
     function handleMessage(event: MessageEvent) {
-      const data = event.data as (WidgetBootstrapMessage | DevstudioExportInstanceDataMessage) | undefined;
+      const data = event.data as (EditorOpenMessage | DevstudioExportInstanceDataMessage) | undefined;
       if (!data || typeof data !== 'object') return;
 
-      if (data.type === 'devstudio:load-instance') {
+      if (data.type === 'ck:open-editor') {
+        if (bootMode !== 'message') return;
+        const requestId = typeof data.requestId === 'string' ? data.requestId.trim() : '';
+        const sessionId = typeof data.sessionId === 'string' ? data.sessionId.trim() : '';
+        const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
+        if (!requestId || !sessionId) {
+          postToParent(
+            {
+              type: 'bob:open-editor-failed',
+              reasonKey: 'coreui.errors.builder.open.invalidRequest',
+              message: 'Missing requestId/sessionId',
+            },
+            targetOrigin,
+          );
+          return;
+        }
+        if (sessionId !== sessionIdRef.current) {
+          postToParent(
+            {
+              type: 'bob:open-editor-failed',
+              requestId,
+              sessionId,
+              reasonKey: 'coreui.errors.builder.open.sessionMismatch',
+              message: 'Session mismatch',
+            },
+            targetOrigin,
+          );
+          return;
+        }
+
+        const existing = openRequestStatusRef.current.get(requestId);
+        postToParent(
+          {
+            type: 'bob:open-editor-ack',
+            requestId,
+            sessionId,
+          },
+          targetOrigin,
+        );
+        if (existing) {
+          if (existing.status === 'applied') {
+            postToParent(
+              {
+                type: 'bob:open-editor-applied',
+                requestId,
+                sessionId,
+                publicId: existing.publicId,
+                widgetname: existing.widgetname,
+              },
+              targetOrigin,
+            );
+          } else if (existing.status === 'failed') {
+            postToParent(
+              {
+                type: 'bob:open-editor-failed',
+                requestId,
+                sessionId,
+                reasonKey: existing.error || 'coreui.errors.builder.open.failed',
+                message: existing.error,
+              },
+              targetOrigin,
+            );
+          }
+          return;
+        }
+
+        openRequestStatusRef.current.set(requestId, { status: 'processing' });
+        if (openRequestStatusRef.current.size > 50) {
+          const oldest = openRequestStatusRef.current.keys().next().value;
+          if (oldest) openRequestStatusRef.current.delete(oldest);
+        }
         if (process.env.NODE_ENV === 'development') {
           console.log('[useWidgetSession] load-instance payload', data);
         }
-        loadInstance(data);
+        void loadInstance(data).then((result) => {
+          if (result.ok) {
+            openRequestStatusRef.current.set(requestId, {
+              status: 'applied',
+              publicId: result.publicId,
+              widgetname: result.widgetname,
+            });
+            postToParent(
+              {
+                type: 'bob:open-editor-applied',
+                requestId,
+                sessionId,
+                publicId: result.publicId,
+                widgetname: result.widgetname,
+              },
+              targetOrigin,
+            );
+            return;
+          }
+          openRequestStatusRef.current.set(requestId, {
+            status: 'failed',
+            error: result.error,
+          });
+          postToParent(
+            {
+              type: 'bob:open-editor-failed',
+              requestId,
+              sessionId,
+              reasonKey: result.error || 'coreui.errors.builder.open.failed',
+              message: result.error,
+            },
+            targetOrigin,
+          );
+        });
         return;
       }
 
@@ -1823,7 +1981,7 @@ function useWidgetSessionInternal() {
             };
 
             const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
-            window.parent?.postMessage(reply, targetOrigin);
+            postToParent(reply, targetOrigin);
           } catch (err) {
             const messageText = err instanceof Error ? err.message : String(err);
             const reply: BobExportInstanceDataResponseMessage = {
@@ -1833,7 +1991,7 @@ function useWidgetSessionInternal() {
               error: messageText,
             };
             const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
-            window.parent?.postMessage(reply, targetOrigin);
+            postToParent(reply, targetOrigin);
           }
         })();
       }
@@ -1841,23 +1999,32 @@ function useWidgetSessionInternal() {
 
     window.addEventListener('message', handleMessage);
     if (window.parent) {
-      window.parent.postMessage({ type: 'bob:session-ready' }, '*');
+      postToParent(
+        {
+          type: 'bob:session-ready',
+          sessionId: sessionIdRef.current,
+          bootMode,
+        },
+        '*',
+      );
     }
-    loadFromUrlParams().catch((err) => {
-      const messageText = err instanceof Error ? err.message : String(err);
-      setState((prev) => ({
-        ...prev,
-        compiled: null,
-        instanceData: {},
-        baseInstanceData: {},
-        isDirty: false,
-        minibobPersonalizationUsed: false,
-        error: { source: 'load', message: messageText },
-        upsell: null,
-        locale: { ...DEFAULT_LOCALE_STATE },
-        meta: null,
-      }));
-    });
+    if (bootMode === 'url') {
+      loadFromUrlParams().catch((err) => {
+        const messageText = err instanceof Error ? err.message : String(err);
+        setState((prev) => ({
+          ...prev,
+          compiled: null,
+          instanceData: {},
+          baseInstanceData: {},
+          isDirty: false,
+          minibobPersonalizationUsed: false,
+          error: { source: 'load', message: messageText },
+          upsell: null,
+          locale: { ...DEFAULT_LOCALE_STATE },
+          meta: null,
+        }));
+      });
+    }
     return () => window.removeEventListener('message', handleMessage);
   }, [loadFromUrlParams, loadInstance]);
 
@@ -1892,6 +2059,7 @@ function useWidgetSessionInternal() {
       dismissUpsell,
       requestUpsell,
       setSelectedPath,
+      setInstanceLabel,
       setPreview,
       setLocalePreview,
       saveLocaleOverrides,
@@ -1920,6 +2088,7 @@ function useWidgetSessionInternal() {
       refreshLocaleTranslations,
       revertLocaleOverrides,
       setSelectedPath,
+      setInstanceLabel,
       consumeBudget,
       setCopilotThread,
       updateCopilotThread,

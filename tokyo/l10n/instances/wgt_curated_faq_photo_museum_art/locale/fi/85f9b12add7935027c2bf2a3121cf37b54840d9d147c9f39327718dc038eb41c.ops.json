@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Tee varaus"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Tutustu USA:n bed and breakfast -majoituksemme viehätykseen ja mukavuuteen."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Modern Art Museum – UKK"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Tarjoamme monipuolisen valikoiman <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">modernin taiteen näyttelyitä</a>, kuten <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">nykytaiteilijoita</a>, veistoksia ja <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">installaatioita</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Millaisia taidenäyttelyitä on tarjolla?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Museo on avoinna päivittäin klo 10–18."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Mitkä ovat aukioloajat?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ei, kaikenikäiset ovat tervetulleita."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Onko ikärajaa?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Kyllä, tarjoamme ryhmäalennuksia ja erikoistapahtumapaketteja."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Tarjoatteko erikoispaketteja?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Peruutukset tulee tehdä 24 tuntia etukäteen, jotta vältyt maksulta."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Mikä on peruutuskäytäntönne?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Kyllä, tarjoamme opastettuja koulutuskierroksia ja ohjelmia kouluille ja ryhmille."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Tarjoatteko koulutusohjelmia?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Modern Art Museum -elämys"
+    }
+  ],
+  "v": 1
+}

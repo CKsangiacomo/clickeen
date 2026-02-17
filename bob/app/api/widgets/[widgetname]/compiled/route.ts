@@ -9,10 +9,12 @@ export const runtime = 'edge';
 type CompiledWidgetPayload = Awaited<ReturnType<typeof compileWidgetServer>> & { limits: unknown };
 type CachedCompiledWidget = {
   freshnessKey: string;
+  cachedAt: number;
   payload: CompiledWidgetPayload;
 };
 
 const compiledWidgetCache = new Map<string, CachedCompiledWidget>();
+const COMPILED_WIDGET_HOT_CACHE_TTL_MS = 10 * 60_000;
 
 function getFreshnessValidator(res: Response) {
   return {
@@ -37,21 +39,6 @@ async function sha256Hex(value: string) {
     .join('');
 }
 
-async function resolveManifestSignal(tokyoRoot: string, fetchInit: RequestInit) {
-  try {
-    const manifestRes = await fetch(`${tokyoRoot}/dieter/manifest.json`, fetchInit);
-    if (!manifestRes.ok) return `manifest:status=${manifestRes.status}`;
-    const manifest = (await manifestRes.json()) as { gitSha?: unknown };
-    if (typeof manifest.gitSha === 'string' && manifest.gitSha.trim()) {
-      return `manifest:gitSha=${manifest.gitSha.trim()}`;
-    }
-    return 'manifest:gitSha=missing';
-  } catch {
-    // Fail-open: uncertainty disables effective cache hits instead of hiding stale output.
-    return `manifest:error:${crypto.randomUUID()}`;
-  }
-}
-
 export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname: string }> }) {
   const { widgetname } = await ctx.params;
   if (!widgetname) {
@@ -66,8 +53,20 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
     const specUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/spec.json`;
     const limitsUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/limits.json`;
     const cacheBust = req.nextUrl.searchParams.has('ts') || req.nextUrl.searchParams.has('_t');
+
+    if (!cacheBust) {
+      const cached = compiledWidgetCache.get(widgetname);
+      if (cached && Date.now() - cached.cachedAt < COMPILED_WIDGET_HOT_CACHE_TTL_MS) {
+        return NextResponse.json(cached.payload, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'X-Bob-Compiled-Cache': 'hot',
+          },
+        });
+      }
+    }
+
     const fetchInit: RequestInit = { cache: cacheBust ? 'no-store' : 'default' };
-    const manifestSignalPromise = cacheBust ? null : resolveManifestSignal(tokyoRoot, fetchInit);
     const [specRes, limitsRes] = await Promise.all([fetch(specUrl, fetchInit), fetch(limitsUrl, fetchInit)]);
 
     if (!specRes.ok) {
@@ -92,10 +91,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
 
     const specValidator = getFreshnessValidator(specRes);
     const limitsValidator = getFreshnessValidator(limitsRes);
-    const manifestSignal = manifestSignalPromise ? await manifestSignalPromise : 'manifest:bypass';
     let freshnessKey = [
       `widget=${widgetname}`,
-      manifestSignal,
       buildSourceSignal('spec', specRes.status, specValidator),
       buildSourceSignal('limits', limitsRes.status, limitsValidator),
     ].join('|');
@@ -103,6 +100,10 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
     if (!cacheBust) {
       const cached = compiledWidgetCache.get(widgetname);
       if (cached && hasStrongFreshnessSignal(specValidator) && (limitsRes.status === 404 || hasStrongFreshnessSignal(limitsValidator)) && cached.freshnessKey === freshnessKey) {
+        compiledWidgetCache.set(widgetname, {
+          ...cached,
+          cachedAt: Date.now(),
+        });
         return NextResponse.json(cached.payload, {
           headers: {
             'Access-Control-Allow-Origin': '*',
@@ -127,6 +128,10 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
     if (!cacheBust) {
       const cached = compiledWidgetCache.get(widgetname);
       if (cached && cached.freshnessKey === freshnessKey) {
+        compiledWidgetCache.set(widgetname, {
+          ...cached,
+          cachedAt: Date.now(),
+        });
         return NextResponse.json(cached.payload, {
           headers: {
             'Access-Control-Allow-Origin': '*',
@@ -145,7 +150,11 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
 
     const payload: CompiledWidgetPayload = { ...compiled, limits };
     if (!cacheBust) {
-      compiledWidgetCache.set(widgetname, { freshnessKey, payload });
+      compiledWidgetCache.set(widgetname, {
+        freshnessKey,
+        cachedAt: Date.now(),
+        payload,
+      });
     }
 
     return NextResponse.json(payload, {

@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Đặt chỗ"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Khám phá nét quyến rũ và sự thoải mái tại nhà nghỉ B&B của chúng tôi ở Mỹ."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Câu hỏi thường gặp về Bảo tàng Nghệ thuật Hiện đại"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Chúng tôi có nhiều <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">triển lãm nghệ thuật hiện đại</a> đa dạng, bao gồm các tác phẩm của <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">nghệ sĩ đương đại</a>, điêu khắc và <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">sắp đặt</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Có những loại triển lãm nghệ thuật nào?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Bảo tàng mở cửa hằng ngày từ 10:00 đến 18:00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Giờ tham quan là khi nào?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Không, mọi lứa tuổi đều được chào đón."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Có giới hạn độ tuổi không?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Có, chúng tôi có ưu đãi cho đoàn và các gói sự kiện đặc biệt."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Bạn có gói ưu đãi đặc biệt nào không?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Bạn cần hủy trước 24 giờ để tránh bị tính phí."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Chính sách hủy của bạn như thế nào?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Có, chúng tôi có các tour và chương trình giáo dục dành cho trường học và đoàn."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Bạn có chương trình giáo dục nào không?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Trải nghiệm Bảo tàng Nghệ thuật Hiện đại"
+    }
+  ],
+  "v": 1
+}

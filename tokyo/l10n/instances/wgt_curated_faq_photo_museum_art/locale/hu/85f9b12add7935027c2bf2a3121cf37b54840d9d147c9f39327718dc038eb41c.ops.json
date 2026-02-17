@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Foglalás"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Fedezze fel USA-beli panziónk báját és kényelmét."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Modern Művészeti Múzeum – GYIK"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Sokféle <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">modern művészeti kiállítást</a> kínálunk, többek között <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">kortárs művészek</a> alkotásait, szobrokat és <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">installációkat</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Milyen típusú művészeti kiállítások érhetők el?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "A múzeum naponta 10:00 és 18:00 között tart nyitva."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Mikor van nyitva a múzeum?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Nem, minden korosztályt szeretettel várunk."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Van korhatár?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Igen, csoportos kedvezményeket és különleges rendezvénycsomagokat kínálunk."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Kínálnak valamilyen különleges csomagot?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "A lemondást a díj elkerülése érdekében legalább 24 órával előre kell jelezni."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Mi a lemondási feltételek?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Igen, iskoláknak és csoportoknak oktatási tárlatvezetéseket és programokat is kínálunk."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Kínálnak oktatási programokat?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Modern Művészeti Múzeum – Élmény"
+    }
+  ],
+  "v": 1
+}

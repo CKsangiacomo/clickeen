@@ -31,7 +31,7 @@ DEV_UP_PRAGUE_L10N=0
 DEV_UP_RESET=0
 NEEDS_PRAGUE_L10N_TRANSLATE=0
 STARTED_PID=""
-STACK_PORTS=(3000 3001 3002 3003 4000 4321 5173 8790 8791)
+STACK_PORTS=(3000 3001 3002 3003 3004 4000 4321 5173 8790 8791)
 
 ensure_lock() {
   if [ -d "$LOCK_DIR" ]; then
@@ -511,7 +511,7 @@ clear_stack_state
 init_pid_registry
 
 echo "[dev-up] Stopping stale listeners"
-for p in 3000 3001 3002 3003 4000 4321 5173 8790 8791; do
+for p in 3000 3001 3002 3003 3004 4000 4321 5173 8790 8791; do
   stop_port "$p"
 done
 
@@ -660,10 +660,20 @@ echo "[dev-up] Starting Pitch worker (8790)"
 )
 wait_for_url "http://localhost:8790/healthz" "Pitch" "$LOG_DIR/pitch.dev.log"
 
+echo "[dev-up] Starting Roma (3004)"
+(
+  cd "$ROOT_DIR/roma"
+  start_detached "$LOG_DIR/roma.dev.log" env PORT=3004 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+  ROMA_PID="$STARTED_PID"
+  echo "[dev-up] Roma PID: $ROMA_PID"
+  register_pid "roma" "$ROMA_PID" "3004" "$LOG_DIR/roma.dev.log"
+)
+wait_for_url "http://localhost:3004/home" "Roma" "$LOG_DIR/roma.dev.log"
+
 echo "[dev-up] Starting Prague (4321)"
 (
   cd "$ROOT_DIR/prague"
-  start_detached "$LOG_DIR/prague.dev.log" env PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" PUBLIC_BOB_URL="http://localhost:3000" PUBLIC_VENICE_URL="http://localhost:3003" pnpm dev
+  start_detached "$LOG_DIR/prague.dev.log" env PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" PUBLIC_BOB_URL="http://localhost:3000" PUBLIC_VENICE_URL="http://localhost:3003" PUBLIC_ROMA_URL="http://localhost:3004" pnpm dev
   PRAGUE_PID="$STARTED_PID"
   echo "[dev-up] Prague PID: $PRAGUE_PID"
   register_pid "prague" "$PRAGUE_PID" "4321" "$LOG_DIR/prague.dev.log"
@@ -685,6 +695,7 @@ fi
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
 echo "  Pitch:     http://localhost:8790/healthz"
+echo "  Roma:      http://localhost:3004/home"
 echo "  Prague:    http://localhost:4321/us/en/widgets/faq"
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
 print_registered_pid_status

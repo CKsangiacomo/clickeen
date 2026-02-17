@@ -22,6 +22,12 @@ Bob intentionally separates:
 
 The Settings panel is widget-defined behavior controls; it must not contain embed code.
 
+### Builder chrome ownership (current)
+- Host surfaces (Roma/DevStudio) own widget-level navigation and host-only orchestration actions.
+- Roma Builder embeds Bob via iframe and keeps only the standard Roma domain header above it (no ad-hoc middle toolbars).
+- Bob TopDrawer owns current-instance context (instance selector + workspace-instance rename).
+- Translation status is shown in Bob’s Localization panel header (not in host page headers).
+
 ### Spec-driven + control-driven (not UI-driven)
 The widget definition (`tokyo/widgets/{widget}/spec.json`) is the editor source of truth for:
 - Defaults (`defaults`)
@@ -44,19 +50,26 @@ Bob compiles the spec into a deterministic contract:
 
 ## Boot Flow
 
-### DevStudio harness (current repo behavior)
-DevStudio fetches:
+### Host bootstrap contract (current repo behavior)
+Host surfaces (Roma/DevStudio) fetch:
 - `compiled` (via Bob compile API)
 - `instanceData` (via Paris)
 
-Then DevStudio posts into Bob:
+Then they wait for Bob session readiness and post into Bob:
 ```js
+// Bob -> host
+{ type: 'bob:session-ready', sessionId, bootMode: 'message' }
+
+// host -> Bob
 {
-  type: 'devstudio:load-instance',
-  subjectMode, // 'devstudio' | 'minibob' (dev subjects)
+  type: 'ck:open-editor',
+  requestId,
+  sessionId,
+  subjectMode, // 'workspace' | 'devstudio' | 'minibob'
   widgetname,
   compiled,
   instanceData,
+  workspaceId,
   publicId,
   label
 }
@@ -66,6 +79,15 @@ Bob listens in `bob/lib/session/useWidgetSession.tsx` and:
 - Requires `compiled.controls[]` (must be present and non-empty)
 - Uses `compiled.defaults` when `instanceData` is null
 - Stores `{ compiled, instanceData }` in React state
+- Never auto-picks a different instance when `publicId` is missing.
+- Replies with `bob:open-editor-ack`, then terminal `bob:open-editor-applied` or `bob:open-editor-failed`.
+- Keeps request idempotency state per `requestId` so repeated host sends do not apply duplicate open operations.
+
+### URL bootstrap (deterministic, no auto-pick)
+Bob bootstraps from URL only when `?boot=url` and both `workspaceId` + `publicId` are present.
+If URL mode is selected and either is missing, Bob stays unmounted.
+In `?boot=message`, Bob ignores URL instance params and waits for host `ck:open-editor`.
+Current architecture direction: Roma/DevStudio use `boot=message`; URL mode remains for explicit URL-bootstrap surfaces.
 
 ### Hybrid dev (DevStudio in cloud, Bob local)
 DevStudio’s widget workspace supports overriding the embedded Bob origin with a query param:
@@ -76,14 +98,14 @@ This allows a fast loop where DevStudio runs from Cloudflare Pages while Bob run
 
 Source: `admin/src/html/tools/dev-widget-workspace.html` (see the “configurable via `?bob=`” comment).
 
-### Instance writes (DevStudio Local only)
-- DevStudio is an internal harness that can create/update instances, but **writes happen only in DevStudio Local**.
-- The DevStudio tool page exposes superadmin actions only on `localhost`/`127.0.0.1` and uses Bob’s `/api/paris/*` proxy to call Paris.
-- Instance create/update in Paris is **dev-auth gated** (requires `PARIS_DEV_JWT`) and is intended for internal DevStudio flows, not for end users (current shipped path: `/api/workspaces/:workspaceId/*`, reached via Bob’s `/api/paris/*` proxy).
+### Instance write surfaces (current)
+- Roma user flows can create/duplicate/delete workspace user instances via Paris (`/api/roma/*` + workspace instance endpoints).
+- Bob publish writes base config through workspace `PUT` endpoints from whichever host opened Bob.
+- DevStudio Local remains the superadmin surface for curated/main authoring actions, using Bob’s `/api/paris/*` proxy on `localhost`/`127.0.0.1`.
 
 ### Dev subjects and policy (durable)
 Bob resolves a single subject mode and computes a single policy object:
-- **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=minibob|devstudio` (with backward compatibility for `?minibob=true`).
+- **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=workspace|minibob|devstudio`.
 - **Policy output**: `policy = { flags, caps, budgets }` used to gate controls and reject ops deterministically.
 
 Example enforcement (today):
@@ -95,10 +117,12 @@ Read-only mode (DevStudio cloud):
 - Bob blocks edits and publishing when in viewer role (read-only DevStudio experience).
 
 ### Intended product shape (still aligned)
-The intended “two API calls per session” model is:
-1. `GET /api/widgets/[widgetname]/compiled` (Bob → Tokyo spec → compile)
-2. `GET /api/paris/instance/:publicId?workspaceId=...&subject=workspace` (Bob proxy → Paris workspace endpoint)
-…then edits happen in memory until Publish.
+Core base-config lifecycle per open session:
+1. One instance load `GET /api/paris/workspaces/:workspaceId/instance/:publicId?subject=workspace` (performed by host in message boot or by Bob in URL boot).
+2. In-memory edits only (no base-config API writes).
+3. One publish `PUT /api/paris/workspaces/:workspaceId/instance/:publicId?subject=workspace` on explicit Publish.
+
+Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
 ---
 
@@ -124,6 +148,10 @@ Bob loads `compiled.assets.htmlUrl` into an iframe and posts:
 ```js
 { type: 'ck:state-update', widgetname, state, device, theme }
 ```
+
+Preview readiness behavior:
+- Workspace keeps the preview in a loading state until runtime sends `ck:ready`.
+- A bounded fallback timer reveals the iframe even if `ck:ready` is delayed, to avoid permanent blank-canvas states.
 
 Widget runtime code (`tokyo/widgets/{widget}/widget.client.js`) must:
 - Resolve a widget root (scoped; no global selectors for internals).
@@ -156,6 +184,8 @@ Requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin
 - Fetches `spec.json` over HTTP from `NEXT_PUBLIC_TOKYO_URL` (even locally).
 - Compiles via `compileWidgetServer(widgetJson)`.
 - Returns `CompiledWidget` JSON.
+- Maintains an in-memory hot cache (10 minute TTL) keyed by widget + freshness validators/hash.
+- Emits `X-Bob-Compiled-Cache: hot|hit|miss|bypass` to support runtime latency diagnostics.
 
 ### Source layout
 - Entrypoint: `bob/lib/compiler.server.ts`
@@ -233,6 +263,10 @@ Scopes:
 - **Trace context (optional)**: `workspaceId`, `publicId`, `widgetType`, `source` are persisted for diagnostics/attribution only
 - Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are rejected during persistence.
 
+Operational baseline (local smoke, 2026-02-17):
+- `POST /api/assets/upload` (1x1 PNG, account/workspace trace headers): `~55ms`
+- End-to-end with Roma account asset APIs (list/delete) remained sub-100ms on warm services.
+
 ---
 
 ## Copilot (chat-first, ops-based)
@@ -268,7 +302,7 @@ Deployment note (verified on February 11, 2026):
 - **Provider/Model Selection:** For agents and tiers that allow choice, Bob surfaces provider/model options from the policy grant metadata (for example OpenAI/Claude/DeepSeek/Groq/Amazon Nova, profile-dependent). Bob passes the selected values in the Copilot payload, and San Francisco enforces them against the grant’s `ai.profile`.
 
 ### Copilot env vars (local + Cloud-dev)
-- `PARIS_BASE_URL` and `PARIS_DEV_JWT` (local/dev only) are used by Bob’s AI routes to request grants and attach outcomes.
+- `PARIS_BASE_URL` is used by Bob’s AI routes to request grants and attach outcomes.
 - `SANFRANCISCO_BASE_URL` should point at the San Francisco Worker. (`/api/ai/widget-copilot` also has local fallbacks + health probing.)
 
 ---
@@ -391,10 +425,10 @@ Reference:
 
 ### Paris proxy (current code)
 Bob proxies Paris via:
-- `bob/app/api/paris/instance/[publicId]/route.ts`
-- `bob/app/api/paris/instances/route.ts`
 - `bob/app/api/paris/curated-instances/route.ts`
 - `bob/app/api/paris/widgets/route.ts`
+- `bob/app/api/paris/workspaces/[workspaceId]/instance/[publicId]/route.ts`
+- `bob/app/api/paris/workspaces/[workspaceId]/instances/route.ts`
 - `bob/app/api/paris/workspaces/[workspaceId]/instances/[publicId]/layers/route.ts`
 - `bob/app/api/paris/workspaces/[workspaceId]/instances/[publicId]/layers/[layer]/[layerKey]/route.ts`
 - `bob/app/api/paris/workspaces/[workspaceId]/locales/route.ts`
@@ -404,13 +438,10 @@ The proxy currently supports:
 - `PARIS_BASE_URL` (preferred)
 - `NEXT_PUBLIC_PARIS_URL` / `http://localhost:3001` default (present in code today)
 
-Optional:
-- `PARIS_DEV_JWT` (dev auth passthrough)
-
 Workspace-scoped proxy calls require `subject=workspace|devstudio|minibob` to resolve policy.
 
 **Security rule (executed):**
-- `PARIS_DEV_JWT` is **local/dev-worker-only**. It must never be set in Cloudflare Pages production env vars.
+- Bob’s Paris and AI proxy routes forward Supabase session bearer tokens. Product auth does not use `PARIS_DEV_JWT` passthrough.
 
 ### Dev-up
 Run:
@@ -422,7 +453,7 @@ It:
 - Builds i18n bundles into `tokyo/i18n`
 - Verifies Prague l10n overlays (repo base + `tokyo/l10n/prague/**`)
 - Clears stale Next chunks (`bob/.next`)
-- Starts Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)
+- Starts Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), Roma (3004), DevStudio (5173), Prague (4321), Pitch (8790)
 - Uses **local Supabase by default**; to point local Workers at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`
 
 ### Deterministic compilation gate (executed)

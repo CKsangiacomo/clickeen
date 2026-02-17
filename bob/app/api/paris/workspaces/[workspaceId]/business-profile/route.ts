@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  applySessionCookies,
   fetchWithTimeout,
   proxyErrorResponse,
   resolveParisBaseOrResponse,
+  resolveParisSession,
   withParisDevAuthorization,
 } from '../../../../../../lib/api/paris/proxy-helpers';
 
@@ -19,6 +21,9 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ workspaceId: string }> }) {
+  const session = await resolveParisSession(request);
+  if (!session.ok) return session.response;
+
   const { workspaceId } = await ctx.params;
   if (!workspaceId) {
     return NextResponse.json({ error: 'INVALID_WORKSPACE_ID' }, { status: 400, headers: CORS_HEADERS });
@@ -28,18 +33,19 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ workspa
   if (!paris.ok) return paris.response;
 
   const url = `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/business-profile`;
-  const headers = withParisDevAuthorization(new Headers());
+  const headers = withParisDevAuthorization(new Headers(), session.accessToken);
 
   try {
     const res = await fetchWithTimeout(url, { method: 'GET', headers, cache: 'no-store' });
     const data = await res.text();
-    return new NextResponse(data, {
+    const response = new NextResponse(data, {
       status: res.status,
       headers: {
         'Content-Type': res.headers.get('Content-Type') || 'application/json',
         ...CORS_HEADERS,
       },
     });
+    return applySessionCookies(response, request, session.setCookies);
   } catch (error) {
     return proxyErrorResponse(error, CORS_HEADERS);
   }

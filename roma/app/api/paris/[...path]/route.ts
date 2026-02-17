@@ -50,7 +50,8 @@ async function proxyToParis(request: NextRequest, context: RouteContext) {
   const { path } = await context.params;
   const parisBase = resolveParisBaseUrl();
   const incoming = new URL(request.url);
-  const target = `${parisBase}/api/${(path || []).map(encodeURIComponent).join('/')}${incoming.search}`;
+  const pathParts = path || [];
+  const target = `${parisBase}/api/${pathParts.map(encodeURIComponent).join('/')}${incoming.search}`;
 
   const method = request.method.toUpperCase();
   const requestHeaders = copyRequestHeaders(request, auth.accessToken);

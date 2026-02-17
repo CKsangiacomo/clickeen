@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "예약하기"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "미국 B&B의 매력과 편안함을 만나보세요."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "현대 미술관 FAQ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">현대 미술 전시</a>를 다양하게 선보이며, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">동시대 작가</a> 작품, 조각, 그리고 <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">설치 작품</a> 등을 포함합니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "어떤 종류의 미술 전시가 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "미술관은 매일 오전 10시부터 오후 6시까지 운영합니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "관람 시간은 어떻게 되나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "아니요, 모든 연령이 이용 가능합니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "연령 제한이 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "네, 단체 할인과 특별 이벤트 패키지를 제공합니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "특별 패키지가 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "수수료를 피하려면 취소는 24시간 전에 진행해 주세요."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "취소 정책은 어떻게 되나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "네, 학교 및 단체를 위한 교육 투어와 프로그램을 제공합니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "교육 프로그램이 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "현대 미술관 체험"
+    }
+  ],
+  "v": 1
+}

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  applySessionCookies,
   fetchWithTimeout,
   proxyErrorResponse,
   resolveParisBaseOrResponse,
+  resolveParisSession,
   shouldEnforceSuperadmin,
   withParisDevAuthorization,
 } from '../../../../lib/api/paris/proxy-helpers';
@@ -22,6 +24,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await resolveParisSession(request);
+  if (!session.ok) return session.response;
+
   const paris = resolveParisBaseOrResponse(CORS_HEADERS);
   if (!paris.ok) return paris.response;
 
@@ -53,7 +58,7 @@ export async function POST(request: NextRequest) {
 
   const url = `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/website-creative?subject=${encodeURIComponent(subject)}`;
 
-  const headers = withParisDevAuthorization(new Headers({ 'content-type': 'application/json' }));
+  const headers = withParisDevAuthorization(new Headers({ 'content-type': 'application/json' }), session.accessToken);
 
   try {
     const body = await request.text();
@@ -65,13 +70,14 @@ export async function POST(request: NextRequest) {
     });
 
     const data = await res.text();
-    return new NextResponse(data, {
+    const response = new NextResponse(data, {
       status: res.status,
       headers: {
         'Content-Type': res.headers.get('Content-Type') || 'application/json',
         ...CORS_HEADERS,
       },
     });
+    return applySessionCookies(response, request, session.setCookies);
   } catch (error) {
     return proxyErrorResponse(error, CORS_HEADERS);
   }

@@ -8,6 +8,6 @@ export async function handleHealthz(): Promise<Response> {
 
 export async function handleNotImplemented(req: Request, env: Env, feature: string): Promise<Response> {
   const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
+  if ('response' in auth) return auth.response;
   return json({ error: 'NOT_IMPLEMENTED', feature }, { status: 501 });
 }

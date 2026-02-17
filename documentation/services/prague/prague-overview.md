@@ -72,7 +72,7 @@ Current repo behavior:
 ### 1.4 Create bridge route
 
 - `/{market}/{locale}/create` is a redirect bridge from Prague into Roma (`${PUBLIC_ROMA_URL}/home`).
-- Prague preserves incoming query params (including `claimToken` / `publicId`) and appends source context (`from=prague_create`, `market`, `locale`).
+- Prague preserves incoming query params (including `handoffId` / `publicId`) and appends source context (`from=prague_create`, `market`, `locale`).
 - If `PUBLIC_ROMA_URL` is missing, this route fails visibly with `503` (no silent fallback).
 - Prague l10n cache token is resolved automatically from `CF_PAGES_COMMIT_SHA`; `PUBLIC_PRAGUE_BUILD_ID` is only an optional manual override.
 
@@ -168,9 +168,10 @@ Defaults (local/dev):
 
 MiniBob publish/signup handoff:
 - Prague requests current draft context from Bob iframe via postMessage (`devstudio:export-instance-data`).
-- Prague mints a signed claim token via `POST /api/minibob/claim-token`.
-- Prague redirects to the create/signup URL with `claimToken` + `publicId` query params.
-- Token signing uses `MINIBOB_CLAIM_HMAC_SECRET` (or `AI_GRANT_HMAC_SECRET` fallback) and emits `mbc.v1.<payload>.<signature>` for Paris claim verification.
+- Prague starts a server-side handoff via `POST /api/minibob/handoff-start`.
+- Prague redirects to the create/signup URL with `handoffId` + `publicId` query params.
+- Handoff start accepts only curated/base MiniBob source ids (`wgt_main_*` or `wgt_curated_*`), never user instance ids.
+- No signed payload token is carried in URL; Paris stores snapshot state server-side and Roma consumes by opaque `handoffId`.
 
 ---
 

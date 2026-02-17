@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "จองเลย"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "ค้นพบเสน่ห์และความสบายของที่พักแบบเบดแอนด์เบรกฟาสต์ในสหรัฐอเมริกาของเรา"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "คำถามที่พบบ่อยเกี่ยวกับพิพิธภัณฑ์ศิลปะสมัยใหม่"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "เรามีนิทรรศการ <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">ศิลปะสมัยใหม่</a> หลากหลายรูปแบบ รวมถึงผลงานของ <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">ศิลปินร่วมสมัย</a> ประติมากรรม และ <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">งานจัดวาง</a>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "มีนิทรรศการศิลปะประเภทใดบ้าง?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "พิพิธภัณฑ์เปิดทุกวัน เวลา 10:00–18:00 น."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "เวลาเข้าชมคือช่วงไหน?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "ไม่มี ยินดีต้อนรับทุกช่วงวัย"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "มีการจำกัดอายุหรือไม่?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "มี เรามีส่วนลดสำหรับกรุ๊ปและแพ็กเกจสำหรับอีเวนต์พิเศษ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "มีแพ็กเกจพิเศษหรือไม่?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "ต้องยกเลิกล่วงหน้าอย่างน้อย 24 ชั่วโมงเพื่อหลีกเลี่ยงค่าธรรมเนียม"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "นโยบายการยกเลิกคืออะไร?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "มี เรามีทัวร์เชิงการศึกษาและโปรแกรมสำหรับโรงเรียนและกลุ่มต่างๆ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "มีโปรแกรมการศึกษาหรือไม่?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "ประสบการณ์พิพิธภัณฑ์ศิลปะสมัยใหม่"
+    }
+  ],
+  "v": 1
+}

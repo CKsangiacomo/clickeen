@@ -78,10 +78,10 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
       options?.onThemeUpdate?.(payload);
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
-    if (url.includes('/api/paris/instances') && method === 'POST') {
+    if (url.includes('/api/paris/workspaces/') && url.includes('/instances') && method === 'POST') {
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
-    if (url.includes('/api/paris/instance/')) {
+    if (url.includes('/api/paris/workspaces/') && url.includes('/instance/')) {
       return new Response(JSON.stringify({ config: { title: 'ok' } }), { status: 200 });
     }
     return new Response('{}', { status: 404 });
@@ -167,7 +167,12 @@ describe('DevStudio widget workspace tool', () => {
 
     const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
     expect(urls.some((url) => url.includes('/api/widgets/faq/compiled'))).toBe(true);
-    expect(urls.some((url) => url.includes('/api/paris/instance/wgt_curated_faq_simple'))).toBe(true);
+    expect(
+      urls.some(
+        (url) =>
+          url.includes('/api/paris/workspaces/') && url.includes('/instance/wgt_curated_faq_simple'),
+      ),
+    ).toBe(true);
 
     dom.window.close();
   });
@@ -308,7 +313,11 @@ describe('DevStudio widget workspace tool', () => {
 
     const createCall = fetchMock.mock.calls.find(([input, init]) => {
       const url = typeof input === 'string' ? input : input.toString();
-      return url.includes('/api/paris/instances') && (init?.method || 'GET') === 'POST';
+      return (
+        url.includes('/api/paris/workspaces/') &&
+        url.includes('/instances') &&
+        (init?.method || 'GET') === 'POST'
+      );
     });
     expect(createCall).toBeTruthy();
     const createBody = createCall?.[1]?.body ? JSON.parse(String(createCall[1].body)) : null;

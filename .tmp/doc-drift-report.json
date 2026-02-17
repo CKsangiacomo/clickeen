@@ -1,0 +1,2467 @@
+{
+  "missingPaths": [
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/026__Localization_PragueCopy_Base_Overlays_Manifest.md",
+      "line": 335,
+      "ref": "scripts/prague-localize.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/026__Localization_PragueCopy_Base_Overlays_Manifest.md",
+      "line": 441,
+      "ref": "scripts/prague-localize.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/029__PRD__18__Prague_Blocks_Composability_Uplevel__dup2.md",
+      "line": 104,
+      "ref": "prague/src/composition/",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/029__PRD__18__Prague_Blocks_Composability_Uplevel__dup2.md",
+      "line": 785,
+      "ref": "tooling/sf-policies/",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/032__PRD__Connectors__Universal_Data_Sources.md",
+      "line": 8,
+      "ref": "Execution_Pipeline_Docs/00-Strategy/007__PRD_Multitenancy_and_SubjectPolicy_System.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 43,
+      "ref": "bob/lib/session/useWidgetSession.tsx:160",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 44,
+      "ref": "bob/lib/session/useWidgetSession.tsx:201",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 45,
+      "ref": "bob/lib/session/useWidgetSession.tsx:203",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 49,
+      "ref": "tokyo/dev-server.mjs:476",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 49,
+      "ref": "tokyo/dev-server.mjs:526",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 49,
+      "ref": "tokyo/dev-server.mjs:579",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 49,
+      "ref": "tokyo/dev-server.mjs:758",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 50,
+      "ref": "tokyo-worker/src/index.ts:1605",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 50,
+      "ref": "tokyo-worker/src/index.ts:1616",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 52,
+      "ref": "tokyo-worker/src/index.ts:1627",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 53,
+      "ref": "tokyo/dev-server.mjs:526",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 53,
+      "ref": "tokyo/dev-server.mjs:581",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 53,
+      "ref": "tokyo/dev-server.mjs:616",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 55,
+      "ref": "scripts/dev-up.sh:489",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 56,
+      "ref": "tokyo-worker/src/index.ts:54",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 65,
+      "ref": "bob/app/widgets/[...path]/route.ts:55",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 66,
+      "ref": "bob/app/widgets/[...path]/route.ts:60",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 67,
+      "ref": "bob/app/dieter/[...path]/route.ts:55",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 68,
+      "ref": "bob/app/dieter/[...path]/route.ts:60",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 70,
+      "ref": "bob/app/api/widgets/[widgetname]/compiled/route.ts:21",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 71,
+      "ref": "bob/lib/session/useWidgetSession.tsx:1717",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 72,
+      "ref": "prague/src/blocks/minibob/minibob.astro:47",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 171,
+      "ref": "bob/lib/paris-proxy/core.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 235,
+      "ref": "validation.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 235,
+      "ref": "handlers.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 235,
+      "ref": "service.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 235,
+      "ref": "types.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/045__PRD__Architecture_Convergence_and_Scalability_Hardening.md",
+      "line": 236,
+      "ref": "index.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 41,
+      "ref": "bob/app/api/assets/upload/route.ts:58",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 42,
+      "ref": "bob/app/api/assets/upload/route.ts:79",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 43,
+      "ref": "bob/app/api/assets/upload/route.ts:89",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 45,
+      "ref": "bob/lib/session/useWidgetSession.tsx:1506",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 46,
+      "ref": "bob/lib/session/useWidgetSession.tsx:1508",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 48,
+      "ref": "tokyo-worker/src/index.ts:1465",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 49,
+      "ref": "tokyo-worker/src/index.ts:1541",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 50,
+      "ref": "tokyo-worker/src/index.ts:1533",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 51,
+      "ref": "tokyo-worker/src/index.ts:1571",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 53,
+      "ref": "tokyo/dev-server.mjs:571",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 54,
+      "ref": "tokyo/dev-server.mjs:855",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 59,
+      "ref": "admin/src/html/tools/dev-widget-workspace.html:1762",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 60,
+      "ref": "admin/src/html/tools/dev-widget-workspace.html:1777",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 61,
+      "ref": "admin/src/html/tools/dev-widget-workspace.html:1782",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 62,
+      "ref": "admin/src/html/tools/dev-widget-workspace.html:1793",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 64,
+      "ref": "admin/vite.config.ts:670",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 65,
+      "ref": "admin/vite.config.ts:703",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 66,
+      "ref": "admin/vite.config.ts:728",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 67,
+      "ref": "admin/vite.config.ts:731",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 72,
+      "ref": "tokyo-worker/src/index.ts:1253",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 73,
+      "ref": "tokyo-worker/src/index.ts:1271",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 75,
+      "ref": "paris/src/shared/budgets.ts:4",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/02-Executing/046__PRD__Account_Owned_Asset_Domain_and_Upload_Convergence.md",
+      "line": 76,
+      "ref": "paris/src/shared/budgets.ts:31",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 73,
+      "ref": "paris/app/api/instances/route.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 157,
+      "ref": "tokyo/widgets/<widget>/spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 228,
+      "ref": "paris/app/api/instances/route.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 229,
+      "ref": "paris/lib/instances.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 235,
+      "ref": "paris/app/api/instances/route.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/001__DONE_Architecture_Realignment.md",
+      "line": 237,
+      "ref": "paris/lib/instances.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/002__DONE__Infrastructure_Cloudflare_Plan.md",
+      "line": 36,
+      "ref": "Localization_Global_Strategy.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/004__PRD__Artifact_Axes__Type_Content_Skin.md",
+      "line": 103,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/005__PRD__Prague_CMS__Widgets_Catalog_and_Website_Creatives.md",
+      "line": 88,
+      "ref": "blockRegistry.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/005__PRD__Prague_CMS__Widgets_Catalog_and_Website_Creatives.md",
+      "line": 144,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/008__PRD_System_User_Instance_Split.md",
+      "line": 14,
+      "ref": "Execution_Pipeline_Docs/02-Executing/003__Localization_Instance_L10n_Refactor.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "line": 188,
+      "ref": "tokyo/widgets/<widget>/pages/<page>.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "line": 278,
+      "ref": "prague/src/blocks/<block-type>/",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "line": 305,
+      "ref": "tokyo/widgets/<widget>/pages/<page>.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "line": 354,
+      "ref": "prague/src/blocks/<block-type>/",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "line": 372,
+      "ref": "overview.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "line": 372,
+      "ref": "templates.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/011__AGENTS_UPLEVEL_PLAN.md",
+      "line": 145,
+      "ref": "sanfrancisco/src/ai/callLLM.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/011__AGENTS_UPLEVEL_PLAN.md",
+      "line": 178,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/011__AGENTS_UPLEVEL_PLAN.md",
+      "line": 478,
+      "ref": "sanfrancisco/src/ai/callLLM.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/014__Localization_Architecture_Update.md",
+      "line": 98,
+      "ref": "tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/014__Localization_Architecture_Update.md",
+      "line": 114,
+      "ref": "tokyo/l10n/instances/<publicId>/manifest.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/014__Localization_Architecture_Update.md",
+      "line": 115,
+      "ref": "tokyo/l10n/manifests/<prefix>.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/014__Localization_Architecture_Update.md",
+      "line": 164,
+      "ref": "l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/015__OpenPRDsExecution.md",
+      "line": 37,
+      "ref": "l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/015__OpenPRDsExecution.md",
+      "line": 220,
+      "ref": "prague/src/lib/pragueStrings.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/019__Clickeen_Audit_Report.md",
+      "line": 69,
+      "ref": "sanfrancisco/src/agents/editorFaqAnswer.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/019__Clickeen_Audit_Report.md",
+      "line": 156,
+      "ref": "sanfrancisco/src/agents/editorFaqAnswer.ts",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 10,
+      "ref": "tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 10,
+      "ref": "tokyo/l10n/instances/<publicId>/index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 16,
+      "ref": "tokyo/l10n/prague/<pageId>/locale/<locale>/<baseFingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 16,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 17,
+      "ref": "scripts/[retired]/prague-l10n-watch",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 37,
+      "ref": "Execution_Pipeline_Docs/00-Strategy/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 38,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 41,
+      "ref": "Execution_Pipeline_Docs/00-Strategy/010__PRD_Version_Limits_Assets_Localization.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 42,
+      "ref": "Execution_Pipeline_Docs/00-Strategy/014__Localization_Architecture_Update.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 43,
+      "ref": "Execution_Pipeline_Docs/00-Strategy/008__PRD_System_User_Instance_Split.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/020__Documentation-Drift-AnalysisReport.md",
+      "line": 45,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 11,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 37,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 38,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 168,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 171,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 175,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 181,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 185,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 189,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 196,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 291,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 306,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 417,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 438,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 455,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/027__PRD_20_Minibob_SDR_Agent_PRD.md",
+      "line": 464,
+      "ref": "scripts/[retired]/validate-sdr-allowlists",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/031__PRD__Bob_Preview_Mode__Decouple_SEO_GEO.md",
+      "line": 158,
+      "ref": "Workspace.tsx",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/034__PRD__CI_CD_Automation_Uplevel.md",
+      "line": 163,
+      "ref": "prague-sync.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/034__PRD__CI_CD_Automation_Uplevel.md",
+      "line": 329,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/036__Prague_GA_Market_Routing_PRD_v0.2.md",
+      "line": 84,
+      "ref": "l10n/prague/",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/037__Elfsight_vs_Clickeen__Architecture_Learnings_Implementation.md",
+      "line": 72,
+      "ref": "platform.js",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/037__Elfsight_vs_Clickeen__Architecture_Learnings_Implementation.md",
+      "line": 72,
+      "ref": "venice-loader.js",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/037__Elfsight_vs_Clickeen__Architecture_Learnings_Implementation.md",
+      "line": 206,
+      "ref": "prague/src/content/install-recipes/<platform>.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/037__Elfsight_vs_Clickeen__Architecture_Learnings_Implementation.md",
+      "line": 212,
+      "ref": "bob/embed-wizard/",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/037__Elfsight_vs_Clickeen__Architecture_Learnings_Implementation.md",
+      "line": 215,
+      "ref": "venice/diagnostics",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 89,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 112,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 119,
+      "ref": "r.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 122,
+      "ref": "meta.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 125,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 155,
+      "ref": "tokyo/renders/instances/<publicId>/index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 185,
+      "ref": "tokyo/renders/instances/<publicId>/index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 203,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 218,
+      "ref": "r.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 219,
+      "ref": "meta.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 220,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 234,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 259,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 278,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/038__PRD__Infra_Published_Render_Snapshot_v1.md",
+      "line": 295,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 31,
+      "ref": "scripts/[retired]/prague-l10n-watch",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 119,
+      "ref": "scripts/[retired]/l10n-push",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 179,
+      "ref": "dev-up.sh",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 233,
+      "ref": "translate.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 234,
+      "ref": "prague-sync.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 234,
+      "ref": "ensure-queues.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 235,
+      "ref": "validate.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 235,
+      "ref": "verify.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 245,
+      "ref": "scripts/prague-l10n/migrate.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/039__Scripts_AUDIT_cleanup.md",
+      "line": 246,
+      "ref": "scripts/prague-build.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/040__PRD__Entitlements_Matrix__Usage_First_v1.md",
+      "line": 7,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/040__PRD__Entitlements_Matrix__Usage_First_v1.md",
+      "line": 117,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/040__PRD__Entitlements_Matrix__Usage_First_v1.md",
+      "line": 125,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/040__PRD__Entitlements_Matrix__Usage_First_v1.md",
+      "line": 183,
+      "ref": "entitlements.matrix.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/040__PRD__Entitlements_Matrix__Usage_First_v1.md",
+      "line": 205,
+      "ref": "entitlements.matrix.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/040__PRD__Entitlements_Matrix__Usage_First_v1.md",
+      "line": 360,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/040__PRD__Entitlements_Matrix__Usage_First_v1.md",
+      "line": 430,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_GTM_System__Gigantic_Leap_FW.md",
+      "line": 57,
+      "ref": "tokyo/widgets/<widget>/pages/<page>.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_GTM_System__Gigantic_Leap_FW.md",
+      "line": 63,
+      "ref": "prague/content/allowlists/v1/blocks/<type>.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_GTM_System__Gigantic_Leap_FW.md",
+      "line": 64,
+      "ref": "tokyo/l10n/prague/<pageId>/index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_GTM_System__Gigantic_Leap_FW.md",
+      "line": 65,
+      "ref": "tokyo/l10n/prague/<pageId>/locale/<locale>/<fingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_GTM_System__Gigantic_Leap_FW.md",
+      "line": 66,
+      "ref": "tokyo/l10n/prague/<pageId>/bases/<fingerprint>.snapshot.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_GTM_System__Gigantic_Leap_FW.md",
+      "line": 568,
+      "ref": "translate.mjs",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_PagesDelta.md",
+      "line": 24,
+      "ref": "tokyo/widgets/<widget>/pages/overview.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_PagesDelta.md",
+      "line": 25,
+      "ref": "tokyo/widgets/<widget>/pages/templates.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_PagesDelta.md",
+      "line": 26,
+      "ref": "tokyo/widgets/<widget>/pages/examples.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_PagesDelta.md",
+      "line": 27,
+      "ref": "tokyo/widgets/<widget>/pages/features.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md",
+      "line": 49,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md",
+      "line": 59,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md",
+      "line": 61,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md",
+      "line": 63,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md",
+      "line": 64,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md",
+      "line": 65,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md",
+      "line": 66,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md",
+      "line": 106,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md",
+      "line": 130,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md",
+      "line": 291,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/044__PRD__Curated_Publish_Freshness_and_L10n_Fanout_Control.md",
+      "line": 163,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/044__PRD__Curated_Publish_Freshness_and_L10n_Fanout_Control.md",
+      "line": 259,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "README.md",
+      "line": 15,
+      "ref": "tokyo/widgets/<name>/spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 195,
+      "ref": "typography.usage.json",
+      "kind": "code"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 206,
+      "ref": "componentRegistry.ts",
+      "kind": "code"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 234,
+      "ref": "mycomponent.spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 284,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 489,
+      "ref": "componentRenderer.ts",
+      "kind": "code"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 497,
+      "ref": "main.ts",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/README.md",
+      "line": 88,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/README.md",
+      "line": 88,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/_pitch/README.md",
+      "line": 127,
+      "ref": "founder_profile.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 87,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 93,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 98,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 98,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 115,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 123,
+      "ref": "../shared/stagePod.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 123,
+      "ref": "../shared/typography.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 123,
+      "ref": "../shared/branding.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 124,
+      "ref": "../shared/fill.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 125,
+      "ref": "../shared/header.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 125,
+      "ref": "../shared/header.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 126,
+      "ref": "../shared/surface.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 130,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 139,
+      "ref": "typography.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 144,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 158,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 164,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 172,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 172,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 193,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 193,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/agents/gtm.md",
+      "line": 35,
+      "ref": "gtm.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/agents/pitch-agent.md",
+      "line": 167,
+      "ref": "INSTRUCTIONS.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/agents/sdr-copilot.md",
+      "line": 46,
+      "ref": "UXWriterAgent.PRD.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/agents/sdr-copilot.md",
+      "line": 243,
+      "ref": "WidgetArchitecture.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/agents/sdr-copilot.md",
+      "line": 245,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/agents/sdr-copilot.md",
+      "line": 245,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/ai/agents/ux-writer.md",
+      "line": 260,
+      "ref": "report.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/BabelProtocol.md",
+      "line": 293,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 5,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 54,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 54,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 54,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 54,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 55,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 55,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 95,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 96,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 200,
+      "ref": "fill.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 201,
+      "ref": "header.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 202,
+      "ref": "surface.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 203,
+      "ref": "stagePod.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 204,
+      "ref": "typography.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 205,
+      "ref": "branding.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 130,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 140,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 193,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 217,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 356,
+      "ref": "fill.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 357,
+      "ref": "header.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 358,
+      "ref": "surface.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 359,
+      "ref": "stagePod.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 360,
+      "ref": "typography.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 361,
+      "ref": "branding.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 395,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 401,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 420,
+      "ref": "typography.ts",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 421,
+      "ref": "stagePod.ts",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/architecture/Tenets.md",
+      "line": 312,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 78,
+      "ref": "tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 79,
+      "ref": "tokyo/l10n/instances/<publicId>/index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 80,
+      "ref": "tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 120,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 158,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 200,
+      "ref": "l10n/instances/<publicId>/<layer>/<layerKey>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 204,
+      "ref": "tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 208,
+      "ref": "tokyo/l10n/instances/<publicId>/index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 209,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 233,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 236,
+      "ref": "tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 334,
+      "ref": "l10n/instances/<publicId>/<layer>/<layerKey>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/multitenancy.md",
+      "line": 319,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/seo-geo.md",
+      "line": 162,
+      "ref": "venice/lib/schema/<widgetType>.ts",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/capabilities/seo-geo.md",
+      "line": 163,
+      "ref": "venice/lib/schema/<widgetType>.ts",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 120,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 120,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 156,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 172,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 172,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 173,
+      "ref": "tokens.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 468,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/devstudio.md",
+      "line": 42,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 51,
+      "ref": "dieter/components/<component>/",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 55,
+      "ref": "dieter/components/<component>/",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 61,
+      "ref": "button.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 91,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 117,
+      "ref": "dieter/components/<component>/<component>.html",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 117,
+      "ref": "dieter/components/<component>/<component>.spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 265,
+      "ref": "dieter/components/<component>/<component>.spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 266,
+      "ref": "dieter/components/<component>/<component>.html",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 267,
+      "ref": "dieter/components/<component>/<component>.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 304,
+      "ref": "dieter/components/<component>/<component>.spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 368,
+      "ref": "dieter/components/<component>/<component>.spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/michael.md",
+      "line": 178,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 23,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 72,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 72,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 72,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 72,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 72,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 181,
+      "ref": "tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 219,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 219,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 219,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 219,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 219,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/prague/prague-overview.md",
+      "line": 43,
+      "ref": "overview.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/prague/prague-overview.md",
+      "line": 52,
+      "ref": "overview.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo-worker.md",
+      "line": 13,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo-worker.md",
+      "line": 39,
+      "ref": "tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo-worker.md",
+      "line": 40,
+      "ref": "tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo-worker.md",
+      "line": 41,
+      "ref": "tokyo/l10n/instances/<publicId>/index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 10,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 10,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 10,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 10,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 11,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 11,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 65,
+      "ref": "manifest.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 95,
+      "ref": "tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 96,
+      "ref": "tokyo/l10n/instances/<publicId>/index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 97,
+      "ref": "tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 105,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 116,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/venice.md",
+      "line": 38,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/venice.md",
+      "line": 38,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/venice.md",
+      "line": 38,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/venice.md",
+      "line": 39,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/venice.md",
+      "line": 39,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/venice.md",
+      "line": 80,
+      "ref": "tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/venice.md",
+      "line": 127,
+      "ref": "r.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/venice.md",
+      "line": 127,
+      "ref": "meta.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/services/venice.md",
+      "line": 160,
+      "ref": "index.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/strategy/WhyClickeen.md",
+      "line": 62,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/Countdown/Countdown_PRD.md",
+      "line": 36,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/Countdown/Countdown_PRD.md",
+      "line": 38,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/Countdown/Countdown_PRD.md",
+      "line": 39,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/Countdown/Countdown_PRD.md",
+      "line": 40,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/Countdown/Countdown_PRD.md",
+      "line": 41,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/Countdown/Countdown_PRD.md",
+      "line": 42,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/Countdown/Countdown_PRD.md",
+      "line": 117,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/Countdown/Countdown_PRD.md",
+      "line": 160,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/FAQ/FAQ_PRD.md",
+      "line": 55,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/FAQ/FAQ_PRD.md",
+      "line": 57,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/FAQ/FAQ_PRD.md",
+      "line": 58,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/FAQ/FAQ_PRD.md",
+      "line": 59,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/FAQ/FAQ_PRD.md",
+      "line": 60,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/FAQ/FAQ_PRD.md",
+      "line": 61,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/FAQ/FAQ_PraguePages.md",
+      "line": 4,
+      "ref": "WidgetPraguePagesBuilder.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/InstagramFeed/InstagramFeed_PRD.md",
+      "line": 38,
+      "ref": "tokyo/widgets/<widgetType>/spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/InstagramFeed/InstagramFeed_PRD.md",
+      "line": 40,
+      "ref": "tokyo/widgets/<widgetType>/limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/InstagramFeed/InstagramFeed_PRD.md",
+      "line": 55,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/LogoShowcase_PRD.md",
+      "line": 51,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/LogoShowcase_PRD.md",
+      "line": 58,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/LogoShowcase_PRD.md",
+      "line": 376,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 23,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 25,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 26,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 27,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 28,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 29,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 40,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 102,
+      "ref": "typography.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 103,
+      "ref": "stagePod.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 104,
+      "ref": "fill.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 105,
+      "ref": "header.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 106,
+      "ref": "header.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 107,
+      "ref": "surface.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 108,
+      "ref": "branding.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 15,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 17,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 18,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 19,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 20,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 21,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 54,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 89,
+      "ref": "../shared/surface.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 89,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 91,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 103,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 148,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 185,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 202,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 213,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 80,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 88,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 101,
+      "ref": "../shared/fill.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 102,
+      "ref": "../shared/stagePod.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 103,
+      "ref": "../shared/typography.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 104,
+      "ref": "../shared/branding.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 105,
+      "ref": "../shared/surface.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 105,
+      "ref": "../shared/header.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 105,
+      "ref": "../shared/header.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 112,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 123,
+      "ref": "widget.client.js",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 141,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 163,
+      "ref": "agent.md",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 170,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 170,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 179,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 180,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 181,
+      "ref": "sdr.allowlist.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 188,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 227,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetGTMStrategy.md",
+      "line": 46,
+      "ref": "spec.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetGTMStrategy.md",
+      "line": 46,
+      "ref": "widget.css",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/WidgetGTMStrategy.md",
+      "line": 47,
+      "ref": "localization.json",
+      "kind": "code"
+    },
+    {
+      "file": "documentation/widgets/_templates/SubjectPolicyMatrices.md",
+      "line": 25,
+      "ref": "limits.json",
+      "kind": "code"
+    },
+    {
+      "file": "l10n/README.md",
+      "line": 10,
+      "ref": "l10n/instances/<publicId>/<layer>/<layerKey>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "l10n/README.md",
+      "line": 13,
+      "ref": "tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json",
+      "kind": "code"
+    },
+    {
+      "file": "tooling/whisper/.venv/lib/python3.9/site-packages/onnxruntime/Privacy.md",
+      "line": 14,
+      "ref": "../README.md#binaries",
+      "kind": "link"
+    },
+    {
+      "file": "tooling/whisper/.venv/lib/python3.9/site-packages/onnxruntime/Privacy.md",
+      "line": 14,
+      "ref": "../onnxruntime/core/platform/telemetry.h",
+      "kind": "link"
+    },
+    {
+      "file": "tooling/whisper/.venv/lib/python3.9/site-packages/onnxruntime/Privacy.md",
+      "line": 19,
+      "ref": "../README.md#api-documentation",
+      "kind": "link"
+    },
+    {
+      "file": "tooling/whisper/.venv/lib/python3.9/site-packages/onnxruntime/Privacy.md",
+      "line": 20,
+      "ref": "./C_API.md#telemetry",
+      "kind": "link"
+    },
+    {
+      "file": "tooling/whisper/README.md",
+      "line": 27,
+      "ref": "tooling/whisper/inbox/<name>.txt",
+      "kind": "code"
+    },
+    {
+      "file": "tooling/whisper/README.md",
+      "line": 28,
+      "ref": "tooling/whisper/inbox/<name>.json",
+      "kind": "code"
+    }
+  ],
+  "missingNodeScripts": [],
+  "missingPnpmScripts": [
+    {
+      "file": "AGENTS.md",
+      "line": 47,
+      "cmd": "pnpm install",
+      "script": "install"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/00-Strategy/026__Localization_PragueCopy_Base_Overlays_Manifest.md",
+      "line": 420,
+      "cmd": "pnpm prague:strings:watch",
+      "script": "prague:strings:watch"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "line": 325,
+      "cmd": "pnpm prague:strings:translate",
+      "script": "prague:strings:translate"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/009__PRD_Prague_Blocks_Components_Refactor.md",
+      "line": 325,
+      "cmd": "pnpm prague:strings:compile",
+      "script": "prague:strings:compile"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/034__PRD__CI_CD_Automation_Uplevel.md",
+      "line": 140,
+      "cmd": "pnpm -C prague build",
+      "script": "-C"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/034__PRD__CI_CD_Automation_Uplevel.md",
+      "line": 141,
+      "cmd": "pnpm -C tokyo-worker exec wrangler ",
+      "script": "-C"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/034__PRD__CI_CD_Automation_Uplevel.md",
+      "line": 165,
+      "cmd": "pnpm -C prague build",
+      "script": "-C"
+    },
+    {
+      "file": "Execution_Pipeline_Docs/03-Executed/034__PRD__CI_CD_Automation_Uplevel.md",
+      "line": 166,
+      "cmd": "pnpm -C tokyo-worker exec wrangler ",
+      "script": "-C"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 107,
+      "cmd": "pnpm install @ck/dieter",
+      "script": "install"
+    },
+    {
+      "file": "documentation/widgets/WidgetPraguePagesBuilder.md",
+      "line": 287,
+      "cmd": "pnpm -C prague build",
+      "script": "-C"
+    }
+  ]
+}

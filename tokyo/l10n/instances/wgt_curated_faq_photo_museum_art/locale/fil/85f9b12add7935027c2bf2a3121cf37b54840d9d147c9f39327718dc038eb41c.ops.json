@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "baseUpdatedAt": "2026-02-15T01:32:01.685336+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Magpa-reserba"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Tuklasin ang alindog at ginhawa ng aming bed and breakfast sa USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Mga FAQ ng Modern Art Museum"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Nag-aalok kami ng iba’t ibang <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">eksibit ng modernong sining</a>, kabilang ang mga <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">kontemporaryong artista</a>, mga eskultura, at <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">mga instalasyon</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Anong mga uri ng art exhibit ang available?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Bukas ang museo araw-araw mula 10 AM hanggang 6 PM."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Ano ang oras ng pagbisita?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Hindi, welcome ang lahat ng edad."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "May age restriction ba?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Oo, may group discounts kami at mga special event package."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Nag-aalok ba kayo ng mga espesyal na package?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Dapat gawin ang pagkansela 24 oras bago ang schedule para maiwasan ang bayarin."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Ano ang polisiya ninyo sa pagkansela?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Oo, nag-aalok kami ng mga educational tour at program para sa mga paaralan at grupo."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Nag-aalok ba kayo ng mga programang pang-edukasyon?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Modern Art Museum Experience"
+    }
+  ],
+  "v": 1
+}

@@ -42,7 +42,8 @@ import {
 } from '../../shared/instances';
 import { consumeBudget } from '../../shared/budgets';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
-import { loadWorkspaceById, requireWorkspace } from '../../shared/workspaces';
+import { loadWorkspaceById } from '../../shared/workspaces';
+import { authorizeWorkspace } from '../../shared/workspace-auth';
 import { loadInstanceByWorkspaceAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import { issueAiGrant } from '../ai';
 import {
@@ -556,12 +557,9 @@ export async function handleWorkspaceInstanceLayersList(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'viewer');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -603,12 +601,9 @@ export async function handleWorkspaceInstanceLayerGet(
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'viewer');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -664,12 +659,9 @@ export async function handleWorkspaceInstanceLayerUpsert(
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -1033,12 +1025,9 @@ export async function handleWorkspaceInstanceLayerDelete(
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -1155,12 +1144,9 @@ export async function handleWorkspaceInstanceL10nStatus(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'viewer');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -1240,12 +1226,9 @@ export async function handleWorkspaceInstanceL10nEnqueueSelected(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -1297,12 +1280,9 @@ export async function handleWorkspaceInstanceL10nEnqueueSelected(
 }
 
 export async function handleWorkspaceLocalesGet(req: Request, env: Env, workspaceId: string) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'viewer');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -1313,12 +1293,9 @@ export async function handleWorkspaceLocalesGet(req: Request, env: Env, workspac
 }
 
 export async function handleWorkspaceLocalesPut(req: Request, env: Env, workspaceId: string) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;

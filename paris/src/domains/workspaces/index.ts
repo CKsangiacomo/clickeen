@@ -12,20 +12,21 @@ import type {
 } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
-import { assertDevAuth } from '../../shared/auth';
 import { supabaseFetch } from '../../shared/supabase';
 import {
+  asTrimmedString,
   assertConfig,
+  assertDisplayName,
   assertMeta,
   assertStatus,
   configNonPersistableUrlIssues,
   isRecord,
 } from '../../shared/validation';
 import { isKnownWidgetType, loadWidgetLimits } from '../../shared/tokyo';
-import { requireWorkspace } from '../../shared/workspaces';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { loadWidgetLocalizationAllowlist } from '../../shared/l10n';
 import { consumeBudget } from '../../shared/budgets';
+import { authorizeWorkspace } from '../../shared/workspace-auth';
 import {
   AssetUsageValidationError,
   syncAccountAssetUsageForInstance,
@@ -41,7 +42,6 @@ import {
   resolveInstanceWorkspaceId,
 } from '../../shared/instances';
 import {
-  handleInstances,
   loadInstanceByPublicId,
   loadInstanceByWorkspaceAndPublicId,
   loadWidgetByType,
@@ -59,18 +59,56 @@ import {
   type RenderIndexEntry,
 } from './service';
 
+function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  return raw as Record<string, unknown>;
+}
+
+const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
+
+function formatCuratedDisplayName(meta: Record<string, unknown> | null, fallback: string): string {
+  if (!meta) return fallback;
+  const styleName = asTrimmedString(meta.styleName ?? meta.name ?? meta.title);
+  if (!styleName) return fallback;
+  return styleName;
+}
+
+function resolveWorkspaceInstanceDisplayName(instance: InstanceRow | CuratedInstanceRow): string {
+  if (isCuratedInstanceRow(instance)) {
+    return formatCuratedDisplayName(readCuratedMeta(instance.meta), instance.public_id);
+  }
+  return asTrimmedString(instance.display_name) ?? DEFAULT_INSTANCE_DISPLAY_NAME;
+}
+
+function resolveCuratedMetaUpdate(args: {
+  currentMetaRaw: unknown;
+  incomingMeta: Record<string, unknown> | null | undefined;
+  displayName: string | null | undefined;
+}): Record<string, unknown> | null | undefined {
+  const { currentMetaRaw, incomingMeta, displayName } = args;
+  if (incomingMeta === undefined && displayName === undefined) return undefined;
+  const baseMeta = incomingMeta !== undefined ? incomingMeta : readCuratedMeta(currentMetaRaw);
+  const nextMeta: Record<string, unknown> = baseMeta && typeof baseMeta === 'object' ? { ...baseMeta } : {};
+  if (displayName !== undefined) {
+    if (displayName === null) {
+      delete nextMeta.styleName;
+    } else {
+      nextMeta.styleName = displayName;
+    }
+  }
+  if (incomingMeta === null && Object.keys(nextMeta).length === 0) return null;
+  return nextMeta;
+}
+
 export async function handleWorkspaceInstanceRenderSnapshot(
   req: Request,
   env: Env,
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -120,16 +158,69 @@ export async function handleWorkspaceInstanceRenderSnapshot(
 }
 
 export async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: string) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'viewer');
+  if (!authorized.ok) return authorized.response;
 
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
+  const params = new URLSearchParams({
+    select: 'public_id,display_name,status,config,created_at,updated_at,widget_id,workspace_id,kind',
+    order: 'created_at.desc',
+    limit: '50',
+    workspace_id: `eq.${workspaceId}`,
+  });
+  const instancesRes = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, {
+    method: 'GET',
+  });
+  if (!instancesRes.ok) {
+    const details = await readJson(instancesRes);
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.db.readFailed',
+        detail: JSON.stringify(details),
+      },
+      500,
+    );
+  }
 
-  // Reuse the legacy shape for now (DevStudio tooling consumes it), but scope it to a workspace.
-  const url = new URL(req.url);
-  url.searchParams.set('workspaceId', workspaceId);
-  return handleInstances(new Request(url.toString(), { method: 'GET', headers: req.headers }), env);
+  const rows = ((await instancesRes.json().catch(() => null)) as InstanceRow[] | null) ?? [];
+  const widgetIds = Array.from(
+    new Set(rows.map((row) => row.widget_id).filter((id): id is string => typeof id === 'string' && id.length > 0)),
+  );
+  const widgetLookup = new Map<string, { type: string | null; name: string | null }>();
+  if (widgetIds.length > 0) {
+    const widgetParams = new URLSearchParams({
+      select: 'id,type,name',
+      id: `in.(${widgetIds.join(',')})`,
+    });
+    const widgetRes = await supabaseFetch(env, `/rest/v1/widgets?${widgetParams.toString()}`, { method: 'GET' });
+    if (!widgetRes.ok) {
+      const details = await readJson(widgetRes);
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.readFailed',
+          detail: JSON.stringify(details),
+        },
+        500,
+      );
+    }
+    const widgets = ((await widgetRes.json().catch(() => null)) as WidgetRow[] | null) ?? [];
+    widgets.forEach((widget) => {
+      if (!widget?.id) return;
+      widgetLookup.set(String(widget.id), { type: widget.type ?? null, name: widget.name ?? null });
+    });
+  }
+
+  const instances = rows.map((row) => {
+    const widget = row.widget_id ? widgetLookup.get(row.widget_id) : undefined;
+    return {
+      publicId: row.public_id,
+      widgetname: widget?.type ?? 'unknown',
+      displayName: asTrimmedString(row.display_name) ?? DEFAULT_INSTANCE_DISPLAY_NAME,
+      config: row.config,
+    };
+  });
+  return json({ instances });
 }
 
 export async function handleWorkspaceGetInstance(
@@ -138,12 +229,9 @@ export async function handleWorkspaceGetInstance(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'viewer');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -163,6 +251,7 @@ export async function handleWorkspaceGetInstance(
 
   return json({
     publicId: instance.public_id,
+    displayName: resolveWorkspaceInstanceDisplayName(instance),
     ownerAccountId: workspace.account_id,
     status: instance.status,
     widgetType,
@@ -187,12 +276,9 @@ export async function handleWorkspaceInstancePublishStatus(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'viewer');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -489,12 +575,9 @@ export async function handleWorkspaceUpdateInstance(
   workspaceId: string,
   publicId: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -526,6 +609,10 @@ export async function handleWorkspaceUpdateInstance(
   if (!statusResult.ok) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.status.invalid' }, 422);
   }
+  const displayNameResult = assertDisplayName(payload.displayName);
+  if (!displayNameResult.ok) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
 
   const metaResult =
     payload.meta !== undefined ? assertMeta(payload.meta) : { ok: true as const, value: undefined };
@@ -535,9 +622,10 @@ export async function handleWorkspaceUpdateInstance(
 
   const config = configResult.value;
   const status = statusResult.value;
+  const displayName = displayNameResult.value;
   const meta = metaResult.value;
 
-  if (config === undefined && status === undefined && meta === undefined) {
+  if (config === undefined && status === undefined && meta === undefined && displayName === undefined) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' }, 422);
   }
 
@@ -564,7 +652,9 @@ export async function handleWorkspaceUpdateInstance(
   }
 
   const isCurated = resolveInstanceKind(instance) === 'curated';
-  if (isCurated && !allowCuratedWrites(env)) {
+  const isCuratedRenameOnly =
+    isCurated && displayName !== undefined && config === undefined && status === undefined && meta === undefined;
+  if (isCurated && !allowCuratedWrites(env) && !isCuratedRenameOnly) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
   }
   if (!isCurated && payload.meta !== undefined) {
@@ -656,16 +746,23 @@ export async function handleWorkspaceUpdateInstance(
   if (isCurated) {
     update.status = 'published';
     update.owner_account_id = workspace.account_id;
+    const curatedMetaUpdate = resolveCuratedMetaUpdate({
+      currentMetaRaw: isCuratedInstanceRow(instance) ? instance.meta : null,
+      incomingMeta: meta,
+      displayName,
+    });
+    if (curatedMetaUpdate !== undefined) update.meta = curatedMetaUpdate;
   } else if (status !== undefined) {
     update.status = status;
   }
-  if (meta !== undefined) update.meta = meta;
+  if (!isCurated && meta !== undefined) update.meta = meta;
+  if (!isCurated && displayName !== undefined) update.display_name = displayName ?? DEFAULT_INSTANCE_DISPLAY_NAME;
 
   let updatedInstance: InstanceRow | CuratedInstanceRow | null = instance;
   const patchPath = isCurated
     ? `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(publicId)}`
     : `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&workspace_id=eq.${encodeURIComponent(workspaceId)}`;
-  const patchRes = await supabaseFetch(env, patchPath, {
+  let patchRes = await supabaseFetch(env, patchPath, {
     method: 'PATCH',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(update),
@@ -838,12 +935,9 @@ export async function handleWorkspaceUpdateInstance(
 }
 
 export async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId: string) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  if (!authorized.ok) return authorized.response;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -871,6 +965,7 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
   const publicIdResult = assertPublicId((payload as any).publicId);
   const configResult = assertConfig((payload as any).config);
   const statusResult = assertStatus((payload as any).status);
+  const displayNameResult = assertDisplayName((payload as any).displayName);
   const metaResult =
     (payload as any).meta !== undefined
       ? assertMeta((payload as any).meta)
@@ -881,6 +976,7 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
     !publicIdResult.ok ||
     !configResult.ok ||
     !statusResult.ok ||
+    !displayNameResult.ok ||
     !metaResult.ok
   ) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
@@ -890,6 +986,7 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
   const publicId = publicIdResult.value;
   const config = configResult.value;
   const requestedStatus = statusResult.value;
+  const requestedDisplayName = displayNameResult.value;
   const meta = metaResult.value;
   const kind = inferInstanceKindFromPublicId(publicId);
   const isCurated = kind === 'curated';
@@ -911,6 +1008,9 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
   }
   if (!isCurated && (payload as any).meta !== undefined) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+  if (isCurated && (payload as any).displayName !== undefined) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
 
@@ -1113,16 +1213,21 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
       }
     }
 
-    const instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {
+    const baseInsertPayload = {
+      workspace_id: workspaceId,
+      widget_id: widget.id,
+      public_id: publicId,
+      status,
+      config,
+      kind,
+    };
+    const resolvedDisplayName = requestedDisplayName ?? DEFAULT_INSTANCE_DISPLAY_NAME;
+    let instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
-        workspace_id: workspaceId,
-        widget_id: widget.id,
-        public_id: publicId,
-        status,
-        config,
-        kind,
+        ...baseInsertPayload,
+        display_name: resolvedDisplayName,
       }),
     });
     if (!instanceInsert.ok) {
@@ -1293,16 +1398,14 @@ export async function handleWorkspaceEnsureWebsiteCreative(
   env: Env,
   workspaceId: string,
 ) {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  if (!authorized.ok) return authorized.response;
 
   if ((env.ENV_STAGE || '').toLowerCase() !== 'local') {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
   }
 
-  const workspaceResult = await requireWorkspace(env, workspaceId);
-  if (!workspaceResult.ok) return workspaceResult.response;
-  const workspace = workspaceResult.workspace;
+  const workspace = authorized.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -1564,8 +1667,8 @@ export async function handleWorkspaceBusinessProfileGet(
   env: Env,
   workspaceId: string,
 ): Promise<Response> {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'viewer');
+  if (!authorized.ok) return authorized.response;
 
   try {
     const row = await loadWorkspaceBusinessProfile(env, workspaceId);
@@ -1586,8 +1689,8 @@ export async function handleWorkspaceBusinessProfileUpsert(
   env: Env,
   workspaceId: string,
 ): Promise<Response> {
-  const auth = await assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
+  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  if (!authorized.ok) return authorized.response;
 
   let body: unknown;
   try {

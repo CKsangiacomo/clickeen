@@ -1,0 +1,23 @@
+{
+  "baseFingerprint": "85f9b12add7935027c2bf2a3121cf37b54840d9d147c9f39327718dc038eb41c",
+  "publicId": "wgt_curated_faq_photo_museum_art",
+  "snapshot": {
+    "cta.label": "Make a reservation",
+    "header.subtitleHtml": "Discover the charm and comfort of our USA bed and breakfast.",
+    "header.title": "Modern Art Museum FAQs",
+    "sections.0.faqs.0.answer": "We offer a variety of <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">modern art exhibits</a> including <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">contemporary artists</a> , sculptures, and <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">installations</a> .",
+    "sections.0.faqs.0.question": "What types of art exhibits are available?",
+    "sections.0.faqs.1.answer": "The museum is open daily from 10 AM to 6 PM.",
+    "sections.0.faqs.1.question": "What are the visiting hours?",
+    "sections.0.faqs.2.answer": "No, all ages are welcome.",
+    "sections.0.faqs.2.question": "Is there an age restriction?",
+    "sections.0.faqs.3.answer": "Yes, we offer group discounts and special event packages.",
+    "sections.0.faqs.3.question": "Do you offer any special packages?",
+    "sections.0.faqs.4.answer": "Cancellations must be made 24 hours in advance to avoid a fee.",
+    "sections.0.faqs.4.question": "What is your cancellation policy?",
+    "sections.0.faqs.5.answer": "Yes, we offer educational tours and programs for schools and groups.",
+    "sections.0.faqs.5.question": "Do you offer any educational programs?",
+    "sections.0.title": "Modern Art Museum Experience"
+  },
+  "v": 1
+}

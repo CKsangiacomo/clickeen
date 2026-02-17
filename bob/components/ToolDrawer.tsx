@@ -184,7 +184,7 @@ export function ToolDrawer() {
             ) : (
               <div className="tdmenucontent">
                 <div className="heading-3">Content</div>
-                <div className="label-s label-muted">Load an instance from DevStudio to begin editing.</div>
+                <div className="label-s label-muted">No instance selected yet. Choose one from Widgets to begin editing.</div>
               </div>
             )}
           </>

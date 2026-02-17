@@ -1,0 +1,545 @@
+{
+  "docsScanned": 76,
+  "missingLinks": [],
+  "missingNodeScripts": [],
+  "missingPnpm": [
+    {
+      "file": "venice/README.md",
+      "line": 24,
+      "cmd": "pnpm build:venice"
+    }
+  ],
+  "missingRootPaths": [
+    {
+      "file": "AGENTS.md",
+      "line": 62,
+      "ref": "dieter/components/*/*.spec.json"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 380,
+      "ref": "/dieter/components/[name]/"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 478,
+      "ref": "/dieter/components/[name]/"
+    },
+    {
+      "file": "admin/README.md",
+      "line": 530,
+      "ref": "/dieter/components/[name]/"
+    },
+    {
+      "file": "documentation/README.md",
+      "line": 101,
+      "ref": "/dieter/**"
+    },
+    {
+      "file": "documentation/README.md",
+      "line": 107,
+      "ref": "tokyo/widgets/**/pages/*.json"
+    },
+    {
+      "file": "documentation/README.md",
+      "line": 110,
+      "ref": "tokyo/widgets/**"
+    },
+    {
+      "file": "documentation/README.md",
+      "line": 129,
+      "ref": "tokyo/widgets/**/pages/*.json"
+    },
+    {
+      "file": "documentation/README.md",
+      "line": 148,
+      "ref": "documentation/ai/*.md"
+    },
+    {
+      "file": "documentation/README.md",
+      "line": 155,
+      "ref": "documentation/services/prague/*.md"
+    },
+    {
+      "file": "documentation/_pitch/README.md",
+      "line": 175,
+      "ref": "documentation/_pitch/**"
+    },
+    {
+      "file": "documentation/_pitch/investor_faq.md",
+      "line": 557,
+      "ref": "documentation/services/*"
+    },
+    {
+      "file": "documentation/_pitch/pitch_narrative.md",
+      "line": 467,
+      "ref": "documentation/services/*"
+    },
+    {
+      "file": "documentation/ai/BUILD_PraguePage.md",
+      "line": 30,
+      "ref": "prague/content/allowlists/v1/**"
+    },
+    {
+      "file": "documentation/ai/BUILD_PraguePage.md",
+      "line": 45,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/ai/BUILD_Widget.md",
+      "line": 68,
+      "ref": "tokyo/widgets/shared/*"
+    },
+    {
+      "file": "documentation/ai/agents/pitch-agent.md",
+      "line": 134,
+      "ref": "documentation/_pitch/**"
+    },
+    {
+      "file": "documentation/ai/agents/ux-writer.md",
+      "line": 349,
+      "ref": "tokyo/i18n/*"
+    },
+    {
+      "file": "documentation/architecture/BabelProtocol.md",
+      "line": 633,
+      "ref": "/tokyo/widgets/*/spec.json"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 5,
+      "ref": "tokyo/widgets/*"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 253,
+      "ref": "tokyo/i18n/**"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 254,
+      "ref": "tokyo/l10n/**"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 255,
+      "ref": "tokyo/widgets/*/pages/*.json"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 255,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 295,
+      "ref": "documentation/services/prague/*.md"
+    },
+    {
+      "file": "documentation/architecture/CONTEXT.md",
+      "line": 295,
+      "ref": "documentation/ai/*.md"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 147,
+      "ref": "/dieter/**"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 149,
+      "ref": "/l10n/**"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 150,
+      "ref": "tokyo/widgets/*/pages/*.json"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 150,
+      "ref": "/l10n/prague/**"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 157,
+      "ref": "tokyo/renders/instances/**"
+    },
+    {
+      "file": "documentation/architecture/Overview.md",
+      "line": 193,
+      "ref": "/dieter/**"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 89,
+      "ref": "l10n/instances/**"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 90,
+      "ref": "tokyo/l10n/**"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 109,
+      "ref": "/l10n/status"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 147,
+      "ref": "tokyo/widgets/*/pages/*.json"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 149,
+      "ref": "prague/content/allowlists/v1/**"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 156,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 301,
+      "ref": "tokyo/widgets/*/pages/*.json"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 302,
+      "ref": "prague/content/allowlists/v1/**"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 308,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 337,
+      "ref": "/l10n/**"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 337,
+      "ref": "tokyo/l10n/**"
+    },
+    {
+      "file": "documentation/capabilities/localization.md",
+      "line": 342,
+      "ref": "tokyo/l10n/**"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 138,
+      "ref": "/dieter/*"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 142,
+      "ref": "/bob/preview-shadow"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 162,
+      "ref": "bob/lib/compiler/*"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 389,
+      "ref": "/bob/preview-shadow"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 423,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 435,
+      "ref": "tokyo/widgets/*"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 448,
+      "ref": "bob/lib/edit/*"
+    },
+    {
+      "file": "documentation/services/bob.md",
+      "line": 452,
+      "ref": "bob/lib/compiler/*"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 5,
+      "ref": "dieter/components/*/*.css"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 5,
+      "ref": "dieter/components/*/*.spec.json"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 14,
+      "ref": "/dieter/**"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 254,
+      "ref": "tokyo/dieter/icons/svg/*"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 287,
+      "ref": "/bob/public/dieter/**"
+    },
+    {
+      "file": "documentation/services/dieter.md",
+      "line": 293,
+      "ref": "dieter/components/*"
+    },
+    {
+      "file": "documentation/services/michael.md",
+      "line": 242,
+      "ref": "supabase/migrations/*"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 19,
+      "ref": "paris/src/domains/*"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 19,
+      "ref": "paris/src/shared/*"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 182,
+      "ref": "/l10n/publish"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 182,
+      "ref": "tokyo/l10n/**"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 184,
+      "ref": "tokyo/widgets/*/pages/*.json"
+    },
+    {
+      "file": "documentation/services/paris.md",
+      "line": 184,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/services/prague/blocks.md",
+      "line": 35,
+      "ref": "prague/src/blocks/**"
+    },
+    {
+      "file": "documentation/services/prague/blocks.md",
+      "line": 122,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/services/prague/blocks.md",
+      "line": 308,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/services/prague/prague-overview.md",
+      "line": 13,
+      "ref": "tokyo/widgets/*/pages/*.json"
+    },
+    {
+      "file": "documentation/services/prague/prague-overview.md",
+      "line": 13,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/services/prague/prague-overview.md",
+      "line": 16,
+      "ref": "tokyo/widgets/*"
+    },
+    {
+      "file": "documentation/services/prague/prague-overview.md",
+      "line": 18,
+      "ref": "prague/src/pages/**"
+    },
+    {
+      "file": "documentation/services/prague/prague-overview.md",
+      "line": 76,
+      "ref": "prague/src/blocks/**"
+    },
+    {
+      "file": "documentation/services/prague/prague-overview.md",
+      "line": 79,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/services/prague/prague-overview.md",
+      "line": 188,
+      "ref": "tokyo/widgets/*/pages/**/*.md"
+    },
+    {
+      "file": "documentation/services/sanfrancisco.md",
+      "line": 79,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/services/tokyo-worker.md",
+      "line": 14,
+      "ref": "/l10n/**"
+    },
+    {
+      "file": "documentation/services/tokyo-worker.md",
+      "line": 52,
+      "ref": "scripts/prague-l10n/*"
+    },
+    {
+      "file": "documentation/services/tokyo-worker.md",
+      "line": 52,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 12,
+      "ref": "tokyo/l10n/**"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 13,
+      "ref": "tokyo/renders/instances/**"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 14,
+      "ref": "tokyo/widgets/*/pages/*.json"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 14,
+      "ref": "tokyo/l10n/prague/**"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 33,
+      "ref": "tokyo/dieter/**"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 34,
+      "ref": "tokyo/i18n/**"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 71,
+      "ref": "tokyo/i18n/*"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 72,
+      "ref": "tokyo/arsenale/o/*"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 73,
+      "ref": "tokyo/arsenale/o/*"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 74,
+      "ref": "tokyo/arsenale/o/*"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 76,
+      "ref": "/l10n/*"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 76,
+      "ref": "tokyo/l10n/*"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 78,
+      "ref": "/l10n/*"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 85,
+      "ref": "tokyo/l10n/instances/**/bases/*.snapshot.json"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 86,
+      "ref": "tokyo/l10n/**"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 87,
+      "ref": "tokyo/l10n/**"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 117,
+      "ref": "/l10n/**"
+    },
+    {
+      "file": "documentation/services/tokyo.md",
+      "line": 118,
+      "ref": "/l10n/publish"
+    },
+    {
+      "file": "documentation/services/venice.md",
+      "line": 152,
+      "ref": "/dieter/*"
+    },
+    {
+      "file": "documentation/widgets/LogoShowcase/LogoShowcase_PRD.md",
+      "line": 48,
+      "ref": "tokyo/widgets/logoshowcase/layers/*.allowlist.json"
+    },
+    {
+      "file": "documentation/widgets/WidgetArchitecture.md",
+      "line": 118,
+      "ref": "/dieter/*"
+    },
+    {
+      "file": "documentation/widgets/WidgetBuildContract.md",
+      "line": 28,
+      "ref": "tokyo/widgets/shared/*"
+    },
+    {
+      "file": "documentation/widgets/WidgetComplianceSteps.md",
+      "line": 30,
+      "ref": "tokyo/widgets/shared/*"
+    },
+    {
+      "file": "l10n/README.md",
+      "line": 5,
+      "ref": "tokyo/l10n/**"
+    },
+    {
+      "file": "pitch/README.md",
+      "line": 12,
+      "ref": "pitch/**"
+    },
+    {
+      "file": "pitch/README.md",
+      "line": 12,
+      "ref": "documentation/_pitch/**"
+    },
+    {
+      "file": "pitch/README.md",
+      "line": 12,
+      "ref": "documentation/strategy/*.md"
+    }
+  ],
+  "staleClaims": []
+}

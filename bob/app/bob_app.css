@@ -19,6 +19,25 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.builder-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  overflow: hidden;
+  background: var(--color-system-gray-6-step3);
+}
+
+.builder-app__content {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: var(--space-2);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .label-muted {
   opacity: 0.6;
 }
@@ -31,12 +50,92 @@ body {
   padding: var(--space-2);
   background: transparent;
   border: none;
+  gap: var(--space-2);
 }
 
 .topdrawer-actions {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+.topdrawer-context-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
+}
+
+.topdrawer-context {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.topdrawer-instance-title {
+  min-width: 240px;
+  max-width: 560px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.topdrawer-instance-title--editable {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: text;
+  text-align: left;
+}
+
+.topdrawer-instance-title--editable:hover {
+  opacity: 0.8;
+}
+
+.topdrawer-instance-title--readonly {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.topdrawer-instance-title-input {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: var(--control-size-md);
+  min-width: 240px;
+  max-width: 440px;
+  border: 1px solid var(--color-system-blue);
+  border-radius: var(--control-radius-md);
+  background: var(--role-surface-bg);
+  color: var(--color-text);
+  padding: 0 var(--space-2);
+  outline: none;
+  box-shadow: none;
+}
+
+.topdrawer-instance-title-input:focus,
+.topdrawer-instance-title-input:focus-visible {
+  border-color: var(--color-system-blue);
+  background: var(--color-system-white);
+  outline: none;
+  box-shadow: none;
+}
+
+.topdrawer-instance-title-input:active {
+  background: var(--color-system-white);
+}
+
+.topdrawer-instance-title-input:disabled {
+  opacity: 0.7;
 }
 
 .instance-rename__error {
@@ -142,6 +241,41 @@ body {
 
 .localization-dropdown {
   width: 100%;
+}
+
+.localization-header-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 6px 10px;
+  border-radius: var(--control-radius-lg);
+  border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+  background: color-mix(in oklab, var(--color-system-gray-6-step2), white 45%);
+  color: var(--color-text);
+  width: fit-content;
+}
+
+.localization-header-status__label {
+  color: color-mix(in oklab, var(--color-text), transparent 25%);
+}
+
+.localization-header-status__dot {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 999px;
+  background: var(--color-system-gray-7);
+}
+
+.localization-header-status[data-tone='ready'] .localization-header-status__dot {
+  background: var(--color-system-green);
+}
+
+.localization-header-status[data-tone='pending'] .localization-header-status__dot {
+  background: var(--color-system-yellow);
+}
+
+.localization-header-status[data-tone='unavailable'] .localization-header-status__dot {
+  background: var(--color-system-gray-7);
 }
 
 .localization-dropdown[data-disabled='true'] {
@@ -381,6 +515,7 @@ body {
   justify-content: center;
   background: var(--color-system-gray-6-step3);
   border: none;
+  border-radius: var(--control-radius-md);
   min-height: 0;
   overflow: hidden;
 }
@@ -395,8 +530,18 @@ body {
   transition: opacity 120ms ease;
 }
 
-.workspace:not([data-widget-ready='true']) .workspace-iframe {
-  opacity: 0;
+.workspace-status-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklab, var(--color-system-gray-6-step3), transparent 20%);
+  pointer-events: none;
+}
+
+.workspace-status-overlay--error {
+  background: color-mix(in oklab, var(--color-system-red-5), transparent 75%);
 }
 
 .workspace[data-host='canvas'][data-canvas-resize='true'] .workspace-iframe {

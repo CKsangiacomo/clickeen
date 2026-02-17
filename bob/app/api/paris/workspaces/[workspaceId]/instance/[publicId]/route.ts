@@ -1,0 +1,120 @@
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  applySessionCookies,
+  fetchWithTimeout,
+  proxyErrorResponse,
+  resolveParisBaseOrResponse,
+  resolveParisSession,
+  shouldEnforceSuperadmin,
+  withParisDevAuthorization,
+} from '../../../../../../../lib/api/paris/proxy-helpers';
+
+export const runtime = 'edge';
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,PUT,OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id, x-ck-superadmin-key',
+} as const;
+
+const CK_SUPERADMIN_KEY = process.env.CK_SUPERADMIN_KEY;
+
+type RouteContext = { params: Promise<{ workspaceId: string; publicId: string }> };
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
+function resolveSubject(request: NextRequest): { ok: true; subject: string } | { ok: false; response: NextResponse } {
+  const requestUrl = new URL(request.url);
+  const subject = (requestUrl.searchParams.get('subject') || '').trim();
+  if (!subject) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.subject.invalid' } },
+        { status: 422, headers: CORS_HEADERS },
+      ),
+    };
+  }
+  return { ok: true, subject };
+}
+
+async function forwardInstance(
+  request: NextRequest,
+  ctx: RouteContext,
+  init: { method: 'GET' | 'PUT'; body?: string },
+) {
+  const session = await resolveParisSession(request);
+  if (!session.ok) return session.response;
+
+  const { workspaceId, publicId } = await ctx.params;
+  if (!workspaceId) {
+    return NextResponse.json({ error: 'INVALID_WORKSPACE_ID' }, { status: 400, headers: CORS_HEADERS });
+  }
+  if (!publicId) {
+    return NextResponse.json({ error: 'INVALID_PUBLIC_ID' }, { status: 400, headers: CORS_HEADERS });
+  }
+
+  const subjectResult = resolveSubject(request);
+  if (!subjectResult.ok) return subjectResult.response;
+
+  const paris = resolveParisBaseOrResponse(CORS_HEADERS);
+  if (!paris.ok) return paris.response;
+
+  const url = new URL(
+    `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+      publicId,
+    )}`,
+  );
+  url.searchParams.set('subject', subjectResult.subject);
+
+  const headers = withParisDevAuthorization(new Headers(), session.accessToken);
+  if (init.method === 'PUT') {
+    headers.set('content-type', request.headers.get('content-type') || 'application/json');
+  }
+
+  try {
+    const res = await fetchWithTimeout(
+      url.toString(),
+      {
+        method: init.method,
+        headers,
+        body: init.body,
+        cache: 'no-store',
+      },
+      5000,
+    );
+
+    const text = await res.text();
+    const response = new NextResponse(text, {
+      status: res.status,
+      headers: {
+        'Content-Type': res.headers.get('Content-Type') || 'application/json',
+        ...CORS_HEADERS,
+      },
+    });
+    return applySessionCookies(response, request, session.setCookies);
+  } catch (error) {
+    return proxyErrorResponse(error, CORS_HEADERS);
+  }
+}
+
+export async function GET(request: NextRequest, ctx: RouteContext) {
+  return forwardInstance(request, ctx, { method: 'GET' });
+}
+
+export async function PUT(request: NextRequest, ctx: RouteContext) {
+  if (shouldEnforceSuperadmin(request, CK_SUPERADMIN_KEY)) {
+    const provided = (request.headers.get('x-ck-superadmin-key') || '').trim();
+    if (!provided || provided !== CK_SUPERADMIN_KEY) {
+      return NextResponse.json(
+        { error: { kind: 'DENY', reasonKey: 'coreui.errors.superadmin.invalid' } },
+        { status: 403, headers: CORS_HEADERS },
+      );
+    }
+  }
+
+  const body = await request.text();
+  return forwardInstance(request, ctx, { method: 'PUT', body });
+}

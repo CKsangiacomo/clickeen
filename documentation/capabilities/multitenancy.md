@@ -151,21 +151,24 @@ Workspace
 
 **Widgets belong to workspaces, not users.** If an editor leaves, their widgets stay.
 
-## Account Layer (Shipped for Asset Ownership)
+## Account Layer (Shipped for Assets + Authz Context)
 
-PRD 046 introduced an account layer above workspaces for uploads and asset metering:
+PRD 046 introduced an account layer above workspaces for uploads/asset metering. Current runtime also uses the account layer for Roma authz context and account-scoped entitlement projection:
 
 ```
 account
   ├── workspaces
   │   ├── widget instances (workspace-owned)
   │   └── members/roles (workspace boundary)
-  └── account-owned assets
+  ├── account-owned assets
+  └── account authz + entitlement context
 ```
 
 Key boundary rules:
 - Workspaces remain the collaboration boundary (roles, comments, instance ownership).
 - Accounts are the ownership/metering boundary for uploads (`/assets/upload` -> `account_id` required).
+- Roma/Paris asset reads are account-canonical (`/api/accounts/:accountId/assets`) with optional workspace projection (`used_in_workspace` / `created_in_workspace`).
+- Roma bootstrap now includes an account capsule (`x-ck-account-capsule`) and an account entitlement snapshot for UI/runtime gating without per-screen membership checks.
 - `workspaces.account_id` is now required and deterministic.
 - Curated platform content is owned by `PLATFORM_ACCOUNT_ID` while remaining globally readable.
 
@@ -309,8 +312,8 @@ While we are building (before full auth/billing enforcement ships), we still nee
 
 **How the subject is set today (shipped in Bob):**
 - Bob accepts the subject via either:
-  - URL: `?subject=minibob|devstudio` (preferred), plus backward compatibility with `?minibob=true`
-  - Bootstrap message: `postMessage { type:'devstudio:load-instance', subjectMode:'minibob'|'devstudio', ... }`
+  - URL bootstrap mode: `?boot=url&subject=workspace|minibob|devstudio` (used by URL-driven embeds like MiniBob)
+  - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'workspace'|'minibob'|'devstudio', ... }` (used by Roma/DevStudio)
 
 **What Bob enforces today (example):**
 - `branding.remove` maps to `behavior.showBacklink` and is sanitized on load when blocked.

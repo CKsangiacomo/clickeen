@@ -115,3 +115,19 @@ export function assertStatus(status: unknown) {
   }
   return { ok: true as const, value: status as 'published' | 'unpublished' };
 }
+
+export function assertDisplayName(displayName: unknown) {
+  if (displayName === undefined) return { ok: true as const, value: undefined };
+  if (displayName === null) return { ok: true as const, value: null };
+  if (typeof displayName !== 'string') {
+    return { ok: false as const, issues: [{ path: 'displayName', message: 'displayName must be a string' }] };
+  }
+  const trimmed = displayName.trim();
+  if (!trimmed) {
+    return { ok: false as const, issues: [{ path: 'displayName', message: 'displayName cannot be empty' }] };
+  }
+  if (trimmed.length > 120) {
+    return { ok: false as const, issues: [{ path: 'displayName', message: 'displayName must be <= 120 chars' }] };
+  }
+  return { ok: true as const, value: trimmed };
+}

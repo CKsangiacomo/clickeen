@@ -1,5 +1,5 @@
-import { ControlPlaneShell } from '../../../components/control-plane-shell';
-import { ModuleSurface } from '../../../components/module-surface';
+import Link from 'next/link';
+import { RomaShell, RomaShellDefaultActions } from '../../../components/roma-shell';
 
 export const runtime = 'edge';
 
@@ -10,16 +10,15 @@ type AssetPageProps = {
 export default async function AssetDetailPage({ params }: AssetPageProps) {
   const { assetId } = await params;
   return (
-    <ControlPlaneShell
-      moduleKey="assets"
-      title={`Asset ${assetId}`}
-      subtitle="Asset detail contract route for usage and restore/delete operations."
-    >
-      <ModuleSurface
-        description="Next step: connect used-by graph and guard destructive actions through policy-aware endpoint contracts."
-        primaryHref="/assets"
-        primaryLabel="Back to assets"
-      />
-    </ControlPlaneShell>
+    <RomaShell activeDomain="assets" title={`Asset ${assetId}`} headerRight={<RomaShellDefaultActions />}>
+      <section className="roma-module-surface" aria-label="Asset detail placeholder">
+        <p>Next step: connect used-by graph and guard destructive actions through policy-aware endpoint contracts.</p>
+        <div className="roma-module-surface__actions">
+          <Link href="/assets" className="diet-btn-txt" data-size="md" data-variant="primary">
+            <span className="diet-btn-txt__label">Back to assets</span>
+          </Link>
+        </div>
+      </section>
+    </RomaShell>
   );
 }

@@ -10,7 +10,7 @@ Canonical routes in this repo snapshot:
 - `/{market}/{locale}/widgets/{widget}`
 - `/{market}/{locale}/widgets/{widget}/{page}`
 - `/{market}/{locale}/privacy`
-- `POST /api/minibob/claim-token`
+- `POST /api/minibob/handoff-start`
 
 ## Env
 
@@ -26,9 +26,9 @@ Optional (to pin the Minibob workspace only):
 - `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>` or `PUBLIC_MINIBOB_WORKSPACE_ID` (fallback)
 - `PUBLIC_PRAGUE_BUILD_ID` (optional override for Prague l10n cache token; defaults to `CF_PAGES_COMMIT_SHA` automatically)
 - `PUBLIC_ROMA_URL` (used by `/{market}/{locale}/create` redirect bridge to Roma `/home`)
-- `MINIBOB_CLAIM_HMAC_SECRET` (server-only, required to mint MiniBob claim tokens; falls back to `AI_GRANT_HMAC_SECRET` when omitted)
 
 Minibob `publicId` is derived from the widget slug as `wgt_main_${widget}` and is not overridden.
+MiniBob handoff start only accepts curated/base source ids (`wgt_main_*` or `wgt_curated_*`).
 
 Local defaults (when running `scripts/dev-up.sh`):
 

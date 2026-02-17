@@ -26,6 +26,65 @@ export type SupabaseAuthPrincipal = {
   claims: JwtClaims;
 };
 
+const SUPABASE_PRINCIPAL_CACHE_KEY = '__CK_PARIS_SUPABASE_PRINCIPAL_CACHE_V1__';
+const SUPABASE_PRINCIPAL_CACHE_TTL_MS = 5 * 60_000;
+
+type SupabasePrincipalCacheEntry = {
+  principal: SupabaseAuthPrincipal;
+  expiresAt: number;
+};
+
+type SupabasePrincipalStore = {
+  cache: Record<string, SupabasePrincipalCacheEntry | undefined>;
+};
+
+function isSupabasePrincipalStore(value: unknown): value is SupabasePrincipalStore {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  const cache = record.cache;
+  if (!cache || typeof cache !== 'object' || Array.isArray(cache)) return false;
+  return true;
+}
+
+function resolveSupabasePrincipalStore(): SupabasePrincipalStore {
+  const scope = globalThis as Record<string, unknown>;
+  const existing = scope[SUPABASE_PRINCIPAL_CACHE_KEY];
+  if (isSupabasePrincipalStore(existing)) return existing;
+  const next: SupabasePrincipalStore = {
+    cache: {},
+  };
+  scope[SUPABASE_PRINCIPAL_CACHE_KEY] = next;
+  return next;
+}
+
+function readCachedSupabasePrincipal(token: string): SupabaseAuthPrincipal | null {
+  const store = resolveSupabasePrincipalStore();
+  const entry = store.cache[token];
+  if (!entry) return null;
+  if (Date.now() >= entry.expiresAt) {
+    delete store.cache[token];
+    return null;
+  }
+  return entry.principal;
+}
+
+function writeCachedSupabasePrincipal(
+  token: string,
+  principal: SupabaseAuthPrincipal,
+  tokenExpSec: number,
+): SupabaseAuthPrincipal {
+  const store = resolveSupabasePrincipalStore();
+  const nowMs = Date.now();
+  const tokenExpMs = tokenExpSec * 1000;
+  const boundedExpiryMs = Math.min(nowMs + SUPABASE_PRINCIPAL_CACHE_TTL_MS, tokenExpMs);
+  const expiresAt = Math.max(nowMs + 1_000, boundedExpiryMs);
+  store.cache[token] = {
+    principal,
+    expiresAt,
+  };
+  return principal;
+}
+
 export function requireEnv(env: Env, key: keyof Env) {
   const value = env[key];
   if (!value || typeof value !== 'string' || !value.trim()) {
@@ -49,18 +108,10 @@ export async function assertDevAuth(
   | { ok: true; principal?: SupabaseAuthPrincipal; source: 'dev' | 'supabase' }
   | { ok: false; response: Response }
 > {
-  const token = asBearerToken(req.headers.get('Authorization'));
-  if (!token) {
-    return { ok: false as const, response: json({ error: 'AUTH_REQUIRED' }, { status: 401 }) };
-  }
-
-  const expected = typeof env.PARIS_DEV_JWT === 'string' ? env.PARIS_DEV_JWT.trim() : '';
-  if (expected && token === expected) {
-    return { ok: true as const, source: 'dev' };
-  }
-
   const supabase = await assertSupabaseAuth(req, env);
-  if (!supabase.ok) return supabase;
+  if ('response' in supabase) {
+    return { ok: false as const, response: supabase.response };
+  }
 
   return { ok: true as const, source: 'supabase', principal: supabase.principal };
 }
@@ -184,6 +235,14 @@ export async function assertSupabaseAuth(req: Request, env: Env): Promise<
     return { ok: false, response: json({ error: 'AUTH_INVALID', reason: 'token_not_yet_valid' }, { status: 403 }) };
   }
 
+  const cachedPrincipal = readCachedSupabasePrincipal(token);
+  if (cachedPrincipal) {
+    const sub = claimAsString(claims.sub);
+    if (!sub || sub === cachedPrincipal.userId) {
+      return { ok: true, principal: cachedPrincipal };
+    }
+  }
+
   let profile: SupabaseUserProfile | null = null;
   try {
     profile = await fetchSupabaseUserProfile(token, env);
@@ -203,14 +262,20 @@ export async function assertSupabaseAuth(req: Request, env: Env): Promise<
     return { ok: false, response: json({ error: 'AUTH_INVALID', reason: 'subject_mismatch' }, { status: 403 }) };
   }
 
-  return {
-    ok: true,
-    principal: {
+  const principal = writeCachedSupabasePrincipal(
+    token,
+    {
       token,
       userId: profile.id,
       email: profile.email ?? null,
       role: profile.role ?? null,
       claims,
     },
+    exp,
+  );
+
+  return {
+    ok: true,
+    principal,
   };
 }
