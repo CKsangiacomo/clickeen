@@ -27,4 +27,5 @@ export default async function BuilderLandingPage({ searchParams }: BuilderLandin
   );
 }
 
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';

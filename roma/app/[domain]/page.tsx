@@ -103,3 +103,6 @@ export default async function RomaDomainPage({ params }: DomainPageProps) {
     </RomaShell>
   );
 }
+
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
