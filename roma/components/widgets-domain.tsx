@@ -8,7 +8,6 @@ import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 import {
   buildBuilderRoute,
-  createUserInstancePublicId,
   DEFAULT_INSTANCE_DISPLAY_NAME,
   normalizeWidgetType,
   normalizeRomaWidgetsSnapshot,
@@ -20,6 +19,10 @@ type CreateInstanceArgs = {
   openBuilder?: boolean;
   actionKey: string;
 };
+
+function buildMainPublicId(widgetType: string): string {
+  return `wgt_main_${widgetType}`;
+}
 
 export function WidgetsDomain() {
   const router = useRouter();
@@ -111,31 +114,34 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        const publicId = createUserInstancePublicId(normalizedWidgetType);
-        const payload = await fetchParisJson<{ publicId?: string }>(
-          `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances?subject=workspace`,
+        const sourcePublicId = buildMainPublicId(normalizedWidgetType);
+        const payload = await fetchParisJson<{ publicId?: string; widgetType?: string }>(
+          `/api/paris/roma/widgets/duplicate`,
           {
             method: 'POST',
             headers: {
               'content-type': 'application/json',
             },
             body: JSON.stringify({
-              publicId,
-              widgetType: normalizedWidgetType,
-              displayName: DEFAULT_INSTANCE_DISPLAY_NAME,
-              status: 'unpublished',
-              config: {},
+              workspaceId,
+              sourcePublicId,
             }),
           },
         );
         const createdPublicId =
-          payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : publicId;
+          payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
+        if (!createdPublicId) {
+          throw new Error(`Create from main failed: missing publicId for source ${sourcePublicId}.`);
+        }
+        const createdType = normalizeWidgetType(
+          payload && typeof payload.widgetType === 'string' ? payload.widgetType : normalizedWidgetType,
+        );
         setWidgetInstances((prev) => {
           if (prev.some((instance) => instance.publicId === createdPublicId)) return prev;
           return [
             {
               publicId: createdPublicId,
-              widgetType: normalizedWidgetType,
+              widgetType: createdType,
               displayName: DEFAULT_INSTANCE_DISPLAY_NAME,
               workspaceId,
               source: 'workspace',
@@ -145,16 +151,17 @@ export function WidgetsDomain() {
           ];
         });
         setWidgetTypes((prev) => {
-          if (prev.includes(normalizedWidgetType)) return prev;
-          return [...prev, normalizedWidgetType].sort((a, b) => a.localeCompare(b));
+          if (createdType === 'unknown' || prev.includes(createdType)) return prev;
+          return [...prev, createdType].sort((a, b) => a.localeCompare(b));
         });
+        await me.reload();
         if (openBuilder) {
           router.push(
             buildBuilderRoute({
               publicId: createdPublicId,
               workspaceId,
               accountId: activeAccountId,
-              widgetType: normalizedWidgetType,
+              widgetType: createdType,
             }),
           );
         }
@@ -165,7 +172,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [activeAccountId, router, workspaceId],
+    [activeAccountId, me, router, workspaceId],
   );
 
   const handleDuplicateInstance = useCallback(
@@ -211,6 +218,7 @@ export function WidgetsDomain() {
             return [...prev, duplicatedType].sort((a, b) => a.localeCompare(b));
           });
         }
+        await me.reload();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setCreateError(message);
@@ -218,7 +226,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [workspaceId],
+    [me, workspaceId],
   );
 
   const handleDeleteInstance = useCallback(
@@ -236,6 +244,7 @@ export function WidgetsDomain() {
           },
         );
         setWidgetInstances((prev) => prev.filter((item) => item.publicId !== instance.publicId));
+        await me.reload();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setCreateError(message);
@@ -243,7 +252,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [workspaceId],
+    [me, workspaceId],
   );
 
   useEffect(() => {
@@ -285,6 +294,7 @@ export function WidgetsDomain() {
         {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
       </p>
       <p>Showing workspace widgets grouped by widget. Account-owned curated/main instances are included.</p>
+      <p>Create in this domain always clones the widget main baseline: wgt_main_&lt;widgetType&gt;.</p>
 
       {dataError ? <p>Failed to load widget instances: {dataError}</p> : null}
       {createError ? <p>Failed to update widgets: {createError}</p> : null}
@@ -309,6 +319,7 @@ export function WidgetsDomain() {
                 <p>
                   {group.instances.length} {group.instances.length === 1 ? 'instance' : 'instances'}
                 </p>
+                <p>Create source: {canCreate ? buildMainPublicId(group.widgetType) : 'n/a'}</p>
                 {canCreate ? (
                   <button
                     className="diet-btn-txt"
@@ -319,7 +330,7 @@ export function WidgetsDomain() {
                     disabled={Boolean(activeActionKey)}
                   >
                     <span className="diet-btn-txt__label">
-                      {activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}
+                      {activeActionKey === createActionKey ? 'Creating...' : 'Create from main'}
                     </span>
                   </button>
                 ) : null}

@@ -171,6 +171,11 @@ curated_widget_instances.meta = {
 
 **Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves canonical account asset paths (`/arsenale/o/**`), materializes **instance** l10n overlays into Tokyo/R2, and publishes Venice render snapshots.
 
+**Asset URL contract (pre-GA strict):**
+- Persisted widget config stores account assets as canonical root-relative paths: `/arsenale/o/{accountId}/{assetId}/{variant?}/{filename}`.
+- Runtime resolves concrete host per environment via `CK_ASSET_ORIGIN` (same config works local and cloud-dev; only origin/base URL differs).
+- Legacy host-pinned/legacy paths (for example `/curated-assets/**`) are not supported.
+
 **Dieter** — Design system. Tokens (spacing, typography, colors), 16+ components (toggle, textfield, dropdown-fill, object-manager, repeater, dropdown-edit, etc.), icons. Output is CSS + HTML. Each widget only loads what it needs.
 
 **Atlas** — Cloudflare KV. Read-only runtime cache. Admin overrides require INTERNAL_ADMIN_KEY and CEO approval.

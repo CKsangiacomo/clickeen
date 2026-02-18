@@ -43,6 +43,149 @@ function containsNonPersistableUrl(value: string): boolean {
   return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
 }
 
+function extractPathnameFromUrlCandidate(raw: string): string | null {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      return new URL(value).pathname || '/';
+    } catch {
+      return null;
+    }
+  }
+
+  if (/^\/\//.test(value)) {
+    try {
+      return new URL(`https:${value}`).pathname || '/';
+    } catch {
+      return null;
+    }
+  }
+
+  if (value.startsWith('/')) return value;
+  if (value.startsWith('./') || value.startsWith('../')) return value;
+  return null;
+}
+
+function parseCanonicalAccountAssetPath(pathname: string): { accountId: string; assetId: string } | null {
+  const match = String(pathname || '').match(/^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/);
+  if (!match) return null;
+  return {
+    accountId: decodeURIComponent(match[1] || '').trim(),
+    assetId: decodeURIComponent(match[2] || '').trim(),
+  };
+}
+
+function isStaticTokyoAssetPath(pathname: string): boolean {
+  return pathname.startsWith('/widgets/') || pathname.startsWith('/themes/') || pathname.startsWith('/dieter/');
+}
+
+function isLikelyAssetFieldPath(path: string): boolean {
+  return /(?:^|[\].])(?:src|poster|logoFill)$/.test(String(path || ''));
+}
+
+export function configAssetUrlContractIssues(
+  config: unknown,
+  expectedAccountId?: string | null,
+): Array<{ path: string; message: string }> {
+  const issues: Array<{ path: string; message: string }> = [];
+  const expectedAccount = typeof expectedAccountId === 'string' ? expectedAccountId.trim() : '';
+  const urlPattern = /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi;
+
+  const inspectCandidate = (candidateRaw: string, path: string) => {
+    const candidate = String(candidateRaw || '').trim();
+    if (!candidate) return;
+    if (/^(?:data|blob):/i.test(candidate)) return;
+
+    const pathname = extractPathnameFromUrlCandidate(candidate);
+    if (!pathname) return;
+
+    if (pathname.includes('/curated-assets/')) {
+      issues.push({
+        path,
+        message: `Legacy asset URL path is not supported: ${candidate}`,
+      });
+      return;
+    }
+
+    if (pathname.startsWith('/arsenale/o/')) {
+      const parsed = parseCanonicalAccountAssetPath(pathname);
+      if (!parsed) {
+        issues.push({
+          path,
+          message: `Unsupported asset URL path: ${candidate}`,
+        });
+        return;
+      }
+      if (!isUuid(parsed.accountId) || !isUuid(parsed.assetId)) {
+        issues.push({
+          path,
+          message: `Asset URL must include valid accountId/assetId UUIDs: ${candidate}`,
+        });
+        return;
+      }
+      if (expectedAccount && parsed.accountId !== expectedAccount) {
+        issues.push({
+          path,
+          message: `Asset URL account mismatch at ${path}: expected ${expectedAccount}, got ${parsed.accountId}`,
+        });
+      }
+      return;
+    }
+
+    if (pathname.startsWith('./') || pathname.startsWith('../')) {
+      issues.push({
+        path,
+        message: `Relative asset URL path is not supported: ${candidate}`,
+      });
+      return;
+    }
+
+    if (isStaticTokyoAssetPath(pathname)) return;
+
+    issues.push({
+      path,
+      message: `Unsupported asset URL path: ${candidate}`,
+    });
+  };
+
+  const visit = (node: unknown, path: string) => {
+    if (typeof node === 'string') {
+      let matchedCssUrl = false;
+      let match: RegExpExecArray | null = urlPattern.exec(node);
+      while (match) {
+        matchedCssUrl = true;
+        inspectCandidate(match[2] || '', path);
+        match = urlPattern.exec(node);
+      }
+      urlPattern.lastIndex = 0;
+
+      if (!matchedCssUrl && isLikelyAssetFieldPath(path)) {
+        inspectCandidate(node, path);
+      }
+      return;
+    }
+
+    if (!node || typeof node !== 'object') return;
+
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i += 1) {
+        visit(node[i], `${path}[${i}]`);
+      }
+      return;
+    }
+
+    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+      const nextPath = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key) ? `${path}.${key}` : `${path}[${JSON.stringify(key)}]`;
+      visit(value, nextPath);
+    }
+  };
+
+  visit(config, 'config');
+  return issues;
+}
+
 export function configNonPersistableUrlIssues(config: unknown): Array<{ path: string; message: string }> {
   const issues: Array<{ path: string; message: string }> = [];
 

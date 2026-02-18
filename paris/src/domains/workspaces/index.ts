@@ -19,6 +19,7 @@ import {
   assertDisplayName,
   assertMeta,
   assertStatus,
+  configAssetUrlContractIssues,
   configNonPersistableUrlIssues,
   isRecord,
 } from '../../shared/validation';
@@ -773,6 +774,19 @@ export async function handleWorkspaceUpdateInstance(
       );
     }
 
+    const assetIssues = configAssetUrlContractIssues(config, workspace.account_id);
+    if (assetIssues.length) {
+      return ckError(
+        {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.publish.nonPersistableUrl',
+          detail: assetIssues[0]?.message,
+          paths: assetIssues.map((i) => i.path),
+        },
+        422,
+      );
+    }
+
     const denyByLimits = await enforceLimits(env, policyResult.policy, widgetType, config);
     if (denyByLimits) return denyByLimits;
   }
@@ -1091,6 +1105,19 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         reasonKey: 'coreui.errors.publish.nonPersistableUrl',
         detail: issues[0]?.message,
         paths: issues.map((i) => i.path),
+      },
+      422,
+    );
+  }
+
+  const assetIssues = configAssetUrlContractIssues(config, workspace.account_id);
+  if (assetIssues.length) {
+    return ckError(
+      {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.publish.nonPersistableUrl',
+        detail: assetIssues[0]?.message,
+        paths: assetIssues.map((i) => i.path),
       },
       422,
     );
@@ -1508,6 +1535,19 @@ export async function handleWorkspaceEnsureWebsiteCreative(
         reasonKey: 'coreui.errors.publish.nonPersistableUrl',
         detail: issues[0]?.message,
         paths: issues.map((i) => `baselineConfig.${i.path}`),
+      },
+      422,
+    );
+  }
+
+  const assetIssues = configAssetUrlContractIssues(baselineConfig, workspace.account_id);
+  if (assetIssues.length) {
+    return ckError(
+      {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.publish.nonPersistableUrl',
+        detail: assetIssues[0]?.message,
+        paths: assetIssues.map((i) => `baselineConfig.${i.path}`),
       },
       422,
     );

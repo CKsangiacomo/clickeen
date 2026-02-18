@@ -499,10 +499,10 @@ async function loadRomaMeState(force: boolean, workspaceId: string | null): Prom
 }
 
 export function useRomaMe() {
-  const [state, setState] = useState<UseRomaMeState>(() => {
-    const requestedWorkspaceId = resolveRequestedWorkspaceId();
-    const cached = readRomaMeCache(requestedWorkspaceId);
-    return cached ?? { loading: true, data: null, error: null };
+  const [state, setState] = useState<UseRomaMeState>({
+    loading: true,
+    data: null,
+    error: null,
   });
 
   const load = useCallback(async (force: boolean) => {

@@ -19,6 +19,27 @@
     return Boolean(value && typeof value === 'object' && !Array.isArray(value));
   }
 
+  // Asset origin is dynamic by surface:
+  // - Bob preview: same-origin proxy routes
+  // - Venice runtime: Tokyo CDN origin
+  // Keep persisted config host-agnostic and resolve concrete origin at runtime.
+  var DEFAULT_ASSET_ORIGIN = (function () {
+    var fromWindow = typeof window.CK_ASSET_ORIGIN === 'string' ? window.CK_ASSET_ORIGIN.trim() : '';
+    if (fromWindow) return fromWindow.replace(/\/+$/, '');
+    try {
+      if (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) {
+        return new URL(document.currentScript.src, window.location.href).origin;
+      }
+    } catch {}
+    return String(window.location.origin || '').replace(/\/+$/, '');
+  })();
+
+  function resolveAssetOrigin() {
+    var fromWindow = typeof window.CK_ASSET_ORIGIN === 'string' ? window.CK_ASSET_ORIGIN.trim() : '';
+    var origin = fromWindow || DEFAULT_ASSET_ORIGIN || String(window.location.origin || '');
+    return origin.replace(/\/+$/, '');
+  }
+
   function clampNumber(value, min, max) {
     if (typeof value !== 'number' || !Number.isFinite(value)) return min;
     return Math.min(Math.max(value, min), max);
@@ -38,16 +59,31 @@
     return /^https?:\/\//i.test(v) || v.indexOf('/') === 0;
   }
 
+  function normalizePersistedAssetUrl(raw) {
+    var v = String(raw || '').trim();
+    if (!isPersistedAssetUrl(v)) return '';
+    if (/^https?:\/\//i.test(v)) return v;
+    if (/^\/\//.test(v)) return 'https:' + v;
+    var origin = resolveAssetOrigin();
+    if (!origin) return v;
+    try {
+      return new URL(v, origin).toString();
+    } catch {
+      return v;
+    }
+  }
+
   function normalizeStringFill(raw) {
     var v = String(raw || '').trim();
     if (!v || v === 'transparent') return { type: 'none' };
     if (/url\(\s*/i.test(v)) {
       var extracted = extractPrimaryUrl(v);
-      if (!isPersistedAssetUrl(extracted)) return null;
+      var normalizedExtracted = normalizePersistedAssetUrl(extracted);
+      if (!normalizedExtracted) return null;
       return {
         type: 'image',
         image: {
-          src: extracted,
+          src: normalizedExtracted,
           fit: 'cover',
           position: 'center',
           repeat: 'no-repeat',
@@ -55,11 +91,12 @@
         },
       };
     }
-    if (isPersistedAssetUrl(v)) {
+    var normalizedDirect = normalizePersistedAssetUrl(v);
+    if (normalizedDirect) {
       return {
         type: 'image',
         image: {
-          src: extractPrimaryUrl(v),
+          src: normalizedDirect,
           fit: 'cover',
           position: 'center',
           repeat: 'no-repeat',
@@ -136,7 +173,7 @@
   function normalizeImage(raw) {
     if (!isRecord(raw)) return { src: '', fit: 'cover', position: 'center', repeat: 'no-repeat', fallback: '' };
     var srcRaw = typeof raw.src === 'string' ? raw.src.trim() : '';
-    var src = isPersistedAssetUrl(srcRaw) ? srcRaw : '';
+    var src = normalizePersistedAssetUrl(srcRaw);
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var repeat = typeof raw.repeat === 'string' && raw.repeat.trim() ? raw.repeat.trim() : 'no-repeat';
@@ -148,8 +185,8 @@
     if (!isRecord(raw)) return { src: '', poster: '', fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true, fallback: '' };
     var srcRaw = typeof raw.src === 'string' ? raw.src.trim() : '';
     var posterRaw = typeof raw.poster === 'string' ? raw.poster.trim() : '';
-    var src = isPersistedAssetUrl(srcRaw) ? srcRaw : '';
-    var poster = isPersistedAssetUrl(posterRaw) ? posterRaw : '';
+    var src = normalizePersistedAssetUrl(srcRaw);
+    var poster = normalizePersistedAssetUrl(posterRaw);
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var loop = typeof raw.loop === 'boolean' ? raw.loop : true;
