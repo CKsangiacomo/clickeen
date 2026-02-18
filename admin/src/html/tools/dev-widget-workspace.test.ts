@@ -359,7 +359,7 @@ describe('DevStudio widget workspace tool', () => {
       },
     ];
 
-    const { dom } = await loadWorkspaceDom(instances, {
+    const { dom, fetchMock } = await loadWorkspaceDom(instances, {
       fetch: {
         themes: [
           { id: 'light', label: 'Light' },
@@ -411,7 +411,7 @@ describe('DevStudio widget workspace tool', () => {
 
     let themeUpdatePayload: { themeId?: string; values?: Record<string, unknown> } | null = null;
 
-    const { dom } = await loadWorkspaceDom(instances, {
+    const { dom, fetchMock } = await loadWorkspaceDom(instances, {
       fetch: {
         themes: [
           { id: 'light', label: 'Light' },
@@ -467,6 +467,16 @@ describe('DevStudio widget workspace tool', () => {
         );
       },
     });
+    const countParisInstanceLoads = () =>
+      fetchMock.mock.calls
+        .map(([input]) => (typeof input === 'string' ? input : input.toString()))
+        .filter(
+          (url) =>
+            url.includes('/api/paris/workspaces/') && url.includes('/instance/wgt_curated_faq_simple'),
+        ).length;
+
+    const beforeThemeEditLoads = countParisInstanceLoads();
+    expect(beforeThemeEditLoads).toBe(1);
 
     const updateThemeBtn = dom.window.document.getElementById('superadmin-update-theme');
     updateThemeBtn?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
