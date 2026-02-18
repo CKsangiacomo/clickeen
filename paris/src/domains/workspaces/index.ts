@@ -68,6 +68,48 @@ type WorkspaceLocaleOverlayPayload = {
   userOps: Array<{ op: 'set'; path: string; value: string }>;
 };
 
+type WorkspaceInstanceEnvelope = {
+  publicId: string;
+  displayName: string;
+  ownerAccountId: string;
+  status: 'published' | 'unpublished';
+  widgetType: string;
+  config: Record<string, unknown>;
+  meta: Record<string, unknown> | null;
+  updatedAt: string | null;
+  baseFingerprint: string;
+  enforcement: ReturnType<typeof normalizeActiveEnforcement>;
+  policy: Policy;
+  workspace: {
+    id: string;
+    accountId: string;
+    tier: string;
+    websiteUrl: string | null;
+  };
+  localization: {
+    workspaceLocales: string[];
+    invalidWorkspaceLocales: string | null;
+    localeOverlays: WorkspaceLocaleOverlayPayload[];
+  };
+};
+
+function validateWorkspaceInstanceEnvelope(payload: WorkspaceInstanceEnvelope): string | null {
+  if (!payload.publicId) return 'publicId missing';
+  if (!payload.displayName) return 'displayName missing';
+  if (!payload.ownerAccountId) return 'ownerAccountId missing';
+  if (payload.status !== 'published' && payload.status !== 'unpublished') return 'status invalid';
+  if (!payload.widgetType) return 'widgetType missing';
+  if (!payload.config || typeof payload.config !== 'object' || Array.isArray(payload.config)) return 'config invalid';
+  if (!/^[a-f0-9]{64}$/i.test(payload.baseFingerprint)) return 'baseFingerprint invalid';
+  if (!payload.policy || typeof payload.policy !== 'object') return 'policy missing';
+  if (!payload.workspace?.id) return 'workspace.id missing';
+  if (!payload.workspace?.accountId) return 'workspace.accountId missing';
+  if (!payload.workspace?.tier) return 'workspace.tier missing';
+  if (!Array.isArray(payload.localization.workspaceLocales)) return 'localization.workspaceLocales invalid';
+  if (!Array.isArray(payload.localization.localeOverlays)) return 'localization.localeOverlays invalid';
+  return null;
+}
+
 function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   return raw as Record<string, unknown>;
@@ -105,6 +147,83 @@ function resolveWorkspaceInstanceDisplayName(instance: InstanceRow | CuratedInst
     return formatCuratedDisplayName(readCuratedMeta(instance.meta), instance.public_id);
   }
   return asTrimmedString(instance.display_name) ?? DEFAULT_INSTANCE_DISPLAY_NAME;
+}
+
+const SNAPSHOT_READY_TIMEOUT_MS = 12_000;
+const SNAPSHOT_READY_POLL_MS = 400;
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function normalizeSnapshotLocales(locales: string[] | undefined): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of locales ?? []) {
+    const normalized = String(raw || '').trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    out.push(normalized);
+  }
+  if (!seen.has('en')) out.unshift('en');
+  return out;
+}
+
+function hasSnapshotPointersForLocales(
+  index: Record<string, RenderIndexEntry> | null,
+  locales: string[],
+): boolean {
+  if (!index) return false;
+  return locales.every((locale) => {
+    const entry = index[locale];
+    if (!entry) return false;
+    return Boolean(entry.e && entry.r && entry.meta);
+  });
+}
+
+async function waitForRenderSnapshotState(args: {
+  env: Env;
+  publicId: string;
+  action: 'upsert' | 'delete';
+  locales?: string[];
+}): Promise<{ ok: true } | { ok: false; detail: string }> {
+  const locales = normalizeSnapshotLocales(args.locales);
+  const deadline = Date.now() + SNAPSHOT_READY_TIMEOUT_MS;
+  let lastError = '';
+  let lastSeenLocales: string[] = [];
+
+  while (Date.now() <= deadline) {
+    try {
+      const current = await loadRenderIndexCurrent({ env: args.env, publicId: args.publicId });
+      lastSeenLocales = current ? Object.keys(current).sort() : [];
+      if (args.action === 'delete') {
+        if (!current) return { ok: true };
+      } else if (hasSnapshotPointersForLocales(current, locales)) {
+        return { ok: true };
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+
+    if (Date.now() > deadline) break;
+    await wait(SNAPSHOT_READY_POLL_MS);
+  }
+
+  if (args.action === 'delete') {
+    return {
+      ok: false,
+      detail: `Snapshot delete pointer timeout for ${args.publicId}. Last seen locales: ${
+        lastSeenLocales.length ? lastSeenLocales.join(',') : '<none>'
+      }${lastError ? `; last error: ${lastError}` : ''}`,
+    };
+  }
+
+  return {
+    ok: false,
+    detail: `Snapshot pointer timeout for ${args.publicId} locales=${locales.join(',')}. Last seen locales: ${
+      lastSeenLocales.length ? lastSeenLocales.join(',') : '<none>'
+    }${lastError ? `; last error: ${lastError}` : ''}`,
+  };
 }
 
 function resolveCuratedMetaUpdate(args: {
@@ -192,6 +311,23 @@ export async function handleWorkspaceInstanceRenderSnapshot(
         kind: 'INTERNAL',
         reasonKey: 'coreui.errors.publish.failed',
         detail: enqueue.error,
+      },
+      503,
+    );
+  }
+
+  const ready = await waitForRenderSnapshotState({
+    env,
+    publicId: publicIdResult.value,
+    action: 'upsert',
+    locales: activeLocales,
+  });
+  if (!ready.ok) {
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.publish.failed',
+        detail: ready.detail,
       },
       503,
     );
@@ -327,7 +463,7 @@ export async function handleWorkspaceGetInstance(
     );
   }
 
-  return json({
+  const envelope: WorkspaceInstanceEnvelope = {
     publicId: instance.public_id,
     displayName: resolveWorkspaceInstanceDisplayName(instance),
     ownerAccountId: workspace.account_id,
@@ -350,7 +486,19 @@ export async function handleWorkspaceGetInstance(
       invalidWorkspaceLocales,
       localeOverlays,
     },
-  });
+  };
+  const envelopeError = validateWorkspaceInstanceEnvelope(envelope);
+  if (envelopeError) {
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.payload.invalid',
+        detail: `Invalid InstanceEnvelope: ${envelopeError}`,
+      },
+      500,
+    );
+  }
+  return json(envelope);
 }
 
 export async function handleWorkspaceInstancePublishStatus(
@@ -928,10 +1076,11 @@ export async function handleWorkspaceUpdateInstance(
       updatedNextStatus === 'published' &&
       (updatedPrevStatus !== updatedNextStatus || configChanged)
     ) {
+      const renderLocales = ['en'];
       const enqueue = await enqueueRenderSnapshot(env, {
         publicId,
         action: 'upsert',
-        locales: ['en'],
+        locales: renderLocales,
       });
       if (!enqueue.ok) {
         return ckError(
@@ -939,6 +1088,22 @@ export async function handleWorkspaceUpdateInstance(
             kind: 'INTERNAL',
             reasonKey: 'coreui.errors.publish.failed',
             detail: enqueue.error,
+          },
+          503,
+        );
+      }
+      const ready = await waitForRenderSnapshotState({
+        env,
+        publicId,
+        action: 'upsert',
+        locales: renderLocales,
+      });
+      if (!ready.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.publish.failed',
+            detail: ready.detail,
           },
           503,
         );
@@ -986,6 +1151,22 @@ export async function handleWorkspaceUpdateInstance(
           503,
         );
       }
+      const ready = await waitForRenderSnapshotState({
+        env,
+        publicId,
+        action: 'upsert',
+        locales: activeLocales,
+      });
+      if (!ready.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.publish.failed',
+            detail: ready.detail,
+          },
+          503,
+        );
+      }
     } else if (
       !isCurated &&
       updatedPrevStatus === 'published' &&
@@ -998,6 +1179,21 @@ export async function handleWorkspaceUpdateInstance(
             kind: 'INTERNAL',
             reasonKey: 'coreui.errors.publish.failed',
             detail: enqueue.error,
+          },
+          503,
+        );
+      }
+      const ready = await waitForRenderSnapshotState({
+        env,
+        publicId,
+        action: 'delete',
+      });
+      if (!ready.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.publish.failed',
+            detail: ready.detail,
           },
           503,
         );
@@ -1342,10 +1538,11 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
 
     const createdKind = resolveInstanceKind(createdInstance);
     if (createdKind === 'curated' && createdInstance.status === 'published') {
+      const renderLocales = ['en'];
       const enqueue = await enqueueRenderSnapshot(env, {
         publicId,
         action: 'upsert',
-        locales: ['en'],
+        locales: renderLocales,
       });
       if (!enqueue.ok) {
         return ckError(
@@ -1353,6 +1550,22 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
             kind: 'INTERNAL',
             reasonKey: 'coreui.errors.publish.failed',
             detail: enqueue.error,
+          },
+          503,
+        );
+      }
+      const ready = await waitForRenderSnapshotState({
+        env,
+        publicId,
+        action: 'upsert',
+        locales: renderLocales,
+      });
+      if (!ready.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.publish.failed',
+            detail: ready.detail,
           },
           503,
         );
@@ -1412,6 +1625,22 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
             kind: 'INTERNAL',
             reasonKey: 'coreui.errors.publish.failed',
             detail: enqueue.error,
+          },
+          503,
+        );
+      }
+      const ready = await waitForRenderSnapshotState({
+        env,
+        publicId,
+        action: 'upsert',
+        locales: activeLocales,
+      });
+      if (!ready.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.publish.failed',
+            detail: ready.detail,
           },
           503,
         );

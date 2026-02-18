@@ -78,7 +78,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
   const rawLocale = (url.searchParams.get('locale') || '').trim();
   const locale = normalizeLocaleToken(rawLocale) ?? 'en';
-  const isBaseLocaleRequest = locale === 'en' || locale.startsWith('en-');
   const bypassSnapshot = req.headers.get('x-ck-snapshot-bypass') === '1';
   const enforcement = (url.searchParams.get('enforcement') || '').trim().toLowerCase();
   const frozenAt = (url.searchParams.get('frozenAt') || '').trim();
@@ -106,13 +105,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
   let snapshotReason: string | null = null;
   const snapshotCacheControl = ts ? 'no-store' : CACHE_PUBLISHED;
-  if (!auth && !embedToken && !bypassSnapshot && isBaseLocaleRequest) {
-    let snapshotLocale = locale;
-    let snapshot = await loadRenderSnapshot({ publicId, locale: snapshotLocale, variant: 'e' });
-    if (!snapshot.ok && snapshot.reason === 'LOCALE_MISSING' && snapshotLocale !== 'en') {
-      snapshotLocale = 'en';
-      snapshot = await loadRenderSnapshot({ publicId, locale: snapshotLocale, variant: 'e' });
-    }
+  if (!bypassSnapshot) {
+    const snapshot = await loadRenderSnapshot({ publicId, locale, variant: 'e' });
     if (snapshot.ok) {
       const etag = `W/"${snapshot.fingerprint}"`;
       const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
@@ -126,12 +120,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
       let html = new TextDecoder().decode(snapshot.bytes);
       try {
-        const patched = patchSnapshotHtml(html, { theme, device, requestedLocale: snapshotLocale });
+        const patched = patchSnapshotHtml(html, { theme, device, requestedLocale: locale });
         if (!patched) throw new Error('SNAPSHOT_PATCH_FAILED');
         html = patched.html;
         html = rewriteWidgetCdnUrls(html, getTokyoBase());
-        headers['X-Ck-L10n-Requested-Locale'] = snapshotLocale;
-        headers['X-Ck-L10n-Resolved-Locale'] = snapshotLocale;
+        headers['X-Ck-L10n-Requested-Locale'] = locale;
+        headers['X-Ck-L10n-Resolved-Locale'] = locale;
         headers['X-Ck-L10n-Effective-Locale'] = patched.effectiveLocale;
         headers['X-Ck-L10n-Status'] = patched.effectiveLocale === 'en' ? 'base' : 'fresh';
       } catch {
@@ -146,21 +140,70 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
         headers['X-Venice-Render-Mode'] = 'snapshot';
-
         const parisOrigin = new URL(getParisBase()).origin;
         const tokyoOrigin = new URL(getTokyoBase()).origin;
         headers['Content-Security-Policy'] = buildCsp(nonce, { parisOrigin, tokyoOrigin });
         return new NextResponse(html, { status: 200, headers });
       }
+    } else {
+      snapshotReason = snapshot.reason;
     }
-    if (!snapshot.ok && !snapshotReason) snapshotReason = snapshot.reason;
-  } else if (auth || embedToken) {
-    snapshotReason = 'SKIP_AUTH';
-  } else if (bypassSnapshot) {
-    snapshotReason = 'SKIP_BYPASS';
-  } else if (!isBaseLocaleRequest) {
-    snapshotReason = 'SKIP_NON_BASE_LOCALE';
+
+    const statusProbe = await parisJson<InstanceResponse | { error?: string }>(
+      `/api/instance/${encodeURIComponent(publicId)}?subject=venice`,
+      {
+        method: 'GET',
+        headers: forwardHeaders,
+        cache: 'no-store',
+      },
+    );
+
+    if (!statusProbe.res.ok) {
+      const status = statusProbe.res.status === 401 || statusProbe.res.status === 403 ? 403 : statusProbe.res.status;
+      const tokyoBase = getTokyoBase();
+      const html = renderErrorPage({
+        publicId,
+        status,
+        message: typeof statusProbe.body === 'string' ? statusProbe.body : JSON.stringify(statusProbe.body),
+        tokyoBase,
+      });
+      headers['Cache-Control'] = 'no-store';
+      headers['X-Venice-Render-Mode'] = 'snapshot';
+      if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
+      return new NextResponse(html, { status, headers });
+    }
+
+    const statusInstance = statusProbe.body as InstanceResponse;
+    if (statusInstance.status !== 'published' && !isCurated) {
+      const tokyoBase = getTokyoBase();
+      const html = renderErrorPage({
+        publicId,
+        status: 404,
+        message: 'Widget unavailable',
+        tokyoBase,
+      });
+      headers['Cache-Control'] = 'no-store';
+      headers['Vary'] = 'Authorization, X-Embed-Token';
+      headers['X-Venice-Render-Mode'] = 'snapshot';
+      if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
+      return new NextResponse(html, { status: 404, headers });
+    }
+
+    const tokyoBase = getTokyoBase();
+    const html = renderErrorPage({
+      publicId,
+      status: 503,
+      message: `Snapshot unavailable (${snapshotReason || 'UNKNOWN'})`,
+      tokyoBase,
+    });
+    headers['Cache-Control'] = 'no-store';
+    headers['Vary'] = 'Authorization, X-Embed-Token';
+    headers['X-Venice-Render-Mode'] = 'snapshot';
+    if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
+    return new NextResponse(html, { status: 503, headers });
   }
+
+  snapshotReason = 'SKIP_BYPASS';
 
   const { res, body } = await parisJson<InstanceResponse | { error?: string }>(
     `/api/instance/${encodeURIComponent(publicId)}?subject=venice`,

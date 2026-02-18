@@ -99,6 +99,7 @@ function toWeakEtag(value: string) {
 export async function GET(req: Request, ctx: { params: Promise<{ publicId: string }> }) {
   const { publicId: rawPublicId } = await ctx.params;
   const publicId = String(rawPublicId || '').trim();
+  const isCurated = /^wgt_curated_/i.test(publicId) || /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
   const url = new URL(req.url);
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
@@ -107,7 +108,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
   const rawLocale = (url.searchParams.get('locale') || '').trim();
   const locale = normalizeLocaleToken(rawLocale) ?? 'en';
-  const isBaseLocaleRequest = locale === 'en' || locale.startsWith('en-');
   const bypassSnapshot = req.headers.get('x-ck-snapshot-bypass') === '1';
   const enforcement = (url.searchParams.get('enforcement') || '').trim().toLowerCase();
   const frozenAt = (url.searchParams.get('frozenAt') || '').trim();
@@ -130,24 +130,23 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
   const auth = req.headers.get('authorization') ?? req.headers.get('Authorization');
   const embedToken = req.headers.get('x-embed-token') ?? req.headers.get('X-Embed-Token');
+  const forwardHeaders: HeadersInit = {
+    'X-Request-ID': req.headers.get('x-request-id') ?? crypto.randomUUID(),
+    'Cache-Control': 'no-store',
+  };
+
+  if (auth) forwardHeaders['Authorization'] = auth;
+  if (embedToken) forwardHeaders['X-Embed-Token'] = embedToken;
+
   let snapshotReason: string | null = null;
 
   const snapshotCacheControl = ts ? 'no-store' : CACHE_PUBLISHED;
-  if (!auth && !embedToken && !bypassSnapshot && isBaseLocaleRequest) {
-    let snapshotLocale = locale;
-    let snapshot = await loadRenderSnapshot({
+  if (!bypassSnapshot) {
+    const snapshot = await loadRenderSnapshot({
       publicId,
-      locale: snapshotLocale,
+      locale,
       variant: metaOnly ? 'meta' : 'r',
     });
-    if (!snapshot.ok && snapshot.reason === 'LOCALE_MISSING' && snapshotLocale !== 'en') {
-      snapshotLocale = 'en';
-      snapshot = await loadRenderSnapshot({
-        publicId,
-        locale: snapshotLocale,
-        variant: metaOnly ? 'meta' : 'r',
-      });
-    }
     if (snapshot.ok) {
       const etag = `W/"${snapshot.fingerprint}"`;
       const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
@@ -164,12 +163,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         try {
           const parsed = JSON.parse(raw) as Record<string, unknown>;
           const mode = (parsed as any)?.enforcement?.mode;
-          const resolvedLocale = mode === 'frozen' ? 'en' : snapshotLocale;
+          const resolvedLocale = mode === 'frozen' ? 'en' : locale;
           parsed.theme = theme;
           parsed.device = device;
           parsed.locale = resolvedLocale;
           const body = JSON.stringify(parsed);
-          headers['X-Ck-L10n-Requested-Locale'] = snapshotLocale;
+          headers['X-Ck-L10n-Requested-Locale'] = locale;
           headers['X-Ck-L10n-Resolved-Locale'] = resolvedLocale;
           headers['X-Ck-L10n-Effective-Locale'] = resolvedLocale;
           headers['X-Ck-L10n-Status'] = resolvedLocale === 'en' ? 'base' : 'fresh';
@@ -182,35 +181,57 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           snapshotReason = 'SNAPSHOT_INVALID';
         }
       } else {
-        headers['X-Ck-L10n-Requested-Locale'] = snapshotLocale;
-        headers['X-Ck-L10n-Resolved-Locale'] = snapshotLocale;
-        headers['X-Ck-L10n-Effective-Locale'] = snapshotLocale;
-        headers['X-Ck-L10n-Status'] = snapshotLocale === 'en' ? 'base' : 'fresh';
+        headers['X-Ck-L10n-Requested-Locale'] = locale;
+        headers['X-Ck-L10n-Resolved-Locale'] = locale;
+        headers['X-Ck-L10n-Effective-Locale'] = locale;
+        headers['X-Ck-L10n-Status'] = locale === 'en' ? 'base' : 'fresh';
         headers['ETag'] = etag;
         headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
         headers['X-Venice-Render-Mode'] = 'snapshot';
         return new NextResponse(raw, { status: 200, headers });
       }
-
-      // Fall through to dynamic rendering if snapshot payload is invalid.
+    } else {
+      snapshotReason = snapshot.reason;
     }
-    if (!snapshot.ok && !snapshotReason) snapshotReason = snapshot.reason;
-  } else if (auth || embedToken) {
-    snapshotReason = 'SKIP_AUTH';
-  } else if (bypassSnapshot) {
-    snapshotReason = 'SKIP_BYPASS';
-  } else if (!isBaseLocaleRequest) {
-    snapshotReason = 'SKIP_NON_BASE_LOCALE';
+
+    const statusProbe = await parisJson<InstanceResponse | { error?: string }>(
+      `/api/instance/${encodeURIComponent(publicId)}?subject=venice`,
+      {
+        method: 'GET',
+        headers: forwardHeaders,
+        cache: 'no-store',
+      },
+    );
+
+    if (!statusProbe.res.ok) {
+      const status = statusProbe.res.status === 401 || statusProbe.res.status === 403 ? 403 : statusProbe.res.status;
+      headers['Cache-Control'] = 'no-store';
+      headers['X-Venice-Render-Mode'] = 'snapshot';
+      if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
+      return new NextResponse(JSON.stringify(statusProbe.body), { status, headers });
+    }
+
+    const statusInstance = statusProbe.body as InstanceResponse;
+    if (statusInstance.status !== 'published' && !isCurated) {
+      headers['Cache-Control'] = 'no-store';
+      headers['Vary'] = 'Authorization, X-Embed-Token';
+      headers['X-Venice-Render-Mode'] = 'snapshot';
+      if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
+      return new NextResponse(JSON.stringify({ error: 'NOT_FOUND' }), { status: 404, headers });
+    }
+
+    headers['Cache-Control'] = 'no-store';
+    headers['Vary'] = 'Authorization, X-Embed-Token';
+    headers['X-Venice-Render-Mode'] = 'snapshot';
+    if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
+    return new NextResponse(
+      JSON.stringify({ error: 'SNAPSHOT_UNAVAILABLE', reason: snapshotReason || 'UNKNOWN' }),
+      { status: 503, headers },
+    );
   }
 
-  const forwardHeaders: HeadersInit = {
-    'X-Request-ID': req.headers.get('x-request-id') ?? crypto.randomUUID(),
-    'Cache-Control': 'no-store',
-  };
-
-  if (auth) forwardHeaders['Authorization'] = auth;
-  if (embedToken) forwardHeaders['X-Embed-Token'] = embedToken;
+  snapshotReason = 'SKIP_BYPASS';
 
   const { res, body } = await parisJson<InstanceResponse | { error?: string }>(
     `/api/instance/${encodeURIComponent(publicId)}?subject=venice`,

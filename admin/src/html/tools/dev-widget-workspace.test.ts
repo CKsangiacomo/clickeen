@@ -82,7 +82,27 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
     if (url.includes('/api/paris/workspaces/') && url.includes('/instance/')) {
-      return new Response(JSON.stringify({ config: { title: 'ok' } }), { status: 200 });
+      const match = url.match(/\/instance\/([^/?]+)/);
+      const publicId = match ? decodeURIComponent(match[1] || '') : '';
+      const instance = instances.find((entry) => entry.publicId === publicId) ?? null;
+      const widgetType = instance?.widgetname || 'faq';
+      return new Response(
+        JSON.stringify({
+          publicId: publicId || instance?.publicId || 'wgt_curated_faq_simple',
+          displayName: instance?.displayName || 'Untitled widget',
+          ownerAccountId: '00000000-0000-0000-0000-000000000100',
+          widgetType,
+          config: instance?.config ?? { title: 'ok' },
+          workspace: {
+            id: '00000000-0000-0000-0000-000000000001',
+            accountId: '00000000-0000-0000-0000-000000000100',
+          },
+          localization: null,
+          policy: null,
+          enforcement: null,
+        }),
+        { status: 200 },
+      );
     }
     return new Response('{}', { status: 404 });
   });
@@ -166,13 +186,13 @@ describe('DevStudio widget workspace tool', () => {
     expect(menu?.querySelectorAll('[data-public-id]').length).toBe(1);
 
     const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
-    expect(urls.some((url) => url.includes('/api/widgets/faq/compiled'))).toBe(true);
-    expect(
-      urls.some(
-        (url) =>
-          url.includes('/api/paris/workspaces/') && url.includes('/instance/wgt_curated_faq_simple'),
-      ),
-    ).toBe(true);
+    const compiledLoads = urls.filter((url) => url.includes('/api/widgets/faq/compiled'));
+    const instanceLoads = urls.filter(
+      (url) =>
+        url.includes('/api/paris/workspaces/') && url.includes('/instance/wgt_curated_faq_simple'),
+    );
+    expect(compiledLoads.length).toBe(1);
+    expect(instanceLoads.length).toBe(1);
 
     dom.window.close();
   });

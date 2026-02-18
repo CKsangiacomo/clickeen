@@ -814,7 +814,6 @@
     const TOKYO_BASE = resolveTokyoBaseUrl();
     const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
     const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
-    const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
     // v1: curated instances live in the single Clickeen-owned workspace in dev, which is ck-dev.
     // In prod this will point at the Clickeen marketing workspace.
     const CLICKEEN_WORKSPACE_ID = DEV_WORKSPACE_ID;
@@ -2705,10 +2704,10 @@
       const payloadWidgetType =
         typeof payload.widgetType === 'string' && payload.widgetType.trim()
           ? normalizeWidgetname(payload.widgetType)
-          : null;
-      const slug = payloadWidgetType || instance.widgetSlug || normalizeWidgetname(instance.widgetname);
+          : '';
+      const slug = payloadWidgetType;
       if (!slug) {
-        throw new Error(`[DevStudio] Unable to derive widget slug for ${instance.widgetname}`);
+        throw new Error(`[DevStudio] Missing widgetType in instance payload for ${publicId}`);
       }
       const label =
         typeof payload.displayName === 'string' && payload.displayName.trim()
@@ -2733,15 +2732,17 @@
         payload.config && typeof payload.config === 'object' && !Array.isArray(payload.config)
           ? payload.config
           : null;
+      if (!config) {
+        throw new Error(`[DevStudio] Invalid instance config payload for ${publicId}`);
+      }
       const workspaceId =
         payload.workspace && typeof payload.workspace === 'object' && typeof payload.workspace.id === 'string'
-          ? payload.workspace.id.trim() || DEV_WORKSPACE_ID
-          : DEV_WORKSPACE_ID;
-      instance.config = config;
-      instance.localization = payload.localization ?? null;
-      instance.policy = payload.policy ?? null;
-      instance.enforcement = payload.enforcement ?? null;
-      instance.ownerAccountId =
+          ? payload.workspace.id.trim()
+          : '';
+      if (!workspaceId) {
+        throw new Error(`[DevStudio] Missing workspace context in instance payload for ${publicId}`);
+      }
+      const ownerAccountId =
         typeof payload.ownerAccountId === 'string' && payload.ownerAccountId.trim()
           ? payload.ownerAccountId.trim()
           : payload.workspace &&
@@ -2749,7 +2750,15 @@
               typeof payload.workspace.accountId === 'string' &&
               payload.workspace.accountId.trim()
             ? payload.workspace.accountId.trim()
-            : PLATFORM_ACCOUNT_ID;
+            : '';
+      if (!ownerAccountId) {
+        throw new Error(`[DevStudio] Missing ownerAccountId in instance payload for ${publicId}`);
+      }
+      instance.config = config;
+      instance.localization = payload.localization ?? null;
+      instance.policy = payload.policy ?? null;
+      instance.enforcement = payload.enforcement ?? null;
+      instance.ownerAccountId = ownerAccountId;
       console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
       await postOpenEditorAndWait(target, {
         type: 'ck:open-editor',
@@ -2760,7 +2769,7 @@
         label,
         widgetname: slug,
         compiled,
-        instanceData: config ?? null,
+        instanceData: config,
         localization: instance.localization,
         policy: instance.policy ?? undefined,
         enforcement: instance.enforcement ?? undefined,

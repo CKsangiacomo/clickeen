@@ -335,21 +335,22 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
         typeof instance.displayName === 'string' && instance.displayName.trim()
           ? instance.displayName.trim()
           : resolvedPublicId;
-      const config =
-        instance.config && typeof instance.config === 'object' && !Array.isArray(instance.config)
-          ? (instance.config as Record<string, unknown>)
-          : {};
+      if (!instance.config || typeof instance.config !== 'object' || Array.isArray(instance.config)) {
+        throw new Error('coreui.errors.instance.config.invalid');
+      }
+      const config = instance.config as Record<string, unknown>;
       const ownerAccountId =
-        typeof instance.ownerAccountId === 'string' && instance.ownerAccountId.trim()
-          ? instance.ownerAccountId.trim()
-          : accountId;
+        typeof instance.ownerAccountId === 'string' && instance.ownerAccountId.trim() ? instance.ownerAccountId.trim() : '';
+      if (!ownerAccountId) {
+        throw new Error('coreui.errors.instance.ownerAccountMissing');
+      }
 
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
         subjectMode: 'workspace',
         publicId: resolvedPublicId,
         workspaceId,
-        ownerAccountId: ownerAccountId || undefined,
+        ownerAccountId,
         label,
         widgetname: widgetType,
         compiled,

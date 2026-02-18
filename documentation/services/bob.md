@@ -411,6 +411,12 @@ Bob supports instance-content localization (not editor chrome):
 - In Translate mode, edits are saved as per-field overrides (layer=user) and never change structure.
 - Structural edits (add/remove items) happen only in the base locale (Edit mode), then publish to regenerate locale overlays.
 - "Revert to auto-translate" deletes the layer=user overlay for the active locale.
+- Localization status is derived from **materialized overlays**, not configured locale count:
+  - `EN only` = base locale only
+  - `Configured` = locales configured but no usable non-base overlays yet
+  - `Ready` = at least one usable non-base overlay exists
+  - `Stale` = overlay fingerprint mismatch with base
+- If a locale is selected but no usable overlay exists, Bob must show explicit "not generated yet" state (no silent fallback-as-ready).
 
 Note: localization writes are separate from the base-config two-call pattern; overlays persist in `widget_instance_overlays` without publishing the base config.
 

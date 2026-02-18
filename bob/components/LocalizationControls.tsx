@@ -66,16 +66,20 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const isLocaleMode = activeLocale !== baseLocale;
   const isStale = locale.stale;
   const activeLocaleToken = normalizeLocaleToken(activeLocale);
-  const overlayLocales = useMemo(() => {
+  const materializedOverlayLocales = useMemo(() => {
     const normalized = instanceLocales
+      .filter((entry) => {
+        if (normalizeLocaleToken(entry.locale) === baseLocale) return false;
+        if (!entry.baseFingerprint || !/^[a-f0-9]{64}$/i.test(entry.baseFingerprint)) return false;
+        return entry.baseOps.length > 0 || entry.userOps.length > 0;
+      })
       .map((entry) => normalizeLocaleToken(entry.locale))
       .filter((value): value is string => Boolean(value));
-    const set = new Set<string>(normalized);
-    const rest = Array.from(set)
-      .filter((code) => code !== baseLocale)
-      .sort();
-    return [baseLocale, ...rest];
+    return Array.from(new Set(normalized)).sort();
   }, [instanceLocales, baseLocale]);
+  const overlayLocales = useMemo(() => {
+    return [baseLocale, ...materializedOverlayLocales];
+  }, [baseLocale, materializedOverlayLocales]);
   const overlayLocaleSet = useMemo(() => new Set(overlayLocales), [overlayLocales]);
   const hasInstance = Boolean(publicId && widgetType);
   const selectionDisabled =
@@ -133,7 +137,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     !locale.loading &&
     !workspaceError &&
     !minibobTranslationsLocked &&
-    !activeLocaleEntry;
+    !overlayLocaleSet.has(activeLocaleToken ?? '');
 
   const translationsStatus = useMemo(() => {
     if (minibobTranslationsLocked) {
@@ -163,7 +167,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     if (availableLocales.length <= 1) {
       return { tone: 'unavailable', label: 'EN only' };
     }
-    if (overlayLocales.length <= 1) {
+    if (materializedOverlayLocales.length === 0) {
       return { tone: 'pending', label: 'Configured' };
     }
     return { tone: 'ready', label: 'Ready' };
@@ -177,7 +181,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     isSyncQueued,
     isSyncTranslating,
     minibobTranslationsLocked,
-    overlayLocales.length,
+    materializedOverlayLocales.length,
     workspaceError,
   ]);
 

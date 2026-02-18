@@ -27,25 +27,38 @@ function safeJsonParse(text: string): unknown | null {
 
 function normalizeTokyoUploadUrl(
   tokyoBase: string,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
+  expectedAccountId: string,
 ): string | null {
   const base = tokyoBase.replace(/\/+$/, '');
   const direct = typeof payload.url === 'string' ? payload.url.trim() : '';
   if (!direct) return null;
 
+  const parseCanonicalPath = (pathname: string): string | null => {
+    const match = String(pathname || '').match(/^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/);
+    if (!match) return null;
+    const accountId = decodeURIComponent(match[1] || '').trim();
+    const assetId = decodeURIComponent(match[2] || '').trim();
+    if (!isUuid(accountId) || !isUuid(assetId)) return null;
+    if (expectedAccountId && accountId !== expectedAccountId) return null;
+    return pathname;
+  };
+
   if (/^https?:\/\//i.test(direct)) {
     try {
       const parsed = new URL(direct);
-      if (!parsed.pathname.startsWith('/arsenale/o/')) return null;
-      return `${base}${parsed.pathname}`;
+      const canonicalPath = parseCanonicalPath(parsed.pathname);
+      if (!canonicalPath) return null;
+      return `${base}${canonicalPath}`;
     } catch {
       return null;
     }
   }
 
   if (!direct.startsWith('/')) return null;
-  if (!direct.startsWith('/arsenale/o/')) return null;
-  return `${base}${direct}`;
+  const canonicalPath = parseCanonicalPath(direct);
+  if (!canonicalPath) return null;
+  return `${base}${canonicalPath}`;
 }
 
 function isPublicId(value: string): boolean {
@@ -193,7 +206,7 @@ export async function POST(request: NextRequest) {
       ), session.setCookies);
     }
 
-    const normalizedUrl = normalizeTokyoUploadUrl(tokyoBase, payload as Record<string, unknown>);
+    const normalizedUrl = normalizeTokyoUploadUrl(tokyoBase, payload as Record<string, unknown>, accountId);
     if (!normalizedUrl) {
       return withCorsAndSession(request, NextResponse.json(
         {
