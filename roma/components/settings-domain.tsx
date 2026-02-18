@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatNumber } from '../lib/format';
-import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountSummaryResponse = {
@@ -37,6 +36,12 @@ type AccountWorkspacesResponse = {
   }>;
 };
 
+type SettingsContextPayload = {
+  accountSummary: AccountSummaryResponse;
+  workspaceSummary: WorkspaceSummaryResponse;
+  accountWorkspaces: AccountWorkspacesResponse['workspaces'];
+};
+
 function formatTimestamp(value: string | null | undefined): string {
   if (!value) return 'n/a';
   const date = new Date(value);
@@ -55,7 +60,6 @@ export function SettingsDomain() {
   const workspaceId = context.workspaceId.trim();
   const [switchingWorkspaceId, setSwitchingWorkspaceId] = useState<string | null>(null);
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [accountSummary, setAccountSummary] = useState<AccountSummaryResponse | null>(null);
   const [workspaceSummary, setWorkspaceSummary] = useState<WorkspaceSummaryResponse | null>(null);
@@ -66,41 +70,37 @@ export function SettingsDomain() {
   );
 
   useEffect(() => {
-    if (!accountId || !workspaceId) return;
-    let cancelled = false;
-    const run = async () => {
-      setLoading(true);
+    if (!accountId || !workspaceId) {
+      setAccountSummary(null);
+      setWorkspaceSummary(null);
+      setAccountWorkspaces([]);
       setError(null);
-      try {
-        const [accountPayload, workspacePayload, workspacesPayload] = await Promise.all([
-          fetchParisJson<AccountSummaryResponse>(`/api/paris/accounts/${encodeURIComponent(accountId)}`),
-          fetchParisJson<WorkspaceSummaryResponse>(`/api/paris/workspaces/${encodeURIComponent(workspaceId)}`),
-          fetchParisJson<AccountWorkspacesResponse>(`/api/paris/accounts/${encodeURIComponent(accountId)}/workspaces`),
-        ]);
-        if (cancelled) return;
-        setAccountSummary(accountPayload);
-        setWorkspaceSummary(workspacePayload);
-        setAccountWorkspaces(
-          Array.isArray(workspacesPayload.workspaces)
-            ? workspacesPayload.workspaces.slice().sort((a, b) => a.name.localeCompare(b.name))
-            : [],
-        );
-      } catch (err) {
-        if (cancelled) return;
-        const message = err instanceof Error ? err.message : String(err);
-        setError(message);
-        setAccountSummary(null);
-        setWorkspaceSummary(null);
-        setAccountWorkspaces([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      return;
+    }
+    const snapshot = me.data?.domains?.settings ?? null;
+    if (
+      !snapshot ||
+      snapshot.accountSummary.accountId !== accountId ||
+      snapshot.workspaceSummary.workspaceId !== workspaceId ||
+      snapshot.workspaceSummary.accountId !== accountId ||
+      !Array.isArray(snapshot.accountWorkspaces)
+    ) {
+      setAccountSummary(null);
+      setWorkspaceSummary(null);
+      setAccountWorkspaces([]);
+      setError('Bootstrap settings snapshot unavailable.');
+      return;
+    }
+    const payload: SettingsContextPayload = {
+      accountSummary: snapshot.accountSummary,
+      workspaceSummary: snapshot.workspaceSummary,
+      accountWorkspaces: snapshot.accountWorkspaces,
     };
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, [accountId, workspaceId]);
+    setAccountSummary(payload.accountSummary);
+    setWorkspaceSummary(payload.workspaceSummary);
+    setAccountWorkspaces(payload.accountWorkspaces.slice().sort((a, b) => a.name.localeCompare(b.name)));
+    setError(null);
+  }, [accountId, workspaceId, me.data?.domains?.settings]);
 
   const handleSelectWorkspace = useCallback(
     async (nextWorkspaceId: string) => {
@@ -179,7 +179,6 @@ export function SettingsDomain() {
 
       <p>User: {me.data.user.email ?? me.data.user.id}</p>
 
-      {loading ? <p>Loading account settings...</p> : null}
       {error ? <p>Failed to load settings context: {error}</p> : null}
 
       {accountSummary ? (
@@ -268,7 +267,7 @@ export function SettingsDomain() {
         </table>
       ) : null}
 
-      {!loading && !error && accountSummary && accountWorkspaces.length === 0 ? (
+      {!error && accountSummary && accountWorkspaces.length === 0 ? (
         <p>No workspaces found for this account.</p>
       ) : null}
 

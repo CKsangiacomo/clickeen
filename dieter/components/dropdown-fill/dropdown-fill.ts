@@ -1,4 +1,5 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
+import { uploadEditorAsset } from '../shared/assetUpload';
 
 type FillMode = 'color' | 'gradient' | 'image' | 'video';
 type GradientStop = { color: string; position: number };
@@ -859,13 +860,21 @@ function installImageHandlers(state: DropdownFillState) {
       const file = fileInput.files && fileInput.files[0];
       if (!file) return;
       state.imageName = file.name || null;
-
-      if (state.imageObjectUrl) URL.revokeObjectURL(state.imageObjectUrl);
-      const objectUrl = URL.createObjectURL(file);
-      state.imageObjectUrl = objectUrl;
-      // Locked editor contract: keep uploads in-memory until publish.
-      // We commit the object URL into the field so stage/pod preview updates immediately.
-      setImageSrc(state, objectUrl, { commit: true });
+      setFillUploadingState(state, true);
+      updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
+      try {
+        const uploadedUrl = await uploadEditorAsset({
+          file,
+          variant: 'original',
+          source: 'api',
+        });
+        setImageSrc(state, uploadedUrl, { commit: true });
+      } catch {
+        updateHeader(state, { text: 'Upload failed', muted: true, chipColor: null, noneChip: true });
+      } finally {
+        setFillUploadingState(state, false);
+        fileInput.value = '';
+      }
     });
   }
 }
@@ -901,12 +910,33 @@ function installVideoHandlers(state: DropdownFillState) {
       const file = videoFileInput.files && videoFileInput.files[0];
       if (!file) return;
       state.videoName = file.name || null;
-      if (state.videoObjectUrl) URL.revokeObjectURL(state.videoObjectUrl);
-      const objectUrl = URL.createObjectURL(file);
-      state.videoObjectUrl = objectUrl;
-      setVideoSrc(state, objectUrl, { commit: true });
+      setFillUploadingState(state, true);
+      updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
+      try {
+        const uploadedUrl = await uploadEditorAsset({
+          file,
+          variant: 'original',
+          source: 'api',
+        });
+        setVideoSrc(state, uploadedUrl, { commit: true });
+      } catch {
+        updateHeader(state, { text: 'Upload failed', muted: true, chipColor: null, noneChip: true });
+      } finally {
+        setFillUploadingState(state, false);
+        videoFileInput.value = '';
+      }
     });
   }
+}
+
+function setFillUploadingState(state: DropdownFillState, uploading: boolean) {
+  state.root.dataset.uploading = uploading ? 'true' : 'false';
+  if (state.uploadButton) state.uploadButton.disabled = uploading;
+  if (state.replaceButton) state.replaceButton.disabled = uploading;
+  if (state.removeButton) state.removeButton.disabled = uploading;
+  if (state.videoUploadButton) state.videoUploadButton.disabled = uploading;
+  if (state.videoReplaceButton) state.videoReplaceButton.disabled = uploading;
+  if (state.videoRemoveButton) state.videoRemoveButton.disabled = uploading;
 }
 
 function setInputValue(state: DropdownFillState, value: FillValue, emit: boolean) {
@@ -1160,7 +1190,8 @@ function normalizeImageValue(raw: unknown): ImageValue {
     return { src: '', fit: 'cover', position: 'center', repeat: 'no-repeat', fallback: '' };
   }
   const value = raw as Record<string, unknown>;
-  const src = typeof value.src === 'string' ? value.src.trim() : '';
+  const srcRaw = typeof value.src === 'string' ? value.src.trim() : '';
+  const src = isPersistedAssetUrl(srcRaw) ? srcRaw : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
   const repeat = typeof value.repeat === 'string' && value.repeat.trim() ? value.repeat.trim() : 'no-repeat';
@@ -1173,8 +1204,10 @@ function normalizeVideoValue(raw: unknown): VideoValue {
     return { src: '', poster: '', fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true, fallback: '' };
   }
   const value = raw as Record<string, unknown>;
-  const src = typeof value.src === 'string' ? value.src.trim() : '';
-  const poster = typeof value.poster === 'string' ? value.poster.trim() : '';
+  const srcRaw = typeof value.src === 'string' ? value.src.trim() : '';
+  const posterRaw = typeof value.poster === 'string' ? value.poster.trim() : '';
+  const src = isPersistedAssetUrl(srcRaw) ? srcRaw : '';
+  const poster = isPersistedAssetUrl(posterRaw) ? posterRaw : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
   const loop = typeof value.loop === 'boolean' ? value.loop : true;
@@ -1233,13 +1266,19 @@ function coerceFillValue(raw: Record<string, unknown>): FillValue | null {
   return { type: 'none' };
 }
 
-function parseLegacyFill(value: string, root: HTMLElement): FillValue | null {
+function isPersistedAssetUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value) || value.startsWith('/');
+}
+
+function parseFillString(value: string, root: HTMLElement): FillValue | null {
   if (!value) return { type: 'none' };
   const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
   if (urlMatch && urlMatch[2]) {
-    return { type: 'image', image: { src: urlMatch[2], fit: 'cover', position: 'center', repeat: 'no-repeat', fallback: '' } };
+    const src = urlMatch[2].trim();
+    if (!isPersistedAssetUrl(src)) return null;
+    return { type: 'image', image: { src, fit: 'cover', position: 'center', repeat: 'no-repeat', fallback: '' } };
   }
-  if (/^(?:https?:|data:|blob:)/i.test(value)) {
+  if (isPersistedAssetUrl(value)) {
     return { type: 'image', image: { src: value, fit: 'cover', position: 'center', repeat: 'no-repeat', fallback: '' } };
   }
   if (/-gradient\(/i.test(value)) {
@@ -1256,15 +1295,15 @@ function parseFillValue(raw: string, root: HTMLElement): FillValue | null {
   if (value.startsWith('{') || value.startsWith('[') || value.startsWith('"')) {
     try {
       const parsed = JSON.parse(value) as Record<string, unknown>;
-      if (typeof parsed === 'string') return parseLegacyFill(parsed, root);
+      if (typeof parsed === 'string') return parseFillString(parsed, root);
       if (parsed == null) return { type: 'none' };
       if (typeof parsed !== 'object' || Array.isArray(parsed)) return null;
       return coerceFillValue(parsed as Record<string, unknown>);
     } catch {
-      return parseLegacyFill(value, root);
+      return parseFillString(value, root);
     }
   }
-  return parseLegacyFill(value, root);
+  return parseFillString(value, root);
 }
 
 function resolveModeFromFill(state: DropdownFillState, fill: FillValue): FillMode {
@@ -1589,7 +1628,6 @@ function extractFileName(value: string): string | null {
   if (!raw) return null;
   const urlMatch = raw.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
   const source = urlMatch && urlMatch[2] ? urlMatch[2] : raw;
-  if (/^(?:data:|blob:)/i.test(source)) return null;
   const trimmed = source.split('#')[0]?.split('?')[0] ?? '';
   if (!trimmed) return null;
   const parts = trimmed.split('/').filter(Boolean);

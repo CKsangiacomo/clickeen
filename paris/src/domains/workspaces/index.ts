@@ -27,10 +27,7 @@ import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { loadWidgetLocalizationAllowlist } from '../../shared/l10n';
 import { consumeBudget } from '../../shared/budgets';
 import { authorizeWorkspace } from '../../shared/workspace-auth';
-import {
-  AssetUsageValidationError,
-  syncAccountAssetUsageForInstance,
-} from '../../shared/assetUsage';
+import { syncAccountAssetUsageForInstance } from '../../shared/assetUsage';
 import {
   allowCuratedWrites,
   assertPublicId,
@@ -58,6 +55,17 @@ import {
   resolveActivePublishLocales,
   type RenderIndexEntry,
 } from './service';
+import { loadInstanceOverlays } from '../l10n/service';
+
+type WorkspaceLocaleOverlayPayload = {
+  locale: string;
+  source: string | null;
+  baseFingerprint: string | null;
+  baseUpdatedAt: string | null;
+  hasUserOps: boolean;
+  baseOps: Array<{ op: 'set'; path: string; value: string }>;
+  userOps: Array<{ op: 'set'; path: string; value: string }>;
+};
 
 function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
@@ -65,6 +73,24 @@ function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
 }
 
 const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
+
+async function syncAccountAssetUsageForInstanceBestEffort(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  config: unknown;
+}): Promise<void> {
+  try {
+    await syncAccountAssetUsageForInstance(args);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error('[ParisWorker] non-blocking account asset usage sync failed', {
+      publicId: args.publicId,
+      accountId: args.accountId,
+      detail,
+    });
+  }
+}
 
 function formatCuratedDisplayName(meta: Record<string, unknown> | null, fallback: string): string {
   if (!meta) return fallback;
@@ -98,6 +124,22 @@ function resolveCuratedMetaUpdate(args: {
   }
   if (incomingMeta === null && Object.keys(nextMeta).length === 0) return null;
   return nextMeta;
+}
+
+function normalizeLocalizationOpsForPayload(raw: unknown): Array<{ op: 'set'; path: string; value: string }> {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
+      const op = (entry as { op?: unknown }).op;
+      const path = (entry as { path?: unknown }).path;
+      const value = (entry as { value?: unknown }).value;
+      if (op !== 'set') return null;
+      if (typeof path !== 'string' || !path.trim()) return null;
+      if (typeof value !== 'string') return null;
+      return { op: 'set' as const, path: path.trim(), value };
+    })
+    .filter((entry): entry is { op: 'set'; path: string; value: string } => Boolean(entry));
 }
 
 export async function handleWorkspaceInstanceRenderSnapshot(
@@ -248,6 +290,41 @@ export async function handleWorkspaceGetInstance(
   const baseFingerprint = await computeBaseFingerprint(instance.config);
   const enforcementRow = await loadEnforcement(env, publicId);
   const enforcement = normalizeActiveEnforcement(enforcementRow);
+  const { locales: workspaceLocales, invalidWorkspaceLocales } = resolveActivePublishLocales(
+    workspace.l10n_locales,
+    policyResult.policy,
+  );
+
+  let localeOverlays: WorkspaceLocaleOverlayPayload[] = [];
+  try {
+    const overlayRows = await loadInstanceOverlays(env, publicId);
+    localeOverlays = overlayRows
+      .filter((row) => row.layer === 'locale')
+      .map((row) => {
+        const locale = typeof row.layer_key === 'string' ? row.layer_key.trim().toLowerCase() : '';
+        const userOps = normalizeLocalizationOpsForPayload(row.user_ops);
+        return {
+          locale,
+          source: typeof row.source === 'string' ? row.source : null,
+          baseFingerprint: typeof row.base_fingerprint === 'string' ? row.base_fingerprint : null,
+          baseUpdatedAt: typeof row.base_updated_at === 'string' ? row.base_updated_at : null,
+          hasUserOps: userOps.length > 0,
+          baseOps: normalizeLocalizationOpsForPayload(row.ops),
+          userOps,
+        };
+      })
+      .filter((entry) => Boolean(entry.locale));
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.db.readFailed',
+        detail,
+      },
+      500,
+    );
+  }
 
   return json({
     publicId: instance.public_id,
@@ -266,6 +343,11 @@ export async function handleWorkspaceGetInstance(
       accountId: workspace.account_id,
       tier: workspace.tier,
       websiteUrl: workspace.website_url,
+    },
+    localization: {
+      workspaceLocales,
+      invalidWorkspaceLocales,
+      localeOverlays,
     },
   });
 }
@@ -789,34 +871,12 @@ export async function handleWorkspaceUpdateInstance(
 
   if (updatedInstance) {
     if (config !== undefined) {
-      try {
-        await syncAccountAssetUsageForInstance({
-          env,
-          accountId: workspace.account_id,
-          publicId,
-          config,
-        });
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        if (error instanceof AssetUsageValidationError) {
-          return ckError(
-            {
-              kind: 'VALIDATION',
-              reasonKey: 'coreui.errors.payload.invalid',
-              detail,
-            },
-            422,
-          );
-        }
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail,
-          },
-          500,
-        );
-      }
+      await syncAccountAssetUsageForInstanceBestEffort({
+        env,
+        accountId: workspace.account_id,
+        publicId,
+        config,
+      });
     }
 
     const shouldTrigger =
@@ -1246,34 +1306,12 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
   }
 
   if (createdInstance) {
-    try {
-      await syncAccountAssetUsageForInstance({
-        env,
-        accountId: workspace.account_id,
-        publicId,
-        config: createdInstance.config,
-      });
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      if (error instanceof AssetUsageValidationError) {
-        return ckError(
-          {
-            kind: 'VALIDATION',
-            reasonKey: 'coreui.errors.payload.invalid',
-            detail,
-          },
-          422,
-        );
-      }
-      return ckError(
-        {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.db.writeFailed',
-          detail,
-        },
-        500,
-      );
-    }
+    await syncAccountAssetUsageForInstanceBestEffort({
+      env,
+      accountId: workspace.account_id,
+      publicId,
+      config: createdInstance.config,
+    });
 
     const createdKind = resolveInstanceKind(createdInstance);
     if (createdKind === 'curated' && createdInstance.status === 'published') {
@@ -1576,34 +1614,12 @@ export async function handleWorkspaceEnsureWebsiteCreative(
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.notFound' }, 500);
   }
 
-  try {
-    await syncAccountAssetUsageForInstance({
-      env,
-      accountId: workspace.account_id,
-      publicId,
-      config: existing.config,
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    if (error instanceof AssetUsageValidationError) {
-      return ckError(
-        {
-          kind: 'VALIDATION',
-          reasonKey: 'coreui.errors.payload.invalid',
-          detail,
-        },
-        422,
-      );
-    }
-    return ckError(
-      {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.db.writeFailed',
-        detail,
-      },
-      500,
-    );
-  }
+  await syncAccountAssetUsageForInstanceBestEffort({
+    env,
+    accountId: workspace.account_id,
+    publicId,
+    config: existing.config,
+  });
 
   return json({ creativeKey, publicId }, { status: 200 });
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type WorkspaceMembersResponse = {
@@ -19,36 +18,24 @@ export function TeamDomain() {
   const me = useRomaMe();
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const workspaceId = context.workspaceId;
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [members, setMembers] = useState<WorkspaceMembersResponse | null>(null);
 
   useEffect(() => {
-    if (!workspaceId) return;
-    let cancelled = false;
-    const run = async () => {
-      setLoading(true);
+    if (!workspaceId) {
+      setMembers(null);
       setError(null);
-      try {
-        const payload = await fetchParisJson<WorkspaceMembersResponse>(
-          `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/members`,
-        );
-        if (cancelled) return;
-        setMembers(payload);
-      } catch (err) {
-        if (cancelled) return;
-        const message = err instanceof Error ? err.message : String(err);
-        setError(message);
-        setMembers(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, [workspaceId]);
+      return;
+    }
+    const snapshot = me.data?.domains?.team ?? null;
+    if (!snapshot || snapshot.workspaceId !== workspaceId || !Array.isArray(snapshot.members)) {
+      setMembers(null);
+      setError('Bootstrap team snapshot unavailable.');
+      return;
+    }
+    setMembers(snapshot);
+    setError(null);
+  }, [workspaceId, me.data?.domains?.team]);
 
   if (me.loading) return <section className="roma-module-surface">Loading team context...</section>;
   if (me.error || !me.data) {
@@ -65,7 +52,6 @@ export function TeamDomain() {
         {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
       </p>
 
-      {loading ? <p>Loading workspace members...</p> : null}
       {error ? <p>Failed to load workspace members: {error}</p> : null}
 
       {members ? (
@@ -85,7 +71,7 @@ export function TeamDomain() {
                 <td>{member.createdAt ?? 'unknown'}</td>
               </tr>
             ))}
-            {!loading && members.members.length === 0 ? (
+            {members.members.length === 0 ? (
               <tr>
                 <td colSpan={3}>No members found for this workspace.</td>
               </tr>

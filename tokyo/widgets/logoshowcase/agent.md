@@ -119,7 +119,7 @@ Stage/Pod (layout spacing lives here; no widget-level width/padding):
 - Header richtext is sanitized by `tokyo/widgets/shared/header.js`:
   - `header.title`: allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `br` (no links).
   - `header.subtitleHtml`: allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `a`, `br` (links require `http(s)://`).
-- `logoFill` accepts `blob:`, `data:`, or `http(s)` URLs. Runtime extracts the primary URL and applies it as `background-image` on `[data-role="logo-visual"]`.
+- `logoFill` accepts canonical asset URLs (`http(s)` or root-relative). Runtime extracts the primary URL and applies it as `background-image` on `[data-role="logo-visual"]`.
 - Links: `href` is normalized; only valid `http(s)://` makes a logo/CTA clickable (else it renders inert).
 
 ## Branding (global)

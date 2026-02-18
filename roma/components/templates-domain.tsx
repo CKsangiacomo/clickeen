@@ -3,14 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
-import { prefetchWorkspaceInstance } from './workspace-instance-cache';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 import {
   buildBuilderRoute,
   DEFAULT_INSTANCE_DISPLAY_NAME,
 } from './use-roma-widgets';
-import { useRomaTemplates, type TemplateInstance } from './use-roma-templates';
+import { normalizeRomaTemplatesSnapshot, type TemplateInstance } from './use-roma-templates';
 
 export function TemplatesDomain() {
   const router = useRouter();
@@ -18,12 +17,32 @@ export function TemplatesDomain() {
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [templateInstances, setTemplateInstances] = useState<TemplateInstance[]>([]);
+  const [accountIdFromSnapshot, setAccountIdFromSnapshot] = useState('');
+  const [dataError, setDataError] = useState<string | null>(null);
 
   const workspaceId = context.workspaceId;
   const accountId = context.accountId;
+  const activeAccountId = accountId || accountIdFromSnapshot;
 
-  const { templateInstances, accountIdFromApi, loading, dataError, loadTemplatesData } = useRomaTemplates(workspaceId);
-  const activeAccountId = accountId || accountIdFromApi;
+  useEffect(() => {
+    if (!workspaceId) {
+      setTemplateInstances([]);
+      setAccountIdFromSnapshot('');
+      setDataError(null);
+      return;
+    }
+    const snapshot = normalizeRomaTemplatesSnapshot(me.data?.domains?.templates ?? null);
+    if (!snapshot || snapshot.workspaceId !== workspaceId) {
+      setTemplateInstances([]);
+      setAccountIdFromSnapshot('');
+      setDataError('Bootstrap templates snapshot unavailable.');
+      return;
+    }
+    setTemplateInstances(snapshot.instances);
+    setAccountIdFromSnapshot(snapshot.accountId);
+    setDataError(null);
+  }, [workspaceId, me.data?.domains?.templates]);
 
   const groupedTemplates = useMemo(() => {
     const groups = new Map<string, TemplateInstance[]>();
@@ -47,13 +66,6 @@ export function TemplatesDomain() {
       void prefetchCompiledWidget(widgetType);
     });
   }, [groupedTemplates]);
-
-  useEffect(() => {
-    if (!workspaceId) return;
-    templateInstances.slice(0, 6).forEach((instance) => {
-      void prefetchWorkspaceInstance(workspaceId, instance.publicId);
-    });
-  }, [templateInstances, workspaceId]);
 
   const handleUseTemplate = useCallback(
     async (instance: TemplateInstance) => {
@@ -79,7 +91,6 @@ export function TemplatesDomain() {
           throw new Error('Duplicate response missing publicId.');
         }
 
-        await loadTemplatesData(true);
         router.push(
           buildBuilderRoute({
             publicId: createdPublicId,
@@ -95,7 +106,7 @@ export function TemplatesDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [activeAccountId, loadTemplatesData, router, workspaceId],
+    [activeAccountId, router, workspaceId],
   );
 
   if (me.loading) return <section className="roma-module-surface">Loading workspace context...</section>;
@@ -114,11 +125,10 @@ export function TemplatesDomain() {
       </p>
       <p>Showing all curated templates available.</p>
 
-      {loading ? <p>Loading templates...</p> : null}
       {dataError ? <p>Failed to load templates: {dataError}</p> : null}
       {actionError ? <p>Failed to use template: {actionError}</p> : null}
 
-      {!loading && groupedTemplates.length === 0 ? <p>No curated templates available yet.</p> : null}
+      {groupedTemplates.length === 0 ? <p>No curated templates available yet.</p> : null}
 
       <div className="roma-grid">
         {groupedTemplates.map((group) => (

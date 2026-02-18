@@ -55,6 +55,7 @@ type BobOpenEditorMessage = {
   widgetname: string;
   compiled: unknown;
   instanceData: Record<string, unknown>;
+  localization?: unknown;
   policy?: unknown;
   enforcement?: unknown;
 };
@@ -155,9 +156,8 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
     url.searchParams.set('boot', 'message');
     url.searchParams.set('workspaceId', workspaceId);
     url.searchParams.set('subject', 'workspace');
-    if (accountId) url.searchParams.set('accountId', accountId);
     return url.toString();
-  }, [accountId, bobBaseUrl, workspaceId]);
+  }, [bobBaseUrl, workspaceId]);
 
   useEffect(() => {
     if (!workspaceId || !activePublicId) return;
@@ -354,6 +354,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
         widgetname: widgetType,
         compiled,
         instanceData: config,
+        localization: instance.localization,
         policy: instance.policy,
         enforcement: instance.enforcement,
       };

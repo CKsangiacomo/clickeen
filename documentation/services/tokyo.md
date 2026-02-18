@@ -69,10 +69,8 @@ Rules:
 
 Local dev:
 - `tokyo/dev-server.mjs` serves `/i18n/*` from `tokyo/i18n/*`.
-- `tokyo/dev-server.mjs` serves canonical account assets from `tokyo/arsenale/o/*` (gitignored) when `TOKYO_ASSET_BACKEND=mirror` (default local mode).
-- If a canonical asset is missing locally, mirror mode falls back to `tokyo-worker` read and writes the fetched bytes into `tokyo/arsenale/o/*` (read-through mirror).
-- `tokyo/dev-server.mjs` mirrors successful `POST /assets/upload` writes to `tokyo/arsenale/o/*` while still proxying the upload to `tokyo-worker` for metadata/budget enforcement.
-- `tokyo/dev-server.mjs` can be switched to pure worker mode (`TOKYO_ASSET_BACKEND=worker`) to proxy `/arsenale/o/*` reads directly to `tokyo-worker`.
+- `tokyo/dev-server.mjs` proxies canonical account asset reads (`/arsenale/o/*`) directly to `tokyo-worker` (no local mirror mode).
+- `tokyo/dev-server.mjs` proxies `POST /assets/upload` directly to `tokyo-worker` (same authority path as cloud-dev/prod).
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` (so Venice can fetch published render snapshots from the same Tokyo origin).
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
@@ -109,7 +107,7 @@ Build command (repo root):
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
-  - `POST /assets/upload` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; required header: `x-account-id`; optional trace headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`)
+  - `POST /assets/upload` (requires `Authorization: Bearer <token>`; accepts Supabase session bearer for product uploads, or `TOKYO_DEV_JWT` for internal/dev automation. Required headers: `x-account-id`, `x-workspace-id`; optional trace headers: `x-public-id`, `x-widget-type`, `x-source`)
   - `POST /assets/purge-deleted` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; retention purge for soft-deleted account assets)
   - `GET /arsenale/o/**` (public, cacheable; canonical account-owned asset reads)
   - `POST /l10n/instances/:publicId/:layer/:layerKey` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
@@ -118,7 +116,7 @@ Cloud-dev:
   - `/l10n/publish` (internal) materializes Supabase overlays into R2
 
 Security rule (executed):
-- `TOKYO_DEV_JWT` must never be used from a browser. DevStudio promotion uses it server-side (local Vite middleware).
+- `TOKYO_DEV_JWT` must never be used from a browser. Browser upload flows go through Bob server routes using Supabase session auth.
 
 Asset-domain note:
 - Tokyo upload metadata is ownership/file-centric (`account_assets`, `account_asset_variants`).

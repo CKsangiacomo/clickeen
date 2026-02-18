@@ -93,6 +93,123 @@ var Dieter = (() => {
     };
   }
 
+  // components/shared/assetUpload.ts
+  function isUuid(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+  }
+  function isPublicId(value) {
+    if (!value) return false;
+    if (/^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(value)) return true;
+    if (/^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/i.test(value)) return true;
+    return /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(value);
+  }
+  function isWidgetType(value) {
+    return /^[a-z0-9][a-z0-9_-]*$/i.test(value);
+  }
+  function readDatasetValue(name) {
+    if (typeof document === "undefined") return "";
+    const value = document.documentElement.dataset?.[name];
+    return typeof value === "string" ? value.trim() : "";
+  }
+  function resolveContextFromDocument() {
+    const accountId = readDatasetValue("ckOwnerAccountId");
+    const workspaceId = readDatasetValue("ckWorkspaceId");
+    const publicId = readDatasetValue("ckPublicId");
+    const widgetType = readDatasetValue("ckWidgetType");
+    if (!accountId || !isUuid(accountId)) return null;
+    if (!workspaceId || !isUuid(workspaceId)) return null;
+    const context = {
+      accountId,
+      workspaceId
+    };
+    if (publicId && isPublicId(publicId)) context.publicId = publicId;
+    if (widgetType && isWidgetType(widgetType)) context.widgetType = widgetType.toLowerCase();
+    return context;
+  }
+  function safeJsonParse(text) {
+    if (!text || typeof text !== "string") return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
+  }
+  function normalizeUploadUrl(payload) {
+    const direct = typeof payload.url === "string" ? payload.url.trim() : "";
+    if (!direct) return null;
+    if (/^https?:\/\//i.test(direct)) {
+      try {
+        const parsed = new URL(direct);
+        if (!parsed.pathname.startsWith("/arsenale/o/")) return null;
+        return direct;
+      } catch {
+        return null;
+      }
+    }
+    if (!direct.startsWith("/")) return null;
+    if (!direct.startsWith("/arsenale/o/")) return null;
+    return direct;
+  }
+  function assertUploadContext(context) {
+    const accountId = String(context.accountId || "").trim();
+    const workspaceId = String(context.workspaceId || "").trim();
+    const publicId = String(context.publicId || "").trim();
+    const widgetType = String(context.widgetType || "").trim().toLowerCase();
+    if (!isUuid(accountId)) {
+      throw new Error("coreui.errors.accountId.invalid");
+    }
+    if (!isUuid(workspaceId)) {
+      throw new Error("coreui.errors.workspaceId.invalid");
+    }
+    if (publicId && !isPublicId(publicId)) {
+      throw new Error("coreui.errors.publicId.invalid");
+    }
+    if (widgetType && !isWidgetType(widgetType)) {
+      throw new Error("coreui.errors.widgetType.invalid");
+    }
+    return { accountId, workspaceId, publicId: publicId || void 0, widgetType: widgetType || void 0 };
+  }
+  async function uploadEditorAsset(args) {
+    const file = args.file;
+    if (!(file instanceof File) || file.size <= 0) {
+      throw new Error("coreui.errors.payload.empty");
+    }
+    const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? {});
+    const source = args.source || "api";
+    const variant = args.variant || "original";
+    const endpoint = (args.endpoint || "/api/assets/upload").trim();
+    const headers = new Headers();
+    headers.set("content-type", file.type || "application/octet-stream");
+    headers.set("x-account-id", context.accountId);
+    headers.set("x-workspace-id", context.workspaceId);
+    headers.set("x-filename", file.name || "upload.bin");
+    headers.set("x-variant", variant);
+    headers.set("x-source", source);
+    if (context.publicId) headers.set("x-public-id", context.publicId);
+    if (context.widgetType) headers.set("x-widget-type", context.widgetType);
+    const response = await fetch(`${endpoint.replace(/\/$/, "")}?_t=${Date.now()}`, {
+      method: "POST",
+      headers,
+      body: file
+    });
+    const text = await response.text().catch(() => "");
+    const payload = safeJsonParse(text);
+    if (!response.ok) {
+      const errorRecord = payload && typeof payload === "object" && !Array.isArray(payload) ? payload.error : void 0;
+      const reasonKey = typeof errorRecord?.reasonKey === "string" ? errorRecord.reasonKey : "";
+      const detail = typeof errorRecord?.detail === "string" ? errorRecord.detail : "";
+      throw new Error(reasonKey || detail || `coreui.errors.assets.uploadFailed (${response.status})`);
+    }
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      throw new Error("coreui.errors.assets.uploadFailed");
+    }
+    const url = normalizeUploadUrl(payload);
+    if (!url) {
+      throw new Error("coreui.errors.assets.uploadFailed");
+    }
+    return url;
+  }
+
   // components/dropdown-upload/dropdown-upload.ts
   var states = /* @__PURE__ */ new Map();
   var ASSET_UNAVAILABLE_MESSAGE = "Asset URL is unavailable. Replace file to restore preview.";
@@ -195,7 +312,7 @@ var Dieter = (() => {
     const handlePreviewMediaError = (kind, currentSrc) => {
       const raw = state.input.value || "";
       const expected = extractPrimaryUrl(raw) || "";
-      if (!expected || /^data:/i.test(expected) || /^blob:/i.test(expected)) return;
+      if (!expected) return;
       if (state.previewPanel.dataset.kind !== kind) return;
       if (!sameAssetUrl(currentSrc, expected)) return;
       const fallbackLabel = state.previewName.textContent?.trim() || "Asset unavailable";
@@ -248,22 +365,40 @@ var Dieter = (() => {
         return;
       }
       clearError(state);
-      if (state.localObjectUrl) URL.revokeObjectURL(state.localObjectUrl);
-      const objectUrl = URL.createObjectURL(file);
-      state.localObjectUrl = objectUrl;
-      const { kind, ext } = classifyByNameAndType(file.name, file.type);
-      state.root.dataset.localName = file.name;
-      setMetaValue(state, { name: file.name, mime: file.type || "", source: "user" }, true);
-      setHeaderWithFile(state, file.name, false);
-      setPreview(state, {
-        kind,
-        previewUrl: kind === "image" || kind === "video" ? objectUrl : void 0,
-        name: file.name,
-        ext,
-        hasFile: true
-      });
-      setFileKey(state, objectUrl, true);
+      try {
+        setUploadingState(state, true);
+        const uploadedUrl = await uploadEditorAsset({
+          file,
+          variant: "original",
+          source: "api"
+        });
+        const { kind, ext } = classifyByNameAndType(file.name, file.type);
+        state.root.dataset.localName = file.name;
+        setMetaValue(state, { name: file.name, mime: file.type || "", source: "user" }, true);
+        setHeaderWithFile(state, file.name, false);
+        setPreview(state, {
+          kind,
+          previewUrl: kind === "image" || kind === "video" ? uploadedUrl : void 0,
+          name: file.name,
+          ext,
+          hasFile: true
+        });
+        setFileKey(state, uploadedUrl, true);
+        clearError(state);
+      } catch (error2) {
+        const message = error2 instanceof Error ? error2.message : "coreui.errors.assets.uploadFailed";
+        setError(state, message);
+      } finally {
+        setUploadingState(state, false);
+        state.fileInput.value = "";
+      }
     });
+  }
+  function setUploadingState(state, uploading) {
+    state.root.dataset.uploading = uploading ? "true" : "false";
+    state.uploadButton.disabled = uploading;
+    state.replaceButton.disabled = uploading;
+    state.removeButton.disabled = uploading;
   }
   function validateFileSelection(state, file) {
     const { kind } = classifyByNameAndType(file.name, file.type);
@@ -312,18 +447,17 @@ var Dieter = (() => {
   function extractPrimaryUrl(raw) {
     const v = (raw || "").trim();
     if (!v) return null;
-    if (/^data:/i.test(v) || /^blob:/i.test(v) || /^https?:\/\//i.test(v)) return v;
+    if (/^https?:\/\//i.test(v) || v.startsWith("/")) return v;
     const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    if (m && m[2]) return m[2];
+    if (m && m[2]) {
+      const extracted = m[2].trim();
+      if (/^https?:\/\//i.test(extracted) || extracted.startsWith("/")) return extracted;
+    }
     return null;
-  }
-  function isDataUrl(raw) {
-    const url = extractPrimaryUrl(raw);
-    return Boolean(url && /^data:/i.test(url));
   }
   function looksLikeUrl(raw) {
     const url = extractPrimaryUrl(raw);
-    return Boolean(url && (/^https?:\/\//i.test(url) || /^blob:/i.test(url) || url.startsWith("/")));
+    return Boolean(url && (/^https?:\/\//i.test(url) || url.startsWith("/")));
   }
   function sameAssetUrl(leftRaw, rightRaw) {
     const left = normalizeUrlForCompare(leftRaw);
@@ -348,13 +482,6 @@ var Dieter = (() => {
     const kind = classifyByNameAndType(kindName || "file", mime).kind;
     setPreview(state, { kind, previewUrl: url, name, ext, hasFile: true });
   }
-  function previewFromDataUrl(state, raw, name, kindName, mimeOverride) {
-    const url = extractPrimaryUrl(raw) || "";
-    const mime = mimeOverride || (url.split(";")[0] || "").slice("data:".length);
-    const ext = (guessExtFromName(kindName) || "").toLowerCase();
-    const kind = classifyByNameAndType(kindName || "file", mime).kind;
-    setPreview(state, { kind, previewUrl: kind === "doc" ? void 0 : url, name, ext, hasFile: true });
-  }
   function syncFromValue(state, raw, meta = null) {
     let key = String(raw ?? "").trim();
     if (key === "transparent") key = "";
@@ -364,7 +491,7 @@ var Dieter = (() => {
     const expectsMeta = state.metaHasPath;
     const rawUrl = extractPrimaryUrl(key) || "";
     const kindName = metaName || guessNameFromUrl(rawUrl) || "";
-    const fallbackName = expectsMeta ? "" : isDataUrl(key) ? state.root.dataset.localName || "Uploaded file" : state.root.dataset.localName || guessNameFromUrl(rawUrl) || rawUrl || key || "Uploaded file";
+    const fallbackName = expectsMeta ? "" : state.root.dataset.localName || guessNameFromUrl(rawUrl) || rawUrl || key || "Uploaded file";
     const displayName = metaName || fallbackName || (expectsMeta ? "Unnamed file" : "Uploaded file");
     if (!key) {
       clearError(state);
@@ -381,11 +508,6 @@ var Dieter = (() => {
     } else {
       clearError(state);
     }
-    if (isDataUrl(key)) {
-      setHeaderWithFile(state, displayName, false);
-      previewFromDataUrl(state, key, displayName, kindName || displayName, metaMime);
-      return;
-    }
     if (looksLikeUrl(key)) {
       setHeaderWithFile(state, displayName, false);
       previewFromUrl(state, key, displayName, kindName || displayName, metaMime);
@@ -393,7 +515,7 @@ var Dieter = (() => {
     }
     setPreview(state, { kind: "unknown", previewUrl: void 0, name: "", ext: "", hasFile: true });
     setHeaderWithFile(state, "Invalid value", true);
-    setError(state, "Unsupported value. Expected a URL (http/https) or an editor-only data URL.");
+    setError(state, "Unsupported value. Expected an absolute URL (http/https) or root-relative path.");
   }
   function setFileKey(state, fileKey, emit) {
     state.internalWrite = true;
@@ -471,10 +593,11 @@ var Dieter = (() => {
     if (!parts.length) return "";
     const filename = parts[parts.length - 1];
     const stem = filename.replace(/\.[^.]+$/, "").toLowerCase();
-    if (stem === "original" || stem === "grayscale") {
-      const legacyAssetId = parts.length >= 2 ? parts[parts.length - 2] : "";
-      const nestedAssetId = parts.length >= 3 ? parts[parts.length - 3] : "";
-      const assetId = /^[a-f0-9-]{8,}$/i.test(nestedAssetId) ? nestedAssetId : /^[a-f0-9-]{8,}$/i.test(legacyAssetId) ? legacyAssetId : "";
+    const normalizedPath = cleaned.startsWith("/") ? cleaned : `/${cleaned}`;
+    if ((stem === "original" || stem === "grayscale") && /\/arsenale\/o\//i.test(normalizedPath)) {
+      const assetIdDirect = parts.length >= 2 ? parts[parts.length - 2] : "";
+      const assetIdWithVariant = parts.length >= 3 ? parts[parts.length - 3] : "";
+      const assetId = /^[a-f0-9-]{8,}$/i.test(assetIdWithVariant) ? assetIdWithVariant : /^[a-f0-9-]{8,}$/i.test(assetIdDirect) ? assetIdDirect : "";
       if (assetId) {
         const ext = guessExtFromName(filename);
         const shortId = assetId.replace(/-/g, "").slice(0, 8);

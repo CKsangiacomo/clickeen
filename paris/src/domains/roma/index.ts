@@ -78,6 +78,19 @@ type AccountAssetRow = {
   deleted_at?: string | null;
 };
 
+type AccountAssetListBootstrapRow = {
+  asset_id: string;
+  normalized_filename: string;
+  content_type: string;
+  size_bytes: number;
+  deleted_at?: string | null;
+  created_at: string;
+};
+
+type AccountAssetUsageCountRow = {
+  asset_id: string;
+};
+
 type WorkspaceWidgetInstanceRow = {
   public_id: string;
   display_name?: string | null;
@@ -117,10 +130,236 @@ type AccountEntitlementsSnapshot = {
   budgets: Record<string, { max: number | null; used: number }>;
 };
 
+type RomaBootstrapDomainsPayload = {
+  widgets: {
+    accountId: string;
+    workspaceId: string;
+    widgetTypes: string[];
+    instances: Array<{
+      publicId: string;
+      widgetType: string;
+      displayName: string;
+      workspaceId: string | null;
+      source: 'workspace' | 'curated';
+      actions: {
+        edit: boolean;
+        duplicate: boolean;
+        delete: boolean;
+      };
+    }>;
+  };
+  templates: {
+    accountId: string;
+    workspaceId: string;
+    widgetTypes: string[];
+    instances: Array<{
+      publicId: string;
+      widgetType: string;
+      displayName: string;
+    }>;
+  };
+  assets: {
+    accountId: string;
+    workspaceId: string | null;
+    assets: Array<{
+      assetId: string;
+      normalizedFilename: string;
+      contentType: string;
+      sizeBytes: number;
+      usageCount: number;
+      deletedAt: string | null;
+      createdAt: string;
+    }>;
+  };
+  team: {
+    workspaceId: string;
+    role: string;
+    members: Array<{
+      userId: string;
+      role: string;
+      createdAt: string | null;
+      updatedAt: string | null;
+    }>;
+  };
+  billing: {
+    accountId: string;
+    role: string;
+    provider: string;
+    status: string;
+    reasonKey: string;
+    plan: {
+      inferredTier: string;
+      workspaceCount: number;
+    };
+    checkoutAvailable: boolean;
+    portalAvailable: boolean;
+  };
+  usage: {
+    accountId: string;
+    role: string;
+    usage: {
+      workspaces: number;
+      instances: {
+        total: number;
+        published: number;
+        unpublished: number;
+      };
+      assets: {
+        total: number;
+        active: number;
+        bytesActive: number;
+      };
+    };
+  };
+  settings: {
+    accountSummary: {
+      accountId: string;
+      status: string;
+      isPlatform: boolean;
+      role: string;
+      workspaceCount: number;
+    };
+    workspaceSummary: {
+      workspaceId: string;
+      accountId: string;
+      tier: string;
+      name: string;
+      slug: string;
+      role: string;
+    };
+    accountWorkspaces: Array<{
+      workspaceId: string;
+      accountId: string;
+      tier: string;
+      name: string;
+      slug: string;
+      createdAt: string | null;
+      updatedAt: string | null;
+    }>;
+  };
+};
+
 const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 const ROMA_AUTHZ_CAPSULE_TTL_SEC = 15 * 60;
 const ROMA_WIDGET_LOOKUP_CACHE_TTL_MS = 5 * 60_000;
 const ROMA_WIDGET_LOOKUP_STORE_KEY = '__CK_PARIS_ROMA_WIDGET_LOOKUP_STORE_V1__';
+
+async function syncAccountAssetUsageForInstanceBestEffort(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  config: unknown;
+}): Promise<void> {
+  try {
+    await syncAccountAssetUsageForInstance(args);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error('[ParisWorker] non-blocking account asset usage sync failed', {
+      publicId: args.publicId,
+      accountId: args.accountId,
+      detail,
+    });
+  }
+}
+
+async function loadWorkspaceMembersForBootstrap(env: Env, workspaceId: string): Promise<RomaBootstrapDomainsPayload['team']['members']> {
+  const params = new URLSearchParams({
+    select: 'user_id,role,created_at',
+    workspace_id: `eq.${workspaceId}`,
+    order: 'created_at.asc',
+    limit: '500',
+  });
+  const membersRes = await supabaseFetch(env, `/rest/v1/workspace_members?${params.toString()}`, { method: 'GET' });
+  if (!membersRes.ok) {
+    const details = await readJson(membersRes);
+    throw new Error(
+      `[ParisWorker] Failed to load workspace members for bootstrap (${membersRes.status}): ${JSON.stringify(details)}`,
+    );
+  }
+  const rows = ((await membersRes.json()) as WorkspaceMemberListRow[]) ?? [];
+  return rows.map((row) => ({
+    userId: row.user_id,
+    role: normalizeRole(row.role) ?? row.role,
+    createdAt: row.created_at ?? null,
+    updatedAt: row.updated_at ?? null,
+  }));
+}
+
+async function loadAccountUsageAssetRowsForBootstrap(env: Env, accountId: string): Promise<AccountAssetRow[]> {
+  const assetParams = new URLSearchParams({
+    select: 'asset_id,size_bytes,deleted_at',
+    account_id: `eq.${accountId}`,
+    limit: '5000',
+  });
+  const assetRes = await supabaseFetch(env, `/rest/v1/account_assets?${assetParams.toString()}`, { method: 'GET' });
+  if (!assetRes.ok) {
+    const details = await readJson(assetRes);
+    throw new Error(
+      `[ParisWorker] Failed to load account usage assets for bootstrap (${assetRes.status}): ${JSON.stringify(details)}`,
+    );
+  }
+  return ((await assetRes.json()) as AccountAssetRow[]) ?? [];
+}
+
+async function loadAccountAssetUsageCountMapForBootstrap(
+  env: Env,
+  accountId: string,
+  assetIds: string[],
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (assetIds.length === 0) return counts;
+
+  const params = new URLSearchParams({
+    select: 'asset_id',
+    account_id: `eq.${accountId}`,
+    asset_id: `in.(${assetIds.join(',')})`,
+    limit: '5000',
+  });
+  const usageRes = await supabaseFetch(env, `/rest/v1/account_asset_usage?${params.toString()}`, { method: 'GET' });
+  if (!usageRes.ok) {
+    const details = await readJson(usageRes);
+    throw new Error(
+      `[ParisWorker] Failed to load account asset usage counts for bootstrap (${usageRes.status}): ${JSON.stringify(details)}`,
+    );
+  }
+  const rows = ((await usageRes.json()) as AccountAssetUsageCountRow[]) ?? [];
+  rows.forEach((row) => {
+    const assetId = asTrimmedString(row.asset_id);
+    if (!assetId) return;
+    counts.set(assetId, (counts.get(assetId) ?? 0) + 1);
+  });
+  return counts;
+}
+
+async function loadAccountAssetsForBootstrap(env: Env, accountId: string): Promise<RomaBootstrapDomainsPayload['assets']['assets']> {
+  const params = new URLSearchParams({
+    select: 'asset_id,normalized_filename,content_type,size_bytes,deleted_at,created_at',
+    account_id: `eq.${accountId}`,
+    deleted_at: 'is.null',
+    order: 'created_at.desc',
+    limit: '200',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load account assets for bootstrap (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = ((await res.json()) as AccountAssetListBootstrapRow[]) ?? [];
+  const assetIds = rows.map((row) => asTrimmedString(row.asset_id)).filter((assetId): assetId is string => Boolean(assetId));
+  const usageCountMap = await loadAccountAssetUsageCountMapForBootstrap(env, accountId, assetIds);
+  return rows.map((row) => {
+    const assetId = asTrimmedString(row.asset_id) || '';
+    return {
+      assetId,
+      normalizedFilename: row.normalized_filename,
+      contentType: row.content_type,
+      sizeBytes: row.size_bytes,
+      usageCount: usageCountMap.get(assetId) ?? 0,
+      deletedAt: row.deleted_at ?? null,
+      createdAt: row.created_at,
+    };
+  });
+}
 
 type RomaWidgetLookupCacheEntry = {
   widgetType: string;
@@ -835,6 +1074,165 @@ function inferHighestTierFromIdentityWorkspaces(
     if (!best || tierRank(tier) > tierRank(best)) best = tier;
   }
   return best;
+}
+
+async function buildRomaBootstrapDomainsSnapshot(args: {
+  env: Env;
+  accountId: string;
+  accountStatus: string;
+  isPlatform: boolean;
+  accountRole: MemberRole;
+  workspace: {
+    workspaceId: string;
+    accountId: string;
+    tier: string;
+    name: string;
+    slug: string;
+    role: MemberRole;
+  };
+}): Promise<RomaBootstrapDomainsPayload> {
+  const accountRoleLabelValue = accountRoleLabel(args.accountRole);
+  const [accountWorkspaces, teamMembers, usageAssets, assets, workspaceWidgetRows, ownedCuratedRows, curatedRows] = await Promise.all([
+    loadAccountWorkspaces(args.env, args.accountId),
+    loadWorkspaceMembersForBootstrap(args.env, args.workspace.workspaceId),
+    loadAccountUsageAssetRowsForBootstrap(args.env, args.accountId),
+    loadAccountAssetsForBootstrap(args.env, args.accountId),
+    loadWorkspaceWidgetsInstances(args.env, args.workspace.workspaceId),
+    loadOwnedCuratedWidgetsInstances(args.env, args.accountId),
+    loadCuratedWidgetsInstances(args.env),
+  ]);
+
+  const workspaceIds = accountWorkspaces.map((workspace) => workspace.id).filter(Boolean);
+  let instances: InstanceListRow[] = [];
+  if (workspaceIds.length > 0) {
+    const instanceParams = new URLSearchParams({
+      select: 'public_id,status,workspace_id',
+      workspace_id: `in.(${workspaceIds.join(',')})`,
+      limit: '5000',
+    });
+    const instanceRes = await supabaseFetch(args.env, `/rest/v1/widget_instances?${instanceParams.toString()}`, { method: 'GET' });
+    if (!instanceRes.ok) {
+      const details = await readJson(instanceRes);
+      throw new Error(
+        `[ParisWorker] Failed to load account instances for bootstrap (${instanceRes.status}): ${JSON.stringify(details)}`,
+      );
+    }
+    instances = ((await instanceRes.json()) as InstanceListRow[]) ?? [];
+  }
+
+  const activeUsageAssets = usageAssets.filter((asset) => !asset.deleted_at);
+  const usageBytes = activeUsageAssets.reduce((sum, asset) => {
+    const size = Number.isFinite(asset.size_bytes) ? asset.size_bytes : 0;
+    return sum + Math.max(0, size);
+  }, 0);
+  const publishedInstances = instances.filter((instance) => instance.status === 'published').length;
+
+  const inferredTier = inferHighestTier(accountWorkspaces);
+  const canMutateWorkspace = roleRank(args.workspace.role) >= roleRank('editor');
+  const canDeleteCurated = roleRank(args.workspace.role) >= roleRank('admin');
+
+  const widgetCatalog = mergeRomaWidgetInstances(workspaceWidgetRows, ownedCuratedRows).map((instance) => ({
+    ...instance,
+    actions: {
+      edit: true,
+      duplicate: canMutateWorkspace,
+      delete: instance.source === 'curated' ? canDeleteCurated : canMutateWorkspace,
+    },
+  }));
+  const widgetTypes = Array.from(
+    new Set(widgetCatalog.map((instance) => instance.widgetType).filter((widgetType) => widgetType !== 'unknown')),
+  ).sort((a, b) => a.localeCompare(b));
+
+  const templateTypes = Array.from(
+    new Set(curatedRows.map((instance) => instance.widgetType).filter((widgetType) => widgetType !== 'unknown')),
+  ).sort((a, b) => a.localeCompare(b));
+
+  return {
+    widgets: {
+      accountId: args.accountId,
+      workspaceId: args.workspace.workspaceId,
+      widgetTypes,
+      instances: widgetCatalog,
+    },
+    templates: {
+      accountId: args.accountId,
+      workspaceId: args.workspace.workspaceId,
+      widgetTypes: templateTypes,
+      instances: curatedRows.map((instance) => ({
+        publicId: instance.publicId,
+        widgetType: instance.widgetType,
+        displayName: instance.displayName,
+      })),
+    },
+    assets: {
+      accountId: args.accountId,
+      workspaceId: args.workspace.workspaceId,
+      assets,
+    },
+    team: {
+      workspaceId: args.workspace.workspaceId,
+      role: args.workspace.role,
+      members: teamMembers,
+    },
+    billing: {
+      accountId: args.accountId,
+      role: accountRoleLabelValue,
+      provider: 'stripe',
+      status: 'not_configured',
+      reasonKey: 'coreui.errors.billing.notConfigured',
+      plan: {
+        inferredTier,
+        workspaceCount: accountWorkspaces.length,
+      },
+      checkoutAvailable: false,
+      portalAvailable: false,
+    },
+    usage: {
+      accountId: args.accountId,
+      role: accountRoleLabelValue,
+      usage: {
+        workspaces: accountWorkspaces.length,
+        instances: {
+          total: instances.length,
+          published: publishedInstances,
+          unpublished: Math.max(0, instances.length - publishedInstances),
+        },
+        assets: {
+          total: usageAssets.length,
+          active: activeUsageAssets.length,
+          bytesActive: usageBytes,
+        },
+      },
+    },
+    settings: {
+      accountSummary: {
+        accountId: args.accountId,
+        status: args.accountStatus,
+        isPlatform: args.isPlatform,
+        role: accountRoleLabelValue,
+        workspaceCount: accountWorkspaces.length,
+      },
+      workspaceSummary: {
+        workspaceId: args.workspace.workspaceId,
+        accountId: args.workspace.accountId,
+        tier: args.workspace.tier,
+        name: args.workspace.name,
+        slug: args.workspace.slug,
+        role: args.workspace.role,
+      },
+      accountWorkspaces: accountWorkspaces
+        .map((workspace) => ({
+          workspaceId: workspace.id,
+          accountId: workspace.account_id,
+          tier: workspace.tier,
+          name: workspace.name,
+          slug: workspace.slug,
+          createdAt: workspace.created_at ?? null,
+          updatedAt: workspace.updated_at ?? null,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    },
+  };
 }
 
 async function resolveAccountEntitlementsSnapshot(args: {
@@ -1602,16 +2000,16 @@ export async function handleRomaWidgetDelete(
 
     try {
       await deleteCuratedInstance(env, publicId);
-      await syncAccountAssetUsageForInstance({
-        env,
-        accountId: authorized.workspace.account_id,
-        publicId,
-        config: {},
-      });
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
     }
+    await syncAccountAssetUsageForInstanceBestEffort({
+      env,
+      accountId: authorized.workspace.account_id,
+      publicId,
+      config: {},
+    });
 
     return json({ workspaceId, publicId, source: 'curated', deleted: true }, { status: 200 });
   }
@@ -1629,16 +2027,16 @@ export async function handleRomaWidgetDelete(
 
   try {
     await deleteWorkspaceInstance(env, workspaceId, publicId);
-    await syncAccountAssetUsageForInstance({
-      env,
-      accountId: authorized.workspace.account_id,
-      publicId,
-      config: {},
-    });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
   }
+  await syncAccountAssetUsageForInstanceBestEffort({
+    env,
+    accountId: authorized.workspace.account_id,
+    publicId,
+    config: {},
+  });
 
   return json({ workspaceId, publicId, source: 'workspace', deleted: true }, { status: 200 });
 }
@@ -1686,6 +2084,7 @@ export async function handleRomaBootstrap(req: Request, env: Env): Promise<Respo
     accountExpiresAt: null,
     entitlements: null,
   };
+  let domains: RomaBootstrapDomainsPayload | null = null;
 
   const nowSec = Math.floor(Date.now() / 1000);
   const expiresSec = nowSec + ROMA_AUTHZ_CAPSULE_TTL_SEC;
@@ -1712,11 +2111,12 @@ export async function handleRomaBootstrap(req: Request, env: Env): Promise<Respo
           : []),
       ];
       const accountRole = deriveHighestRole(roleCandidates);
+      const accountRoleResolved: MemberRole = accountRole ?? role;
       const accountProfile = inferHighestTierFromIdentityWorkspaces(payload.workspaces, accountId) || profile;
-      const accountAuthzVersion = `account:${accountId}:role:${accountRole ?? 'viewer'}:profile:${accountProfile}`;
+      const accountAuthzVersion = `account:${accountId}:role:${accountRoleResolved}:profile:${accountProfile}`;
 
       try {
-        const [workspaceCapsule, accountCapsule, entitlements] = await Promise.all([
+        const [workspaceCapsule, accountCapsule, entitlements, domainsSnapshot] = await Promise.all([
           mintRomaWorkspaceAuthzCapsule(env, {
             sub: resolved.principal.userId,
             userId: resolved.principal.userId,
@@ -1731,28 +2131,39 @@ export async function handleRomaBootstrap(req: Request, env: Env): Promise<Respo
             iat: nowSec,
             exp: expiresSec,
           }),
-          accountRole
-            ? mintRomaAccountAuthzCapsule(env, {
-                sub: resolved.principal.userId,
-                userId: resolved.principal.userId,
-                accountId,
-                accountStatus,
-                isPlatform,
-                role: accountRole,
-                profile: accountProfile,
-                authzVersion: accountAuthzVersion,
-                iat: nowSec,
-                exp: expiresSec,
-              })
-            : Promise.resolve(null),
-          accountRole
-            ? resolveAccountEntitlementsSnapshot({
-                env,
-                accountId,
-                profile: accountProfile,
-                role: accountRole,
-              })
-            : Promise.resolve(null),
+          mintRomaAccountAuthzCapsule(env, {
+            sub: resolved.principal.userId,
+            userId: resolved.principal.userId,
+            accountId,
+            accountStatus,
+            isPlatform,
+            role: accountRoleResolved,
+            profile: accountProfile,
+            authzVersion: accountAuthzVersion,
+            iat: nowSec,
+            exp: expiresSec,
+          }),
+          resolveAccountEntitlementsSnapshot({
+            env,
+            accountId,
+            profile: accountProfile,
+            role: accountRoleResolved,
+          }),
+          buildRomaBootstrapDomainsSnapshot({
+            env,
+            accountId,
+            accountStatus,
+            isPlatform,
+            accountRole: accountRoleResolved,
+            workspace: {
+              workspaceId: workspace.workspaceId,
+              accountId,
+              tier: profile,
+              name: workspace.name,
+              slug: workspace.slug,
+              role,
+            },
+          }),
         ]);
 
         authz = {
@@ -1765,13 +2176,14 @@ export async function handleRomaBootstrap(req: Request, env: Env): Promise<Respo
           issuedAt: issuedAtIso,
           expiresAt: expiresAtIso,
           accountCapsule: accountCapsule?.token ?? null,
-          accountRole,
+          accountRole: accountRoleResolved,
           accountProfile,
           accountAuthzVersion,
-          accountIssuedAt: accountCapsule ? issuedAtIso : null,
-          accountExpiresAt: accountCapsule ? expiresAtIso : null,
+          accountIssuedAt: issuedAtIso,
+          accountExpiresAt: expiresAtIso,
           entitlements,
         };
+        domains = domainsSnapshot;
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         return ckError(
@@ -1789,6 +2201,7 @@ export async function handleRomaBootstrap(req: Request, env: Env): Promise<Respo
   return json({
     ...payload,
     authz,
+    domains,
   });
 }
 

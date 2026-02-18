@@ -15,12 +15,6 @@ type AssetRecord = {
   createdAt: string;
 };
 
-type AssetsPayload = {
-  accountId: string;
-  workspaceId: string | null;
-  assets: AssetRecord[];
-};
-
 type DeleteAssetPayload = {
   accountId: string;
   assetId: string;
@@ -36,40 +30,25 @@ export function AssetsDomain() {
   const workspaceId = context.workspaceId;
 
   const [assets, setAssets] = useState<AssetRecord[]>([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const loadAssets = useCallback(async () => {
+  useEffect(() => {
     if (!accountId) {
       setAssets([]);
+      setError(null);
       return;
     }
-    setLoading(true);
-    setError(null);
-    try {
-      const payload = await fetchParisJson<AssetsPayload>(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/assets`,
-      );
-      const items =
-        payload && typeof payload === 'object' && Array.isArray((payload as { assets?: unknown }).assets)
-          ? ((payload as { assets: AssetRecord[] }).assets ?? [])
-          : [];
-      setAssets(items);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(message);
+    const snapshot = me.data?.domains?.assets ?? null;
+    if (!snapshot || snapshot.accountId !== accountId || !Array.isArray(snapshot.assets)) {
       setAssets([]);
-    } finally {
-      setLoading(false);
+      setError('Bootstrap assets snapshot unavailable.');
+      return;
     }
-  }, [accountId]);
-
-  useEffect(() => {
-    if (!accountId) return;
-    void loadAssets();
-  }, [accountId, loadAssets]);
+    setAssets(snapshot.assets as AssetRecord[]);
+    setError(null);
+  }, [accountId, me.data?.domains?.assets]);
 
   const handleDeleteAsset = useCallback(async (assetId: string, usageCount: number) => {
     if (!accountId) return;
@@ -88,14 +67,14 @@ export function AssetsDomain() {
         `/api/paris/accounts/${encodeURIComponent(accountId)}/assets/${encodeURIComponent(assetId)}`,
         { method: 'DELETE' },
       );
-      await loadAssets();
+      setAssets((prev) => prev.filter((asset) => asset.assetId !== assetId));
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setDeleteError(message);
     } finally {
       setDeletingAssetId(null);
     }
-  }, [accountId, loadAssets]);
+  }, [accountId]);
 
   if (me.loading) return <section className="roma-module-surface">Loading workspace context...</section>;
   if (me.error || !me.data) {
@@ -111,7 +90,6 @@ export function AssetsDomain() {
         Account: {accountId} | Workspace: {context.workspaceName || workspaceId}
       </p>
 
-      {loading ? <p>Loading assets...</p> : null}
       {error ? <p>Failed to load assets: {error}</p> : null}
       {deleteError ? <p>Failed to delete asset: {deleteError}</p> : null}
 
@@ -146,7 +124,7 @@ export function AssetsDomain() {
               </td>
             </tr>
           ))}
-          {!loading && assets.length === 0 ? (
+          {assets.length === 0 ? (
             <tr>
               <td colSpan={5}>No assets found for this account.</td>
             </tr>

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { formatBytes, formatNumber } from '../lib/format';
-import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountUsageResponse = {
@@ -32,36 +31,24 @@ export function UsageDomain() {
   const accountRole = me.data?.authz?.accountRole ?? me.data?.authz?.role ?? null;
   const entitlements = me.data?.authz?.entitlements ?? null;
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<AccountUsageResponse | null>(null);
 
   useEffect(() => {
-    if (!accountId) return;
-    let cancelled = false;
-    const run = async () => {
-      setLoading(true);
+    if (!accountId) {
+      setUsage(null);
       setError(null);
-      try {
-        const usagePayload = await fetchParisJson<AccountUsageResponse>(
-          `/api/paris/accounts/${encodeURIComponent(accountId)}/usage`,
-        );
-        if (cancelled) return;
-        setUsage(usagePayload);
-      } catch (err) {
-        if (cancelled) return;
-        const message = err instanceof Error ? err.message : String(err);
-        setError(message);
-        setUsage(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, [accountId]);
+      return;
+    }
+    const snapshot = me.data?.domains?.usage ?? null;
+    if (!snapshot || snapshot.accountId !== accountId) {
+      setUsage(null);
+      setError('Bootstrap usage snapshot unavailable.');
+      return;
+    }
+    setUsage(snapshot);
+    setError(null);
+  }, [accountId, me.data?.domains?.usage]);
 
   if (me.loading) return <section className="roma-module-surface">Loading usage context...</section>;
   if (me.error || !me.data) {
@@ -82,7 +69,6 @@ export function UsageDomain() {
         {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
       </p>
 
-      {loading ? <p>Loading usage and entitlement diagnostics...</p> : null}
       {error ? <p>Failed to load usage diagnostics: {error}</p> : null}
 
       {usage ? (

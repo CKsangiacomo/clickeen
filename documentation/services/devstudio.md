@@ -18,7 +18,7 @@ Route: `/#/dieter/dev-widget-workspace`
 What it does:
 - Embeds Bob in an iframe (default or via `?bob=http://localhost:3000`).
 - Loads instances via Bob’s `/api/paris/*` proxy (DevStudio never calls Paris directly).
-- In **DevStudio Local only**, shows local-only actions (update defaults, reset instance from JSON, create curated instance, update curated, promote cloud, refresh Prague preview, translate locales).
+- In **DevStudio Local only**, shows local-only actions (update defaults, reset instance from JSON, create curated instance, update curated, refresh Prague preview, translate locales).
 - Uses a 2-step selector in Widget Workspace: pick `Widget` first, then pick an instance from that widget’s scoped list.
 - Instance list fetch uses `GET /api/curated-instances?includeConfig=0` and lazy-loads each instance config on selection.
 
@@ -42,17 +42,15 @@ DevStudio Local supports curated instances as the single primitive:
 - **Reset instance from JSON**: pulls from compiled defaults (`spec.json`) and overwrites `wgt_main_{widget}`.
 - **Create curated instance**: creates `wgt_curated_{widget}_{styleSlug}` from the current editor config, storing metadata (`styleName`, `styleSlug`, and optional `variants`).
 - **Update curated instance**: overwrites the selected `wgt_curated_*` config in place with the current editor state.
-- **Promote Cloud**: explicitly pushes the currently persisted local curated/main instance to cloud-dev Paris/Tokyo.
 - **Refresh Prague preview**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=devstudio` to regenerate curated snapshot artifacts (default locale `en`) for Venice/Prague.
 - **Translate locales**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=devstudio` to enqueue locale jobs for the workspace active locale set.
 
 Notes:
-- Local curated/main writes are authoritative and do not auto-promote to cloud-dev. Promotion is explicit via **Promote Cloud**.
-- Before any DevStudio save that would write to Paris, DevStudio persists any `data:`/`blob:` URLs found in config by uploading the binary to Tokyo and replacing values with stable `http(s)://` URLs.
+- Asset controls upload immediately at edit-time; DevStudio write actions now assume config already contains canonical Tokyo `/arsenale/o/**` URLs (no pre-save blob/data persistence pass).
 - Curated IDs are locale-free; do not create `wgt_curated_*.<locale>` variants. Locale is a runtime query param.
 - Curated metadata lives in `curated_widget_instances.meta`: `{ styleName, styleSlug, variants? }`.
 - DevStudio create flow keeps this intentionally minimal: required instance name + optional `variant`/`sub-variant`.
-- DevStudio uploads through the canonical Tokyo account route (`POST /assets/upload`) with explicit `x-account-id`.
+- DevStudio uploads through the canonical Tokyo account route (`POST /assets/upload`) with explicit `x-account-id` + `x-workspace-id`.
 - Curated/main flows use `PLATFORM_ACCOUNT_ID`; resulting URLs are canonical account paths:
   - original variant: `/arsenale/o/{accountId}/{assetId}/{filename}`
   - non-original variants: `/arsenale/o/{accountId}/{assetId}/{variant}/{filename}`

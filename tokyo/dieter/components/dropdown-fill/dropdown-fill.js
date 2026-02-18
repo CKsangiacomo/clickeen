@@ -93,6 +93,123 @@ var Dieter = (() => {
     };
   }
 
+  // components/shared/assetUpload.ts
+  function isUuid(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+  }
+  function isPublicId(value) {
+    if (!value) return false;
+    if (/^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(value)) return true;
+    if (/^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/i.test(value)) return true;
+    return /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(value);
+  }
+  function isWidgetType(value) {
+    return /^[a-z0-9][a-z0-9_-]*$/i.test(value);
+  }
+  function readDatasetValue(name) {
+    if (typeof document === "undefined") return "";
+    const value = document.documentElement.dataset?.[name];
+    return typeof value === "string" ? value.trim() : "";
+  }
+  function resolveContextFromDocument() {
+    const accountId = readDatasetValue("ckOwnerAccountId");
+    const workspaceId = readDatasetValue("ckWorkspaceId");
+    const publicId = readDatasetValue("ckPublicId");
+    const widgetType = readDatasetValue("ckWidgetType");
+    if (!accountId || !isUuid(accountId)) return null;
+    if (!workspaceId || !isUuid(workspaceId)) return null;
+    const context = {
+      accountId,
+      workspaceId
+    };
+    if (publicId && isPublicId(publicId)) context.publicId = publicId;
+    if (widgetType && isWidgetType(widgetType)) context.widgetType = widgetType.toLowerCase();
+    return context;
+  }
+  function safeJsonParse(text) {
+    if (!text || typeof text !== "string") return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
+  }
+  function normalizeUploadUrl(payload) {
+    const direct = typeof payload.url === "string" ? payload.url.trim() : "";
+    if (!direct) return null;
+    if (/^https?:\/\//i.test(direct)) {
+      try {
+        const parsed = new URL(direct);
+        if (!parsed.pathname.startsWith("/arsenale/o/")) return null;
+        return direct;
+      } catch {
+        return null;
+      }
+    }
+    if (!direct.startsWith("/")) return null;
+    if (!direct.startsWith("/arsenale/o/")) return null;
+    return direct;
+  }
+  function assertUploadContext(context) {
+    const accountId = String(context.accountId || "").trim();
+    const workspaceId = String(context.workspaceId || "").trim();
+    const publicId = String(context.publicId || "").trim();
+    const widgetType = String(context.widgetType || "").trim().toLowerCase();
+    if (!isUuid(accountId)) {
+      throw new Error("coreui.errors.accountId.invalid");
+    }
+    if (!isUuid(workspaceId)) {
+      throw new Error("coreui.errors.workspaceId.invalid");
+    }
+    if (publicId && !isPublicId(publicId)) {
+      throw new Error("coreui.errors.publicId.invalid");
+    }
+    if (widgetType && !isWidgetType(widgetType)) {
+      throw new Error("coreui.errors.widgetType.invalid");
+    }
+    return { accountId, workspaceId, publicId: publicId || void 0, widgetType: widgetType || void 0 };
+  }
+  async function uploadEditorAsset(args) {
+    const file = args.file;
+    if (!(file instanceof File) || file.size <= 0) {
+      throw new Error("coreui.errors.payload.empty");
+    }
+    const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? {});
+    const source = args.source || "api";
+    const variant = args.variant || "original";
+    const endpoint = (args.endpoint || "/api/assets/upload").trim();
+    const headers = new Headers();
+    headers.set("content-type", file.type || "application/octet-stream");
+    headers.set("x-account-id", context.accountId);
+    headers.set("x-workspace-id", context.workspaceId);
+    headers.set("x-filename", file.name || "upload.bin");
+    headers.set("x-variant", variant);
+    headers.set("x-source", source);
+    if (context.publicId) headers.set("x-public-id", context.publicId);
+    if (context.widgetType) headers.set("x-widget-type", context.widgetType);
+    const response = await fetch(`${endpoint.replace(/\/$/, "")}?_t=${Date.now()}`, {
+      method: "POST",
+      headers,
+      body: file
+    });
+    const text = await response.text().catch(() => "");
+    const payload = safeJsonParse(text);
+    if (!response.ok) {
+      const errorRecord = payload && typeof payload === "object" && !Array.isArray(payload) ? payload.error : void 0;
+      const reasonKey = typeof errorRecord?.reasonKey === "string" ? errorRecord.reasonKey : "";
+      const detail = typeof errorRecord?.detail === "string" ? errorRecord.detail : "";
+      throw new Error(reasonKey || detail || `coreui.errors.assets.uploadFailed (${response.status})`);
+    }
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      throw new Error("coreui.errors.assets.uploadFailed");
+    }
+    const url = normalizeUploadUrl(payload);
+    if (!url) {
+      throw new Error("coreui.errors.assets.uploadFailed");
+    }
+    return url;
+  }
+
   // components/dropdown-fill/dropdown-fill.ts
   var MODE_ORDER = ["color", "gradient", "image", "video"];
   var MODE_LABELS = {
@@ -792,10 +909,21 @@ var Dieter = (() => {
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
         state.imageName = file.name || null;
-        if (state.imageObjectUrl) URL.revokeObjectURL(state.imageObjectUrl);
-        const objectUrl = URL.createObjectURL(file);
-        state.imageObjectUrl = objectUrl;
-        setImageSrc(state, objectUrl, { commit: true });
+        setFillUploadingState(state, true);
+        updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
+        try {
+          const uploadedUrl = await uploadEditorAsset({
+            file,
+            variant: "original",
+            source: "api"
+          });
+          setImageSrc(state, uploadedUrl, { commit: true });
+        } catch {
+          updateHeader(state, { text: "Upload failed", muted: true, chipColor: null, noneChip: true });
+        } finally {
+          setFillUploadingState(state, false);
+          fileInput.value = "";
+        }
       });
     }
   }
@@ -830,12 +958,32 @@ var Dieter = (() => {
         const file = videoFileInput.files && videoFileInput.files[0];
         if (!file) return;
         state.videoName = file.name || null;
-        if (state.videoObjectUrl) URL.revokeObjectURL(state.videoObjectUrl);
-        const objectUrl = URL.createObjectURL(file);
-        state.videoObjectUrl = objectUrl;
-        setVideoSrc(state, objectUrl, { commit: true });
+        setFillUploadingState(state, true);
+        updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
+        try {
+          const uploadedUrl = await uploadEditorAsset({
+            file,
+            variant: "original",
+            source: "api"
+          });
+          setVideoSrc(state, uploadedUrl, { commit: true });
+        } catch {
+          updateHeader(state, { text: "Upload failed", muted: true, chipColor: null, noneChip: true });
+        } finally {
+          setFillUploadingState(state, false);
+          videoFileInput.value = "";
+        }
       });
     }
+  }
+  function setFillUploadingState(state, uploading) {
+    state.root.dataset.uploading = uploading ? "true" : "false";
+    if (state.uploadButton) state.uploadButton.disabled = uploading;
+    if (state.replaceButton) state.replaceButton.disabled = uploading;
+    if (state.removeButton) state.removeButton.disabled = uploading;
+    if (state.videoUploadButton) state.videoUploadButton.disabled = uploading;
+    if (state.videoReplaceButton) state.videoReplaceButton.disabled = uploading;
+    if (state.videoRemoveButton) state.videoRemoveButton.disabled = uploading;
   }
   function setInputValue(state, value, emit) {
     const json = JSON.stringify(value);
@@ -1060,7 +1208,8 @@ var Dieter = (() => {
       return { src: "", fit: "cover", position: "center", repeat: "no-repeat", fallback: "" };
     }
     const value = raw;
-    const src = typeof value.src === "string" ? value.src.trim() : "";
+    const srcRaw = typeof value.src === "string" ? value.src.trim() : "";
+    const src = isPersistedAssetUrl(srcRaw) ? srcRaw : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
     const repeat = typeof value.repeat === "string" && value.repeat.trim() ? value.repeat.trim() : "no-repeat";
@@ -1072,8 +1221,10 @@ var Dieter = (() => {
       return { src: "", poster: "", fit: "cover", position: "center", loop: true, muted: true, autoplay: true, fallback: "" };
     }
     const value = raw;
-    const src = typeof value.src === "string" ? value.src.trim() : "";
-    const poster = typeof value.poster === "string" ? value.poster.trim() : "";
+    const srcRaw = typeof value.src === "string" ? value.src.trim() : "";
+    const posterRaw = typeof value.poster === "string" ? value.poster.trim() : "";
+    const src = isPersistedAssetUrl(srcRaw) ? srcRaw : "";
+    const poster = isPersistedAssetUrl(posterRaw) ? posterRaw : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
     const loop = typeof value.loop === "boolean" ? value.loop : true;
@@ -1126,13 +1277,18 @@ var Dieter = (() => {
     }
     return { type: "none" };
   }
-  function parseLegacyFill(value, root) {
+  function isPersistedAssetUrl(value) {
+    return /^https?:\/\//i.test(value) || value.startsWith("/");
+  }
+  function parseFillString(value, root) {
     if (!value) return { type: "none" };
     const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
     if (urlMatch && urlMatch[2]) {
-      return { type: "image", image: { src: urlMatch[2], fit: "cover", position: "center", repeat: "no-repeat", fallback: "" } };
+      const src = urlMatch[2].trim();
+      if (!isPersistedAssetUrl(src)) return null;
+      return { type: "image", image: { src, fit: "cover", position: "center", repeat: "no-repeat", fallback: "" } };
     }
-    if (/^(?:https?:|data:|blob:)/i.test(value)) {
+    if (isPersistedAssetUrl(value)) {
       return { type: "image", image: { src: value, fit: "cover", position: "center", repeat: "no-repeat", fallback: "" } };
     }
     if (/-gradient\(/i.test(value)) {
@@ -1148,15 +1304,15 @@ var Dieter = (() => {
     if (value.startsWith("{") || value.startsWith("[") || value.startsWith('"')) {
       try {
         const parsed = JSON.parse(value);
-        if (typeof parsed === "string") return parseLegacyFill(parsed, root);
+        if (typeof parsed === "string") return parseFillString(parsed, root);
         if (parsed == null) return { type: "none" };
         if (typeof parsed !== "object" || Array.isArray(parsed)) return null;
         return coerceFillValue(parsed);
       } catch {
-        return parseLegacyFill(value, root);
+        return parseFillString(value, root);
       }
     }
-    return parseLegacyFill(value, root);
+    return parseFillString(value, root);
   }
   function resolveModeFromFill(state, fill) {
     const desired = fill.type === "none" ? state.mode : fill.type;
@@ -1434,7 +1590,6 @@ var Dieter = (() => {
     if (!raw) return null;
     const urlMatch = raw.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
     const source = urlMatch && urlMatch[2] ? urlMatch[2] : raw;
-    if (/^(?:data:|blob:)/i.test(source)) return null;
     const trimmed = source.split("#")[0]?.split("?")[0] ?? "";
     if (!trimmed) return null;
     const parts = trimmed.split("/").filter(Boolean);

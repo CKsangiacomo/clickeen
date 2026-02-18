@@ -24,10 +24,13 @@
 
 Asset-domain note:
 - Tokyo-worker persists canonical ownership/file metadata in `account_assets` + `account_asset_variants`.
-- Instance/path usage mapping is maintained by Paris in `account_asset_usage` during instance config writes.
+- Instance/path usage mapping is maintained by Paris in `account_asset_usage` as a best-effort sync during instance config writes.
 - Upload filename normalization enforces non-redundant variant/file naming.
 - Upload response includes deterministic metadata (`accountId`, `assetId`, `variant`, `key`, `url`, `workspaceId/publicId/widgetType` trace fields).
 - `workspace_id/public_id/widget_type` on `account_assets` are provenance fields only; ownership remains account-bound.
+- Upload auth contract:
+  - Product path: Supabase session bearer + required `x-workspace-id`; Tokyo-worker enforces workspace membership (`editor+`) and workspace/account binding.
+  - Internal/dev path: `TOKYO_DEV_JWT` remains accepted for internal automation endpoints.
 
 ## Deployment
 - Cloudflare Workers + Queues

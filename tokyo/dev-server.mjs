@@ -9,7 +9,8 @@
  *   - GET /i18n/**        → static files from tokyo/i18n/**
  *   - GET /themes/**      → static files from tokyo/themes/**
  *   - GET /widgets/**     → static files from tokyo/widgets/**
- *   - GET /arsenale/**    → canonical account assets from tokyo/arsenale/**
+ *   - GET /arsenale/**    → proxy to tokyo-worker canonical account assets
+ *   - POST /assets/upload → proxy to tokyo-worker upload authority
  *
  * This lets Bob and other surfaces talk to a CDN-style base URL
  * (http://localhost:4000) in dev, mirroring the GA architecture.
@@ -29,10 +30,6 @@ const tokyoWorkerBase = String(process.env.TOKYO_WORKER_BASE_URL || 'http://loca
   .trim()
   .replace(/\/+$/, '');
 const TOKYO_L10N_BRIDGE_HEADER = 'x-tokyo-l10n-bridge';
-const TOKYO_ASSET_BACKEND = String(process.env.TOKYO_ASSET_BACKEND || 'mirror')
-  .trim()
-  .toLowerCase();
-const TOKYO_ASSET_BACKEND_MODE = TOKYO_ASSET_BACKEND === 'worker' ? 'worker' : 'mirror';
 
 function getContentType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -374,72 +371,6 @@ function sendJson(res, status, payload) {
   res.end(JSON.stringify(payload));
 }
 
-function safeJsonParse(raw) {
-  try {
-    return JSON.parse(String(raw || ''));
-  } catch {
-    return null;
-  }
-}
-
-function normalizeCanonicalArsenalePath(rawPath) {
-  const value = String(rawPath || '').trim();
-  if (!value) return null;
-  if (value.startsWith('/arsenale/o/')) return value;
-  if (value.startsWith('arsenale/o/')) return `/${value}`;
-  if (/^https?:\/\//i.test(value)) {
-    try {
-      const parsed = new URL(value);
-      return normalizeCanonicalArsenalePath(parsed.pathname);
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
-function localFilePathForArsenalePath(canonicalPath) {
-  const normalized = normalizeCanonicalArsenalePath(canonicalPath);
-  if (!normalized) return null;
-  if (!normalized.startsWith('/arsenale/o/')) return null;
-  const relative = normalized.slice(1);
-  if (!relative || relative.includes('..')) return null;
-  return path.join(baseDir, relative);
-}
-
-function serveLocalArsenaleFile(req, res, canonicalPath) {
-  const absPath = localFilePathForArsenalePath(canonicalPath);
-  if (!absPath || !fs.existsSync(absPath)) return false;
-  const stat = fs.statSync(absPath);
-  if (!stat.isFile()) return false;
-
-  const etag = `"${stat.size}-${Math.round(stat.mtimeMs)}"`;
-  const ifNoneMatch = String(req.headers['if-none-match'] || '').trim();
-  res.setHeader('ETag', etag);
-  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-
-  if (ifNoneMatch && ifNoneMatch === etag) {
-    res.statusCode = 304;
-    res.end();
-    return true;
-  }
-
-  res.statusCode = 200;
-  res.setHeader('Content-Type', getContentType(absPath));
-  if (req.method === 'HEAD') {
-    res.end();
-    return true;
-  }
-  fs.createReadStream(absPath)
-    .on('error', () => {
-      res.statusCode = 500;
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.end('Internal server error');
-    })
-    .pipe(res);
-  return true;
-}
-
 function isTokyoWorkerBridgeRequest(req) {
   const raw = req.headers[TOKYO_L10N_BRIDGE_HEADER];
   const value = Array.isArray(raw) ? raw[0] : raw;
@@ -449,13 +380,13 @@ function isTokyoWorkerBridgeRequest(req) {
 function shouldProxyMutableToWorker(req, pathname) {
   if (isTokyoWorkerBridgeRequest(req)) return false;
   if (req.method === 'POST' && pathname === '/assets/upload') {
-    return TOKYO_ASSET_BACKEND_MODE === 'worker';
+    return true;
   }
   if (req.method === 'POST' && pathname === '/assets/purge-deleted') {
     return true;
   }
   if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/arsenale/o/')) {
-    return TOKYO_ASSET_BACKEND_MODE === 'worker';
+    return true;
   }
   if ((req.method === 'POST' || req.method === 'DELETE') && pathname.startsWith('/l10n/instances/')) {
     return true;
@@ -513,65 +444,6 @@ async function proxyMutableToWorker(req, res) {
     return;
   }
   const bytes = Buffer.from(await upstream.arrayBuffer());
-  res.end(bytes);
-}
-
-async function proxyAssetsUploadWithLocalMirror(req, res) {
-  const method = req.method || 'POST';
-  const target = `${tokyoWorkerBase}${req.url || '/assets/upload'}`;
-  const body = await readRequestBody(req);
-
-  const upstream = await fetch(target, {
-    method,
-    headers: buildWorkerProxyHeaders(req),
-    body,
-  });
-
-  const rawText = await upstream.text().catch(() => '');
-  const payload = safeJsonParse(rawText);
-  if (upstream.ok && payload && typeof payload === 'object' && typeof payload.key === 'string') {
-    const canonicalPath = normalizeCanonicalArsenalePath(payload.key);
-    const localAbsPath = localFilePathForArsenalePath(canonicalPath);
-    if (localAbsPath) {
-      ensureDir(path.dirname(localAbsPath));
-      fs.writeFileSync(localAbsPath, body);
-    }
-  }
-
-  res.statusCode = upstream.status;
-  copyUpstreamHeadersToResponse(upstream, res);
-
-  if (!upstream.headers.get('content-type')) {
-    res.setHeader('content-type', 'application/json; charset=utf-8');
-  }
-  res.end(rawText);
-}
-
-async function serveArsenaleWithWorkerFallback(req, res, canonicalPath) {
-  if (serveLocalArsenaleFile(req, res, canonicalPath)) return;
-
-  const target = `${tokyoWorkerBase}${canonicalPath}`;
-  const upstream = await fetch(target, {
-    method: req.method || 'GET',
-    headers: buildWorkerProxyHeaders(req),
-  });
-
-  res.statusCode = upstream.status;
-  copyUpstreamHeadersToResponse(upstream, res);
-
-  if (req.method === 'HEAD' || upstream.status === 204 || upstream.status === 304) {
-    res.end();
-    return;
-  }
-
-  const bytes = Buffer.from(await upstream.arrayBuffer());
-  if (upstream.ok) {
-    const absPath = localFilePathForArsenalePath(canonicalPath);
-    if (absPath) {
-      ensureDir(path.dirname(absPath));
-      fs.writeFileSync(absPath, bytes);
-    }
-  }
   res.end(bytes);
 }
 
@@ -674,22 +546,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (
-    TOKYO_ASSET_BACKEND_MODE === 'mirror' &&
-    (req.method === 'GET' || req.method === 'HEAD') &&
-    pathname.startsWith('/arsenale/o/')
-  ) {
-    serveArsenaleWithWorkerFallback(req, res, pathname).catch((err) => {
-      res.statusCode = 502;
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      sendJson(res, 502, {
-        error: 'WORKER_PROXY_FAILED',
-        detail: err instanceof Error ? err.message : 'Bad gateway',
-      });
-    });
-    return;
-  }
-
   if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/renders/')) {
     (async () => {
       const upstream = await fetch(`${tokyoWorkerBase}${req.url}`, { method: req.method });
@@ -708,18 +564,6 @@ const server = http.createServer((req, res) => {
       res.statusCode = 502;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.end(err instanceof Error ? err.message : 'Bad gateway');
-    });
-    return;
-  }
-
-  if (req.method === 'POST' && pathname === '/assets/upload' && TOKYO_ASSET_BACKEND_MODE === 'mirror') {
-    proxyAssetsUploadWithLocalMirror(req, res).catch((err) => {
-      res.statusCode = 502;
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      sendJson(res, 502, {
-        error: 'WORKER_PROXY_FAILED',
-        detail: err instanceof Error ? err.message : 'Bad gateway',
-      });
     });
     return;
   }

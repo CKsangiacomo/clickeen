@@ -117,20 +117,25 @@ export async function syncAccountAssetUsageForInstance(args: {
   }
 
   const refs = extractAccountAssetUsageRefs(args.config, publicId);
-  const crossAccount = refs.find((row) => row.accountId !== accountId);
-  if (crossAccount) {
+  const mismatchedRef = refs.find((ref) => ref.accountId !== accountId);
+  if (mismatchedRef) {
     throw new AssetUsageValidationError(
-      `Cross-account asset reference at ${crossAccount.configPath}: asset account=${crossAccount.accountId}, instance account=${accountId}`,
+      `Account asset reference mismatch at ${mismatchedRef.configPath}: expected account_id=${accountId}, got account_id=${mismatchedRef.accountId}`,
     );
   }
 
   if (refs.length > 0) {
-    const uniqueAssetIds = Array.from(new Set(refs.map((row) => row.assetId))).filter(Boolean);
+    const assetIds = Array.from(new Set(refs.map((ref) => ref.assetId).filter(Boolean)));
+    if (!assetIds.length) {
+      throw new AssetUsageValidationError('Account asset references are missing asset ids');
+    }
+
+    const existingKeys = new Set<string>();
     const existingParams = new URLSearchParams({
-      select: 'asset_id',
+      select: 'account_id,asset_id,deleted_at',
       account_id: `eq.${accountId}`,
-      asset_id: `in.(${uniqueAssetIds.join(',')})`,
-      limit: String(Math.max(uniqueAssetIds.length, 1)),
+      asset_id: `in.(${assetIds.join(',')})`,
+      limit: String(Math.max(assetIds.length, 1)),
     });
     const existingRes = await supabaseFetch(
       args.env,
@@ -143,26 +148,31 @@ export async function syncAccountAssetUsageForInstance(args: {
         `[ParisWorker] Failed to validate account assets (${existingRes.status}): ${JSON.stringify(details)}`,
       );
     }
-    const existingRows = (await existingRes.json().catch(() => null)) as Array<{ asset_id?: string }> | null;
-    const existingAssetIds = new Set(
-      Array.isArray(existingRows)
-        ? existingRows
-            .map((row) => (typeof row?.asset_id === 'string' ? row.asset_id.trim() : ''))
-            .filter((value): value is string => Boolean(value))
-        : [],
-    );
-    const missingRef = refs.find((row) => !existingAssetIds.has(row.assetId));
+    const existingRows = (await existingRes.json().catch(() => null)) as Array<{
+      account_id?: string;
+      asset_id?: string;
+      deleted_at?: string | null;
+    }> | null;
+    if (Array.isArray(existingRows)) {
+      for (const row of existingRows) {
+        const rowAccountId = typeof row?.account_id === 'string' ? row.account_id.trim() : '';
+        const rowAssetId = typeof row?.asset_id === 'string' ? row.asset_id.trim() : '';
+        const deletedAt = typeof row?.deleted_at === 'string' ? row.deleted_at.trim() : '';
+        if (!rowAccountId || !rowAssetId) continue;
+        if (deletedAt) continue;
+        existingKeys.add(`${rowAccountId}|${rowAssetId}`);
+      }
+    }
+
+    const missingRef = refs.find((row) => !existingKeys.has(`${row.accountId}|${row.assetId}`));
     if (missingRef) {
       throw new AssetUsageValidationError(
-        `Missing account asset reference at ${missingRef.configPath}: asset_id=${missingRef.assetId}`,
+        `Missing or deleted account asset reference at ${missingRef.configPath}: account_id=${missingRef.accountId}, asset_id=${missingRef.assetId}`,
       );
     }
   }
 
-  const deleteParams = new URLSearchParams({
-    account_id: `eq.${accountId}`,
-    public_id: `eq.${publicId}`,
-  });
+  const deleteParams = new URLSearchParams({ public_id: `eq.${publicId}` });
   const deleteRes = await supabaseFetch(
     args.env,
     `/rest/v1/account_asset_usage?${deleteParams.toString()}`,

@@ -43,33 +43,6 @@ function containsNonPersistableUrl(value: string): boolean {
   return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
 }
 
-function containsLegacyAssetUrl(value: string): boolean {
-  const legacyPathPattern = /^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i;
-
-  const tryPath = (candidate: string): boolean => {
-    const trimmed = String(candidate || '').trim();
-    if (!trimmed) return false;
-    if (legacyPathPattern.test(trimmed)) return true;
-    if (!/^https?:\/\//i.test(trimmed)) return false;
-    try {
-      return legacyPathPattern.test(new URL(trimmed).pathname);
-    } catch {
-      return false;
-    }
-  };
-
-  if (tryPath(value)) return true;
-
-  const urlPattern = /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi;
-  let match: RegExpExecArray | null = urlPattern.exec(value);
-  while (match) {
-    if (tryPath(match[2] || '')) return true;
-    match = urlPattern.exec(value);
-  }
-
-  return false;
-}
-
 export function configNonPersistableUrlIssues(config: unknown): Array<{ path: string; message: string }> {
   const issues: Array<{ path: string; message: string }> = [];
 
@@ -79,11 +52,6 @@ export function configNonPersistableUrlIssues(config: unknown): Array<{ path: st
         issues.push({
           path,
           message: 'non-persistable URL scheme found (data:/blob:). Persist stable URLs/keys only.',
-        });
-      } else if (containsLegacyAssetUrl(node)) {
-        issues.push({
-          path,
-          message: 'legacy Tokyo asset URL found. Use canonical /arsenale/o/{accountId}/{assetId}/... URLs only.',
         });
       }
       return;

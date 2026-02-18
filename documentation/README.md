@@ -133,15 +133,12 @@ Instances are data (not code) and live in Paris/Michael. Assets live in Tokyo.
 4) **Venice embeds** render curated/user instances using Paris + Tokyo (local URLs).
 
 ### C) Cloud-dev propagation (explicit)
-Local changes do not auto-appear in cloud-dev. You must promote or deploy.
+Local changes do not auto-appear in cloud-dev. You must deploy.
 
-1) **Curated instances + assets**:
-   - Use DevStudio **Promote Cloud** action (local DevStudio -> cloud Paris/Tokyo).
-   - Promotion rewrites local Tokyo URLs to cloud Tokyo URLs.
-2) **Prague/Bob/Roma/DevStudio**:
+1) **Prague/Bob/Roma/DevStudio**:
    - Code changes require Cloudflare deploys (Pages/Workers).
    - Cloud Prague/Bob/Roma read `https://tokyo.dev.clickeen.com`, not your local filesystem.
-3) **Marketing JSON updates**:
+2) **Marketing JSON updates**:
    - `tokyo/widgets/**/pages/*.json` updates require a Prague deployment to be visible in cloud-dev.
 
 Invariant: **Local propagation is automatic; cloud-dev propagation is explicit.** Treat any assumption otherwise as a bug.

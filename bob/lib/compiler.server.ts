@@ -441,7 +441,7 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
 function extractPrimaryUrl(raw: string): string | null {
   const v = String(raw || '').trim();
   if (!v) return null;
-  if (/^(?:https?:\/\/|data:|blob:|\/)/i.test(v)) return v;
+  if (/^(?:https?:\/\/|\/)/i.test(v)) return v;
   const match = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
   if (match && match[2]) return match[2];
   return null;
@@ -467,14 +467,6 @@ function isTokyoAssetPath(pathname: string): boolean {
   );
 }
 
-function isLegacyTokyoAssetPath(pathname: string): boolean {
-  return (
-    pathname.startsWith('/assets/accounts/') ||
-    pathname.startsWith('/workspace-assets/') ||
-    pathname.startsWith('/curated-assets/')
-  );
-}
-
 function rewriteAssetUrlsInDefaults(defaults: Record<string, unknown>, tokyoBase: string): Record<string, unknown> {
   const base = String(tokyoBase || '').trim().replace(/\/+$/, '');
   if (!base) return defaults;
@@ -483,28 +475,25 @@ function rewriteAssetUrlsInDefaults(defaults: Record<string, unknown>, tokyoBase
   const visit = (node: unknown): string | void => {
     if (typeof node === 'string') {
       const primaryUrl = extractPrimaryUrl(node);
-      if (!primaryUrl || /^(?:data|blob):/i.test(primaryUrl)) return;
+      if (!primaryUrl) return;
+      if (/^(?:data|blob):/i.test(primaryUrl)) {
+        throw new Error(`[Compiler] Non-persistable asset URL scheme is not supported: ${primaryUrl}`);
+      }
 
       if (primaryUrl.startsWith('/')) {
-        if (isLegacyTokyoAssetPath(primaryUrl)) {
-          throw new Error(`[Compiler] Legacy Tokyo asset path is not supported: ${primaryUrl}`);
+        if (isTokyoAssetPath(primaryUrl)) {
+          return replacePrimaryUrl(node, `${base}${primaryUrl}`);
         }
-        if (!isTokyoAssetPath(primaryUrl)) return;
-        return replacePrimaryUrl(node, `${base}${primaryUrl}`);
+        return;
       }
 
       if (/^https?:\/\//i.test(primaryUrl)) {
         try {
           const parsed = new URL(primaryUrl);
-          if (isLegacyTokyoAssetPath(parsed.pathname)) {
-            throw new Error(`[Compiler] Legacy Tokyo asset path is not supported: ${parsed.pathname}`);
+          if (isTokyoAssetPath(parsed.pathname)) {
+            return replacePrimaryUrl(node, `${base}${parsed.pathname}`);
           }
-          if (!isTokyoAssetPath(parsed.pathname)) return;
-          return replacePrimaryUrl(node, `${base}${parsed.pathname}`);
-        } catch (error) {
-          if (error instanceof Error && error.message.startsWith('[Compiler] Legacy Tokyo asset path is not supported')) {
-            throw error;
-          }
+        } catch {
           return;
         }
       }

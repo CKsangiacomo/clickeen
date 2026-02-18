@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { isCuratedPublicId, normalizeLocaleToken } from '../lib/l10n/instance';
+import { normalizeLocaleToken } from '../lib/l10n/instance';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { can } from '@clickeen/ck-policy';
@@ -32,182 +32,64 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     revertLocaleOverrides,
   } = session;
   const publicId = meta?.publicId ? String(meta.publicId) : '';
-  const workspaceId = meta?.workspaceId ? String(meta.workspaceId) : '';
   const widgetType = compiled?.widgetname ?? '';
-  const curated = publicId ? isCuratedPublicId(publicId) : false;
   const isTranslatePanel = mode === 'translate';
   const minibobTranslationsLocked = policy.profile === 'minibob' && session.minibobPersonalizationUsed;
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const showSelector = section !== 'footer';
   const showFooter = section !== 'selector';
-  const subject = useMemo(() => {
-    if (policy.profile === 'devstudio') return 'devstudio';
-    if (policy.profile === 'minibob') return 'minibob';
-    return 'workspace';
-  }, [policy.profile]);
-
-  const [workspaceLocales, setWorkspaceLocales] = useState<string[] | null>(null);
-  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
-  const [workspaceLoading, setWorkspaceLoading] = useState(false);
-
-  const [instanceLocales, setInstanceLocales] = useState<
-    Array<{ locale: string; source?: string | null; hasUserOps?: boolean }> | null
-  >(null);
-  const [instanceError, setInstanceError] = useState<string | null>(null);
-  const [instanceLoading, setInstanceLoading] = useState(false);
+  const workspaceError = locale.workspaceLocalesInvalid;
+  const instanceLocales = locale.overlayEntries;
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!showSelector) return;
-    if (minibobTranslationsLocked) {
-      setWorkspaceLocales(null);
-      setWorkspaceError(null);
-      setWorkspaceLoading(false);
-      return;
-    }
-    if (!workspaceId || curated) {
-      setWorkspaceLocales(null);
-      setWorkspaceError(null);
-      setWorkspaceLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setWorkspaceLoading(true);
-    fetch(`/api/paris/workspaces/${encodeURIComponent(workspaceId)}/locales?subject=${encodeURIComponent(subject)}`, {
-      cache: 'no-store',
-    })
-      .then(async (res) => {
-        const json = (await res.json().catch(() => null)) as any;
-        if (!res.ok) {
-          const message = json?.error?.reasonKey || json?.error?.message || 'Failed to load workspace locales';
-          throw new Error(message);
-        }
-        const locales = Array.isArray(json?.locales) ? json.locales : [];
-        return locales.filter((l: unknown) => typeof l === 'string').map((l: string) => l.trim().toLowerCase());
-      })
-      .then((locales) => {
-        if (cancelled) return;
-        setWorkspaceLocales(Array.from(new Set(locales)));
-        setWorkspaceError(null);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setWorkspaceLocales([]);
-        setWorkspaceError(err instanceof Error ? err.message : String(err));
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setWorkspaceLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [workspaceId, curated, showSelector, subject, minibobTranslationsLocked]);
-
-  useEffect(() => {
-    if (!publicId || !workspaceId || (!showSelector && !showFooter)) {
-      setInstanceLocales(null);
-      setInstanceError(null);
-      setInstanceLoading(false);
-      return;
-    }
-
-    if (minibobTranslationsLocked) {
-      setInstanceLocales(null);
-      setInstanceError(null);
-      setInstanceLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setInstanceLoading(true);
-    fetch(
-      `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
-        publicId
-      )}/layers?subject=${encodeURIComponent(subject)}`,
-      { cache: 'no-store' }
-    )
-      .then(async (res) => {
-        const json = (await res.json().catch(() => null)) as any;
-        if (!res.ok) {
-          const message = json?.error?.message || json?.error?.code || 'Failed to load locale overlays';
-          throw new Error(message);
-        }
-        const layers = Array.isArray(json?.layers) ? json.layers : [];
-        const localeLayers = layers
-          .filter((item: any) => item?.layer === 'locale')
-          .map((item: any) => ({
-            locale: typeof item?.layerKey === 'string' ? item.layerKey.trim().toLowerCase() : '',
-            source: typeof item?.source === 'string' ? item.source : null,
-            hasUserOps: typeof item?.hasUserOps === 'boolean' ? item.hasUserOps : false,
-          }))
-          .filter((item: { locale: string }) => Boolean(item.locale));
-        return { localeLayers };
-      })
-      .then(({ localeLayers }) => {
-        if (cancelled) return;
-        setInstanceLocales(localeLayers);
-        setInstanceError(null);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setInstanceLocales([]);
-        setInstanceError(err instanceof Error ? err.message : String(err));
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setInstanceLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [publicId, workspaceId, showSelector, showFooter, subject, minibobTranslationsLocked]);
+  const isSyncQueued = locale.sync.stage === 'queuing';
+  const isSyncTranslating = locale.sync.stage === 'translating';
+  const isSyncFailed = locale.sync.stage === 'failed';
+  const isSyncBusy = isSyncQueued || isSyncTranslating;
 
   const availableLocales = useMemo(() => {
     if (!showSelector) return [locale.baseLocale];
     const baseLocale = locale.baseLocale;
     if (minibobTranslationsLocked) return [baseLocale];
-    const list = curated ? instanceLocales ?? [] : workspaceLocales ?? [];
-    const normalized = Array.isArray(list)
-      ? list
-          .map((value: any) => {
-            const raw = typeof value === 'string' ? value : value?.locale;
-            return normalizeLocaleToken(raw);
-          })
-          .filter((value: unknown): value is string => Boolean(value))
-      : [];
+    const normalized = locale.availableLocales
+      .map((value) => normalizeLocaleToken(value))
+      .filter((value): value is string => Boolean(value));
     const set = new Set<string>(normalized);
     const rest = Array.from(set)
       .filter((code) => code !== baseLocale)
       .sort();
     return [baseLocale, ...rest];
-  }, [curated, instanceLocales, workspaceLocales, locale.baseLocale, showSelector, minibobTranslationsLocked]);
+  }, [locale.availableLocales, locale.baseLocale, showSelector, minibobTranslationsLocked]);
 
   const activeLocale = locale.activeLocale;
   const baseLocale = locale.baseLocale;
   const isLocaleMode = activeLocale !== baseLocale;
   const isStale = locale.stale;
   const activeLocaleToken = normalizeLocaleToken(activeLocale);
+  const overlayLocales = useMemo(() => {
+    const normalized = instanceLocales
+      .map((entry) => normalizeLocaleToken(entry.locale))
+      .filter((value): value is string => Boolean(value));
+    const set = new Set<string>(normalized);
+    const rest = Array.from(set)
+      .filter((code) => code !== baseLocale)
+      .sort();
+    return [baseLocale, ...rest];
+  }, [instanceLocales, baseLocale]);
+  const overlayLocaleSet = useMemo(() => new Set(overlayLocales), [overlayLocales]);
   const hasInstance = Boolean(publicId && widgetType);
   const selectionDisabled =
     minibobTranslationsLocked ||
     !hasInstance ||
     locale.loading ||
-    (curated ? instanceLoading : workspaceLoading) ||
     availableLocales.length <= 1;
   const publishGate = can(policy, 'instance.publish');
   const canPublish = publishGate.allow;
   const showEmptyState =
     showSelector &&
     hasInstance &&
-    !instanceLoading &&
-    !workspaceLoading &&
-    availableLocales.length <= 1 &&
-    !instanceError &&
+    availableLocales.length > 1 &&
+    overlayLocales.length <= 1 &&
     !workspaceError &&
     !minibobTranslationsLocked;
 
@@ -225,10 +107,12 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     return selectLocales.map((code) => {
       const normalized = normalizeLocaleToken(code) ?? code;
       const languageLabel = resolveLocaleLabel({ locales: CANONICAL_LOCALES, uiLocale, targetLocale: normalized });
-      const label = normalized === baseLocale ? `Base — ${languageLabel} (${normalized})` : `${languageLabel} (${normalized})`;
+      const baseLabel = normalized === baseLocale ? `Base - ${languageLabel} (${normalized})` : `${languageLabel} (${normalized})`;
+      const pending = normalized !== baseLocale && !overlayLocaleSet.has(normalized);
+      const label = pending ? `${baseLabel} (Pending)` : baseLabel;
       return { value: normalized, label };
     });
-  }, [selectLocales, baseLocale]);
+  }, [selectLocales, baseLocale, overlayLocaleSet]);
   const localeOptionsKey = useMemo(() => localeOptions.map((option) => option.value).join('|'), [localeOptions]);
 
   const translateNote = (() => {
@@ -241,19 +125,33 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   })();
 
   const activeLocaleEntry = useMemo(() => {
-    if (!instanceLocales) return null;
     return instanceLocales.find((entry) => normalizeLocaleToken(entry.locale) === activeLocaleToken) ?? null;
   }, [instanceLocales, activeLocaleToken]);
   const hasManualOverrides = Boolean(activeLocaleEntry?.hasUserOps);
+  const activeLocaleMissingOverlay =
+    isLocaleMode &&
+    !locale.loading &&
+    !workspaceError &&
+    !minibobTranslationsLocked &&
+    !activeLocaleEntry;
 
   const translationsStatus = useMemo(() => {
     if (minibobTranslationsLocked) {
       return { tone: 'unavailable', label: 'Upgrade required' };
     }
-    if (workspaceLoading || instanceLoading || locale.loading) {
+    if (isSyncQueued) {
+      return { tone: 'pending', label: 'Queuing' };
+    }
+    if (isSyncTranslating) {
+      return { tone: 'pending', label: 'Translating' };
+    }
+    if (isSyncFailed) {
+      return { tone: 'unavailable', label: 'Failed' };
+    }
+    if (locale.loading) {
       return { tone: 'pending', label: 'Loading' };
     }
-    if (workspaceError || instanceError || locale.error) {
+    if (workspaceError || locale.error) {
       return { tone: 'unavailable', label: 'Unavailable' };
     }
     if (!hasInstance) {
@@ -265,19 +163,37 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     if (availableLocales.length <= 1) {
       return { tone: 'unavailable', label: 'EN only' };
     }
+    if (overlayLocales.length <= 1) {
+      return { tone: 'pending', label: 'Configured' };
+    }
     return { tone: 'ready', label: 'Ready' };
   }, [
     availableLocales.length,
     hasInstance,
-    instanceError,
-    instanceLoading,
     isStale,
     locale.error,
     locale.loading,
+    isSyncFailed,
+    isSyncQueued,
+    isSyncTranslating,
     minibobTranslationsLocked,
+    overlayLocales.length,
     workspaceError,
-    workspaceLoading,
   ]);
+
+  const syncUpdatedAtLabel = useMemo(() => {
+    if (!locale.sync.lastUpdatedAt) return null;
+    const parsed = new Date(locale.sync.lastUpdatedAt);
+    if (!Number.isFinite(parsed.getTime())) return null;
+    return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }, [locale.sync.lastUpdatedAt]);
+
+  const syncDetailMessage = useMemo(() => {
+    const detail = locale.sync.detail ? locale.sync.detail.trim() : '';
+    if (!detail) return null;
+    if (!syncUpdatedAtLabel) return detail;
+    return `${detail} Last sync: ${syncUpdatedAtLabel}.`;
+  }, [locale.sync.detail, syncUpdatedAtLabel]);
 
   useEffect(() => {
     if (!minibobTranslationsLocked) return;
@@ -434,19 +350,19 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                 </div>
               </div>
             </div>
-            {workspaceLoading ? <div className="label-s label-muted">Loading workspace locales…</div> : null}
-            {curated && instanceLoading ? <div className="label-s label-muted">Loading locale overlays…</div> : null}
             {workspaceError ? <div className="settings-panel__error">{workspaceError}</div> : null}
-            {curated && instanceError ? <div className="settings-panel__error">{instanceError}</div> : null}
+            {syncDetailMessage ? (
+              <div className={isSyncFailed ? 'settings-panel__error' : 'settings-panel__note'}>{syncDetailMessage}</div>
+            ) : null}
             {showEmptyState ? (
               <div className="settings-panel__note">
-                No translations found yet. Save the base locale to generate locale overlays.
+                No generated translations yet for configured locales. Save the base locale to generate locale overlays.
                 <button
                   className="diet-btn-txt"
                   data-size="md"
                   data-variant="primary"
                   type="button"
-                  disabled={!canPublish || isPublishing || locale.loading}
+                  disabled={!canPublish || isPublishing || locale.loading || isSyncBusy}
                   onClick={async () => {
                     setRefreshMessage(null);
                     if (isDirty) {
@@ -462,8 +378,21 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                     );
                   }}
                 >
-                  <span className="diet-btn-txt__label">{isDirty ? 'Save to generate translations' : 'Generate translations'}</span>
+                  <span className="diet-btn-txt__label">
+                    {isSyncQueued
+                      ? 'Queuing...'
+                      : isSyncTranslating
+                        ? 'Translating...'
+                        : isDirty
+                          ? 'Save to generate translations'
+                          : 'Generate translations'}
+                  </span>
                 </button>
+              </div>
+            ) : null}
+            {activeLocaleMissingOverlay ? (
+              <div className="settings-panel__warning">
+                No generated translation for {activeLocale} yet. Preview is currently showing base content.
               </div>
             ) : null}
           </div>
@@ -507,7 +436,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                         data-size="md"
                         data-variant="primary"
                         type="button"
-                        disabled={locale.loading || isPublishing}
+                        disabled={locale.loading || isPublishing || isSyncBusy}
                         onClick={async () => {
                           setRefreshMessage(null);
                           const result = await refreshLocaleTranslations();
@@ -519,7 +448,9 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                           );
                         }}
                       >
-                        <span className="diet-btn-txt__label">{locale.loading ? 'Refreshing…' : 'Refresh translations'}</span>
+                        <span className="diet-btn-txt__label">
+                          {isSyncQueued ? 'Queuing...' : isSyncTranslating ? 'Translating...' : locale.loading ? 'Refreshing...' : 'Refresh translations'}
+                        </span>
                       </button>
                     </div>
                   ) : null}

@@ -10,6 +10,8 @@ type Env = {
   VENICE_BASE_URL?: string;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
+  SUPABASE_JWT_ISSUER?: string;
+  SUPABASE_JWT_AUDIENCE?: string;
   TOKYO_L10N_HTTP_BASE?: string;
 };
 
@@ -30,6 +32,149 @@ function asBearerToken(header: string | null): string | null {
   if (!scheme || scheme.toLowerCase() !== 'bearer') return null;
   if (!token) return null;
   return token.trim() || null;
+}
+
+type JwtClaims = Record<string, unknown> & {
+  sub?: string;
+  iss?: string;
+  aud?: string | string[];
+  exp?: number;
+  nbf?: number;
+};
+
+type UploadPrincipal = {
+  token: string;
+  userId: string;
+};
+
+type UploadAuthResult =
+  | { ok: true; trusted: true }
+  | { ok: true; trusted: false; principal: UploadPrincipal }
+  | { ok: false; response: Response };
+
+function decodeJwtPayload(token: string): JwtClaims | null {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const payloadPart = parts[1];
+  if (!payloadPart) return null;
+  try {
+    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const decoded = atob(padded);
+    const parsed = JSON.parse(decoded) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    return parsed as JwtClaims;
+  } catch {
+    return null;
+  }
+}
+
+function claimAsString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function claimAsNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function audienceMatches(claim: unknown, expected: string): boolean {
+  if (typeof claim === 'string') return claim.trim() === expected;
+  if (Array.isArray(claim)) return claim.some((item) => typeof item === 'string' && item.trim() === expected);
+  return false;
+}
+
+function resolveSupabaseIssuer(env: Env): string {
+  const configured = (typeof env.SUPABASE_JWT_ISSUER === 'string' ? env.SUPABASE_JWT_ISSUER.trim() : '') || null;
+  if (configured) return configured.replace(/\/+$/, '');
+  const base = requireSupabaseEnv(env, 'SUPABASE_URL').replace(/\/+$/, '');
+  return `${base}/auth/v1`;
+}
+
+function resolveSupabaseAudience(env: Env): string {
+  const configured = (typeof env.SUPABASE_JWT_AUDIENCE === 'string' ? env.SUPABASE_JWT_AUDIENCE.trim() : '') || null;
+  return configured || 'authenticated';
+}
+
+async function fetchSupabaseUserId(token: string, env: Env): Promise<string | null> {
+  const baseUrl = requireSupabaseEnv(env, 'SUPABASE_URL').replace(/\/+$/, '');
+  const serviceKey = requireSupabaseEnv(env, 'SUPABASE_SERVICE_ROLE_KEY');
+  const response = await fetch(`${baseUrl}/auth/v1/user`, {
+    method: 'GET',
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
+    },
+    cache: 'no-store',
+  });
+
+  if (response.status === 401 || response.status === 403) return null;
+  if (!response.ok) throw new Error(`Supabase auth lookup failed (${response.status})`);
+  const parsed = (await response.json().catch(() => null)) as { id?: unknown } | null;
+  const userId = typeof parsed?.id === 'string' ? parsed.id.trim() : '';
+  if (!userId || !isUuid(userId)) return null;
+  return userId;
+}
+
+async function assertUploadAuth(req: Request, env: Env): Promise<UploadAuthResult> {
+  const token = asBearerToken(req.headers.get('authorization'));
+  if (!token) {
+    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } }, { status: 401 }) };
+  }
+
+  const trustedToken = (env.TOKYO_DEV_JWT || '').trim();
+  if (trustedToken && token === trustedToken) {
+    return { ok: true, trusted: true };
+  }
+
+  const claims = decodeJwtPayload(token);
+  if (!claims) {
+    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+  }
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const issuer = resolveSupabaseIssuer(env);
+  const audience = resolveSupabaseAudience(env);
+  const iss = claimAsString(claims.iss);
+  if (!iss || iss !== issuer) {
+    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+  }
+  if (!audienceMatches(claims.aud, audience)) {
+    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+  }
+  const exp = claimAsNumber(claims.exp);
+  if (!exp || exp <= nowSec) {
+    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_EXPIRED' } }, { status: 401 }) };
+  }
+  const nbf = claimAsNumber(claims.nbf);
+  if (nbf && nbf > nowSec) {
+    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+  }
+
+  let userId: string | null = null;
+  try {
+    userId = await fetchSupabaseUserId(token, env);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return { ok: false, response: json({ error: { kind: 'INTERNAL', reasonKey: 'AUTH_PROVIDER_UNAVAILABLE', detail } }, { status: 502 }) };
+  }
+  if (!userId) {
+    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+  }
+
+  const sub = claimAsString(claims.sub);
+  if (sub && sub !== userId) {
+    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+  }
+
+  return { ok: true, trusted: false, principal: { token, userId } };
 }
 
 function requireDevAuth(req: Request, env: Env): Response | null {
@@ -1395,6 +1540,35 @@ type WorkspaceUploadContext = {
   accountId: string | null;
 };
 
+type MemberRole = 'viewer' | 'editor' | 'admin' | 'owner';
+
+function normalizeMemberRole(value: unknown): MemberRole | null {
+  switch (value) {
+    case 'viewer':
+    case 'editor':
+    case 'admin':
+    case 'owner':
+      return value;
+    default:
+      return null;
+  }
+}
+
+function roleRank(role: MemberRole): number {
+  switch (role) {
+    case 'owner':
+      return 4;
+    case 'admin':
+      return 3;
+    case 'editor':
+      return 2;
+    case 'viewer':
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 async function loadWorkspaceUploadContext(env: Env, workspaceId: string): Promise<WorkspaceUploadContext | null> {
   if (!isUuid(workspaceId)) return null;
   const params = new URLSearchParams({
@@ -1417,6 +1591,27 @@ async function loadWorkspaceUploadContext(env: Env, workspaceId: string): Promis
     tier: typeof row.tier === 'string' ? row.tier : null,
     accountId: typeof row.account_id === 'string' ? row.account_id : null,
   };
+}
+
+async function loadWorkspaceMembershipRole(
+  env: Env,
+  workspaceId: string,
+  userId: string,
+): Promise<MemberRole | null> {
+  if (!isUuid(workspaceId) || !isUuid(userId)) return null;
+  const params = new URLSearchParams({
+    select: 'role',
+    workspace_id: `eq.${workspaceId}`,
+    user_id: `eq.${userId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/workspace_members?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase workspace membership read failed (${res.status}) ${text}`.trim());
+  }
+  const rows = (await res.json().catch(() => [])) as Array<{ role?: unknown }>;
+  return normalizeMemberRole(rows?.[0]?.role);
 }
 
 type AccountAssetSource = 'bob.publish' | 'bob.export' | 'devstudio' | 'promotion' | 'api';
@@ -1767,8 +1962,8 @@ async function handleGetL10nAsset(env: Env, key: string): Promise<Response> {
 }
 
 async function handleUploadAccountAsset(req: Request, env: Env): Promise<Response> {
-  const authErr = requireDevAuth(req, env);
-  if (authErr) return authErr;
+  const auth = await assertUploadAuth(req, env);
+  if (!auth.ok) return auth.response;
 
   const accountId = (req.headers.get('x-account-id') || '').trim();
   if (!accountId || !isUuid(accountId)) {
@@ -1789,6 +1984,9 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   }
 
   const workspaceId = (req.headers.get('x-workspace-id') || '').trim();
+  if (!workspaceId && !auth.trusted) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 });
+  }
   let tier: string | null = account.isPlatform ? 'devstudio' : null;
   if (workspaceId) {
     if (!isUuid(workspaceId)) {
@@ -1803,6 +2001,22 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
         { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.account.workspaceMismatch' } },
         { status: 422 },
       );
+    }
+
+    if (!auth.trusted) {
+      let membershipRole: MemberRole | null = null;
+      try {
+        membershipRole = await loadWorkspaceMembershipRole(env, workspaceId, auth.principal.userId);
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        return json(
+          { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } },
+          { status: 500 },
+        );
+      }
+      if (!membershipRole || roleRank(membershipRole) < roleRank('editor')) {
+        return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 });
+      }
     }
     tier = workspace.tier ?? tier;
   }

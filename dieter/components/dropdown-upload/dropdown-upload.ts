@@ -1,4 +1,5 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
+import { uploadEditorAsset } from '../shared/assetUpload';
 
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
@@ -165,7 +166,7 @@ function installHandlers(state: DropdownUploadState) {
   const handlePreviewMediaError = (kind: Kind, currentSrc: string) => {
     const raw = state.input.value || '';
     const expected = extractPrimaryUrl(raw) || '';
-    if (!expected || /^data:/i.test(expected) || /^blob:/i.test(expected)) return;
+    if (!expected) return;
     if (state.previewPanel.dataset.kind !== kind) return;
     if (!sameAssetUrl(currentSrc, expected)) return;
     const fallbackLabel = state.previewName.textContent?.trim() || 'Asset unavailable';
@@ -224,27 +225,41 @@ function installHandlers(state: DropdownUploadState) {
     }
     clearError(state);
 
-    if (state.localObjectUrl) URL.revokeObjectURL(state.localObjectUrl);
-    const objectUrl = URL.createObjectURL(file);
-    state.localObjectUrl = objectUrl;
-    const { kind, ext } = classifyByNameAndType(file.name, file.type);
-    state.root.dataset.localName = file.name;
-    setMetaValue(state, { name: file.name, mime: file.type || '', source: 'user' }, true);
-    // Update header immediately with the user-facing filename.
-    setHeaderWithFile(state, file.name, false);
-    setPreview(state, {
-      kind,
-      previewUrl: kind === 'image' || kind === 'video' ? objectUrl : undefined,
-      name: file.name,
-      ext,
-      hasFile: true,
-    });
-
-    // Locked editor contract: keep uploads in-memory until publish.
-    // Persisting is handled by the editor publish flow, which will convert blob/data
-    // URLs into stable URLs.
-    setFileKey(state, objectUrl, true);
+    try {
+      setUploadingState(state, true);
+      const uploadedUrl = await uploadEditorAsset({
+        file,
+        variant: 'original',
+        source: 'api',
+      });
+      const { kind, ext } = classifyByNameAndType(file.name, file.type);
+      state.root.dataset.localName = file.name;
+      setMetaValue(state, { name: file.name, mime: file.type || '', source: 'user' }, true);
+      setHeaderWithFile(state, file.name, false);
+      setPreview(state, {
+        kind,
+        previewUrl: kind === 'image' || kind === 'video' ? uploadedUrl : undefined,
+        name: file.name,
+        ext,
+        hasFile: true,
+      });
+      setFileKey(state, uploadedUrl, true);
+      clearError(state);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
+      setError(state, message);
+    } finally {
+      setUploadingState(state, false);
+      state.fileInput.value = '';
+    }
   });
+}
+
+function setUploadingState(state: DropdownUploadState, uploading: boolean) {
+  state.root.dataset.uploading = uploading ? 'true' : 'false';
+  state.uploadButton.disabled = uploading;
+  state.replaceButton.disabled = uploading;
+  state.removeButton.disabled = uploading;
 }
 
 function validateFileSelection(state: DropdownUploadState, file: File): string | null {
@@ -309,21 +324,18 @@ function readMeta(state: DropdownUploadState): UploadMeta | null {
 function extractPrimaryUrl(raw: string): string | null {
   const v = (raw || '').trim();
   if (!v) return null;
-  if (/^data:/i.test(v) || /^blob:/i.test(v) || /^https?:\/\//i.test(v)) return v;
-  // CSS fill string, e.g. url("data:...") center center / cover no-repeat
+  if (/^https?:\/\//i.test(v) || v.startsWith('/')) return v;
   const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-  if (m && m[2]) return m[2];
+  if (m && m[2]) {
+    const extracted = m[2].trim();
+    if (/^https?:\/\//i.test(extracted) || extracted.startsWith('/')) return extracted;
+  }
   return null;
-}
-
-function isDataUrl(raw: string): boolean {
-  const url = extractPrimaryUrl(raw);
-  return Boolean(url && /^data:/i.test(url));
 }
 
 function looksLikeUrl(raw: string): boolean {
   const url = extractPrimaryUrl(raw);
-  return Boolean(url && (/^https?:\/\//i.test(url) || /^blob:/i.test(url) || url.startsWith('/')));
+  return Boolean(url && (/^https?:\/\//i.test(url) || url.startsWith('/')));
 }
 
 function sameAssetUrl(leftRaw: string, rightRaw: string): boolean {
@@ -352,20 +364,6 @@ function previewFromUrl(state: DropdownUploadState, raw: string, name: string, k
   setPreview(state, { kind, previewUrl: url, name, ext, hasFile: true });
 }
 
-function previewFromDataUrl(
-  state: DropdownUploadState,
-  raw: string,
-  name: string,
-  kindName: string,
-  mimeOverride: string,
-) {
-  const url = extractPrimaryUrl(raw) || '';
-  const mime = mimeOverride || (url.split(';')[0] || '').slice('data:'.length);
-  const ext = (guessExtFromName(kindName) || '').toLowerCase();
-  const kind = classifyByNameAndType(kindName || 'file', mime).kind;
-  setPreview(state, { kind, previewUrl: kind === 'doc' ? undefined : url, name, ext, hasFile: true });
-}
-
 function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta | null = null) {
   let key = String(raw ?? '').trim();
   if (key === 'transparent') key = '';
@@ -377,9 +375,7 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   const kindName = metaName || guessNameFromUrl(rawUrl) || '';
   const fallbackName = expectsMeta
     ? ''
-    : isDataUrl(key)
-      ? state.root.dataset.localName || 'Uploaded file'
-      : state.root.dataset.localName || guessNameFromUrl(rawUrl) || rawUrl || key || 'Uploaded file';
+    : state.root.dataset.localName || guessNameFromUrl(rawUrl) || rawUrl || key || 'Uploaded file';
   const displayName = metaName || fallbackName || (expectsMeta ? 'Unnamed file' : 'Uploaded file');
 
   if (!key) {
@@ -398,13 +394,7 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   } else {
     clearError(state);
   }
-  // Editor-time: local data URL (no network).
-  if (isDataUrl(key)) {
-    setHeaderWithFile(state, displayName, false);
-    previewFromDataUrl(state, key, displayName, kindName || displayName, metaMime);
-    return;
-  }
-  // Persisted state may store a direct URL; render it (no resolve).
+  // Persisted state stores canonical URLs; render directly.
   if (looksLikeUrl(key)) {
     setHeaderWithFile(state, displayName, false);
     previewFromUrl(state, key, displayName, kindName || displayName, metaMime);
@@ -413,7 +403,7 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
 
   setPreview(state, { kind: 'unknown', previewUrl: undefined, name: '', ext: '', hasFile: true });
   setHeaderWithFile(state, 'Invalid value', true);
-  setError(state, 'Unsupported value. Expected a URL (http/https) or an editor-only data URL.');
+  setError(state, 'Unsupported value. Expected an absolute URL (http/https) or root-relative path.');
 }
 
 function setFileKey(state: DropdownUploadState, fileKey: string, emit: boolean) {
@@ -512,13 +502,14 @@ function guessNameFromUrl(url: string): string {
   if (!parts.length) return '';
   const filename = parts[parts.length - 1];
   const stem = filename.replace(/\.[^.]+$/, '').toLowerCase();
-  if (stem === 'original' || stem === 'grayscale') {
-    const legacyAssetId = parts.length >= 2 ? parts[parts.length - 2] : '';
-    const nestedAssetId = parts.length >= 3 ? parts[parts.length - 3] : '';
-    const assetId = /^[a-f0-9-]{8,}$/i.test(nestedAssetId)
-      ? nestedAssetId
-      : /^[a-f0-9-]{8,}$/i.test(legacyAssetId)
-        ? legacyAssetId
+  const normalizedPath = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+  if ((stem === 'original' || stem === 'grayscale') && /\/arsenale\/o\//i.test(normalizedPath)) {
+    const assetIdDirect = parts.length >= 2 ? parts[parts.length - 2] : '';
+    const assetIdWithVariant = parts.length >= 3 ? parts[parts.length - 3] : '';
+    const assetId = /^[a-f0-9-]{8,}$/i.test(assetIdWithVariant)
+      ? assetIdWithVariant
+      : /^[a-f0-9-]{8,}$/i.test(assetIdDirect)
+        ? assetIdDirect
         : '';
     if (assetId) {
       const ext = guessExtFromName(filename);

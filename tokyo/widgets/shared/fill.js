@@ -32,10 +32,30 @@
     return v;
   }
 
+  function isPersistedAssetUrl(raw) {
+    var v = String(raw || '').trim();
+    if (!v) return false;
+    return /^https?:\/\//i.test(v) || v.indexOf('/') === 0;
+  }
+
   function normalizeStringFill(raw) {
     var v = String(raw || '').trim();
     if (!v || v === 'transparent') return { type: 'none' };
-    if (/^(?:https?:|data:|blob:)/i.test(v) || /url\(\s*/i.test(v)) {
+    if (/url\(\s*/i.test(v)) {
+      var extracted = extractPrimaryUrl(v);
+      if (!isPersistedAssetUrl(extracted)) return null;
+      return {
+        type: 'image',
+        image: {
+          src: extracted,
+          fit: 'cover',
+          position: 'center',
+          repeat: 'no-repeat',
+          fallback: '',
+        },
+      };
+    }
+    if (isPersistedAssetUrl(v)) {
       return {
         type: 'image',
         image: {
@@ -115,7 +135,8 @@
 
   function normalizeImage(raw) {
     if (!isRecord(raw)) return { src: '', fit: 'cover', position: 'center', repeat: 'no-repeat', fallback: '' };
-    var src = typeof raw.src === 'string' ? raw.src.trim() : '';
+    var srcRaw = typeof raw.src === 'string' ? raw.src.trim() : '';
+    var src = isPersistedAssetUrl(srcRaw) ? srcRaw : '';
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var repeat = typeof raw.repeat === 'string' && raw.repeat.trim() ? raw.repeat.trim() : 'no-repeat';
@@ -125,8 +146,10 @@
 
   function normalizeVideo(raw) {
     if (!isRecord(raw)) return { src: '', poster: '', fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true, fallback: '' };
-    var src = typeof raw.src === 'string' ? raw.src.trim() : '';
-    var poster = typeof raw.poster === 'string' ? raw.poster.trim() : '';
+    var srcRaw = typeof raw.src === 'string' ? raw.src.trim() : '';
+    var posterRaw = typeof raw.poster === 'string' ? raw.poster.trim() : '';
+    var src = isPersistedAssetUrl(srcRaw) ? srcRaw : '';
+    var poster = isPersistedAssetUrl(posterRaw) ? posterRaw : '';
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var loop = typeof raw.loop === 'boolean' ? raw.loop : true;

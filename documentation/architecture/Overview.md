@@ -161,7 +161,7 @@ Each release proceeds in 3 steps:
 
 #### Tokyo Worker (Workers + Queues)
 - Handles canonical account-owned uploads (`POST /assets/upload`) and stores metadata in Michael (`account_assets`, `account_asset_variants`).
-- Asset usage ("where used") is tracked by Paris in `account_asset_usage` on instance config writes.
+- Asset usage ("where used") is tracked by Paris in `account_asset_usage` via best-effort sync on instance config writes.
 - Serves canonical account asset reads (`GET /arsenale/o/**`) only.
 - Reads `widget_instance_overlays` from Supabase (layered), merges `ops + user_ops` for layer=user, and publishes overlays to Tokyo/R2.
 - Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path.
@@ -172,7 +172,7 @@ Each release proceeds in 3 steps:
 - End-to-end flow:
   1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional workspace/public/widget trace headers).
   2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`).
-  3. Paris validates account asset references on instance writes (fails fast on cross-account/missing refs) and rewrites usage mappings (`account_asset_usage`).
+  3. Paris best-effort syncs usage mappings (`account_asset_usage`) from instance config writes.
   4. Roma Assets reads/deletes via account endpoints (`/api/accounts/:accountId/assets*`) and optionally applies workspace projection.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)

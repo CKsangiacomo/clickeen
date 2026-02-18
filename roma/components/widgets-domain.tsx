@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
-import { prefetchWorkspaceInstance } from './workspace-instance-cache';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 import {
@@ -12,7 +11,7 @@ import {
   createUserInstancePublicId,
   DEFAULT_INSTANCE_DISPLAY_NAME,
   normalizeWidgetType,
-  useRomaWidgets,
+  normalizeRomaWidgetsSnapshot,
   type WidgetInstance,
 } from './use-roma-widgets';
 
@@ -31,14 +30,38 @@ export function WidgetsDomain() {
 
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>([]);
+  const [widgetTypes, setWidgetTypes] = useState<string[]>([]);
+  const [accountIdFromSnapshot, setAccountIdFromSnapshot] = useState('');
+  const [dataError, setDataError] = useState<string | null>(null);
 
   const workspaceId = context.workspaceId;
   const accountId = context.accountId;
   const searchIntent = useMemo(() => (searchParams.get('intent') || '').trim().toLowerCase(), [searchParams]);
   const searchWidgetType = useMemo(() => normalizeWidgetType(searchParams.get('widgetType')), [searchParams]);
+  const activeAccountId = accountId || accountIdFromSnapshot;
 
-  const { widgetInstances, widgetTypes, accountIdFromApi, loading, dataError, loadWidgetsData } = useRomaWidgets(workspaceId);
-  const activeAccountId = accountId || accountIdFromApi;
+  useEffect(() => {
+    if (!workspaceId) {
+      setWidgetInstances([]);
+      setWidgetTypes([]);
+      setAccountIdFromSnapshot('');
+      setDataError(null);
+      return;
+    }
+    const snapshot = normalizeRomaWidgetsSnapshot(me.data?.domains?.widgets ?? null);
+    if (!snapshot || snapshot.workspaceId !== workspaceId) {
+      setWidgetInstances([]);
+      setWidgetTypes([]);
+      setAccountIdFromSnapshot('');
+      setDataError('Bootstrap widgets snapshot unavailable.');
+      return;
+    }
+    setWidgetInstances(snapshot.instances);
+    setWidgetTypes(snapshot.widgetTypes);
+    setAccountIdFromSnapshot(snapshot.accountId);
+    setDataError(null);
+  }, [workspaceId, me.data?.domains?.widgets]);
 
   const availableWidgetTypes = useMemo(() => {
     const values = new Set<string>();
@@ -77,15 +100,6 @@ export function WidgetsDomain() {
     });
   }, [availableWidgetTypes]);
 
-  useEffect(() => {
-    if (!workspaceId) return;
-    widgetInstances.slice(0, 6).forEach((instance) => {
-      const targetWorkspaceId = instance.workspaceId || workspaceId;
-      if (!targetWorkspaceId) return;
-      void prefetchWorkspaceInstance(targetWorkspaceId, instance.publicId);
-    });
-  }, [widgetInstances, workspaceId]);
-
   const createInstance = useCallback(
     async ({ widgetType, openBuilder, actionKey }: CreateInstanceArgs) => {
       if (!workspaceId) return;
@@ -116,7 +130,24 @@ export function WidgetsDomain() {
         );
         const createdPublicId =
           payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : publicId;
-        await loadWidgetsData(true);
+        setWidgetInstances((prev) => {
+          if (prev.some((instance) => instance.publicId === createdPublicId)) return prev;
+          return [
+            {
+              publicId: createdPublicId,
+              widgetType: normalizedWidgetType,
+              displayName: DEFAULT_INSTANCE_DISPLAY_NAME,
+              workspaceId,
+              source: 'workspace',
+              actions: { edit: true, duplicate: true, delete: true },
+            },
+            ...prev,
+          ];
+        });
+        setWidgetTypes((prev) => {
+          if (prev.includes(normalizedWidgetType)) return prev;
+          return [...prev, normalizedWidgetType].sort((a, b) => a.localeCompare(b));
+        });
         if (openBuilder) {
           router.push(
             buildBuilderRoute({
@@ -134,7 +165,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [activeAccountId, loadWidgetsData, router, workspaceId],
+    [activeAccountId, router, workspaceId],
   );
 
   const handleDuplicateInstance = useCallback(
@@ -145,7 +176,7 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        await fetchParisJson<{ publicId?: string }>(`/api/paris/roma/widgets/duplicate`, {
+        const payload = await fetchParisJson<{ publicId?: string; widgetType?: string }>(`/api/paris/roma/widgets/duplicate`, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
@@ -155,7 +186,31 @@ export function WidgetsDomain() {
             sourcePublicId: instance.publicId,
           }),
         });
-        await loadWidgetsData(true);
+        const duplicatedPublicId =
+          payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
+        const duplicatedType = normalizeWidgetType(
+          payload && typeof payload.widgetType === 'string' ? payload.widgetType : instance.widgetType,
+        );
+        if (duplicatedPublicId) {
+          setWidgetInstances((prev) => {
+            if (prev.some((item) => item.publicId === duplicatedPublicId)) return prev;
+            return [
+              {
+                publicId: duplicatedPublicId,
+                widgetType: duplicatedType,
+                displayName: DEFAULT_INSTANCE_DISPLAY_NAME,
+                workspaceId: actionWorkspaceId,
+                source: 'workspace',
+                actions: { edit: true, duplicate: true, delete: true },
+              },
+              ...prev,
+            ];
+          });
+          setWidgetTypes((prev) => {
+            if (duplicatedType === 'unknown' || prev.includes(duplicatedType)) return prev;
+            return [...prev, duplicatedType].sort((a, b) => a.localeCompare(b));
+          });
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setCreateError(message);
@@ -163,7 +218,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [loadWidgetsData, workspaceId],
+    [workspaceId],
   );
 
   const handleDeleteInstance = useCallback(
@@ -180,7 +235,7 @@ export function WidgetsDomain() {
             method: 'DELETE',
           },
         );
-        await loadWidgetsData(true);
+        setWidgetInstances((prev) => prev.filter((item) => item.publicId !== instance.publicId));
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setCreateError(message);
@@ -188,7 +243,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [loadWidgetsData, workspaceId],
+    [workspaceId],
   );
 
   useEffect(() => {
@@ -231,11 +286,10 @@ export function WidgetsDomain() {
       </p>
       <p>Showing workspace widgets grouped by widget. Account-owned curated/main instances are included.</p>
 
-      {loading ? <p>Loading widget instances...</p> : null}
       {dataError ? <p>Failed to load widget instances: {dataError}</p> : null}
       {createError ? <p>Failed to update widgets: {createError}</p> : null}
 
-      {!loading && groupedInstances.length === 0 ? (
+      {groupedInstances.length === 0 ? (
         <div className="roma-module-surface__actions">
           <p>No editable instances yet. Use Templates to start from curated.</p>
           <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/templates">

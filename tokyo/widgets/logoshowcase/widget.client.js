@@ -262,7 +262,7 @@
   function resolveAssetUrl(raw, origin) {
     const v = String(raw || '').trim();
     if (!v) return null;
-    if (/^(?:data:|blob:|https?:\/\/|\/\/)/i.test(v)) return v;
+    if (/^(?:https?:\/\/|\/\/|\/|\.\/|\.\.\/)/i.test(v)) return v;
     if (!origin) return v;
     try {
       return new URL(v, origin).toString();
@@ -274,8 +274,8 @@
   function extractPrimaryUrl(raw, origin) {
     const v = String(raw || '').trim();
     if (!v) return null;
-    if (/^(?:data:|blob:|https?:\/\/|\/\/)/i.test(v)) return v;
-    // CSS fill string, e.g. url("data:...") center center / cover no-repeat
+    if (/^(?:https?:\/\/|\/\/|\/|\.\/|\.\.\/)/i.test(v)) return v;
+    // CSS fill string, e.g. url("https://...") center center / cover no-repeat
     const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
     if (m && m[2]) return resolveAssetUrl(m[2], origin);
     if (/^(?:\/|\.\/|\.\.\/)/.test(v)) return resolveAssetUrl(v, origin);

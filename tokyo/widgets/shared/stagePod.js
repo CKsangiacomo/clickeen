@@ -219,7 +219,7 @@
       if (v.includes(',')) return v;
       return `${v}, linear-gradient(var(--color-system-white), var(--color-system-white))`;
     }
-    if (/^(?:https?:\/\/|data:|blob:)/i.test(v)) {
+    if (/^(?:https?:\/\/|\/)/i.test(v)) {
       return `url("${v}") center center / cover no-repeat, linear-gradient(var(--color-system-white), var(--color-system-white))`;
     }
     return v;

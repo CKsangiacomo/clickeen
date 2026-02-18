@@ -542,21 +542,6 @@
             ></span>
             <span class="diet-btn-ictxt__label body-s">Update Curated</span>
           </button>
-          <button
-            type="button"
-            class="diet-btn-ictxt dev-widget-workspace__action"
-            id="promote-curated-cloud"
-            data-size="md"
-            data-variant="secondary"
-            data-tone="gray4.4"
-          >
-            <span
-              class="diet-btn-ictxt__icon"
-              aria-hidden="true"
-              data-icon="square.and.arrow.up"
-            ></span>
-            <span class="diet-btn-ictxt__label body-s">Promote Cloud</span>
-          </button>
         </div>
       </div>
     </div>
@@ -851,7 +836,7 @@
     const currentLabel = document.getElementById('current-instance-label');
     const compiledCache = new Map();
     const compiledPromiseCache = new Map();
-    const instanceConfigPromiseCache = new Map();
+    const instancePayloadPromiseCache = new Map();
     let sendInstanceSeq = 0;
     const superadminActions = document.getElementById('superadmin-actions');
     const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
@@ -859,7 +844,6 @@
     const superadminResetFromJson = document.getElementById('superadmin-reset-from-json');
     const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
     const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
-    const promoteCuratedCloudBtn = document.getElementById('promote-curated-cloud');
     const refreshPraguePreviewBtn = document.getElementById('refresh-prague-preview');
     const translateSelectedLocalesBtn = document.getElementById('translate-selected-locales');
     const l10nStatus = document.getElementById('l10n-status');
@@ -1347,10 +1331,10 @@
       return promise;
     }
 
-    async function fetchInstanceConfig(publicId, workspaceId = DEV_WORKSPACE_ID) {
+    async function fetchInstancePayload(publicId, workspaceId = DEV_WORKSPACE_ID) {
       const cacheKey = `${workspaceId}::${publicId}`;
-      if (instanceConfigPromiseCache.has(cacheKey)) {
-        return instanceConfigPromiseCache.get(cacheKey);
+      if (instancePayloadPromiseCache.has(cacheKey)) {
+        return instancePayloadPromiseCache.get(cacheKey);
       }
       const promise = (async () => {
         const res = await fetch(
@@ -1361,12 +1345,15 @@
         );
         if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
         const json = await res.json();
-        return json?.config ?? null;
+        if (!json || typeof json !== 'object') {
+          throw new Error(`[DevStudio] Invalid instance payload for ${publicId}`);
+        }
+        return json;
       })().finally(() => {
-        instanceConfigPromiseCache.delete(cacheKey);
+        instancePayloadPromiseCache.delete(cacheKey);
       });
 
-      instanceConfigPromiseCache.set(cacheKey, promise);
+      instancePayloadPromiseCache.set(cacheKey, promise);
       return promise;
     }
 
@@ -1703,33 +1690,6 @@
       );
     }
 
-    async function promoteInstanceToCloud({
-      workspaceId,
-      widgetType,
-      publicId,
-      config,
-      status,
-      ownerAccountId = PLATFORM_ACCOUNT_ID,
-    }) {
-      if (!isLocalDevStudio) return { ok: false, skipped: true };
-      const res = await fetch(`/api/promote-instance?_t=${Date.now()}`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ workspaceId, widgetType, publicId, config, status, ownerAccountId }),
-      });
-      const text = await res.text().catch(() => '');
-      if (!res.ok) {
-        let detail = text || `HTTP ${res.status}`;
-        try {
-          const parsed = text ? JSON.parse(text) : null;
-          detail = parsed?.error?.detail || parsed?.error?.reasonKey || detail;
-        } catch {}
-        console.warn('[DevStudio] Cloud promote failed', { publicId, detail });
-        return { ok: false, error: detail };
-      }
-      return { ok: true, detail: 'promoted' };
-    }
-
     async function exportInstanceDataFromBob({
       timeoutMs = 2500,
       persistAssets = false,
@@ -1891,13 +1851,27 @@
             ? json.relativePath.trim()
             : '';
       const directUrl = typeof json?.url === 'string' ? json.url.trim() : '';
+      const tokyoBase = TOKYO_BASE.replace(/\/+$/, '');
+      const normalizeAbsoluteToBase = (raw) => {
+        const value = String(raw || '').trim();
+        if (!value) return '';
+        try {
+          const parsed = new URL(value);
+          return `${tokyoBase}${parsed.pathname}`;
+        } catch {
+          return value;
+        }
+      };
       const normalizedUrl =
-        directUrl ||
-        (keyCandidate
+        keyCandidate
           ? /^https?:\/\//i.test(keyCandidate)
-            ? keyCandidate
-            : `${TOKYO_BASE.replace(/\/+$/, '')}/${keyCandidate.replace(/^\/+/, '')}`
-          : '');
+            ? normalizeAbsoluteToBase(keyCandidate)
+            : `${tokyoBase}/${keyCandidate.replace(/^\/+/, '')}`
+          : directUrl
+            ? /^https?:\/\//i.test(directUrl)
+              ? normalizeAbsoluteToBase(directUrl)
+              : directUrl
+            : '';
       if (!normalizedUrl) throw new Error('[DevStudio] Asset upload missing url');
       return normalizedUrl;
     }
@@ -2505,40 +2479,6 @@
       }
     }
 
-    async function promoteCurrentInstanceToCloud() {
-      if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-      if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
-        throw new Error('[DevStudio] Select a curated/main instance first.');
-      }
-
-      const instance = instances.find((inst) => inst.publicId === currentPublicId);
-      const widgetSlug = instance?.widgetSlug || normalizeWidgetname(instance?.widgetname);
-      if (!widgetSlug) {
-        throw new Error('[DevStudio] Unable to resolve widget type from selected instance.');
-      }
-
-      const config = await fetchInstanceConfig(currentPublicId, CLICKEEN_WORKSPACE_ID);
-      if (!config || typeof config !== 'object') {
-        throw new Error('[DevStudio] Failed to read persisted local config before cloud promote.');
-      }
-
-      const promoted = await promoteInstanceToCloud({
-        workspaceId: CLICKEEN_WORKSPACE_ID,
-        widgetType: widgetSlug,
-        publicId: currentPublicId,
-        config,
-        status: 'published',
-      });
-
-      if (!promoted.ok) {
-        throw new Error(
-          `[DevStudio] Cloud promote failed for ${currentPublicId}: ${promoted.error || 'unknown error'}`,
-        );
-      }
-
-      alert(`[DevStudio] Cloud promote completed for ${currentPublicId}.`);
-    }
-
     if (isLocalDevStudio && superadminActions) {
       superadminActions.style.display = 'inline-flex';
     }
@@ -2590,25 +2530,6 @@
         await refreshInstancesAndSelect(result.publicId);
       } catch (err) {
         alert(err instanceof Error ? err.message : String(err));
-      }
-    });
-
-    promoteCuratedCloudBtn?.addEventListener('click', async () => {
-      const labelEl = promoteCuratedCloudBtn?.querySelector('.diet-btn-ictxt__label');
-      const previousLabel = labelEl?.textContent || 'Promote Cloud';
-      try {
-        if (promoteCuratedCloudBtn) promoteCuratedCloudBtn.disabled = true;
-        if (labelEl) labelEl.textContent = 'Promoting...';
-        await promoteCurrentInstanceToCloud();
-        if (labelEl) labelEl.textContent = 'Promoted';
-        setTimeout(() => {
-          if (labelEl) labelEl.textContent = previousLabel;
-        }, 1400);
-      } catch (err) {
-        if (labelEl) labelEl.textContent = previousLabel;
-        alert(err instanceof Error ? err.message : String(err));
-      } finally {
-        if (promoteCuratedCloudBtn) promoteCuratedCloudBtn.disabled = false;
       }
     });
 
@@ -2774,57 +2695,80 @@
       if (!instance) {
         throw new Error(`[DevStudio] Instance not found for publicId ${publicId}`);
       }
-      const label =
-        typeof instance.label === 'string' && instance.label.trim()
-          ? instance.label.trim()
-          : DEFAULT_INSTANCE_DISPLAY_NAME;
-
-      const slug = instance.widgetSlug || normalizeWidgetname(instance.widgetname);
+      const payloadStart = performance.now();
+      const payloadResult = await fetchInstancePayload(publicId).then((value) => ({
+        value,
+        durationMs: performance.now() - payloadStart,
+      }));
+      if (requestSeq !== sendInstanceSeq) return;
+      const payload = payloadResult.value;
+      const payloadWidgetType =
+        typeof payload.widgetType === 'string' && payload.widgetType.trim()
+          ? normalizeWidgetname(payload.widgetType)
+          : null;
+      const slug = payloadWidgetType || instance.widgetSlug || normalizeWidgetname(instance.widgetname);
       if (!slug) {
         throw new Error(`[DevStudio] Unable to derive widget slug for ${instance.widgetname}`);
       }
+      const label =
+        typeof payload.displayName === 'string' && payload.displayName.trim()
+          ? payload.displayName.trim()
+          : typeof instance.label === 'string' && instance.label.trim()
+            ? instance.label.trim()
+            : DEFAULT_INSTANCE_DISPLAY_NAME;
 
       let compiled = compiledCache.get(slug);
-      const hasInlineConfig = Boolean(
-        instance.config && typeof instance.config === 'object' && !Array.isArray(instance.config),
-      );
       const compiledStart = performance.now();
       const compiledPromise = compiled
         ? Promise.resolve({ value: compiled, durationMs: performance.now() - compiledStart })
-        : ensureCompiledWidget(instance.widgetname).then((nextCompiled) => ({
+        : ensureCompiledWidget(slug).then((nextCompiled) => ({
             value: nextCompiled,
             durationMs: performance.now() - compiledStart,
           }));
 
-      const configStart = performance.now();
-      const configPromise = hasInlineConfig
-        ? Promise.resolve({ value: instance.config, durationMs: performance.now() - configStart })
-        : fetchInstanceConfig(publicId).then((nextConfig) => ({
-            value: nextConfig,
-            durationMs: performance.now() - configStart,
-          }));
-
-      const [compiledResult, configResult] = await Promise.all([compiledPromise, configPromise]);
+      const compiledResult = await compiledPromise;
       if (requestSeq !== sendInstanceSeq) return;
       compiled = compiledResult.value;
-      const config = configResult.value;
+      const config =
+        payload.config && typeof payload.config === 'object' && !Array.isArray(payload.config)
+          ? payload.config
+          : null;
+      const workspaceId =
+        payload.workspace && typeof payload.workspace === 'object' && typeof payload.workspace.id === 'string'
+          ? payload.workspace.id.trim() || DEV_WORKSPACE_ID
+          : DEV_WORKSPACE_ID;
       instance.config = config;
+      instance.localization = payload.localization ?? null;
+      instance.policy = payload.policy ?? null;
+      instance.enforcement = payload.enforcement ?? null;
+      instance.ownerAccountId =
+        typeof payload.ownerAccountId === 'string' && payload.ownerAccountId.trim()
+          ? payload.ownerAccountId.trim()
+          : payload.workspace &&
+              typeof payload.workspace === 'object' &&
+              typeof payload.workspace.accountId === 'string' &&
+              payload.workspace.accountId.trim()
+            ? payload.workspace.accountId.trim()
+            : PLATFORM_ACCOUNT_ID;
       console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
       await postOpenEditorAndWait(target, {
         type: 'ck:open-editor',
         subjectMode: 'devstudio',
         publicId,
-        workspaceId: DEV_WORKSPACE_ID,
-        ownerAccountId: PLATFORM_ACCOUNT_ID,
+        workspaceId,
+        ownerAccountId: instance.ownerAccountId,
         label,
         widgetname: slug,
         compiled,
         instanceData: config ?? null,
+        localization: instance.localization,
+        policy: instance.policy ?? undefined,
+        enforcement: instance.enforcement ?? undefined,
       });
       console.log('[DevStudio] Instance load timings', {
         publicId,
         compileMs: Math.round(compiledResult.durationMs),
-        configMs: Math.round(configResult.durationMs),
+        payloadMs: Math.round(payloadResult.durationMs),
         totalMs: Math.round(performance.now() - totalStart),
       });
     }

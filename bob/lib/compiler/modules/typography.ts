@@ -60,7 +60,7 @@ export function buildTypographyPanel(args: {
 
   const roleEntries: Array<{ key: string; label: string }> = [
     { key: 'title', label: 'Title' },
-    { key: 'body', label: 'Body' },
+    { key: 'body', label: 'Subtitle' },
     { key: 'section', label: 'Eyebrow' },
     { key: 'question', label: 'Question' },
     { key: 'answer', label: 'Answer' },

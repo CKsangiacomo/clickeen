@@ -161,7 +161,7 @@ Widget runtime code (`tokyo/widgets/{widget}/widget.client.js`) must:
 
 ### Tokyo asset proxy (preview)
 
-Bob serves widget and Dieter assets through same-origin routes so the preview iframe can load assets and `blob:` URLs safely:
+Bob serves widget and Dieter assets through same-origin routes so the preview iframe can load canonical asset URLs safely:
 - `bob/app/widgets/[...path]/route.ts` (`/widgets/*`)
 - `bob/app/dieter/[...path]/route.ts` (`/dieter/*`)
 
@@ -248,20 +248,21 @@ ToolDrawer has a single, global vertical rhythm. **Only clusters and groups defi
 ### Built-in editor actions (current)
 - Undo is supported for the last applied ops batch (`undoSnapshot` in `useWidgetSession`).
 
-### Asset persistence (account-owned uploads)
+### Asset uploads (account-owned, immediate)
 
-Before publish (and during certain DevStudio superadmin flows), Bob scans config for `data:`/`blob:` URLs, uploads binaries to Tokyo, and rewrites the config with stable `http(s)` URLs.
+Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file pick through Bob:
+- `POST /api/assets/upload` (Bob proxy) -> Tokyo-worker `POST /assets/upload`
+- Bob forwards Supabase session bearer and account/workspace/public/widget trace headers.
+- Tokyo-worker validates auth + workspace membership, enforces account/workspace binding, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
 
-Implementation:
-- Client persistence utility: `bob/lib/assets/persistConfigAssetsToTokyo.ts`
-- Upload proxy: `bob/app/api/assets/upload/route.ts` (proxies to Tokyo `POST /assets/upload`)
+The control writes the canonical URL directly into widget config (no publish-time crawl/rewrite step).
 
-Scopes:
-- **Canonical ownership**: every upload carries `x-account-id` and writes to canonical account paths:
+Contracts:
+- **Canonical ownership**: uploads are account-owned and stored at:
   - original variant: `arsenale/o/{accountId}/{assetId}/{filename}`
   - non-original variants: `arsenale/o/{accountId}/{assetId}/{variant}/{filename}`
-- **Trace context (optional)**: `workspaceId`, `publicId`, `widgetType`, `source` are persisted for diagnostics/attribution only
-- Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are rejected during persistence.
+- **Trace context**: `workspaceId`, `publicId`, `widgetType`, `source` remain provenance fields.
+- Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are unsupported on writes.
 
 Operational baseline (local smoke, 2026-02-17):
 - `POST /api/assets/upload` (1x1 PNG, account/workspace trace headers): `~55ms`
@@ -424,7 +425,6 @@ Reference:
 - `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local dev defaults to `http://localhost:4000`)
 ### Optional
 - `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (used by the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
-- `TOKYO_DEV_JWT` (server-only; used by `/api/assets/upload` when targeting Tokyo dev worker)
 
 ### Paris proxy (current code)
 Bob proxies Paris via:

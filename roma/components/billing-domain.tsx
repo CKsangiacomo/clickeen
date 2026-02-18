@@ -23,38 +23,26 @@ export function BillingDomain() {
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<BillingSummaryResponse | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<null | 'checkout' | 'portal'>(null);
 
   useEffect(() => {
-    if (!accountId) return;
-    let cancelled = false;
-    const run = async () => {
-      setLoading(true);
+    if (!accountId) {
+      setSummary(null);
       setError(null);
-      try {
-        const payload = await fetchParisJson<BillingSummaryResponse>(
-          `/api/paris/accounts/${encodeURIComponent(accountId)}/billing/summary`,
-        );
-        if (cancelled) return;
-        setSummary(payload);
-      } catch (err) {
-        if (cancelled) return;
-        const message = err instanceof Error ? err.message : String(err);
-        setError(message);
-        setSummary(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, [accountId]);
+      return;
+    }
+    const snapshot = me.data?.domains?.billing ?? null;
+    if (!snapshot || snapshot.accountId !== accountId) {
+      setSummary(null);
+      setError('Bootstrap billing snapshot unavailable.');
+      return;
+    }
+    setSummary(snapshot);
+    setError(null);
+  }, [accountId, me.data?.domains?.billing]);
 
   const callBillingAction = async (kind: 'checkout' | 'portal') => {
     if (!accountId) return;
@@ -86,7 +74,6 @@ export function BillingDomain() {
     <section className="roma-module-surface">
       <p>Account: {accountId}</p>
 
-      {loading ? <p>Loading billing summary...</p> : null}
       {error ? <p>Failed to load billing summary: {error}</p> : null}
       {actionError ? <p>Billing action failed: {actionError}</p> : null}
 

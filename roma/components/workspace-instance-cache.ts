@@ -13,6 +13,19 @@ export type WorkspaceInstancePayload = {
   config?: unknown;
   policy?: unknown;
   enforcement?: unknown;
+  localization?: {
+    workspaceLocales?: string[];
+    invalidWorkspaceLocales?: string | null;
+    localeOverlays?: Array<{
+      locale?: string;
+      source?: string | null;
+      baseFingerprint?: string | null;
+      baseUpdatedAt?: string | null;
+      hasUserOps?: boolean;
+      baseOps?: Array<{ op?: string; path?: string; value?: string }>;
+      userOps?: Array<{ op?: string; path?: string; value?: string }>;
+    }>;
+  };
 };
 
 type WorkspaceInstanceCacheEntry = {
@@ -114,4 +127,3 @@ export async function prefetchWorkspaceInstance(workspaceId: string, publicId: s
     // Prefetch is best-effort. Interactive flows still fetch on demand.
   }
 }
-

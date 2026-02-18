@@ -51,6 +51,114 @@ export type RomaMeResponse = {
       budgets?: Record<string, { max: number | null; used: number }>;
     } | null;
   };
+  domains?: {
+    widgets?: {
+      accountId: string;
+      workspaceId: string;
+      widgetTypes: string[];
+      instances: Array<{
+        publicId: string;
+        widgetType: string;
+        displayName: string;
+        workspaceId: string | null;
+        source: 'workspace' | 'curated';
+        actions: {
+          edit: boolean;
+          duplicate: boolean;
+          delete: boolean;
+        };
+      }>;
+    } | null;
+    templates?: {
+      accountId: string;
+      workspaceId: string;
+      widgetTypes: string[];
+      instances: Array<{
+        publicId: string;
+        widgetType: string;
+        displayName: string;
+      }>;
+    } | null;
+    assets?: {
+      accountId: string;
+      workspaceId: string | null;
+      assets: Array<{
+        assetId: string;
+        normalizedFilename: string;
+        contentType: string;
+        sizeBytes: number;
+        usageCount: number;
+        deletedAt: string | null;
+        createdAt: string;
+      }>;
+    } | null;
+    team?: {
+      workspaceId: string;
+      role: string;
+      members: Array<{
+        userId: string;
+        role: string;
+        createdAt: string | null;
+        updatedAt: string | null;
+      }>;
+    } | null;
+    billing?: {
+      accountId: string;
+      role: string;
+      provider: string;
+      status: string;
+      reasonKey: string;
+      plan: {
+        inferredTier: string;
+        workspaceCount: number;
+      };
+      checkoutAvailable: boolean;
+      portalAvailable: boolean;
+    } | null;
+    usage?: {
+      accountId: string;
+      role: string;
+      usage: {
+        workspaces: number;
+        instances: {
+          total: number;
+          published: number;
+          unpublished: number;
+        };
+        assets: {
+          total: number;
+          active: number;
+          bytesActive: number;
+        };
+      };
+    } | null;
+    settings?: {
+      accountSummary: {
+        accountId: string;
+        status: string;
+        isPlatform: boolean;
+        role: string;
+        workspaceCount: number;
+      };
+      workspaceSummary: {
+        workspaceId: string;
+        accountId: string;
+        tier: string;
+        name: string;
+        slug: string;
+        role: string;
+      };
+      accountWorkspaces: Array<{
+        workspaceId: string;
+        accountId: string;
+        tier: string;
+        name: string;
+        slug: string;
+        createdAt: string | null;
+        updatedAt: string | null;
+      }>;
+    } | null;
+  } | null;
 };
 
 export type ResolvedRomaContext = {

@@ -32,8 +32,7 @@ Paris in this repo is a **dev-focused Worker** with a deliberately small surface
 - Instance reads/writes use Supabase REST with the service role.
 - Paris requires `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
 - Paris exposes account-canonical asset management APIs backed by `account_assets`, `account_asset_variants`, and `account_asset_usage` ("where used"), with optional workspace projection filters.
-- Paris automatically rewrites `account_asset_usage` rows on instance config create/update (workspace endpoints), so usage mapping is deterministic without manual reconcile jobs.
-- Instance writes fail fast (`422`) when config references account-asset URLs that are cross-account or missing from `account_assets`, preventing dangling `/arsenale/o/**` refs from being persisted.
+- Paris best-effort syncs `account_asset_usage` rows on instance config create/update/delete (workspace + Roma endpoints); sync errors are logged and do not block writes.
 - Roma widgets/templates domain lists (`GET /api/roma/widgets`, `GET /api/roma/templates`) are intentionally lightweight (no instance `config` blobs); write actions like duplicate are explicit commands (`POST /api/roma/widgets/duplicate`).
 - `GET /api/roma/widgets` returns active-workspace user instances plus curated/main starters owned by the workspace account.
 - `GET /api/roma/templates` returns all curated/main starters available to authenticated workspace members.
@@ -478,7 +477,6 @@ Required env vars:
 Notes:
 
 - Locale is a **runtime parameter** (handled by Venice overlays); it must not be encoded into `publicId`.
-- Cloud-dev should be updated via DevStudio’s **Promote Cloud** action (direct upsert), not by calling this local-only endpoint.
 
 ### Usage & submissions (not shipped here)
 

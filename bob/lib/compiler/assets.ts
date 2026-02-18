@@ -91,7 +91,6 @@ export async function buildWidgetAssets(args: {
 }): Promise<CompiledWidget['assets']> {
   const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
   // Serve widget + Dieter assets through Bob so the preview iframe runs same-origin.
-  // This enables in-memory `blob:` URLs (locked editor contract) to render inside the preview.
   const dieterBase = `/dieter`;
   const assetBase = `/widgets/${args.widgetname}`;
 

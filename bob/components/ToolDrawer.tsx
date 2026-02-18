@@ -14,6 +14,9 @@ export function ToolDrawer() {
   const compiled = session.compiled;
   const sessionError = session.error;
   const workspaceId = session.meta?.workspaceId ? String(session.meta.workspaceId) : '';
+  const ownerAccountId = session.meta?.ownerAccountId ? String(session.meta.ownerAccountId) : '';
+  const publicId = session.meta?.publicId ? String(session.meta.publicId) : '';
+  const widgetType = session.meta?.widgetname ? String(session.meta.widgetname) : '';
 
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
@@ -32,16 +35,19 @@ export function ToolDrawer() {
   }, [activePanel, session, session.locale.activeLocale, session.locale.baseLocale, session.setLocalePreview]);
 
   useEffect(() => {
-    // Provide a stable place for Dieter upload controls (dropdown-fill/dropdown-upload) to find
-    // the active workspace for asset persistence. This avoids having to thread IDs through every stencil.
+    // Keep editor upload context in one place for Dieter upload controls.
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
-    if (!workspaceId) {
-      delete (root.dataset as any).ckWorkspaceId;
-      return;
-    }
-    (root.dataset as any).ckWorkspaceId = workspaceId;
-  }, [workspaceId]);
+    const dataset = root.dataset as any;
+    if (workspaceId) dataset.ckWorkspaceId = workspaceId;
+    else delete dataset.ckWorkspaceId;
+    if (ownerAccountId) dataset.ckOwnerAccountId = ownerAccountId;
+    else delete dataset.ckOwnerAccountId;
+    if (publicId) dataset.ckPublicId = publicId;
+    else delete dataset.ckPublicId;
+    if (widgetType) dataset.ckWidgetType = widgetType;
+    else delete dataset.ckWidgetType;
+  }, [workspaceId, ownerAccountId, publicId, widgetType]);
 
   const panelsById = useMemo(() => {
     const map: Record<string, CompiledPanel> = {};
