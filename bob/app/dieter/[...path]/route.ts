@@ -53,11 +53,12 @@ async function proxy(request: NextRequest, prefix: string, pathSegments: string[
   }
 
   const cacheBust = request.nextUrl.searchParams.has('ts');
-  const res = await fetch(url, {
+  const fetchInit: RequestInit = {
     method,
     headers: buildConditionalHeaders(request),
-    cache: cacheBust ? 'no-store' : 'default',
-  });
+  };
+  if (cacheBust) fetchInit.cache = 'no-store';
+  const res = await fetch(url, fetchInit);
   const headers = copyUpstreamHeaders(res);
 
   // Explicit cache bust (opt-in via query param).

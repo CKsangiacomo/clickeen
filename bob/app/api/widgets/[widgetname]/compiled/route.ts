@@ -66,7 +66,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
       }
     }
 
-    const fetchInit: RequestInit = { cache: cacheBust ? 'no-store' : 'default' };
+    const fetchInit: RequestInit = {};
+    if (cacheBust) fetchInit.cache = 'no-store';
     const [specRes, limitsRes] = await Promise.all([fetch(specUrl, fetchInit), fetch(limitsUrl, fetchInit)]);
 
     if (!specRes.ok) {

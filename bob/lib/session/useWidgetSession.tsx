@@ -2181,12 +2181,17 @@ function useWidgetSessionInternal() {
     const params = new URLSearchParams(window.location.search);
     const workspaceId = (params.get('workspaceId') || '').trim();
     const publicId = (params.get('publicId') || '').trim();
-    if (!workspaceId || !publicId) return;
+    if (!publicId) return;
 
     const subject = resolveSubjectModeFromUrl();
-    const instanceUrl = `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
-      publicId
-    )}?subject=${encodeURIComponent(subject)}`;
+    if (!workspaceId && subject !== 'minibob') return;
+
+    const instanceUrl =
+      subject === 'minibob'
+        ? `/api/paris/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`
+        : `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+            publicId,
+          )}?subject=${encodeURIComponent(subject)}`;
     const instanceRes = await fetch(instanceUrl, { cache: 'no-store' });
     if (!instanceRes.ok) {
       throw new Error(`[useWidgetSession] Failed to load instance (HTTP ${instanceRes.status})`);
