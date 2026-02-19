@@ -429,7 +429,7 @@ const drawerContext = JSON.stringify({
         return;
       }
 
-      const publicIdPattern = new RegExp({JSON.stringify(curatedPublicIdPattern)}, 'i');
+      const publicIdPattern = new RegExp(${JSON.stringify(curatedPublicIdPattern)}, 'i');
       for (const update of updates) {
         if (!publicIdPattern.test(update.publicId)) {
           setStatus('Invalid publicId: ' + update.publicId, 'error');
