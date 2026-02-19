@@ -1,5 +1,6 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 import { uploadEditorAsset } from '../shared/assetUpload';
+import { parseCanonicalAssetRef } from '@clickeen/ck-contracts';
 
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
@@ -502,20 +503,11 @@ function guessNameFromUrl(url: string): string {
   if (!parts.length) return '';
   const filename = parts[parts.length - 1];
   const stem = filename.replace(/\.[^.]+$/, '').toLowerCase();
-  const normalizedPath = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
-  if ((stem === 'original' || stem === 'grayscale') && /\/arsenale\/o\//i.test(normalizedPath)) {
-    const assetIdDirect = parts.length >= 2 ? parts[parts.length - 2] : '';
-    const assetIdWithVariant = parts.length >= 3 ? parts[parts.length - 3] : '';
-    const assetId = /^[a-f0-9-]{8,}$/i.test(assetIdWithVariant)
-      ? assetIdWithVariant
-      : /^[a-f0-9-]{8,}$/i.test(assetIdDirect)
-        ? assetIdDirect
-        : '';
-    if (assetId) {
-      const ext = guessExtFromName(filename);
-      const shortId = assetId.replace(/-/g, '').slice(0, 8);
-      return ext ? `asset-${shortId}.${ext}` : `asset-${shortId}`;
-    }
+  const parsed = parseCanonicalAssetRef(cleaned);
+  if (parsed && (parsed.kind === 'pointer' || stem === 'original' || stem === 'grayscale')) {
+    const ext = guessExtFromName(filename);
+    const shortId = parsed.assetId.replace(/-/g, '').slice(0, 8);
+    return ext ? `asset-${shortId}.${ext}` : `asset-${shortId}`;
   }
   return filename;
 }

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { ASSET_OBJECT_PATH_RE, isUuid } from '../tooling/ck-contracts/src/index.js';
+
 /**
  * One-shot origin repair for persisted widget configs.
  *
@@ -26,7 +28,6 @@ const CURATED_TABLE = 'curated_widget_instances';
 const WORKSPACE_TABLE = 'widget_instances';
 const DEFAULT_PAGE_SIZE = 100;
 
-const CANONICAL_PATH_RE = /^\/arsenale\/o\/([^/]+)\/([0-9a-fA-F-]{36})\/(?:(original|[a-z0-9_-]+)\/)?([^/?#]+)$/i;
 const LEGACY_CURATED_PATH_RE = /^\/curated-assets\/[^/]+\/[^/]+\/([0-9a-fA-F-]{36})\/([^/?#]+)$/i;
 const CSS_URL_RE = /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi;
 const ASSET_FIELD_PATH_RE = /(?:^|[\].])(?:src|poster|logoFill)$/;
@@ -97,10 +98,6 @@ function parseArgs(argv) {
   return out;
 }
 
-function isUuid(value) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || '').trim());
-}
-
 function toPathname(raw) {
   const value = String(raw || '').trim();
   if (!value) return null;
@@ -143,6 +140,24 @@ function safeDecodeSegment(raw) {
   } catch {
     return value;
   }
+}
+
+function parseCanonicalAssetPathDetails(pathname) {
+  const matched = String(pathname || '').match(ASSET_OBJECT_PATH_RE);
+  if (!matched) return null;
+
+  const parts = String(pathname || '')
+    .split('/')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length !== 5 && parts.length !== 6) return null;
+
+  const accountId = safeDecodeSegment(parts[2] || '');
+  const assetId = safeDecodeSegment(parts[3] || '').toLowerCase();
+  const filename = safeDecodeSegment(parts[parts.length - 1] || '');
+  const variantRaw = parts.length === 6 ? safeDecodeSegment(parts[4] || '') : 'original';
+  const variant = String(variantRaw || 'original').trim().toLowerCase() || 'original';
+  return { accountId, assetId, variant, filename };
 }
 
 function isAssetFieldPath(path) {
@@ -262,12 +277,12 @@ async function rewriteCandidatePath(client, candidateRaw, variantCache) {
     return { changed: canonical !== candidate, value: canonical };
   }
 
-  const canonicalMatch = pathname.match(CANONICAL_PATH_RE);
-  if (canonicalMatch) {
-    const accountIdFromPath = safeDecodeSegment(canonicalMatch[1] || '');
-    const assetId = String(canonicalMatch[2] || '').trim().toLowerCase();
-    const variant = String(canonicalMatch[3] || 'original').trim().toLowerCase() || 'original';
-    const filenameFromPath = safeDecodeSegment(canonicalMatch[4] || '');
+  const canonical = parseCanonicalAssetPathDetails(pathname);
+  if (canonical) {
+    const accountIdFromPath = canonical.accountId;
+    const assetId = canonical.assetId;
+    const variant = canonical.variant;
+    const filenameFromPath = canonical.filename;
     if (!isUuid(accountIdFromPath)) {
       return { changed: false, value: candidate, unresolved: `canonical-invalid-account-id:${candidate}` };
     }

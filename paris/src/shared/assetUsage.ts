@@ -2,10 +2,16 @@ import type { Env } from './types';
 import { readJson } from './http';
 import { supabaseFetch } from './supabase';
 import { isUuid } from './validation';
+import { parseCanonicalAssetRef } from '@clickeen/ck-contracts';
 
 type AccountAssetRef = {
   accountId: string;
   assetId: string;
+};
+
+type SyncAccountAssetUsageRpcRow = {
+  count?: unknown;
+  sync_account_asset_usage?: unknown;
 };
 
 export type AccountAssetUsageRef = {
@@ -23,28 +29,13 @@ export class AssetUsageValidationError extends Error {
 }
 
 function parseAccountAssetRef(raw: string): AccountAssetRef | null {
-  const value = String(raw || '').trim();
-  if (!value) return null;
-
-  let pathname = '';
-  if (/^https?:\/\//i.test(value)) {
-    try {
-      pathname = new URL(value).pathname;
-    } catch {
-      return null;
-    }
-  } else if (value.startsWith('/')) {
-    pathname = value;
-  } else {
-    return null;
-  }
-
-  const match = pathname.match(/^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/);
-  if (!match) return null;
-  const accountId = decodeURIComponent(match[1] || '').trim();
-  const assetId = decodeURIComponent(match[2] || '').trim();
-  if (!isUuid(accountId) || !isUuid(assetId)) return null;
-  return { accountId, assetId };
+  const parsed = parseCanonicalAssetRef(raw);
+  if (!parsed) return null;
+  if (!isUuid(parsed.accountId) || !isUuid(parsed.assetId)) return null;
+  return {
+    accountId: parsed.accountId,
+    assetId: parsed.assetId,
+  };
 }
 
 function findAccountAssetRefsInString(value: string): AccountAssetRef[] {
@@ -101,12 +92,12 @@ export function extractAccountAssetUsageRefs(config: unknown, publicId: string):
   return Array.from(out.values());
 }
 
-export async function syncAccountAssetUsageForInstance(args: {
+async function resolveValidatedAccountAssetUsageRefs(args: {
   env: Env;
   accountId: string;
   publicId: string;
   config: Record<string, unknown>;
-}): Promise<{ count: number }> {
+}): Promise<AccountAssetUsageRef[]> {
   const accountId = String(args.accountId || '').trim();
   const publicId = String(args.publicId || '').trim();
   if (!isUuid(accountId)) {
@@ -172,41 +163,67 @@ export async function syncAccountAssetUsageForInstance(args: {
     }
   }
 
-  const deleteParams = new URLSearchParams({ public_id: `eq.${publicId}` });
-  const deleteRes = await supabaseFetch(
-    args.env,
-    `/rest/v1/account_asset_usage?${deleteParams.toString()}`,
-    { method: 'DELETE' },
-  );
-  if (!deleteRes.ok) {
-    const details = await readJson(deleteRes);
+  return refs;
+}
+
+export async function validateAccountAssetUsageForInstance(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  config: Record<string, unknown>;
+}): Promise<{ count: number }> {
+  const refs = await resolveValidatedAccountAssetUsageRefs(args);
+  return { count: refs.length };
+}
+
+export async function syncAccountAssetUsageForInstance(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  config: Record<string, unknown>;
+}): Promise<{ count: number }> {
+  const refs = await resolveValidatedAccountAssetUsageRefs(args);
+  const accountId = String(args.accountId || '').trim();
+  const publicId = String(args.publicId || '').trim();
+
+  const rpcRows = refs.map((ref) => ({
+    asset_id: ref.assetId,
+    config_path: ref.configPath,
+  }));
+  const syncRes = await supabaseFetch(args.env, '/rest/v1/rpc/sync_account_asset_usage', {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({
+      p_account_id: accountId,
+      p_public_id: publicId,
+      p_refs: rpcRows,
+    }),
+  });
+  if (!syncRes.ok) {
+    const details = await readJson(syncRes);
     throw new Error(
-      `[ParisWorker] Failed to delete existing asset usage (${deleteRes.status}): ${JSON.stringify(details)}`,
+      `[ParisWorker] Failed to sync account asset usage atomically (${syncRes.status}): ${JSON.stringify(details)}`,
     );
   }
 
-  if (refs.length === 0) return { count: 0 };
-
-  const insertRows = refs.map((row) => ({
-    account_id: row.accountId,
-    asset_id: row.assetId,
-    public_id: row.publicId,
-    config_path: row.configPath,
-  }));
-  const insertRes = await supabaseFetch(
-    args.env,
-    '/rest/v1/account_asset_usage?on_conflict=account_id,asset_id,public_id,config_path',
-    {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify(insertRows),
-    },
-  );
-  if (!insertRes.ok) {
-    const details = await readJson(insertRes);
-    throw new Error(
-      `[ParisWorker] Failed to upsert asset usage (${insertRes.status}): ${JSON.stringify(details)}`,
-    );
+  const payload = (await readJson(syncRes)) as
+    | SyncAccountAssetUsageRpcRow
+    | SyncAccountAssetUsageRpcRow[]
+    | number
+    | null;
+  const first =
+    Array.isArray(payload) && payload.length > 0 && payload[0] && typeof payload[0] === 'object'
+      ? payload[0]
+      : null;
+  const rawCount =
+    (first?.count ?? first?.sync_account_asset_usage) ??
+    (payload && typeof payload === 'object' && !Array.isArray(payload)
+      ? ((payload as SyncAccountAssetUsageRpcRow).count ??
+          (payload as SyncAccountAssetUsageRpcRow).sync_account_asset_usage)
+      : null) ??
+    (typeof payload === 'number' ? payload : null);
+  if (typeof rawCount === 'number' && Number.isFinite(rawCount) && rawCount >= 0) {
+    return { count: Math.trunc(rawCount) };
   }
 
   return { count: refs.length };

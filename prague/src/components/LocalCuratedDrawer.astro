@@ -1,4 +1,6 @@
 ---
+import { WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN } from '@clickeen/ck-contracts';
+
 type CuratedSlot = {
   blockId: string;
   blockType: string;
@@ -78,6 +80,7 @@ if (Array.isArray(blocks)) {
 }
 
 const normalizedSlotCount = normalizedBlocks.reduce((sum, block) => sum + block.slots.length, 0);
+const curatedPublicIdPattern = WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN;
 const drawerContext = JSON.stringify({
   widget,
   page,
@@ -426,7 +429,7 @@ const drawerContext = JSON.stringify({
         return;
       }
 
-      const publicIdPattern = /^wgt_(curated|main)_[a-z0-9][a-z0-9_.-]*$/i;
+      const publicIdPattern = new RegExp({JSON.stringify(curatedPublicIdPattern)}, 'i');
       for (const update of updates) {
         if (!publicIdPattern.test(update.publicId)) {
           setStatus('Invalid publicId: ' + update.publicId, 'error');

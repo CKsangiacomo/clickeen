@@ -21,20 +21,33 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isL10nBaseSnapshot = isL10n && normalized.includes('/bases/') && normalized.endsWith('.snapshot.json');
   const isI18n = normalized.startsWith('/i18n/');
   const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
-  const isAccountAsset = normalized.startsWith('/arsenale/o/');
+  const isAccountAssetObject = normalized.startsWith('/arsenale/o/');
+  const isAccountAssetPointer = normalized.startsWith('/arsenale/a/');
   const isRender = normalized.startsWith('/renders/');
-  const isRenderIndex = isRender && normalized.endsWith('/index.json');
-  const isRenderArtifact = isRender && !isRenderIndex;
+  const isRenderPublishedPointer = isRender && normalized.endsWith('/published.json');
+  const isRenderRevisionIndex = /^\/renders\/instances\/[^/]+\/revisions\/[^/]+\/index\.json$/i.test(normalized);
+  const isRenderLegacyIndex = isRender && normalized.endsWith('/index.json') && !isRenderRevisionIndex;
+  const isRenderArtifact =
+    isRender &&
+    !isRenderPublishedPointer &&
+    !isRenderRevisionIndex &&
+    !isRenderLegacyIndex;
   const isDieter = normalized.startsWith('/dieter/');
   const isWidget = normalized.startsWith('/widgets/');
 
-  if (isL10nOverlay || isL10nBaseSnapshot || isAccountAsset || isRenderArtifact) {
+  if (isL10nOverlay || isL10nBaseSnapshot || isAccountAssetObject || isRenderArtifact || isRenderRevisionIndex) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
+  }
+  if (isAccountAssetPointer) {
+    return { cache: 'force-cache', next: { revalidate: 30 } };
+  }
+  if (isRenderPublishedPointer) {
+    return { cache: 'force-cache', next: { revalidate: 15 } };
   }
   if (isI18n && !isI18nManifest) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
-  if (isRenderIndex) {
+  if (isRenderLegacyIndex) {
     return { cache: 'force-cache', next: { revalidate: 60 } };
   }
   if (isL10nIndex || isI18nManifest) {

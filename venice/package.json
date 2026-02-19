@@ -10,6 +10,7 @@
     "check:budgets": "node scripts/check-budgets.js"
   },
   "dependencies": {
+    "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/l10n": "workspace:*",
     "next": "15.5.2",
     "react": "^18.3.1",

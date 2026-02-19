@@ -23,6 +23,12 @@ type DeleteAssetPayload = {
   deletedAt?: string | null;
 };
 
+type PendingDelete = {
+  assetId: string;
+  normalizedFilename: string;
+  usageCount: number;
+};
+
 export function AssetsDomain() {
   const me = useRomaMe();
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
@@ -33,6 +39,7 @@ export function AssetsDomain() {
   const [error, setError] = useState<string | null>(null);
   const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
 
   useEffect(() => {
     if (!accountId) {
@@ -50,31 +57,49 @@ export function AssetsDomain() {
     setError(null);
   }, [accountId, me.data?.domains?.assets]);
 
-  const handleDeleteAsset = useCallback(async (assetId: string, usageCount: number) => {
-    if (!accountId) return;
-    const usageWarning =
-      usageCount > 0
-        ? `This asset is currently referenced ${usageCount} time${usageCount === 1 ? '' : 's'} in instance config. `
-        : '';
-    const confirmed = window.confirm(
-      `${usageWarning}Delete this asset from account library? This is a soft delete and does not rewrite existing instance configs.`,
-    );
-    if (!confirmed) return;
-    setDeletingAssetId(assetId);
-    setDeleteError(null);
-    try {
-      await fetchParisJson<DeleteAssetPayload>(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/assets/${encodeURIComponent(assetId)}`,
-        { method: 'DELETE' },
-      );
-      setAssets((prev) => prev.filter((asset) => asset.assetId !== assetId));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setDeleteError(message);
-    } finally {
-      setDeletingAssetId(null);
-    }
-  }, [accountId]);
+  const deleteAsset = useCallback(
+    async (assetId: string) => {
+      if (!accountId) return;
+      setPendingDelete(null);
+      setDeletingAssetId(assetId);
+      setDeleteError(null);
+      try {
+        await fetchParisJson<DeleteAssetPayload>(
+          `/api/paris/accounts/${encodeURIComponent(accountId)}/assets/${encodeURIComponent(assetId)}`,
+          { method: 'DELETE' },
+        );
+        setAssets((prev) => prev.filter((asset) => asset.assetId !== assetId));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setDeleteError(message);
+      } finally {
+        setDeletingAssetId(null);
+      }
+    },
+    [accountId],
+  );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!pendingDelete) return;
+    const { assetId } = pendingDelete;
+    await deleteAsset(assetId);
+  }, [deleteAsset, pendingDelete]);
+
+  const handleDeleteAsset = useCallback(
+    (asset: AssetRecord) => {
+      if (!accountId) return;
+      if (asset.usageCount > 0) {
+        setPendingDelete({
+          assetId: asset.assetId,
+          normalizedFilename: asset.normalizedFilename,
+          usageCount: asset.usageCount,
+        });
+        return;
+      }
+      void deleteAsset(asset.assetId);
+    },
+    [accountId, deleteAsset],
+  );
 
   if (me.loading) return <section className="roma-module-surface">Loading workspace context...</section>;
   if (me.error || !me.data) {
@@ -116,7 +141,7 @@ export function AssetsDomain() {
                   data-size="md"
                   data-variant="secondary"
                   type="button"
-                  onClick={() => void handleDeleteAsset(asset.assetId, asset.usageCount)}
+                  onClick={() => handleDeleteAsset(asset)}
                   disabled={deletingAssetId === asset.assetId}
                 >
                   <span className="diet-btn-txt__label">{deletingAssetId === asset.assetId ? 'Deleting...' : 'Delete'}</span>
@@ -131,6 +156,42 @@ export function AssetsDomain() {
           ) : null}
         </tbody>
       </table>
+
+      {pendingDelete ? (
+        <div className="roma-modal-backdrop" role="presentation">
+          <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-assets-delete-title">
+            <h2 id="roma-assets-delete-title">Confirm asset delete</h2>
+            <p>
+              {pendingDelete.usageCount > 0
+                ? `This asset is used ${pendingDelete.usageCount} time${pendingDelete.usageCount === 1 ? '' : 's'}, are you sure you want to delete it?`
+                : 'Are you sure you want to delete this asset?'}
+            </p>
+            <p>Asset: {pendingDelete.normalizedFilename}</p>
+            <div className="roma-modal__actions">
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="secondary"
+                type="button"
+                onClick={() => setPendingDelete(null)}
+                disabled={Boolean(deletingAssetId)}
+              >
+                <span className="diet-btn-txt__label">Cancel</span>
+              </button>
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="danger"
+                type="button"
+                onClick={() => void handleConfirmDelete()}
+                disabled={Boolean(deletingAssetId)}
+              >
+                <span className="diet-btn-txt__label">Confirm Delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

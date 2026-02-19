@@ -305,6 +305,46 @@ a {
   gap: 8px;
 }
 
+.roma-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in oklab, var(--color-system-black, #131313), transparent 65%);
+}
+
+.roma-modal {
+  width: min(520px, 100%);
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #131313), transparent 84%);
+  background: var(--color-system-white, #fff);
+  box-shadow: 0 20px 56px color-mix(in oklab, var(--color-system-black, #131313), transparent 75%);
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.roma-modal h2 {
+  margin: 0;
+  font-size: var(--fs-16, 1rem);
+  line-height: 1.25;
+}
+
+.roma-modal p {
+  margin: 0;
+  font-size: var(--fs-14, 0.875rem);
+  line-height: 1.5;
+}
+
+.roma-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
 .roma-builder__iframe {
   width: 100%;
   min-height: 0;

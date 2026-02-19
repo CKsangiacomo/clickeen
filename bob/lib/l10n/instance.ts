@@ -1,4 +1,5 @@
 import type { AllowlistEntry } from '@clickeen/l10n';
+import { isCuratedOrMainWidgetPublicId } from '@clickeen/ck-contracts';
 import { buildL10nSnapshot, computeBaseFingerprint, computeL10nFingerprint, normalizeLocaleToken } from '@clickeen/l10n';
 import { setAt } from '../utils/paths';
 
@@ -25,10 +26,7 @@ function isNumericSegment(seg: string): boolean {
   return /^\d+$/.test(seg);
 }
 
-export function isCuratedPublicId(publicId: string): boolean {
-  if (/^wgt_curated_[a-z0-9][a-z0-9_-]*$/.test(publicId)) return true;
-  return /^wgt_main_[a-z0-9][a-z0-9_-]*$/.test(publicId);
-}
+export const isCuratedPublicId = isCuratedOrMainWidgetPublicId;
 
 function hasProhibitedSegment(pathStr: string): boolean {
   return String(pathStr || '')

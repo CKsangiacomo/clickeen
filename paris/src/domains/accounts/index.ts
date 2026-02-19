@@ -5,6 +5,7 @@ import { readRomaAccountAuthzCapsuleHeader, verifyRomaAccountAuthzCapsule } from
 import { json, readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
 import { isUuid } from '../../shared/validation';
+import { toCanonicalAssetPointerPath } from '@clickeen/ck-contracts';
 
 type AccountRow = {
   id: string;
@@ -142,9 +143,23 @@ function resolveTokyoAssetBase(env: Env): string | null {
   return raw || null;
 }
 
-function normalizeAssetVariant(row: AccountAssetVariantRow, tokyoBase: string | null) {
+function normalizeAssetVariant(
+  row: AccountAssetVariantRow,
+  tokyoBase: string | null,
+  accountId: string,
+): {
+  variant: string;
+  key: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  createdAt: string;
+  url: string | null;
+} {
   const key = row.r2_key;
-  const url = tokyoBase ? `${tokyoBase}/${key.replace(/^\/+/, '')}` : null;
+  const assetId = row.asset_id;
+  const pointerPath = toCanonicalAssetPointerPath(accountId, assetId);
+  const url = tokyoBase && pointerPath ? `${tokyoBase}${pointerPath}` : null;
   return {
     variant: row.variant,
     key,
@@ -186,7 +201,7 @@ function normalizeAccountAsset(
     updatedAt: row.updated_at,
     usageCount: usage.length,
     usedBy: usage,
-    variants: variants.map((variant) => normalizeAssetVariant(variant, tokyoBase)),
+    variants: variants.map((variant) => normalizeAssetVariant(variant, tokyoBase, row.account_id)),
   };
 }
 
@@ -636,51 +651,51 @@ export async function handleAccountAssetDelete(req: Request, env: Env, accountId
 
     const existing = await loadAccountAsset(env, accountId, assetId, true);
     if (!existing) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
-    if (existing.deleted_at) {
-      return json({
-        accountId,
-        assetId,
-        deleted: false,
-        alreadyDeleted: true,
-        deletedAt: existing.deleted_at,
-      });
+    const tokyoBase = resolveTokyoAssetBase(env);
+    if (!tokyoBase) {
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_BASE_URL missing' }, 500);
     }
 
-    const deletedAt = new Date().toISOString();
-    const patchParams = new URLSearchParams({
-      select: 'asset_id,deleted_at',
-      account_id: `eq.${accountId}`,
-      asset_id: `eq.${assetId}`,
-      deleted_at: 'is.null',
-    });
-    const patchRes = await supabaseFetch(env, `/rest/v1/account_assets?${patchParams.toString()}`, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ deleted_at: deletedAt }),
-    });
-    if (!patchRes.ok) {
-      const details = await readJson(patchRes);
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
-    }
-    const rows = (await patchRes.json().catch(() => [])) as Array<{ asset_id?: string; deleted_at?: string | null }>;
-    const row = rows?.[0];
-    if (!row) {
-      const latest = await loadAccountAsset(env, accountId, assetId, true);
-      return json({
-        accountId,
-        assetId,
-        deleted: false,
-        alreadyDeleted: Boolean(latest?.deleted_at),
-        deletedAt: latest?.deleted_at ?? null,
-      });
+    const tokyoToken = (env.TOKYO_DEV_JWT || env.PARIS_DEV_JWT || '').trim();
+    if (!tokyoToken) {
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_DEV_JWT missing' }, 500);
     }
 
-    return json({
-      accountId,
-      assetId,
-      deleted: true,
-      deletedAt: row.deleted_at ?? deletedAt,
-    });
+    const tokyoRes = await fetch(
+      `${tokyoBase}/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${tokyoToken}`,
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+      },
+    );
+    const tokyoBody = await readJson(tokyoRes);
+    if (tokyoRes.status === 404) {
+      return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
+    }
+    if (!tokyoRes.ok) {
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: JSON.stringify(tokyoBody),
+        },
+        500,
+      );
+    }
+
+    return json(
+      (tokyoBody && typeof tokyoBody === 'object'
+        ? tokyoBody
+        : {
+            accountId,
+            assetId,
+            deleted: true,
+          }) as Record<string, unknown>,
+    );
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);

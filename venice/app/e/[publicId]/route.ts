@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
 import { normalizeLocaleToken } from '@clickeen/l10n';
+import { INSTANCE_PUBLISH_STATUS, isCuratedOrMainWidgetPublicId } from '@clickeen/ck-contracts';
 import { parisJson, getParisBase } from '@venice/lib/paris';
 import { tokyoFetch, getTokyoBase } from '@venice/lib/tokyo';
 import { loadRenderSnapshot } from '@venice/lib/render-snapshot';
 import { escapeHtml } from '@venice/lib/html';
 import { applyTokyoInstanceOverlayWithMeta } from '@venice/lib/l10n';
+import { resolveSnapshotBypass } from '@venice/lib/internal-bypass';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 interface InstanceResponse {
   publicId: string;
-  status: 'published' | 'unpublished';
+  status: typeof INSTANCE_PUBLISH_STATUS.PUBLISHED | typeof INSTANCE_PUBLISH_STATUS.UNPUBLISHED;
   widgetType?: string | null;
   config: Record<string, unknown>;
   updatedAt?: string;
@@ -19,7 +21,6 @@ interface InstanceResponse {
 }
 
 const CACHE_PUBLISHED = 'public, max-age=60, s-maxage=60';
-const CACHE_DRAFT = 'public, max-age=60, s-maxage=60, stale-while-revalidate=300';
 
 function extractCkWidgetJson(html: string): { json: Record<string, unknown>; re: RegExp } | null {
   const re = /window\.CK_WIDGET=([^;]+);/;
@@ -71,14 +72,15 @@ function extractNonce(html: string): string | null {
 export async function GET(req: Request, ctx: { params: Promise<{ publicId: string }> }) {
   const { publicId: rawPublicId } = await ctx.params;
   const publicId = String(rawPublicId || '').trim();
-  const isCurated = /^wgt_curated_/i.test(publicId) || /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
+  const isCurated = isCuratedOrMainWidgetPublicId(publicId);
   const url = new URL(req.url);
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
   const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
   const rawLocale = (url.searchParams.get('locale') || '').trim();
   const locale = normalizeLocaleToken(rawLocale) ?? 'en';
-  const bypassSnapshot = req.headers.get('x-ck-snapshot-bypass') === '1';
+  const bypass = resolveSnapshotBypass(req);
+  const bypassSnapshot = bypass.enabled;
   const enforcement = (url.searchParams.get('enforcement') || '').trim().toLowerCase();
   const frozenAt = (url.searchParams.get('frozenAt') || '').trim();
   const resetAt = (url.searchParams.get('resetAt') || '').trim();
@@ -92,6 +94,18 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
     'X-Content-Type-Options': 'nosniff',
   };
+
+  if (bypass.requested && !bypass.enabled) {
+    const tokyoBase = getTokyoBase();
+    const html = renderErrorPage({
+      publicId,
+      status: 403,
+      message: 'Internal bypass forbidden',
+      tokyoBase,
+    });
+    headers['Cache-Control'] = 'no-store';
+    return new NextResponse(html, { status: 403, headers });
+  }
 
   const forwardHeaders: HeadersInit = {
     'X-Request-ID': req.headers.get('x-request-id') ?? crypto.randomUUID(),
@@ -149,32 +163,56 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       snapshotReason = snapshot.reason;
     }
 
-    const statusProbe = await parisJson<InstanceResponse | { error?: string }>(
-      `/api/instance/${encodeURIComponent(publicId)}?subject=venice`,
-      {
-        method: 'GET',
-        headers: forwardHeaders,
-        cache: 'no-store',
-      },
-    );
+    if (snapshotReason && locale !== 'en') {
+      const fallbackSnapshot = await loadRenderSnapshot({ publicId, locale: 'en', variant: 'e' });
+      if (fallbackSnapshot.ok) {
+        const etag = `W/"${fallbackSnapshot.fingerprint}"`;
+        const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
+        if (ifNoneMatch && ifNoneMatch === etag) {
+          headers['ETag'] = etag;
+          headers['Cache-Control'] = snapshotCacheControl;
+          headers['Vary'] = 'Authorization, X-Embed-Token';
+          headers['X-Venice-Render-Mode'] = 'snapshot';
+          headers['X-Venice-Snapshot-Fallback'] = 'en';
+          headers['X-Ck-L10n-Requested-Locale'] = locale;
+          headers['X-Ck-L10n-Resolved-Locale'] = 'en';
+          headers['X-Ck-L10n-Effective-Locale'] = 'en';
+          headers['X-Ck-L10n-Status'] = 'base';
+          if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
+          return new NextResponse(null, { status: 304, headers });
+        }
 
-    if (!statusProbe.res.ok) {
-      const status = statusProbe.res.status === 401 || statusProbe.res.status === 403 ? 403 : statusProbe.res.status;
-      const tokyoBase = getTokyoBase();
-      const html = renderErrorPage({
-        publicId,
-        status,
-        message: typeof statusProbe.body === 'string' ? statusProbe.body : JSON.stringify(statusProbe.body),
-        tokyoBase,
-      });
-      headers['Cache-Control'] = 'no-store';
-      headers['X-Venice-Render-Mode'] = 'snapshot';
-      if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
-      return new NextResponse(html, { status, headers });
+        let html = new TextDecoder().decode(fallbackSnapshot.bytes);
+        try {
+          const patched = patchSnapshotHtml(html, { theme, device, requestedLocale: 'en' });
+          if (!patched) throw new Error('SNAPSHOT_PATCH_FAILED');
+          html = patched.html;
+          html = rewriteWidgetCdnUrls(html, getTokyoBase());
+        } catch {
+          html = '';
+        }
+
+        const nonce = html ? extractNonce(html) : null;
+        if (html && nonce) {
+          headers['ETag'] = etag;
+          headers['Cache-Control'] = snapshotCacheControl;
+          headers['Vary'] = 'Authorization, X-Embed-Token';
+          headers['X-Venice-Render-Mode'] = 'snapshot';
+          headers['X-Venice-Snapshot-Fallback'] = 'en';
+          headers['X-Ck-L10n-Requested-Locale'] = locale;
+          headers['X-Ck-L10n-Resolved-Locale'] = 'en';
+          headers['X-Ck-L10n-Effective-Locale'] = 'en';
+          headers['X-Ck-L10n-Status'] = 'base';
+          if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
+          const parisOrigin = new URL(getParisBase()).origin;
+          const tokyoOrigin = new URL(getTokyoBase()).origin;
+          headers['Content-Security-Policy'] = buildCsp(nonce, { parisOrigin, tokyoOrigin });
+          return new NextResponse(html, { status: 200, headers });
+        }
+      }
     }
 
-    const statusInstance = statusProbe.body as InstanceResponse;
-    if (statusInstance.status !== 'published' && !isCurated) {
+    if (snapshotReason === 'NEVER_PUBLISHED') {
       const tokyoBase = getTokyoBase();
       const html = renderErrorPage({
         publicId,
@@ -188,22 +226,23 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
       return new NextResponse(html, { status: 404, headers });
     }
-
-    const tokyoBase = getTokyoBase();
-    const html = renderErrorPage({
-      publicId,
-      status: 503,
-      message: `Snapshot unavailable (${snapshotReason || 'UNKNOWN'})`,
-      tokyoBase,
-    });
-    headers['Cache-Control'] = 'no-store';
-    headers['Vary'] = 'Authorization, X-Embed-Token';
-    headers['X-Venice-Render-Mode'] = 'snapshot';
-    if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
-    return new NextResponse(html, { status: 503, headers });
+    {
+      const tokyoBase = getTokyoBase();
+      const html = renderErrorPage({
+        publicId,
+        status: 503,
+        message: `Published snapshot unavailable (${snapshotReason ?? 'unknown'})`,
+        tokyoBase,
+      });
+      headers['Cache-Control'] = 'no-store';
+      headers['Vary'] = 'Authorization, X-Embed-Token';
+      headers['X-Venice-Render-Mode'] = 'snapshot';
+      headers['X-Venice-Snapshot-Reason'] = snapshotReason ?? 'SNAPSHOT_UNAVAILABLE';
+      return new NextResponse(html, { status: 503, headers });
+    }
   }
 
-  snapshotReason = 'SKIP_BYPASS';
+  snapshotReason = 'BYPASS_DYNAMIC';
 
   const { res, body } = await parisJson<InstanceResponse | { error?: string }>(
     `/api/instance/${encodeURIComponent(publicId)}?subject=venice`,
@@ -232,7 +271,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const instance = body as InstanceResponse;
   // Venice is the public embed runtime. It must never serve unpublished instances.
   // (Dev/auth preview belongs to Bob; Prague and third-party sites only iframe Venice.)
-  if (instance.status !== 'published' && !isCurated) {
+  if (instance.status !== INSTANCE_PUBLISH_STATUS.PUBLISHED && !isCurated) {
     const tokyoBase = getTokyoBase();
     const html = renderErrorPage({
       publicId,
@@ -290,7 +329,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
   const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
   const ifModifiedSince = req.headers.get('if-modified-since') ?? req.headers.get('If-Modified-Since');
-  if (!ts && !bypassSnapshot) {
+  if (!ts && bypassSnapshot) {
     if (ifNoneMatch && etag && ifNoneMatch === etag) {
       headers['Vary'] = 'Authorization, X-Embed-Token';
       headers['X-Venice-Render-Mode'] = 'dynamic';
@@ -309,16 +348,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     }
   }
 
-  const isPublishable = instance.status === 'published' || isCurated;
-  if (ts) {
-    headers['Cache-Control'] = 'no-store';
-  } else if (bypassSnapshot) {
-    headers['Cache-Control'] = 'no-store';
-  } else if (isPublishable) {
-    headers['Cache-Control'] = CACHE_PUBLISHED;
-  } else {
-    headers['Cache-Control'] = CACHE_DRAFT;
-  }
+  headers['Cache-Control'] = 'no-store';
 
   headers['Vary'] = 'Authorization, X-Embed-Token';
   headers['X-Venice-Render-Mode'] = 'dynamic';

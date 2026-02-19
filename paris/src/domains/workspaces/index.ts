@@ -28,7 +28,11 @@ import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { loadWidgetLocalizationAllowlist } from '../../shared/l10n';
 import { consumeBudget } from '../../shared/budgets';
 import { authorizeWorkspace } from '../../shared/workspace-auth';
-import { syncAccountAssetUsageForInstance } from '../../shared/assetUsage';
+import {
+  AssetUsageValidationError,
+  syncAccountAssetUsageForInstance,
+  validateAccountAssetUsageForInstance,
+} from '../../shared/assetUsage';
 import {
   allowCuratedWrites,
   assertPublicId,
@@ -117,21 +121,178 @@ function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
 
 const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 
-async function syncAccountAssetUsageForInstanceBestEffort(args: {
+function accountAssetValidationPaths(detail: string): string[] | undefined {
+  const match = String(detail || '').match(/ at ([^:]+):/);
+  const path = match?.[1]?.trim() || '';
+  return path ? [path] : undefined;
+}
+
+async function validateAccountAssetUsageForInstanceStrict(args: {
   env: Env;
   accountId: string;
   publicId: string;
-  config: unknown;
-}): Promise<void> {
+  config: Record<string, unknown>;
+}): Promise<Response | null> {
   try {
-    await syncAccountAssetUsageForInstance(args);
+    await validateAccountAssetUsageForInstance(args);
+    return null;
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    console.error('[ParisWorker] non-blocking account asset usage sync failed', {
-      publicId: args.publicId,
+    if (error instanceof AssetUsageValidationError) {
+      return ckError(
+        {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.payload.invalid',
+          detail,
+          paths: accountAssetValidationPaths(detail),
+        },
+        422,
+      );
+    }
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
+  }
+}
+
+async function syncAccountAssetUsageForInstanceStrict(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  config: Record<string, unknown>;
+}): Promise<Response | null> {
+  try {
+    await syncAccountAssetUsageForInstance(args);
+    return null;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    if (error instanceof AssetUsageValidationError) {
+      return ckError(
+        {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.payload.invalid',
+          detail,
+          paths: accountAssetValidationPaths(detail),
+        },
+        422,
+      );
+    }
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
+  }
+}
+
+async function rollbackCreatedInstanceOnUsageSyncFailure(args: {
+  env: Env;
+  workspaceId: string;
+  publicId: string;
+  isCurated: boolean;
+}): Promise<void> {
+  const path = args.isCurated
+    ? `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(args.publicId)}`
+    : `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(args.publicId)}&workspace_id=eq.${encodeURIComponent(args.workspaceId)}`;
+  const res = await supabaseFetch(args.env, path, {
+    method: 'DELETE',
+    headers: { Prefer: 'return=minimal' },
+  });
+  if (!res.ok) {
+    const details = await readJson(res);
+    console.error(
+      `[ParisWorker] Failed to rollback created instance after usage sync error (${res.status}): ${JSON.stringify(details)}`,
+    );
+  }
+}
+
+async function rollbackInstanceWriteOnUsageSyncFailure(args: {
+  env: Env;
+  workspaceId: string;
+  publicId: string;
+  before: InstanceRow | CuratedInstanceRow;
+  isCurated: boolean;
+}): Promise<void> {
+  const patchPath = args.isCurated
+    ? `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(args.publicId)}`
+    : `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(args.publicId)}&workspace_id=eq.${encodeURIComponent(args.workspaceId)}`;
+
+  let rollbackPayload: Record<string, unknown> = {
+    config: args.before.config,
+  };
+  if (args.isCurated) {
+    rollbackPayload = {
+      ...rollbackPayload,
+      status: 'published',
+      kind: resolveCuratedRowKind(args.publicId),
+      meta: (args.before as CuratedInstanceRow).meta ?? null,
+    };
+  } else {
+    const beforeUser = args.before as InstanceRow;
+    rollbackPayload = {
+      ...rollbackPayload,
+      status: beforeUser.status,
+      display_name: beforeUser.display_name ?? DEFAULT_INSTANCE_DISPLAY_NAME,
+      kind: beforeUser.kind ?? inferInstanceKindFromPublicId(args.publicId),
+    };
+  }
+
+  const rollbackRes = await supabaseFetch(args.env, patchPath, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify(rollbackPayload),
+  });
+  if (!rollbackRes.ok) {
+    const details = await readJson(rollbackRes);
+    console.error(
+      `[ParisWorker] Failed to rollback instance write after usage sync error (${rollbackRes.status}): ${JSON.stringify(details)}`,
+    );
+  }
+}
+
+async function deleteAccountAssetUsageRowsForPublicId(args: {
+  env: Env;
+  publicId: string;
+}): Promise<void> {
+  const deleteParams = new URLSearchParams({ public_id: `eq.${args.publicId}` });
+  const deleteRes = await supabaseFetch(
+    args.env,
+    `/rest/v1/account_asset_usage?${deleteParams.toString()}`,
+    { method: 'DELETE' },
+  );
+  if (!deleteRes.ok) {
+    const details = await readJson(deleteRes);
+    console.error(
+      `[ParisWorker] Failed to delete account_asset_usage during rollback (${deleteRes.status}): ${JSON.stringify(details)}`,
+    );
+  }
+}
+
+async function rollbackCreatedInstanceAfterPostCommitFailure(args: {
+  env: Env;
+  workspaceId: string;
+  publicId: string;
+  isCurated: boolean;
+}): Promise<void> {
+  await rollbackCreatedInstanceOnUsageSyncFailure(args);
+  await deleteAccountAssetUsageRowsForPublicId({ env: args.env, publicId: args.publicId });
+}
+
+async function rollbackInstanceWriteAfterPostCommitFailure(args: {
+  env: Env;
+  workspaceId: string;
+  publicId: string;
+  before: InstanceRow | CuratedInstanceRow;
+  isCurated: boolean;
+  accountId: string;
+}): Promise<void> {
+  await rollbackInstanceWriteOnUsageSyncFailure(args);
+  try {
+    await syncAccountAssetUsageForInstance({
+      env: args.env,
       accountId: args.accountId,
-      detail,
+      publicId: args.publicId,
+      config: args.before.config,
     });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(
+      `[ParisWorker] Failed to restore account_asset_usage after rollback for ${args.publicId}: ${detail}`,
+    );
   }
 }
 
@@ -151,6 +312,11 @@ function resolveWorkspaceInstanceDisplayName(instance: InstanceRow | CuratedInst
 
 const SNAPSHOT_READY_TIMEOUT_MS = 12_000;
 const SNAPSHOT_READY_POLL_MS = 400;
+
+type RenderSnapshotWaitResult =
+  | { state: 'ready' }
+  | { state: 'pending'; detail: string }
+  | { state: 'failed'; detail: string };
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -186,7 +352,7 @@ async function waitForRenderSnapshotState(args: {
   publicId: string;
   action: 'upsert' | 'delete';
   locales?: string[];
-}): Promise<{ ok: true } | { ok: false; detail: string }> {
+}): Promise<RenderSnapshotWaitResult> {
   const locales = normalizeSnapshotLocales(args.locales);
   const deadline = Date.now() + SNAPSHOT_READY_TIMEOUT_MS;
   let lastError = '';
@@ -197,9 +363,9 @@ async function waitForRenderSnapshotState(args: {
       const current = await loadRenderIndexCurrent({ env: args.env, publicId: args.publicId });
       lastSeenLocales = current ? Object.keys(current).sort() : [];
       if (args.action === 'delete') {
-        if (!current) return { ok: true };
+        if (!current) return { state: 'ready' };
       } else if (hasSnapshotPointersForLocales(current, locales)) {
-        return { ok: true };
+        return { state: 'ready' };
       }
     } catch (error) {
       lastError = error instanceof Error ? error.message : String(error);
@@ -211,16 +377,26 @@ async function waitForRenderSnapshotState(args: {
 
   if (args.action === 'delete') {
     return {
-      ok: false,
+      state: 'failed',
       detail: `Snapshot delete pointer timeout for ${args.publicId}. Last seen locales: ${
         lastSeenLocales.length ? lastSeenLocales.join(',') : '<none>'
       }${lastError ? `; last error: ${lastError}` : ''}`,
     };
   }
 
+  try {
+    const reconciled = await loadRenderIndexCurrent({ env: args.env, publicId: args.publicId });
+    lastSeenLocales = reconciled ? Object.keys(reconciled).sort() : lastSeenLocales;
+    if (hasSnapshotPointersForLocales(reconciled, locales)) {
+      return { state: 'ready' };
+    }
+  } catch (error) {
+    lastError = error instanceof Error ? error.message : String(error);
+  }
+
   return {
-    ok: false,
-    detail: `Snapshot pointer timeout for ${args.publicId} locales=${locales.join(',')}. Last seen locales: ${
+    state: 'pending',
+    detail: `Snapshot publish still processing for ${args.publicId} locales=${locales.join(',')}. Last seen locales: ${
       lastSeenLocales.length ? lastSeenLocales.join(',') : '<none>'
     }${lastError ? `; last error: ${lastError}` : ''}`,
   };
@@ -322,7 +498,7 @@ export async function handleWorkspaceInstanceRenderSnapshot(
     action: 'upsert',
     locales: activeLocales,
   });
-  if (!ready.ok) {
+  if (ready.state === 'failed') {
     return ckError(
       {
         kind: 'INTERNAL',
@@ -333,7 +509,20 @@ export async function handleWorkspaceInstanceRenderSnapshot(
     );
   }
 
-  return json({ ok: true, publicId: publicIdResult.value, locales: activeLocales });
+  if (ready.state === 'pending') {
+    return json(
+      {
+        ok: true,
+        publicId: publicIdResult.value,
+        locales: activeLocales,
+        snapshotState: 'pending',
+        detail: ready.detail,
+      },
+      { status: 202 },
+    );
+  }
+
+  return json({ ok: true, publicId: publicIdResult.value, locales: activeLocales, snapshotState: 'ready' });
 }
 
 export async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: string) {
@@ -908,8 +1097,18 @@ export async function handleWorkspaceUpdateInstance(
     }
   }
 
-  if (config !== undefined) {
-    const issues = configNonPersistableUrlIssues(config);
+  const prevStatus = instance.status;
+  const nextStatus = status ?? prevStatus;
+  const statusChanged = status !== undefined && status !== prevStatus;
+  const configForWriteValidation =
+    config !== undefined
+      ? config
+      : !isCurated && statusChanged && prevStatus !== 'published' && nextStatus === 'published'
+        ? instance.config
+        : undefined;
+
+  if (configForWriteValidation !== undefined) {
+    const issues = configNonPersistableUrlIssues(configForWriteValidation);
     if (issues.length) {
       return ckError(
         {
@@ -922,7 +1121,7 @@ export async function handleWorkspaceUpdateInstance(
       );
     }
 
-    const assetIssues = configAssetUrlContractIssues(config, workspace.account_id);
+    const assetIssues = configAssetUrlContractIssues(configForWriteValidation, workspace.account_id);
     if (assetIssues.length) {
       return ckError(
         {
@@ -935,13 +1134,22 @@ export async function handleWorkspaceUpdateInstance(
       );
     }
 
-    const denyByLimits = await enforceLimits(env, policyResult.policy, widgetType, config);
+    const denyByLimits = await enforceLimits(
+      env,
+      policyResult.policy,
+      widgetType,
+      configForWriteValidation,
+    );
     if (denyByLimits) return denyByLimits;
-  }
 
-  const prevStatus = instance.status;
-  const nextStatus = status ?? prevStatus;
-  const statusChanged = status !== undefined && status !== prevStatus;
+    const usageValidationError = await validateAccountAssetUsageForInstanceStrict({
+      env,
+      accountId: workspace.account_id,
+      publicId,
+      config: configForWriteValidation,
+    });
+    if (usageValidationError) return usageValidationError;
+  }
 
   // Enforce published-instance slots (per workspace tier).
   if (!isCurated && statusChanged && prevStatus !== 'published' && nextStatus === 'published') {
@@ -1032,13 +1240,42 @@ export async function handleWorkspaceUpdateInstance(
   }
 
   if (updatedInstance) {
-    if (config !== undefined) {
-      await syncAccountAssetUsageForInstanceBestEffort({
+    const rollbackAndReturn = async (response: Response): Promise<Response> => {
+      await rollbackInstanceWriteAfterPostCommitFailure({
+        env,
+        workspaceId,
+        publicId,
+        before: instance,
+        isCurated,
+        accountId: workspace.account_id,
+      });
+      return response;
+    };
+
+    const configForUsageSync =
+      config !== undefined
+        ? config
+        : !isCurated && statusChanged && prevStatus !== 'published' && nextStatus === 'published'
+          ? updatedInstance.config
+          : undefined;
+
+    if (configForUsageSync !== undefined) {
+      const usageSyncError = await syncAccountAssetUsageForInstanceStrict({
         env,
         accountId: workspace.account_id,
         publicId,
-        config,
+        config: configForUsageSync,
       });
+      if (usageSyncError) {
+        await rollbackInstanceWriteOnUsageSyncFailure({
+          env,
+          workspaceId,
+          publicId,
+          before: instance,
+          isCurated,
+        });
+        return usageSyncError;
+      }
     }
 
     const shouldTrigger =
@@ -1054,13 +1291,15 @@ export async function handleWorkspaceUpdateInstance(
       });
       if (!enqueueResult.ok) {
         console.error('[ParisWorker] l10n enqueue failed', enqueueResult.error);
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.l10n.enqueueFailed',
-            detail: enqueueResult.error,
-          },
-          500,
+        return rollbackAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.l10n.enqueueFailed',
+              detail: enqueueResult.error,
+            },
+            500,
+          ),
         );
       }
     }
@@ -1083,13 +1322,15 @@ export async function handleWorkspaceUpdateInstance(
         locales: renderLocales,
       });
       if (!enqueue.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.publish.failed',
-            detail: enqueue.error,
-          },
-          503,
+        return rollbackAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: enqueue.error,
+            },
+            503,
+          ),
         );
       }
       const ready = await waitForRenderSnapshotState({
@@ -1098,15 +1339,20 @@ export async function handleWorkspaceUpdateInstance(
         action: 'upsert',
         locales: renderLocales,
       });
-      if (!ready.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.publish.failed',
-            detail: ready.detail,
-          },
-          503,
+      if (ready.state === 'failed') {
+        return rollbackAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: ready.detail,
+            },
+            503,
+          ),
         );
+      }
+      if (ready.state === 'pending') {
+        console.warn('[ParisWorker] Snapshot publish pending after timeout', ready.detail);
       }
     } else if (
       !isCurated &&
@@ -1126,14 +1372,16 @@ export async function handleWorkspaceUpdateInstance(
         amount: 1,
       });
       if (!regen.ok) {
-        return ckError(
-          {
-            kind: 'DENY',
-            reasonKey: regen.reasonKey,
-            upsell: 'UP',
-            detail: regen.detail,
-          },
-          403,
+        return rollbackAndReturn(
+          ckError(
+            {
+              kind: 'DENY',
+              reasonKey: regen.reasonKey,
+              upsell: 'UP',
+              detail: regen.detail,
+            },
+            403,
+          ),
         );
       }
       const enqueue = await enqueueRenderSnapshot(env, {
@@ -1142,13 +1390,15 @@ export async function handleWorkspaceUpdateInstance(
         locales: activeLocales,
       });
       if (!enqueue.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.publish.failed',
-            detail: enqueue.error,
-          },
-          503,
+        return rollbackAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: enqueue.error,
+            },
+            503,
+          ),
         );
       }
       const ready = await waitForRenderSnapshotState({
@@ -1157,15 +1407,20 @@ export async function handleWorkspaceUpdateInstance(
         action: 'upsert',
         locales: activeLocales,
       });
-      if (!ready.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.publish.failed',
-            detail: ready.detail,
-          },
-          503,
+      if (ready.state === 'failed') {
+        return rollbackAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: ready.detail,
+            },
+            503,
+          ),
         );
+      }
+      if (ready.state === 'pending') {
+        console.warn('[ParisWorker] Snapshot publish pending after timeout', ready.detail);
       }
     } else if (
       !isCurated &&
@@ -1174,13 +1429,15 @@ export async function handleWorkspaceUpdateInstance(
     ) {
       const enqueue = await enqueueRenderSnapshot(env, { publicId, action: 'delete' });
       if (!enqueue.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.publish.failed',
-            detail: enqueue.error,
-          },
-          503,
+        return rollbackAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: enqueue.error,
+            },
+            503,
+          ),
         );
       }
       const ready = await waitForRenderSnapshotState({
@@ -1188,14 +1445,16 @@ export async function handleWorkspaceUpdateInstance(
         publicId,
         action: 'delete',
       });
-      if (!ready.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.publish.failed',
-            detail: ready.detail,
-          },
-          503,
+      if (ready.state === 'failed') {
+        return rollbackAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: ready.detail,
+            },
+            503,
+          ),
         );
       }
     }
@@ -1321,6 +1580,14 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
 
   const denyByLimits = await enforceLimits(env, policyResult.policy, widgetType, config);
   if (denyByLimits) return denyByLimits;
+
+  const usageValidationError = await validateAccountAssetUsageForInstanceStrict({
+    env,
+    accountId: workspace.account_id,
+    publicId,
+    config,
+  });
+  if (usageValidationError) return usageValidationError;
 
   let createdInstance: InstanceRow | CuratedInstanceRow | null = null;
 
@@ -1529,14 +1796,33 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
   }
 
   if (createdInstance) {
-    await syncAccountAssetUsageForInstanceBestEffort({
+    const createdKind = resolveInstanceKind(createdInstance);
+    const rollbackCreatedAndReturn = async (response: Response): Promise<Response> => {
+      await rollbackCreatedInstanceAfterPostCommitFailure({
+        env,
+        workspaceId,
+        publicId,
+        isCurated: createdKind === 'curated',
+      });
+      return response;
+    };
+
+    const usageSyncError = await syncAccountAssetUsageForInstanceStrict({
       env,
       accountId: workspace.account_id,
       publicId,
       config: createdInstance.config,
     });
+    if (usageSyncError) {
+      await rollbackCreatedInstanceAfterPostCommitFailure({
+        env,
+        workspaceId,
+        publicId,
+        isCurated: createdKind === 'curated',
+      });
+      return usageSyncError;
+    }
 
-    const createdKind = resolveInstanceKind(createdInstance);
     if (createdKind === 'curated' && createdInstance.status === 'published') {
       const renderLocales = ['en'];
       const enqueue = await enqueueRenderSnapshot(env, {
@@ -1545,13 +1831,15 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         locales: renderLocales,
       });
       if (!enqueue.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.publish.failed',
-            detail: enqueue.error,
-          },
-          503,
+        return rollbackCreatedAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: enqueue.error,
+            },
+            503,
+          ),
         );
       }
       const ready = await waitForRenderSnapshotState({
@@ -1560,15 +1848,20 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         action: 'upsert',
         locales: renderLocales,
       });
-      if (!ready.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.publish.failed',
-            detail: ready.detail,
-          },
-          503,
+      if (ready.state === 'failed') {
+        return rollbackCreatedAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: ready.detail,
+            },
+            503,
+          ),
         );
+      }
+      if (ready.state === 'pending') {
+        console.warn('[ParisWorker] Snapshot publish pending after timeout', ready.detail);
       }
     } else if (createdKind !== 'curated' && createdInstance.status === 'published') {
       const enqueueResult = await enqueueL10nJobs({
@@ -1581,13 +1874,15 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
       });
       if (!enqueueResult.ok) {
         console.error('[ParisWorker] l10n enqueue failed', enqueueResult.error);
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.l10n.enqueueFailed',
-            detail: enqueueResult.error,
-          },
-          500,
+        return rollbackCreatedAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.l10n.enqueueFailed',
+              detail: enqueueResult.error,
+            },
+            500,
+          ),
         );
       }
 
@@ -1604,14 +1899,16 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         amount: 1,
       });
       if (!regen.ok) {
-        return ckError(
-          {
-            kind: 'DENY',
-            reasonKey: regen.reasonKey,
-            upsell: 'UP',
-            detail: regen.detail,
-          },
-          403,
+        return rollbackCreatedAndReturn(
+          ckError(
+            {
+              kind: 'DENY',
+              reasonKey: regen.reasonKey,
+              upsell: 'UP',
+              detail: regen.detail,
+            },
+            403,
+          ),
         );
       }
       const enqueue = await enqueueRenderSnapshot(env, {
@@ -1620,13 +1917,15 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         locales: activeLocales,
       });
       if (!enqueue.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.publish.failed',
-            detail: enqueue.error,
-          },
-          503,
+        return rollbackCreatedAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: enqueue.error,
+            },
+            503,
+          ),
         );
       }
       const ready = await waitForRenderSnapshotState({
@@ -1635,15 +1934,20 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         action: 'upsert',
         locales: activeLocales,
       });
-      if (!ready.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.publish.failed',
-            detail: ready.detail,
-          },
-          503,
+      if (ready.state === 'failed') {
+        return rollbackCreatedAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: ready.detail,
+            },
+            503,
+          ),
         );
+      }
+      if (ready.state === 'pending') {
+        console.warn('[ParisWorker] Snapshot publish pending after timeout', ready.detail);
       }
     }
   }
@@ -1733,7 +2037,12 @@ export async function handleWorkspaceEnsureWebsiteCreative(
   const page = pageResult.value;
   const slot = slotResult.value;
   const creativeKey = `${widgetType}.${page}.${slot}`;
-  const publicId = `wgt_curated_${creativeKey}`;
+  const publicIdSuffix = `${widgetType}_${page}_${slot}`
+    .replace(/[.]+/g, '_')
+    .replace(/[^a-z0-9_-]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  const publicId = `wgt_curated_${publicIdSuffix}`;
 
   const publicIdResult = assertPublicId(publicId);
   if (!publicIdResult.ok)
@@ -1746,6 +2055,8 @@ export async function handleWorkspaceEnsureWebsiteCreative(
 
   // 1) Ensure instance exists (and optionally reset config to baseline).
   let existing = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  const existingBeforeOverwrite = existing;
+  let createdWebsiteCreative = false;
   if (existing && !overwrite) {
     // No-op open path: do not validate or mutate baseline config if we're only opening an existing creative.
     return json({ creativeKey, publicId }, { status: 200 });
@@ -1784,6 +2095,14 @@ export async function handleWorkspaceEnsureWebsiteCreative(
 
   const denyByLimits = await enforceLimits(env, policyResult.policy, widgetType, baselineConfig);
   if (denyByLimits) return denyByLimits;
+
+  const usageValidationError = await validateAccountAssetUsageForInstanceStrict({
+    env,
+    accountId: workspace.account_id,
+    publicId,
+    config: baselineConfig,
+  });
+  if (usageValidationError) return usageValidationError;
 
   if (!existing) {
     let widget = await loadWidgetByType(env, widgetType);
@@ -1847,6 +2166,7 @@ export async function handleWorkspaceEnsureWebsiteCreative(
     }
     const created = (await instanceInsert.json().catch(() => null)) as CuratedInstanceRow[] | null;
     existing = created?.[0] ?? null;
+    createdWebsiteCreative = true;
   } else {
     const patchRes = await supabaseFetch(
       env,
@@ -1883,12 +2203,31 @@ export async function handleWorkspaceEnsureWebsiteCreative(
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.notFound' }, 500);
   }
 
-  await syncAccountAssetUsageForInstanceBestEffort({
+  const creativeUsageSyncError = await syncAccountAssetUsageForInstanceStrict({
     env,
     accountId: workspace.account_id,
     publicId,
     config: existing.config,
   });
+  if (creativeUsageSyncError) {
+    if (createdWebsiteCreative) {
+      await rollbackCreatedInstanceOnUsageSyncFailure({
+        env,
+        workspaceId,
+        publicId,
+        isCurated: true,
+      });
+    } else if (existingBeforeOverwrite && isCuratedInstanceRow(existingBeforeOverwrite)) {
+      await rollbackInstanceWriteOnUsageSyncFailure({
+        env,
+        workspaceId,
+        publicId,
+        before: existingBeforeOverwrite,
+        isCurated: true,
+      });
+    }
+    return creativeUsageSyncError;
+  }
 
   return json({ creativeKey, publicId }, { status: 200 });
 }

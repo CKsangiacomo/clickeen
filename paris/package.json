@@ -8,6 +8,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/ck-policy": "workspace:*",
     "@clickeen/l10n": "workspace:*"
   },

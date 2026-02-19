@@ -21,6 +21,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import crypto from 'node:crypto';
+import { normalizeWidgetPublicId, parseCanonicalAssetRef } from '../tooling/ck-contracts/src/index.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -88,21 +89,7 @@ function normalizeWidgetType(raw) {
 }
 
 function normalizePublicId(raw) {
-  const v = String(raw || '').trim();
-  if (!v) return null;
-  const okMain = /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(v);
-  const okCurated = /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(v);
-  const okUser = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i.test(v);
-  if (!okMain && !okCurated && !okUser) return null;
-  return v;
-}
-
-function normalizeCuratedPublicId(raw) {
-  const v = normalizePublicId(raw);
-  if (!v) return null;
-  if (/^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(v)) return v;
-  if (/^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(v)) return v;
-  return null;
+  return normalizeWidgetPublicId(raw);
 }
 
 function normalizeLocale(raw) {
@@ -385,7 +372,7 @@ function shouldProxyMutableToWorker(req, pathname) {
   if (req.method === 'POST' && pathname === '/assets/purge-deleted') {
     return true;
   }
-  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/arsenale/o/')) {
+  if ((req.method === 'GET' || req.method === 'HEAD') && parseCanonicalAssetRef(pathname)) {
     return true;
   }
   if ((req.method === 'POST' || req.method === 'DELETE') && pathname.startsWith('/l10n/instances/')) {

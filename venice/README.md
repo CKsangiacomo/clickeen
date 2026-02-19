@@ -16,6 +16,7 @@ Required env (deployed environments):
 
 Optional:
 - `USAGE_EVENT_HMAC_SECRET` (required only for signed usage forwarding in `/embed/pixel`)
+- `VENICE_INTERNAL_BYPASS_TOKEN` (required outside local for controlled `x-ck-snapshot-bypass: 1` preview/debug path)
 
 Local dev:
 - `pnpm dev:venice` (default `http://localhost:3003`)

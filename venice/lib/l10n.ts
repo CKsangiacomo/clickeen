@@ -83,11 +83,6 @@ function isIndex(segment: string): boolean {
   return /^\d+$/.test(segment);
 }
 
-function isCuratedPublicId(publicId: string): boolean {
-  if (/^wgt_curated_/.test(publicId)) return true;
-  return /^wgt_main_[a-z0-9][a-z0-9_-]*$/.test(publicId);
-}
-
 function isDevStrict(): boolean {
   return process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 }

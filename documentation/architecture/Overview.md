@@ -148,10 +148,13 @@ Each release proceeds in 3 steps:
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
+  - Publish/unpublish writes are transactional: if downstream l10n/snapshot publish steps fail, Paris rolls back both instance row state and deterministic `account_asset_usage` mappings.
 
 #### Venice (Workers)
 - Public embed surface (third-party websites only talk to Venice).
 - Runtime combines Tokyo widget assets with Paris instance config and **best-available** instance l10n overlays from Tokyo (base/fresh/stale; never block embed render).
+- Render snapshots are consumed through published revision pointers; when the newest revision is missing/corrupt, Venice serves the last good published revision instead of hard-failing existing embeds.
+- Public `/e/:publicId` and `/r/:publicId` serve snapshots from published pointers only (no public dynamic fallback). Dynamic rendering is restricted to controlled internal bypass.
 
 #### Tokyo (R2)
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
@@ -161,18 +164,19 @@ Each release proceeds in 3 steps:
 
 #### Tokyo Worker (Workers + Queues)
 - Handles canonical account-owned uploads (`POST /assets/upload`) and stores metadata in Michael (`account_assets`, `account_asset_variants`).
-- Asset usage ("where used") is tracked by Paris in `account_asset_usage` via best-effort sync on instance config writes.
-- Serves canonical account asset reads (`GET /arsenale/o/**`) only.
+- Asset usage ("where used") is tracked by Paris in `account_asset_usage` via deterministic sync on instance config writes/publishes.
+- Serves revocable account asset pointer reads (`GET /arsenale/a/{accountId}/{assetId}`) with legacy object-path compatibility (`GET /arsenale/o/**`).
+- Asset delete is immediate revoke (`deleted_at` -> non-servable); physical blob purge is async (`POST /assets/purge-deleted`).
 - Reads `widget_instance_overlays` from Supabase (layered), merges `ops + user_ops` for layer=user, and publishes overlays to Tokyo/R2.
-- Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path.
+- Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path using revisioned indices + atomic published pointer flip.
 
 #### Asset ownership model (canonical)
 - Ownership boundary is account (`account_id`), not workspace.
 - Workspace is a projection boundary for UX queries (`used_in_workspace`, `created_in_workspace`), not an ownership boundary.
 - End-to-end flow:
   1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional workspace/public/widget trace headers).
-  2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`).
-  3. Paris best-effort syncs usage mappings (`account_asset_usage`) from instance config writes.
+  2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`) and returns canonical pointer URL (`/arsenale/a/{accountId}/{assetId}`).
+  3. Paris validates/syncs usage mappings (`account_asset_usage`) from instance config writes in the same request path.
   4. Roma Assets reads/deletes via account endpoints (`/api/accounts/:accountId/assets*`) and optionally applies workspace projection.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)

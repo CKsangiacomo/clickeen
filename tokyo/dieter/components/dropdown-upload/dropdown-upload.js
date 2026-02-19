@@ -93,15 +93,76 @@ var Dieter = (() => {
     };
   }
 
-  // components/shared/assetUpload.ts
-  function isUuid(value) {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+  // ../tooling/ck-contracts/src/index.js
+  var WIDGET_PUBLIC_ID_RE = /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
+  var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  var ASSET_POINTER_PATH_RE = /^\/arsenale\/a\/([^/]+)\/([^/]+)$/;
+  var ASSET_OBJECT_PATH_RE = /^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
+  var CK_ERROR_CODE = Object.freeze({
+    VALIDATION: "VALIDATION",
+    NOT_FOUND: "NOT_FOUND",
+    DENY: "DENY",
+    INTERNAL: "INTERNAL"
+  });
+  var INSTANCE_PUBLISH_STATUS = Object.freeze({
+    PUBLISHED: "published",
+    UNPUBLISHED: "unpublished"
+  });
+  var RENDER_SNAPSHOT_ACTION = Object.freeze({
+    UPSERT: "upsert",
+    DELETE: "delete"
+  });
+  function normalizeWidgetPublicId(raw) {
+    const value = typeof raw === "string" ? raw.trim() : "";
+    if (!value) return null;
+    return WIDGET_PUBLIC_ID_RE.test(value) ? value : null;
   }
+  function isWidgetPublicId(raw) {
+    return normalizeWidgetPublicId(raw) != null;
+  }
+  function decodePathPart(raw) {
+    try {
+      return decodeURIComponent(String(raw || "")).trim();
+    } catch {
+      return "";
+    }
+  }
+  function pathnameFromRawAssetRef(raw) {
+    const value = String(raw || "").trim();
+    if (!value) return null;
+    if (value.startsWith("/")) return value;
+    if (!/^https?:\/\//i.test(value)) return null;
+    try {
+      return new URL(value).pathname || "/";
+    } catch {
+      return null;
+    }
+  }
+  function isUuid(raw) {
+    const value = typeof raw === "string" ? raw.trim() : "";
+    return Boolean(value && UUID_RE.test(value));
+  }
+  function parseCanonicalAssetRef(raw) {
+    const pathname = pathnameFromRawAssetRef(raw);
+    if (!pathname) return null;
+    const pointer = pathname.match(ASSET_POINTER_PATH_RE);
+    if (pointer) {
+      const accountId2 = decodePathPart(pointer[1]);
+      const assetId2 = decodePathPart(pointer[2]);
+      if (!isUuid(accountId2) || !isUuid(assetId2)) return null;
+      return { accountId: accountId2, assetId: assetId2, kind: "pointer", pathname };
+    }
+    const object = pathname.match(ASSET_OBJECT_PATH_RE);
+    if (!object) return null;
+    const accountId = decodePathPart(object[1]);
+    const assetId = decodePathPart(object[2]);
+    if (!isUuid(accountId) || !isUuid(assetId)) return null;
+    return { accountId, assetId, kind: "object", pathname };
+  }
+
+  // components/shared/assetUpload.ts
   function isPublicId(value) {
-    if (!value) return false;
-    if (/^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(value)) return true;
-    if (/^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/i.test(value)) return true;
-    return /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(value);
+    return isWidgetPublicId(value);
   }
   function isWidgetType(value) {
     return /^[a-z0-9][a-z0-9_-]*$/i.test(value);
@@ -137,18 +198,10 @@ var Dieter = (() => {
   function normalizeUploadUrl(payload) {
     const direct = typeof payload.url === "string" ? payload.url.trim() : "";
     if (!direct) return null;
-    if (/^https?:\/\//i.test(direct)) {
-      try {
-        const parsed = new URL(direct);
-        if (!parsed.pathname.startsWith("/arsenale/o/")) return null;
-        return direct;
-      } catch {
-        return null;
-      }
-    }
-    if (!direct.startsWith("/")) return null;
-    if (!direct.startsWith("/arsenale/o/")) return null;
-    return direct;
+    const parsed = parseCanonicalAssetRef(direct);
+    if (!parsed) return null;
+    if (/^https?:\/\//i.test(direct)) return direct;
+    return parsed.pathname;
   }
   function assertUploadContext(context) {
     const accountId = String(context.accountId || "").trim();
@@ -593,16 +646,11 @@ var Dieter = (() => {
     if (!parts.length) return "";
     const filename = parts[parts.length - 1];
     const stem = filename.replace(/\.[^.]+$/, "").toLowerCase();
-    const normalizedPath = cleaned.startsWith("/") ? cleaned : `/${cleaned}`;
-    if ((stem === "original" || stem === "grayscale") && /\/arsenale\/o\//i.test(normalizedPath)) {
-      const assetIdDirect = parts.length >= 2 ? parts[parts.length - 2] : "";
-      const assetIdWithVariant = parts.length >= 3 ? parts[parts.length - 3] : "";
-      const assetId = /^[a-f0-9-]{8,}$/i.test(assetIdWithVariant) ? assetIdWithVariant : /^[a-f0-9-]{8,}$/i.test(assetIdDirect) ? assetIdDirect : "";
-      if (assetId) {
-        const ext = guessExtFromName(filename);
-        const shortId = assetId.replace(/-/g, "").slice(0, 8);
-        return ext ? `asset-${shortId}.${ext}` : `asset-${shortId}`;
-      }
+    const parsed = parseCanonicalAssetRef(cleaned);
+    if (parsed && (parsed.kind === "pointer" || stem === "original" || stem === "grayscale")) {
+      const ext = guessExtFromName(filename);
+      const shortId = parsed.assetId.replace(/-/g, "").slice(0, 8);
+      return ext ? `asset-${shortId}.${ext}` : `asset-${shortId}`;
     }
     return filename;
   }

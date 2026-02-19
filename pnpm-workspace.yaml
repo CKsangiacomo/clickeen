@@ -10,6 +10,7 @@ packages:
   - tokyo-worker
   - venice
   - tooling/ck-policy
+  - tooling/ck-contracts
   - tooling/composition
   - tooling/l10n
   - tooling/sf-symbols

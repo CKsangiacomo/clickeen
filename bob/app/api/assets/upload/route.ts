@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isUuid, isWidgetPublicId, parseCanonicalAssetRef, toCanonicalAssetPointerPath } from '@clickeen/ck-contracts';
 import { resolveTokyoBaseUrl } from '../../../../lib/env/tokyo';
 import { resolveSessionBearer, type SessionCookieSpec } from '../../../../lib/auth/session';
 import { applySessionCookies } from '../../../../lib/api/paris/proxy-helpers';
@@ -11,10 +12,6 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers':
     'authorization, content-type, x-account-id, x-workspace-id, x-public-id, x-widget-type, x-filename, x-variant, x-source',
 } as const;
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
 
 function safeJsonParse(text: string): unknown | null {
   if (!text || typeof text !== 'string') return null;
@@ -33,39 +30,12 @@ function normalizeTokyoUploadUrl(
   const base = tokyoBase.replace(/\/+$/, '');
   const direct = typeof payload.url === 'string' ? payload.url.trim() : '';
   if (!direct) return null;
-
-  const parseCanonicalPath = (pathname: string): string | null => {
-    const match = String(pathname || '').match(/^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/);
-    if (!match) return null;
-    const accountId = decodeURIComponent(match[1] || '').trim();
-    const assetId = decodeURIComponent(match[2] || '').trim();
-    if (!isUuid(accountId) || !isUuid(assetId)) return null;
-    if (expectedAccountId && accountId !== expectedAccountId) return null;
-    return pathname;
-  };
-
-  if (/^https?:\/\//i.test(direct)) {
-    try {
-      const parsed = new URL(direct);
-      const canonicalPath = parseCanonicalPath(parsed.pathname);
-      if (!canonicalPath) return null;
-      return `${base}${canonicalPath}`;
-    } catch {
-      return null;
-    }
-  }
-
-  if (!direct.startsWith('/')) return null;
-  const canonicalPath = parseCanonicalPath(direct);
+  const parsed = parseCanonicalAssetRef(direct);
+  if (!parsed) return null;
+  if (expectedAccountId && parsed.accountId !== expectedAccountId) return null;
+  const canonicalPath = toCanonicalAssetPointerPath(parsed.accountId, parsed.assetId);
   if (!canonicalPath) return null;
   return `${base}${canonicalPath}`;
-}
-
-function isPublicId(value: string): boolean {
-  if (!value) return false;
-  if (/^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(value)) return true;
-  if (/^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/i.test(value)) return true;
-  return /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(value);
 }
 
 function isWidgetType(value: string): boolean {
@@ -129,7 +99,7 @@ export async function POST(request: NextRequest) {
 
   const publicId = (request.headers.get('x-public-id') || '').trim();
   if (publicId) {
-    if (!isPublicId(publicId)) {
+    if (!isWidgetPublicId(publicId)) {
       return withCorsAndSession(request, NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } },
         { status: 422 },

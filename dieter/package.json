@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
+    "@clickeen/ck-contracts": "workspace:*",
     "gsap": "^3.12.5",
     "tldts": "^6.1.86"
   },

@@ -1,4 +1,5 @@
 import { validateBlockMeta, validateBlockStrings } from './blockRegistry';
+import { isCuratedWidgetPublicId } from '@clickeen/ck-contracts';
 import { loadPraguePageContent, loadPraguePageContentWithMeta, type PragueOverlayContext, type PragueOverlayMeta } from './pragueL10n';
 
 const CURATED_VALIDATE =
@@ -43,8 +44,10 @@ async function assertCuratedInstanceExists(args: { publicId: string; pagePath: s
   }
 
   const publicId = args.publicId;
-  if (!publicId.startsWith('wgt_curated_')) {
-    throw new Error(`[prague] ${args.pagePath}: curatedRef.publicId must be wgt_curated_*, got "${publicId}"`);
+  if (!isCuratedWidgetPublicId(publicId)) {
+    throw new Error(
+      `[prague] ${args.pagePath}: curatedRef.publicId must match wgt_curated_[a-z0-9][a-z0-9_-]*, got "${publicId}"`,
+    );
   }
 
   const cached = CURATED_VALIDATION_CACHE.get(publicId);

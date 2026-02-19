@@ -1,4 +1,5 @@
 import { resolvePolicy } from '@clickeen/ck-policy';
+import { normalizeWidgetPublicId } from '@clickeen/ck-contracts';
 import type { Env, RenderSnapshotQueueJob } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
@@ -23,13 +24,6 @@ type EnforcementRow = {
   reset_at: string;
   updated_at?: string | null;
 };
-
-function normalizePublicId(raw: unknown): string | null {
-  const value = typeof raw === 'string' ? raw.trim() : '';
-  if (!value) return null;
-  if (!/^wgt_[a-z0-9][a-z0-9_.-]*$/i.test(value)) return null;
-  return value;
-}
 
 function normalizeEvent(raw: unknown): 'view' | null {
   const value = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
@@ -210,7 +204,7 @@ export async function handleUsageEvent(req: Request, env: Env): Promise<Response
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' }, 422);
   }
 
-  const publicId = normalizePublicId(payload.publicId);
+  const publicId = normalizeWidgetPublicId(payload.publicId);
   const event = normalizeEvent(payload.event);
   const tier = normalizeTier(payload.tier);
   const sig = normalizeSig(payload.sig);

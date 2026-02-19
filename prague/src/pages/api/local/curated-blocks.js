@@ -1,9 +1,15 @@
+import {
+  WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN,
+  isMainWidgetPublicId,
+  normalizeWidgetPublicId,
+} from '@clickeen/ck-contracts';
+
 export const prerender = false;
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
 const PAGE_KEYS = new Set(['overview', 'templates', 'examples', 'features', 'pricing']);
 const WIDGET_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
-const PUBLIC_ID_PATTERN = /^wgt_(curated|main)_[a-z0-9][a-z0-9_.-]*$/i;
+const PUBLIC_ID_PATTERN = new RegExp(WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN, 'i');
 
 function json(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -27,8 +33,8 @@ function asSlug(value) {
 }
 
 function asPublicId(value) {
-  const publicId = String(value || '').trim();
-  return PUBLIC_ID_PATTERN.test(publicId) ? publicId : '';
+  const publicId = normalizeWidgetPublicId(value);
+  return publicId && PUBLIC_ID_PATTERN.test(publicId) ? publicId : '';
 }
 
 function asBlockId(value) {
@@ -56,14 +62,14 @@ function resolveWidgetTypeFromPublicId(publicId) {
   const value = asPublicId(publicId);
   if (!value) return '';
 
-  const mainMatch = value.match(/^wgt_main_([a-z0-9-]+)$/i);
-  if (mainMatch && mainMatch[1]) {
-    return asSlug(mainMatch[1]);
+  if (isMainWidgetPublicId(value)) {
+    return asSlug(value.slice('wgt_main_'.length));
   }
 
-  const curatedMatch = value.match(/^wgt_curated_([a-z0-9-]+)_[a-z0-9_.-]+$/i);
-  if (curatedMatch && curatedMatch[1]) {
-    return asSlug(curatedMatch[1]);
+  if (value.startsWith('wgt_curated_')) {
+    const rest = value.slice('wgt_curated_'.length);
+    const widget = rest.split('_')[0] || '';
+    return asSlug(widget);
   }
 
   return '';

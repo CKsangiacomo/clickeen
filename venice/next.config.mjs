@@ -4,6 +4,9 @@ const nextConfig = {
   // Next 15: typedRoutes moved out of experimental
   typedRoutes: true,
 
+  // Ensure shared workspace TS libs are bundled for Edge runtime.
+  transpilePackages: ['@clickeen/ck-contracts'],
+
   // Build should not depend on host-machine eslint config resolution.
   // We run lint/typecheck explicitly elsewhere; keep build fast/robust.
   eslint: {

@@ -159,20 +159,22 @@ curated_widget_instances.meta = {
 
 **Roma** — Product shell and workspace experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves active workspace context through `/api/bootstrap`, keeps short-lived workspace/account authz capsules for Paris calls, and opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle).
 
-**Venice** — SSR embed runtime. Fetches instance config via Paris and serves embeddable HTML. Third-party pages only ever talk to Venice; Paris is private.
+**Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with last-good revision fallback; dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — HTTP API gateway (Cloudflare Workers). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for paid/devstudio). **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
+**Paris** — HTTP API gateway (Cloudflare Workers). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for paid/devstudio). Publish/unpublish control-plane writes are transactional: if downstream l10n/snapshot publish steps fail, Paris rolls back instance state and deterministic asset usage rows. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
 **Michael** — Supabase PostgreSQL database. Stores curated instances (`curated_widget_instances`), user instances (`widget_instances`), submissions, users, usage events. RLS enforced for user tables; curated rows are global. Starters use `wgt_main_*` and `wgt_curated_*`.
 
-**Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and signed URLs for user-uploaded images.
+**Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and account-owned upload blobs.
 
-**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves canonical account asset paths (`/arsenale/o/**`), materializes **instance** l10n overlays into Tokyo/R2, and publishes Venice render snapshots.
+**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves revocable account asset pointer paths (`/arsenale/a/{accountId}/{assetId}`) with legacy object-path compatibility (`/arsenale/o/**`), materializes **instance** l10n overlays into Tokyo/R2, and publishes Venice render snapshots.
 
 **Asset URL contract (pre-GA strict):**
-- Persisted widget config stores account assets as canonical root-relative paths: `/arsenale/o/{accountId}/{assetId}/{variant?}/{filename}`.
+- Persisted widget config stores account assets as canonical root-relative pointer paths: `/arsenale/a/{accountId}/{assetId}`.
+- Runtime still reads legacy `/arsenale/o/**` paths for backward compatibility, but new writes normalize to `/arsenale/a/**`.
+- `DELETE` on an account asset means immediate revoke (`/arsenale/a/**` and `/arsenale/o/**` stop serving). Physical blob purge is async.
 - Runtime resolves concrete host per environment via `CK_ASSET_ORIGIN` (same config works local and cloud-dev; only origin/base URL differs).
 - Legacy host-pinned/legacy paths (for example `/curated-assets/**`) are not supported.
 

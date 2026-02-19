@@ -20,7 +20,11 @@ import { readBudgetUsed } from '../../shared/budgets';
 import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString, assertConfig, isUuid } from '../../shared/validation';
 import { authorizeWorkspace as authorizeWorkspaceAccess } from '../../shared/workspace-auth';
-import { syncAccountAssetUsageForInstance } from '../../shared/assetUsage';
+import {
+  AssetUsageValidationError,
+  syncAccountAssetUsageForInstance,
+  validateAccountAssetUsageForInstance,
+} from '../../shared/assetUsage';
 import {
   allowCuratedWrites,
   assertPublicId,
@@ -244,21 +248,79 @@ const ROMA_AUTHZ_CAPSULE_TTL_SEC = 15 * 60;
 const ROMA_WIDGET_LOOKUP_CACHE_TTL_MS = 5 * 60_000;
 const ROMA_WIDGET_LOOKUP_STORE_KEY = '__CK_PARIS_ROMA_WIDGET_LOOKUP_STORE_V1__';
 
-async function syncAccountAssetUsageForInstanceBestEffort(args: {
+function accountAssetValidationPaths(detail: string): string[] | undefined {
+  const match = String(detail || '').match(/ at ([^:]+):/);
+  const path = match?.[1]?.trim() || '';
+  return path ? [path] : undefined;
+}
+
+async function syncAccountAssetUsageForInstanceStrict(args: {
   env: Env;
   accountId: string;
   publicId: string;
-  config: unknown;
-}): Promise<void> {
+  config: Record<string, unknown>;
+}): Promise<Response | null> {
   try {
     await syncAccountAssetUsageForInstance(args);
+    return null;
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    console.error('[ParisWorker] non-blocking account asset usage sync failed', {
-      publicId: args.publicId,
-      accountId: args.accountId,
-      detail,
-    });
+    if (error instanceof AssetUsageValidationError) {
+      return ckError(
+        {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.payload.invalid',
+          detail,
+          paths: accountAssetValidationPaths(detail),
+        },
+        422,
+      );
+    }
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
+  }
+}
+
+async function rollbackCreatedWorkspaceInstanceOnUsageSyncFailure(args: {
+  env: Env;
+  workspaceId: string;
+  publicId: string;
+}): Promise<void> {
+  const path = `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(args.publicId)}&workspace_id=eq.${encodeURIComponent(args.workspaceId)}`;
+  const res = await supabaseFetch(args.env, path, {
+    method: 'DELETE',
+    headers: { Prefer: 'return=minimal' },
+  });
+  if (!res.ok) {
+    const details = await readJson(res);
+    console.error(
+      `[ParisWorker] Failed to rollback Minibob instance after usage sync error (${res.status}): ${JSON.stringify(details)}`,
+    );
+  }
+}
+
+async function validateAccountAssetUsageForInstanceStrict(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  config: Record<string, unknown>;
+}): Promise<Response | null> {
+  try {
+    await validateAccountAssetUsageForInstance(args);
+    return null;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    if (error instanceof AssetUsageValidationError) {
+      return ckError(
+        {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.payload.invalid',
+          detail,
+          paths: accountAssetValidationPaths(detail),
+        },
+        422,
+      );
+    }
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
   }
 }
 
@@ -1376,6 +1438,7 @@ function resolveMinibobHandoffRoute(publicId: string, workspaceId: string, accou
 
 async function materializeMinibobHandoffInstance(args: {
   env: Env;
+  accountId: string;
   workspaceId: string;
   handoffId: string;
   widgetType: string;
@@ -1410,6 +1473,14 @@ async function materializeMinibobHandoffInstance(args: {
 
   const suffix = handoffIdResult.value.replace(/^mbh_/, '').replace(/[^a-z0-9_-]/g, '').slice(0, 48) || 'handoff';
   const publicId = `wgt_${widgetType}_u_${suffix}`;
+  const usageValidationError = await validateAccountAssetUsageForInstanceStrict({
+    env: args.env,
+    accountId: args.accountId,
+    publicId,
+    config: configResult.value,
+  });
+  if (usageValidationError) return { ok: false, response: usageValidationError };
+
   const insertRes = await supabaseFetch(args.env, '/rest/v1/widget_instances', {
     method: 'POST',
     headers: {
@@ -1441,6 +1512,22 @@ async function materializeMinibobHandoffInstance(args: {
       ),
     };
   }
+
+  const usageSyncError = await syncAccountAssetUsageForInstanceStrict({
+    env: args.env,
+    accountId: args.accountId,
+    publicId,
+    config: configResult.value,
+  });
+  if (usageSyncError) {
+    await rollbackCreatedWorkspaceInstanceOnUsageSyncFailure({
+      env: args.env,
+      workspaceId: args.workspaceId,
+      publicId,
+    });
+    return { ok: false, response: usageSyncError };
+  }
+
   return { ok: true, publicId };
 }
 
@@ -1804,6 +1891,7 @@ export async function handleMinibobHandoffComplete(req: Request, env: Env): Prom
 
   const materialized = await materializeMinibobHandoffInstance({
     env,
+    accountId: accountIdResult.value,
     workspaceId: workspaceIdResult.value,
     handoffId,
     widgetType: existingHandoff.widgetType,
@@ -2004,12 +2092,13 @@ export async function handleRomaWidgetDelete(
       const detail = error instanceof Error ? error.message : String(error);
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
     }
-    await syncAccountAssetUsageForInstanceBestEffort({
+    const usageSyncError = await syncAccountAssetUsageForInstanceStrict({
       env,
       accountId: authorized.workspace.account_id,
       publicId,
       config: {},
     });
+    if (usageSyncError) return usageSyncError;
 
     return json({ workspaceId, publicId, source: 'curated', deleted: true }, { status: 200 });
   }
@@ -2031,12 +2120,13 @@ export async function handleRomaWidgetDelete(
     const detail = error instanceof Error ? error.message : String(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
   }
-  await syncAccountAssetUsageForInstanceBestEffort({
+  const usageSyncError = await syncAccountAssetUsageForInstanceStrict({
     env,
     accountId: authorized.workspace.account_id,
     publicId,
     config: {},
   });
+  if (usageSyncError) return usageSyncError;
 
   return json({ workspaceId, publicId, source: 'workspace', deleted: true }, { status: 200 });
 }

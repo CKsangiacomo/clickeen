@@ -1,4 +1,5 @@
 import { ckError } from './errors';
+import { isUuid as isContractUuid, parseCanonicalAssetRef } from '@clickeen/ck-contracts';
 
 export function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -10,9 +11,7 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-export function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
+export const isUuid = isContractUuid;
 
 export function assertWorkspaceId(value: unknown) {
   const trimmed = typeof value === 'string' ? value.trim() : '';
@@ -69,12 +68,9 @@ function extractPathnameFromUrlCandidate(raw: string): string | null {
 }
 
 function parseCanonicalAccountAssetPath(pathname: string): { accountId: string; assetId: string } | null {
-  const match = String(pathname || '').match(/^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/);
-  if (!match) return null;
-  return {
-    accountId: decodeURIComponent(match[1] || '').trim(),
-    assetId: decodeURIComponent(match[2] || '').trim(),
-  };
+  const parsed = parseCanonicalAssetRef(pathname);
+  if (!parsed) return null;
+  return { accountId: parsed.accountId, assetId: parsed.assetId };
 }
 
 function isStaticTokyoAssetPath(pathname: string): boolean {
@@ -109,7 +105,7 @@ export function configAssetUrlContractIssues(
       return;
     }
 
-    if (pathname.startsWith('/arsenale/o/')) {
+    if (pathname.startsWith('/arsenale/a/') || pathname.startsWith('/arsenale/o/')) {
       const parsed = parseCanonicalAccountAssetPath(pathname);
       if (!parsed) {
         issues.push({

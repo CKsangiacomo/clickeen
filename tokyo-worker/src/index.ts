@@ -1,4 +1,10 @@
 import { getEntitlementsMatrix } from '@clickeen/ck-policy';
+import {
+  ASSET_POINTER_PATH_RE,
+  isUuid,
+  normalizeWidgetPublicId,
+  toCanonicalAssetPointerPath,
+} from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 
 type Env = {
@@ -13,6 +19,7 @@ type Env = {
   SUPABASE_JWT_ISSUER?: string;
   SUPABASE_JWT_AUDIENCE?: string;
   TOKYO_L10N_HTTP_BASE?: string;
+  VENICE_INTERNAL_BYPASS_TOKEN?: string;
 };
 
 function json(payload: unknown, init?: ResponseInit) {
@@ -224,11 +231,6 @@ async function supabaseFetch(env: Env, pathnameWithQuery: string, init?: Request
   return fetch(`${baseUrl}${pathnameWithQuery}`, { ...init, headers });
 }
 
-function isUuid(value: string): boolean {
-  // Dev/staging tolerate non-v4 UUIDs (e.g. deterministic ck-dev workspace ids).
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
 function extFromMime(mime: string): string | null {
   const mt = String(mime || '').toLowerCase();
   if (mt === 'image/png') return 'png';
@@ -302,6 +304,26 @@ function normalizeAccountAssetReadKey(pathname: string): string | null {
   const key = String(pathname || '').replace(/^\/+/, '');
   if (!key.startsWith(ACCOUNT_ASSET_CANONICAL_PREFIX)) return null;
   return normalizeCanonicalAccountAssetSuffix(key.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length));
+}
+
+type AccountAssetIdentity = { accountId: string; assetId: string };
+
+function buildAccountAssetPointerPath(accountId: string, assetId: string): string {
+  const pointerPath = toCanonicalAssetPointerPath(accountId, assetId);
+  if (!pointerPath) throw new Error('[tokyo] invalid account asset identity for pointer path');
+  return pointerPath;
+}
+
+function parseAccountAssetIdentityFromKey(key: string): AccountAssetIdentity | null {
+  const normalized = normalizeAccountAssetReadKey(key.startsWith('/') ? key : `/${key}`);
+  if (!normalized) return null;
+  const suffix = normalized.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length);
+  const parts = suffix.split('/').filter(Boolean);
+  if (parts.length !== 3 && parts.length !== 4) return null;
+  const accountId = parts[0];
+  const assetId = parts[1];
+  if (!accountId || !assetId || !isUuid(accountId) || !isUuid(assetId)) return null;
+  return { accountId, assetId };
 }
 
 function guessContentTypeFromExt(ext: string): string {
@@ -440,16 +462,7 @@ type L10nPublishResult = {
   workspaceId: string | null;
 };
 
-function normalizePublicId(raw: string): string | null {
-  const value = String(raw || '').trim();
-  if (!value) return null;
-  const okMain = /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(value);
-  const okCurated =
-    /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(value);
-  const okUser = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i.test(value);
-  if (!okMain && !okCurated && !okUser) return null;
-  return value;
-}
+const normalizePublicId = normalizeWidgetPublicId;
 
 function normalizeWidgetType(raw: string): string | null {
   const value = String(raw || '').trim().toLowerCase();
@@ -1712,6 +1725,120 @@ async function persistAccountAssetMetadata(args: {
   }
 }
 
+type AccountAssetRow = {
+  asset_id: string;
+  account_id: string;
+  deleted_at?: string | null;
+};
+
+async function loadAccountAssetByIdentity(
+  env: Env,
+  accountId: string,
+  assetId: string,
+): Promise<AccountAssetRow | null> {
+  const params = new URLSearchParams({
+    select: 'asset_id,account_id,deleted_at',
+    account_id: `eq.${accountId}`,
+    asset_id: `eq.${assetId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_assets read failed (${res.status}) ${text}`.trim());
+  }
+  const rows = (await res.json().catch(() => [])) as AccountAssetRow[];
+  return rows?.[0] ?? null;
+}
+
+type AccountAssetVariantKeyRow = {
+  variant?: string | null;
+  r2_key?: string | null;
+};
+
+async function loadAccountAssetVariantKeys(
+  env: Env,
+  accountId: string,
+  assetId: string,
+): Promise<string[]> {
+  const params = new URLSearchParams({
+    select: 'variant,r2_key',
+    account_id: `eq.${accountId}`,
+    asset_id: `eq.${assetId}`,
+    limit: '200',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_asset_variants list failed (${res.status}) ${text}`.trim());
+  }
+  const rows = (await res.json().catch(() => [])) as AccountAssetVariantKeyRow[];
+  return rows
+    .map((row) => (typeof row.r2_key === 'string' ? row.r2_key.trim() : ''))
+    .filter(Boolean);
+}
+
+async function loadPrimaryAccountAssetKey(
+  env: Env,
+  accountId: string,
+  assetId: string,
+): Promise<string | null> {
+  const params = new URLSearchParams({
+    select: 'variant,r2_key',
+    account_id: `eq.${accountId}`,
+    asset_id: `eq.${assetId}`,
+    order: 'created_at.asc',
+    limit: '32',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_asset_variants read failed (${res.status}) ${text}`.trim());
+  }
+  const rows = (await res.json().catch(() => [])) as AccountAssetVariantKeyRow[];
+  if (!rows.length) return null;
+  const original = rows.find((row) => typeof row.variant === 'string' && row.variant.toLowerCase() === 'original');
+  const preferred = original ?? rows[0];
+  const key = typeof preferred?.r2_key === 'string' ? preferred.r2_key.trim() : '';
+  return key || null;
+}
+
+async function markAccountAssetDeletedByIdentity(
+  env: Env,
+  accountId: string,
+  assetId: string,
+  deletedAtIso: string,
+): Promise<void> {
+  const params = new URLSearchParams({
+    account_id: `eq.${accountId}`,
+    asset_id: `eq.${assetId}`,
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify({ deleted_at: deletedAtIso }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_assets update failed (${res.status}) ${text}`.trim());
+  }
+}
+
+async function purgeAccountAssetUsageByIdentity(env: Env, accountId: string, assetId: string): Promise<void> {
+  const params = new URLSearchParams({
+    account_id: `eq.${accountId}`,
+    asset_id: `eq.${assetId}`,
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_asset_usage?${params.toString()}`, {
+    method: 'DELETE',
+    headers: { Prefer: 'return=minimal' },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_asset_usage cleanup failed (${res.status}) ${text}`.trim());
+  }
+}
+
 type DeletedAccountAssetRow = {
   asset_id: string;
   account_id: string;
@@ -2140,7 +2267,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   }
 
   const origin = new URL(req.url).origin;
-  const url = `${origin}/${key}`;
+  const url = `${origin}${buildAccountAssetPointerPath(accountId, assetId)}`;
   return json(
     {
       accountId,
@@ -2166,17 +2293,105 @@ function respondImmutableR2Asset(key: string, obj: R2ObjectBody): Response {
   const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
   const headers = new Headers();
   headers.set('content-type', contentType);
-  headers.set('cache-control', 'public, max-age=31536000, immutable');
+  headers.set('cache-control', 'no-store');
+  return new Response(obj.body, { status: 200, headers });
+}
+
+function respondPointerR2Asset(key: string, obj: R2ObjectBody): Response {
+  const ext = key.split('.').pop() || '';
+  const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
+  const headers = new Headers();
+  headers.set('content-type', contentType);
+  headers.set('cache-control', 'public, max-age=30, s-maxage=30');
   return new Response(obj.body, { status: 200, headers });
 }
 
 async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
   const canonical = normalizeAccountAssetReadKey(key.startsWith('/') ? key : `/${key}`);
-  if (!canonical) return new Response('Not found', { status: 404 });
+  const identity = canonical ? parseAccountAssetIdentityFromKey(canonical) : null;
+  if (!canonical || !identity) return new Response('Not found', { status: 404 });
+
+  const assetRow = await loadAccountAssetByIdentity(env, identity.accountId, identity.assetId);
+  if (!assetRow || assetRow.deleted_at) return new Response('Not found', { status: 404 });
 
   const canonicalObj = await env.TOKYO_R2.get(canonical);
   if (canonicalObj) return respondImmutableR2Asset(canonical, canonicalObj);
   return new Response('Not found', { status: 404 });
+}
+
+async function handleGetAccountAssetPointer(
+  env: Env,
+  accountIdRaw: string,
+  assetIdRaw: string,
+): Promise<Response> {
+  const accountId = String(accountIdRaw || '').trim();
+  const assetId = String(assetIdRaw || '').trim();
+  if (!accountId || !assetId || !isUuid(accountId) || !isUuid(assetId)) {
+    return new Response('Not found', { status: 404 });
+  }
+
+  const assetRow = await loadAccountAssetByIdentity(env, accountId, assetId);
+  if (!assetRow || assetRow.deleted_at) return new Response('Not found', { status: 404 });
+
+  const key = await loadPrimaryAccountAssetKey(env, accountId, assetId);
+  if (!key) return new Response('Not found', { status: 404 });
+
+  const obj = await env.TOKYO_R2.get(key);
+  if (!obj) return new Response('Not found', { status: 404 });
+  return respondPointerR2Asset(key, obj);
+}
+
+async function handleDeleteAccountAsset(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+  assetIdRaw: string,
+): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+
+  const accountId = String(accountIdRaw || '').trim();
+  if (!accountId || !isUuid(accountId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
+  }
+  const assetId = String(assetIdRaw || '').trim();
+  if (!assetId || !isUuid(assetId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' } }, { status: 422 });
+  }
+
+  const existing = await loadAccountAssetByIdentity(env, accountId, assetId);
+  if (!existing) {
+    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
+  }
+
+  if (existing.deleted_at) {
+    await purgeAccountAssetUsageByIdentity(env, accountId, assetId);
+    const variantKeys = await loadAccountAssetVariantKeys(env, accountId, assetId);
+    return json({
+      accountId,
+      assetId,
+      deleted: true,
+      revokedAt: existing.deleted_at,
+      queuedGc: true,
+      queuedObjects: variantKeys.length,
+      previouslyDeleted: true,
+    });
+  }
+
+  const revokedAt = new Date().toISOString();
+  await markAccountAssetDeletedByIdentity(env, accountId, assetId, revokedAt);
+  await purgeAccountAssetUsageByIdentity(env, accountId, assetId);
+  const variantKeys = await loadAccountAssetVariantKeys(env, accountId, assetId);
+
+  return json({
+    accountId,
+    assetId,
+    deleted: true,
+    revokedAt,
+    queuedGc: true,
+    queuedObjects: variantKeys.length,
+    previouslyDeleted: false,
+  });
 }
 
 type RenderIndexEntry = { e: string; r: string; meta: string };
@@ -2185,6 +2400,14 @@ type RenderIndex = {
   v: 1;
   publicId: string;
   current: Record<string, RenderIndexEntry>;
+};
+
+type RenderPublishedPointer = {
+  v: 1;
+  publicId: string;
+  revision: string;
+  previousRevision?: string | null;
+  updatedAt: string;
 };
 
 type InstanceEnforcementState = {
@@ -2261,8 +2484,23 @@ function renderIndexKey(publicId: string): string {
   return `renders/instances/${publicId}/index.json`;
 }
 
+function renderPublishedPointerKey(publicId: string): string {
+  return `renders/instances/${publicId}/published.json`;
+}
+
+function renderRevisionIndexKey(publicId: string, revision: string): string {
+  return `renders/instances/${publicId}/revisions/${revision}/index.json`;
+}
+
 function renderArtifactKey(publicId: string, fingerprint: string, filename: 'e.html' | 'r.json' | 'meta.json'): string {
   return `renders/instances/${publicId}/${fingerprint}/${filename}`;
+}
+
+function normalizeRenderRevision(raw: unknown): string | null {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  if (!/^[a-z0-9][a-z0-9_-]{7,63}$/i.test(value)) return null;
+  return value;
 }
 
 function assertRenderIndexShape(payload: any, publicId: string): RenderIndex {
@@ -2291,12 +2529,83 @@ function assertRenderIndexShape(payload: any, publicId: string): RenderIndex {
   return { v: 1, publicId, current: normalized };
 }
 
-async function loadRenderIndex(env: Env, publicId: string): Promise<RenderIndex | null> {
-  const obj = await env.TOKYO_R2.get(renderIndexKey(publicId));
+function assertRenderPublishedPointerShape(payload: any, publicId: string): RenderPublishedPointer {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('[tokyo] published pointer must be an object');
+  }
+  if (payload.v !== 1) throw new Error('[tokyo] published pointer.v must be 1');
+  const pid = typeof payload.publicId === 'string' ? payload.publicId.trim() : '';
+  if (pid && pid !== publicId) throw new Error('[tokyo] published pointer.publicId mismatch');
+  const revision = normalizeRenderRevision(payload.revision);
+  if (!revision) throw new Error('[tokyo] published pointer.revision invalid');
+  const rawPreviousRevision =
+    typeof payload.previousRevision === 'string' ? payload.previousRevision.trim() : '';
+  const previousRevision = rawPreviousRevision ? normalizeRenderRevision(rawPreviousRevision) : null;
+  if (rawPreviousRevision && !previousRevision) {
+    throw new Error('[tokyo] published pointer.previousRevision invalid');
+  }
+  if (previousRevision && previousRevision === revision) {
+    throw new Error('[tokyo] published pointer.previousRevision must differ from revision');
+  }
+  const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
+  if (!updatedAt) throw new Error('[tokyo] published pointer.updatedAt missing');
+  return {
+    v: 1,
+    publicId,
+    revision,
+    previousRevision: previousRevision ?? null,
+    updatedAt,
+  };
+}
+
+async function loadRenderPublishedPointer(env: Env, publicId: string): Promise<RenderPublishedPointer | null> {
+  const obj = await env.TOKYO_R2.get(renderPublishedPointerKey(publicId));
   if (!obj) return null;
   const json = (await obj.json().catch(() => null)) as any;
   if (!json) return null;
-  return assertRenderIndexShape(json, publicId);
+  return assertRenderPublishedPointerShape(json, publicId);
+}
+
+async function putRenderPublishedPointer(
+  env: Env,
+  publicId: string,
+  pointer: RenderPublishedPointer,
+): Promise<void> {
+  await env.TOKYO_R2.put(renderPublishedPointerKey(publicId), prettyStableJson(pointer), {
+    httpMetadata: { contentType: 'application/json; charset=utf-8' },
+  });
+}
+
+async function deleteRenderPublishedPointer(env: Env, publicId: string): Promise<void> {
+  await env.TOKYO_R2.delete(renderPublishedPointerKey(publicId));
+}
+
+async function putRenderRevisionIndex(
+  env: Env,
+  publicId: string,
+  revision: string,
+  index: RenderIndex,
+): Promise<void> {
+  await env.TOKYO_R2.put(renderRevisionIndexKey(publicId, revision), prettyStableJson(index), {
+    httpMetadata: { contentType: 'application/json; charset=utf-8' },
+  });
+}
+
+async function loadRenderIndex(env: Env, publicId: string): Promise<RenderIndex | null> {
+  const pointer = await loadRenderPublishedPointer(env, publicId).catch(() => null);
+  if (pointer?.revision) {
+    const revisionObj = await env.TOKYO_R2.get(renderRevisionIndexKey(publicId, pointer.revision));
+    if (revisionObj) {
+      const revisionJson = (await revisionObj.json().catch(() => null)) as any;
+      if (revisionJson) return assertRenderIndexShape(revisionJson, publicId);
+    }
+  }
+
+  const legacyObj = await env.TOKYO_R2.get(renderIndexKey(publicId));
+  if (!legacyObj) return null;
+  const legacyJson = (await legacyObj.json().catch(() => null)) as any;
+  if (!legacyJson) return null;
+  return assertRenderIndexShape(legacyJson, publicId);
 }
 
 async function putRenderIndex(env: Env, publicId: string, index: RenderIndex): Promise<void> {
@@ -2306,6 +2615,7 @@ async function putRenderIndex(env: Env, publicId: string, index: RenderIndex): P
 }
 
 async function deleteRenderIndex(env: Env, publicId: string): Promise<void> {
+  await deleteRenderPublishedPointer(env, publicId);
   await env.TOKYO_R2.delete(renderIndexKey(publicId));
 }
 
@@ -2315,10 +2625,14 @@ async function fetchVeniceBytes(
   opts?: { headers?: Record<string, string> },
 ): Promise<{ bytes: ArrayBuffer; contentType: string | null; effectiveLocale: string | null; l10nStatus: string | null }> {
   const base = resolveVeniceBase(env);
+  const bypassToken = String(env.VENICE_INTERNAL_BYPASS_TOKEN || '').trim();
   const headers: Record<string, string> = {
     'X-Request-ID': crypto.randomUUID(),
     ...opts?.headers,
   };
+  if (bypassToken && headers['X-Ck-Snapshot-Bypass'] === '1') {
+    headers['X-Ck-Internal-Bypass-Token'] = bypassToken;
+  }
   const res = await fetch(`${base}${pathnameWithQuery.startsWith('/') ? pathnameWithQuery : `/${pathnameWithQuery}`}`, {
     method: 'GET',
     headers,
@@ -2422,6 +2736,22 @@ async function generateRenderSnapshots(args: {
   }
 
   const index: RenderIndex = { v: 1, publicId, current: nextCurrent };
+  const revision =
+    `${Date.now().toString(36)}-${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`.toLowerCase();
+  const existingPointer = await loadRenderPublishedPointer(env, publicId).catch(() => null);
+  const previousRevision =
+    existingPointer?.revision && existingPointer.revision !== revision
+      ? existingPointer.revision
+      : null;
+  await putRenderRevisionIndex(env, publicId, revision, index);
+  await putRenderPublishedPointer(env, publicId, {
+    v: 1,
+    publicId,
+    revision,
+    previousRevision,
+    updatedAt: new Date().toISOString(),
+  });
+  // Legacy compatibility for tooling that still reads /index.json directly.
   await putRenderIndex(env, publicId, index);
 }
 
@@ -2457,6 +2787,37 @@ export default {
         const publicId = normalizePublicId(decodeURIComponent(renderIndexMatch[1]));
         if (!publicId) return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
         return withCors(await handleGetRenderObject(env, renderIndexKey(publicId), 'public, max-age=60, s-maxage=60'));
+      }
+
+      const renderPublishedPointerMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/published\.json$/);
+      if (renderPublishedPointerMatch) {
+        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const publicId = normalizePublicId(decodeURIComponent(renderPublishedPointerMatch[1]));
+        if (!publicId) return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
+        return withCors(
+          await handleGetRenderObject(
+            env,
+            renderPublishedPointerKey(publicId),
+            'public, max-age=15, s-maxage=15',
+          ),
+        );
+      }
+
+      const renderRevisionIndexMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/revisions\/([^/]+)\/index\.json$/);
+      if (renderRevisionIndexMatch) {
+        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const publicId = normalizePublicId(decodeURIComponent(renderRevisionIndexMatch[1]));
+        const revision = normalizeRenderRevision(decodeURIComponent(renderRevisionIndexMatch[2]));
+        if (!publicId || !revision) {
+          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
+        }
+        return withCors(
+          await handleGetRenderObject(
+            env,
+            renderRevisionIndexKey(publicId, revision),
+            'public, max-age=31536000, immutable',
+          ),
+        );
       }
 
       const renderArtifactMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/([^/]+)\/(e\.html|r\.json|meta\.json)$/);
@@ -2513,6 +2874,31 @@ export default {
       if (pathname === '/assets/upload') {
         if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         return withCors(await handleUploadAccountAsset(req, env));
+      }
+
+      const accountAssetDeleteMatch = pathname.match(/^\/assets\/([^/]+)\/([^/]+)$/);
+      if (accountAssetDeleteMatch) {
+        if (req.method !== 'DELETE') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        return withCors(
+          await handleDeleteAccountAsset(
+            req,
+            env,
+            decodeURIComponent(accountAssetDeleteMatch[1] || ''),
+            decodeURIComponent(accountAssetDeleteMatch[2] || ''),
+          ),
+        );
+      }
+
+      const accountAssetPointerMatch = pathname.match(ASSET_POINTER_PATH_RE);
+      if (accountAssetPointerMatch) {
+        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        return withCors(
+          await handleGetAccountAssetPointer(
+            env,
+            decodeURIComponent(accountAssetPointerMatch[1] || ''),
+            decodeURIComponent(accountAssetPointerMatch[2] || ''),
+          ),
+        );
       }
 
       if (pathname.startsWith('/arsenale/o/')) {

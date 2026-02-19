@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.0",
+    "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/composition": "workspace:*",
     "@clickeen/l10n": "workspace:*",
     "astro": "^5.1.2"

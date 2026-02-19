@@ -1,6 +1,6 @@
-export const prerender = false;
+import { isCuratedOrMainWidgetPublicId } from '@clickeen/ck-contracts';
 
-const PUBLIC_ID_PATTERN = /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*)$/;
+export const prerender = false;
 const WIDGET_TYPE_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 const MAX_DRAFT_CONFIG_BYTES = 7000;
 const PARIS_TIMEOUT_MS = 4000;
@@ -104,7 +104,7 @@ export async function POST({ request, locals }) {
   }
 
   const publicId = asTrimmedString(body.publicId);
-  if (!publicId || !PUBLIC_ID_PATTERN.test(publicId)) {
+  if (!publicId || !isCuratedOrMainWidgetPublicId(publicId)) {
     return json(
       {
         error: 'INVALID_PUBLIC_ID',

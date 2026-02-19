@@ -1,3 +1,5 @@
+import { isUuid, isWidgetPublicId, parseCanonicalAssetRef } from '@clickeen/ck-contracts';
+
 type EditorAssetUploadContext = {
   accountId: string;
   workspaceId: string;
@@ -15,15 +17,8 @@ type UploadEditorAssetArgs = {
   endpoint?: string;
 };
 
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
 function isPublicId(value: string): boolean {
-  if (!value) return false;
-  if (/^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(value)) return true;
-  if (/^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/i.test(value)) return true;
-  return /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(value);
+  return isWidgetPublicId(value);
 }
 
 function isWidgetType(value: string): boolean {
@@ -67,20 +62,10 @@ function safeJsonParse(text: string): unknown | null {
 function normalizeUploadUrl(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.url === 'string' ? payload.url.trim() : '';
   if (!direct) return null;
-
-  if (/^https?:\/\//i.test(direct)) {
-    try {
-      const parsed = new URL(direct);
-      if (!parsed.pathname.startsWith('/arsenale/o/')) return null;
-      return direct;
-    } catch {
-      return null;
-    }
-  }
-
-  if (!direct.startsWith('/')) return null;
-  if (!direct.startsWith('/arsenale/o/')) return null;
-  return direct;
+  const parsed = parseCanonicalAssetRef(direct);
+  if (!parsed) return null;
+  if (/^https?:\/\//i.test(direct)) return direct;
+  return parsed.pathname;
 }
 
 function assertUploadContext(context: EditorAssetUploadContext): EditorAssetUploadContext {
