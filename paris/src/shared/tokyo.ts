@@ -2,12 +2,37 @@ import { parseLimitsSpec } from '@clickeen/ck-policy';
 import type { Env } from './types';
 import type { LimitsSpec } from '@clickeen/ck-policy';
 
+const TOKYO_BASE_ENV_KEY = 'TOKYO_BASE_URL';
+const TOKYO_LEGACY_PATH_PREFIXES = new Set(['/assets', '/arsenale', '/dieter', '/widgets', '/renders', '/l10n', '/i18n']);
+
+function normalizeTokyoBaseUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return trimmed;
+  const normalized = trimmed.replace(/\/+$/, '');
+  let parsed: URL;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    return normalized;
+  }
+
+  if (parsed.search || parsed.hash) {
+    throw new Error(`[ParisWorker] Invalid ${TOKYO_BASE_ENV_KEY}: query/hash is not allowed (${trimmed})`);
+  }
+
+  const normalizedPath = parsed.pathname.replace(/\/+$/, '') || '/';
+  if (normalizedPath === '/') return parsed.origin;
+  if (TOKYO_LEGACY_PATH_PREFIXES.has(normalizedPath)) return parsed.origin;
+
+  throw new Error(`[ParisWorker] Invalid ${TOKYO_BASE_ENV_KEY}: expected Tokyo origin, got path "${parsed.pathname}"`);
+}
+
 export function requireTokyoBase(env: Env) {
   const base = env.TOKYO_BASE_URL?.trim();
   if (!base) {
     throw new Error('[ParisWorker] Missing required env var: TOKYO_BASE_URL');
   }
-  return base.replace(/\/+$/, '');
+  return normalizeTokyoBaseUrl(base);
 }
 
 const widgetTypeExistenceCache = new Map<string, boolean>();

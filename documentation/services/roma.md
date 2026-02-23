@@ -32,10 +32,14 @@ Roma is a host/orchestrator. Bob remains the editor kernel.
 
 Roma bootstraps from:
 - `GET /api/bootstrap` (canonical)
-- `GET /api/me` (compat alias to same upstream bootstrap flow)
 
-Both proxy to Paris `GET /api/roma/bootstrap` with the user bearer token.
-When no valid session is present, both return `401` with auth error payload (`coreui.errors.auth.required`).
+`/api/bootstrap` proxies to Paris `GET /api/roma/bootstrap` with the user bearer token.
+When no valid session is present, it returns `401` with auth error payload (`coreui.errors.auth.required`).
+Roma does not auto-bootstrap local auth sessions; local and Cloudflare require real Supabase session tokens.
+Roma also exposes `GET /api/session/access-token` for Builder->Bob auth handoff; it resolves the current bearer server-side and forwards refreshed auth cookies when rotation occurs.
+Roma exposes explicit session endpoints for product auth UX:
+- `POST /api/session/login` (email/password -> Supabase password grant -> httpOnly session cookies)
+- `POST /api/session/logout` (clears Supabase session cookies)
 
 Bootstrap payload includes:
 - User/accounts/workspaces graph
@@ -50,6 +54,7 @@ Client behavior (`use-roma-me.ts`):
 - Persists successful bootstrap cache in sessionStorage for reload speed.
 - Guards and re-initializes global store shape if corrupted.
 - Pushes both capsules into shared transport state (`paris-http`) so subsequent calls avoid repeated identity/membership lookups.
+- When bootstrap returns `coreui.errors.auth.required`, Roma redirects to `/login?next=...` for explicit sign-in.
 
 ## Paris proxy model
 
@@ -68,15 +73,17 @@ Roma injects both authz headers for Paris calls through `fetchParisJson` (`roma/
 
 `BuilderDomain` flow:
 1. Resolve active workspace + target publicId.
-2. Load instance payload (`/api/paris/instance/:publicId?workspaceId=...`).
-3. Load compiled payload (`/api/widgets/:widgetType/compiled`).
-4. Wait for Bob `bob:session-ready` (`boot=message`).
-5. Send `ck:open-editor` with `requestId + sessionId`.
-6. Require ack/applied lifecycle (`bob:open-editor-ack` → `bob:open-editor-applied` or `bob:open-editor-failed`).
+2. Resolve Bob handoff bearer (`/api/session/access-token`).
+3. Load instance payload (`/api/paris/instance/:publicId?workspaceId=...`).
+4. Load compiled payload (`/api/widgets/:widgetType/compiled`).
+5. Wait for Bob `bob:session-ready` (`boot=message`).
+6. Send `ck:open-editor` with `requestId + sessionId + sessionAccessToken`.
+7. Require ack/applied lifecycle (`bob:open-editor-ack` → `bob:open-editor-applied` or `bob:open-editor-failed`).
 
 Notes:
 - Builder retries open while waiting for ack (bounded attempts + timeout).
 - Bob URL-bootstrap (`boot=url`) still exists for explicit URL-mode surfaces, but Roma Builder uses message boot as canonical.
+- Roma marks Bob iframe host intent with `surface=roma` to keep host-specific auth behavior explicit.
 
 ## Data domains and caches (client-side)
 
@@ -100,7 +107,16 @@ Assets domain behavior:
 - Roma runs at `http://localhost:3004` via `bash scripts/dev-up.sh`.
 - Canonical entry: `http://localhost:3004/home`.
 - Uses local Paris through `PARIS_BASE_URL=http://localhost:3001`.
+- `dev-up` exports `ENV_STAGE=local` for Bob/Roma so local-only bypass logic stays stage-gated.
 - `dev-up` points Paris/Workers to local Supabase by default; remote Supabase is opt-in (`DEV_UP_USE_REMOTE_SUPABASE=1`).
+- `dev-up` seeds deterministic local auth personas (non-destructive) for parity testing:
+  - `local.free@clickeen.local` -> `ck-demo` (`free`, `owner`)
+  - `local.paid@clickeen.local` -> `ck-dev` (`tier3`, `owner`)
+  - `local.admin@clickeen.local` -> `ck-dev` (`tier3`, `admin`)
+  Admin identity env vars:
+  - `CK_ADMIN_EMAIL`
+  - `CK_ADMIN_PASSWORD`
+  `CK_ADMIN_PASSWORD` is required for local persona seeding and local DevStudio auth bootstrap.
 
 ### Cloud-dev
 - Roma runtime target: `https://roma.dev.clickeen.com` (or deployment-specific Pages domain).

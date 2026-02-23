@@ -1,4 +1,13 @@
-import type { AIGrant, Env, ExecuteRequest, ExecuteResponse, InteractionEvent, OutcomeAttachRequest, Usage } from './types';
+import type {
+  AIGrant,
+  Env,
+  ExecuteRequest,
+  ExecuteResponse,
+  InteractionEvent,
+  OutcomeAttachRequest,
+  SanfranciscoCommandMessage,
+  Usage,
+} from './types';
 import { listAiAgents, resolveAiAgent } from '@clickeen/ck-policy';
 import { HttpError, json, noStore, readJson, asString, isRecord } from './http';
 import { assertCap, verifyGrant } from './grants';
@@ -6,7 +15,12 @@ import { executeSdrCopilot } from './agents/sdrCopilot';
 import { executeDebugGrantProbe } from './agents/debugGrantProbe';
 import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
 import { executeCsWidgetCopilot } from './agents/csWidgetCopilot';
-import { executeL10nJob, isL10nJob, type L10nJob } from './agents/l10nInstance';
+import {
+  executeL10nJob,
+  isL10nJob,
+  resolveL10nPlanningSnapshot,
+  type L10nJob,
+} from './agents/l10nInstance';
 import { executePragueStringsTranslate, isPragueStringsJob } from './agents/l10nPragueStrings';
 import { executePersonalizationPreview, type PersonalizationPreviewInput, type PersonalizationPreviewResult } from './agents/personalizationPreview';
 import { executePersonalizationOnboarding, type PersonalizationOnboardingInput, type PersonalizationOnboardingResult } from './agents/personalizationOnboarding';
@@ -189,6 +203,38 @@ type OnboardingJobRecord = {
   persisted?: boolean;
   persistError?: string;
 };
+
+function isSanfranciscoCommandMessage(value: unknown): value is SanfranciscoCommandMessage {
+  if (!isRecord(value)) return false;
+  if ((value as any).v !== 1) return false;
+  if ((value as any).kind !== 'sf.command') return false;
+  const command = asTrimmedString((value as any).command);
+  if (
+    command !== 'personalization.preview.enqueue' &&
+    command !== 'personalization.onboarding.enqueue' &&
+    command !== 'ai.outcome.attach'
+  ) {
+    return false;
+  }
+  return isRecord((value as any).payload);
+}
+
+function unwrapCommandPayload(raw: unknown, expectedCommand: string): unknown {
+  if (!isSanfranciscoCommandMessage(raw)) {
+    throw new HttpError(400, {
+      code: 'BAD_REQUEST',
+      message: 'Expected sf.command envelope payload',
+    });
+  }
+  const command = raw.command;
+  if (command !== expectedCommand) {
+    throw new HttpError(400, {
+      code: 'BAD_REQUEST',
+      message: `Unsupported command "${command}" (expected "${expectedCommand}")`,
+    });
+  }
+  return raw.payload;
+}
 
 const ONBOARDING_JOB_TTL_SEC = 60 * 30;
 
@@ -546,28 +592,9 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
   }
 }
 
-async function handleOutcome(request: Request, env: Env): Promise<Response> {
-  const bodyText = await request.text();
-  await verifyOutcomeSignature({ request, env, bodyText });
-
-  let body: unknown;
-  try {
-    body = bodyText ? JSON.parse(bodyText) : null;
-  } catch {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
-  }
-
-  if (!isOutcomeAttachRequest(body)) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Invalid request',
-      issues: [{ path: '', message: 'Expected { requestId, sessionId, event, occurredAtMs }' }],
-    });
-  }
-
+async function persistOutcomeAttach(env: Env, body: OutcomeAttachRequest): Promise<void> {
   await ensureD1Schema(env);
   const day = toIsoDay(body.occurredAtMs);
-
   try {
     await env.SF_D1.prepare(
       `INSERT OR REPLACE INTO copilot_outcomes_v1
@@ -589,6 +616,30 @@ async function handleOutcome(request: Request, env: Env): Promise<Response> {
     console.error('[sanfrancisco] outcome insert failed', err);
     throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Failed to persist outcome' });
   }
+}
+
+async function handleOutcome(request: Request, env: Env): Promise<Response> {
+  const bodyText = await request.text();
+  await verifyOutcomeSignature({ request, env, bodyText });
+
+  let parsedBody: unknown;
+  try {
+    parsedBody = bodyText ? JSON.parse(bodyText) : null;
+  } catch {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
+  }
+
+  const body = unwrapCommandPayload(parsedBody, 'ai.outcome.attach');
+
+  if (!isOutcomeAttachRequest(body)) {
+    throw new HttpError(400, {
+      code: 'BAD_REQUEST',
+      message: 'Invalid request',
+      issues: [{ path: '', message: 'Expected { requestId, sessionId, event, occurredAtMs }' }],
+    });
+  }
+
+  await persistOutcomeAttach(env, body);
 
   return noStore(json({ ok: true }));
 }
@@ -657,6 +708,44 @@ async function handleL10nDispatch(request: Request, env: Env, ctx: ExecutionCont
   }
 
   return noStore(json({ ok: true, queued: jobs.length }));
+}
+
+async function handleL10nPlan(request: Request, env: Env): Promise<Response> {
+  assertInternalAuth(request, env);
+
+  const body = await readJson(request);
+  if (!isRecord(body)) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'body must be an object' });
+  }
+
+  const widgetType = asTrimmedString((body as any).widgetType);
+  const config = isRecord((body as any).config) ? ((body as any).config as Record<string, unknown>) : null;
+  const baseUpdatedAt = asTrimmedString((body as any).baseUpdatedAt) ?? null;
+  const publicId = asTrimmedString((body as any).publicId);
+  const workspaceId = asTrimmedString((body as any).workspaceId);
+
+  if (!widgetType) {
+    throw new HttpError(400, {
+      code: 'BAD_REQUEST',
+      message: 'Missing required field: widgetType',
+    });
+  }
+  if (!config && (!publicId || !workspaceId)) {
+    throw new HttpError(400, {
+      code: 'BAD_REQUEST',
+      message: 'Missing required fields: config OR (publicId + workspaceId)',
+    });
+  }
+
+  const plan = await resolveL10nPlanningSnapshot({
+    env,
+    widgetType,
+    config,
+    baseUpdatedAt,
+    publicId,
+    workspaceId,
+  });
+  return noStore(json(plan));
 }
 
 async function handlePragueStringsTranslate(request: Request, env: Env): Promise<Response> {
@@ -737,13 +826,13 @@ async function runPersonalizationPreviewJob(args: { env: Env; jobId: string; gra
   }
 }
 
-async function handlePersonalizationPreviewCreate(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  assertInternalAuth(request, env);
-
-  const payload = await readJson(request);
-  if (!isRecord(payload)) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
-  }
+async function enqueuePersonalizationPreview(args: {
+  env: Env;
+  payload: Record<string, unknown>;
+  dispatchMode: 'background' | 'inline';
+  ctx?: ExecutionContext;
+}): Promise<{ jobId: string }> {
+  const { env, payload } = args;
 
   const url = asTrimmedString((payload as any).url);
   if (!url) {
@@ -766,8 +855,14 @@ async function handlePersonalizationPreviewCreate(request: Request, env: Env, ct
   const locale = asTrimmedString((payload as any).locale);
   const templateContext = isRecord((payload as any).templateContext) ? ((payload as any).templateContext as Record<string, unknown>) : undefined;
   const allowedOverrides = normalizeOverrideKeys((payload as any).allowedOverrides);
+  const requestedJobId = asTrimmedString((payload as any).jobId);
 
-  const jobId = crypto.randomUUID();
+  const jobId = requestedJobId ?? crypto.randomUUID();
+  const existing = await loadPreviewJob(env, jobId);
+  if (existing && existing.status !== 'failed') {
+    return { jobId };
+  }
+
   const now = Date.now();
   const input: PersonalizationPreviewInput = {
     url,
@@ -780,14 +875,40 @@ async function handlePersonalizationPreviewCreate(request: Request, env: Env, ct
     v: 1,
     jobId,
     status: 'queued',
-    createdAtMs: now,
+    createdAtMs: existing?.createdAtMs ?? now,
     updatedAtMs: now,
     input,
   };
-  await savePreviewJob(env, record);
+  await savePreviewJob(env, existing ? { ...existing, ...record } : record);
 
-  ctx.waitUntil(runPersonalizationPreviewJob({ env, jobId, grant, input }));
-  return noStore(json({ jobId }));
+  if (args.dispatchMode === 'background') {
+    if (!args.ctx) {
+      throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing execution context' });
+    }
+    args.ctx.waitUntil(runPersonalizationPreviewJob({ env, jobId, grant, input }));
+    return { jobId };
+  }
+
+  await runPersonalizationPreviewJob({ env, jobId, grant, input });
+  return { jobId };
+}
+
+async function handlePersonalizationPreviewCreate(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  assertInternalAuth(request, env);
+
+  const payloadRaw = await readJson(request);
+  const payload = unwrapCommandPayload(payloadRaw, 'personalization.preview.enqueue');
+  if (!isRecord(payload)) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
+  }
+
+  const scheduled = await enqueuePersonalizationPreview({
+    env,
+    payload: payload as Record<string, unknown>,
+    dispatchMode: 'background',
+    ctx,
+  });
+  return noStore(json({ jobId: scheduled.jobId }));
 }
 
 async function handlePersonalizationPreviewStatus(request: Request, env: Env, jobId: string): Promise<Response> {
@@ -869,13 +990,13 @@ async function runPersonalizationOnboardingJob(args: {
   }
 }
 
-async function handlePersonalizationOnboardingCreate(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  assertInternalAuth(request, env);
-
-  const payload = await readJson(request);
-  if (!isRecord(payload)) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
-  }
+async function enqueuePersonalizationOnboarding(args: {
+  env: Env;
+  payload: Record<string, unknown>;
+  dispatchMode: 'background' | 'inline';
+  ctx?: ExecutionContext;
+}): Promise<{ jobId: string }> {
+  const { env, payload } = args;
 
   const grantRaw = asTrimmedString((payload as any).grant);
   if (!grantRaw) {
@@ -906,20 +1027,52 @@ async function handlePersonalizationOnboardingCreate(request: Request, env: Env,
     ...(typeof (payload as any).instagramHandle === 'string' ? { instagramHandle: (payload as any).instagramHandle } : {}),
   };
 
-  const jobId = crypto.randomUUID();
+  const requestedJobId = asTrimmedString((payload as any).jobId);
+  const jobId = requestedJobId ?? crypto.randomUUID();
+  const existing = await loadOnboardingJob(env, jobId);
+  if (existing && existing.status !== 'failed') {
+    return { jobId };
+  }
+
   const now = Date.now();
   const record: OnboardingJobRecord = {
     v: 1,
     jobId,
     status: 'queued',
-    createdAtMs: now,
+    createdAtMs: existing?.createdAtMs ?? now,
     updatedAtMs: now,
     input,
   };
-  await saveOnboardingJob(env, record);
+  await saveOnboardingJob(env, existing ? { ...existing, ...record } : record);
 
-  ctx.waitUntil(runPersonalizationOnboardingJob({ env, jobId, grant, input }));
-  return noStore(json({ jobId }));
+  if (args.dispatchMode === 'background') {
+    if (!args.ctx) {
+      throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing execution context' });
+    }
+    args.ctx.waitUntil(runPersonalizationOnboardingJob({ env, jobId, grant, input }));
+    return { jobId };
+  }
+
+  await runPersonalizationOnboardingJob({ env, jobId, grant, input });
+  return { jobId };
+}
+
+async function handlePersonalizationOnboardingCreate(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  assertInternalAuth(request, env);
+
+  const payloadRaw = await readJson(request);
+  const payload = unwrapCommandPayload(payloadRaw, 'personalization.onboarding.enqueue');
+  if (!isRecord(payload)) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
+  }
+
+  const scheduled = await enqueuePersonalizationOnboarding({
+    env,
+    payload: payload as Record<string, unknown>,
+    dispatchMode: 'background',
+    ctx,
+  });
+  return noStore(json({ jobId: scheduled.jobId }));
 }
 
 async function handlePersonalizationOnboardingStatus(request: Request, env: Env, jobId: string): Promise<Response> {
@@ -939,6 +1092,40 @@ async function handlePersonalizationOnboardingStatus(request: Request, env: Env,
       updatedAtMs: record.updatedAtMs,
     }),
   );
+}
+
+async function handleQueuedSanfranciscoCommand(command: SanfranciscoCommandMessage, env: Env): Promise<void> {
+  if (command.command === 'personalization.preview.enqueue') {
+    await enqueuePersonalizationPreview({
+      env,
+      payload: command.payload,
+      dispatchMode: 'inline',
+    });
+    return;
+  }
+
+  if (command.command === 'personalization.onboarding.enqueue') {
+    await enqueuePersonalizationOnboarding({
+      env,
+      payload: command.payload,
+      dispatchMode: 'inline',
+    });
+    return;
+  }
+
+  if (command.command === 'ai.outcome.attach') {
+    if (!isOutcomeAttachRequest(command.payload)) {
+      throw new HttpError(400, {
+        code: 'BAD_REQUEST',
+        message: 'Invalid ai.outcome.attach payload',
+        issues: [{ path: 'payload', message: 'Expected { requestId, sessionId, event, occurredAtMs }' }],
+      });
+    }
+    await persistOutcomeAttach(env, command.payload);
+    return;
+  }
+
+  throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Unsupported command' });
 }
 
 export default {
@@ -965,6 +1152,7 @@ export default {
         const jobId = decodeURIComponent(onboardingStatusMatch[1]);
         return await handlePersonalizationOnboardingStatus(request, env, jobId);
       }
+      if (request.method === 'POST' && url.pathname === '/v1/l10n/plan') return await handleL10nPlan(request, env);
       if (request.method === 'POST' && url.pathname === '/v1/l10n') return await handleL10nDispatch(request, env, ctx);
       if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') return await handlePragueStringsTranslate(request, env);
 
@@ -976,11 +1164,19 @@ export default {
     }
   },
 
-  async queue(batch: MessageBatch<InteractionEvent | L10nJob>, env: Env): Promise<void> {
+  async queue(batch: MessageBatch<InteractionEvent | L10nJob | SanfranciscoCommandMessage>, env: Env): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
     await ensureD1Schema(env);
     for (const msg of batch.messages) {
       const body = msg.body;
+      if (isSanfranciscoCommandMessage(body)) {
+        try {
+          await handleQueuedSanfranciscoCommand(body, env);
+        } catch (err) {
+          console.error('[sanfrancisco] command message failed', err);
+        }
+        continue;
+      }
       if (isL10nJob(body)) {
         try {
           const grant = await verifyGrant(body.grant, env.AI_GRANT_HMAC_SECRET);

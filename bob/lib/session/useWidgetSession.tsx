@@ -88,8 +88,9 @@ type LocaleState = {
   };
 };
 
-type SubjectMode = 'devstudio' | 'minibob' | 'workspace';
+type SubjectMode = 'minibob' | 'workspace';
 type BootMode = 'message' | 'url';
+type HostSurface = 'roma' | 'devstudio' | 'unknown';
 
 type SessionState = {
   compiled: CompiledWidget | null;
@@ -124,6 +125,7 @@ type EditorOpenMessage = {
   type: 'ck:open-editor';
   requestId?: string;
   sessionId?: string;
+  sessionAccessToken?: string;
   widgetname: string;
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
@@ -525,13 +527,12 @@ function upsertLocaleOverlayEntry(
 }
 
 function resolveSubjectModeFromUrl(): SubjectMode {
-  if (typeof window === 'undefined') return 'devstudio';
+  if (typeof window === 'undefined') return 'workspace';
   const params = new URLSearchParams(window.location.search);
   const subject = (params.get('subject') || '').trim().toLowerCase();
   if (subject === 'workspace') return 'workspace';
   if (subject === 'minibob') return 'minibob';
-  if (subject === 'devstudio') return 'devstudio';
-  return 'devstudio';
+  return 'workspace';
 }
 
 function resolveBootModeFromUrl(): BootMode {
@@ -541,8 +542,16 @@ function resolveBootModeFromUrl(): BootMode {
   return boot === 'url' ? 'url' : 'message';
 }
 
-function resolvePolicySubject(policy: Policy): 'devstudio' | 'minibob' | 'workspace' {
-  if (policy.profile === 'devstudio') return 'devstudio';
+function resolveHostSurfaceFromUrl(): HostSurface {
+  if (typeof window === 'undefined') return 'unknown';
+  const params = new URLSearchParams(window.location.search);
+  const surface = (params.get('surface') || '').trim().toLowerCase();
+  if (surface === 'roma') return 'roma';
+  if (surface === 'devstudio') return 'devstudio';
+  return 'unknown';
+}
+
+function resolvePolicySubject(policy: Policy): 'minibob' | 'workspace' {
   if (policy.profile === 'minibob') return 'minibob';
   return 'workspace';
 }
@@ -603,9 +612,36 @@ function useWidgetSessionInternal() {
   const localeRequestRef = useRef(0);
   const localeSyncRunRef = useRef(0);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const sessionAccessTokenRef = useRef('');
   const openRequestStatusRef = useRef<
     Map<string, { status: 'processing' | 'applied' | 'failed'; publicId?: string; widgetname?: string; error?: string }>
   >(new Map());
+
+  const fetchApi = useCallback((input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const token = sessionAccessTokenRef.current.trim();
+    if (!token) {
+      return fetch(input, init);
+    }
+
+    const resolveUrl = (): URL | null => {
+      if (typeof window === 'undefined') return null;
+      if (typeof input === 'string') return new URL(input, window.location.origin);
+      if (input instanceof URL) return input;
+      if (typeof input.url === 'string') return new URL(input.url, window.location.origin);
+      return null;
+    };
+
+    const url = resolveUrl();
+    if (!url || url.origin !== window.location.origin || !url.pathname.startsWith('/api/')) {
+      return fetch(input, init);
+    }
+
+    const headers = new Headers(init?.headers ?? undefined);
+    if (!headers.has('authorization')) {
+      headers.set('authorization', `Bearer ${token}`);
+    }
+    return fetch(input, { ...init, headers });
+  }, []);
 
   useEffect(() => {
     previewOpsRef.current = state.previewOps;
@@ -1204,7 +1240,7 @@ function useWidgetSessionInternal() {
         }));
         return;
       }
-      const res = await fetch(
+      const res = await fetchApi(
         `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
           publicId
         )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
@@ -1269,16 +1305,16 @@ function useWidgetSessionInternal() {
         locale: { ...prev.locale, error: message },
       }));
     }
-  }, [loadLocaleAllowlist]);
+  }, [fetchApi, loadLocaleAllowlist]);
 
   const refreshLocaleTranslations = useCallback(async () => {
     const rehydrateLocalizationSnapshot = async (args: {
       publicId: string;
       workspaceId: string;
-      subject: 'devstudio' | 'minibob' | 'workspace';
+      subject: 'minibob' | 'workspace';
     }): Promise<{ ok: true } | { ok: false; message: string }> => {
       try {
-        const res = await fetch(
+        const res = await fetchApi(
           `/api/paris/workspaces/${encodeURIComponent(args.workspaceId)}/instance/${encodeURIComponent(
             args.publicId
           )}?subject=${encodeURIComponent(args.subject)}`,
@@ -1386,14 +1422,14 @@ function useWidgetSessionInternal() {
     const readPublishStatus = async (args: {
       publicId: string;
       workspaceId: string;
-      subject: 'devstudio' | 'minibob' | 'workspace';
+      subject: 'minibob' | 'workspace';
     }): Promise<
       | { stage: 'ready'; detail: string | null }
       | { stage: 'translating'; detail: string | null }
       | { stage: 'failed'; detail: string }
     > => {
       try {
-        const res = await fetch(
+        const res = await fetchApi(
           `/api/paris/workspaces/${encodeURIComponent(args.workspaceId)}/instances/${encodeURIComponent(
             args.publicId
           )}/publish/status?subject=${encodeURIComponent(args.subject)}&_t=${Date.now()}`,
@@ -1465,7 +1501,7 @@ function useWidgetSessionInternal() {
       runId: number;
       publicId: string;
       workspaceId: string;
-      subject: 'devstudio' | 'minibob' | 'workspace';
+      subject: 'minibob' | 'workspace';
     }) => {
       const startedAt = Date.now();
       const pollIntervalMs = 1500;
@@ -1672,7 +1708,7 @@ function useWidgetSessionInternal() {
     }));
 
     try {
-      const res = await fetch(
+      const res = await fetchApi(
         `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
           publicId
         )}/l10n/enqueue-selected?subject=${encodeURIComponent(subject)}`,
@@ -1744,7 +1780,7 @@ function useWidgetSessionInternal() {
       }));
       return { ok: false as const, message };
     }
-  }, [loadLocaleAllowlist]);
+  }, [fetchApi, loadLocaleAllowlist]);
 
   const revertLocaleOverrides = useCallback(async () => {
     const snapshot = stateRef.current;
@@ -1779,7 +1815,7 @@ function useWidgetSessionInternal() {
     if (snapshot.locale.userOps.length === 0) return;
 
     try {
-      const res = await fetch(
+      const res = await fetchApi(
         `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
           publicId
         )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
@@ -1841,13 +1877,17 @@ function useWidgetSessionInternal() {
         locale: { ...prev.locale, error: message },
       }));
     }
-  }, [loadLocaleAllowlist]);
+  }, [fetchApi, loadLocaleAllowlist]);
 
   const loadInstance = useCallback(
     async (
       message: EditorOpenMessage,
     ): Promise<{ ok: true; publicId?: string; widgetname?: string } | { ok: false; error: string }> => {
     try {
+      const sessionAccessToken =
+        typeof message.sessionAccessToken === 'string' ? message.sessionAccessToken.trim() : '';
+      sessionAccessTokenRef.current = sessionAccessToken;
+
       const compiled = message.compiled;
       if (!compiled) {
         throw new Error('[useWidgetSession] Missing compiled widget payload');
@@ -1941,6 +1981,7 @@ function useWidgetSessionInternal() {
         widgetname: compiled.widgetname,
       };
     } catch (err) {
+      sessionAccessTokenRef.current = '';
       if (process.env.NODE_ENV === 'development') {
         console.error('[useWidgetSession] Failed to load instance', err, message);
       }
@@ -2058,12 +2099,12 @@ function useWidgetSessionInternal() {
       return;
     }
 
-    const subject = state.policy.profile === 'devstudio' || state.policy.profile === 'minibob' ? state.policy.profile : 'workspace';
+    const subject = state.policy.profile === 'minibob' ? 'minibob' : 'workspace';
 
     setState((prev) => ({ ...prev, isPublishing: true, error: null }));
     try {
       const configToPublish = state.baseInstanceData;
-      const res = await fetch(
+      const res = await fetchApi(
         `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
           publicId
         )}?subject=${encodeURIComponent(subject)}`,
@@ -2150,6 +2191,7 @@ function useWidgetSessionInternal() {
       setState((prev) => ({ ...prev, isPublishing: false, error: { source: 'publish', message: messageText } }));
     }
   }, [
+    fetchApi,
     state.baseInstanceData,
     state.meta?.publicId,
     state.meta?.workspaceId,
@@ -2193,7 +2235,7 @@ function useWidgetSessionInternal() {
         : `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
             publicId,
           )}?subject=${encodeURIComponent(subject)}`;
-    const instanceRes = await fetch(instanceUrl, { cache: 'no-store' });
+    const instanceRes = await fetchApi(instanceUrl, { cache: 'no-store' });
     if (!instanceRes.ok) {
       throw new Error(`[useWidgetSession] Failed to load instance (HTTP ${instanceRes.status})`);
     }
@@ -2214,7 +2256,7 @@ function useWidgetSessionInternal() {
         ? instanceJson.displayName.trim()
         : String(instanceJson.publicId ?? publicId).trim() || 'Untitled widget';
 
-    const compiledRes = await fetch(`/api/widgets/${encodeURIComponent(widgetType)}/compiled`, { cache: 'no-store' });
+    const compiledRes = await fetchApi(`/api/widgets/${encodeURIComponent(widgetType)}/compiled`, { cache: 'no-store' });
     if (!compiledRes.ok) {
       throw new Error(`[useWidgetSession] Failed to compile widget ${widgetType} (HTTP ${compiledRes.status})`);
     }
@@ -2236,7 +2278,7 @@ function useWidgetSessionInternal() {
       label: displayName,
       subjectMode: subject,
     });
-  }, [loadInstance]);
+  }, [fetchApi, loadInstance]);
 
   const setCopilotThread = useCallback((key: string, next: CopilotThread) => {
     const trimmed = key.trim();
@@ -2320,6 +2362,7 @@ function useWidgetSessionInternal() {
 
   useEffect(() => {
     const bootMode = resolveBootModeFromUrl();
+    const hostSurface = resolveHostSurfaceFromUrl();
     const postToParent = (
       payload:
         | BobSessionReadyMessage
@@ -2402,6 +2445,56 @@ function useWidgetSessionInternal() {
               targetOrigin,
             );
           }
+          return;
+        }
+
+        const rawSubjectMode =
+          typeof (data as { subjectMode?: unknown }).subjectMode === 'string'
+            ? String((data as { subjectMode?: unknown }).subjectMode).trim().toLowerCase()
+            : '';
+        const resolvedSubjectMode =
+          rawSubjectMode === 'workspace' || rawSubjectMode === 'minibob'
+            ? rawSubjectMode
+            : resolveSubjectModeFromUrl();
+        if (rawSubjectMode && rawSubjectMode !== 'workspace' && rawSubjectMode !== 'minibob') {
+          const reasonKey = 'coreui.errors.builder.open.invalidRequest';
+          openRequestStatusRef.current.set(requestId, {
+            status: 'failed',
+            error: reasonKey,
+          });
+          postToParent(
+            {
+              type: 'bob:open-editor-failed',
+              requestId,
+              sessionId,
+              reasonKey,
+              message: 'Invalid subjectMode in open-editor payload',
+            },
+            targetOrigin,
+          );
+          return;
+        }
+
+        const sessionAccessToken =
+          typeof (data as { sessionAccessToken?: unknown }).sessionAccessToken === 'string'
+            ? String((data as { sessionAccessToken?: unknown }).sessionAccessToken).trim()
+            : '';
+        if (hostSurface === 'roma' && resolvedSubjectMode === 'workspace' && !sessionAccessToken) {
+          const reasonKey = 'coreui.errors.auth.required';
+          openRequestStatusRef.current.set(requestId, {
+            status: 'failed',
+            error: reasonKey,
+          });
+          postToParent(
+            {
+              type: 'bob:open-editor-failed',
+              requestId,
+              sessionId,
+              reasonKey,
+              message: 'Missing sessionAccessToken for Roma workspace boot.',
+            },
+            targetOrigin,
+          );
           return;
         }
 
@@ -2536,6 +2629,7 @@ function useWidgetSessionInternal() {
       lastUpdate: state.lastUpdate,
       error: state.error,
       meta: state.meta,
+      apiFetch: fetchApi,
       canUndo: Boolean(state.undoSnapshot) && state.locale.activeLocale === state.locale.baseLocale,
       copilotThreads: state.copilotThreads,
       applyOps,
@@ -2561,6 +2655,7 @@ function useWidgetSessionInternal() {
     }),
     [
       state,
+      fetchApi,
       applyOps,
       setPreviewOps,
       clearPreviewOps,

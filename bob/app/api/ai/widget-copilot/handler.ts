@@ -24,31 +24,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-type AiGrantSubject = 'devstudio' | 'minibob' | 'workspace';
+type AiGrantSubject = 'minibob' | 'workspace';
 
-function isDevstudioSubjectAllowed(): boolean {
-  const stage =
-    (process.env.ENV_STAGE || process.env.NEXT_PUBLIC_ENV_STAGE || process.env.CLICKEEN_ENV || '')
-      .trim()
-      .toLowerCase();
-  if (stage === 'local' || stage === 'cloud-dev' || stage === 'dev' || stage === 'development') return true;
-  if (process.env.NODE_ENV !== 'production') return true;
-  return process.env.ALLOW_DEVSTUDIO_SUBJECT === '1';
-}
-
-function normalizeSubject(args: { rawSubject?: string; workspaceId?: string }): AiGrantSubject {
+function normalizeSubject(args: { rawSubject?: string; workspaceId?: string }): AiGrantSubject | null {
   const raw = (args.rawSubject || '').trim().toLowerCase();
   const hasWorkspace = Boolean((args.workspaceId || '').trim());
 
   if (raw === 'minibob') return 'minibob';
-  if (raw === 'workspace') return hasWorkspace ? 'workspace' : isDevstudioSubjectAllowed() ? 'devstudio' : 'minibob';
-  if (raw === 'devstudio') {
-    if (isDevstudioSubjectAllowed()) return 'devstudio';
-    return hasWorkspace ? 'workspace' : 'minibob';
-  }
-
+  if (raw === 'workspace') return hasWorkspace ? 'workspace' : null;
+  if (raw) return null;
   if (hasWorkspace) return 'workspace';
-  return isDevstudioSubjectAllowed() ? 'devstudio' : 'minibob';
+  return 'minibob';
 }
 
 function safeJsonParse(text: string): unknown {
@@ -395,7 +381,8 @@ export async function POST(req: NextRequest) {
     const sessionToken = asTrimmedString(body?.sessionToken);
     const instancePublicId = asTrimmedString(body?.instancePublicId) || undefined;
     const workspaceId = asTrimmedString(body?.workspaceId) || undefined;
-    const subject = normalizeSubject({ rawSubject: asTrimmedString(body?.subject) || undefined, workspaceId });
+    const rawSubject = asTrimmedString(body?.subject) || undefined;
+    const subject = normalizeSubject({ rawSubject, workspaceId });
     const requestedAgentId = asTrimmedString(body?.agentId) || WIDGET_COPILOT_AGENT_ALIAS;
     const provider = asTrimmedString(body?.provider) || undefined;
     const model = asTrimmedString(body?.model) || undefined;
@@ -410,6 +397,7 @@ export async function POST(req: NextRequest) {
     if (!sessionId) issues.push({ path: 'sessionId', message: 'sessionId is required' });
     if (!isRecord(currentConfig)) issues.push({ path: 'currentConfig', message: 'currentConfig must be an object' });
     if (!Array.isArray(controls)) issues.push({ path: 'controls', message: 'controls must be an array' });
+    if (!subject) issues.push({ path: 'subject', message: 'subject must be workspace|minibob and workspace requires workspaceId' });
     if (isMinibob && !sessionToken) issues.push({ path: 'sessionToken', message: 'sessionToken is required for Minibob requests' });
     if (!ALLOWED_WIDGET_COPILOT_AGENT_IDS.has(requestedAgentId)) {
       issues.push({ path: 'agentId', message: 'agentId must be widget.copilot.v1, sdr.widget.copilot.v1, or cs.widget.copilot.v1' });
@@ -425,7 +413,7 @@ export async function POST(req: NextRequest) {
       ...(isMinibob ? { sessionToken } : {}),
       instancePublicId,
       workspaceId,
-      subject,
+      subject: subject ?? undefined,
       provider,
       model,
       // Website-based content edits may require a single-page fetch + an LLM call. Keep this generous in local dev.

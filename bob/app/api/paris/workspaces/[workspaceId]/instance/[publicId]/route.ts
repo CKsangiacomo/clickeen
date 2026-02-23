@@ -5,7 +5,6 @@ import {
   proxyErrorResponse,
   resolveParisBaseOrResponse,
   resolveParisSession,
-  shouldEnforceSuperadmin,
   withParisDevAuthorization,
 } from '../../../../../../../lib/api/paris/proxy-helpers';
 
@@ -14,10 +13,8 @@ export const runtime = 'edge';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,PUT,OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id, x-ck-superadmin-key',
+  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id',
 } as const;
-
-const CK_SUPERADMIN_KEY = process.env.CK_SUPERADMIN_KEY;
 
 type RouteContext = { params: Promise<{ workspaceId: string; publicId: string }> };
 
@@ -27,8 +24,8 @@ export async function OPTIONS() {
 
 function resolveSubject(request: NextRequest): { ok: true; subject: string } | { ok: false; response: NextResponse } {
   const requestUrl = new URL(request.url);
-  const subject = (requestUrl.searchParams.get('subject') || '').trim();
-  if (!subject) {
+  const subject = (requestUrl.searchParams.get('subject') || '').trim().toLowerCase();
+  if (subject !== 'workspace') {
     return {
       ok: false,
       response: NextResponse.json(
@@ -105,16 +102,6 @@ export async function GET(request: NextRequest, ctx: RouteContext) {
 }
 
 export async function PUT(request: NextRequest, ctx: RouteContext) {
-  if (shouldEnforceSuperadmin(request, CK_SUPERADMIN_KEY)) {
-    const provided = (request.headers.get('x-ck-superadmin-key') || '').trim();
-    if (!provided || provided !== CK_SUPERADMIN_KEY) {
-      return NextResponse.json(
-        { error: { kind: 'DENY', reasonKey: 'coreui.errors.superadmin.invalid' } },
-        { status: 403, headers: CORS_HEADERS },
-      );
-    }
-  }
-
   const body = await request.text();
   return forwardInstance(request, ctx, { method: 'PUT', body });
 }

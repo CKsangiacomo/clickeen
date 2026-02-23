@@ -16,6 +16,7 @@ type RenderPublishedPointer = {
   publicId: string;
   revision: string;
   previousRevision?: string | null;
+  updatedAt?: string | null;
 };
 
 function normalizeSha256Hex(raw: unknown): string | null {
@@ -63,13 +64,21 @@ function normalizeRenderPublishedPointer(raw: unknown, publicId: string): Render
     : null;
   if (previousRevisionRaw && !previousRevision) return null;
   if (previousRevision && previousRevision === revision) return null;
-  return { v: 1, publicId, revision, previousRevision };
+  const updatedAtRaw = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
+  const updatedAt = updatedAtRaw || null;
+  return { v: 1, publicId, revision, previousRevision, updatedAt };
 }
 
 export type RenderSnapshotVariant = 'e' | 'r' | 'meta';
 
 export type RenderSnapshotLoadResult =
-  | { ok: true; fingerprint: string; bytes: ArrayBuffer; contentType: string | null }
+  | {
+      ok: true;
+      fingerprint: string;
+      bytes: ArrayBuffer;
+      contentType: string | null;
+      pointerUpdatedAt: string | null;
+    }
   | { ok: false; reason: string };
 
 async function loadRevisionRenderIndex(args: {
@@ -99,11 +108,13 @@ export async function loadRenderSnapshot(args: {
   const locale = normalizeLocaleToken(args.locale) ?? 'en';
   let index: RenderIndex | null = null;
   let fallbackIndex: RenderIndex | null = null;
+  let pointerUpdatedAt: string | null = null;
   const pointerRes = await tokyoFetch(`/renders/instances/${encodeURIComponent(publicId)}/published.json`, { method: 'GET' });
   if (pointerRes.ok) {
     const pointerJson = (await pointerRes.json().catch(() => null)) as unknown;
     const pointer = normalizeRenderPublishedPointer(pointerJson, publicId);
     if (!pointer) return { ok: false, reason: 'POINTER_INVALID' };
+    pointerUpdatedAt = pointer.updatedAt ?? null;
 
     const primaryRevision = await loadRevisionRenderIndex({ publicId, revision: pointer.revision });
     if (primaryRevision.index) {
@@ -152,7 +163,13 @@ export async function loadRenderSnapshot(args: {
     if (artifactRes.status === 404) continue;
     if (!artifactRes.ok) return { ok: false, reason: `ARTIFACT_HTTP_${artifactRes.status}` };
     const bytes = await artifactRes.arrayBuffer();
-    return { ok: true, fingerprint, bytes, contentType: artifactRes.headers.get('content-type') };
+    return {
+      ok: true,
+      fingerprint,
+      bytes,
+      contentType: artifactRes.headers.get('content-type'),
+      pointerUpdatedAt,
+    };
   }
 
   return { ok: false, reason: 'ARTIFACT_NOT_FOUND' };

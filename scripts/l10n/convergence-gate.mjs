@@ -8,7 +8,7 @@ const DEFAULT_EXPECTED_INSTANCE_COUNT = 4;
 const DEFAULT_TIMEOUT_MS = 3 * 60_000;
 const DEFAULT_INTERVAL_MS = 5_000;
 const DEFAULT_STALL_MS = 90_000;
-const DEFAULT_SUBJECT = 'devstudio';
+const DEFAULT_SUBJECT = 'workspace';
 const DEFAULT_IDS_FALLBACK = [
   'wgt_main_countdown',
   'wgt_main_faq',

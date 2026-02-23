@@ -44,7 +44,6 @@ export type IdentityMePayload = {
   accounts: Array<{
     accountId: string;
     status: string;
-    isPlatform: boolean;
     derivedRole: 'account_owner' | 'account_admin' | 'account_member';
     workspaceRoles: string[];
   }>;
@@ -82,7 +81,6 @@ function toAccountPayload(
     return {
       accountId: row.id,
       status: row.status,
-      isPlatform: row.is_platform,
       derivedRole: deriveAccountRole(workspaceRoles),
       workspaceRoles,
     };

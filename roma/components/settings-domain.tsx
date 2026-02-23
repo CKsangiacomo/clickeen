@@ -3,12 +3,12 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatNumber } from '../lib/format';
+import { resolveBootstrapDomainState } from './bootstrap-domain-state';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountSummaryResponse = {
   accountId: string;
   status: string;
-  isPlatform: boolean;
   role: string;
   workspaceCount: number;
 };
@@ -78,29 +78,36 @@ export function SettingsDomain() {
       return;
     }
     const snapshot = me.data?.domains?.settings ?? null;
-    if (
-      !snapshot ||
-      snapshot.accountSummary.accountId !== accountId ||
-      snapshot.workspaceSummary.workspaceId !== workspaceId ||
-      snapshot.workspaceSummary.accountId !== accountId ||
-      !Array.isArray(snapshot.accountWorkspaces)
-    ) {
+    const hasDomainPayload = Boolean(
+      snapshot &&
+        snapshot.accountSummary.accountId === accountId &&
+        snapshot.workspaceSummary.workspaceId === workspaceId &&
+        snapshot.workspaceSummary.accountId === accountId &&
+        Array.isArray(snapshot.accountWorkspaces),
+    );
+    const domainState = resolveBootstrapDomainState({
+      data: me.data,
+      domainKey: 'settings',
+      hasDomainPayload,
+    });
+    if (!hasDomainPayload || domainState.kind !== 'ok') {
       setAccountSummary(null);
       setWorkspaceSummary(null);
       setAccountWorkspaces([]);
-      setError('Bootstrap settings snapshot unavailable.');
+      setError(domainState.reasonKey);
       return;
     }
+    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
     const payload: SettingsContextPayload = {
-      accountSummary: snapshot.accountSummary,
-      workspaceSummary: snapshot.workspaceSummary,
-      accountWorkspaces: snapshot.accountWorkspaces,
+      accountSummary: safeSnapshot.accountSummary,
+      workspaceSummary: safeSnapshot.workspaceSummary,
+      accountWorkspaces: safeSnapshot.accountWorkspaces,
     };
     setAccountSummary(payload.accountSummary);
     setWorkspaceSummary(payload.workspaceSummary);
     setAccountWorkspaces(payload.accountWorkspaces.slice().sort((a, b) => a.name.localeCompare(b.name)));
     setError(null);
-  }, [accountId, workspaceId, me.data?.domains?.settings]);
+  }, [accountId, workspaceId, me.data]);
 
   const handleSelectWorkspace = useCallback(
     async (nextWorkspaceId: string) => {
@@ -121,162 +128,182 @@ export function SettingsDomain() {
     [me, router],
   );
 
-  if (me.loading) return <section className="roma-module-surface">Loading settings context...</section>;
+  if (me.loading) return <section className="rd-canvas-module body-m">Loading settings context...</section>;
   if (me.error || !me.data) {
-    return <section className="roma-module-surface">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
+    return <section className="rd-canvas-module body-m">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
   }
   if (!accountId || !workspaceId) {
     return (
-      <section className="roma-module-surface">
-        <p>Select an active workspace to continue in Roma.</p>
-        {error ? <p>Failed to switch workspace: {error}</p> : null}
-        {selectableWorkspaces.length === 0 ? <p>No workspace memberships found for this user.</p> : null}
+      <>
+        <section className="rd-canvas-module">
+          <p className="body-m">Select an active workspace to continue in Roma.</p>
+          {error ? <p className="body-m">Failed to switch workspace: {error}</p> : null}
+          {selectableWorkspaces.length === 0 ? <p className="body-m">No workspace memberships found for this user.</p> : null}
+        </section>
         {selectableWorkspaces.length > 0 ? (
+          <section className="rd-canvas-module">
+            <table className="roma-table">
+              <thead>
+                <tr>
+                  <th className="table-header label-s">Workspace</th>
+                  <th className="table-header label-s">Slug</th>
+                  <th className="table-header label-s">Tier</th>
+                  <th className="table-header label-s">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectableWorkspaces.map((workspace) => (
+                  <tr key={workspace.workspaceId}>
+                    <td className="body-s">{workspace.name}</td>
+                    <td className="body-s">{workspace.slug}</td>
+                    <td className="body-s">{workspace.tier}</td>
+                    <td className="roma-cell-actions">
+                      <button
+                        className="diet-btn-txt"
+                        data-size="md"
+                        data-variant="primary"
+                        type="button"
+                        onClick={() => void handleSelectWorkspace(workspace.workspaceId)}
+                        disabled={Boolean(switchingWorkspaceId)}
+                      >
+                        <span className="diet-btn-txt__label body-m">
+                          {switchingWorkspaceId === workspace.workspaceId ? 'Switching...' : 'Use workspace'}
+                        </span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        ) : null}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <section className="rd-canvas-module">
+        <p className="body-m">
+          Account: {accountId} | Active workspace: {context.workspaceName || workspaceId}
+          {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
+        </p>
+
+        <p className="body-m">User: {me.data.user.email ?? me.data.user.id}</p>
+
+        {error ? (
+          <div className="roma-inline-stack">
+            <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
+            <p className="body-m">{error}</p>
+            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+              <span className="diet-btn-txt__label body-m">Retry</span>
+            </button>
+          </div>
+        ) : null}
+      </section>
+
+      {accountSummary ? (
+        <section className="rd-canvas-module">
+          <div className="roma-grid roma-grid--three">
+            <article className="roma-card">
+              <h2 className="heading-6">Account Role</h2>
+              <p className="body-s">{accountSummary.role}</p>
+            </article>
+            <article className="roma-card">
+              <h2 className="heading-6">Account Status</h2>
+              <p className="body-s">{accountSummary.status}</p>
+            </article>
+            <article className="roma-card">
+              <h2 className="heading-6">Workspace Count</h2>
+              <p className="body-s">{formatNumber(accountSummary.workspaceCount)}</p>
+            </article>
+          </div>
+        </section>
+      ) : null}
+
+      {workspaceSummary ? (
+        <section className="rd-canvas-module">
+          <div className="roma-grid roma-grid--three">
+            <article className="roma-card">
+              <h2 className="heading-6">Active Workspace</h2>
+              <p className="body-s">{workspaceSummary.name}</p>
+            </article>
+            <article className="roma-card">
+              <h2 className="heading-6">Slug</h2>
+              <p className="body-s">{workspaceSummary.slug}</p>
+            </article>
+            <article className="roma-card">
+              <h2 className="heading-6">Tier</h2>
+              <p className="body-s">{workspaceSummary.tier}</p>
+            </article>
+            <article className="roma-card">
+              <h2 className="heading-6">Workspace Role</h2>
+              <p className="body-s">{workspaceSummary.role}</p>
+            </article>
+          </div>
+        </section>
+      ) : null}
+
+      {accountWorkspaces.length > 0 ? (
+        <section className="rd-canvas-module">
           <table className="roma-table">
             <thead>
               <tr>
-                <th>Workspace</th>
-                <th>Slug</th>
-                <th>Tier</th>
-                <th>Action</th>
+                <th className="table-header label-s">Workspace</th>
+                <th className="table-header label-s">Slug</th>
+                <th className="table-header label-s">Tier</th>
+                <th className="table-header label-s">Active</th>
+                <th className="table-header label-s">Updated</th>
+                <th className="table-header label-s">Action</th>
               </tr>
             </thead>
             <tbody>
-              {selectableWorkspaces.map((workspace) => (
+              {accountWorkspaces.map((workspace) => (
                 <tr key={workspace.workspaceId}>
-                  <td>{workspace.name}</td>
-                  <td>{workspace.slug}</td>
-                  <td>{workspace.tier}</td>
+                  <td className="body-s">{workspace.name}</td>
+                  <td className="body-s">{workspace.slug}</td>
+                  <td className="body-s">{workspace.tier}</td>
+                  <td className="body-s">{workspace.workspaceId === workspaceId ? 'Yes' : 'No'}</td>
+                  <td className="body-s">{formatTimestamp(workspace.updatedAt ?? workspace.createdAt)}</td>
                   <td className="roma-cell-actions">
-                    <button
-                      className="diet-btn-txt"
-                      data-size="md"
-                      data-variant="primary"
-                      type="button"
-                      onClick={() => void handleSelectWorkspace(workspace.workspaceId)}
-                      disabled={Boolean(switchingWorkspaceId)}
-                    >
-                      <span className="diet-btn-txt__label">
-                        {switchingWorkspaceId === workspace.workspaceId ? 'Switching...' : 'Use workspace'}
-                      </span>
-                    </button>
+                    {workspace.workspaceId === workspaceId ? (
+                      <span className="label-s">Active</span>
+                    ) : (
+                      <button
+                        className="diet-btn-txt"
+                        data-size="md"
+                        data-variant="line2"
+                        type="button"
+                        onClick={() => void handleSelectWorkspace(workspace.workspaceId)}
+                        disabled={Boolean(switchingWorkspaceId)}
+                      >
+                        <span className="diet-btn-txt__label body-m">
+                          {switchingWorkspaceId === workspace.workspaceId ? 'Switching...' : 'Use workspace'}
+                        </span>
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        ) : null}
-      </section>
-    );
-  }
-
-  return (
-    <section className="roma-module-surface">
-      <p>
-        Account: {accountId} | Active workspace: {context.workspaceName || workspaceId}
-        {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
-      </p>
-
-      <p>User: {me.data.user.email ?? me.data.user.id}</p>
-
-      {error ? <p>Failed to load settings context: {error}</p> : null}
-
-      {accountSummary ? (
-        <div className="roma-grid roma-grid--three">
-          <article className="roma-card">
-            <h2>Account Role</h2>
-            <p>{accountSummary.role}</p>
-          </article>
-          <article className="roma-card">
-            <h2>Account Status</h2>
-            <p>{accountSummary.status}</p>
-          </article>
-          <article className="roma-card">
-            <h2>Platform Account</h2>
-            <p>{accountSummary.isPlatform ? 'Yes' : 'No'}</p>
-          </article>
-          <article className="roma-card">
-            <h2>Workspace Count</h2>
-            <p>{formatNumber(accountSummary.workspaceCount)}</p>
-          </article>
-        </div>
-      ) : null}
-
-      {workspaceSummary ? (
-        <div className="roma-grid roma-grid--three">
-          <article className="roma-card">
-            <h2>Active Workspace</h2>
-            <p>{workspaceSummary.name}</p>
-          </article>
-          <article className="roma-card">
-            <h2>Slug</h2>
-            <p>{workspaceSummary.slug}</p>
-          </article>
-          <article className="roma-card">
-            <h2>Tier</h2>
-            <p>{workspaceSummary.tier}</p>
-          </article>
-          <article className="roma-card">
-            <h2>Workspace Role</h2>
-            <p>{workspaceSummary.role}</p>
-          </article>
-        </div>
-      ) : null}
-
-      {accountWorkspaces.length > 0 ? (
-        <table className="roma-table">
-          <thead>
-            <tr>
-              <th>Workspace</th>
-              <th>Slug</th>
-              <th>Tier</th>
-              <th>Active</th>
-              <th>Updated</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {accountWorkspaces.map((workspace) => (
-              <tr key={workspace.workspaceId}>
-                <td>{workspace.name}</td>
-                <td>{workspace.slug}</td>
-                <td>{workspace.tier}</td>
-                <td>{workspace.workspaceId === workspaceId ? 'Yes' : 'No'}</td>
-                <td>{formatTimestamp(workspace.updatedAt ?? workspace.createdAt)}</td>
-                <td className="roma-cell-actions">
-                  {workspace.workspaceId === workspaceId ? (
-                    <span className="roma-label">Active</span>
-                  ) : (
-                    <button
-                      className="diet-btn-txt"
-                      data-size="md"
-                      data-variant="line2"
-                      type="button"
-                      onClick={() => void handleSelectWorkspace(workspace.workspaceId)}
-                      disabled={Boolean(switchingWorkspaceId)}
-                    >
-                      <span className="diet-btn-txt__label">
-                        {switchingWorkspaceId === workspace.workspaceId ? 'Switching...' : 'Use workspace'}
-                      </span>
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        </section>
       ) : null}
 
       {!error && accountSummary && accountWorkspaces.length === 0 ? (
-        <p>No workspaces found for this account.</p>
+        <section className="rd-canvas-module">
+          <p className="body-m">No workspaces found for this account.</p>
+        </section>
       ) : null}
 
       {accountSummary ? (
-        <div className="roma-module-surface__actions">
-          <span className="roma-label">Account ID</span>
-          <code>{accountSummary.accountId}</code>
-        </div>
+        <section className="rd-canvas-module">
+          <div className="rd-canvas-module__actions">
+            <span className="label-s">Account ID</span>
+            <code className="body-s">{accountSummary.accountId}</code>
+          </div>
+        </section>
       ) : null}
-    </section>
+    </>
   );
 }

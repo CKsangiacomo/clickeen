@@ -38,6 +38,13 @@ type L10nJobV2 = {
 
 export type L10nJob = L10nJobV1 | L10nJobV2;
 
+export type L10nPlanningSnapshot = {
+  widgetType: string;
+  baseFingerprint: string;
+  baseUpdatedAt: string | null;
+  snapshot: Record<string, string>;
+};
+
 type InstanceResponse = {
   publicId: string;
   status: 'published' | 'unpublished';
@@ -759,15 +766,11 @@ async function translateRichtextWithSegmentFallback(args: {
   return { value: restored, usage };
 }
 
-async function fetchInstance(job: L10nJob, env: Env): Promise<InstanceResponse> {
+async function fetchInstanceByContext(args: { workspaceId: string; publicId: string }, env: Env): Promise<InstanceResponse> {
   const baseUrl = requireEnvVar((env as any).PARIS_BASE_URL, 'PARIS_BASE_URL');
   const token = requireEnvVar((env as any).PARIS_DEV_JWT, 'PARIS_DEV_JWT');
-  const workspaceId = asString(job.workspaceId);
-  if (!workspaceId) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing workspaceId' });
-  }
   const url = new URL(
-    `/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(job.publicId)}?subject=devstudio`,
+    `/api/workspaces/${encodeURIComponent(args.workspaceId)}/instance/${encodeURIComponent(args.publicId)}?subject=devstudio`,
     baseUrl,
   ).toString();
 
@@ -795,6 +798,14 @@ async function fetchInstance(job: L10nJob, env: Env): Promise<InstanceResponse> 
     });
   }
   return body;
+}
+
+async function fetchInstance(job: L10nJob, env: Env): Promise<InstanceResponse> {
+  const workspaceId = asString(job.workspaceId);
+  if (!workspaceId) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing workspaceId' });
+  }
+  return fetchInstanceByContext({ workspaceId, publicId: job.publicId }, env);
 }
 
 async function fetchAllowlist(widgetType: string, env: Env): Promise<AllowlistEntry[]> {
@@ -836,6 +847,58 @@ async function fetchAllowlist(widgetType: string, env: Env): Promise<AllowlistEn
 
   await env.SF_KV.put(cacheKey, JSON.stringify({ v: 1, paths: entries }), { expirationTtl: 3600 });
   return entries;
+}
+
+export async function resolveL10nPlanningSnapshot(args: {
+  env: Env;
+  widgetType: string;
+  config?: Record<string, unknown> | null;
+  baseUpdatedAt?: string | null;
+  workspaceId?: string | null;
+  publicId?: string | null;
+}): Promise<L10nPlanningSnapshot> {
+  const widgetTypeHint = asString(args.widgetType);
+  if (!widgetTypeHint) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing widgetType' });
+  }
+
+  let config: Record<string, unknown>;
+  let resolvedWidgetType = widgetTypeHint;
+  let resolvedBaseUpdatedAt: string | null =
+    typeof args.baseUpdatedAt === 'string' && args.baseUpdatedAt.trim()
+      ? args.baseUpdatedAt.trim()
+      : null;
+
+  if (args.config && isRecord(args.config)) {
+    config = args.config;
+  } else {
+    const workspaceId = asString(args.workspaceId);
+    if (!workspaceId) {
+      throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing workspaceId' });
+    }
+    const publicId = asString(args.publicId);
+    if (!publicId) {
+      throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing publicId' });
+    }
+    const instance = await fetchInstanceByContext({ workspaceId, publicId }, args.env);
+    resolvedWidgetType = instance.widgetType ? String(instance.widgetType) : widgetTypeHint;
+    config = instance.config;
+    resolvedBaseUpdatedAt = instance.updatedAt ?? resolvedBaseUpdatedAt;
+  }
+
+  const allowlist = await fetchAllowlist(resolvedWidgetType, args.env);
+  const entries = collectTranslatableEntries(config, allowlist, true);
+  const snapshot: Record<string, string> = {};
+  entries.forEach((entry) => {
+    snapshot[entry.path] = entry.value;
+  });
+
+  return {
+    widgetType: resolvedWidgetType,
+    baseFingerprint: await computeBaseFingerprint(snapshot),
+    baseUpdatedAt: resolvedBaseUpdatedAt,
+    snapshot,
+  };
 }
 
 type ExistingLocale = {

@@ -5,14 +5,13 @@ import { readRomaAccountAuthzCapsuleHeader, verifyRomaAccountAuthzCapsule } from
 import { json, readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
 import { isUuid } from '../../shared/validation';
-import { toCanonicalAssetPointerPath } from '@clickeen/ck-contracts';
+import { isWidgetPublicId, toCanonicalAssetPointerPath } from '@clickeen/ck-contracts';
 
 type AccountRow = {
   id: string;
   status: 'active' | 'disabled';
   is_platform: boolean;
 };
-
 type AccountAssetRow = {
   asset_id: string;
   account_id: string;
@@ -25,11 +24,9 @@ type AccountAssetRow = {
   content_type: string;
   size_bytes: number;
   sha256?: string | null;
-  deleted_at?: string | null;
   created_at: string;
   updated_at: string;
 };
-
 type AccountAssetVariantRow = {
   asset_id: string;
   variant: string;
@@ -39,7 +36,6 @@ type AccountAssetVariantRow = {
   size_bytes: number;
   created_at: string;
 };
-
 type AccountAssetUsageRow = {
   account_id: string;
   asset_id: string;
@@ -48,20 +44,16 @@ type AccountAssetUsageRow = {
   created_at: string;
   updated_at: string;
 };
-
 type WorkspaceMembershipRole = 'viewer' | 'editor' | 'admin' | 'owner';
 type AccountAssetView = 'all' | 'used_in_workspace' | 'created_in_workspace';
-
 type AccountAssetProjection = {
   view: AccountAssetView;
   workspaceId: string | null;
 };
-
 type WorkspaceAccountRow = {
   id: string;
   account_id: string;
 };
-
 function assertAccountId(value: string) {
   const trimmed = String(value || '').trim();
   if (!trimmed || !isUuid(trimmed)) {
@@ -84,6 +76,10 @@ function assertWorkspaceId(value: string) {
     return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' }, 422) };
   }
   return { ok: true as const, value: trimmed };
+}
+
+function isWidgetType(value: string): boolean {
+  return /^[a-z0-9][a-z0-9_-]*$/i.test(value);
 }
 
 function resolveAccountAssetView(req: Request): { ok: true; projection: AccountAssetProjection } | { ok: false; response: Response } {
@@ -127,16 +123,20 @@ function resolveListLimit(req: Request): number {
   return Math.min(raw, 200);
 }
 
-function shouldIncludeDeleted(req: Request): boolean {
-  const url = new URL(req.url);
-  const raw = (url.searchParams.get('includeDeleted') || '').trim().toLowerCase();
-  return raw === '1' || raw === 'true' || raw === 'yes';
-}
-
-function resolveTokyoAssetBase(env: Env): string | null {
+function resolveTokyoPublicAssetBase(env: Env): string | null {
   const raw = (
     (typeof env.TOKYO_BASE_URL === 'string' ? env.TOKYO_BASE_URL : '') ||
     (typeof env.TOKYO_WORKER_BASE_URL === 'string' ? env.TOKYO_WORKER_BASE_URL : '')
+  )
+    .trim()
+    .replace(/\/+$/, '');
+  return raw || null;
+}
+
+function resolveTokyoMutableAssetBase(env: Env): string | null {
+  const raw = (
+    (typeof env.TOKYO_WORKER_BASE_URL === 'string' ? env.TOKYO_WORKER_BASE_URL : '') ||
+    (typeof env.TOKYO_BASE_URL === 'string' ? env.TOKYO_BASE_URL : '')
   )
     .trim()
     .replace(/\/+$/, '');
@@ -196,7 +196,6 @@ function normalizeAccountAsset(
     contentType: row.content_type,
     sizeBytes: row.size_bytes,
     sha256: row.sha256 ?? null,
-    deletedAt: row.deleted_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     usageCount: usage.length,
@@ -273,7 +272,7 @@ async function authorizeAccountAccess(
   env: Env,
   accountId: string,
   auth: { principal?: { userId: string } },
-  requireAdminRole: boolean,
+  minRole: WorkspaceMembershipRole = 'viewer',
 ): Promise<Response | null> {
   const userId = auth.principal?.userId;
   if (!userId) {
@@ -290,7 +289,7 @@ async function authorizeAccountAccess(
     if (payload.userId !== userId || payload.accountId !== accountId) {
       return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
     }
-    if (requireAdminRole && roleRank(payload.role) < roleRank('admin')) {
+    if (roleRank(payload.role) < roleRank(minRole)) {
       return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
     }
     return null;
@@ -307,7 +306,7 @@ async function authorizeAccountAccess(
   if (!role) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.account.mismatch' }, 403);
   }
-  if (requireAdminRole && roleRank(role) < roleRank('admin')) {
+  if (roleRank(role) < roleRank(minRole)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
   }
   return null;
@@ -417,16 +416,14 @@ async function loadAccountAsset(
   env: Env,
   accountId: string,
   assetId: string,
-  includeDeleted: boolean,
 ): Promise<AccountAssetRow | null> {
   const params = new URLSearchParams({
     select:
-      'asset_id,account_id,workspace_id,public_id,widget_type,source,original_filename,normalized_filename,content_type,size_bytes,sha256,deleted_at,created_at,updated_at',
+      'asset_id,account_id,workspace_id,public_id,widget_type,source,original_filename,normalized_filename,content_type,size_bytes,sha256,created_at,updated_at',
     account_id: `eq.${accountId}`,
     asset_id: `eq.${assetId}`,
     limit: '1',
   });
-  if (!includeDeleted) params.set('deleted_at', 'is.null');
   const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
   if (!res.ok) {
     const details = await readJson(res);
@@ -485,7 +482,7 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, false);
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, 'viewer');
   if (ownerError) return ownerError;
 
   const projectionResult = resolveAccountAssetView(req);
@@ -509,10 +506,9 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
   }
 
   const limit = resolveListLimit(req);
-  const includeDeleted = shouldIncludeDeleted(req);
   const params = new URLSearchParams({
     select:
-      'asset_id,account_id,workspace_id,public_id,widget_type,source,original_filename,normalized_filename,content_type,size_bytes,sha256,deleted_at,created_at,updated_at',
+      'asset_id,account_id,workspace_id,public_id,widget_type,source,original_filename,normalized_filename,content_type,size_bytes,sha256,created_at,updated_at',
     account_id: `eq.${accountId}`,
     order: 'created_at.desc',
     limit: String(limit),
@@ -520,9 +516,8 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
   if (projection.view === 'created_in_workspace' && projection.workspaceId) {
     params.set('workspace_id', `eq.${projection.workspaceId}`);
   }
-  if (!includeDeleted) params.set('deleted_at', 'is.null');
 
-  const tokyoBase = resolveTokyoAssetBase(env);
+  const tokyoBase = resolveTokyoPublicAssetBase(env);
 
   try {
     const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
@@ -577,15 +572,14 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
   if (!assetIdResult.ok) return assetIdResult.response;
   const assetId = assetIdResult.value;
 
-  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, false);
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, 'viewer');
   if (ownerError) return ownerError;
 
   const projectionResult = resolveAccountAssetView(req);
   if (!projectionResult.ok) return projectionResult.response;
   const projection = projectionResult.projection;
 
-  const includeDeleted = shouldIncludeDeleted(req);
-  const tokyoBase = resolveTokyoAssetBase(env);
+  const tokyoBase = resolveTokyoPublicAssetBase(env);
 
   try {
     const account = await loadAccount(env, accountId);
@@ -596,7 +590,7 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
       if (workspaceScopeError) return workspaceScopeError;
     }
 
-    const asset = await loadAccountAsset(env, accountId, assetId, includeDeleted);
+    const asset = await loadAccountAsset(env, accountId, assetId);
     if (!asset) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
 
     const variantsByAssetId = await loadVariantsByAssetIds(env, accountId, [assetId]);
@@ -633,25 +627,21 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
 export async function handleAccountAssetDelete(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
   const auth = await assertDevAuth(req, env);
   if ('response' in auth) return auth.response;
-
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
-
   const assetIdResult = assertAssetId(assetIdRaw);
   if (!assetIdResult.ok) return assetIdResult.response;
   const assetId = assetIdResult.value;
-
-  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, true);
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, 'editor');
   if (ownerError) return ownerError;
-
   try {
     const account = await loadAccount(env, accountId);
     if (!account) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
 
-    const existing = await loadAccountAsset(env, accountId, assetId, true);
+    const existing = await loadAccountAsset(env, accountId, assetId);
     if (!existing) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
-    const tokyoBase = resolveTokyoAssetBase(env);
+    const tokyoBase = resolveTokyoMutableAssetBase(env);
     if (!tokyoBase) {
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_BASE_URL missing' }, 500);
     }
@@ -661,8 +651,12 @@ export async function handleAccountAssetDelete(req: Request, env: Env, accountId
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_DEV_JWT missing' }, 500);
     }
 
+    const confirmInUse = (new URL(req.url).searchParams.get('confirmInUse') || '').trim();
+    const tokyoUrl = new URL(`${tokyoBase}/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`);
+    if (confirmInUse) tokyoUrl.searchParams.set('confirmInUse', confirmInUse);
+
     const tokyoRes = await fetch(
-      `${tokyoBase}/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`,
+      tokyoUrl.toString(),
       {
         method: 'DELETE',
         headers: {
@@ -675,6 +669,9 @@ export async function handleAccountAssetDelete(req: Request, env: Env, accountId
     const tokyoBody = await readJson(tokyoRes);
     if (tokyoRes.status === 404) {
       return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
+    }
+    if (tokyoRes.status === 409 && tokyoBody && typeof tokyoBody === 'object') {
+      return json(tokyoBody as Record<string, unknown>, { status: 409 });
     }
     if (!tokyoRes.ok) {
       return ckError(
@@ -694,6 +691,119 @@ export async function handleAccountAssetDelete(req: Request, env: Env, accountId
             accountId,
             assetId,
             deleted: true,
+          }) as Record<string, unknown>,
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
+  }
+}
+
+export async function handleAccountAssetReplaceContent(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
+  const auth = await assertDevAuth(req, env);
+  if ('response' in auth) return auth.response;
+
+  const accountIdResult = assertAccountId(accountIdRaw);
+  if (!accountIdResult.ok) return accountIdResult.response;
+  const accountId = accountIdResult.value;
+
+  const assetIdResult = assertAssetId(assetIdRaw);
+  if (!assetIdResult.ok) return assetIdResult.response;
+  const assetId = assetIdResult.value;
+
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, 'editor');
+  if (ownerError) return ownerError;
+
+  const idempotencyKey = (req.headers.get('idempotency-key') || '').trim();
+  if (!idempotencyKey) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.idempotencyKey.required' }, 422);
+  }
+
+  const workspaceId = (req.headers.get('x-workspace-id') || '').trim();
+  if (workspaceId && !isUuid(workspaceId)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' }, 422);
+  }
+  const publicId = (req.headers.get('x-public-id') || '').trim();
+  if (publicId && !isWidgetPublicId(publicId)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);
+  }
+  const widgetType = (req.headers.get('x-widget-type') || '').trim().toLowerCase();
+  if (widgetType && !isWidgetType(widgetType)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
+  }
+
+  try {
+    const account = await loadAccount(env, accountId);
+    if (!account) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
+
+    const existing = await loadAccountAsset(env, accountId, assetId);
+    if (!existing) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
+
+    const tokyoBase = resolveTokyoMutableAssetBase(env);
+    if (!tokyoBase) {
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_BASE_URL missing' }, 500);
+    }
+    const tokyoToken = (env.TOKYO_DEV_JWT || env.PARIS_DEV_JWT || '').trim();
+    if (!tokyoToken) {
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_DEV_JWT missing' }, 500);
+    }
+
+    const contentLength = Number(req.headers.get('content-length') || '');
+    if (Number.isFinite(contentLength) && contentLength <= 0) {
+      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' }, 422);
+    }
+    const bodyStream = req.body;
+    if (!bodyStream) {
+      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' }, 422);
+    }
+
+    const headers = new Headers();
+    headers.set('Authorization', `Bearer ${tokyoToken}`);
+    headers.set('Content-Type', (req.headers.get('content-type') || '').trim() || 'application/octet-stream');
+    headers.set('x-account-id', accountId);
+    headers.set('x-filename', (req.headers.get('x-filename') || '').trim() || 'upload.bin');
+    headers.set('x-variant', (req.headers.get('x-variant') || '').trim() || 'original');
+    headers.set('idempotency-key', idempotencyKey);
+    const source = (req.headers.get('x-source') || '').trim();
+    if (source) headers.set('x-source', source);
+    if (workspaceId) headers.set('x-workspace-id', workspaceId);
+    if (publicId) headers.set('x-public-id', publicId);
+    if (widgetType) headers.set('x-widget-type', widgetType);
+
+    const tokyoRes = await fetch(
+      `${tokyoBase}/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`,
+      {
+        method: 'PUT',
+        headers,
+        body: bodyStream,
+        cache: 'no-store',
+      },
+    );
+    const tokyoBody = await readJson(tokyoRes);
+    if (tokyoRes.status === 404) {
+      return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
+    }
+    if (tokyoRes.status === 409 && tokyoBody && typeof tokyoBody === 'object') {
+      return json(tokyoBody as Record<string, unknown>, { status: 409 });
+    }
+    if (!tokyoRes.ok) {
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: JSON.stringify(tokyoBody),
+        },
+        500,
+      );
+    }
+
+    return json(
+      (tokyoBody && typeof tokyoBody === 'object'
+        ? tokyoBody
+        : {
+            accountId,
+            assetId,
+            replaced: true,
           }) as Record<string, unknown>,
     );
   } catch (error) {

@@ -1,3 +1,5 @@
+THESE PRD BROKE THE ARCHITECTURE - KEEPING ONLY AS REFERENCE
+
 # PRD 45 — Architecture Convergence and Scalability Hardening (Bob ↔ Paris ↔ Tokyo)
 
 **Status:** EXECUTED (validated in local on 2026-02-13)  

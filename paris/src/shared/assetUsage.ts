@@ -30,7 +30,7 @@ export class AssetUsageValidationError extends Error {
 
 function parseAccountAssetRef(raw: string): AccountAssetRef | null {
   const parsed = parseCanonicalAssetRef(raw);
-  if (!parsed) return null;
+  if (!parsed || parsed.kind !== 'pointer') return null;
   if (!isUuid(parsed.accountId) || !isUuid(parsed.assetId)) return null;
   return {
     accountId: parsed.accountId,
@@ -123,7 +123,7 @@ async function resolveValidatedAccountAssetUsageRefs(args: {
 
     const existingKeys = new Set<string>();
     const existingParams = new URLSearchParams({
-      select: 'account_id,asset_id,deleted_at',
+      select: 'account_id,asset_id',
       account_id: `eq.${accountId}`,
       asset_id: `in.(${assetIds.join(',')})`,
       limit: String(Math.max(assetIds.length, 1)),
@@ -142,15 +142,12 @@ async function resolveValidatedAccountAssetUsageRefs(args: {
     const existingRows = (await existingRes.json().catch(() => null)) as Array<{
       account_id?: string;
       asset_id?: string;
-      deleted_at?: string | null;
     }> | null;
     if (Array.isArray(existingRows)) {
       for (const row of existingRows) {
         const rowAccountId = typeof row?.account_id === 'string' ? row.account_id.trim() : '';
         const rowAssetId = typeof row?.asset_id === 'string' ? row.asset_id.trim() : '';
-        const deletedAt = typeof row?.deleted_at === 'string' ? row.deleted_at.trim() : '';
         if (!rowAccountId || !rowAssetId) continue;
-        if (deletedAt) continue;
         existingKeys.add(`${rowAccountId}|${rowAssetId}`);
       }
     }

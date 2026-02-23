@@ -31,6 +31,33 @@ function assertExcludes(file, tokens) {
   }
 }
 
+function assertIncludesAny(files, tokens) {
+  const byFile = files.map((file) => ({ file, contents: readFile(file) }));
+  for (const token of tokens) {
+    const matched = byFile.some((entry) => entry.contents.includes(token));
+    if (!matched) {
+      throw new Error(`[contracts] files ${files.join(', ')} missing required token: ${token}`);
+    }
+  }
+}
+
+function assertExcludesAll(files, tokens) {
+  const byFile = files.map((file) => ({ file, contents: readFile(file) }));
+  for (const token of tokens) {
+    const found = byFile.find((entry) => entry.contents.includes(token));
+    if (found) {
+      throw new Error(`[contracts] ${found.file} contains forbidden token: ${token}`);
+    }
+  }
+}
+
+function assertMissing(relPath) {
+  const absolute = path.join(repoRoot, relPath);
+  if (fs.existsSync(absolute)) {
+    throw new Error(`[contracts] ${relPath} must not exist`);
+  }
+}
+
 function readJson(relPath) {
   const contents = readFile(relPath);
   try {
@@ -210,11 +237,97 @@ function assertLocaleCanonicalization() {
   assertIncludes('tooling/l10n/src/index.ts', ['replace(/_/g, \'-\')', 'toLowerCase()']);
 }
 
+function assertAssetLifecycleContracts49B() {
+  const tokyoAssetFiles = [
+    'tokyo-worker/src/index.ts',
+    'tokyo-worker/src/domains/assets.ts',
+    'tokyo-worker/src/domains/assets-handlers.ts',
+  ];
+
+  assertIncludesAny(tokyoAssetFiles, [
+    'replace_account_asset_variant',
+    "coreui.errors.asset.inUseConfirmRequired",
+    'requiresConfirm: true',
+    'confirmInUse',
+    "headers.set('cache-control', 'no-store')",
+    "headers.set('cdn-cache-control', 'no-store')",
+    "headers.set('cloudflare-cdn-cache-control', 'no-store')",
+    'ctx.waitUntil(Promise.allSettled(variantKeys.map((key) => env.TOKYO_R2.delete(key))))',
+  ]);
+  assertExcludesAll(tokyoAssetFiles, ['purge-deleted', 'markAccountAssetDeletedByIdentity']);
+
+  assertIncludes('paris/src/index.ts', [
+    'const accountAssetContentMatch = pathname.match(/^\\/api\\/accounts\\/([^/]+)\\/assets\\/([^/]+)\\/content$/);',
+  ]);
+  assertIncludes('paris/src/domains/accounts/index.ts', [
+    'handleAccountAssetReplaceContent',
+    "tokyoUrl.searchParams.set('confirmInUse', confirmInUse);",
+  ]);
+
+  assertIncludes('venice/lib/tokyo.ts', ["if (isAccountAssetPointer)", "return { cache: 'no-store' };"]);
+
+  assertIncludes('roma/components/assets-domain.tsx', [
+    "const search = confirmInUse ? '?confirmInUse=1' : '';",
+    "typed.payload.error?.reasonKey === 'coreui.errors.asset.inUseConfirmRequired'",
+  ]);
+
+  assertIncludes('dieter/components/dropdown-upload/dropdown-upload.ts', [
+    "setMetaValue(state, { name: file.name }, true);",
+    "throw new Error('coreui.errors.assets.replaceTargetInvalid');",
+    'replaceEditorAsset({',
+  ]);
+  assertExcludes('dieter/components/dropdown-upload/dropdown-upload.ts', [
+    "setMetaValue(state, { name: file.name, mime: file.type || '', source: 'user' }, true)",
+  ]);
+
+  assertIncludes('dieter/components/dropdown-fill/dropdown-fill.ts', [
+    "throw new Error('coreui.errors.assets.replaceTargetInvalid');",
+  ]);
+  assertExcludes('tokyo/widgets/shared/fill.js', ['fallbackLayer(']);
+
+  assertIncludes('paris/src/shared/assetUsage.ts', ["parsed.kind !== 'pointer'"]);
+  assertIncludes('dieter/components/shared/assetUpload.ts', ["parsed.kind !== 'pointer'"]);
+}
+
+function assertBootstrapContracts49C() {
+  assertIncludes('paris/src/domains/roma/bootstrap-core.ts', [
+    'Promise.allSettled',
+    'domainErrors',
+    'domainOutcomes',
+    'bootstrapFanoutMs',
+  ]);
+
+  assertIncludes('paris/src/domains/roma/widgets-bootstrap.ts', [
+    'domainErrors',
+    'bootstrapFanoutMs',
+    'bootstrapDomainOutcomes',
+  ]);
+
+  assertIncludes('roma/app/api/bootstrap/route.ts', [
+    '/api/roma/bootstrap',
+    "cache: 'no-store'",
+    "response.headers.set('cache-control', 'no-store')",
+    "response.headers.set('cdn-cache-control', 'no-store')",
+    "response.headers.set('cloudflare-cdn-cache-control', 'no-store')",
+  ]);
+  assertMissing('roma/app/api/me/route.ts');
+
+  assertIncludes('roma/components/use-roma-me.ts', [
+    'ROMA_ME_DEGRADED_SUCCESS_TTL_MS = 5_000',
+    'domainErrors?: Partial<Record<RomaBootstrapDomainKey, RomaBootstrapDomainError>> | null;',
+    "fetch(`/api/bootstrap${search}`, { cache: 'no-store' })",
+  ]);
+  assertIncludes('roma/components/bootstrap-domain-state.ts', [
+    'roma.errors.bootstrap.domain_unavailable',
+    'roma.errors.bootstrap.domain_contract_violation',
+  ]);
+}
+
 function main() {
   assertIncludes('venice/lib/tokyo.ts', ["cache: 'force-cache'", "cache: 'no-store'", 'resolveTokyoCache']);
   assertIncludes('venice/lib/l10n.ts', ['/l10n/instances/', 'index.json']);
 
-  assertIncludes('tokyo-worker/src/index.ts', [
+  assertIncludesAny(['tokyo-worker/src/index.ts', 'tokyo-worker/src/domains/l10n-core.ts', 'tokyo-worker/src/domains/l10n.ts'], [
     'l10n/instances/${publicId}/${layer}/${layerKey}/',
     'l10n/instances/${publicId}/index.json',
   ]);
@@ -224,6 +337,8 @@ function main() {
   assertIndexFixture();
   assertLayerContract();
   assertLocaleCanonicalization();
+  assertAssetLifecycleContracts49B();
+  assertBootstrapContracts49C();
 
   console.log('[contracts] OK');
 }

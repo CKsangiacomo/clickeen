@@ -30,15 +30,10 @@ function copyResponseHeaders(upstreamHeaders: Headers): Headers {
 export async function GET(request: NextRequest) {
   const auth = await resolveSessionBearer(request);
   if (!auth.ok) {
-    return NextResponse.json(
-      {
-        error: {
-          kind: 'AUTH',
-          reasonKey: 'coreui.errors.auth.required',
-        },
-      },
-      { status: 401 },
-    );
+    auth.response.headers.set('cache-control', 'no-store');
+    auth.response.headers.set('cdn-cache-control', 'no-store');
+    auth.response.headers.set('cloudflare-cdn-cache-control', 'no-store');
+    return auth.response;
   }
 
   const parisBase = resolveParisBaseUrl();
@@ -57,6 +52,9 @@ export async function GET(request: NextRequest) {
       statusText: upstreamResponse.statusText,
       headers: copyResponseHeaders(upstreamResponse.headers),
     });
+    response.headers.set('cache-control', 'no-store');
+    response.headers.set('cdn-cache-control', 'no-store');
+    response.headers.set('cloudflare-cdn-cache-control', 'no-store');
 
     if (auth.setCookies?.length) {
       const secure = request.nextUrl.protocol === 'https:';
@@ -84,7 +82,14 @@ export async function GET(request: NextRequest) {
           message,
         },
       },
-      { status: 502 },
+      {
+        status: 502,
+        headers: {
+          'cache-control': 'no-store',
+          'cdn-cache-control': 'no-store',
+          'cloudflare-cdn-cache-control': 'no-store',
+        },
+      },
     );
   }
 }

@@ -50,8 +50,37 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
     const method =
       init?.method ||
       (input instanceof Request ? input.method : 'GET');
+    if (url.includes('/tooling/contracts/open-editor-lifecycle.v1.json')) {
+      return new Response(
+        JSON.stringify({
+          events: {
+            openEditor: 'ck:open-editor',
+            sessionReady: 'bob:session-ready',
+            ack: 'bob:open-editor-ack',
+            applied: 'bob:open-editor-applied',
+            failed: 'bob:open-editor-failed',
+          },
+          timing: {
+            ackRetryMs: 250,
+            maxAckAttempts: 6,
+            timeoutMs: 7000,
+          },
+        }),
+        { status: 200 },
+      );
+    }
     if (url.includes('/api/paris/curated-instances')) {
       return new Response(JSON.stringify({ instances }), { status: 200 });
+    }
+    if (url.includes('/api/paris/roma/bootstrap') && method === 'GET') {
+      return new Response(
+        JSON.stringify({
+          defaults: {
+            workspaceId: '00000000-0000-0000-0000-000000000001',
+          },
+        }),
+        { status: 200 },
+      );
     }
     const compiledMatch = url.match(/\/api\/widgets\/([^/]+)\/compiled/);
     if (compiledMatch) {
@@ -77,6 +106,16 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
       } catch {}
       options?.onThemeUpdate?.(payload);
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+    if (url.includes('/api/assets/upload') && method === 'POST') {
+      return new Response(
+        JSON.stringify({
+          accountId: '00000000-0000-0000-0000-000000000100',
+          assetId: '11111111-1111-1111-1111-111111111111',
+          url: 'http://localhost:4000/arsenale/a/00000000-0000-0000-0000-000000000100/11111111-1111-1111-1111-111111111111',
+        }),
+        { status: 200 },
+      );
     }
     if (url.includes('/api/paris/workspaces/') && url.includes('/instances') && method === 'POST') {
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
@@ -119,11 +158,12 @@ async function loadWorkspaceDom(
   instances: InstancePayload[],
   options?: {
     fetch?: FetchMockOptions;
+    url?: string;
     onBobPostMessage?: (payload: unknown, origin: string, ctx: { dom: JSDOM; bobWindow: Window }) => void;
   }
 ) {
   const dom = new JSDOM(HTML_SOURCE, {
-    url: 'http://localhost:5173/#/tools/dev-widget-workspace',
+    url: options?.url || 'http://localhost:5173/?runtimeProfile=local#/tools/dev-widget-workspace',
     pretendToBeVisual: true,
     runScripts: 'outside-only',
   });
@@ -159,6 +199,27 @@ async function loadWorkspaceDom(
 }
 
 describe('DevStudio widget workspace tool', () => {
+  it('defaults to local runtime profile on localhost when query is missing', async () => {
+    const instances = [
+      {
+        publicId: 'wgt_curated_faq_simple',
+        widgetname: 'faq',
+        displayName: 'FAQ Simple',
+      },
+    ];
+    const { dom, fetchMock } = await loadWorkspaceDom(instances, {
+      url: 'http://localhost:5173/#/tools/dev-widget-workspace',
+    });
+
+    const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
+    expect(urls.some((url) => url.startsWith('http://localhost:3000/api/paris/roma/bootstrap'))).toBe(true);
+
+    const iframe = dom.window.document.getElementById('bob-iframe') as HTMLIFrameElement | null;
+    expect(iframe?.src || '').toContain('http://localhost:3000/bob?');
+
+    dom.window.close();
+  });
+
   it('shows the empty-state label when no curated instances exist', async () => {
     const { dom } = await loadWorkspaceDom([]);
     const label = dom.window.document.getElementById('current-instance-label');
@@ -346,6 +407,9 @@ describe('DevStudio widget workspace tool', () => {
     expect(createBody?.meta?.styleSlug).toBe('lightblurs_hospitality_airbnb');
     expect(createBody?.meta?.variants?.primary).toBe('Hospitality');
     expect(createBody?.meta?.variants?.secondary).toBe('Airbnb');
+    const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
+    const uploadUrls = urls.filter((url) => url.includes('/assets/upload'));
+    expect(uploadUrls.some((url) => url.startsWith('http://localhost:4000/assets/upload'))).toBe(false);
 
     dom.window.close();
   });
@@ -386,7 +450,7 @@ describe('DevStudio widget workspace tool', () => {
       },
     });
 
-    const updateThemeBtn = dom.window.document.getElementById('superadmin-update-theme');
+    const updateThemeBtn = dom.window.document.getElementById('privileged-update-theme');
     updateThemeBtn?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
     await flushDom(dom, 4);
 
@@ -478,7 +542,7 @@ describe('DevStudio widget workspace tool', () => {
     const beforeThemeEditLoads = countParisInstanceLoads();
     expect(beforeThemeEditLoads).toBe(1);
 
-    const updateThemeBtn = dom.window.document.getElementById('superadmin-update-theme');
+    const updateThemeBtn = dom.window.document.getElementById('privileged-update-theme');
     updateThemeBtn?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
     await flushDom(dom, 3);
 

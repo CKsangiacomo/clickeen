@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isUuid, isWidgetPublicId, parseCanonicalAssetRef, toCanonicalAssetPointerPath } from '@clickeen/ck-contracts';
 import { resolveTokyoBaseUrl } from '../../../../lib/env/tokyo';
-import { resolveSessionBearer, type SessionCookieSpec } from '../../../../lib/auth/session';
+import {
+  isDevstudioLocalBootstrapRequest,
+  resolveSessionBearer,
+  type SessionCookieSpec,
+} from '../../../../lib/auth/session';
 import { applySessionCookies } from '../../../../lib/api/paris/proxy-helpers';
 
 export const runtime = 'edge';
@@ -57,7 +61,9 @@ function withCorsAndSession(
 }
 
 export async function POST(request: NextRequest) {
-  const session = await resolveSessionBearer(request);
+  const session = await resolveSessionBearer(request, {
+    allowLocalDevBootstrap: isDevstudioLocalBootstrapRequest(request),
+  });
   if (!session.ok) {
     return withCorsAndSession(request, session.response);
   }
@@ -71,7 +77,7 @@ export async function POST(request: NextRequest) {
   }
 
   const workspaceId = (request.headers.get('x-workspace-id') || '').trim();
-  if (!workspaceId || !isUuid(workspaceId)) {
+  if (workspaceId && !isUuid(workspaceId)) {
     return withCorsAndSession(request, NextResponse.json(
       { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } },
       { status: 422 },
@@ -95,7 +101,7 @@ export async function POST(request: NextRequest) {
   const headers = new Headers();
   headers.set('authorization', `Bearer ${session.accessToken}`);
   headers.set('x-account-id', accountId);
-  headers.set('x-workspace-id', workspaceId);
+  if (workspaceId) headers.set('x-workspace-id', workspaceId);
 
   const publicId = (request.headers.get('x-public-id') || '').trim();
   if (publicId) {
@@ -125,8 +131,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.arrayBuffer();
-    if (!body || body.byteLength === 0) {
+    const contentLength = Number(request.headers.get('content-length') || '');
+    if (Number.isFinite(contentLength) && contentLength <= 0) {
+      return withCorsAndSession(request, NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } },
+        { status: 422 },
+      ), session.setCookies);
+    }
+    const bodyStream = request.body;
+    if (!bodyStream) {
       return withCorsAndSession(request, NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } },
         { status: 422 },
@@ -142,7 +155,7 @@ export async function POST(request: NextRequest) {
     const res = await fetch(`${tokyoUrl}?_t=${Date.now()}`, {
       method: 'POST',
       headers,
-      body,
+      body: bodyStream,
     });
 
     const text = await res.text().catch(() => '');

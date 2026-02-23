@@ -205,9 +205,9 @@ export function CopilotPane() {
   const instancePublicId = session.meta?.publicId ?? null;
   const workspaceId = session.meta?.workspaceId ?? null;
   const policyProfile = session.policy?.profile ?? 'minibob';
-  const subject = policyProfile === 'devstudio' || policyProfile === 'minibob' ? policyProfile : 'workspace';
-  const aiSubject = subject === 'workspace' && !workspaceId ? 'minibob' : subject;
-  const isMinibob = aiSubject === 'minibob';
+  const subject = policyProfile === 'minibob' ? 'minibob' : 'workspace';
+  const isMinibob = subject === 'minibob';
+  const missingWorkspaceForWorkspaceSubject = subject === 'workspace' && !workspaceId;
   const widgetCopilotAgentId = useMemo(() => resolveWidgetCopilotAgentId({ policyProfile }), [policyProfile]);
 
   const aiPolicy = useMemo(() => {
@@ -219,11 +219,11 @@ export function CopilotPane() {
   const [aiSelection, setAiSelection] = useState<AiSelection | null>(null);
   useEffect(() => {
     if (!aiPolicy) return;
-    const key = aiStorageKey({ workspaceId, subject: aiSubject });
+    const key = aiStorageKey({ workspaceId, subject });
     const stored = readStoredAiSelection(key);
     const next = clampAiSelection(stored, aiPolicy);
     setAiSelection(next);
-  }, [aiPolicy, workspaceId, aiSubject]);
+  }, [aiPolicy, workspaceId, subject]);
 
   const showAiSettings = useMemo(() => {
     if (widgetCopilotAgentId !== WIDGET_COPILOT_AGENT_IDS.cs) return false;
@@ -266,7 +266,7 @@ export function CopilotPane() {
   }) => {
     if (!args.requestId || !args.sessionId) return;
     try {
-      await fetch('/api/ai/outcome', {
+      await session.apiFetch('/api/ai/outcome', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -430,6 +430,13 @@ export function CopilotPane() {
       pushMessage({ role: 'assistant', text: 'Copilot session not ready. Please try again in a moment.' });
       return;
     }
+    if (missingWorkspaceForWorkspaceSubject) {
+      pushMessage({
+        role: 'assistant',
+        text: 'Workspace context is missing. Reopen the instance from Roma/DevStudio and try again.',
+      });
+      return;
+    }
 
     setStatus('loading');
     setDraft('');
@@ -452,7 +459,7 @@ export function CopilotPane() {
         aiPolicy && !isMinibob && widgetCopilotAgentId === WIDGET_COPILOT_AGENT_IDS.cs
           ? clampAiSelection(aiSelection, aiPolicy)
           : null;
-      const res = await fetch('/api/ai/widget-copilot', {
+      const res = await session.apiFetch('/api/ai/widget-copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -465,7 +472,7 @@ export function CopilotPane() {
           ...(isMinibob ? { sessionToken: minibobSessionToken } : {}),
           instancePublicId,
           workspaceId,
-          subject: aiSubject,
+          subject,
           ...(selection?.provider ? { provider: selection.provider } : {}),
           ...(selection?.model ? { model: selection.model } : {}),
         }),
@@ -566,7 +573,7 @@ export function CopilotPane() {
                       const nextProvider = event.target.value;
                       const clamped = clampAiSelection({ provider: nextProvider, model: '' }, aiPolicy);
                       setAiSelection(clamped);
-                      writeStoredAiSelection(aiStorageKey({ workspaceId, subject: aiSubject }), clamped);
+                      writeStoredAiSelection(aiStorageKey({ workspaceId, subject }), clamped);
                     }}
                   >
                     {aiPolicy.allowedProviders.map((provider) => (
@@ -597,7 +604,7 @@ export function CopilotPane() {
                       const next: AiSelection = { provider: aiSelection.provider, model: event.target.value };
                       const clamped = clampAiSelection(next, aiPolicy);
                       setAiSelection(clamped);
-                      writeStoredAiSelection(aiStorageKey({ workspaceId, subject: aiSubject }), clamped);
+                      writeStoredAiSelection(aiStorageKey({ workspaceId, subject }), clamped);
                     }}
                   >
                     {(aiPolicy.models?.[aiSelection.provider]?.allowed ?? []).map((model) => (

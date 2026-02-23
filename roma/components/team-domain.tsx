@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { resolveBootstrapDomainState } from './bootstrap-domain-state';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type WorkspaceMembersResponse = {
@@ -28,59 +29,82 @@ export function TeamDomain() {
       return;
     }
     const snapshot = me.data?.domains?.team ?? null;
-    if (!snapshot || snapshot.workspaceId !== workspaceId || !Array.isArray(snapshot.members)) {
+    const hasDomainPayload = Boolean(snapshot && snapshot.workspaceId === workspaceId && Array.isArray(snapshot.members));
+    const domainState = resolveBootstrapDomainState({
+      data: me.data,
+      domainKey: 'team',
+      hasDomainPayload,
+    });
+    if (!hasDomainPayload || domainState.kind !== 'ok') {
       setMembers(null);
-      setError('Bootstrap team snapshot unavailable.');
+      setError(domainState.reasonKey);
       return;
     }
-    setMembers(snapshot);
+    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
+    setMembers(safeSnapshot);
     setError(null);
-  }, [workspaceId, me.data?.domains?.team]);
+  }, [workspaceId, me.data]);
 
-  if (me.loading) return <section className="roma-module-surface">Loading team context...</section>;
+  if (me.loading) return <section className="rd-canvas-module body-m">Loading team context...</section>;
   if (me.error || !me.data) {
-    return <section className="roma-module-surface">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
+    return <section className="rd-canvas-module body-m">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
   }
   if (!workspaceId) {
-    return <section className="roma-module-surface">No workspace membership found for team controls.</section>;
+    return <section className="rd-canvas-module body-m">No workspace membership found for team controls.</section>;
   }
 
   return (
-    <section className="roma-module-surface">
-      <p>
-        Workspace: {context.workspaceName || workspaceId}
-        {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
-      </p>
+    <>
+      <section className="rd-canvas-module">
+        <p className="body-m">
+          Workspace: {context.workspaceName || workspaceId}
+          {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
+        </p>
 
-      {error ? <p>Failed to load workspace members: {error}</p> : null}
+        {error ? (
+          <div className="roma-inline-stack">
+            <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
+            <p className="body-m">{error}</p>
+            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+              <span className="diet-btn-txt__label body-m">Retry</span>
+            </button>
+          </div>
+        ) : null}
+      </section>
 
       {members ? (
-        <table className="roma-table">
-          <thead>
-            <tr>
-              <th>User ID</th>
-              <th>Role</th>
-              <th>Joined</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.members.map((member) => (
-              <tr key={member.userId}>
-                <td>{member.userId}</td>
-                <td>{member.role}</td>
-                <td>{member.createdAt ?? 'unknown'}</td>
-              </tr>
-            ))}
-            {members.members.length === 0 ? (
+        <section className="rd-canvas-module">
+          <table className="roma-table">
+            <thead>
               <tr>
-                <td colSpan={3}>No members found for this workspace.</td>
+                <th className="table-header label-s">User ID</th>
+                <th className="table-header label-s">Role</th>
+                <th className="table-header label-s">Joined</th>
               </tr>
-            ) : null}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {members.members.map((member) => (
+                <tr key={member.userId}>
+                  <td className="body-s">{member.userId}</td>
+                  <td className="body-s">{member.role}</td>
+                  <td className="body-s">{member.createdAt ?? 'unknown'}</td>
+                </tr>
+              ))}
+              {members.members.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="body-s">
+                    No members found for this workspace.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </section>
       ) : null}
 
-      <p>Invite/revoke flows are intentionally blocked until invite schema + audit tables are introduced.</p>
-    </section>
+      <section className="rd-canvas-module">
+        <p className="body-m">Invite/revoke flows are intentionally blocked until invite schema + audit tables are introduced.</p>
+      </section>
+    </>
   );
 }

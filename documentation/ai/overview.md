@@ -81,7 +81,7 @@ San Francisco enforces this profile by:
 
 Widget copilot routing (shipped):
 - `minibob` + `free` resolve to `sdr.widget.copilot.v1`
-- `tier1`/`tier2`/`tier3`/`devstudio` resolve to `cs.widget.copilot.v1`
+- `tier1`/`tier2`/`tier3` resolve to `cs.widget.copilot.v1`
 - Callers may request the alias `widget.copilot.v1`; Paris resolves it by profile.
 - DevStudio Entitlements now exposes both profile-level model access and per-agent runtime access so provider/model differences are explicit.
 - Runtime behavior is policy-scoped by agent role (shared infra, separate behavior packs):

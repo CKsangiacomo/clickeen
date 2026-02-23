@@ -1,7 +1,7 @@
 import rawMatrix from '../../../config/entitlements.matrix.json';
 import type { EntitlementKind, EntitlementsMatrix, PolicyProfile } from './types';
 
-const REQUIRED_TIERS: PolicyProfile[] = ['devstudio', 'minibob', 'free', 'tier1', 'tier2', 'tier3'];
+const REQUIRED_TIERS: PolicyProfile[] = ['minibob', 'free', 'tier1', 'tier2', 'tier3'];
 const VALID_KINDS: EntitlementKind[] = ['flag', 'cap', 'budget'];
 
 let cachedMatrix: EntitlementsMatrix | null = null;

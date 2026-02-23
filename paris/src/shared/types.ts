@@ -21,6 +21,7 @@ export type Env = {
   L10N_GENERATE_QUEUE?: Queue<L10nJob>;
   L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
   RENDER_SNAPSHOT_QUEUE?: Queue<RenderSnapshotQueueJob>;
+  SANFRANCISCO_COMMANDS_QUEUE?: Queue<SanfranciscoCommandQueueJob>;
 };
 
 export type InstanceKind = 'curated' | 'user';
@@ -163,6 +164,18 @@ export type RenderSnapshotQueueJob = {
   publicId: string;
   action?: 'upsert' | 'delete';
   locales?: string[];
+};
+
+export type SanfranciscoCommandName =
+  | 'personalization.preview.enqueue'
+  | 'personalization.onboarding.enqueue'
+  | 'ai.outcome.attach';
+
+export type SanfranciscoCommandQueueJob = {
+  v: 1;
+  kind: 'sf.command';
+  command: SanfranciscoCommandName;
+  payload: Record<string, unknown>;
 };
 
 export type InstanceOverlayRow = {

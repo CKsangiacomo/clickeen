@@ -41,7 +41,7 @@ Current runtime contract (February 11, 2026):
   1. Rewrite existing FAQ questions/answers.
   2. Personalize FAQ questions/answers from one website URL (single-page read, explicit consent).
 - Requests outside those two capabilities return seller guidance plus a signup CTA (no fallback style/layout edits in SDR mode).
-- Paid/devstudio users are routed to `cs.widget.copilot.v1` (CS policy), not this SDR behavior pack.
+- Paid workspace users (`tier1|tier2|tier3`) are routed to `cs.widget.copilot.v1` (CS policy), not this SDR behavior pack.
 
 **Sibling agents**: SDR Copilot is one of multiple Clickeen agents. See also: `UXWriterAgent.PRD.md` (async localization intelligence).
 
@@ -244,7 +244,7 @@ Notes:
 - `sessionId` is used for learning + conversion attribution.
 - Each widget has an `agent.md` file defining editable paths, enums, and binding maps. Copilot uses this + `spec.json` to understand what's editable.
 - `agentId` (when provided by the UI) is restricted to widget-copilot IDs only: `widget.copilot.v1`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`.
-- `subject` is normalized server-side. `devstudio` is accepted only in local/cloud-dev (or explicit override); otherwise requests fall back to policy-safe routing (`workspace` when `workspaceId` exists, `minibob` otherwise).
+- `subject` is normalized server-side to `workspace|minibob` only (`workspace` requires `workspaceId`).
 
 Response shape (success):
 ```json
@@ -290,7 +290,7 @@ Current request alias:
 
 Paris resolves this alias by policy profile:
 - `minibob` + `free` -> `sdr.widget.copilot.v1`
-- `tier1`/`tier2`/`tier3`/`devstudio` -> `cs.widget.copilot.v1`
+- `tier1`/`tier2`/`tier3` -> `cs.widget.copilot.v1`
 - If callers force `sdr.widget.copilot.v1` or `cs.widget.copilot.v1`, Paris still canonicalizes to the profile-resolved ID for widget-copilot requests.
 
 The agent is expected to return:

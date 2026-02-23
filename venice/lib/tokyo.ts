@@ -1,6 +1,40 @@
+const TOKYO_BASE_ENV_KEYS = 'TOKYO_URL/TOKYO_BASE_URL/NEXT_PUBLIC_TOKYO_URL';
+const TOKYO_LEGACY_PATH_PREFIXES = new Set([
+  '/assets',
+  '/arsenale',
+  '/dieter',
+  '/widgets',
+  '/renders',
+  '/l10n',
+  '/i18n',
+  '/fonts',
+]);
+
+function normalizeTokyoBaseUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return trimmed;
+  const normalized = trimmed.replace(/\/+$/, '');
+  let parsed: URL;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    return normalized;
+  }
+
+  if (parsed.search || parsed.hash) {
+    throw new Error(`[Venice] Invalid ${TOKYO_BASE_ENV_KEYS}: query/hash is not allowed (${trimmed})`);
+  }
+
+  const normalizedPath = parsed.pathname.replace(/\/+$/, '') || '/';
+  if (normalizedPath === '/') return parsed.origin;
+  if (TOKYO_LEGACY_PATH_PREFIXES.has(normalizedPath)) return parsed.origin;
+
+  throw new Error(`[Venice] Invalid ${TOKYO_BASE_ENV_KEYS}: expected Tokyo origin, got path "${parsed.pathname}"`);
+}
+
 export function getTokyoBase() {
   const configured = process.env.TOKYO_URL || process.env.TOKYO_BASE_URL || process.env.NEXT_PUBLIC_TOKYO_URL;
-  if (configured) return configured.replace(/\/$/, '');
+  if (configured) return normalizeTokyoBaseUrl(configured);
 
   // Local dev default.
   if (process.env.NODE_ENV === 'development') {
@@ -34,15 +68,16 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
     !isRenderLegacyIndex;
   const isDieter = normalized.startsWith('/dieter/');
   const isWidget = normalized.startsWith('/widgets/');
+  const isFont = normalized.startsWith('/fonts/');
 
   if (isL10nOverlay || isL10nBaseSnapshot || isAccountAssetObject || isRenderArtifact || isRenderRevisionIndex) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
   if (isAccountAssetPointer) {
-    return { cache: 'force-cache', next: { revalidate: 30 } };
+    return { cache: 'no-store' };
   }
   if (isRenderPublishedPointer) {
-    return { cache: 'force-cache', next: { revalidate: 15 } };
+    return { cache: 'no-store' };
   }
   if (isI18n && !isI18nManifest) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
@@ -53,7 +88,7 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   if (isL10nIndex || isI18nManifest) {
     return { cache: 'force-cache', next: { revalidate: 300 } };
   }
-  if (isDieter || isWidget) {
+  if (isDieter || isWidget || isFont) {
     return { cache: 'force-cache', next: { revalidate: 300 } };
   }
   return { cache: 'no-store' };

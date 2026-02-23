@@ -17,7 +17,9 @@ Route: `/#/dieter/dev-widget-workspace`
 
 What it does:
 - Embeds Bob in an iframe (default or via `?bob=http://localhost:3000`).
+- Marks iframe host intent as `surface=devstudio` (pairs with `surface=roma` in Roma Builder for explicit host behavior).
 - Loads instances via Bob’s `/api/paris/*` proxy (DevStudio never calls Paris directly).
+- Local-only unauth convenience is isolated here: DevStudio Local carries explicit `devstudio` surface markers so Bob can mint local sessions only for this toolchain, and only when `ENV_STAGE=local`. Roma/product routes do not get this bypass.
 - In **DevStudio Local only**, shows local-only actions (update defaults, reset instance from JSON, create curated instance, update curated, refresh Prague preview, translate locales).
 - Uses a 2-step selector in Widget Workspace: pick `Widget` first, then pick an instance from that widget’s scoped list.
 - Instance list fetch uses `GET /api/curated-instances?includeConfig=0` and lazy-loads each instance config on selection.
@@ -32,7 +34,7 @@ DevStudio has two separate gates for Copilot behavior:
 
 Important behavior:
 - Unlimited budget values alone do not enable CS Copilot.
-- For paid profiles (`tier1|tier2|tier3|devstudio`), both gates must allow a CS-capable provider/model and runtime access for `cs.widget.copilot.v1`.
+- For paid profiles (`tier1|tier2|tier3`), both gates must allow a CS-capable provider/model and runtime access for `cs.widget.copilot.v1`.
 - Free + Minibob remain constrained to `sdr.widget.copilot.v1` by design.
 
 ### Curated instances (single source of truth)
@@ -42,8 +44,8 @@ DevStudio Local supports curated instances as the single primitive:
 - **Reset instance from JSON**: pulls from compiled defaults (`spec.json`) and overwrites `wgt_main_{widget}`.
 - **Create curated instance**: creates `wgt_curated_{widget}_{styleSlug}` from the current editor config, storing metadata (`styleName`, `styleSlug`, and optional `variants`).
 - **Update curated instance**: overwrites the selected `wgt_curated_*` config in place with the current editor state.
-- **Refresh Prague preview**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=devstudio` to regenerate curated snapshot artifacts (default locale `en`) for Venice/Prague.
-- **Translate locales**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=devstudio` to enqueue locale jobs for the workspace active locale set.
+- **Refresh Prague preview**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=workspace` to regenerate curated snapshot artifacts (default locale `en`) for Venice/Prague.
+- **Translate locales**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=workspace` to enqueue locale jobs for the workspace active locale set.
 
 Notes:
 - Asset controls upload immediately at edit-time; DevStudio write actions now assume config already contains canonical Tokyo `/arsenale/o/**` URLs (no pre-save blob/data persistence pass).

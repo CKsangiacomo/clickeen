@@ -20,6 +20,10 @@ queue = "instance-l10n-publish-cloud-dev"
 binding = "RENDER_SNAPSHOT_QUEUE"
 queue = "instance-render-snapshot-cloud-dev"
 
+[[queues.producers]]
+binding = "SANFRANCISCO_COMMANDS_QUEUE"
+queue = "paris-sf-commands-cloud-dev"
+
 [triggers]
 crons = ["*/5 * * * *"]
 
@@ -42,3 +46,7 @@ queue = "instance-l10n-publish-local"
 [[env.local.queues.producers]]
 binding = "RENDER_SNAPSHOT_QUEUE"
 queue = "instance-render-snapshot-local"
+
+[[env.local.queues.producers]]
+binding = "SANFRANCISCO_COMMANDS_QUEUE"
+queue = "paris-sf-commands-local"

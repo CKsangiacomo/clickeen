@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import openEditorLifecycleContractJson from '../../tooling/contracts/open-editor-lifecycle.v1.json';
 import { getCompiledWidget, normalizeCompiledWidgetType } from './compiled-widget-cache';
 import { getWorkspaceInstance, prefetchWorkspaceInstance } from './workspace-instance-cache';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
@@ -12,8 +13,25 @@ type BuilderDomainProps = {
   initialWorkspaceId?: string;
 };
 
+type OpenEditorLifecycleContract = {
+  events: {
+    openEditor: string;
+    sessionReady: string;
+    ack: string;
+    applied: string;
+    failed: string;
+  };
+  timing: {
+    ackRetryMs: number;
+    maxAckAttempts: number;
+    timeoutMs: number;
+  };
+};
+
+const OPEN_EDITOR_LIFECYCLE: OpenEditorLifecycleContract = openEditorLifecycleContractJson;
+
 type BobReadyMessage = {
-  type: 'bob:session-ready';
+  type: typeof OPEN_EDITOR_LIFECYCLE.events.sessionReady;
   sessionId?: string | null;
   bootMode?: 'message' | 'url' | null;
 };
@@ -24,19 +42,19 @@ type BobSwitchMessage = {
 };
 
 type BobOpenEditorAckMessage = {
-  type: 'bob:open-editor-ack';
+  type: typeof OPEN_EDITOR_LIFECYCLE.events.ack;
   requestId?: string | null;
   sessionId?: string | null;
 };
 
 type BobOpenEditorAppliedMessage = {
-  type: 'bob:open-editor-applied';
+  type: typeof OPEN_EDITOR_LIFECYCLE.events.applied;
   requestId?: string | null;
   sessionId?: string | null;
 };
 
 type BobOpenEditorFailedMessage = {
-  type: 'bob:open-editor-failed';
+  type: typeof OPEN_EDITOR_LIFECYCLE.events.failed;
   requestId?: string | null;
   sessionId?: string | null;
   reasonKey?: string | null;
@@ -44,9 +62,10 @@ type BobOpenEditorFailedMessage = {
 };
 
 type BobOpenEditorMessage = {
-  type: 'ck:open-editor';
+  type: typeof OPEN_EDITOR_LIFECYCLE.events.openEditor;
   requestId: string;
   sessionId: string;
+  sessionAccessToken: string;
   subjectMode: 'workspace';
   publicId: string;
   workspaceId: string;
@@ -156,6 +175,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
     url.searchParams.set('boot', 'message');
     url.searchParams.set('workspaceId', workspaceId);
     url.searchParams.set('subject', 'workspace');
+    url.searchParams.set('surface', 'roma');
     return url.toString();
   }, [bobBaseUrl, workspaceId]);
 
@@ -245,11 +265,11 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
           args.targetWindow.postMessage(payload, bobBaseUrl);
 
           if (!acknowledged) {
-            if (attempts >= 6) {
+            if (attempts >= OPEN_EDITOR_LIFECYCLE.timing.maxAckAttempts) {
               fail(new Error('coreui.errors.builder.open.ackTimeout'));
               return;
             }
-            retryTimer = window.setTimeout(send, 250);
+            retryTimer = window.setTimeout(send, OPEN_EDITOR_LIFECYCLE.timing.ackRetryMs);
           }
         };
 
@@ -267,7 +287,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
           const dataSessionId = typeof data.sessionId === 'string' ? data.sessionId.trim() : '';
           if (dataRequestId !== requestId || dataSessionId !== sessionId) return;
 
-          if (data.type === 'bob:open-editor-ack') {
+          if (data.type === OPEN_EDITOR_LIFECYCLE.events.ack) {
             acknowledged = true;
             if (retryTimer != null) {
               window.clearTimeout(retryTimer);
@@ -276,15 +296,16 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
             return;
           }
 
-          if (data.type === 'bob:open-editor-applied') {
+          if (data.type === OPEN_EDITOR_LIFECYCLE.events.applied) {
             succeed();
             return;
           }
 
-          if (data.type === 'bob:open-editor-failed') {
+          if (data.type === OPEN_EDITOR_LIFECYCLE.events.failed) {
+            const failed = data as BobOpenEditorFailedMessage;
             const reason =
-              (typeof data.reasonKey === 'string' && data.reasonKey.trim()) ||
-              (typeof data.message === 'string' && data.message.trim()) ||
+              (typeof failed.reasonKey === 'string' && failed.reasonKey.trim()) ||
+              (typeof failed.message === 'string' && failed.message.trim()) ||
               'coreui.errors.builder.open.failed';
             fail(new Error(reason));
           }
@@ -293,13 +314,40 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
         window.addEventListener('message', onMessage);
         timeoutTimer = window.setTimeout(() => {
           fail(new Error('coreui.errors.builder.open.timeout'));
-        }, 7000);
+        }, OPEN_EDITOR_LIFECYCLE.timing.timeoutMs);
 
         send();
       });
     },
     [bobBaseUrl],
   );
+
+  const resolveBobSessionAccessToken = useCallback(async (): Promise<string> => {
+    const response = await fetch('/api/session/access-token', {
+      method: 'GET',
+      cache: 'no-store',
+    });
+    const payload = (await response.json().catch(() => null)) as
+      | {
+          accessToken?: unknown;
+          error?: { reasonKey?: unknown } | unknown;
+        }
+      | null;
+    if (!response.ok) {
+      const reasonKey =
+        payload?.error &&
+        typeof payload.error === 'object' &&
+        typeof (payload.error as { reasonKey?: unknown }).reasonKey === 'string'
+          ? String((payload.error as { reasonKey?: unknown }).reasonKey).trim()
+          : '';
+      throw new Error(reasonKey || 'coreui.errors.auth.required');
+    }
+    const accessToken = typeof payload?.accessToken === 'string' ? payload.accessToken.trim() : '';
+    if (!accessToken) {
+      throw new Error('coreui.errors.auth.required');
+    }
+    return accessToken;
+  }, []);
 
   const openActiveInstanceInBob = useCallback(async () => {
     const targetWindow = iframeRef.current?.contentWindow;
@@ -310,11 +358,13 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
 
     try {
       const compileFetchStartedAt = performance.now();
+      const sessionAccessTokenPromise = resolveBobSessionAccessToken();
       const hintedCompiledPromise = widgetTypeHint ? getCompiledWidget(widgetTypeHint) : null;
       const instanceResult = await getWorkspaceInstance({
         workspaceId,
         publicId: activePublicId,
       });
+      const sessionAccessToken = await sessionAccessTokenPromise;
       const instance = instanceResult.payload;
 
       const widgetType = typeof instance.widgetType === 'string' ? instance.widgetType.trim() : '';
@@ -346,8 +396,9 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
       }
 
       const message: BobOpenEditorPayload = {
-        type: 'ck:open-editor',
+        type: OPEN_EDITOR_LIFECYCLE.events.openEditor,
         subjectMode: 'workspace',
+        sessionAccessToken,
         publicId: resolvedPublicId,
         workspaceId,
         ownerAccountId,
@@ -380,7 +431,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [accountId, activePublicId, postOpenEditorAndWait, widgetTypeHint, workspaceId]);
+  }, [activePublicId, postOpenEditorAndWait, resolveBobSessionAccessToken, widgetTypeHint, workspaceId]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {
@@ -389,13 +440,14 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
       if (!source || event.source !== source) return;
       const data = event.data as BobReadyMessage | BobSwitchMessage | null;
       if (!data || typeof data !== 'object') return;
-      if (data.type === 'bob:session-ready') {
-        const sessionId = typeof data.sessionId === 'string' ? data.sessionId.trim() : '';
+      if (data.type === OPEN_EDITOR_LIFECYCLE.events.sessionReady) {
+        const ready = data as BobReadyMessage;
+        const sessionId = typeof ready.sessionId === 'string' ? ready.sessionId.trim() : '';
         if (!sessionId) {
           setOpenError('coreui.errors.builder.open.sessionMissing');
           return;
         }
-        if (data.bootMode && data.bootMode !== 'message') {
+        if (ready.bootMode && ready.bootMode !== 'message') {
           setOpenError('coreui.errors.builder.open.bootModeInvalid');
           return;
         }
@@ -407,7 +459,8 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
         return;
       }
       if (data.type === 'bob:request-instance-switch') {
-        const nextPublicId = String(data.publicId || '').trim();
+        const switchMessage = data as BobSwitchMessage;
+        const nextPublicId = String(switchMessage.publicId || '').trim();
         if (!nextPublicId) return;
         if (nextPublicId === activePublicId) return;
         setActivePublicId(nextPublicId);
@@ -440,18 +493,18 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
   if (!hasWorkspaceId) {
     if (waitingForWorkspaceContext) {
       return (
-        <div className="roma-module-surface">
-          <p>Loading builder context…</p>
+        <div className="rd-canvas-module">
+          <p className="body-m">Loading builder context…</p>
         </div>
       );
     }
 
     return (
-      <div className="roma-module-surface">
-        <p>No workspace context found for Builder.</p>
-        <div className="roma-module-surface__actions">
+      <div className="rd-canvas-module">
+        <p className="body-m">No workspace context found for Builder.</p>
+        <div className="rd-canvas-module__actions">
           <Link className="diet-btn-txt" data-size="md" data-variant="primary" href="/settings">
-            <span className="diet-btn-txt__label">Open settings</span>
+            <span className="diet-btn-txt__label body-m">Open settings</span>
           </Link>
         </div>
       </div>
@@ -460,15 +513,15 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
 
   if (!activePublicId) {
     return (
-      <div className="roma-module-surface">
-        <p>No instance selected for Builder.</p>
-        <p>Select a concrete instance from Widgets or Templates and open Edit.</p>
-        <div className="roma-module-surface__actions">
+      <div className="rd-canvas-module">
+        <p className="body-m">No instance selected for Builder.</p>
+        <p className="body-m">Select a concrete instance from Widgets or Templates and open Edit.</p>
+        <div className="rd-canvas-module__actions">
           <Link className="diet-btn-txt" data-size="md" data-variant="primary" href="/widgets">
-            <span className="diet-btn-txt__label">Open widgets</span>
+            <span className="diet-btn-txt__label body-m">Open widgets</span>
           </Link>
           <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/templates">
-            <span className="diet-btn-txt__label">Open templates</span>
+            <span className="diet-btn-txt__label body-m">Open templates</span>
           </Link>
         </div>
       </div>
@@ -478,11 +531,11 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
   return (
     <>
       {openError ? (
-        <div className="roma-module-surface">
-          <p>Failed to open instance: {openError}</p>
-          <div className="roma-module-surface__actions">
+        <div className="rd-canvas-module">
+          <p className="body-m">Failed to open instance: {openError}</p>
+          <div className="rd-canvas-module__actions">
             <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void openActiveInstanceInBob()}>
-              <span className="diet-btn-txt__label">Retry</span>
+              <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
           </div>
         </div>

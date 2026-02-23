@@ -13,7 +13,7 @@ This runbook captures the rollout status for widget copilot routing:
 - Request alias: `widget.copilot.v1`
 - Paris grant resolution:
   - `minibob|free` -> `sdr.widget.copilot.v1`
-  - `tier1|tier2|tier3|devstudio` -> `cs.widget.copilot.v1`
+  - `tier1|tier2|tier3` -> `cs.widget.copilot.v1`
 - Minibob public grants are fixed server-side to SDR (`sdr.widget.copilot.v1`).
 
 ## Environment behavior matrix

@@ -34,7 +34,7 @@ export function RomaNav({ activeDomain, compact = false }: RomaNavProps) {
             className={isActive ? 'roma-nav__link roma-nav__link--active' : 'roma-nav__link'}
             title={domain.description}
           >
-            <span className="roma-nav__label">{domain.label}</span>
+            <span className="roma-nav__label label-s">{domain.label}</span>
           </Link>
         );
       })}

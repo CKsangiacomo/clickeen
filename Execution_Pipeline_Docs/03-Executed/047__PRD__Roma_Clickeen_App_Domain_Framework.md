@@ -1,3 +1,5 @@
+THESE PRD BROKE THE ARCHITECTURE - KEEPING ONLY AS REFERENCE
+
 # PRD 47 - Roma: Clickeen App Domain Framework (System Introduction + Architecture Convergence)
 
 **Status:** PLANNING (01-Planning; peer review required before 02-Executing)  

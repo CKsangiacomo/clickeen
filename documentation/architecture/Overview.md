@@ -40,6 +40,48 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 ---
 
+## Core Object Model: Mutable Pointers to Immutable Artifacts
+
+Every stateful object in Clickeen follows one pattern: a **thin mutable pointer** that references a **heavy immutable artifact**.
+
+```
+Mutable pointer  (tiny, always fetched fresh)
+    │
+    └──► Immutable artifact  (heavy, cached forever, content-addressed)
+```
+
+"Updating" something never mutates an existing object. It means: create a new immutable artifact, then atomically flip the pointer. The old artifact stays cached wherever it is — no invalidation cascade, no eventual consistency window.
+
+### Where this applies
+
+| Domain | Mutable pointer | Immutable artifact |
+|--------|----------------|--------------------|
+| **Publish** | `published.json` (`no-store`) | Render snapshot at `/arsenale/o/:revision/` (cache forever) |
+| **Assets** | `/arsenale/a/:accountId/:assetId` | Uploaded bytes at content address |
+| **Auth** | JWT (short-lived, refreshable) | userId claim (stable identity) |
+| **Authz** | HMAC-signed capsule (expires) | Role/account/workspace snapshot at issuance |
+| **Overlays** | Layer pointer in DB | Materialized overlay file on R2 (fingerprinted) |
+
+### Why this matters
+
+**For caching:** The heavy part (artifacts, snapshots, overlay files) caches perfectly — CDN, edge, browser, forever. The mutable part (pointers, JWTs, capsules) is tiny and cheap to fetch fresh. One uncached pointer read, then everything it references hits cache.
+
+**For safety:** Writes produce new artifacts, never modify shared state. If a write fails, nothing changed. If it succeeds, the artifact exists permanently. Rollback is just pointing back to the previous artifact.
+
+**For agents:** An AI agent's loop is verify state, take action, verify result. Pointer reads give deterministic current state. New artifact writes can't corrupt existing data. Pointer flips give binary confirmation. No locks, no race conditions, no partial states.
+
+**For scale:** 10,000 concurrent editors produce 10,000 independent artifacts. No write contention, no coordination between them. The pointer flip is the only serialization point and it's a single atomic write.
+
+### Contrast with traditional SaaS
+
+Traditional systems treat objects as mutable: update in place, invalidate caches everywhere, coordinate distributed reads, handle partial writes, build versioning schemes. Clickeen sidesteps all of this. The pointer is the only mutable thing, and it's trivially small.
+
+This is the same principle that underpins content-addressed storage, Git, and distributed ledgers: if data is immutable and addressed by content, you can distribute it globally and cache it indefinitely without coordination.
+
+Every service section below is an instance of this pattern. Tokyo stores immutable artifacts. Paris flips pointers. Venice reads pointers and serves cached artifacts. Bob creates new artifacts. Roma and DevStudio orchestrate the cycle.
+
+---
+
 ## System Map
 
 | System | Repo Path | Deploy | Responsibility | Status |
@@ -143,7 +185,7 @@ Each release proceeds in 3 steps:
 #### Paris (Workers)
 - Stateless API gateway to Michael (Supabase).
 - Public endpoints are under `/api/*`.
-- Shipped in this repo snapshot: `GET /api/instance/:publicId` (public; user-owned rows are published-only), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` (editor/dev tooling), Roma domain endpoints (`GET /api/roma/bootstrap`, `GET /api/roma/widgets`, `GET /api/roma/templates`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
+- Shipped in this repo snapshot: `GET /api/instance/:publicId` (public; user-owned rows are published-only), `GET/POST /api/workspaces/:workspaceId/instances?subject=workspace|minibob`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace|minibob` (editor/dev tooling), Roma domain endpoints (`GET /api/roma/bootstrap`, `GET /api/roma/widgets`, `GET /api/roma/templates`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=workspace|minibob`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=workspace|minibob`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
 - Layered l10n endpoints are canonical.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
@@ -359,7 +401,7 @@ Base config exists in EXACTLY 2 places during editing:
 
 In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Publish still goes through the same workspace `PUT` endpoint.
 
-`subject` is required on workspace endpoints (`workspace`, `devstudio`, `minibob`) to resolve policy.
+`subject` is required on workspace endpoints (`workspace`, `minibob`) to resolve policy.
 
 Localization is separate: overlay edits write to `widget_instance_overlays` via Paris and do not touch the base config.
 

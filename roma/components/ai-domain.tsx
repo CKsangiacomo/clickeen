@@ -32,44 +32,50 @@ export function AiDomain() {
 
   const copilotAgentId = profile === 'free' ? 'sdr.widget.copilot.v1' : 'cs.widget.copilot.v1';
 
-  if (me.loading) return <section className="roma-module-surface">Loading AI workspace context...</section>;
+  if (me.loading) return <section className="rd-canvas-module body-m">Loading AI workspace context...</section>;
   if (me.error || !me.data) {
-    return <section className="roma-module-surface">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
+    return <section className="rd-canvas-module body-m">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
   }
   if (!workspaceId) {
-    return <section className="roma-module-surface">No workspace membership found for AI diagnostics.</section>;
+    return <section className="rd-canvas-module body-m">No workspace membership found for AI diagnostics.</section>;
   }
 
   return (
-    <section className="roma-module-surface">
-      <p>
-        Workspace: {context.workspaceName || workspaceId}
-        {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
-      </p>
+    <>
+      <section className="rd-canvas-module">
+        <p className="body-m">
+          Workspace: {context.workspaceName || workspaceId}
+          {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
+        </p>
+      </section>
 
       {profile || role ? (
-        <div className="roma-grid roma-grid--three">
-          <article className="roma-card">
-            <h2>Policy Profile</h2>
-            <p>{profile ?? 'unknown'}</p>
-          </article>
-          <article className="roma-card">
-            <h2>Copilot Agent</h2>
-            <p>{copilotAgentId}</p>
-          </article>
-          <article className="roma-card">
-            <h2>Role</h2>
-            <p>{role ?? 'unknown'}</p>
-          </article>
-        </div>
+        <section className="rd-canvas-module">
+          <div className="roma-grid roma-grid--three">
+            <article className="roma-card">
+              <h2 className="heading-6">Policy Profile</h2>
+              <p className="body-s">{profile ?? 'unknown'}</p>
+            </article>
+            <article className="roma-card">
+              <h2 className="heading-6">Copilot Agent</h2>
+              <p className="body-s">{copilotAgentId}</p>
+            </article>
+            <article className="roma-card">
+              <h2 className="heading-6">Role</h2>
+              <p className="body-s">{role ?? 'unknown'}</p>
+            </article>
+          </div>
+        </section>
       ) : null}
 
       {profile ? (
-        <div className="roma-codeblock">
-          <strong>AI Entitlements (bootstrap)</strong>
-          <pre>{JSON.stringify({ profile, role, caps: aiCaps, budgets: aiBudgets }, null, 2)}</pre>
-        </div>
+        <section className="rd-canvas-module">
+          <div className="roma-codeblock">
+            <strong className="overline-small">AI Entitlements (bootstrap)</strong>
+            <pre>{JSON.stringify({ profile, role, caps: aiCaps, budgets: aiBudgets }, null, 2)}</pre>
+          </div>
+        </section>
       ) : null}
-    </section>
+    </>
   );
 }

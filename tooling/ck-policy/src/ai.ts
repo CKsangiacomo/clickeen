@@ -152,7 +152,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     agentId: WIDGET_COPILOT_AGENT_IDS.cs,
     category: 'copilot',
     taskClass: 'copilot.widget.editor',
-    description: 'CS widget copilot (paid tiers + DevStudio).',
+    description: 'CS widget copilot (paid tiers).',
     supportedProviders: ['deepseek', 'openai', 'anthropic', 'groq', 'amazon'],
     defaultProvider: 'openai',
     executionSurface: 'execute',
@@ -260,7 +260,6 @@ for (const entry of AI_AGENT_REGISTRY) {
 }
 
 const PROFILE_BY_POLICY: Record<PolicyProfile, AiProfile> = {
-  devstudio: 'paid_premium',
   minibob: 'free_low',
   free: 'free_low',
   tier1: 'paid_standard',

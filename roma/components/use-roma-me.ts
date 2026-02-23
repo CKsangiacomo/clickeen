@@ -3,6 +3,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { setRomaAccountCapsule, setRomaAuthzCapsule } from './paris-http';
 
+export type RomaBootstrapDomainKey = 'widgets' | 'templates' | 'assets' | 'team' | 'billing' | 'usage' | 'settings';
+export type RomaBootstrapDomainError = {
+  reasonKey: string;
+  status: number;
+  detail?: string;
+};
+export type RomaBootstrapDomainOutcome = {
+  status: 'ok' | 'error';
+  httpStatus: number;
+  reasonKey?: string;
+};
+
 export type RomaMeResponse = {
   user: {
     id: string;
@@ -12,7 +24,6 @@ export type RomaMeResponse = {
   accounts: Array<{
     accountId: string;
     status: string;
-    isPlatform: boolean;
     derivedRole: 'account_owner' | 'account_admin' | 'account_member';
     workspaceRoles: string[];
   }>;
@@ -88,7 +99,6 @@ export type RomaMeResponse = {
         contentType: string;
         sizeBytes: number;
         usageCount: number;
-        deletedAt: string | null;
         createdAt: string;
       }>;
     } | null;
@@ -136,7 +146,6 @@ export type RomaMeResponse = {
       accountSummary: {
         accountId: string;
         status: string;
-        isPlatform: boolean;
         role: string;
         workspaceCount: number;
       };
@@ -159,6 +168,9 @@ export type RomaMeResponse = {
       }>;
     } | null;
   } | null;
+  domainErrors?: Partial<Record<RomaBootstrapDomainKey, RomaBootstrapDomainError>> | null;
+  bootstrapFanoutMs?: number | null;
+  bootstrapDomainOutcomes?: Partial<Record<RomaBootstrapDomainKey, RomaBootstrapDomainOutcome>> | null;
 };
 
 export type ResolvedRomaContext = {
@@ -264,6 +276,7 @@ type UseRomaMeState = {
 
 const ROMA_ME_SUCCESS_FALLBACK_TTL_MS = 5 * 60_000;
 const ROMA_ME_ERROR_TTL_MS = 10_000;
+const ROMA_ME_DEGRADED_SUCCESS_TTL_MS = 5_000;
 const ROMA_ME_MIN_SUCCESS_TTL_MS = 30_000;
 const ROMA_ME_AUTHZ_EXPIRY_SKEW_MS = 30_000;
 const ROMA_ME_STORE_KEY = '__CK_ROMA_ME_STORE_V1__';
@@ -321,6 +334,11 @@ function resolveRomaMeSuccessTtlMs(data: RomaMeResponse | null): number {
   return Math.max(ROMA_ME_MIN_SUCCESS_TTL_MS, Math.round(remainingMs));
 }
 
+function hasDomainErrors(data: RomaMeResponse | null): boolean {
+  if (!data || !data.domainErrors || typeof data.domainErrors !== 'object') return false;
+  return Object.keys(data.domainErrors).length > 0;
+}
+
 function persistRomaMeSessionStore(store: RomaMeStore): void {
   if (typeof window === 'undefined') return;
 
@@ -331,6 +349,7 @@ function persistRomaMeSessionStore(store: RomaMeStore): void {
       if (!entry) return;
       if (entry.expiresAt <= now) return;
       if (entry.state.error || !entry.state.data) return;
+      if (hasDomainErrors(entry.state.data)) return;
       cache[key] = {
         data: entry.state.data,
         expiresAt: entry.expiresAt,
@@ -425,7 +444,11 @@ function readRomaMeCache(workspaceId: string | null): UseRomaMeState | null {
 
 function writeRomaMeCache(workspaceId: string | null, state: UseRomaMeState): UseRomaMeState {
   const store = resolveRomaMeStore();
-  const ttl = state.error ? ROMA_ME_ERROR_TTL_MS : resolveRomaMeSuccessTtlMs(state.data);
+  const ttl = state.error
+    ? ROMA_ME_ERROR_TTL_MS
+    : hasDomainErrors(state.data)
+      ? ROMA_ME_DEGRADED_SUCCESS_TTL_MS
+      : resolveRomaMeSuccessTtlMs(state.data);
   const key = toWorkspaceCacheKey(workspaceId);
   store.cache[key] = {
     state,

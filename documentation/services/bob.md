@@ -65,7 +65,8 @@ Then they wait for Bob session readiness and post into Bob:
   type: 'ck:open-editor',
   requestId,
   sessionId,
-  subjectMode, // 'workspace' | 'devstudio' | 'minibob'
+  sessionAccessToken, // Roma handoff bearer for Bob /api calls
+  subjectMode, // 'workspace' | 'minibob'
   widgetname,
   compiled,
   instanceData,
@@ -82,12 +83,15 @@ Bob listens in `bob/lib/session/useWidgetSession.tsx` and:
 - Never auto-picks a different instance when `publicId` is missing.
 - Replies with `bob:open-editor-ack`, then terminal `bob:open-editor-applied` or `bob:open-editor-failed`.
 - Keeps request idempotency state per `requestId` so repeated host sends do not apply duplicate open operations.
+- Uses `sessionAccessToken` (when present) to authorize Bob same-origin `/api/*` requests from the browser (no cookie bootstrap dependency for Roma message-boot).
+- Local unauth bootstrap fallback is DevStudio-scoped only: Bob may mint a local session only when `ENV_STAGE=local` and requests carry explicit DevStudio intent (`surface=devstudio`, `x-ck-surface: devstudio`, `x-source: devstudio`, or DevStudio local referrer/origin). Roma/product flows must use real Supabase sessions in local and cloud-dev.
 
 ### URL bootstrap (deterministic, no auto-pick)
 Bob bootstraps from URL only when `?boot=url` and both `workspaceId` + `publicId` are present.
 If URL mode is selected and either is missing, Bob stays unmounted.
 In `?boot=message`, Bob ignores URL instance params and waits for host `ck:open-editor`.
 Current architecture direction: Roma/DevStudio use `boot=message`; URL mode remains for explicit URL-bootstrap surfaces.
+Host intent is explicit via `surface` query param on the Bob iframe (`surface=roma` or `surface=devstudio`).
 
 ### Hybrid dev (DevStudio in cloud, Bob local)
 DevStudio’s widget workspace supports overriding the embedded Bob origin with a query param:
@@ -105,7 +109,7 @@ Source: `admin/src/html/tools/dev-widget-workspace.html` (see the “configurabl
 
 ### Dev subjects and policy (durable)
 Bob resolves a single subject mode and computes a single policy object:
-- **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=workspace|minibob|devstudio`.
+- **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=workspace|minibob`.
 - **Policy output**: `policy = { flags, caps, budgets }` used to gate controls and reject ops deterministically.
 
 Example enforcement (today):
@@ -284,8 +288,8 @@ Behavior:
 - Reports outcomes (keep/undo/CTA clicks) via `/api/ai/outcome` (best-effort).
 - Server-side hardening in `/api/ai/widget-copilot`:
   - Accepts only widget-copilot agent IDs (`widget.copilot.v1`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`).
-  - Normalizes `subject` on the server. `devstudio` is honored only in local/cloud-dev (or when explicitly enabled), otherwise non-minibob calls resolve to `workspace` when `workspaceId` exists.
-  - For widget-copilot IDs (alias or canonical), grant routing is policy-resolved server-side (free/minibob -> SDR, paid/devstudio -> CS).
+  - Normalizes `subject` on the server. Only `workspace|minibob` are accepted (`workspace` requires `workspaceId`).
+  - For widget-copilot IDs (alias or canonical), grant routing is policy-resolved server-side (`free|minibob` -> SDR, `tier1|tier2|tier3` -> CS).
 
 Minibob keep gate (public UX):
 - In Minibob (`subject=minibob`), edits are preview-only until signup.
@@ -447,7 +451,7 @@ The proxy currently supports:
 - `PARIS_BASE_URL` (preferred)
 - `NEXT_PUBLIC_PARIS_URL` / `http://localhost:3001` default (present in code today)
 
-Workspace-scoped proxy calls require `subject=workspace|devstudio|minibob` to resolve policy.
+Workspace-scoped proxy calls require `subject=workspace|minibob` to resolve policy.
 
 **Security rule (executed):**
 - Bob’s Paris and AI proxy routes forward Supabase session bearer tokens. Product auth does not use `PARIS_DEV_JWT` passthrough.

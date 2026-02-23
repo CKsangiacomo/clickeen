@@ -14,11 +14,11 @@ type RomaShellProps = {
 export function RomaShellDefaultActions() {
   return (
     <>
-      <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/team">
-        <span className="diet-btn-txt__label">Invite members</span>
+      <Link className="diet-btn-txt" data-size="lg" data-variant="line2" href="/team">
+        <span className="diet-btn-txt__label body-l">Invite members</span>
       </Link>
-      <Link className="diet-btn-txt" data-size="md" data-variant="primary" href="/widgets?intent=create">
-        <span className="diet-btn-txt__label">New widget</span>
+      <Link className="diet-btn-txt" data-size="lg" data-variant="primary" href="/widgets?intent=create">
+        <span className="diet-btn-txt__label body-l">New widget</span>
       </Link>
     </>
   );
@@ -41,7 +41,7 @@ export function RomaShell({
           <header className="rd-header">
             <div className="rd-header-left">
               <details className="roma-nav-drawer">
-                <summary>Domains</summary>
+                <summary className="label-s">Domains</summary>
                 <RomaNav activeDomain={activeDomain} compact />
               </details>
               <h1 className="heading-2 rd-header-title">{title}</h1>

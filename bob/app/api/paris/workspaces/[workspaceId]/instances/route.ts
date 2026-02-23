@@ -5,7 +5,6 @@ import {
   proxyErrorResponse,
   resolveParisBaseOrResponse,
   resolveParisSession,
-  shouldEnforceSuperadmin,
   withParisDevAuthorization,
 } from '../../../../../../lib/api/paris/proxy-helpers';
 
@@ -14,10 +13,8 @@ export const runtime = 'edge';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id, x-ck-superadmin-key',
+  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id',
 } as const;
-
-const CK_SUPERADMIN_KEY = process.env.CK_SUPERADMIN_KEY;
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
@@ -36,9 +33,15 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ workspa
   if (!paris.ok) return paris.response;
 
   const requestUrl = new URL(request.url);
-  const subject = (requestUrl.searchParams.get('subject') || '').trim();
+  const subject = (requestUrl.searchParams.get('subject') || '').trim().toLowerCase();
+  if (subject !== 'workspace') {
+    return NextResponse.json(
+      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.subject.invalid' } },
+      { status: 422, headers: CORS_HEADERS },
+    );
+  }
   const url = new URL(`${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instances`);
-  if (subject) url.searchParams.set('subject', subject);
+  url.searchParams.set('subject', subject);
 
   const headers = withParisDevAuthorization(new Headers(), session.accessToken);
 
@@ -62,24 +65,14 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ worksp
   const session = await resolveParisSession(request);
   if (!session.ok) return session.response;
 
-  if (shouldEnforceSuperadmin(request, CK_SUPERADMIN_KEY)) {
-    const provided = (request.headers.get('x-ck-superadmin-key') || '').trim();
-    if (!provided || provided !== CK_SUPERADMIN_KEY) {
-      return NextResponse.json(
-        { error: { kind: 'DENY', reasonKey: 'coreui.errors.superadmin.invalid' } },
-        { status: 403, headers: CORS_HEADERS },
-      );
-    }
-  }
-
   const { workspaceId } = await ctx.params;
   if (!workspaceId) {
     return NextResponse.json({ error: 'INVALID_WORKSPACE_ID' }, { status: 400, headers: CORS_HEADERS });
   }
 
   const requestUrl = new URL(request.url);
-  const subject = (requestUrl.searchParams.get('subject') || '').trim();
-  if (!subject) {
+  const subject = (requestUrl.searchParams.get('subject') || '').trim().toLowerCase();
+  if (subject !== 'workspace') {
     return NextResponse.json(
       { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.subject.invalid' } },
       { status: 422, headers: CORS_HEADERS },

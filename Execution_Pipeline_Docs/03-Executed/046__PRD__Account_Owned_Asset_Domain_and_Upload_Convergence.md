@@ -1,3 +1,5 @@
+THESE PRD BROKE THE ARCHITECTURE - KEEPING ONLY AS REFERENCE
+
 # PRD 46 — Account-Owned Asset Domain and Upload Convergence
 
 **Status:** EXECUTED (validated in local on 2026-02-13)

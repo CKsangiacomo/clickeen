@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { resolveBootstrapDomainState } from './bootstrap-domain-state';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
@@ -53,18 +54,25 @@ export function WidgetsDomain() {
       return;
     }
     const snapshot = normalizeRomaWidgetsSnapshot(me.data?.domains?.widgets ?? null);
-    if (!snapshot || snapshot.workspaceId !== workspaceId) {
+    const hasDomainPayload = Boolean(snapshot && snapshot.workspaceId === workspaceId);
+    const domainState = resolveBootstrapDomainState({
+      data: me.data,
+      domainKey: 'widgets',
+      hasDomainPayload,
+    });
+    if (!hasDomainPayload || domainState.kind !== 'ok') {
       setWidgetInstances([]);
       setWidgetTypes([]);
       setAccountIdFromSnapshot('');
-      setDataError('Bootstrap widgets snapshot unavailable.');
+      setDataError(domainState.reasonKey);
       return;
     }
-    setWidgetInstances(snapshot.instances);
-    setWidgetTypes(snapshot.widgetTypes);
-    setAccountIdFromSnapshot(snapshot.accountId);
+    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
+    setWidgetInstances(safeSnapshot.instances);
+    setWidgetTypes(safeSnapshot.widgetTypes);
+    setAccountIdFromSnapshot(safeSnapshot.accountId);
     setDataError(null);
-  }, [workspaceId, me.data?.domains?.widgets]);
+  }, [workspaceId, me.data]);
 
   const availableWidgetTypes = useMemo(() => {
     const values = new Set<string>();
@@ -279,141 +287,149 @@ export function WidgetsDomain() {
     [createInstance],
   );
 
-  if (me.loading) return <section className="roma-module-surface">Loading workspace context...</section>;
+  if (me.loading) return <section className="rd-canvas-module body-m">Loading workspace context...</section>;
   if (me.error || !me.data) {
-    return <section className="roma-module-surface">Failed to load workspace context: {me.error ?? 'unknown_error'}</section>;
+    return <section className="rd-canvas-module body-m">Failed to load workspace context: {me.error ?? 'unknown_error'}</section>;
   }
   if (!workspaceId) {
-    return <section className="roma-module-surface">No workspace membership found for current user.</section>;
+    return <section className="rd-canvas-module body-m">No workspace membership found for current user.</section>;
   }
 
   return (
-    <section className="roma-module-surface">
-      <p>
-        Workspace: {context.workspaceName || workspaceId}
-        {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
-      </p>
-      <p>Showing workspace widgets grouped by widget. Account-owned curated/main instances are included.</p>
-      <p>Create in this domain always clones the widget main baseline: wgt_main_&lt;widgetType&gt;.</p>
+    <>
+      {dataError || createError || groupedInstances.length === 0 ? (
+        <section className="rd-canvas-module">
+          {dataError ? (
+            <div className="roma-inline-stack">
+              <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
+              <p className="body-m">{dataError}</p>
+              <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+                <span className="diet-btn-txt__label body-m">Retry</span>
+              </button>
+            </div>
+          ) : null}
+          {createError ? <p className="body-m">Failed to update widgets: {createError}</p> : null}
 
-      {dataError ? <p>Failed to load widget instances: {dataError}</p> : null}
-      {createError ? <p>Failed to update widgets: {createError}</p> : null}
-
-      {groupedInstances.length === 0 ? (
-        <div className="roma-module-surface__actions">
-          <p>No editable instances yet. Use Templates to start from curated.</p>
-          <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/templates">
-            <span className="diet-btn-txt__label">Open templates</span>
-          </Link>
-        </div>
+          {groupedInstances.length === 0 ? (
+            <div className="rd-canvas-module__actions">
+              <p className="body-m">No editable instances yet. Use Templates to start from curated.</p>
+              <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/templates">
+                <span className="diet-btn-txt__label body-m">Open templates</span>
+              </Link>
+            </div>
+          ) : null}
+        </section>
       ) : null}
 
-      <div className="roma-grid">
-        {groupedInstances.map((group) => {
-          const createActionKey = `create:${group.widgetType}`;
-          const canCreate = group.widgetType !== 'unknown';
-          return (
-            <article className="roma-card" key={group.widgetType}>
-              <div className="roma-toolbar">
-                <h2>{group.widgetType}</h2>
-                <p>
-                  {group.instances.length} {group.instances.length === 1 ? 'instance' : 'instances'}
-                </p>
-                <p>Create source: {canCreate ? buildMainPublicId(group.widgetType) : 'n/a'}</p>
-                {canCreate ? (
-                  <button
-                    className="diet-btn-txt"
-                    data-size="md"
-                    data-variant="primary"
-                    type="button"
-                    onClick={() => handleCreateFromWidget(group.widgetType)}
-                    disabled={Boolean(activeActionKey)}
-                  >
-                    <span className="diet-btn-txt__label">
-                      {activeActionKey === createActionKey ? 'Creating...' : 'Create from main'}
-                    </span>
-                  </button>
-                ) : null}
-              </div>
+      {groupedInstances.map((group) => {
+        const createActionKey = `create:${group.widgetType}`;
+        const canCreate = group.widgetType !== 'unknown';
+        return (
+          <section className="rd-canvas-module" key={group.widgetType}>
+            <div className="roma-toolbar">
+              <h2 className="heading-4">{group.widgetType}</h2>
+              <p className="body-m roma-toolbar-count">
+                {group.instances.length} {group.instances.length === 1 ? 'instance' : 'instances'}
+              </p>
+            </div>
 
-              <table className="roma-table">
-                <thead>
-                  <tr>
-                    <th>Instance</th>
-                    <th>Public ID</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {group.instances.map((instance) => {
-                    const duplicateActionKey = `duplicate:${instance.publicId}`;
-                    const deleteActionKey = `delete:${instance.publicId}`;
-                    const canEdit = instance.actions.edit;
-                    const canDuplicate = instance.actions.duplicate;
-                    const canDelete = instance.actions.delete;
-                    return (
-                      <tr key={instance.publicId}>
-                        <td>{instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}</td>
-                        <td>{instance.publicId}</td>
-                        <td className="roma-cell-actions">
-                          {canEdit ? (
-                            <Link
-                              href={buildBuilderRoute({
-                                publicId: instance.publicId,
-                                workspaceId: instance.workspaceId || workspaceId,
-                                accountId: activeAccountId,
-                                widgetType: instance.widgetType,
-                              })}
-                              className="diet-btn-txt"
-                              data-size="md"
-                              data-variant="line2"
-                            >
-                              <span className="diet-btn-txt__label">Edit</span>
-                            </Link>
-                          ) : (
-                            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled>
-                              <span className="diet-btn-txt__label">Edit</span>
-                            </button>
-                          )}
-                          <button
-                            className="diet-btn-txt"
-                            data-size="md"
-                            data-variant="secondary"
-                            type="button"
-                            onClick={() => handleDuplicateInstance(instance)}
-                            disabled={Boolean(activeActionKey) || !canDuplicate}
-                          >
-                            <span className="diet-btn-txt__label">
-                              {activeActionKey === duplicateActionKey ? 'Duplicating...' : 'Duplicate'}
-                            </span>
-                          </button>
-                          <button
+            <table className="roma-table">
+              <thead>
+                <tr>
+                  <th className="table-header label-s">Instance</th>
+                  <th className="table-header label-s">Public ID</th>
+                  <th className="table-header label-s">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.instances.map((instance) => {
+                  const duplicateActionKey = `duplicate:${instance.publicId}`;
+                  const deleteActionKey = `delete:${instance.publicId}`;
+                  const canEdit = instance.actions.edit;
+                  const canDuplicate = instance.actions.duplicate;
+                  const canDelete = instance.actions.delete;
+                  return (
+                    <tr key={instance.publicId}>
+                      <td className="body-s">{instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}</td>
+                      <td className="body-s">{instance.publicId}</td>
+                      <td className="roma-cell-actions">
+                        {canEdit ? (
+                          <Link
+                            href={buildBuilderRoute({
+                              publicId: instance.publicId,
+                              workspaceId: instance.workspaceId || workspaceId,
+                              accountId: activeAccountId,
+                              widgetType: instance.widgetType,
+                            })}
                             className="diet-btn-txt"
                             data-size="md"
                             data-variant="line2"
-                            type="button"
-                            onClick={() => handleDeleteInstance(instance)}
-                            disabled={Boolean(activeActionKey) || !canDelete}
                           >
-                            <span className="diet-btn-txt__label">
-                              {activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}
-                            </span>
+                            <span className="diet-btn-txt__label body-m">Edit</span>
+                          </Link>
+                        ) : (
+                          <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled>
+                            <span className="diet-btn-txt__label body-m">Edit</span>
                           </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {group.instances.length === 0 ? (
-                    <tr>
-                      <td colSpan={3}>No instances yet.</td>
+                        )}
+                        <button
+                          className="diet-btn-txt"
+                          data-size="md"
+                          data-variant="secondary"
+                          type="button"
+                          onClick={() => handleDuplicateInstance(instance)}
+                          disabled={Boolean(activeActionKey) || !canDuplicate}
+                        >
+                          <span className="diet-btn-txt__label body-m">
+                            {activeActionKey === duplicateActionKey ? 'Duplicating...' : 'Duplicate'}
+                          </span>
+                        </button>
+                        <button
+                          className="diet-btn-txt"
+                          data-size="md"
+                          data-variant="line2"
+                          type="button"
+                          onClick={() => handleDeleteInstance(instance)}
+                          disabled={Boolean(activeActionKey) || !canDelete}
+                        >
+                          <span className="diet-btn-txt__label body-m">
+                            {activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}
+                          </span>
+                        </button>
+                      </td>
                     </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </article>
-          );
-        })}
-      </div>
-    </section>
+                  );
+                })}
+                {group.instances.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="body-s">
+                      No instances yet.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+            {canCreate ? (
+              <div className="rd-canvas-module__actions">
+                <button
+                  className="diet-btn-txt"
+                  data-size="md"
+                  data-variant="primary"
+                  type="button"
+                  onClick={() => handleCreateFromWidget(group.widgetType)}
+                  disabled={Boolean(activeActionKey)}
+                >
+                  <span className="diet-btn-txt__label body-m">
+                    {activeActionKey === createActionKey
+                      ? 'Creating...'
+                      : `Create ${group.widgetType} widget instance`}
+                  </span>
+                </button>
+              </div>
+            ) : null}
+          </section>
+        );
+      })}
+    </>
   );
 }

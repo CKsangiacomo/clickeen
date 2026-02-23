@@ -1,7 +1,6 @@
 {
   "v": 1,
   "tiers": [
-    "devstudio",
     "minibob",
     "free",
     "tier1",
@@ -12,7 +11,6 @@
     "l10n.locales.max": {
       "kind": "cap",
       "values": {
-        "devstudio": null,
         "minibob": 0,
         "free": 2,
         "tier1": 4,
@@ -23,7 +21,6 @@
     "l10n.locales.custom.max": {
       "kind": "cap",
       "values": {
-        "devstudio": null,
         "minibob": 0,
         "free": 0,
         "tier1": 3,
@@ -34,7 +31,6 @@
     "l10n.versions.max": {
       "kind": "cap",
       "values": {
-        "devstudio": 10,
         "minibob": 0,
         "free": 1,
         "tier1": 3,
@@ -45,7 +41,6 @@
     "personalization.sources.website.depth.max": {
       "kind": "cap",
       "values": {
-        "devstudio": null,
         "minibob": 1,
         "free": 1,
         "tier1": 2,
@@ -56,7 +51,6 @@
     "branding.remove": {
       "kind": "flag",
       "values": {
-        "devstudio": true,
         "minibob": false,
         "free": false,
         "tier1": true,
@@ -67,7 +61,6 @@
     "budget.copilot.turns": {
       "kind": "budget",
       "values": {
-        "devstudio": null,
         "minibob": 4,
         "free": 20,
         "tier1": 50,
@@ -78,7 +71,6 @@
     "budget.uploads.count": {
       "kind": "budget",
       "values": {
-        "devstudio": null,
         "minibob": 0,
         "free": 3,
         "tier1": 20,
@@ -89,7 +81,6 @@
     "budget.uploads.bytes": {
       "kind": "budget",
       "values": {
-        "devstudio": null,
         "minibob": 0,
         "free": 31457280,
         "tier1": 314572800,
@@ -100,7 +91,6 @@
     "budget.personalization.runs": {
       "kind": "budget",
       "values": {
-        "devstudio": null,
         "minibob": 1,
         "free": 3,
         "tier1": 20,
@@ -111,7 +101,6 @@
     "budget.personalization.website.crawls": {
       "kind": "budget",
       "values": {
-        "devstudio": null,
         "minibob": 1,
         "free": 3,
         "tier1": 20,
@@ -122,7 +111,6 @@
     "budget.snapshots.regens": {
       "kind": "budget",
       "values": {
-        "devstudio": null,
         "minibob": 1,
         "free": 3,
         "tier1": 20,
@@ -133,7 +121,6 @@
     "budget.l10n.publishes": {
       "kind": "budget",
       "values": {
-        "devstudio": null,
         "minibob": 1,
         "free": 3,
         "tier1": 20,
@@ -144,7 +131,6 @@
     "views.monthly.max": {
       "kind": "cap",
       "values": {
-        "devstudio": null,
         "minibob": null,
         "free": 10000,
         "tier1": 100000,
@@ -155,7 +141,6 @@
     "instances.published.max": {
       "kind": "cap",
       "values": {
-        "devstudio": null,
         "minibob": 0,
         "free": 1,
         "tier1": 1,
@@ -166,7 +151,6 @@
     "widgets.types.max": {
       "kind": "cap",
       "values": {
-        "devstudio": null,
         "minibob": 1,
         "free": 1,
         "tier1": 1,
@@ -177,7 +161,6 @@
     "uploads.size.max": {
       "kind": "cap",
       "values": {
-        "devstudio": 31457280,
         "minibob": 262144,
         "free": 10485760,
         "tier1": 15728640,
@@ -188,7 +171,6 @@
     "cap.group.items.small.max": {
       "kind": "cap",
       "values": {
-        "devstudio": null,
         "minibob": 5,
         "free": 5,
         "tier1": 10,
@@ -199,7 +181,6 @@
     "cap.group.items.medium.max": {
       "kind": "cap",
       "values": {
-        "devstudio": null,
         "minibob": 10,
         "free": 10,
         "tier1": 25,
@@ -210,7 +191,6 @@
     "cap.group.items.large.max": {
       "kind": "cap",
       "values": {
-        "devstudio": null,
         "minibob": 25,
         "free": 25,
         "tier1": 50,

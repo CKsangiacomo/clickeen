@@ -87,7 +87,6 @@
           fit: 'cover',
           position: 'center',
           repeat: 'no-repeat',
-          fallback: '',
         },
       };
     }
@@ -100,7 +99,6 @@
           fit: 'cover',
           position: 'center',
           repeat: 'no-repeat',
-          fallback: '',
         },
       };
     }
@@ -171,18 +169,17 @@
   }
 
   function normalizeImage(raw) {
-    if (!isRecord(raw)) return { src: '', fit: 'cover', position: 'center', repeat: 'no-repeat', fallback: '' };
+    if (!isRecord(raw)) return { src: '', fit: 'cover', position: 'center', repeat: 'no-repeat' };
     var srcRaw = typeof raw.src === 'string' ? raw.src.trim() : '';
     var src = normalizePersistedAssetUrl(srcRaw);
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var repeat = typeof raw.repeat === 'string' && raw.repeat.trim() ? raw.repeat.trim() : 'no-repeat';
-    var fallback = typeof raw.fallback === 'string' ? raw.fallback.trim() : '';
-    return { src: src, fit: fit, position: position, repeat: repeat, fallback: fallback };
+    return { src: src, fit: fit, position: position, repeat: repeat };
   }
 
   function normalizeVideo(raw) {
-    if (!isRecord(raw)) return { src: '', poster: '', fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true, fallback: '' };
+    if (!isRecord(raw)) return { src: '', poster: '', fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true };
     var srcRaw = typeof raw.src === 'string' ? raw.src.trim() : '';
     var posterRaw = typeof raw.poster === 'string' ? raw.poster.trim() : '';
     var src = normalizePersistedAssetUrl(srcRaw);
@@ -192,7 +189,6 @@
     var loop = typeof raw.loop === 'boolean' ? raw.loop : true;
     var muted = typeof raw.muted === 'boolean' ? raw.muted : true;
     var autoplay = typeof raw.autoplay === 'boolean' ? raw.autoplay : true;
-    var fallback = typeof raw.fallback === 'string' ? raw.fallback.trim() : '';
     return {
       src: src,
       poster: poster,
@@ -201,16 +197,7 @@
       loop: loop,
       muted: muted,
       autoplay: autoplay,
-      fallback: fallback,
     };
-  }
-
-  function fallbackLayer(raw) {
-    var v = typeof raw === 'string' ? raw.trim() : '';
-    if (!v) return 'linear-gradient(var(--color-system-white), var(--color-system-white))';
-    if (v === 'transparent') return 'transparent';
-    if (/-gradient\(/i.test(v)) return v;
-    return 'linear-gradient(' + v + ', ' + v + ')';
   }
 
   function buildGradientCss(gradient) {
@@ -243,11 +230,9 @@
       var fit = fill.image.fit === 'contain' ? 'contain' : 'cover';
       var position = fill.image.position || 'center';
       var repeat = fill.image.repeat || 'no-repeat';
-      var layer = 'url(\"' + fill.image.src + '\") ' + position + ' / ' + fit + ' ' + repeat;
-      var fallback = fallbackLayer(fill.image.fallback);
-      return fallback === 'transparent' ? layer : layer + ', ' + fallback;
+      return 'url(\"' + fill.image.src + '\") ' + position + ' / ' + fit + ' ' + repeat;
     }
-    if (fill.type === 'video') return fallbackLayer(fill.video && fill.video.fallback);
+    if (fill.type === 'video') return 'transparent';
     return 'transparent';
   }
 

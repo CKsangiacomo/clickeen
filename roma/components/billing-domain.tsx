@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { resolveBootstrapDomainState } from './bootstrap-domain-state';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
@@ -35,14 +36,21 @@ export function BillingDomain() {
       return;
     }
     const snapshot = me.data?.domains?.billing ?? null;
-    if (!snapshot || snapshot.accountId !== accountId) {
+    const hasDomainPayload = Boolean(snapshot && snapshot.accountId === accountId);
+    const domainState = resolveBootstrapDomainState({
+      data: me.data,
+      domainKey: 'billing',
+      hasDomainPayload,
+    });
+    if (!hasDomainPayload || domainState.kind !== 'ok') {
       setSummary(null);
-      setError('Bootstrap billing snapshot unavailable.');
+      setError(domainState.reasonKey);
       return;
     }
-    setSummary(snapshot);
+    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
+    setSummary(safeSnapshot);
     setError(null);
-  }, [accountId, me.data?.domains?.billing]);
+  }, [accountId, me.data]);
 
   const callBillingAction = async (kind: 'checkout' | 'portal') => {
     if (!accountId) return;
@@ -62,60 +70,74 @@ export function BillingDomain() {
     }
   };
 
-  if (me.loading) return <section className="roma-module-surface">Loading billing context...</section>;
+  if (me.loading) return <section className="rd-canvas-module body-m">Loading billing context...</section>;
   if (me.error || !me.data) {
-    return <section className="roma-module-surface">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
+    return <section className="rd-canvas-module body-m">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
   }
   if (!accountId) {
-    return <section className="roma-module-surface">No account membership found for billing controls.</section>;
+    return <section className="rd-canvas-module body-m">No account membership found for billing controls.</section>;
   }
 
   return (
-    <section className="roma-module-surface">
-      <p>Account: {accountId}</p>
+    <>
+      <section className="rd-canvas-module">
+        <p className="body-m">Account: {accountId}</p>
 
-      {error ? <p>Failed to load billing summary: {error}</p> : null}
-      {actionError ? <p>Billing action failed: {actionError}</p> : null}
+        {error ? (
+          <div className="roma-inline-stack">
+            <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
+            <p className="body-m">{error}</p>
+            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+              <span className="diet-btn-txt__label body-m">Retry</span>
+            </button>
+          </div>
+        ) : null}
+        {actionError ? <p className="body-m">Billing action failed: {actionError}</p> : null}
+      </section>
 
       {summary ? (
-        <div className="roma-grid roma-grid--three">
-          <article className="roma-card">
-            <h2>Plan Tier</h2>
-            <p>{summary.plan.inferredTier}</p>
-          </article>
-          <article className="roma-card">
-            <h2>Status</h2>
-            <p>{summary.status}</p>
-          </article>
-          <article className="roma-card">
-            <h2>Provider</h2>
-            <p>{summary.provider}</p>
-          </article>
-        </div>
+        <section className="rd-canvas-module">
+          <div className="roma-grid roma-grid--three">
+            <article className="roma-card">
+              <h2 className="heading-6">Plan Tier</h2>
+              <p className="body-s">{summary.plan.inferredTier}</p>
+            </article>
+            <article className="roma-card">
+              <h2 className="heading-6">Status</h2>
+              <p className="body-s">{summary.status}</p>
+            </article>
+            <article className="roma-card">
+              <h2 className="heading-6">Provider</h2>
+              <p className="body-s">{summary.provider}</p>
+            </article>
+          </div>
+        </section>
       ) : null}
 
-      <div className="roma-module-surface__actions">
-        <button
-          className="diet-btn-txt"
-          data-size="md"
-          data-variant="primary"
-          type="button"
-          onClick={() => void callBillingAction('checkout')}
-          disabled={actionLoading !== null}
-        >
-          <span className="diet-btn-txt__label">{actionLoading === 'checkout' ? 'Opening checkout...' : 'Start checkout'}</span>
-        </button>
-        <button
-          className="diet-btn-txt"
-          data-size="md"
-          data-variant="line2"
-          type="button"
-          onClick={() => void callBillingAction('portal')}
-          disabled={actionLoading !== null}
-        >
-          <span className="diet-btn-txt__label">{actionLoading === 'portal' ? 'Opening portal...' : 'Open billing portal'}</span>
-        </button>
-      </div>
-    </section>
+      <section className="rd-canvas-module">
+        <div className="rd-canvas-module__actions">
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="primary"
+            type="button"
+            onClick={() => void callBillingAction('checkout')}
+            disabled={actionLoading !== null}
+          >
+            <span className="diet-btn-txt__label body-m">{actionLoading === 'checkout' ? 'Opening checkout...' : 'Start checkout'}</span>
+          </button>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="line2"
+            type="button"
+            onClick={() => void callBillingAction('portal')}
+            disabled={actionLoading !== null}
+          >
+            <span className="diet-btn-txt__label body-m">{actionLoading === 'portal' ? 'Opening portal...' : 'Open billing portal'}</span>
+          </button>
+        </div>
+      </section>
+    </>
   );
 }

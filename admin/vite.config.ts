@@ -3,6 +3,15 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 
+const OPEN_EDITOR_CONTRACT_SOURCE_PATH = path.resolve(
+  __dirname,
+  '..',
+  'tooling',
+  'contracts',
+  'open-editor-lifecycle.v1.json',
+);
+const OPEN_EDITOR_CONTRACT_ROUTE = '/tooling/contracts/open-editor-lifecycle.v1.json';
+
 export default defineConfig({
   build: {
     chunkSizeWarningLimit: 2000,
@@ -26,6 +35,46 @@ export default defineConfig({
     },
   },
   plugins: [
+    {
+      name: 'open-editor-lifecycle-contract',
+      buildStart() {
+        if (!fs.existsSync(OPEN_EDITOR_CONTRACT_SOURCE_PATH)) {
+          this.error(`Missing contract artifact: ${OPEN_EDITOR_CONTRACT_SOURCE_PATH}`);
+        }
+      },
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const pathname = (req.url || '').split('?')[0] || '';
+          if (pathname !== OPEN_EDITOR_CONTRACT_ROUTE) return next();
+          try {
+            const raw = fs.readFileSync(OPEN_EDITOR_CONTRACT_SOURCE_PATH, 'utf8');
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-store');
+            res.end(raw);
+          } catch (error) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.end(
+              JSON.stringify({
+                error: {
+                  kind: 'INTERNAL',
+                  reasonKey: 'coreui.errors.contract.readFailed',
+                  detail: error instanceof Error ? error.message : String(error),
+                },
+              }),
+            );
+          }
+        });
+      },
+      generateBundle() {
+        const raw = fs.readFileSync(OPEN_EDITOR_CONTRACT_SOURCE_PATH, 'utf8');
+        this.emitFile({
+          type: 'asset',
+          fileName: 'tooling/contracts/open-editor-lifecycle.v1.json',
+          source: raw,
+        });
+      },
+    },
     {
       name: 'local-edit-entitlements-matrix',
       configureServer(server) {

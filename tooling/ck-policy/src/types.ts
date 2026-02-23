@@ -1,5 +1,5 @@
 export type WorkspaceTier = 'free' | 'tier1' | 'tier2' | 'tier3';
-export type PolicyProfile = 'devstudio' | 'minibob' | WorkspaceTier;
+export type PolicyProfile = 'minibob' | WorkspaceTier;
 export type MemberRole = 'viewer' | 'editor' | 'admin' | 'owner';
 
 export type EntitlementKind = 'flag' | 'cap' | 'budget';

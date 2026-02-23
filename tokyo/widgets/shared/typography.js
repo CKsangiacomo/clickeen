@@ -92,76 +92,143 @@
 
   const curatedFonts = {
     Inter: Object.freeze({
+      source: 'google',
       spec: 'Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900',
       familyClass: 'sans',
     }),
     Manrope: Object.freeze({
+      source: 'google',
       spec: 'Manrope:wght@200..800',
       familyClass: 'sans',
     }),
     'Open Sans': Object.freeze({
+      source: 'google',
       spec: 'Open+Sans:ital,wght@0,300..800;1,300..800',
       familyClass: 'sans',
     }),
     Lato: Object.freeze({
+      source: 'google',
       spec: 'Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900',
       familyClass: 'sans',
     }),
     Roboto: Object.freeze({
+      source: 'google',
       spec: 'Roboto:ital,wght@0,100..900;1,100..900',
       familyClass: 'sans',
     }),
     Montserrat: Object.freeze({
+      source: 'google',
       spec: 'Montserrat:ital,wght@0,100..900;1,100..900',
       familyClass: 'sans',
     }),
     Raleway: Object.freeze({
+      source: 'google',
       spec: 'Raleway:ital,wght@0,100..900;1,100..900',
       familyClass: 'sans',
     }),
     'Libre Baskerville': Object.freeze({
+      source: 'google',
       spec: 'Libre+Baskerville:ital,wght@0,400..700;1,400..700',
       familyClass: 'serif',
     }),
     Lora: Object.freeze({
+      source: 'google',
       spec: 'Lora:ital,wght@0,400..700;1,400..700',
       familyClass: 'serif',
     }),
     'Cormorant Garamond': Object.freeze({
+      source: 'google',
       spec: 'Cormorant+Garamond:ital,wght@0,300..700;1,300..700',
       familyClass: 'serif',
     }),
     'Crimson Text': Object.freeze({
+      source: 'google',
       spec: 'Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700',
       familyClass: 'serif',
     }),
     Gabriela: Object.freeze({
+      source: 'google',
       spec: 'Gabriela',
       familyClass: 'serif',
     }),
     Michroma: Object.freeze({
+      source: 'google',
       spec: 'Michroma',
       familyClass: 'sans',
     }),
     'Playfair Display': Object.freeze({
+      source: 'google',
       spec: 'Playfair+Display:ital,wght@0,400..900;1,400..900',
       familyClass: 'serif',
     }),
     Cookie: Object.freeze({
+      source: 'google',
       spec: 'Cookie',
       familyClass: 'sans',
     }),
     'Homemade Apple': Object.freeze({
+      source: 'google',
       spec: 'Homemade+Apple',
       familyClass: 'sans',
     }),
     'Permanent Marker': Object.freeze({
+      source: 'google',
       spec: 'Permanent+Marker',
       familyClass: 'sans',
     }),
     'Shadows Into Light': Object.freeze({
+      source: 'google',
       spec: 'Shadows+Into+Light',
       familyClass: 'sans',
+    }),
+    Frari: Object.freeze({
+      source: 'tokyo',
+      filePath: '/fonts/special/Frari.woff2',
+      weights: Object.freeze(['400']),
+      styles: Object.freeze(['normal']),
+      familyClass: 'serif',
+    }),
+    Giudecca: Object.freeze({
+      source: 'tokyo',
+      filePath: '/fonts/special/Giudecca.woff',
+      weights: Object.freeze(['400']),
+      styles: Object.freeze(['normal']),
+      familyClass: 'serif',
+    }),
+    Marin: Object.freeze({
+      source: 'tokyo',
+      filePath: '/fonts/special/Marin.woff',
+      weights: Object.freeze(['400']),
+      styles: Object.freeze(['normal']),
+      familyClass: 'serif',
+    }),
+    Orio: Object.freeze({
+      source: 'tokyo',
+      filePath: '/fonts/special/Orio.woff',
+      weights: Object.freeze(['400']),
+      styles: Object.freeze(['normal']),
+      familyClass: 'serif',
+    }),
+    Pachuka: Object.freeze({
+      source: 'tokyo',
+      filePath: '/fonts/special/Pachuka.woff2',
+      weights: Object.freeze(['400']),
+      styles: Object.freeze(['normal']),
+      familyClass: 'serif',
+    }),
+    'Pachuka Line': Object.freeze({
+      source: 'tokyo',
+      filePath: '/fonts/special/Pachuka_line.woff2',
+      weights: Object.freeze(['400']),
+      styles: Object.freeze(['normal']),
+      familyClass: 'serif',
+    }),
+    Rialto: Object.freeze({
+      source: 'tokyo',
+      filePath: '/fonts/special/Rialto.woff2',
+      weights: Object.freeze(['400']),
+      styles: Object.freeze(['normal']),
+      familyClass: 'serif',
     }),
   };
 
@@ -270,7 +337,11 @@
   function allowedWeightsForFamily(family) {
     const meta = curatedFonts[family];
     if (!meta) return null;
+    if (Array.isArray(meta.weights) && meta.weights.length) {
+      return Array.from(new Set(meta.weights)).sort((a, b) => Number(a) - Number(b));
+    }
     const spec = meta.spec;
+    if (typeof spec !== 'string' || !spec) return ['400'];
     const idx = spec.indexOf('wght@');
     if (idx === -1) return ['400'];
     const segment = spec.slice(idx + 'wght@'.length);
@@ -304,7 +375,11 @@
   function allowedStylesForFamily(family) {
     const meta = curatedFonts[family];
     if (!meta) return null;
+    if (Array.isArray(meta.styles) && meta.styles.length) {
+      return Array.from(new Set(meta.styles));
+    }
     const spec = meta.spec;
+    if (typeof spec !== 'string' || !spec) return ['normal'];
     const supportsItalic = spec.includes('ital,') || spec.includes('ital@');
     return supportsItalic ? ['normal', 'italic'] : ['normal'];
   }
@@ -458,10 +533,68 @@
     loadedFonts.add(family);
   }
 
+  function resolveTokyoFontUrl(filePath) {
+    const normalizedPath = String(filePath || '').trim();
+    if (!normalizedPath) return '';
+    const absoluteLike = /^https?:\/\//i.test(normalizedPath);
+    if (absoluteLike) return normalizedPath;
+    const rootedPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+    try {
+      const baseEl = document.querySelector('base[href]');
+      if (baseEl && typeof baseEl.href === 'string' && baseEl.href.trim()) {
+        return new URL(rootedPath, baseEl.href).toString();
+      }
+    } catch {}
+    try {
+      return new URL(rootedPath, window.location.origin).toString();
+    } catch {
+      return rootedPath;
+    }
+  }
+
+  function resolveFontFormat(filePath) {
+    const extMatch = String(filePath || '').toLowerCase().match(/\.([a-z0-9]+)(?:$|\?)/);
+    const ext = extMatch ? extMatch[1] : '';
+    if (ext === 'woff2') return 'woff2';
+    if (ext === 'woff') return 'woff';
+    if (ext === 'ttf') return 'truetype';
+    if (ext === 'otf') return 'opentype';
+    return '';
+  }
+
+  function ensureTokyoFontLoaded(family, filePath) {
+    const url = resolveTokyoFontUrl(filePath);
+    if (!url) return;
+    if (loadedFonts.has(family)) return;
+    const id = `ck-font-face-${String(family).replace(/\s+/g, '-').toLowerCase()}`;
+    if (document.getElementById(id)) {
+      loadedFonts.add(family);
+      return;
+    }
+
+    const style = document.createElement('style');
+    style.id = id;
+    const nonce =
+      window.CK_CSP_NONCE && typeof window.CK_CSP_NONCE === 'string' ? window.CK_CSP_NONCE.trim() : '';
+    if (nonce) style.setAttribute('nonce', nonce);
+    const format = resolveFontFormat(url);
+    const src = format ? `url("${url}") format("${format}")` : `url("${url}")`;
+    style.textContent = `@font-face{font-family:${toFontFamilyToken(family)};src:${src};font-style:normal;font-weight:400;font-display:swap;}`;
+    document.head.appendChild(style);
+    loadedFonts.add(family);
+  }
+
   function ensureFontLoaded(family) {
     const meta = curatedFonts[family];
     if (!meta) {
       throw new Error(`[CKTypography] Unknown font family "${family}"`);
+    }
+    if (meta.source === 'tokyo') {
+      if (!meta.filePath) {
+        throw new Error(`[CKTypography] Missing Tokyo font filePath for family "${family}"`);
+      }
+      ensureTokyoFontLoaded(family, meta.filePath);
+      return;
     }
     ensureGoogleFontLoaded(family, meta.spec);
   }

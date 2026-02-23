@@ -10,10 +10,7 @@ export function resolveEditorPolicyFromRequest(req: Request, workspace: Workspac
   let profile: PolicyProfile;
   let role: Policy['role'];
 
-  if (subject === 'devstudio') {
-    profile = 'devstudio';
-    role = 'owner';
-  } else if (subject === 'minibob') {
+  if (subject === 'minibob') {
     profile = 'minibob';
     role = 'editor';
   } else if (subject === 'workspace') {

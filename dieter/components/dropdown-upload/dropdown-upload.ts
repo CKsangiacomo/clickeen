@@ -1,13 +1,10 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 import { uploadEditorAsset } from '../shared/assetUpload';
-import { parseCanonicalAssetRef } from '@clickeen/ck-contracts';
 
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
 type UploadMeta = {
   name?: string;
-  mime?: string;
-  source?: string;
 };
 
 type DropdownUploadState = {
@@ -39,6 +36,7 @@ type DropdownUploadState = {
 };
 
 const states = new Map<HTMLElement, DropdownUploadState>();
+const UUID_FILENAME_STEM_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ASSET_UNAVAILABLE_MESSAGE = 'Asset URL is unavailable. Replace file to restore preview.';
 
 // IMPORTANT: keep this at module scope.
@@ -198,13 +196,18 @@ function installHandlers(state: DropdownUploadState) {
     handlePreviewMediaReady('video', state.previewVideoEl.currentSrc || state.previewVideoEl.src || '');
   });
 
-  const pickFile = (event: Event) => {
+  const pickUploadFile = (event: Event) => {
     event.preventDefault();
     state.fileInput.value = '';
     state.fileInput.click();
   };
-  state.uploadButton.addEventListener('click', pickFile);
-  state.replaceButton.addEventListener('click', pickFile);
+  const pickReplaceFile = (event: Event) => {
+    event.preventDefault();
+    state.fileInput.value = '';
+    state.fileInput.click();
+  };
+  state.uploadButton.addEventListener('click', pickUploadFile);
+  state.replaceButton.addEventListener('click', pickReplaceFile);
   state.removeButton.addEventListener('click', (event) => {
     event.preventDefault();
     if (state.localObjectUrl) {
@@ -235,7 +238,7 @@ function installHandlers(state: DropdownUploadState) {
       });
       const { kind, ext } = classifyByNameAndType(file.name, file.type);
       state.root.dataset.localName = file.name;
-      setMetaValue(state, { name: file.name, mime: file.type || '', source: 'user' }, true);
+      setMetaValue(state, { name: file.name }, true);
       setHeaderWithFile(state, file.name, false);
       setPreview(state, {
         kind,
@@ -357,11 +360,11 @@ function normalizeUrlForCompare(raw: string): string {
   }
 }
 
-function previewFromUrl(state: DropdownUploadState, raw: string, name: string, kindName: string, mime: string) {
+function previewFromUrl(state: DropdownUploadState, raw: string, name: string, kindName: string) {
   const url = extractPrimaryUrl(raw);
   if (!url) return;
   const ext = (guessExtFromName(kindName) || '').toLowerCase();
-  const kind = classifyByNameAndType(kindName || 'file', mime).kind;
+  const kind = classifyByNameAndType(kindName || 'file', '').kind;
   setPreview(state, { kind, previewUrl: url, name, ext, hasFile: true });
 }
 
@@ -370,13 +373,13 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   if (key === 'transparent') key = '';
   const placeholder = state.headerValue?.dataset.placeholder ?? '';
   const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
-  const metaMime = typeof meta?.mime === 'string' ? meta.mime.trim() : '';
   const expectsMeta = state.metaHasPath;
   const rawUrl = extractPrimaryUrl(key) || '';
   const kindName = metaName || guessNameFromUrl(rawUrl) || '';
+  const guessedUrlName = guessNameFromUrl(rawUrl);
   const fallbackName = expectsMeta
     ? ''
-    : state.root.dataset.localName || guessNameFromUrl(rawUrl) || rawUrl || key || 'Uploaded file';
+    : state.root.dataset.localName || guessedUrlName || (rawUrl ? 'Uploaded file' : key || 'Uploaded file');
   const displayName = metaName || fallbackName || (expectsMeta ? 'Unnamed file' : 'Uploaded file');
 
   if (!key) {
@@ -398,7 +401,7 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   // Persisted state stores canonical URLs; render directly.
   if (looksLikeUrl(key)) {
     setHeaderWithFile(state, displayName, false);
-    previewFromUrl(state, key, displayName, kindName || displayName, metaMime);
+    previewFromUrl(state, key, displayName, kindName || displayName);
     return;
   }
 
@@ -501,15 +504,19 @@ function guessNameFromUrl(url: string): string {
   const cleaned = url.split('?')[0];
   const parts = cleaned.split('/').filter(Boolean);
   if (!parts.length) return '';
-  const filename = parts[parts.length - 1];
-  const stem = filename.replace(/\.[^.]+$/, '').toLowerCase();
-  const parsed = parseCanonicalAssetRef(cleaned);
-  if (parsed && (parsed.kind === 'pointer' || stem === 'original' || stem === 'grayscale')) {
-    const ext = guessExtFromName(filename);
-    const shortId = parsed.assetId.replace(/-/g, '').slice(0, 8);
-    return ext ? `asset-${shortId}.${ext}` : `asset-${shortId}`;
-  }
+  const filename = decodePathPart(parts[parts.length - 1]);
+  if (!filename || !filename.includes('.')) return '';
+  const stem = filename.replace(/\.[^.]+$/, '');
+  if (!stem || UUID_FILENAME_STEM_RE.test(stem)) return '';
   return filename;
+}
+
+function decodePathPart(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
 }
 
 function captureNativeValue(input: HTMLInputElement): DropdownUploadState['nativeValue'] {

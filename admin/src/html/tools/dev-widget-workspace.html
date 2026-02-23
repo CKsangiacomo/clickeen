@@ -50,39 +50,39 @@
       margin: 0;
     }
 
-    #superadmin-actions {
+    #privileged-actions {
       display: none;
       align-items: center;
       gap: var(--space-2);
       flex-wrap: wrap;
     }
 
-    #superadmin-actions .diet-btn-txt {
+    #privileged-actions .diet-btn-txt {
       box-shadow: var(--shadow-floating);
     }
 
-    #superadmin-actions .dev-widget-workspace__actions {
+    #privileged-actions .dev-widget-workspace__actions {
       display: inline-flex;
       align-items: center;
       gap: var(--space-2);
       flex-wrap: wrap;
     }
 
-    #superadmin-actions .dev-widget-workspace__actions-group {
+    #privileged-actions .dev-widget-workspace__actions-group {
       display: inline-flex;
       align-items: center;
       gap: var(--space-2);
       flex-wrap: wrap;
     }
 
-    #superadmin-actions .dev-widget-workspace__actions-divider {
+    #privileged-actions .dev-widget-workspace__actions-divider {
       inline-size: 1px;
       block-size: 20px;
       background: color-mix(in oklab, var(--role-border), transparent 35%);
       border-radius: 999px;
     }
 
-    #superadmin-actions .dev-widget-workspace__action,
+    #privileged-actions .dev-widget-workspace__action,
     .dev-widget-workspace__modal .dev-widget-workspace__action {
       --btn-border-width: 0px;
       --btn-border-color: transparent;
@@ -96,37 +96,37 @@
       box-shadow: var(--shadow-floating);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='green4'],
+    #privileged-actions .dev-widget-workspace__action[data-tone='green4'],
     .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='green4'] {
       --action-bg: var(--color-system-green-4);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='purple4'],
+    #privileged-actions .dev-widget-workspace__action[data-tone='purple4'],
     .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='purple4'] {
       --action-bg: var(--color-system-purple-4);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='pink4'],
+    #privileged-actions .dev-widget-workspace__action[data-tone='pink4'],
     .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='pink4'] {
       --action-bg: var(--color-system-pink-4);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='indigo4'],
+    #privileged-actions .dev-widget-workspace__action[data-tone='indigo4'],
     .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='indigo4'] {
       --action-bg: var(--color-system-indigo-4);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='brown.5'],
+    #privileged-actions .dev-widget-workspace__action[data-tone='brown.5'],
     .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='brown.5'] {
       --action-bg: var(--color-system-brown-5);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='gray4.4'],
+    #privileged-actions .dev-widget-workspace__action[data-tone='gray4.4'],
     .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='gray4.4'] {
       --action-bg: color-mix(in oklab, var(--color-system-gray-4), white 80%);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='teal.5'],
+    #privileged-actions .dev-widget-workspace__action[data-tone='teal.5'],
     .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='teal.5'] {
       --action-bg: color-mix(in oklab, var(--color-system-teal), white 90%);
     }
@@ -439,13 +439,13 @@
 
   <header class="devstudio-page__header" style="flex-shrink: 0">
     <h1 class="heading-2" style="margin: 0">Widget Workspace</h1>
-    <div id="superadmin-actions">
+    <div id="privileged-actions">
       <div class="dev-widget-workspace__actions">
         <div class="dev-widget-workspace__actions-group" data-group="primary">
           <button
             type="button"
             class="diet-btn-ictxt dev-widget-workspace__action"
-            id="superadmin-update-defaults"
+            id="privileged-update-defaults"
             data-size="md"
             data-variant="secondary"
             data-tone="brown.5"
@@ -460,7 +460,7 @@
           <button
             type="button"
             class="diet-btn-ictxt dev-widget-workspace__action"
-            id="superadmin-reset-from-json"
+            id="privileged-reset-from-json"
             data-size="md"
             data-variant="secondary"
             data-tone="brown.5"
@@ -501,7 +501,7 @@
           <button
             type="button"
             class="diet-btn-ictxt dev-widget-workspace__action"
-            id="superadmin-update-theme"
+            id="privileged-update-theme"
             data-size="md"
             data-variant="secondary"
             data-tone="brown.5"
@@ -772,6 +772,40 @@
   </div>
 
   <script type="module">
+    const OPEN_EDITOR_CONTRACT_PATH = '/tooling/contracts/open-editor-lifecycle.v1.json';
+    let OPEN_EDITOR_EVENTS = null;
+    let OPEN_EDITOR_TIMING = null;
+
+    function applyOpenEditorLifecycleContract(raw) {
+      const events = raw?.events;
+      const timing = raw?.timing;
+      if (
+        !events ||
+        typeof events.openEditor !== 'string' ||
+        typeof events.sessionReady !== 'string' ||
+        typeof events.ack !== 'string' ||
+        typeof events.applied !== 'string' ||
+        typeof events.failed !== 'string' ||
+        !timing ||
+        typeof timing.ackRetryMs !== 'number' ||
+        typeof timing.maxAckAttempts !== 'number' ||
+        typeof timing.timeoutMs !== 'number'
+      ) {
+        throw new Error('[DevStudio] Invalid open-editor lifecycle contract');
+      }
+      OPEN_EDITOR_EVENTS = events;
+      OPEN_EDITOR_TIMING = timing;
+    }
+
+    async function loadOpenEditorLifecycleContract() {
+      const res = await fetch(`${OPEN_EDITOR_CONTRACT_PATH}?_t=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) {
+        throw new Error(`[DevStudio] Failed to load open-editor lifecycle contract (HTTP ${res.status})`);
+      }
+      const payload = await res.json().catch(() => null);
+      applyOpenEditorLifecycleContract(payload);
+    }
+
     // This page is rendered inside DevStudio’s SPA shell. When navigating between tools,
     // DevStudio swaps DOM but does not automatically remove global event listeners.
     // Use an AbortController keyed on `window` so re-entering this tool page doesn't
@@ -786,12 +820,35 @@
       window[CK_DEV_WIDGET_WORKSPACE_ABORT_KEY] = abortController;
     } catch {}
 
-    function requireBobOrigin() {
-      const params = new URLSearchParams(window.location.search);
-      const isLocal =
-        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const defaultBob = isLocal ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';
-      const raw = (params.get('bob') || defaultBob).trim();
+    const pageParams = new URLSearchParams(window.location.search);
+
+    function resolveRuntimeProfile(params) {
+      const fromQuery = (params.get('runtimeProfile') || '').trim().toLowerCase();
+      if (fromQuery === 'local' || fromQuery === 'cloud') return fromQuery;
+      const fromGlobal =
+        typeof window.__CK_DEVSTUDIO_RUNTIME_PROFILE__ === 'string'
+          ? window.__CK_DEVSTUDIO_RUNTIME_PROFILE__.trim().toLowerCase()
+          : '';
+      if (fromGlobal === 'local' || fromGlobal === 'cloud') return fromGlobal;
+      const origin = String(window.location.origin || '').trim().toLowerCase();
+      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        return 'local';
+      }
+      throw new Error(
+        '[DevStudio] Missing runtimeProfile. Add ?runtimeProfile=local|cloud or set __CK_DEVSTUDIO_RUNTIME_PROFILE__.',
+      );
+    }
+
+    const runtimeProfile = resolveRuntimeProfile(pageParams);
+    const isLocalDevStudio = runtimeProfile === 'local';
+
+    function requireBobOrigin(params, profile) {
+      const fromGlobal =
+        typeof window.__CK_DEVSTUDIO_BOB_ORIGIN__ === 'string'
+          ? window.__CK_DEVSTUDIO_BOB_ORIGIN__.trim()
+          : '';
+      const defaultBob = profile === 'local' ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';
+      const raw = (params.get('bob') || fromGlobal || defaultBob).trim();
       try {
         return new URL(raw).origin;
       } catch {
@@ -799,32 +856,44 @@
       }
     }
 
-    const BOB_ORIGIN = requireBobOrigin();
+    const BOB_ORIGIN = requireBobOrigin(pageParams, runtimeProfile);
     const PARIS_API = `${BOB_ORIGIN}/api/paris`;
 
-    function resolveTokyoBaseUrl() {
-      // Keep in sync with bob/lib/env/tokyo.ts (but plain JS for DevStudio tools).
-      const isLocal =
-        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      if (isLocal) return 'http://localhost:4000';
-      // Cloudflare Pages build/runtime (dev). Keep stable even if env vars aren't wired yet.
-      return 'https://tokyo.dev.clickeen.com';
+    function resolveTokyoBaseUrl(params, profile) {
+      const fromQuery = (params.get('tokyo') || '').trim();
+      if (fromQuery) {
+        try {
+          return new URL(fromQuery).origin;
+        } catch {
+          throw new Error(`Invalid ?tokyo= origin: "${fromQuery}"`);
+        }
+      }
+      const fromGlobal =
+        typeof window.__CK_DEVSTUDIO_TOKYO_BASE_URL__ === 'string'
+          ? window.__CK_DEVSTUDIO_TOKYO_BASE_URL__.trim()
+          : '';
+      if (fromGlobal) {
+        try {
+          return new URL(fromGlobal).origin;
+        } catch {
+          throw new Error(`Invalid __CK_DEVSTUDIO_TOKYO_BASE_URL__: "${fromGlobal}"`);
+        }
+      }
+      return profile === 'local' ? 'http://localhost:4000' : 'https://tokyo.dev.clickeen.com';
     }
 
-    const TOKYO_BASE = resolveTokyoBaseUrl();
+    const TOKYO_BASE = resolveTokyoBaseUrl(pageParams, runtimeProfile);
     const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
-    const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
-    // v1: curated instances live in the single Clickeen-owned workspace in dev, which is ck-dev.
-    // In prod this will point at the Clickeen marketing workspace.
-    const CLICKEEN_WORKSPACE_ID = DEV_WORKSPACE_ID;
+    const URL_UUID_PATTERN =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const queryWorkspaceId = readQueryUuidParam(pageParams.get('workspaceId'));
+    const queryCuratedWorkspaceId = readQueryUuidParam(pageParams.get('curatedWorkspaceId'));
+    let bootstrapWorkspaceIdPromise = null;
     let currentPublicId = null;
     let selectedWidgetSlug = null;
     let instances = [];
     let isOpen = false;
     let bobSessionId = '';
-    const isLocalDevStudio =
-      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
     const dropdown = document.getElementById('instance-dropdown');
     const widgetSelector = document.getElementById('widget-selector');
     const widgetSelect = document.getElementById('widget-select');
@@ -837,10 +906,10 @@
     const compiledPromiseCache = new Map();
     const instancePayloadPromiseCache = new Map();
     let sendInstanceSeq = 0;
-    const superadminActions = document.getElementById('superadmin-actions');
-    const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
-    const superadminUpdateTheme = document.getElementById('superadmin-update-theme');
-    const superadminResetFromJson = document.getElementById('superadmin-reset-from-json');
+    const privilegedActions = document.getElementById('privileged-actions');
+    const privilegedUpdateDefaults = document.getElementById('privileged-update-defaults');
+    const privilegedUpdateTheme = document.getElementById('privileged-update-theme');
+    const privilegedResetFromJson = document.getElementById('privileged-reset-from-json');
     const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
     const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
     const refreshPraguePreviewBtn = document.getElementById('refresh-prague-preview');
@@ -866,17 +935,69 @@
     const themeModalSelect = document.getElementById('theme-modal-select');
     let l10nStatusTimer = null;
 
-    const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
     const THEME_UPDATE_LAST_ID_STORAGE = 'ck.devstudio.theme.update.lastThemeId';
 
     let curatedModalState = null;
     let themeModalState = null;
 
-    const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
-    bobUrl.searchParams.set('boot', 'message');
-    bobUrl.searchParams.set('subject', 'devstudio');
-    if (!isLocalDevStudio) bobUrl.searchParams.set('readonly', '1');
-    iframe.src = bobUrl.toString();
+    function initBobIframe() {
+      const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
+      bobUrl.searchParams.set('boot', 'message');
+      bobUrl.searchParams.set('subject', 'workspace');
+      bobUrl.searchParams.set('surface', 'devstudio');
+      if (!isLocalDevStudio) bobUrl.searchParams.set('readonly', '1');
+      iframe.src = bobUrl.toString();
+    }
+
+    function readQueryUuidParam(rawValue) {
+      const value = typeof rawValue === 'string' ? rawValue.trim() : '';
+      if (!value) return '';
+      return URL_UUID_PATTERN.test(value) ? value : '';
+    }
+
+    async function loadBootstrapWorkspaceId() {
+      if (bootstrapWorkspaceIdPromise) return bootstrapWorkspaceIdPromise;
+      bootstrapWorkspaceIdPromise = (async () => {
+        try {
+          const res = await fetch(`${PARIS_API}/roma/bootstrap?_t=${Date.now()}`, {
+            cache: 'no-store',
+          });
+          if (!res.ok) return '';
+          const payload = await res.json().catch(() => null);
+          const defaults =
+            payload && typeof payload === 'object' && payload.defaults && typeof payload.defaults === 'object'
+              ? payload.defaults
+              : null;
+          const workspaceId = defaults && typeof defaults.workspaceId === 'string' ? defaults.workspaceId.trim() : '';
+          return URL_UUID_PATTERN.test(workspaceId) ? workspaceId : '';
+        } catch {
+          return '';
+        }
+      })();
+      return bootstrapWorkspaceIdPromise;
+    }
+
+    async function resolveStandardWorkspaceId() {
+      if (queryWorkspaceId) return queryWorkspaceId;
+      const workspaceId = await loadBootstrapWorkspaceId();
+      if (workspaceId) return workspaceId;
+      throw new Error(
+        '[DevStudio] Missing workspaceId. Add ?workspaceId=<uuid> or ensure /api/paris/roma/bootstrap returns defaults.workspaceId.',
+      );
+    }
+
+    async function resolveCuratedWorkspaceId() {
+      if (queryCuratedWorkspaceId) return queryCuratedWorkspaceId;
+      return resolveStandardWorkspaceId();
+    }
+
+    async function resolveWorkspaceIdForPublicId(publicId) {
+      const resolvedPublicId = String(publicId || '').trim();
+      if (isCuratedPublicId(resolvedPublicId) || resolvedPublicId.startsWith('wgt_main_')) {
+        return resolveCuratedWorkspaceId();
+      }
+      return resolveStandardWorkspaceId();
+    }
 
     function setL10nStatusDisplay({ state, tone, value, meta }) {
       if (!(l10nStatus instanceof HTMLElement)) return;
@@ -1092,11 +1213,11 @@
       setL10nStatusDisplay({ state: 'loading', tone: 'pending', value: 'Loading...', meta: '' });
 
       try {
-        const workspaceId = CLICKEEN_WORKSPACE_ID;
+        const workspaceId = await resolveWorkspaceIdForPublicId(publicId);
         const res = await fetch(
           `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
             publicId,
-          )}/publish/status?subject=devstudio&_t=${Date.now()}`,
+          )}/publish/status?subject=workspace&_t=${Date.now()}`,
           { cache: 'no-store' },
         );
         const payload = await res.json().catch(() => null);
@@ -1181,7 +1302,7 @@
           renderInstances();
           return;
         }
-        if (data && data.type === 'bob:session-ready') {
+        if (data && data.type === OPEN_EDITOR_EVENTS.sessionReady) {
           const sessionId = typeof data.sessionId === 'string' ? data.sessionId.trim() : '';
           if (!sessionId) {
             console.error('[DevStudio] bob:session-ready missing sessionId');
@@ -1330,16 +1451,20 @@
       return promise;
     }
 
-    async function fetchInstancePayload(publicId, workspaceId = DEV_WORKSPACE_ID) {
-      const cacheKey = `${workspaceId}::${publicId}`;
+    async function fetchInstancePayload(publicId, workspaceId) {
+      const resolvedWorkspaceId =
+        typeof workspaceId === 'string' && workspaceId.trim()
+          ? workspaceId.trim()
+          : await resolveWorkspaceIdForPublicId(publicId);
+      const cacheKey = `${resolvedWorkspaceId}::${publicId}`;
       if (instancePayloadPromiseCache.has(cacheKey)) {
         return instancePayloadPromiseCache.get(cacheKey);
       }
       const promise = (async () => {
         const res = await fetch(
-          `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+          `${PARIS_API}/workspaces/${encodeURIComponent(resolvedWorkspaceId)}/instance/${encodeURIComponent(
             publicId,
-          )}?subject=devstudio&_t=${Date.now()}`,
+          )}?subject=workspace&_t=${Date.now()}`,
           { cache: 'no-store' },
         );
         if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
@@ -1485,40 +1610,8 @@
       refreshL10nStatus(publicId).catch(() => {});
     }
 
-    function requireSuperadminKey() {
-      if (!isLocalDevStudio) {
-        throw new Error('[DevStudio] Superadmin actions are only available on DevStudio Local.');
-      }
-      const existing = sessionStorage.getItem(SUPERADMIN_KEY_STORAGE);
-      if (existing && existing.trim()) return existing.trim();
-      const entered = window.prompt('Superadmin key (stored in sessionStorage):');
-      const key = (entered || '').trim();
-      if (!key) throw new Error('[DevStudio] Missing superadmin key');
-      sessionStorage.setItem(SUPERADMIN_KEY_STORAGE, key);
-      return key;
-    }
-
-    async function superadminFetch(url, init) {
-      const headers = new Headers(init?.headers || {});
-      const attempt = async () => fetch(url, { ...init, headers });
-
-      const res = await attempt();
-      if (res.status !== 403) return res;
-
-      // Only prompt for a superadmin key if Bob is enforcing it (via CK_SUPERADMIN_KEY).
-      // Retry once with the provided key.
-      try {
-        const clone = res.clone();
-        const data = await clone.json().catch(() => null);
-        const reasonKey = data?.error?.reasonKey;
-        if (reasonKey !== 'coreui.errors.superadmin.invalid') return res;
-      } catch {
-        return res;
-      }
-
-      const key = requireSuperadminKey();
-      headers.set('x-ck-superadmin-key', key);
-      return attempt();
+    async function privilegedActionsFetch(url, init) {
+      return fetch(url, init);
     }
 
     function requireWidgetSlugForAction() {
@@ -1628,8 +1721,8 @@
       status,
       meta,
     }) {
-      const res = await superadminFetch(
-        `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instances?subject=devstudio&_t=${Date.now()}`,
+      const res = await privilegedActionsFetch(
+        `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instances?subject=workspace&_t=${Date.now()}`,
         {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -1645,10 +1738,10 @@
     }
 
     async function updateWorkspaceInstance({ workspaceId, publicId, config, status, meta }) {
-      const res = await superadminFetch(
+      const res = await privilegedActionsFetch(
         `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
           publicId,
-        )}?subject=devstudio&_t=${Date.now()}`,
+        )}?subject=workspace&_t=${Date.now()}`,
         {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },
@@ -1664,8 +1757,8 @@
     }
 
     async function ensureWorkspaceInstance({ workspaceId, widgetType, publicId, config, status }) {
-      const res = await superadminFetch(
-        `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instances?subject=devstudio&_t=${Date.now()}`,
+      const res = await privilegedActionsFetch(
+        `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instances?subject=workspace&_t=${Date.now()}`,
         {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -1803,10 +1896,8 @@
 
       let endpoint = '';
       if (scope === 'workspace') {
-        if (!workspaceId)
-          throw new Error('[DevStudio] Missing workspaceId for workspace asset upload');
-        headers.set('x-workspace-id', workspaceId);
-        endpoint = `${TOKYO_BASE}/assets/upload`;
+        if (workspaceId) headers.set('x-workspace-id', workspaceId);
+        endpoint = `${BOB_ORIGIN}/api/assets/upload`;
       } else if (scope === 'curated') {
         if (!publicId) throw new Error('[DevStudio] Missing publicId for curated asset upload');
         const normalized =
@@ -1817,7 +1908,7 @@
         if (!normalized) throw new Error('[DevStudio] Missing widgetType for curated asset upload');
         headers.set('x-public-id', publicId);
         headers.set('x-widget-type', normalized);
-        endpoint = `${TOKYO_BASE}/assets/upload`;
+        endpoint = `${BOB_ORIGIN}/api/assets/upload`;
       } else if (scope === 'widget') {
         const normalized =
           normalizeWidgetname(widgetType) ||
@@ -1985,16 +2076,17 @@
       const defaultsForSpec = stripTokyoBaseFromConfig(cloneJson(config), TOKYO_BASE);
       await updateTokyoWidgetSpecDefaults({ widgetSlug, defaults: defaultsForSpec });
       compiledCache.delete(widgetSlug);
+      const curatedWorkspaceId = await resolveCuratedWorkspaceId();
 
       await createWorkspaceInstance({
-        workspaceId: DEV_WORKSPACE_ID,
+        workspaceId: curatedWorkspaceId,
         widgetType: widgetSlug,
         publicId,
         config,
         status: 'published',
       });
       await updateWorkspaceInstance({
-        workspaceId: DEV_WORKSPACE_ID,
+        workspaceId: curatedWorkspaceId,
         publicId,
         config,
         status: 'published',
@@ -2252,15 +2344,16 @@
       if (!ok) throw new Error('[DevStudio] Canceled');
 
       const config = cloneJson(defaults);
+      const curatedWorkspaceId = await resolveCuratedWorkspaceId();
       await createWorkspaceInstance({
-        workspaceId: DEV_WORKSPACE_ID,
+        workspaceId: curatedWorkspaceId,
         widgetType: widgetSlug,
         publicId,
         config,
         status: 'published',
       });
       await updateWorkspaceInstance({
-        workspaceId: DEV_WORKSPACE_ID,
+        workspaceId: curatedWorkspaceId,
         publicId,
         config,
         status: 'published',
@@ -2298,9 +2391,10 @@
         `Update curated instance ${publicId} in place? This will overwrite the current config.`,
       );
       if (!ok) throw new Error('[DevStudio] Canceled');
+      const curatedWorkspaceId = await resolveCuratedWorkspaceId();
 
       await updateWorkspaceInstance({
-        workspaceId: CLICKEEN_WORKSPACE_ID,
+        workspaceId: curatedWorkspaceId,
         publicId,
         config,
         status: 'published',
@@ -2455,9 +2549,10 @@
       if (styleVariants.primary || styleVariants.secondary) {
         meta.variants = styleVariants;
       }
+      const curatedWorkspaceId = await resolveCuratedWorkspaceId();
 
       await createWorkspaceInstance({
-        workspaceId: CLICKEEN_WORKSPACE_ID,
+        workspaceId: curatedWorkspaceId,
         widgetType: curatedModalState.widgetSlug,
         publicId,
         config: sourceConfig,
@@ -2478,11 +2573,11 @@
       }
     }
 
-    if (isLocalDevStudio && superadminActions) {
-      superadminActions.style.display = 'inline-flex';
+    if (isLocalDevStudio && privilegedActions) {
+      privilegedActions.style.display = 'inline-flex';
     }
 
-    superadminUpdateDefaults?.addEventListener('click', async () => {
+    privilegedUpdateDefaults?.addEventListener('click', async () => {
       try {
         const widgetSlug = requireWidgetSlugForAction();
         const result = await updateDefaultsMainInstanceFromEditor(widgetSlug);
@@ -2492,7 +2587,7 @@
       }
     });
 
-    superadminUpdateTheme?.addEventListener('click', async () => {
+    privilegedUpdateTheme?.addEventListener('click', async () => {
       try {
         await updateThemeFromEditor();
       } catch (err) {
@@ -2500,7 +2595,7 @@
       }
     });
 
-    superadminResetFromJson?.addEventListener('click', async () => {
+    privilegedResetFromJson?.addEventListener('click', async () => {
       try {
         const widgetSlug = requireWidgetSlugForAction();
         const result = await resetMainInstanceFromJson(widgetSlug);
@@ -2542,10 +2637,11 @@
         }
         if (refreshPraguePreviewBtn) refreshPraguePreviewBtn.disabled = true;
         if (labelEl) labelEl.textContent = 'Queuing...';
-        const res = await superadminFetch(
-          `${PARIS_API}/workspaces/${encodeURIComponent(CLICKEEN_WORKSPACE_ID)}/instances/${encodeURIComponent(
+        const curatedWorkspaceId = await resolveCuratedWorkspaceId();
+        const res = await privilegedActionsFetch(
+          `${PARIS_API}/workspaces/${encodeURIComponent(curatedWorkspaceId)}/instances/${encodeURIComponent(
             currentPublicId,
-          )}/render-snapshot?subject=devstudio&_t=${Date.now()}`,
+          )}/render-snapshot?subject=workspace&_t=${Date.now()}`,
           {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
@@ -2577,11 +2673,12 @@
         if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
           throw new Error('[DevStudio] Select a curated instance first.');
         }
+        const curatedWorkspaceId = await resolveCuratedWorkspaceId();
 
-        const res = await superadminFetch(
-          `${PARIS_API}/workspaces/${encodeURIComponent(CLICKEEN_WORKSPACE_ID)}/instances/${encodeURIComponent(
+        const res = await privilegedActionsFetch(
+          `${PARIS_API}/workspaces/${encodeURIComponent(curatedWorkspaceId)}/instances/${encodeURIComponent(
             currentPublicId,
-          )}/l10n/enqueue-selected?subject=devstudio&_t=${Date.now()}`,
+          )}/l10n/enqueue-selected?subject=workspace&_t=${Date.now()}`,
           {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
@@ -2761,8 +2858,8 @@
       instance.ownerAccountId = ownerAccountId;
       console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
       await postOpenEditorAndWait(target, {
-        type: 'ck:open-editor',
-        subjectMode: 'devstudio',
+        type: OPEN_EDITOR_EVENTS.openEditor,
+        subjectMode: 'workspace',
         publicId,
         workspaceId,
         ownerAccountId: instance.ownerAccountId,
@@ -2823,11 +2920,11 @@
           target.postMessage(message, BOB_ORIGIN);
 
           if (!acknowledged) {
-            if (attempts >= 6) {
+            if (attempts >= OPEN_EDITOR_TIMING.maxAckAttempts) {
               fail(new Error('[DevStudio] Timed out waiting for bob:open-editor-ack'));
               return;
             }
-            retryTimer = setTimeout(send, 250);
+            retryTimer = setTimeout(send, OPEN_EDITOR_TIMING.ackRetryMs);
           }
         };
 
@@ -2839,7 +2936,7 @@
           if (String(data.requestId || '') !== requestId) return;
           if (String(data.sessionId || '') !== sessionId) return;
 
-          if (data.type === 'bob:open-editor-ack') {
+          if (data.type === OPEN_EDITOR_EVENTS.ack) {
             acknowledged = true;
             if (retryTimer) {
               clearTimeout(retryTimer);
@@ -2848,12 +2945,12 @@
             return;
           }
 
-          if (data.type === 'bob:open-editor-applied') {
+          if (data.type === OPEN_EDITOR_EVENTS.applied) {
             succeed();
             return;
           }
 
-          if (data.type === 'bob:open-editor-failed') {
+          if (data.type === OPEN_EDITOR_EVENTS.failed) {
             const reason = String(data.reasonKey || data.message || '[DevStudio] Bob failed to apply instance');
             fail(new Error(reason));
           }
@@ -2861,7 +2958,7 @@
 
         timeoutTimer = setTimeout(
           () => fail(new Error('[DevStudio] Timed out waiting for bob:open-editor-applied')),
-          7000,
+          OPEN_EDITOR_TIMING.timeoutMs,
         );
         window.addEventListener('message', onMessage);
         send();
@@ -2984,6 +3081,8 @@
 
     (async () => {
       try {
+        await loadOpenEditorLifecycleContract();
+        initBobIframe();
         await fetchInstances();
       } catch (error) {
         console.error('[DevStudio] Failed to fetch instances', error);

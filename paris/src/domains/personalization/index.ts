@@ -2,11 +2,12 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import { resolvePolicy } from '@clickeen/ck-policy';
 import type { Policy } from '@clickeen/ck-policy';
 import type { Env } from '../../shared/types';
-import { json, readJson } from '../../shared/http';
+import { json } from '../../shared/http';
 import { assertDevAuth } from '../../shared/auth';
 import { asTrimmedString, isRecord } from '../../shared/validation';
 import { requireWorkspace } from '../../shared/workspaces';
 import { consumeBudget, currentUtcBudgetPeriodKey } from '../../shared/budgets';
+import { callSanfranciscoJson, dispatchSanfranciscoCommand } from '../../shared/sanfrancisco';
 import { issueAiGrant } from '../ai';
 
 const PREVIEW_DEFAULT_OVERRIDES = ['heroTitle', 'heroSubtitle', 'sectionTitle', 'ctaText'];
@@ -78,32 +79,18 @@ async function dispatchPersonalizationPreviewJob(args: {
     allowedOverrides: string[];
   };
 }): Promise<{ ok: true; jobId: string } | { ok: false; response: Response }> {
-  const sfBaseUrl = asTrimmedString(args.env.SANFRANCISCO_BASE_URL);
-  if (!sfBaseUrl) {
-    return { ok: false, response: json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 }) };
-  }
-  const token = asTrimmedString(args.env.PARIS_DEV_JWT);
-  if (!token) {
-    return { ok: false, response: json({ error: 'MISCONFIGURED', message: 'Missing PARIS_DEV_JWT' }, { status: 503 }) };
-  }
-
-  const res = await fetch(new URL('/v1/personalization/preview', sfBaseUrl).toString(), {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(args.job),
+  const jobId = crypto.randomUUID();
+  const upstream = await dispatchSanfranciscoCommand({
+    env: args.env,
+    path: '/v1/personalization/preview',
+    command: 'personalization.preview.enqueue',
+    payload: { ...args.job, jobId },
   });
+  if (!upstream.ok) return upstream;
 
-  const payload = await readJson(res);
-  if (!res.ok) {
-    return { ok: false, response: json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details: payload }, { status: 502 }) };
-  }
-
-  const jobId = asTrimmedString((payload as any)?.jobId);
-  if (!jobId) {
-    return { ok: false, response: json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', message: 'Missing jobId' }, { status: 502 }) };
+  const upstreamJobId = asTrimmedString((upstream.payload as any)?.jobId);
+  if (upstreamJobId) {
+    return { ok: true, jobId: upstreamJobId };
   }
 
   return { ok: true, jobId };
@@ -187,28 +174,13 @@ export async function handlePersonalizationPreviewCreate(req: Request, env: Env)
 }
 
 export async function handlePersonalizationPreviewStatus(req: Request, env: Env, jobId: string): Promise<Response> {
-  const sfBaseUrl = asTrimmedString(env.SANFRANCISCO_BASE_URL);
-  if (!sfBaseUrl) {
-    return json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 });
-  }
-  const token = asTrimmedString(env.PARIS_DEV_JWT);
-  if (!token) {
-    return json({ error: 'MISCONFIGURED', message: 'Missing PARIS_DEV_JWT' }, { status: 503 });
-  }
-
-  const res = await fetch(new URL(`/v1/personalization/preview/${encodeURIComponent(jobId)}`, sfBaseUrl).toString(), {
+  const upstream = await callSanfranciscoJson({
+    env,
+    path: `/v1/personalization/preview/${encodeURIComponent(jobId)}`,
     method: 'GET',
-    headers: {
-      authorization: `Bearer ${token}`,
-    },
   });
-
-  const payload = await readJson(res);
-  if (!res.ok) {
-    return json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details: payload }, { status: 502 });
-  }
-
-  return json(payload);
+  if (!upstream.ok) return upstream.response;
+  return json(upstream.payload);
 }
 
 async function dispatchPersonalizationOnboardingJob(args: {
@@ -225,32 +197,18 @@ async function dispatchPersonalizationOnboardingJob(args: {
     instagramHandle?: string;
   };
 }): Promise<{ ok: true; jobId: string } | { ok: false; response: Response }> {
-  const sfBaseUrl = asTrimmedString(args.env.SANFRANCISCO_BASE_URL);
-  if (!sfBaseUrl) {
-    return { ok: false, response: json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 }) };
-  }
-  const token = asTrimmedString(args.env.PARIS_DEV_JWT);
-  if (!token) {
-    return { ok: false, response: json({ error: 'MISCONFIGURED', message: 'Missing PARIS_DEV_JWT' }, { status: 503 }) };
-  }
-
-  const res = await fetch(new URL('/v1/personalization/onboarding', sfBaseUrl).toString(), {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(args.job),
+  const jobId = crypto.randomUUID();
+  const upstream = await dispatchSanfranciscoCommand({
+    env: args.env,
+    path: '/v1/personalization/onboarding',
+    command: 'personalization.onboarding.enqueue',
+    payload: { ...args.job, jobId },
   });
+  if (!upstream.ok) return upstream;
 
-  const payload = await readJson(res);
-  if (!res.ok) {
-    return { ok: false, response: json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details: payload }, { status: 502 }) };
-  }
-
-  const jobId = asTrimmedString((payload as any)?.jobId);
-  if (!jobId) {
-    return { ok: false, response: json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', message: 'Missing jobId' }, { status: 502 }) };
+  const upstreamJobId = asTrimmedString((upstream.payload as any)?.jobId);
+  if (upstreamJobId) {
+    return { ok: true, jobId: upstreamJobId };
   }
 
   return { ok: true, jobId };
@@ -326,26 +284,11 @@ export async function handlePersonalizationOnboardingStatus(req: Request, env: E
   const auth = await assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
-  const sfBaseUrl = asTrimmedString(env.SANFRANCISCO_BASE_URL);
-  if (!sfBaseUrl) {
-    return json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 });
-  }
-  const token = asTrimmedString(env.PARIS_DEV_JWT);
-  if (!token) {
-    return json({ error: 'MISCONFIGURED', message: 'Missing PARIS_DEV_JWT' }, { status: 503 });
-  }
-
-  const res = await fetch(new URL(`/v1/personalization/onboarding/${encodeURIComponent(jobId)}`, sfBaseUrl).toString(), {
+  const upstream = await callSanfranciscoJson({
+    env,
+    path: `/v1/personalization/onboarding/${encodeURIComponent(jobId)}`,
     method: 'GET',
-    headers: {
-      authorization: `Bearer ${token}`,
-    },
   });
-
-  const payload = await readJson(res);
-  if (!res.ok) {
-    return json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details: payload }, { status: 502 });
-  }
-
-  return json(payload);
+  if (!upstream.ok) return upstream.response;
+  return json(upstream.payload);
 }

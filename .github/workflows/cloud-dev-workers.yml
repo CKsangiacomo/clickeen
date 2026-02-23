@@ -7,7 +7,9 @@ on:
       - "paris/**"
       - "sanfrancisco/**"
       - "tokyo-worker/**"
+      - "tokyo/fonts/**"
       - "scripts/infra/**"
+      - "scripts/tokyo-fonts-sync.mjs"
       - ".github/workflows/cloud-dev-workers.yml"
   workflow_dispatch: {}
 
@@ -21,6 +23,11 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      RUNTIME_PARITY_SUPABASE_BEARER_CLOUD: ${{ secrets.RUNTIME_PARITY_SUPABASE_BEARER }}
+      RUNTIME_PARITY_TOKYO_DEV_JWT: ${{ secrets.RUNTIME_PARITY_TOKYO_DEV_JWT }}
+      RUNTIME_PARITY_PUBLIC_ID: ${{ vars.RUNTIME_PARITY_PUBLIC_ID }}
+      RUNTIME_PARITY_PUBLISH_PUBLIC_ID: ${{ vars.RUNTIME_PARITY_PUBLISH_PUBLIC_ID }}
+      TOKYO_R2_BUCKET: tokyo-assets-dev
     steps:
       - uses: actions/checkout@v4
 
@@ -35,6 +42,34 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Contract checks
+        run: pnpm test:contracts
+
+      - name: Paris boundary gate
+        run: pnpm test:paris-boundary
+
+      - name: Bob bootstrap boundary gate
+        run: pnpm test:bob-bootstrap-boundary
+
+      - name: Runtime parity release gates (pre-deploy)
+        run: |
+          export CK_ADMIN_EMAIL="local.admin@clickeen.local"
+          export CK_ADMIN_PASSWORD="ci-local-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 8)"
+          export PARIS_DEV_JWT="ci-local-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-paris"
+          export TOKYO_DEV_JWT="$PARIS_DEV_JWT"
+          bash scripts/dev-up.sh --reset > /tmp/dev-up-runtime-parity.log 2>&1 || (tail -n 200 /tmp/dev-up-runtime-parity.log && exit 1)
+          pnpm test:runtime-parity:public
+          pnpm test:runtime-parity:auth
+          pnpm test:runtime-parity:cloud-dev:public
+          pnpm test:runtime-parity:cloud-dev:auth
+          pnpm test:runtime-parity:cross-env
+
       - name: Deploy paris-dev
         run: pnpm -C paris run deploy
 
@@ -43,3 +78,21 @@ jobs:
 
       - name: Deploy tokyo-assets-dev (tokyo-worker)
         run: pnpm -C tokyo-worker run deploy
+
+      - name: Sync Tokyo fonts to R2 (cloud-dev)
+        run: node scripts/tokyo-fonts-sync.mjs --remote
+
+      - name: Runtime parity checks (cloud-dev auth)
+        run: node scripts/ci/runtime-parity/index.mjs --env cloud-dev --mode auth --json-out artifacts/runtime-parity-cloud-dev-workers-auth.json
+
+      - name: Runtime parity checks (cloud-dev public)
+        run: node scripts/ci/runtime-parity/index.mjs --env cloud-dev --mode public --json-out artifacts/runtime-parity-cloud-dev-workers-public.json
+
+      - name: Upload runtime parity artifact (workers)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-parity-cloud-dev-workers
+          path: |
+            artifacts/runtime-parity-cloud-dev-workers-auth.json
+            artifacts/runtime-parity-cloud-dev-workers-public.json

@@ -1,3 +1,5 @@
+THESE PRD BROKE THE ARCHITECTURE - KEEPING ONLY AS REFERENCE
+
 # PRD 48 — Roma Model Unification and Legacy-Zero Hard Cut
 
 **Status:** EXECUTING  

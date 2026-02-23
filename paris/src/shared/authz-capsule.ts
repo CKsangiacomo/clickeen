@@ -38,7 +38,6 @@ export type RomaAccountAuthzCapsulePayload = {
   userId: string;
   accountId: string;
   accountStatus: string;
-  isPlatform: boolean;
   profile: WorkspaceRow['tier'];
   role: MemberRole;
   authzVersion: string;
@@ -238,8 +237,6 @@ function normalizeAccountPayload(
   const sub = typeof record.sub === 'string' ? record.sub.trim() : '';
   const accountId = typeof record.accountId === 'string' ? record.accountId.trim() : '';
   const accountStatus = typeof record.accountStatus === 'string' ? record.accountStatus.trim() : '';
-  if (typeof record.isPlatform !== 'boolean') return null;
-  const isPlatform = record.isPlatform;
   const authzVersion = typeof record.authzVersion === 'string' ? record.authzVersion.trim() : '';
   const role = normalizeMemberRole(record.role);
   const profile = normalizeWorkspaceTier(record.profile);
@@ -262,7 +259,6 @@ function normalizeAccountPayload(
     userId,
     accountId,
     accountStatus,
-    isPlatform,
     profile,
     role,
     authzVersion,

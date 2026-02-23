@@ -28,6 +28,9 @@ queue = "sanfrancisco-events-dev"
 [[queues.consumers]]
 queue = "instance-l10n-generate-cloud-dev"
 
+[[queues.consumers]]
+queue = "paris-sf-commands-cloud-dev"
+
 [env.local]
 name = "sanfrancisco-local"
 vars = { ENVIRONMENT = "local" }
@@ -47,3 +50,6 @@ bucket_name = "sanfrancisco-logs-dev"
 
 [[env.local.queues.consumers]]
 queue = "instance-l10n-generate-local"
+
+[[env.local.queues.consumers]]
+queue = "paris-sf-commands-local"

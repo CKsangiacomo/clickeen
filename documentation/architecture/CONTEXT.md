@@ -69,7 +69,7 @@ Core base-config editing follows EXACTLY 2 Paris instance calls per open session
 1. **Load**: `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` once per instance open (host-performed in Roma/DevStudio message boot, Bob-performed in URL boot).
 2. **Publish**: `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish (always from Bob).
 
-`subject` is required on workspace-scoped endpoints (`workspace`, `devstudio`, `minibob`) to resolve editor policy.
+`subject` is required on workspace-scoped endpoints (`workspace`, `minibob`) to resolve editor policy.
 
 In the browser these flow through one of two host paths:
 - Bob URL boot path: Bob same-origin proxy (`/api/paris/workspaces/:workspaceId/instance/:publicId?subject=workspace`) forwards to the workspace-scoped Paris endpoints.
@@ -161,7 +161,7 @@ curated_widget_instances.meta = {
 
 **Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with last-good revision fallback; dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — HTTP API gateway (Cloudflare Workers). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for paid/devstudio). Publish/unpublish control-plane writes are transactional: if downstream l10n/snapshot publish steps fail, Paris rolls back instance state and deterministic asset usage rows. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
+**Paris** — HTTP API gateway (Cloudflare Workers). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). Publish/unpublish control-plane writes are transactional: if downstream l10n/snapshot publish steps fail, Paris rolls back instance state and deterministic asset usage rows. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 

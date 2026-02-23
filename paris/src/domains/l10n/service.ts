@@ -4,46 +4,10 @@ import type {
   L10nBaseSnapshotRow,
   L10nGenerateStateRow,
   L10nGenerateStatus,
-  L10nPublishQueueJob,
 } from '../../shared/types';
 import { readJson } from '../../shared/http';
 import { apiError } from '../../shared/errors';
-import { asTrimmedString } from '../../shared/validation';
-import { hasProhibitedSegment, normalizeOpPath, pathMatchesAllowlist } from '../../shared/l10n';
 import { supabaseFetch } from '../../shared/supabase';
-
-function resolveLocalTokyoWorkerBase(env: Env): string | null {
-  const stage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
-  if (stage !== 'local') return null;
-  const base = asTrimmedString(env.TOKYO_WORKER_BASE_URL);
-  if (!base) return null;
-  return base.replace(/\/+$/, '');
-}
-
-async function publishLayerLocal(
-  env: Env,
-  publicId: string,
-  layer: string,
-  layerKey: string,
-  action: 'upsert' | 'delete',
-): Promise<Response | null> {
-  const base = resolveLocalTokyoWorkerBase(env);
-  if (!base) return null;
-  const token = asTrimmedString(env.TOKYO_DEV_JWT) ?? asTrimmedString(env.PARIS_DEV_JWT);
-  const headers: HeadersInit = { 'content-type': 'application/json' };
-  if (token) headers['authorization'] = `Bearer ${token}`;
-
-  const res = await fetch(`${base}/l10n/publish`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ v: 2, publicId, layer, layerKey, action }),
-  });
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    return apiError('INTERNAL_ERROR', 'Local l10n publish failed', 500, detail);
-  }
-  return null;
-}
 
 async function loadInstanceOverlay(
   env: Env,
@@ -379,140 +343,6 @@ async function upsertL10nSnapshot(env: Env, row: L10nBaseSnapshotRow): Promise<v
   }
 }
 
-function diffL10nSnapshots(prev: Record<string, string> | null, next: Record<string, string>) {
-  const changed: string[] = [];
-  const removed: string[] = [];
-
-  if (!prev) {
-    changed.push(...Object.keys(next));
-  } else {
-    Object.entries(next).forEach(([path, value]) => {
-      if (prev[path] !== value) {
-        changed.push(path);
-      }
-    });
-
-    Object.keys(prev).forEach((path) => {
-      if (!(path in next)) {
-        removed.push(path);
-      }
-    });
-  }
-
-  changed.sort();
-  removed.sort();
-  return { changedPaths: changed, removedPaths: removed };
-}
-
-function filterOpsForSnapshot(
-  ops: Array<{ op: 'set'; path: string; value: unknown }> | null | undefined,
-  allowlist: string[],
-  snapshotKeys: Set<string>,
-): Array<{ op: 'set'; path: string; value: unknown }> {
-  if (!Array.isArray(ops)) return [];
-  const filtered: Array<{ op: 'set'; path: string; value: unknown }> = [];
-  for (const op of ops) {
-    if (!op || typeof op !== 'object') continue;
-    if (op.op !== 'set') continue;
-    const rawPath = typeof op.path === 'string' ? op.path : '';
-    const path = normalizeOpPath(rawPath);
-    if (!path || hasProhibitedSegment(path)) continue;
-    if (!allowlist.some((allow) => pathMatchesAllowlist(path, allow))) continue;
-    if (!snapshotKeys.has(path)) continue;
-    if (op.value === undefined) continue;
-    filtered.push({ op: 'set', path, value: op.value });
-  }
-  return filtered;
-}
-
-async function rebaseUserOverlays(args: {
-  env: Env;
-  publicId: string;
-  baseFingerprint: string;
-  baseUpdatedAt: string | null;
-  allowlistPaths: string[];
-  snapshot: Record<string, string>;
-}): Promise<void> {
-  const snapshotKeys = new Set(Object.keys(args.snapshot));
-  const overlays = await loadInstanceOverlays(args.env, args.publicId);
-  const userOverlays = overlays.filter((row) => row.layer === 'user');
-  if (!userOverlays.length) return;
-
-  for (const row of userOverlays) {
-    const filteredOps = filterOpsForSnapshot(row.ops ?? [], args.allowlistPaths, snapshotKeys);
-    const filteredUserOps = filterOpsForSnapshot(
-      row.user_ops ?? [],
-      args.allowlistPaths,
-      snapshotKeys,
-    );
-
-    const patchRes = await supabaseFetch(
-      args.env,
-      `/rest/v1/widget_instance_overlays?public_id=eq.${encodeURIComponent(
-        args.publicId,
-      )}&layer=eq.user&layer_key=eq.${encodeURIComponent(row.layer_key)}`,
-      {
-        method: 'PATCH',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({
-          ops: filteredOps,
-          user_ops: filteredUserOps,
-          base_fingerprint: args.baseFingerprint,
-          base_updated_at: args.baseUpdatedAt ?? null,
-        }),
-      },
-    );
-    if (!patchRes.ok) {
-      const details = await readJson(patchRes);
-      throw new Error(
-        `[ParisWorker] Failed to rebase user overlay (${patchRes.status}): ${JSON.stringify(details)}`,
-      );
-    }
-
-    if (!args.env.L10N_PUBLISH_QUEUE) {
-      console.error('[ParisWorker] L10N_PUBLISH_QUEUE missing while rebasing user overlays');
-      continue;
-    }
-    const markDirty = await markL10nPublishDirty({
-      env: args.env,
-      publicId: args.publicId,
-      layer: 'user',
-      layerKey: row.layer_key,
-      baseFingerprint: args.baseFingerprint,
-    });
-    if (markDirty) {
-      console.error('[ParisWorker] Failed to mark user overlay dirty during rebase', markDirty);
-      continue;
-    }
-    try {
-      await args.env.L10N_PUBLISH_QUEUE.send({
-        v: 2,
-        publicId: args.publicId,
-        layer: 'user',
-        layerKey: row.layer_key,
-        action: 'upsert',
-      } satisfies L10nPublishQueueJob);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      console.error('[ParisWorker] Failed to enqueue user overlay publish during rebase', detail);
-      continue;
-    }
-    const localPublish = await publishLayerLocal(
-      args.env,
-      args.publicId,
-      'user',
-      row.layer_key,
-      'upsert',
-    );
-    if (localPublish) {
-      console.error(
-        '[ParisWorker] Failed to locally publish user overlay during rebase',
-        localPublish,
-      );
-    }
-  }
-}
-
 async function updateL10nGenerateStatus(args: {
   env: Env;
   publicId: string;
@@ -572,7 +402,6 @@ export {
   L10N_GENERATE_MAX_ATTEMPTS,
   L10N_GENERATE_STALE_REQUEUE_MS,
   canRetryL10nGenerate,
-  diffL10nSnapshots,
   isL10nGenerateInFlightStale,
   isL10nGenerateStatus,
   loadInstanceOverlay,
@@ -581,8 +410,6 @@ export {
   loadL10nGenerateStateRow,
   loadL10nGenerateStates,
   markL10nPublishDirty,
-  publishLayerLocal,
-  rebaseUserOverlays,
   resolveL10nFailureRetryState,
   supersedeL10nGenerateStates,
   toRetryExhaustedError,

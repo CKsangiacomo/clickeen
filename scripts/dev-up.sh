@@ -256,6 +256,62 @@ print_registered_pid_status() {
   done < "$PID_REGISTRY_FILE"
 }
 
+collect_registered_service_health_errors() {
+  local errors_file="$1"
+  : > "$errors_file"
+  if [ ! -s "$PID_REGISTRY_FILE" ]; then
+    return 0
+  fi
+
+  local name pid port log_file
+  while IFS=$'\t' read -r name pid port log_file; do
+    [ -z "$name" ] && continue
+
+    if [ -n "$port" ]; then
+      if ! is_port_listening "$port"; then
+        printf '%s\t%s\t%s\t%s\n' "$name" "$pid" "$port" "$log_file" >> "$errors_file"
+      fi
+      continue
+    fi
+
+    if ! kill -0 "$pid" >/dev/null 2>&1; then
+      printf '%s\t%s\t%s\t%s\n' "$name" "$pid" "$port" "$log_file" >> "$errors_file"
+    fi
+  done < "$PID_REGISTRY_FILE"
+}
+
+ensure_registered_services_healthy() {
+  local attempts="${1:-8}"
+  local interval_seconds="${2:-1}"
+  local attempt
+  local errors_file
+  errors_file="$(mktemp)"
+  trap 'rm -f "$errors_file"' RETURN
+
+  for attempt in $(seq 1 "$attempts"); do
+    collect_registered_service_health_errors "$errors_file"
+    if [ ! -s "$errors_file" ]; then
+      return 0
+    fi
+    if [ "$attempt" -lt "$attempts" ]; then
+      sleep "$interval_seconds"
+    fi
+  done
+
+  echo "[dev-up] ERROR: local stack failed readiness checks."
+  while IFS=$'\t' read -r name pid port log_file; do
+    [ -z "$name" ] && continue
+    if [ -n "$port" ]; then
+      echo "[dev-up]   $name: expected port $port to be listening"
+    else
+      echo "[dev-up]   $name: expected pid $pid to stay alive"
+    fi
+    tail_log "$log_file"
+  done < "$errors_file"
+
+  return 1
+}
+
 tail_log() {
   local log_file="${1:-}"
   if [ -n "$log_file" ] && [ -f "$log_file" ]; then
@@ -446,6 +502,30 @@ if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
   exit 1
 fi
 
+if [ "$DEV_UP_USE_REMOTE_SUPABASE" = "1" ] || [ "$DEV_UP_USE_REMOTE_SUPABASE" = "true" ]; then
+  echo "[dev-up] Skipping local persona seed (remote Supabase mode)"
+else
+  if [ -z "${CK_ADMIN_EMAIL:-}" ]; then
+    CK_ADMIN_EMAIL="local.admin@clickeen.local"
+    export CK_ADMIN_EMAIL
+    echo "[dev-up] CK_ADMIN_EMAIL not set. Defaulting to $CK_ADMIN_EMAIL"
+  fi
+  if [ -z "${CK_ADMIN_PASSWORD:-}" ]; then
+    if command -v openssl >/dev/null 2>&1; then
+      CK_ADMIN_PASSWORD="Local-$(openssl rand -hex 12)!A9"
+    else
+      CK_ADMIN_PASSWORD="Local-${RANDOM}${RANDOM}-Fallback!A9"
+    fi
+    export CK_ADMIN_PASSWORD
+    echo "[dev-up] CK_ADMIN_PASSWORD not set. Generated ephemeral local admin password for this run:"
+    echo "[dev-up]   CK_ADMIN_EMAIL=$CK_ADMIN_EMAIL"
+    echo "[dev-up]   CK_ADMIN_PASSWORD=$CK_ADMIN_PASSWORD"
+  fi
+  echo "[dev-up] Seeding deterministic local personas (non-destructive)"
+  SUPABASE_URL="$SUPABASE_URL" SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:-}" CK_ADMIN_EMAIL="${CK_ADMIN_EMAIL:-}" CK_ADMIN_PASSWORD="${CK_ADMIN_PASSWORD:-}" \
+    node "$ROOT_DIR/scripts/dev/seed-local-personas.mjs"
+fi
+
 PARIS_DEV_JWT_FILE="$ROOT_DIR/Execution_Pipeline_Docs/paris.dev.jwt"
 if [ -z "${PARIS_DEV_JWT:-}" ] && [ -f "$PARIS_DEV_JWT_FILE" ]; then
   PARIS_DEV_JWT="$(cat "$PARIS_DEV_JWT_FILE")"
@@ -540,6 +620,11 @@ echo "[dev-up] Starting Tokyo Worker (8791)"
 )
 wait_for_url "http://localhost:8791/healthz" "Tokyo Worker" "$LOG_DIR/tokyo-worker.dev.log"
 
+echo "[dev-up] Syncing Tokyo fonts to local R2"
+if ! node "$ROOT_DIR/scripts/tokyo-fonts-sync.mjs" --local --persist-to "$WRANGLER_PERSIST_DIR"; then
+  echo "[dev-up] WARNING: Tokyo font sync failed; special fonts may not load until sync succeeds."
+fi
+
 echo "[dev-up] Starting Paris Worker (3001)"
 (
   cd "$ROOT_DIR/paris"
@@ -629,9 +714,9 @@ echo "[dev-up] Starting Bob (3000)"
 (
   cd "$ROOT_DIR/bob"
   if [ -n "$SF_BASE_URL" ]; then
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" CK_ADMIN_EMAIL="${CK_ADMIN_EMAIL:-}" CK_ADMIN_PASSWORD="${CK_ADMIN_PASSWORD:-}" pnpm dev
   else
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" CK_ADMIN_EMAIL="${CK_ADMIN_EMAIL:-}" CK_ADMIN_PASSWORD="${CK_ADMIN_PASSWORD:-}" pnpm dev
   fi
   BOB_PID="$STARTED_PID"
   echo "[dev-up] Bob PID: $BOB_PID"
@@ -663,7 +748,7 @@ wait_for_url "http://localhost:8790/healthz" "Pitch" "$LOG_DIR/pitch.dev.log"
 echo "[dev-up] Starting Roma (3004)"
 (
   cd "$ROOT_DIR/roma"
-  start_detached "$LOG_DIR/roma.dev.log" env PORT=3004 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+  start_detached "$LOG_DIR/roma.dev.log" env PORT=3004 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   ROMA_PID="$STARTED_PID"
   echo "[dev-up] Roma PID: $ROMA_PID"
   register_pid "roma" "$ROMA_PID" "3004" "$LOG_DIR/roma.dev.log"
@@ -680,12 +765,6 @@ echo "[dev-up] Starting Prague (4321)"
 )
 wait_for_url "http://localhost:4321" "Prague" "$LOG_DIR/prague.dev.log"
 
-if [ -n "$SF_BASE_URL" ]; then
-  write_active_state "1"
-else
-  write_active_state "0"
-fi
-
 echo "[dev-up] URLs:"
 echo "  Tokyo:     http://localhost:4000/healthz"
 echo "  Paris:     http://localhost:3001"
@@ -700,3 +779,17 @@ echo "  Prague:    http://localhost:4321/us/en/widgets/faq"
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
 print_registered_pid_status
 print_stack_port_status
+
+if ! ensure_registered_services_healthy 8 1; then
+  echo "[dev-up] Startup failed health checks. Cleaning managed processes."
+  stop_registered_pids
+  stop_repo_wrangler_processes
+  clear_stack_state
+  exit 1
+fi
+
+if [ -n "$SF_BASE_URL" ]; then
+  write_active_state "1"
+else
+  write_active_state "0"
+fi

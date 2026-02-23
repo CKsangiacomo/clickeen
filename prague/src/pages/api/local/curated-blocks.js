@@ -1,5 +1,5 @@
 import {
-  WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN,
+  isCuratedOrMainWidgetPublicId,
   isMainWidgetPublicId,
   normalizeWidgetPublicId,
 } from '@clickeen/ck-contracts';
@@ -9,7 +9,6 @@ export const prerender = false;
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
 const PAGE_KEYS = new Set(['overview', 'templates', 'examples', 'features', 'pricing']);
 const WIDGET_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
-const PUBLIC_ID_PATTERN = new RegExp(WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN, 'i');
 
 function json(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -34,7 +33,7 @@ function asSlug(value) {
 
 function asPublicId(value) {
   const publicId = normalizeWidgetPublicId(value);
-  return publicId && PUBLIC_ID_PATTERN.test(publicId) ? publicId : '';
+  return publicId && isCuratedOrMainWidgetPublicId(publicId) ? publicId : '';
 }
 
 function asBlockId(value) {

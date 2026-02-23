@@ -8,7 +8,8 @@ export function isSnapshotBypassRequested(req: Request): boolean {
 
 export function isSnapshotBypassAuthorized(req: Request): boolean {
   const stage = normalizeStage(process.env.ENV_STAGE);
-  if (stage === 'local') return true;
+  const nodeEnv = normalizeStage(process.env.NODE_ENV);
+  if (stage === 'local' || nodeEnv !== 'production') return true;
 
   const expectedToken = String(process.env.VENICE_INTERNAL_BYPASS_TOKEN || '').trim();
   if (!expectedToken) return false;

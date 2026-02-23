@@ -17,6 +17,10 @@ type SessionResolution =
       response: NextResponse;
     };
 
+export type ResolveSessionBearerOptions = {
+  allowLocalDevBootstrap?: boolean;
+};
+
 type TokenBundle = {
   accessToken: string | null;
   refreshToken: string | null;
@@ -48,8 +52,8 @@ type LocalDevIssuedSession = {
 const DEFAULT_ACCESS_COOKIE = 'sb-access-token';
 const DEFAULT_REFRESH_COOKIE = 'sb-refresh-token';
 const LOCAL_DEV_DEFAULT_EMAIL = 'dev@clickeen.local';
-const LOCAL_DEV_DEFAULT_PASSWORD = 'DevOnly!12345';
 const LOCAL_DEV_DEFAULT_WORKSPACE_SLUG = 'ck-dev';
+const DEVSTUDIO_SURFACE = 'devstudio';
 
 function unauthorized(reasonKey: string, status = 401) {
   return NextResponse.json(
@@ -148,6 +152,59 @@ function isLocalHostname(hostname: string): boolean {
   return normalized === 'localhost' || normalized === '127.0.0.1';
 }
 
+function isLocalEnvStage(): boolean {
+  const stage = (process.env.ENV_STAGE ?? process.env.NEXT_PUBLIC_ENV_STAGE ?? '').trim().toLowerCase();
+  return stage === 'local';
+}
+
+function normalizeSurfaceMarker(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toLowerCase();
+  return normalized || null;
+}
+
+function hasDevstudioSurface(value: string | null | undefined): boolean {
+  return normalizeSurfaceMarker(value) === DEVSTUDIO_SURFACE;
+}
+
+function isKnownDevstudioPort(port: string): boolean {
+  return port === '5173' || port === '4173';
+}
+
+function originSignalsDevstudio(origin: string | null): boolean {
+  if (!origin) return false;
+  try {
+    const parsed = new URL(origin);
+    if (!isLocalHostname(parsed.hostname)) return false;
+    return isKnownDevstudioPort(parsed.port);
+  } catch {
+    return false;
+  }
+}
+
+function refererSignalsDevstudio(referrer: string | null): boolean {
+  if (!referrer) return false;
+  try {
+    const parsed = new URL(referrer);
+    if (hasDevstudioSurface(parsed.searchParams.get('surface'))) return true;
+    const path = parsed.pathname.trim().toLowerCase();
+    if (path.includes('/dev-widget-workspace')) return true;
+    if (!isLocalHostname(parsed.hostname)) return false;
+    return isKnownDevstudioPort(parsed.port);
+  } catch {
+    return false;
+  }
+}
+
+export function isDevstudioLocalBootstrapRequest(request: NextRequest): boolean {
+  if (!isLocalEnvStage()) return false;
+  if (!isLocalHostname(request.nextUrl.hostname)) return false;
+  if (hasDevstudioSurface(request.nextUrl.searchParams.get('surface'))) return true;
+  if (hasDevstudioSurface(request.headers.get('x-ck-surface'))) return true;
+  if (originSignalsDevstudio(request.headers.get('origin'))) return true;
+  return refererSignalsDevstudio(request.headers.get('referer'));
+}
+
 function parseUserEmail(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim().toLowerCase();
@@ -169,6 +226,9 @@ function withEmailAlias(email: string, alias: string): string {
 }
 
 function resolveLocalDevBootstrapConfig(): LocalDevBootstrapConfig | null {
+  const envStage = (process.env.ENV_STAGE ?? '').trim().toLowerCase();
+  if (envStage !== 'local') return null;
+
   const disableFlag = (process.env.ROMA_LOCAL_DEV_AUTH_BOOTSTRAP ?? '').trim().toLowerCase();
   if (disableFlag === '0' || disableFlag === 'false' || disableFlag === 'off') return null;
 
@@ -196,8 +256,10 @@ function resolveLocalDevBootstrapConfig(): LocalDevBootstrapConfig | null {
   const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim();
   if (!serviceRoleKey) return null;
 
-  const userEmailHint = parseUserEmail(process.env.ROMA_DEV_USER_EMAIL) ?? LOCAL_DEV_DEFAULT_EMAIL;
-  const userPassword = (process.env.ROMA_DEV_USER_PASSWORD ?? LOCAL_DEV_DEFAULT_PASSWORD).trim();
+  const userEmailHint =
+    parseUserEmail(process.env.CK_ADMIN_EMAIL) ??
+    LOCAL_DEV_DEFAULT_EMAIL;
+  const userPassword = (process.env.CK_ADMIN_PASSWORD ?? '').trim();
   if (!userPassword) return null;
 
   const workspaceSlug = (process.env.ROMA_DEV_WORKSPACE_SLUG ?? LOCAL_DEV_DEFAULT_WORKSPACE_SLUG).trim();
@@ -531,17 +593,24 @@ async function refreshSession(refreshToken: string): Promise<
   };
 }
 
-export async function resolveSessionBearer(request: NextRequest): Promise<SessionResolution> {
+export async function resolveSessionBearer(
+  request: NextRequest,
+  options: ResolveSessionBearerOptions = {},
+): Promise<SessionResolution> {
   const headerToken = asBearerToken(request.headers.get('Authorization'));
   if (headerToken) {
     return { ok: true, accessToken: headerToken };
   }
 
+  const canBootstrapLocalDev =
+    options.allowLocalDevBootstrap === true && isDevstudioLocalBootstrapRequest(request);
   const tokens = extractSessionTokens(request);
   if (!tokens.accessToken) {
-    const bootstrap = await bootstrapLocalDevSession(tokens);
-    if (bootstrap) return bootstrap;
-    return { ok: false, response: unauthorized('roma.errors.auth.session_missing', 401) };
+    if (canBootstrapLocalDev) {
+      const bootstrap = await bootstrapLocalDevSession(tokens);
+      if (bootstrap) return bootstrap;
+    }
+    return { ok: false, response: unauthorized('coreui.errors.auth.required', 401) };
   }
 
   if (!tokenIsExpired(tokens.accessToken)) {
@@ -549,16 +618,20 @@ export async function resolveSessionBearer(request: NextRequest): Promise<Sessio
   }
 
   if (!tokens.refreshToken) {
-    const bootstrap = await bootstrapLocalDevSession(tokens);
-    if (bootstrap) return bootstrap;
-    return { ok: false, response: unauthorized('roma.errors.auth.session_expired', 401) };
+    if (canBootstrapLocalDev) {
+      const bootstrap = await bootstrapLocalDevSession(tokens);
+      if (bootstrap) return bootstrap;
+    }
+    return { ok: false, response: unauthorized('coreui.errors.auth.required', 401) };
   }
 
   const refreshed = await refreshSession(tokens.refreshToken);
   if (!refreshed.ok) {
-    const bootstrap = await bootstrapLocalDevSession(tokens);
-    if (bootstrap) return bootstrap;
-    return { ok: false, response: unauthorized(refreshed.reason, 401) };
+    if (canBootstrapLocalDev) {
+      const bootstrap = await bootstrapLocalDevSession(tokens);
+      if (bootstrap) return bootstrap;
+    }
+    return { ok: false, response: unauthorized('coreui.errors.auth.required', 401) };
   }
 
   return {

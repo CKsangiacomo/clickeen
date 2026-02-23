@@ -1,0 +1,42 @@
+name: pr architecture gates
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "paris/**"
+      - "roma/**"
+      - "bob/**"
+      - "scripts/**"
+      - "tooling/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/pr-architecture-gates.yml"
+
+concurrency:
+  group: pr-architecture-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: {}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Paris boundary gate
+        run: pnpm test:paris-boundary
+
+      - name: Bob bootstrap boundary gate
+        run: pnpm test:bob-bootstrap-boundary

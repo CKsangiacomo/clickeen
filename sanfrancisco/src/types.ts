@@ -64,6 +64,18 @@ export type OutcomeAttachRequest = {
   workspaceIdHash?: string;
 };
 
+export type SanfranciscoCommandName =
+  | 'personalization.preview.enqueue'
+  | 'personalization.onboarding.enqueue'
+  | 'ai.outcome.attach';
+
+export type SanfranciscoCommandMessage = {
+  v: 1;
+  kind: 'sf.command';
+  command: SanfranciscoCommandName;
+  payload: Record<string, unknown>;
+};
+
 export type Usage = {
   provider: string;
   model: string;

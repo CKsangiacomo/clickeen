@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveParisBaseUrl } from '../../env/paris';
-import { resolveSessionBearer, type SessionCookieSpec } from '../../auth/session';
+import {
+  isDevstudioLocalBootstrapRequest,
+  resolveSessionBearer,
+  type SessionCookieSpec,
+} from '../../auth/session';
 
 export function resolveParisBaseOrResponse(corsHeaders: HeadersInit) {
   try {
@@ -24,19 +28,13 @@ export async function fetchWithTimeout(input: string, init: RequestInit, timeout
   }
 }
 
-export function shouldEnforceSuperadmin(request: NextRequest, superadminKey: string | undefined): boolean {
-  if (!superadminKey) return false;
-  if (process.env.NODE_ENV === 'development') return false;
-  const host = (request.headers.get('host') || '').toLowerCase();
-  if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) return false;
-  return true;
-}
-
 export async function resolveParisSession(request: NextRequest): Promise<
   | { ok: true; accessToken: string; setCookies?: SessionCookieSpec[] }
   | { ok: false; response: NextResponse }
 > {
-  const resolved = await resolveSessionBearer(request);
+  const resolved = await resolveSessionBearer(request, {
+    allowLocalDevBootstrap: isDevstudioLocalBootstrapRequest(request),
+  });
   if (!resolved.ok) return resolved;
   return {
     ok: true,

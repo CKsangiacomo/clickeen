@@ -71,16 +71,16 @@ export function HomeDomain() {
   }, [completeHandoff, handoffId, hasWorkspaceContext, me.data]);
 
   if (me.loading) {
-    return <section className="roma-module-surface">Loading identity and membership context...</section>;
+    return <section className="rd-canvas-module body-m">Loading identity and membership context...</section>;
   }
 
   if (me.error || !me.data) {
     return (
-      <section className="roma-module-surface">
-        <p>Failed to load Roma identity context: {me.error ?? 'unknown_error'}</p>
-        <div className="roma-module-surface__actions">
+      <section className="rd-canvas-module">
+        <p className="body-m">Failed to load Roma identity context: {me.error ?? 'unknown_error'}</p>
+        <div className="rd-canvas-module__actions">
           <button className="diet-btn-txt" data-size="md" data-variant="primary" onClick={() => void me.reload()} type="button">
-            <span className="diet-btn-txt__label">Retry</span>
+            <span className="diet-btn-txt__label body-m">Retry</span>
           </button>
         </div>
       </section>
@@ -89,14 +89,14 @@ export function HomeDomain() {
 
   if (!hasWorkspaceContext) {
     return (
-      <section className="roma-module-surface">
-        <p>No workspace context is available for this account membership.</p>
-        <div className="roma-module-surface__actions">
+      <section className="rd-canvas-module">
+        <p className="body-m">No workspace context is available for this account membership.</p>
+        <div className="rd-canvas-module__actions">
           <Link href="/settings" className="diet-btn-txt" data-size="md" data-variant="primary">
-            <span className="diet-btn-txt__label">Open settings</span>
+            <span className="diet-btn-txt__label body-m">Open settings</span>
           </Link>
           <Link href="/team" className="diet-btn-txt" data-size="md" data-variant="line2">
-            <span className="diet-btn-txt__label">Open team</span>
+            <span className="diet-btn-txt__label body-m">Open team</span>
           </Link>
         </div>
       </section>
@@ -104,63 +104,67 @@ export function HomeDomain() {
   }
 
   return (
-    <section className="roma-module-surface">
-      {handoffId ? (
-        <article className="roma-card">
-          <h2>MiniBob Continuation</h2>
-          <p>
-            {handoffStatus === 'running'
-              ? 'Continuing from MiniBob and opening Builder...'
-              : handoffStatus === 'failed'
-                ? `MiniBob continuation failed: ${handoffError ?? 'unknown_error'}`
-                : handoffPublicIdHint
-                  ? `Pending continuation for ${handoffPublicIdHint}.`
-                  : 'Pending continuation detected from MiniBob.'}
-          </p>
-          {handoffStatus === 'failed' ? (
-            <div className="roma-module-surface__actions">
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="primary"
-                type="button"
-                onClick={() => {
-                  handoffAttemptRef.current = null;
-                  void completeHandoff();
-                }}
-              >
-                <span className="diet-btn-txt__label">Retry continuation</span>
-              </button>
+    <>
+      <section className="rd-canvas-module">
+        {handoffId ? (
+          <article className="roma-card">
+            <h2 className="heading-6">MiniBob Continuation</h2>
+            <p className="body-m">
+              {handoffStatus === 'running'
+                ? 'Continuing from MiniBob and opening Builder...'
+                : handoffStatus === 'failed'
+                  ? `MiniBob continuation failed: ${handoffError ?? 'unknown_error'}`
+                  : handoffPublicIdHint
+                    ? `Pending continuation for ${handoffPublicIdHint}.`
+                    : 'Pending continuation detected from MiniBob.'}
+            </p>
+            {handoffStatus === 'failed' ? (
+              <div className="rd-canvas-module__actions">
+                <button
+                  className="diet-btn-txt"
+                  data-size="md"
+                  data-variant="primary"
+                  type="button"
+                  onClick={() => {
+                    handoffAttemptRef.current = null;
+                    void completeHandoff();
+                  }}
+                >
+                  <span className="diet-btn-txt__label body-m">Retry continuation</span>
+                </button>
+              </div>
+            ) : null}
+          </article>
+        ) : null}
+
+        <p className="body-m">
+          Active workspace: {context.workspaceName || context.workspaceId}
+          {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
+        </p>
+      </section>
+
+      <section className="rd-canvas-module">
+        <div className="roma-grid roma-grid--three">
+          <article className="roma-card">
+            <h2 className="heading-6">Create</h2>
+            <p className="body-s">Create a widget and open Bob Builder immediately.</p>
+            <div className="rd-canvas-module__actions">
+              <Link href="/widgets?intent=create" className="diet-btn-txt" data-size="md" data-variant="primary">
+                <span className="diet-btn-txt__label body-m">Create widget</span>
+              </Link>
             </div>
-          ) : null}
-        </article>
-      ) : null}
-
-      <p>
-        Active workspace: {context.workspaceName || context.workspaceId}
-        {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
-      </p>
-
-      <div className="roma-grid roma-grid--three">
-        <article className="roma-card">
-          <h2>Create</h2>
-          <p>Create a widget and open Bob Builder immediately.</p>
-          <div className="roma-module-surface__actions">
-            <Link href="/widgets?intent=create" className="diet-btn-txt" data-size="md" data-variant="primary">
-              <span className="diet-btn-txt__label">Create widget</span>
-            </Link>
-          </div>
-        </article>
-        <article className="roma-card">
-          <h2>Continue</h2>
-          <p>Open existing widget instances and jump into Builder.</p>
-          <div className="roma-module-surface__actions">
-            <Link href="/widgets" className="diet-btn-txt" data-size="md" data-variant="line2">
-              <span className="diet-btn-txt__label">Open widgets</span>
-            </Link>
-          </div>
-        </article>
-      </div>
-    </section>
+          </article>
+          <article className="roma-card">
+            <h2 className="heading-6">Continue</h2>
+            <p className="body-s">Open existing widget instances and jump into Builder.</p>
+            <div className="rd-canvas-module__actions">
+              <Link href="/widgets" className="diet-btn-txt" data-size="md" data-variant="line2">
+                <span className="diet-btn-txt__label body-m">Open widgets</span>
+              </Link>
+            </div>
+          </article>
+        </div>
+      </section>
+    </>
   );
 }

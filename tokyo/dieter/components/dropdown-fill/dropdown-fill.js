@@ -5,6 +5,7 @@ var Dieter = (() => {
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __getOwnPropNames = Object.getOwnPropertyNames;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __export = (target, all) => {
     for (var name in all)
       __defProp(target, name, { get: all[name], enumerable: true });
@@ -18,6 +19,7 @@ var Dieter = (() => {
     return to;
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+  var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
   // components/dropdown-fill/dropdown-fill.ts
   var dropdown_fill_exports = {};
@@ -33,7 +35,8 @@ var Dieter = (() => {
       popoverSelector = ".diet-popover",
       onOpen,
       onClose,
-      initialState = "closed"
+      initialState = "closed",
+      isInsideTarget
     } = config;
     const hostRegistry = /* @__PURE__ */ new Map();
     let globalHandlersBound = false;
@@ -75,7 +78,9 @@ var Dieter = (() => {
             if (!target) return;
             hostRegistry.forEach((record) => {
               const { root } = record;
-              if (!root.contains(target) && root.dataset.state === "open") {
+              const insideRoot = root.contains(target);
+              const insideExtraTarget = isInsideTarget?.(root, target) ?? false;
+              if (!insideRoot && !insideExtraTarget && root.dataset.state === "open") {
                 setOpen(record, false);
               }
             });
@@ -91,6 +96,617 @@ var Dieter = (() => {
         });
       }
     };
+  }
+
+  // components/dropdown-fill/asset-picker-overlay.ts
+  function clampNumber(value, min, max) {
+    if (!Number.isFinite(value)) return min;
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+  }
+  var AssetPickerOverlay = class {
+    constructor(callbacks) {
+      __publicField(this, "root");
+      __publicField(this, "closeButton");
+      __publicField(this, "messageEl");
+      __publicField(this, "rowsEl");
+      __publicField(this, "callbacks");
+      __publicField(this, "anchor", null);
+      __publicField(this, "openState", false);
+      __publicField(this, "handleDocumentPointerDown");
+      __publicField(this, "handleDocumentKeydown");
+      __publicField(this, "handleViewportChange");
+      this.callbacks = callbacks;
+      this.root = document.createElement("div");
+      this.root.className = "diet-popover diet-dropdown-fill__asset-picker diet-dropdown-fill__asset-picker-portal";
+      this.root.setAttribute("role", "dialog");
+      this.root.setAttribute("aria-label", "Choose from assets");
+      this.root.hidden = true;
+      this.root.innerHTML = `
+      <div class="diet-popover__header">
+        <span class="diet-popover__header-label label-s">Choose from assets</span>
+        <button
+          type="button"
+          class="diet-btn-ic diet-popover__header-trigger diet-dropdown-fill__asset-picker-close"
+          data-size="sm"
+          data-variant="neutral"
+          aria-label="Close assets list"
+        >
+          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="multiply"></span>
+        </button>
+      </div>
+      <div class="diet-popover__body">
+        <p class="diet-dropdown-fill__asset-picker-message body-s" data-role="asset-picker-message"></p>
+        <div class="diet-dropdown-fill__asset-picker-tablewrap">
+          <table class="diet-dropdown-fill__asset-picker-table">
+            <thead>
+              <tr>
+                <th class="label-s">Asset</th>
+                <th class="label-s">Type</th>
+                <th class="label-s">Size</th>
+                <th class="label-s">Usage</th>
+                <th class="label-s">Action</th>
+              </tr>
+            </thead>
+            <tbody data-role="asset-picker-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+      const closeButton = this.root.querySelector(".diet-dropdown-fill__asset-picker-close");
+      const messageEl = this.root.querySelector('[data-role="asset-picker-message"]');
+      const rowsEl = this.root.querySelector('[data-role="asset-picker-rows"]');
+      if (!closeButton || !messageEl || !rowsEl) {
+        throw new Error("[dropdown-fill] asset picker overlay missing DOM nodes");
+      }
+      this.closeButton = closeButton;
+      this.messageEl = messageEl;
+      this.rowsEl = rowsEl;
+      this.handleDocumentPointerDown = (event) => {
+        if (!this.openState) return;
+        const target = event.target;
+        if (!target) return;
+        if (this.root.contains(target)) return;
+        if (this.anchor?.contains(target)) return;
+        this.close();
+      };
+      this.handleDocumentKeydown = (event) => {
+        if (!this.openState) return;
+        if (event.key !== "Escape") return;
+        this.close();
+      };
+      this.handleViewportChange = () => {
+        if (!this.openState) return;
+        this.position();
+      };
+      document.body.appendChild(this.root);
+      this.bindStaticHandlers();
+    }
+    bindStaticHandlers() {
+      this.closeButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.close();
+      });
+    }
+    bindOpenHandlers() {
+      document.addEventListener("pointerdown", this.handleDocumentPointerDown, true);
+      document.addEventListener("keydown", this.handleDocumentKeydown);
+      window.addEventListener("resize", this.handleViewportChange);
+      window.addEventListener("scroll", this.handleViewportChange, true);
+    }
+    unbindOpenHandlers() {
+      document.removeEventListener("pointerdown", this.handleDocumentPointerDown, true);
+      document.removeEventListener("keydown", this.handleDocumentKeydown);
+      window.removeEventListener("resize", this.handleViewportChange);
+      window.removeEventListener("scroll", this.handleViewportChange, true);
+    }
+    position() {
+      if (!this.openState) return;
+      if (!this.anchor?.isConnected) {
+        this.close();
+        return;
+      }
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const margin = 12;
+      const gap = 8;
+      const maxWidth = Math.max(260, viewportWidth - margin * 2);
+      const width = Math.min(480, maxWidth);
+      this.root.style.inlineSize = `${Math.round(width)}px`;
+      const anchorRect = this.anchor.getBoundingClientRect();
+      let left = anchorRect.left;
+      left = clampNumber(left, margin, Math.max(margin, viewportWidth - width - margin));
+      let top = anchorRect.bottom + gap;
+      const currentHeight = this.root.getBoundingClientRect().height || 320;
+      const minBelowSpace = 220;
+      if (viewportHeight - top - margin < minBelowSpace) {
+        top = Math.max(margin, anchorRect.top - gap - currentHeight);
+      }
+      const maxBlockSize = Math.max(180, viewportHeight - top - margin);
+      this.root.style.insetInlineStart = `${Math.round(left)}px`;
+      this.root.style.insetBlockStart = `${Math.round(top)}px`;
+      this.root.style.maxBlockSize = `${Math.round(maxBlockSize)}px`;
+    }
+    isOpen() {
+      return this.openState;
+    }
+    open(anchor) {
+      this.anchor = anchor;
+      if (this.openState) {
+        this.position();
+        return;
+      }
+      this.openState = true;
+      this.bindOpenHandlers();
+      this.root.hidden = false;
+      this.callbacks.onOpenChange?.(true);
+      this.position();
+      requestAnimationFrame(() => this.position());
+    }
+    close() {
+      if (!this.openState) return;
+      this.openState = false;
+      this.unbindOpenHandlers();
+      this.root.hidden = true;
+      this.callbacks.onOpenChange?.(false);
+    }
+    contains(target) {
+      return this.root.contains(target);
+    }
+    setMessage(message) {
+      this.messageEl.textContent = message;
+    }
+    setRows(items) {
+      this.rowsEl.innerHTML = "";
+      if (!items.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 5;
+        td.className = "body-s";
+        td.textContent = "No image assets found.";
+        tr.appendChild(td);
+        this.rowsEl.appendChild(tr);
+        return;
+      }
+      items.forEach((item) => {
+        const tr = document.createElement("tr");
+        const nameCell = document.createElement("td");
+        nameCell.className = "body-s";
+        nameCell.textContent = item.normalizedFilename;
+        tr.appendChild(nameCell);
+        const typeCell = document.createElement("td");
+        typeCell.className = "body-s";
+        typeCell.textContent = item.contentType;
+        tr.appendChild(typeCell);
+        const sizeCell = document.createElement("td");
+        sizeCell.className = "body-s";
+        sizeCell.textContent = item.sizeLabel;
+        tr.appendChild(sizeCell);
+        const usageCell = document.createElement("td");
+        usageCell.className = "body-s";
+        usageCell.textContent = String(item.usageCount);
+        tr.appendChild(usageCell);
+        const actionCell = document.createElement("td");
+        const useButton = document.createElement("button");
+        useButton.type = "button";
+        useButton.className = "diet-btn-txt diet-dropdown-fill__asset-picker-use";
+        useButton.setAttribute("data-size", "sm");
+        useButton.setAttribute("data-variant", "line1");
+        useButton.innerHTML = '<span class="diet-btn-txt__label body-s">Use</span>';
+        useButton.addEventListener("click", (event) => {
+          event.preventDefault();
+          this.callbacks.onUse(item);
+          this.close();
+        });
+        actionCell.appendChild(useButton);
+        tr.appendChild(actionCell);
+        this.rowsEl.appendChild(tr);
+      });
+    }
+    destroy() {
+      this.unbindOpenHandlers();
+      this.close();
+      this.root.remove();
+    }
+  };
+
+  // components/dropdown-fill/fill-types.ts
+  var MODE_ORDER = ["color", "gradient", "image", "video"];
+  var DEFAULT_GRADIENT = {
+    angle: 135,
+    stops: [
+      { color: "#ff3b30", position: 0 },
+      { color: "#007aff", position: 100 }
+    ]
+  };
+
+  // components/dropdown-fill/color-utils.ts
+  function clampNumber2(value, min, max) {
+    if (Number.isNaN(value)) return min;
+    return Math.min(Math.max(value, min), max);
+  }
+  function roundTo(value, precision) {
+    const factor = Math.pow(10, precision);
+    return Math.round(value * factor) / factor;
+  }
+  function normalizeHex(value) {
+    const hex = value.trim().replace(/^#/, "").toLowerCase();
+    if (/^[0-9a-f]{3}$/.test(hex)) {
+      return `#${hex.split("").map((c) => c + c).join("")}`;
+    }
+    if (/^[0-9a-f]{4}$/.test(hex)) {
+      const expanded = hex.split("").map((c) => c + c).join("");
+      return `#${expanded.slice(0, 6)}`;
+    }
+    if (/^[0-9a-f]{6}$/.test(hex)) return `#${hex}`;
+    if (/^[0-9a-f]{8}$/.test(hex)) return `#${hex.slice(0, 6)}`;
+    return null;
+  }
+  function normalizeAssetReferenceUrl(value) {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    try {
+      const baseHref = typeof window !== "undefined" ? window.location.href : "http://localhost/";
+      return new URL(trimmed, baseHref).toString();
+    } catch {
+      return trimmed;
+    }
+  }
+  function sameAssetReferenceUrl(left, right) {
+    const leftNormalized = normalizeAssetReferenceUrl(left);
+    const rightNormalized = normalizeAssetReferenceUrl(right);
+    if (!leftNormalized || !rightNormalized) return false;
+    return leftNormalized === rightNormalized;
+  }
+  function hexToRgba(value) {
+    const raw = value.trim().replace(/^#/, "");
+    if (!/^[0-9a-f]+$/i.test(raw)) return null;
+    if (raw.length === 3) {
+      const r = parseInt(raw[0] + raw[0], 16);
+      const g = parseInt(raw[1] + raw[1], 16);
+      const b = parseInt(raw[2] + raw[2], 16);
+      return { r, g, b, a: 1 };
+    }
+    if (raw.length === 4) {
+      const r = parseInt(raw[0] + raw[0], 16);
+      const g = parseInt(raw[1] + raw[1], 16);
+      const b = parseInt(raw[2] + raw[2], 16);
+      const a = parseInt(raw[3] + raw[3], 16) / 255;
+      return { r, g, b, a };
+    }
+    if (raw.length === 6 || raw.length === 8) {
+      const r = parseInt(raw.slice(0, 2), 16);
+      const g = parseInt(raw.slice(2, 4), 16);
+      const b = parseInt(raw.slice(4, 6), 16);
+      const a = raw.length === 8 ? parseInt(raw.slice(6, 8), 16) / 255 : 1;
+      return { r, g, b, a };
+    }
+    return null;
+  }
+  function rgbToHsv(r, g, b, alpha = 1) {
+    const rNorm = r / 255;
+    const gNorm = g / 255;
+    const bNorm = b / 255;
+    const max = Math.max(rNorm, gNorm, bNorm);
+    const min = Math.min(rNorm, gNorm, bNorm);
+    const delta = max - min;
+    let h = 0;
+    if (delta !== 0) {
+      switch (max) {
+        case rNorm:
+          h = 60 * ((gNorm - bNorm) / delta % 6);
+          break;
+        case gNorm:
+          h = 60 * ((bNorm - rNorm) / delta + 2);
+          break;
+        case bNorm:
+          h = 60 * ((rNorm - gNorm) / delta + 4);
+          break;
+        default:
+          break;
+      }
+    }
+    if (h < 0) h += 360;
+    const s = max === 0 ? 0 : delta / max;
+    const v = max;
+    return { h, s, v, a: clampNumber2(alpha, 0, 1) };
+  }
+  function hsvToRgb(h, s, v) {
+    const c = v * s;
+    const x = c * (1 - Math.abs(h / 60 % 2 - 1));
+    const m = v - c;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    if (h >= 0 && h < 60) {
+      r = c;
+      g = x;
+      b = 0;
+    } else if (h >= 60 && h < 120) {
+      r = x;
+      g = c;
+      b = 0;
+    } else if (h >= 120 && h < 180) {
+      r = 0;
+      g = c;
+      b = x;
+    } else if (h >= 180 && h < 240) {
+      r = 0;
+      g = x;
+      b = c;
+    } else if (h >= 240 && h < 300) {
+      r = x;
+      g = 0;
+      b = c;
+    } else {
+      r = c;
+      g = 0;
+      b = x;
+    }
+    return {
+      r: Math.round((r + m) * 255),
+      g: Math.round((g + m) * 255),
+      b: Math.round((b + m) * 255)
+    };
+  }
+  function toHex(value) {
+    return clampNumber2(Math.round(value), 0, 255).toString(16).padStart(2, "0");
+  }
+  function formatHex(hsv) {
+    const { r, g, b } = hsvToRgb(hsv.h, hsv.s, hsv.v);
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  }
+  function getComputedColor(value, root) {
+    const temp = document.createElement("div");
+    temp.style.color = value;
+    temp.style.display = "none";
+    root.appendChild(temp);
+    const computed = getComputedStyle(temp).color;
+    root.removeChild(temp);
+    return computed;
+  }
+  function tryParseTransparentColorMix(value, root) {
+    const trimmed = value.trim();
+    if (!/^color-mix\(/i.test(trimmed)) return null;
+    const parsePct = (raw) => {
+      const num = Number.parseFloat(raw);
+      if (!Number.isFinite(num)) return null;
+      if (num < 0 || num > 100) return null;
+      return num / 100;
+    };
+    const tailTransparent = trimmed.match(/^color-mix\(\s*in\s+oklab\s*,\s*(.+?)\s*,\s*transparent\s+([0-9.]+)%\s*\)$/i);
+    const headTransparent = trimmed.match(/^color-mix\(\s*in\s+oklab\s*,\s*transparent\s+([0-9.]+)%\s*,\s*(.+?)\s*\)$/i);
+    let colorExpr = null;
+    let transparentWeight = null;
+    if (tailTransparent) {
+      colorExpr = tailTransparent[1]?.trim() ?? null;
+      transparentWeight = parsePct(tailTransparent[2] ?? "");
+    } else if (headTransparent) {
+      transparentWeight = parsePct(headTransparent[1] ?? "");
+      colorExpr = headTransparent[2]?.trim() ?? null;
+    }
+    if (!colorExpr || transparentWeight == null) return null;
+    const base = colorStringToRgba(colorExpr, root);
+    if (!base) return null;
+    const baseWeight = 1 - transparentWeight;
+    return { r: base.r, g: base.g, b: base.b, a: clampNumber2(base.a * baseWeight, 0, 1) };
+  }
+  function colorStringToRgba(value, root) {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const transparentMix = tryParseTransparentColorMix(trimmed, root);
+    if (transparentMix) return transparentMix;
+    if (trimmed.startsWith("#")) {
+      return hexToRgba(trimmed);
+    }
+    if (typeof CSS !== "undefined" && typeof CSS.supports === "function" && !/\bvar\(/i.test(trimmed) && !CSS.supports("color", trimmed)) {
+      return null;
+    }
+    const computed = getComputedColor(trimmed, root);
+    return parseCssColor(computed);
+  }
+  function parseColor(value, root) {
+    const rgba = colorStringToRgba(value, root);
+    if (!rgba) return null;
+    return rgbToHsv(rgba.r, rgba.g, rgba.b, rgba.a);
+  }
+  function parseCssColor(computed) {
+    const clamp01 = (value) => Math.min(Math.max(value, 0), 1);
+    const clamp255 = (value) => Math.min(Math.max(value, 0), 255);
+    const parseAlpha = (token) => {
+      if (!token) return 1;
+      const raw = token.trim();
+      if (!raw) return 1;
+      if (raw.endsWith("%")) {
+        const pct = Number.parseFloat(raw.slice(0, -1));
+        return Number.isFinite(pct) ? clamp01(pct / 100) : 1;
+      }
+      const num = Number.parseFloat(raw);
+      return Number.isFinite(num) ? clamp01(num) : 1;
+    };
+    const parseRgb255 = (token) => {
+      const raw = token.trim();
+      if (!raw) return null;
+      if (raw.endsWith("%")) {
+        const pct = Number.parseFloat(raw.slice(0, -1));
+        if (!Number.isFinite(pct)) return null;
+        return clamp255(Math.round(pct / 100 * 255));
+      }
+      const num = Number.parseFloat(raw);
+      if (!Number.isFinite(num)) return null;
+      return clamp255(Math.round(num));
+    };
+    const parseSrgbChannel = (token) => {
+      const raw = token.trim();
+      if (!raw) return null;
+      if (raw.endsWith("%")) {
+        const pct = Number.parseFloat(raw.slice(0, -1));
+        if (!Number.isFinite(pct)) return null;
+        return clamp255(Math.round(pct / 100 * 255));
+      }
+      const num = Number.parseFloat(raw);
+      if (!Number.isFinite(num)) return null;
+      const normalized = num > 1 ? num / 255 : num;
+      return clamp255(Math.round(clamp01(normalized) * 255));
+    };
+    const trimmed = computed.trim();
+    const hexMatch = trimmed.match(/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
+    if (hexMatch) return hexToRgba(trimmed);
+    const srgbMatch = trimmed.match(/^color\(\s*srgb\s+(.+)\)$/i);
+    if (srgbMatch) {
+      const body = srgbMatch[1].trim().replace(/\)\s*$/, "");
+      const [channelsPart, alphaPart] = body.split(/\s*\/\s*/);
+      const channels = channelsPart.split(/\s+/).filter(Boolean);
+      if (channels.length >= 3) {
+        const r = parseSrgbChannel(channels[0]);
+        const g = parseSrgbChannel(channels[1]);
+        const b = parseSrgbChannel(channels[2]);
+        if (r != null && g != null && b != null) return { r, g, b, a: parseAlpha(alphaPart) };
+      }
+    }
+    const rgbMatch = trimmed.match(/^rgba?\(\s*(.+)\s*\)$/i);
+    if (rgbMatch) {
+      const body = rgbMatch[1];
+      const hasSlash = body.includes("/");
+      const [channelsPartRaw, alphaPartRaw] = hasSlash ? body.split(/\s*\/\s*/) : [body, null];
+      const tokens = channelsPartRaw.split(/[\s,]+/).map((t) => t.trim()).filter(Boolean);
+      let alphaToken = alphaPartRaw ? alphaPartRaw.trim() : null;
+      if (!alphaToken && tokens.length >= 4) {
+        alphaToken = tokens[3];
+      }
+      if (tokens.length >= 3) {
+        const r = parseRgb255(tokens[0]);
+        const g = parseRgb255(tokens[1]);
+        const b = parseRgb255(tokens[2]);
+        if (r != null && g != null && b != null) return { r, g, b, a: parseAlpha(alphaToken) };
+      }
+    }
+    return null;
+  }
+
+  // components/dropdown-fill/fill-parser.ts
+  function isPersistedAssetUrl(value) {
+    return /^https?:\/\//i.test(value) || value.startsWith("/");
+  }
+  function normalizeImageValue(raw) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return { src: "", fit: "cover", position: "center", repeat: "no-repeat" };
+    }
+    const value = raw;
+    const srcRaw = typeof value.src === "string" ? value.src.trim() : "";
+    const src = isPersistedAssetUrl(srcRaw) ? srcRaw : "";
+    const name = typeof value.name === "string" ? value.name.trim() : "";
+    const fit = value.fit === "contain" ? "contain" : "cover";
+    const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
+    const repeat = typeof value.repeat === "string" && value.repeat.trim() ? value.repeat.trim() : "no-repeat";
+    return { src, ...name ? { name } : {}, fit, position, repeat };
+  }
+  function normalizeVideoValue(raw) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return { src: "", poster: "", fit: "cover", position: "center", loop: true, muted: true, autoplay: true };
+    }
+    const value = raw;
+    const srcRaw = typeof value.src === "string" ? value.src.trim() : "";
+    const posterRaw = typeof value.poster === "string" ? value.poster.trim() : "";
+    const src = isPersistedAssetUrl(srcRaw) ? srcRaw : "";
+    const name = typeof value.name === "string" ? value.name.trim() : "";
+    const poster = isPersistedAssetUrl(posterRaw) ? posterRaw : "";
+    const fit = value.fit === "contain" ? "contain" : "cover";
+    const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
+    const loop = typeof value.loop === "boolean" ? value.loop : true;
+    const muted = typeof value.muted === "boolean" ? value.muted : true;
+    const autoplay = typeof value.autoplay === "boolean" ? value.autoplay : true;
+    return { src, ...name ? { name } : {}, poster, fit, position, loop, muted, autoplay };
+  }
+  function normalizeGradientValue(raw) {
+    if (typeof raw === "string") {
+      const css2 = raw.trim();
+      return css2 ? { css: css2 } : void 0;
+    }
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return void 0;
+    const value = raw;
+    const css = typeof value.css === "string" ? value.css.trim() : "";
+    if (css) return { css };
+    const kindRaw = typeof value.kind === "string" ? value.kind.trim() : "";
+    const kind = kindRaw === "radial" || kindRaw === "conic" ? kindRaw : "linear";
+    const angle = clampNumber2(typeof value.angle === "number" ? value.angle : 0, 0, 360);
+    const stopsRaw = Array.isArray(value.stops) ? value.stops : [];
+    const stops = stopsRaw.map((stop) => {
+      if (!stop || typeof stop !== "object" || Array.isArray(stop)) return null;
+      const entry = stop;
+      const color = typeof entry.color === "string" ? entry.color.trim() : "";
+      if (!color) return null;
+      const position = clampNumber2(typeof entry.position === "number" ? entry.position : 0, 0, 100);
+      return { color, position };
+    }).filter((stop) => Boolean(stop));
+    return { kind, angle, stops };
+  }
+  function coerceFillValue(raw) {
+    const typeRaw = typeof raw.type === "string" ? raw.type.trim().toLowerCase() : "";
+    if (!typeRaw) return { type: "none" };
+    if (typeRaw === "none") return { type: "none" };
+    if (!MODE_ORDER.includes(typeRaw)) return null;
+    if (typeRaw === "color") {
+      const color = typeof raw.color === "string" ? raw.color.trim() : "";
+      const value = typeof raw.value === "string" ? raw.value.trim() : "";
+      return { type: "color", color: color || value || "transparent" };
+    }
+    if (typeRaw === "gradient") {
+      return { type: "gradient", gradient: normalizeGradientValue(raw.gradient) };
+    }
+    if (typeRaw === "image") {
+      return { type: "image", image: normalizeImageValue(raw.image) };
+    }
+    if (typeRaw === "video") {
+      return { type: "video", video: normalizeVideoValue(raw.video) };
+    }
+    return { type: "none" };
+  }
+  function parseFillString(value, root) {
+    if (!value) return { type: "none" };
+    const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+    if (urlMatch && urlMatch[2]) {
+      const src = urlMatch[2].trim();
+      if (!isPersistedAssetUrl(src)) return null;
+      return { type: "image", image: { src, fit: "cover", position: "center", repeat: "no-repeat" } };
+    }
+    if (isPersistedAssetUrl(value)) {
+      return { type: "image", image: { src: value, fit: "cover", position: "center", repeat: "no-repeat" } };
+    }
+    if (/-gradient\(/i.test(value)) {
+      return { type: "gradient", gradient: { css: value } };
+    }
+    const parsed = parseColor(value, root);
+    if (!parsed) return null;
+    return { type: "color", color: value };
+  }
+  function parseFillValue(raw, root) {
+    const value = String(raw ?? "").trim();
+    if (!value) return { type: "none" };
+    if (value.startsWith("{") || value.startsWith("[") || value.startsWith('"')) {
+      try {
+        const parsed = JSON.parse(value);
+        if (typeof parsed === "string") return parseFillString(parsed, root);
+        if (parsed == null) return { type: "none" };
+        if (typeof parsed !== "object" || Array.isArray(parsed)) return null;
+        return coerceFillValue(parsed);
+      } catch {
+        return parseFillString(value, root);
+      }
+    }
+    return parseFillString(value, root);
+  }
+  function resolveModeFromFill(currentMode, allowedModes, fill) {
+    const desired = fill.type === "none" ? currentMode : fill.type;
+    if (desired !== "none" && allowedModes.includes(desired)) return desired;
+    return allowedModes[0] || "color";
+  }
+  function readImageName(fill) {
+    return typeof fill.image?.name === "string" && fill.image.name.trim() ? fill.image.name.trim() : null;
+  }
+  function readVideoName(fill) {
+    return typeof fill.video?.name === "string" && fill.video.name.trim() ? fill.video.name.trim() : null;
   }
 
   // ../tooling/ck-contracts/src/index.js
@@ -178,11 +794,10 @@ var Dieter = (() => {
     const publicId = readDatasetValue("ckPublicId");
     const widgetType = readDatasetValue("ckWidgetType");
     if (!accountId || !isUuid(accountId)) return null;
-    if (!workspaceId || !isUuid(workspaceId)) return null;
     const context = {
-      accountId,
-      workspaceId
+      accountId
     };
+    if (workspaceId && isUuid(workspaceId)) context.workspaceId = workspaceId;
     if (publicId && isPublicId(publicId)) context.publicId = publicId;
     if (widgetType && isWidgetType(widgetType)) context.widgetType = widgetType.toLowerCase();
     return context;
@@ -195,11 +810,11 @@ var Dieter = (() => {
       return null;
     }
   }
-  function normalizeUploadUrl(payload) {
+  function normalizeAssetUrl(payload) {
     const direct = typeof payload.url === "string" ? payload.url.trim() : "";
     if (!direct) return null;
     const parsed = parseCanonicalAssetRef(direct);
-    if (!parsed) return null;
+    if (!parsed || parsed.kind !== "pointer") return null;
     if (/^https?:\/\//i.test(direct)) return direct;
     return parsed.pathname;
   }
@@ -211,7 +826,7 @@ var Dieter = (() => {
     if (!isUuid(accountId)) {
       throw new Error("coreui.errors.accountId.invalid");
     }
-    if (!isUuid(workspaceId)) {
+    if (workspaceId && !isUuid(workspaceId)) {
       throw new Error("coreui.errors.workspaceId.invalid");
     }
     if (publicId && !isPublicId(publicId)) {
@@ -220,7 +835,12 @@ var Dieter = (() => {
     if (widgetType && !isWidgetType(widgetType)) {
       throw new Error("coreui.errors.widgetType.invalid");
     }
-    return { accountId, workspaceId, publicId: publicId || void 0, widgetType: widgetType || void 0 };
+    return {
+      accountId,
+      workspaceId: workspaceId || void 0,
+      publicId: publicId || void 0,
+      widgetType: widgetType || void 0
+    };
   }
   async function uploadEditorAsset(args) {
     const file = args.file;
@@ -234,7 +854,7 @@ var Dieter = (() => {
     const headers = new Headers();
     headers.set("content-type", file.type || "application/octet-stream");
     headers.set("x-account-id", context.accountId);
-    headers.set("x-workspace-id", context.workspaceId);
+    if (context.workspaceId) headers.set("x-workspace-id", context.workspaceId);
     headers.set("x-filename", file.name || "upload.bin");
     headers.set("x-variant", variant);
     headers.set("x-source", source);
@@ -256,32 +876,431 @@ var Dieter = (() => {
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
-    const url = normalizeUploadUrl(payload);
+    const url = normalizeAssetUrl(payload);
     if (!url) {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
     return url;
   }
 
+  // components/dropdown-fill/asset-picker-data.ts
+  function readFillDocumentDatasetValue(key) {
+    if (typeof document === "undefined") return "";
+    const value = document.documentElement.dataset[key];
+    return typeof value === "string" ? value.trim() : "";
+  }
+  function resolveImageAssetPickerContext() {
+    const accountId = readFillDocumentDatasetValue("ckOwnerAccountId");
+    if (!isUuid(accountId)) return null;
+    const workspaceIdRaw = readFillDocumentDatasetValue("ckWorkspaceId");
+    return {
+      accountId,
+      workspaceId: isUuid(workspaceIdRaw) ? workspaceIdRaw : null
+    };
+  }
+  function formatAssetSizeLabel(sizeBytes) {
+    const safe = Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0;
+    if (safe < 1024) return `${safe} B`;
+    if (safe < 1024 * 1024) return `${Math.round(safe / 1024)} KB`;
+    return `${(safe / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  function resolveAssetChoiceUrl(accountId, assetId) {
+    return `/arsenale/a/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`;
+  }
+  async function fetchImageAssetChoices() {
+    const context = resolveImageAssetPickerContext();
+    if (!context) {
+      throw new Error("No account context available.");
+    }
+    const params = new URLSearchParams({
+      view: "all",
+      limit: "200"
+    });
+    if (context.workspaceId) params.set("workspaceId", context.workspaceId);
+    const response = await fetch(`/api/assets/${encodeURIComponent(context.accountId)}?${params.toString()}`, {
+      cache: "no-store"
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const reasonKey = String(payload?.error?.reasonKey || "").trim();
+      throw new Error(reasonKey || `HTTP_${response.status}`);
+    }
+    const assets = Array.isArray(payload?.assets) ? payload?.assets : [];
+    return assets.map((asset) => {
+      const assetId = String(asset.assetId || "").trim();
+      if (!isUuid(assetId)) return null;
+      const contentType = String(asset.contentType || "").trim().toLowerCase();
+      if (!contentType.startsWith("image/")) return null;
+      const normalizedFilename = String(asset.normalizedFilename || "").trim() || `asset-${assetId.slice(0, 8)}`;
+      const sizeBytes = Number(asset.sizeBytes);
+      const usageCount = Number(asset.usageCount);
+      return {
+        assetId,
+        accountId: context.accountId,
+        normalizedFilename,
+        contentType,
+        sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
+        usageCount: Number.isFinite(usageCount) ? Math.max(0, Math.trunc(usageCount)) : 0,
+        url: resolveAssetChoiceUrl(context.accountId, assetId)
+      };
+    }).filter((asset) => Boolean(asset));
+  }
+  function toAssetPickerOverlayItems(assets) {
+    return assets.map((asset) => ({
+      assetId: asset.assetId,
+      normalizedFilename: asset.normalizedFilename,
+      contentType: asset.contentType,
+      sizeLabel: formatAssetSizeLabel(asset.sizeBytes),
+      usageCount: asset.usageCount,
+      url: asset.url
+    }));
+  }
+
+  // components/dropdown-fill/media-controller.ts
+  function setFillUploadingState(state, uploading) {
+    state.root.dataset.uploading = uploading ? "true" : "false";
+    if (state.uploadButton) state.uploadButton.disabled = uploading;
+    if (state.chooseButton) state.chooseButton.disabled = uploading;
+    if (state.removeButton) state.removeButton.disabled = uploading;
+    if (state.videoUploadButton) state.videoUploadButton.disabled = uploading;
+    if (state.videoReplaceButton) state.videoReplaceButton.disabled = uploading;
+    if (state.videoRemoveButton) state.videoRemoveButton.disabled = uploading;
+  }
+  function syncImageHeader(state, deps) {
+    const placeholder = state.headerValue?.dataset.placeholder ?? "";
+    if (state.imageSrc && !state.imageUnavailable) {
+      const label = state.imageName || "Image selected";
+      deps.updateHeader(state, { text: label, muted: false, chipColor: null });
+      return;
+    }
+    if (state.imageSrc && state.imageUnavailable) {
+      deps.updateHeader(state, { text: "", muted: true, chipColor: null, noneChip: true });
+      return;
+    }
+    deps.updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+  }
+  function syncVideoHeader(state, deps) {
+    const placeholder = state.headerValue?.dataset.placeholder ?? "";
+    if (state.videoSrc && !state.videoUnavailable) {
+      const label = state.videoName || "Video selected";
+      deps.updateHeader(state, { text: label, muted: false, chipColor: null });
+      return;
+    }
+    if (state.videoSrc && state.videoUnavailable) {
+      deps.updateHeader(state, { text: "", muted: true, chipColor: null, noneChip: true });
+      return;
+    }
+    deps.updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+  }
+  function hasAvailableImage(state) {
+    return Boolean(state.imageSrc && !state.imageUnavailable);
+  }
+  function hasAvailableVideo(state) {
+    return Boolean(state.videoSrc && !state.videoUnavailable);
+  }
+  function syncImageMediaState(state, opts, deps) {
+    const hasImage = hasAvailableImage(state);
+    if (state.imagePanel) {
+      state.imagePanel.dataset.hasImage = hasImage ? "true" : "false";
+    }
+    if (state.imagePreview) {
+      state.imagePreview.style.backgroundImage = hasImage ? `url("${state.imageSrc}")` : "none";
+    }
+    if (opts.updateHeader !== false) {
+      syncImageHeader(state, deps);
+    }
+    if (opts.updateRemove !== false) {
+      deps.setRemoveFillState(state, !hasImage);
+    }
+  }
+  function syncVideoMediaState(state, opts, deps) {
+    const hasVideo = hasAvailableVideo(state);
+    if (state.videoPanel) {
+      state.videoPanel.dataset.hasVideo = hasVideo ? "true" : "false";
+    }
+    if (opts.updateHeader !== false) {
+      syncVideoHeader(state, deps);
+    }
+    if (opts.updateRemove !== false) {
+      deps.setRemoveFillState(state, !hasVideo);
+    }
+  }
+  function verifyImageAvailability(state, src, deps) {
+    const normalizedSrc = normalizeAssetReferenceUrl(src);
+    if (!normalizedSrc) {
+      state.imageUnavailable = true;
+      if (state.mode === "image") syncImageMediaState(state, { updateHeader: true, updateRemove: true }, deps);
+      return;
+    }
+    state.imageAvailabilityRequestId += 1;
+    const requestId = state.imageAvailabilityRequestId;
+    const probe = new Image();
+    const finalize = (available) => {
+      if (state.imageAvailabilityRequestId !== requestId) return;
+      if (!sameAssetReferenceUrl(state.imageSrc || "", normalizedSrc)) return;
+      const nextUnavailable = !available;
+      if (state.imageUnavailable === nextUnavailable) return;
+      state.imageUnavailable = nextUnavailable;
+      if (state.mode === "image") syncImageMediaState(state, { updateHeader: true, updateRemove: true }, deps);
+    };
+    probe.addEventListener("load", () => finalize(true), { once: true });
+    probe.addEventListener("error", () => finalize(false), { once: true });
+    probe.src = normalizedSrc;
+  }
+  async function openImageAssetPicker(state) {
+    if (!state.assetPickerOverlay || !state.chooseButton) return;
+    state.assetPickerOverlay.open(state.chooseButton);
+    state.assetPickerOverlay.setMessage("Loading assets...");
+    state.assetPickerOverlay.setRows([]);
+    state.imageAssetPickerLoading = true;
+    try {
+      const assets = await fetchImageAssetChoices();
+      const rows = toAssetPickerOverlayItems(assets);
+      state.assetPickerOverlay.setRows(rows);
+      if (assets.length === 0) {
+        state.assetPickerOverlay.setMessage("No assets available.");
+      } else {
+        state.assetPickerOverlay.setMessage(`Select from ${assets.length} image asset${assets.length === 1 ? "" : "s"}.`);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load assets.";
+      state.assetPickerOverlay.setMessage(message || "Failed to load assets.");
+      state.assetPickerOverlay.setRows([]);
+    } finally {
+      state.imageAssetPickerLoading = false;
+    }
+  }
+  function setImageSrc(state, src, opts, deps) {
+    const shouldUpdateHeader = opts.updateHeader !== false;
+    const shouldUpdateRemove = opts.updateRemove !== false;
+    const previousSrc = state.imageSrc;
+    if (state.imageObjectUrl && previousSrc && previousSrc === state.imageObjectUrl && src !== previousSrc) {
+      URL.revokeObjectURL(state.imageObjectUrl);
+      state.imageObjectUrl = null;
+    }
+    state.imageSrc = src;
+    if (!src) {
+      state.imageName = null;
+      state.imageUnavailable = false;
+      state.imageAvailabilityRequestId += 1;
+    } else if (!sameAssetReferenceUrl(src, previousSrc ?? "")) {
+      state.imageUnavailable = false;
+    }
+    if (opts.commit) {
+      const fill = src ? {
+        type: "image",
+        image: {
+          src,
+          ...state.imageName ? { name: state.imageName } : {},
+          fit: "cover",
+          position: "center",
+          repeat: "no-repeat"
+        }
+      } : { type: "none" };
+      deps.setInputValue(state, fill, true);
+    }
+    if (src) {
+      verifyImageAvailability(state, src, deps);
+    }
+    syncImageMediaState(state, { updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove }, deps);
+  }
+  function setVideoSrc(state, src, opts, deps) {
+    const shouldUpdateHeader = opts.updateHeader !== false;
+    const shouldUpdateRemove = opts.updateRemove !== false;
+    const previousSrc = state.videoSrc;
+    if (state.videoObjectUrl && previousSrc && previousSrc === state.videoObjectUrl && src !== previousSrc) {
+      URL.revokeObjectURL(state.videoObjectUrl);
+      state.videoObjectUrl = null;
+    }
+    state.videoSrc = src;
+    if (!src) {
+      state.videoName = null;
+      state.videoUnavailable = false;
+    } else if (!sameAssetReferenceUrl(src, previousSrc ?? "")) {
+      state.videoUnavailable = false;
+    }
+    if (opts.commit) {
+      const fill = src ? {
+        type: "video",
+        video: {
+          src,
+          ...state.videoName ? { name: state.videoName } : {},
+          fit: "cover",
+          position: "center",
+          loop: true,
+          muted: true,
+          autoplay: true
+        }
+      } : { type: "none" };
+      deps.setInputValue(state, fill, true);
+    }
+    if (state.videoPreview) {
+      state.videoPreview.src = src || "";
+      if (src) state.videoPreview.load();
+    }
+    syncVideoMediaState(state, { updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove }, deps);
+  }
+  function installImageHandlers(state, deps) {
+    const { uploadButton, chooseButton, removeButton, fileInput } = state;
+    if (uploadButton && fileInput) {
+      uploadButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        fileInput.value = "";
+        fileInput.click();
+      });
+    }
+    if (chooseButton) {
+      chooseButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (!state.assetPickerOverlay) return;
+        if (state.assetPickerOverlay.isOpen()) {
+          state.assetPickerOverlay.close();
+          return;
+        }
+        state.assetPickerOverlay.open(chooseButton);
+        void openImageAssetPicker(state);
+      });
+    }
+    if (removeButton) {
+      removeButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (state.imageObjectUrl) {
+          URL.revokeObjectURL(state.imageObjectUrl);
+          state.imageObjectUrl = null;
+        }
+        state.assetPickerOverlay?.close();
+        setImageSrc(state, null, { commit: true }, deps);
+      });
+    }
+    if (fileInput) {
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        const previousSrc = state.imageSrc;
+        const previousName = state.imageName;
+        state.imageName = file.name || null;
+        setFillUploadingState(state, true);
+        state.assetPickerOverlay?.close();
+        deps.updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
+        const localPreviewUrl = URL.createObjectURL(file);
+        state.imageObjectUrl = localPreviewUrl;
+        setImageSrc(state, localPreviewUrl, { commit: false, updateHeader: true, updateRemove: true }, deps);
+        try {
+          const uploadedUrl = await uploadEditorAsset({
+            file,
+            variant: "original",
+            source: "api"
+          });
+          setImageSrc(state, uploadedUrl, { commit: true }, deps);
+        } catch {
+          state.imageName = previousName;
+          setImageSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
+          if (!previousSrc) {
+            deps.updateHeader(state, { text: "Upload failed", muted: true, chipColor: null, noneChip: true });
+          }
+        } finally {
+          setFillUploadingState(state, false);
+          fileInput.value = "";
+        }
+      });
+    }
+  }
+  function installVideoHandlers(state, deps) {
+    const { videoUploadButton, videoReplaceButton, videoRemoveButton, videoFileInput } = state;
+    if (state.videoPreview) {
+      state.videoPreview.addEventListener("error", () => {
+        const currentSrc = state.videoPreview?.currentSrc || state.videoPreview?.src || "";
+        if (!state.videoSrc || !sameAssetReferenceUrl(currentSrc, state.videoSrc)) return;
+        if (state.videoUnavailable) return;
+        state.videoUnavailable = true;
+        if (state.mode === "video") syncVideoMediaState(state, { updateHeader: true, updateRemove: true }, deps);
+      });
+      state.videoPreview.addEventListener("loadeddata", () => {
+        const currentSrc = state.videoPreview?.currentSrc || state.videoPreview?.src || "";
+        if (!state.videoSrc || !sameAssetReferenceUrl(currentSrc, state.videoSrc)) return;
+        if (!state.videoUnavailable) return;
+        state.videoUnavailable = false;
+        if (state.mode === "video") syncVideoMediaState(state, { updateHeader: true, updateRemove: true }, deps);
+      });
+    }
+    if (videoUploadButton && videoFileInput) {
+      videoUploadButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        videoFileInput.value = "";
+        videoFileInput.click();
+      });
+    }
+    if (videoReplaceButton && videoFileInput) {
+      videoReplaceButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        videoFileInput.value = "";
+        videoFileInput.click();
+      });
+    }
+    if (videoRemoveButton) {
+      videoRemoveButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (state.videoObjectUrl) {
+          URL.revokeObjectURL(state.videoObjectUrl);
+          state.videoObjectUrl = null;
+        }
+        setVideoSrc(state, null, { commit: true }, deps);
+      });
+    }
+    if (videoFileInput) {
+      videoFileInput.addEventListener("change", async () => {
+        const file = videoFileInput.files && videoFileInput.files[0];
+        if (!file) return;
+        const previousSrc = state.videoSrc;
+        const previousName = state.videoName;
+        state.videoName = file.name || null;
+        setFillUploadingState(state, true);
+        deps.updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
+        const localPreviewUrl = URL.createObjectURL(file);
+        state.videoObjectUrl = localPreviewUrl;
+        setVideoSrc(state, localPreviewUrl, { commit: false, updateHeader: true, updateRemove: true }, deps);
+        try {
+          const uploadedUrl = await uploadEditorAsset({
+            file,
+            variant: "original",
+            source: "api"
+          });
+          setVideoSrc(state, uploadedUrl, { commit: true }, deps);
+        } catch {
+          state.videoName = previousName;
+          setVideoSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
+          if (!previousSrc) {
+            deps.updateHeader(state, { text: "Upload failed", muted: true, chipColor: null, noneChip: true });
+          }
+        } finally {
+          setFillUploadingState(state, false);
+          videoFileInput.value = "";
+        }
+      });
+    }
+  }
+
   // components/dropdown-fill/dropdown-fill.ts
-  var MODE_ORDER = ["color", "gradient", "image", "video"];
   var MODE_LABELS = {
     color: "Color fill",
     gradient: "Gradient fill",
     image: "Image fill",
     video: "Video fill"
   };
-  var DEFAULT_GRADIENT = {
-    angle: 135,
-    stops: [
-      { color: "#ff3b30", position: 0 },
-      { color: "#007aff", position: 100 }
-    ]
-  };
   var states = /* @__PURE__ */ new Map();
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-fill",
-    triggerSelector: ".diet-dropdown-fill__control"
+    triggerSelector: ".diet-dropdown-fill__control",
+    isInsideTarget: (root, target) => {
+      const state = states.get(root);
+      if (!state?.assetPickerOverlay) return false;
+      return state.assetPickerOverlay.contains(target);
+    },
+    onClose: (root) => {
+      const state = states.get(root);
+      if (!state) return;
+      state.assetPickerOverlay?.close();
+    }
   });
   function hydrateDropdownFill(scope) {
     const roots = Array.from(scope.querySelectorAll(".diet-dropdown-fill"));
@@ -321,7 +1340,7 @@ var Dieter = (() => {
     return {
       id: createGradientStopId(),
       color: safeColor,
-      position: clampNumber(stop.position, 0, 100),
+      position: clampNumber2(stop.position, 0, 100),
       hsv
     };
   }
@@ -364,7 +1383,7 @@ var Dieter = (() => {
     const imagePanel = root.querySelector(".diet-dropdown-fill__panel--image");
     const imagePreview = root.querySelector(".diet-dropdown-fill__image-preview");
     const uploadButton = root.querySelector(".diet-dropdown-fill__upload-btn");
-    const replaceButton = root.querySelector(".diet-dropdown-fill__replace-btn");
+    const chooseButton = root.querySelector(".diet-dropdown-fill__choose-btn");
     const removeButton = root.querySelector(".diet-dropdown-fill__remove-btn");
     const fileInput = root.querySelector(".diet-dropdown-fill__file-input");
     const videoPanel = root.querySelector(".diet-dropdown-fill__panel--video");
@@ -375,6 +1394,27 @@ var Dieter = (() => {
     const videoFileInput = root.querySelector(".diet-dropdown-fill__video-file-input");
     if (!input || !hueInput || !alphaInput || !hexField || !alphaField || !svCanvas || !svThumb) {
       return null;
+    }
+    const assetPickerOverlay = chooseButton ? new AssetPickerOverlay({
+      onUse: (item) => {
+        const current = states.get(root);
+        if (!current) return;
+        current.imageName = item.normalizedFilename;
+        setImageSrc2(current, item.url, { commit: true });
+      },
+      onOpenChange: (open) => {
+        const current = states.get(root);
+        if (!current) return;
+        current.imageAssetPickerOpen = open;
+        if (current.chooseButton) {
+          current.chooseButton.setAttribute("aria-expanded", open ? "true" : "false");
+          current.chooseButton.classList.toggle("is-active", open);
+        }
+      }
+    }) : null;
+    if (chooseButton) {
+      chooseButton.setAttribute("aria-haspopup", "dialog");
+      chooseButton.setAttribute("aria-expanded", "false");
     }
     const nativeValue = captureNativeValue(input);
     const allowedModes = parseAllowedModes(root);
@@ -422,12 +1462,17 @@ var Dieter = (() => {
       imagePanel,
       imagePreview,
       uploadButton,
-      replaceButton,
+      chooseButton,
       removeButton,
+      assetPickerOverlay,
       fileInput,
       imageSrc: null,
       imageName: null,
       imageObjectUrl: null,
+      imageUnavailable: false,
+      imageAvailabilityRequestId: 0,
+      imageAssetPickerOpen: false,
+      imageAssetPickerLoading: false,
       videoPanel,
       videoPreview,
       videoUploadButton,
@@ -437,6 +1482,7 @@ var Dieter = (() => {
       videoSrc: null,
       videoName: null,
       videoObjectUrl: null,
+      videoUnavailable: false,
       allowedModes,
       mode,
       nativeValue,
@@ -461,13 +1507,13 @@ var Dieter = (() => {
       syncFromValue(state, readValue());
     });
     state.hueInput.addEventListener("input", () => {
-      const hue = clampNumber(Number(state.hueInput.value), 0, 360);
+      const hue = clampNumber2(Number(state.hueInput.value), 0, 360);
       state.hsv.h = hue;
       if (state.hsv.a === 0) state.hsv.a = 1;
       syncColorUI(state, { commit: true });
     });
     state.alphaInput.addEventListener("input", () => {
-      const alpha = clampNumber(Number(state.alphaInput.value) / 100, 0, 1);
+      const alpha = clampNumber2(Number(state.alphaInput.value) / 100, 0, 1);
       state.hsv.a = alpha;
       syncColorUI(state, { commit: true });
     });
@@ -478,8 +1524,8 @@ var Dieter = (() => {
     installSvCanvasHandlers(state);
     installSwatchHandlers(state);
     installGradientHandlers(state);
-    installImageHandlers(state);
-    installVideoHandlers(state);
+    installImageHandlers2(state);
+    installVideoHandlers2(state);
     installNativeColorPicker(state);
     if (state.removeFillActions.length) {
       state.removeFillActions.forEach((action) => {
@@ -510,7 +1556,7 @@ var Dieter = (() => {
   function installGradientHandlers(state) {
     if (state.gradientAngleInput) {
       state.gradientAngleInput.addEventListener("input", () => {
-        const angle = clampNumber(Number(state.gradientAngleInput?.value), 0, 360);
+        const angle = clampNumber2(Number(state.gradientAngleInput?.value), 0, 360);
         state.gradientCss = null;
         state.gradient.angle = angle;
         syncGradientUI(state, { commit: true });
@@ -553,7 +1599,7 @@ var Dieter = (() => {
   function gradientPercentToPx(state, position) {
     const metrics = getGradientStopMetrics(state);
     if (!metrics) return null;
-    const percent = clampNumber(position, 0, 100);
+    const percent = clampNumber2(position, 0, 100);
     const span = metrics.maxX - metrics.minX;
     if (span <= 0) return metrics.minX;
     return metrics.minX + span * percent / 100;
@@ -561,10 +1607,10 @@ var Dieter = (() => {
   function gradientPxToPercent(state, clientX) {
     const metrics = getGradientStopMetrics(state);
     if (!metrics) return 0;
-    const x = clampNumber(clientX - metrics.rect.left, metrics.minX, metrics.maxX);
+    const x = clampNumber2(clientX - metrics.rect.left, metrics.minX, metrics.maxX);
     const span = metrics.maxX - metrics.minX;
     if (span <= 0) return 0;
-    return clampNumber((x - metrics.minX) / span * 100, 0, 100);
+    return clampNumber2((x - metrics.minX) / span * 100, 0, 100);
   }
   function getActiveGradientStopIndex(state) {
     const sorted = getSortedGradientStops(state.gradientStops);
@@ -765,7 +1811,7 @@ var Dieter = (() => {
       state.gradientStopAlphaField.value = `${Math.round(hsv.a * 100)}%`;
       return;
     }
-    const percent = clampNumber(parsed, 0, 100);
+    const percent = clampNumber2(parsed, 0, 100);
     hsv.a = percent / 100;
     commitGradientStopFromHsv(state);
   }
@@ -853,13 +1899,13 @@ var Dieter = (() => {
       const move = (event) => {
         const rect = state.gradientStopSv?.getBoundingClientRect();
         if (!rect) return;
-        const x = clampNumber(event.clientX - rect.left, 0, rect.width);
-        const y = clampNumber(event.clientY - rect.top, 0, rect.height);
+        const x = clampNumber2(event.clientX - rect.left, 0, rect.width);
+        const y = clampNumber2(event.clientY - rect.top, 0, rect.height);
         const s = rect.width ? x / rect.width : 0;
         const v = rect.height ? 1 - y / rect.height : 0;
         const stop = getActiveGradientStop(state);
-        stop.hsv.s = clampNumber(s, 0, 1);
-        stop.hsv.v = clampNumber(v, 0, 1);
+        stop.hsv.s = clampNumber2(s, 0, 1);
+        stop.hsv.v = clampNumber2(v, 0, 1);
         if (stop.hsv.a === 0) stop.hsv.a = 1;
         commitGradientStopFromHsv(state);
       };
@@ -879,7 +1925,7 @@ var Dieter = (() => {
     }
     if (state.gradientStopHueInput) {
       state.gradientStopHueInput.addEventListener("input", () => {
-        const hue = clampNumber(Number(state.gradientStopHueInput?.value), 0, 360);
+        const hue = clampNumber2(Number(state.gradientStopHueInput?.value), 0, 360);
         const stop = getActiveGradientStop(state);
         stop.hsv.h = hue;
         if (stop.hsv.a === 0) stop.hsv.a = 1;
@@ -888,7 +1934,7 @@ var Dieter = (() => {
     }
     if (state.gradientStopAlphaInput) {
       state.gradientStopAlphaInput.addEventListener("input", () => {
-        const alpha = clampNumber(Number(state.gradientStopAlphaInput?.value) / 100, 0, 1);
+        const alpha = clampNumber2(Number(state.gradientStopAlphaInput?.value) / 100, 0, 1);
         const stop = getActiveGradientStop(state);
         stop.hsv.a = alpha;
         commitGradientStopFromHsv(state);
@@ -908,12 +1954,12 @@ var Dieter = (() => {
   function installSvCanvasHandlers(state) {
     const move = (event) => {
       const rect = state.svCanvas.getBoundingClientRect();
-      const x = clampNumber(event.clientX - rect.left, 0, rect.width);
-      const y = clampNumber(event.clientY - rect.top, 0, rect.height);
+      const x = clampNumber2(event.clientX - rect.left, 0, rect.width);
+      const y = clampNumber2(event.clientY - rect.top, 0, rect.height);
       const s = rect.width ? x / rect.width : 0;
       const v = rect.height ? 1 - y / rect.height : 0;
-      state.hsv.s = clampNumber(s, 0, 1);
-      state.hsv.v = clampNumber(v, 0, 1);
+      state.hsv.s = clampNumber2(s, 0, 1);
+      state.hsv.v = clampNumber2(v, 0, 1);
       if (state.hsv.a === 0) state.hsv.a = 1;
       syncColorUI(state, { commit: true });
     };
@@ -931,112 +1977,24 @@ var Dieter = (() => {
       move(event);
     });
   }
-  function installImageHandlers(state) {
-    const { uploadButton, replaceButton, removeButton, fileInput } = state;
-    if (uploadButton && fileInput) {
-      uploadButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        fileInput.value = "";
-        fileInput.click();
-      });
-    }
-    if (replaceButton && fileInput) {
-      replaceButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        fileInput.value = "";
-        fileInput.click();
-      });
-    }
-    if (removeButton) {
-      removeButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        if (state.imageObjectUrl) {
-          URL.revokeObjectURL(state.imageObjectUrl);
-          state.imageObjectUrl = null;
-        }
-        setImageSrc(state, null, { commit: true });
-      });
-    }
-    if (fileInput) {
-      fileInput.addEventListener("change", async () => {
-        const file = fileInput.files && fileInput.files[0];
-        if (!file) return;
-        state.imageName = file.name || null;
-        setFillUploadingState(state, true);
-        updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
-        try {
-          const uploadedUrl = await uploadEditorAsset({
-            file,
-            variant: "original",
-            source: "api"
-          });
-          setImageSrc(state, uploadedUrl, { commit: true });
-        } catch {
-          updateHeader(state, { text: "Upload failed", muted: true, chipColor: null, noneChip: true });
-        } finally {
-          setFillUploadingState(state, false);
-          fileInput.value = "";
-        }
-      });
-    }
+  function mediaDeps() {
+    return {
+      setInputValue,
+      updateHeader,
+      setRemoveFillState
+    };
   }
-  function installVideoHandlers(state) {
-    const { videoUploadButton, videoReplaceButton, videoRemoveButton, videoFileInput } = state;
-    if (videoUploadButton && videoFileInput) {
-      videoUploadButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        videoFileInput.value = "";
-        videoFileInput.click();
-      });
-    }
-    if (videoReplaceButton && videoFileInput) {
-      videoReplaceButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        videoFileInput.value = "";
-        videoFileInput.click();
-      });
-    }
-    if (videoRemoveButton) {
-      videoRemoveButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        if (state.videoObjectUrl) {
-          URL.revokeObjectURL(state.videoObjectUrl);
-          state.videoObjectUrl = null;
-        }
-        setVideoSrc(state, null, { commit: true });
-      });
-    }
-    if (videoFileInput) {
-      videoFileInput.addEventListener("change", async () => {
-        const file = videoFileInput.files && videoFileInput.files[0];
-        if (!file) return;
-        state.videoName = file.name || null;
-        setFillUploadingState(state, true);
-        updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
-        try {
-          const uploadedUrl = await uploadEditorAsset({
-            file,
-            variant: "original",
-            source: "api"
-          });
-          setVideoSrc(state, uploadedUrl, { commit: true });
-        } catch {
-          updateHeader(state, { text: "Upload failed", muted: true, chipColor: null, noneChip: true });
-        } finally {
-          setFillUploadingState(state, false);
-          videoFileInput.value = "";
-        }
-      });
-    }
+  function installImageHandlers2(state) {
+    installImageHandlers(state, mediaDeps());
   }
-  function setFillUploadingState(state, uploading) {
-    state.root.dataset.uploading = uploading ? "true" : "false";
-    if (state.uploadButton) state.uploadButton.disabled = uploading;
-    if (state.replaceButton) state.replaceButton.disabled = uploading;
-    if (state.removeButton) state.removeButton.disabled = uploading;
-    if (state.videoUploadButton) state.videoUploadButton.disabled = uploading;
-    if (state.videoReplaceButton) state.videoReplaceButton.disabled = uploading;
-    if (state.videoRemoveButton) state.videoRemoveButton.disabled = uploading;
+  function installVideoHandlers2(state) {
+    installVideoHandlers(state, mediaDeps());
+  }
+  function setImageSrc2(state, src, opts) {
+    setImageSrc(state, src, opts, mediaDeps());
+  }
+  function setVideoSrc2(state, src, opts) {
+    setVideoSrc(state, src, opts, mediaDeps());
   }
   function setInputValue(state, value, emit) {
     const json = JSON.stringify(value);
@@ -1051,90 +2009,6 @@ var Dieter = (() => {
   function colorStringFromHsv(hsv) {
     const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
     return hsv.a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(hsv.a, 2)})` : formatHex({ ...hsv, a: 1 });
-  }
-  function resolveFallbackFromState(state) {
-    if (state.hsv.a <= 0) return "var(--color-system-white)";
-    return colorStringFromHsv(state.hsv);
-  }
-  function setImageSrc(state, src, opts) {
-    const shouldUpdateHeader = opts.updateHeader !== false;
-    const shouldUpdateRemove = opts.updateRemove !== false;
-    const prev = state.imageSrc;
-    if (state.imageObjectUrl && prev && prev === state.imageObjectUrl && src !== prev) {
-      URL.revokeObjectURL(state.imageObjectUrl);
-      state.imageObjectUrl = null;
-    }
-    state.imageSrc = src;
-    if (!src) {
-      state.imageName = null;
-    } else if (!state.imageObjectUrl || src !== state.imageObjectUrl) {
-      state.imageName = null;
-    }
-    if (opts.commit) {
-      const fallback = resolveFallbackFromState(state);
-      const fill = src ? { type: "image", image: { src, fit: "cover", position: "center", repeat: "no-repeat", fallback } } : { type: "none" };
-      setInputValue(state, fill, true);
-    }
-    if (state.imagePanel) {
-      state.imagePanel.dataset.hasImage = src ? "true" : "false";
-    }
-    if (state.imagePreview) {
-      state.imagePreview.style.backgroundImage = src ? `url("${src}")` : "none";
-    }
-    if (shouldUpdateHeader) {
-      const placeholder = state.headerValue?.dataset.placeholder ?? "";
-      if (src) {
-        const label = state.imageName || extractFileName(src) || "Image selected";
-        updateHeader(state, { text: label, muted: false, chipColor: null });
-      } else {
-        updateHeader(state, { text: placeholder, muted: true, chipColor: null });
-      }
-    }
-    if (shouldUpdateRemove) {
-      setRemoveFillState(state, !src);
-    }
-  }
-  function setVideoSrc(state, src, opts) {
-    const shouldUpdateHeader = opts.updateHeader !== false;
-    const shouldUpdateRemove = opts.updateRemove !== false;
-    const prev = state.videoSrc;
-    if (state.videoObjectUrl && prev && prev === state.videoObjectUrl && src !== prev) {
-      URL.revokeObjectURL(state.videoObjectUrl);
-      state.videoObjectUrl = null;
-    }
-    state.videoSrc = src;
-    if (!src) {
-      state.videoName = null;
-    } else if (!state.videoObjectUrl || src !== state.videoObjectUrl) {
-      state.videoName = null;
-    }
-    if (opts.commit) {
-      const fallback = resolveFallbackFromState(state);
-      const fill = src ? {
-        type: "video",
-        video: { src, fit: "cover", position: "center", loop: true, muted: true, autoplay: true, fallback }
-      } : { type: "none" };
-      setInputValue(state, fill, true);
-    }
-    if (state.videoPanel) {
-      state.videoPanel.dataset.hasVideo = src ? "true" : "false";
-    }
-    if (state.videoPreview) {
-      state.videoPreview.src = src || "";
-      if (src) state.videoPreview.load();
-    }
-    if (shouldUpdateHeader) {
-      const placeholder = state.headerValue?.dataset.placeholder ?? "";
-      if (src) {
-        const label = state.videoName || extractFileName(src) || "Video selected";
-        updateHeader(state, { text: label, muted: false, chipColor: null });
-      } else {
-        updateHeader(state, { text: placeholder, muted: true, chipColor: null });
-      }
-    }
-    if (shouldUpdateRemove) {
-      setRemoveFillState(state, !src);
-    }
   }
   function setRemoveFillState(state, isEmpty) {
     if (!state.removeFillActions.length) return;
@@ -1198,7 +2072,7 @@ var Dieter = (() => {
       state.alphaField.value = `${Math.round(state.hsv.a * 100)}%`;
       return;
     }
-    const percent = clampNumber(parsed, 0, 100);
+    const percent = clampNumber2(parsed, 0, 100);
     state.hsv.a = percent / 100;
     syncColorUI(state, { commit: true });
   }
@@ -1219,12 +2093,12 @@ var Dieter = (() => {
       const fallback = fallbackStops[Math.min(index, fallbackStops.length - 1)]?.color || fallbackStops[0].color;
       return {
         color: normalizeGradientColor(state, stop.color, fallback),
-        position: clampNumber(stop.position, 0, 100)
+        position: clampNumber2(stop.position, 0, 100)
       };
     });
   }
   function buildGradientFill(state) {
-    const angle = clampNumber(state.gradient.angle, 0, 360);
+    const angle = clampNumber2(state.gradient.angle, 0, 360);
     const normalizedStops = normalizeGradientStopsForOutput(state);
     return {
       type: "gradient",
@@ -1236,9 +2110,9 @@ var Dieter = (() => {
     };
   }
   function buildGradientCss(state) {
-    const angle = clampNumber(state.gradient.angle, 0, 360);
+    const angle = clampNumber2(state.gradient.angle, 0, 360);
     const normalizedStops = normalizeGradientStopsForOutput(state);
-    const stopList = normalizedStops.map((stop) => `${stop.color} ${clampNumber(stop.position, 0, 100)}%`).join(", ");
+    const stopList = normalizedStops.map((stop) => `${stop.color} ${clampNumber2(stop.position, 0, 100)}%`).join(", ");
     return `linear-gradient(${angle}deg, ${stopList})`;
   }
   function syncGradientUI(state, opts) {
@@ -1246,7 +2120,7 @@ var Dieter = (() => {
     const shouldUpdateRemove = opts.updateRemove !== false;
     ensureGradientStops(state);
     if (state.gradientAngleInput) {
-      state.gradientAngleInput.value = String(clampNumber(state.gradient.angle, 0, 360));
+      state.gradientAngleInput.value = String(clampNumber2(state.gradient.angle, 0, 360));
       state.gradientAngleInput.style.setProperty("--value", state.gradientAngleInput.value);
       state.gradientAngleInput.style.setProperty("--min", "0");
       state.gradientAngleInput.style.setProperty("--max", "360");
@@ -1255,122 +2129,6 @@ var Dieter = (() => {
     syncActiveGradientStopUI(state);
     updateGradientAddButton(state);
     updateGradientPreview(state, { commit: opts.commit, updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove });
-  }
-  function normalizeImageValue(raw) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-      return { src: "", fit: "cover", position: "center", repeat: "no-repeat", fallback: "" };
-    }
-    const value = raw;
-    const srcRaw = typeof value.src === "string" ? value.src.trim() : "";
-    const src = isPersistedAssetUrl(srcRaw) ? srcRaw : "";
-    const fit = value.fit === "contain" ? "contain" : "cover";
-    const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
-    const repeat = typeof value.repeat === "string" && value.repeat.trim() ? value.repeat.trim() : "no-repeat";
-    const fallback = typeof value.fallback === "string" ? value.fallback.trim() : "";
-    return { src, fit, position, repeat, fallback };
-  }
-  function normalizeVideoValue(raw) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-      return { src: "", poster: "", fit: "cover", position: "center", loop: true, muted: true, autoplay: true, fallback: "" };
-    }
-    const value = raw;
-    const srcRaw = typeof value.src === "string" ? value.src.trim() : "";
-    const posterRaw = typeof value.poster === "string" ? value.poster.trim() : "";
-    const src = isPersistedAssetUrl(srcRaw) ? srcRaw : "";
-    const poster = isPersistedAssetUrl(posterRaw) ? posterRaw : "";
-    const fit = value.fit === "contain" ? "contain" : "cover";
-    const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
-    const loop = typeof value.loop === "boolean" ? value.loop : true;
-    const muted = typeof value.muted === "boolean" ? value.muted : true;
-    const autoplay = typeof value.autoplay === "boolean" ? value.autoplay : true;
-    const fallback = typeof value.fallback === "string" ? value.fallback.trim() : "";
-    return { src, poster, fit, position, loop, muted, autoplay, fallback };
-  }
-  function normalizeGradientValue(raw) {
-    if (typeof raw === "string") {
-      const css2 = raw.trim();
-      return css2 ? { css: css2 } : void 0;
-    }
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return void 0;
-    const value = raw;
-    const css = typeof value.css === "string" ? value.css.trim() : "";
-    if (css) return { css };
-    const kindRaw = typeof value.kind === "string" ? value.kind.trim() : "";
-    const kind = kindRaw === "radial" || kindRaw === "conic" ? kindRaw : "linear";
-    const angle = clampNumber(typeof value.angle === "number" ? value.angle : 0, 0, 360);
-    const stopsRaw = Array.isArray(value.stops) ? value.stops : [];
-    const stops = stopsRaw.map((stop) => {
-      if (!stop || typeof stop !== "object" || Array.isArray(stop)) return null;
-      const entry = stop;
-      const color = typeof entry.color === "string" ? entry.color.trim() : "";
-      if (!color) return null;
-      const position = clampNumber(typeof entry.position === "number" ? entry.position : 0, 0, 100);
-      return { color, position };
-    }).filter((stop) => Boolean(stop));
-    return { kind, angle, stops };
-  }
-  function coerceFillValue(raw) {
-    const typeRaw = typeof raw.type === "string" ? raw.type.trim().toLowerCase() : "";
-    if (!typeRaw) return { type: "none" };
-    if (typeRaw === "none") return { type: "none" };
-    if (!MODE_ORDER.includes(typeRaw)) return null;
-    if (typeRaw === "color") {
-      const color = typeof raw.color === "string" ? raw.color.trim() : "";
-      const value = typeof raw.value === "string" ? raw.value.trim() : "";
-      return { type: "color", color: color || value || "transparent" };
-    }
-    if (typeRaw === "gradient") {
-      return { type: "gradient", gradient: normalizeGradientValue(raw.gradient) };
-    }
-    if (typeRaw === "image") {
-      return { type: "image", image: normalizeImageValue(raw.image) };
-    }
-    if (typeRaw === "video") {
-      return { type: "video", video: normalizeVideoValue(raw.video) };
-    }
-    return { type: "none" };
-  }
-  function isPersistedAssetUrl(value) {
-    return /^https?:\/\//i.test(value) || value.startsWith("/");
-  }
-  function parseFillString(value, root) {
-    if (!value) return { type: "none" };
-    const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    if (urlMatch && urlMatch[2]) {
-      const src = urlMatch[2].trim();
-      if (!isPersistedAssetUrl(src)) return null;
-      return { type: "image", image: { src, fit: "cover", position: "center", repeat: "no-repeat", fallback: "" } };
-    }
-    if (isPersistedAssetUrl(value)) {
-      return { type: "image", image: { src: value, fit: "cover", position: "center", repeat: "no-repeat", fallback: "" } };
-    }
-    if (/-gradient\(/i.test(value)) {
-      return { type: "gradient", gradient: { css: value } };
-    }
-    const parsed = parseColor(value, root);
-    if (!parsed) return null;
-    return { type: "color", color: value };
-  }
-  function parseFillValue(raw, root) {
-    const value = String(raw ?? "").trim();
-    if (!value) return { type: "none" };
-    if (value.startsWith("{") || value.startsWith("[") || value.startsWith('"')) {
-      try {
-        const parsed = JSON.parse(value);
-        if (typeof parsed === "string") return parseFillString(parsed, root);
-        if (parsed == null) return { type: "none" };
-        if (typeof parsed !== "object" || Array.isArray(parsed)) return null;
-        return coerceFillValue(parsed);
-      } catch {
-        return parseFillString(value, root);
-      }
-    }
-    return parseFillString(value, root);
-  }
-  function resolveModeFromFill(state, fill) {
-    const desired = fill.type === "none" ? state.mode : fill.type;
-    if (desired !== "none" && state.allowedModes.includes(desired)) return desired;
-    return state.allowedModes[0] || "color";
   }
   function applyGradientFromFill(state, gradient) {
     state.gradient = { angle: DEFAULT_GRADIENT.angle };
@@ -1384,7 +2142,7 @@ var Dieter = (() => {
       return;
     }
     const angle = typeof gradient.angle === "number" ? gradient.angle : DEFAULT_GRADIENT.angle;
-    state.gradient.angle = clampNumber(angle, 0, 360);
+    state.gradient.angle = clampNumber2(angle, 0, 360);
     if (Array.isArray(gradient.stops) && gradient.stops.length >= 2) {
       state.gradientStops = gradient.stops.map(
         (stop) => createGradientStopState(state.root, {
@@ -1404,15 +2162,15 @@ var Dieter = (() => {
       return;
     }
     delete state.root.dataset.invalid;
-    const nextMode = resolveModeFromFill(state, fill);
+    const nextMode = resolveModeFromFill(state.mode, state.allowedModes, fill);
     setMode(state, nextMode);
     if (fill.type === "none") {
       if (nextMode === "image") {
-        setImageSrc(state, null, { commit: false });
+        setImageSrc2(state, null, { commit: false });
         return;
       }
       if (nextMode === "video") {
-        setVideoSrc(state, null, { commit: false });
+        setVideoSrc2(state, null, { commit: false });
         return;
       }
       if (nextMode === "gradient") {
@@ -1445,11 +2203,13 @@ var Dieter = (() => {
       return;
     }
     if (fill.type === "image") {
-      setImageSrc(state, fill.image?.src || null, { commit: false });
+      state.imageName = readImageName(fill);
+      setImageSrc2(state, fill.image?.src || null, { commit: false });
       return;
     }
     if (fill.type === "video") {
-      setVideoSrc(state, fill.video?.src || null, { commit: false });
+      state.videoName = readVideoName(fill);
+      setVideoSrc2(state, fill.video?.src || null, { commit: false });
       return;
     }
   }
@@ -1554,6 +2314,9 @@ var Dieter = (() => {
     if (state.headerLabel) {
       state.headerLabel.textContent = MODE_LABELS[next] || state.headerLabel.textContent;
     }
+    if (next !== "image" && state.imageAssetPickerOpen) {
+      state.assetPickerOverlay?.close();
+    }
   }
   function syncModeUI(state, opts) {
     if (state.mode === "gradient") {
@@ -1562,7 +2325,7 @@ var Dieter = (() => {
     }
     if (state.mode === "image") {
       const shouldCommit = opts.commit && Boolean(state.imageSrc);
-      setImageSrc(state, state.imageSrc, {
+      setImageSrc2(state, state.imageSrc, {
         commit: shouldCommit,
         updateHeader: opts.updateHeader,
         updateRemove: opts.updateRemove
@@ -1571,7 +2334,7 @@ var Dieter = (() => {
     }
     if (state.mode === "video") {
       const shouldCommit = opts.commit && Boolean(state.videoSrc);
-      setVideoSrc(state, state.videoSrc, {
+      setVideoSrc2(state, state.videoSrc, {
         commit: shouldCommit,
         updateHeader: opts.updateHeader,
         updateRemove: opts.updateRemove
@@ -1594,127 +2357,6 @@ var Dieter = (() => {
     const initial = state.root.dataset.mode || state.mode;
     setMode(state, initial);
   }
-  function parseColor(value, root) {
-    const rgba = colorStringToRgba(value, root);
-    if (!rgba) return null;
-    return rgbToHsv(rgba.r, rgba.g, rgba.b, rgba.a);
-  }
-  function tryParseTransparentColorMix(value, root) {
-    const trimmed = value.trim();
-    if (!/^color-mix\(/i.test(trimmed)) return null;
-    const parsePct = (raw) => {
-      const num = Number.parseFloat(raw);
-      if (!Number.isFinite(num)) return null;
-      if (num < 0 || num > 100) return null;
-      return num / 100;
-    };
-    const tailTransparent = trimmed.match(/^color-mix\(\s*in\s+oklab\s*,\s*(.+?)\s*,\s*transparent\s+([0-9.]+)%\s*\)$/i);
-    const headTransparent = trimmed.match(/^color-mix\(\s*in\s+oklab\s*,\s*transparent\s+([0-9.]+)%\s*,\s*(.+?)\s*\)$/i);
-    let colorExpr = null;
-    let transparentWeight = null;
-    if (tailTransparent) {
-      colorExpr = tailTransparent[1]?.trim() ?? null;
-      transparentWeight = parsePct(tailTransparent[2] ?? "");
-    } else if (headTransparent) {
-      transparentWeight = parsePct(headTransparent[1] ?? "");
-      colorExpr = headTransparent[2]?.trim() ?? null;
-    }
-    if (!colorExpr || transparentWeight == null) return null;
-    const base = colorStringToRgba(colorExpr, root);
-    if (!base) return null;
-    const baseWeight = 1 - transparentWeight;
-    return { r: base.r, g: base.g, b: base.b, a: clampNumber(base.a * baseWeight, 0, 1) };
-  }
-  function normalizeHex(value) {
-    const hex = value.trim().replace(/^#/, "").toLowerCase();
-    if (/^[0-9a-f]{3}$/.test(hex)) {
-      return `#${hex.split("").map((c) => c + c).join("")}`;
-    }
-    if (/^[0-9a-f]{4}$/.test(hex)) {
-      const expanded = hex.split("").map((c) => c + c).join("");
-      return `#${expanded.slice(0, 6)}`;
-    }
-    if (/^[0-9a-f]{6}$/.test(hex)) return `#${hex}`;
-    if (/^[0-9a-f]{8}$/.test(hex)) return `#${hex.slice(0, 6)}`;
-    return null;
-  }
-  function extractFileName(value) {
-    const raw = value.trim();
-    if (!raw) return null;
-    const urlMatch = raw.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    const source = urlMatch && urlMatch[2] ? urlMatch[2] : raw;
-    const trimmed = source.split("#")[0]?.split("?")[0] ?? "";
-    if (!trimmed) return null;
-    const parts = trimmed.split("/").filter(Boolean);
-    return parts.length ? parts[parts.length - 1] : null;
-  }
-  function hexToRgba(value) {
-    const raw = value.trim().replace(/^#/, "");
-    if (!/^[0-9a-f]+$/i.test(raw)) return null;
-    if (raw.length === 3) {
-      const r = parseInt(raw[0] + raw[0], 16);
-      const g = parseInt(raw[1] + raw[1], 16);
-      const b = parseInt(raw[2] + raw[2], 16);
-      return { r, g, b, a: 1 };
-    }
-    if (raw.length === 4) {
-      const r = parseInt(raw[0] + raw[0], 16);
-      const g = parseInt(raw[1] + raw[1], 16);
-      const b = parseInt(raw[2] + raw[2], 16);
-      const a = parseInt(raw[3] + raw[3], 16) / 255;
-      return { r, g, b, a };
-    }
-    if (raw.length === 6 || raw.length === 8) {
-      const r = parseInt(raw.slice(0, 2), 16);
-      const g = parseInt(raw.slice(2, 4), 16);
-      const b = parseInt(raw.slice(4, 6), 16);
-      const a = raw.length === 8 ? parseInt(raw.slice(6, 8), 16) / 255 : 1;
-      return { r, g, b, a };
-    }
-    return null;
-  }
-  function rgbToHsv(r, g, b, alpha = 1) {
-    const rNorm = r / 255;
-    const gNorm = g / 255;
-    const bNorm = b / 255;
-    const max = Math.max(rNorm, gNorm, bNorm);
-    const min = Math.min(rNorm, gNorm, bNorm);
-    const delta = max - min;
-    let h = 0;
-    if (delta !== 0) {
-      switch (max) {
-        case rNorm:
-          h = 60 * ((gNorm - bNorm) / delta % 6);
-          break;
-        case gNorm:
-          h = 60 * ((bNorm - rNorm) / delta + 2);
-          break;
-        case bNorm:
-          h = 60 * ((rNorm - gNorm) / delta + 4);
-          break;
-        default:
-          break;
-      }
-    }
-    if (h < 0) h += 360;
-    const s = max === 0 ? 0 : delta / max;
-    const v = max;
-    return { h, s, v, a: clampNumber(alpha, 0, 1) };
-  }
-  function colorStringToRgba(value, root) {
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-    const transparentMix = tryParseTransparentColorMix(trimmed, root);
-    if (transparentMix) return transparentMix;
-    if (trimmed.startsWith("#")) {
-      return hexToRgba(trimmed);
-    }
-    if (typeof CSS !== "undefined" && typeof CSS.supports === "function" && !/\bvar\(/i.test(trimmed) && !CSS.supports("color", trimmed)) {
-      return null;
-    }
-    const computed = getComputedColor(trimmed, root);
-    return parseCssColor(computed);
-  }
   function captureNativeValue(input) {
     const proto = Object.getPrototypeOf(input);
     const desc = Object.getOwnPropertyDescriptor(proto, "value");
@@ -1725,141 +2367,6 @@ var Dieter = (() => {
         desc.set?.call(input, next);
       }
     };
-  }
-  function hsvToRgb(h, s, v) {
-    const c = v * s;
-    const x = c * (1 - Math.abs(h / 60 % 2 - 1));
-    const m = v - c;
-    let r = 0;
-    let g = 0;
-    let b = 0;
-    if (h >= 0 && h < 60) {
-      r = c;
-      g = x;
-      b = 0;
-    } else if (h >= 60 && h < 120) {
-      r = x;
-      g = c;
-      b = 0;
-    } else if (h >= 120 && h < 180) {
-      r = 0;
-      g = c;
-      b = x;
-    } else if (h >= 180 && h < 240) {
-      r = 0;
-      g = x;
-      b = c;
-    } else if (h >= 240 && h < 300) {
-      r = x;
-      g = 0;
-      b = c;
-    } else {
-      r = c;
-      g = 0;
-      b = x;
-    }
-    return {
-      r: Math.round((r + m) * 255),
-      g: Math.round((g + m) * 255),
-      b: Math.round((b + m) * 255)
-    };
-  }
-  function formatHex(hsv) {
-    const { r, g, b } = hsvToRgb(hsv.h, hsv.s, hsv.v);
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-  }
-  function toHex(value) {
-    return clampNumber(Math.round(value), 0, 255).toString(16).padStart(2, "0");
-  }
-  function clampNumber(value, min, max) {
-    if (Number.isNaN(value)) return min;
-    return Math.min(Math.max(value, min), max);
-  }
-  function roundTo(value, precision) {
-    const factor = Math.pow(10, precision);
-    return Math.round(value * factor) / factor;
-  }
-  function parseCssColor(computed) {
-    const clamp01 = (value) => Math.min(Math.max(value, 0), 1);
-    const clamp255 = (value) => Math.min(Math.max(value, 0), 255);
-    const parseAlpha = (token) => {
-      if (!token) return 1;
-      const raw = token.trim();
-      if (!raw) return 1;
-      if (raw.endsWith("%")) {
-        const pct = Number.parseFloat(raw.slice(0, -1));
-        return Number.isFinite(pct) ? clamp01(pct / 100) : 1;
-      }
-      const num = Number.parseFloat(raw);
-      return Number.isFinite(num) ? clamp01(num) : 1;
-    };
-    const parseRgb255 = (token) => {
-      const raw = token.trim();
-      if (!raw) return null;
-      if (raw.endsWith("%")) {
-        const pct = Number.parseFloat(raw.slice(0, -1));
-        if (!Number.isFinite(pct)) return null;
-        return clamp255(Math.round(pct / 100 * 255));
-      }
-      const num = Number.parseFloat(raw);
-      if (!Number.isFinite(num)) return null;
-      return clamp255(Math.round(num));
-    };
-    const parseSrgbChannel = (token) => {
-      const raw = token.trim();
-      if (!raw) return null;
-      if (raw.endsWith("%")) {
-        const pct = Number.parseFloat(raw.slice(0, -1));
-        if (!Number.isFinite(pct)) return null;
-        return clamp255(Math.round(pct / 100 * 255));
-      }
-      const num = Number.parseFloat(raw);
-      if (!Number.isFinite(num)) return null;
-      const normalized = num > 1 ? num / 255 : num;
-      return clamp255(Math.round(clamp01(normalized) * 255));
-    };
-    const trimmed = computed.trim();
-    const hexMatch = trimmed.match(/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
-    if (hexMatch) return hexToRgba(trimmed);
-    const srgbMatch = trimmed.match(/^color\(\s*srgb\s+(.+)\)$/i);
-    if (srgbMatch) {
-      const body = srgbMatch[1].trim().replace(/\)\s*$/, "");
-      const [channelsPart, alphaPart] = body.split(/\s*\/\s*/);
-      const channels = channelsPart.split(/\s+/).filter(Boolean);
-      if (channels.length >= 3) {
-        const r = parseSrgbChannel(channels[0]);
-        const g = parseSrgbChannel(channels[1]);
-        const b = parseSrgbChannel(channels[2]);
-        if (r != null && g != null && b != null) return { r, g, b, a: parseAlpha(alphaPart) };
-      }
-    }
-    const rgbMatch = trimmed.match(/^rgba?\(\s*(.+)\s*\)$/i);
-    if (rgbMatch) {
-      const body = rgbMatch[1];
-      const hasSlash = body.includes("/");
-      const [channelsPartRaw, alphaPartRaw] = hasSlash ? body.split(/\s*\/\s*/) : [body, null];
-      const tokens = channelsPartRaw.split(/[\s,]+/).map((t) => t.trim()).filter(Boolean);
-      let alphaToken = alphaPartRaw ? alphaPartRaw.trim() : null;
-      if (!alphaToken && tokens.length >= 4) {
-        alphaToken = tokens[3];
-      }
-      if (tokens.length >= 3) {
-        const r = parseRgb255(tokens[0]);
-        const g = parseRgb255(tokens[1]);
-        const b = parseRgb255(tokens[2]);
-        if (r != null && g != null && b != null) return { r, g, b, a: parseAlpha(alphaToken) };
-      }
-    }
-    return null;
-  }
-  function getComputedColor(value, root) {
-    const temp = document.createElement("div");
-    temp.style.color = value;
-    temp.style.display = "none";
-    root.appendChild(temp);
-    const computed = getComputedStyle(temp).color;
-    root.removeChild(temp);
-    return computed;
   }
   return __toCommonJS(dropdown_fill_exports);
 })();

@@ -316,20 +316,22 @@ export async function handleGetInstance(_req: Request, env: Env, publicId: strin
 
   const baseFingerprint = await computeBaseFingerprint(instance.config);
   let policy: Policy | null = null;
-  if (resolveInstanceKind(instance) === 'curated') {
-    policy = resolvePolicy({ profile: 'devstudio', role: 'owner' });
-  } else {
-    const workspaceId = resolveInstanceWorkspaceId(instance);
-    if (workspaceId) {
-      try {
-        const workspace = await loadWorkspaceById(env, workspaceId);
-        if (workspace) {
-          policy = resolvePolicy({ profile: workspace.tier, role: 'editor' });
-        }
-      } catch {
-        policy = null;
+  const workspaceId = resolveInstanceWorkspaceId(instance);
+  if (workspaceId) {
+    try {
+      const workspace = await loadWorkspaceById(env, workspaceId);
+      if (workspace) {
+        policy = resolvePolicy({ profile: workspace.tier, role: 'editor' });
       }
+    } catch {
+      policy = null;
     }
+  }
+
+  if (!policy && resolveInstanceKind(instance) === 'curated') {
+    // Curated/public reads should still use product policy profiles.
+    // Tier3 gives uncapped product entitlements without introducing a dedicated admin branch.
+    policy = resolvePolicy({ profile: 'tier3', role: 'editor' });
   }
 
   return json({

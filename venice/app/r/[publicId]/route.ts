@@ -20,7 +20,7 @@ interface InstanceResponse {
   policy?: { flags?: Record<string, boolean> } | null;
 }
 
-const CACHE_PUBLISHED = 'public, max-age=60, s-maxage=60';
+const CACHE_PUBLISHED = 'no-store';
 
 function extractBodyHtml(widgetHtml: string): string {
   const match = widgetHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -156,6 +156,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     });
     if (snapshot.ok) {
       const etag = `W/"${snapshot.fingerprint}"`;
+      if (snapshot.pointerUpdatedAt) {
+        headers['X-Ck-Render-Pointer-Updated-At'] = snapshot.pointerUpdatedAt;
+      }
       const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
       if (ifNoneMatch && ifNoneMatch === etag) {
         headers['ETag'] = etag;
@@ -210,6 +213,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       });
       if (fallbackSnapshot.ok) {
         const etag = `W/"${fallbackSnapshot.fingerprint}"`;
+        if (fallbackSnapshot.pointerUpdatedAt) {
+          headers['X-Ck-Render-Pointer-Updated-At'] = fallbackSnapshot.pointerUpdatedAt;
+        }
         const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
         if (ifNoneMatch && ifNoneMatch === etag) {
           headers['ETag'] = etag;

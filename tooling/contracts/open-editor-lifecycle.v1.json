@@ -1,0 +1,15 @@
+{
+  "version": "1",
+  "events": {
+    "openEditor": "ck:open-editor",
+    "sessionReady": "bob:session-ready",
+    "ack": "bob:open-editor-ack",
+    "applied": "bob:open-editor-applied",
+    "failed": "bob:open-editor-failed"
+  },
+  "timing": {
+    "ackRetryMs": 250,
+    "maxAckAttempts": 6,
+    "timeoutMs": 7000
+  }
+}

@@ -4,15 +4,14 @@ import { useCallback, useMemo, useState } from 'react';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { PublishEmbedModal } from './PublishEmbedModal';
 
-function resolveSubject(profile: string | null | undefined): 'workspace' | 'devstudio' | 'minibob' {
-  if (profile === 'devstudio') return 'devstudio';
+function resolveSubject(profile: string | null | undefined): 'workspace' | 'minibob' {
   if (profile === 'minibob') return 'minibob';
   return 'workspace';
 }
 
 export function TopDrawer() {
   const session = useWidgetSession();
-  const { meta, policy, publish, isPublishing, isDirty, discardChanges, setInstanceLabel } = session;
+  const { meta, policy, publish, isPublishing, isDirty, discardChanges, setInstanceLabel, apiFetch } = session;
   const [embedOpen, setEmbedOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState('');
@@ -60,7 +59,7 @@ export function TopDrawer() {
     setRenameBusy(true);
     setRenameError(null);
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
           currentPublicId,
         )}?subject=${encodeURIComponent(subject)}`,
@@ -110,7 +109,7 @@ export function TopDrawer() {
     } finally {
       setRenameBusy(false);
     }
-  }, [canRename, currentLabel, currentPublicId, renameBusy, renameDraft, setInstanceLabel, subject, workspaceId]);
+  }, [apiFetch, canRename, currentLabel, currentPublicId, renameBusy, renameDraft, setInstanceLabel, subject, workspaceId]);
 
   const handleRenameBlur = useCallback(() => {
     const nextLabel = renameDraft.trim();

@@ -38,12 +38,40 @@ export async function GET(request: NextRequest, ctx: RouteContext) {
 
   const subjectResult = resolveSubject(request);
   if (!subjectResult.ok) return subjectResult.response;
+  const requestUrl = new URL(request.url);
+  const workspaceId = (requestUrl.searchParams.get('workspaceId') || '').trim();
 
   const paris = resolveParisBaseOrResponse(CORS_HEADERS);
   if (!paris.ok) return paris.response;
 
-  const url = new URL(`${paris.baseUrl.replace(/\/$/, '')}/api/instance/${encodeURIComponent(publicId)}`);
-  url.searchParams.set('subject', subjectResult.subject);
+  const url =
+    subjectResult.subject === 'workspace'
+      ? (() => {
+          if (!workspaceId) {
+            return null;
+          }
+          const workspaceUrl = new URL(
+            `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(
+              workspaceId,
+            )}/instance/${encodeURIComponent(publicId)}`,
+          );
+          workspaceUrl.searchParams.set('subject', 'workspace');
+          return workspaceUrl;
+        })()
+      : (() => {
+          const instanceUrl = new URL(
+            `${paris.baseUrl.replace(/\/$/, '')}/api/instance/${encodeURIComponent(publicId)}`,
+          );
+          instanceUrl.searchParams.set('subject', subjectResult.subject);
+          return instanceUrl;
+        })();
+
+  if (!url) {
+    return NextResponse.json(
+      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } },
+      { status: 422, headers: CORS_HEADERS },
+    );
+  }
 
   try {
     const res = await fetchWithTimeout(

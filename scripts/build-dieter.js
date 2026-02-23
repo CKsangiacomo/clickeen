@@ -196,19 +196,24 @@ function runNodeScript(scriptRelPath) {
 }
 
 async function bundleComponentScripts({ componentsSrc, dist }) {
-  const tsFiles = (await glob(path.join(componentsSrc, '**/*.ts').replace(/\\/g, '/'))).sort();
+  const componentEntryFiles = (await glob(path.join(componentsSrc, '**/*.ts').replace(/\\/g, '/')))
+    .sort()
+    .filter((filePath) => {
+      const componentName = path.basename(path.dirname(filePath));
+      const fileName = path.basename(filePath, '.ts');
+      return fileName === componentName;
+    });
 
-  for (const tsFile of tsFiles) {
-    const parts = tsFile.split('/');
-    const name = parts[parts.length - 2]; // e.g., textfield/toggle
-    const outDir = path.join(dist, 'components', name);
-    const outFile = path.join(outDir, `${name}.js`);
-    const content = fs.readFileSync(tsFile, 'utf8');
+  for (const entryFile of componentEntryFiles) {
+    const componentName = path.basename(path.dirname(entryFile));
+    const outDir = path.join(dist, 'components', componentName);
+    const outFile = path.join(outDir, `${componentName}.js`);
+    const content = fs.readFileSync(entryFile, 'utf8');
     const match = content.match(/export function (\w+)/);
     if (!match) continue;
     fs.mkdirSync(outDir, { recursive: true });
     await esbuild.build({
-      entryPoints: [tsFile],
+      entryPoints: [entryFile],
       bundle: true,
       format: 'iife',
       globalName: 'Dieter',

@@ -7,6 +7,7 @@
  *   - GET /healthz        → 200 ok
  *   - GET /dieter/**      → static files from tokyo/dieter/**
  *   - GET /i18n/**        → static files from tokyo/i18n/**
+ *   - GET /fonts/**       → static files from tokyo/fonts/**
  *   - GET /themes/**      → static files from tokyo/themes/**
  *   - GET /widgets/**     → static files from tokyo/widgets/**
  *   - GET /arsenale/**    → proxy to tokyo-worker canonical account assets
@@ -56,6 +57,14 @@ function getContentType(filePath) {
       return 'image/gif';
     case '.ico':
       return 'image/x-icon';
+    case '.woff2':
+      return 'font/woff2';
+    case '.woff':
+      return 'font/woff';
+    case '.otf':
+      return 'font/otf';
+    case '.ttf':
+      return 'font/ttf';
     default:
       return 'application/octet-stream';
   }
@@ -366,7 +375,16 @@ function isTokyoWorkerBridgeRequest(req) {
 
 function shouldProxyMutableToWorker(req, pathname) {
   if (isTokyoWorkerBridgeRequest(req)) return false;
+  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/fonts/')) {
+    return true;
+  }
   if (req.method === 'POST' && pathname === '/assets/upload') {
+    return true;
+  }
+  if (
+    (req.method === 'PUT' || req.method === 'DELETE') &&
+    /^\/assets\/[0-9a-f-]{36}\/[0-9a-f-]{36}$/i.test(pathname)
+  ) {
     return true;
   }
   if (req.method === 'POST' && pathname === '/assets/purge-deleted') {
@@ -468,7 +486,7 @@ function serveStatic(req, res, prefix) {
       }
       return 'public, max-age=31536000, immutable';
     }
-    // Default for /dieter/ and /widgets/ in local dev: cache, but always revalidate.
+    // Default for /dieter/, /widgets/, and /fonts/ in local dev: cache, but always revalidate.
     return 'public, max-age=0, must-revalidate';
   };
 
@@ -803,6 +821,7 @@ const server = http.createServer((req, res) => {
   if (
     serveStatic(req, res, '/dieter/') ||
     serveStatic(req, res, '/i18n/') ||
+    serveStatic(req, res, '/fonts/') ||
     serveStatic(req, res, '/l10n/') ||
     serveStatic(req, res, '/themes/') ||
     serveStatic(req, res, '/widgets/')

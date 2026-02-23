@@ -33,7 +33,8 @@ var Dieter = (() => {
       popoverSelector = ".diet-popover",
       onOpen,
       onClose,
-      initialState = "closed"
+      initialState = "closed",
+      isInsideTarget
     } = config;
     const hostRegistry = /* @__PURE__ */ new Map();
     let globalHandlersBound = false;
@@ -75,7 +76,9 @@ var Dieter = (() => {
             if (!target) return;
             hostRegistry.forEach((record) => {
               const { root } = record;
-              if (!root.contains(target) && root.dataset.state === "open") {
+              const insideRoot = root.contains(target);
+              const insideExtraTarget = isInsideTarget?.(root, target) ?? false;
+              if (!insideRoot && !insideExtraTarget && root.dataset.state === "open") {
                 setOpen(record, false);
               }
             });

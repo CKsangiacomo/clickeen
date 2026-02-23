@@ -12,6 +12,7 @@ import { UsageDomain } from '../../components/usage-domain';
 import { AiDomain } from '../../components/ai-domain';
 import { SettingsDomain } from '../../components/settings-domain';
 import { RomaShell, RomaShellDefaultActions } from '../../components/roma-shell';
+import { RomaAuthRedirect } from '../../components/roma-auth-redirect';
 
 type DomainPageProps = {
   params: Promise<{ domain: string }>;
@@ -97,9 +98,11 @@ export default async function RomaDomainPage({ params }: DomainPageProps) {
       title={config.title}
       headerRight={<RomaShellDefaultActions />}
     >
-      <Suspense fallback={<section className="roma-module-surface">{config.fallback}</section>}>
-        <DomainComponent />
-      </Suspense>
+      <RomaAuthRedirect>
+        <Suspense fallback={<section className="roma-module-surface">{config.fallback}</section>}>
+          <DomainComponent />
+        </Suspense>
+      </RomaAuthRedirect>
     </RomaShell>
   );
 }

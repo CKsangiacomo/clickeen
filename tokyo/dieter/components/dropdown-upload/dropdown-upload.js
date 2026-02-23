@@ -33,7 +33,8 @@ var Dieter = (() => {
       popoverSelector = ".diet-popover",
       onOpen,
       onClose,
-      initialState = "closed"
+      initialState = "closed",
+      isInsideTarget
     } = config;
     const hostRegistry = /* @__PURE__ */ new Map();
     let globalHandlersBound = false;
@@ -75,7 +76,9 @@ var Dieter = (() => {
             if (!target) return;
             hostRegistry.forEach((record) => {
               const { root } = record;
-              if (!root.contains(target) && root.dataset.state === "open") {
+              const insideRoot = root.contains(target);
+              const insideExtraTarget = isInsideTarget?.(root, target) ?? false;
+              if (!insideRoot && !insideExtraTarget && root.dataset.state === "open") {
                 setOpen(record, false);
               }
             });
@@ -178,11 +181,10 @@ var Dieter = (() => {
     const publicId = readDatasetValue("ckPublicId");
     const widgetType = readDatasetValue("ckWidgetType");
     if (!accountId || !isUuid(accountId)) return null;
-    if (!workspaceId || !isUuid(workspaceId)) return null;
     const context = {
-      accountId,
-      workspaceId
+      accountId
     };
+    if (workspaceId && isUuid(workspaceId)) context.workspaceId = workspaceId;
     if (publicId && isPublicId(publicId)) context.publicId = publicId;
     if (widgetType && isWidgetType(widgetType)) context.widgetType = widgetType.toLowerCase();
     return context;
@@ -195,11 +197,11 @@ var Dieter = (() => {
       return null;
     }
   }
-  function normalizeUploadUrl(payload) {
+  function normalizeAssetUrl(payload) {
     const direct = typeof payload.url === "string" ? payload.url.trim() : "";
     if (!direct) return null;
     const parsed = parseCanonicalAssetRef(direct);
-    if (!parsed) return null;
+    if (!parsed || parsed.kind !== "pointer") return null;
     if (/^https?:\/\//i.test(direct)) return direct;
     return parsed.pathname;
   }
@@ -211,7 +213,7 @@ var Dieter = (() => {
     if (!isUuid(accountId)) {
       throw new Error("coreui.errors.accountId.invalid");
     }
-    if (!isUuid(workspaceId)) {
+    if (workspaceId && !isUuid(workspaceId)) {
       throw new Error("coreui.errors.workspaceId.invalid");
     }
     if (publicId && !isPublicId(publicId)) {
@@ -220,7 +222,12 @@ var Dieter = (() => {
     if (widgetType && !isWidgetType(widgetType)) {
       throw new Error("coreui.errors.widgetType.invalid");
     }
-    return { accountId, workspaceId, publicId: publicId || void 0, widgetType: widgetType || void 0 };
+    return {
+      accountId,
+      workspaceId: workspaceId || void 0,
+      publicId: publicId || void 0,
+      widgetType: widgetType || void 0
+    };
   }
   async function uploadEditorAsset(args) {
     const file = args.file;
@@ -234,7 +241,7 @@ var Dieter = (() => {
     const headers = new Headers();
     headers.set("content-type", file.type || "application/octet-stream");
     headers.set("x-account-id", context.accountId);
-    headers.set("x-workspace-id", context.workspaceId);
+    if (context.workspaceId) headers.set("x-workspace-id", context.workspaceId);
     headers.set("x-filename", file.name || "upload.bin");
     headers.set("x-variant", variant);
     headers.set("x-source", source);
@@ -256,7 +263,7 @@ var Dieter = (() => {
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
-    const url = normalizeUploadUrl(payload);
+    const url = normalizeAssetUrl(payload);
     if (!url) {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
@@ -265,6 +272,7 @@ var Dieter = (() => {
 
   // components/dropdown-upload/dropdown-upload.ts
   var states = /* @__PURE__ */ new Map();
+  var UUID_FILENAME_STEM_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   var ASSET_UNAVAILABLE_MESSAGE = "Asset URL is unavailable. Replace file to restore preview.";
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-upload",
@@ -393,13 +401,18 @@ var Dieter = (() => {
     state.previewVideoEl.addEventListener("loadeddata", () => {
       handlePreviewMediaReady("video", state.previewVideoEl.currentSrc || state.previewVideoEl.src || "");
     });
-    const pickFile = (event) => {
+    const pickUploadFile = (event) => {
       event.preventDefault();
       state.fileInput.value = "";
       state.fileInput.click();
     };
-    state.uploadButton.addEventListener("click", pickFile);
-    state.replaceButton.addEventListener("click", pickFile);
+    const pickReplaceFile = (event) => {
+      event.preventDefault();
+      state.fileInput.value = "";
+      state.fileInput.click();
+    };
+    state.uploadButton.addEventListener("click", pickUploadFile);
+    state.replaceButton.addEventListener("click", pickReplaceFile);
     state.removeButton.addEventListener("click", (event) => {
       event.preventDefault();
       if (state.localObjectUrl) {
@@ -427,7 +440,7 @@ var Dieter = (() => {
         });
         const { kind, ext } = classifyByNameAndType(file.name, file.type);
         state.root.dataset.localName = file.name;
-        setMetaValue(state, { name: file.name, mime: file.type || "", source: "user" }, true);
+        setMetaValue(state, { name: file.name }, true);
         setHeaderWithFile(state, file.name, false);
         setPreview(state, {
           kind,
@@ -528,11 +541,11 @@ var Dieter = (() => {
       return value;
     }
   }
-  function previewFromUrl(state, raw, name, kindName, mime) {
+  function previewFromUrl(state, raw, name, kindName) {
     const url = extractPrimaryUrl(raw);
     if (!url) return;
     const ext = (guessExtFromName(kindName) || "").toLowerCase();
-    const kind = classifyByNameAndType(kindName || "file", mime).kind;
+    const kind = classifyByNameAndType(kindName || "file", "").kind;
     setPreview(state, { kind, previewUrl: url, name, ext, hasFile: true });
   }
   function syncFromValue(state, raw, meta = null) {
@@ -540,11 +553,11 @@ var Dieter = (() => {
     if (key === "transparent") key = "";
     const placeholder = state.headerValue?.dataset.placeholder ?? "";
     const metaName = typeof meta?.name === "string" ? meta.name.trim() : "";
-    const metaMime = typeof meta?.mime === "string" ? meta.mime.trim() : "";
     const expectsMeta = state.metaHasPath;
     const rawUrl = extractPrimaryUrl(key) || "";
     const kindName = metaName || guessNameFromUrl(rawUrl) || "";
-    const fallbackName = expectsMeta ? "" : state.root.dataset.localName || guessNameFromUrl(rawUrl) || rawUrl || key || "Uploaded file";
+    const guessedUrlName = guessNameFromUrl(rawUrl);
+    const fallbackName = expectsMeta ? "" : state.root.dataset.localName || guessedUrlName || (rawUrl ? "Uploaded file" : key || "Uploaded file");
     const displayName = metaName || fallbackName || (expectsMeta ? "Unnamed file" : "Uploaded file");
     if (!key) {
       clearError(state);
@@ -563,7 +576,7 @@ var Dieter = (() => {
     }
     if (looksLikeUrl(key)) {
       setHeaderWithFile(state, displayName, false);
-      previewFromUrl(state, key, displayName, kindName || displayName, metaMime);
+      previewFromUrl(state, key, displayName, kindName || displayName);
       return;
     }
     setPreview(state, { kind: "unknown", previewUrl: void 0, name: "", ext: "", hasFile: true });
@@ -644,15 +657,18 @@ var Dieter = (() => {
     const cleaned = url.split("?")[0];
     const parts = cleaned.split("/").filter(Boolean);
     if (!parts.length) return "";
-    const filename = parts[parts.length - 1];
-    const stem = filename.replace(/\.[^.]+$/, "").toLowerCase();
-    const parsed = parseCanonicalAssetRef(cleaned);
-    if (parsed && (parsed.kind === "pointer" || stem === "original" || stem === "grayscale")) {
-      const ext = guessExtFromName(filename);
-      const shortId = parsed.assetId.replace(/-/g, "").slice(0, 8);
-      return ext ? `asset-${shortId}.${ext}` : `asset-${shortId}`;
-    }
+    const filename = decodePathPart2(parts[parts.length - 1]);
+    if (!filename || !filename.includes(".")) return "";
+    const stem = filename.replace(/\.[^.]+$/, "");
+    if (!stem || UUID_FILENAME_STEM_RE.test(stem)) return "";
     return filename;
+  }
+  function decodePathPart2(raw) {
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
   }
   function captureNativeValue(input) {
     const proto = Object.getPrototypeOf(input);

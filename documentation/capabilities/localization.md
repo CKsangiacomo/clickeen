@@ -117,6 +117,7 @@ This is not “manual editing of locales” — it’s the expected artifact reg
 - Paris stores overlays in Supabase (`widget_instance_overlays`, layer + layer_key).
 - Paris rebases user overrides onto the new snapshot fingerprint (drops removed paths, keeps valid overrides).
 - Paris marks `l10n_publish_state` as dirty and enqueues publish jobs.
+- Published base saves also trigger render snapshot regeneration for the workspace active locale set (EN + active non-EN within policy caps) for both user and curated instances, so base style changes propagate cross-locale even when translation diffs are empty.
 - Tokyo-worker materializes overlays into Tokyo/R2 using deterministic paths (no global manifest) and writes `index.json` for locale selection.
 - Venice applies the **best available** overlay at render time:
   - **fresh:** `overlay.baseFingerprint` matches the current base

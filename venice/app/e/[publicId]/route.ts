@@ -20,7 +20,7 @@ interface InstanceResponse {
   policy?: { profile?: string; flags?: Record<string, boolean> } | null;
 }
 
-const CACHE_PUBLISHED = 'public, max-age=60, s-maxage=60';
+const CACHE_PUBLISHED = 'no-store';
 
 function extractCkWidgetJson(html: string): { json: Record<string, unknown>; re: RegExp } | null {
   const re = /window\.CK_WIDGET=([^;]+);/;
@@ -123,6 +123,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     const snapshot = await loadRenderSnapshot({ publicId, locale, variant: 'e' });
     if (snapshot.ok) {
       const etag = `W/"${snapshot.fingerprint}"`;
+      if (snapshot.pointerUpdatedAt) {
+        headers['X-Ck-Render-Pointer-Updated-At'] = snapshot.pointerUpdatedAt;
+      }
       const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
       if (ifNoneMatch && ifNoneMatch === etag) {
         headers['ETag'] = etag;
@@ -167,6 +170,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       const fallbackSnapshot = await loadRenderSnapshot({ publicId, locale: 'en', variant: 'e' });
       if (fallbackSnapshot.ok) {
         const etag = `W/"${fallbackSnapshot.fingerprint}"`;
+        if (fallbackSnapshot.pointerUpdatedAt) {
+          headers['X-Ck-Render-Pointer-Updated-At'] = fallbackSnapshot.pointerUpdatedAt;
+        }
         const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
         if (ifNoneMatch && ifNoneMatch === etag) {
           headers['ETag'] = etag;
@@ -660,7 +666,7 @@ function buildCsp(nonce: string, { parisOrigin, tokyoOrigin }: { parisOrigin: st
     `script-src 'self' 'nonce-${nonce}' ${escapeHtml(tokyoOrigin)}`,
     `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com ${escapeHtml(tokyoOrigin)}`,
     `img-src 'self' data: https: ${escapeHtml(tokyoOrigin)}`,
-    "font-src https://fonts.gstatic.com data:",
+    `font-src https://fonts.gstatic.com data: ${escapeHtml(tokyoOrigin)}`,
     `connect-src 'self' ${escapeHtml(parisOrigin)} ${escapeHtml(tokyoOrigin)}`,
     "frame-ancestors *",
     "form-action 'self'",

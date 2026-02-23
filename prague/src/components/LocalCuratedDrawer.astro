@@ -1,6 +1,4 @@
 ---
-import { WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN } from '@clickeen/ck-contracts';
-
 type CuratedSlot = {
   blockId: string;
   blockType: string;
@@ -80,7 +78,6 @@ if (Array.isArray(blocks)) {
 }
 
 const normalizedSlotCount = normalizedBlocks.reduce((sum, block) => sum + block.slots.length, 0);
-const curatedPublicIdPattern = WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN;
 const drawerContext = JSON.stringify({
   widget,
   page,
@@ -95,7 +92,6 @@ const drawerContext = JSON.stringify({
       class="ck-btn ck-btn--glass ck-btn--md label-s ck-localCurated__trigger"
       type="button"
       data-action="open"
-      onclick="window.__ckLocalCuratedOpen && window.__ckLocalCuratedOpen(this)"
     >
       Curated
     </button>
@@ -104,7 +100,6 @@ const drawerContext = JSON.stringify({
       class="ck-localCurated__backdrop"
       data-action="close"
       hidden
-      onclick="window.__ckLocalCuratedClose && window.__ckLocalCuratedClose(this)"
     ></div>
 
     <aside class="ck-localCurated__panel" data-role="panel" hidden>
@@ -118,7 +113,6 @@ const drawerContext = JSON.stringify({
           class="ck-btn ck-btn--secondary ck-btn--sm label-s"
           type="button"
           data-action="close"
-          onclick="window.__ckLocalCuratedClose && window.__ckLocalCuratedClose(this)"
         >
           Close
         </button>
@@ -176,342 +170,10 @@ const drawerContext = JSON.stringify({
   </div>
 ) : null}
 
-<script is:inline>
-  (function () {
-    window.__ckLocalCuratedOpen = function (triggerEl) {
-      const root = triggerEl && triggerEl.closest ? triggerEl.closest('.ck-localCurated') : null;
-      if (!(root instanceof HTMLElement)) return;
-      const panel = root.querySelector('[data-role="panel"]');
-      const backdrop = root.querySelector('.ck-localCurated__backdrop');
-      if (panel instanceof HTMLElement) panel.hidden = false;
-      if (backdrop instanceof HTMLElement) backdrop.hidden = false;
-      requestAnimationFrame(() => {
-        root.classList.add('is-open');
-      });
-    };
+<script>
+  import { initLocalCuratedDrawers } from '../lib/localCuratedDrawerClient';
 
-    window.__ckLocalCuratedClose = function (triggerEl) {
-      const root = triggerEl && triggerEl.closest ? triggerEl.closest('.ck-localCurated') : null;
-      if (!(root instanceof HTMLElement)) return;
-      const panel = root.querySelector('[data-role="panel"]');
-      const backdrop = root.querySelector('.ck-localCurated__backdrop');
-      root.classList.remove('is-open');
-      window.setTimeout(() => {
-        if (panel instanceof HTMLElement) panel.hidden = true;
-        if (backdrop instanceof HTMLElement) backdrop.hidden = true;
-      }, 180);
-    };
-
-    const roots = Array.from(document.querySelectorAll('.ck-localCurated[data-ck-local-curated="true"]'));
-    roots.forEach((node) => {
-      if (!(node instanceof HTMLElement)) return;
-      const root = node;
-      if (root.dataset.bound === '1') return;
-      root.dataset.bound = '1';
-      // Escape any transformed/overflow ancestors so the fixed drawer uses viewport geometry.
-      if (root.parentElement !== document.body) {
-        document.body.appendChild(root);
-      }
-
-      const contextRaw = root.dataset.context || '';
-      const parsedContext = (() => {
-        try {
-          return JSON.parse(contextRaw);
-        } catch {
-          return null;
-        }
-      })();
-      const context = parsedContext && typeof parsedContext === 'object' ? parsedContext : {};
-
-      const panel = root.querySelector('[data-role="panel"]');
-      const backdrop = root.querySelector('.ck-localCurated__backdrop');
-      const statusEl = root.querySelector('[data-role="status"]');
-      const refreshBtn = root.querySelector('[data-action="refresh-options"]');
-      const saveBtn = root.querySelector('[data-action="save"]');
-
-      if (!(panel instanceof HTMLElement) || !(backdrop instanceof HTMLElement)) return;
-
-      const slotEls = Array.from(root.querySelectorAll('[data-slot-index]')).filter((el) => el instanceof HTMLElement);
-      const blockEls = Array.from(root.querySelectorAll('.ck-localCurated__block')).filter((el) => el instanceof HTMLElement);
-      const blockCount = Number.isInteger(context.blockCount) ? Number(context.blockCount) : blockEls.length;
-      const slotCount = Number.isInteger(context.slotCount) ? Number(context.slotCount) : slotEls.length;
-
-    function setStatus(message, tone) {
-      if (!(statusEl instanceof HTMLElement)) return;
-      statusEl.textContent = message;
-      statusEl.dataset.tone = tone || 'muted';
-    }
-
-    function normalizePublicId(value) {
-      return String(value || '').trim();
-    }
-
-    function readInput(slotEl) {
-      const select = slotEl.querySelector('[data-role="select"]');
-      if (!(select instanceof HTMLSelectElement)) return '';
-      return normalizePublicId(select.value);
-    }
-
-    function setSelectOptions(slotEl, values) {
-      const select = slotEl.querySelector('[data-role="select"]');
-      if (!(select instanceof HTMLSelectElement)) return;
-
-      const existing = normalizePublicId(slotEl.dataset.original || '');
-      const current = normalizePublicId(select.value || existing);
-      const merged = Array.from(new Set([existing, current, ...values].filter(Boolean))).sort((a, b) =>
-        a.localeCompare(b),
-      );
-
-      select.innerHTML = '';
-      if (merged.length === 0) {
-        const empty = document.createElement('option');
-        empty.value = '';
-        empty.textContent = 'No instances available';
-        select.appendChild(empty);
-        select.value = '';
-        return;
-      }
-
-      merged.forEach((value) => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = value;
-        select.appendChild(option);
-      });
-
-      if (current && merged.includes(current)) {
-        select.value = current;
-      } else if (existing && merged.includes(existing)) {
-        select.value = existing;
-      } else {
-        select.value = merged[0] || '';
-      }
-    }
-
-    function setSaveEnabled() {
-      if (!(saveBtn instanceof HTMLButtonElement)) return;
-      const changed = slotEls.some((slotEl) => {
-        const nextValue = readInput(slotEl);
-        const originalValue = normalizePublicId(slotEl.dataset.original || '');
-        return nextValue !== originalValue;
-      });
-      saveBtn.disabled = !changed;
-    }
-
-    function setOptionLoading(loading) {
-      if (root.dataset.busy === '1') return;
-      if (refreshBtn instanceof HTMLButtonElement) refreshBtn.disabled = loading;
-      slotEls.forEach((slotEl) => {
-        const select = slotEl.querySelector('[data-role="select"]');
-        if (select instanceof HTMLSelectElement) select.disabled = loading;
-      });
-      if (loading) {
-        if (saveBtn instanceof HTMLButtonElement) saveBtn.disabled = true;
-      } else {
-        setSaveEnabled();
-      }
-    }
-
-    function openPanel() {
-      setSaveEnabled();
-      setStatus('Found ' + slotCount + ' editable instance slots across ' + blockCount + ' blocks on this page.', 'muted');
-      panel.hidden = false;
-      backdrop.hidden = false;
-      requestAnimationFrame(() => {
-        root.classList.add('is-open');
-      });
-    }
-
-    function closePanel() {
-      root.classList.remove('is-open');
-      window.setTimeout(() => {
-        panel.hidden = true;
-        backdrop.hidden = true;
-      }, 180);
-    }
-
-    function setBusy(busy) {
-      root.dataset.busy = busy ? '1' : '0';
-      if (refreshBtn instanceof HTMLButtonElement) refreshBtn.disabled = busy;
-      slotEls.forEach((slotEl) => {
-        const select = slotEl.querySelector('[data-role="select"]');
-        if (select instanceof HTMLSelectElement) select.disabled = busy;
-      });
-      if (saveBtn instanceof HTMLButtonElement) {
-        if (busy) {
-          saveBtn.disabled = true;
-        } else {
-          setSaveEnabled();
-        }
-      }
-    }
-
-    async function loadCuratedOptions() {
-      const widget = encodeURIComponent(String(context.widget || '').trim());
-      if (!widget) return;
-      setOptionLoading(true);
-      setStatus('Loading curated instance IDs…', 'muted');
-      try {
-        const res = await fetch('/api/local/curated-blocks?widget=' + widget + '&_t=' + Date.now(), {
-          method: 'GET',
-          cache: 'no-store',
-        });
-        const payload = await res.json().catch(() => ({}));
-        const instances = Array.isArray(payload.instances) ? payload.instances : [];
-
-        const values = new Set();
-        slotEls.forEach((slotEl) => {
-          const existing = normalizePublicId(slotEl.dataset.original || '');
-          if (existing) values.add(existing);
-        });
-        instances.forEach((instance) => {
-          const value = normalizePublicId(instance && instance.publicId);
-          if (value) values.add(value);
-        });
-
-        const sortedValues = Array.from(values).sort((a, b) => a.localeCompare(b));
-        slotEls.forEach((slotEl) => setSelectOptions(slotEl, sortedValues));
-
-        const localCount = Number.isInteger(payload.localCount) ? Number(payload.localCount) : 0;
-        const parisCount = Number.isInteger(payload.parisCount) ? Number(payload.parisCount) : 0;
-        const warning = typeof payload.warning === 'string' && payload.warning.trim() ? payload.warning.trim() : '';
-
-        if (instances.length > 0) {
-          const sourceBreakdown =
-            localCount > 0 || parisCount > 0 ? ' (' + localCount + ' local, ' + parisCount + ' Paris)' : '';
-          const baseMessage =
-            'Found ' +
-            slotCount +
-            ' editable slots across ' +
-            blockCount +
-            ' blocks. Loaded ' +
-            instances.length +
-            ' available instance IDs' +
-            sourceBreakdown +
-            '.';
-          setStatus(warning ? baseMessage + ' ' + warning : baseMessage, warning ? 'warn' : 'ok');
-        } else {
-          const baseMessage =
-            'Found ' + slotCount + ' editable slots across ' + blockCount + ' blocks. No instance IDs available.';
-          setStatus(warning ? baseMessage + ' ' + warning : baseMessage, 'warn');
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        setStatus(
-          'Found ' + slotCount + ' editable slots across ' + blockCount + ' blocks. Could not load IDs (' + message + ').',
-          'warn',
-        );
-      } finally {
-        setOptionLoading(false);
-      }
-    }
-
-    async function saveChanges() {
-      if (!(saveBtn instanceof HTMLButtonElement) || saveBtn.disabled) return;
-
-      const updates = slotEls
-        .map((slotEl) => {
-          const publicId = readInput(slotEl);
-          const original = normalizePublicId(slotEl.dataset.original || '');
-          if (publicId === original) return null;
-          return {
-            slotEl,
-            publicId,
-            blockId: normalizePublicId(slotEl.dataset.blockId || ''),
-            target: normalizePublicId(slotEl.dataset.target || ''),
-            itemIndexRaw: normalizePublicId(slotEl.dataset.itemIndex || ''),
-          };
-        })
-        .filter(Boolean);
-
-      if (updates.length === 0) {
-        setStatus('No changes to save.', 'muted');
-        return;
-      }
-
-      const publicIdPattern = new RegExp(${JSON.stringify(curatedPublicIdPattern)}, 'i');
-      for (const update of updates) {
-        if (!publicIdPattern.test(update.publicId)) {
-          setStatus('Invalid publicId: ' + update.publicId, 'error');
-          return;
-        }
-      }
-
-      setBusy(true);
-      setStatus('Saving ' + updates.length + ' change(s)…', 'muted');
-
-      try {
-        for (const update of updates) {
-          const body = {
-            widget: String(context.widget || '').trim(),
-            page: String(context.page || '').trim(),
-            blockId: update.blockId,
-            target: update.target,
-            itemIndex: update.itemIndexRaw ? Number.parseInt(update.itemIndexRaw, 10) : null,
-            publicId: update.publicId,
-          };
-
-          const res = await fetch('/api/local/curated-blocks', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(body),
-          });
-
-          const payload = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            const message = payload && typeof payload.message === 'string' ? payload.message : 'Request failed';
-            throw new Error(message);
-          }
-
-          update.slotEl.dataset.original = update.publicId;
-        }
-
-        setStatus('Saved ' + updates.length + ' change(s). Reloading page…', 'ok');
-        setSaveEnabled();
-        window.setTimeout(() => {
-          window.location.reload();
-        }, 350);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        setStatus('Save failed: ' + message, 'error');
-        setBusy(false);
-        setSaveEnabled();
-        return;
-      }
-    }
-
-      root.querySelector('[data-action="open"]')?.addEventListener('click', openPanel);
-
-      root.querySelectorAll('[data-action="close"]').forEach((el) => {
-        el.addEventListener('click', closePanel);
-      });
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && root.classList.contains('is-open')) {
-          closePanel();
-        }
-      });
-
-      slotEls.forEach((slotEl) => {
-        const select = slotEl.querySelector('[data-role="select"]');
-        if (!(select instanceof HTMLSelectElement)) return;
-        select.addEventListener('change', () => {
-          setSaveEnabled();
-          setStatus('Selection changed. Click "Save changes" to apply.', 'muted');
-        });
-      });
-
-      refreshBtn?.addEventListener('click', () => {
-        void loadCuratedOptions();
-      });
-
-      saveBtn?.addEventListener('click', () => {
-        void saveChanges();
-      });
-
-      setSaveEnabled();
-      void loadCuratedOptions();
-    });
-  })();
+  initLocalCuratedDrawers();
 </script>
 
 <style>

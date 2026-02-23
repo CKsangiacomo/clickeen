@@ -29,30 +29,8 @@ type SupabaseAuthConfig = {
   anonKey: string;
 };
 
-type LocalDevBootstrapConfig = {
-  baseUrl: string;
-  serviceRoleKey: string;
-  userEmailHint: string;
-  userPassword: string;
-  workspaceSlug: string;
-};
-
-type LocalDevIssuedSession = {
-  accessToken: string;
-  refreshToken: string;
-  maxAge: number;
-  userId: string;
-  userEmail: string;
-};
-
 const DEFAULT_ACCESS_COOKIE = 'sb-access-token';
 const DEFAULT_REFRESH_COOKIE = 'sb-refresh-token';
-const LOCAL_DEV_DEFAULT_EMAIL = 'dev@clickeen.local';
-const LOCAL_DEV_DEFAULT_PASSWORD = 'DevOnly!12345';
-const LOCAL_DEV_DEFAULT_WORKSPACE_SLUG = 'ck-dev';
-const LOCAL_DEV_BOOTSTRAP_SESSION_KEY = '__CK_ROMA_LOCAL_DEV_BOOTSTRAP_SESSION_V1__';
-const LOCAL_DEV_BOOTSTRAP_INFLIGHT_KEY = '__CK_ROMA_LOCAL_DEV_BOOTSTRAP_INFLIGHT_V1__';
-const LOCAL_DEV_BOOTSTRAP_EXPIRY_SKEW_MS = 30_000;
 
 function unauthorized(reasonKey: string, status = 401) {
   return NextResponse.json(
@@ -146,395 +124,6 @@ function resolveSupabaseBaseUrl(): string {
   return rawBase.trim().replace(/\/+$/, '');
 }
 
-function isLocalHostname(hostname: string): boolean {
-  const normalized = hostname.trim().toLowerCase();
-  return normalized === 'localhost' || normalized === '127.0.0.1';
-}
-
-function parseUserEmail(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim().toLowerCase();
-  return normalized || null;
-}
-
-function parseUserId(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
-
-function withEmailAlias(email: string, alias: string): string {
-  const [localPart, domainPart] = email.split('@');
-  if (!localPart || !domainPart) return email;
-  const normalizedAlias = alias.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-  if (!normalizedAlias) return email;
-  return `${localPart}+${normalizedAlias}@${domainPart}`;
-}
-
-function resolveLocalDevBootstrapConfig(): LocalDevBootstrapConfig | null {
-  const disableFlag = (process.env.ROMA_LOCAL_DEV_AUTH_BOOTSTRAP ?? '').trim().toLowerCase();
-  if (disableFlag === '0' || disableFlag === 'false' || disableFlag === 'off') return null;
-
-  const nodeEnv = (process.env.NODE_ENV ?? '').trim().toLowerCase();
-  if (nodeEnv && nodeEnv !== 'development') return null;
-
-  const parisBase = (process.env.PARIS_BASE_URL ?? '').trim();
-  if (parisBase) {
-    try {
-      const hostname = new URL(parisBase).hostname;
-      if (!isLocalHostname(hostname)) return null;
-    } catch {
-      return null;
-    }
-  }
-
-  const baseUrl = resolveSupabaseBaseUrl();
-  if (!baseUrl) return null;
-  try {
-    if (!isLocalHostname(new URL(baseUrl).hostname)) return null;
-  } catch {
-    return null;
-  }
-
-  const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim();
-  if (!serviceRoleKey) return null;
-
-  const userEmailHint = parseUserEmail(process.env.ROMA_DEV_USER_EMAIL) ?? LOCAL_DEV_DEFAULT_EMAIL;
-  const userPassword = (process.env.ROMA_DEV_USER_PASSWORD ?? LOCAL_DEV_DEFAULT_PASSWORD).trim();
-  if (!userPassword) return null;
-
-  const workspaceSlug = (process.env.ROMA_DEV_WORKSPACE_SLUG ?? LOCAL_DEV_DEFAULT_WORKSPACE_SLUG).trim();
-  if (!workspaceSlug) return null;
-
-  return {
-    baseUrl,
-    serviceRoleKey,
-    userEmailHint,
-    userPassword,
-    workspaceSlug,
-  };
-}
-
-function localDevServiceHeaders(serviceRoleKey: string): HeadersInit {
-  return {
-    apikey: serviceRoleKey,
-    Accept: 'application/json',
-  };
-}
-
-function parseLocalDevSessionPayload(payload: unknown): LocalDevIssuedSession | null {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const record = payload as Record<string, unknown>;
-
-  const accessToken = typeof record.access_token === 'string' ? record.access_token.trim() : '';
-  const refreshToken = typeof record.refresh_token === 'string' ? record.refresh_token.trim() : '';
-  const expiresIn =
-    typeof record.expires_in === 'number'
-      ? record.expires_in
-      : typeof record.expires_in === 'string'
-        ? Number.parseInt(record.expires_in, 10)
-        : 3600;
-  const maxAge = Number.isFinite(expiresIn) && expiresIn > 0 ? expiresIn : 3600;
-
-  const userRecord =
-    record.user && typeof record.user === 'object' && !Array.isArray(record.user)
-      ? (record.user as Record<string, unknown>)
-      : null;
-  const userId = parseUserId(userRecord?.id) ?? parseUserId(decodeJwtPayload(accessToken)?.sub);
-  const userEmail = parseUserEmail(userRecord?.email) ?? parseUserEmail(decodeJwtPayload(accessToken)?.email);
-
-  if (!accessToken || !refreshToken || !userId || !userEmail) return null;
-  return {
-    accessToken,
-    refreshToken,
-    maxAge,
-    userId,
-    userEmail,
-  };
-}
-
-async function requestPasswordSession(
-  config: LocalDevBootstrapConfig,
-  email: string,
-): Promise<LocalDevIssuedSession | null> {
-  const response = await fetch(`${config.baseUrl}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: {
-      apikey: config.serviceRoleKey,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    cache: 'no-store',
-    body: JSON.stringify({
-      email,
-      password: config.userPassword,
-    }),
-  });
-  if (!response.ok) return null;
-  const payload = await response.json().catch(() => null);
-  return parseLocalDevSessionPayload(payload);
-}
-
-async function signUpLocalDevUser(config: LocalDevBootstrapConfig, email: string): Promise<void> {
-  await fetch(`${config.baseUrl}/auth/v1/signup`, {
-    method: 'POST',
-    headers: {
-      apikey: config.serviceRoleKey,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    cache: 'no-store',
-    body: JSON.stringify({
-      email,
-      password: config.userPassword,
-    }),
-  }).catch(() => null);
-}
-
-async function ensureLocalDevSession(
-  config: LocalDevBootstrapConfig,
-  email: string,
-): Promise<LocalDevIssuedSession | null> {
-  const normalizedEmail = parseUserEmail(email);
-  if (!normalizedEmail) return null;
-
-  const signedIn = await requestPasswordSession(config, normalizedEmail);
-  if (signedIn) return signedIn;
-
-  await signUpLocalDevUser(config, normalizedEmail);
-  return requestPasswordSession(config, normalizedEmail);
-}
-
-async function resolveWorkspaceIdBySlug(config: LocalDevBootstrapConfig): Promise<string | null> {
-  const params = new URLSearchParams({
-    select: 'id',
-    slug: `eq.${config.workspaceSlug}`,
-    limit: '1',
-  });
-
-  const response = await fetch(`${config.baseUrl}/rest/v1/workspaces?${params.toString()}`, {
-    method: 'GET',
-    headers: localDevServiceHeaders(config.serviceRoleKey),
-    cache: 'no-store',
-  });
-  if (!response.ok) return null;
-
-  const payload = await response.json().catch(() => null);
-  if (!Array.isArray(payload) || payload.length === 0) return null;
-  const first = payload[0];
-  if (!first || typeof first !== 'object' || Array.isArray(first)) return null;
-  const workspaceId = (first as Record<string, unknown>).id;
-  return typeof workspaceId === 'string' && workspaceId.trim() ? workspaceId.trim() : null;
-}
-
-async function ensureWorkspaceOwnerMembership(
-  config: LocalDevBootstrapConfig,
-  workspaceId: string,
-  userId: string,
-): Promise<boolean> {
-  const lookupParams = new URLSearchParams({
-    select: 'role',
-    workspace_id: `eq.${workspaceId}`,
-    user_id: `eq.${userId}`,
-    limit: '1',
-  });
-
-  const lookupResponse = await fetch(`${config.baseUrl}/rest/v1/workspace_members?${lookupParams.toString()}`, {
-    method: 'GET',
-    headers: localDevServiceHeaders(config.serviceRoleKey),
-    cache: 'no-store',
-  });
-  if (!lookupResponse.ok) return false;
-
-  const lookupPayload = await lookupResponse.json().catch(() => null);
-  const existingRole =
-    Array.isArray(lookupPayload) && lookupPayload[0] && typeof lookupPayload[0] === 'object'
-      ? (lookupPayload[0] as Record<string, unknown>).role
-      : null;
-  if (existingRole === 'owner') return true;
-
-  if (typeof existingRole === 'string') {
-    const updateParams = new URLSearchParams({
-      workspace_id: `eq.${workspaceId}`,
-      user_id: `eq.${userId}`,
-    });
-    const updateResponse = await fetch(`${config.baseUrl}/rest/v1/workspace_members?${updateParams.toString()}`, {
-      method: 'PATCH',
-      headers: {
-        ...localDevServiceHeaders(config.serviceRoleKey),
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      cache: 'no-store',
-      body: JSON.stringify({ role: 'owner' }),
-    });
-    return updateResponse.ok;
-  }
-
-  const createResponse = await fetch(`${config.baseUrl}/rest/v1/workspace_members`, {
-    method: 'POST',
-    headers: {
-      ...localDevServiceHeaders(config.serviceRoleKey),
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-    },
-    cache: 'no-store',
-    body: JSON.stringify([
-      {
-        workspace_id: workspaceId,
-        user_id: userId,
-        role: 'owner',
-      },
-    ]),
-  });
-  return createResponse.ok;
-}
-
-function localDevSessionExpiresAtMs(session: LocalDevIssuedSession): number {
-  const payload = decodeJwtPayload(session.accessToken);
-  const expRaw = payload?.exp;
-  const expSec =
-    typeof expRaw === 'number'
-      ? expRaw
-      : typeof expRaw === 'string'
-        ? Number.parseInt(expRaw, 10)
-        : Number.NaN;
-  if (Number.isFinite(expSec) && expSec > 0) {
-    return Math.trunc(expSec * 1000);
-  }
-  const fallbackMaxAgeMs = Math.max(60_000, Math.round(Math.max(1, session.maxAge) * 1000));
-  return Date.now() + fallbackMaxAgeMs;
-}
-
-function toLocalDevSessionResolution(tokens: TokenBundle, session: LocalDevIssuedSession): SessionResolution {
-  return {
-    ok: true,
-    accessToken: session.accessToken,
-    setCookies: [
-      {
-        name: tokens.accessCookieName || DEFAULT_ACCESS_COOKIE,
-        value: session.accessToken,
-        maxAge: session.maxAge,
-      },
-      {
-        name: tokens.refreshCookieName || DEFAULT_REFRESH_COOKIE,
-        value: session.refreshToken,
-        maxAge: 60 * 60 * 24 * 30,
-      },
-    ],
-  };
-}
-
-function readCachedLocalDevBootstrapSession(): LocalDevIssuedSession | null {
-  const scope = globalThis as Record<string, unknown>;
-  const raw = scope[LOCAL_DEV_BOOTSTRAP_SESSION_KEY];
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const record = raw as Record<string, unknown>;
-
-  const accessToken = typeof record.accessToken === 'string' ? record.accessToken.trim() : '';
-  const refreshToken = typeof record.refreshToken === 'string' ? record.refreshToken.trim() : '';
-  const maxAgeRaw = typeof record.maxAge === 'number' ? record.maxAge : Number(record.maxAge);
-  const maxAge = Number.isFinite(maxAgeRaw) && maxAgeRaw > 0 ? Math.round(maxAgeRaw) : 3600;
-  const userId = typeof record.userId === 'string' ? record.userId.trim() : '';
-  const userEmail = typeof record.userEmail === 'string' ? record.userEmail.trim() : '';
-  const expiresAtRaw = typeof record.expiresAt === 'number' ? record.expiresAt : Number(record.expiresAt);
-
-  if (!accessToken || !refreshToken || !userId || !userEmail || !Number.isFinite(expiresAtRaw)) {
-    delete scope[LOCAL_DEV_BOOTSTRAP_SESSION_KEY];
-    return null;
-  }
-
-  if (Date.now() >= expiresAtRaw - LOCAL_DEV_BOOTSTRAP_EXPIRY_SKEW_MS) {
-    delete scope[LOCAL_DEV_BOOTSTRAP_SESSION_KEY];
-    return null;
-  }
-
-  return {
-    accessToken,
-    refreshToken,
-    maxAge,
-    userId,
-    userEmail,
-  };
-}
-
-function writeCachedLocalDevBootstrapSession(session: LocalDevIssuedSession | null): void {
-  const scope = globalThis as Record<string, unknown>;
-  if (!session) {
-    delete scope[LOCAL_DEV_BOOTSTRAP_SESSION_KEY];
-    return;
-  }
-  scope[LOCAL_DEV_BOOTSTRAP_SESSION_KEY] = {
-    accessToken: session.accessToken,
-    refreshToken: session.refreshToken,
-    maxAge: session.maxAge,
-    userId: session.userId,
-    userEmail: session.userEmail,
-    expiresAt: localDevSessionExpiresAtMs(session),
-  };
-}
-
-function readLocalDevBootstrapInFlight(): Promise<LocalDevIssuedSession | null> | null {
-  const scope = globalThis as Record<string, unknown>;
-  const value = scope[LOCAL_DEV_BOOTSTRAP_INFLIGHT_KEY];
-  if (value && typeof (value as { then?: unknown }).then === 'function') {
-    return value as Promise<LocalDevIssuedSession | null>;
-  }
-  return null;
-}
-
-function writeLocalDevBootstrapInFlight(request: Promise<LocalDevIssuedSession | null> | null): void {
-  const scope = globalThis as Record<string, unknown>;
-  if (request) {
-    scope[LOCAL_DEV_BOOTSTRAP_INFLIGHT_KEY] = request;
-    return;
-  }
-  delete scope[LOCAL_DEV_BOOTSTRAP_INFLIGHT_KEY];
-}
-
-async function bootstrapLocalDevSession(tokens: TokenBundle): Promise<SessionResolution | null> {
-  const config = resolveLocalDevBootstrapConfig();
-  if (!config) return null;
-
-  const cached = readCachedLocalDevBootstrapSession();
-  if (cached) {
-    return toLocalDevSessionResolution(tokens, cached);
-  }
-
-  const existingRequest = readLocalDevBootstrapInFlight();
-  if (existingRequest) {
-    const session = await existingRequest.catch(() => null);
-    if (!session) return null;
-    writeCachedLocalDevBootstrapSession(session);
-    return toLocalDevSessionResolution(tokens, session);
-  }
-
-  const request = (async (): Promise<LocalDevIssuedSession | null> => {
-    const primarySession = await ensureLocalDevSession(config, config.userEmailHint);
-    const fallbackEmail = withEmailAlias(config.userEmailHint, `${Date.now().toString(36)}_auto`);
-    const session = primarySession ?? (fallbackEmail === config.userEmailHint ? null : await ensureLocalDevSession(config, fallbackEmail));
-    if (!session) return null;
-
-    const workspaceId = await resolveWorkspaceIdBySlug(config);
-    if (!workspaceId) return null;
-    const membershipReady = await ensureWorkspaceOwnerMembership(config, workspaceId, session.userId);
-    if (!membershipReady) return null;
-    return session;
-  })();
-  writeLocalDevBootstrapInFlight(request);
-
-  try {
-    const session = await request;
-    if (!session) return null;
-    writeCachedLocalDevBootstrapSession(session);
-    return toLocalDevSessionResolution(tokens, session);
-  } catch {
-    return null;
-  } finally {
-    writeLocalDevBootstrapInFlight(null);
-  }
-}
-
 function extractSessionTokens(request: NextRequest): TokenBundle {
   const cookies = request.cookies.getAll();
   let accessToken: string | null = null;
@@ -579,9 +168,7 @@ function extractSessionTokens(request: NextRequest): TokenBundle {
   };
 }
 
-function resolveSupabaseAuthConfig():
-  | SupabaseAuthConfig
-  | null {
+function resolveSupabaseAuthConfig(): SupabaseAuthConfig | null {
   const baseUrl = resolveSupabaseBaseUrl();
   if (!baseUrl) return null;
 
@@ -622,9 +209,7 @@ async function refreshSession(refreshToken: string): Promise<
   const payload = (await response.json()) as Record<string, unknown>;
   const nextAccessToken = typeof payload.access_token === 'string' ? payload.access_token : '';
   const nextRefreshToken =
-    typeof payload.refresh_token === 'string' && payload.refresh_token.trim()
-      ? payload.refresh_token
-      : refreshToken;
+    typeof payload.refresh_token === 'string' && payload.refresh_token.trim() ? payload.refresh_token : refreshToken;
   if (!nextAccessToken) return { ok: false, reason: 'roma.errors.auth.refresh_failed' };
 
   const expiresIn =
@@ -651,9 +236,7 @@ export async function resolveSessionBearer(request: NextRequest): Promise<Sessio
 
   const tokens = extractSessionTokens(request);
   if (!tokens.accessToken) {
-    const bootstrap = await bootstrapLocalDevSession(tokens);
-    if (bootstrap) return bootstrap;
-    return { ok: false, response: unauthorized('roma.errors.auth.session_missing', 401) };
+    return { ok: false, response: unauthorized('coreui.errors.auth.required', 401) };
   }
 
   if (!tokenIsExpired(tokens.accessToken)) {
@@ -661,16 +244,12 @@ export async function resolveSessionBearer(request: NextRequest): Promise<Sessio
   }
 
   if (!tokens.refreshToken) {
-    const bootstrap = await bootstrapLocalDevSession(tokens);
-    if (bootstrap) return bootstrap;
-    return { ok: false, response: unauthorized('roma.errors.auth.session_expired', 401) };
+    return { ok: false, response: unauthorized('coreui.errors.auth.required', 401) };
   }
 
   const refreshed = await refreshSession(tokens.refreshToken);
   if (!refreshed.ok) {
-    const bootstrap = await bootstrapLocalDevSession(tokens);
-    if (bootstrap) return bootstrap;
-    return { ok: false, response: unauthorized(refreshed.reason, 401) };
+    return { ok: false, response: unauthorized('coreui.errors.auth.required', 401) };
   }
 
   return {

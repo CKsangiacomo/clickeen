@@ -280,7 +280,7 @@ Free user → invites team as viewers → viewers comment
 
 ## Technical Notes
 
-## Dev Subjects (DevStudio + MiniBob) — Durable policy architecture
+## Runtime Subjects (Workspace + MiniBob) — Durable policy architecture
 
 While we are building (before full auth/billing enforcement ships), we still need deterministic gating/caps across surfaces.
 
@@ -291,7 +291,7 @@ While we are building (before full auth/billing enforcement ships), we still nee
 **Budgets (MiniBob + Free conversion gates):**
 - Budgets are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls, snapshot regenerations).
 - Budgets are **metered and enforced server-side** at the point where cost is incurred (Paris/Tokyo-worker/Venice); Bob uses the resolved policy for UX gating + upsell messaging.
-- Budgets are defined by the subject policy (e.g. `minibob` vs `devstudio`) and workspace tier, not by individual widgets.
+- Budgets are defined by the subject policy (e.g. `minibob` vs `workspace`) and workspace tier, not by individual widgets.
 
 **How this appears in widget PRDs (required):**
 - PRDs list **which entitlement keys** a widget uses and **how they map** to widget state (paths + metrics).
@@ -306,14 +306,14 @@ While we are building (before full auth/billing enforcement ships), we still nee
   - If the viewer is logged in but blocked by plan/tier: upsell takes them to **Upgrade Plan**
 - PRDs do **not** encode "free vs paid" in per-row copy; it is derived from the matrix deltas and current viewer profile.
 
-**Current dev subjects:**
-- `devstudio`: internal “everything enabled” subject used by DevStudio.
+**Current runtime subjects:**
+- `workspace`: standard editor subject used by Roma and DevStudio.
 - `minibob`: internal “demo” subject used by Prague MiniBob.
 
 **How the subject is set today (shipped in Bob):**
 - Bob accepts the subject via either:
-  - URL bootstrap mode: `?boot=url&subject=workspace|minibob|devstudio` (used by URL-driven embeds like MiniBob)
-  - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'workspace'|'minibob'|'devstudio', ... }` (used by Roma/DevStudio)
+  - URL bootstrap mode: `?boot=url&subject=workspace|minibob` (used by URL-driven embeds like MiniBob)
+  - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'workspace'|'minibob', ... }` (used by Roma/DevStudio)
 
 **What Bob enforces today (example):**
 - `branding.remove` maps to `behavior.showBacklink` and is sanitized on load when blocked.

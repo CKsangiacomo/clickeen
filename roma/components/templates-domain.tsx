@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { resolveBootstrapDomainState } from './bootstrap-domain-state';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
@@ -33,16 +34,23 @@ export function TemplatesDomain() {
       return;
     }
     const snapshot = normalizeRomaTemplatesSnapshot(me.data?.domains?.templates ?? null);
-    if (!snapshot || snapshot.workspaceId !== workspaceId) {
+    const hasDomainPayload = Boolean(snapshot && snapshot.workspaceId === workspaceId);
+    const domainState = resolveBootstrapDomainState({
+      data: me.data,
+      domainKey: 'templates',
+      hasDomainPayload,
+    });
+    if (!hasDomainPayload || domainState.kind !== 'ok') {
       setTemplateInstances([]);
       setAccountIdFromSnapshot('');
-      setDataError('Bootstrap templates snapshot unavailable.');
+      setDataError(domainState.reasonKey);
       return;
     }
-    setTemplateInstances(snapshot.instances);
-    setAccountIdFromSnapshot(snapshot.accountId);
+    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
+    setTemplateInstances(safeSnapshot.instances);
+    setAccountIdFromSnapshot(safeSnapshot.accountId);
     setDataError(null);
-  }, [workspaceId, me.data?.domains?.templates]);
+  }, [workspaceId, me.data]);
 
   const groupedTemplates = useMemo(() => {
     const groups = new Map<string, TemplateInstance[]>();
@@ -109,74 +117,87 @@ export function TemplatesDomain() {
     [activeAccountId, router, workspaceId],
   );
 
-  if (me.loading) return <section className="roma-module-surface">Loading workspace context...</section>;
+  if (me.loading) return <section className="rd-canvas-module body-m">Loading workspace context...</section>;
   if (me.error || !me.data) {
-    return <section className="roma-module-surface">Failed to load workspace context: {me.error ?? 'unknown_error'}</section>;
+    return <section className="rd-canvas-module body-m">Failed to load workspace context: {me.error ?? 'unknown_error'}</section>;
   }
   if (!workspaceId) {
-    return <section className="roma-module-surface">No workspace membership found for current user.</section>;
+    return <section className="rd-canvas-module body-m">No workspace membership found for current user.</section>;
   }
 
   return (
-    <section className="roma-module-surface">
-      <p>
-        Workspace: {context.workspaceName || workspaceId}
-        {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
-      </p>
-      <p>Showing all curated templates available.</p>
+    <>
+      <section className="rd-canvas-module">
+        <p className="body-m">
+          Workspace: {context.workspaceName || workspaceId}
+          {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
+        </p>
+        <p className="body-m">Showing all curated templates available.</p>
 
-      {dataError ? <p>Failed to load templates: {dataError}</p> : null}
-      {actionError ? <p>Failed to use template: {actionError}</p> : null}
+        {dataError ? (
+          <div className="roma-inline-stack">
+            <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
+            <p className="body-m">{dataError}</p>
+            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+              <span className="diet-btn-txt__label body-m">Retry</span>
+            </button>
+          </div>
+        ) : null}
+        {actionError ? <p className="body-m">Failed to use template: {actionError}</p> : null}
+        {groupedTemplates.length === 0 ? <p className="body-m">No curated templates available yet.</p> : null}
+      </section>
 
-      {groupedTemplates.length === 0 ? <p>No curated templates available yet.</p> : null}
+      {groupedTemplates.length > 0 ? (
+        <section className="rd-canvas-module">
+          <div className="roma-grid">
+            {groupedTemplates.map((group) => (
+              <article className="roma-card" key={group.widgetType}>
+                <div className="roma-toolbar">
+                  <h2 className="heading-4">{group.widgetType}</h2>
+                  <p className="body-s">
+                    {group.instances.length} {group.instances.length === 1 ? 'template' : 'templates'}
+                  </p>
+                </div>
 
-      <div className="roma-grid">
-        {groupedTemplates.map((group) => (
-          <article className="roma-card" key={group.widgetType}>
-            <div className="roma-toolbar">
-              <h2>{group.widgetType}</h2>
-              <p>
-                {group.instances.length} {group.instances.length === 1 ? 'template' : 'templates'}
-              </p>
-            </div>
-
-            <table className="roma-table">
-              <thead>
-                <tr>
-                  <th>Template</th>
-                  <th>Public ID</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.instances.map((instance) => {
-                  const actionKey = `template:${instance.publicId}`;
-                  return (
-                    <tr key={instance.publicId}>
-                      <td>{instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}</td>
-                      <td>{instance.publicId}</td>
-                      <td className="roma-cell-actions">
-                        <button
-                          className="diet-btn-txt"
-                          data-size="md"
-                          data-variant="primary"
-                          type="button"
-                          onClick={() => handleUseTemplate(instance)}
-                          disabled={Boolean(activeActionKey)}
-                        >
-                          <span className="diet-btn-txt__label">
-                            {activeActionKey === actionKey ? 'Creating...' : 'Use template'}
-                          </span>
-                        </button>
-                      </td>
+                <table className="roma-table">
+                  <thead>
+                    <tr>
+                      <th className="table-header label-s">Template</th>
+                      <th className="table-header label-s">Public ID</th>
+                      <th className="table-header label-s">Actions</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </article>
-        ))}
-      </div>
-    </section>
+                  </thead>
+                  <tbody>
+                    {group.instances.map((instance) => {
+                      const actionKey = `template:${instance.publicId}`;
+                      return (
+                        <tr key={instance.publicId}>
+                          <td className="body-s">{instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}</td>
+                          <td className="body-s">{instance.publicId}</td>
+                          <td className="roma-cell-actions">
+                            <button
+                              className="diet-btn-txt"
+                              data-size="md"
+                              data-variant="primary"
+                              type="button"
+                              onClick={() => handleUseTemplate(instance)}
+                              disabled={Boolean(activeActionKey)}
+                            >
+                              <span className="diet-btn-txt__label body-m">
+                                {activeActionKey === actionKey ? 'Creating...' : 'Use template'}
+                              </span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </>
   );
 }

@@ -5,6 +5,7 @@ export type DropdownHydrateConfig = {
   initialState?: 'open' | 'closed';
   onOpen?: (root: HTMLElement, popover: HTMLElement, trigger: HTMLElement) => void;
   onClose?: (root: HTMLElement, popover: HTMLElement, trigger: HTMLElement) => void;
+  isInsideTarget?: (root: HTMLElement, target: Node) => boolean;
 };
 
 type HostRecord = {
@@ -23,6 +24,7 @@ export function createDropdownHydrator(config: DropdownHydrateConfig) {
     onOpen,
     onClose,
     initialState = 'closed',
+    isInsideTarget,
   } = config;
   const hostRegistry = new Map<HTMLElement, HostRecord>();
   let globalHandlersBound = false;
@@ -74,7 +76,9 @@ export function createDropdownHydrator(config: DropdownHydrateConfig) {
 
           hostRegistry.forEach((record) => {
             const { root } = record;
-            if (!root.contains(target) && root.dataset.state === 'open') {
+            const insideRoot = root.contains(target);
+            const insideExtraTarget = isInsideTarget?.(root, target) ?? false;
+            if (!insideRoot && !insideExtraTarget && root.dataset.state === 'open') {
               setOpen(record, false);
             }
           });

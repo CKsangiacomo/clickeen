@@ -15,6 +15,7 @@ type EnforcementRow = {
 };
 
 type RenderSnapshotEnqueueResult = { ok: true } | { ok: false; error: string };
+type LocaleOverlayLayerKeyRow = { layer_key?: string | null };
 
 type RenderIndexEntry = { e: string; r: string; meta: string };
 type RenderPublishedPointer = { revision: string };
@@ -77,41 +78,6 @@ function resolveRenderIndexBases(env: Env): string[] {
   return bases;
 }
 
-function resolveLocalTokyoWorkerBase(env: Env): string | null {
-  const stage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
-  if (stage !== 'local') return null;
-  const base = asTrimmedString(env.TOKYO_WORKER_BASE_URL);
-  if (!base) return null;
-  return base.replace(/\/+$/, '');
-}
-
-async function enqueueRenderSnapshotLocal(
-  env: Env,
-  job: { publicId: string; action: 'upsert' | 'delete'; locales?: string[] },
-): Promise<string | null> {
-  const base = resolveLocalTokyoWorkerBase(env);
-  if (!base) return null;
-  const token = asTrimmedString(env.TOKYO_DEV_JWT) ?? asTrimmedString(env.PARIS_DEV_JWT);
-  const headers: HeadersInit = { 'content-type': 'application/json' };
-  if (token) headers['authorization'] = `Bearer ${token}`;
-  const res = await fetch(
-    `${base}/renders/instances/${encodeURIComponent(job.publicId)}/snapshot`,
-    {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        action: job.action,
-        locales: job.locales,
-      }),
-    },
-  );
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    return `[ParisWorker] Local render snapshot publish failed (${res.status}): ${detail}`;
-  }
-  return null;
-}
-
 function resolveActivePublishLocales(
   workspaceLocales: unknown,
   policy: Policy,
@@ -125,6 +91,71 @@ function resolveActivePublishLocales(
   const locales = maxLocalesTotal == null ? deduped : deduped.slice(0, maxLocalesTotal);
   const invalidWorkspaceLocales = normalized.ok ? null : JSON.stringify(normalized.issues);
   return { locales, invalidWorkspaceLocales };
+}
+
+async function loadPersistedLocaleOverlayKeys(
+  env: Env,
+  publicId: string,
+): Promise<string[]> {
+  const params = new URLSearchParams({
+    select: 'layer_key',
+    public_id: `eq.${publicId}`,
+    layer: 'eq.locale',
+    limit: '1000',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
+    method: 'GET',
+  });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(
+      `[ParisWorker] Failed to load persisted locale overlays (${res.status}): ${JSON.stringify(details)}`,
+    );
+  }
+  const rows = ((await res.json().catch(() => null)) as LocaleOverlayLayerKeyRow[] | null) ?? [];
+  const layerKeys = rows
+    .map((row) => asTrimmedString(row.layer_key))
+    .filter((value): value is string => Boolean(value));
+  const normalized = normalizeLocaleList(layerKeys, 'overlay.layer_key');
+  if (!normalized.ok) return [];
+  return normalized.locales;
+}
+
+async function resolveRenderSnapshotLocales(args: {
+  env: Env;
+  publicId: string;
+  workspaceLocales: unknown;
+  policy: Policy;
+}): Promise<{
+  locales: string[];
+  invalidWorkspaceLocales: string | null;
+  hasOverlayLocaleFallback: boolean;
+}> {
+  const active = resolveActivePublishLocales(args.workspaceLocales, args.policy);
+  try {
+    const persistedLocaleKeys = await loadPersistedLocaleOverlayKeys(args.env, args.publicId);
+    if (persistedLocaleKeys.length === 0) {
+      return {
+        locales: active.locales,
+        invalidWorkspaceLocales: active.invalidWorkspaceLocales,
+        hasOverlayLocaleFallback: false,
+      };
+    }
+    const merged = Array.from(new Set([...active.locales, ...persistedLocaleKeys]));
+    return {
+      locales: merged,
+      invalidWorkspaceLocales: active.invalidWorkspaceLocales,
+      hasOverlayLocaleFallback: merged.length > active.locales.length,
+    };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.warn('[ParisWorker] Failed to resolve persisted locale overlay keys for snapshot locales', detail);
+    return {
+      locales: active.locales,
+      invalidWorkspaceLocales: active.invalidWorkspaceLocales,
+      hasOverlayLocaleFallback: false,
+    };
+  }
 }
 
 async function enqueueRenderSnapshot(
@@ -150,7 +181,6 @@ async function enqueueRenderSnapshot(
         : locales.length
           ? locales.map((locale) => ({ ...job, locales: [locale] }))
           : [job];
-
     for (const next of jobs) {
       await env.RENDER_SNAPSHOT_QUEUE.send({
         v: 1,
@@ -159,8 +189,6 @@ async function enqueueRenderSnapshot(
         action: next.action,
         locales: next.locales,
       });
-      const localBypassError = await enqueueRenderSnapshotLocal(env, next);
-      if (localBypassError) return { ok: false, error: localBypassError };
     }
     return { ok: true };
   } catch (error) {
@@ -324,19 +352,6 @@ async function loadRenderIndexCurrent(args: {
         `[ParisWorker] Failed to load render pointer from ${base} (${pointerRes.status}): ${detail}`.trim(),
       );
     }
-
-    const legacyIndexUrl = `${base}/renders/instances/${encodeURIComponent(args.publicId)}/index.json`;
-    const legacyRes = await fetch(legacyIndexUrl, requestInit);
-    if (legacyRes.status === 404) continue;
-    if (!legacyRes.ok) {
-      const detail = await legacyRes.text().catch(() => '');
-      throw new Error(
-        `[ParisWorker] Failed to load render index from ${base} (${legacyRes.status}): ${detail}`.trim(),
-      );
-    }
-    const legacyPayload = (await legacyRes.json().catch(() => null)) as unknown;
-    const legacyCurrent = normalizeRenderIndexCurrent(legacyPayload);
-    if (legacyCurrent) return legacyCurrent;
   }
   return null;
 }
@@ -351,4 +366,5 @@ export {
   loadRenderIndexCurrent,
   normalizeActiveEnforcement,
   resolveActivePublishLocales,
+  resolveRenderSnapshotLocales,
 };

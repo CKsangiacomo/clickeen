@@ -10,12 +10,13 @@ import {
 } from '@clickeen/ck-policy';
 import type { BudgetKey, Policy, PolicyProfile } from '@clickeen/ck-policy';
 import type { AIGrant, Env, WorkspaceRow } from '../../shared/types';
-import { json, readJson } from '../../shared/http';
+import { json } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { assertDevAuth } from '../../shared/auth';
 import { asTrimmedString, isRecord, isUuid } from '../../shared/validation';
 import { consumeBudget } from '../../shared/budgets';
 import { requireWorkspace } from '../../shared/workspaces';
+import { callSanfranciscoJson } from '../../shared/sanfrancisco';
 
 const OUTCOME_EVENTS = new Set([
   'signup_started',
@@ -232,9 +233,9 @@ async function mintGrant(grant: AIGrant, secret: string): Promise<string> {
   return `v1.${payloadB64}.${sigB64}`;
 }
 
-function normalizeAiSubject(value: unknown): 'devstudio' | 'minibob' | 'workspace' | null {
+function normalizeAiSubject(value: unknown): 'minibob' | 'workspace' | null {
   const raw = typeof value === 'string' ? value.trim().toLowerCase() : '';
-  if (raw === 'devstudio' || raw === 'minibob' || raw === 'workspace') return raw;
+  if (raw === 'minibob' || raw === 'workspace') return raw;
   return null;
 }
 
@@ -248,13 +249,9 @@ function clampBudget(requested: number | null, allowed: number, hardCap: number)
 }
 
 function resolveAiSubjectPolicy(args: {
-  subject: 'devstudio' | 'minibob' | 'workspace';
+  subject: 'minibob' | 'workspace';
   workspace?: WorkspaceRow | null;
 }): { policy: Policy; profile: PolicyProfile } {
-  if (args.subject === 'devstudio') {
-    const policy = resolvePolicy({ profile: 'devstudio', role: 'owner' });
-    return { policy, profile: 'devstudio' };
-  }
   if (args.subject === 'minibob') {
     const policy = resolvePolicy({ profile: 'minibob', role: 'editor' });
     return { policy, profile: 'minibob' };
@@ -274,7 +271,7 @@ export async function issueAiGrant(args: {
   mode?: 'editor' | 'ops';
   requestedProvider?: string;
   requestedModel?: string;
-  subject?: 'devstudio' | 'minibob' | 'workspace';
+  subject?: 'minibob' | 'workspace';
   workspaceId?: string;
   workspace?: WorkspaceRow | null;
   trace?: { sessionId?: string; instancePublicId?: string };
@@ -411,7 +408,11 @@ export async function handleAiGrant(req: Request, env: Env) {
   const requestedModel = typeof (body as any).model === 'string' ? (body as any).model.trim() : '';
 
   const workspaceIdRaw = typeof (body as any).workspaceId === 'string' ? (body as any).workspaceId.trim() : '';
-  const subjectRaw = normalizeAiSubject((body as any).subject);
+  const subjectInput = typeof (body as any).subject === 'string' ? (body as any).subject.trim() : '';
+  const subjectRaw = normalizeAiSubject(subjectInput);
+  if (subjectInput && !subjectRaw) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.subject.invalid' }, 422);
+  }
   const subject = subjectRaw ?? (workspaceIdRaw ? 'workspace' : 'minibob');
 
   const traceRaw = isRecord((body as any).trace) ? (body as any).trace : null;
@@ -633,34 +634,28 @@ export async function handleAiOutcome(req: Request, env: Env) {
     return json([{ path: 'body', message: 'expected { requestId, sessionId, event, occurredAtMs }' }], { status: 422 });
   }
 
-  const sfBaseUrl = asTrimmedString(env.SANFRANCISCO_BASE_URL);
-  if (!sfBaseUrl) {
-    return json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 });
-  }
-
   const secret = env.AI_GRANT_HMAC_SECRET?.trim();
   if (!secret) {
     return json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 });
   }
 
-  const bodyText = JSON.stringify(body);
+  const outcomeCommand = {
+    command: 'ai.outcome.attach' as const,
+    payload: body,
+  };
+  const bodyText = JSON.stringify(outcomeCommand);
   const signature = await hmacSha256Base64Url(secret, `outcome.v1.${bodyText}`);
-  const outcomeUrl = new URL('/v1/outcome', sfBaseUrl).toString();
-
-  const res = await fetch(outcomeUrl, {
+  const upstream = await callSanfranciscoJson({
+    env,
+    path: '/v1/outcome',
     method: 'POST',
+    auth: 'none',
     headers: {
       'content-type': 'application/json',
       'x-paris-signature': signature,
     },
     body: bodyText,
   });
-
-  if (!res.ok) {
-    const details = await readJson(res);
-    return json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details }, { status: 502 });
-  }
-
-  const data = await readJson(res);
-  return json({ ok: true, upstream: data });
+  if (!upstream.ok) return upstream.response;
+  return json({ ok: true, upstream: upstream.payload });
 }

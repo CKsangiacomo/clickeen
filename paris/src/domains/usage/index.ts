@@ -34,9 +34,10 @@ function normalizeEvent(raw: unknown): 'view' | null {
 function normalizeTier(raw: unknown): string | null {
   const value = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
   if (!value) return null;
-  // expected: devstudio|minibob|free|tier1|tier2|tier3
-  if (!/^[a-z0-9-]{2,24}$/.test(value)) return null;
-  return value;
+  if (value === 'minibob' || value === 'free' || value === 'tier1' || value === 'tier2' || value === 'tier3') {
+    return value;
+  }
+  return null;
 }
 
 function normalizeSig(raw: unknown): string | null {
@@ -130,7 +131,7 @@ async function isValidUsageSignature(args: {
 }
 
 function resolveMonthlyViewsCap(tier: string): number | null {
-  // Policy profile matches workspace tier strings for paid/free; allow devstudio/minibob too.
+  // Policy profile matches product tiers and minibob only.
   const policy = resolvePolicy({ profile: tier as any, role: 'editor' });
   const cap = policy.caps['views.monthly.max'];
   if (cap == null) return null;
