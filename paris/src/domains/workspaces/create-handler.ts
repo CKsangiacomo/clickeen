@@ -27,7 +27,12 @@ import {
 } from '../../shared/instances';
 import { loadInstanceByPublicId, loadWidgetByType } from '../instances';
 import { enqueueL10nJobs } from '../l10n';
-import { enqueueRenderSnapshot, resolveRenderSnapshotLocales } from './service';
+import {
+  enqueueRenderSnapshot,
+  loadRenderSnapshotState,
+  resolveRenderSnapshotLocales,
+  waitForEnSnapshotReady,
+} from './service';
 import {
   DEFAULT_INSTANCE_DISPLAY_NAME,
   enforceLimits,
@@ -449,22 +454,59 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
           ),
         );
       }
-      const enqueue = await enqueueRenderSnapshot(env, {
+      const baselineSnapshotState = await loadRenderSnapshotState({
+        env,
+        publicId,
+      }).catch(() => null);
+      const enSync = await enqueueRenderSnapshot(env, {
         publicId,
         action: 'upsert',
-        locales: activeLocales,
+        locales: ['en'],
       });
-      if (!enqueue.ok) {
+      if (!enSync.ok) {
         return rollbackCreatedAndReturn(
           ckError(
             {
               kind: 'INTERNAL',
               reasonKey: 'coreui.errors.publish.failed',
-              detail: enqueue.error,
+              detail: enSync.error,
             },
             503,
           ),
         );
+      }
+      const enReady = await waitForEnSnapshotReady({
+        env,
+        publicId,
+        baselinePointerUpdatedAt: baselineSnapshotState?.pointerUpdatedAt ?? null,
+        baselineRevision: baselineSnapshotState?.revision ?? null,
+      });
+      if (!enReady.ok) {
+        return rollbackCreatedAndReturn(
+          ckError(
+            {
+              kind: 'INTERNAL',
+              reasonKey: 'coreui.errors.publish.failed',
+              detail: enReady.error,
+            },
+            503,
+          ),
+        );
+      }
+
+      const asyncLocales = activeLocales.filter((locale) => locale !== 'en');
+      if (asyncLocales.length) {
+        const enqueue = await enqueueRenderSnapshot(env, {
+          publicId,
+          action: 'upsert',
+          locales: asyncLocales,
+        });
+        if (!enqueue.ok) {
+          console.warn('[ParisWorker] async locale snapshot enqueue failed', {
+            publicId,
+            detail: enqueue.error,
+          });
+        }
       }
     }
   }

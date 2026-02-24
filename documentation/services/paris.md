@@ -197,6 +197,14 @@ Curated writes are allowed only in **local** and **cloud-dev**. Production remai
     - Includes finite l10n buckets in `summary.l10n` / `pipeline.l10n` (`inFlight`, `retrying`, `failedTerminal`, `needsEnqueue`) so UIs can distinguish active work from stale/manual-action states.
     - `pipeline.l10n` also exposes `stageReasons` (count by blocker reason) and `nextAction` (explicit operator hint for DevStudio/Bob).
     - `stage=failed` is terminal (no `nextAttemptAt`); retry-scheduled failures remain `awaiting_l10n`.
+    - `pipeline.overall` represents base render readiness:
+      - `awaiting_snapshot` blocks only when EN/base snapshot is missing.
+      - locale terminal failures are surfaced via `pipeline.l10n.failedTerminal` and `pipeline.overall='l10n_failed'` (degraded, non-blocking for base render visibility).
+    - Also emits `status.v2`:
+      - `{ baseRevision, baseFingerprint, pointerUpdatedAt, locales }`
+      - `locales[locale].overlayState` = `current | stale | missing`
+      - `locales[locale].snapshotState` = `current | generating | missing`
+      - `locales[locale].source` = `current_locale | current_revision_en_fallback | unavailable`
   - `POST /api/l10n/jobs/report` (San Francisco → Paris job status updates)
 - Canonical store: `widget_instance_overlays` (layer + layer_key).
 - User overrides live in layer=user (layerKey=<locale>) with optional `global` fallback and are merged last at publish time.
@@ -204,7 +212,7 @@ Curated writes are allowed only in **local** and **cloud-dev**. Production remai
   - On **published instance save/update** (user and curated), Paris enqueues l10n jobs to `L10N_GENERATE_QUEUE`.
   - Paris mints a short-lived AI grant for `l10n.instance.v1` (10-minute TTL) and attaches `{ agentId, grant }` to each l10n job.
   - If enqueue/dispatch fails, the publish/update request fails (fail-fast to preserve overlay determinism).
-  - Local dev: when `ENV_STAGE=local` and `SANFRANCISCO_BASE_URL` are set, Paris POSTs l10n jobs directly to San Francisco `/v1/l10n` (queue bypass).
+  - Local dev fallback: when `ENV_STAGE=local`, `SANFRANCISCO_BASE_URL` is set, and `L10N_GENERATE_QUEUE` binding is unavailable, Paris POSTs l10n jobs directly to San Francisco `/v1/l10n`.
   - Locale scope: workspace **active locales** from `workspaces.l10n_locales` (within cap) for both **user** and **curated** instances.
   - Paris persists job state in `l10n_generate_state` and retries `dirty/failed` rows via cron (skips locales no longer active; marks them `superseded`).
   - Cron also recovers stale in-flight rows (`queued`/`running` older than the staleness window) and re-queues them through the same finite retry budget.
@@ -212,9 +220,14 @@ Curated writes are allowed only in **local** and **cloud-dev**. Production remai
   - Queued/running l10n states that are stale for 10+ minutes may be re-queued on the next published instance update.
   - Paris stores allowlist snapshots in `l10n_base_snapshots`, diffs `changed_paths` + `removed_paths`, and rebases user overrides to the new fingerprint.
   - `baseFingerprint` is required on overlay writes; `baseUpdatedAt` is metadata only.
-  - On published base writes, Paris regenerates render snapshots for the workspace active locale set (EN + active non-EN within policy caps) for both user and curated instances. This keeps non-translatable style changes (for example typography/colors/layout) in parity across locales even when l10n diff is empty.
+  - On published base writes, Paris triggers render snapshots in two phases:
+    - Enqueue EN first (blocking; publish waits for EN snapshot readiness + pointer advance, then returns success).
+    - Enqueue non-EN locales asynchronously (non-blocking fanout).
+  - `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot` follows the same EN-first + async non-EN orchestration.
+    - Optional `waitForEn=1|true|en-ready` query waits for EN readiness and returns `200` with `snapshotState=ready`; default remains `202` queued.
+  - This keeps non-translatable style changes (for example typography/colors/layout) in parity across locales even when l10n diff is empty.
   - Overlay writes enqueue `L10N_PUBLISH_QUEUE` (layer + layerKey).
-  - Tokyo-worker materializes overlays into Tokyo and writes per-fingerprint base snapshots (`tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`) so Venice can safely apply stale locale overlays while async generation catches up.
+  - Tokyo-worker materializes overlays into Tokyo and writes per-fingerprint base snapshots (`tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`).
   - Local dev: when `ENV_STAGE=local` and `TOKYO_WORKER_BASE_URL` are set, Paris also POSTs to tokyo-worker `/l10n/publish` to materialize overlays into `tokyo/l10n/**`.
   - Snapshot publish path is fail-fast: when Paris cannot enqueue `RENDER_SNAPSHOT_QUEUE`, publish/update returns an error instead of silently succeeding with stale embeds.
 - Prague website strings use page JSON base copy plus Tokyo-hosted overlays (`tokyo/widgets/*/pages/*.json` + `tokyo/l10n/prague/**`) and do not go through Paris. Chrome UI strings remain in `prague/content/base/v1/chrome.json`.

@@ -294,8 +294,16 @@ async function generateRenderSnapshots(args: {
   const { env, publicId } = args;
   const enforcement = await loadInstanceEnforcement(env, publicId);
   const requestedLocales = args.locales.length ? args.locales : ['en'];
-  const locales = enforcement ? ['en'] : Array.from(new Set(['en', ...requestedLocales]));
   const existing = enforcement ? null : await loadRenderIndex(env, publicId).catch(() => null);
+  const dedupedRequested = Array.from(new Set(requestedLocales));
+  let locales = enforcement ? ['en'] : dedupedRequested;
+  if (!locales.length) locales = ['en'];
+  if (!enforcement) {
+    const hasExistingEnSnapshot = Boolean(existing?.current?.en);
+    if (!hasExistingEnSnapshot && !locales.includes('en')) {
+      locales = ['en', ...locales];
+    }
+  }
   const nextCurrent: Record<string, RenderIndexEntry> = existing?.current ? { ...existing.current } : {};
 
   for (const locale of locales) {

@@ -23,6 +23,7 @@ import {
 } from './service';
 import { enforceL10nSelection, readWorkspaceLocales } from './shared';
 import { resolveL10nPlanningSnapshot } from './planning';
+import { dispatchL10nGenerateJobs } from './dispatch-jobs';
 
 function toFailedStateRows(args: {
   publicId: string;
@@ -156,7 +157,7 @@ export async function enqueueL10nJobs(args: {
     if (current?.status === 'succeeded') return;
     if (current?.status === 'failed') {
       const attempts = Math.max(0, Math.floor(current.attempts ?? 0));
-      if (!canRetryL10nGenerate(attempts)) return;
+      if (!canRetryL10nGenerate(attempts) && !allowRetryScheduleOverride) return;
       const nextAttemptMs = current.next_attempt_at ? Date.parse(current.next_attempt_at) : NaN;
       const retryReady = !Number.isFinite(nextAttemptMs) || nextAttemptMs <= nowMs;
       if (!retryReady && !allowRetryScheduleOverride) return;
@@ -231,7 +232,8 @@ export async function enqueueL10nJobs(args: {
     });
   }
 
-  if (!args.env.L10N_GENERATE_QUEUE) {
+  const dispatched = await dispatchL10nGenerateJobs(args.env, jobs);
+  if (!dispatched.ok) {
     const failedRows = toFailedStateRows({
       publicId,
       layer,
@@ -241,38 +243,14 @@ export async function enqueueL10nJobs(args: {
       baseUpdatedAt,
       widgetType,
       workspaceId,
-      message: 'L10N_GENERATE_QUEUE missing',
+      message: dispatched.error,
     });
     await upsertL10nGenerateStates(args.env, failedRows);
     return {
       ok: false as const,
       queued: 0,
       skipped: locales.length - pendingLocales.length,
-      error: 'L10N_GENERATE_QUEUE missing',
-    };
-  }
-
-  try {
-    await args.env.L10N_GENERATE_QUEUE.sendBatch(jobs.map((job) => ({ body: job })));
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    const failedRows = toFailedStateRows({
-      publicId,
-      layer,
-      pendingLocales,
-      existingStates,
-      baseFingerprint,
-      baseUpdatedAt,
-      widgetType,
-      workspaceId,
-      message: detail,
-    });
-    await upsertL10nGenerateStates(args.env, failedRows);
-    return {
-      ok: false as const,
-      queued: 0,
-      skipped: locales.length - pendingLocales.length,
-      error: detail,
+      error: dispatched.error,
     };
   }
 

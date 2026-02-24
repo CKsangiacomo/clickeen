@@ -21,6 +21,7 @@ interface InstanceResponse {
 }
 
 const CACHE_PUBLISHED = 'no-store';
+type RenderLocaleSource = 'current_locale' | 'current_revision_en_fallback' | 'unavailable';
 
 function extractBodyHtml(widgetHtml: string): string {
   const match = widgetHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -97,6 +98,18 @@ function toWeakEtag(value: string) {
   return `W/"${hash}"`;
 }
 
+function resolveRenderLocaleSource(args: {
+  requestedLocale: string;
+  effectiveLocale: string;
+  fallbackToEn?: boolean;
+}): RenderLocaleSource {
+  if (args.fallbackToEn) return 'current_revision_en_fallback';
+  if (args.requestedLocale !== 'en' && args.effectiveLocale === 'en') {
+    return 'current_revision_en_fallback';
+  }
+  return 'current_locale';
+}
+
 export async function GET(req: Request, ctx: { params: Promise<{ publicId: string }> }) {
   const { publicId: rawPublicId } = await ctx.params;
   const publicId = String(rawPublicId || '').trim();
@@ -132,6 +145,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
   if (bypass.requested && !bypass.enabled) {
     headers['Cache-Control'] = 'no-store';
+    headers['X-Ck-Render-Locale-Source'] = 'unavailable';
     return new NextResponse(JSON.stringify({ error: 'FORBIDDEN_BYPASS' }), { status: 403, headers });
   }
 
@@ -165,6 +179,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
         headers['X-Venice-Render-Mode'] = 'snapshot';
+        headers['X-Ck-Render-Locale-Source'] = 'current_locale';
         return new NextResponse(null, { status: 304, headers });
       }
 
@@ -182,6 +197,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           headers['X-Ck-L10n-Resolved-Locale'] = resolvedLocale;
           headers['X-Ck-L10n-Effective-Locale'] = resolvedLocale;
           headers['X-Ck-L10n-Status'] = resolvedLocale === 'en' ? 'base' : 'fresh';
+          headers['X-Ck-Render-Locale-Source'] = resolveRenderLocaleSource({
+            requestedLocale: locale,
+            effectiveLocale: resolvedLocale,
+          });
           headers['ETag'] = etag;
           headers['Cache-Control'] = snapshotCacheControl;
           headers['Vary'] = 'Authorization, X-Embed-Token';
@@ -195,6 +214,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         headers['X-Ck-L10n-Resolved-Locale'] = locale;
         headers['X-Ck-L10n-Effective-Locale'] = locale;
         headers['X-Ck-L10n-Status'] = locale === 'en' ? 'base' : 'fresh';
+        headers['X-Ck-Render-Locale-Source'] = 'current_locale';
         headers['ETag'] = etag;
         headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
@@ -227,6 +247,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           headers['X-Ck-L10n-Resolved-Locale'] = 'en';
           headers['X-Ck-L10n-Effective-Locale'] = 'en';
           headers['X-Ck-L10n-Status'] = 'base';
+          headers['X-Ck-Render-Locale-Source'] = 'current_revision_en_fallback';
           if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
           return new NextResponse(null, { status: 304, headers });
         }
@@ -248,6 +269,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
             headers['X-Ck-L10n-Resolved-Locale'] = 'en';
             headers['X-Ck-L10n-Effective-Locale'] = 'en';
             headers['X-Ck-L10n-Status'] = 'base';
+            headers['X-Ck-Render-Locale-Source'] = 'current_revision_en_fallback';
             if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
             return new NextResponse(body, { status: 200, headers });
           } catch {
@@ -263,6 +285,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           headers['X-Ck-L10n-Resolved-Locale'] = 'en';
           headers['X-Ck-L10n-Effective-Locale'] = 'en';
           headers['X-Ck-L10n-Status'] = 'base';
+          headers['X-Ck-Render-Locale-Source'] = 'current_revision_en_fallback';
           if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
           return new NextResponse(raw, { status: 200, headers });
         }
@@ -274,6 +297,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       headers['Vary'] = 'Authorization, X-Embed-Token';
       headers['X-Venice-Render-Mode'] = 'snapshot';
       headers['X-Venice-Snapshot-Reason'] = snapshotReason;
+      headers['X-Ck-Render-Locale-Source'] = 'unavailable';
       return new NextResponse(JSON.stringify({ error: 'NOT_FOUND' }), { status: 404, headers });
     }
 
@@ -281,6 +305,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     headers['Vary'] = 'Authorization, X-Embed-Token';
     headers['X-Venice-Render-Mode'] = 'snapshot';
     headers['X-Venice-Snapshot-Reason'] = snapshotReason ?? 'SNAPSHOT_UNAVAILABLE';
+    headers['X-Ck-Render-Locale-Source'] = 'unavailable';
     return new NextResponse(
       JSON.stringify({ error: 'SNAPSHOT_UNAVAILABLE', reason: snapshotReason ?? 'SNAPSHOT_UNAVAILABLE' }),
       { status: 503, headers },
@@ -302,6 +327,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     const status = res.status === 401 || res.status === 403 ? 403 : res.status;
     headers['Cache-Control'] = 'no-store';
     headers['X-Venice-Render-Mode'] = 'dynamic';
+    headers['X-Ck-Render-Locale-Source'] = 'unavailable';
     if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
     return new NextResponse(JSON.stringify(body), { status, headers });
   }
@@ -311,6 +337,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     headers['Cache-Control'] = 'no-store';
     headers['Vary'] = 'Authorization, X-Embed-Token';
     headers['X-Venice-Render-Mode'] = 'dynamic';
+    headers['X-Ck-Render-Locale-Source'] = 'unavailable';
     if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
     return new NextResponse(JSON.stringify({ error: 'NOT_FOUND' }), { status: 404, headers });
   }
@@ -361,12 +388,17 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         baseUpdatedAt: instance.updatedAt ?? null,
         widgetType,
         config: instance.config,
+        allowStaleOverlay: !bypassSnapshot,
       });
 
   headers['X-Ck-L10n-Requested-Locale'] = overlayResult.meta.requestedLocale;
   headers['X-Ck-L10n-Resolved-Locale'] = overlayResult.meta.resolvedLocale;
   headers['X-Ck-L10n-Effective-Locale'] = overlayResult.meta.effectiveLocale;
   headers['X-Ck-L10n-Status'] = overlayResult.meta.status;
+  headers['X-Ck-Render-Locale-Source'] = resolveRenderLocaleSource({
+    requestedLocale: overlayResult.meta.requestedLocale,
+    effectiveLocale: overlayResult.meta.effectiveLocale,
+  });
 
   const localizedState = overlayResult.config;
   const effectiveLocale = overlayResult.meta.effectiveLocale;

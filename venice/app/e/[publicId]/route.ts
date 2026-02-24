@@ -21,6 +21,7 @@ interface InstanceResponse {
 }
 
 const CACHE_PUBLISHED = 'no-store';
+type RenderLocaleSource = 'current_locale' | 'current_revision_en_fallback' | 'unavailable';
 
 function extractCkWidgetJson(html: string): { json: Record<string, unknown>; re: RegExp } | null {
   const re = /window\.CK_WIDGET=([^;]+);/;
@@ -69,6 +70,18 @@ function extractNonce(html: string): string | null {
   return nonce ? nonce : null;
 }
 
+function resolveRenderLocaleSource(args: {
+  requestedLocale: string;
+  effectiveLocale: string;
+  fallbackToEn?: boolean;
+}): RenderLocaleSource {
+  if (args.fallbackToEn) return 'current_revision_en_fallback';
+  if (args.requestedLocale !== 'en' && args.effectiveLocale === 'en') {
+    return 'current_revision_en_fallback';
+  }
+  return 'current_locale';
+}
+
 export async function GET(req: Request, ctx: { params: Promise<{ publicId: string }> }) {
   const { publicId: rawPublicId } = await ctx.params;
   const publicId = String(rawPublicId || '').trim();
@@ -104,6 +117,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       tokyoBase,
     });
     headers['Cache-Control'] = 'no-store';
+    headers['X-Ck-Render-Locale-Source'] = 'unavailable';
     return new NextResponse(html, { status: 403, headers });
   }
 
@@ -132,6 +146,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
         headers['X-Venice-Render-Mode'] = 'snapshot';
+        headers['X-Ck-Render-Locale-Source'] = 'current_locale';
         return new NextResponse(null, { status: 304, headers });
       }
 
@@ -157,6 +172,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
         headers['X-Venice-Render-Mode'] = 'snapshot';
+        headers['X-Ck-Render-Locale-Source'] = resolveRenderLocaleSource({
+          requestedLocale: locale,
+          effectiveLocale: headers['X-Ck-L10n-Effective-Locale'] ?? locale,
+        });
         const parisOrigin = new URL(getParisBase()).origin;
         const tokyoOrigin = new URL(getTokyoBase()).origin;
         headers['Content-Security-Policy'] = buildCsp(nonce, { parisOrigin, tokyoOrigin });
@@ -184,6 +203,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           headers['X-Ck-L10n-Resolved-Locale'] = 'en';
           headers['X-Ck-L10n-Effective-Locale'] = 'en';
           headers['X-Ck-L10n-Status'] = 'base';
+          headers['X-Ck-Render-Locale-Source'] = 'current_revision_en_fallback';
           if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
           return new NextResponse(null, { status: 304, headers });
         }
@@ -209,6 +229,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           headers['X-Ck-L10n-Resolved-Locale'] = 'en';
           headers['X-Ck-L10n-Effective-Locale'] = 'en';
           headers['X-Ck-L10n-Status'] = 'base';
+          headers['X-Ck-Render-Locale-Source'] = 'current_revision_en_fallback';
           if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
           const parisOrigin = new URL(getParisBase()).origin;
           const tokyoOrigin = new URL(getTokyoBase()).origin;
@@ -229,6 +250,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       headers['Cache-Control'] = 'no-store';
       headers['Vary'] = 'Authorization, X-Embed-Token';
       headers['X-Venice-Render-Mode'] = 'snapshot';
+      headers['X-Ck-Render-Locale-Source'] = 'unavailable';
       if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
       return new NextResponse(html, { status: 404, headers });
     }
@@ -243,6 +265,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       headers['Cache-Control'] = 'no-store';
       headers['Vary'] = 'Authorization, X-Embed-Token';
       headers['X-Venice-Render-Mode'] = 'snapshot';
+      headers['X-Ck-Render-Locale-Source'] = 'unavailable';
       headers['X-Venice-Snapshot-Reason'] = snapshotReason ?? 'SNAPSHOT_UNAVAILABLE';
       return new NextResponse(html, { status: 503, headers });
     }
@@ -270,6 +293,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     });
     headers['Cache-Control'] = 'no-store';
     headers['X-Venice-Render-Mode'] = 'dynamic';
+    headers['X-Ck-Render-Locale-Source'] = 'unavailable';
     if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
     return new NextResponse(html, { status, headers });
   }
@@ -288,6 +312,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     headers['Cache-Control'] = 'no-store';
     headers['Vary'] = 'Authorization, X-Embed-Token';
     headers['X-Venice-Render-Mode'] = 'dynamic';
+    headers['X-Ck-Render-Locale-Source'] = 'unavailable';
     if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
     return new NextResponse(html, { status: 404, headers });
   }
@@ -307,12 +332,17 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           baseUpdatedAt: instance.updatedAt ?? null,
           widgetType,
           config: instance.config,
+          allowStaleOverlay: !bypassSnapshot,
         });
 
   headers['X-Ck-L10n-Requested-Locale'] = overlayResult.meta.requestedLocale;
   headers['X-Ck-L10n-Resolved-Locale'] = overlayResult.meta.resolvedLocale;
   headers['X-Ck-L10n-Effective-Locale'] = overlayResult.meta.effectiveLocale;
   headers['X-Ck-L10n-Status'] = overlayResult.meta.status;
+  headers['X-Ck-Render-Locale-Source'] = resolveRenderLocaleSource({
+    requestedLocale: overlayResult.meta.requestedLocale,
+    effectiveLocale: overlayResult.meta.effectiveLocale,
+  });
 
   const responseHtml = await renderInstancePage({
     instance,

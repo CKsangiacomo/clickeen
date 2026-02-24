@@ -1031,6 +1031,98 @@
         payload?.pipeline?.l10n && typeof payload.pipeline.l10n === 'object'
           ? payload.pipeline.l10n
           : {};
+      const statusV2 =
+        payload?.status &&
+        typeof payload.status === 'object' &&
+        payload.status.v === 2 &&
+        payload.status.locales &&
+        typeof payload.status.locales === 'object'
+          ? payload.status
+          : null;
+      if (statusV2) {
+        const localeEntries = Object.entries(statusV2.locales);
+        const totalLocales = localeEntries.length;
+        const live = localeEntries.filter(
+          ([, entry]) => entry?.overlayState === 'current' && entry?.snapshotState === 'current',
+        ).length;
+        const generating = localeEntries.filter(
+          ([, entry]) => entry?.snapshotState === 'generating',
+        ).length;
+        const stale = localeEntries.filter(([, entry]) => entry?.overlayState === 'stale').length;
+        const missing = localeEntries.filter(([, entry]) => entry?.overlayState === 'missing').length;
+        const retrying =
+          typeof pipelineL10n.retrying === 'number' ? pipelineL10n.retrying : 0;
+        const failedTerminal =
+          typeof pipelineL10n.failedTerminal === 'number' ? pipelineL10n.failedTerminal : 0;
+        const rawNextActionLabel =
+          pipelineL10n?.nextAction &&
+          typeof pipelineL10n.nextAction === 'object' &&
+          typeof pipelineL10n.nextAction.label === 'string'
+            ? pipelineL10n.nextAction.label.trim()
+            : '';
+
+        let label = 'Live';
+        let tone = 'ready';
+        if (payload?.instanceStatus !== 'published') {
+          label = 'Draft';
+          tone = 'unavailable';
+        } else if (failedTerminal > 0) {
+          label = 'Failed';
+          tone = 'unavailable';
+        } else if (generating > 0) {
+          label = 'Updating';
+          tone = 'running';
+        } else if (retrying > 0) {
+          label = 'Retrying';
+          tone = 'retrying';
+        } else if (stale > 0 || missing > 0) {
+          label = 'Outdated';
+          tone = 'pending';
+        }
+
+        const firstLocaleError = locales.find((entry) => entry?.l10n?.lastError);
+        const rawLocaleError = firstLocaleError?.l10n?.lastError
+          ? String(firstLocaleError.l10n.lastError).trim()
+          : '';
+        const rawPipelineError =
+          payload?.pipeline?.renderIndexError && typeof payload.pipeline.renderIndexError === 'string'
+            ? payload.pipeline.renderIndexError.trim()
+            : '';
+        const rawL10nPipelineError =
+          pipelineL10n?.overlayMatchError && typeof pipelineL10n.overlayMatchError === 'string'
+            ? pipelineL10n.overlayMatchError.trim()
+            : '';
+        const persistedOverlayKeysError =
+          pipelineL10n?.persistedOverlayKeysError &&
+          typeof pipelineL10n.persistedOverlayKeysError === 'string'
+            ? pipelineL10n.persistedOverlayKeysError.trim()
+            : '';
+        const rawError =
+          rawLocaleError || rawPipelineError || rawL10nPipelineError || persistedOverlayKeysError;
+        const metaError = rawError
+          ? `Last error: ${rawError.length > 120 ? `${rawError.slice(0, 117)}...` : rawError}`
+          : '';
+
+        const meta = [
+          totalLocales ? `${live}/${totalLocales} live` : '',
+          generating > 0 ? `${generating} generating` : '',
+          stale > 0 ? `${stale} stale` : '',
+          missing > 0 ? `${missing} missing` : '',
+          retrying > 0 ? `${retrying} retrying` : '',
+          failedTerminal > 0 ? `${failedTerminal} failed` : '',
+          rawNextActionLabel ? `Next: ${rawNextActionLabel}` : '',
+          metaError,
+        ]
+          .filter(Boolean)
+          .join(' · ');
+
+        return {
+          label,
+          tone,
+          meta,
+          shouldPoll: generating > 0 || retrying > 0,
+        };
+      }
       const nonBaseLocales = locales.filter((entry) => entry?.locale !== 'en');
       const pointerFlipped =
         typeof summary.pointerFlipped === 'number'

@@ -18,11 +18,10 @@ import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
 import LocalCuratedDrawer from './LocalCuratedDrawer.astro';
 import { pragueT } from '../lib/i18n';
 import { getPragueMarket } from '../lib/markets';
+import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
-  chooseOverviewHeroLocales,
   chooseShowcaseTiles,
   localeLabel,
-  resolveOverviewHeroNamedLocaleCount,
   resolveTokyoInstanceLocales,
   sortLocaleOptions,
 } from '../lib/instanceL10n';
@@ -84,13 +83,6 @@ const instanceLocales = instanceLocalesRaw ? sortLocaleOptions(instanceLocalesRa
 const showcaseTiles = chooseShowcaseTiles(instanceLocales);
 const showcaseTileEntries = showcaseTiles.map((code) => ({ code, label: localeLabel(code, locale) }));
 const showcaseOptionEntries = instanceLocales.map((code) => ({ code, label: localeLabel(code, locale) }));
-const overviewHeroLocalePool = marketConfig?.locales?.length ? marketConfig.locales : instanceLocales;
-const overviewHeroNamedLocaleCount = resolveOverviewHeroNamedLocaleCount(marketConfig);
-const overviewHeroLocaleSelection = chooseOverviewHeroLocales({
-  market: marketConfig,
-  instanceLocales: overviewHeroLocalePool,
-  max: overviewHeroNamedLocaleCount,
-});
 const overviewHeroSubheadOne = await pragueT(locale, 'prague.hero.overview.subheadOne');
 const overviewHeroSubheadTwo = await pragueT(locale, 'prague.hero.overview.subheadTwo');
 const overviewHeroSubheadMany = await pragueT(locale, 'prague.hero.overview.subheadMany');
@@ -232,8 +224,7 @@ const localCuratedSlotCount = localCuratedBlocks.reduce((sum, block) => sum + bl
         };
       });
       const heroPreviewPublicId = curatedPublicId || showcasePublicId;
-      const overviewHeroLocales =
-        overviewHeroLocaleSelection.locales.length > 0 ? overviewHeroLocaleSelection.locales : showcaseTiles;
+      const overviewHeroLocales = [normalizeLocaleToken(locale) ?? 'en'];
       const autoOverviewHeroItems =
         activeSubpage === 'overview' && mappedHeroItems.length === 0 && heroPreviewPublicId
           ? overviewHeroLocales.map((code) => ({

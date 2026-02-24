@@ -14,11 +14,13 @@ import {
   enqueueRenderSnapshot,
   loadEnforcement,
   loadL10nGenerateStatesForFingerprint,
+  loadPersistedLocaleOverlayKeys,
   loadLocaleOverlayMatchesForFingerprint,
-  loadRenderIndexCurrent,
+  loadRenderSnapshotState,
   normalizeActiveEnforcement,
   resolveActivePublishLocales,
   resolveRenderSnapshotLocales,
+  waitForEnSnapshotReady,
   type RenderIndexEntry,
 } from './service';
 import {
@@ -63,17 +65,28 @@ export async function handleWorkspaceInstanceRenderSnapshot(
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
   if (!instance)
     return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  const url = new URL(req.url);
+  const waitToken = (url.searchParams.get('waitForEn') ?? url.searchParams.get('wait') ?? '')
+    .trim()
+    .toLowerCase();
+  const waitForEn = waitToken === '1' || waitToken === 'true' || waitToken === 'en-ready';
   const { locales: activeLocales } = await resolveRenderSnapshotLocales({
     env,
     publicId: publicIdResult.value,
     workspaceLocales: workspace.l10n_locales,
     policy: policyResult.policy,
   });
+  const baselineSnapshotState = waitForEn
+    ? await loadRenderSnapshotState({
+        env,
+        publicId: publicIdResult.value,
+      }).catch(() => null)
+    : null;
 
   const enqueue = await enqueueRenderSnapshot(env, {
     publicId: publicIdResult.value,
     action: 'upsert',
-    locales: activeLocales,
+    locales: ['en'],
   });
   if (!enqueue.ok) {
     return ckError(
@@ -85,15 +98,51 @@ export async function handleWorkspaceInstanceRenderSnapshot(
       503,
     );
   }
+  let enWaitedMs: number | null = null;
+  if (waitForEn) {
+    const enReady = await waitForEnSnapshotReady({
+      env,
+      publicId: publicIdResult.value,
+      baselinePointerUpdatedAt: baselineSnapshotState?.pointerUpdatedAt ?? null,
+      baselineRevision: baselineSnapshotState?.revision ?? null,
+    });
+    if (!enReady.ok) {
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.publish.failed',
+          detail: enReady.error,
+        },
+        503,
+      );
+    }
+    enWaitedMs = enReady.waitedMs;
+  }
+
+  const asyncLocales = activeLocales.filter((locale) => locale !== 'en');
+  if (asyncLocales.length) {
+    const asyncEnqueue = await enqueueRenderSnapshot(env, {
+      publicId: publicIdResult.value,
+      action: 'upsert',
+      locales: asyncLocales,
+    });
+    if (!asyncEnqueue.ok) {
+      console.warn('[ParisWorker] async locale snapshot enqueue failed', {
+        publicId: publicIdResult.value,
+        detail: asyncEnqueue.error,
+      });
+    }
+  }
   return json(
     {
       ok: true,
       publicId: publicIdResult.value,
       locales: activeLocales,
-      snapshotState: 'queued',
+      snapshotState: waitForEn ? 'ready' : 'queued',
       operationId: crypto.randomUUID(),
+      ...(waitForEn ? { enReadyWaitMs: enWaitedMs } : {}),
     },
-    { status: 202 },
+    { status: waitForEn ? 200 : 202 },
   );
 }
 
@@ -334,10 +383,24 @@ export async function handleWorkspaceInstancePublishStatus(
     overlayMatchError = error instanceof Error ? error.message : String(error);
   }
 
+  let persistedLocaleOverlayKeys = new Set<string>();
+  let persistedOverlayKeysError: string | null = null;
+  try {
+    const persistedKeys = await loadPersistedLocaleOverlayKeys(env, publicId);
+    persistedLocaleOverlayKeys = new Set(persistedKeys);
+  } catch (error) {
+    persistedOverlayKeysError = error instanceof Error ? error.message : String(error);
+  }
+
   let renderIndexCurrent: Record<string, RenderIndexEntry> | null = null;
+  let renderBaseRevision: string | null = null;
+  let renderPointerUpdatedAt: string | null = null;
   let renderIndexError: string | null = null;
   try {
-    renderIndexCurrent = await loadRenderIndexCurrent({ env, publicId });
+    const snapshotState = await loadRenderSnapshotState({ env, publicId });
+    renderBaseRevision = snapshotState.revision;
+    renderPointerUpdatedAt = snapshotState.pointerUpdatedAt;
+    renderIndexCurrent = snapshotState.current;
   } catch (error) {
     renderIndexError = error instanceof Error ? error.message : String(error);
   }
@@ -345,6 +408,15 @@ export async function handleWorkspaceInstancePublishStatus(
   const localeStatuses = locales.map((locale) => {
     const state = locale === 'en' ? null : stateMap.get(locale);
     const hasOverlayMatch = locale !== 'en' && overlayMatchLocales.has(locale);
+    const hadAnyOverlayForLocale = locale !== 'en' && persistedLocaleOverlayKeys.has(locale);
+    const overlayState =
+      locale === 'en'
+        ? ('current' as const)
+        : hasOverlayMatch
+          ? ('current' as const)
+          : hadAnyOverlayForLocale
+            ? ('stale' as const)
+            : ('missing' as const);
     const l10nStatus =
       locale === 'en' ? 'succeeded' : hasOverlayMatch ? 'succeeded' : (state?.status ?? 'dirty');
     const snapshot = renderIndexCurrent?.[locale] ?? null;
@@ -383,9 +455,26 @@ export async function handleWorkspaceInstancePublishStatus(
       stage = 'awaiting_snapshot';
       stageReason = 'snapshot_missing';
     }
+    const snapshotState =
+      snapshot
+        ? ('current' as const)
+        : stageReason === 'snapshot_missing' ||
+            stageReason === 'l10n_queued' ||
+            stageReason === 'l10n_running' ||
+            stageReason === 'l10n_retrying'
+          ? ('generating' as const)
+          : ('missing' as const);
+    const source =
+      snapshot
+        ? ('current_locale' as const)
+        : locale !== 'en' && Boolean(renderIndexCurrent?.en)
+          ? ('current_revision_en_fallback' as const)
+          : ('unavailable' as const);
 
     return {
       locale,
+      overlayState,
+      source,
       l10n: {
         status: l10nStatus,
         attempts: locale === 'en' ? 0 : (state?.attempts ?? 0),
@@ -399,6 +488,7 @@ export async function handleWorkspaceInstancePublishStatus(
         r: snapshot?.r ?? null,
         meta: snapshot?.meta ?? null,
       },
+      snapshotState,
       stage,
       stageReason,
     };
@@ -450,20 +540,24 @@ export async function handleWorkspaceInstancePublishStatus(
       {} as Record<string, number>,
     );
 
+  const baseLocaleStatus = localeStatuses.find((entry) => entry.locale === 'en') ?? null;
+  const baseSnapshotBlocked =
+    instance.status === 'published' && (!baseLocaleStatus || baseLocaleStatus.snapshotState !== 'current');
+
   const overall =
     instance.status !== 'published'
       ? 'unpublished'
-      : summary.failed > 0
-        ? 'failed'
+      : baseSnapshotBlocked
+        ? 'awaiting_snapshot'
+        : l10nSummary.failedTerminal > 0
+          ? 'l10n_failed'
         : l10nSummary.inFlight > 0
           ? 'l10n_in_flight'
           : l10nSummary.retrying > 0
             ? 'l10n_retrying'
             : summary.awaitingL10n > 0
               ? 'awaiting_l10n'
-              : summary.awaitingSnapshot > 0
-                ? 'awaiting_snapshot'
-                : 'ready';
+              : 'ready';
 
   const nextAction =
     instance.status !== 'published'
@@ -500,6 +594,27 @@ export async function handleWorkspaceInstancePublishStatus(
                   }
                 : null;
 
+  const localeStatusV2 = localeStatuses.reduce(
+    (acc, entry) => {
+      acc[entry.locale] = {
+        overlayState: entry.overlayState,
+        snapshotState: entry.snapshotState,
+        source: entry.source,
+        lastPublishedAt: renderPointerUpdatedAt ?? null,
+      };
+      return acc;
+    },
+    {} as Record<
+      string,
+      {
+        overlayState: 'current' | 'stale' | 'missing';
+        snapshotState: 'current' | 'generating' | 'missing';
+        source: 'current_locale' | 'current_revision_en_fallback' | 'unavailable';
+        lastPublishedAt: string | null;
+      }
+    >,
+  );
+
   return json({
     publicId: instance.public_id,
     widgetType,
@@ -509,6 +624,13 @@ export async function handleWorkspaceInstancePublishStatus(
       l10nBaseFingerprint,
       updatedAt: instance.updated_at ?? null,
     },
+    status: {
+      v: 2,
+      baseRevision: renderBaseRevision,
+      baseFingerprint: l10nBaseFingerprint,
+      pointerUpdatedAt: renderPointerUpdatedAt,
+      locales: localeStatusV2,
+    },
     pipeline: {
       overall,
       bindings: {
@@ -516,6 +638,8 @@ export async function handleWorkspaceInstancePublishStatus(
         l10nGenerateQueue: Boolean(env.L10N_GENERATE_QUEUE),
       },
       renderIndexFound: Boolean(renderIndexCurrent),
+      renderBaseRevision,
+      renderPointerUpdatedAt,
       renderIndexError,
       workspaceLocales: {
         invalid: invalidWorkspaceLocales,
@@ -528,6 +652,7 @@ export async function handleWorkspaceInstancePublishStatus(
         stageReasons: blockedStageReasonSummary,
         nextAction,
         overlayMatchError,
+        persistedOverlayKeysError,
       },
     },
     summary,

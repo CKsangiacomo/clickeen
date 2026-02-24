@@ -32,7 +32,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 | Principle | Rule |
 |-----------|------|
-| **No Fallbacks** | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Localization overlays are applied **best-available** (base/fresh/stale) and must never block runtime. |
+| **No Fallbacks** | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Public renders must be revision-coherent (single published revision, with same-revision EN fallback only). |
 | **Widget Files = Truth** | Core runtime files + contract files in `tokyo/widgets/{name}/` define widget behavior and validation. |
 | **Orchestrators = Dumb Pipes** | Bob/Paris/Venice avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. overlay composition) but must not “fix” state ad hoc. |
 | **Dieter Tokens** | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB. |
@@ -190,12 +190,13 @@ Each release proceeds in 3 steps:
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
-  - Publish/unpublish writes are transactional: if downstream l10n/snapshot publish steps fail, Paris rolls back both instance row state and deterministic `account_asset_usage` mappings.
+  - Publish control-plane writes are transactional for base/account usage persistence; EN snapshot enqueue is blocking, while non-EN snapshot fanout is async and non-blocking.
 
 #### Venice (Workers)
 - Public embed surface (third-party websites only talk to Venice).
-- Runtime combines Tokyo widget assets with Paris instance config and **best-available** instance l10n overlays from Tokyo (base/fresh/stale; never block embed render).
-- Render snapshots are consumed through published revision pointers; when the newest revision is missing/corrupt, Venice serves the last good published revision instead of hard-failing existing embeds.
+- Runtime combines Tokyo widget assets with Paris instance config and locale overlays from Tokyo.
+- Public snapshot serving is revision-coherent: Venice reads one published revision and never mixes artifacts from previous revisions.
+- If a locale artifact is missing in the current revision, Venice falls back to EN from the same revision.
 - Public `/e/:publicId` and `/r/:publicId` serve snapshots from published pointers only (no public dynamic fallback). Dynamic rendering is restricted to controlled internal bypass.
 
 #### Tokyo (R2)

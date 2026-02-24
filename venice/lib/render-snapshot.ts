@@ -107,7 +107,6 @@ export async function loadRenderSnapshot(args: {
 
   const locale = normalizeLocaleToken(args.locale) ?? 'en';
   let index: RenderIndex | null = null;
-  let fallbackIndex: RenderIndex | null = null;
   let pointerUpdatedAt: string | null = null;
   const pointerRes = await tokyoFetch(`/renders/instances/${encodeURIComponent(publicId)}/published.json`, { method: 'GET' });
   if (pointerRes.ok) {
@@ -121,20 +120,6 @@ export async function loadRenderSnapshot(args: {
       index = primaryRevision.index;
     }
 
-    const previousRevision =
-      pointer.previousRevision && pointer.previousRevision !== pointer.revision
-        ? pointer.previousRevision
-        : null;
-    if (previousRevision) {
-      const previous = await loadRevisionRenderIndex({ publicId, revision: previousRevision });
-      if (previous.index) fallbackIndex = previous.index;
-    }
-
-    if (!index && fallbackIndex) {
-      index = fallbackIndex;
-      fallbackIndex = null;
-    }
-
     if (!index) {
       return { ok: false, reason: primaryRevision.reason ?? 'REVISION_INDEX_NOT_FOUND' };
     }
@@ -146,31 +131,23 @@ export async function loadRenderSnapshot(args: {
 
   if (!index) return { ok: false, reason: 'INDEX_UNAVAILABLE' };
 
-  const primaryEntry = index.current[locale] ?? null;
-  const fallbackEntry = fallbackIndex?.current?.[locale] ?? null;
-  const entryCandidates = [primaryEntry, fallbackEntry].filter(
-    (entry): entry is RenderIndexEntry => Boolean(entry),
-  );
-  if (!entryCandidates.length) return { ok: false, reason: 'LOCALE_MISSING' };
+  const entry = index.current[locale] ?? null;
+  if (!entry) return { ok: false, reason: 'LOCALE_MISSING' };
 
   const filename = args.variant === 'e' ? 'e.html' : args.variant === 'meta' ? 'meta.json' : 'r.json';
-  for (const entry of entryCandidates) {
-    const fingerprint = args.variant === 'e' ? entry.e : args.variant === 'meta' ? entry.meta : entry.r;
-    const artifactRes = await tokyoFetch(
-      `/renders/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(fingerprint)}/${filename}`,
-      { method: 'GET' },
-    );
-    if (artifactRes.status === 404) continue;
-    if (!artifactRes.ok) return { ok: false, reason: `ARTIFACT_HTTP_${artifactRes.status}` };
-    const bytes = await artifactRes.arrayBuffer();
-    return {
-      ok: true,
-      fingerprint,
-      bytes,
-      contentType: artifactRes.headers.get('content-type'),
-      pointerUpdatedAt,
-    };
-  }
-
-  return { ok: false, reason: 'ARTIFACT_NOT_FOUND' };
+  const fingerprint = args.variant === 'e' ? entry.e : args.variant === 'meta' ? entry.meta : entry.r;
+  const artifactRes = await tokyoFetch(
+    `/renders/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(fingerprint)}/${filename}`,
+    { method: 'GET' },
+  );
+  if (artifactRes.status === 404) return { ok: false, reason: 'ARTIFACT_NOT_FOUND' };
+  if (!artifactRes.ok) return { ok: false, reason: `ARTIFACT_HTTP_${artifactRes.status}` };
+  const bytes = await artifactRes.arrayBuffer();
+  return {
+    ok: true,
+    fingerprint,
+    bytes,
+    contentType: artifactRes.headers.get('content-type'),
+    pointerUpdatedAt,
+  };
 }

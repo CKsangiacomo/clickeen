@@ -1,7 +1,7 @@
 import type { MemberRole } from '@clickeen/ck-policy';
 import type { Env, WorkspaceRow } from './types';
 import type { SupabaseAuthPrincipal } from './auth';
-import { assertDevAuth } from './auth';
+import { assertDevAuth, isTrustedInternalServiceRequest } from './auth';
 import {
   readRomaAuthzCapsuleHeader,
   verifyRomaWorkspaceAuthzCapsule,
@@ -19,7 +19,7 @@ type WorkspaceMembershipRow = {
 type WorkspaceAuthResult =
   | {
       ok: true;
-      auth: { source: 'dev' | 'supabase'; principal: SupabaseAuthPrincipal };
+      auth: { source: 'dev' | 'supabase'; principal?: SupabaseAuthPrincipal };
       workspace: WorkspaceRow;
       role: MemberRole;
     }
@@ -27,6 +27,14 @@ type WorkspaceAuthResult =
       ok: false;
       response: Response;
     };
+
+function isInternalWorkspaceServicePathAllowed(req: Request): boolean {
+  const pathname = new URL(req.url).pathname;
+  if (/^\/api\/workspaces\/[^/]+\/instance\/[^/]+$/.test(pathname)) return true;
+  if (/^\/api\/workspaces\/[^/]+\/instances\/[^/]+\/layers\/locale\/[^/]+$/.test(pathname))
+    return true;
+  return false;
+}
 
 function normalizeRole(value: unknown): MemberRole | null {
   switch (value) {
@@ -166,8 +174,28 @@ export async function authorizeWorkspace(
 ): Promise<WorkspaceAuthResult> {
   const auth = await assertDevAuth(req, env);
   if (!auth.ok) return { ok: false, response: auth.response };
+
   if (!auth.principal) {
-    return { ok: false, response: ckError({ kind: 'AUTH', reasonKey: 'coreui.errors.auth.required' }, 401) };
+    const trustedInternal =
+      auth.source === 'dev' &&
+      isTrustedInternalServiceRequest(req, env) &&
+      isInternalWorkspaceServicePathAllowed(req);
+    if (!trustedInternal) {
+      return {
+        ok: false,
+        response: ckError({ kind: 'AUTH', reasonKey: 'coreui.errors.auth.required' }, 401),
+      };
+    }
+    const workspaceResult = await requireWorkspace(env, workspaceId);
+    if (!workspaceResult.ok) {
+      return { ok: false, response: workspaceResult.response };
+    }
+    return {
+      ok: true,
+      auth: { source: auth.source },
+      workspace: workspaceResult.workspace,
+      role: 'owner',
+    };
   }
 
   const capsule = readRomaAuthzCapsuleHeader(req);

@@ -70,16 +70,17 @@ Venice must **never** serve unpublished instances.
 **Render algorithm (high level):**
 0. **Snapshot-only public serving (PRD 38):** for normal embed requests (no `X-Ck-Snapshot-Bypass: 1`), Venice serves only Tokyo render artifacts (`e.html`) from `renders/instances/<publicId>/index.json` + immutable `.../<fingerprint>/e.html` (per-locale). Venice patches request-time `theme` + `device` into the snapshot response. Response header: `X-Venice-Render-Mode: snapshot`.
 1. **No public dynamic fallback:** when snapshot artifacts are missing/invalid, Venice returns explicit errors (`404` for unavailable/unpublished, `503` for published snapshot-missing). It does not render dynamically for public traffic.
-2. **Internal dynamic render path (snapshot generation only):** when `X-Ck-Snapshot-Bypass: 1` is present (tokyo-worker pipeline), Venice fetches Paris state and renders dynamically.
-3. Internal dynamic rendering applies Tokyo `l10n` overlay (if present) from deterministic overlay paths:
+2. **Revision-coherent fallback rule:** Venice never mixes revisions. If requested locale snapshot is missing, Venice serves EN from the same published revision only.
+3. **Internal dynamic render path (snapshot generation only):** when `X-Ck-Snapshot-Bypass: 1` is present (tokyo-worker pipeline), Venice fetches Paris state and renders dynamically.
+4. Internal dynamic rendering applies Tokyo `l10n` overlay (if present) from deterministic overlay paths:
    - Overlay must be set-only ops.
    - Overlay ops are already merged (agent ops + per-field user overrides).
    - Overlay must include `baseFingerprint` (required).
-   - Venice applies **best-available** locale overlays:
+   - Snapshot materialization uses strict overlay matching:
      - **fresh:** `overlay.baseFingerprint` matches the current base fingerprint → apply full overlay
-     - **stale:** fingerprint mismatch → may apply overlay ops selectively when safe using `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json` (otherwise treat as base)
+     - **stale/missing:** do not salvage during snapshot generation; treat as base (EN fallback at snapshot read time)
    - The allowlist comes from `tokyo/widgets/{widgetType}/localization.json` (translatable paths only).
-4. Dynamic render path returns HTML that:
+5. Dynamic render path returns HTML that:
    - sets `<base href="/widgets/{widgetType}/">` so relative asset links resolve under Venice
    - injects a single canonical bootstrap object: `window.CK_WIDGET`
 
@@ -140,12 +141,13 @@ Response includes (as implemented today):
 - `requestedLocale`: from `?locale=<token>` when present; otherwise defaults to `en`.
 - `resolvedLocale`: best-supported match for `requestedLocale` (e.g. `fr-ca` → `fr`). `geoTargets` are used only for same-language variant selection.
 - `effectiveLocale`: the locale actually applied to the response. If overlays cannot be applied, Venice falls back to base and sets `effectiveLocale=en` (no lying via HTML `lang` / `window.CK_WIDGET.locale`).
+- `render locale source`: `X-Ck-Render-Locale-Source` (`current_locale | current_revision_en_fallback | unavailable`).
 
 **Localization response headers (shipped):**
 - `X-Ck-L10n-Requested-Locale`
 - `X-Ck-L10n-Resolved-Locale`
 - `X-Ck-L10n-Effective-Locale`
-- `X-Ck-L10n-Status` (`base | fresh | stale`)
+- `X-Ck-L10n-Status` (`base | fresh`)
 
 ### Tokyo Asset Proxy Routes (Shipped)
 

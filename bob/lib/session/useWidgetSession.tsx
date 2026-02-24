@@ -1445,6 +1445,75 @@ function useWidgetSessionInternal() {
           return { stage: 'failed', detail };
         }
 
+        const statusV2 =
+          json?.status &&
+          typeof json.status === 'object' &&
+          json.status.v === 2 &&
+          json.status.locales &&
+          typeof json.status.locales === 'object'
+            ? (json.status as {
+                locales: Record<
+                  string,
+                  {
+                    overlayState?: 'current' | 'stale' | 'missing';
+                    snapshotState?: 'current' | 'generating' | 'missing';
+                  }
+                >;
+              })
+            : null;
+        if (statusV2) {
+          const localeEntries = Object.values(statusV2.locales || {});
+          const generating = localeEntries.filter((entry) => entry?.snapshotState === 'generating').length;
+          const stale = localeEntries.filter((entry) => entry?.overlayState === 'stale').length;
+          const missing = localeEntries.filter((entry) => entry?.overlayState === 'missing').length;
+          const pipelineOverall =
+            json?.pipeline && typeof json.pipeline.overall === 'string'
+              ? json.pipeline.overall
+              : '';
+          const failedTerminal =
+            typeof json?.pipeline?.l10n?.failedTerminal === 'number'
+              ? json.pipeline.l10n.failedTerminal
+              : 0;
+          const nextActionLabel =
+            typeof json?.pipeline?.l10n?.nextAction?.label === 'string'
+              ? json.pipeline.l10n.nextAction.label.trim()
+              : '';
+          const firstLocaleError = Array.isArray(json?.locales)
+            ? json.locales.find((entry: any) => typeof entry?.l10n?.lastError === 'string' && entry.l10n.lastError.trim())
+            : null;
+          const localeError =
+            firstLocaleError && typeof firstLocaleError.l10n.lastError === 'string'
+              ? firstLocaleError.l10n.lastError.trim()
+              : '';
+
+          if (json?.instanceStatus !== 'published') {
+            return { stage: 'failed', detail: 'Instance is unpublished. Publish base content before translating.' };
+          }
+          if (pipelineOverall === 'failed' || pipelineOverall === 'l10n_failed' || failedTerminal > 0) {
+            return {
+              stage: 'failed',
+              detail: localeError || nextActionLabel || 'Translation failed for one or more locales.',
+            };
+          }
+          if (generating > 0) {
+            return {
+              stage: 'translating',
+              detail: `${generating} locale snapshot${generating === 1 ? '' : 's'} generating.`,
+            };
+          }
+          if (stale > 0 || missing > 0 || pipelineOverall === 'awaiting_l10n') {
+            const pending = stale + missing;
+            return {
+              stage: 'translating',
+              detail:
+                pending > 0
+                  ? `${pending} locale${pending === 1 ? '' : 's'} pending translation.`
+                  : nextActionLabel || 'Translations are updating.',
+            };
+          }
+          return { stage: 'ready', detail: nextActionLabel || null };
+        }
+
         const summary = json?.summary && typeof json.summary === 'object' ? json.summary : {};
         const l10n = summary?.l10n && typeof summary.l10n === 'object' ? summary.l10n : {};
         const failedTerminal = typeof l10n.failedTerminal === 'number' ? l10n.failedTerminal : 0;

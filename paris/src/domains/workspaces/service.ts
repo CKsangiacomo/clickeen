@@ -18,7 +18,15 @@ type RenderSnapshotEnqueueResult = { ok: true } | { ok: false; error: string };
 type LocaleOverlayLayerKeyRow = { layer_key?: string | null };
 
 type RenderIndexEntry = { e: string; r: string; meta: string };
-type RenderPublishedPointer = { revision: string };
+type RenderPublishedPointer = { revision: string; updatedAt: string | null };
+type RenderSnapshotState = {
+  revision: string | null;
+  pointerUpdatedAt: string | null;
+  current: Record<string, RenderIndexEntry> | null;
+};
+type WaitForEnSnapshotReadyResult =
+  | { ok: true; state: RenderSnapshotState; waitedMs: number }
+  | { ok: false; error: string; state: RenderSnapshotState | null; waitedMs: number };
 
 async function loadEnforcement(env: Env, publicId: string): Promise<EnforcementRow | null> {
   const params = new URLSearchParams({
@@ -297,7 +305,11 @@ function normalizeRenderPublishedPointer(raw: unknown): RenderPublishedPointer |
   const payload = raw as Record<string, unknown>;
   const revision = normalizeRenderRevision(payload.revision);
   if (!revision) return null;
-  return { revision };
+  const updatedAt =
+    typeof payload.updatedAt === 'string' && payload.updatedAt.trim()
+      ? payload.updatedAt.trim()
+      : null;
+  return { revision, updatedAt };
 }
 
 function normalizeRenderIndexCurrent(raw: unknown): Record<string, RenderIndexEntry> | null {
@@ -319,6 +331,14 @@ async function loadRenderIndexCurrent(args: {
   env: Env;
   publicId: string;
 }): Promise<Record<string, RenderIndexEntry> | null> {
+  const state = await loadRenderSnapshotState(args);
+  return state.current;
+}
+
+async function loadRenderSnapshotState(args: {
+  env: Env;
+  publicId: string;
+}): Promise<RenderSnapshotState> {
   const bases = resolveRenderIndexBases(args.env);
   for (const base of bases) {
     const requestInit: RequestInit = {
@@ -338,13 +358,22 @@ async function loadRenderIndexCurrent(args: {
         if (revisionRes.ok) {
           const revisionPayload = (await revisionRes.json().catch(() => null)) as unknown;
           const revisionCurrent = normalizeRenderIndexCurrent(revisionPayload);
-          if (revisionCurrent) return revisionCurrent;
+          return {
+            revision: pointer.revision,
+            pointerUpdatedAt: pointer.updatedAt,
+            current: revisionCurrent,
+          };
         } else if (revisionRes.status !== 404) {
           const detail = await revisionRes.text().catch(() => '');
           throw new Error(
             `[ParisWorker] Failed to load render revision index from ${base} (${revisionRes.status}): ${detail}`.trim(),
           );
         }
+        return {
+          revision: pointer.revision,
+          pointerUpdatedAt: pointer.updatedAt,
+          current: null,
+        };
       }
     } else if (pointerRes.status !== 404) {
       const detail = await pointerRes.text().catch(() => '');
@@ -353,7 +382,84 @@ async function loadRenderIndexCurrent(args: {
       );
     }
   }
-  return null;
+  return {
+    revision: null,
+    pointerUpdatedAt: null,
+    current: null,
+  };
+}
+
+function hasPointerAdvanced(args: {
+  state: RenderSnapshotState;
+  baselinePointerUpdatedAt: string | null;
+  baselineRevision: string | null;
+}): boolean {
+  const currentPointerUpdatedAt = asTrimmedString(args.state.pointerUpdatedAt);
+  const currentRevision = asTrimmedString(args.state.revision);
+  const baselinePointerUpdatedAt = asTrimmedString(args.baselinePointerUpdatedAt);
+  const baselineRevision = asTrimmedString(args.baselineRevision);
+
+  const hadBaseline = Boolean(baselinePointerUpdatedAt || baselineRevision);
+  if (!hadBaseline) return Boolean(currentPointerUpdatedAt || currentRevision);
+
+  if (baselinePointerUpdatedAt && currentPointerUpdatedAt && currentPointerUpdatedAt !== baselinePointerUpdatedAt) {
+    return true;
+  }
+  if (baselineRevision && currentRevision && currentRevision !== baselineRevision) {
+    return true;
+  }
+  return false;
+}
+
+async function waitForEnSnapshotReady(args: {
+  env: Env;
+  publicId: string;
+  baselinePointerUpdatedAt?: string | null;
+  baselineRevision?: string | null;
+  timeoutMs?: number;
+  intervalMs?: number;
+}): Promise<WaitForEnSnapshotReadyResult> {
+  const timeoutMs =
+    typeof args.timeoutMs === 'number' && Number.isFinite(args.timeoutMs) && args.timeoutMs > 0
+      ? Math.floor(args.timeoutMs)
+      : 12_000;
+  const intervalMs =
+    typeof args.intervalMs === 'number' && Number.isFinite(args.intervalMs) && args.intervalMs > 0
+      ? Math.floor(args.intervalMs)
+      : 300;
+  const startedAt = Date.now();
+  const baselinePointerUpdatedAt = asTrimmedString(args.baselinePointerUpdatedAt) ?? null;
+  const baselineRevision = asTrimmedString(args.baselineRevision) ?? null;
+  let lastState: RenderSnapshotState | null = null;
+  let lastError: string | null = null;
+
+  while (Date.now() - startedAt <= timeoutMs) {
+    try {
+      const state = await loadRenderSnapshotState({ env: args.env, publicId: args.publicId });
+      lastState = state;
+      const hasEnSnapshot = Boolean(state.current?.en);
+      const pointerAdvanced = hasPointerAdvanced({
+        state,
+        baselinePointerUpdatedAt,
+        baselineRevision,
+      });
+      if (hasEnSnapshot && pointerAdvanced) {
+        return { ok: true, state, waitedMs: Date.now() - startedAt };
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+
+  return {
+    ok: false,
+    error:
+      lastError ??
+      `Timed out waiting for EN snapshot readiness (publicId=${args.publicId}, timeoutMs=${timeoutMs})`,
+    state: lastState,
+    waitedMs: Date.now() - startedAt,
+  };
 }
 
 export type { RenderIndexEntry, RenderSnapshotEnqueueResult };
@@ -362,9 +468,12 @@ export {
   enqueueRenderSnapshot,
   loadEnforcement,
   loadL10nGenerateStatesForFingerprint,
+  loadPersistedLocaleOverlayKeys,
   loadLocaleOverlayMatchesForFingerprint,
   loadRenderIndexCurrent,
+  loadRenderSnapshotState,
   normalizeActiveEnforcement,
   resolveActivePublishLocales,
   resolveRenderSnapshotLocales,
+  waitForEnSnapshotReady,
 };

@@ -26,6 +26,25 @@ export type SupabaseAuthPrincipal = {
   claims: JwtClaims;
 };
 
+const INTERNAL_SERVICE_HEADER = 'x-ck-internal-service';
+const INTERNAL_SERVICE_ALLOWLIST = new Set(['sanfrancisco', 'sanfrancisco.l10n']);
+
+function normalizeInternalServiceId(value: string | null): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed || null;
+}
+
+export function isTrustedInternalServiceRequest(req: Request, env: Env): boolean {
+  const marker = normalizeInternalServiceId(req.headers.get(INTERNAL_SERVICE_HEADER));
+  if (!marker || !INTERNAL_SERVICE_ALLOWLIST.has(marker)) return false;
+  const expected = typeof env.PARIS_DEV_JWT === 'string' ? env.PARIS_DEV_JWT.trim() : '';
+  if (!expected) return false;
+  const token = asBearerToken(req.headers.get('Authorization'));
+  if (!token) return false;
+  return token === expected;
+}
+
 const SUPABASE_PRINCIPAL_CACHE_KEY = '__CK_PARIS_SUPABASE_PRINCIPAL_CACHE_V1__';
 const SUPABASE_PRINCIPAL_CACHE_TTL_MS = 5 * 60_000;
 
@@ -108,6 +127,10 @@ export async function assertDevAuth(
   | { ok: true; principal?: SupabaseAuthPrincipal; source: 'dev' | 'supabase' }
   | { ok: false; response: Response }
 > {
+  if (isTrustedInternalServiceRequest(req, env)) {
+    return { ok: true as const, source: 'dev' };
+  }
+
   const supabase = await assertSupabaseAuth(req, env);
   if ('response' in supabase) {
     return { ok: false as const, response: supabase.response };

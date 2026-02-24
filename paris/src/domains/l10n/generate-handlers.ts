@@ -32,6 +32,7 @@ import {
   updateL10nGenerateStatus,
   upsertL10nGenerateStates,
 } from './service';
+import { dispatchL10nGenerateJobs } from './dispatch-jobs';
 
 async function applyL10nGenerateReport(args: { env: Env; report: L10nGenerateReportPayload }) {
   const { env, report } = args;
@@ -385,38 +386,15 @@ async function requeueL10nGenerateStates(
 
   if (!jobs.length) return { processed: rows.length, queued: 0, failed: failedRows.length };
 
-  if (!env.L10N_GENERATE_QUEUE) {
+  const dispatched = await dispatchL10nGenerateJobs(env, jobs);
+  if (!dispatched.ok) {
     const failedAt = new Date().toISOString();
     const queueFailures: L10nGenerateStateRow[] = queuedRows.map((row) => {
       const attempts = row.attempts ?? 1;
       const retry = resolveL10nFailureRetryState({
         occurredAtIso: failedAt,
         attempts,
-        message: 'L10N_GENERATE_QUEUE missing',
-      });
-      return {
-        ...row,
-        status: 'failed' as const,
-        next_attempt_at: retry.nextAttemptAt,
-        last_attempt_at: failedAt,
-        last_error: retry.lastError,
-      };
-    });
-    await upsertL10nGenerateStates(env, queueFailures);
-    return { processed: rows.length, queued: 0, failed: failedRows.length + queueFailures.length };
-  }
-
-  try {
-    await env.L10N_GENERATE_QUEUE.sendBatch(jobs.map((job) => ({ body: job })));
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    const failedAt = new Date().toISOString();
-    const queueFailures: L10nGenerateStateRow[] = queuedRows.map((row) => {
-      const attempts = row.attempts ?? 1;
-      const retry = resolveL10nFailureRetryState({
-        occurredAtIso: failedAt,
-        attempts,
-        message: detail,
+        message: dispatched.error,
       });
       return {
         ...row,
@@ -444,4 +422,3 @@ export async function handleL10nGenerateRetries(env: Env): Promise<void> {
     console.error('[ParisWorker] l10n generate retry sweep failed', error);
   }
 }
-

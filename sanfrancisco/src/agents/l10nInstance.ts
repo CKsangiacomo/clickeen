@@ -129,6 +129,13 @@ function requireEnvVar(value: unknown, name: string): string {
   return trimmed;
 }
 
+function buildParisInternalHeaders(token: string, extra?: HeadersInit): Headers {
+  const headers = new Headers(extra || {});
+  headers.set('authorization', `Bearer ${token}`);
+  headers.set('x-ck-internal-service', 'sanfrancisco.l10n');
+  return headers;
+}
+
 function getTokyoReadBase(env: Env): string {
   return requireEnvVar((env as any).TOKYO_BASE_URL, 'TOKYO_BASE_URL');
 }
@@ -770,16 +777,13 @@ async function fetchInstanceByContext(args: { workspaceId: string; publicId: str
   const baseUrl = requireEnvVar((env as any).PARIS_BASE_URL, 'PARIS_BASE_URL');
   const token = requireEnvVar((env as any).PARIS_DEV_JWT, 'PARIS_DEV_JWT');
   const url = new URL(
-    `/api/workspaces/${encodeURIComponent(args.workspaceId)}/instance/${encodeURIComponent(args.publicId)}?subject=devstudio`,
+    `/api/workspaces/${encodeURIComponent(args.workspaceId)}/instance/${encodeURIComponent(args.publicId)}?subject=workspace`,
     baseUrl,
   ).toString();
 
   const res = await fetch(url, {
     method: 'GET',
-    headers: {
-      authorization: `Bearer ${token}`,
-      'cache-control': 'no-store',
-    },
+    headers: buildParisInternalHeaders(token, { 'cache-control': 'no-store' }),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
@@ -925,14 +929,11 @@ async function fetchExistingLocale(
     )}/layers/locale/${encodeURIComponent(locale)}`,
     baseUrl,
   );
-  url.searchParams.set('subject', 'devstudio');
+  url.searchParams.set('subject', 'workspace');
 
   const res = await fetch(url.toString(), {
     method: 'GET',
-    headers: {
-      authorization: `Bearer ${token}`,
-      'cache-control': 'no-store',
-    },
+    headers: buildParisInternalHeaders(token, { 'cache-control': 'no-store' }),
   });
   if (res.status === 404) return null;
   if (!res.ok) return null;
@@ -978,13 +979,10 @@ async function writeOverlay(
     )}/layers/locale/${encodeURIComponent(locale)}`,
     baseUrl,
   );
-  url.searchParams.set('subject', 'devstudio');
+  url.searchParams.set('subject', 'workspace');
   const res = await fetch(url.toString(), {
     method: 'PUT',
-    headers: {
-      authorization: `Bearer ${token}`,
-      'content-type': 'application/json',
-    },
+    headers: buildParisInternalHeaders(token, { 'content-type': 'application/json' }),
     body: JSON.stringify({
       ops: overlay.ops,
       baseUpdatedAt: overlay.baseUpdatedAt ?? null,
@@ -1053,10 +1051,7 @@ async function reportL10nGenerateStatus(args: {
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${token}`,
-      },
+      headers: buildParisInternalHeaders(token, { 'content-type': 'application/json' }),
       body: JSON.stringify(payload),
     });
     if (!res.ok) {

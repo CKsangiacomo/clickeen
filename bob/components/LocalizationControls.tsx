@@ -378,7 +378,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                     setRefreshMessage(
                       result.queued > 0
                         ? `Queued ${result.queued} translation job${result.queued === 1 ? '' : 's'}.`
-                        : 'Translations are already up to date.',
+                        : null,
                     );
                   }}
                 >
@@ -448,7 +448,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                           setRefreshMessage(
                             result.queued > 0
                               ? `Queued ${result.queued} translation job${result.queued === 1 ? '' : 's'}.`
-                              : 'Translations are already up to date.',
+                              : null,
                           );
                         }}
                       >

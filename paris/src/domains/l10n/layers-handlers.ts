@@ -14,12 +14,14 @@ import {
 } from '../../shared/l10n';
 import {
   assertPublicId,
+  assertWidgetType,
   resolveInstanceKind,
   resolveInstanceWorkspaceId,
 } from '../../shared/instances';
 import { consumeBudget } from '../../shared/budgets';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { authorizeWorkspace } from '../../shared/workspace-auth';
+import { supabaseFetch } from '../../shared/supabase';
 import { loadInstanceByWorkspaceAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import {
   loadInstanceOverlay,

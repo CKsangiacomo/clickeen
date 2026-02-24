@@ -117,11 +117,11 @@ This is not “manual editing of locales” — it’s the expected artifact reg
 - Paris stores overlays in Supabase (`widget_instance_overlays`, layer + layer_key).
 - Paris rebases user overrides onto the new snapshot fingerprint (drops removed paths, keeps valid overrides).
 - Paris marks `l10n_publish_state` as dirty and enqueues publish jobs.
-- Published base saves also trigger render snapshot regeneration for the workspace active locale set (EN + active non-EN within policy caps) for both user and curated instances, so base style changes propagate cross-locale even when translation diffs are empty.
+- Published base saves trigger render snapshots in two phases: EN is enqueued first (blocking for publish control-plane success), then non-EN locales are fanned out asynchronously.
 - Tokyo-worker materializes overlays into Tokyo/R2 using deterministic paths (no global manifest) and writes `index.json` for locale selection.
-- Venice applies the **best available** overlay at render time:
-  - **fresh:** `overlay.baseFingerprint` matches the current base
-  - **stale:** may apply the last published overlay ops **selectively** when safe (see staleness guard)
+- Venice public snapshot serving is strict and revision-coherent:
+  - **fresh/current revision:** locale artifact serves directly
+  - **stale/missing locale artifact:** fallback is EN from the same revision only
 
 **Widget allowlist (authoritative)**
 
@@ -234,7 +234,7 @@ Rules:
 - `index.json` is updated by Tokyo-worker whenever locales are published or deleted.
 - `geoTargets` is optional and is used only for **variant selection within a language** (e.g. `fr` vs `fr-ca`); it must never override an explicit unrelated locale.
 - Runtime prefers overlays whose `overlay.baseFingerprint` matches the current base fingerprint.
-  - If the latest overlay is stale (fingerprint mismatch), Venice may apply the last published overlay ops **selectively** when safe, using `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`.
+  - Venice public snapshot materialization does not apply stale overlays; stale locale output resolves through same-revision EN fallback.
 
 Example:
 
@@ -259,8 +259,9 @@ We use one staleness guard everywhere (Prague pages, curated instances, user ins
 - `baseFingerprint` is the canonical staleness guard.
 - Fresh overlays apply when:
   - `overlay.baseFingerprint === computeL10nFingerprint(baseConfig, allowlist)`.
-- Stale overlays may apply **partially** when safe:
-  - Venice compares the current base value at each op path to the published base snapshot for the stale overlay fingerprint.
+- Stale overlays may apply **partially** only in explicitly configured non-public paths:
+  - Safe stale apply compares current base values to the published base snapshot for the stale overlay fingerprint.
+- Venice public snapshot materialization does not use safe stale apply.
 
 This keeps “locale overlays” deterministic across file-based content (Prague pages) and DB-based content (instances).
 

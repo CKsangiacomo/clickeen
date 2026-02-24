@@ -474,6 +474,7 @@ export async function applyTokyoInstanceOverlayWithMeta(args: {
   config: Record<string, unknown>;
   layerContext?: LayerContext;
   explicitLocale?: boolean;
+  allowStaleOverlay?: boolean;
 }): Promise<{ config: Record<string, unknown>; meta: TokyoInstanceL10nMeta }> {
   const requestedLocale = normalizeLocaleToken(args.locale) ?? 'en';
 
@@ -495,6 +496,7 @@ export async function applyTokyoInstanceOverlayWithMeta(args: {
 
   const baseFingerprint = args.baseFingerprint ?? (await computeL10nFingerprint(args.config, allowlist));
   const explicitLocale = args.explicitLocale === true;
+  const allowStaleOverlay = args.allowStaleOverlay !== false;
 
   if (explicitLocale) {
     const overlays = await Promise.all([
@@ -549,7 +551,7 @@ export async function applyTokyoInstanceOverlayWithMeta(args: {
       const entry = index?.layers?.[target.layer];
       const publishedFingerprint = entry?.lastPublishedFingerprint?.[target.key];
 
-      if (publishedFingerprint && publishedFingerprint !== baseFingerprint) {
+      if (allowStaleOverlay && publishedFingerprint && publishedFingerprint !== baseFingerprint) {
         const overlay = await fetchOverlay(args.publicId, target.layer, target.key, publishedFingerprint);
         return { target, overlay, mode: 'stale' as const, overlayFingerprint: publishedFingerprint };
       }
@@ -615,6 +617,7 @@ export async function applyTokyoInstanceOverlay(args: {
   config: Record<string, unknown>;
   layerContext?: LayerContext;
   explicitLocale?: boolean;
+  allowStaleOverlay?: boolean;
 }): Promise<Record<string, unknown>> {
   const result = await applyTokyoInstanceOverlayWithMeta(args);
   return result.config;

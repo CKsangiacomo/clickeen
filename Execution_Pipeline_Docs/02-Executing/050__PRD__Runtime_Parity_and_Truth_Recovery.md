@@ -267,3 +267,31 @@ No `PARTIAL` accepted.
    - `enqueueL10nJobs` no longer performs Paris-side snapshot diff/removal planning or user-overlay rebase execution in the request path.
    - Paris now keeps control-plane responsibilities in this path (authz, fingerprint/state, queue dispatch), and SanFrancisco remains responsible for translation decisioning/execution at job runtime.
    - Boundary + runtime parity suites remained green after this slice (`parityDiff=PASS`).
+16. **Venice snapshot resolution is revision-coherent**
+   - Cross-revision serving was removed from Venice snapshot read paths.
+   - If a locale artifact is missing in the current revision, Venice now falls back only to EN from that same revision.
+   - Snapshot responses now expose `X-Ck-Render-Locale-Source` (`current_locale | current_revision_en_fallback | unavailable`) for deterministic debugging.
+17. **Publish-status contract unified (`status.v2`)**
+   - Paris publish status now emits `status.v2` with `{ baseRevision, baseFingerprint, pointerUpdatedAt, locales }`.
+   - Per-locale status is normalized as `overlayState` (`current|stale|missing`) and `snapshotState` (`current|generating|missing`).
+   - Bob and DevStudio status UIs now prefer `status.v2`, removing divergent host-side interpretation.
+18. **Publish snapshot fanout simplified**
+   - On published base writes, Paris now enqueues EN snapshot first (blocking) and fans out non-EN snapshot enqueue asynchronously (non-blocking).
+   - Tokyo render generation no longer regenerates EN on every non-EN job when EN already exists in the current revision.
+19. **Prague locale boundary tightened (overview hero)**
+   - Overview hero auto-generated embeds now default to the page locale.
+   - Multi-locale hero preview remains explicit-only (via authored hero items), preventing implicit locale mixing between Prague chrome locale and showcased widget locale.
+20. **Validation evidence for this slice**
+   - `pnpm test:paris-boundary` = PASS.
+   - `pnpm test:bob-bootstrap-boundary` = PASS.
+   - `pnpm typecheck` = PASS.
+21. **Publish-immediacy recovery (local runtime parity)**
+   - `POST /render-snapshot` orchestration now enqueues EN first (blocking) and fans out non-EN locales asynchronously.
+   - Publish status `pipeline.overall` now reflects base EN snapshot readiness; locale terminal failures surface as `l10n_failed` (degraded) instead of blocking base-render observability.
+   - Local runtime parity auth suite now passes publish-immediacy end-to-end (`pnpm test:runtime-parity:auth`).
+22. **Publish contract hardened (EN-ready gate on published writes)**
+   - Published create/update flows now block on EN snapshot readiness plus pointer advancement before returning success.
+   - Non-EN locale snapshot fanout remains async and non-blocking.
+23. **`status.v2` locale source finalized**
+   - Paris publish status now emits `status.v2.locales[locale].source` with finite values: `current_locale | current_revision_en_fallback | unavailable`.
+   - This makes Roma and DevStudio locale-state rendering deterministic from one backend contract.
