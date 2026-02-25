@@ -124,16 +124,6 @@
     return 'var(--control-radius-' + normalized + ')';
   }
 
-  function resolveAssetOrigin(widgetRoot) {
-    try {
-      var raw = window.getComputedStyle(widgetRoot).getPropertyValue('--ck-asset-origin');
-      var trimmed = String(raw || '').trim();
-      return trimmed.replace(/\/$/, '');
-    } catch {
-      return '';
-    }
-  }
-
   function normalizeIconName(raw) {
     var v = String(raw || '').trim();
     if (!v) return '';
@@ -320,8 +310,7 @@
     ctaIconEl.hidden = !iconEnabled;
     ctaEl.dataset.iconPlacement = state.cta.iconPlacement;
     if (iconEnabled) {
-      var assetOrigin = resolveAssetOrigin(widgetRoot) || window.location.origin;
-      layoutEl.style.setProperty('--ck-header-cta-icon', 'url("' + assetOrigin + '/dieter/icons/svg/' + iconName + '.svg")');
+      layoutEl.style.setProperty('--ck-header-cta-icon', 'url("/dieter/icons/svg/' + iconName + '.svg")');
     } else {
       layoutEl.style.setProperty('--ck-header-cta-icon', 'none');
     }

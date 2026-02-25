@@ -19,13 +19,6 @@ export type InstanceOverlay = {
   ops: LocalizationOp[];
 };
 
-type InstanceBaseSnapshot = {
-  v: 1;
-  publicId: string;
-  baseFingerprint: string;
-  snapshot: Record<string, string>;
-};
-
 type LayerIndexEntry = {
   keys: string[];
   lastPublishedFingerprint?: Record<string, string>;
@@ -188,28 +181,6 @@ async function fetchLayerIndex(publicId: string): Promise<LayerIndex | null> {
   if (!json || typeof json !== 'object' || json.v !== 1) return null;
   if (!json.layers || typeof json.layers !== 'object') return null;
   return json;
-}
-
-async function fetchBaseSnapshot(publicId: string, baseFingerprint: string): Promise<Record<string, string> | null> {
-  if (!baseFingerprint) return null;
-  const res = await tokyoFetch(
-    `/l10n/instances/${encodeURIComponent(publicId)}/bases/${encodeURIComponent(baseFingerprint)}.snapshot.json`,
-    { method: 'GET' },
-  );
-  if (res.status === 404) return null;
-  if (!res.ok) return null;
-  const json = (await res.json().catch(() => null)) as InstanceBaseSnapshot | null;
-  if (!json || typeof json !== 'object' || json.v !== 1) return null;
-  if (json.publicId && json.publicId !== publicId) return null;
-  if (json.baseFingerprint !== baseFingerprint) return null;
-  if (!json.snapshot || typeof json.snapshot !== 'object' || Array.isArray(json.snapshot)) return null;
-
-  const snapshot: Record<string, string> = {};
-  for (const [key, value] of Object.entries(json.snapshot)) {
-    if (typeof value !== 'string') continue;
-    snapshot[String(key)] = value;
-  }
-  return snapshot;
 }
 
 function normalizeCountryCode(raw?: string | null): string | null {
@@ -404,59 +375,6 @@ export async function resolveTokyoLocale(args: {
   return resolveLocaleFromIndex({ entry: index.layers.locale, locale: normalized, country: args.country }) ?? normalized;
 }
 
-function getAt(obj: unknown, path: string): unknown {
-  const parts = String(path || '')
-    .split('.')
-    .map((p) => p.trim())
-    .filter(Boolean);
-  if (!parts.length) return undefined;
-
-  let current: any = obj;
-  for (const part of parts) {
-    if (current == null) return undefined;
-    if (Array.isArray(current) && isIndex(part)) {
-      current = current[Number(part)];
-      continue;
-    }
-    if (typeof current !== 'object') return undefined;
-    current = (current as any)[part];
-  }
-
-  return current;
-}
-
-function applySafeStaleOps(args: {
-  current: Record<string, unknown>;
-  baseForComparison: Record<string, unknown>;
-  ops: LocalizationOp[];
-  baseSnapshot: Record<string, string>;
-}): { next: Record<string, unknown>; appliedCount: number } {
-  let working: unknown = args.current;
-  let appliedCount = 0;
-
-  for (const op of args.ops) {
-    if (!op || typeof op !== 'object') continue;
-    if (op.op !== 'set') continue;
-    if (typeof op.path !== 'string' || !op.path.trim()) continue;
-    if (hasProhibitedSegment(op.path)) continue;
-    if (op.value === undefined) continue;
-
-    const baseValue = args.baseSnapshot[op.path];
-    if (typeof baseValue !== 'string') continue;
-    const currentValue = getAt(args.baseForComparison, op.path);
-    if (typeof currentValue !== 'string') continue;
-    if (currentValue !== baseValue) continue;
-
-    working = setAt(working, op.path, op.value);
-    appliedCount += 1;
-  }
-
-  return {
-    next: working && typeof working === 'object' && !Array.isArray(working) ? (working as Record<string, unknown>) : args.current,
-    appliedCount,
-  };
-}
-
 export type TokyoInstanceL10nMeta = {
   requestedLocale: string;
   resolvedLocale: string;
@@ -474,7 +392,6 @@ export async function applyTokyoInstanceOverlayWithMeta(args: {
   config: Record<string, unknown>;
   layerContext?: LayerContext;
   explicitLocale?: boolean;
-  allowStaleOverlay?: boolean;
 }): Promise<{ config: Record<string, unknown>; meta: TokyoInstanceL10nMeta }> {
   const requestedLocale = normalizeLocaleToken(args.locale) ?? 'en';
 
@@ -496,7 +413,6 @@ export async function applyTokyoInstanceOverlayWithMeta(args: {
 
   const baseFingerprint = args.baseFingerprint ?? (await computeL10nFingerprint(args.config, allowlist));
   const explicitLocale = args.explicitLocale === true;
-  const allowStaleOverlay = args.allowStaleOverlay !== false;
 
   if (explicitLocale) {
     const overlays = await Promise.all([
@@ -543,27 +459,16 @@ export async function applyTokyoInstanceOverlayWithMeta(args: {
   }
 
   const cappedTargets = targets.slice(0, MAX_LAYER_APPLICATIONS);
-  const baseForComparison = args.config;
-  const snapshotCache = new Map<string, Record<string, string> | null>();
 
   const overlayResults = await Promise.all(
     cappedTargets.map(async (target) => {
-      const entry = index?.layers?.[target.layer];
-      const publishedFingerprint = entry?.lastPublishedFingerprint?.[target.key];
-
-      if (allowStaleOverlay && publishedFingerprint && publishedFingerprint !== baseFingerprint) {
-        const overlay = await fetchOverlay(args.publicId, target.layer, target.key, publishedFingerprint);
-        return { target, overlay, mode: 'stale' as const, overlayFingerprint: publishedFingerprint };
-      }
-
       const overlay = await fetchOverlay(args.publicId, target.layer, target.key, baseFingerprint);
-      return { target, overlay, mode: 'fresh' as const, overlayFingerprint: baseFingerprint };
+      return { target, overlay };
     }),
   );
 
   let localized = args.config;
   let anyL10nApplied = false;
-  let anyStaleApplied = false;
 
   for (const result of overlayResults) {
     if (!result.overlay) continue;
@@ -571,34 +476,13 @@ export async function applyTokyoInstanceOverlayWithMeta(args: {
     const ops = result.overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as LocalizationOp[];
     if (!ops.length) continue;
 
-    if (result.mode === 'fresh') {
-      localized = applySetOps(localized, ops);
-      if (result.target.layer === 'locale' || result.target.layer === 'user') {
-        anyL10nApplied = true;
-      }
-      continue;
-    }
-
-    const fingerprint = result.overlayFingerprint;
-    if (!fingerprint) continue;
-
-    let baseSnapshot = snapshotCache.get(fingerprint) ?? null;
-    if (!snapshotCache.has(fingerprint)) {
-      baseSnapshot = await fetchBaseSnapshot(args.publicId, fingerprint).catch(() => null);
-      snapshotCache.set(fingerprint, baseSnapshot);
-    }
-    if (!baseSnapshot) continue;
-
-    const applied = applySafeStaleOps({ current: localized, baseForComparison, ops, baseSnapshot });
-    localized = applied.next;
-    if (applied.appliedCount > 0 && (result.target.layer === 'locale' || result.target.layer === 'user')) {
+    localized = applySetOps(localized, ops);
+    if (result.target.layer === 'locale' || result.target.layer === 'user') {
       anyL10nApplied = true;
-      anyStaleApplied = true;
     }
   }
 
-  const status: CkL10nStatus =
-    resolvedLocale === 'en' ? 'base' : anyL10nApplied ? (anyStaleApplied ? 'stale' : 'fresh') : 'base';
+  const status: CkL10nStatus = resolvedLocale === 'en' ? 'base' : anyL10nApplied ? 'fresh' : 'base';
   const effectiveLocale = status === 'base' ? 'en' : resolvedLocale;
 
   return {
@@ -617,7 +501,6 @@ export async function applyTokyoInstanceOverlay(args: {
   config: Record<string, unknown>;
   layerContext?: LayerContext;
   explicitLocale?: boolean;
-  allowStaleOverlay?: boolean;
 }): Promise<Record<string, unknown>> {
   const result = await applyTokyoInstanceOverlayWithMeta(args);
   return result.config;

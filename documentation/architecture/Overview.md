@@ -32,7 +32,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 | Principle | Rule |
 |-----------|------|
-| **No Fallbacks** | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Public renders must be revision-coherent (single published revision, with same-revision EN fallback only). |
+| **No Fallbacks** | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Public renders must be revision-coherent (single published revision; missing locale artifacts fail visibly). |
 | **Widget Files = Truth** | Core runtime files + contract files in `tokyo/widgets/{name}/` define widget behavior and validation. |
 | **Orchestrators = Dumb Pipes** | Bob/Paris/Venice avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. overlay composition) but must not “fix” state ad hoc. |
 | **Dieter Tokens** | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB. |
@@ -56,8 +56,8 @@ Mutable pointer  (tiny, always fetched fresh)
 
 | Domain | Mutable pointer | Immutable artifact |
 |--------|----------------|--------------------|
-| **Publish** | `published.json` (`no-store`) | Render snapshot at `/arsenale/o/:revision/` (cache forever) |
-| **Assets** | `/arsenale/a/:accountId/:assetId` | Uploaded bytes at content address |
+| **Publish** | `published.json` (`no-store`) | Render artifacts at `/renders/instances/{publicId}/{fingerprint}/...` (cache forever) |
+| **Assets** | *(none in runtime contract; config stores immutable `asset.versionId` refs)* | Asset bytes at `/assets/v/{encodeURIComponent(versionKey)}` |
 | **Auth** | JWT (short-lived, refreshable) | userId claim (stable identity) |
 | **Authz** | HMAC-signed capsule (expires) | Role/account/workspace snapshot at issuance |
 | **Overlays** | Layer pointer in DB | Materialized overlay file on R2 (fingerprinted) |
@@ -190,26 +190,26 @@ Each release proceeds in 3 steps:
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
-  - Publish control-plane writes are transactional for base/account usage persistence; EN snapshot enqueue is blocking, while non-EN snapshot fanout is async and non-blocking.
+- Publish control-plane writes are transactional for base/account usage persistence; snapshot enqueue is atomic across active locales and pointer advancement is gated on successful publish.
 
 #### Venice (Workers)
 - Public embed surface (third-party websites only talk to Venice).
 - Runtime combines Tokyo widget assets with Paris instance config and locale overlays from Tokyo.
 - Public snapshot serving is revision-coherent: Venice reads one published revision and never mixes artifacts from previous revisions.
-- If a locale artifact is missing in the current revision, Venice falls back to EN from the same revision.
+- If a locale artifact is missing in the current revision, Venice returns unavailable for that locale (no serve-time locale fallback).
 - Public `/e/:publicId` and `/r/:publicId` serve snapshots from published pointers only (no public dynamic fallback). Dynamic rendering is restricted to controlled internal bypass.
 
 #### Tokyo (R2)
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
 - **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
-- Serves materialized instance l10n overlays (`/l10n/**`) published from Supabase (including per-fingerprint base snapshots used for safe stale apply).
+- Serves materialized instance l10n overlays (`/l10n/**`) published from Supabase (including per-fingerprint base snapshots for diagnostics/non-public tooling).
 - Prague website base copy lives in `tokyo/widgets/*/pages/*.json` (single source per page), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 #### Tokyo Worker (Workers + Queues)
 - Handles canonical account-owned uploads (`POST /assets/upload`) and stores metadata in Michael (`account_assets`, `account_asset_variants`).
 - Asset usage ("where used") is tracked by Paris in `account_asset_usage` via deterministic sync on instance config writes/publishes.
-- Serves revocable account asset pointer reads (`GET /arsenale/a/{accountId}/{assetId}`) with legacy object-path compatibility (`GET /arsenale/o/**`).
-- Asset delete is immediate revoke (`deleted_at` -> non-servable); physical blob purge is async (`POST /assets/purge-deleted`).
+- Serves immutable account asset version reads (`GET /assets/v/{versionKey}`); legacy `/arsenale/*` paths are hard-failed.
+- Asset delete is synchronous legal pipeline: metadata + blob delete + CDN purge-by-URL + impacted snapshot rebuild enqueue.
 - Reads `widget_instance_overlays` from Supabase (layered), merges `ops + user_ops` for layer=user, and publishes overlays to Tokyo/R2.
 - Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path using revisioned indices + atomic published pointer flip.
 
@@ -218,7 +218,7 @@ Each release proceeds in 3 steps:
 - Workspace is a projection boundary for UX queries (`used_in_workspace`, `created_in_workspace`), not an ownership boundary.
 - End-to-end flow:
   1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional workspace/public/widget trace headers).
-  2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`) and returns canonical pointer URL (`/arsenale/a/{accountId}/{assetId}`).
+  2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`) and returns canonical immutable version URL (`/assets/v/{encodeURIComponent(versionKey)}`).
   3. Paris validates/syncs usage mappings (`account_asset_usage`) from instance config writes in the same request path.
   4. Roma Assets reads/deletes via account endpoints (`/api/accounts/:accountId/assets*`) and optionally applies workspace projection.
 

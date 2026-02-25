@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   applySessionCookies,
+  PARIS_PROXY_READ_TIMEOUT_MS,
+  PARIS_PROXY_WRITE_TIMEOUT_MS,
   fetchWithTimeout,
   proxyErrorResponse,
   resolveParisBaseOrResponse,
@@ -72,6 +74,7 @@ async function forwardInstance(
   }
 
   try {
+    const timeoutMs = init.method === 'PUT' ? PARIS_PROXY_WRITE_TIMEOUT_MS : PARIS_PROXY_READ_TIMEOUT_MS;
     const res = await fetchWithTimeout(
       url.toString(),
       {
@@ -80,7 +83,7 @@ async function forwardInstance(
         body: init.body,
         cache: 'no-store',
       },
-      5000,
+      timeoutMs,
     );
 
     const text = await res.text();

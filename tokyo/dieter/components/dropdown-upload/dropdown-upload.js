@@ -99,8 +99,8 @@ var Dieter = (() => {
   // ../tooling/ck-contracts/src/index.js
   var WIDGET_PUBLIC_ID_RE = /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
   var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  var ASSET_POINTER_PATH_RE = /^\/arsenale\/a\/([^/]+)\/([^/]+)$/;
-  var ASSET_OBJECT_PATH_RE = /^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
+  var ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
+  var ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
   var CK_ERROR_CODE = Object.freeze({
     VALIDATION: "VALIDATION",
     NOT_FOUND: "NOT_FOUND",
@@ -141,6 +141,17 @@ var Dieter = (() => {
       return null;
     }
   }
+  function decodeAssetVersionToken(raw) {
+    const token = decodePathPart(raw);
+    if (!token) return null;
+    try {
+      const key = decodeURIComponent(token).trim();
+      if (!key || key.startsWith("/") || key.includes("..")) return null;
+      return key;
+    } catch {
+      return null;
+    }
+  }
   function isUuid(raw) {
     const value = typeof raw === "string" ? raw.trim() : "";
     return Boolean(value && UUID_RE.test(value));
@@ -148,19 +159,29 @@ var Dieter = (() => {
   function parseCanonicalAssetRef(raw) {
     const pathname = pathnameFromRawAssetRef(raw);
     if (!pathname) return null;
-    const pointer = pathname.match(ASSET_POINTER_PATH_RE);
-    if (pointer) {
-      const accountId2 = decodePathPart(pointer[1]);
-      const assetId2 = decodePathPart(pointer[2]);
-      if (!isUuid(accountId2) || !isUuid(assetId2)) return null;
-      return { accountId: accountId2, assetId: assetId2, kind: "pointer", pathname };
-    }
-    const object = pathname.match(ASSET_OBJECT_PATH_RE);
-    if (!object) return null;
-    const accountId = decodePathPart(object[1]);
-    const assetId = decodePathPart(object[2]);
+    const version = pathname.match(ASSET_VERSION_PATH_RE);
+    if (!version) return null;
+    const versionToken = decodePathPart(version[1]);
+    const versionKey = decodeAssetVersionToken(versionToken);
+    if (!versionKey) return null;
+    const keyMatch = versionKey.match(ASSET_VERSION_KEY_RE);
+    if (!keyMatch) return null;
+    const accountId = decodePathPart(keyMatch[1]);
+    const assetId = decodePathPart(keyMatch[2]);
     if (!isUuid(accountId) || !isUuid(assetId)) return null;
-    return { accountId, assetId, kind: "object", pathname };
+    return {
+      accountId,
+      assetId,
+      kind: "version",
+      pathname,
+      versionToken,
+      versionKey
+    };
+  }
+  function toCanonicalAssetVersionPath(versionKey) {
+    const key = typeof versionKey === "string" ? versionKey.trim() : "";
+    if (!key || key.startsWith("/") || key.includes("..") || !ASSET_VERSION_KEY_RE.test(key)) return null;
+    return `/assets/v/${encodeURIComponent(key)}`;
   }
 
   // components/shared/assetUpload.ts
@@ -201,7 +222,7 @@ var Dieter = (() => {
     const direct = typeof payload.url === "string" ? payload.url.trim() : "";
     if (!direct) return null;
     const parsed = parseCanonicalAssetRef(direct);
-    if (!parsed || parsed.kind !== "pointer") return null;
+    if (!parsed || parsed.kind !== "version") return null;
     if (/^https?:\/\//i.test(direct)) return direct;
     return parsed.pathname;
   }
@@ -438,9 +459,17 @@ var Dieter = (() => {
           variant: "original",
           source: "api"
         });
+        const uploadedVersionId = parseCanonicalAssetVersionId(uploadedUrl);
+        const existingMeta = readMeta(state);
+        const nextMeta = {
+          ...existingMeta || {},
+          name: file.name
+        };
+        if (uploadedVersionId) nextMeta.versionId = uploadedVersionId;
+        else delete nextMeta.versionId;
         const { kind, ext } = classifyByNameAndType(file.name, file.type);
         state.root.dataset.localName = file.name;
-        setMetaValue(state, { name: file.name }, true);
+        setMetaValue(state, nextMeta, true);
         setHeaderWithFile(state, file.name, false);
         setPreview(state, {
           kind,
@@ -449,7 +478,7 @@ var Dieter = (() => {
           ext,
           hasFile: true
         });
-        setFileKey(state, uploadedUrl, true);
+        setFileKey(state, uploadedVersionId ? "transparent" : uploadedUrl, true);
         clearError(state);
       } catch (error2) {
         const message = error2 instanceof Error ? error2.message : "coreui.errors.assets.uploadFailed";
@@ -521,10 +550,6 @@ var Dieter = (() => {
     }
     return null;
   }
-  function looksLikeUrl(raw) {
-    const url = extractPrimaryUrl(raw);
-    return Boolean(url && (/^https?:\/\//i.test(url) || url.startsWith("/")));
-  }
   function sameAssetUrl(leftRaw, rightRaw) {
     const left = normalizeUrlForCompare(leftRaw);
     const right = normalizeUrlForCompare(rightRaw);
@@ -541,6 +566,18 @@ var Dieter = (() => {
       return value;
     }
   }
+  function parseCanonicalAssetVersionId(raw) {
+    const parsed = parseCanonicalAssetRef(raw);
+    if (!parsed || parsed.kind !== "version") return null;
+    const versionId = String(parsed.versionKey || "").trim();
+    return versionId || null;
+  }
+  function assetUrlFromMeta(meta) {
+    const versionId = typeof meta?.versionId === "string" ? meta.versionId.trim() : "";
+    if (!versionId) return "";
+    const path = toCanonicalAssetVersionPath(versionId);
+    return path || "";
+  }
   function previewFromUrl(state, raw, name, kindName) {
     const url = extractPrimaryUrl(raw);
     if (!url) return;
@@ -554,12 +591,13 @@ var Dieter = (() => {
     const placeholder = state.headerValue?.dataset.placeholder ?? "";
     const metaName = typeof meta?.name === "string" ? meta.name.trim() : "";
     const expectsMeta = state.metaHasPath;
-    const rawUrl = extractPrimaryUrl(key) || "";
+    const metaUrl = assetUrlFromMeta(meta);
+    const rawUrl = metaUrl || extractPrimaryUrl(key) || "";
     const kindName = metaName || guessNameFromUrl(rawUrl) || "";
     const guessedUrlName = guessNameFromUrl(rawUrl);
     const fallbackName = expectsMeta ? "" : state.root.dataset.localName || guessedUrlName || (rawUrl ? "Uploaded file" : key || "Uploaded file");
     const displayName = metaName || fallbackName || (expectsMeta ? "Unnamed file" : "Uploaded file");
-    if (!key) {
+    if (!key && !rawUrl) {
       clearError(state);
       setHeaderEmpty(state, placeholder);
       state.root.dataset.hasFile = "false";
@@ -568,15 +606,15 @@ var Dieter = (() => {
       return;
     }
     state.root.dataset.hasFile = "true";
-    const hasMetaError = expectsMeta && !metaName;
+    const hasMetaError = expectsMeta && !metaName && !rawUrl;
     if (hasMetaError) {
       setError(state, "Missing file metadata.");
     } else {
       clearError(state);
     }
-    if (looksLikeUrl(key)) {
+    if (rawUrl) {
       setHeaderWithFile(state, displayName, false);
-      previewFromUrl(state, key, displayName, kindName || displayName);
+      previewFromUrl(state, rawUrl, displayName, kindName || displayName);
       return;
     }
     setPreview(state, { kind: "unknown", previewUrl: void 0, name: "", ext: "", hasFile: true });

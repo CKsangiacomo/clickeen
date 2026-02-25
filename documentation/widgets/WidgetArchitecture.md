@@ -110,12 +110,12 @@ Location: `tokyo/widgets/shared/`
 ---
 
 ## Asset origin
-When widget code executes in the host page (shadow embed), origin-relative URLs will 404.
-Venice sets:
-```js
-window.CK_ASSET_ORIGIN = "https://venice.clickeen.com"
-```
-Widgets must use this for `/dieter/*` and `/widgets/*` assets.
+Widgets must use canonical root-relative asset paths:
+- `/assets/v/*` for account-owned immutable assets
+- `/dieter/*` for design-system assets
+- `/widgets/*` for widget package assets
+
+Runtime must not depend on `window.CK_ASSET_ORIGIN`; Venice owns proxying these paths on the public embed origin.
 
 ---
 

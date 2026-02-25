@@ -1,17 +1,17 @@
 import { getEntitlementsMatrix } from '@clickeen/ck-policy';
 import {
-  ASSET_POINTER_PATH_RE,
   isUuid,
   normalizeWidgetPublicId,
-  toCanonicalAssetPointerPath,
+  parseCanonicalAssetRef,
+  toCanonicalAssetVersionPath,
 } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
-  handleGetAccountAssetPointer,
   handleReplaceAccountAssetContent,
   handleUploadAccountAsset,
+  upsertInstanceRenderHealth,
 } from './domains/assets';
 import {
   deleteLayerArtifacts,
@@ -43,11 +43,12 @@ import {
   normalizeRenderLocales,
   normalizeRenderRevision,
   renderArtifactKey,
-  renderIndexKey,
   renderPublishedPointerKey,
   renderRevisionIndexKey,
   type RenderSnapshotQueueJob,
 } from './domains/render';
+
+export { generateRenderSnapshots };
 
 export type Env = {
   TOKYO_DEV_JWT: string;
@@ -62,6 +63,8 @@ export type Env = {
   SUPABASE_JWT_AUDIENCE?: string;
   TOKYO_L10N_HTTP_BASE?: string;
   VENICE_INTERNAL_BYPASS_TOKEN?: string;
+  CLOUDFLARE_ZONE_ID?: string;
+  CLOUDFLARE_API_TOKEN?: string;
 };
 
 export function json(payload: unknown, init?: ResponseInit) {
@@ -313,7 +316,7 @@ export function sanitizeUploadFilename(filename: string | null, ext: string, var
   return `${safeStem}.${safeExt}`;
 }
 
-const ACCOUNT_ASSET_CANONICAL_PREFIX = 'arsenale/o/';
+const ACCOUNT_ASSET_CANONICAL_PREFIX = 'assets/versions/';
 
 export function buildAccountAssetKey(accountId: string, assetId: string, variant: string, filename: string): string {
   const normalizedVariant = String(variant || '').trim().toLowerCase();
@@ -362,10 +365,10 @@ export function normalizeAccountAssetReadKey(pathname: string): string | null {
 
 type AccountAssetIdentity = { accountId: string; assetId: string };
 
-export function buildAccountAssetPointerPath(accountId: string, assetId: string): string {
-  const pointerPath = toCanonicalAssetPointerPath(accountId, assetId);
-  if (!pointerPath) throw new Error('[tokyo] invalid account asset identity for pointer path');
-  return pointerPath;
+export function buildAccountAssetVersionPath(versionKey: string): string {
+  const versionPath = toCanonicalAssetVersionPath(versionKey);
+  if (!versionPath) throw new Error('[tokyo] invalid account asset version key');
+  return versionPath;
 }
 
 export function parseAccountAssetIdentityFromKey(key: string): AccountAssetIdentity | null {
@@ -472,6 +475,56 @@ export function normalizeLocale(raw: unknown): string | null {
   return value;
 }
 
+function extractSnapshotLocalesFromL10nIndex(payload: unknown): string[] {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return ['en'];
+  const layers = (payload as any).layers;
+  if (!layers || typeof layers !== 'object' || Array.isArray(layers)) return ['en'];
+
+  const out: string[] = ['en'];
+  const seen = new Set<string>(out);
+  const appendLayerLocales = (layerName: 'locale' | 'user') => {
+    const layer = (layers as any)[layerName];
+    const keys = Array.isArray(layer?.keys) ? layer.keys : [];
+    for (const raw of keys) {
+      const key = typeof raw === 'string' ? raw.trim() : '';
+      if (!key) continue;
+      if (layerName === 'user' && key === 'global') continue;
+      const normalized = normalizeLocale(key);
+      if (!normalized || seen.has(normalized)) continue;
+      seen.add(normalized);
+      out.push(normalized);
+    }
+  };
+
+  appendLayerLocales('locale');
+  appendLayerLocales('user');
+  return out;
+}
+
+export async function loadSnapshotLocalesFromL10nIndex(args: {
+  env: Env;
+  publicId: string;
+  changedLayerKey?: string | null;
+}): Promise<string[]> {
+  const fallback = ['en'];
+  const changedLocale = normalizeLocale(args.changedLayerKey ?? null);
+  if (changedLocale && changedLocale !== 'en') fallback.push(changedLocale);
+
+  try {
+    const key = `l10n/instances/${args.publicId}/index.json`;
+    const obj = await args.env.TOKYO_R2.get(key);
+    if (!obj) return fallback;
+    const raw = await obj.text();
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    const locales = extractSnapshotLocalesFromL10nIndex(parsed);
+    if (changedLocale && !locales.includes(changedLocale)) locales.push(changedLocale);
+    return locales.length ? locales : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function normalizeSha256Hex(raw: unknown): string | null {
   const value = String(raw || '').trim().toLowerCase();
   if (!/^[a-f0-9]{64}$/.test(value)) return null;
@@ -513,14 +566,6 @@ export default {
         return withCors(json({ up: true }, { status: 200 }));
       }
 
-      const renderIndexMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/index\.json$/);
-      if (renderIndexMatch) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const publicId = normalizePublicId(decodeURIComponent(renderIndexMatch[1]));
-        if (!publicId) return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
-        return withCors(await handleGetRenderObject(env, renderIndexKey(publicId), 'public, max-age=60, s-maxage=60'));
-      }
-
       const renderPublishedPointerMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/published\.json$/);
       if (renderPublishedPointerMatch) {
         if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
@@ -548,6 +593,23 @@ export default {
             env,
             renderRevisionIndexKey(publicId, revision),
             'public, max-age=31536000, immutable',
+          ),
+        );
+      }
+
+      const renderLegacyIndexMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/index\.json$/);
+      if (renderLegacyIndexMatch) {
+        return withCors(
+          json(
+            {
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: 'tokyo.errors.render.legacyIndexUnsupported',
+                detail:
+                  'Legacy /renders/instances/{publicId}/index.json is not supported. Use /published.json + /revisions/{revision}/index.json.',
+              },
+            },
+            { status: 410 },
           ),
         );
       }
@@ -588,9 +650,40 @@ export default {
           await deleteRenderIndex(env, publicId);
           return withCors(json({ ok: true, publicId, action }, { status: 200 }));
         }
-        const locales = normalizeRenderLocales(payload?.locales);
-        await generateRenderSnapshots({ env, publicId, locales: locales.length ? locales : ['en'] });
-        return withCors(json({ ok: true, publicId, action, locales: locales.length ? locales : ['en'] }, { status: 200 }));
+        try {
+          const locales = normalizeRenderLocales(payload?.locales);
+          const resolvedLocales = locales.length
+            ? locales
+            : await loadSnapshotLocalesFromL10nIndex({
+                env,
+                publicId,
+              });
+          await generateRenderSnapshots({ env, publicId, locales: resolvedLocales });
+          try {
+            await upsertInstanceRenderHealth(env, {
+              publicId,
+              status: 'healthy',
+              reason: 'snapshot_revision_published',
+              detail: null,
+            });
+          } catch (healthErr) {
+            console.error('[tokyo] render health update failed (manual snapshot success)', healthErr);
+          }
+          return withCors(json({ ok: true, publicId, action, locales: resolvedLocales }, { status: 200 }));
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
+          try {
+            await upsertInstanceRenderHealth(env, {
+              publicId,
+              status: 'error',
+              reason: 'snapshot_generation_failed',
+              detail,
+            });
+          } catch (healthErr) {
+            console.error('[tokyo] render health update failed (manual snapshot failure)', healthErr);
+          }
+          throw error;
+        }
       }
 
       if (pathname === '/l10n/publish') {
@@ -603,6 +696,18 @@ export default {
         return withCors(await handleUploadAccountAsset(req, env));
       }
 
+      const accountAssetVersion = parseCanonicalAssetRef(pathname);
+      if (accountAssetVersion) {
+        if (req.method !== 'GET' && req.method !== 'HEAD') {
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        }
+        const response = await handleGetAccountAsset(env, accountAssetVersion.versionKey);
+        if (req.method === 'HEAD') {
+          return withCors(new Response(null, { status: response.status, headers: response.headers }));
+        }
+        return withCors(response);
+      }
+
       const accountAssetMatch = pathname.match(/^\/assets\/([^/]+)\/([^/]+)$/);
       if (accountAssetMatch) {
         const accountId = decodeURIComponent(accountAssetMatch[1] || '');
@@ -611,27 +716,9 @@ export default {
           return withCors(await handleReplaceAccountAssetContent(req, env, accountId, assetId));
         }
         if (req.method === 'DELETE') {
-          return withCors(await handleDeleteAccountAsset(req, env, ctx, accountId, assetId));
+          return withCors(await handleDeleteAccountAsset(req, env, accountId, assetId));
         }
         return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-      }
-
-      const accountAssetPointerMatch = pathname.match(ASSET_POINTER_PATH_RE);
-      if (accountAssetPointerMatch) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        return withCors(
-          await handleGetAccountAssetPointer(
-            env,
-            decodeURIComponent(accountAssetPointerMatch[1] || ''),
-            decodeURIComponent(accountAssetPointerMatch[2] || ''),
-          ),
-        );
-      }
-
-      if (pathname.startsWith('/arsenale/o/')) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const key = pathname.replace(/^\//, '');
-        return withCors(await handleGetAccountAsset(env, key));
       }
 
       if (pathname.startsWith('/fonts/')) {
@@ -715,10 +802,37 @@ export default {
             await deleteRenderIndex(env, publicId);
           } else {
             const locales = normalizeRenderLocales(body.locales);
-            await generateRenderSnapshots({ env, publicId, locales: locales.length ? locales : ['en'] });
+            const resolvedLocales = locales.length
+              ? locales
+              : await loadSnapshotLocalesFromL10nIndex({
+                  env,
+                  publicId,
+                });
+            await generateRenderSnapshots({ env, publicId, locales: resolvedLocales });
+            try {
+              await upsertInstanceRenderHealth(env, {
+                publicId,
+                status: 'healthy',
+                reason: 'snapshot_revision_published',
+                detail: null,
+              });
+            } catch (healthErr) {
+              console.error('[tokyo] render health update failed (snapshot queue success)', healthErr);
+            }
           }
         } catch (err) {
           console.error('[tokyo] render snapshot job failed', err);
+          const detail = err instanceof Error ? err.message : String(err);
+          try {
+            await upsertInstanceRenderHealth(env, {
+              publicId,
+              status: 'error',
+              reason: 'snapshot_generation_failed',
+              detail,
+            });
+          } catch (healthErr) {
+            console.error('[tokyo] render health update failed (snapshot queue failure)', healthErr);
+          }
         }
         continue;
       }
@@ -749,11 +863,16 @@ export default {
         }
 
         if ((layer === 'locale' || layer === 'user') && env.RENDER_SNAPSHOT_QUEUE) {
+          const locales = await loadSnapshotLocalesFromL10nIndex({
+            env,
+            publicId,
+            changedLayerKey: layerKey,
+          });
           await env.RENDER_SNAPSHOT_QUEUE.send({
             v: 1,
             kind: 'render-snapshot',
             publicId,
-            locales: [layerKey],
+            locales,
             action: 'upsert',
           });
         }

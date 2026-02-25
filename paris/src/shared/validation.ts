@@ -1,5 +1,5 @@
 import { ckError } from './errors';
-import { isUuid as isContractUuid, parseCanonicalAssetRef } from '@clickeen/ck-contracts';
+import { isUuid as isContractUuid, parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 
 export function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -81,6 +81,23 @@ function isLikelyAssetFieldPath(path: string): boolean {
   return /(?:^|[\].])(?:src|poster|logoFill)$/.test(String(path || ''));
 }
 
+function isLogoFillFieldPath(path: string): boolean {
+  return /(?:^|[\].])logoFill$/.test(String(path || ''));
+}
+
+function isAssetVersionIdFieldPath(path: string): boolean {
+  return /(?:^|[\].])(?:asset|poster)\.versionId$/.test(String(path || ''));
+}
+
+function isLegacyPersistedFillMediaFieldPath(path: string): boolean {
+  const value = String(path || '');
+  return (
+    /(?:^|[\].])fill\.(?:image|video)\.src$/.test(value) ||
+    /(?:^|[\].])fill\.video\.posterSrc$/.test(value) ||
+    /(?:^|[\].])fill\.video\.poster$/.test(value)
+  );
+}
+
 export function configAssetUrlContractIssues(
   config: unknown,
   expectedAccountId?: string | null,
@@ -105,28 +122,26 @@ export function configAssetUrlContractIssues(
       return;
     }
 
-    if (pathname.startsWith('/arsenale/a/') || pathname.startsWith('/arsenale/o/')) {
-      const parsed = parseCanonicalAccountAssetPath(pathname);
-      if (!parsed) {
+    if (pathname.startsWith('/arsenale/')) {
+      issues.push({
+        path,
+        message: `Legacy asset URL path is not supported: ${candidate}. Use asset.versionId refs only.`,
+      });
+      return;
+    }
+
+    if (pathname.startsWith('/assets/v/')) {
+      if (isLogoFillFieldPath(path)) {
         issues.push({
           path,
-          message: `Unsupported asset URL path: ${candidate}`,
+          message: `Persisted logoFill asset URL is not supported at ${path}. Use asset.versionId refs only.`,
         });
         return;
       }
-      if (!isUuid(parsed.accountId) || !isUuid(parsed.assetId)) {
-        issues.push({
-          path,
-          message: `Asset URL must include valid accountId/assetId UUIDs: ${candidate}`,
-        });
-        return;
-      }
-      if (expectedAccount && parsed.accountId !== expectedAccount) {
-        issues.push({
-          path,
-          message: `Asset URL account mismatch at ${path}: expected ${expectedAccount}, got ${parsed.accountId}`,
-        });
-      }
+      issues.push({
+        path,
+        message: `Persisted asset URL path is not supported at ${path}. Use asset.versionId refs only.`,
+      });
       return;
     }
 
@@ -146,8 +161,57 @@ export function configAssetUrlContractIssues(
     });
   };
 
+  const inspectVersionIdCandidate = (candidateRaw: string, path: string) => {
+    const candidate = String(candidateRaw || '').trim();
+    if (!candidate) {
+      issues.push({
+        path,
+        message: 'Asset version id is required',
+      });
+      return;
+    }
+
+    const canonicalPath = toCanonicalAssetVersionPath(candidate);
+    if (!canonicalPath) {
+      issues.push({
+        path,
+        message: `Asset version id must be a canonical immutable key: ${candidate}`,
+      });
+      return;
+    }
+
+    const parsed = parseCanonicalAccountAssetPath(canonicalPath);
+    if (!parsed || !isUuid(parsed.accountId) || !isUuid(parsed.assetId)) {
+      issues.push({
+        path,
+        message: `Asset version id is invalid: ${candidate}`,
+      });
+      return;
+    }
+
+    if (expectedAccount && parsed.accountId !== expectedAccount) {
+      issues.push({
+        path,
+        message: `Asset version account mismatch at ${path}: expected ${expectedAccount}, got ${parsed.accountId}`,
+      });
+    }
+  };
+
   const visit = (node: unknown, path: string) => {
     if (typeof node === 'string') {
+      if (isLegacyPersistedFillMediaFieldPath(path)) {
+        issues.push({
+          path,
+          message: `Persisted media URL fields are not supported at ${path}. Use asset.versionId refs only.`,
+        });
+        return;
+      }
+
+      if (isAssetVersionIdFieldPath(path)) {
+        inspectVersionIdCandidate(node, path);
+        return;
+      }
+
       let matchedCssUrl = false;
       let match: RegExpExecArray | null = urlPattern.exec(node);
       while (match) {

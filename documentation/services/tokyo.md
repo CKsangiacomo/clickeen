@@ -69,14 +69,15 @@ Rules:
 
 Local dev:
 - `tokyo/dev-server.mjs` serves `/i18n/*` from `tokyo/i18n/*`.
-- `tokyo/dev-server.mjs` proxies canonical account asset reads (`/arsenale/o/*`) directly to `tokyo-worker` (no local mirror mode).
+- `tokyo/dev-server.mjs` proxies canonical account asset reads (`/assets/v/*`) directly to `tokyo-worker` (no local mirror mode).
 - `tokyo/dev-server.mjs` proxies `POST /assets/upload` directly to `tokyo-worker` (same authority path as cloud-dev/prod).
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` (so Venice can fetch published render snapshots from the same Tokyo origin).
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
 - `tokyo/dev-server.mjs` supports local upload endpoints:
   - `POST /assets/upload` (account-owned uploads; required header: `x-account-id`; optional trace headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`)
-  - `POST /assets/purge-deleted` (internal retention helper; optional `retentionDays`, `limit`, `dryRun`)
+  - `PUT /assets/:accountId/:assetId` (atomic content replace)
+  - `DELETE /assets/:accountId/:assetId` (synchronous legal delete pipeline + impacted snapshot rebuild)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
   - `POST /l10n/instances/:publicId/:layer/:layerKey` (dev-only; layered path)
   - `DELETE /l10n/instances/:publicId/:layer/:layerKey` (dev-only; layered path)
@@ -108,8 +109,9 @@ Build command (repo root):
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
   - `POST /assets/upload` (requires `Authorization: Bearer <token>`; accepts Supabase session bearer for product uploads, or `TOKYO_DEV_JWT` for internal/dev automation. Required headers: `x-account-id`, `x-workspace-id`; optional trace headers: `x-public-id`, `x-widget-type`, `x-source`)
-  - `POST /assets/purge-deleted` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; retention purge for soft-deleted account assets)
-  - `GET /arsenale/o/**` (public, cacheable; canonical account-owned asset reads)
+  - `PUT /assets/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; atomic content replace)
+  - `DELETE /assets/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; synchronous delete pipeline)
+  - `GET /assets/v/:versionKey` (public, immutable, cacheable; canonical account-owned asset reads)
   - `POST /l10n/instances/:publicId/:layer/:layerKey` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /l10n/**` (public; deterministic overlay paths; immutable by fingerprint, except `index.json`)
   - `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague)

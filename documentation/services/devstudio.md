@@ -48,14 +48,15 @@ DevStudio Local supports curated instances as the single primitive:
 - **Translate locales**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=workspace` to enqueue locale jobs for the workspace active locale set.
 
 Notes:
-- Asset controls upload immediately at edit-time; DevStudio write actions now assume config already contains canonical Tokyo `/arsenale/o/**` URLs (no pre-save blob/data persistence pass).
+- Asset controls upload immediately at edit-time; DevStudio write actions now assume config already contains canonical immutable `/assets/v/**` URLs (no pre-save blob/data persistence pass).
 - Curated IDs are locale-free; do not create `wgt_curated_*.<locale>` variants. Locale is a runtime query param.
 - Curated metadata lives in `curated_widget_instances.meta`: `{ styleName, styleSlug, variants? }`.
 - DevStudio create flow keeps this intentionally minimal: required instance name + optional `variant`/`sub-variant`.
 - DevStudio uploads through the canonical Tokyo account route (`POST /assets/upload`) with explicit `x-account-id` + `x-workspace-id`.
-- Curated/main flows use `PLATFORM_ACCOUNT_ID`; resulting URLs are canonical account paths:
-  - original variant: `/arsenale/o/{accountId}/{assetId}/{filename}`
-  - non-original variants: `/arsenale/o/{accountId}/{assetId}/{variant}/{filename}`
+- Curated/main flows use `PLATFORM_ACCOUNT_ID`; resulting URLs are canonical immutable version paths:
+  - original variant key: `assets/versions/{accountId}/{assetId}/{filename}`
+  - non-original variant key: `assets/versions/{accountId}/{assetId}/{variant}/{filename}`
+  - persisted runtime URL: `/assets/v/{encodeURIComponent(versionKey)}`
 - Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are invalid for DevStudio flows.
 - Curated actions export the current editor state from Bob (not the last published config).
 

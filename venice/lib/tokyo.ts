@@ -1,7 +1,6 @@
 const TOKYO_BASE_ENV_KEYS = 'TOKYO_URL/TOKYO_BASE_URL/NEXT_PUBLIC_TOKYO_URL';
 const TOKYO_LEGACY_PATH_PREFIXES = new Set([
   '/assets',
-  '/arsenale',
   '/dieter',
   '/widgets',
   '/renders',
@@ -55,8 +54,7 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isL10nBaseSnapshot = isL10n && normalized.includes('/bases/') && normalized.endsWith('.snapshot.json');
   const isI18n = normalized.startsWith('/i18n/');
   const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
-  const isAccountAssetObject = normalized.startsWith('/arsenale/o/');
-  const isAccountAssetPointer = normalized.startsWith('/arsenale/a/');
+  const isAccountAssetVersion = normalized.startsWith('/assets/v/');
   const isRender = normalized.startsWith('/renders/');
   const isRenderPublishedPointer = isRender && normalized.endsWith('/published.json');
   const isRenderRevisionIndex = /^\/renders\/instances\/[^/]+\/revisions\/[^/]+\/index\.json$/i.test(normalized);
@@ -70,11 +68,8 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isWidget = normalized.startsWith('/widgets/');
   const isFont = normalized.startsWith('/fonts/');
 
-  if (isL10nOverlay || isL10nBaseSnapshot || isAccountAssetObject || isRenderArtifact || isRenderRevisionIndex) {
+  if (isL10nOverlay || isL10nBaseSnapshot || isAccountAssetVersion || isRenderArtifact || isRenderRevisionIndex) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
-  }
-  if (isAccountAssetPointer) {
-    return { cache: 'no-store' };
   }
   if (isRenderPublishedPointer) {
     return { cache: 'no-store' };

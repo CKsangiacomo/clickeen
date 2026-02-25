@@ -1,10 +1,12 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 import { uploadEditorAsset } from '../shared/assetUpload';
+import { parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
 type UploadMeta = {
   name?: string;
+  versionId?: string;
 };
 
 type DropdownUploadState = {
@@ -236,9 +238,17 @@ function installHandlers(state: DropdownUploadState) {
         variant: 'original',
         source: 'api',
       });
+      const uploadedVersionId = parseCanonicalAssetVersionId(uploadedUrl);
+      const existingMeta = readMeta(state);
+      const nextMeta: UploadMeta = {
+        ...(existingMeta || {}),
+        name: file.name,
+      };
+      if (uploadedVersionId) nextMeta.versionId = uploadedVersionId;
+      else delete nextMeta.versionId;
       const { kind, ext } = classifyByNameAndType(file.name, file.type);
       state.root.dataset.localName = file.name;
-      setMetaValue(state, { name: file.name }, true);
+      setMetaValue(state, nextMeta, true);
       setHeaderWithFile(state, file.name, false);
       setPreview(state, {
         kind,
@@ -247,7 +257,7 @@ function installHandlers(state: DropdownUploadState) {
         ext,
         hasFile: true,
       });
-      setFileKey(state, uploadedUrl, true);
+      setFileKey(state, uploadedVersionId ? 'transparent' : uploadedUrl, true);
       clearError(state);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
@@ -337,11 +347,6 @@ function extractPrimaryUrl(raw: string): string | null {
   return null;
 }
 
-function looksLikeUrl(raw: string): boolean {
-  const url = extractPrimaryUrl(raw);
-  return Boolean(url && (/^https?:\/\//i.test(url) || url.startsWith('/')));
-}
-
 function sameAssetUrl(leftRaw: string, rightRaw: string): boolean {
   const left = normalizeUrlForCompare(leftRaw);
   const right = normalizeUrlForCompare(rightRaw);
@@ -360,6 +365,20 @@ function normalizeUrlForCompare(raw: string): string {
   }
 }
 
+function parseCanonicalAssetVersionId(raw: string): string | null {
+  const parsed = parseCanonicalAssetRef(raw);
+  if (!parsed || parsed.kind !== 'version') return null;
+  const versionId = String(parsed.versionKey || '').trim();
+  return versionId || null;
+}
+
+function assetUrlFromMeta(meta: UploadMeta | null): string {
+  const versionId = typeof meta?.versionId === 'string' ? meta.versionId.trim() : '';
+  if (!versionId) return '';
+  const path = toCanonicalAssetVersionPath(versionId);
+  return path || '';
+}
+
 function previewFromUrl(state: DropdownUploadState, raw: string, name: string, kindName: string) {
   const url = extractPrimaryUrl(raw);
   if (!url) return;
@@ -374,7 +393,8 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   const placeholder = state.headerValue?.dataset.placeholder ?? '';
   const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
   const expectsMeta = state.metaHasPath;
-  const rawUrl = extractPrimaryUrl(key) || '';
+  const metaUrl = assetUrlFromMeta(meta);
+  const rawUrl = metaUrl || extractPrimaryUrl(key) || '';
   const kindName = metaName || guessNameFromUrl(rawUrl) || '';
   const guessedUrlName = guessNameFromUrl(rawUrl);
   const fallbackName = expectsMeta
@@ -382,7 +402,7 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
     : state.root.dataset.localName || guessedUrlName || (rawUrl ? 'Uploaded file' : key || 'Uploaded file');
   const displayName = metaName || fallbackName || (expectsMeta ? 'Unnamed file' : 'Uploaded file');
 
-  if (!key) {
+  if (!key && !rawUrl) {
     clearError(state);
     setHeaderEmpty(state, placeholder);
     state.root.dataset.hasFile = 'false';
@@ -392,16 +412,16 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   }
 
   state.root.dataset.hasFile = 'true';
-  const hasMetaError = expectsMeta && !metaName;
+  const hasMetaError = expectsMeta && !metaName && !rawUrl;
   if (hasMetaError) {
     setError(state, 'Missing file metadata.');
   } else {
     clearError(state);
   }
   // Persisted state stores canonical URLs; render directly.
-  if (looksLikeUrl(key)) {
+  if (rawUrl) {
     setHeaderWithFile(state, displayName, false);
-    previewFromUrl(state, key, displayName, kindName || displayName);
+    previewFromUrl(state, rawUrl, displayName, kindName || displayName);
     return;
   }
 

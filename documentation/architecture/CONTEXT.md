@@ -159,9 +159,9 @@ curated_widget_instances.meta = {
 
 **Roma** — Product shell and workspace experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves active workspace context through `/api/bootstrap`, keeps short-lived workspace/account authz capsules for Paris calls, and opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle).
 
-**Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; same-revision EN fallback when a locale artifact is missing). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
+**Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — HTTP API gateway (Cloudflare Workers). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). Publish control-plane writes are transactional for instance/account usage persistence; EN snapshot enqueue is blocking and non-EN locale snapshot fanout is async/non-blocking. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
+**Paris** — HTTP API gateway (Cloudflare Workers). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). Publish control-plane writes are transactional for instance/account usage persistence; render snapshot enqueue is atomic across active locales and pointer advance is gated by successful publication. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
@@ -169,13 +169,14 @@ curated_widget_instances.meta = {
 
 **Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and account-owned upload blobs.
 
-**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves revocable account asset pointer paths (`/arsenale/a/{accountId}/{assetId}`) with legacy object-path compatibility (`/arsenale/o/**`), materializes **instance** l10n overlays into Tokyo/R2, and publishes Venice render snapshots.
+**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves immutable account asset version paths (`/assets/v/{encodedVersionKey}`), materializes **instance** l10n overlays into Tokyo/R2, and publishes Venice render snapshots.
 
 **Asset URL contract (pre-GA strict):**
-- Persisted widget config stores account assets as canonical root-relative pointer paths: `/arsenale/a/{accountId}/{assetId}`.
-- Runtime still reads legacy `/arsenale/o/**` paths for backward compatibility, but new writes normalize to `/arsenale/a/**`.
-- `DELETE` on an account asset means immediate revoke (`/arsenale/a/**` and `/arsenale/o/**` stop serving). Physical blob purge is async.
-- Runtime resolves concrete host per environment via `CK_ASSET_ORIGIN` (same config works local and cloud-dev; only origin/base URL differs).
+- Persisted widget config stores account assets as immutable `asset.versionId` refs; runtime materializes canonical root-relative paths: `/assets/v/{encodeURIComponent(versionId)}`.
+- Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and `/assets/v/*`-backed `logoFill` strings) are outside contract and rejected on write.
+- Legacy `/arsenale/a/**` and `/arsenale/o/**` paths are outside the runtime contract and are rejected on new writes.
+- `DELETE` on an account asset version is synchronous in the delete path (metadata + variant blobs + CDN purge-by-URL) and synchronously rebuilds render snapshots for impacted instances (immediate pointer flip when rebuild succeeds) while writing explicit render health (`healthy|degraded|error`); subsequent `/assets/v/**` reads return unavailable.
+- Runtime does not rely on `CK_ASSET_ORIGIN`; asset paths remain canonical root-relative and environment portability is provided by Bob/Venice proxy routes.
 - Legacy host-pinned/legacy paths (for example `/curated-assets/**`) are not supported.
 
 **Dieter** — Design system. Tokens (spacing, typography, colors), 16+ components (toggle, textfield, dropdown-fill, object-manager, repeater, dropdown-edit, etc.), icons. Output is CSS + HTML. Each widget only loads what it needs.

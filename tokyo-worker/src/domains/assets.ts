@@ -3,7 +3,6 @@ import { isUuid } from '@clickeen/ck-contracts';
 import {
   assertUploadAuth,
   buildAccountAssetKey,
-  buildAccountAssetPointerPath,
   buildAccountAssetReplaceKey,
   guessContentTypeFromExt,
   json,
@@ -534,6 +533,119 @@ export async function loadAccountAssetUsageCountByIdentity(env: Env, accountId: 
   return rows.length;
 }
 
+export async function loadAccountAssetUsagePublicIdsByIdentity(
+  env: Env,
+  accountId: string,
+  assetId: string,
+): Promise<string[]> {
+  const params = new URLSearchParams({
+    select: 'public_id',
+    account_id: `eq.${accountId}`,
+    asset_id: `eq.${assetId}`,
+    limit: '5000',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_asset_usage?${params.toString()}`, {
+    method: 'GET',
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_asset_usage public ids read failed (${res.status}) ${text}`.trim());
+  }
+  const rows = (await res.json().catch(() => [])) as Array<{ public_id?: unknown }>;
+  const out: string[] = [];
+  const seen = new Set<string>();
+  rows.forEach((row) => {
+    const normalized = normalizePublicId(row?.public_id);
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    out.push(normalized);
+  });
+  return out;
+}
+
+export type InstanceRenderHealthStatus = 'healthy' | 'degraded' | 'error';
+
+type InstanceRenderHealthUpsert = {
+  publicId: string;
+  status: InstanceRenderHealthStatus;
+  reason?: string | null;
+  detail?: string | null;
+};
+
+function normalizeRenderHealthReason(raw: string | null | undefined): string | null {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  return value.slice(0, 120);
+}
+
+function normalizeRenderHealthDetail(raw: string | null | undefined): string | null {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  return value.slice(0, 1000);
+}
+
+export async function upsertInstanceRenderHealth(
+  env: Env,
+  update: InstanceRenderHealthUpsert,
+): Promise<void> {
+  const publicId = normalizePublicId(update.publicId);
+  if (!publicId) return;
+  const status = update.status;
+  if (status !== 'healthy' && status !== 'degraded' && status !== 'error') return;
+  const row = {
+    public_id: publicId,
+    status,
+    reason: normalizeRenderHealthReason(update.reason),
+    detail: normalizeRenderHealthDetail(update.detail),
+    updated_at: new Date().toISOString(),
+  };
+  const res = await supabaseFetch(env, '/rest/v1/instance_render_health?on_conflict=public_id', {
+    method: 'POST',
+    headers: {
+      Prefer: 'resolution=merge-duplicates,return=minimal',
+    },
+    body: JSON.stringify(row),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase instance_render_health upsert failed (${res.status}) ${text}`.trim());
+  }
+}
+
+export async function upsertInstanceRenderHealthBatch(
+  env: Env,
+  updates: InstanceRenderHealthUpsert[],
+): Promise<void> {
+  if (!updates.length) return;
+  const rows = updates
+    .map((update) => {
+      const publicId = normalizePublicId(update.publicId);
+      if (!publicId) return null;
+      const status = update.status;
+      if (status !== 'healthy' && status !== 'degraded' && status !== 'error') return null;
+      return {
+        public_id: publicId,
+        status,
+        reason: normalizeRenderHealthReason(update.reason),
+        detail: normalizeRenderHealthDetail(update.detail),
+        updated_at: new Date().toISOString(),
+      };
+    })
+    .filter((row): row is { public_id: string; status: InstanceRenderHealthStatus; reason: string | null; detail: string | null; updated_at: string } => Boolean(row));
+  if (!rows.length) return;
+  const res = await supabaseFetch(env, '/rest/v1/instance_render_health?on_conflict=public_id', {
+    method: 'POST',
+    headers: {
+      Prefer: 'resolution=merge-duplicates,return=minimal',
+    },
+    body: JSON.stringify(rows),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase instance_render_health batch upsert failed (${res.status}) ${text}`.trim());
+  }
+}
+
 export async function deleteAccountAssetUsageByIdentity(env: Env, accountId: string, assetId: string): Promise<void> {
   const params = new URLSearchParams({
     account_id: `eq.${accountId}`,
@@ -583,7 +695,6 @@ export async function deleteAccountAssetByIdentity(env: Env, accountId: string, 
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
-  handleGetAccountAssetPointer,
   handleReplaceAccountAssetContent,
   handleUploadAccountAsset,
 } from './assets-handlers';

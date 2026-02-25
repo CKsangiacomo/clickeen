@@ -194,6 +194,14 @@ function inferControlMetadata(control: CompiledControl, defaults: Record<string,
   }
 
   if (control.type === 'toggle') return { kind: 'boolean' };
+  if (
+    control.type === 'textfield' ||
+    control.type === 'choice-cards' ||
+    control.type === 'choice-tiles' ||
+    control.type === 'dropdown-edit' ||
+    control.type === 'datepicker'
+  )
+    return { kind: 'string' };
   if (control.type === 'slider' || control.type === 'valuefield') return { kind: 'number' };
   if (control.type === 'dropdown-fill') return { kind: 'json' };
   const samplePath = samplePathForDefaults(control.path);

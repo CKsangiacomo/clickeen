@@ -22,19 +22,8 @@
     throw new Error('[LogoShowcase] Missing [data-role="strips"]');
   }
 
-  const assetOriginRaw = typeof window.CK_ASSET_ORIGIN === 'string' ? window.CK_ASSET_ORIGIN : '';
-  const scriptOrigin = (() => {
-    if (!(scriptEl instanceof HTMLScriptElement)) return '';
-    try {
-      return new URL(scriptEl.src, window.location.href).origin;
-    } catch {
-      return '';
-    }
-  })();
-  const assetOrigin = (assetOriginRaw || scriptOrigin || window.location.origin).replace(/\/$/, '');
-  widgetRoot.style.setProperty('--ck-asset-origin', assetOrigin);
-  widgetRoot.style.setProperty('--ls-icon-prev', `url("${assetOrigin}/dieter/icons/svg/chevron.left.svg")`);
-  widgetRoot.style.setProperty('--ls-icon-next', `url("${assetOrigin}/dieter/icons/svg/chevron.right.svg")`);
+  widgetRoot.style.setProperty('--ls-icon-prev', 'url("/dieter/icons/svg/chevron.left.svg")');
+  widgetRoot.style.setProperty('--ls-icon-next', 'url("/dieter/icons/svg/chevron.right.svg")');
 
   const resolvedPublicId = (() => {
     const direct = widgetRoot.getAttribute('data-ck-public-id');
@@ -56,6 +45,7 @@
     return candidate || '';
   })();
   if (resolvedPublicId) widgetRoot.setAttribute('data-ck-public-id', resolvedPublicId);
+  const ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
 
   function assertBoolean(value, path) {
     if (typeof value !== 'boolean') throw new Error(`[LogoShowcase] ${path} must be a boolean`);
@@ -136,6 +126,13 @@
         assertString(logo.id, `state.strips[${stripIdx}].logos[${logoIdx}].id`);
         assertString(logo.name, `state.strips[${stripIdx}].logos[${logoIdx}].name`);
         assertString(logo.logoFill, `state.strips[${stripIdx}].logos[${logoIdx}].logoFill`);
+        if (logo.asset != null) {
+          assertObject(logo.asset, `state.strips[${stripIdx}].logos[${logoIdx}].asset`);
+          const versionId = typeof logo.asset.versionId === 'string' ? logo.asset.versionId.trim() : '';
+          if (versionId && !ASSET_VERSION_KEY_RE.test(versionId)) {
+            throw new Error(`[LogoShowcase] state.strips[${stripIdx}].logos[${logoIdx}].asset.versionId invalid`);
+          }
+        }
         assertString(logo.href, `state.strips[${stripIdx}].logos[${logoIdx}].href`);
         assertBoolean(logo.targetBlank, `state.strips[${stripIdx}].logos[${logoIdx}].targetBlank`);
         assertBoolean(logo.nofollow, `state.strips[${stripIdx}].logos[${logoIdx}].nofollow`);
@@ -259,35 +256,31 @@
     return v;
   }
 
-  function resolveAssetUrl(raw, origin) {
+  function resolveAssetUrl(raw) {
     const v = String(raw || '').trim();
     if (!v) return null;
     if (/^https?:\/\//i.test(v)) return v;
     if (/^\/\//.test(v)) return `https:${v}`;
-    if (/^(?:\/|\.\/|\.\.\/)/.test(v)) {
-      if (!origin) return v;
-      try {
-        return new URL(v, origin).toString();
-      } catch {
-        return v;
-      }
-    }
-    if (!origin) return v;
-    try {
-      return new URL(v, origin).toString();
-    } catch {
-      return v;
-    }
+    return v;
   }
 
-  function extractPrimaryUrl(raw, origin) {
+  function resolveLogoAssetVersionUrl(logo) {
+    if (!logo || typeof logo !== 'object' || Array.isArray(logo)) return null;
+    const asset = logo.asset;
+    if (!asset || typeof asset !== 'object' || Array.isArray(asset)) return null;
+    const versionId = typeof asset.versionId === 'string' ? asset.versionId.trim() : '';
+    if (!versionId || !ASSET_VERSION_KEY_RE.test(versionId)) return null;
+    return `/assets/v/${encodeURIComponent(versionId)}`;
+  }
+
+  function extractPrimaryUrl(raw) {
     const v = String(raw || '').trim();
     if (!v) return null;
-    if (/^(?:https?:\/\/|\/\/|\/|\.\/|\.\.\/)/i.test(v)) return resolveAssetUrl(v, origin);
+    if (/^(?:https?:\/\/|\/\/|\/|\.\/|\.\.\/)/i.test(v)) return resolveAssetUrl(v);
     // CSS fill string, e.g. url("https://...") center center / cover no-repeat
     const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    if (m && m[2]) return resolveAssetUrl(m[2], origin);
-    if (/^(?:\/|\.\/|\.\.\/)/.test(v)) return resolveAssetUrl(v, origin);
+    if (m && m[2]) return resolveAssetUrl(m[2]);
+    if (/^(?:\/|\.\/|\.\.\/)/.test(v)) return resolveAssetUrl(v);
     return null;
   }
 
@@ -382,7 +375,7 @@
     visualEl.setAttribute('role', 'img');
     if (aria) visualEl.setAttribute('aria-label', aria);
 
-    const primaryUrl = extractPrimaryUrl(logo.logoFill, assetOrigin);
+    const primaryUrl = resolveLogoAssetVersionUrl(logo) || extractPrimaryUrl(logo.logoFill);
     if (primaryUrl) {
       const safeUrl = primaryUrl.replace(/"/g, '%22');
       visualEl.style.backgroundImage = `url("${safeUrl}")`;

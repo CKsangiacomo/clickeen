@@ -3,9 +3,10 @@ import { AssetPickerOverlay } from './asset-picker-overlay';
 import {
   parseFillValue,
   readImageName,
+  readImageSrc,
   readVideoName,
+  readVideoSrc,
   resolveModeFromFill,
-  isPersistedAssetUrl,
 } from './fill-parser';
 import { DEFAULT_GRADIENT, MODE_ORDER, type FillMode, type FillValue, type GradientStop } from './fill-types';
 import {
@@ -1136,13 +1137,13 @@ function syncFromValue(state: DropdownFillState, raw: string) {
 
   if (fill.type === 'image') {
     state.imageName = readImageName(fill);
-    setImageSrc(state, fill.image?.src || null, { commit: false });
+    setImageSrc(state, readImageSrc(fill), { commit: false });
     return;
   }
 
   if (fill.type === 'video') {
     state.videoName = readVideoName(fill);
-    setVideoSrc(state, fill.video?.src || null, { commit: false });
+    setVideoSrc(state, readVideoSrc(fill), { commit: false });
     return;
   }
 }

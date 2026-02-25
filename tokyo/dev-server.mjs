@@ -10,7 +10,7 @@
  *   - GET /fonts/**       → static files from tokyo/fonts/**
  *   - GET /themes/**      → static files from tokyo/themes/**
  *   - GET /widgets/**     → static files from tokyo/widgets/**
- *   - GET /arsenale/**    → proxy to tokyo-worker canonical account assets
+ *   - GET /assets/v/**    → proxy to tokyo-worker canonical account assets
  *   - POST /assets/upload → proxy to tokyo-worker upload authority
  *
  * This lets Bob and other surfaces talk to a CDN-style base URL
@@ -467,13 +467,9 @@ function serveStatic(req, res, prefix) {
   const relativePath = relativePathPosix; // keep naming for existing logic
   const cacheControlFor = () => {
     // Cache policy:
-    // - Account-owned uploads are content-addressed by assetId; cache aggressively to avoid "flash" on load.
     // - i18n bundles are content-hashed; cache aggressively (manifest is the short-TTL indirection layer).
     // - l10n overlays are content-addressed; cache aggressively (index.json is short-TTL).
     // - Dieter/widget assets are edited frequently in dev; allow caching but require revalidation to avoid staleness.
-    if (prefix === '/arsenale/') {
-      return 'public, max-age=31536000, immutable';
-    }
     if (prefix === '/i18n/') {
       if (relativePathPosix.endsWith('/manifest.json')) {
         return 'public, max-age=60, must-revalidate';

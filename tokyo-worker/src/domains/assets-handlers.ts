@@ -1,9 +1,11 @@
 import {
   buildAccountAssetKey,
-  buildAccountAssetPointerPath,
+  buildAccountAssetVersionPath,
   buildAccountAssetReplaceKey,
+  generateRenderSnapshots,
   guessContentTypeFromExt,
   json,
+  loadSnapshotLocalesFromL10nIndex,
   normalizeAccountAssetReadKey,
   normalizePublicId,
   normalizeWidgetType,
@@ -25,11 +27,10 @@ import {
   deleteAccountAssetUsageByIdentity,
   deleteAccountAssetVariantsByIdentity,
   loadAccountAssetByIdentity,
-  loadAccountAssetUsageCountByIdentity,
+  loadAccountAssetUsagePublicIdsByIdentity,
   loadAccountAssetVariantKeys,
   loadAccountMembershipRole,
   loadAccountUploadProfile,
-  loadPrimaryAccountAssetKey,
   loadWorkspaceMembershipRole,
   loadWorkspaceUploadContext,
   normalizeAccountAssetSource,
@@ -39,9 +40,151 @@ import {
   resolveUploadsBytesBudgetMax,
   resolveUploadsCountBudgetMax,
   roleRank,
+  upsertInstanceRenderHealthBatch,
   type MemberRole,
   type ReplaceAccountAssetAtomicResult,
 } from './assets';
+
+const CLOUDFLARE_PURGE_CHUNK_SIZE = 30;
+
+function normalizeBaseUrl(raw: string | null | undefined): string | null {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  return value.replace(/\/+$/, '');
+}
+
+function resolveAssetPurgeUrls(args: { req: Request; env: Env; variantKeys: string[] }): string[] {
+  const paths = Array.from(
+    new Set(
+      args.variantKeys
+        .map((key) => {
+          try {
+            return buildAccountAssetVersionPath(key);
+          } catch {
+            return null;
+          }
+        })
+        .filter((path): path is string => Boolean(path)),
+    ),
+  );
+  if (!paths.length) return [];
+
+  const bases = new Set<string>();
+  try {
+    bases.add(new URL(args.req.url).origin);
+  } catch {
+    // Ignore malformed request URL.
+  }
+  const veniceBase = normalizeBaseUrl(args.env.VENICE_BASE_URL);
+  if (veniceBase) bases.add(veniceBase);
+
+  const urls: string[] = [];
+  bases.forEach((base) => {
+    paths.forEach((path) => {
+      urls.push(`${base}${path}`);
+    });
+  });
+  return Array.from(new Set(urls));
+}
+
+type CloudflarePurgeResult = {
+  total: number;
+  purged: number;
+  failed: number;
+  details: string[];
+};
+
+function isLocalPurgeUrl(rawUrl: string): boolean {
+  try {
+    const parsed = new URL(rawUrl);
+    const hostname = parsed.hostname.toLowerCase();
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
+  } catch {
+    return false;
+  }
+}
+
+async function purgeCloudflareByUrls(env: Env, urls: string[]): Promise<CloudflarePurgeResult> {
+  const unique = Array.from(new Set(urls.filter(Boolean)));
+  if (!unique.length) return { total: 0, purged: 0, failed: 0, details: [] };
+
+  const zoneId = String(env.CLOUDFLARE_ZONE_ID || '').trim();
+  const apiToken = String(env.CLOUDFLARE_API_TOKEN || '').trim();
+  if (!zoneId || !apiToken) {
+    const localOnly = unique.every((url) => isLocalPurgeUrl(url));
+    if (localOnly) {
+      return {
+        total: unique.length,
+        purged: unique.length,
+        failed: 0,
+        details: ['skipped Cloudflare purge for local-only URLs'],
+      };
+    }
+    return {
+      total: unique.length,
+      purged: 0,
+      failed: unique.length,
+      details: ['missing CLOUDFLARE_ZONE_ID or CLOUDFLARE_API_TOKEN'],
+    };
+  }
+
+  let purged = 0;
+  let failed = 0;
+  const details: string[] = [];
+
+  for (let i = 0; i < unique.length; i += CLOUDFLARE_PURGE_CHUNK_SIZE) {
+    const chunk = unique.slice(i, i + CLOUDFLARE_PURGE_CHUNK_SIZE);
+    try {
+      const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ files: chunk }),
+      });
+      const payload = (await res.json().catch(() => null)) as
+        | { success?: unknown; errors?: Array<{ message?: unknown }> }
+        | null;
+      const success = res.ok && payload?.success === true;
+      if (!success) {
+        failed += chunk.length;
+        const message = Array.isArray(payload?.errors)
+          ? payload?.errors
+              .map((entry) => (typeof entry?.message === 'string' ? entry.message.trim() : ''))
+              .filter(Boolean)
+              .join('; ')
+          : '';
+        details.push(
+          message
+            ? `chunk ${Math.floor(i / CLOUDFLARE_PURGE_CHUNK_SIZE) + 1} failed: ${message}`
+            : `chunk ${Math.floor(i / CLOUDFLARE_PURGE_CHUNK_SIZE) + 1} failed with status ${res.status}`,
+        );
+        continue;
+      }
+      purged += chunk.length;
+    } catch (error) {
+      failed += chunk.length;
+      const detail = error instanceof Error ? error.message : String(error);
+      details.push(`chunk ${Math.floor(i / CLOUDFLARE_PURGE_CHUNK_SIZE) + 1} failed: ${detail}`);
+    }
+  }
+
+  return { total: unique.length, purged, failed, details };
+}
+
+type HealthUpdate = { status: 'healthy' | 'degraded' | 'error'; reason: string; detail: string | null };
+
+function upsertHealthInMap(
+  map: Map<string, HealthUpdate>,
+  publicId: string,
+  update: HealthUpdate,
+): void {
+  const nextRank = update.status === 'error' ? 3 : update.status === 'degraded' ? 2 : 1;
+  const current = map.get(publicId);
+  const currentRank = current ? (current.status === 'error' ? 3 : current.status === 'degraded' ? 2 : 1) : 0;
+  if (nextRank >= currentRank) map.set(publicId, update);
+}
 
 async function handleUploadAccountAsset(req: Request, env: Env): Promise<Response> {
   const auth = await assertUploadAuth(req, env);
@@ -233,7 +376,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   }
 
   const origin = new URL(req.url).origin;
-  const url = `${origin}${buildAccountAssetPointerPath(accountId, assetId)}`;
+  const url = `${origin}${buildAccountAssetVersionPath(key)}`;
   return json(
     {
       accountId,
@@ -265,17 +408,6 @@ function respondImmutableR2Asset(key: string, obj: R2ObjectBody): Response {
   return new Response(obj.body, { status: 200, headers });
 }
 
-function respondPointerR2Asset(key: string, obj: R2ObjectBody): Response {
-  const ext = key.split('.').pop() || '';
-  const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
-  const headers = new Headers();
-  headers.set('content-type', contentType);
-  headers.set('cache-control', 'no-store');
-  headers.set('cdn-cache-control', 'no-store');
-  headers.set('cloudflare-cdn-cache-control', 'no-store');
-  return new Response(obj.body, { status: 200, headers });
-}
-
 async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
   const canonical = normalizeAccountAssetReadKey(key.startsWith('/') ? key : `/${key}`);
   const identity = canonical ? parseAccountAssetIdentityFromKey(canonical) : null;
@@ -287,28 +419,6 @@ async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
   const canonicalObj = await env.TOKYO_R2.get(canonical);
   if (canonicalObj) return respondImmutableR2Asset(canonical, canonicalObj);
   return new Response('Not found', { status: 404 });
-}
-
-async function handleGetAccountAssetPointer(
-  env: Env,
-  accountIdRaw: string,
-  assetIdRaw: string,
-): Promise<Response> {
-  const accountId = String(accountIdRaw || '').trim();
-  const assetId = String(assetIdRaw || '').trim();
-  if (!accountId || !assetId || !isUuid(accountId) || !isUuid(assetId)) {
-    return new Response('Not found', { status: 404 });
-  }
-
-  const assetRow = await loadAccountAssetByIdentity(env, accountId, assetId);
-  if (!assetRow) return new Response('Not found', { status: 404 });
-
-  const key = await loadPrimaryAccountAssetKey(env, accountId, assetId);
-  if (!key) return new Response('Not found', { status: 404 });
-
-  const obj = await env.TOKYO_R2.get(key);
-  if (!obj) return new Response('Not found', { status: 404 });
-  return respondPointerR2Asset(key, obj);
 }
 
 async function handleReplaceAccountAssetContent(
@@ -406,7 +516,7 @@ async function handleReplaceAccountAssetContent(
 
   const effectiveKey = atomicResult.currentKey;
   const origin = new URL(req.url).origin;
-  const url = `${origin}${buildAccountAssetPointerPath(accountId, assetId)}`;
+  const url = `${origin}${buildAccountAssetVersionPath(effectiveKey)}`;
   return json(
     {
       accountId,
@@ -428,7 +538,6 @@ async function handleReplaceAccountAssetContent(
 async function handleDeleteAccountAsset(
   req: Request,
   env: Env,
-  ctx: ExecutionContext,
   accountIdRaw: string,
   assetIdRaw: string,
 ): Promise<Response> {
@@ -449,7 +558,8 @@ async function handleDeleteAccountAsset(
     return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
   }
 
-  const usageCount = await loadAccountAssetUsageCountByIdentity(env, accountId, assetId);
+  const impactedPublicIds = await loadAccountAssetUsagePublicIdsByIdentity(env, accountId, assetId);
+  const usageCount = impactedPublicIds.length;
   const confirmInUseRaw = (new URL(req.url).searchParams.get('confirmInUse') || '').trim().toLowerCase();
   const confirmInUse = confirmInUseRaw === '1' || confirmInUseRaw === 'true' || confirmInUseRaw === 'yes';
   if (usageCount > 0 && !confirmInUse) {
@@ -467,22 +577,150 @@ async function handleDeleteAccountAsset(
   await deleteAccountAssetUsageByIdentity(env, accountId, assetId);
   await deleteAccountAssetVariantsByIdentity(env, accountId, assetId);
   await deleteAccountAssetByIdentity(env, accountId, assetId);
+
+  let failedBlobDeletes = 0;
+  const failedBlobDeleteDetails: string[] = [];
   if (variantKeys.length) {
-    ctx.waitUntil(Promise.allSettled(variantKeys.map((key) => env.TOKYO_R2.delete(key))));
+    const deleteResults = await Promise.allSettled(variantKeys.map((key) => env.TOKYO_R2.delete(key)));
+    deleteResults.forEach((result, index) => {
+      if (result.status === 'fulfilled') return;
+      failedBlobDeletes += 1;
+      const detail = result.reason instanceof Error ? result.reason.message : String(result.reason);
+      failedBlobDeleteDetails.push(`${variantKeys[index]}: ${detail}`);
+    });
   }
 
-  return json({
-    accountId,
-    assetId,
-    deleted: true,
+  const purgeUrls = resolveAssetPurgeUrls({ req, env, variantKeys });
+  const purgeResult = await purgeCloudflareByUrls(env, purgeUrls);
+
+  let rebuiltSnapshotRevisions = 0;
+  let failedSnapshotRebuilds = 0;
+  const failedSnapshotRebuildDetails: string[] = [];
+  const rebuiltPublicIds: string[] = [];
+  const failedRebuildPublicIds: string[] = [];
+  for (const publicId of impactedPublicIds) {
+    try {
+      const locales = await loadSnapshotLocalesFromL10nIndex({ env, publicId });
+      await generateRenderSnapshots({ env, publicId, locales });
+      rebuiltSnapshotRevisions += 1;
+      rebuiltPublicIds.push(publicId);
+    } catch (error) {
+      failedSnapshotRebuilds += 1;
+      failedRebuildPublicIds.push(publicId);
+      const detail = error instanceof Error ? error.message : String(error);
+      failedSnapshotRebuildDetails.push(`${publicId}: ${detail}`);
+    }
+  }
+
+  const renderHealthByPublicId = new Map<string, HealthUpdate>();
+  rebuiltPublicIds.forEach((publicId) => {
+    upsertHealthInMap(renderHealthByPublicId, publicId, {
+      status: 'healthy',
+      reason: 'asset_delete_rebuild_applied',
+      detail: `Asset ${assetId} deleted; clean revision published.`,
+    });
   });
+  failedRebuildPublicIds.forEach((publicId) => {
+    upsertHealthInMap(renderHealthByPublicId, publicId, {
+      status: 'error',
+      reason: 'asset_delete_rebuild_failed',
+      detail: `Asset ${assetId} deleted; clean revision rebuild failed.`,
+    });
+  });
+
+  if (failedBlobDeletes > 0 || purgeResult.failed > 0) {
+    impactedPublicIds.forEach((publicId) => {
+      upsertHealthInMap(renderHealthByPublicId, publicId, {
+        status: 'error',
+        reason: 'asset_delete_cleanup_failed',
+        detail: `Asset ${assetId} delete pipeline had storage or CDN purge failures.`,
+      });
+    });
+  }
+
+  let failedRenderHealthWrites = 0;
+  if (renderHealthByPublicId.size > 0) {
+    try {
+      await upsertInstanceRenderHealthBatch(
+        env,
+        Array.from(renderHealthByPublicId.entries()).map(([publicId, update]) => ({
+          publicId,
+          status: update.status,
+          reason: update.reason,
+          detail: update.detail,
+        })),
+      );
+    } catch {
+      failedRenderHealthWrites = renderHealthByPublicId.size;
+    }
+  }
+
+  if (failedBlobDeletes > 0 || failedSnapshotRebuilds > 0 || purgeResult.failed > 0 || failedRenderHealthWrites > 0) {
+    const errorDetails: string[] = [];
+    if (failedBlobDeletes > 0) errorDetails.push(`failed to delete ${failedBlobDeletes} asset blob(s)`);
+    if (purgeResult.failed > 0) errorDetails.push(`failed to purge ${purgeResult.failed} CDN URL(s)`);
+    if (failedSnapshotRebuilds > 0) {
+      errorDetails.push(`failed to rebuild ${failedSnapshotRebuilds} snapshot revision(s)`);
+    }
+    if (failedRenderHealthWrites > 0) {
+      errorDetails.push(`failed to persist ${failedRenderHealthWrites} render health update(s)`);
+    }
+    return json(
+      {
+        error: {
+          kind: 'INTERNAL',
+          reasonKey: 'tokyo.errors.assets.deletePipelinePartialFailure',
+          detail: errorDetails.join('; '),
+        },
+        accountId,
+        assetId,
+        deleted: true,
+        impactedPublicIds,
+        snapshotRebuilds: {
+          total: impactedPublicIds.length,
+          rebuilt: rebuiltSnapshotRevisions,
+          failed: failedSnapshotRebuilds,
+        },
+        failedBlobDeletes,
+        failedBlobDeleteDetails,
+        cdnPurge: {
+          attempted: purgeResult.total,
+          purged: purgeResult.purged,
+          failed: purgeResult.failed,
+          details: purgeResult.details,
+        },
+        failedSnapshotRebuildDetails,
+        failedRenderHealthWrites,
+      },
+      { status: 502 },
+    );
+  }
+
+  return json(
+    {
+      accountId,
+      assetId,
+      deleted: true,
+      impactedPublicIds,
+      snapshotRebuilds: {
+        total: impactedPublicIds.length,
+        rebuilt: rebuiltSnapshotRevisions,
+        failed: failedSnapshotRebuilds,
+      },
+      cdnPurge: {
+        attempted: purgeResult.total,
+        purged: purgeResult.purged,
+        failed: purgeResult.failed,
+      },
+    },
+    { status: 200 },
+  );
 }
 
 
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
-  handleGetAccountAssetPointer,
   handleReplaceAccountAssetContent,
   handleUploadAccountAsset,
 };

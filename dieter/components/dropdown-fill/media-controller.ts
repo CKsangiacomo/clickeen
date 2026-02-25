@@ -1,6 +1,7 @@
 import { uploadEditorAsset } from '../shared/assetUpload';
 import { fetchImageAssetChoices, toAssetPickerOverlayItems } from './asset-picker-data';
 import { normalizeAssetReferenceUrl, sameAssetReferenceUrl } from './color-utils';
+import { assetVersionIdFromUrl } from './fill-parser';
 import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fill';
 import type { FillValue } from './fill-types';
 
@@ -15,6 +16,11 @@ export type MediaControllerDeps = {
   updateHeader: (state: DropdownFillState, opts: DropdownFillHeaderUpdate) => void;
   setRemoveFillState: (state: DropdownFillState, isEmpty: boolean) => void;
 };
+
+function resolveAssetVersionId(src: string | null): string | null {
+  if (!src) return null;
+  return assetVersionIdFromUrl(src);
+}
 
 function setFillUploadingState(state: DropdownFillState, uploading: boolean): void {
   state.root.dataset.uploading = uploading ? 'true' : 'false';
@@ -171,11 +177,12 @@ export function setImageSrc(
     state.imageUnavailable = false;
   }
   if (opts.commit) {
-    const fill: FillValue = src
+    const versionId = resolveAssetVersionId(src);
+    const fill: FillValue = versionId
       ? {
           type: 'image',
           image: {
-            src,
+            asset: { versionId },
             ...(state.imageName ? { name: state.imageName } : {}),
             fit: 'cover',
             position: 'center',
@@ -212,11 +219,12 @@ export function setVideoSrc(
     state.videoUnavailable = false;
   }
   if (opts.commit) {
-    const fill: FillValue = src
+    const versionId = resolveAssetVersionId(src);
+    const fill: FillValue = versionId
       ? {
           type: 'video',
           video: {
-            src,
+            asset: { versionId },
             ...(state.videoName ? { name: state.videoName } : {}),
             fit: 'cover',
             position: 'center',

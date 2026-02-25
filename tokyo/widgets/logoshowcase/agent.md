@@ -32,7 +32,7 @@ Set by the global Header primitive (`tokyo/widgets/shared/header.js`):
   - Logos list: `[data-role="logos"]`
   - Ticker copies (mode=continuous): `[data-role="ticker-a"]`, `[data-role="ticker-b"]`
 - Logo tile (generated): `[data-role="logo"]`
-  - Visual: `[data-role="logo-visual"]` (background-image from `logoFill`)
+  - Visual: `[data-role="logo-visual"]` (background-image from `asset.versionId` first, then `logoFill` fallback)
   - Caption: `[data-role="logo-caption"]`
 
 ## Editable Schema (high-signal paths)
@@ -52,8 +52,8 @@ Content:
   - `strips[]` (array)
   - `strips[].logos[]` (array)
 - `strips[].logos[].name` (string)
-- `strips[].logos[].logoFill` (string CSS fill from `dropdown-upload`, e.g. `url("...") center / contain no-repeat` or `transparent`)
-  - `strips[].logos[].asset` (object; file metadata for editor display, e.g. `{ name, mime, source }`)
+- `strips[].logos[].logoFill` (string CSS fill fallback, e.g. static `/widgets/*` logo URL or `transparent`)
+  - `strips[].logos[].asset` (object; editor metadata + immutable asset ref, e.g. `{ name, source, versionId }`)
   - `strips[].logos[].caption` (string; hover label; falls back to `name` if empty)
   - `strips[].logos[].href` (string; only valid `http(s)://` becomes clickable)
   - `strips[].logos[].targetBlank` (boolean)
@@ -119,7 +119,7 @@ Stage/Pod (layout spacing lives here; no widget-level width/padding):
 - Header richtext is sanitized by `tokyo/widgets/shared/header.js`:
   - `header.title`: allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `br` (no links).
   - `header.subtitleHtml`: allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `a`, `br` (links require `http(s)://`).
-- `logoFill` accepts canonical asset URLs (`http(s)` or root-relative). Runtime extracts the primary URL and applies it as `background-image` on `[data-role="logo-visual"]`.
+- Runtime resolves logo image URL from `asset.versionId` first (`/assets/v/{encodeURIComponent(versionId)}`) and only falls back to `logoFill` for static non-account assets.
 - Links: `href` is normalized; only valid `http(s)://` makes a logo/CTA clickable (else it renders inert).
 
 ## Branding (global)

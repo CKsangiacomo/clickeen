@@ -3,7 +3,7 @@ import type { Env } from './types';
 import type { LimitsSpec } from '@clickeen/ck-policy';
 
 const TOKYO_BASE_ENV_KEY = 'TOKYO_BASE_URL';
-const TOKYO_LEGACY_PATH_PREFIXES = new Set(['/assets', '/arsenale', '/dieter', '/widgets', '/renders', '/l10n', '/i18n']);
+const TOKYO_LEGACY_PATH_PREFIXES = new Set(['/assets', '/dieter', '/widgets', '/renders', '/l10n', '/i18n']);
 
 function normalizeTokyoBaseUrl(raw: string): string {
   const trimmed = raw.trim();

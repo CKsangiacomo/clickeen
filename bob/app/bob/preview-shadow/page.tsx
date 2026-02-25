@@ -8,8 +8,6 @@ type SearchParams = Record<string, string | string[] | undefined>;
 export default async function PreviewShadowPage(props: { searchParams?: Promise<SearchParams> }) {
   const searchParams = (props.searchParams ? await props.searchParams : {}) ?? {};
   const publicId = typeof searchParams.publicId === 'string' ? searchParams.publicId : '';
-  const theme = searchParams.theme === 'dark' ? 'dark' : 'light';
-  const device = searchParams.device === 'mobile' ? 'mobile' : 'desktop';
   const mode = typeof searchParams.mode === 'string' ? searchParams.mode : '';
   const seoGeoOptimization = mode === 'seo-geo';
   const veniceBase = resolveVeniceBaseUrl().replace(/\/+$/, '');
@@ -25,8 +23,6 @@ export default async function PreviewShadowPage(props: { searchParams?: Promise<
         data-trigger="immediate"
         data-force-shadow={seoGeoOptimization ? 'false' : 'true'}
         data-ck-optimization={seoGeoOptimization ? 'seo-geo' : undefined}
-        data-theme={theme}
-        data-device={device}
       />
     </main>
   );

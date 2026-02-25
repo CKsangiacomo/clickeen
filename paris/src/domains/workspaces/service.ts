@@ -24,6 +24,13 @@ type RenderSnapshotState = {
   pointerUpdatedAt: string | null;
   current: Record<string, RenderIndexEntry> | null;
 };
+type InstanceRenderHealthStatus = 'healthy' | 'degraded' | 'error';
+type InstanceRenderHealthState = {
+  status: InstanceRenderHealthStatus;
+  reason: string | null;
+  detail: string | null;
+  updatedAt: string | null;
+};
 type WaitForEnSnapshotReadyResult =
   | { ok: true; state: RenderSnapshotState; waitedMs: number }
   | { ok: false; error: string; state: RenderSnapshotState | null; waitedMs: number };
@@ -183,21 +190,13 @@ async function enqueueRenderSnapshot(
           ),
         )
       : [];
-    const jobs =
-      job.action === 'delete'
-        ? [job]
-        : locales.length
-          ? locales.map((locale) => ({ ...job, locales: [locale] }))
-          : [job];
-    for (const next of jobs) {
-      await env.RENDER_SNAPSHOT_QUEUE.send({
-        v: 1,
-        kind: 'render-snapshot',
-        publicId: next.publicId,
-        action: next.action,
-        locales: next.locales,
-      });
-    }
+    await env.RENDER_SNAPSHOT_QUEUE.send({
+      v: 1,
+      kind: 'render-snapshot',
+      publicId: job.publicId,
+      action: job.action,
+      locales: locales.length ? locales : undefined,
+    });
     return { ok: true };
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -389,6 +388,42 @@ async function loadRenderSnapshotState(args: {
   };
 }
 
+async function loadInstanceRenderHealth(
+  env: Env,
+  publicId: string,
+): Promise<InstanceRenderHealthState | null> {
+  const params = new URLSearchParams({
+    select: 'public_id,status,reason,detail,updated_at',
+    public_id: `eq.${publicId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/instance_render_health?${params.toString()}`, {
+    method: 'GET',
+  });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(
+      `[ParisWorker] Failed to load render health (${res.status}): ${JSON.stringify(details)}`,
+    );
+  }
+  const rows = ((await res.json().catch(() => null)) as Array<{
+    status?: unknown;
+    reason?: unknown;
+    detail?: unknown;
+    updated_at?: unknown;
+  }> | null) ?? [];
+  const row = rows[0];
+  if (!row) return null;
+  const statusRaw = asTrimmedString(row.status)?.toLowerCase();
+  if (statusRaw !== 'healthy' && statusRaw !== 'degraded' && statusRaw !== 'error') return null;
+  return {
+    status: statusRaw,
+    reason: asTrimmedString(row.reason),
+    detail: asTrimmedString(row.detail),
+    updatedAt: asTrimmedString(row.updated_at),
+  };
+}
+
 function hasPointerAdvanced(args: {
   state: RenderSnapshotState;
   baselinePointerUpdatedAt: string | null;
@@ -466,6 +501,7 @@ export type { RenderIndexEntry, RenderSnapshotEnqueueResult };
 
 export {
   enqueueRenderSnapshot,
+  loadInstanceRenderHealth,
   loadEnforcement,
   loadL10nGenerateStatesForFingerprint,
   loadPersistedLocaleOverlayKeys,

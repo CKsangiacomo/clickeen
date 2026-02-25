@@ -307,7 +307,7 @@ export default defineConfig({
                 } else if (containsLegacyTokyoAssetUrl(node)) {
                   issues.push({
                     path: nodePath,
-                    message: 'legacy Tokyo asset URL found. Use canonical /arsenale/o/{accountId}/{assetId}/... URLs only.',
+                    message: 'legacy Tokyo asset URL found. Use canonical /assets/v/{token} URLs only.',
                   });
                 }
                 return;
@@ -505,7 +505,7 @@ export default defineConfig({
                 } else if (containsLegacyTokyoAssetUrl(node)) {
                   issues.push({
                     path: nodePath,
-                    message: 'legacy Tokyo asset URL found. Use canonical /arsenale/o/{accountId}/{assetId}/... URLs only.',
+                    message: 'legacy Tokyo asset URL found. Use canonical /assets/v/{token} URLs only.',
                   });
                 }
                 return;

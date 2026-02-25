@@ -38,7 +38,7 @@ const widgetType = (() => {
 const tsToken = import.meta.env.DEV ? String(Date.now()) : '';
 const ts = tsToken ? `&ts=${encodeURIComponent(tsToken)}` : '';
 const iframeSrc = VENICE_URL
-  ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(locale)}${ts}`
+  ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}${ts}`
   : null;
 
 const anchorId = `ck-instance-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;

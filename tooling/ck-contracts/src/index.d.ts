@@ -3,20 +3,20 @@ export declare const WIDGET_PUBLIC_ID_CURATED_RE: RegExp;
 export declare const WIDGET_PUBLIC_ID_USER_RE: RegExp;
 export declare const WIDGET_PUBLIC_ID_RE: RegExp;
 export declare const UUID_RE: RegExp;
-export declare const ASSET_POINTER_PATH_RE: RegExp;
-export declare const ASSET_OBJECT_PATH_RE: RegExp;
+export declare const ASSET_VERSION_PATH_RE: RegExp;
 
 export declare const WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN: string;
-export declare const ASSET_POINTER_PATH_PATTERN: string;
-export declare const ASSET_OBJECT_PATH_PATTERN: string;
+export declare const ASSET_VERSION_PATH_PATTERN: string;
 
 export type WidgetPublicIdKind = 'main' | 'curated' | 'user';
-export type AssetRefKind = 'pointer' | 'object';
+export type AssetRefKind = 'version';
 export type AssetRef = {
   accountId: string;
   assetId: string;
   kind: AssetRefKind;
   pathname: string;
+  versionToken: string;
+  versionKey: string;
 };
 
 export declare const CK_ERROR_CODE: Readonly<{
@@ -45,7 +45,6 @@ export declare function isCuratedOrMainWidgetPublicId(raw: unknown): boolean;
 export declare function isUserWidgetPublicId(raw: unknown): boolean;
 export declare function isUuid(raw: unknown): boolean;
 export declare function parseCanonicalAssetRef(raw: unknown): AssetRef | null;
-export declare function isCanonicalAssetPointerRef(raw: unknown): boolean;
-export declare function isCanonicalAssetObjectRef(raw: unknown): boolean;
+export declare function isCanonicalAssetVersionRef(raw: unknown): boolean;
 export declare function isCanonicalAssetRef(raw: unknown): boolean;
-export declare function toCanonicalAssetPointerPath(accountId: unknown, assetId: unknown): string | null;
+export declare function toCanonicalAssetVersionPath(versionKey: unknown): string | null;

@@ -261,8 +261,7 @@ function replacePrimaryUrl(raw: string, nextUrl: string): string {
 
 function isTokyoAssetPath(pathname: string): boolean {
   return (
-    pathname.startsWith('/arsenale/a/') ||
-    pathname.startsWith('/arsenale/o/') ||
+    pathname.startsWith('/assets/v/') ||
     pathname.startsWith('/widgets/') ||
     pathname.startsWith('/themes/') ||
     pathname.startsWith('/dieter/')

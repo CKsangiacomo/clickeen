@@ -5,7 +5,7 @@ import { readRomaAccountAuthzCapsuleHeader, verifyRomaAccountAuthzCapsule } from
 import { json, readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
 import { isUuid } from '../../shared/validation';
-import { isWidgetPublicId, toCanonicalAssetPointerPath } from '@clickeen/ck-contracts';
+import { isWidgetPublicId, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 
 type AccountRow = {
   id: string;
@@ -146,7 +146,6 @@ function resolveTokyoMutableAssetBase(env: Env): string | null {
 function normalizeAssetVariant(
   row: AccountAssetVariantRow,
   tokyoBase: string | null,
-  accountId: string,
 ): {
   variant: string;
   key: string;
@@ -157,9 +156,8 @@ function normalizeAssetVariant(
   url: string | null;
 } {
   const key = row.r2_key;
-  const assetId = row.asset_id;
-  const pointerPath = toCanonicalAssetPointerPath(accountId, assetId);
-  const url = tokyoBase && pointerPath ? `${tokyoBase}${pointerPath}` : null;
+  const versionPath = toCanonicalAssetVersionPath(key);
+  const url = tokyoBase && versionPath ? `${tokyoBase}${versionPath}` : null;
   return {
     variant: row.variant,
     key,
@@ -200,7 +198,7 @@ function normalizeAccountAsset(
     updatedAt: row.updated_at,
     usageCount: usage.length,
     usedBy: usage,
-    variants: variants.map((variant) => normalizeAssetVariant(variant, tokyoBase, row.account_id)),
+    variants: variants.map((variant) => normalizeAssetVariant(variant, tokyoBase)),
   };
 }
 

@@ -75,7 +75,7 @@ export function PublishEmbedModal({ open, onClose }: PublishEmbedModalProps) {
 
     const scriptlessSnippet = canRender
       ? `<iframe
-  src="${veniceBase}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=en"
+  src="${veniceBase}/e/${encodeURIComponent(publicId)}?locale=en"
   title="Clickeen widget"
   loading="lazy"
   referrerpolicy="no-referrer"
@@ -96,7 +96,7 @@ export function PublishEmbedModal({ open, onClose }: PublishEmbedModalProps) {
       : '';
 
     const previewSeoGeoHref = publicId
-      ? `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&theme=light&device=desktop&mode=seo-geo`
+      ? `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&mode=seo-geo`
       : '/bob/preview-shadow?mode=seo-geo';
 
     return { veniceBase, loaderSrc, canRender, safeSnippet, scriptlessSnippet, seoGeoSnippet, previewSeoGeoHref };

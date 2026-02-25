@@ -2,7 +2,7 @@ import type { Env } from './types';
 import { readJson } from './http';
 import { supabaseFetch } from './supabase';
 import { isUuid } from './validation';
-import { parseCanonicalAssetRef } from '@clickeen/ck-contracts';
+import { parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 
 type AccountAssetRef = {
   accountId: string;
@@ -29,8 +29,18 @@ export class AssetUsageValidationError extends Error {
 }
 
 function parseAccountAssetRef(raw: string): AccountAssetRef | null {
-  const parsed = parseCanonicalAssetRef(raw);
-  if (!parsed || parsed.kind !== 'pointer') return null;
+  const parsedDirect = parseCanonicalAssetRef(raw);
+  const parsedFromVersionId =
+    !parsedDirect || parsedDirect.kind !== 'version'
+      ? (() => {
+          const path = toCanonicalAssetVersionPath(raw);
+          if (!path) return null;
+          const parsed = parseCanonicalAssetRef(path);
+          return parsed && parsed.kind === 'version' ? parsed : null;
+        })()
+      : null;
+  const parsed = parsedDirect && parsedDirect.kind === 'version' ? parsedDirect : parsedFromVersionId;
+  if (!parsed || parsed.kind !== 'version') return null;
   if (!isUuid(parsed.accountId) || !isUuid(parsed.assetId)) return null;
   return {
     accountId: parsed.accountId,

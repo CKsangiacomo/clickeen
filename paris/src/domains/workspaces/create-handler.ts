@@ -458,18 +458,18 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         env,
         publicId,
       }).catch(() => null);
-      const enSync = await enqueueRenderSnapshot(env, {
+      const enqueue = await enqueueRenderSnapshot(env, {
         publicId,
         action: 'upsert',
-        locales: ['en'],
+        locales: activeLocales,
       });
-      if (!enSync.ok) {
+      if (!enqueue.ok) {
         return rollbackCreatedAndReturn(
           ckError(
             {
               kind: 'INTERNAL',
               reasonKey: 'coreui.errors.publish.failed',
-              detail: enSync.error,
+              detail: enqueue.error,
             },
             503,
           ),
@@ -492,21 +492,6 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
             503,
           ),
         );
-      }
-
-      const asyncLocales = activeLocales.filter((locale) => locale !== 'en');
-      if (asyncLocales.length) {
-        const enqueue = await enqueueRenderSnapshot(env, {
-          publicId,
-          action: 'upsert',
-          locales: asyncLocales,
-        });
-        if (!enqueue.ok) {
-          console.warn('[ParisWorker] async locale snapshot enqueue failed', {
-            publicId,
-            detail: enqueue.error,
-          });
-        }
       }
     }
   }

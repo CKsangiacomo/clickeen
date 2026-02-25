@@ -112,7 +112,8 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         JSON.stringify({
           accountId: '00000000-0000-0000-0000-000000000100',
           assetId: '11111111-1111-1111-1111-111111111111',
-          url: 'http://localhost:4000/arsenale/a/00000000-0000-0000-0000-000000000100/11111111-1111-1111-1111-111111111111',
+          url:
+            'http://localhost:4000/assets/v/assets%2Fversions%2F00000000-0000-0000-0000-000000000100%2F11111111-1111-1111-1111-111111111111%2Fcover.jpg',
         }),
         { status: 200 },
       );

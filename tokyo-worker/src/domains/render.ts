@@ -102,10 +102,6 @@ function normalizeRenderLocales(locales: unknown): string[] {
   return out;
 }
 
-function renderIndexKey(publicId: string): string {
-  return `renders/instances/${publicId}/index.json`;
-}
-
 function renderPublishedPointerKey(publicId: string): string {
   return `renders/instances/${publicId}/published.json`;
 }
@@ -215,30 +211,16 @@ async function putRenderRevisionIndex(
 
 async function loadRenderIndex(env: Env, publicId: string): Promise<RenderIndex | null> {
   const pointer = await loadRenderPublishedPointer(env, publicId).catch(() => null);
-  if (pointer?.revision) {
-    const revisionObj = await env.TOKYO_R2.get(renderRevisionIndexKey(publicId, pointer.revision));
-    if (revisionObj) {
-      const revisionJson = (await revisionObj.json().catch(() => null)) as any;
-      if (revisionJson) return assertRenderIndexShape(revisionJson, publicId);
-    }
-  }
-
-  const legacyObj = await env.TOKYO_R2.get(renderIndexKey(publicId));
-  if (!legacyObj) return null;
-  const legacyJson = (await legacyObj.json().catch(() => null)) as any;
-  if (!legacyJson) return null;
-  return assertRenderIndexShape(legacyJson, publicId);
-}
-
-async function putRenderIndex(env: Env, publicId: string, index: RenderIndex): Promise<void> {
-  await env.TOKYO_R2.put(renderIndexKey(publicId), prettyStableJson(index), {
-    httpMetadata: { contentType: 'application/json; charset=utf-8' },
-  });
+  if (!pointer?.revision) return null;
+  const revisionObj = await env.TOKYO_R2.get(renderRevisionIndexKey(publicId, pointer.revision));
+  if (!revisionObj) return null;
+  const revisionJson = (await revisionObj.json().catch(() => null)) as any;
+  if (!revisionJson) return null;
+  return assertRenderIndexShape(revisionJson, publicId);
 }
 
 async function deleteRenderIndex(env: Env, publicId: string): Promise<void> {
   await deleteRenderPublishedPointer(env, publicId);
-  await env.TOKYO_R2.delete(renderIndexKey(publicId));
 }
 
 async function fetchVeniceBytes(
@@ -336,6 +318,32 @@ async function generateRenderSnapshots(args: {
     );
     const [e, r, meta] = await Promise.all([ePromise, rPromise, metaPromise]);
 
+    if (!enforcement && locale !== 'en') {
+      const effectiveLocales = [e.effectiveLocale, r.effectiveLocale, meta.effectiveLocale].map((value) =>
+        normalizeLocale(value),
+      );
+      const normalizedStatuses = [e.l10nStatus, r.l10nStatus, meta.l10nStatus].map((value) =>
+        String(value || '')
+          .trim()
+          .toLowerCase(),
+      );
+      const distinctEffectiveLocales = Array.from(new Set(effectiveLocales.filter((value): value is string => Boolean(value))));
+      const hasEnFallback = effectiveLocales.some((value) => !value || value === 'en');
+      const allFresh = normalizedStatuses.every((value) => value === 'fresh');
+      const consistentEffectiveLocale = distinctEffectiveLocales.length === 1;
+      if (hasEnFallback || !allFresh || !consistentEffectiveLocale) {
+        throw new Error(
+          [
+            `[tokyo] locale snapshot not publish-ready`,
+            `publicId=${publicId}`,
+            `locale=${locale}`,
+            `effective=${effectiveLocales.join('|')}`,
+            `status=${normalizedStatuses.join('|')}`,
+          ].join(' '),
+        );
+      }
+    }
+
     const eFp = await putImmutableRenderArtifact({
       env,
       publicId,
@@ -377,8 +385,6 @@ async function generateRenderSnapshots(args: {
     previousRevision,
     updatedAt: new Date().toISOString(),
   });
-  // Legacy compatibility for tooling that still reads /index.json directly.
-  await putRenderIndex(env, publicId, index);
 }
 
 async function handleGetRenderObject(env: Env, key: string, cacheControl: string): Promise<Response> {
@@ -409,7 +415,6 @@ export {
   normalizeRenderLocales,
   normalizeRenderRevision,
   renderArtifactKey,
-  renderIndexKey,
   renderPublishedPointerKey,
   renderRevisionIndexKey,
 };

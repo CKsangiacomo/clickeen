@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 
-import { ASSET_OBJECT_PATH_RE, isUuid } from '../tooling/ck-contracts/src/index.js';
+import {
+  isUuid,
+  parseCanonicalAssetRef,
+  toCanonicalAssetVersionPath,
+} from '../tooling/ck-contracts/src/index.js';
+
+const ASSET_OBJECT_PATH_RE = /^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
 
 /**
  * One-shot origin repair for persisted widget configs.
  *
- * Rewrites legacy/invalid asset origins to canonical account asset paths:
- *   /arsenale/o/{accountId}/{assetId}/{filename}
- *   /arsenale/o/{accountId}/{assetId}/{variant}/{filename}
+ * Rewrites legacy/invalid asset origins to canonical immutable asset version paths:
+ *   /assets/v/{encodeURIComponent(assets/versions/{accountId}/{assetId}/{variant?}/{filename})}
  *
  * Source rows:
  *   - curated_widget_instances
@@ -126,10 +131,9 @@ function toPathname(raw) {
 }
 
 function buildCanonicalAssetPath(accountId, assetId, variant, filename) {
-  if (variant === 'original') {
-    return `/arsenale/o/${accountId}/${assetId}/${filename}`;
-  }
-  return `/arsenale/o/${accountId}/${assetId}/${variant}/${filename}`;
+  const variantSegment = variant === 'original' ? '' : `${variant}/`;
+  const versionKey = `assets/versions/${accountId}/${assetId}/${variantSegment}${filename}`;
+  return toCanonicalAssetVersionPath(versionKey) || '';
 }
 
 function safeDecodeSegment(raw) {
@@ -262,6 +266,12 @@ async function rewriteCandidatePath(client, candidateRaw, variantCache) {
     return { changed: false, value: candidate };
   }
 
+  const canonicalVersionRef = parseCanonicalAssetRef(pathname);
+  if (canonicalVersionRef && canonicalVersionRef.kind === 'version') {
+    const canonical = toCanonicalAssetVersionPath(canonicalVersionRef.versionKey) || pathname;
+    return { changed: canonical !== candidate, value: canonical };
+  }
+
   const legacyMatch = pathname.match(LEGACY_CURATED_PATH_RE);
   if (legacyMatch) {
     const assetId = String(legacyMatch[1] || '').trim().toLowerCase();
@@ -274,6 +284,9 @@ async function rewriteCandidatePath(client, candidateRaw, variantCache) {
       return { changed: false, value: candidate, unresolved: `legacy-missing-variant:${candidate}` };
     }
     const canonical = buildCanonicalAssetPath(meta.accountId, assetId, variant, meta.filename);
+    if (!canonical) {
+      return { changed: false, value: candidate, unresolved: `legacy-invalid-canonical-version:${candidate}` };
+    }
     return { changed: canonical !== candidate, value: canonical };
   }
 
@@ -293,6 +306,9 @@ async function rewriteCandidatePath(client, candidateRaw, variantCache) {
     const canonical = meta
       ? buildCanonicalAssetPath(meta.accountId, assetId, variant, meta.filename)
       : buildCanonicalAssetPath(accountIdFromPath, assetId, variant, filenameFromPath || 'original.jpg');
+    if (!canonical) {
+      return { changed: false, value: candidate, unresolved: `canonical-invalid-canonical-version:${candidate}` };
+    }
     if (!meta) {
       return { changed: canonical !== candidate, value: canonical, unresolved: `canonical-missing-variant:${candidate}` };
     }

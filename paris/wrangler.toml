@@ -3,6 +3,9 @@ main = "src/index.ts"
 compatibility_date = "2025-12-28"
 workers_dev = true
 
+[vars]
+SANFRANCISCO_BASE_URL = "https://sanfrancisco.dev.clickeen.com"
+
 [[kv_namespaces]]
 binding = "USAGE_KV"
 id = "a9396f7fee7f47bc9b1be520c78a24c9"

@@ -6,6 +6,9 @@ import {
   type SessionCookieSpec,
 } from '../../auth/session';
 
+export const PARIS_PROXY_READ_TIMEOUT_MS = 5_000;
+export const PARIS_PROXY_WRITE_TIMEOUT_MS = 20_000;
+
 export function resolveParisBaseOrResponse(corsHeaders: HeadersInit) {
   try {
     return { ok: true as const, baseUrl: resolveParisBaseUrl() };
@@ -18,7 +21,11 @@ export function resolveParisBaseOrResponse(corsHeaders: HeadersInit) {
   }
 }
 
-export async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs = 5000) {
+export async function fetchWithTimeout(
+  input: string,
+  init: RequestInit,
+  timeoutMs = PARIS_PROXY_READ_TIMEOUT_MS,
+) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {

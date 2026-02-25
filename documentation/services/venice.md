@@ -68,9 +68,9 @@ Venice must **never** serve unpublished instances.
 **Purpose:** Return complete widget HTML suitable for iframing on third-party sites.
 
 **Render algorithm (high level):**
-0. **Snapshot-only public serving (PRD 38):** for normal embed requests (no `X-Ck-Snapshot-Bypass: 1`), Venice serves only Tokyo render artifacts (`e.html`) from `renders/instances/<publicId>/index.json` + immutable `.../<fingerprint>/e.html` (per-locale). Venice patches request-time `theme` + `device` into the snapshot response. Response header: `X-Venice-Render-Mode: snapshot`.
+0. **Snapshot-only public serving (PRD 38):** for normal embed requests (no `X-Ck-Snapshot-Bypass: 1`), Venice serves only Tokyo render artifacts (`e.html`) from `renders/instances/<publicId>/published.json` -> `revisions/<revision>/index.json` + immutable `.../<fingerprint>/e.html` (per-locale). Venice returns snapshot bytes as-is (no request-time payload mutation). Response header: `X-Venice-Render-Mode: snapshot`.
 1. **No public dynamic fallback:** when snapshot artifacts are missing/invalid, Venice returns explicit errors (`404` for unavailable/unpublished, `503` for published snapshot-missing). It does not render dynamically for public traffic.
-2. **Revision-coherent fallback rule:** Venice never mixes revisions. If requested locale snapshot is missing, Venice serves EN from the same published revision only.
+2. **Revision-coherent strictness rule:** Venice never mixes revisions and does not locale-fallback in public snapshot mode. If the requested locale artifact is missing, Venice returns unavailable.
 3. **Internal dynamic render path (snapshot generation only):** when `X-Ck-Snapshot-Bypass: 1` is present (tokyo-worker pipeline), Venice fetches Paris state and renders dynamically.
 4. Internal dynamic rendering applies Tokyo `l10n` overlay (if present) from deterministic overlay paths:
    - Overlay must be set-only ops.
@@ -78,10 +78,10 @@ Venice must **never** serve unpublished instances.
    - Overlay must include `baseFingerprint` (required).
    - Snapshot materialization uses strict overlay matching:
      - **fresh:** `overlay.baseFingerprint` matches the current base fingerprint → apply full overlay
-     - **stale/missing:** do not salvage during snapshot generation; treat as base (EN fallback at snapshot read time)
+     - **stale/missing:** do not salvage during snapshot generation; non-EN snapshot generation must fail visibly
    - The allowlist comes from `tokyo/widgets/{widgetType}/localization.json` (translatable paths only).
 5. Dynamic render path returns HTML that:
-   - sets `<base href="/widgets/{widgetType}/">` so relative asset links resolve under Venice
+   - sets `<base href="<TOKYO_BASE>/widgets/{widgetType}/">` so widget package files resolve to Tokyo
    - injects a single canonical bootstrap object: `window.CK_WIDGET`
 
 **Injected bootstrap object (canonical):**
@@ -101,8 +101,6 @@ window.CK_WIDGET = {
 Widgets consume `window.CK_WIDGET.state` for the initial render (legacy). For multi-embed host pages, widgets SHOULD prefer `window.CK_WIDGETS[publicId].state` when available, and fall back to `window.CK_WIDGET.state`. Widgets then respond to Bob preview updates via `ck:state-update` postMessage.
 
 **Query parameters (shipped):**
-- `theme=light|dark` (optional, defaults to `light`)
-- `device=desktop|mobile` (optional, defaults to `desktop`)
 - `locale=<bcp47-ish>` (optional; when omitted, Venice defaults to `en` without any auto-selection)
 - `ts=<milliseconds>` (optional; cache bust / no-store)
 
@@ -111,7 +109,7 @@ Widgets consume `window.CK_WIDGET.state` for the initial render (legacy). For mu
 
 **Cache strategy (shipped):**
   - With `?ts=<timestamp>`: `no-store` (explicit cache bust)
-  - Published: `public, max-age=60, s-maxage=60`
+  - Published: `no-store` (pointer-coherent snapshot serving)
   - Unpublished: never served on public embed routes
 
 ### JSON Render Route: `GET /r/:publicId` (shipped)
@@ -125,7 +123,7 @@ Response includes (as implemented today):
 - `excerptHtml` (derived from `widgetType + state + locale`)
 - `state` (localized instance config; overlays applied the same as `/e`)
 
-**Snapshot-only public serving (PRD 38):** normal requests serve `r.json` (or `meta.json` for `?meta=1`) from Tokyo `renders/instances/<publicId>/index.json` + immutable artifacts. Venice patches request-time `theme` + `device` into snapshot payloads. Response header: `X-Venice-Render-Mode: snapshot`.
+**Snapshot-only public serving (PRD 38):** normal requests serve `r.json` (or `meta.json` for `?meta=1`) from Tokyo `renders/instances/<publicId>/published.json` -> `revisions/<revision>/index.json` + immutable artifacts. Venice returns snapshot bytes as-is (no request-time payload mutation). Response header: `X-Venice-Render-Mode: snapshot`.
 
 **No public dynamic fallback:** when snapshot is missing/invalid, Venice returns explicit errors with `X-Venice-Snapshot-Reason`.
 
@@ -140,7 +138,7 @@ Response includes (as implemented today):
 **Locale resolution (shipped):**
 - `requestedLocale`: from `?locale=<token>` when present; otherwise defaults to `en`.
 - `resolvedLocale`: best-supported match for `requestedLocale` (e.g. `fr-ca` → `fr`). `geoTargets` are used only for same-language variant selection.
-- `effectiveLocale`: the locale actually applied to the response. If overlays cannot be applied, Venice falls back to base and sets `effectiveLocale=en` (no lying via HTML `lang` / `window.CK_WIDGET.locale`).
+- `effectiveLocale`: the locale actually applied to the response. Public snapshot mode does not locale-fallback; if the locale artifact is missing, Venice returns unavailable.
 - `render locale source`: `X-Ck-Render-Locale-Source` (`current_locale | current_revision_en_fallback | unavailable`).
 
 **Localization response headers (shipped):**
@@ -154,25 +152,21 @@ Response includes (as implemented today):
 Venice exposes a stable asset origin for widget packages:
 - `GET /widgets/*` proxies Tokyo `/widgets/*`
 - `GET /dieter/*` proxies Tokyo `/dieter/*`
+- `GET /assets/v/*` proxies Tokyo `/assets/v/*`
 
 This keeps widget definitions portable and prevents hard-coded Tokyo origins inside widget HTML/CSS/JS.
 
 **Cache policy (shipped):**
 - Path-aware caching is enforced in Venice (not pass-through):
-  - `l10n` overlays, `arsenale/o` account assets: `force-cache` with 1-year revalidate.
+  - `l10n` overlays, immutable account assets (`/assets/v/*`), and immutable render artifacts: `force-cache` with 1-year revalidate.
   - `i18n` bundles: `force-cache` with 1-year revalidate; `i18n/manifest.json`: short TTL (5 min).
   - `l10n` `index.json`: short TTL (5 min) for overlay metadata freshness.
   - `widgets/` + `dieter/`: short TTL (5 min) for fast iteration.
   - Everything else: `no-store`.
 
-**Asset origin constant (shipped):**
-
-Venice embed loaders set:
-```js
-window.CK_ASSET_ORIGIN = new URL(document.currentScript.src, window.location.href).origin
-```
-
-Widgets can use this when they need absolute URLs (e.g. Dieter icon `mask-image` URLs) while still relying on Venice as the stable proxy origin.
+**Asset URL contract (shipped):**
+- Venice loaders do not inject global asset-origin variables.
+- Widget runtime resolves asset/icon URLs via canonical root-relative paths (`/assets/v/*`, `/dieter/*`, `/widgets/*`) served by Venice proxy routes.
 
 ### Embed loader (v2) data attributes (shipped)
 
@@ -185,7 +179,7 @@ The v2 loader supports two install shapes:
 
 **Scriptless mode (builders that block scripts):**
 - Use a plain iframe to `GET /e/:publicId`:
-  - `<iframe src="<VENICE_URL>/e/wgt_...?theme=light&device=desktop&locale=en" ...></iframe>`
+  - `<iframe src="<VENICE_URL>/e/wgt_...?locale=en" ...></iframe>`
 
 Attributes can live on the placeholder (recommended) or on the script tag (legacy / defaults):
 - `data-clickeen-id` (required for placeholder mode)
@@ -199,8 +193,6 @@ Attributes can live on the placeholder (recommended) or on the script tag (legac
 - `data-locale` (requested locale override; otherwise uses `navigator.language`. Venice may return a different effective locale; see `X-Ck-L10n-*` headers.)
 - `data-ts` (preferred cache-bust token; appended to `/e` and `/r` requests)
 - `data-cache-bust` (`true` to add `?ts=` cache busting; legacy)
-- `data-theme` (`light` | `dark`)
-- `data-device` (`desktop` | `mobile`)
 - `data-max-width` (px; `0` means no max width)
 - `data-min-height` (px)
 - `data-width` (v0.2: only `100%` supported)

@@ -74,11 +74,11 @@ async function proxy(request: NextRequest, prefix: string, pathSegments: string[
 export async function GET(request: NextRequest, ctx: { params: Promise<{ path?: string[] }> }) {
   const params = await ctx.params;
   const segments = Array.isArray(params.path) ? params.path : [];
-  return proxy(request, 'arsenale/a', segments, 'GET');
+  return proxy(request, 'assets/v', segments, 'GET');
 }
 
 export async function HEAD(request: NextRequest, ctx: { params: Promise<{ path?: string[] }> }) {
   const params = await ctx.params;
   const segments = Array.isArray(params.path) ? params.path : [];
-  return proxy(request, 'arsenale/a', segments, 'HEAD');
+  return proxy(request, 'assets/v', segments, 'HEAD');
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   applySessionCookies,
+  PARIS_PROXY_WRITE_TIMEOUT_MS,
   fetchWithTimeout,
   proxyErrorResponse,
   resolveParisBaseOrResponse,
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ worksp
       headers,
       body,
       cache: 'no-store',
-    });
+    }, PARIS_PROXY_WRITE_TIMEOUT_MS);
     const data = await res.text();
     const response = new NextResponse(data, {
       status: res.status,

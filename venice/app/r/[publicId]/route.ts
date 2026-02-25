@@ -115,8 +115,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const publicId = String(rawPublicId || '').trim();
   const isCurated = isCuratedOrMainWidgetPublicId(publicId);
   const url = new URL(req.url);
-  const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
-  const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
+  const theme = 'light';
+  const device = 'desktop';
   const ts = url.searchParams.get('ts');
   const metaOnly = url.searchParams.get('meta') === '1' || url.searchParams.get('meta') === 'true';
   const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
@@ -170,6 +170,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     });
     if (snapshot.ok) {
       const etag = `W/"${snapshot.fingerprint}"`;
+      if (snapshot.contentType) headers['Content-Type'] = snapshot.contentType;
       if (snapshot.pointerUpdatedAt) {
         headers['X-Ck-Render-Pointer-Updated-At'] = snapshot.pointerUpdatedAt;
       }
@@ -183,113 +184,18 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         return new NextResponse(null, { status: 304, headers });
       }
 
-      const raw = new TextDecoder().decode(snapshot.bytes);
-      if (!metaOnly) {
-        try {
-          const parsed = JSON.parse(raw) as Record<string, unknown>;
-          const mode = (parsed as any)?.enforcement?.mode;
-          const resolvedLocale = mode === 'frozen' ? 'en' : locale;
-          parsed.theme = theme;
-          parsed.device = device;
-          parsed.locale = resolvedLocale;
-          const body = JSON.stringify(parsed);
-          headers['X-Ck-L10n-Requested-Locale'] = locale;
-          headers['X-Ck-L10n-Resolved-Locale'] = resolvedLocale;
-          headers['X-Ck-L10n-Effective-Locale'] = resolvedLocale;
-          headers['X-Ck-L10n-Status'] = resolvedLocale === 'en' ? 'base' : 'fresh';
-          headers['X-Ck-Render-Locale-Source'] = resolveRenderLocaleSource({
-            requestedLocale: locale,
-            effectiveLocale: resolvedLocale,
-          });
-          headers['ETag'] = etag;
-          headers['Cache-Control'] = snapshotCacheControl;
-          headers['Vary'] = 'Authorization, X-Embed-Token';
-          headers['X-Venice-Render-Mode'] = 'snapshot';
-          return new NextResponse(body, { status: 200, headers });
-        } catch {
-          snapshotReason = 'SNAPSHOT_INVALID';
-        }
-      } else {
-        headers['X-Ck-L10n-Requested-Locale'] = locale;
-        headers['X-Ck-L10n-Resolved-Locale'] = locale;
-        headers['X-Ck-L10n-Effective-Locale'] = locale;
-        headers['X-Ck-L10n-Status'] = locale === 'en' ? 'base' : 'fresh';
-        headers['X-Ck-Render-Locale-Source'] = 'current_locale';
-        headers['ETag'] = etag;
-        headers['Cache-Control'] = snapshotCacheControl;
-        headers['Vary'] = 'Authorization, X-Embed-Token';
-        headers['X-Venice-Render-Mode'] = 'snapshot';
-        return new NextResponse(raw, { status: 200, headers });
-      }
+      headers['X-Ck-L10n-Requested-Locale'] = locale;
+      headers['X-Ck-L10n-Resolved-Locale'] = locale;
+      headers['X-Ck-L10n-Effective-Locale'] = locale;
+      headers['X-Ck-L10n-Status'] = locale === 'en' ? 'base' : 'fresh';
+      headers['X-Ck-Render-Locale-Source'] = 'current_locale';
+      headers['ETag'] = etag;
+      headers['Cache-Control'] = snapshotCacheControl;
+      headers['Vary'] = 'Authorization, X-Embed-Token';
+      headers['X-Venice-Render-Mode'] = 'snapshot';
+      return new NextResponse(snapshot.bytes, { status: 200, headers });
     } else {
       snapshotReason = snapshot.reason;
-    }
-
-    if (snapshotReason && locale !== 'en') {
-      const fallbackSnapshot = await loadRenderSnapshot({
-        publicId,
-        locale: 'en',
-        variant: metaOnly ? 'meta' : 'r',
-      });
-      if (fallbackSnapshot.ok) {
-        const etag = `W/"${fallbackSnapshot.fingerprint}"`;
-        if (fallbackSnapshot.pointerUpdatedAt) {
-          headers['X-Ck-Render-Pointer-Updated-At'] = fallbackSnapshot.pointerUpdatedAt;
-        }
-        const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
-        if (ifNoneMatch && ifNoneMatch === etag) {
-          headers['ETag'] = etag;
-          headers['Cache-Control'] = snapshotCacheControl;
-          headers['Vary'] = 'Authorization, X-Embed-Token';
-          headers['X-Venice-Render-Mode'] = 'snapshot';
-          headers['X-Venice-Snapshot-Fallback'] = 'en';
-          headers['X-Ck-L10n-Requested-Locale'] = locale;
-          headers['X-Ck-L10n-Resolved-Locale'] = 'en';
-          headers['X-Ck-L10n-Effective-Locale'] = 'en';
-          headers['X-Ck-L10n-Status'] = 'base';
-          headers['X-Ck-Render-Locale-Source'] = 'current_revision_en_fallback';
-          if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
-          return new NextResponse(null, { status: 304, headers });
-        }
-
-        const raw = new TextDecoder().decode(fallbackSnapshot.bytes);
-        if (!metaOnly) {
-          try {
-            const parsed = JSON.parse(raw) as Record<string, unknown>;
-            parsed.theme = theme;
-            parsed.device = device;
-            parsed.locale = 'en';
-            const body = JSON.stringify(parsed);
-            headers['ETag'] = etag;
-            headers['Cache-Control'] = snapshotCacheControl;
-            headers['Vary'] = 'Authorization, X-Embed-Token';
-            headers['X-Venice-Render-Mode'] = 'snapshot';
-            headers['X-Venice-Snapshot-Fallback'] = 'en';
-            headers['X-Ck-L10n-Requested-Locale'] = locale;
-            headers['X-Ck-L10n-Resolved-Locale'] = 'en';
-            headers['X-Ck-L10n-Effective-Locale'] = 'en';
-            headers['X-Ck-L10n-Status'] = 'base';
-            headers['X-Ck-Render-Locale-Source'] = 'current_revision_en_fallback';
-            if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
-            return new NextResponse(body, { status: 200, headers });
-          } catch {
-            // Fall through to snapshot status probe and unavailable response.
-          }
-        } else {
-          headers['ETag'] = etag;
-          headers['Cache-Control'] = snapshotCacheControl;
-          headers['Vary'] = 'Authorization, X-Embed-Token';
-          headers['X-Venice-Render-Mode'] = 'snapshot';
-          headers['X-Venice-Snapshot-Fallback'] = 'en';
-          headers['X-Ck-L10n-Requested-Locale'] = locale;
-          headers['X-Ck-L10n-Resolved-Locale'] = 'en';
-          headers['X-Ck-L10n-Effective-Locale'] = 'en';
-          headers['X-Ck-L10n-Status'] = 'base';
-          headers['X-Ck-Render-Locale-Source'] = 'current_revision_en_fallback';
-          if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
-          return new NextResponse(raw, { status: 200, headers });
-        }
-      }
     }
 
     if (snapshotReason === 'NEVER_PUBLISHED') {
@@ -388,7 +294,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         baseUpdatedAt: instance.updatedAt ?? null,
         widgetType,
         config: instance.config,
-        allowStaleOverlay: !bypassSnapshot,
       });
 
   headers['X-Ck-L10n-Requested-Locale'] = overlayResult.meta.requestedLocale;

@@ -249,22 +249,36 @@ function assertAssetLifecycleContracts49B() {
     "coreui.errors.asset.inUseConfirmRequired",
     'requiresConfirm: true',
     'confirmInUse',
-    "headers.set('cache-control', 'no-store')",
-    "headers.set('cdn-cache-control', 'no-store')",
-    "headers.set('cloudflare-cdn-cache-control', 'no-store')",
-    'ctx.waitUntil(Promise.allSettled(variantKeys.map((key) => env.TOKYO_R2.delete(key))))',
+    "headers.set('cache-control', 'public, max-age=31536000, immutable')",
+    "headers.set('cdn-cache-control', 'public, max-age=31536000, immutable')",
+    "headers.set('cloudflare-cdn-cache-control', 'public, max-age=31536000, immutable')",
+    "toCanonicalAssetVersionPath",
+    "reasonKey: 'tokyo.errors.assets.deletePipelinePartialFailure'",
   ]);
   assertExcludesAll(tokyoAssetFiles, ['purge-deleted', 'markAccountAssetDeletedByIdentity']);
 
   assertIncludes('paris/src/index.ts', [
     'const accountAssetContentMatch = pathname.match(/^\\/api\\/accounts\\/([^/]+)\\/assets\\/([^/]+)\\/content$/);',
   ]);
+  assertIncludes('paris/src/shared/validation.ts', [
+    'isLegacyPersistedFillMediaFieldPath',
+    'Persisted media URL fields are not supported',
+    'Persisted logoFill asset URL is not supported',
+  ]);
   assertIncludes('paris/src/domains/accounts/index.ts', [
     'handleAccountAssetReplaceContent',
     "tokyoUrl.searchParams.set('confirmInUse', confirmInUse);",
   ]);
 
-  assertIncludes('venice/lib/tokyo.ts', ["if (isAccountAssetPointer)", "return { cache: 'no-store' };"]);
+  assertIncludes('venice/lib/tokyo.ts', ["const isAccountAssetVersion = normalized.startsWith('/assets/v/');"]);
+  assertIncludes('tokyo-worker/src/index.ts', ["reasonKey: 'tokyo.errors.render.legacyIndexUnsupported'"]);
+  assertExcludes('tokyo-worker/src/index.ts', [
+    "if (pathname.startsWith('/arsenale/'))",
+    "reasonKey: 'tokyo.errors.assets.legacyPathUnsupported'",
+    'Legacy /arsenale/* paths are not supported.',
+  ]);
+  assertExcludes('tokyo-worker/src/index.ts', ['renderIndexMatch', 'renderIndexKey(publicId)']);
+  assertExcludes('tokyo-worker/src/domains/render.ts', ['await putRenderIndex(env, publicId, index);', 'function renderIndexKey(']);
 
   assertIncludes('roma/components/assets-domain.tsx', [
     "const search = confirmInUse ? '?confirmInUse=1' : '';",
@@ -272,21 +286,28 @@ function assertAssetLifecycleContracts49B() {
   ]);
 
   assertIncludes('dieter/components/dropdown-upload/dropdown-upload.ts', [
-    "setMetaValue(state, { name: file.name }, true);",
-    "throw new Error('coreui.errors.assets.replaceTargetInvalid');",
-    'replaceEditorAsset({',
+    'parseCanonicalAssetVersionId(uploadedUrl);',
+    'setMetaValue(state, nextMeta, true);',
+    "setFileKey(state, uploadedVersionId ? 'transparent' : uploadedUrl, true);",
   ]);
   assertExcludes('dieter/components/dropdown-upload/dropdown-upload.ts', [
     "setMetaValue(state, { name: file.name, mime: file.type || '', source: 'user' }, true)",
   ]);
 
-  assertIncludes('dieter/components/dropdown-fill/dropdown-fill.ts', [
-    "throw new Error('coreui.errors.assets.replaceTargetInvalid');",
+  assertIncludes('dieter/components/dropdown-fill/fill-types.ts', [
+    'export type AssetRefValue = { versionId: string };',
+    'asset?: AssetRefValue;',
+    'poster?: AssetRefValue;',
   ]);
-  assertExcludes('tokyo/widgets/shared/fill.js', ['fallbackLayer(']);
+  assertExcludes('dieter/components/dropdown-fill/fill-types.ts', ['src?: string;', 'posterSrc?: string;']);
 
-  assertIncludes('paris/src/shared/assetUsage.ts', ["parsed.kind !== 'pointer'"]);
-  assertIncludes('dieter/components/shared/assetUpload.ts', ["parsed.kind !== 'pointer'"]);
+  assertIncludes('dieter/components/dropdown-fill/fill-parser.ts', ['readImageSrc', 'readVideoSrc']);
+  assertExcludes('dieter/components/dropdown-fill/fill-parser.ts', ['isPersistedAssetUrl']);
+
+  assertExcludes('tokyo/widgets/shared/fill.js', ['fallbackLayer(', 'normalizePersistedAssetUrl(', 'isPersistedAssetUrl(']);
+
+  assertIncludes('paris/src/shared/assetUsage.ts', ["parsed.kind !== 'version'"]);
+  assertIncludes('dieter/components/shared/assetUpload.ts', ["parsed.kind !== 'version'"]);
 }
 
 function assertBootstrapContracts49C() {

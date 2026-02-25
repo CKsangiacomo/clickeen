@@ -234,7 +234,7 @@ Rules:
 - `index.json` is updated by Tokyo-worker whenever locales are published or deleted.
 - `geoTargets` is optional and is used only for **variant selection within a language** (e.g. `fr` vs `fr-ca`); it must never override an explicit unrelated locale.
 - Runtime prefers overlays whose `overlay.baseFingerprint` matches the current base fingerprint.
-  - Venice public snapshot materialization does not apply stale overlays; stale locale output resolves through same-revision EN fallback.
+  - Venice public snapshot materialization does not apply stale overlays and does not EN-fallback for missing locale artifacts; missing locale snapshots are unavailable until publish succeeds.
 
 Example:
 

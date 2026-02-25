@@ -311,6 +311,94 @@ var Dieter = (() => {
     }
   };
 
+  // ../tooling/ck-contracts/src/index.js
+  var WIDGET_PUBLIC_ID_RE = /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
+  var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  var ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
+  var ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
+  var CK_ERROR_CODE = Object.freeze({
+    VALIDATION: "VALIDATION",
+    NOT_FOUND: "NOT_FOUND",
+    DENY: "DENY",
+    INTERNAL: "INTERNAL"
+  });
+  var INSTANCE_PUBLISH_STATUS = Object.freeze({
+    PUBLISHED: "published",
+    UNPUBLISHED: "unpublished"
+  });
+  var RENDER_SNAPSHOT_ACTION = Object.freeze({
+    UPSERT: "upsert",
+    DELETE: "delete"
+  });
+  function normalizeWidgetPublicId(raw) {
+    const value = typeof raw === "string" ? raw.trim() : "";
+    if (!value) return null;
+    return WIDGET_PUBLIC_ID_RE.test(value) ? value : null;
+  }
+  function isWidgetPublicId(raw) {
+    return normalizeWidgetPublicId(raw) != null;
+  }
+  function decodePathPart(raw) {
+    try {
+      return decodeURIComponent(String(raw || "")).trim();
+    } catch {
+      return "";
+    }
+  }
+  function pathnameFromRawAssetRef(raw) {
+    const value = String(raw || "").trim();
+    if (!value) return null;
+    if (value.startsWith("/")) return value;
+    if (!/^https?:\/\//i.test(value)) return null;
+    try {
+      return new URL(value).pathname || "/";
+    } catch {
+      return null;
+    }
+  }
+  function decodeAssetVersionToken(raw) {
+    const token = decodePathPart(raw);
+    if (!token) return null;
+    try {
+      const key = decodeURIComponent(token).trim();
+      if (!key || key.startsWith("/") || key.includes("..")) return null;
+      return key;
+    } catch {
+      return null;
+    }
+  }
+  function isUuid(raw) {
+    const value = typeof raw === "string" ? raw.trim() : "";
+    return Boolean(value && UUID_RE.test(value));
+  }
+  function parseCanonicalAssetRef(raw) {
+    const pathname = pathnameFromRawAssetRef(raw);
+    if (!pathname) return null;
+    const version = pathname.match(ASSET_VERSION_PATH_RE);
+    if (!version) return null;
+    const versionToken = decodePathPart(version[1]);
+    const versionKey = decodeAssetVersionToken(versionToken);
+    if (!versionKey) return null;
+    const keyMatch = versionKey.match(ASSET_VERSION_KEY_RE);
+    if (!keyMatch) return null;
+    const accountId = decodePathPart(keyMatch[1]);
+    const assetId = decodePathPart(keyMatch[2]);
+    if (!isUuid(accountId) || !isUuid(assetId)) return null;
+    return {
+      accountId,
+      assetId,
+      kind: "version",
+      pathname,
+      versionToken,
+      versionKey
+    };
+  }
+  function toCanonicalAssetVersionPath(versionKey) {
+    const key = typeof versionKey === "string" ? versionKey.trim() : "";
+    if (!key || key.startsWith("/") || key.includes("..") || !ASSET_VERSION_KEY_RE.test(key)) return null;
+    return `/assets/v/${encodeURIComponent(key)}`;
+  }
+
   // components/dropdown-fill/fill-types.ts
   var MODE_ORDER = ["color", "gradient", "image", "video"];
   var DEFAULT_GRADIENT = {
@@ -586,38 +674,73 @@ var Dieter = (() => {
   }
 
   // components/dropdown-fill/fill-parser.ts
-  function isPersistedAssetUrl(value) {
-    return /^https?:\/\//i.test(value) || value.startsWith("/");
+  function resolveAssetBaseHref() {
+    if (typeof window === "undefined") return "http://localhost/";
+    return window.location.href || "http://localhost/";
+  }
+  function assetVersionIdToPath(versionIdRaw) {
+    const versionId = String(versionIdRaw || "").trim();
+    const canonical = toCanonicalAssetVersionPath(versionId);
+    return canonical || null;
+  }
+  function assetVersionIdToUrl(versionIdRaw) {
+    const path = assetVersionIdToPath(versionIdRaw);
+    if (!path) return null;
+    try {
+      return new URL(path, resolveAssetBaseHref()).toString();
+    } catch {
+      return path;
+    }
+  }
+  function assetVersionIdFromUrl(raw) {
+    const parsed = parseCanonicalAssetRef(raw);
+    if (!parsed || parsed.kind !== "version") return null;
+    return parsed.versionKey;
   }
   function normalizeImageValue(raw) {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-      return { src: "", fit: "cover", position: "center", repeat: "no-repeat" };
+      return { fit: "cover", position: "center", repeat: "no-repeat" };
     }
     const value = raw;
-    const srcRaw = typeof value.src === "string" ? value.src.trim() : "";
-    const src = isPersistedAssetUrl(srcRaw) ? srcRaw : "";
+    const assetVersionIdRaw = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.versionId || "").trim() : "";
+    const assetVersionId = assetVersionIdToPath(assetVersionIdRaw) ? assetVersionIdRaw : "";
     const name = typeof value.name === "string" ? value.name.trim() : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
     const repeat = typeof value.repeat === "string" && value.repeat.trim() ? value.repeat.trim() : "no-repeat";
-    return { src, ...name ? { name } : {}, fit, position, repeat };
+    return {
+      ...assetVersionId ? { asset: { versionId: assetVersionId } } : {},
+      ...name ? { name } : {},
+      fit,
+      position,
+      repeat
+    };
   }
   function normalizeVideoValue(raw) {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-      return { src: "", poster: "", fit: "cover", position: "center", loop: true, muted: true, autoplay: true };
+      return { fit: "cover", position: "center", loop: true, muted: true, autoplay: true };
     }
     const value = raw;
-    const srcRaw = typeof value.src === "string" ? value.src.trim() : "";
-    const posterRaw = typeof value.poster === "string" ? value.poster.trim() : "";
-    const src = isPersistedAssetUrl(srcRaw) ? srcRaw : "";
+    const assetVersionIdRaw = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.versionId || "").trim() : "";
+    const posterVersionIdRaw = value.poster && typeof value.poster === "object" && !Array.isArray(value.poster) ? String(value.poster.versionId || "").trim() : "";
+    const assetVersionId = assetVersionIdToPath(assetVersionIdRaw) ? assetVersionIdRaw : "";
+    const posterVersionId = assetVersionIdToPath(posterVersionIdRaw) ? posterVersionIdRaw : "";
     const name = typeof value.name === "string" ? value.name.trim() : "";
-    const poster = isPersistedAssetUrl(posterRaw) ? posterRaw : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
     const loop = typeof value.loop === "boolean" ? value.loop : true;
     const muted = typeof value.muted === "boolean" ? value.muted : true;
     const autoplay = typeof value.autoplay === "boolean" ? value.autoplay : true;
-    return { src, ...name ? { name } : {}, poster, fit, position, loop, muted, autoplay };
+    return {
+      ...assetVersionId ? { asset: { versionId: assetVersionId } } : {},
+      ...name ? { name } : {},
+      ...posterVersionId ? { poster: { versionId: posterVersionId } } : {},
+      fit,
+      position,
+      loop,
+      muted,
+      autoplay
+    };
   }
   function normalizeGradientValue(raw) {
     if (typeof raw === "string") {
@@ -665,15 +788,8 @@ var Dieter = (() => {
   }
   function parseFillString(value, root) {
     if (!value) return { type: "none" };
-    const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    if (urlMatch && urlMatch[2]) {
-      const src = urlMatch[2].trim();
-      if (!isPersistedAssetUrl(src)) return null;
-      return { type: "image", image: { src, fit: "cover", position: "center", repeat: "no-repeat" } };
-    }
-    if (isPersistedAssetUrl(value)) {
-      return { type: "image", image: { src: value, fit: "cover", position: "center", repeat: "no-repeat" } };
-    }
+    if (/url\(\s*(['"]?)([^'")]+)\1\s*\)/i.test(value)) return null;
+    if (/^https?:\/\//i.test(value) || value.startsWith("/")) return null;
     if (/-gradient\(/i.test(value)) {
       return { type: "gradient", gradient: { css: value } };
     }
@@ -708,72 +824,15 @@ var Dieter = (() => {
   function readVideoName(fill) {
     return typeof fill.video?.name === "string" && fill.video.name.trim() ? fill.video.name.trim() : null;
   }
-
-  // ../tooling/ck-contracts/src/index.js
-  var WIDGET_PUBLIC_ID_RE = /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
-  var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  var ASSET_POINTER_PATH_RE = /^\/arsenale\/a\/([^/]+)\/([^/]+)$/;
-  var ASSET_OBJECT_PATH_RE = /^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
-  var CK_ERROR_CODE = Object.freeze({
-    VALIDATION: "VALIDATION",
-    NOT_FOUND: "NOT_FOUND",
-    DENY: "DENY",
-    INTERNAL: "INTERNAL"
-  });
-  var INSTANCE_PUBLISH_STATUS = Object.freeze({
-    PUBLISHED: "published",
-    UNPUBLISHED: "unpublished"
-  });
-  var RENDER_SNAPSHOT_ACTION = Object.freeze({
-    UPSERT: "upsert",
-    DELETE: "delete"
-  });
-  function normalizeWidgetPublicId(raw) {
-    const value = typeof raw === "string" ? raw.trim() : "";
-    if (!value) return null;
-    return WIDGET_PUBLIC_ID_RE.test(value) ? value : null;
+  function readImageSrc(fill) {
+    const versionId = String(fill.image?.asset?.versionId || "").trim();
+    if (!versionId) return null;
+    return assetVersionIdToUrl(versionId);
   }
-  function isWidgetPublicId(raw) {
-    return normalizeWidgetPublicId(raw) != null;
-  }
-  function decodePathPart(raw) {
-    try {
-      return decodeURIComponent(String(raw || "")).trim();
-    } catch {
-      return "";
-    }
-  }
-  function pathnameFromRawAssetRef(raw) {
-    const value = String(raw || "").trim();
-    if (!value) return null;
-    if (value.startsWith("/")) return value;
-    if (!/^https?:\/\//i.test(value)) return null;
-    try {
-      return new URL(value).pathname || "/";
-    } catch {
-      return null;
-    }
-  }
-  function isUuid(raw) {
-    const value = typeof raw === "string" ? raw.trim() : "";
-    return Boolean(value && UUID_RE.test(value));
-  }
-  function parseCanonicalAssetRef(raw) {
-    const pathname = pathnameFromRawAssetRef(raw);
-    if (!pathname) return null;
-    const pointer = pathname.match(ASSET_POINTER_PATH_RE);
-    if (pointer) {
-      const accountId2 = decodePathPart(pointer[1]);
-      const assetId2 = decodePathPart(pointer[2]);
-      if (!isUuid(accountId2) || !isUuid(assetId2)) return null;
-      return { accountId: accountId2, assetId: assetId2, kind: "pointer", pathname };
-    }
-    const object = pathname.match(ASSET_OBJECT_PATH_RE);
-    if (!object) return null;
-    const accountId = decodePathPart(object[1]);
-    const assetId = decodePathPart(object[2]);
-    if (!isUuid(accountId) || !isUuid(assetId)) return null;
-    return { accountId, assetId, kind: "object", pathname };
+  function readVideoSrc(fill) {
+    const versionId = String(fill.video?.asset?.versionId || "").trim();
+    if (!versionId) return null;
+    return assetVersionIdToUrl(versionId);
   }
 
   // components/shared/assetUpload.ts
@@ -814,7 +873,7 @@ var Dieter = (() => {
     const direct = typeof payload.url === "string" ? payload.url.trim() : "";
     if (!direct) return null;
     const parsed = parseCanonicalAssetRef(direct);
-    if (!parsed || parsed.kind !== "pointer") return null;
+    if (!parsed || parsed.kind !== "version") return null;
     if (/^https?:\/\//i.test(direct)) return direct;
     return parsed.pathname;
   }
@@ -904,8 +963,21 @@ var Dieter = (() => {
     if (safe < 1024 * 1024) return `${Math.round(safe / 1024)} KB`;
     return `${(safe / (1024 * 1024)).toFixed(1)} MB`;
   }
-  function resolveAssetChoiceUrl(accountId, assetId) {
-    return `/arsenale/a/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`;
+  function pickAssetVariantUrl(asset) {
+    const variantsRaw = Array.isArray(asset.variants) ? asset.variants : [];
+    if (!variantsRaw.length) return null;
+    const normalized = variantsRaw.map((variant) => {
+      const variantName = String(variant.variant || "").trim().toLowerCase();
+      const url = String(variant.url || "").trim();
+      if (!url || !url.startsWith("/") && !/^https?:\/\//i.test(url)) return null;
+      return {
+        variant: variantName,
+        url
+      };
+    }).filter((entry) => Boolean(entry));
+    if (!normalized.length) return null;
+    const original = normalized.find((entry) => entry.variant === "original");
+    return (original || normalized[0])?.url || null;
   }
   async function fetchImageAssetChoices() {
     const context = resolveImageAssetPickerContext();
@@ -934,6 +1006,8 @@ var Dieter = (() => {
       const normalizedFilename = String(asset.normalizedFilename || "").trim() || `asset-${assetId.slice(0, 8)}`;
       const sizeBytes = Number(asset.sizeBytes);
       const usageCount = Number(asset.usageCount);
+      const url = pickAssetVariantUrl(asset);
+      if (!url) return null;
       return {
         assetId,
         accountId: context.accountId,
@@ -941,7 +1015,7 @@ var Dieter = (() => {
         contentType,
         sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
         usageCount: Number.isFinite(usageCount) ? Math.max(0, Math.trunc(usageCount)) : 0,
-        url: resolveAssetChoiceUrl(context.accountId, assetId)
+        url
       };
     }).filter((asset) => Boolean(asset));
   }
@@ -957,6 +1031,10 @@ var Dieter = (() => {
   }
 
   // components/dropdown-fill/media-controller.ts
+  function resolveAssetVersionId(src) {
+    if (!src) return null;
+    return assetVersionIdFromUrl(src);
+  }
   function setFillUploadingState(state, uploading) {
     state.root.dataset.uploading = uploading ? "true" : "false";
     if (state.uploadButton) state.uploadButton.disabled = uploading;
@@ -1087,10 +1165,11 @@ var Dieter = (() => {
       state.imageUnavailable = false;
     }
     if (opts.commit) {
-      const fill = src ? {
+      const versionId = resolveAssetVersionId(src);
+      const fill = versionId ? {
         type: "image",
         image: {
-          src,
+          asset: { versionId },
           ...state.imageName ? { name: state.imageName } : {},
           fit: "cover",
           position: "center",
@@ -1120,10 +1199,11 @@ var Dieter = (() => {
       state.videoUnavailable = false;
     }
     if (opts.commit) {
-      const fill = src ? {
+      const versionId = resolveAssetVersionId(src);
+      const fill = versionId ? {
         type: "video",
         video: {
-          src,
+          asset: { versionId },
           ...state.videoName ? { name: state.videoName } : {},
           fit: "cover",
           position: "center",
@@ -2204,12 +2284,12 @@ var Dieter = (() => {
     }
     if (fill.type === "image") {
       state.imageName = readImageName(fill);
-      setImageSrc2(state, fill.image?.src || null, { commit: false });
+      setImageSrc2(state, readImageSrc(fill), { commit: false });
       return;
     }
     if (fill.type === "video") {
       state.videoName = readVideoName(fill);
-      setVideoSrc2(state, fill.video?.src || null, { commit: false });
+      setVideoSrc2(state, readVideoSrc(fill), { commit: false });
       return;
     }
   }

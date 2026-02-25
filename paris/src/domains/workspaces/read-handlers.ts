@@ -13,6 +13,7 @@ import { resolveL10nPlanningSnapshot } from '../l10n/planning';
 import {
   enqueueRenderSnapshot,
   loadEnforcement,
+  loadInstanceRenderHealth,
   loadL10nGenerateStatesForFingerprint,
   loadPersistedLocaleOverlayKeys,
   loadLocaleOverlayMatchesForFingerprint,
@@ -86,7 +87,7 @@ export async function handleWorkspaceInstanceRenderSnapshot(
   const enqueue = await enqueueRenderSnapshot(env, {
     publicId: publicIdResult.value,
     action: 'upsert',
-    locales: ['en'],
+    locales: activeLocales,
   });
   if (!enqueue.ok) {
     return ckError(
@@ -119,20 +120,6 @@ export async function handleWorkspaceInstanceRenderSnapshot(
     enWaitedMs = enReady.waitedMs;
   }
 
-  const asyncLocales = activeLocales.filter((locale) => locale !== 'en');
-  if (asyncLocales.length) {
-    const asyncEnqueue = await enqueueRenderSnapshot(env, {
-      publicId: publicIdResult.value,
-      action: 'upsert',
-      locales: asyncLocales,
-    });
-    if (!asyncEnqueue.ok) {
-      console.warn('[ParisWorker] async locale snapshot enqueue failed', {
-        publicId: publicIdResult.value,
-        detail: asyncEnqueue.error,
-      });
-    }
-  }
   return json(
     {
       ok: true,
@@ -396,6 +383,15 @@ export async function handleWorkspaceInstancePublishStatus(
   let renderBaseRevision: string | null = null;
   let renderPointerUpdatedAt: string | null = null;
   let renderIndexError: string | null = null;
+  let renderHealth:
+    | {
+        status: 'healthy' | 'degraded' | 'error';
+        reason: string | null;
+        detail: string | null;
+        updatedAt: string | null;
+      }
+    | null = null;
+  let renderHealthError: string | null = null;
   try {
     const snapshotState = await loadRenderSnapshotState({ env, publicId });
     renderBaseRevision = snapshotState.revision;
@@ -403,6 +399,11 @@ export async function handleWorkspaceInstancePublishStatus(
     renderIndexCurrent = snapshotState.current;
   } catch (error) {
     renderIndexError = error instanceof Error ? error.message : String(error);
+  }
+  try {
+    renderHealth = await loadInstanceRenderHealth(env, publicId);
+  } catch (error) {
+    renderHealthError = error instanceof Error ? error.message : String(error);
   }
 
   const localeStatuses = locales.map((locale) => {
@@ -547,21 +548,30 @@ export async function handleWorkspaceInstancePublishStatus(
   const overall =
     instance.status !== 'published'
       ? 'unpublished'
+      : renderHealth?.status === 'error'
+        ? 'snapshot_error'
       : baseSnapshotBlocked
         ? 'awaiting_snapshot'
-        : l10nSummary.failedTerminal > 0
-          ? 'l10n_failed'
-        : l10nSummary.inFlight > 0
+      : l10nSummary.failedTerminal > 0
+        ? 'l10n_failed'
+      : l10nSummary.inFlight > 0
           ? 'l10n_in_flight'
           : l10nSummary.retrying > 0
             ? 'l10n_retrying'
             : summary.awaitingL10n > 0
               ? 'awaiting_l10n'
+              : renderHealth?.status === 'degraded'
+                ? 'awaiting_snapshot'
               : 'ready';
 
   const nextAction =
     instance.status !== 'published'
       ? { key: 'publish_instance', label: 'Publish instance to start localization.' }
+      : renderHealth?.status === 'error'
+        ? {
+            key: 'inspect_snapshot_pipeline',
+            label: 'Inspect render snapshot pipeline errors and republish.',
+          }
       : l10nSummary.failedTerminal > 0
         ? {
             key: 'inspect_terminal_failures',
@@ -641,6 +651,8 @@ export async function handleWorkspaceInstancePublishStatus(
       renderBaseRevision,
       renderPointerUpdatedAt,
       renderIndexError,
+      renderHealth,
+      renderHealthError,
       workspaceLocales: {
         invalid: invalidWorkspaceLocales,
       },

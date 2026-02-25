@@ -1,7 +1,6 @@
 const TOKYO_BASE_ENV_KEYS = 'NEXT_PUBLIC_TOKYO_URL/TOKYO_URL/TOKYO_BASE_URL';
 const TOKYO_LEGACY_PATH_PREFIXES = new Set([
   '/assets',
-  '/arsenale',
   '/dieter',
   '/widgets',
   '/renders',

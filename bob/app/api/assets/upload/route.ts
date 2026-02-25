@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isUuid, isWidgetPublicId, parseCanonicalAssetRef, toCanonicalAssetPointerPath } from '@clickeen/ck-contracts';
+import { isUuid, isWidgetPublicId, parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 import { resolveTokyoBaseUrl } from '../../../../lib/env/tokyo';
 import {
   isDevstudioLocalBootstrapRequest,
@@ -37,7 +37,7 @@ function normalizeTokyoUploadUrl(
   const parsed = parseCanonicalAssetRef(direct);
   if (!parsed) return null;
   if (expectedAccountId && parsed.accountId !== expectedAccountId) return null;
-  const canonicalPath = toCanonicalAssetPointerPath(parsed.accountId, parsed.assetId);
+  const canonicalPath = toCanonicalAssetVersionPath(parsed.versionKey);
   if (!canonicalPath) return null;
   return `${base}${canonicalPath}`;
 }

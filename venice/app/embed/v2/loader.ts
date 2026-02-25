@@ -1,18 +1,17 @@
-const script = `(() => {
+function buildScript(): string {
+  return `(() => {
   const scriptEl = document.currentScript;
   if (!scriptEl) return;
 
-		  const {
-		    publicId,
-		    trigger = 'immediate',
-		    delay = '0',
-		    scrollPct,
-		    clickSelector,
-		    theme = 'light',
-		    device = 'desktop',
-		    forceShadow = 'false',
-		    ckOptimization = 'none',
-		    cacheBust = 'false',
+			  const {
+			    publicId,
+			    trigger = 'immediate',
+			    delay = '0',
+			    scrollPct,
+			    clickSelector,
+			    forceShadow = 'false',
+			    ckOptimization = 'none',
+			    cacheBust = 'false',
 		    maxWidth: maxWidthAttr,
 		    minHeight: minHeightAttr,
 		    width: widthAttr,
@@ -66,7 +65,6 @@ const script = `(() => {
 	  }
 
 			  const origin = new URL(scriptEl.src, window.location.href).origin;
-			  window.CK_ASSET_ORIGIN = origin;
 
 			  const PLACEHOLDER_SELECTOR = '[data-clickeen-id]';
 
@@ -171,9 +169,8 @@ const script = `(() => {
 	    return url.toString();
 	  };
 
-	  const embedUrl = (path, params = {}) => makeUrl(path, { theme, device, ...tsParam, ...params });
-	  const embedUrlFor = (opts, path, params = {}) =>
-	    makeUrl(path, { theme: opts.theme, device: opts.device, ...opts.tsParam, ...params });
+		  const embedUrl = (path, params = {}) => makeUrl(path, { ...tsParam, ...params });
+		  const embedUrlFor = (opts, path, params = {}) => makeUrl(path, { ...opts.tsParam, ...params });
 	  const assetUrl = (path, params = {}) => makeUrl(path, { ...tsParam, ...params });
 
   function setReadyOnce() {
@@ -612,14 +609,8 @@ const script = `(() => {
     hostEl.setAttribute('data-ck-public-id', pid);
     clearMissingIdError();
 
-    const hostThemeRaw = typeof hostEl.dataset.theme === 'string' ? hostEl.dataset.theme.trim().toLowerCase() : '';
-    const hostTheme = hostThemeRaw === 'dark' ? 'dark' : theme;
-
-    const hostDeviceRaw = typeof hostEl.dataset.device === 'string' ? hostEl.dataset.device.trim().toLowerCase() : '';
-    const hostDevice = hostDeviceRaw === 'mobile' ? 'mobile' : device;
-
-    const hostLocaleRaw = typeof hostEl.dataset.locale === 'string' ? hostEl.dataset.locale : locale;
-    const hostLocale = resolveLocale(hostLocaleRaw);
+	    const hostLocaleRaw = typeof hostEl.dataset.locale === 'string' ? hostEl.dataset.locale : locale;
+	    const hostLocale = resolveLocale(hostLocaleRaw);
 
     const hostExplicitTs = typeof hostEl.dataset.ts === 'string' ? hostEl.dataset.ts.trim() : '';
     const hostCacheBust = typeof hostEl.dataset.cacheBust === 'string' ? hostEl.dataset.cacheBust.trim().toLowerCase() : '';
@@ -640,9 +631,9 @@ const script = `(() => {
     hostEl.style.minHeight = hostMinHeight + 'px';
 
     const iframe = document.createElement('iframe');
-    iframe.src = embedUrlFor({ theme: hostTheme, device: hostDevice, tsParam: hostTsParam }, '/e/' + encodeURIComponent(pid), {
-      locale: hostLocale,
-    });
+	    iframe.src = embedUrlFor({ tsParam: hostTsParam }, '/e/' + encodeURIComponent(pid), {
+	      locale: hostLocale,
+	    });
     iframe.setAttribute('loading', 'lazy');
     iframe.setAttribute('title', 'Clickeen widget');
     iframe.setAttribute('referrerpolicy', 'no-referrer');
@@ -712,10 +703,10 @@ const script = `(() => {
     const hostOptimization = typeof hostEl.dataset.ckOptimization === 'string' ? hostEl.dataset.ckOptimization.trim().toLowerCase() : '';
     const hostSeoGeoOptimization = hostOptimization === 'seo-geo';
     if (hostSeoGeoOptimization) {
-      fetch(embedUrlFor({ theme: hostTheme, device: hostDevice, tsParam: hostTsParam }, '/r/' + encodeURIComponent(pid), { locale: hostLocale, meta: '1' }), {
-        mode: 'cors',
-        credentials: 'omit',
-      })
+	      fetch(embedUrlFor({ tsParam: hostTsParam }, '/r/' + encodeURIComponent(pid), { locale: hostLocale, meta: '1' }), {
+	        mode: 'cors',
+	        credentials: 'omit',
+	      })
         .then((res) => res.json().catch(() => null).then((payload) => ({ res, payload })))
         .then(({ res, payload }) => {
           if (!res.ok || !payload) {
@@ -809,10 +800,12 @@ const script = `(() => {
   if (publicId) scheduleMount();
 })();
 `;
+}
 
 export const runtime = 'edge';
 
 export function GET() {
+  const script = buildScript();
   return new Response(script, {
     status: 200,
     headers: {

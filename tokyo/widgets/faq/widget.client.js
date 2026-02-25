@@ -28,18 +28,6 @@
     throw new Error('[FAQ] Missing [data-role="faq-list"]');
   }
 
-  const assetOriginRaw = typeof window.CK_ASSET_ORIGIN === 'string' ? window.CK_ASSET_ORIGIN : '';
-  const scriptOrigin = (() => {
-    if (!(scriptEl instanceof HTMLScriptElement)) return '';
-    try {
-      return new URL(scriptEl.src, window.location.href).origin;
-    } catch {
-      return '';
-    }
-  })();
-  const assetOrigin = (assetOriginRaw || scriptOrigin || window.location.origin).replace(/\/$/, '');
-  widgetRoot.style.setProperty('--ck-asset-origin', assetOrigin);
-
   const resolvedPublicId = (() => {
     const direct = widgetRoot.getAttribute('data-ck-public-id');
     if (typeof direct === 'string' && direct.trim()) return direct.trim();
@@ -552,8 +540,8 @@
     if (!pair) {
       throw new Error(`[FAQ] Unknown accordion icon style "${iconStyle}"`);
     }
-    faqRoot.style.setProperty('--faq-icon-expand', `url("${assetOrigin}/dieter/icons/svg/${pair.expand}.svg")`);
-    faqRoot.style.setProperty('--faq-icon-collapse', `url("${assetOrigin}/dieter/icons/svg/${pair.collapse}.svg")`);
+    faqRoot.style.setProperty('--faq-icon-expand', `url("/dieter/icons/svg/${pair.expand}.svg")`);
+    faqRoot.style.setProperty('--faq-icon-collapse', `url("/dieter/icons/svg/${pair.collapse}.svg")`);
   }
 
   // Avoid DOM churn on unrelated state updates (e.g. stage sizing). The state object sent

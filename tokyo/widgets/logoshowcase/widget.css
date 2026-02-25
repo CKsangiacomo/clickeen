@@ -12,10 +12,6 @@ body {
   font: 400 var(--fs-14)/var(--lh-body) var(--font-ui);
 }
 
-.ck-logoshowcase-widget {
-  --ck-asset-origin: '';
-}
-
 .stage {
   width: 100%;
   background: var(--stage-bg, transparent);

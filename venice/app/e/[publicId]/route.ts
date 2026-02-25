@@ -23,47 +23,6 @@ interface InstanceResponse {
 const CACHE_PUBLISHED = 'no-store';
 type RenderLocaleSource = 'current_locale' | 'current_revision_en_fallback' | 'unavailable';
 
-function extractCkWidgetJson(html: string): { json: Record<string, unknown>; re: RegExp } | null {
-  const re = /window\.CK_WIDGET=([^;]+);/;
-  const match = html.match(re);
-  if (!match) return null;
-  const rawJson = match[1] || '';
-  const json = JSON.parse(rawJson) as Record<string, unknown>;
-  return { json, re };
-}
-
-function isFrozenCkWidgetPayload(json: Record<string, unknown>): boolean {
-  const enforcement = (json as any)?.enforcement;
-  const mode = enforcement && typeof enforcement === 'object' ? (enforcement as any).mode : null;
-  return mode === 'frozen';
-}
-
-function patchSnapshotHtml(
-  html: string,
-  updates: { theme: string; device: string; requestedLocale: string },
-): { html: string; effectiveLocale: string } | null {
-  const extracted = extractCkWidgetJson(html);
-  if (!extracted) return null;
-  const { json, re } = extracted;
-
-  const effectiveLocale = isFrozenCkWidgetPayload(json) ? 'en' : updates.requestedLocale;
-  (json as any).theme = updates.theme;
-  (json as any).device = updates.device;
-  (json as any).locale = effectiveLocale;
-
-  const nextJson = JSON.stringify(json).replace(/</g, '\\u003c');
-  let patched = html.replace(re, `window.CK_WIDGET=${nextJson};`);
-
-  const htmlTagRe = /<html\b[^>]*>/i;
-  if (!htmlTagRe.test(patched)) return null;
-  const tag = `<html lang="${escapeHtml(effectiveLocale)}" data-theme="${escapeHtml(updates.theme)}" data-device="${escapeHtml(
-    updates.device,
-  )}" data-locale="${escapeHtml(effectiveLocale)}">`;
-  patched = patched.replace(htmlTagRe, tag);
-
-  return { html: patched, effectiveLocale };
-}
-
 function extractNonce(html: string): string | null {
   const match = html.match(/\bnonce="([^"]+)"/i);
   const nonce = match?.[1]?.trim() || '';
@@ -87,8 +46,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const publicId = String(rawPublicId || '').trim();
   const isCurated = isCuratedOrMainWidgetPublicId(publicId);
   const url = new URL(req.url);
-  const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
-  const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
+  const theme = 'light';
+  const device = 'desktop';
   const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
   const rawLocale = (url.searchParams.get('locale') || '').trim();
   const locale = normalizeLocaleToken(rawLocale) ?? 'en';
@@ -137,6 +96,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     const snapshot = await loadRenderSnapshot({ publicId, locale, variant: 'e' });
     if (snapshot.ok) {
       const etag = `W/"${snapshot.fingerprint}"`;
+      if (snapshot.contentType) headers['Content-Type'] = snapshot.contentType;
       if (snapshot.pointerUpdatedAt) {
         headers['X-Ck-Render-Pointer-Updated-At'] = snapshot.pointerUpdatedAt;
       }
@@ -150,93 +110,27 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         return new NextResponse(null, { status: 304, headers });
       }
 
-      let html = new TextDecoder().decode(snapshot.bytes);
-      try {
-        const patched = patchSnapshotHtml(html, { theme, device, requestedLocale: locale });
-        if (!patched) throw new Error('SNAPSHOT_PATCH_FAILED');
-        html = patched.html;
-        html = rewriteWidgetCdnUrls(html, getTokyoBase());
-        headers['X-Ck-L10n-Requested-Locale'] = locale;
-        headers['X-Ck-L10n-Resolved-Locale'] = locale;
-        headers['X-Ck-L10n-Effective-Locale'] = patched.effectiveLocale;
-        headers['X-Ck-L10n-Status'] = patched.effectiveLocale === 'en' ? 'base' : 'fresh';
-      } catch {
-        snapshotReason = 'SNAPSHOT_INVALID';
-      }
-
+      const html = new TextDecoder().decode(snapshot.bytes);
       const nonce = extractNonce(html);
       if (!nonce) snapshotReason = snapshotReason ?? 'SNAPSHOT_NONCE_MISSING';
 
       if (!snapshotReason && nonce) {
+        headers['X-Ck-L10n-Requested-Locale'] = locale;
+        headers['X-Ck-L10n-Resolved-Locale'] = locale;
+        headers['X-Ck-L10n-Effective-Locale'] = locale;
+        headers['X-Ck-L10n-Status'] = locale === 'en' ? 'base' : 'fresh';
         headers['ETag'] = etag;
         headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
         headers['X-Venice-Render-Mode'] = 'snapshot';
-        headers['X-Ck-Render-Locale-Source'] = resolveRenderLocaleSource({
-          requestedLocale: locale,
-          effectiveLocale: headers['X-Ck-L10n-Effective-Locale'] ?? locale,
-        });
+        headers['X-Ck-Render-Locale-Source'] = 'current_locale';
         const parisOrigin = new URL(getParisBase()).origin;
         const tokyoOrigin = new URL(getTokyoBase()).origin;
         headers['Content-Security-Policy'] = buildCsp(nonce, { parisOrigin, tokyoOrigin });
-        return new NextResponse(html, { status: 200, headers });
+        return new NextResponse(snapshot.bytes, { status: 200, headers });
       }
     } else {
       snapshotReason = snapshot.reason;
-    }
-
-    if (snapshotReason && locale !== 'en') {
-      const fallbackSnapshot = await loadRenderSnapshot({ publicId, locale: 'en', variant: 'e' });
-      if (fallbackSnapshot.ok) {
-        const etag = `W/"${fallbackSnapshot.fingerprint}"`;
-        if (fallbackSnapshot.pointerUpdatedAt) {
-          headers['X-Ck-Render-Pointer-Updated-At'] = fallbackSnapshot.pointerUpdatedAt;
-        }
-        const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
-        if (ifNoneMatch && ifNoneMatch === etag) {
-          headers['ETag'] = etag;
-          headers['Cache-Control'] = snapshotCacheControl;
-          headers['Vary'] = 'Authorization, X-Embed-Token';
-          headers['X-Venice-Render-Mode'] = 'snapshot';
-          headers['X-Venice-Snapshot-Fallback'] = 'en';
-          headers['X-Ck-L10n-Requested-Locale'] = locale;
-          headers['X-Ck-L10n-Resolved-Locale'] = 'en';
-          headers['X-Ck-L10n-Effective-Locale'] = 'en';
-          headers['X-Ck-L10n-Status'] = 'base';
-          headers['X-Ck-Render-Locale-Source'] = 'current_revision_en_fallback';
-          if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
-          return new NextResponse(null, { status: 304, headers });
-        }
-
-        let html = new TextDecoder().decode(fallbackSnapshot.bytes);
-        try {
-          const patched = patchSnapshotHtml(html, { theme, device, requestedLocale: 'en' });
-          if (!patched) throw new Error('SNAPSHOT_PATCH_FAILED');
-          html = patched.html;
-          html = rewriteWidgetCdnUrls(html, getTokyoBase());
-        } catch {
-          html = '';
-        }
-
-        const nonce = html ? extractNonce(html) : null;
-        if (html && nonce) {
-          headers['ETag'] = etag;
-          headers['Cache-Control'] = snapshotCacheControl;
-          headers['Vary'] = 'Authorization, X-Embed-Token';
-          headers['X-Venice-Render-Mode'] = 'snapshot';
-          headers['X-Venice-Snapshot-Fallback'] = 'en';
-          headers['X-Ck-L10n-Requested-Locale'] = locale;
-          headers['X-Ck-L10n-Resolved-Locale'] = 'en';
-          headers['X-Ck-L10n-Effective-Locale'] = 'en';
-          headers['X-Ck-L10n-Status'] = 'base';
-          headers['X-Ck-Render-Locale-Source'] = 'current_revision_en_fallback';
-          if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
-          const parisOrigin = new URL(getParisBase()).origin;
-          const tokyoOrigin = new URL(getTokyoBase()).origin;
-          headers['Content-Security-Policy'] = buildCsp(nonce, { parisOrigin, tokyoOrigin });
-          return new NextResponse(html, { status: 200, headers });
-        }
-      }
     }
 
     if (snapshotReason === 'NEVER_PUBLISHED') {
@@ -332,7 +226,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           baseUpdatedAt: instance.updatedAt ?? null,
           widgetType,
           config: instance.config,
-          allowStaleOverlay: !bypassSnapshot,
         });
 
   headers['X-Ck-L10n-Requested-Locale'] = overlayResult.meta.requestedLocale;
@@ -465,7 +358,6 @@ async function renderInstancePage({
   if (ts) {
     widgetHtml = appendCacheBustParam(widgetHtml, ts);
   }
-  widgetHtml = rewriteWidgetCdnUrls(widgetHtml, tokyoBase);
 
   const bodyHtml = extractBodyHtml(widgetHtml);
   const title = extractTitle(widgetHtml) ?? `${widgetType} widget`;
@@ -634,24 +526,6 @@ function appendCacheBustParam(widgetHtml: string, ts: string): string {
     const joiner = url.includes('?') ? '&' : '?';
     return `${attr}=${quote}${url}${joiner}ts=${encodedTs}${quote}`;
   });
-}
-
-function rewriteWidgetCdnUrls(widgetHtml: string, tokyoBase: string): string {
-  const base = tokyoBase.replace(/\/$/, '');
-  return (
-    widgetHtml
-      // Move asset fetches to Tokyo (CDN), not Venice origin.
-      .replace(/\b(href|src)=(["'])\/(dieter|widgets)\/([^"'?#]+(?:\?[^"']*)?)\2/g, (_match, attr, quote, kind, rest) => {
-        return `${attr}=${quote}${base}/${kind}/${rest}${quote}`;
-      })
-      .replace(/url\(\s*(["']?)\/dieter\/([^"'?#)]+(?:\?[^"')]+)?)\1\s*\)/g, (_match, quote, rest) => {
-        const q = quote || '';
-        return `url(${q}${base}/dieter/${rest}${q})`;
-      })
-      .replace(/<base\b([^>]*?)\bhref=(["'])\/widgets\/([^"']*)\2([^>]*)>/gi, (_match, before, quote, rest, after) => {
-        return `<base${before}href=${quote}${base}/widgets/${rest}${quote}${after}>`;
-      })
-  );
 }
 
 function renderErrorPage({

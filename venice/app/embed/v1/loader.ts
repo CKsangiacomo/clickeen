@@ -1,4 +1,5 @@
-const script = `(() => {
+function buildScript(): string {
+  return `(() => {
   const scriptEl = document.currentScript;
   if (!scriptEl) return;
 
@@ -7,9 +8,7 @@ const script = `(() => {
     trigger = 'immediate',
     delay = '0',
     scrollPct,
-    clickSelector,
-    theme = 'light',
-    device = 'desktop'
+    clickSelector
   } = scriptEl.dataset;
 
   if (!publicId) {
@@ -35,11 +34,9 @@ const script = `(() => {
   window.Clickeen = window.Clickeen || window.ckeenBus;
 
   const origin = new URL(scriptEl.src, window.location.href).origin;
-  window.CK_ASSET_ORIGIN = origin;
   const embedUrl = (params = {}) => {
     const url = new URL(origin + '/e/' + encodeURIComponent(publicId));
-    const combined = { theme, device, ...params };
-    Object.entries(combined).forEach(([key, value]) => {
+    Object.entries(params).forEach(([key, value]) => {
       if (value) url.searchParams.set(key, String(value));
     });
     return url.toString();
@@ -152,10 +149,12 @@ const script = `(() => {
   });
 })();
 `;
+}
 
 export const runtime = 'edge';
 
 export function GET() {
+  const script = buildScript();
   return new Response(script, {
     status: 200,
     headers: {

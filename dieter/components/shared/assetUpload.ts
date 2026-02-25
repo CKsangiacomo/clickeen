@@ -99,7 +99,7 @@ function normalizeAssetUrl(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.url === 'string' ? payload.url.trim() : '';
   if (!direct) return null;
   const parsed = parseCanonicalAssetRef(direct);
-  if (!parsed || parsed.kind !== 'pointer') return null;
+  if (!parsed || parsed.kind !== 'version') return null;
   if (/^https?:\/\//i.test(direct)) return direct;
   return parsed.pathname;
 }
@@ -131,7 +131,7 @@ function assertUploadContext(context: EditorAssetUploadContext): EditorAssetUplo
 
 export function parseEditorAssetIdentity(raw: string): EditorAssetIdentity | null {
   const parsed = parseCanonicalAssetRef(raw);
-  if (!parsed || parsed.kind !== 'pointer') return null;
+  if (!parsed || parsed.kind !== 'version') return null;
   return { accountId: parsed.accountId, assetId: parsed.assetId };
 }
 

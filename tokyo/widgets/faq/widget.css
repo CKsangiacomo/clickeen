@@ -14,7 +14,6 @@ body {
 
 .ck-faq-widget {
   --faq-item-bg: var(--color-system-white);
-  --ck-asset-origin: '';
 }
 
 .stage {

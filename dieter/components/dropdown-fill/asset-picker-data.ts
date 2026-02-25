@@ -34,8 +34,25 @@ export function formatAssetSizeLabel(sizeBytes: number): string {
   return `${(safe / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function resolveAssetChoiceUrl(accountId: string, assetId: string): string {
-  return `/arsenale/a/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`;
+function pickAssetVariantUrl(asset: Record<string, unknown>): string | null {
+  const variantsRaw = Array.isArray(asset.variants) ? (asset.variants as Array<Record<string, unknown>>) : [];
+  if (!variantsRaw.length) return null;
+
+  const normalized = variantsRaw
+    .map((variant) => {
+      const variantName = String(variant.variant || '').trim().toLowerCase();
+      const url = String(variant.url || '').trim();
+      if (!url || (!url.startsWith('/') && !/^https?:\/\//i.test(url))) return null;
+      return {
+        variant: variantName,
+        url,
+      };
+    })
+    .filter((entry): entry is { variant: string; url: string } => Boolean(entry));
+
+  if (!normalized.length) return null;
+  const original = normalized.find((entry) => entry.variant === 'original');
+  return (original || normalized[0])?.url || null;
 }
 
 export async function fetchImageAssetChoices(): Promise<ImageAssetChoice[]> {
@@ -69,6 +86,8 @@ export async function fetchImageAssetChoices(): Promise<ImageAssetChoice[]> {
       const normalizedFilename = String(asset.normalizedFilename || '').trim() || `asset-${assetId.slice(0, 8)}`;
       const sizeBytes = Number(asset.sizeBytes);
       const usageCount = Number(asset.usageCount);
+      const url = pickAssetVariantUrl(asset);
+      if (!url) return null;
       return {
         assetId,
         accountId: context.accountId,
@@ -76,7 +95,7 @@ export async function fetchImageAssetChoices(): Promise<ImageAssetChoice[]> {
         contentType,
         sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
         usageCount: Number.isFinite(usageCount) ? Math.max(0, Math.trunc(usageCount)) : 0,
-        url: resolveAssetChoiceUrl(context.accountId, assetId),
+        url,
       } satisfies ImageAssetChoice;
     })
     .filter((asset): asset is ImageAssetChoice => Boolean(asset));

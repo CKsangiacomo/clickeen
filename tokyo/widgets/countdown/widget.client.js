@@ -64,18 +64,6 @@
     throw new Error('[Countdown] Missing .pod wrapper');
   }
 
-  const assetOriginRaw = typeof window.CK_ASSET_ORIGIN === 'string' ? window.CK_ASSET_ORIGIN : '';
-  const scriptOrigin = (() => {
-    if (!(scriptEl instanceof HTMLScriptElement)) return '';
-    try {
-      return new URL(scriptEl.src, window.location.href).origin;
-    } catch {
-      return '';
-    }
-  })();
-  const assetOrigin = (assetOriginRaw || scriptOrigin || window.location.origin).replace(/\/$/, '');
-  widgetRoot.style.setProperty('--ck-asset-origin', assetOrigin);
-
   const resolvedPublicId = (() => {
     const direct = widgetRoot.getAttribute('data-ck-public-id');
     if (typeof direct === 'string' && direct.trim()) return direct.trim();
@@ -304,6 +292,15 @@
       throw new Error(`[Countdown] state.layout.position must be ${LAYOUT_POSITION_LIST.join('|')}`);
     }
     assertObject(state.appearance, 'state.appearance');
+    assertString(state.appearance.timerStyle, 'state.appearance.timerStyle');
+    if (!['separated', 'inline'].includes(state.appearance.timerStyle)) {
+      throw new Error('[Countdown] state.appearance.timerStyle must be separated|inline');
+    }
+    assertString(state.appearance.timeFormat, 'state.appearance.timeFormat');
+    if (!['auto', 'D:H:M:S', 'H:M:S'].includes(state.appearance.timeFormat)) {
+      throw new Error('[Countdown] state.appearance.timeFormat must be auto|D:H:M:S|H:M:S');
+    }
+    assertBoolean(state.appearance.showLabels, 'state.appearance.showLabels');
     assertString(state.appearance.theme, 'state.appearance.theme');
     if (!THEME_KEYS.has(state.appearance.theme)) {
       throw new Error(`[Countdown] state.appearance.theme must be one of: ${Array.from(THEME_KEYS).join(', ')}`);
@@ -567,6 +564,8 @@
     const textColor = resolveFillColor(state.appearance.textColor);
     const itemBackground = resolveFillBackground(state.appearance.itemBackground);
 
+    countdownRoot.setAttribute('data-timer-style', state.appearance.timerStyle);
+    countdownRoot.setAttribute('data-show-labels', state.appearance.showLabels ? 'true' : 'false');
     countdownRoot.setAttribute('data-animation', state.appearance.animation);
     countdownRoot.style.setProperty('--countdown-text-color', textColor);
     countdownRoot.style.setProperty('--countdown-item-bg', itemBackground);
@@ -822,6 +821,20 @@
       const valueEl = unitEl.querySelector('[data-role="value"]');
       if (!valueEl) return;
       valueEl.textContent = String(time[unit]).padStart(2, '0');
+
+      // timeFormat logic
+      const format = currentState && currentState.appearance && currentState.appearance.timeFormat || 'auto';
+      let show = true;
+      if (format === 'H:M:S' && unit === 'days') show = false;
+      if (format === 'auto' && unit === 'days' && time.days === 0) show = false;
+      
+      if (show) {
+        unitEl.hidden = false;
+        unitEl.style.display = '';
+      } else {
+        unitEl.hidden = true;
+        unitEl.style.display = 'none';
+      }
     });
   }
 

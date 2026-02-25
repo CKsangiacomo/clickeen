@@ -1,4 +1,5 @@
 import { can } from '@clickeen/ck-policy';
+import { computeBaseFingerprint } from '@clickeen/l10n';
 import type { CuratedInstanceRow, Env, InstanceRow, UpdatePayload } from '../../shared/types';
 import { readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
@@ -153,8 +154,20 @@ export async function handleWorkspaceUpdateInstance(
   const prevStatus = instance.status;
   const nextStatus = status ?? prevStatus;
   const statusChanged = status !== undefined && status !== prevStatus;
+  let configChanged = false;
+  if (config !== undefined) {
+    try {
+      const [currentFingerprint, nextFingerprint] = await Promise.all([
+        computeBaseFingerprint(instance.config),
+        computeBaseFingerprint(config),
+      ]);
+      configChanged = currentFingerprint !== nextFingerprint;
+    } catch {
+      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.config.invalid' }, 422);
+    }
+  }
   const configForWriteValidation =
-    config !== undefined
+    configChanged
       ? config
       : !isCurated && statusChanged && prevStatus !== 'published' && nextStatus === 'published'
         ? instance.config
@@ -306,7 +319,7 @@ export async function handleWorkspaceUpdateInstance(
     };
 
     const configForUsageSync =
-      config !== undefined
+      configChanged
         ? config
         : !isCurated && statusChanged && prevStatus !== 'published' && nextStatus === 'published'
           ? updatedInstance.config
@@ -331,8 +344,7 @@ export async function handleWorkspaceUpdateInstance(
       }
     }
 
-    const shouldTrigger =
-      config !== undefined || (status === 'published' && updatedInstance.status === 'published');
+    const shouldTrigger = configChanged || (statusChanged && updatedInstance.status === 'published');
     if (shouldTrigger && updatedInstance.status === 'published') {
       const enqueueResult = await enqueueL10nJobs({
         env,
@@ -362,7 +374,6 @@ export async function handleWorkspaceUpdateInstance(
     // When an instance is unpublished, delete the snapshot index to enforce "published-only".
     const updatedPrevStatus = prevStatus;
     const updatedNextStatus = updatedInstance.status;
-    const configChanged = config !== undefined;
     if (updatedNextStatus === 'published' && (statusChanged || configChanged)) {
       const { locales: activeLocales } = await resolveRenderSnapshotLocales({
         env,
@@ -395,18 +406,18 @@ export async function handleWorkspaceUpdateInstance(
         env,
         publicId,
       }).catch(() => null);
-      const enSync = await enqueueRenderSnapshot(env, {
+      const enqueue = await enqueueRenderSnapshot(env, {
         publicId,
         action: 'upsert',
-        locales: ['en'],
+        locales: activeLocales,
       });
-      if (!enSync.ok) {
+      if (!enqueue.ok) {
         return rollbackAndReturn(
           ckError(
             {
               kind: 'INTERNAL',
               reasonKey: 'coreui.errors.publish.failed',
-              detail: enSync.error,
+              detail: enqueue.error,
             },
             503,
           ),
@@ -429,21 +440,6 @@ export async function handleWorkspaceUpdateInstance(
             503,
           ),
         );
-      }
-
-      const asyncLocales = activeLocales.filter((locale) => locale !== 'en');
-      if (asyncLocales.length) {
-        const enqueue = await enqueueRenderSnapshot(env, {
-          publicId,
-          action: 'upsert',
-          locales: asyncLocales,
-        });
-        if (!enqueue.ok) {
-          console.warn('[ParisWorker] async locale snapshot enqueue failed', {
-            publicId,
-            detail: enqueue.error,
-          });
-        }
       }
     } else if (
       !isCurated &&

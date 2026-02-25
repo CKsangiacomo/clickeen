@@ -5,7 +5,6 @@ workers_dev = true
 routes = [
   { pattern = "tokyo.dev.clickeen.com/l10n/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/assets/*", zone_name = "clickeen.com" },
-  { pattern = "tokyo.dev.clickeen.com/arsenale/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/fonts/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/renders/*", zone_name = "clickeen.com" },
 ]

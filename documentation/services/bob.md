@@ -263,8 +263,9 @@ The control writes the canonical URL directly into widget config (no publish-tim
 
 Contracts:
 - **Canonical ownership**: uploads are account-owned and stored at:
-  - original variant: `arsenale/o/{accountId}/{assetId}/{filename}`
-  - non-original variants: `arsenale/o/{accountId}/{assetId}/{variant}/{filename}`
+  - original variant key: `assets/versions/{accountId}/{assetId}/{filename}`
+  - non-original variant key: `assets/versions/{accountId}/{assetId}/{variant}/{filename}`
+  - persisted runtime URL: `/assets/v/{encodeURIComponent(versionKey)}`
 - **Trace context**: `workspaceId`, `publicId`, `widgetType`, `source` remain provenance fields.
 - Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are unsupported on writes.
 
