@@ -75,8 +75,14 @@
   outline: none;
 }
 
+.diet-datepicker__date {
+  min-inline-size: 10.25rem;
+}
+
 .diet-datepicker__time {
-  max-inline-size: 7ch;
+  min-inline-size: 6.5rem;
+  inline-size: 6.5rem;
+  max-inline-size: 6.5rem;
 }
 
 .diet-datepicker__field {
