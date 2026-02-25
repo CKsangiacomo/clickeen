@@ -27,6 +27,7 @@ import {
   deleteAccountAssetUsageByIdentity,
   deleteAccountAssetVariantsByIdentity,
   loadAccountAssetByIdentity,
+  loadPrimaryAccountAssetKey,
   loadAccountAssetUsagePublicIdsByIdentity,
   loadAccountAssetVariantKeys,
   loadAccountMembershipRole,
@@ -418,6 +419,41 @@ async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
 
   const canonicalObj = await env.TOKYO_R2.get(canonical);
   if (canonicalObj) return respondImmutableR2Asset(canonical, canonicalObj);
+
+  // Backfill compatibility: some environments still have variant keys stored as
+  // legacy `arsenale/o/...` object paths even when reads come through `/assets/v/*`.
+  const variantKey = await loadPrimaryAccountAssetKey(env, identity.accountId, identity.assetId);
+  if (variantKey && variantKey !== canonical) {
+    const variantObj = await env.TOKYO_R2.get(variantKey);
+    if (variantObj) return respondImmutableR2Asset(variantKey, variantObj);
+  }
+  return new Response('Not found', { status: 404 });
+}
+
+async function handleGetLegacyAccountAssetByIdentity(
+  env: Env,
+  accountIdRaw: string,
+  assetIdRaw: string,
+  legacyObjectKeyRaw?: string | null,
+): Promise<Response> {
+  const accountId = String(accountIdRaw || '').trim();
+  const assetId = String(assetIdRaw || '').trim();
+  if (!isUuid(accountId) || !isUuid(assetId)) return new Response('Not found', { status: 404 });
+
+  const legacyObjectKey = String(legacyObjectKeyRaw || '').trim();
+  if (legacyObjectKey) {
+    const legacyObj = await env.TOKYO_R2.get(legacyObjectKey);
+    if (legacyObj) return respondImmutableR2Asset(legacyObjectKey, legacyObj);
+  }
+
+  const assetRow = await loadAccountAssetByIdentity(env, accountId, assetId);
+  if (!assetRow) return new Response('Not found', { status: 404 });
+
+  const key = await loadPrimaryAccountAssetKey(env, accountId, assetId);
+  if (!key) return new Response('Not found', { status: 404 });
+
+  const object = await env.TOKYO_R2.get(key);
+  if (object) return respondImmutableR2Asset(key, object);
   return new Response('Not found', { status: 404 });
 }
 
@@ -721,6 +757,7 @@ async function handleDeleteAccountAsset(
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
+  handleGetLegacyAccountAssetByIdentity,
   handleReplaceAccountAssetContent,
   handleUploadAccountAsset,
 };

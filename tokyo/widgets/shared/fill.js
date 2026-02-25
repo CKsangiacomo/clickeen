@@ -193,7 +193,12 @@
     if (fill.type === 'color') return fill.color || 'transparent';
     if (fill.type === 'gradient') return buildGradientCss(fill.gradient);
     if (fill.type === 'image') {
-      if (!fill.image || !fill.image.src) throw new Error('[CKFill] Missing image asset source');
+      if (!fill.image || !fill.image.src) {
+        if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+          console.warn('[CKFill] Missing image asset source');
+        }
+        return 'transparent';
+      }
       var fit = fill.image.fit === 'contain' ? 'contain' : 'cover';
       var position = fill.image.position || 'center';
       var repeat = fill.image.repeat || 'no-repeat';

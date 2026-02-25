@@ -9,6 +9,7 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
+  handleGetLegacyAccountAssetByIdentity,
   handleReplaceAccountAssetContent,
   handleUploadAccountAsset,
   upsertInstanceRenderHealth,
@@ -383,6 +384,59 @@ export function parseAccountAssetIdentityFromKey(key: string): AccountAssetIdent
   return { accountId, assetId };
 }
 
+type LegacyAccountAssetIdentity = { accountId: string; assetId: string; legacyObjectKey: string | null };
+
+function parseLegacyAssetVersionToken(pathname: string): LegacyAccountAssetIdentity | null {
+  const match = pathname.match(/^\/assets\/v\/(.+)$/);
+  if (!match) return null;
+  const rawSuffix = String(match[1] || '').trim();
+  if (!rawSuffix) return null;
+
+  const decodeMaybe = (value: string): string => {
+    let out = value;
+    try {
+      const once = decodeURIComponent(out).trim();
+      if (once) out = once;
+    } catch {
+      return out;
+    }
+    try {
+      const twice = decodeURIComponent(out).trim();
+      if (twice) out = twice;
+    } catch {
+      // Already decoded enough.
+    }
+    return out;
+  };
+
+  const candidates = Array.from(
+    new Set(
+      [rawSuffix, decodeMaybe(rawSuffix)]
+        .map((entry) => String(entry || '').trim().replace(/^\/+/, ''))
+        .filter(Boolean),
+    ),
+  );
+
+  for (const candidate of candidates) {
+    const parts = candidate.split('/').map((part) => part.trim()).filter(Boolean);
+    if (parts.length < 4) continue;
+    if (parts[0] !== 'arsenale') continue;
+    if (parts[1] !== 'a' && parts[1] !== 'o') continue;
+
+    const accountId = parts[2];
+    const assetId = parts[3];
+    if (!isUuid(accountId) || !isUuid(assetId)) continue;
+    const objectTail = parts.slice(4);
+    const legacyObjectKey =
+      parts[1] === 'o' && objectTail.length
+        ? `arsenale/o/${accountId}/${assetId}/${objectTail.join('/')}`
+        : null;
+    return { accountId, assetId, legacyObjectKey };
+  }
+
+  return null;
+}
+
 export function guessContentTypeFromExt(ext: string): string {
   switch (ext.toLowerCase()) {
     case 'css':
@@ -708,7 +762,24 @@ export default {
         return withCors(response);
       }
 
-      const accountAssetMatch = pathname.match(/^\/assets\/([^/]+)\/([^/]+)$/);
+      const legacyAccountAsset = parseLegacyAssetVersionToken(pathname);
+      if (legacyAccountAsset) {
+        if (req.method !== 'GET' && req.method !== 'HEAD') {
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        }
+        const response = await handleGetLegacyAccountAssetByIdentity(
+          env,
+          legacyAccountAsset.accountId,
+          legacyAccountAsset.assetId,
+          legacyAccountAsset.legacyObjectKey,
+        );
+        if (req.method === 'HEAD') {
+          return withCors(new Response(null, { status: response.status, headers: response.headers }));
+        }
+        return withCors(response);
+      }
+
+      const accountAssetMatch = pathname.match(/^\/assets\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i);
       if (accountAssetMatch) {
         const accountId = decodeURIComponent(accountAssetMatch[1] || '');
         const assetId = decodeURIComponent(accountAssetMatch[2] || '');

@@ -695,6 +695,7 @@ export async function deleteAccountAssetByIdentity(env: Env, accountId: string, 
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
+  handleGetLegacyAccountAssetByIdentity,
   handleReplaceAccountAssetContent,
   handleUploadAccountAsset,
 } from './assets-handlers';
