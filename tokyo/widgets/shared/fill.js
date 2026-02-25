@@ -38,22 +38,9 @@
   }
 
   function readAssetVersionId(raw) {
-    if (typeof raw === 'string') {
-      var directVersionId = raw.trim();
-      return isCanonicalAssetVersionKey(directVersionId) ? directVersionId : '';
-    }
     if (!isRecord(raw)) return '';
     var versionId = typeof raw.versionId === 'string' ? raw.versionId.trim() : '';
-    if (!versionId && typeof raw.assetVersionId === 'string') {
-      versionId = raw.assetVersionId.trim();
-    }
     return isCanonicalAssetVersionKey(versionId) ? versionId : '';
-  }
-
-  function readAssetSource(raw) {
-    if (typeof raw !== 'string') return '';
-    var source = raw.trim();
-    return source || '';
   }
 
   function normalizeStringFill(raw) {
@@ -132,7 +119,6 @@
     if (!isRecord(raw)) return { src: '', fit: 'cover', position: 'center', repeat: 'no-repeat' };
     var assetVersionId = readAssetVersionId(raw.asset);
     var src = assetVersionIdToPath(assetVersionId);
-    if (!src) src = readAssetSource(raw.src);
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var repeat = typeof raw.repeat === 'string' && raw.repeat.trim() ? raw.repeat.trim() : 'no-repeat';
@@ -146,9 +132,7 @@
     var assetVersionId = readAssetVersionId(raw.asset);
     var posterVersionId = readAssetVersionId(raw.poster);
     var src = assetVersionIdToPath(assetVersionId);
-    if (!src) src = readAssetSource(raw.src);
     var poster = assetVersionIdToPath(posterVersionId);
-    if (!poster) poster = readAssetSource(raw.poster);
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var loop = typeof raw.loop === 'boolean' ? raw.loop : true;
@@ -164,6 +148,7 @@
       autoplay: autoplay,
     };
     if (assetVersionId) out.asset = { versionId: assetVersionId };
+    if (posterVersionId) out.poster = { versionId: posterVersionId };
     return out;
   }
 
@@ -240,6 +225,9 @@
   function applyMediaLayer(container, raw, opts) {
     var fill = normalizeFill(raw);
     if (!fill) throw new Error('[CKFill] Invalid fill');
+    if (fill.type === 'video' && (!fill.video || !fill.video.src)) {
+      throw new Error('[CKFill] Missing video asset source');
+    }
     var wantsVideo = fill.type === 'video' && fill.video && fill.video.src;
     if (!wantsVideo) {
       clearLayer(container);

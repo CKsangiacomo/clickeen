@@ -25,6 +25,10 @@ export function assertConfig(config: unknown) {
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
     return { ok: false as const, issues: [{ path: 'config', message: 'config must be an object' }] };
   }
+  const assetIssues = configAssetUrlContractIssues(config);
+  if (assetIssues.length) {
+    return { ok: false as const, issues: assetIssues };
+  }
   return { ok: true as const, value: config as Record<string, unknown> };
 }
 
@@ -89,12 +93,17 @@ function isAssetVersionIdFieldPath(path: string): boolean {
   return /(?:^|[\].])(?:asset|poster)\.versionId$/.test(String(path || ''));
 }
 
-function isLegacyPersistedFillMediaFieldPath(path: string): boolean {
+function isMediaAssetRefFieldPath(path: string): boolean {
+  return /(?:^|[\].])(?:image|video)\.(?:asset|poster)$/.test(String(path || ''));
+}
+
+function isPersistedMediaUrlFieldPath(path: string): boolean {
   const value = String(path || '');
   return (
-    /(?:^|[\].])fill\.(?:image|video)\.src$/.test(value) ||
-    /(?:^|[\].])fill\.video\.posterSrc$/.test(value) ||
-    /(?:^|[\].])fill\.video\.poster$/.test(value)
+    /(?:^|[\].])(?:fill\.)?image\.src$/.test(value) ||
+    /(?:^|[\].])(?:fill\.)?video\.src$/.test(value) ||
+    /(?:^|[\].])(?:fill\.)?video\.posterSrc$/.test(value) ||
+    /(?:^|[\].])(?:fill\.)?video\.poster$/.test(value)
   );
 }
 
@@ -199,7 +208,7 @@ export function configAssetUrlContractIssues(
 
   const visit = (node: unknown, path: string) => {
     if (typeof node === 'string') {
-      if (isLegacyPersistedFillMediaFieldPath(path)) {
+      if (isPersistedMediaUrlFieldPath(path)) {
         issues.push({
           path,
           message: `Persisted media URL fields are not supported at ${path}. Use asset.versionId refs only.`,
@@ -209,6 +218,14 @@ export function configAssetUrlContractIssues(
 
       if (isAssetVersionIdFieldPath(path)) {
         inspectVersionIdCandidate(node, path);
+        return;
+      }
+
+      if (isMediaAssetRefFieldPath(path)) {
+        issues.push({
+          path,
+          message: `Asset ref at ${path} must be an object with versionId.`,
+        });
         return;
       }
 

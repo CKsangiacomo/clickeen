@@ -38,6 +38,7 @@ const DEFAULT_PAGE_SIZE = 100;
 const LEGACY_CURATED_PATH_RE = /^\/curated-assets\/[^/]+\/[^/]+\/([0-9a-fA-F-]{36})\/([^/?#]+)$/i;
 const CSS_URL_RE = /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi;
 const ASSET_FIELD_PATH_RE = /(?:^|[\].])(?:src|poster|logoFill)$/;
+const ASSET_REF_OBJECT_PATH_RE = /(?:^|[\].])(?:asset|poster)$/;
 
 function printUsage() {
   console.log(`Usage: node scripts/repair-asset-origins.mjs [options]
@@ -201,6 +202,175 @@ function parseLegacyAssetVersionTokenPath(pathname) {
 
 function isAssetFieldPath(path) {
   return ASSET_FIELD_PATH_RE.test(String(path || ''));
+}
+
+function isAssetRefObjectPath(path) {
+  return ASSET_REF_OBJECT_PATH_RE.test(String(path || ''));
+}
+
+function parseAssetVersionId(raw) {
+  const direct = String(raw || '').trim();
+  if (!direct) return '';
+  const directCanonicalPath = toCanonicalAssetVersionPath(direct);
+  if (directCanonicalPath) {
+    const parsed = parseCanonicalAssetRef(directCanonicalPath);
+    if (parsed && parsed.kind === 'version' && typeof parsed.versionKey === 'string' && parsed.versionKey.trim()) {
+      return parsed.versionKey.trim();
+    }
+  }
+
+  const pathname = toPathname(direct);
+  if (!pathname) return '';
+  const parsed = parseCanonicalAssetRef(pathname);
+  if (!parsed || parsed.kind !== 'version') return '';
+  const versionId = String(parsed.versionKey || '').trim();
+  return versionId || '';
+}
+
+function parseAssetRefObjectVersionId(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return '';
+  const record = value;
+  const versionId = typeof record.versionId === 'string' ? record.versionId.trim() : '';
+  if (versionId) return parseAssetVersionId(versionId);
+  const legacy = typeof record.assetVersionId === 'string' ? record.assetVersionId.trim() : '';
+  return parseAssetVersionId(legacy);
+}
+
+function promoteAssetRefFromCandidate(record, fieldKey, candidateRaw, path, rowStats) {
+  const candidate = String(candidateRaw || '').trim();
+  if (!candidate) return false;
+  const versionId = parseAssetVersionId(candidate);
+  if (!versionId) {
+    rowStats.unresolved.add(`unresolved-version-id:${path}.${fieldKey}:${candidate}`);
+    return false;
+  }
+  const existing = record[fieldKey];
+  const hadStrictShape =
+    existing &&
+    typeof existing === 'object' &&
+    !Array.isArray(existing) &&
+    Object.keys(existing).length === 1 &&
+    parseAssetVersionId(existing.versionId) === versionId;
+  record[fieldKey] = { versionId };
+  if (!hadStrictShape) {
+    rowStats.promotions += 1;
+    return true;
+  }
+  return false;
+}
+
+function normalizeAssetRefObject(record, fieldKey, path, rowStats) {
+  const value = record[fieldKey];
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const versionId = parseAssetRefObjectVersionId(value);
+  if (!versionId) return false;
+  const hadStrictShape =
+    Object.keys(value).length === 1 &&
+    parseAssetVersionId(value.versionId) === versionId;
+  record[fieldKey] = { versionId };
+  if (!hadStrictShape) {
+    rowStats.promotions += 1;
+    return true;
+  }
+  return false;
+}
+
+function promoteImagePayload(record, path, rowStats) {
+  let changed = false;
+
+  if (typeof record.asset === 'string') {
+    changed = promoteAssetRefFromCandidate(record, 'asset', record.asset, path, rowStats) || changed;
+  } else {
+    changed = normalizeAssetRefObject(record, 'asset', path, rowStats) || changed;
+  }
+
+  if (typeof record.assetVersionId === 'string') {
+    const promoted = promoteAssetRefFromCandidate(record, 'asset', record.assetVersionId, path, rowStats);
+    changed = promoted || changed;
+    if (promoted) {
+      delete record.assetVersionId;
+      changed = true;
+    }
+  }
+
+  if (typeof record.src === 'string') {
+    const promoted = promoteAssetRefFromCandidate(record, 'asset', record.src, path, rowStats);
+    changed = promoted || changed;
+    if (promoted) {
+      delete record.src;
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
+function promoteVideoPayload(record, path, rowStats) {
+  let changed = promoteImagePayload(record, path, rowStats);
+
+  if (typeof record.poster === 'string') {
+    const promoted = promoteAssetRefFromCandidate(record, 'poster', record.poster, path, rowStats);
+    changed = promoted || changed;
+    if (promoted) {
+      delete record.poster;
+      changed = true;
+    }
+  } else {
+    changed = normalizeAssetRefObject(record, 'poster', path, rowStats) || changed;
+  }
+
+  if (typeof record.posterSrc === 'string') {
+    const promoted = promoteAssetRefFromCandidate(record, 'poster', record.posterSrc, path, rowStats);
+    changed = promoted || changed;
+    if (promoted) {
+      delete record.posterSrc;
+      changed = true;
+    }
+  }
+
+  if (typeof record.posterVersionId === 'string') {
+    const promoted = promoteAssetRefFromCandidate(record, 'poster', record.posterVersionId, path, rowStats);
+    changed = promoted || changed;
+    if (promoted) {
+      delete record.posterVersionId;
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
+function promoteMediaAssetRefs(node, path, rowStats) {
+  if (!node || typeof node !== 'object' || Array.isArray(node)) return false;
+  const record = node;
+  const type = typeof record.type === 'string' ? record.type.trim().toLowerCase() : '';
+  let changed = false;
+  const hasImageNode = record.image && typeof record.image === 'object' && !Array.isArray(record.image);
+  const hasVideoNode = record.video && typeof record.video === 'object' && !Array.isArray(record.video);
+
+  if (hasImageNode && (type === '' || type === 'image')) {
+    changed = promoteImagePayload(record.image, `${path}.image`, rowStats) || changed;
+  }
+  if (hasVideoNode && (type === '' || type === 'video')) {
+    changed = promoteVideoPayload(record.video, `${path}.video`, rowStats) || changed;
+  }
+
+  const hasDirectMediaFields =
+    typeof record.src === 'string' ||
+    typeof record.poster === 'string' ||
+    typeof record.posterSrc === 'string' ||
+    typeof record.assetVersionId === 'string' ||
+    typeof record.posterVersionId === 'string';
+
+  if (!hasImageNode && !hasVideoNode && hasDirectMediaFields) {
+    if (type === 'video') {
+      changed = promoteVideoPayload(record, path, rowStats) || changed;
+    } else {
+      changed = promoteImagePayload(record, path, rowStats) || changed;
+    }
+  }
+
+  return changed;
 }
 
 function deepCloneJson(value) {
@@ -438,6 +608,7 @@ async function rewriteStringValue(client, rawValue, path, variantCache, rowStats
 async function rewriteConfig(client, config, variantCache) {
   const rowStats = {
     rewrites: 0,
+    promotions: 0,
     unresolved: new Set(),
   };
 
@@ -461,6 +632,9 @@ async function rewriteConfig(client, config, variantCache) {
       return changed;
     }
 
+    const promoted = promoteMediaAssetRefs(node, path, rowStats);
+    if (promoted) changed = true;
+
     for (const [childKey, childValue] of Object.entries(node)) {
       const nextPath = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(childKey)
         ? `${path}.${childKey}`
@@ -477,6 +651,7 @@ async function rewriteConfig(client, config, variantCache) {
     changed,
     config: wrapper.value,
     rewrites: rowStats.rewrites,
+    promotions: rowStats.promotions,
     unresolved: Array.from(rowStats.unresolved),
   };
 }
@@ -516,7 +691,10 @@ function extractAccountAssetUsageRefs(config, publicId) {
   const out = new Map();
 
   const addRef = (candidateRaw, path) => {
-    const parsed = parseCanonicalAssetRef(candidateRaw);
+    const candidate = String(candidateRaw || '').trim();
+    if (!candidate) return;
+    const canonicalPath = toCanonicalAssetVersionPath(candidate);
+    const parsed = parseCanonicalAssetRef(canonicalPath || candidate);
     if (!parsed || parsed.kind !== 'version') return;
     const accountId = String(parsed.accountId || '').trim();
     const assetId = String(parsed.assetId || '').trim();
@@ -529,6 +707,14 @@ function extractAccountAssetUsageRefs(config, publicId) {
   };
 
   const visit = (node, path) => {
+    if (isAssetRefObjectPath(path)) {
+      const versionId = parseAssetRefObjectVersionId(node);
+      if (versionId) {
+        addRef(versionId, `${path}.versionId`);
+        return;
+      }
+    }
+
     if (typeof node === 'string') {
       addRef(node, path);
       CSS_URL_RE.lastIndex = 0;
@@ -586,6 +772,7 @@ async function main() {
   let scanned = 0;
   let changedRows = 0;
   let rewriteCount = 0;
+  let promotedFields = 0;
   let syncedUsageRows = 0;
   const unresolved = new Set();
 
@@ -615,6 +802,7 @@ async function main() {
         scanned += 1;
         const rewritten = await rewriteConfig(client, config, variantCache);
         rewriteCount += rewritten.rewrites;
+        promotedFields += rewritten.promotions;
         rewritten.unresolved.forEach((item) => unresolved.add(`${table}:${publicId}:${item}`));
 
         if (!rewritten.changed) continue;
@@ -627,9 +815,13 @@ async function main() {
             await syncAccountAssetUsage(client, expectedAccountId, publicId, refs);
             syncedUsageRows += 1;
           }
-          console.log(`[repair-asset-origins] patched ${table}:${publicId} rewrites=${rewritten.rewrites}`);
+          console.log(
+            `[repair-asset-origins] patched ${table}:${publicId} rewrites=${rewritten.rewrites} promotions=${rewritten.promotions}`,
+          );
         } else {
-          console.log(`[repair-asset-origins] would-patch ${table}:${publicId} rewrites=${rewritten.rewrites}`);
+          console.log(
+            `[repair-asset-origins] would-patch ${table}:${publicId} rewrites=${rewritten.rewrites} promotions=${rewritten.promotions}`,
+          );
         }
       }
 
@@ -643,6 +835,7 @@ async function main() {
   console.log(`  scanned_rows=${scanned}`);
   console.log(`  changed_rows=${changedRows}`);
   console.log(`  rewritten_urls=${rewriteCount}`);
+  console.log(`  promoted_media_fields=${promotedFields}`);
   console.log(`  usage_rows_synced=${syncedUsageRows}`);
   console.log(`  unresolved_refs=${unresolved.size}`);
   if (unresolved.size > 0) {

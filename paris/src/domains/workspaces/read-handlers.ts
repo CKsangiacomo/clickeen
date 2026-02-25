@@ -1,9 +1,9 @@
 import { computeBaseFingerprint } from '@clickeen/l10n';
-import type { Env, L10nGenerateStateRow, WidgetRow } from '../../shared/types';
+import type { Env, InstanceRow, L10nGenerateStateRow, WidgetRow } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
-import { asTrimmedString } from '../../shared/validation';
+import { asTrimmedString, assertConfig } from '../../shared/validation';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { authorizeWorkspace } from '../../shared/workspace-auth';
 import { assertPublicId, inferInstanceKindFromPublicId, isCuratedInstanceRow, resolveInstanceKind } from '../../shared/instances';
@@ -159,6 +159,19 @@ export async function handleWorkspaceInstances(req: Request, env: Env, workspace
   }
 
   const rows = ((await instancesRes.json().catch(() => null)) as InstanceRow[] | null) ?? [];
+  for (const row of rows) {
+    const configResult = assertConfig(row.config);
+    if (!configResult.ok) {
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.payload.invalid',
+          detail: `Invalid persisted instance config for ${String(row.public_id || 'unknown')}: ${configResult.issues[0]?.message || 'invalid config'}`,
+        },
+        500,
+      );
+    }
+  }
   const widgetIds = Array.from(
     new Set(rows.map((row) => row.widget_id).filter((id): id is string => typeof id === 'string' && id.length > 0)),
   );
@@ -215,6 +228,17 @@ export async function handleWorkspaceGetInstance(
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
   if (!instance)
     return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  const configResult = assertConfig(instance.config);
+  if (!configResult.ok) {
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.payload.invalid',
+        detail: `Invalid persisted instance config for ${String(instance.public_id || 'unknown')}: ${configResult.issues[0]?.message || 'invalid config'}`,
+      },
+      500,
+    );
+  }
   const instanceKind = resolveInstanceKind(instance);
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
@@ -314,6 +338,17 @@ export async function handleWorkspaceInstancePublishStatus(
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
   if (!instance)
     return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  const configResult = assertConfig(instance.config);
+  if (!configResult.ok) {
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.payload.invalid',
+        detail: `Invalid persisted instance config for ${String(instance.public_id || 'unknown')}: ${configResult.issues[0]?.message || 'invalid config'}`,
+      },
+      500,
+    );
+  }
   const instanceKind = resolveInstanceKind(instance);
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);

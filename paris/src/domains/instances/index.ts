@@ -6,7 +6,7 @@ import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { assertDevAuth } from '../../shared/auth';
 import { supabaseFetch } from '../../shared/supabase';
-import { asTrimmedString } from '../../shared/validation';
+import { asTrimmedString, assertConfig } from '../../shared/validation';
 import { loadWorkspaceById } from '../../shared/workspaces';
 import {
   isCuratedInstanceRow,
@@ -65,6 +65,14 @@ async function fetchUserInstanceRows(
   const primaryRes = await supabaseFetch(env, `/rest/v1/widget_instances?${primaryParams.toString()}`, { method: 'GET' });
   if (primaryRes.ok) {
     const rows = ((await primaryRes.json()) as InstanceRow[]).filter(Boolean);
+    for (const row of rows) {
+      const configResult = assertConfig(row.config);
+      if (!configResult.ok) {
+        throw new Error(
+          `[ParisWorker] Invalid persisted instance config (${String(row.public_id || 'unknown')}): ${configResult.issues[0]?.message || 'invalid config'}`,
+        );
+      }
+    }
     return { ok: true, rows };
   }
 
@@ -97,7 +105,15 @@ async function loadCuratedInstanceByPublicId(env: Env, publicId: string): Promis
     throw new Error(`[ParisWorker] Failed to load curated instance (${res.status}): ${JSON.stringify(details)}`);
   }
   const rows = (await res.json()) as CuratedInstanceRow[];
-  return rows?.[0] ?? null;
+  const row = rows?.[0] ?? null;
+  if (!row) return null;
+  const configResult = assertConfig(row.config);
+  if (!configResult.ok) {
+    throw new Error(
+      `[ParisWorker] Invalid persisted curated config (${String(row.public_id || 'unknown')}): ${configResult.issues[0]?.message || 'invalid config'}`,
+    );
+  }
+  return row;
 }
 
 export async function loadInstanceByPublicId(env: Env, publicId: string): Promise<InstanceRow | CuratedInstanceRow | null> {
@@ -282,6 +298,21 @@ export async function handleCuratedInstances(req: Request, env: Env) {
 
   type CuratedListRow = Omit<CuratedInstanceRow, 'config'> & { config?: Record<string, unknown> };
   const rows = ((await res.json()) as CuratedListRow[]).filter(Boolean);
+  if (includeConfig) {
+    for (const row of rows) {
+      const configResult = assertConfig(row.config);
+      if (!configResult.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.payload.invalid',
+            detail: `Invalid persisted curated config for ${String(row.public_id || 'unknown')}: ${configResult.issues[0]?.message || 'invalid config'}`,
+          },
+          500,
+        );
+      }
+    }
+  }
   const instances = rows.map((row) => {
     const meta = readCuratedMeta(row.meta);
     const base = {
