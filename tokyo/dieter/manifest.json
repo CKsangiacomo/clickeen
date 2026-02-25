@@ -1,10 +1,11 @@
 {
   "v": 1,
-  "gitSha": "8bcae36a327e6e8ce5108666a92d21ee11de8b68",
+  "gitSha": "deb5df1514ebe94af8ff986181046244b3399846",
   "components": [
     "bulk-edit",
     "button",
     "choice-tiles",
+    "datepicker",
     "dropdown-actions",
     "dropdown-border",
     "dropdown-edit",
@@ -30,6 +31,7 @@
     "bulk-edit",
     "button",
     "choice-tiles",
+    "datepicker",
     "dropdown-actions",
     "dropdown-border",
     "dropdown-edit",

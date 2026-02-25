@@ -1,0 +1,35 @@
+{
+  "component": "datepicker",
+  "syntax": "<tooldrawer-field type='datepicker' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' value='{{VALUE}}' min='{{MIN}}' max='{{MAX}}' step='{{STEP}}' placeholder='{{PLACEHOLDER}}' />",
+  "attributes": {
+    "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "path": { "optional": true },
+    "label": { "optional": true },
+    "value": { "optional": true },
+    "min": { "optional": true },
+    "max": { "optional": true },
+    "step": { "optional": true },
+    "placeholder": { "optional": true },
+    "show-if": { "optional": true },
+    "show-when": { "optional": true }
+  },
+  "binding": { "path": "instanceData[PATH]", "type": "string" },
+  "defaults": [
+    {
+      "id": "datepicker",
+      "sizes": ["sm", "md", "lg"],
+      "spec": ["diet-datepicker", "data-size='{{size}}'"],
+      "context": {
+        "size": "md",
+        "id": "datepicker-{{size}}",
+        "label": "Date & time",
+        "value": "",
+        "path": "",
+        "min": "",
+        "max": "",
+        "step": "60",
+        "placeholder": "2026-01-20T12:00"
+      }
+    }
+  ]
+}

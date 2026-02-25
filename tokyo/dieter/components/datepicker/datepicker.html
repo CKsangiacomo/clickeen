@@ -1,0 +1,16 @@
+<div class="diet-datepicker" data-size="{{size}}">
+  <label class="diet-datepicker__control">
+    <span class="diet-datepicker__display-label{{#if label}}{{else}} is-hidden{{/if}}">{{#if label}}{{label}}:{{/if}}</span>
+    <input
+      id="{{id}}"
+      type="datetime-local"
+      class="diet-datepicker__field"
+      aria-label="{{label}}"
+      value="{{value}}"
+      placeholder="{{placeholder}}"
+      {{#if min}}min="{{min}}"{{/if}}
+      {{#if max}}max="{{max}}"{{/if}}
+      {{#if step}}step="{{step}}"{{/if}}
+    />
+  </label>
+</div>
