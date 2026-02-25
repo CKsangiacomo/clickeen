@@ -22,7 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import crypto from 'node:crypto';
-import { normalizeWidgetPublicId } from '../tooling/ck-contracts/src/index.js';
+import { normalizeWidgetPublicId, parseCanonicalAssetRef } from '../tooling/ck-contracts/src/index.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -390,7 +390,7 @@ function shouldProxyMutableToWorker(req, pathname) {
   if (req.method === 'POST' && pathname === '/assets/purge-deleted') {
     return true;
   }
-  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/assets/v/')) {
+  if ((req.method === 'GET' || req.method === 'HEAD') && parseCanonicalAssetRef(pathname)) {
     return true;
   }
   if ((req.method === 'POST' || req.method === 'DELETE') && pathname.startsWith('/l10n/instances/')) {

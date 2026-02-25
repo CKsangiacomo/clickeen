@@ -5,8 +5,10 @@ import {
   parseCanonicalAssetRef,
   toCanonicalAssetVersionPath,
 } from '../tooling/ck-contracts/src/index.js';
+import { execSync } from 'node:child_process';
 
 const ASSET_OBJECT_PATH_RE = /^\/arsenale\/o\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
+const ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/i;
 
 /**
  * One-shot origin repair for persisted widget configs.
@@ -146,7 +148,7 @@ function safeDecodeSegment(raw) {
   }
 }
 
-function parseCanonicalAssetPathDetails(pathname) {
+function parseLegacyObjectPathDetails(pathname) {
   const matched = String(pathname || '').match(ASSET_OBJECT_PATH_RE);
   if (!matched) return null;
 
@@ -164,6 +166,39 @@ function parseCanonicalAssetPathDetails(pathname) {
   return { accountId, assetId, variant, filename };
 }
 
+function decodeAssetVersionTokenCandidates(rawToken) {
+  const seed = String(rawToken || '').trim();
+  if (!seed) return [];
+  const out = new Set([seed]);
+  let current = seed;
+  for (let i = 0; i < 2; i += 1) {
+    try {
+      const next = decodeURIComponent(current).trim();
+      if (!next || out.has(next)) break;
+      out.add(next);
+      current = next;
+    } catch {
+      break;
+    }
+  }
+  return Array.from(out);
+}
+
+function parseLegacyAssetVersionTokenPath(pathname) {
+  const match = String(pathname || '').match(ASSET_VERSION_PATH_RE);
+  if (!match) return null;
+  const rawToken = String(match[1] || '').trim();
+  if (!rawToken) return null;
+
+  const candidates = decodeAssetVersionTokenCandidates(rawToken);
+  for (const candidate of candidates) {
+    const normalized = `/${candidate.replace(/^\/+/, '')}`;
+    const parsed = parseLegacyObjectPathDetails(normalized);
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
 function isAssetFieldPath(path) {
   return ASSET_FIELD_PATH_RE.test(String(path || ''));
 }
@@ -173,8 +208,20 @@ function deepCloneJson(value) {
 }
 
 function buildSupabaseClient() {
-  const base = String(process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
-  const serviceRole = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const raw = execSync('supabase status -o env', { encoding: 'utf8' });
+      for (const line of raw.split('\n')) {
+        const m = line.match(/^([A-Z0-9_]+)=["']?(.*?)["']?$/);
+        if (!m) continue;
+        if (!process.env[m[1]]) process.env[m[1]] = m[2];
+      }
+    } catch {
+      // Fallback to existing process env.
+    }
+  }
+  const base = String(process.env.SUPABASE_URL || process.env.API_URL || '').trim().replace(/\/+$/, '');
+  const serviceRole = String(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY || '').trim();
   if (!base) throw new Error('Missing SUPABASE_URL');
   if (!serviceRole) throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
   return { base, serviceRole };
@@ -272,6 +319,31 @@ async function rewriteCandidatePath(client, candidateRaw, variantCache) {
     return { changed: canonical !== candidate, value: canonical };
   }
 
+  const legacyVersionToken = parseLegacyAssetVersionTokenPath(pathname);
+  if (legacyVersionToken) {
+    const accountIdFromPath = legacyVersionToken.accountId;
+    const assetId = legacyVersionToken.assetId;
+    const variant = legacyVersionToken.variant;
+    const filenameFromPath = legacyVersionToken.filename;
+    if (!isUuid(accountIdFromPath)) {
+      return { changed: false, value: candidate, unresolved: `legacy-token-invalid-account-id:${candidate}` };
+    }
+    if (!isUuid(assetId)) {
+      return { changed: false, value: candidate, unresolved: `legacy-token-invalid-asset-id:${candidate}` };
+    }
+    const meta = await loadVariantMeta(client, assetId, variant, variantCache);
+    const canonical = meta
+      ? buildCanonicalAssetPath(meta.accountId, assetId, variant, meta.filename)
+      : buildCanonicalAssetPath(accountIdFromPath, assetId, variant, filenameFromPath || 'original.jpg');
+    if (!canonical) {
+      return { changed: false, value: candidate, unresolved: `legacy-token-invalid-canonical-version:${candidate}` };
+    }
+    if (!meta) {
+      return { changed: canonical !== candidate, value: canonical, unresolved: `legacy-token-missing-variant:${candidate}` };
+    }
+    return { changed: canonical !== candidate, value: canonical };
+  }
+
   const legacyMatch = pathname.match(LEGACY_CURATED_PATH_RE);
   if (legacyMatch) {
     const assetId = String(legacyMatch[1] || '').trim().toLowerCase();
@@ -290,7 +362,7 @@ async function rewriteCandidatePath(client, candidateRaw, variantCache) {
     return { changed: canonical !== candidate, value: canonical };
   }
 
-  const canonical = parseCanonicalAssetPathDetails(pathname);
+  const canonical = parseLegacyObjectPathDetails(pathname);
   if (canonical) {
     const accountIdFromPath = canonical.accountId;
     const assetId = canonical.assetId;
@@ -440,6 +512,62 @@ async function patchConfig(client, table, publicId, config) {
   });
 }
 
+function extractAccountAssetUsageRefs(config, publicId) {
+  const out = new Map();
+
+  const addRef = (candidateRaw, path) => {
+    const parsed = parseCanonicalAssetRef(candidateRaw);
+    if (!parsed || parsed.kind !== 'version') return;
+    const accountId = String(parsed.accountId || '').trim();
+    const assetId = String(parsed.assetId || '').trim();
+    if (!isUuid(accountId) || !isUuid(assetId)) return;
+    const key = `${accountId}|${assetId}|${publicId}|${path}`;
+    out.set(key, {
+      asset_id: assetId,
+      config_path: path,
+    });
+  };
+
+  const visit = (node, path) => {
+    if (typeof node === 'string') {
+      addRef(node, path);
+      CSS_URL_RE.lastIndex = 0;
+      let match = CSS_URL_RE.exec(node);
+      while (match) {
+        addRef(match[2] || '', path);
+        match = CSS_URL_RE.exec(node);
+      }
+      CSS_URL_RE.lastIndex = 0;
+      return;
+    }
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i += 1) visit(node[i], `${path}[${i}]`);
+      return;
+    }
+    for (const [key, value] of Object.entries(node)) {
+      const nextPath = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key) ? `${path}.${key}` : `${path}[${JSON.stringify(key)}]`;
+      visit(value, nextPath);
+    }
+  };
+
+  visit(config, 'config');
+  return Array.from(out.values());
+}
+
+async function syncAccountAssetUsage(client, accountId, publicId, refs) {
+  const payload = {
+    p_account_id: accountId,
+    p_public_id: publicId,
+    p_refs: refs,
+  };
+  await supabaseFetch(client, '/rest/v1/rpc/sync_account_asset_usage', {
+    method: 'POST',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify(payload),
+  });
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
@@ -458,6 +586,7 @@ async function main() {
   let scanned = 0;
   let changedRows = 0;
   let rewriteCount = 0;
+  let syncedUsageRows = 0;
   const unresolved = new Set();
 
   for (const table of tables) {
@@ -493,6 +622,11 @@ async function main() {
 
         if (args.apply) {
           await patchConfig(client, table, publicId, rewritten.config);
+          if (isUuid(expectedAccountId)) {
+            const refs = extractAccountAssetUsageRefs(rewritten.config, publicId);
+            await syncAccountAssetUsage(client, expectedAccountId, publicId, refs);
+            syncedUsageRows += 1;
+          }
           console.log(`[repair-asset-origins] patched ${table}:${publicId} rewrites=${rewritten.rewrites}`);
         } else {
           console.log(`[repair-asset-origins] would-patch ${table}:${publicId} rewrites=${rewritten.rewrites}`);
@@ -509,6 +643,7 @@ async function main() {
   console.log(`  scanned_rows=${scanned}`);
   console.log(`  changed_rows=${changedRows}`);
   console.log(`  rewritten_urls=${rewriteCount}`);
+  console.log(`  usage_rows_synced=${syncedUsageRows}`);
   console.log(`  unresolved_refs=${unresolved.size}`);
   if (unresolved.size > 0) {
     const sample = Array.from(unresolved).slice(0, 20);
