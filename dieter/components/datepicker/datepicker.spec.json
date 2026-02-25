@@ -1,6 +1,6 @@
 {
   "component": "datepicker",
-  "syntax": "<tooldrawer-field type='datepicker' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' value='{{VALUE}}' min='{{MIN}}' max='{{MAX}}' step='{{STEP}}' placeholder='{{PLACEHOLDER}}' />",
+  "syntax": "<tooldrawer-field type='datepicker' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' value='{{VALUE}}' min='{{MIN}}' max='{{MAX}}' step='{{STEP}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "path": { "optional": true },
@@ -9,7 +9,6 @@
     "min": { "optional": true },
     "max": { "optional": true },
     "step": { "optional": true },
-    "placeholder": { "optional": true },
     "show-if": { "optional": true },
     "show-when": { "optional": true }
   },
@@ -27,8 +26,7 @@
         "path": "",
         "min": "",
         "max": "",
-        "step": "60",
-        "placeholder": "2026-01-20T12:00"
+        "step": "60"
       }
     }
   ]

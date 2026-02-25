@@ -24,7 +24,8 @@
 
 .diet-datepicker__control {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: var(--space-1);
   inline-size: 100%;
@@ -52,9 +53,18 @@
   display: none;
 }
 
-.diet-datepicker__field {
-  flex: 1 1 auto;
+.diet-datepicker__inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1);
+  align-items: center;
   min-inline-size: 0;
+}
+
+.diet-datepicker__date,
+.diet-datepicker__time {
+  min-inline-size: 0;
+  inline-size: 100%;
   border: none;
   background: transparent;
   color: var(--color-system-black);
@@ -65,16 +75,22 @@
   outline: none;
 }
 
-.diet-datepicker__field::-webkit-calendar-picker-indicator {
-  opacity: 0.7;
+.diet-datepicker__time {
+  max-inline-size: 7ch;
+}
+
+.diet-datepicker__field {
+  display: none;
+}
+
+.diet-datepicker__date::-webkit-calendar-picker-indicator,
+.diet-datepicker__time::-webkit-calendar-picker-indicator {
+  opacity: 0.8;
   cursor: pointer;
 }
 
-.diet-datepicker__field::placeholder {
-  color: color-mix(in oklab, var(--color-system-black), transparent 45%);
-}
-
-.diet-datepicker__field:disabled {
+.diet-datepicker__date:disabled,
+.diet-datepicker__time:disabled {
   cursor: not-allowed;
   color: color-mix(in oklab, var(--color-system-black), transparent 40%);
 }
@@ -88,7 +104,8 @@
   font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui);
 }
 
-.diet-datepicker[data-size="sm"] .diet-datepicker__field {
+.diet-datepicker[data-size="sm"] .diet-datepicker__date,
+.diet-datepicker[data-size="sm"] .diet-datepicker__time {
   font: 400 var(--fs-11)/var(--lh-tight) var(--font-ui);
 }
 
@@ -101,7 +118,8 @@
   font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui);
 }
 
-.diet-datepicker[data-size="md"] .diet-datepicker__field {
+.diet-datepicker[data-size="md"] .diet-datepicker__date,
+.diet-datepicker[data-size="md"] .diet-datepicker__time {
   font: 400 var(--fs-13)/var(--lh-tight) var(--font-ui);
 }
 
@@ -114,12 +132,14 @@
   font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui);
 }
 
-.diet-datepicker[data-size="lg"] .diet-datepicker__field {
+.diet-datepicker[data-size="lg"] .diet-datepicker__date,
+.diet-datepicker[data-size="lg"] .diet-datepicker__time {
   font: 400 var(--fs-14)/var(--lh-tight) var(--font-ui);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .diet-datepicker__field {
+  .diet-datepicker__date,
+  .diet-datepicker__time {
     transition: none;
   }
 }

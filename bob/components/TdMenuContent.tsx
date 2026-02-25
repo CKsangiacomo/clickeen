@@ -1703,6 +1703,12 @@ export function TdMenuContent({
                   detail: { value: nextValue, source: 'tdmenu' },
                 })
               );
+            } else if (field.classList.contains('diet-datepicker__field')) {
+              field.dispatchEvent(
+                new CustomEvent('external-sync', {
+                  detail: { value: nextValue, source: 'tdmenu' },
+                })
+              );
             } else if (field.classList.contains('diet-dropdown-edit__field')) {
               field.dispatchEvent(
                 new CustomEvent('external-sync', {
