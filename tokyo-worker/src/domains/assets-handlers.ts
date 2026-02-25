@@ -631,7 +631,7 @@ async function handleDeleteAccountAsset(
   if (failedBlobDeletes > 0 || purgeResult.failed > 0) {
     impactedPublicIds.forEach((publicId) => {
       upsertHealthInMap(renderHealthByPublicId, publicId, {
-        status: 'error',
+        status: 'degraded',
         reason: 'asset_delete_cleanup_failed',
         detail: `Asset ${assetId} delete pipeline had storage or CDN purge failures.`,
       });
@@ -655,23 +655,19 @@ async function handleDeleteAccountAsset(
     }
   }
 
-  if (failedBlobDeletes > 0 || failedSnapshotRebuilds > 0 || purgeResult.failed > 0 || failedRenderHealthWrites > 0) {
-    const errorDetails: string[] = [];
-    if (failedBlobDeletes > 0) errorDetails.push(`failed to delete ${failedBlobDeletes} asset blob(s)`);
-    if (purgeResult.failed > 0) errorDetails.push(`failed to purge ${purgeResult.failed} CDN URL(s)`);
-    if (failedSnapshotRebuilds > 0) {
-      errorDetails.push(`failed to rebuild ${failedSnapshotRebuilds} snapshot revision(s)`);
-    }
-    if (failedRenderHealthWrites > 0) {
-      errorDetails.push(`failed to persist ${failedRenderHealthWrites} render health update(s)`);
-    }
+  const pipelineWarnings: string[] = [];
+  if (failedBlobDeletes > 0) pipelineWarnings.push(`failed to delete ${failedBlobDeletes} asset blob(s)`);
+  if (purgeResult.failed > 0) pipelineWarnings.push(`failed to purge ${purgeResult.failed} CDN URL(s)`);
+  if (failedSnapshotRebuilds > 0) {
+    pipelineWarnings.push(`failed to rebuild ${failedSnapshotRebuilds} snapshot revision(s)`);
+  }
+  if (failedRenderHealthWrites > 0) {
+    pipelineWarnings.push(`failed to persist ${failedRenderHealthWrites} render health update(s)`);
+  }
+
+  if (pipelineWarnings.length > 0) {
     return json(
       {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'tokyo.errors.assets.deletePipelinePartialFailure',
-          detail: errorDetails.join('; '),
-        },
         accountId,
         assetId,
         deleted: true,
@@ -691,8 +687,12 @@ async function handleDeleteAccountAsset(
         },
         failedSnapshotRebuildDetails,
         failedRenderHealthWrites,
+        pipeline: {
+          status: 'degraded',
+          warnings: pipelineWarnings,
+        },
       },
-      { status: 502 },
+      { status: 200 },
     );
   }
 
@@ -711,6 +711,10 @@ async function handleDeleteAccountAsset(
         attempted: purgeResult.total,
         purged: purgeResult.purged,
         failed: purgeResult.failed,
+      },
+      pipeline: {
+        status: 'ok',
+        warnings: [],
       },
     },
     { status: 200 },

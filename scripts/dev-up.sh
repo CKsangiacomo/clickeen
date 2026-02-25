@@ -625,6 +625,11 @@ if ! node "$ROOT_DIR/scripts/tokyo-fonts-sync.mjs" --local --persist-to "$WRANGL
   echo "[dev-up] WARNING: Tokyo font sync failed; special fonts may not load until sync succeeds."
 fi
 
+echo "[dev-up] Syncing missing Tokyo account assets to local R2"
+if ! node "$ROOT_DIR/scripts/tokyo-assets-sync.mjs" --persist-to "$WRANGLER_PERSIST_DIR"; then
+  echo "[dev-up] WARNING: Tokyo asset sync failed; some local /assets/v/* refs may return unavailable."
+fi
+
 echo "[dev-up] Starting Paris Worker (3001)"
 (
   cd "$ROOT_DIR/paris"
