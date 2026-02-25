@@ -436,7 +436,7 @@
     "    <tooldrawer-field-content-timer-labels group-label='' type='textfield' size='md' path='timer.labels.seconds' label='Seconds label' value='{{timer.labels.seconds}}' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster label='Date settings' show-if=\"timer.mode == 'date'\">",
-    "    <tooldrawer-field-timer-date group-label='' type='datepicker' size='md' path='timer.targetDate' label='Target date & time' value='{{timer.targetDate}}' placeholder='2026-01-20T12:00' />",
+    "    <tooldrawer-field-timer-date group-label='' type='textfield' size='md' path='timer.targetDate' label='Target date & time' value='{{timer.targetDate}}' placeholder='2026-01-20T12:00' />",
     "    <tooldrawer-field-timer-date group-label='' type='textfield' size='md' path='timer.timezone' label='Timezone (IANA or browser)' value='{{timer.timezone}}' placeholder='browser' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster label='Countdown settings' show-if=\"timer.mode == 'personal'\">",

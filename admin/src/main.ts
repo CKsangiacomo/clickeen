@@ -7,7 +7,6 @@ import { generateBobNativeCatalog } from './BobNativeCatalog';
 import { getIcon } from './data/icons';
 import {
   hydrateChoiceTiles,
-  hydrateDatepicker,
   hydrateDropdownActions,
   hydrateDropdownBorder,
   hydrateDropdownFill,
@@ -290,7 +289,6 @@ function hydrateIcons(scope: ParentNode) {
 function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateChoiceTiles(scope);
   hydrateTextfield(scope);
-  hydrateDatepicker(scope);
   hydrateValuefield(scope);
   hydrateTextedit(scope);
   hydrateTextrename(scope);

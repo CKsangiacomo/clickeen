@@ -7,7 +7,6 @@ export { hydrateDropdownShadow } from './dropdown-shadow/dropdown-shadow';
 export { hydrateDropdownUpload } from './dropdown-upload/dropdown-upload';
 export { hydrateDropdownEdit } from './dropdown-edit/dropdown-edit';
 export { hydrateTextfield } from './textfield/textfield';
-export { hydrateDatepicker } from './datepicker/datepicker';
 export { hydrateValuefield } from './valuefield/valuefield';
 export { hydrateButton } from './button/button';
 export { hydrateBulkEdit } from './bulk-edit/bulk-edit';
