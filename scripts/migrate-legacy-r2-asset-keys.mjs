@@ -18,6 +18,7 @@ function printUsage() {
 Options:
   --apply                 Persist changes (default: dry-run)
   --delete-legacy         Delete legacy R2 object after copy (only with --apply)
+  --remote                Operate on remote R2 (default: local)
   --bucket <name>         R2 bucket name (default: ${DEFAULT_BUCKET})
   --persist-to <dir>      Wrangler local persistence dir (default: ${DEFAULT_PERSIST_TO})
   --asset-id <uuid>       Restrict to one asset_id
@@ -30,6 +31,7 @@ function parseArgs(argv) {
   const out = {
     apply: false,
     deleteLegacy: false,
+    remote: false,
     bucket: DEFAULT_BUCKET,
     persistTo: DEFAULT_PERSIST_TO,
     assetId: '',
@@ -50,6 +52,10 @@ function parseArgs(argv) {
     }
     if (arg === '--delete-legacy') {
       out.deleteLegacy = true;
+      continue;
+    }
+    if (arg === '--remote') {
+      out.remote = true;
       continue;
     }
     if (arg === '--bucket') {
@@ -185,19 +191,21 @@ async function runWranglerR2Object(args) {
   return `${stdout || ''}${stderr || ''}`.trim();
 }
 
-async function copyLocalR2Object({ bucket, persistTo, fromKey, toKey }) {
+async function copyR2Object({ bucket, persistTo, fromKey, toKey, remote }) {
   const tempDir = await mkdtemp(path.join(os.tmpdir(), 'ck-r2-migrate-'));
   const tempFile = path.join(tempDir, 'object.bin');
   try {
-    await runWranglerR2Object(['get', `${bucket}/${fromKey}`, '--local', '--persist-to', persistTo, '--file', tempFile]);
-    await runWranglerR2Object(['put', `${bucket}/${toKey}`, '--local', '--persist-to', persistTo, '--file', tempFile]);
+    const scopeArgs = remote ? ['--remote'] : ['--local', '--persist-to', persistTo];
+    await runWranglerR2Object(['get', `${bucket}/${fromKey}`, ...scopeArgs, '--file', tempFile]);
+    await runWranglerR2Object(['put', `${bucket}/${toKey}`, ...scopeArgs, '--file', tempFile]);
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
 }
 
-async function deleteLocalR2Object({ bucket, persistTo, key }) {
-  await runWranglerR2Object(['delete', `${bucket}/${key}`, '--local', '--persist-to', persistTo]);
+async function deleteR2Object({ bucket, persistTo, key, remote }) {
+  const scopeArgs = remote ? ['--remote'] : ['--local', '--persist-to', persistTo];
+  await runWranglerR2Object(['delete', `${bucket}/${key}`, ...scopeArgs]);
 }
 
 async function patchVariantR2Key(client, row, nextKey) {
@@ -224,7 +232,7 @@ async function main() {
   const rows = await loadLegacyVariantRows(client, args);
 
   console.log(
-    `[migrate-legacy-r2-asset-keys] mode=${args.apply ? 'apply' : 'dry-run'} rows=${rows.length} bucket=${args.bucket}`,
+    `[migrate-legacy-r2-asset-keys] mode=${args.apply ? 'apply' : 'dry-run'} storage=${args.remote ? 'remote' : 'local'} rows=${rows.length} bucket=${args.bucket}`,
   );
 
   let copied = 0;
@@ -245,20 +253,22 @@ async function main() {
     }
 
     try {
-      await copyLocalR2Object({
+      await copyR2Object({
         bucket: args.bucket,
         persistTo: args.persistTo,
         fromKey,
         toKey: nextKey,
+        remote: args.remote,
       });
       copied += 1;
       await patchVariantR2Key(client, row, nextKey);
       patched += 1;
       if (args.deleteLegacy) {
-        await deleteLocalR2Object({
+        await deleteR2Object({
           bucket: args.bucket,
           persistTo: args.persistTo,
           key: fromKey,
+          remote: args.remote,
         });
         deleted += 1;
       }

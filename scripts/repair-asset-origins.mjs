@@ -222,9 +222,36 @@ function parseAssetVersionId(raw) {
   const pathname = toPathname(direct);
   if (!pathname) return '';
   const parsed = parseCanonicalAssetRef(pathname);
-  if (!parsed || parsed.kind !== 'version') return '';
-  const versionId = String(parsed.versionKey || '').trim();
-  return versionId || '';
+  if (parsed && parsed.kind === 'version') {
+    const versionId = String(parsed.versionKey || '').trim();
+    if (versionId) return versionId;
+  }
+
+  const legacyToken = parseLegacyAssetVersionTokenPath(pathname);
+  if (legacyToken) {
+    const accountId = String(legacyToken.accountId || '').trim().toLowerCase();
+    const assetId = String(legacyToken.assetId || '').trim().toLowerCase();
+    const variant = String(legacyToken.variant || 'original').trim().toLowerCase() || 'original';
+    const filename = String(legacyToken.filename || '').trim();
+    if (isUuid(accountId) && isUuid(assetId) && filename) {
+      const variantSegment = variant === 'original' ? '' : `${variant}/`;
+      return `assets/versions/${accountId}/${assetId}/${variantSegment}${filename}`;
+    }
+  }
+
+  const legacyObject = parseLegacyObjectPathDetails(pathname);
+  if (legacyObject) {
+    const accountId = String(legacyObject.accountId || '').trim().toLowerCase();
+    const assetId = String(legacyObject.assetId || '').trim().toLowerCase();
+    const variant = String(legacyObject.variant || 'original').trim().toLowerCase() || 'original';
+    const filename = String(legacyObject.filename || '').trim();
+    if (isUuid(accountId) && isUuid(assetId) && filename) {
+      const variantSegment = variant === 'original' ? '' : `${variant}/`;
+      return `assets/versions/${accountId}/${assetId}/${variantSegment}${filename}`;
+    }
+  }
+
+  return '';
 }
 
 function parseAssetRefObjectVersionId(value) {
