@@ -295,6 +295,25 @@ var Dieter = (() => {
   var states = /* @__PURE__ */ new Map();
   var UUID_FILENAME_STEM_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   var ASSET_UNAVAILABLE_MESSAGE = "Asset URL is unavailable. Upload a new file to restore preview.";
+  var ASSET_ENTITLEMENT_REASON_KEYS = /* @__PURE__ */ new Set([
+    "coreui.upsell.reason.budgetExceeded",
+    "coreui.upsell.reason.capReached"
+  ]);
+  function isAssetEntitlementReasonKey(value) {
+    const reasonKey = String(value || "").trim();
+    return ASSET_ENTITLEMENT_REASON_KEYS.has(reasonKey);
+  }
+  function dispatchAssetEntitlementGate(root, reasonKey) {
+    root.dispatchEvent(
+      new CustomEvent("bob-upsell", {
+        bubbles: true,
+        detail: { reasonKey }
+      })
+    );
+    if (typeof window === "undefined") return;
+    if (!window.parent || window.parent === window) return;
+    window.parent.postMessage({ type: "bob:asset-entitlement-denied", reasonKey }, "*");
+  }
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-upload",
     triggerSelector: ".diet-dropdown-upload__control",
@@ -482,6 +501,9 @@ var Dieter = (() => {
         clearError(state);
       } catch (error2) {
         const message = error2 instanceof Error ? error2.message : "coreui.errors.assets.uploadFailed";
+        if (isAssetEntitlementReasonKey(message)) {
+          dispatchAssetEntitlementGate(state.root, message);
+        }
         setError(state, message);
       } finally {
         setUploadingState(state, false);
