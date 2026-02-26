@@ -76,8 +76,9 @@ Local dev:
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
 - `tokyo/dev-server.mjs` supports local upload endpoints:
   - `POST /assets/upload` (account-owned uploads; required header: `x-account-id`; optional trace headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`)
-  - `PUT /assets/:accountId/:assetId` (atomic content replace)
-  - `DELETE /assets/:accountId/:assetId` (synchronous legal delete pipeline + impacted snapshot rebuild)
+  - `DELETE /assets/:accountId/:assetId` (synchronous hard delete of blobs + metadata; no snapshot rebuild)
+  - `GET /assets/integrity/:accountId` (account mirror integrity snapshot)
+  - `GET /assets/integrity/:accountId/:assetId` (per-asset integrity snapshot)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
   - `POST /l10n/instances/:publicId/:layer/:layerKey` (dev-only; layered path)
   - `DELETE /l10n/instances/:publicId/:layer/:layerKey` (dev-only; layered path)
@@ -108,10 +109,11 @@ Build command (repo root):
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
-  - `POST /assets/upload` (requires `Authorization: Bearer <token>`; accepts Supabase session bearer for product uploads, or `TOKYO_DEV_JWT` for internal/dev automation. Required headers: `x-account-id`, `x-workspace-id`; optional trace headers: `x-public-id`, `x-widget-type`, `x-source`)
-  - `PUT /assets/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; atomic content replace)
-  - `DELETE /assets/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; synchronous delete pipeline)
-  - `GET /assets/v/:versionKey` (public, immutable, cacheable; canonical account-owned asset reads)
+  - `POST /assets/upload` (requires `Authorization: Bearer <token>`; accepts Supabase session bearer for product uploads, or `TOKYO_DEV_JWT` for internal/dev automation. Required header: `x-account-id`. Optional headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`. When `x-workspace-id` is provided, worker enforces workspace membership + workspace/account binding; otherwise it enforces account membership.)
+  - `DELETE /assets/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; synchronous hard delete path)
+  - `GET /assets/integrity/:accountId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
+  - `GET /assets/integrity/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
+  - `GET /assets/v/:versionId` (public, immutable, cacheable; canonical account-owned asset reads)
   - `POST /l10n/instances/:publicId/:layer/:layerKey` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /l10n/**` (public; deterministic overlay paths; immutable by fingerprint, except `index.json`)
   - `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague)

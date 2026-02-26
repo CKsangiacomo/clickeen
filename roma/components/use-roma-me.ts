@@ -101,6 +101,16 @@ export type RomaMeResponse = {
         usageCount: number;
         createdAt: string;
       }>;
+      integrity: {
+        ok: boolean;
+        reasonKey: string | null;
+        dbVariantCount: number;
+        r2ObjectCount: number;
+        missingInR2Count: number;
+        orphanInR2Count: number;
+        missingInR2: Array<{ assetId: string; r2Key: string }>;
+        orphanInR2: string[];
+      };
     } | null;
     team?: {
       workspaceId: string;

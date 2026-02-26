@@ -675,8 +675,9 @@ tokyo/widgets/
     gtm.json
 
 documentation/
-  Agents/
-    GTMAgent.PRD.md         # This doc
+  ai/
+    agents/
+      gtm.md                # This doc
 ```
 
 ---
@@ -693,4 +694,3 @@ documentation/
 | OpenAI API (or similar) | LLM for research, strategy, copy |
 | Keyword API (DataForSEO, etc.) | Keyword volumes, difficulty |
 | Berlin (analytics) | Page performance data |
-

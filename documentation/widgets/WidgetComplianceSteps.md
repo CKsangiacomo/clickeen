@@ -205,14 +205,14 @@ Only applicable if the widget exposes `seoGeo.enabled` / an SEO/GEO toggle.
 
 OUTPUT
 - Venice schema/excerpt implementation:
-  - `venice/lib/schema/{widgetType}.ts` (schemaJsonLd + excerptHtml)
+  - `venice/lib/schema/{widgetType}.ts` (excerptHtml required; schemaJsonLd only when semantically implemented)
   - registered in `venice/lib/schema/index.ts`
 - Gating matches `documentation/capabilities/seo-geo.md`:
   - `seoGeo.enabled !== true` → emit empty strings
   - widget-specific schema only when semantically safe
 
 GATE
-- `GET /r/:publicId?meta=1` returns expected `schemaJsonLd`/`excerptHtml` when enabled and empty strings when disabled.
+- `GET /r/:publicId?meta=1` returns expected SEO/GEO payloads by widget contract when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
 
 ---
 

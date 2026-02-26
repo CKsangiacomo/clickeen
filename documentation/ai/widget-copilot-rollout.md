@@ -1,5 +1,6 @@
 STATUS: EXECUTION RUNBOOK — WIDGET COPILOT (SDR + CS)
-Updated: February 11, 2026
+Updated: February 26, 2026 (doc/runtime sync)
+Cloud-dev verification snapshot below remains from February 11, 2026.
 
 ## Purpose
 

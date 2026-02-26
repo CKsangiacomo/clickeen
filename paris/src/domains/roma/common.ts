@@ -93,6 +93,17 @@ type AccountAssetUsageCountRow = {
   asset_id: string;
 };
 
+type RomaAssetsIntegritySnapshot = {
+  ok: boolean;
+  reasonKey: string | null;
+  dbVariantCount: number;
+  r2ObjectCount: number;
+  missingInR2Count: number;
+  orphanInR2Count: number;
+  missingInR2: Array<{ assetId: string; r2Key: string }>;
+  orphanInR2: string[];
+};
+
 type WorkspaceWidgetInstanceRow = {
   public_id: string;
   display_name?: string | null;
@@ -171,6 +182,7 @@ type RomaBootstrapDomainsPayload = {
       usageCount: number;
       createdAt: string;
     }>;
+    integrity: RomaAssetsIntegritySnapshot;
   };
   team: {
     workspaceId: string;
@@ -320,6 +332,171 @@ async function validateAccountAssetUsageForInstanceStrict(args: {
   }
 }
 
+const ROMA_ASSET_BOOTSTRAP_PAGE_SIZE = 1000;
+const ROMA_ASSET_USAGE_ID_CHUNK_SIZE = 200;
+
+function resolveTokyoMutableAssetBase(env: Env): string | null {
+  const raw = (
+    (typeof env.TOKYO_WORKER_BASE_URL === 'string' ? env.TOKYO_WORKER_BASE_URL : '') ||
+    (typeof env.TOKYO_BASE_URL === 'string' ? env.TOKYO_BASE_URL : '')
+  )
+    .trim()
+    .replace(/\/+$/, '');
+  return raw || null;
+}
+
+function resolveTokyoServiceToken(env: Env): string | null {
+  const token = ((typeof env.TOKYO_DEV_JWT === 'string' ? env.TOKYO_DEV_JWT : '') || (typeof env.PARIS_DEV_JWT === 'string' ? env.PARIS_DEV_JWT : '')).trim();
+  return token || null;
+}
+
+function chunkValues<T>(values: T[], chunkSize: number): T[][] {
+  if (chunkSize <= 0) return [values];
+  const out: T[][] = [];
+  for (let i = 0; i < values.length; i += chunkSize) {
+    out.push(values.slice(i, i + chunkSize));
+  }
+  return out;
+}
+
+async function loadPagedRows<T>(args: {
+  env: Env;
+  table: string;
+  baseParams: Record<string, string>;
+  pageSize?: number;
+}): Promise<T[]> {
+  const pageSize = args.pageSize ?? ROMA_ASSET_BOOTSTRAP_PAGE_SIZE;
+  const out: T[] = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const params = new URLSearchParams({
+      ...args.baseParams,
+      limit: String(pageSize),
+      offset: String(offset),
+    });
+    const res = await supabaseFetch(args.env, `/rest/v1/${args.table}?${params.toString()}`, { method: 'GET' });
+    if (!res.ok) {
+      const details = await readJson(res);
+      throw new Error(`[ParisWorker] Failed to load ${args.table} rows (${res.status}): ${JSON.stringify(details)}`);
+    }
+    const rows = ((await res.json()) as T[]) ?? [];
+    out.push(...rows);
+    if (rows.length < pageSize) break;
+  }
+  return out;
+}
+
+async function loadAccountAssetsMirrorIntegrityForBootstrap(
+  env: Env,
+  accountId: string,
+): Promise<RomaAssetsIntegritySnapshot> {
+  const tokyoBase = resolveTokyoMutableAssetBase(env);
+  const tokyoToken = resolveTokyoServiceToken(env);
+  if (!tokyoBase || !tokyoToken) {
+    return {
+      ok: false,
+      reasonKey: 'coreui.errors.assets.integrityUnavailable',
+      dbVariantCount: 0,
+      r2ObjectCount: 0,
+      missingInR2Count: 0,
+      orphanInR2Count: 0,
+      missingInR2: [],
+      orphanInR2: [],
+    };
+  }
+  let res: Response;
+  let payload:
+    | {
+        error?: { reasonKey?: string | null };
+        integrity?: {
+          ok?: boolean;
+          dbVariantCount?: number;
+          r2ObjectCount?: number;
+          missingInR2Count?: number;
+          orphanInR2Count?: number;
+          missingInR2?: Array<{ assetId?: string; r2Key?: string }>;
+          orphanInR2?: Array<string>;
+        };
+      }
+    | null = null;
+  try {
+    const url = `${tokyoBase}/assets/integrity/${encodeURIComponent(accountId)}`;
+    res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${tokyoToken}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+    payload = (await readJson(res)) as
+      | {
+          error?: { reasonKey?: string | null };
+          integrity?: {
+            ok?: boolean;
+            dbVariantCount?: number;
+            r2ObjectCount?: number;
+            missingInR2Count?: number;
+            orphanInR2Count?: number;
+            missingInR2?: Array<{ assetId?: string; r2Key?: string }>;
+            orphanInR2?: Array<string>;
+          };
+        }
+      | null;
+  } catch {
+    return {
+      ok: false,
+      reasonKey: 'coreui.errors.assets.integrityUnavailable',
+      dbVariantCount: 0,
+      r2ObjectCount: 0,
+      missingInR2Count: 0,
+      orphanInR2Count: 0,
+      missingInR2: [],
+      orphanInR2: [],
+    };
+  }
+
+  const integrity = payload?.integrity ?? null;
+  const missingInR2 =
+    Array.isArray(integrity?.missingInR2)
+      ? integrity.missingInR2
+          .map((entry) => ({
+            assetId: String(entry?.assetId || '').trim(),
+            r2Key: String(entry?.r2Key || '').trim(),
+          }))
+          .filter((entry) => entry.assetId && entry.r2Key)
+      : [];
+  const orphanInR2 =
+    Array.isArray(integrity?.orphanInR2) ? integrity.orphanInR2.map((entry) => String(entry || '').trim()).filter(Boolean) : [];
+  const missingInR2Count =
+    typeof integrity?.missingInR2Count === 'number' && Number.isFinite(integrity.missingInR2Count)
+      ? Math.max(0, Math.trunc(integrity.missingInR2Count))
+      : missingInR2.length;
+  const orphanInR2Count =
+    typeof integrity?.orphanInR2Count === 'number' && Number.isFinite(integrity.orphanInR2Count)
+      ? Math.max(0, Math.trunc(integrity.orphanInR2Count))
+      : orphanInR2.length;
+
+  return {
+    ok: res.ok && Boolean(integrity?.ok === true),
+    reasonKey:
+      res.ok && integrity?.ok === true
+        ? null
+        : String(payload?.error?.reasonKey || 'coreui.errors.assets.integrityMismatch'),
+    dbVariantCount:
+      typeof integrity?.dbVariantCount === 'number' && Number.isFinite(integrity.dbVariantCount)
+        ? Math.max(0, Math.trunc(integrity.dbVariantCount))
+        : 0,
+    r2ObjectCount:
+      typeof integrity?.r2ObjectCount === 'number' && Number.isFinite(integrity.r2ObjectCount)
+        ? Math.max(0, Math.trunc(integrity.r2ObjectCount))
+        : 0,
+    missingInR2Count,
+    orphanInR2Count,
+    missingInR2,
+    orphanInR2,
+  };
+}
+
 async function loadWorkspaceMembersForBootstrap(env: Env, workspaceId: string): Promise<RomaBootstrapDomainsPayload['team']['members']> {
   const params = new URLSearchParams({
     select: 'user_id,role,created_at',
@@ -344,19 +521,15 @@ async function loadWorkspaceMembersForBootstrap(env: Env, workspaceId: string): 
 }
 
 async function loadAccountUsageAssetRowsForBootstrap(env: Env, accountId: string): Promise<AccountAssetRow[]> {
-  const assetParams = new URLSearchParams({
-    select: 'asset_id,size_bytes',
-    account_id: `eq.${accountId}`,
-    limit: '5000',
+  return loadPagedRows<AccountAssetRow>({
+    env,
+    table: 'account_assets',
+    baseParams: {
+      select: 'asset_id,size_bytes',
+      account_id: `eq.${accountId}`,
+      order: 'created_at.asc',
+    },
   });
-  const assetRes = await supabaseFetch(env, `/rest/v1/account_assets?${assetParams.toString()}`, { method: 'GET' });
-  if (!assetRes.ok) {
-    const details = await readJson(assetRes);
-    throw new Error(
-      `[ParisWorker] Failed to load account usage assets for bootstrap (${assetRes.status}): ${JSON.stringify(details)}`,
-    );
-  }
-  return ((await assetRes.json()) as AccountAssetRow[]) ?? [];
 }
 
 async function loadAccountAssetUsageCountMapForBootstrap(
@@ -367,44 +540,48 @@ async function loadAccountAssetUsageCountMapForBootstrap(
   const counts = new Map<string, number>();
   if (assetIds.length === 0) return counts;
 
-  const params = new URLSearchParams({
-    select: 'asset_id',
-    account_id: `eq.${accountId}`,
-    asset_id: `in.(${assetIds.join(',')})`,
-    limit: '5000',
-  });
-  const usageRes = await supabaseFetch(env, `/rest/v1/account_asset_usage?${params.toString()}`, { method: 'GET' });
-  if (!usageRes.ok) {
-    const details = await readJson(usageRes);
-    throw new Error(
-      `[ParisWorker] Failed to load account asset usage counts for bootstrap (${usageRes.status}): ${JSON.stringify(details)}`,
-    );
+  const chunks = chunkValues(assetIds, ROMA_ASSET_USAGE_ID_CHUNK_SIZE);
+  for (const chunk of chunks) {
+    const rows = await loadPagedRows<AccountAssetUsageCountRow>({
+      env,
+      table: 'account_asset_usage',
+      baseParams: {
+        select: 'asset_id',
+        account_id: `eq.${accountId}`,
+        asset_id: `in.(${chunk.join(',')})`,
+      },
+    });
+    rows.forEach((row) => {
+      const assetId = asTrimmedString(row.asset_id);
+      if (!assetId) return;
+      counts.set(assetId, (counts.get(assetId) ?? 0) + 1);
+    });
   }
-  const rows = ((await usageRes.json()) as AccountAssetUsageCountRow[]) ?? [];
-  rows.forEach((row) => {
-    const assetId = asTrimmedString(row.asset_id);
-    if (!assetId) return;
-    counts.set(assetId, (counts.get(assetId) ?? 0) + 1);
-  });
   return counts;
 }
 
-async function loadAccountAssetsForBootstrap(env: Env, accountId: string): Promise<RomaBootstrapDomainsPayload['assets']['assets']> {
-  const params = new URLSearchParams({
-    select: 'asset_id,normalized_filename,content_type,size_bytes,created_at',
-    account_id: `eq.${accountId}`,
-    order: 'created_at.desc',
-    limit: '200',
+async function loadAccountAssetsForBootstrap(
+  env: Env,
+  accountId: string,
+): Promise<{
+  assets: RomaBootstrapDomainsPayload['assets']['assets'];
+  integrity: RomaAssetsIntegritySnapshot;
+}> {
+  const rows = await loadPagedRows<AccountAssetListBootstrapRow>({
+    env,
+    table: 'account_assets',
+    baseParams: {
+      select: 'asset_id,normalized_filename,content_type,size_bytes,created_at',
+      account_id: `eq.${accountId}`,
+      order: 'created_at.desc',
+    },
   });
-  const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load account assets for bootstrap (${res.status}): ${JSON.stringify(details)}`);
-  }
-  const rows = ((await res.json()) as AccountAssetListBootstrapRow[]) ?? [];
   const assetIds = rows.map((row) => asTrimmedString(row.asset_id)).filter((assetId): assetId is string => Boolean(assetId));
-  const usageCountMap = await loadAccountAssetUsageCountMapForBootstrap(env, accountId, assetIds);
-  return rows.map((row) => {
+  const [usageCountMap, integrity] = await Promise.all([
+    loadAccountAssetUsageCountMapForBootstrap(env, accountId, assetIds),
+    loadAccountAssetsMirrorIntegrityForBootstrap(env, accountId),
+  ]);
+  const assets = rows.map((row) => {
     const assetId = asTrimmedString(row.asset_id) || '';
     return {
       assetId,
@@ -415,6 +592,7 @@ async function loadAccountAssetsForBootstrap(env: Env, accountId: string): Promi
       createdAt: row.created_at,
     };
   });
+  return { assets, integrity };
 }
 
 type RomaWidgetLookupCacheEntry = {

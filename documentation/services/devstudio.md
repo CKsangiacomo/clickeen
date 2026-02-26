@@ -44,11 +44,11 @@ DevStudio Local supports curated instances as the single primitive:
 - **Reset instance from JSON**: pulls from compiled defaults (`spec.json`) and overwrites `wgt_main_{widget}`.
 - **Create curated instance**: creates `wgt_curated_{widget}_{styleSlug}` from the current editor config, storing metadata (`styleName`, `styleSlug`, and optional `variants`).
 - **Update curated instance**: overwrites the selected `wgt_curated_*` config in place with the current editor state.
-- **Refresh Prague preview**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=workspace` to regenerate curated snapshot artifacts (default locale `en`) for Venice/Prague.
+- **Refresh Prague preview**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=workspace` to enqueue curated snapshot regeneration (default locale `en`) for Venice/Prague.
 - **Translate locales**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=workspace` to enqueue locale jobs for the workspace active locale set.
 
 Notes:
-- Asset controls upload immediately at edit-time; DevStudio write actions now assume config already contains canonical immutable `/assets/v/**` URLs (no pre-save blob/data persistence pass).
+- Asset controls upload immediately at edit-time; persisted config should store immutable refs (`asset.versionId`) on asset fields, while runtime derives `/assets/v/{encodeURIComponent(versionId)}` paths.
 - Curated IDs are locale-free; do not create `wgt_curated_*.<locale>` variants. Locale is a runtime query param.
 - Curated metadata lives in `curated_widget_instances.meta`: `{ styleName, styleSlug, variants? }`.
 - DevStudio create flow keeps this intentionally minimal: required instance name + optional `variant`/`sub-variant`.
@@ -56,7 +56,7 @@ Notes:
 - Curated/main flows use `PLATFORM_ACCOUNT_ID`; resulting URLs are canonical immutable version paths:
   - original variant key: `assets/versions/{accountId}/{assetId}/{filename}`
   - non-original variant key: `assets/versions/{accountId}/{assetId}/{variant}/{filename}`
-  - persisted runtime URL: `/assets/v/{encodeURIComponent(versionKey)}`
+  - runtime path derived from version ref: `/assets/v/{encodeURIComponent(versionId)}`
 - Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are invalid for DevStudio flows.
 - Curated actions export the current editor state from Bob (not the last published config).
 

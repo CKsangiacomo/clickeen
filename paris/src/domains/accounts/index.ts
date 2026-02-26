@@ -54,6 +54,46 @@ type WorkspaceAccountRow = {
   id: string;
   account_id: string;
 };
+
+type TokyoAssetIdentityIntegritySnapshot = {
+  ok?: boolean;
+  reasonKey?: string | null;
+  dbVariantCount?: number;
+  r2ObjectCount?: number;
+  missingInR2Count?: number;
+  orphanInR2Count?: number;
+  missingInR2?: string[];
+  orphanInR2?: string[];
+};
+
+const ACCOUNT_ASSET_QUERY_PAGE_SIZE = 1000;
+
+async function loadPagedRows<T>(args: {
+  env: Env;
+  table: string;
+  baseParams: Record<string, string>;
+  pageSize?: number;
+}): Promise<T[]> {
+  const pageSize = args.pageSize ?? ACCOUNT_ASSET_QUERY_PAGE_SIZE;
+  const out: T[] = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const params = new URLSearchParams({
+      ...args.baseParams,
+      limit: String(pageSize),
+      offset: String(offset),
+    });
+    const res = await supabaseFetch(args.env, `/rest/v1/${args.table}?${params.toString()}`, { method: 'GET' });
+    if (!res.ok) {
+      const details = await readJson(res);
+      throw new Error(`[ParisWorker] Failed to load ${args.table} rows (${res.status}): ${JSON.stringify(details)}`);
+    }
+    const rows = ((await res.json()) as T[]) ?? [];
+    out.push(...rows);
+    if (rows.length < pageSize) break;
+  }
+  return out;
+}
+
 function assertAccountId(value: string) {
   const trimmed = String(value || '').trim();
   if (!trimmed || !isUuid(trimmed)) {
@@ -112,6 +152,19 @@ function resolveAccountAssetView(req: Request): { ok: true; projection: AccountA
   };
 }
 
+function requireRomaAssetSurface(req: Request): Response | null {
+  const surface = (req.headers.get('x-clickeen-surface') || '').trim();
+  if (surface === 'roma-assets') return null;
+  return ckError(
+    {
+      kind: 'DENY',
+      reasonKey: 'coreui.errors.auth.forbidden',
+      detail: 'Asset delete is managed via Roma Assets.',
+    },
+    403,
+  );
+}
+
 function resolveListLimit(req: Request): number {
   const url = new URL(req.url);
   const raw = Number.parseInt((url.searchParams.get('limit') || '').trim(), 10);
@@ -137,6 +190,100 @@ function resolveTokyoMutableAssetBase(env: Env): string | null {
     .trim()
     .replace(/\/+$/, '');
   return raw || null;
+}
+
+function resolveTokyoServiceToken(env: Env): string | null {
+  const token = ((typeof env.TOKYO_DEV_JWT === 'string' ? env.TOKYO_DEV_JWT : '') || (typeof env.PARIS_DEV_JWT === 'string' ? env.PARIS_DEV_JWT : '')).trim();
+  return token || null;
+}
+
+async function ensureTokyoAssetIdentityIntegrity(
+  env: Env,
+  accountId: string,
+  assetId: string,
+): Promise<{ ok: true } | { ok: false; response: Response }> {
+  const tokyoBase = resolveTokyoMutableAssetBase(env);
+  const tokyoToken = resolveTokyoServiceToken(env);
+  if (!tokyoBase || !tokyoToken) {
+    return {
+      ok: false,
+      response: ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.assets.integrityUnavailable',
+          detail: !tokyoBase ? 'TOKYO_BASE_URL missing' : 'TOKYO_DEV_JWT missing',
+        },
+        500,
+      ),
+    };
+  }
+
+  let res: Response;
+  let payload:
+    | {
+        error?: { reasonKey?: string | null; detail?: string | null };
+        accountId?: string;
+        assetId?: string;
+        integrity?: TokyoAssetIdentityIntegritySnapshot;
+      }
+    | null = null;
+  try {
+    const url = `${tokyoBase}/assets/integrity/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`;
+    res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${tokyoToken}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+    payload = (await readJson(res)) as
+      | {
+          error?: { reasonKey?: string | null; detail?: string | null };
+          accountId?: string;
+          assetId?: string;
+          integrity?: TokyoAssetIdentityIntegritySnapshot;
+        }
+      | null;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return {
+      ok: false,
+      response: ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.assets.integrityUnavailable',
+          detail,
+        },
+        500,
+      ),
+    };
+  }
+
+  if (res.ok) return { ok: true };
+
+  if (res.status === 404) {
+    return { ok: false, response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404) };
+  }
+
+  if (res.status === 409 && payload && typeof payload === 'object') {
+    return {
+      ok: false,
+      response: json(payload as Record<string, unknown>, { status: 409 }),
+    };
+  }
+
+  return {
+    ok: false,
+    response: ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.assets.integrityUnavailable',
+        detail: JSON.stringify(payload),
+      },
+      500,
+    ),
+  };
 }
 
 function normalizeAssetVariant(
@@ -352,19 +499,16 @@ async function loadVariantsByAssetIds(
   const out = new Map<string, AccountAssetVariantRow[]>();
   if (assetIds.length === 0) return out;
 
-  const params = new URLSearchParams({
-    select: 'asset_id,variant,r2_key,filename,content_type,size_bytes,created_at',
-    account_id: `eq.${accountId}`,
-    asset_id: `in.(${assetIds.join(',')})`,
-    order: 'created_at.desc',
-    limit: '2000',
+  const rows = await loadPagedRows<AccountAssetVariantRow>({
+    env,
+    table: 'account_asset_variants',
+    baseParams: {
+      select: 'asset_id,variant,r2_key,filename,content_type,size_bytes,created_at',
+      account_id: `eq.${accountId}`,
+      asset_id: `in.(${assetIds.join(',')})`,
+      order: 'created_at.desc',
+    },
   });
-  const res = await supabaseFetch(env, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load account asset variants (${res.status}): ${JSON.stringify(details)}`);
-  }
-  const rows = (await res.json()) as AccountAssetVariantRow[];
   rows.forEach((row) => {
     const current = out.get(row.asset_id);
     if (current) current.push(row);
@@ -381,23 +525,16 @@ async function loadUsageByAssetIds(
   const out = new Map<string, AccountAssetUsageRow[]>();
   if (assetIds.length === 0) return out;
 
-  const params = new URLSearchParams({
-    select: 'account_id,asset_id,public_id,config_path,created_at,updated_at',
-    account_id: `eq.${accountId}`,
-    asset_id: `in.(${assetIds.join(',')})`,
-    order: 'updated_at.desc',
-    limit: '5000',
+  const rows = await loadPagedRows<AccountAssetUsageRow>({
+    env,
+    table: 'account_asset_usage',
+    baseParams: {
+      select: 'account_id,asset_id,public_id,config_path,created_at,updated_at',
+      account_id: `eq.${accountId}`,
+      asset_id: `in.(${assetIds.join(',')})`,
+      order: 'updated_at.desc',
+    },
   });
-  const res = await supabaseFetch(env, `/rest/v1/account_asset_usage?${params.toString()}`, {
-    method: 'GET',
-  });
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(
-      `[ParisWorker] Failed to load account asset usage (${res.status}): ${JSON.stringify(details)}`,
-    );
-  }
-  const rows = (await res.json()) as AccountAssetUsageRow[];
   rows.forEach((row) => {
     const current = out.get(row.asset_id);
     if (current) current.push(row);
@@ -428,19 +565,15 @@ async function loadAccountAsset(
 }
 
 async function loadWorkspaceInstancePublicIdSet(env: Env, workspaceId: string): Promise<Set<string>> {
-  const params = new URLSearchParams({
-    select: 'public_id',
-    workspace_id: `eq.${workspaceId}`,
-    limit: '5000',
+  const rows = await loadPagedRows<{ public_id?: string }>({
+    env,
+    table: 'widget_instances',
+    baseParams: {
+      select: 'public_id',
+      workspace_id: `eq.${workspaceId}`,
+      order: 'public_id.asc',
+    },
   });
-  const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(
-      `[ParisWorker] Failed to load workspace instances for asset usage (${res.status}): ${JSON.stringify(details)}`,
-    );
-  }
-  const rows = (await res.json()) as Array<{ public_id?: string }>;
   const out = new Set<string>();
   rows.forEach((row) => {
     const publicId = typeof row.public_id === 'string' ? row.public_id : '';
@@ -601,6 +734,9 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
       return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
     }
 
+    const integrity = await ensureTokyoAssetIdentityIntegrity(env, accountId, assetId);
+    if (!integrity.ok) return integrity.response;
+
     return json({
       accountId,
       view: projection.view,
@@ -619,6 +755,8 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
 }
 
 export async function handleAccountAssetDelete(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
+  const surfaceError = requireRomaAssetSurface(req);
+  if (surfaceError) return surfaceError;
   const auth = await assertDevAuth(req, env);
   if ('response' in auth) return auth.response;
   const accountIdResult = assertAccountId(accountIdRaw);
@@ -656,6 +794,7 @@ export async function handleAccountAssetDelete(req: Request, env: Env, accountId
         headers: {
           Authorization: `Bearer ${tokyoToken}`,
           'Content-Type': 'application/json',
+          'x-clickeen-surface': 'roma-assets',
         },
         cache: 'no-store',
       },

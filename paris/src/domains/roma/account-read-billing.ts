@@ -6,6 +6,34 @@ import type { AccountAssetRow, AccountWorkspaceRow, InstanceListRow } from './co
 import { assertAccountId } from './common';
 import { accountRoleLabel, authorizeAccount, inferHighestTier, loadAccountWorkspaces } from './data';
 
+const ACCOUNT_USAGE_PAGE_SIZE = 1000;
+
+async function loadPagedRows<T>(args: {
+  env: Env;
+  table: string;
+  baseParams: Record<string, string>;
+  pageSize?: number;
+}): Promise<T[]> {
+  const pageSize = args.pageSize ?? ACCOUNT_USAGE_PAGE_SIZE;
+  const out: T[] = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const params = new URLSearchParams({
+      ...args.baseParams,
+      limit: String(pageSize),
+      offset: String(offset),
+    });
+    const res = await supabaseFetch(args.env, `/rest/v1/${args.table}?${params.toString()}`, { method: 'GET' });
+    if (!res.ok) {
+      const details = await readJson(res);
+      throw new Error(`[ParisWorker] Failed to load ${args.table} rows (${res.status}): ${JSON.stringify(details)}`);
+    }
+    const rows = ((await res.json()) as T[]) ?? [];
+    out.push(...rows);
+    if (rows.length < pageSize) break;
+  }
+  return out;
+}
+
 export async function handleAccountGet(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
@@ -82,30 +110,37 @@ export async function handleAccountUsage(req: Request, env: Env, accountIdRaw: s
 
   let instances: InstanceListRow[] = [];
   if (workspaceIds.length > 0) {
-    const instanceParams = new URLSearchParams({
-      select: 'public_id,status,workspace_id',
-      workspace_id: `in.(${workspaceIds.join(',')})`,
-      limit: '5000',
-    });
-    const instanceRes = await supabaseFetch(env, `/rest/v1/widget_instances?${instanceParams.toString()}`, { method: 'GET' });
-    if (!instanceRes.ok) {
-      const details = await readJson(instanceRes);
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
+    try {
+      instances = await loadPagedRows<InstanceListRow>({
+        env,
+        table: 'widget_instances',
+        baseParams: {
+          select: 'public_id,status,workspace_id',
+          workspace_id: `in.(${workspaceIds.join(',')})`,
+          order: 'public_id.asc',
+        },
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
     }
-    instances = ((await instanceRes.json()) as InstanceListRow[]) ?? [];
   }
 
-  const assetParams = new URLSearchParams({
-    select: 'asset_id,size_bytes',
-    account_id: `eq.${accountId}`,
-    limit: '5000',
-  });
-  const assetRes = await supabaseFetch(env, `/rest/v1/account_assets?${assetParams.toString()}`, { method: 'GET' });
-  if (!assetRes.ok) {
-    const details = await readJson(assetRes);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
+  let assets: AccountAssetRow[] = [];
+  try {
+    assets = await loadPagedRows<AccountAssetRow>({
+      env,
+      table: 'account_assets',
+      baseParams: {
+        select: 'asset_id,size_bytes',
+        account_id: `eq.${accountId}`,
+        order: 'created_at.asc',
+      },
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
   }
-  const assets = ((await assetRes.json()) as AccountAssetRow[]) ?? [];
 
   const assetBytes = assets.reduce((sum, asset) => {
     const size = Number.isFinite(asset.size_bytes) ? asset.size_bytes : 0;

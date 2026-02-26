@@ -268,10 +268,10 @@ See: `documentation/capabilities/multitenancy.md`
 
 **Publish triggers signup:**
 - When visitor clicks "Publish", they're prompted to create a free account
-- After signing up, they land in the authenticated app (Bob) and the widget they just built is claimed to their workspace
+- After signing up, they land in the authenticated app (Roma) and the widget they just built is claimed to their workspace
 - The widget is now published and they can copy the embed code
 
-**Inside the app (authenticated Bob):**
+**Inside the app (authenticated Roma, with Builder powered by Bob):**
 - **"Copy Code" button always visible** — get embed snippet anytime
 - User can continue editing, create more widgets, view collected data
 

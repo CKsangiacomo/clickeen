@@ -401,8 +401,9 @@ services/
     package.json
 
 documentation/
-  Agents/
-    UXWriterAgent.PRD.md    # This doc
+  ai/
+    agents/
+      ux-writer.md          # This doc
 ```
 
 ---

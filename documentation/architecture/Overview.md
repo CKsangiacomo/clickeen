@@ -3,6 +3,7 @@
 This document describes system boundaries, data flows, and how the platform fits together.
 
 **For definitions and glossary:** See `CONTEXT.md`
+**For canonical asset behavior:** See [AssetManagement.md](./AssetManagement.md)
 **For strategy and vision:** See `documentation/strategy/WhyClickeen.md`
 **For system details:** See `documentation/services/` and `documentation/ai/`
 
@@ -57,7 +58,7 @@ Mutable pointer  (tiny, always fetched fresh)
 | Domain | Mutable pointer | Immutable artifact |
 |--------|----------------|--------------------|
 | **Publish** | `published.json` (`no-store`) | Render artifacts at `/renders/instances/{publicId}/{fingerprint}/...` (cache forever) |
-| **Assets** | *(none in runtime contract; config stores immutable `asset.versionId` refs)* | Asset bytes at `/assets/v/{encodeURIComponent(versionKey)}` |
+| **Assets** | *(none in runtime contract; config stores immutable `asset.versionId` refs)* | Asset bytes at `/assets/v/{encodeURIComponent(versionId)}` |
 | **Auth** | JWT (short-lived, refreshable) | userId claim (stable identity) |
 | **Authz** | HMAC-signed capsule (expires) | Role/account/workspace snapshot at issuance |
 | **Overlays** | Layer pointer in DB | Materialized overlay file on R2 (fingerprinted) |
@@ -190,7 +191,7 @@ Each release proceeds in 3 steps:
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
-- Publish control-plane writes are transactional for base/account usage persistence; snapshot enqueue is atomic across active locales and pointer advancement is gated on successful publish.
+- Publish control-plane writes are transactional for base/account usage persistence; snapshot generation is async (queue + publish-status) and does not block publish persistence on pointer advancement.
 
 #### Venice (Workers)
 - Public embed surface (third-party websites only talk to Venice).
@@ -206,10 +207,12 @@ Each release proceeds in 3 steps:
 - Prague website base copy lives in `tokyo/widgets/*/pages/*.json` (single source per page), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 #### Tokyo Worker (Workers + Queues)
+- Canonical asset management contract (cross-surface behavior): [AssetManagement.md](./AssetManagement.md)
 - Handles canonical account-owned uploads (`POST /assets/upload`) and stores metadata in Michael (`account_assets`, `account_asset_variants`).
 - Asset usage ("where used") is tracked by Paris in `account_asset_usage` via deterministic sync on instance config writes/publishes.
-- Serves immutable account asset version reads (`GET /assets/v/{versionKey}`); legacy `/arsenale/*` paths are hard-failed.
-- Asset delete is synchronous legal pipeline: metadata + blob delete + CDN purge-by-URL + impacted snapshot rebuild enqueue.
+- Serves immutable account asset version reads (`GET /assets/v/{versionId}`); legacy `/arsenale/*` paths are hard-failed.
+- Asset delete is synchronous hard delete (`metadata + blob delete`) with no snapshot rebuild enqueue or runtime healing.
+- Tokyo-worker exposes integrity endpoints for managed surfaces (`GET /assets/integrity/:accountId`, `GET /assets/integrity/:accountId/:assetId`).
 - Reads `widget_instance_overlays` from Supabase (layered), merges `ops + user_ops` for layer=user, and publishes overlays to Tokyo/R2.
 - Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path using revisioned indices + atomic published pointer flip.
 
@@ -218,9 +221,9 @@ Each release proceeds in 3 steps:
 - Workspace is a projection boundary for UX queries (`used_in_workspace`, `created_in_workspace`), not an ownership boundary.
 - End-to-end flow:
   1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional workspace/public/widget trace headers).
-  2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`) and returns canonical immutable version URL (`/assets/v/{encodeURIComponent(versionKey)}`).
+  2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`) and returns canonical immutable version URL (`/assets/v/{encodeURIComponent(versionId)}`).
   3. Paris validates/syncs usage mappings (`account_asset_usage`) from instance config writes in the same request path.
-  4. Roma Assets reads/deletes via account endpoints (`/api/accounts/:accountId/assets*`) and optionally applies workspace projection.
+  4. Roma Assets reads/deletes via account endpoints (`/api/accounts/:accountId/assets*`) and optionally applies workspace projection; delete is Roma-surface-gated and delegates to Tokyo-worker hard delete.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
 - `/healthz`, `/v1/execute`, `/v1/outcome`, queue consumer for non-blocking log writes.
@@ -397,7 +400,10 @@ Base config exists in EXACTLY 2 places during editing:
 1. Load:    GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace  → host (message boot) or Bob (URL boot) gets published config
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Publish: PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace  → Saves to Michael
+4. Publish: PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace  → Saves to Michael and enqueues async snapshot/l10n pipeline
+
+Snapshot/l10n convergence is observed via:
+- `GET /api/workspaces/:workspaceId/instances/:publicId/publish/status?subject=workspace|minibob`
 ```
 
 In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Publish still goes through the same workspace `PUT` endpoint.

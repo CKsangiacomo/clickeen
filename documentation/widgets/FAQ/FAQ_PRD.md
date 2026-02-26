@@ -78,7 +78,7 @@ Runtime DOM contract (sections):
 - Each FAQ item has:
   - `id` (string; required, stable)
   - `question` (supports a small allowed set of inline tags; links are not allowed)
-  - `answer` (supports the same inline tags + links; URLs auto-link + optional image/video embedding)
+  - `answer` (supports the same inline tags + links; URLs auto-link to anchors only)
   - `defaultOpen` (boolean; accordion only)
 
 ### Canonical IDs (required)
@@ -113,8 +113,9 @@ State: `behavior.*`
 - `expandAll`
 
 ### Media behavior in answers
-State: (no media toggles; answers never embed images/videos)
-- If enabled, image/video URLs in answers render as media; otherwise they render as links.
+State: no media toggles.
+- Answers do not embed image/video media.
+- URL-like text in answers is sanitized and rendered as safe links.
 
 ## 3) Accordion icon system (single choice, deterministic pairs)
 State: `appearance.iconStyle`
@@ -131,7 +132,7 @@ Grouped state (source of truth: `tokyo/widgets/faq/spec.json`):
 - `sections[]` — content tree (section title + list of Q/A items)
 - `layout.*` — layout type, responsive columns, gap
 - `appearance.*` — link styling + accordion icon choice/color + Q&A card styling (background/border/radius/shadow) + pod border + `appearance.theme` (global theme selector; editor-only shortcut)
-- `behavior.*` — accordion toggles + media toggles + backlink
+- `behavior.*` — accordion toggles + backlink
 - `seoGeo.*` + `seo.*` + `geo.*` — SEO/GEO controls (schema, canonical URL, deep links)
 - `context.*` — Copilot context (editor-only; runtime may ignore)
 - `typography.*` — global family + per-role selections (including text colors; compiler-injected panel)
@@ -142,7 +143,7 @@ Panels defined in `tokyo/widgets/faq/spec.json`:
 - `content` — section manager + Q/A editing + global header controls (compiler-injected)
 - `layout` — widget layout + accordion behaviors + responsive columns (+ shared stage/pod layout injected by compiler)
 - `appearance` — theme dropdown (global) + widget appearance + stage/pod appearance
-- `settings` — AI context (website URL) + SEO/GEO toggles + media toggles + backlink
+- `settings` — AI context (website URL) + SEO/GEO toggles + backlink
 
 ToolDrawer spacing rule (authoring):
 - Vertical rhythm is **clusters + groups only**. Use `<tooldrawer-cluster>` to segment sections and group keys for labels.
@@ -304,7 +305,7 @@ Compiler-injected (because defaults include `typography.roles`):
 Widget runtime (`tokyo/widgets/faq/widget.client.js`) must:
 - Render from state deterministically (no default merges; missing required state is an editor bug)
 - Sanitize any inline HTML allowed in questions/answers
-- Convert URLs in answers to links and optionally embed images/videos
+- Convert URLs in answers to links only (no media embedding)
 - Use Dieter tokens + Dieter icon system for visuals
 
 ## 7) Gold standard checklist (AI)

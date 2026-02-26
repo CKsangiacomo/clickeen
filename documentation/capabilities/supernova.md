@@ -1,5 +1,9 @@
 # Supernova — NextGen Web Design
 
+STATUS: ROADMAP REFERENCE - NOT IMPLEMENTED IN RUNTIME
+
+This document captures planned Supernova architecture. It is not a shipped runtime contract yet.
+
 ## What Supernova Is
 
 **Supernova** is Clickeen's premium visual technology layer—the cutting-edge design capabilities that make web experiences mindblowing.

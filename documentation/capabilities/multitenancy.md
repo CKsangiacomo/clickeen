@@ -327,38 +327,48 @@ While we are building (before full auth/billing enforcement ships), we still nee
 
 ### Paris Enforcement
 
-- Workspace plan includes `maxEditors`
-- Adding an editor beyond limit returns `403 SEAT_LIMIT_EXCEEDED`
-- Adding viewers always succeeds (no limit check)
-- Publish checks workspace entitlements (widget-level features)
+Current shipped behavior:
+- Workspace member listing is read-only via `GET /api/workspaces/:workspaceId/members` for authorized users.
+- Publish and editor behavior use policy/entitlement enforcement already wired in runtime.
+- There is no shipped seat-cap write-path enforcement in Paris yet.
+- There is no shipped `SEAT_LIMIT_EXCEEDED` runtime error yet.
+
+Planned behavior (not shipped):
+- Add member management write endpoints.
+- Enforce `maxEditors` on add/update editor-role operations.
+- Keep viewer invites uncapped.
 
 ### Bob UX
 
-- Role-aware UI: viewers see "View Only" mode, cannot access edit controls
-- Invite modal: dropdown for role (Viewer / Editor)
-- Seat limit warning: shows remaining editor seats
+Current shipped behavior:
+- Role/policy-aware editing gates are enforced by resolved workspace policy.
+
+Planned behavior (not shipped):
+- Explicit seat-remaining UI and editor seat warning states.
+- Invite modal enforcing seat caps at submission time.
 
 ### Michael Schema
 
 ```sql
 CREATE TABLE workspace_members (
-  workspace_id UUID REFERENCES workspaces(id),
-  user_id UUID REFERENCES users(id),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'editor', 'viewer')),
-  joined_at TIMESTAMPTZ DEFAULT NOW(),
-  PRIMARY KEY (workspace_id, user_id)
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (workspace_id, user_id)
 );
 
 CREATE TABLE comments (
-  id UUID PRIMARY KEY,
-  workspace_id UUID REFERENCES workspaces(id),
-  widget_instance_id UUID REFERENCES widget_instances(id),
-  user_id UUID REFERENCES users(id),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  widget_instance_id UUID NOT NULL REFERENCES public.widget_instances(id) ON DELETE CASCADE,
+  user_id UUID NULL REFERENCES auth.users(id) ON DELETE SET NULL,
   text TEXT NOT NULL,
-  target_path TEXT,
-  resolved BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  target JSONB NULL,
+  resolved BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
 

@@ -69,10 +69,10 @@ As of PRD 041, LLM access is strictly tiered. Paris resolves a workspace's entit
 
 | AI Profile | Target User | Default Access | Performance |
 |------------|-------------|----------------|-------------|
-| `free_low` | Free / Minibob | `deepseek-chat` (agent-scoped alternatives may include Nova Lite) | Fast, low-cost |
-| `paid_standard` | Tier 1 (Basic) | `gpt-5-mini` (plus DeepSeek, Claude Sonnet, Groq Llama, Nova Lite/Pro where the agent allows it) | Balanced |
-| `paid_premium` | Tier 2+ (Pro) | `gpt-5.2` (plus DeepSeek Reasoner, Claude Sonnet, Groq Llama, Nova Micro/Lite/Pro where the agent allows it) | Higher quality |
-| `curated_premium`| Internal/Special | `gpt-5.2` (OpenAI curated set) | Max capability |
+| `free_low` | Free / Minibob | Policy default `deepseek -> deepseek-chat` (Minibob public mint may request `amazon -> nova-2-lite-v1`) | Fast, low-cost |
+| `paid_standard` | Tier 1 (Basic) | Policy default `openai -> gpt-5-mini` (plus DeepSeek, Claude Sonnet, Groq Llama, Nova where agent allows) | Balanced |
+| `paid_premium` | Tier 2+ (Pro) | Policy default `openai -> gpt-5.2` (plus DeepSeek Reasoner, Claude Sonnet, Groq Llama, Nova where agent allows) | Higher quality |
+| `curated_premium`| Internal/Special | Policy default `openai -> gpt-5.2` (OpenAI curated set) | Max capability |
 
 San Francisco enforces this profile by:
 1.  Receiving the `ai.profile` in the Grant.
@@ -88,7 +88,7 @@ Widget copilot routing (shipped):
   - `sdr.widget.copilot.v1`: FAQ-only SDR workflow (rewrite existing Q&A or personalize from one website URL with consent). Non-supported requests return seller guidance + signup CTA.
   - `cs.widget.copilot.v1`: in-product editor copilot (control-driven edits, task-completion clarifications, no SDR website/seller loop).
 
-Deployment status (verified on February 11, 2026):
+Deployment status (code-synced on February 26, 2026; last cloud-dev smoke notes from February 11, 2026):
 - Local target behavior: browser calls `POST /api/ai/widget-copilot` (with `/api/ai/sdr-copilot` as compatibility shim).
 - Cloud-dev current behavior: `https://bob.dev.clickeen.com/api/ai/widget-copilot` is live (after Bob Pages deploy).
 - Verified post-deploy routing on cloud-dev:
@@ -141,8 +141,9 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `GET /v1/personalization/preview/:jobId` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
   - `POST /v1/personalization/onboarding` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
   - `GET /v1/personalization/onboarding/:jobId` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
-  - `POST /v1/l10n` (internal/local tooling; `Authorization: Bearer ${PARIS_DEV_JWT}`)
-  - `POST /v1/l10n/translate` (local + cloud-dev only; `Authorization: Bearer ${PARIS_DEV_JWT}`)
+  - `POST /v1/l10n/plan` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
+  - `POST /v1/l10n` (internal/local tooling only; `Authorization: Bearer ${PARIS_DEV_JWT}`; `ENVIRONMENT=local` only)
+  - `POST /v1/l10n/translate` (local + cloud-dev only; `Authorization: Bearer ${PARIS_DEV_JWT}`; `ENVIRONMENT in {local,dev}`)
 - Cloudflare bindings:
   - `SF_KV` (sessions + job records)
   - `SF_EVENTS` (queue for async event ingestion)
@@ -152,7 +153,12 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `sdr.copilot`
   - `sdr.widget.copilot.v1`
   - `cs.widget.copilot.v1`
+  - `l10n.instance.v1`
+  - `l10n.prague.strings.v1`
+  - `agent.personalization.preview.v1`
+  - `agent.personalization.onboarding.v1`
   - `debug.grantProbe` (dev only)
+  - `POST /v1/execute` currently wires executors for: `sdr.copilot`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`, `debug.grantProbe`.
 
 This matters because the “learning loop” is not theoretical: every `/v1/execute` call enqueues an `InteractionEvent`, and the queue consumer writes raw payloads to R2 + indexes a small subset into D1.
 
@@ -304,7 +310,7 @@ Phase‑1 (shipped orchestration surface):
   - `sdr.copilot`
   - `sdr.widget.copilot.v1` / `cs.widget.copilot.v1` (profile-resolved widget editing Copilot)
   - `debug.grantProbe` (dev only)
-- Provider/model is explicit per agent; strict errors if unavailable (no silent provider switching).
+- Provider/model policy is explicit per agent/profile; runtime may retry retryable upstream failures across grant-allowed selections, and returns typed errors when retries are exhausted.
 - No general “tool” system yet; any extra capabilities must be explicitly implemented inside the agent (for example: widget copilot includes bounded, SSRF-guarded single-page URL reads + Cloudflare HTML detection).
 - Always returns structured JSON (never “go edit X” prose), plus usage metadata.
 

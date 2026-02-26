@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import {
   DELETE as bobDelete,
   GET as bobGet,
@@ -18,5 +18,8 @@ export function GET(request: NextRequest, context: RouteContext) {
 }
 
 export function DELETE(request: NextRequest, context: RouteContext) {
-  return bobDelete(request, context);
+  const headers = new Headers(request.headers);
+  headers.set('x-clickeen-surface', 'roma-assets');
+  const delegated = new NextRequest(request, { headers });
+  return bobDelete(delegated, context);
 }

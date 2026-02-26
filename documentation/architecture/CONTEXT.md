@@ -8,7 +8,7 @@ This is the technical reference for working in the Clickeen codebase. For strate
 1. Runtime code + `supabase/migrations/` — actual behavior + DB schema truth
 2. Deployed Cloudflare config — environment variables/bindings can differ by stage
 3. `documentation/services/` + `documentation/widgets/` — operational guides (kept in sync with runtime)
-4. `documentation/architecture/Overview.md` + this file — concepts and glossary
+4. `documentation/architecture/Overview.md` + `documentation/architecture/AssetManagement.md` + this file — concepts and glossary
 
 Docs are the source of truth for intended behavior; runtime code + schema are the source of truth for what is running. Any mismatch is a P0 doc bug: update the docs immediately to match reality.
 
@@ -67,7 +67,10 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 Core base-config editing follows EXACTLY 2 Paris instance calls per open session:
 1. **Load**: `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` once per instance open (host-performed in Roma/DevStudio message boot, Bob-performed in URL boot).
-2. **Publish**: `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish (always from Bob).
+2. **Publish**: `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish (always from Bob). Persist is synchronous; snapshot/l10n convergence is async via queue/status.
+
+Publish pipeline status is observed through:
+- `GET /api/workspaces/:workspaceId/instances/:publicId/publish/status?subject=workspace|minibob`
 
 `subject` is required on workspace-scoped endpoints (`workspace`, `minibob`) to resolve editor policy.
 
@@ -161,7 +164,7 @@ curated_widget_instances.meta = {
 
 **Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — HTTP API gateway (Cloudflare Workers). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). Publish control-plane writes are transactional for instance/account usage persistence; render snapshot enqueue is atomic across active locales and pointer advance is gated by successful publication. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
+**Paris** — HTTP API gateway (Cloudflare Workers). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). Publish control-plane writes are transactional for instance/account usage persistence; render snapshot generation is async (queue + publish-status), so save/publish persistence is not blocked on snapshot pointer advancement. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
@@ -169,13 +172,15 @@ curated_widget_instances.meta = {
 
 **Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and account-owned upload blobs.
 
-**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves immutable account asset version paths (`/assets/v/{encodedVersionKey}`), materializes **instance** l10n overlays into Tokyo/R2, and publishes Venice render snapshots.
+**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves immutable account asset version paths (`/assets/v/{encodeURIComponent(versionId)}`), materializes **instance** l10n overlays into Tokyo/R2, and publishes Venice render snapshots.
 
 **Asset URL contract (pre-GA strict):**
+- Full canonical contract: [AssetManagement.md](./AssetManagement.md)
 - Persisted widget config stores account assets as immutable `asset.versionId` refs; runtime materializes canonical root-relative paths: `/assets/v/{encodeURIComponent(versionId)}`.
 - Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and `/assets/v/*`-backed `logoFill` strings) are outside contract and rejected on write.
 - Legacy `/arsenale/a/**` and `/arsenale/o/**` paths are outside the runtime contract and are rejected on new writes.
-- `DELETE` on an account asset version is synchronous in the delete path (metadata + variant blobs + CDN purge-by-URL) and synchronously rebuilds render snapshots for impacted instances (immediate pointer flip when rebuild succeeds) while writing explicit render health (`healthy|degraded|error`); subsequent `/assets/v/**` reads return unavailable.
+- `DELETE` on an account asset version is synchronous in the delete path (metadata + variant blobs) with no snapshot rebuild/healing side effects; subsequent `/assets/v/**` reads return unavailable.
+- Managed asset APIs expose explicit integrity checks (`/assets/integrity/:accountId` and `/assets/integrity/:accountId/:assetId`) so Roma can surface DB↔R2 mismatch states.
 - Runtime does not rely on `CK_ASSET_ORIGIN`; asset paths remain canonical root-relative and environment portability is provided by Bob/Venice proxy routes.
 - Legacy host-pinned/legacy paths (for example `/curated-assets/**`) are not supported.
 

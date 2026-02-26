@@ -32,7 +32,7 @@ Set by the global Header primitive (`tokyo/widgets/shared/header.js`):
   - Logos list: `[data-role="logos"]`
   - Ticker copies (mode=continuous): `[data-role="ticker-a"]`, `[data-role="ticker-b"]`
 - Logo tile (generated): `[data-role="logo"]`
-  - Visual: `[data-role="logo-visual"]` (background-image from `asset.versionId` first, then `logoFill` fallback)
+  - Visual: `[data-role="logo-visual"]` (uses `asset.versionId` only)
   - Caption: `[data-role="logo-caption"]`
 
 ## Editable Schema (high-signal paths)
@@ -52,7 +52,7 @@ Content:
   - `strips[]` (array)
   - `strips[].logos[]` (array)
 - `strips[].logos[].name` (string)
-- `strips[].logos[].logoFill` (string CSS fill fallback, e.g. static `/widgets/*` logo URL or `transparent`)
+- `strips[].logos[].logoFill` (string; editor field state only, not used by runtime image resolution)
   - `strips[].logos[].asset` (object; editor metadata + immutable asset ref, e.g. `{ name, source, versionId }`)
   - `strips[].logos[].caption` (string; hover label; falls back to `name` if empty)
   - `strips[].logos[].href` (string; only valid `http(s)://` becomes clickable)
@@ -119,7 +119,7 @@ Stage/Pod (layout spacing lives here; no widget-level width/padding):
 - Header richtext is sanitized by `tokyo/widgets/shared/header.js`:
   - `header.title`: allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `br` (no links).
   - `header.subtitleHtml`: allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `a`, `br` (links require `http(s)://`).
-- Runtime resolves logo image URL from `asset.versionId` first (`/assets/v/{encodeURIComponent(versionId)}`) and only falls back to `logoFill` for static non-account assets.
+- Runtime resolves logo image URL from `asset.versionId` only (`/assets/v/{encodeURIComponent(versionId)}`).
 - Links: `href` is normalized; only valid `http(s)://` makes a logo/CTA clickable (else it renders inert).
 
 ## Branding (global)

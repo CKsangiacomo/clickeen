@@ -61,6 +61,11 @@ type BobOpenEditorFailedMessage = {
   message?: string | null;
 };
 
+type BobAssetEntitlementDeniedMessage = {
+  type: 'bob:asset-entitlement-denied';
+  reasonKey?: string | null;
+};
+
 type BobOpenEditorMessage = {
   type: typeof OPEN_EDITOR_LIFECYCLE.events.openEditor;
   requestId: string;
@@ -438,7 +443,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
       if (event.origin !== bobBaseUrl) return;
       const source = iframeRef.current?.contentWindow;
       if (!source || event.source !== source) return;
-      const data = event.data as BobReadyMessage | BobSwitchMessage | null;
+      const data = event.data as BobReadyMessage | BobSwitchMessage | BobAssetEntitlementDeniedMessage | null;
       if (!data || typeof data !== 'object') return;
       if (data.type === OPEN_EDITOR_LIFECYCLE.events.sessionReady) {
         const ready = data as BobReadyMessage;
@@ -464,12 +469,22 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
         if (!nextPublicId) return;
         if (nextPublicId === activePublicId) return;
         setActivePublicId(nextPublicId);
+        return;
+      }
+      if (data.type === 'bob:asset-entitlement-denied') {
+        const denial = data as BobAssetEntitlementDeniedMessage;
+        const reasonKey = String(denial.reasonKey || '').trim();
+        const search = new URLSearchParams();
+        if (workspaceId) search.set('workspaceId', workspaceId);
+        if (reasonKey) search.set('reasonKey', reasonKey);
+        const nextRoute = search.size ? `/assets?${search.toString()}` : '/assets';
+        router.push(nextRoute, { scroll: false });
       }
     };
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activePublicId, bobBaseUrl, openActiveInstanceInBob]);
+  }, [activePublicId, bobBaseUrl, openActiveInstanceInBob, router, workspaceId]);
 
   useEffect(() => {
     bobReadyRef.current = false;

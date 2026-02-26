@@ -27,10 +27,8 @@ import { enqueueL10nJobs } from '../l10n';
 import {
   enqueueRenderSnapshot,
   loadEnforcement,
-  loadRenderSnapshotState,
   normalizeActiveEnforcement,
   resolveRenderSnapshotLocales,
-  waitForEnSnapshotReady,
 } from './service';
 import {
   DEFAULT_INSTANCE_DISPLAY_NAME,
@@ -370,8 +368,8 @@ export async function handleWorkspaceUpdateInstance(
     }
 
     // Keep Venice snapshots correct for the public embed path (PRD 38).
-    // When status/config changes for published instances, regenerate render snapshots.
-    // When an instance is unpublished, delete the snapshot index to enforce "published-only".
+    // Snapshot generation is async: publish/update enqueues work, status is observed via publish-status.
+    // Unpublish keeps delete semantics strict by removing the snapshot pointer via queue.
     const updatedPrevStatus = prevStatus;
     const updatedNextStatus = updatedInstance.status;
     if (updatedNextStatus === 'published' && (statusChanged || configChanged)) {
@@ -402,10 +400,6 @@ export async function handleWorkspaceUpdateInstance(
           ),
         );
       }
-      const baselineSnapshotState = await loadRenderSnapshotState({
-        env,
-        publicId,
-      }).catch(() => null);
       const enqueue = await enqueueRenderSnapshot(env, {
         publicId,
         action: 'upsert',
@@ -418,24 +412,6 @@ export async function handleWorkspaceUpdateInstance(
               kind: 'INTERNAL',
               reasonKey: 'coreui.errors.publish.failed',
               detail: enqueue.error,
-            },
-            503,
-          ),
-        );
-      }
-      const enReady = await waitForEnSnapshotReady({
-        env,
-        publicId,
-        baselinePointerUpdatedAt: baselineSnapshotState?.pointerUpdatedAt ?? null,
-        baselineRevision: baselineSnapshotState?.revision ?? null,
-      });
-      if (!enReady.ok) {
-        return rollbackAndReturn(
-          ckError(
-            {
-              kind: 'INTERNAL',
-              reasonKey: 'coreui.errors.publish.failed',
-              detail: enReady.error,
             },
             503,
           ),

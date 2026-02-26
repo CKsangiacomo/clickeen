@@ -2,6 +2,8 @@
 
 > **Purpose**: Authoritative guide for AI agents and developers. All architectural decisions flow from these principles.
 
+> **Canonical asset contract**: [AssetManagement.md](./AssetManagement.md)
+
 ---
 
 ## Summary Diagram

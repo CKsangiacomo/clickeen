@@ -98,7 +98,9 @@ Usage and AI domain behavior:
 - `UsageDomain` and `AiDomain` read profile/role/entitlements from bootstrap authz context (no extra workspace policy/entitlements fetches).
 
 Assets domain behavior:
-- `AssetsDomain` reads/deletes through account-canonical endpoints (`/api/paris/accounts/:accountId/assets`).
+- `AssetsDomain` reads account inventory + integrity from bootstrap (`GET /api/bootstrap` -> `domains.assets`), and performs per-asset operations through account-canonical Roma routes (`/api/assets/:accountId/:assetId`).
+- Roma also exposes account-level asset routes (`/api/assets/:accountId` and `/api/assets/upload`) that delegate to Bob server routes.
+- Delete is Roma-surface managed (`x-clickeen-surface=roma-assets`) and hard-deletes via Paris -> Tokyo-worker.
 - Workspace context is display/projection only; account is the ownership boundary.
 
 ## Local vs cloud-dev
@@ -126,9 +128,9 @@ Assets domain behavior:
 
 Validated flow in local stack:
 1. `POST /api/assets/upload` (Bob proxy -> Tokyo-worker)
-2. `GET /api/paris/accounts/:accountId/assets` (Roma proxy, repeated)
-3. `DELETE /api/paris/accounts/:accountId/assets/:assetId` (Roma proxy)
-4. Re-list confirms soft-delete exclusion
+2. `GET /api/bootstrap` (Roma bootstrap; `domains.assets` carries account asset list + integrity snapshot)
+3. `DELETE /api/assets/:accountId/:assetId` (Roma proxy -> Bob -> Paris -> Tokyo-worker)
+4. `GET /api/bootstrap` confirms hard-delete removal
 
 Observed timings (single machine, warm services):
 - Paris `GET /api/me?workspaceId=...`: `~12ms`

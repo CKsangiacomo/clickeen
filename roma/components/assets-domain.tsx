@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { resolveBootstrapDomainState } from './bootstrap-domain-state';
 import { formatBytes, formatNumber } from '../lib/format';
 import { parseParisReason } from './paris-http';
@@ -15,12 +16,22 @@ type AssetRecord = {
   createdAt: string;
 };
 
+type AssetIntegritySnapshot = {
+  ok: boolean;
+  reasonKey: string | null;
+  dbVariantCount: number;
+  r2ObjectCount: number;
+  missingInR2Count: number;
+  orphanInR2Count: number;
+  missingInR2: Array<{ assetId: string; r2Key: string }>;
+  orphanInR2: string[];
+};
+
 type DeleteAssetPayload = {
   accountId: string;
   assetId: string;
   deleted: boolean;
   usageCount?: number;
-  cleanupQueued?: number;
 };
 
 type DeletePreconditionPayload = {
@@ -46,6 +57,15 @@ const DELETE_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to manage assets.',
   'coreui.errors.auth.forbidden': 'You do not have permission to manage this asset.',
   'coreui.errors.db.writeFailed': 'Asset delete failed on the server. Please try again.',
+  'coreui.errors.assets.integrity.dbPointerMissingBlob': 'Delete blocked: this asset points to missing blobs in storage. Resolve in Assets panel.',
+  'coreui.errors.assets.integrity.orphanBlob': 'Delete blocked: storage contains orphan blobs for this asset. Resolve in Assets panel.',
+  'coreui.errors.assets.integrity.variantsMissingForAsset': 'Delete blocked: this asset has no variant metadata. Resolve in Assets panel.',
+  'coreui.errors.assets.integrityUnavailable': 'Delete blocked: asset integrity check is unavailable right now. Try again.',
+};
+
+const INTEGRITY_REASON_COPY: Record<string, string> = {
+  'coreui.errors.assets.integrityMismatch': 'Asset integrity mismatch: metadata and R2 storage are out of sync.',
+  'coreui.errors.assets.integrityUnavailable': 'Asset integrity check is currently unavailable.',
 };
 
 function resolveDeleteErrorCopy(reason: string): string {
@@ -55,6 +75,12 @@ function resolveDeleteErrorCopy(reason: string): string {
   if (mapped) return mapped;
   if (normalized.startsWith('HTTP_')) return `Asset delete failed (${normalized}).`;
   return normalized;
+}
+
+function resolveIntegrityErrorCopy(reasonKey: string | null): string {
+  const normalized = String(reasonKey || '').trim();
+  if (!normalized) return 'Asset integrity mismatch detected.';
+  return INTEGRITY_REASON_COPY[normalized] ?? normalized;
 }
 
 async function requestDeleteAsset(accountId: string, assetId: string, confirmInUse: boolean): Promise<DeleteAssetPayload> {
@@ -80,11 +106,21 @@ async function requestDeleteAsset(accountId: string, assetId: string, confirmInU
 export function AssetsDomain() {
   const me = useRomaMe();
   const reloadMe = me.reload;
+  const searchParams = useSearchParams();
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
   const workspaceId = context.workspaceId;
+  const redirectReasonKey = useMemo(() => String(searchParams.get('reasonKey') || '').trim(), [searchParams]);
+  const entitlements = me.data?.authz?.entitlements ?? null;
+  const uploadSizeCapBytes = useMemo(() => {
+    const raw = entitlements?.caps?.['uploads.size.max'];
+    return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? Math.trunc(raw) : null;
+  }, [entitlements?.caps]);
+  const uploadsCountBudget = entitlements?.budgets?.['budget.uploads.count'] ?? null;
+  const uploadsBytesBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
 
   const [assets, setAssets] = useState<AssetRecord[]>([]);
+  const [integrity, setIntegrity] = useState<AssetIntegritySnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -93,6 +129,7 @@ export function AssetsDomain() {
   useEffect(() => {
     if (!accountId) {
       setAssets([]);
+      setIntegrity(null);
       setError(null);
       return;
     }
@@ -105,11 +142,13 @@ export function AssetsDomain() {
     });
     if (!hasDomainPayload || domainState.kind !== 'ok') {
       setAssets([]);
+      setIntegrity(null);
       setError(domainState.reasonKey);
       return;
     }
     const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
     setAssets(safeSnapshot.assets as AssetRecord[]);
+    setIntegrity((safeSnapshot.integrity as AssetIntegritySnapshot) ?? null);
     setError(null);
   }, [accountId, me.data]);
 
@@ -193,7 +232,41 @@ export function AssetsDomain() {
             </button>
           </div>
         ) : null}
+        {integrity && !integrity.ok ? (
+          <div className="roma-inline-stack">
+            <p className="body-m">{resolveIntegrityErrorCopy(integrity.reasonKey)}</p>
+            <p className="body-s">
+              Missing in R2: {formatNumber(integrity.missingInR2Count)} | Orphan in R2: {formatNumber(integrity.orphanInR2Count)}
+            </p>
+          </div>
+        ) : null}
+        {redirectReasonKey ? (
+          <p className="body-m">Upload blocked by entitlement: {redirectReasonKey}. Manage assets here, then retry upload in Builder.</p>
+        ) : null}
+        {uploadSizeCapBytes != null ? (
+          <p className="body-m">Upload size limit per file: {formatBytes(uploadSizeCapBytes)}</p>
+        ) : null}
+        {uploadsCountBudget ? (
+          <p className="body-m">
+            Monthly upload count budget: {formatNumber(uploadsCountBudget.used)} /{' '}
+            {uploadsCountBudget.max == null ? 'unlimited' : formatNumber(uploadsCountBudget.max)}
+          </p>
+        ) : null}
+        {uploadsBytesBudget ? (
+          <p className="body-m">
+            Monthly upload bytes budget: {formatBytes(uploadsBytesBudget.used)} /{' '}
+            {uploadsBytesBudget.max == null ? 'unlimited' : formatBytes(uploadsBytesBudget.max)}
+          </p>
+        ) : null}
         {deleteError ? <p className="body-m">Failed to delete asset: {deleteError}</p> : null}
+        {integrity && !integrity.ok && integrity.missingInR2.length > 0 ? (
+          <p className="body-s">
+            Missing sample: {integrity.missingInR2[0].assetId} {'->'} {integrity.missingInR2[0].r2Key}
+          </p>
+        ) : null}
+        {integrity && !integrity.ok && integrity.orphanInR2.length > 0 ? (
+          <p className="body-s">Orphan sample: {integrity.orphanInR2[0]}</p>
+        ) : null}
       </section>
 
       <section className="rd-canvas-module">

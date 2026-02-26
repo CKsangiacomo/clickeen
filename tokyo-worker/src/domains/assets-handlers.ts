@@ -1,10 +1,8 @@
 import {
   buildAccountAssetKey,
   buildAccountAssetVersionPath,
-  generateRenderSnapshots,
   guessContentTypeFromExt,
   json,
-  loadSnapshotLocalesFromL10nIndex,
   normalizeAccountAssetReadKey,
   normalizePublicId,
   normalizeWidgetType,
@@ -27,6 +25,7 @@ import {
   deleteAccountAssetVariantsByIdentity,
   loadAccountAssetByIdentity,
   loadAccountAssetUsagePublicIdsByIdentity,
+  loadAccountAssetVariantIdentitiesByAccount,
   loadAccountAssetVariantKeys,
   loadAccountMembershipRole,
   loadAccountUploadProfile,
@@ -38,149 +37,282 @@ import {
   resolveUploadsBytesBudgetMax,
   resolveUploadsCountBudgetMax,
   roleRank,
-  upsertInstanceRenderHealthBatch,
-  type MemberRole,
 } from './assets';
 
-const CLOUDFLARE_PURGE_CHUNK_SIZE = 30;
+const ACCOUNT_ASSET_NAMESPACE_PREFIX = 'assets/versions/';
+const ACCOUNT_ASSET_R2_LIST_PAGE_SIZE = 1000;
+const ASSET_INTEGRITY_SAMPLE_LIMIT = 50;
+const ASSET_IDENTITY_INTEGRITY_SAMPLE_LIMIT = 50;
 
-function normalizeBaseUrl(raw: string | null | undefined): string | null {
-  const value = String(raw || '').trim();
-  if (!value) return null;
-  return value.replace(/\/+$/, '');
-}
+const ASSET_INTEGRITY_REASON_POINTER_MISSING_BLOB = 'coreui.errors.assets.integrity.dbPointerMissingBlob';
+const ASSET_INTEGRITY_REASON_ORPHAN_BLOB = 'coreui.errors.assets.integrity.orphanBlob';
+const ASSET_INTEGRITY_REASON_VARIANTS_MISSING = 'coreui.errors.assets.integrity.variantsMissingForAsset';
 
-function resolveAssetPurgeUrls(args: { req: Request; env: Env; variantKeys: string[] }): string[] {
-  const paths = Array.from(
-    new Set(
-      args.variantKeys
-        .map((key) => {
-          try {
-            return buildAccountAssetVersionPath(key);
-          } catch {
-            return null;
-          }
-        })
-        .filter((path): path is string => Boolean(path)),
-    ),
-  );
-  if (!paths.length) return [];
+type UploadTierResolutionResult =
+  | { ok: true; tier: string | null }
+  | { ok: false; response: Response };
 
-  const bases = new Set<string>();
-  try {
-    bases.add(new URL(args.req.url).origin);
-  } catch {
-    // Ignore malformed request URL.
-  }
-  const veniceBase = normalizeBaseUrl(args.env.VENICE_BASE_URL);
-  if (veniceBase) bases.add(veniceBase);
+type UploadBudgetResult =
+  | { ok: true }
+  | { ok: false; response: Response };
 
-  const urls: string[] = [];
-  bases.forEach((base) => {
-    paths.forEach((path) => {
-      urls.push(`${base}${path}`);
-    });
-  });
-  return Array.from(new Set(urls));
-}
-
-type CloudflarePurgeResult = {
-  total: number;
-  purged: number;
-  failed: number;
-  details: string[];
+type AssetMirrorIntegritySampleRef = {
+  assetId: string;
+  r2Key: string;
 };
 
-function isLocalPurgeUrl(rawUrl: string): boolean {
-  try {
-    const parsed = new URL(rawUrl);
-    const hostname = parsed.hostname.toLowerCase();
-    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
-  } catch {
-    return false;
-  }
+type AssetMirrorIntegritySnapshot = {
+  ok: boolean;
+  dbVariantCount: number;
+  r2ObjectCount: number;
+  missingInR2Count: number;
+  orphanInR2Count: number;
+  missingInR2: AssetMirrorIntegritySampleRef[];
+  orphanInR2: string[];
+};
+
+type AssetIdentityIntegritySnapshot = {
+  ok: boolean;
+  reasonKey: string | null;
+  dbVariantCount: number;
+  r2ObjectCount: number;
+  missingInR2Count: number;
+  orphanInR2Count: number;
+  missingInR2: string[];
+  orphanInR2: string[];
+};
+
+function denyEntitlement(reasonKey: string, detail: string, status: number): Response {
+  return json(
+    {
+      error: {
+        kind: 'DENY',
+        reasonKey,
+        upsell: 'UP',
+        detail,
+      },
+    },
+    { status },
+  );
 }
 
-async function purgeCloudflareByUrls(env: Env, urls: string[]): Promise<CloudflarePurgeResult> {
-  const unique = Array.from(new Set(urls.filter(Boolean)));
-  if (!unique.length) return { total: 0, purged: 0, failed: 0, details: [] };
-
-  const zoneId = String(env.CLOUDFLARE_ZONE_ID || '').trim();
-  const apiToken = String(env.CLOUDFLARE_API_TOKEN || '').trim();
-  if (!zoneId || !apiToken) {
-    const localOnly = unique.every((url) => isLocalPurgeUrl(url));
-    if (localOnly) {
+async function resolveUploadTierAndAuthorization(args: {
+  env: Env;
+  auth: Exclude<Awaited<ReturnType<typeof assertUploadAuth>>, { ok: false }>;
+  accountId: string;
+  workspaceId: string;
+}): Promise<UploadTierResolutionResult> {
+  const { env, auth, accountId, workspaceId } = args;
+  if (!workspaceId) {
+    if (auth.trusted) return { ok: true, tier: null };
+    try {
+      const membershipRole = await loadAccountMembershipRole(env, accountId, auth.principal.userId);
+      if (!membershipRole || roleRank(membershipRole) < roleRank('editor')) {
+        return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
+      }
+      return { ok: true, tier: null };
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
       return {
-        total: unique.length,
-        purged: unique.length,
-        failed: 0,
-        details: ['skipped Cloudflare purge for local-only URLs'],
+        ok: false,
+        response: json({ error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } }, { status: 500 }),
       };
     }
+  }
+
+  if (!isUuid(workspaceId)) {
+    return { ok: false, response: json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 }) };
+  }
+
+  const workspace = await loadWorkspaceUploadContext(env, workspaceId);
+  if (!workspace) {
+    return { ok: false, response: json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 }) };
+  }
+  if (!workspace.accountId || workspace.accountId !== accountId) {
     return {
-      total: unique.length,
-      purged: 0,
-      failed: unique.length,
-      details: ['missing CLOUDFLARE_ZONE_ID or CLOUDFLARE_API_TOKEN'],
+      ok: false,
+      response: json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.account.workspaceMismatch' } }, { status: 422 }),
     };
   }
 
-  let purged = 0;
-  let failed = 0;
-  const details: string[] = [];
+  if (auth.trusted) return { ok: true, tier: workspace.tier ?? null };
 
-  for (let i = 0; i < unique.length; i += CLOUDFLARE_PURGE_CHUNK_SIZE) {
-    const chunk = unique.slice(i, i + CLOUDFLARE_PURGE_CHUNK_SIZE);
-    try {
-      const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ files: chunk }),
-      });
-      const payload = (await res.json().catch(() => null)) as
-        | { success?: unknown; errors?: Array<{ message?: unknown }> }
-        | null;
-      const success = res.ok && payload?.success === true;
-      if (!success) {
-        failed += chunk.length;
-        const message = Array.isArray(payload?.errors)
-          ? payload?.errors
-              .map((entry) => (typeof entry?.message === 'string' ? entry.message.trim() : ''))
-              .filter(Boolean)
-              .join('; ')
-          : '';
-        details.push(
-          message
-            ? `chunk ${Math.floor(i / CLOUDFLARE_PURGE_CHUNK_SIZE) + 1} failed: ${message}`
-            : `chunk ${Math.floor(i / CLOUDFLARE_PURGE_CHUNK_SIZE) + 1} failed with status ${res.status}`,
-        );
-        continue;
-      }
-      purged += chunk.length;
-    } catch (error) {
-      failed += chunk.length;
-      const detail = error instanceof Error ? error.message : String(error);
-      details.push(`chunk ${Math.floor(i / CLOUDFLARE_PURGE_CHUNK_SIZE) + 1} failed: ${detail}`);
+  try {
+    const membershipRole = await loadWorkspaceMembershipRole(env, workspaceId, auth.principal.userId);
+    if (!membershipRole || roleRank(membershipRole) < roleRank('editor')) {
+      return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
     }
+    return { ok: true, tier: workspace.tier ?? null };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return {
+      ok: false,
+      response: json({ error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } }, { status: 500 }),
+    };
   }
-
-  return { total: unique.length, purged, failed, details };
 }
 
-type HealthUpdate = { status: 'healthy' | 'degraded' | 'error'; reason: string; detail: string | null };
+async function enforceUploadBudgets(args: {
+  env: Env;
+  accountId: string;
+  uploadsBytesMax: number | null;
+  uploadsCountMax: number | null;
+  bodyBytes: number;
+}): Promise<UploadBudgetResult> {
+  const { env, accountId, uploadsBytesMax, uploadsCountMax, bodyBytes } = args;
+  const checks: Array<{ budgetKey: string; max: number | null; amount: number }> = [
+    { budgetKey: UPLOADS_BYTES_BUDGET_KEY, max: uploadsBytesMax, amount: bodyBytes },
+    { budgetKey: UPLOADS_COUNT_BUDGET_KEY, max: uploadsCountMax, amount: 1 },
+  ];
+  for (const check of checks) {
+    const budget = await consumeAccountBudget({
+      env,
+      accountId,
+      budgetKey: check.budgetKey,
+      max: check.max,
+      amount: check.amount,
+    });
+    if (budget.ok) continue;
+    return {
+      ok: false,
+      response: denyEntitlement(budget.reasonKey, budget.detail, 403),
+    };
+  }
+  return { ok: true };
+}
 
-function upsertHealthInMap(
-  map: Map<string, HealthUpdate>,
-  publicId: string,
-  update: HealthUpdate,
-): void {
-  const nextRank = update.status === 'error' ? 3 : update.status === 'degraded' ? 2 : 1;
-  const current = map.get(publicId);
-  const currentRank = current ? (current.status === 'error' ? 3 : current.status === 'degraded' ? 2 : 1) : 0;
-  if (nextRank >= currentRank) map.set(publicId, update);
+function resolveAccountAssetNamespacePrefix(accountId: string): string {
+  return `${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/`;
+}
+
+function resolveAccountAssetIdentityPrefix(accountId: string, assetId: string): string {
+  return `${resolveAccountAssetNamespacePrefix(accountId)}${assetId}/`;
+}
+
+async function listAccountAssetR2Keys(env: Env, accountId: string): Promise<string[]> {
+  const prefix = resolveAccountAssetNamespacePrefix(accountId);
+  const keys: string[] = [];
+  let cursor: string | undefined;
+  do {
+    const listed = await env.TOKYO_R2.list({
+      prefix,
+      limit: ACCOUNT_ASSET_R2_LIST_PAGE_SIZE,
+      cursor,
+    });
+    listed.objects.forEach((obj) => {
+      const key = typeof obj.key === 'string' ? obj.key.trim() : '';
+      if (key) keys.push(key);
+    });
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+  return keys;
+}
+
+async function listAccountAssetR2KeysByIdentity(env: Env, accountId: string, assetId: string): Promise<string[]> {
+  const prefix = resolveAccountAssetIdentityPrefix(accountId, assetId);
+  const keys: string[] = [];
+  let cursor: string | undefined;
+  do {
+    const listed = await env.TOKYO_R2.list({
+      prefix,
+      limit: ACCOUNT_ASSET_R2_LIST_PAGE_SIZE,
+      cursor,
+    });
+    listed.objects.forEach((obj) => {
+      const key = typeof obj.key === 'string' ? obj.key.trim() : '';
+      if (key) keys.push(key);
+    });
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+  return keys;
+}
+
+function resolveAssetIdentityIntegrityReasonKey(args: {
+  dbVariantCount: number;
+  missingInR2Count: number;
+  orphanInR2Count: number;
+}): string | null {
+  if (args.dbVariantCount === 0) return ASSET_INTEGRITY_REASON_VARIANTS_MISSING;
+  if (args.missingInR2Count > 0) return ASSET_INTEGRITY_REASON_POINTER_MISSING_BLOB;
+  if (args.orphanInR2Count > 0) return ASSET_INTEGRITY_REASON_ORPHAN_BLOB;
+  return null;
+}
+
+async function buildAccountAssetIdentityIntegrity(
+  env: Env,
+  accountId: string,
+  assetId: string,
+): Promise<AssetIdentityIntegritySnapshot> {
+  const [variantKeys, r2Keys] = await Promise.all([
+    loadAccountAssetVariantKeys(env, accountId, assetId),
+    listAccountAssetR2KeysByIdentity(env, accountId, assetId),
+  ]);
+  const variantKeySet = new Set<string>(variantKeys);
+  const missingInR2: string[] = [];
+  for (const key of variantKeys) {
+    const found = await env.TOKYO_R2.head(key);
+    if (!found) missingInR2.push(key);
+  }
+  const orphanInR2 = r2Keys.filter((key) => !variantKeySet.has(key));
+  const reasonKey = resolveAssetIdentityIntegrityReasonKey({
+    dbVariantCount: variantKeys.length,
+    missingInR2Count: missingInR2.length,
+    orphanInR2Count: orphanInR2.length,
+  });
+  return {
+    ok: reasonKey == null,
+    reasonKey,
+    dbVariantCount: variantKeys.length,
+    r2ObjectCount: r2Keys.length,
+    missingInR2Count: missingInR2.length,
+    orphanInR2Count: orphanInR2.length,
+    missingInR2: missingInR2.slice(0, ASSET_IDENTITY_INTEGRITY_SAMPLE_LIMIT),
+    orphanInR2: orphanInR2.slice(0, ASSET_IDENTITY_INTEGRITY_SAMPLE_LIMIT),
+  };
+}
+
+function jsonAssetIdentityIntegrityMismatch(
+  accountId: string,
+  assetId: string,
+  snapshot: AssetIdentityIntegritySnapshot,
+): Response {
+  const reasonKey = snapshot.reasonKey || 'coreui.errors.assets.integrityMismatch';
+  return json(
+    {
+      error: {
+        kind: 'INTEGRITY',
+        reasonKey,
+        detail: 'Asset metadata and stored blobs are out of sync for this asset identity.',
+      },
+      accountId,
+      assetId,
+      integrity: snapshot,
+    },
+    { status: 409 },
+  );
+}
+
+async function buildAccountAssetMirrorIntegrity(env: Env, accountId: string): Promise<AssetMirrorIntegritySnapshot> {
+  const [variantRefs, r2Keys] = await Promise.all([
+    loadAccountAssetVariantIdentitiesByAccount(env, accountId),
+    listAccountAssetR2Keys(env, accountId),
+  ]);
+  const dbKeySet = new Set<string>();
+  variantRefs.forEach((ref) => dbKeySet.add(ref.r2Key));
+  const r2KeySet = new Set<string>(r2Keys);
+
+  const missingInR2 = variantRefs.filter((ref) => !r2KeySet.has(ref.r2Key));
+  const orphanInR2 = r2Keys.filter((key) => !dbKeySet.has(key));
+
+  return {
+    ok: missingInR2.length === 0 && orphanInR2.length === 0,
+    dbVariantCount: variantRefs.length,
+    r2ObjectCount: r2Keys.length,
+    missingInR2Count: missingInR2.length,
+    orphanInR2Count: orphanInR2.length,
+    missingInR2: missingInR2.slice(0, ASSET_INTEGRITY_SAMPLE_LIMIT),
+    orphanInR2: orphanInR2.slice(0, ASSET_INTEGRITY_SAMPLE_LIMIT),
+  };
 }
 
 async function handleUploadAccountAsset(req: Request, env: Env): Promise<Response> {
@@ -206,53 +338,14 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   }
 
   const workspaceId = (req.headers.get('x-workspace-id') || '').trim();
-  let tier: string | null = null;
-  if (workspaceId) {
-    if (!isUuid(workspaceId)) {
-      return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 });
-    }
-    const workspace = await loadWorkspaceUploadContext(env, workspaceId);
-    if (!workspace) {
-      return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 });
-    }
-    if (!workspace.accountId || workspace.accountId !== accountId) {
-      return json(
-        { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.account.workspaceMismatch' } },
-        { status: 422 },
-      );
-    }
-
-    if (!auth.trusted) {
-      let membershipRole: MemberRole | null = null;
-      try {
-        membershipRole = await loadWorkspaceMembershipRole(env, workspaceId, auth.principal.userId);
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        return json(
-          { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } },
-          { status: 500 },
-        );
-      }
-      if (!membershipRole || roleRank(membershipRole) < roleRank('editor')) {
-        return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 });
-      }
-    }
-    tier = workspace.tier ?? tier;
-  } else if (!auth.trusted) {
-    let membershipRole: MemberRole | null = null;
-    try {
-      membershipRole = await loadAccountMembershipRole(env, accountId, auth.principal.userId);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return json(
-        { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } },
-        { status: 500 },
-      );
-    }
-    if (!membershipRole || roleRank(membershipRole) < roleRank('editor')) {
-      return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 });
-    }
-  }
+  const tierResolution = await resolveUploadTierAndAuthorization({
+    env,
+    auth,
+    accountId,
+    workspaceId,
+  });
+  if (!tierResolution.ok) return tierResolution.response;
+  const tier = tierResolution.tier;
 
   const publicIdRaw = (req.headers.get('x-public-id') || '').trim();
   const publicId = publicIdRaw ? normalizePublicId(publicIdRaw) : null;
@@ -277,70 +370,24 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   const safeFilename = sanitizeUploadFilename(filename, ext, variant);
 
   const maxBytes = resolveUploadSizeLimitBytes(tier);
-  const contentLengthRaw = (req.headers.get('content-length') || '').trim();
-  const contentLength = contentLengthRaw ? Number.parseInt(contentLengthRaw, 10) : NaN;
-  if (maxBytes != null && Number.isFinite(contentLength) && contentLength > maxBytes) {
-    return json(
-      {
-        error: {
-          kind: 'DENY',
-          reasonKey: 'coreui.upsell.reason.capReached',
-          upsell: 'UP',
-          detail: `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}`,
-        },
-      },
-      { status: 413 },
-    );
-  }
-
   const body = await req.arrayBuffer();
   if (!body || body.byteLength === 0) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
   }
   if (maxBytes != null && body.byteLength > maxBytes) {
-    return json(
-      {
-        error: {
-          kind: 'DENY',
-          reasonKey: 'coreui.upsell.reason.capReached',
-          upsell: 'UP',
-          detail: `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}`,
-        },
-      },
-      { status: 413 },
-    );
+    return denyEntitlement('coreui.upsell.reason.capReached', `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}`, 413);
   }
 
   const uploadsMax = resolveUploadsCountBudgetMax(tier);
   const uploadsBytesMax = resolveUploadsBytesBudgetMax(tier);
-
-  const bytesBudget = await consumeAccountBudget({
+  const budgetResult = await enforceUploadBudgets({
     env,
     accountId,
-    budgetKey: UPLOADS_BYTES_BUDGET_KEY,
-    max: uploadsBytesMax,
-    amount: body.byteLength,
+    uploadsBytesMax,
+    uploadsCountMax: uploadsMax,
+    bodyBytes: body.byteLength,
   });
-  if (!bytesBudget.ok) {
-    return json(
-      { error: { kind: 'DENY', reasonKey: bytesBudget.reasonKey, upsell: 'UP', detail: bytesBudget.detail } },
-      { status: 403 },
-    );
-  }
-
-  const uploadBudget = await consumeAccountBudget({
-    env,
-    accountId,
-    budgetKey: UPLOADS_COUNT_BUDGET_KEY,
-    max: uploadsMax,
-    amount: 1,
-  });
-  if (!uploadBudget.ok) {
-    return json(
-      { error: { kind: 'DENY', reasonKey: uploadBudget.reasonKey, upsell: 'UP', detail: uploadBudget.detail } },
-      { status: 403 },
-    );
-  }
+  if (!budgetResult.ok) return budgetResult.response;
 
   const assetId = crypto.randomUUID();
   const key = buildAccountAssetKey(accountId, assetId, variant, safeFilename);
@@ -418,6 +465,73 @@ async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
   return new Response('Not found', { status: 404 });
 }
 
+async function handleGetAccountAssetIdentityIntegrity(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+  assetIdRaw: string,
+): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+  const accountId = String(accountIdRaw || '').trim();
+  if (!accountId || !isUuid(accountId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
+  }
+  const assetId = String(assetIdRaw || '').trim();
+  if (!assetId || !isUuid(assetId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' } }, { status: 422 });
+  }
+
+  const existing = await loadAccountAssetByIdentity(env, accountId, assetId);
+  if (!existing) {
+    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
+  }
+
+  const snapshot = await buildAccountAssetIdentityIntegrity(env, accountId, assetId);
+  if (snapshot.ok) {
+    return json({
+      accountId,
+      assetId,
+      integrity: snapshot,
+    });
+  }
+  return jsonAssetIdentityIntegrityMismatch(accountId, assetId, snapshot);
+}
+
+async function handleGetAccountAssetMirrorIntegrity(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+  const accountId = String(accountIdRaw || '').trim();
+  if (!accountId || !isUuid(accountId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
+  }
+
+  const snapshot = await buildAccountAssetMirrorIntegrity(env, accountId);
+  if (snapshot.ok) {
+    return json({
+      accountId,
+      integrity: snapshot,
+    });
+  }
+
+  return json(
+    {
+      error: {
+        kind: 'INTEGRITY',
+        reasonKey: 'coreui.errors.assets.integrityMismatch',
+        detail: 'Account asset metadata and R2 namespace are out of sync.',
+      },
+      accountId,
+      integrity: snapshot,
+    },
+    { status: 409 },
+  );
+}
+
 async function handleDeleteAccountAsset(
   req: Request,
   env: Env,
@@ -441,6 +555,11 @@ async function handleDeleteAccountAsset(
     return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
   }
 
+  const integritySnapshot = await buildAccountAssetIdentityIntegrity(env, accountId, assetId);
+  if (!integritySnapshot.ok) {
+    return jsonAssetIdentityIntegrityMismatch(accountId, assetId, integritySnapshot);
+  }
+
   const impactedPublicIds = await loadAccountAssetUsagePublicIdsByIdentity(env, accountId, assetId);
   const usageCount = impactedPublicIds.length;
   const confirmInUseRaw = (new URL(req.url).searchParams.get('confirmInUse') || '').trim().toLowerCase();
@@ -457,125 +576,39 @@ async function handleDeleteAccountAsset(
   }
 
   const variantKeys = await loadAccountAssetVariantKeys(env, accountId, assetId);
-  await deleteAccountAssetUsageByIdentity(env, accountId, assetId);
-  await deleteAccountAssetVariantsByIdentity(env, accountId, assetId);
-  await deleteAccountAssetByIdentity(env, accountId, assetId);
-
-  let failedBlobDeletes = 0;
-  const failedBlobDeleteDetails: string[] = [];
-  if (variantKeys.length) {
-    const deleteResults = await Promise.allSettled(variantKeys.map((key) => env.TOKYO_R2.delete(key)));
-    deleteResults.forEach((result, index) => {
-      if (result.status === 'fulfilled') return;
-      failedBlobDeletes += 1;
-      const detail = result.reason instanceof Error ? result.reason.message : String(result.reason);
-      failedBlobDeleteDetails.push(`${variantKeys[index]}: ${detail}`);
-    });
-  }
-
-  const purgeUrls = resolveAssetPurgeUrls({ req, env, variantKeys });
-  const purgeResult = await purgeCloudflareByUrls(env, purgeUrls);
-
-  let rebuiltSnapshotRevisions = 0;
-  let failedSnapshotRebuilds = 0;
-  const failedSnapshotRebuildDetails: string[] = [];
-  const rebuiltPublicIds: string[] = [];
-  const failedRebuildPublicIds: string[] = [];
-  for (const publicId of impactedPublicIds) {
+  for (const key of variantKeys) {
     try {
-      const locales = await loadSnapshotLocalesFromL10nIndex({ env, publicId });
-      await generateRenderSnapshots({ env, publicId, locales });
-      rebuiltSnapshotRevisions += 1;
-      rebuiltPublicIds.push(publicId);
+      await env.TOKYO_R2.delete(key);
     } catch (error) {
-      failedSnapshotRebuilds += 1;
-      failedRebuildPublicIds.push(publicId);
       const detail = error instanceof Error ? error.message : String(error);
-      failedSnapshotRebuildDetails.push(`${publicId}: ${detail}`);
-    }
-  }
-
-  const renderHealthByPublicId = new Map<string, HealthUpdate>();
-  rebuiltPublicIds.forEach((publicId) => {
-    upsertHealthInMap(renderHealthByPublicId, publicId, {
-      status: 'healthy',
-      reason: 'asset_delete_rebuild_applied',
-      detail: `Asset ${assetId} deleted; clean revision published.`,
-    });
-  });
-  failedRebuildPublicIds.forEach((publicId) => {
-    upsertHealthInMap(renderHealthByPublicId, publicId, {
-      status: 'error',
-      reason: 'asset_delete_rebuild_failed',
-      detail: `Asset ${assetId} deleted; clean revision rebuild failed.`,
-    });
-  });
-
-  if (failedBlobDeletes > 0 || purgeResult.failed > 0) {
-    impactedPublicIds.forEach((publicId) => {
-      upsertHealthInMap(renderHealthByPublicId, publicId, {
-        status: 'degraded',
-        reason: 'asset_delete_cleanup_failed',
-        detail: `Asset ${assetId} delete pipeline had storage or CDN purge failures.`,
-      });
-    });
-  }
-
-  let failedRenderHealthWrites = 0;
-  if (renderHealthByPublicId.size > 0) {
-    try {
-      await upsertInstanceRenderHealthBatch(
-        env,
-        Array.from(renderHealthByPublicId.entries()).map(([publicId, update]) => ({
-          publicId,
-          status: update.status,
-          reason: update.reason,
-          detail: update.detail,
-        })),
+      return json(
+        {
+          error: {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail: `failed to delete blob ${key}: ${detail}`,
+          },
+        },
+        { status: 500 },
       );
-    } catch {
-      failedRenderHealthWrites = renderHealthByPublicId.size;
     }
   }
 
-  const pipelineWarnings: string[] = [];
-  if (failedBlobDeletes > 0) pipelineWarnings.push(`failed to delete ${failedBlobDeletes} asset blob(s)`);
-  if (purgeResult.failed > 0) pipelineWarnings.push(`failed to purge ${purgeResult.failed} CDN URL(s)`);
-  if (failedSnapshotRebuilds > 0) {
-    pipelineWarnings.push(`failed to rebuild ${failedSnapshotRebuilds} snapshot revision(s)`);
-  }
-  if (failedRenderHealthWrites > 0) {
-    pipelineWarnings.push(`failed to persist ${failedRenderHealthWrites} render health update(s)`);
-  }
-
-  if (pipelineWarnings.length > 0) {
+  try {
+    await deleteAccountAssetUsageByIdentity(env, accountId, assetId);
+    await deleteAccountAssetVariantsByIdentity(env, accountId, assetId);
+    await deleteAccountAssetByIdentity(env, accountId, assetId);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
     return json(
       {
-        accountId,
-        assetId,
-        deleted: true,
-        impactedPublicIds,
-        snapshotRebuilds: {
-          total: impactedPublicIds.length,
-          rebuilt: rebuiltSnapshotRevisions,
-          failed: failedSnapshotRebuilds,
-        },
-        failedBlobDeletes,
-        failedBlobDeleteDetails,
-        cdnPurge: {
-          attempted: purgeResult.total,
-          purged: purgeResult.purged,
-          failed: purgeResult.failed,
-          details: purgeResult.details,
-        },
-        failedSnapshotRebuildDetails,
-        failedRenderHealthWrites,
-        pipeline: {
-          status: 'degraded',
-          warnings: pipelineWarnings,
+        error: {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail,
         },
       },
-      { status: 200 },
+      { status: 500 },
     );
   }
 
@@ -584,21 +617,7 @@ async function handleDeleteAccountAsset(
       accountId,
       assetId,
       deleted: true,
-      impactedPublicIds,
-      snapshotRebuilds: {
-        total: impactedPublicIds.length,
-        rebuilt: rebuiltSnapshotRevisions,
-        failed: failedSnapshotRebuilds,
-      },
-      cdnPurge: {
-        attempted: purgeResult.total,
-        purged: purgeResult.purged,
-        failed: purgeResult.failed,
-      },
-      pipeline: {
-        status: 'ok',
-        warnings: [],
-      },
+      usageCount,
     },
     { status: 200 },
   );
@@ -608,5 +627,7 @@ async function handleDeleteAccountAsset(
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
+  handleGetAccountAssetIdentityIntegrity,
+  handleGetAccountAssetMirrorIntegrity,
   handleUploadAccountAsset,
 };

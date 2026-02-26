@@ -212,12 +212,12 @@ This isn't vaporware. Here's what exists:
 **Infrastructure:**
 - Live Cloudflare deployment (edge-first, global)
 - Local development harness + DevStudio (QA/validation surface)
-- 9-service architecture running in production
+- 11-service architecture running in production
 
 **Product:**
 - Widget builder (Bob) - Real-time preview, publish flow
-- Embed runtime (Venice) - SSR delivery, 14 languages
-- Marketing site (Prague) - Localized across 14 languages
+- Embed runtime (Venice) - SSR delivery with locale overlays from a single source of truth
+- Marketing site (Prague) - Localized across the active locale set
 - Minibob - "Try before signup" playground
 
 **AI Workforce:**
@@ -226,7 +226,7 @@ This isn't vaporware. Here's what exists:
 - Learning infrastructure - Outcome tracking, agent improvement loops
 
 **Scale proof:**
-- Serving embeds in 14 languages (AR, DE, EN, ES, FR, HI, IT, JA, KO, NL, PL, PT, TR, ZH-TW)
+- Serving embeds/localized pages across the active locale set (currently 28 non-EN locale overlays plus EN base in widget-page pipelines)
 - Zero human translators, zero localization PMs
 - One founder, no traditional team
 

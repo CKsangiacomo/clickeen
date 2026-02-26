@@ -394,6 +394,13 @@ type AccountAssetVariantKeyRow = {
   size_bytes?: number | null;
 };
 
+export type AccountAssetVariantIdentity = {
+  assetId: string;
+  r2Key: string;
+};
+
+const ACCOUNT_VARIANT_PAGE_SIZE = 1000;
+
 export async function loadAccountAssetVariantKeys(
   env: Env,
   accountId: string,
@@ -414,6 +421,37 @@ export async function loadAccountAssetVariantKeys(
   return rows
     .map((row) => (typeof row.r2_key === 'string' ? row.r2_key.trim() : ''))
     .filter(Boolean);
+}
+
+export async function loadAccountAssetVariantIdentitiesByAccount(
+  env: Env,
+  accountId: string,
+): Promise<AccountAssetVariantIdentity[]> {
+  const out: AccountAssetVariantIdentity[] = [];
+  for (let offset = 0; ; offset += ACCOUNT_VARIANT_PAGE_SIZE) {
+    const params = new URLSearchParams({
+      select: 'asset_id,r2_key',
+      account_id: `eq.${accountId}`,
+      order: 'created_at.asc',
+      limit: String(ACCOUNT_VARIANT_PAGE_SIZE),
+      offset: String(offset),
+    });
+    const res = await supabaseFetch(env, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`[tokyo] Supabase account_asset_variants account read failed (${res.status}) ${text}`.trim());
+    }
+    const rows = (await res.json().catch(() => [])) as Array<{ asset_id?: unknown; r2_key?: unknown }>;
+    if (!rows.length) break;
+    rows.forEach((row) => {
+      const assetId = typeof row.asset_id === 'string' ? row.asset_id.trim() : '';
+      const r2Key = typeof row.r2_key === 'string' ? row.r2_key.trim() : '';
+      if (!assetId || !r2Key) return;
+      out.push({ assetId, r2Key });
+    });
+    if (rows.length < ACCOUNT_VARIANT_PAGE_SIZE) break;
+  }
+  return out;
 }
 
 export async function loadPrimaryAccountAssetKey(
@@ -621,5 +659,7 @@ export async function deleteAccountAssetByIdentity(env: Env, accountId: string, 
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
+  handleGetAccountAssetIdentityIntegrity,
+  handleGetAccountAssetMirrorIntegrity,
   handleUploadAccountAsset,
 } from './assets-handlers';

@@ -256,14 +256,6 @@
     return v;
   }
 
-  function resolveAssetUrl(raw) {
-    const v = String(raw || '').trim();
-    if (!v) return null;
-    if (/^https?:\/\//i.test(v)) return v;
-    if (/^\/\//.test(v)) return `https:${v}`;
-    return v;
-  }
-
   function resolveLogoAssetVersionUrl(logo) {
     if (!logo || typeof logo !== 'object' || Array.isArray(logo)) return null;
     const asset = logo.asset;
@@ -271,17 +263,6 @@
     const versionId = typeof asset.versionId === 'string' ? asset.versionId.trim() : '';
     if (!versionId || !ASSET_VERSION_KEY_RE.test(versionId)) return null;
     return `/assets/v/${encodeURIComponent(versionId)}`;
-  }
-
-  function extractPrimaryUrl(raw) {
-    const v = String(raw || '').trim();
-    if (!v) return null;
-    if (/^(?:https?:\/\/|\/\/|\/|\.\/|\.\.\/)/i.test(v)) return resolveAssetUrl(v);
-    // CSS fill string, e.g. url("https://...") center center / cover no-repeat
-    const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    if (m && m[2]) return resolveAssetUrl(m[2]);
-    if (/^(?:\/|\.\/|\.\.\/)/.test(v)) return resolveAssetUrl(v);
-    return null;
   }
 
   function fnv1a32(str) {
@@ -375,7 +356,7 @@
     visualEl.setAttribute('role', 'img');
     if (aria) visualEl.setAttribute('aria-label', aria);
 
-    const primaryUrl = resolveLogoAssetVersionUrl(logo) || extractPrimaryUrl(logo.logoFill);
+    const primaryUrl = resolveLogoAssetVersionUrl(logo);
     if (primaryUrl) {
       const safeUrl = primaryUrl.replace(/"/g, '%22');
       visualEl.style.backgroundImage = `url("${safeUrl}")`;

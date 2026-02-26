@@ -13,7 +13,7 @@ export const runtime = 'edge';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id',
+  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id, x-clickeen-surface',
 } as const;
 
 type RouteContext = { params: Promise<{ accountId: string; assetId: string }> };
@@ -77,6 +77,10 @@ async function forwardAssetRequest(
 
   const headers = new Headers();
   headers.set('authorization', `Bearer ${session.accessToken}`);
+  if (method === 'DELETE') {
+    const surface = (request.headers.get('x-clickeen-surface') || '').trim();
+    if (surface) headers.set('x-clickeen-surface', surface);
+  }
 
   try {
     const res = await fetch(resolveParisAssetUrl(request, accountId, assetId), {
@@ -117,5 +121,12 @@ export function GET(request: NextRequest, context: RouteContext) {
 }
 
 export function DELETE(request: NextRequest, context: RouteContext) {
+  const surface = (request.headers.get('x-clickeen-surface') || '').trim();
+  if (surface !== 'roma-assets') {
+    return NextResponse.json(
+      { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden', detail: 'Asset delete is managed via Roma Assets.' } },
+      { status: 403, headers: CORS_HEADERS },
+    );
+  }
   return forwardAssetRequest(request, context, 'DELETE');
 }

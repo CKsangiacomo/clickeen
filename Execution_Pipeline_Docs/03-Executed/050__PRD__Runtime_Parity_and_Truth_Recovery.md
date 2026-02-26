@@ -8,6 +8,13 @@
 4. Asset entitlements are enforced in the Roma Assets panel. If user cannot upload due to entitlement, UX routes the user to Assets panel to manage assets.
 5. R2 is a simple mirror of Roma Assets panel for account asset namespace. What Roma Assets shows is exactly what exists in R2 under `assets/versions/{accountId}/`. No hidden artifacts, no ghost files, no deferred cleanup, no system-managed invisible storage.
 
+## Runtime dependency (must stay true)
+
+1. Runtime parity cannot rely on host-side asset healing.
+2. Roma Assets remains the only destructive management surface.
+3. Asset integrity mismatches (DB vs R2) must surface explicitly in Roma Assets and are treated as parity blockers.
+4. Managed asset APIs expose explicit integrity reason keys; public embed/runtime reads stay strict (`200` or `404`) without healing/fallback.
+
 ---
 
 Status: EXECUTED (local + cloud-dev parity green)  

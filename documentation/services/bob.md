@@ -124,7 +124,7 @@ Read-only mode (DevStudio cloud):
 Core base-config lifecycle per open session:
 1. One instance load `GET /api/paris/workspaces/:workspaceId/instance/:publicId?subject=workspace` (performed by host in message boot or by Bob in URL boot).
 2. In-memory edits only (no base-config API writes).
-3. One publish `PUT /api/paris/workspaces/:workspaceId/instance/:publicId?subject=workspace` on explicit Publish.
+3. One publish `PUT /api/paris/workspaces/:workspaceId/instance/:publicId?subject=workspace` on explicit Publish (base persistence immediate; snapshot convergence async via publish-status).
 
 Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
@@ -259,13 +259,13 @@ Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file p
 - Bob forwards Supabase session bearer and account/workspace/public/widget trace headers.
 - Tokyo-worker validates auth + workspace membership, enforces account/workspace binding, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
 
-The control writes the canonical URL directly into widget config (no publish-time crawl/rewrite step).
+Asset-aware controls persist immutable refs (`asset.versionId` / `poster.versionId`) on canonical media fields; runtime URLs are derived from those refs (no publish-time crawl/rewrite step).
 
 Contracts:
 - **Canonical ownership**: uploads are account-owned and stored at:
   - original variant key: `assets/versions/{accountId}/{assetId}/{filename}`
   - non-original variant key: `assets/versions/{accountId}/{assetId}/{variant}/{filename}`
-  - persisted runtime URL: `/assets/v/{encodeURIComponent(versionKey)}`
+  - runtime path derived from ref: `/assets/v/{encodeURIComponent(versionId)}`
 - **Trace context**: `workspaceId`, `publicId`, `widgetType`, `source` remain provenance fields.
 - Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are unsupported on writes.
 

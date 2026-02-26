@@ -40,6 +40,27 @@ type DropdownUploadState = {
 const states = new Map<HTMLElement, DropdownUploadState>();
 const UUID_FILENAME_STEM_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ASSET_UNAVAILABLE_MESSAGE = 'Asset URL is unavailable. Upload a new file to restore preview.';
+const ASSET_ENTITLEMENT_REASON_KEYS = new Set([
+  'coreui.upsell.reason.budgetExceeded',
+  'coreui.upsell.reason.capReached',
+]);
+
+function isAssetEntitlementReasonKey(value: string): boolean {
+  const reasonKey = String(value || '').trim();
+  return ASSET_ENTITLEMENT_REASON_KEYS.has(reasonKey);
+}
+
+function dispatchAssetEntitlementGate(root: HTMLElement, reasonKey: string): void {
+  root.dispatchEvent(
+    new CustomEvent('bob-upsell', {
+      bubbles: true,
+      detail: { reasonKey },
+    }),
+  );
+  if (typeof window === 'undefined') return;
+  if (!window.parent || window.parent === window) return;
+  window.parent.postMessage({ type: 'bob:asset-entitlement-denied', reasonKey }, '*');
+}
 
 // IMPORTANT: keep this at module scope.
 // DevStudio (and some Bob flows) may call hydrators more than once over the same DOM.
@@ -261,6 +282,9 @@ function installHandlers(state: DropdownUploadState) {
       clearError(state);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
+      if (isAssetEntitlementReasonKey(message)) {
+        dispatchAssetEntitlementGate(state.root, message);
+      }
       setError(state, message);
     } finally {
       setUploadingState(state, false);

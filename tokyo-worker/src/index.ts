@@ -9,6 +9,8 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
+  handleGetAccountAssetIdentityIntegrity,
+  handleGetAccountAssetMirrorIntegrity,
   handleUploadAccountAsset,
   upsertInstanceRenderHealth,
 } from './domains/assets';
@@ -701,6 +703,25 @@ export default {
         const assetId = decodeURIComponent(accountAssetMatch[2] || '');
         if (req.method === 'DELETE') {
           return withCors(await handleDeleteAccountAsset(req, env, accountId, assetId));
+        }
+        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+      }
+
+      const accountAssetIntegrityMatch = pathname.match(/^\/assets\/integrity\/([0-9a-f-]{36})$/i);
+      if (accountAssetIntegrityMatch) {
+        const accountId = decodeURIComponent(accountAssetIntegrityMatch[1] || '');
+        if (req.method === 'GET') {
+          return withCors(await handleGetAccountAssetMirrorIntegrity(req, env, accountId));
+        }
+        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+      }
+
+      const accountAssetIdentityIntegrityMatch = pathname.match(/^\/assets\/integrity\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i);
+      if (accountAssetIdentityIntegrityMatch) {
+        const accountId = decodeURIComponent(accountAssetIdentityIntegrityMatch[1] || '');
+        const assetId = decodeURIComponent(accountAssetIdentityIntegrityMatch[2] || '');
+        if (req.method === 'GET') {
+          return withCors(await handleGetAccountAssetIdentityIntegrity(req, env, accountId, assetId));
         }
         return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
       }

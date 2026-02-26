@@ -2,7 +2,7 @@
 
 STATUS: REFERENCE / PRD (keep in sync with shipped code)
 Created: 2024-12-27
-Last updated: 2026-02-11
+Last updated: 2026-02-26
 
 ---
 
@@ -36,14 +36,14 @@ Key properties:
 - **Budgeted + signed**: every model execution is authorized by a short-lived **AI Grant** minted by Paris and verified by San Francisco.
 - **Conversion-aware**: Copilot includes CTAs (signup/upgrade) at appropriate moments without degrading the editing experience.
 
-Current runtime contract (February 11, 2026):
+Current runtime contract (February 26, 2026):
 - SDR widget copilot is constrained to FAQ sales workflow:
   1. Rewrite existing FAQ questions/answers.
   2. Personalize FAQ questions/answers from one website URL (single-page read, explicit consent).
 - Requests outside those two capabilities return seller guidance plus a signup CTA (no fallback style/layout edits in SDR mode).
 - Paid workspace users (`tier1|tier2|tier3`) are routed to `cs.widget.copilot.v1` (CS policy), not this SDR behavior pack.
 
-**Sibling agents**: SDR Copilot is one of multiple Clickeen agents. See also: `UXWriterAgent.PRD.md` (async localization intelligence).
+**Sibling agents**: SDR Copilot is one of multiple Clickeen agents. See also: `documentation/ai/agents/ux-writer.md` (async localization intelligence).
 
 ---
 
@@ -116,29 +116,26 @@ When a user lands on Minibob, the widget has placeholder content (e.g., FAQs abo
 > **Option 1**: Share your website URL — I'll read it and write relevant FAQs for you.
 > **Option 2**: Tell me what your business does — I'll create FAQs based on that.
 > 
-> Or if you'd rather just customize the design, I can help with that too!"
+> Tell me if you want me to rewrite your current FAQs, or generate new ones from your site."
 
 **Priority order**:
 1. **Site URL** — Copilot reads, understands domain, generates content
 2. **User describes business** — Copilot generates based on description
 3. **Reference material** — "What's something you want to leverage?"
-4. **Design customization** — colors/fonts/layout (last resort)
+4. **Unsupported requests** — if user asks for layout/style edits, return seller guidance + signup CTA.
 
 **Why content-first wins**:
 - User gets real value fast (their FAQs, not Clickeen's)
 - Higher investment = higher conversion (sunk cost is content, not colors)
-- Natural conversion moment: "Save YOUR FAQs" not "save your color changes"
+- Natural conversion moment: "Save YOUR FAQs"
 
-### 3.6 Widget content limits (cost control)
+### 3.6 FAQ content limits (cost control)
 
-Each widget type has generation limits to control token costs:
+SDR widget copilot is FAQ-only right now, with bounded generation limits:
 
 | Widget | Limit | Total max |
 |--------|-------|-----------|
 | FAQ | 4 questions per section, 2 sections max | 8 questions |
-| Testimonials | 4 testimonials | 4 items |
-| Logo Showcase | 8 logos | 8 items |
-| Pricing Table | 3 plans | 3 items |
 
 When a limit is reached, Copilot explains:
 > "I've added 4 questions to this section — that's the max for the free preview. Want me to create a second section, or would you like to edit what we have?"
@@ -148,24 +145,23 @@ If user hits the overall widget limit:
 
 ### 3.7 Token budget + conversion gate
 
-**Session token budget**: 50,000 tokens per anonymous session.
+Runtime budgets are grant-scoped and strict (there is no 50K session budget):
 
-This is generous enough to:
-- Read one site (5-10K tokens)
-- Generate full widget content (5-10K tokens)
-- Make several design edits (5-10K tokens)
-- Have a natural conversation (5-10K tokens)
+- Minibob public grant (local): `maxTokens=650`, `maxRequests=2`, `timeoutMs=45_000`
+- Minibob public grant (non-local stages, including cloud-dev): `maxTokens=420`, `maxRequests=2`, `timeoutMs=12_000`
+- Minibob session turns budget: `budget.copilot.turns = 4` (entitlements policy)
 
-**When budget is exhausted**:
-> "You've been busy! 🎉 To keep using Copilot, create a free account. It takes 30 seconds and you'll keep all your customizations."
+Effective upper bound for anonymous Minibob sessions:
+- Local: up to `5,200` tokens (`650 * 2 * 4`) before turn budget is exhausted
+- Non-local/cloud-dev: up to `3,360` tokens (`420 * 2 * 4`) before turn budget is exhausted
 
-This is **the primary conversion gate**. The user has received real value (personalized content), and now we ask for the signup.
+When budgets/turns are exhausted, Paris/San Francisco return explicit deny + upsell signals.
 
 **Token efficiency guardrails**:
-1. **Never send raw HTML to LLM** — preprocess to extract text, summarize to 1-2K tokens
-2. **Two-stage LLM** — cheap model (GPT-4o-mini) for extraction, quality model for generation
-3. **Cache site analysis** — same site = cached result (7-day TTL)
-4. **Progressive generation** — generate 3-4 items, ask before generating more
+1. **Single-page only** — no crawling, no follow-links, SSRF-blocked URL fetch.
+2. **Bounded page payload** — source page read is byte-limited before model call.
+3. **Grant-capped execution** — max tokens, timeout, and max requests are enforced by signed grant.
+4. **Repair pass is bounded** — second pass runs only when grant/time budget still allows it.
 
 ### 3.8 Conversion moments (SDR behavior)
 
@@ -215,7 +211,7 @@ From Bob's perspective, a single Copilot request uses **two platform services**:
 - Bob → Paris (grant)
 - Bob → San Francisco (execute)
 
-(San Francisco → DeepSeek is the provider call.)
+(San Francisco calls the provider/model resolved by grant policy; Minibob public mint currently defaults to Amazon Nova unless request overrides are accepted.)
 
 ---
 
@@ -300,7 +296,7 @@ The agent is expected to return:
 - `meta` (includes at least intent/outcome + version stamps when available)
 
 It uses two deterministic layers before/around model output:
-1) **Vocabulary resolution** (clarify ambiguous terms like "background", "item").
+1) **Vocabulary resolution** (clarify ambiguous terms like "question", "answer", or "rewrite vs generate").
 2) **URL guardrails** (single-page read, SSRF protections, Cloudflare HTML detection).
 
 ---
@@ -309,13 +305,12 @@ It uses two deterministic layers before/around model output:
 
 ### 7.1 Shared vocabulary (coreui.*)
 
-Platform-level concepts that apply to all widgets are defined in the i18n catalog under `coreui.*`:
+Shared terminology lives in i18n catalogs, but SDR runtime currently focuses on FAQ-content wording:
 
 | User says | Copilot clarifies | i18n key |
 |-----------|-------------------|----------|
-| "background" | "Do you mean the **Stage** (outside the widget) or the **Pod** (the widget surface)?" | `coreui.stage`, `coreui.pod` |
-| "padding" | "Do you mean **Pod padding** or **item card padding**?" | `coreui.pod`, `{widget}.item.singular` |
-| "color" | "Which color? **Background**, **text**, or **accent**?" | `coreui.background`, `coreui.text`, `coreui.accent` |
+| "question" | "Do you want to rewrite existing questions, or generate new FAQs from your website?" | `faq.item.singular`, `faq.item.plural` |
+| "answer" | "Should I rewrite the answer tone, or replace it with website-specific content?" | `faq.item.singular` |
 
 ### 7.2 Widget-specific vocabulary ({widgetName}.*)
 
@@ -324,27 +319,23 @@ Each widget defines its own terminology in the i18n catalog:
 | Widget | `{widget}.item.singular` | `{widget}.item.plural` |
 |--------|--------------------------|------------------------|
 | FAQ | "Question" | "Questions" |
-| Logo Showcase | "Logo" | "Logos" |
-| Testimonials | "Testimonial" | "Testimonials" |
-| Pricing Table | "Plan" | "Plans" |
 
 Copilot uses these keys for:
 - Greeting messages: "I see you have 3 **Questions**."
-- Clarification prompts: "Do you mean the **Question card** background?"
-- Action confirmations: "I've added a new **Logo**."
+- Clarification prompts: "Do you want me to rewrite this **Question** or its answer?"
+- Action confirmations: "I've added a new **Question**."
 
 ### 7.3 Panel-aware clarification
 
-Copilot understands the four-panel structure (Content, Layout, Appearance, Typography) and uses it for disambiguation:
+For SDR runtime, supported edits are FAQ content rewrites/personalization only. Non-supported requests (layout/appearance/typography/other widget types) return seller guidance + signup CTA.
 
-| User says | Copilot understands | Panel |
-|-----------|---------------------|-------|
-| "add a question" | Content (items array) | Content |
-| "change spacing" | Layout (gaps, padding) | Layout |
-| "make it darker" | Appearance (colors, fills) | Appearance |
-| "bigger text" | Typography (font size) | Typography |
+| User says | SDR handling |
+|-----------|--------------|
+| "rewrite these questions" | Supported (FAQ content rewrite) |
+| "use my website to generate FAQs" | Supported (single-page read + FAQ personalization) |
+| "change spacing/colors/typography" | Not supported in SDR policy pack (seller guidance + CTA) |
 
-When ambiguous, Copilot asks: "Do you mean the **layout spacing** (gaps between items) or the **item padding** (space inside each card)?"
+When ambiguous within supported FAQ content scope, Copilot asks focused clarification questions.
 
 ---
 
@@ -353,9 +344,9 @@ When ambiguous, Copilot asks: "Do you mean the **layout spacing** (gaps between 
 URL read is the **primary way users personalize content**. When a user shares their site URL, Copilot:
 
 1. **Fetches the page** (single page, no crawling)
-2. **Preprocesses** (strip scripts/styles/nav, extract main content)
-3. **Summarizes** (cheap model: business type, product, audience — ~1-2K tokens)
-4. **Generates content** (quality model: FAQs, testimonials, etc. based on summary)
+2. **Extracts plain text** from HTML (bounded size, scripts/styles stripped)
+3. **Uses that source text directly** in the FAQ rewrite/personalization prompt
+4. **Generates FAQ-only content ops** (or asks for clarification)
 
 **Preprocessing is mandatory** — never send raw HTML to LLM.
 
@@ -363,13 +354,8 @@ URL read is the **primary way users personalize content**. When a user shares th
 - Only one page per request (no crawling, no following links)
 - Protocol: `http`/`https` only
 - Blocks localhost, `.local`, and direct IPs (SSRF hard-stop)
-- Max response size: 500KB (larger pages are truncated)
+- Max response size: 750KB (larger pages are truncated)
 - If page is an error page (Cloudflare 5xx HTML), ask for another URL
-
-**Caching**:
-- Site analysis results are cached in D1 with 7-day TTL
-- Same site URL from different users = cache hit, no re-analysis
-- Reduces token cost for popular/repeated sites
 
 **Fallback if URL fails**:
 > "I couldn't read that page. Can you tell me what your business does instead? I'll create content based on your description."

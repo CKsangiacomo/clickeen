@@ -117,11 +117,11 @@ This is not “manual editing of locales” — it’s the expected artifact reg
 - Paris stores overlays in Supabase (`widget_instance_overlays`, layer + layer_key).
 - Paris rebases user overrides onto the new snapshot fingerprint (drops removed paths, keeps valid overrides).
 - Paris marks `l10n_publish_state` as dirty and enqueues publish jobs.
-- Published base saves trigger render snapshots in two phases: EN is enqueued first (blocking for publish control-plane success), then non-EN locales are fanned out asynchronously.
+- Published base saves enqueue render snapshot regeneration asynchronously. Publish persistence does not block on EN pointer readiness; convergence is observed via publish-status.
 - Tokyo-worker materializes overlays into Tokyo/R2 using deterministic paths (no global manifest) and writes `index.json` for locale selection.
 - Venice public snapshot serving is strict and revision-coherent:
   - **fresh/current revision:** locale artifact serves directly
-  - **stale/missing locale artifact:** fallback is EN from the same revision only
+  - **missing locale artifact:** locale is unavailable (no serve-time EN fallback)
 
 **Widget allowlist (authoritative)**
 
@@ -188,9 +188,9 @@ There is exactly **one** instance row per curated embed in Michael. Locale selec
 
 1. Prague embeds Venice with canonical `publicId`:
    - `/e/wgt_curated_{...}?locale=...`
-2. Venice loads the base instance config from Paris/Michael.
-3. Venice applies Tokyo layered overlays for the request locale (locale layer + user overrides when present).
-4. Venice bootstraps `window.CK_WIDGET.state` with the localized config.
+2. Venice serves the published snapshot for the requested locale from the current revision.
+3. If locale artifact is missing in that revision, response is unavailable (no serve-time EN fallback).
+4. Dynamic base-config + overlay composition is an internal bypass/debug path, not the public default path.
 
 **Strict rule:** `wgt_curated_*.<locale>` URLs are invalid and must 404 (no legacy support).
 
@@ -309,16 +309,19 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
    - Local dev (wrangler local R2): `node scripts/prague-sync.mjs --publish --local`
 6. Prague reads page JSON base copy + Tokyo overlays from `tokyo/l10n/prague/**` (repo output) and fetches them at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/...` (cache-busted; token optional in local dev; `<build-token>` resolves to `CF_PAGES_COMMIT_SHA` unless `PUBLIC_PRAGUE_BUILD_ID` is set).
 
-### 1) Enforce locale-free curated instances in Michael
+### 1) Enforce locale-free curated/main IDs in Michael (current migration set)
 
-Canonical migration:
+Canonical migrations:
 
-- `supabase/migrations/20260116090000__public_id_prefixes.sql`
+- `supabase/migrations/20260116090000__public_id_prefixes.sql` (historical rename to canonical prefixes)
+- `supabase/migrations/20260211143000__curated_ids_strict_and_faq_renames.sql` (current strict constraints for instance/curated/overlay tables)
+- `supabase/migrations/20260201090000__drop_widget_instance_locales.sql` (legacy locales table removed)
 
 Effect:
 
-- Renames known curated/main instances to the new prefixes and enforces locale-free IDs.
-- Re-adds the DB constraint forbidding locale suffixes
+- Enforces locale-free curated/main/user identity patterns on active instance tables.
+- Keeps website creative IDs (`wgt_web_*`) as dedicated web-content identity, not locale-fanout IDs.
+- Removes legacy `widget_instance_locales` table from active schema.
 
 Apply:
 
@@ -345,7 +348,8 @@ User overrides (interactive):
 
 ### 3) Consume overlays
 
-- Venice applies overlays at runtime for `/e/:publicId` and `/r/:publicId` based on the request locale.
+- Public `/e/:publicId` and `/r/:publicId` are snapshot-first and revision-coherent; they do not dynamically heal missing locale artifacts.
+- Dynamic overlay composition is internal bypass behavior only (non-public).
 - Prague embeds the canonical locale-free `publicId` and passes locale via query param to Venice.
 
 ## User-owned localization (current)

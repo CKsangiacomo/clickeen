@@ -1,7 +1,7 @@
 # SEO + GEO Platform Architecture (Iframe++ SEO/GEO)
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
-Last updated: 2026-02-07
+Last updated: 2026-02-26
 
 This document defines the **shipped** SEO/GEO model and contracts across:
 - **Tokyo** widget definitions (state shape + limits + l10n allowlists)
@@ -119,13 +119,12 @@ Source-of-truth implementation:
 - Loaders **only inject** what Venice returns.
 - Prague/Bob must not implement per-widget schema logic.
 
-### Current widget support (as of 2026-02-07)
-- `faq`
-  - `schemaJsonLd`: `FAQPage` (questions/answers)
-  - `excerptHtml`: Q/A excerpt list (bounded)
-- `countdown`
-  - `schemaJsonLd`: not shipped yet
-  - `excerptHtml`: short excerpt (bounded; headline + timer meta)
+### Platform contract (widget-agnostic)
+- This capability doc does not define widget-specific schema/excerpt payloads.
+- Venice dispatches widget handlers through `venice/lib/schema/index.ts`.
+- If a widget has no registered schema handler, `schemaJsonLd` must be empty.
+- If a widget has no registered excerpt handler, `excerptHtml` must be empty.
+- Widget-specific SEO/GEO details belong in the widget docs/PRDs, not this platform capability doc.
 
 ### Gating rules (shipped)
 - `state.seoGeo.enabled !== true` → both `schemaJsonLd` and `excerptHtml` must be empty strings.
@@ -136,10 +135,10 @@ Source-of-truth implementation:
 ## Localization contract (SEO/GEO must be locale-correct)
 
 - Host embeds can pass locale explicitly (`data-locale="<token>"`). If omitted, the loader falls back to `navigator.language`.
-- Venice applies **best-available** Tokyo instance l10n overlays to the instance config before generating schema/excerpt:
-  - overlays are **set-only ops**
-  - locale is never encoded into `publicId`
-  - Venice exposes `X-Ck-L10n-Requested-Locale`, `X-Ck-L10n-Resolved-Locale`, `X-Ck-L10n-Effective-Locale`, `X-Ck-L10n-Status`
+- Public embed render is snapshot-first and revision-coherent (locale artifacts must exist in the current published revision).
+- If the requested locale artifact is missing in the current revision, render/meta is unavailable (no serve-time locale healing).
+- Locale is never encoded into `publicId`.
+- Venice exposes `X-Ck-L10n-Requested-Locale`, `X-Ck-L10n-Resolved-Locale`, `X-Ck-L10n-Effective-Locale`, `X-Ck-L10n-Status`.
 - Schema and excerpt are generated from the **effective localized state** and must match:
   - `payload.locale` (effective), and
   - `X-Ck-L10n-Effective-Locale` (header truth)

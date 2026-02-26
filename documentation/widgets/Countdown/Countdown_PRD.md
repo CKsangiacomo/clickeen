@@ -14,7 +14,7 @@ Renders a configurable countdown / personal countdown / number counter with opti
 ## Entitlements + limits (v1)
 
 - Tier values live in the global matrix: `config/entitlements.matrix.json`.
-- Widget enforcement lives in `tokyo/widgets/countdown/limits.json` (create this when the widget ships).
+- Widget enforcement lives in `tokyo/widgets/countdown/limits.json`.
 - The PRD lists entitlement keys and how they map to state paths; do not repeat per-tier matrices here.
 
 ### Limits mapping (initial)
@@ -78,7 +78,8 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 - `timer.startingNumber`: Numeric (default 0) for number mode.
 - `timer.countDuration`: Numeric seconds (default 5) for number mode.
 - `timer.headline`: Rich text (bold, italic, link, lists; max 500 chars; default: "Get 50% off before it's too late 🎯").
-- `layout.position`: 'inline' | 'full-width' | 'top-bar' | 'bottom-bar' | 'static-top' (visual cards).
+- `layout.position`: supports `'inline' | 'full-width' | 'top-bar' | 'bottom-bar' | 'static-top'` in runtime validation.
+- Current editor control surface exposes `inline` while preserving runtime compatibility for legacy values.
 - Note: content alignment follows `stage.alignment` (left/center/right). Pod sizing is driven by stage/pod layout controls.
 - Legacy layout fields are ignored by runtime (use Stage/Pod layout controls instead).
 - `appearance.theme`: 'custom' | 'light' | 'dark' | 'gradient' + 10 holiday presets (global themes; selection is staged until "Apply theme" is clicked; Cancel restores prior values. Applying a theme sets Stage/Pod/Item appearance values + typography font family; editing any theme-controlled path resets theme to `custom`).
@@ -150,7 +151,7 @@ ToolDrawer spacing rule (authoring):
   - Headline: Rich text editor (bold, italic, link, lists, code view; max 500 chars).
   - CTA (while running) + After timer ends.
 - **Layout Panel**:
-  - Position: Visual cards for 5 options (inline, full-width, top-bar, bottom-bar, static-top).
+  - Position: current editor surface shows `inline`; runtime keeps compatibility for `full-width`, `top-bar`, `bottom-bar`, and `static-top`.
   - Stage/Pod: Shared layout controls (pod width/content width, stage alignment, stage canvas sizing, stage/pod padding).
 - **Appearance Panel**:
   - Theme: Dropdown with custom/light/dark/gradient + holiday presets.

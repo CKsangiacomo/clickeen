@@ -9,7 +9,7 @@ Runtime code + deployed Cloudflare config are operational truth; any mismatch he
 Venice serves an embed by combining:
 - **Tokyo widget files** (the widget package/runtime), and
 - **Paris instance config** (the instance state).
-- For **published** instances, Venice can also serve `/e/:publicId` and `/r/:publicId` from **Tokyo render snapshots** (PRD 38) with **no Paris call** on the hot path.
+- For **published** instances (and curated/main IDs), Venice can serve `/e/:publicId` and `/r/:publicId` from **Tokyo render snapshots** (PRD 38) with **no Paris call** on the hot path.
 
 For localized embeds, Venice may apply a locale-specific, Tokyo-hosted overlay to the instance config before bootstrapping `window.CK_WIDGET` (overlay is a pure, set-only ops patch; locale is never part of instance identity).
 
@@ -55,11 +55,11 @@ All third-party embed traffic terminates at Venice:
   - serves an embed-safe document (base URL, sandboxing) and bootstraps `window.CK_WIDGET`
   - applies embed delivery policy (cache headers, tokens/entitlements)
 
-### Published-Only Rule (Hard Contract)
+### Public Availability Rule (Hard Contract)
 
-Venice must **never** serve unpublished instances.
+Venice treats publish status as the public gate for normal widget IDs.
 
-- `GET /e/:publicId` returns `404` when `instance.status !== 'published'`.
+- `GET /e/:publicId` and `GET /r/:publicId` return `404` when `instance.status !== 'published'` **and** `publicId` is not curated/main (`wgt_curated_*` or `wgt_main_*`).
 - Venice must not use any dev-auth bypass (no `PARIS_DEV_JWT` behavior).
 - Dev previews belong in Bob; Prague and third-party embeds must iframe Venice only.
 
@@ -110,7 +110,7 @@ Widgets consume `window.CK_WIDGET.state` for the initial render (legacy). For mu
 **Cache strategy (shipped):**
   - With `?ts=<timestamp>`: `no-store` (explicit cache bust)
   - Published: `no-store` (pointer-coherent snapshot serving)
-  - Unpublished: never served on public embed routes
+  - Unpublished non-curated/main IDs: never served on public embed routes
 
 ### JSON Render Route: `GET /r/:publicId` (shipped)
 

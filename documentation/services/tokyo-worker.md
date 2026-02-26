@@ -6,11 +6,16 @@
 
 ## Interfaces
 - `POST /assets/upload` (auth required; account-owned uploads; writes to R2 + Supabase metadata)
-- `GET /assets/v/:versionKey` (public; immutable account asset version reads)
-- `PUT /assets/:accountId/:assetId` (dev auth; atomic asset content replace)
-- `DELETE /assets/:accountId/:assetId` (dev auth; synchronous delete pipeline + impacted-instance snapshot rebuild)
+- `GET /assets/v/:versionId` (public; immutable account asset version reads)
+- `DELETE /assets/:accountId/:assetId` (dev auth; synchronous hard delete of metadata + blobs)
+- `GET /assets/integrity/:accountId` (dev auth; account mirror integrity snapshot: DB variants vs R2 objects)
+- `GET /assets/integrity/:accountId/:assetId` (dev auth; per-asset identity integrity snapshot)
 - `POST /l10n/publish` (internal; publish or delete a layer overlay; body: `{ publicId, layer, layerKey, action? }`)
+- `POST /l10n/instances/:publicId/index` (dev auth; write layer index)
+- `DELETE /l10n/instances/:publicId/index` (dev auth; remove layer index)
+- `POST /l10n/instances/:publicId/bases/:baseFingerprint` (dev auth; write base snapshot metadata)
 - `POST /l10n/instances/:publicId/:layer/:layerKey` (dev auth; direct overlay write)
+- `DELETE /l10n/instances/:publicId/:layer/:layerKey` (dev auth; direct overlay delete)
 - `GET /l10n/**` (public; deterministic overlay paths; immutable by fingerprint, except `index.json`)
 - `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague; token is ignored for storage keys)
 - `GET /renders/instances/:publicId/published.json` (public; no-store published pointer with active revision id)
@@ -26,14 +31,15 @@
 
 Asset-domain note:
 - Tokyo-worker persists canonical ownership/file metadata in `account_assets` + `account_asset_variants`.
-- Instance/path usage mapping is maintained by Paris in `account_asset_usage` as a best-effort sync during instance config writes.
-- Asset delete pipeline reads `account_asset_usage`, deletes metadata + blobs synchronously, and rebuilds render snapshots for impacted `publicId`s in the same request.
-- Asset delete pipeline performs synchronous Cloudflare purge-by-URL for affected `/assets/v/**` URLs and records instance render-health transitions (`degraded`/`error`) in `instance_render_health`.
+- Instance/path usage mapping is maintained by Paris in `account_asset_usage` during instance config writes.
+- Asset delete reads `account_asset_usage` for in-use confirmation, then hard-deletes blobs + metadata in the same request path.
+- Delete does not trigger snapshot rebuilds or background repair flows.
 - Upload filename normalization enforces non-redundant variant/file naming.
 - Upload response includes deterministic metadata (`accountId`, `assetId`, `variant`, `key`, `url`, `workspaceId/publicId/widgetType` trace fields).
 - `workspace_id/public_id/widget_type` on `account_assets` are provenance fields only; ownership remains account-bound.
 - Upload auth contract:
-  - Product path: Supabase session bearer + required `x-workspace-id`; Tokyo-worker enforces workspace membership (`editor+`) and workspace/account binding.
+  - Product path: Supabase session bearer + required `x-account-id`.
+  - `x-workspace-id` is optional: when present, Tokyo-worker enforces workspace membership (`editor+`) and workspace/account binding; when absent, Tokyo-worker enforces account membership (`editor+`).
   - Internal/dev path: `TOKYO_DEV_JWT` remains accepted for internal automation endpoints.
 
 ## Deployment
@@ -54,7 +60,6 @@ Asset-domain note:
 ## Local Dev
 - If `TOKYO_L10N_HTTP_BASE` is set, publishes to the Tokyo dev server over HTTP.
 - `TOKYO_DEV_JWT` is required for dev-only endpoints.
-- Asset-delete legal purge path expects `CLOUDFLARE_ZONE_ID` + `CLOUDFLARE_API_TOKEN`; if missing, delete returns explicit partial-failure (`502`) after storage delete.
 
 ## Rules
 - Overlay files are set-only ops with `baseFingerprint` (required).
@@ -83,7 +88,6 @@ Cache semantics:
 Generation:
 - Triggered by Paris on publish/unpublish (via `instance-render-snapshot-{env}` queue).
 - Also triggered by Tokyo-worker after l10n overlay publish; active locale set is resolved from l10n layer index and regenerated as one snapshot job.
-- Also triggered by Tokyo-worker after account-asset delete for impacted instances (resolved via `account_asset_usage`).
 - Queue success marks instance render health `healthy`; queue failures mark `error` (fail-visible operational state).
 - Materialization is done by fetching Venice dynamic endpoints:
   - `/e/:publicId?locale=<locale>`

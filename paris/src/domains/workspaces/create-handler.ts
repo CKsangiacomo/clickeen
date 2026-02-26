@@ -29,9 +29,7 @@ import { loadInstanceByPublicId, loadWidgetByType } from '../instances';
 import { enqueueL10nJobs } from '../l10n';
 import {
   enqueueRenderSnapshot,
-  loadRenderSnapshotState,
   resolveRenderSnapshotLocales,
-  waitForEnSnapshotReady,
 } from './service';
 import {
   DEFAULT_INSTANCE_DISPLAY_NAME,
@@ -454,10 +452,6 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
           ),
         );
       }
-      const baselineSnapshotState = await loadRenderSnapshotState({
-        env,
-        publicId,
-      }).catch(() => null);
       const enqueue = await enqueueRenderSnapshot(env, {
         publicId,
         action: 'upsert',
@@ -470,24 +464,6 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
               kind: 'INTERNAL',
               reasonKey: 'coreui.errors.publish.failed',
               detail: enqueue.error,
-            },
-            503,
-          ),
-        );
-      }
-      const enReady = await waitForEnSnapshotReady({
-        env,
-        publicId,
-        baselinePointerUpdatedAt: baselineSnapshotState?.pointerUpdatedAt ?? null,
-        baselineRevision: baselineSnapshotState?.revision ?? null,
-      });
-      if (!enReady.ok) {
-        return rollbackCreatedAndReturn(
-          ckError(
-            {
-              kind: 'INTERNAL',
-              reasonKey: 'coreui.errors.publish.failed',
-              detail: enReady.error,
             },
             503,
           ),

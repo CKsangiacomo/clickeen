@@ -58,6 +58,8 @@ type RomaBootstrapDomainsResult = {
   bootstrapFanoutMs: number;
 };
 
+const ROMA_USAGE_INSTANCES_PAGE_SIZE = 1000;
+
 function toDomainError(domainKey: RomaBootstrapDomainKey, error: unknown): RomaBootstrapDomainError {
   const detail = error instanceof Error ? error.message : String(error);
   return {
@@ -70,17 +72,25 @@ function toDomainError(domainKey: RomaBootstrapDomainKey, error: unknown): RomaB
 async function loadAccountInstancesForUsage(env: Env, accountWorkspaces: AccountWorkspaceRow[]): Promise<InstanceListRow[]> {
   const workspaceIds = accountWorkspaces.map((workspace) => workspace.id).filter(Boolean);
   if (workspaceIds.length === 0) return [];
-  const instanceParams = new URLSearchParams({
-    select: 'public_id,status,workspace_id',
-    workspace_id: `in.(${workspaceIds.join(',')})`,
-    limit: '5000',
-  });
-  const instanceRes = await supabaseFetch(env, `/rest/v1/widget_instances?${instanceParams.toString()}`, { method: 'GET' });
-  if (!instanceRes.ok) {
-    const details = await readJson(instanceRes);
-    throw new Error(`[ParisWorker] Failed to load account instances for bootstrap (${instanceRes.status}): ${JSON.stringify(details)}`);
+  const out: InstanceListRow[] = [];
+  for (let offset = 0; ; offset += ROMA_USAGE_INSTANCES_PAGE_SIZE) {
+    const instanceParams = new URLSearchParams({
+      select: 'public_id,status,workspace_id',
+      workspace_id: `in.(${workspaceIds.join(',')})`,
+      order: 'public_id.asc',
+      limit: String(ROMA_USAGE_INSTANCES_PAGE_SIZE),
+      offset: String(offset),
+    });
+    const instanceRes = await supabaseFetch(env, `/rest/v1/widget_instances?${instanceParams.toString()}`, { method: 'GET' });
+    if (!instanceRes.ok) {
+      const details = await readJson(instanceRes);
+      throw new Error(`[ParisWorker] Failed to load account instances for bootstrap (${instanceRes.status}): ${JSON.stringify(details)}`);
+    }
+    const rows = ((await instanceRes.json()) as InstanceListRow[]) ?? [];
+    out.push(...rows);
+    if (rows.length < ROMA_USAGE_INSTANCES_PAGE_SIZE) break;
   }
-  return ((await instanceRes.json()) as InstanceListRow[]) ?? [];
+  return out;
 }
 
 async function buildRomaWidgetsDomain(args: {
@@ -145,11 +155,12 @@ async function buildRomaAssetsDomain(args: {
   accountId: string;
   workspaceId: string;
 }): Promise<RomaBootstrapDomainsPayload['assets']> {
-  const assets = await loadAccountAssetsForBootstrap(args.env, args.accountId);
+  const { assets, integrity } = await loadAccountAssetsForBootstrap(args.env, args.accountId);
   return {
     accountId: args.accountId,
     workspaceId: args.workspaceId,
     assets,
+    integrity,
   };
 }
 

@@ -7,6 +7,7 @@
 ## Interfaces
 - Queue consumers for agent jobs (e.g. instance localization).
 - HTTP endpoints for AI outcomes (called by Paris).
+- `POST /v1/l10n/plan` (internal auth; l10n planning snapshot for `{ widgetType, config }` or `{ widgetType, publicId, workspaceId }`)
 
 ## Dependencies
 - Paris (instance data + l10n overlay writes)

@@ -8,6 +8,28 @@
 4. Asset entitlements are enforced in the Roma Assets panel. If user cannot upload due to entitlement, UX routes the user to Assets panel to manage assets.
 5. R2 is a simple mirror of Roma Assets panel for account asset namespace. What Roma Assets shows is exactly what exists in R2 under `assets/versions/{accountId}/`. No hidden artifacts, no ghost files, no deferred cleanup, no system-managed invisible storage.
 
+## Hard-Cut execution (current)
+
+1. Roma-only destructive path:
+   - Bob delete proxy requires `x-clickeen-surface=roma-assets`.
+   - Roma delete route stamps that header.
+   - Paris delete handler rejects non-Roma surface deletes.
+2. Delete behavior:
+   - Delete is pointer+blob delete only.
+   - No snapshot rebuild, no auto-repair, no hidden cleanup pipeline.
+   - No degraded-success delete payload.
+3. Asset inventory:
+   - Bootstrap asset list and usage reads are paginated (no fixed `5000` cap).
+4. Mirror invariant:
+   - Tokyo exposes account mirror integrity check (`db variants` vs `R2 keys`).
+   - Roma assets bootstrap includes integrity snapshot and surfaces mismatch reasons.
+5. Entitlement UX:
+   - Bob entitlement deny routes user to Roma Assets with reason context and visible caps/budgets.
+6. Managed API integrity reasons:
+   - Tokyo exposes per-asset integrity endpoint for managed surfaces.
+   - Managed `GET asset` and `DELETE asset` return explicit `409 INTEGRITY` reason keys when DB metadata and R2 blobs diverge.
+   - Public embed/runtime asset reads remain strict byte-serving (`200` or `404`) with no fallback/healing behavior.
+
 ---
 
 Status: EXECUTED (local + cloud-dev parity green)  

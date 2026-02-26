@@ -32,7 +32,7 @@ Paris in this repo is a **dev-focused Worker** with a deliberately small surface
 - Instance reads/writes use Supabase REST with the service role.
 - Paris requires `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
 - Paris exposes account-canonical asset management APIs backed by `account_assets`, `account_asset_variants`, and `account_asset_usage` ("where used"), with optional workspace projection filters.
-- Paris best-effort syncs `account_asset_usage` rows on instance config create/update/delete (workspace + Roma endpoints); sync errors are logged and do not block writes.
+- Paris synchronizes `account_asset_usage` rows on instance config create/update/delete (workspace + Roma endpoints) as a write-time contract; sync failures fail the request.
 - Roma widgets/templates domain lists (`GET /api/roma/widgets`, `GET /api/roma/templates`) are intentionally lightweight (no instance `config` blobs); write actions like duplicate are explicit commands (`POST /api/roma/widgets/duplicate`).
 - `GET /api/roma/widgets` returns active-workspace user instances plus curated/main starters owned by the workspace account.
 - `GET /api/roma/templates` returns all curated/main starters available to authenticated workspace members.
@@ -49,7 +49,7 @@ If you need the exact shipped behavior, inspect `paris/src/index.ts`.
 **Core base-config editing uses EXACTLY 2 Paris instance calls per open session:**
 
 1. **Load** - `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` once per open (host-performed in Roma/DevStudio message boot, Bob-performed in URL boot) → gets instance snapshot (`config` + `status`)
-2. **Publish** - `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish (from Bob) → saves working copy
+2. **Publish** - `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish (from Bob) → persists working copy and enqueues snapshot/l10n work
 
 `subject` is required on workspace endpoints (`workspace`, `minibob`) to resolve policy profile.
 Membership authz is enforced separately: caller must belong to that workspace, and write routes require at least `editor`.
@@ -75,6 +75,7 @@ Localization is separate and writes overlays via Paris; these do not change the 
 - Paris expects one load `GET` per open and one publish `PUT` per explicit publish.
 - No intermediate saves, no auto-save during editing
 - Database only stores published widgets users actually care about
+- Publish response reflects persistence/enqueue result; snapshot convergence is observed asynchronously via publish-status
 
 See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details.
 
@@ -143,12 +144,12 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 
 ### Account asset endpoints (shipped)
 
-- `GET /api/accounts/:accountId/assets` — Lists non-deleted assets for one account (`includeDeleted=1` optional for internal tooling).
+- `GET /api/accounts/:accountId/assets` — Lists account-owned assets with optional workspace projection filters.
   - `view=all` (default): entire account library.
   - `view=used_in_workspace&workspaceId=:workspaceId`: assets currently used by instances in that workspace.
   - `view=created_in_workspace&workspaceId=:workspaceId`: assets whose provenance `workspace_id` matches that workspace.
 - `GET /api/accounts/:accountId/assets/:assetId` — Returns one account-owned asset with variant metadata (same optional `view/workspaceId` projection rules).
-- `DELETE /api/accounts/:accountId/assets/:assetId` — Soft-deletes one account asset (`deleted_at` set); purge is handled by Tokyo Worker retention endpoint.
+- `DELETE /api/accounts/:accountId/assets/:assetId` — Roma-managed hard delete path. Paris enforces `x-clickeen-surface=roma-assets`, validates integrity, then delegates to Tokyo-worker delete.
 
 Rules:
 - Product ownership boundary for assets is account (`accountId`).
@@ -220,10 +221,10 @@ Curated writes are allowed only in **local** and **cloud-dev**. Production remai
   - Queued/running l10n states that are stale for 10+ minutes may be re-queued on the next published instance update.
   - Paris stores allowlist snapshots in `l10n_base_snapshots`, diffs `changed_paths` + `removed_paths`, and rebases user overrides to the new fingerprint.
   - `baseFingerprint` is required on overlay writes; `baseUpdatedAt` is metadata only.
-  - On published base writes, Paris triggers render snapshots in two phases:
-    - Enqueue EN first (blocking; publish waits for EN snapshot readiness + pointer advance, then returns success).
-    - Enqueue non-EN locales asynchronously (non-blocking fanout).
-  - `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot` follows the same EN-first + async non-EN orchestration.
+  - On published base writes, Paris enqueues render snapshot regeneration for active locales (non-blocking).
+    - Publish/update does not wait for EN pointer advancement.
+    - Convergence/health is observed via `GET .../publish/status`.
+  - `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot` explicitly enqueues snapshot regeneration.
     - Optional `waitForEn=1|true|en-ready` query waits for EN readiness and returns `200` with `snapshotState=ready`; default remains `202` queued.
   - This keeps non-translatable style changes (for example typography/colors/layout) in parity across locales even when l10n diff is empty.
   - Overlay writes enqueue `L10N_PUBLISH_QUEUE` (layer + layerKey).

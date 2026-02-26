@@ -1,6 +1,7 @@
 STATUS: REFERENCE — MUST MATCH RUNTIME
 This document is the operational spec for the San Francisco worker: bindings, deploy shape, endpoints, limits, and runbooks.
 Runtime code + deployed Cloudflare bindings are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
+Last synced to repository runtime: February 26, 2026.
 
 # San Francisco — Infrastructure & Operations
 
@@ -34,6 +35,8 @@ Bindings (Cloudflare primitives):
 Worker vars/secrets:
 - `ENVIRONMENT`: loose environment label used in logs and the `/healthz` response (`dev`, `prod`, etc)
 - `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret with Paris (grant verification + outcome signatures)
+- `PARIS_DEV_JWT` (secret): internal bearer token for San Francisco internal endpoints (`/v1/l10n*`, `/v1/personalization/*`) and Paris writeback calls
+- `PARIS_BASE_URL` (var): required for onboarding persistence path (San Francisco -> Paris workspace profile write)
 - `DEEPSEEK_API_KEY` (secret, optional): required only when an execution reaches the model provider
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
@@ -47,9 +50,9 @@ Worker vars/secrets:
 - `AMAZON_BEDROCK_ACCESS_KEY_ID` / `AMAZON_BEDROCK_SECRET_ACCESS_KEY` / `AMAZON_BEDROCK_REGION` (secret/var, optional): Bedrock fallback path for Amazon provider
 
 Provider split (Tiered Execution):
-- **Free / Minibob**: `deepseek-chat` default (agent-scoped alternatives may include Nova Lite)
+- **Free / Minibob**: profile default `deepseek-chat`; Minibob public grant mint currently defaults request selection to `amazon -> nova-2-lite-v1`
 - **Paid Standard**: mixed provider access (OpenAI/Anthropic/DeepSeek/Groq/Nova) with policy + agent constraints
-- **Paid Premium**: higher-capability defaults (OpenAI `gpt-4o`) with policy + agent constraints
+- **Paid Premium**: higher-capability defaults (OpenAI `gpt-5.2`) with policy + agent constraints
 - **Curated/Internal**: OpenAI curated set (`gpt-5.2` default)
 - **Prague strings L10n**: OpenAI via policy router
 
@@ -83,6 +86,43 @@ Auth:
 
 Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
+
+### `POST /v1/personalization/preview`
+Purpose: enqueue acquisition preview personalization job.
+
+Auth:
+- `Authorization: Bearer ${PARIS_DEV_JWT}`
+
+### `GET /v1/personalization/preview/:jobId`
+Purpose: poll preview personalization job status.
+
+Auth:
+- `Authorization: Bearer ${PARIS_DEV_JWT}`
+
+### `POST /v1/personalization/onboarding`
+Purpose: enqueue workspace onboarding personalization job.
+
+Auth:
+- `Authorization: Bearer ${PARIS_DEV_JWT}`
+
+### `GET /v1/personalization/onboarding/:jobId`
+Purpose: poll onboarding personalization job status.
+
+Auth:
+- `Authorization: Bearer ${PARIS_DEV_JWT}`
+
+### `POST /v1/l10n/plan`
+Purpose: generate localization plan snapshot for a widget instance or config payload.
+
+Auth:
+- `Authorization: Bearer ${PARIS_DEV_JWT}`
+
+### `POST /v1/l10n` (local only)
+Purpose: queue instance localization jobs.
+
+Auth:
+- `Authorization: Bearer ${PARIS_DEV_JWT}`
+- Available only when `ENVIRONMENT` is `local`
 
 ### `POST /v1/l10n/translate` (local + cloud-dev)
 Purpose: translate Prague system-owned base content (prague-l10n pipeline).
@@ -146,6 +186,49 @@ Agent executions are constrained by the grant:
 - `budgets.maxRequests` (optional, for session windows)
 
 Paris is expected to cap these budgets server-side so the client can’t request arbitrarily large execution windows.
+
+Canonical runtime budget source:
+- `tooling/ck-policy/src/ai.ts` (`budgetsByProfile` per agent)
+- `paris/src/domains/ai/index.ts` (grant clamp caps + Minibob mint overrides)
+
+Budget matrix (`maxTokens / timeoutMs / maxRequests`):
+
+| Agent | free_low | paid_standard | paid_premium | curated_premium |
+|---|---|---|---|---|
+| `sdr.widget.copilot.v1` | `650 / 45s / 2` | `900 / 45s / 3` | `1400 / 60s / 3` | `1600 / 60s / 3` |
+| `cs.widget.copilot.v1` | `650 / 45s / 2` | `900 / 45s / 3` | `1400 / 60s / 3` | `1600 / 60s / 3` |
+| `sdr.copilot` | `280 / 15s / 1` | `600 / 25s / 2` | `900 / 35s / 2` | `1200 / 45s / 2` |
+| `l10n.instance.v1` | `900 / 20s / 1` | `1200 / 30s / 1` | `1800 / 45s / 1` | `2200 / 60s / 1` |
+| `l10n.prague.strings.v1` | `1500 / 60s / 1` | `1500 / 60s / 1` | `2000 / 60s / 1` | `2200 / 60s / 1` |
+| `agent.personalization.preview.v1` | `400 / 25s / 1` | `500 / 30s / 1` | `650 / 30s / 1` | `800 / 30s / 1` |
+| `agent.personalization.onboarding.v1` | `900 / 30s / 2` | `1200 / 45s / 2` | `1800 / 60s / 3` | `2200 / 60s / 3` |
+
+Minibob public mint override (Paris endpoint `/api/ai/minibob/grant`):
+- `local` stage: `650 / 45s / 2`
+- non-local stages (including cloud-dev): `420 / 12s / 2`
+
+### Profile -> model policy (canonical)
+
+`free_low`:
+- `deepseek`: default `deepseek-chat` (allowed: `deepseek-chat`)
+- `amazon`: default `nova-2-lite-v1` (allowed: `nova-2-lite-v1`)
+
+`paid_standard`:
+- `openai`: default `gpt-5-mini` (allowed: `gpt-5-mini`, `gpt-4o-mini`)
+- `deepseek`: default `deepseek-chat` (allowed: `deepseek-chat`, `deepseek-reasoner`)
+- `anthropic`: default `claude-3-5-sonnet-20240620` (allowed: same)
+- `groq`: default `llama-3.3-70b-versatile` (allowed: same)
+- `amazon`: default `amazon.nova-pro-v1:0` (allowed: `amazon.nova-lite-v1:0`, `amazon.nova-pro-v1:0`)
+
+`paid_premium`:
+- `openai`: default `gpt-5.2` (allowed: `gpt-5-mini`, `gpt-5`, `gpt-5.2`, `gpt-4o`)
+- `deepseek`: default `deepseek-reasoner` (allowed: `deepseek-chat`, `deepseek-reasoner`)
+- `anthropic`: default `claude-3-5-sonnet-20240620` (allowed: same)
+- `groq`: default `llama-3.3-70b-versatile` (allowed: same)
+- `amazon`: default `amazon.nova-pro-v1:0` (allowed: `amazon.nova-micro-v1:0`, `amazon.nova-lite-v1:0`, `amazon.nova-pro-v1:0`)
+
+`curated_premium`:
+- `openai`: default `gpt-5.2` (allowed: `gpt-5-mini`, `gpt-5`, `gpt-5.2`, `gpt-4o`)
 
 ## 6) Common failure modes (runbook)
 

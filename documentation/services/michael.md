@@ -74,14 +74,13 @@ Core columns:
 - `original_filename`, `normalized_filename`, `content_type` (text)
 - `size_bytes` (bigint)
 - `sha256` (text, nullable)
-- `deleted_at` (timestamptz, nullable) — soft-delete marker
 - `created_at`, `updated_at` (timestamptz)
 
 Notes:
 - `workspace_id/public_id/widget_type` are nullable provenance columns (upload/source context), not ownership/read gates.
 - New usage truth lives in `account_asset_usage` (below).
 - Paris account asset projections map to this schema as:
-  - `view=all`: all active rows by `account_id`
+  - `view=all`: all rows by `account_id`
   - `view=created_in_workspace`: filter by provenance `workspace_id`
   - `view=used_in_workspace`: filter by `account_asset_usage.public_id` set for instances in that workspace
 

@@ -243,67 +243,6 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function extractPrimaryUrl(raw: string): string | null {
-  const value = String(raw || '').trim();
-  if (!value) return null;
-  if (/^(?:https?:\/\/|\/)/i.test(value)) return value;
-  const match = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-  if (match && match[2]) return match[2];
-  return null;
-}
-
-function replacePrimaryUrl(raw: string, nextUrl: string): string {
-  const value = String(raw || '');
-  const match = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-  if (match && match[2]) return value.replace(match[2], nextUrl);
-  return nextUrl;
-}
-
-function isTokyoAssetPath(pathname: string): boolean {
-  return (
-    pathname.startsWith('/assets/v/') ||
-    pathname.startsWith('/widgets/') ||
-    pathname.startsWith('/themes/') ||
-    pathname.startsWith('/dieter/')
-  );
-}
-
-function canonicalizeTokyoAssetUrlsInConfig(config: Record<string, unknown>): Record<string, unknown> {
-  const visit = (node: unknown): string | void => {
-    if (typeof node === 'string') {
-      const primaryUrl = extractPrimaryUrl(node);
-      if (!primaryUrl || primaryUrl.startsWith('/')) return;
-      if (!/^https?:\/\//i.test(primaryUrl)) return;
-
-      try {
-        const parsed = new URL(primaryUrl);
-        if (!isTokyoAssetPath(parsed.pathname)) return;
-        const relative = `${parsed.pathname}${parsed.search}${parsed.hash}`;
-        return replacePrimaryUrl(node, relative);
-      } catch {
-        return;
-      }
-    }
-
-    if (!node || typeof node !== 'object') return;
-    if (Array.isArray(node)) {
-      for (let i = 0; i < node.length; i += 1) {
-        const replaced = visit(node[i]);
-        if (typeof replaced === 'string') node[i] = replaced;
-      }
-      return;
-    }
-
-    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
-      const replaced = visit(value);
-      if (typeof replaced === 'string') (node as Record<string, unknown>)[key] = replaced;
-    }
-  };
-
-  visit(config);
-  return config;
-}
-
 type DevstudioExportInstanceDataMessage = {
   type: 'devstudio:export-instance-data';
   requestId: string;
@@ -1992,7 +1931,6 @@ function useWidgetSessionInternal() {
         throw new Error('[useWidgetSession] Missing instanceData in open-editor payload');
       }
       resolved = incoming == null ? structuredClone(defaults) : structuredClone(incoming);
-      resolved = canonicalizeTokyoAssetUrlsInConfig(resolved);
       if (!message.policy) nextPolicy = resolveDevPolicy(nextSubjectMode);
 
       if (!nextLabel) {

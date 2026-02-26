@@ -3,7 +3,7 @@
 STATUS: DRAFT
 
 ## 1) High level description of what the widget does
-LogoShowcase renders a **header** + one or more **strips** of logos (each strip contains an ordered list of logos, optionally clickable) in one of four **Types** (Grid / Slider / Carousel / Ticker). Users edit the widget in Bob; the widget runtime applies the saved state deterministically on `{ type: 'ck:state-update' }`.
+LogoShowcase renders a **header** + one or more **strips** of logos (each strip contains an ordered list of logos, optionally clickable) in one of two **Types** (Grid / Carousel). Users edit the widget in Bob; the widget runtime applies the saved state deterministically on `{ type: 'ck:state-update' }`.
 
 ## Subject Policy — Entitlements (v1)
 
@@ -27,7 +27,7 @@ These are required patterns to keep editor UX deterministic and prevent dead con
   - Strip item container (generated): `[data-role="strip"]`
   - Logos list per strip: `[data-role="logos"]`
   - Logo tile (generated): `[data-role="logo"]`
-  - Logo visual surface (tile inner): `[data-role="logo-visual"]` (receives `logoFill` as background)
+  - Logo visual surface (tile inner): `[data-role="logo-visual"]` (runtime image source resolves from `asset.versionId`; `logoFill` is editor field state only)
   - Optional caption: `[data-role="logo-caption"]`
 - **Editor arrays pattern**:
   - Use `object-manager` + nested `repeater` templates for `strips[] → strips[i].logos[]` so editing/reorder is standard and stable.
@@ -157,9 +157,9 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: which logos are rendered inside that strip, the selected image (in-memory while editing), link behavior, and hover caption text
   - **how**:
     - runtime renders children under the strip’s `[data-role="logos"]`
-- `strips[i].logos[j].logoFill` → CSS background for the logo tile (string value produced by `dropdown-upload`)
-      - Editor-time value is an in-memory CSS fill string (e.g. `url("data:image/png;base64,...") center center / cover no-repeat`)
-    - `strips[i].logos[j].asset` → file metadata for editor display (object with `name`, optional `mime`, optional `source`)
+- `strips[i].logos[j].asset.versionId` → canonical immutable logo asset ref used by runtime (`/assets/v/{encodeURIComponent(versionId)}`)
+- `strips[i].logos[j].logoFill` → editor field state/preview value only (not runtime image authority)
+    - `strips[i].logos[j].asset` → file metadata for editor display (object with `name`, optional `mime`, optional `source`, optional `versionId`)
     - `strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)
 - `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s)
 - `strips[i].logos[j].targetBlank=true` → set `target="_blank"`
@@ -172,9 +172,9 @@ Note: Links + media metadata are baseline product behavior (not tier-gated). Inv
 
   - **Editor control**:
     - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-upload` (image accept)
-      - value stored is a **CSS fill string** (dropdown-upload legacy format, not a dropdown-fill object)
+      - value stored is editor field state; canonical persistence uses `strips[i].logos[j].asset.versionId`
     - the popover template stays minimal (caption/name only; see Section 4)
-      - selecting an image while editing is in-memory only (Data URL fill)
+      - selecting an image updates asset metadata immediately through upload (no replace-in-place flow)
 
 - **Header (shared primitive)**: `header.*` + `cta.*`
   - **changes**: title/subtitle/CTA copy + placement/alignment + CTA styling
@@ -213,7 +213,7 @@ Note: Links + media metadata are baseline product behavior (not tier-gated). Inv
   - **how**: Bob auto-generates Stage/Pod Layout panel; runtime applies via `CKStagePod.applyStagePod(...)`
   - **important**: Pod width mode materially changes how Types present:
     - `pod.widthMode='fixed'` creates a centered “card/module” feel (good for Grid).
-    - `pod.widthMode='full'` makes the widget span the available width (good for Slider/Carousel/Ticker).
+    - `pod.widthMode='full'` makes the widget span the available width (good for Carousel, especially continuous mode).
 
 ### Panel: Appearance (common)
 - **Logo look**: `appearance.logoLook`
@@ -270,8 +270,8 @@ Below the Type picker, always show:
 #### Logo item editor (required, global pattern)
 Each logo item must use `dropdown-upload` for the logo image, and keep the per-item UI minimal.
 - **Logo image**: `dropdown-upload` bound to `strips[i].logos[j].logoFill`
-  - stored value is a CSS fill string (`url("...") center center / cover no-repeat` or `transparent`)
-  - while editing, selected files are represented as Data URLs in state (in-memory)
+  - runtime image source is `strips[i].logos[j].asset.versionId`
+  - `logoFill` remains editor field state only
   - `template="..."` includes (allowed in all subjects):
     - `textfield` for `strips[i].logos[j].caption`
     - (optional) `textfield` for `strips[i].logos[j].name`
@@ -364,13 +364,11 @@ Defaults are the authoritative state shape. They must be complete (no missing pa
 If any item below is undecided, the implementer must stop and ask; do not guess.
 We intentionally ship **no custom tint** in v1. `appearance.logoLook` is limited to `original | grayscale` (no `customColor` mode).
 
-### Asset handling (scope for this PRD)
-This PRD is for **editor-time widget UX** (core widget files + Bob preview). It is not blocked on asset persistence.
-- **Editor-time (Bob)**: `dropdown-upload` stores an in-memory CSS fill string (typically a Data URL fill) so preview can render immediately.
-- **Persistence/publish**: handled in a later phase. When persistence ships, we will store stable asset references (URL/fileKey) instead of Data URLs.
-
-### `dropdown-upload` contract (editor-time)
-In the editor loop, `dropdown-upload` must not persist assets. It stores an in-memory value for preview, and persistence is handled later on Save/Publish.
+### Asset handling (implemented contract)
+- **Upload path**: `dropdown-upload` uploads immediately through Bob -> Tokyo-worker (`POST /assets/upload`).
+- **Persistence**: canonical asset identity is stored as `strips[i].logos[j].asset.versionId`.
+- **Runtime**: widget resolves logo bytes from `asset.versionId` only. If ref is missing/deleted, logo is missing (no fallback/healing).
+- **No replace flow**: changing a logo file creates a new immutable asset ref.
 
 ### Global defaults (apply to all types)
 The full defaults object (used verbatim as `spec.json` → `defaults`):
