@@ -294,7 +294,7 @@ var Dieter = (() => {
   // components/dropdown-upload/dropdown-upload.ts
   var states = /* @__PURE__ */ new Map();
   var UUID_FILENAME_STEM_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  var ASSET_UNAVAILABLE_MESSAGE = "Asset URL is unavailable. Replace file to restore preview.";
+  var ASSET_UNAVAILABLE_MESSAGE = "Asset URL is unavailable. Upload a new file to restore preview.";
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-upload",
     triggerSelector: ".diet-dropdown-upload__control",

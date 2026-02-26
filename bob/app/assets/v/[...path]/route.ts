@@ -21,14 +21,40 @@ function copyUpstreamHeaders(res: Response): Headers {
   return headers;
 }
 
-function buildTokyoUrl(request: NextRequest, prefix: string, pathSegments: string[]): string {
-  if (pathSegments.some((seg) => seg === '..' || seg === '.')) {
+function resolveOpaqueAssetSuffix(request: NextRequest): string {
+  const marker = '/assets/v/';
+  const pathname = request.nextUrl.pathname || '';
+  const markerIndex = pathname.indexOf(marker);
+  if (markerIndex < 0) {
     throw new Error('Invalid path');
   }
 
+  const suffix = pathname.slice(markerIndex + marker.length).replace(/^\/+/, '');
+  if (!suffix) {
+    throw new Error('Invalid path');
+  }
+
+  const segments = suffix.split('/');
+  for (const segment of segments) {
+    if (!segment) continue;
+    let decoded = '';
+    try {
+      decoded = decodeURIComponent(segment);
+    } catch {
+      throw new Error('Invalid path');
+    }
+    if (decoded === '.' || decoded === '..') {
+      throw new Error('Invalid path');
+    }
+  }
+
+  return suffix;
+}
+
+function buildTokyoUrl(request: NextRequest, prefix: string): string {
   const base = resolveTokyoBaseUrl().replace(/\/+$/, '');
-  const joined = pathSegments.map((seg) => encodeURIComponent(seg)).join('/');
-  const url = `${base}/${prefix}/${joined}`;
+  const suffix = resolveOpaqueAssetSuffix(request);
+  const url = `${base}/${prefix}/${suffix}`;
   const qs = request.nextUrl.search;
   return qs ? `${url}${qs}` : url;
 }
@@ -43,12 +69,15 @@ function buildConditionalHeaders(request: NextRequest): Headers {
   return headers;
 }
 
-async function proxy(request: NextRequest, prefix: string, pathSegments: string[], method: 'GET' | 'HEAD') {
+async function proxy(request: NextRequest, prefix: string, method: 'GET' | 'HEAD') {
   let url: string;
   try {
-    url = buildTokyoUrl(request, prefix, pathSegments);
+    url = buildTokyoUrl(request, prefix);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    if (message === 'Invalid path') {
+      return NextResponse.json({ error: 'INVALID_PATH' }, { status: 400 });
+    }
     return NextResponse.json({ error: 'MISCONFIGURED', message }, { status: 500 });
   }
 
@@ -72,13 +101,11 @@ async function proxy(request: NextRequest, prefix: string, pathSegments: string[
 }
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ path?: string[] }> }) {
-  const params = await ctx.params;
-  const segments = Array.isArray(params.path) ? params.path : [];
-  return proxy(request, 'assets/v', segments, 'GET');
+  await ctx.params;
+  return proxy(request, 'assets/v', 'GET');
 }
 
 export async function HEAD(request: NextRequest, ctx: { params: Promise<{ path?: string[] }> }) {
-  const params = await ctx.params;
-  const segments = Array.isArray(params.path) ? params.path : [];
-  return proxy(request, 'assets/v', segments, 'HEAD');
+  await ctx.params;
+  return proxy(request, 'assets/v', 'HEAD');
 }

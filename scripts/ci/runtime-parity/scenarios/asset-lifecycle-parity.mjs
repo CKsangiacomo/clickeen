@@ -1,8 +1,28 @@
-import crypto from 'node:crypto';
 import { authHeaders, fetchEnvelope } from '../http.mjs';
 import { makeCheck, parseReasonKey, randomAssetBytes, readString, scenarioPassed } from '../utils.mjs';
 
-async function runAssetFlow({ hostLabel, hostBaseUrl, bearer, accountId, workspaceId }) {
+function resolveCanonicalAssetPath(rawUrl) {
+  const value = String(rawUrl || '').trim();
+  if (!value) return '';
+  if (value.startsWith('/')) return value;
+  try {
+    const parsed = new URL(value);
+    return parsed.pathname || '';
+  } catch {
+    return '';
+  }
+}
+
+async function runAssetFlow({
+  hostLabel,
+  hostBaseUrl,
+  bearer,
+  accountId,
+  workspaceId,
+  tokyoBaseUrl,
+  bobBaseUrl,
+  veniceBaseUrl,
+}) {
   const uploadHeaders = authHeaders(bearer, {
     'content-type': 'application/octet-stream',
     'x-filename': `runtime-parity-${hostLabel}-upload.bin`,
@@ -19,29 +39,15 @@ async function runAssetFlow({ hostLabel, hostBaseUrl, bearer, accountId, workspa
 
   const uploadedAssetId = readString(upload.json?.assetId);
   const resolvedAccountId = readString(upload.json?.accountId) || accountId;
-
-  const replaceHeaders = authHeaders(bearer, {
-    'content-type': 'application/octet-stream',
-    'x-filename': `runtime-parity-${hostLabel}-replace.bin`,
-    'x-variant': 'original',
-    'x-account-id': resolvedAccountId,
-    'x-workspace-id': workspaceId,
-    'x-source': 'api',
-    'idempotency-key': crypto.randomUUID(),
-  });
-
-  const replace = uploadedAssetId
-    ? await fetchEnvelope(
-        `${hostBaseUrl}/api/assets/${encodeURIComponent(resolvedAccountId)}/${encodeURIComponent(
-          uploadedAssetId,
-        )}/content?_t=${Date.now()}`,
-        {
-          method: 'PUT',
-          headers: replaceHeaders,
-          body: randomAssetBytes(`${hostLabel}-replace`),
-        },
-      )
-    : null;
+  const uploadedUrl = readString(upload.json?.url);
+  const canonicalAssetPath = resolveCanonicalAssetPath(uploadedUrl);
+  const [tokyoAsset, bobAsset, veniceAsset] = canonicalAssetPath
+    ? await Promise.all([
+        fetchEnvelope(`${tokyoBaseUrl}${canonicalAssetPath}?_t=${Date.now()}`),
+        fetchEnvelope(`${bobBaseUrl}${canonicalAssetPath}?_t=${Date.now()}`),
+        fetchEnvelope(`${veniceBaseUrl}${canonicalAssetPath}?_t=${Date.now()}`),
+      ])
+    : [null, null, null];
 
   const deleted = uploadedAssetId
     ? await fetchEnvelope(
@@ -69,7 +75,11 @@ async function runAssetFlow({ hostLabel, hostBaseUrl, bearer, accountId, workspa
 
   return {
     upload,
-    replace,
+    uploadedUrl,
+    canonicalAssetPath,
+    tokyoAsset,
+    bobAsset,
+    veniceAsset,
     deleted,
     secondDelete,
     uploadedAssetId,
@@ -104,6 +114,9 @@ export async function runAssetLifecycleParityScenario({ profile, context }) {
       bearer: profile.supabaseBearer,
       accountId,
       workspaceId,
+      tokyoBaseUrl: profile.tokyoBaseUrl,
+      bobBaseUrl: profile.bobBaseUrl,
+      veniceBaseUrl: profile.veniceBaseUrl,
     }),
     runAssetFlow({
       hostLabel: 'roma',
@@ -111,6 +124,9 @@ export async function runAssetLifecycleParityScenario({ profile, context }) {
       bearer: profile.supabaseBearer,
       accountId,
       workspaceId,
+      tokyoBaseUrl: profile.tokyoBaseUrl,
+      bobBaseUrl: profile.bobBaseUrl,
+      veniceBaseUrl: profile.veniceBaseUrl,
     }),
   ]);
 
@@ -123,8 +139,30 @@ export async function runAssetLifecycleParityScenario({ profile, context }) {
     makeCheck('Roma upload response includes assetId', Boolean(romaFlow.uploadedAssetId), {
       actual: romaFlow.uploadedAssetId,
     }),
-    makeCheck('Bob asset replace returns 200', bobFlow.replace?.status === 200, { actual: bobFlow.replace?.status }),
-    makeCheck('Roma asset replace returns 200', romaFlow.replace?.status === 200, { actual: romaFlow.replace?.status }),
+    makeCheck('Bob upload response includes canonical asset path', bobFlow.canonicalAssetPath.startsWith('/assets/v/'), {
+      actual: bobFlow.canonicalAssetPath,
+    }),
+    makeCheck('Roma upload response includes canonical asset path', romaFlow.canonicalAssetPath.startsWith('/assets/v/'), {
+      actual: romaFlow.canonicalAssetPath,
+    }),
+    makeCheck('Bob canonical asset read returns 200 on Tokyo', bobFlow.tokyoAsset?.status === 200, {
+      actual: bobFlow.tokyoAsset?.status,
+    }),
+    makeCheck('Bob canonical asset read returns 200 on Bob host', bobFlow.bobAsset?.status === 200, {
+      actual: bobFlow.bobAsset?.status,
+    }),
+    makeCheck('Bob canonical asset read returns 200 on Venice host', bobFlow.veniceAsset?.status === 200, {
+      actual: bobFlow.veniceAsset?.status,
+    }),
+    makeCheck('Roma canonical asset read returns 200 on Tokyo', romaFlow.tokyoAsset?.status === 200, {
+      actual: romaFlow.tokyoAsset?.status,
+    }),
+    makeCheck('Roma canonical asset read returns 200 on Bob host', romaFlow.bobAsset?.status === 200, {
+      actual: romaFlow.bobAsset?.status,
+    }),
+    makeCheck('Roma canonical asset read returns 200 on Venice host', romaFlow.veniceAsset?.status === 200, {
+      actual: romaFlow.veniceAsset?.status,
+    }),
     makeCheck('Bob asset delete returns 200', bobFlow.deleted?.status === 200, { actual: bobFlow.deleted?.status }),
     makeCheck('Roma asset delete returns 200', romaFlow.deleted?.status === 200, { actual: romaFlow.deleted?.status }),
     makeCheck('Bob second delete returns 404', bobFlow.secondDelete?.status === 404, { actual: bobFlow.secondDelete?.status }),

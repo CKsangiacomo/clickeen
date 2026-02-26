@@ -245,7 +245,6 @@ function assertAssetLifecycleContracts49B() {
   ];
 
   assertIncludesAny(tokyoAssetFiles, [
-    'replace_account_asset_variant',
     "coreui.errors.asset.inUseConfirmRequired",
     'requiresConfirm: true',
     'confirmInUse',
@@ -253,22 +252,25 @@ function assertAssetLifecycleContracts49B() {
     "headers.set('cdn-cache-control', 'public, max-age=31536000, immutable')",
     "headers.set('cloudflare-cdn-cache-control', 'public, max-age=31536000, immutable')",
     "toCanonicalAssetVersionPath",
-    "reasonKey: 'tokyo.errors.assets.deletePipelinePartialFailure'",
   ]);
   assertExcludesAll(tokyoAssetFiles, ['purge-deleted', 'markAccountAssetDeletedByIdentity']);
+  assertExcludesAll(tokyoAssetFiles, [
+    'replace_account_asset_variant',
+    'replaceAccountAssetVariantAtomic',
+    'handleReplaceAccountAssetContent',
+    'account_asset_replace_idempotency',
+  ]);
 
-  assertIncludes('paris/src/index.ts', [
+  assertExcludes('paris/src/index.ts', [
     'const accountAssetContentMatch = pathname.match(/^\\/api\\/accounts\\/([^/]+)\\/assets\\/([^/]+)\\/content$/);',
   ]);
   assertIncludes('paris/src/shared/validation.ts', [
-    'isLegacyPersistedFillMediaFieldPath',
+    'isPersistedMediaUrlFieldPath',
     'Persisted media URL fields are not supported',
     'Persisted logoFill asset URL is not supported',
   ]);
-  assertIncludes('paris/src/domains/accounts/index.ts', [
-    'handleAccountAssetReplaceContent',
-    "tokyoUrl.searchParams.set('confirmInUse', confirmInUse);",
-  ]);
+  assertIncludes('paris/src/domains/accounts/index.ts', ["tokyoUrl.searchParams.set('confirmInUse', confirmInUse);"]);
+  assertExcludes('paris/src/domains/accounts/index.ts', ['handleAccountAssetReplaceContent']);
 
   assertIncludes('venice/lib/tokyo.ts', ["const isAccountAssetVersion = normalized.startsWith('/assets/v/');"]);
   assertIncludes('tokyo-worker/src/index.ts', ["reasonKey: 'tokyo.errors.render.legacyIndexUnsupported'"]);
@@ -308,6 +310,13 @@ function assertAssetLifecycleContracts49B() {
 
   assertIncludes('paris/src/shared/assetUsage.ts', ["parsed.kind !== 'version'"]);
   assertIncludes('dieter/components/shared/assetUpload.ts', ["parsed.kind !== 'version'"]);
+  assertExcludes('dieter/components/shared/assetUpload.ts', [
+    'replaceEditorAsset',
+    'upsertEditorAsset',
+    'coreui.errors.assets.replaceFailed',
+  ]);
+  assertMissing('bob/app/api/assets/[accountId]/[assetId]/content/route.ts');
+  assertMissing('roma/app/api/assets/[accountId]/[assetId]/content/route.ts');
 }
 
 function assertBootstrapContracts49C() {

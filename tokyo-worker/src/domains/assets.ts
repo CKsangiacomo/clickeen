@@ -3,7 +3,6 @@ import { isUuid } from '@clickeen/ck-contracts';
 import {
   assertUploadAuth,
   buildAccountAssetKey,
-  buildAccountAssetReplaceKey,
   guessContentTypeFromExt,
   json,
   normalizeAccountAssetReadKey,
@@ -442,79 +441,6 @@ export async function loadPrimaryAccountAssetKey(
   return key || null;
 }
 
-export type ReplaceAccountAssetAtomicResult = {
-  previousKey: string | null;
-  currentKey: string;
-  replay: boolean;
-};
-
-export async function replaceAccountAssetVariantAtomic(args: {
-  env: Env;
-  accountId: string;
-  assetId: string;
-  variant: string;
-  key: string;
-  normalizedFilename: string;
-  contentType: string;
-  sizeBytes: number;
-  source: AccountAssetSource;
-  originalFilename: string;
-  sha256: string;
-  idempotencyKey: string;
-  requestSha256: string;
-}): Promise<ReplaceAccountAssetAtomicResult> {
-  const res = await supabaseFetch(args.env, '/rest/v1/rpc/replace_account_asset_variant', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({
-      p_account_id: args.accountId,
-      p_asset_id: args.assetId,
-      p_variant: args.variant,
-      p_new_r2_key: args.key,
-      p_filename: args.normalizedFilename,
-      p_content_type: args.contentType,
-      p_size_bytes: Math.max(0, Math.trunc(args.sizeBytes)),
-      p_source: args.source,
-      p_original_filename: args.originalFilename,
-      p_sha256: args.sha256,
-      p_idempotency_key: args.idempotencyKey,
-      p_request_sha256: args.requestSha256,
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    const lowered = text.toLowerCase();
-    if (res.status === 400 && lowered.includes('asset not found')) {
-      const err = new Error('ASSET_NOT_FOUND');
-      (err as Error & { code?: string }).code = 'ASSET_NOT_FOUND';
-      throw err;
-    }
-    if (res.status === 400 && lowered.includes('idempotency key reused with different payload')) {
-      const err = new Error('IDEMPOTENCY_CONFLICT');
-      (err as Error & { code?: string }).code = 'IDEMPOTENCY_CONFLICT';
-      throw err;
-    }
-    throw new Error(`[tokyo] Supabase replace_account_asset_variant failed (${res.status}) ${text}`.trim());
-  }
-
-  const rows = (await res.json().catch(() => [])) as Array<{
-    previous_r2_key?: string | null;
-    current_r2_key?: string | null;
-    replay?: boolean | null;
-  }>;
-  const row = rows?.[0] ?? null;
-  const currentKey = typeof row?.current_r2_key === 'string' ? row.current_r2_key.trim() : '';
-  if (!currentKey) {
-    throw new Error('[tokyo] replace_account_asset_variant returned empty current_r2_key');
-  }
-  return {
-    previousKey: typeof row?.previous_r2_key === 'string' && row.previous_r2_key.trim() ? row.previous_r2_key.trim() : null,
-    currentKey,
-    replay: row?.replay === true,
-  };
-}
-
 export async function loadAccountAssetUsageCountByIdentity(env: Env, accountId: string, assetId: string): Promise<number> {
   const params = new URLSearchParams({
     select: 'asset_id',
@@ -695,6 +621,5 @@ export async function deleteAccountAssetByIdentity(env: Env, accountId: string, 
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
-  handleReplaceAccountAssetContent,
   handleUploadAccountAsset,
 } from './assets-handlers';

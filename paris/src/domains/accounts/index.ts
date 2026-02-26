@@ -5,7 +5,7 @@ import { readRomaAccountAuthzCapsuleHeader, verifyRomaAccountAuthzCapsule } from
 import { json, readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
 import { isUuid } from '../../shared/validation';
-import { isWidgetPublicId, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
+import { toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 
 type AccountRow = {
   id: string;
@@ -76,10 +76,6 @@ function assertWorkspaceId(value: string) {
     return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' }, 422) };
   }
   return { ok: true as const, value: trimmed };
-}
-
-function isWidgetType(value: string): boolean {
-  return /^[a-z0-9][a-z0-9_-]*$/i.test(value);
 }
 
 function resolveAccountAssetView(req: Request): { ok: true; projection: AccountAssetProjection } | { ok: false; response: Response } {
@@ -689,119 +685,6 @@ export async function handleAccountAssetDelete(req: Request, env: Env, accountId
             accountId,
             assetId,
             deleted: true,
-          }) as Record<string, unknown>,
-    );
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
-  }
-}
-
-export async function handleAccountAssetReplaceContent(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
-  const auth = await assertDevAuth(req, env);
-  if ('response' in auth) return auth.response;
-
-  const accountIdResult = assertAccountId(accountIdRaw);
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const assetIdResult = assertAssetId(assetIdRaw);
-  if (!assetIdResult.ok) return assetIdResult.response;
-  const assetId = assetIdResult.value;
-
-  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, 'editor');
-  if (ownerError) return ownerError;
-
-  const idempotencyKey = (req.headers.get('idempotency-key') || '').trim();
-  if (!idempotencyKey) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.idempotencyKey.required' }, 422);
-  }
-
-  const workspaceId = (req.headers.get('x-workspace-id') || '').trim();
-  if (workspaceId && !isUuid(workspaceId)) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' }, 422);
-  }
-  const publicId = (req.headers.get('x-public-id') || '').trim();
-  if (publicId && !isWidgetPublicId(publicId)) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);
-  }
-  const widgetType = (req.headers.get('x-widget-type') || '').trim().toLowerCase();
-  if (widgetType && !isWidgetType(widgetType)) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
-  }
-
-  try {
-    const account = await loadAccount(env, accountId);
-    if (!account) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
-
-    const existing = await loadAccountAsset(env, accountId, assetId);
-    if (!existing) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
-
-    const tokyoBase = resolveTokyoMutableAssetBase(env);
-    if (!tokyoBase) {
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_BASE_URL missing' }, 500);
-    }
-    const tokyoToken = (env.TOKYO_DEV_JWT || env.PARIS_DEV_JWT || '').trim();
-    if (!tokyoToken) {
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_DEV_JWT missing' }, 500);
-    }
-
-    const contentLength = Number(req.headers.get('content-length') || '');
-    if (Number.isFinite(contentLength) && contentLength <= 0) {
-      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' }, 422);
-    }
-    const bodyStream = req.body;
-    if (!bodyStream) {
-      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' }, 422);
-    }
-
-    const headers = new Headers();
-    headers.set('Authorization', `Bearer ${tokyoToken}`);
-    headers.set('Content-Type', (req.headers.get('content-type') || '').trim() || 'application/octet-stream');
-    headers.set('x-account-id', accountId);
-    headers.set('x-filename', (req.headers.get('x-filename') || '').trim() || 'upload.bin');
-    headers.set('x-variant', (req.headers.get('x-variant') || '').trim() || 'original');
-    headers.set('idempotency-key', idempotencyKey);
-    const source = (req.headers.get('x-source') || '').trim();
-    if (source) headers.set('x-source', source);
-    if (workspaceId) headers.set('x-workspace-id', workspaceId);
-    if (publicId) headers.set('x-public-id', publicId);
-    if (widgetType) headers.set('x-widget-type', widgetType);
-
-    const tokyoRes = await fetch(
-      `${tokyoBase}/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`,
-      {
-        method: 'PUT',
-        headers,
-        body: bodyStream,
-        cache: 'no-store',
-      },
-    );
-    const tokyoBody = await readJson(tokyoRes);
-    if (tokyoRes.status === 404) {
-      return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
-    }
-    if (tokyoRes.status === 409 && tokyoBody && typeof tokyoBody === 'object') {
-      return json(tokyoBody as Record<string, unknown>, { status: 409 });
-    }
-    if (!tokyoRes.ok) {
-      return ckError(
-        {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.db.writeFailed',
-          detail: JSON.stringify(tokyoBody),
-        },
-        500,
-      );
-    }
-
-    return json(
-      (tokyoBody && typeof tokyoBody === 'object'
-        ? tokyoBody
-        : {
-            accountId,
-            assetId,
-            replaced: true,
           }) as Record<string, unknown>,
     );
   } catch (error) {

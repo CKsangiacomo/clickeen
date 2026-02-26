@@ -19,7 +19,6 @@ const ALLOWLISTED_BOOTSTRAP_OPTION_COUNTS = {
   'bob/app/api/assets/upload/route.ts': 1,
   'bob/app/api/assets/[accountId]/route.ts': 1,
   'bob/app/api/assets/[accountId]/[assetId]/route.ts': 1,
-  'bob/app/api/assets/[accountId]/[assetId]/content/route.ts': 1,
 };
 
 const BOOTSTRAP_OPTION_PATTERN = /allowLocalDevBootstrap\s*:/g;

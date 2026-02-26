@@ -1,7 +1,6 @@
 import {
   buildAccountAssetKey,
   buildAccountAssetVersionPath,
-  buildAccountAssetReplaceKey,
   generateRenderSnapshots,
   guessContentTypeFromExt,
   json,
@@ -35,14 +34,12 @@ import {
   loadWorkspaceUploadContext,
   normalizeAccountAssetSource,
   persistAccountAssetMetadata,
-  replaceAccountAssetVariantAtomic,
   resolveUploadSizeLimitBytes,
   resolveUploadsBytesBudgetMax,
   resolveUploadsCountBudgetMax,
   roleRank,
   upsertInstanceRenderHealthBatch,
   type MemberRole,
-  type ReplaceAccountAssetAtomicResult,
 } from './assets';
 
 const CLOUDFLARE_PURGE_CHUNK_SIZE = 30;
@@ -421,120 +418,6 @@ async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
   return new Response('Not found', { status: 404 });
 }
 
-async function handleReplaceAccountAssetContent(
-  req: Request,
-  env: Env,
-  accountIdRaw: string,
-  assetIdRaw: string,
-): Promise<Response> {
-  const authErr = requireDevAuth(req, env);
-  if (authErr) return authErr;
-
-  const accountId = String(accountIdRaw || '').trim();
-  if (!accountId || !isUuid(accountId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
-  }
-  const assetId = String(assetIdRaw || '').trim();
-  if (!assetId || !isUuid(assetId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' } }, { status: 422 });
-  }
-  const idempotencyKey = (req.headers.get('idempotency-key') || '').trim();
-  if (!idempotencyKey) {
-    return json(
-      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.idempotencyKey.required' } },
-      { status: 422 },
-    );
-  }
-
-  const existing = await loadAccountAssetByIdentity(env, accountId, assetId);
-  if (!existing) {
-    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
-  }
-
-  const variant = (req.headers.get('x-variant') || '').trim() || 'original';
-  if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.variant.invalid' } }, { status: 422 });
-  }
-  const source = normalizeAccountAssetSource(req.headers.get('x-source')) ?? 'api';
-  const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
-  const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
-  const ext = pickExtension(filename, contentType);
-  const safeFilename = sanitizeUploadFilename(filename, ext, variant);
-
-  const body = await req.arrayBuffer();
-  if (!body || body.byteLength === 0) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
-  }
-
-  const requestSha256 = await sha256Hex(body);
-  const key = buildAccountAssetReplaceKey(accountId, assetId, variant, safeFilename, requestSha256);
-  await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
-
-  let atomicResult: ReplaceAccountAssetAtomicResult;
-  try {
-    atomicResult = await replaceAccountAssetVariantAtomic({
-      env,
-      accountId,
-      assetId,
-      variant,
-      key,
-      normalizedFilename: safeFilename,
-      contentType,
-      sizeBytes: body.byteLength,
-      source,
-      originalFilename: filename,
-      sha256: requestSha256,
-      idempotencyKey,
-      requestSha256,
-    });
-  } catch (error) {
-    await env.TOKYO_R2.delete(key).catch(() => null);
-    const code = (error as Error & { code?: string })?.code || '';
-    if (code === 'ASSET_NOT_FOUND') {
-      return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
-    }
-    if (code === 'IDEMPOTENCY_CONFLICT') {
-      return json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.idempotencyKey.conflict' } },
-        { status: 409 },
-      );
-    }
-    const detail = error instanceof Error ? error.message : String(error);
-    return json(
-      { error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.assets.metadataWriteFailed', detail } },
-      { status: 500 },
-    );
-  }
-
-  if (atomicResult.replay && atomicResult.currentKey !== key) {
-    await env.TOKYO_R2.delete(key).catch(() => null);
-  }
-
-  if (!atomicResult.replay && atomicResult.previousKey && atomicResult.previousKey !== atomicResult.currentKey) {
-    await env.TOKYO_R2.delete(atomicResult.previousKey).catch(() => null);
-  }
-
-  const effectiveKey = atomicResult.currentKey;
-  const origin = new URL(req.url).origin;
-  const url = `${origin}${buildAccountAssetVersionPath(effectiveKey)}`;
-  return json(
-    {
-      accountId,
-      assetId,
-      variant,
-      filename: safeFilename,
-      contentType,
-      sizeBytes: body.byteLength,
-      key: effectiveKey,
-      url,
-      idempotencyKey,
-      replay: atomicResult.replay,
-      replaced: Boolean(!atomicResult.replay && atomicResult.previousKey && atomicResult.previousKey !== effectiveKey),
-    },
-    { status: 200 },
-  );
-}
-
 async function handleDeleteAccountAsset(
   req: Request,
   env: Env,
@@ -725,6 +608,5 @@ async function handleDeleteAccountAsset(
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
-  handleReplaceAccountAssetContent,
   handleUploadAccountAsset,
 };

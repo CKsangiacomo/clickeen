@@ -28,7 +28,6 @@ import {
 import {
   handleAccountAssetDelete,
   handleAccountAssetGet,
-  handleAccountAssetReplaceContent,
   handleAccountAssetsList,
 } from './domains/accounts';
 import {
@@ -405,14 +404,6 @@ export default {
         const assetId = decodeURIComponent(accountAssetMatch[2]);
         if (req.method === 'GET') return handleAccountAssetGet(req, env, accountId, assetId);
         if (req.method === 'DELETE') return handleAccountAssetDelete(req, env, accountId, assetId);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const accountAssetContentMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/assets\/([^/]+)\/content$/);
-      if (accountAssetContentMatch) {
-        const accountId = decodeURIComponent(accountAssetContentMatch[1]);
-        const assetId = decodeURIComponent(accountAssetContentMatch[2]);
-        if (req.method === 'PUT') return handleAccountAssetReplaceContent(req, env, accountId, assetId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

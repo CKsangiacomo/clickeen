@@ -38,6 +38,30 @@ function resolvePathSegments(pathSegments: string[]): string[] | null {
   return pathSegments;
 }
 
+function resolveOpaqueAssetSuffix(request: NextRequest): string | null {
+  const marker = '/assets/v/';
+  const pathname = request.nextUrl.pathname || '';
+  const markerIndex = pathname.indexOf(marker);
+  if (markerIndex < 0) return null;
+
+  const suffix = pathname.slice(markerIndex + marker.length).replace(/^\/+/, '');
+  if (!suffix) return null;
+
+  const segments = suffix.split('/');
+  for (const segment of segments) {
+    if (!segment) continue;
+    let decoded = '';
+    try {
+      decoded = decodeURIComponent(segment);
+    } catch {
+      return null;
+    }
+    if (decoded === '.' || decoded === '..') return null;
+  }
+
+  return suffix;
+}
+
 async function proxy(
   request: NextRequest,
   params: { path?: string[] },
@@ -46,8 +70,9 @@ async function proxy(
   const segments = Array.isArray(params.path) ? params.path : [];
   const safeSegments = resolvePathSegments(segments);
   if (!safeSegments) return NextResponse.json({ error: 'INVALID_PATH' }, { status: 400 });
-  const joined = safeSegments.map((seg) => encodeURIComponent(seg)).join('/');
-  const pathname = `/assets/v/${joined}`;
+  const suffix = resolveOpaqueAssetSuffix(request);
+  if (!suffix) return NextResponse.json({ error: 'INVALID_PATH' }, { status: 400 });
+  const pathname = `/assets/v/${suffix}`;
   const search = request.nextUrl.search;
   const response = await tokyoFetch(`${pathname}${search}`, {
     method,

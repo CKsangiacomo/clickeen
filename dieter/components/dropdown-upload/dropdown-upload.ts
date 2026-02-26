@@ -39,7 +39,7 @@ type DropdownUploadState = {
 
 const states = new Map<HTMLElement, DropdownUploadState>();
 const UUID_FILENAME_STEM_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ASSET_UNAVAILABLE_MESSAGE = 'Asset URL is unavailable. Replace file to restore preview.';
+const ASSET_UNAVAILABLE_MESSAGE = 'Asset URL is unavailable. Upload a new file to restore preview.';
 
 // IMPORTANT: keep this at module scope.
 // DevStudio (and some Bob flows) may call hydrators more than once over the same DOM.

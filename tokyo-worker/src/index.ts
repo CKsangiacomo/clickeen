@@ -9,7 +9,6 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
-  handleReplaceAccountAssetContent,
   handleUploadAccountAsset,
   upsertInstanceRenderHealth,
 } from './domains/assets';
@@ -324,18 +323,6 @@ export function buildAccountAssetKey(accountId: string, assetId: string, variant
     return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
   }
   return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${normalizedVariant}/${filename}`;
-}
-
-export function buildAccountAssetReplaceKey(
-  accountId: string,
-  assetId: string,
-  variant: string,
-  filename: string,
-  contentSha256: string,
-): string {
-  const digest = String(contentSha256 || '').trim().toLowerCase().replace(/[^a-f0-9]/g, '').slice(0, 12) || 'replace';
-  const safeName = `${digest}-${filename}`;
-  return buildAccountAssetKey(accountId, assetId, variant, safeName);
 }
 
 function normalizeCanonicalAccountAssetSuffix(suffix: string): string | null {
@@ -712,9 +699,6 @@ export default {
       if (accountAssetMatch) {
         const accountId = decodeURIComponent(accountAssetMatch[1] || '');
         const assetId = decodeURIComponent(accountAssetMatch[2] || '');
-        if (req.method === 'PUT') {
-          return withCors(await handleReplaceAccountAssetContent(req, env, accountId, assetId));
-        }
         if (req.method === 'DELETE') {
           return withCors(await handleDeleteAccountAsset(req, env, accountId, assetId));
         }
