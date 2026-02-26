@@ -143,5 +143,5 @@ Validation result:
 ## Operational notes
 
 - Canonical startup script is `bash scripts/dev-up.sh`.
-- `dev-up` starts Roma with the rest of the stack and writes process state into `.dev-up.state/`.
+- `dev-up` starts Roma with the rest of the local stack and relies on process/port health checks only.
 - If services appear down after a successful start, verify the parent shell/session that launched `dev-up` is still alive.

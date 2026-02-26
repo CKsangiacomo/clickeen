@@ -1,297 +1,245 @@
-# PRD 50 - Runtime Parity and Truth Recovery (Roma <-> DevStudio <-> Bob <-> Paris <-> Tokyo)
+# PRD 50 - DevStudio/Roma Runtime Parity (Host + Context)
 
-## Verification Tenets (Hard Gate)
+## Simple asset tenets (hard, cross-PRD)
 
-We will verify PRD 50 only against these tenets. This PRD is not complete unless every tenet is `TRUE` in local and cloud-dev.
-
-1. DevStudio and Roma (local) use Bob the same way.
-2. DevStudio and Roma use the same account.
-3. Editing instances in DevStudio and Roma works the same way.
-4. Uploading assets in DevStudio and Roma works the same way.
-5. Assets in Roma (local) can be managed via UI.
-6. Any update to instances in Roma or DevStudio, when published, immediately updates instance embeds.
-7. When we push to Git, this architecture and UX translate to Cloudflare with the exact same behavior.
+1. Asset flow is straightforward. User uploads Asset A in Bob -> Asset A is immediately linked in the instance and stored in Tokyo. User uploads Asset B in Bob -> Asset B is immediately linked in the instance and stored in Tokyo. Bob does not manage assets.
+2. Embed does not manage assets. Embed serves exactly what the published embed config references. No fallback, no fixes, no intervention. If an asset was deleted, embed does not show it.
+3. Users manage assets only in Roma Assets panel. That is the single place to view assets and fix asset issues. System does not add hidden replacement logic, silent fixes, or fallback behavior.
+4. Asset entitlements are enforced in the Roma Assets panel. If user cannot upload due to entitlement, UX routes the user to Assets panel to manage assets.
+5. R2 is a simple mirror of Roma Assets panel for account asset namespace. What Roma Assets shows is exactly what exists in R2 under `assets/versions/{accountId}/`. No hidden artifacts, no ghost files, no deferred cleanup, no system-managed invisible storage.
 
 ---
 
-**Status:** EXECUTING  
-**Date:** 2026-02-20  
-**Owner:** Product Dev Team  
-**Reviewers:** Human Architect + Product Dev Team peers  
-**Environment scope:** Local first (`bash scripts/dev-up.sh`), then cloud-dev  
-**Type:** Runtime recovery + contract hardening + parity enforcement  
-**Priority:** P0  
+Status: EXECUTED (local + cloud-dev parity green)  
+Date: 2026-02-26  
+Owner: Product Dev Team  
+Priority: P0
+
+Environment contract:
+- Read truth: local + cloud-dev
+- Write order: local first, then cloud-dev
+- Canonical startup: `bash scripts/dev-up.sh`
 
 ---
 
-## 0) Why this PRD exists
+## One-line objective
 
-PRD 49 was treated as complete on build-time and static-contract gates while runtime behavior remained broken in local.
-
-This PRD re-centers delivery on runtime truth. If runtime invariants are not true in local and cloud-dev, execution is not complete.
+DevStudio and Roma must run the same Bob workflow for curated instance open, edit, save, and publish using the same account/workspace contract.
 
 ---
 
-## 1) Program objective (explicit truth target)
+## Fixed tenets (do not reinterpret)
 
-Convert every Verification Tenet above from partial/false states to `TRUE` and keep them `TRUE` in both local and cloud-dev.
-
----
-
-## 2) Current local truth (as-is runtime evidence)
-
-1. `GET /api/paris/instance/:publicId` is returning `500` in Roma flows because `isCuratedInstanceRow` is used but not imported.
-2. DevStudio relies on Bob `GET /api/paris/roma/bootstrap`, but this route is absent in Bob in current local state.
-3. Roma asset delete path maps to `coreui.errors.asset.notFound` while local Tokyo dev stub does not proxy `PUT/DELETE /assets/:accountId/:assetId`.
-4. Publish-to-embed is not immediate by contract because Venice uses revalidation for render published pointer fetches.
-5. Existing execution gates remain mostly build/static checks and dry-run deploys, not runtime E2E parity proofs.
+1. DevStudio is an internal tooling surface. It embeds Bob. It uses the same admin account. Widget Workspace is where curated instances are created and managed. Nothing else.
+2. Roma (`roma/`) is the product shell for workspace users. It is the product app with login. Right now we run with the admin account in `.env.local`.
+3. DevStudio and Roma are two hosts over the same runtime contracts. Local vs cloud-dev is deployment/config, not behavior forks.
 
 ---
 
-## 3) Scope
+## Why this PRD exists
 
-### In scope
-1. Remove deterministic runtime blockers in local host/editor/asset/publish paths.
-2. Enforce one Bob-open path contract for Roma and DevStudio standard editor use.
-3. Enforce one account-context resolution contract for identical workflow paths.
-4. Enforce one account-asset upload/delete/replace behavior across hosts.
-5. Make Roma assets UI management fully operational in local and cloud-dev.
-6. Make publish-to-embed behavior immediate by contract and verified in runtime.
-7. Add runtime-complete gate matrix (local + cloud-dev) as required exit criteria.
+Runtime behavior drifted between hosts even when build, lint, and typecheck were green.
 
-### Out of scope
-1. New widget features.
-2. Visual redesign unrelated to parity bugs.
-3. Non-runtime refactors with no parity impact.
+The practical impact:
+1. Same instance flow behaved differently depending on host.
+2. Debugging became host-by-host instead of contract-by-contract.
+3. Product work stalled because runtime truth was unclear.
+
+This PRD restores one runtime truth for host behavior.
 
 ---
 
-## 4) Non-negotiable contracts for PRD 50
+## End state
 
-### C1: One host-to-Bob standard editor contract
-1. Roma and DevStudio send the same open payload shape for standard editor workflows.
-2. `subjectMode` for standard flows is `workspace`.
-3. Both hosts resolve workspace/account context from the same upstream envelope contract fields.
-4. Both hosts pass/fail on the same missing-context conditions.
-
-### C2: One account-context contract
-1. Same user + same selected workspace yields same `ownerAccountId` and `workspaceId` in Roma and DevStudio.
-2. No host-specific hidden fallback that silently shifts account context.
-3. Any fallback must be explicit, deterministic, and shared.
-
-### C3: One account-asset lifecycle contract
-1. Upload, replace, and delete routes resolve to the same account-asset domain behavior from both hosts.
-2. Local Tokyo stub and cloud-dev Tokyo routes must expose equivalent behavior for mutable account-asset endpoints.
-3. Roma UI asset delete/replace states must map to reason keys that are rendered as user-visible copy (not raw keys).
-4. In editor dropdown-fill controls, both `Upload` (empty fill) and `Replace` (non-empty fill) create a new asset (`new assetId`); `Replace` relinks the current fill field and does not mutate prior assets in place.
-5. Existing assets remain listed until explicitly deleted from Assets UI.
-
-### C4: Publish-to-embed immediacy contract
-1. After publish success, embed read path must serve updated render without stale-window drift.
-2. Cache policy for published pointer path must align with immediate propagation requirement.
-3. Contract must be verified in local and cloud-dev with measured publish-to-visible latency gates.
-
-### C5: Runtime-complete release contract
-1. Build/lint/type/contracts/dry-run remain necessary but insufficient.
-2. Runtime parity matrix is blocking for completion.
-3. PRD completion cannot be marked green unless all Section 1 statements are true in both local and cloud-dev.
-
-### C6: Execution clarifications (blocking)
-1. Cache policy for "immediate publish propagation" is explicit:
-   - Published render pointer path (`/renders/instances/:publicId/published.json`) must be served/fetched as `no-store` in the runtime-critical hop.
-   - Render artifacts and long-lived immutable objects remain cacheable; this PRD does not disable immutable artifact caching.
-2. Account-context unification must baseline cloud-dev first:
-   - Capture current cloud-dev account/workspace resolution behavior before local contract changes.
-   - If local and cloud-dev differ, execution must converge both to one contract, not optimize local alone.
-3. Runtime matrix scope is minimum viable and bounded:
-   - One happy-path workflow per host for standard editor (`open -> edit -> publish`).
-   - One asset happy path (`upload -> replace -> delete`) on account-scoped asset.
-   - One negative case per contract class (`missing context`, `in-use delete requiresConfirm`, `notFound error rendering`).
-4. Publish immediacy is instrumented, not subjective:
-   - Record publish acceptance timestamp at Paris.
-   - Record first embed fetch serving new published pointer at Venice.
-   - Execution report includes measured deltas and pass/fail against latency gate.
-5. Rollback is slice-scoped and explicit:
-   - Deploy by slice in service order: Tokyo -> Paris -> Bob -> Roma/DevStudio.
-   - On regression, roll back only the active slice and revert in reverse order.
-   - Do not continue to next slice with unresolved regression in current slice.
+1. Bob receives the same `ck:open-editor` contract shape from DevStudio and Roma for equivalent workspace flows.
+2. Account/workspace identity resolves to the same IDs across hosts for the same signed-in admin user.
+3. Open -> edit -> save -> publish works the same from both hosts.
+4. Publish-to-embed visibility is measured and inside gate in local and cloud-dev.
+5. Runtime parity checks are blocking, not optional.
 
 ---
 
-## 5) Execution plan
+## Current delta vs target
 
-### 5.0 Bounded schedule (estimate)
-1. Slice A: 0.5 day
-2. Slice B: 0.5 day
-3. Slice C: 1.0 day
-4. Slice D: 0.5 day
-5. Slice E: 0.5 day
-6. Total estimate: 3.0 days (excludes external review/approval wait time)
-
-### 5.1 Slice A - unblock core instance/open flow
-1. Fix workspace instance envelope handler runtime crash.
-2. Restore DevStudio bootstrap route availability through Bob proxy surface.
-3. Verify Roma and DevStudio can both open/edit/publish standard instances with same contract fields.
-
-### 5.2 Slice B - unify account context behavior
-1. Make account/workspace resolution deterministic and shared across hosts.
-2. Remove silent host-specific fallbacks that produce divergent context.
-3. Add explicit fail-visible behavior for missing required context.
-
-### 5.3 Slice C - harden account-asset lifecycle parity
-1. Ensure local mutable asset endpoints proxy correctly end-to-end.
-2. Verify upload/delete/replace equivalence from Roma and DevStudio.
-3. Ensure Roma assets UI shows translated user-facing errors, not bare reason keys.
-
-### 5.4 Slice D - enforce immediate publish propagation
-1. Align cache behavior with immediate embed update contract.
-2. Validate publish-to-visible propagation with runtime checks in local and cloud-dev.
-
-### 5.5 Slice E - runtime parity governance
-1. Add required runtime matrix checks for local and cloud-dev.
-2. Wire checks as blocking completion gates for this PRD.
-3. Update execution report template to separate build-complete from runtime-complete evidence.
+| Area | Current risk | Target |
+| --- | --- | --- |
+| Host boot contract | Host-specific branching can creep back in | One Bob boot contract used by both hosts |
+| Context resolution | Hidden fallback behavior can mask wrong context | Explicit account/workspace resolution with fail-fast errors |
+| Publish validation | "Looks fine" manual checks are inconsistent | Measured publish-to-visible gate with evidence |
+| Release gating | Static checks can pass while runtime drifts | Runtime parity matrix blocks completion |
 
 ---
 
-## 6) Exit gates (must all pass)
+## Scope
 
-### G1: Statement truth gate (binary)
-Each Section 1 statement must be marked `TRUE` in:
-1. Local runtime evidence.
-2. Cloud-dev runtime evidence.
+In scope:
+1. DevStudio + Roma host parity for Bob open/edit/save/publish.
+2. Account/workspace context parity across hosts.
+3. Runtime parity gates and evidence.
 
-No `PARTIAL` accepted.
+Out of scope:
+1. Asset data-model hard-cut and API contract cleanup (owned by PRD 51).
+2. New widget features.
+3. UI redesign unrelated to parity.
 
-### G2: Local runtime matrix
-1. Roma standard instance open/edit/publish succeeds.
-2. DevStudio standard instance open/edit/publish succeeds.
-3. Same workflow resolves same account/workspace identity across hosts.
-4. Asset upload/delete/replace succeeds from both hosts.
-5. Roma assets UI management path succeeds end-to-end.
-6. Publish shows immediate embed update.
-7. Matrix scope is bounded to:
-   - one happy-path standard widget flow per host,
-   - one happy-path account-asset flow,
-   - one negative case per contract class.
-8. Publish latency gate:
-   - local: publish-to-visible <= 5s
-   - cloud-dev: publish-to-visible <= 7s
+Boundary with PRD 51:
+1. PRD 50 treats asset behavior as black-box runtime proof only (`upload once -> apply once` observed behavior).
+2. PRD 51 owns the asset contract internals and endpoint/model changes.
 
-### G3: Cloud-dev runtime matrix
-1. Same checks as G2 in cloud-dev.
-2. No environment-specific behavioral divergence.
-
-### G4: Existing build/static governance still green
-1. lint
-2. typecheck
-3. contracts
-4. api-loc
-5. build
-6. worker dry-run deploy
+Execution dependency To-Do (focus guard):
+1. [x] Do not execute PRD 50 runtime closure before PRD 51 slices A/B/E are complete.
+2. [x] Do not patch host/context logic to work around broken asset internals.
+3. [x] Only validate asset behavior as runtime proof (`upload once -> apply once`) after PRD 51 changes land.
+4. [x] If parity fails due to asset internals, return to PRD 51 checklist instead of adding host-specific fallback.
 
 ---
 
-## 7) Why we cannot resume normal feature work before this is done
+## Execution plan
 
-1. These are system invariants, not edge cases. If they are false, every new feature branch is built on undefined behavior.
-2. Host divergence (Roma vs DevStudio) doubles bug surface and guarantees repeated regressions.
-3. Broken asset and publish contracts invalidate output trust: users can edit/publish and still observe stale or missing runtime behavior.
-4. Build-complete without runtime-complete creates false confidence and repeated production-risk merges.
-5. Restoring runtime truth first reduces total delivery time by preventing rework loops across all subsequent PRDs.
+### Slice A - Host boot contract parity
+
+Goal: both hosts open Bob the same way.
+
+Actions:
+1. Keep one canonical `ck:open-editor` message contract for workspace subject.
+2. Remove or reject host-only payload variants for standard curated flow.
+3. Keep host wiring thin: host fetches context + instance, Bob owns editor runtime.
+
+Primary touchpoints:
+1. `admin/src/html/tools/dev-widget-workspace.html`
+2. `roma/components/builder-domain.tsx`
+3. `bob/lib/session/useWidgetSession.tsx`
+
+Acceptance:
+1. Same curated `publicId` opens successfully from both hosts.
+2. No host-specific fallback path is needed for standard workspace subject.
+
+### Slice B - Context parity
+
+Goal: same identity in both hosts.
+
+Actions:
+1. Normalize account/workspace resolution path from bootstrap.
+2. Fail fast on missing/invalid workspace context (`422` reason keys), no silent defaulting.
+3. Verify context IDs match between hosts for same signed-in user.
+
+Primary touchpoints:
+1. `roma/components/use-roma-me.ts`
+2. `roma/app/api/bootstrap/route.ts`
+3. `bob/app/api/paris/roma/bootstrap/route.ts`
+
+Acceptance:
+1. Matching `userId`, `accountId`, `workspaceId` across hosts in parity probe.
+2. Missing context fails explicitly with stable reason keys.
+
+### Slice C - Publish parity
+
+Goal: same publish behavior from both hosts.
+
+Actions:
+1. Ensure Bob publish path is identical regardless of host.
+2. Measure publish-to-visible latency at embed endpoints.
+3. Capture latency evidence for both local and cloud-dev.
+
+Primary touchpoints:
+1. `bob/lib/session/useWidgetSession.tsx`
+2. `scripts/ci/runtime-parity/scenarios/publish-immediacy.mjs`
+3. `scripts/ci/runtime-parity/scenarios/instance-open-parity.mjs`
+
+Acceptance:
+1. Publish succeeds from both hosts for same instance.
+2. Embed visibility latency passes gates in both environments.
+
+### Slice D - Runtime parity gates (blocking)
+
+Goal: runtime truth is a hard gate.
+
+Actions:
+1. Keep runtime parity scenarios current and host-aware.
+2. Run local + cloud-dev parity in completion criteria.
+3. Record evidence in execution report.
+
+Primary touchpoints:
+1. `scripts/ci/runtime-parity/index.mjs`
+2. `scripts/ci/runtime-parity/scenarios/bootstrap-parity.mjs`
+3. `scripts/ci/runtime-parity/scenarios/public-access-parity.mjs`
+4. `scripts/ci/runtime-parity/scenarios/instance-open-parity.mjs`
+5. `scripts/ci/runtime-parity/scenarios/publish-immediacy.mjs`
+6. `scripts/ci/check-bootstrap-parity.mjs`
+
+Acceptance:
+1. Runtime parity suite is green in local and cloud-dev.
+2. No PRD completion without runtime evidence.
 
 ---
 
-## 8) Deliverables
+## Required commands
 
-1. Code changes that satisfy C1-C5.
-2. `050__Execution_Report.md` with explicit local + cloud-dev runtime matrix evidence.
-3. Publish latency evidence table (`publishAcceptedAt`, `embedVisibleAt`, `deltaMs`) for local and cloud-dev.
-4. Cloud-dev account-context baseline evidence captured before and after convergence.
-5. Updated governance notes clarifying that completion requires runtime-complete state, not only build-complete.
+Local:
+```bash
+bash scripts/dev-up.sh
+pnpm test:paris-boundary
+pnpm test:bootstrap-parity
+pnpm test:runtime-parity:public
+pnpm test:runtime-parity:auth
+pnpm lint
+pnpm typecheck
+```
+
+Cloud-dev:
+```bash
+pnpm test:bootstrap-parity:cloud-dev
+pnpm test:runtime-parity:cloud-dev:public
+pnpm test:runtime-parity:cloud-dev:auth
+pnpm test:runtime-parity:cross-env
+```
 
 ---
 
-## 9) Execution delta (2026-02-22)
+## Manual runtime checklist (blocking)
 
-1. **Local startup usability hardened (`scripts/dev-up.sh`)**
-   - `dev-up` now treats startup as failed if registered services are not actually healthy/listening.
-   - `dev-up` now generates ephemeral local `CK_ADMIN_PASSWORD` (and defaults `CK_ADMIN_EMAIL`) when missing, instead of hard-failing local startup.
-   - Bob startup now receives explicit `ENV_STAGE=local` and admin identity env vars for deterministic local-only DevStudio bootstrap behavior.
-2. **Gate model simplified**
-   - PR and cloud-dev workflows now keep boundary-focused checks (`paris-boundary`, `bob-bootstrap-boundary`) plus runtime parity.
-   - Removed extra blocking gates that were adding noise without improving runtime truth.
-3. **Runtime parity evidence (local)**
-   - Local runtime parity public + auth suites pass when executed in the same shell after canonical startup:
-     - `bash scripts/dev-up.sh --reset && pnpm test:runtime-parity:public && pnpm test:runtime-parity:auth`
-4. **Admin=user runtime convergence progressed**
-   - Removed Bob proxy superadmin header/key enforcement from workspace instance create/update, render-snapshot, l10n enqueue-selected, and website-creative routes.
-   - Bob Paris proxy CORS allowlist no longer advertises `x-ck-superadmin-key`.
-   - DevStudio workspace tool no longer prompts/retries with `x-ck-superadmin-key`; requests now rely on the same session/JWT path used by product runtime.
-5. **Paris orchestration boundary extracted for SanFrancisco**
-   - Added shared `paris/src/shared/sanfrancisco.ts` client boundary for SanFrancisco calls (misconfiguration + upstream error normalization in one place).
-   - Migrated `paris/src/domains/personalization/index.ts` and `paris/src/domains/ai/index.ts` to use the shared boundary instead of direct domain-level HTTP wiring.
-   - Runtime behavior remains the same; this reduces coupling and prepares command/event extraction without changing local/cloud route semantics.
-6. **Runtime parity evidence (cloud-dev + cross-env)**
-   - `pnpm test:runtime-parity:cloud-dev:public` passes.
-   - `pnpm test:runtime-parity:cloud-dev:auth` passes.
-   - `bash scripts/dev-up.sh && pnpm test:runtime-parity:cross-env` passes with auth/public parity diff checks (`parityDiff=PASS`).
-7. **Command-envelope hard cut for orchestration handoff**
-   - Paris dispatches explicit command envelopes for personalization enqueue and AI outcome attach through the shared SanFrancisco client boundary.
-   - SanFrancisco handlers now require command envelopes only (`personalization.preview.enqueue`, `personalization.onboarding.enqueue`, `ai.outcome.attach`); legacy direct payloads are rejected.
-8. **DevStudio naming convergence (runtime code)**
-   - DevStudio local action fetch helper renamed from `superadminFetch` to `privilegedActionsFetch` (behavior unchanged) to align naming with admin=user entitlement model.
-9. **Superadmin naming removed from runtime gates**
-   - Paris curated-write local-only deny reason key moved from `coreui.errors.superadmin.localOnly` to `coreui.errors.curated.localOnly`.
-   - DevStudio workspace tool UI/runtime IDs and variables were renamed from `superadmin-*` to `privileged-*` (behavior unchanged).
-10. **Post-rename parity evidence**
-   - Boundary suites and full cross-env parity were rerun after the renames and remained green (`parityDiff=PASS`).
-11. **Publish snapshot locale fallback hardened**
-   - Paris render-snapshot locale resolution now unions workspace-configured locales with persisted locale overlay keys for the target instance.
-   - This prevents stale non-English snapshots when base publishes happen while workspace locale config is temporarily invalid/out-of-sync with already translated locales.
-   - Runtime parity suites (local + cloud-dev + cross-env diff) remained green after the change (`parityDiff=PASS`).
-12. **Admin=user metadata convergence in Roma bootstrap/settings**
-   - Roma-facing bootstrap accounts payload no longer exposes `isPlatform`; runtime behavior remains entitlement/capsule-driven.
-   - Roma settings domain payload and UI no longer display platform-account identity metadata.
-   - No admin/platform branch behavior was introduced.
-   - Boundary + runtime parity suites remained green after this slice (`parityDiff=PASS`).
-13. **No-backcompat hard cut on platform identity in runtime contracts**
-   - `RomaAccountAuthzCapsulePayload` no longer carries `isPlatform`.
-   - Identity `accounts[]` payload and account summary endpoint no longer return `isPlatform`.
-   - Minibob handoff account-create response no longer returns `isPlatform`.
-   - Boundary + runtime parity suites remained green after the hard cut (`parityDiff=PASS`).
-14. **No-backcompat hard cut on legacy render-index read path**
-   - Paris render index loader now reads publish pointer + revision index only.
-   - Legacy fallback read path `/renders/instances/:publicId/index.json` was removed.
-15. **L10n enqueue workflow compute reduced in Paris**
-   - `enqueueL10nJobs` no longer performs Paris-side snapshot diff/removal planning or user-overlay rebase execution in the request path.
-   - Paris now keeps control-plane responsibilities in this path (authz, fingerprint/state, queue dispatch), and SanFrancisco remains responsible for translation decisioning/execution at job runtime.
-   - Boundary + runtime parity suites remained green after this slice (`parityDiff=PASS`).
-16. **Venice snapshot resolution is revision-coherent**
-   - Cross-revision serving was removed from Venice snapshot read paths.
-   - If a locale artifact is missing in the current revision, Venice now falls back only to EN from that same revision.
-   - Snapshot responses now expose `X-Ck-Render-Locale-Source` (`current_locale | current_revision_en_fallback | unavailable`) for deterministic debugging.
-17. **Publish-status contract unified (`status.v2`)**
-   - Paris publish status now emits `status.v2` with `{ baseRevision, baseFingerprint, pointerUpdatedAt, locales }`.
-   - Per-locale status is normalized as `overlayState` (`current|stale|missing`) and `snapshotState` (`current|generating|missing`).
-   - Bob and DevStudio status UIs now prefer `status.v2`, removing divergent host-side interpretation.
-18. **Publish snapshot fanout simplified**
-   - On published base writes, Paris now enqueues EN snapshot first (blocking) and fans out non-EN snapshot enqueue asynchronously (non-blocking).
-   - Tokyo render generation no longer regenerates EN on every non-EN job when EN already exists in the current revision.
-19. **Prague locale boundary tightened (overview hero)**
-   - Overview hero auto-generated embeds now default to the page locale.
-   - Multi-locale hero preview remains explicit-only (via authored hero items), preventing implicit locale mixing between Prague chrome locale and showcased widget locale.
-20. **Validation evidence for this slice**
-   - `pnpm test:paris-boundary` = PASS.
-   - `pnpm test:bob-bootstrap-boundary` = PASS.
-   - `pnpm typecheck` = PASS.
-21. **Publish-immediacy recovery (local runtime parity)**
-   - `POST /render-snapshot` orchestration now enqueues EN first (blocking) and fans out non-EN locales asynchronously.
-   - Publish status `pipeline.overall` now reflects base EN snapshot readiness; locale terminal failures surface as `l10n_failed` (degraded) instead of blocking base-render observability.
-   - Local runtime parity auth suite now passes publish-immediacy end-to-end (`pnpm test:runtime-parity:auth`).
-22. **Publish contract hardened (EN-ready gate on published writes)**
-   - Published create/update flows now block on EN snapshot readiness plus pointer advancement before returning success.
-   - Non-EN locale snapshot fanout remains async and non-blocking.
-23. **`status.v2` locale source finalized**
-   - Paris publish status now emits `status.v2.locales[locale].source` with finite values: `current_locale | current_revision_en_fallback | unavailable`.
-   - This makes Roma and DevStudio locale-state rendering deterministic from one backend contract.
+Local:
+1. Open same curated instance in DevStudio and Roma.
+2. Edit one visible field in each host.
+3. Save and publish from each host.
+4. Verify embed reflects publish.
+5. Verify asset-backed field applies once without host-specific workaround.
+
+Cloud-dev:
+1. Repeat same checklist.
+2. Confirm no host divergence.
+
+---
+
+## Evidence to record (`050__Execution_Report.md`)
+
+Record one row per environment with these fields:
+1. `host`
+2. `publicId`
+3. `userId`
+4. `accountId`
+5. `workspaceId`
+6. `openEditorStatus`
+7. `saveStatus`
+8. `publishStatus`
+9. `embedVisibleLatencyMs`
+10. `parityResult` (`PASS|FAIL`)
+
+---
+
+## Rollback
+
+1. Roll out slice-by-slice.
+2. If a slice regresses runtime behavior, roll back only that slice.
+3. Do not start next slice until current slice is green.
+
+---
+
+## Definition of done
+
+All must be true:
+1. DevStudio and Roma run the same Bob curated workflow.
+2. Account/workspace context parity is proven with matching IDs.
+3. Publish parity and latency gates pass in local and cloud-dev.
+4. Runtime parity checks are green and treated as blocking evidence.
+5. `050__Execution_Report.md` is updated with concrete runtime data.

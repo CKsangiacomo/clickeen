@@ -15,10 +15,6 @@ mkdir -p "$LOG_DIR"
 WRANGLER_PERSIST_DIR="$ROOT_DIR/.wrangler/state"
 mkdir -p "$WRANGLER_PERSIST_DIR"
 LOCK_DIR="$ROOT_DIR/.dev-up.lock"
-STATE_DIR="$ROOT_DIR/.dev-up.state"
-mkdir -p "$STATE_DIR"
-PID_REGISTRY_FILE="$STATE_DIR/pids.tsv"
-ACTIVE_FILE="$STATE_DIR/active.env"
 
 TOKYO_WORKER_INSPECTOR_PORT=9231
 PARIS_INSPECTOR_PORT=9232
@@ -92,23 +88,9 @@ print_stack_port_status() {
   done
 }
 
-clear_stack_state() {
-  rm -f "$PID_REGISTRY_FILE" "$ACTIVE_FILE"
-}
-
-init_pid_registry() {
-  : > "$PID_REGISTRY_FILE"
-}
-
 register_pid() {
-  local name="$1"
-  local pid="$2"
-  local port="${3:-}"
-  local log_file="${4:-}"
-  if [ -z "$pid" ]; then
-    return 0
-  fi
-  printf '%s\t%s\t%s\t%s\n' "$name" "$pid" "$port" "$log_file" >> "$PID_REGISTRY_FILE"
+  # Process metadata tracking is intentionally disabled; readiness and lifecycle are port-based.
+  :
 }
 
 stop_pid_tree() {
@@ -135,18 +117,6 @@ stop_pid_tree() {
     sleep 1
   done
   kill -9 "$pid" >/dev/null 2>&1 || true
-}
-
-stop_registered_pids() {
-  if [ ! -s "$PID_REGISTRY_FILE" ]; then
-    return 0
-  fi
-  echo "[dev-up] Stopping previously registered service processes"
-  local pid
-  while IFS= read -r pid; do
-    [ -z "$pid" ] && continue
-    stop_pid_tree "$pid"
-  done < <(awk -F'\t' 'NF>=2 { p[++n]=$2 } END { for (i=n; i>=1; i--) print p[i] }' "$PID_REGISTRY_FILE")
 }
 
 list_repo_wrangler_pids() {
@@ -186,32 +156,19 @@ preflight_existing_stack() {
 
   if [ "$DEV_UP_RESET" = "1" ]; then
     echo "[dev-up] --reset requested: forcing clean local restart"
-    stop_registered_pids
     stop_repo_wrangler_processes
-    clear_stack_state
+    local p
+    for p in "${STACK_PORTS[@]}"; do
+      stop_port "$p"
+    done
     return 0
   fi
 
-  if [ -f "$ACTIVE_FILE" ]; then
-    if [ "$listeners" -ge 4 ]; then
-      echo "[dev-up] Existing local stack detected ($listeners listening ports)."
-      echo "[dev-up] Re-run with --reset to force a clean restart."
-      print_stack_port_status
-      exit 0
-    fi
-    echo "[dev-up] Stale active stack marker found; cleaning orphaned processes"
-    stop_registered_pids
-    stop_repo_wrangler_processes
-    clear_stack_state
-    return 0
-  fi
-
-  if [ -s "$PID_REGISTRY_FILE" ]; then
-    echo "[dev-up] Recovering from an interrupted startup; cleaning registered processes"
-    stop_registered_pids
-    stop_repo_wrangler_processes
-    clear_stack_state
-    return 0
+  if [ "$listeners" -ge 4 ]; then
+    echo "[dev-up] Existing local stack detected ($listeners listening ports)."
+    echo "[dev-up] Re-run with --reset to force a clean restart."
+    print_stack_port_status
+    exit 0
   fi
 
   local orphan_count
@@ -222,75 +179,25 @@ preflight_existing_stack() {
   fi
 }
 
-write_active_state() {
-  local with_sf="$1"
-  cat > "$ACTIVE_FILE" <<EOF
-owner_pid=$$
-started_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-with_sf=$with_sf
-EOF
-}
-
-print_registered_pid_status() {
-  if [ ! -s "$PID_REGISTRY_FILE" ]; then
-    return 0
-  fi
-  echo "[dev-up] Service process status:"
-  local name pid port log_file pstate lstate
-  while IFS=$'\t' read -r name pid port log_file; do
-    [ -z "$name" ] && continue
-    pstate="down"
-    if kill -0 "$pid" >/dev/null 2>&1; then
-      pstate="up"
-    fi
-    if [ -n "$port" ]; then
-      if is_port_listening "$port"; then
-        lstate="listening"
-      else
-        lstate="not-listening"
-      fi
-      echo "  $name: pid=$pid ($pstate), port=$port ($lstate)"
-    else
-      echo "  $name: pid=$pid ($pstate)"
-    fi
-  done < "$PID_REGISTRY_FILE"
-}
-
-collect_registered_service_health_errors() {
-  local errors_file="$1"
-  : > "$errors_file"
-  if [ ! -s "$PID_REGISTRY_FILE" ]; then
-    return 0
-  fi
-
-  local name pid port log_file
-  while IFS=$'\t' read -r name pid port log_file; do
-    [ -z "$name" ] && continue
-
-    if [ -n "$port" ]; then
-      if ! is_port_listening "$port"; then
-        printf '%s\t%s\t%s\t%s\n' "$name" "$pid" "$port" "$log_file" >> "$errors_file"
-      fi
-      continue
-    fi
-
-    if ! kill -0 "$pid" >/dev/null 2>&1; then
-      printf '%s\t%s\t%s\t%s\n' "$name" "$pid" "$port" "$log_file" >> "$errors_file"
-    fi
-  done < "$PID_REGISTRY_FILE"
-}
-
-ensure_registered_services_healthy() {
+ensure_stack_ports_healthy() {
   local attempts="${1:-8}"
   local interval_seconds="${2:-1}"
-  local attempt
-  local errors_file
-  errors_file="$(mktemp)"
-  trap 'rm -f "$errors_file"' RETURN
+  local include_sf="${3:-0}"
+  local ports=(3000 3001 3003 3004 4000 4321 5173 8790 8791)
+  if [ "$include_sf" = "1" ]; then
+    ports+=(3002)
+  fi
 
+  local attempt port
+  local missing_ports=()
   for attempt in $(seq 1 "$attempts"); do
-    collect_registered_service_health_errors "$errors_file"
-    if [ ! -s "$errors_file" ]; then
+    missing_ports=()
+    for port in "${ports[@]}"; do
+      if ! is_port_listening "$port"; then
+        missing_ports+=("$port")
+      fi
+    done
+    if [ "${#missing_ports[@]}" -eq 0 ]; then
       return 0
     fi
     if [ "$attempt" -lt "$attempts" ]; then
@@ -299,16 +206,21 @@ ensure_registered_services_healthy() {
   done
 
   echo "[dev-up] ERROR: local stack failed readiness checks."
-  while IFS=$'\t' read -r name pid port log_file; do
-    [ -z "$name" ] && continue
-    if [ -n "$port" ]; then
-      echo "[dev-up]   $name: expected port $port to be listening"
-    else
-      echo "[dev-up]   $name: expected pid $pid to stay alive"
-    fi
-    tail_log "$log_file"
-  done < "$errors_file"
-
+  for port in "${missing_ports[@]}"; do
+    echo "[dev-up]   missing listener on port $port"
+  done
+  tail_log "$LOG_DIR/tokyo.dev.log"
+  tail_log "$LOG_DIR/tokyo-worker.dev.log"
+  tail_log "$LOG_DIR/paris.dev.log"
+  tail_log "$LOG_DIR/venice.dev.log"
+  tail_log "$LOG_DIR/bob.dev.log"
+  tail_log "$LOG_DIR/devstudio.dev.log"
+  tail_log "$LOG_DIR/pitch.dev.log"
+  tail_log "$LOG_DIR/roma.dev.log"
+  tail_log "$LOG_DIR/prague.dev.log"
+  if [ "$include_sf" = "1" ]; then
+    tail_log "$LOG_DIR/sanfrancisco.dev.log"
+  fi
   return 1
 }
 
@@ -587,9 +499,6 @@ else
   fi
 fi
 
-clear_stack_state
-init_pid_registry
-
 echo "[dev-up] Stopping stale listeners"
 for p in 3000 3001 3002 3003 3004 4000 4321 5173 8790 8791; do
   stop_port "$p"
@@ -782,19 +691,18 @@ echo "  Pitch:     http://localhost:8790/healthz"
 echo "  Roma:      http://localhost:3004/home"
 echo "  Prague:    http://localhost:4321/us/en/widgets/faq"
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
-print_registered_pid_status
 print_stack_port_status
 
-if ! ensure_registered_services_healthy 8 1; then
-  echo "[dev-up] Startup failed health checks. Cleaning managed processes."
-  stop_registered_pids
-  stop_repo_wrangler_processes
-  clear_stack_state
-  exit 1
+HEALTH_WITH_SF=0
+if [ -n "$SF_BASE_URL" ]; then
+  HEALTH_WITH_SF=1
 fi
 
-if [ -n "$SF_BASE_URL" ]; then
-  write_active_state "1"
-else
-  write_active_state "0"
+if ! ensure_stack_ports_healthy 8 1 "$HEALTH_WITH_SF"; then
+  echo "[dev-up] Startup failed health checks. Cleaning listeners."
+  stop_repo_wrangler_processes
+  for p in "${STACK_PORTS[@]}"; do
+    stop_port "$p"
+  done
+  exit 1
 fi

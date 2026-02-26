@@ -68,6 +68,3 @@ prague-strings/compiled/
 
 # User-uploaded assets (local dev only; served by Tokyo dev server)
 tokyo/arsenale/
-
-# Local dev-up runtime state
-.dev-up.state/
