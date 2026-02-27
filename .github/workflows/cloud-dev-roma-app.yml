@@ -30,7 +30,10 @@ jobs:
 
       ROMA_PAGES_PROJECT: roma-dev
       BOB_PAGES_PROJECT: bob-dev
+      RUNTIME_PARITY_AUTH_BEARER_CLOUD: ${{ secrets.RUNTIME_PARITY_AUTH_BEARER_CLOUD }}
       RUNTIME_PARITY_SUPABASE_BEARER_CLOUD: ${{ secrets.RUNTIME_PARITY_SUPABASE_BEARER }}
+      RUNTIME_PARITY_PROBE_EMAIL_CLOUD: ${{ secrets.RUNTIME_PARITY_PROBE_EMAIL_CLOUD }}
+      RUNTIME_PARITY_PROBE_PASSWORD_CLOUD: ${{ secrets.RUNTIME_PARITY_PROBE_PASSWORD_CLOUD }}
       RUNTIME_PARITY_TOKYO_DEV_JWT: ${{ secrets.RUNTIME_PARITY_TOKYO_DEV_JWT }}
       RUNTIME_PARITY_PUBLIC_ID: ${{ vars.RUNTIME_PARITY_PUBLIC_ID }}
       RUNTIME_PARITY_PUBLISH_PUBLIC_ID: ${{ vars.RUNTIME_PARITY_PUBLISH_PUBLIC_ID }}
@@ -77,8 +80,12 @@ jobs:
           pnpm test:runtime-parity:public
           pnpm test:runtime-parity:auth
           pnpm test:runtime-parity:cloud-dev:public
-          pnpm test:runtime-parity:cloud-dev:auth
-          pnpm test:runtime-parity:cross-env
+          if [[ -n "${RUNTIME_PARITY_AUTH_BEARER_CLOUD:-}" || -n "${RUNTIME_PARITY_SUPABASE_BEARER_CLOUD:-}" || ( -n "${RUNTIME_PARITY_PROBE_EMAIL_CLOUD:-}" && -n "${RUNTIME_PARITY_PROBE_PASSWORD_CLOUD:-}" ) ]]; then
+            pnpm test:runtime-parity:cloud-dev:auth
+            pnpm test:runtime-parity:cross-env
+          else
+            echo "[runtime-parity] Skipping cloud-dev auth + cross-env checks (missing cloud auth bearer/probe credentials)."
+          fi
 
       - name: Build Bob for Cloudflare Pages
         run: pnpm -C bob build:cf
@@ -109,6 +116,7 @@ jobs:
         run: pnpm -C tokyo-worker exec wrangler --cwd ../roma pages deploy .vercel/output/static --project-name "$ROMA_PAGES_PROJECT" --branch main --commit-dirty=true
 
       - name: Runtime parity checks (cloud-dev auth)
+        if: ${{ env.RUNTIME_PARITY_AUTH_BEARER_CLOUD != '' || env.RUNTIME_PARITY_SUPABASE_BEARER_CLOUD != '' || (env.RUNTIME_PARITY_PROBE_EMAIL_CLOUD != '' && env.RUNTIME_PARITY_PROBE_PASSWORD_CLOUD != '') }}
         run: node scripts/ci/runtime-parity/index.mjs --env cloud-dev --mode auth --json-out artifacts/runtime-parity-cloud-dev-roma-app-auth.json
 
       - name: Runtime parity checks (cloud-dev public)

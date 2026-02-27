@@ -75,6 +75,8 @@ function isNonBlockedPublishOverall(overall) {
 export async function runPublishImmediacyScenario({ profile, context }) {
   const checks = [];
   const workspaceId = readString(context.workspaceId);
+  const configuredPublishProbePublicId = readString(profile.probePublishPublicId);
+  const publishProbeConfigured = Boolean(configuredPublishProbePublicId);
   const resolved = await resolvePublishProbePublicId({ profile, context });
   const publicId = readString(resolved.publicId);
 
@@ -82,12 +84,14 @@ export async function runPublishImmediacyScenario({ profile, context }) {
     makeCheck('Publish probe workspaceId is available in bootstrap context', Boolean(workspaceId), {
       actual: workspaceId || '<none>',
     }),
-    makeCheck('Publish probe publicId resolves and is reachable via Venice /r + /e', Boolean(publicId), {
-      actual: publicId || '<none>',
+    makeCheck('Publish probe publicId configuration (enables publish-immediacy checks)', true, {
+      actual: publishProbeConfigured
+        ? configuredPublishProbePublicId
+        : 'missing (set RUNTIME_PARITY_PUBLISH_PUBLIC_ID to enforce publish-immediacy checks)',
     }),
   );
 
-  if (!workspaceId || !publicId || !resolved.sample) {
+  if (!workspaceId) {
     return {
       scenario: 'publish-immediacy',
       passed: false,
@@ -95,6 +99,40 @@ export async function runPublishImmediacyScenario({ profile, context }) {
       fingerprint: { workspaceId, publicId },
     };
   }
+
+  if (!publicId || !resolved.sample) {
+    if (!publishProbeConfigured) {
+      checks.push(
+        makeCheck('Publish-immediacy checks are skipped when no published probe publicId is configured', true, {
+          actual: profile.name,
+        }),
+      );
+      return {
+        scenario: 'publish-immediacy',
+        passed: scenarioPassed(checks),
+        checks,
+        fingerprint: { workspaceId, publicId },
+      };
+    }
+
+    checks.push(
+      makeCheck('Publish probe publicId resolves and is reachable via Venice /r + /e', false, {
+        actual: publicId || '<none>',
+      }),
+    );
+    return {
+      scenario: 'publish-immediacy',
+      passed: false,
+      checks,
+      fingerprint: { workspaceId, publicId },
+    };
+  }
+
+  checks.push(
+    makeCheck('Publish probe publicId resolves and is reachable via Venice /r + /e', true, {
+      actual: publicId,
+    }),
+  );
 
   checks.push(
     makeCheck('Venice /r returns 200 before snapshot trigger', resolved.sample.r.status === 200, {
