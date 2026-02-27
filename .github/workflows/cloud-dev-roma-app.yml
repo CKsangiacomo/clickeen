@@ -46,6 +46,8 @@ jobs:
           cache: pnpm
 
       - uses: supabase/setup-cli@v1
+        with:
+          version: 2.75.0
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
