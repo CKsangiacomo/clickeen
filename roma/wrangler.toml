@@ -6,3 +6,6 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 PARIS_BASE_URL = "https://paris.dev.clickeen.com"
 NEXT_PUBLIC_TOKYO_URL = "https://tokyo.dev.clickeen.com"
+
+[env.production]
+compatibility_flags = ["nodejs_compat"]
