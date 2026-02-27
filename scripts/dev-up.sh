@@ -739,7 +739,7 @@ if [ -n "$SF_BASE_URL" ]; then
   HEALTH_WITH_SF=1
 fi
 
-if ! ensure_stack_ports_healthy 8 1 "$HEALTH_WITH_SF"; then
+if ! ensure_stack_ports_healthy "$DEV_UP_HEALTH_ATTEMPTS" "$DEV_UP_HEALTH_INTERVAL" "$HEALTH_WITH_SF"; then
   echo "[dev-up] Startup failed health checks. Cleaning listeners."
   stop_repo_wrangler_processes
   for p in "${STACK_PORTS[@]}"; do
