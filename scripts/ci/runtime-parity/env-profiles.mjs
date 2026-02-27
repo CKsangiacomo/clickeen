@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
 
 const DEFAULTS = {
   local: {
@@ -23,7 +22,6 @@ const DEFAULTS = {
 
 const LOCAL_ENV_FILE = path.join(process.cwd(), '.env.local');
 const LOCAL_PROBE_EMAIL_DEFAULTS = ['local.admin@clickeen.local', 'local.paid@clickeen.local', 'dev@clickeen.local'];
-let cachedSupabaseCliEnv = null;
 
 function readLocalEnvValue(key) {
   const direct = process.env[key];
@@ -71,13 +69,13 @@ function parseLatencyBudget(raw, fallback) {
   return parsed;
 }
 
-function resolveSupabaseBearer(envName) {
+function resolveAuthBearer(envName) {
   const allowLocalFallback = envName === 'local';
   const envScopedKey =
     envName === 'cloud-dev'
-      ? 'RUNTIME_PARITY_SUPABASE_BEARER_CLOUD'
+      ? 'RUNTIME_PARITY_AUTH_BEARER_CLOUD'
       : envName === 'local'
-        ? 'RUNTIME_PARITY_SUPABASE_BEARER_LOCAL'
+        ? 'RUNTIME_PARITY_AUTH_BEARER_LOCAL'
         : '';
 
   const scopedToken = envScopedKey
@@ -87,11 +85,24 @@ function resolveSupabaseBearer(envName) {
     : '';
   if (scopedToken) return scopedToken;
 
-  const token = readRuntimeValue('RUNTIME_PARITY_SUPABASE_BEARER', {
+  const token = readRuntimeValue('RUNTIME_PARITY_AUTH_BEARER', {
     allowLocalFallback,
   });
   if (token) return token;
-  return '';
+
+  // Backward compatibility for older env names.
+  const legacyScopedKey =
+    envName === 'cloud-dev'
+      ? 'RUNTIME_PARITY_SUPABASE_BEARER_CLOUD'
+      : envName === 'local'
+        ? 'RUNTIME_PARITY_SUPABASE_BEARER_LOCAL'
+        : '';
+  const legacyScoped = legacyScopedKey
+    ? readRuntimeValue(legacyScopedKey, { allowLocalFallback })
+    : '';
+  if (legacyScoped) return legacyScoped;
+
+  return readRuntimeValue('RUNTIME_PARITY_SUPABASE_BEARER', { allowLocalFallback });
 }
 
 function resolveTokyoDevJwt(envName, { required }) {
@@ -109,77 +120,6 @@ function resolveTokyoDevJwt(envName, { required }) {
     );
   }
   return '';
-}
-
-function parseEnvLines(raw) {
-  const out = {};
-  for (const line of String(raw || '').split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const idx = trimmed.indexOf('=');
-    if (idx <= 0) continue;
-    const key = trimmed.slice(0, idx).trim();
-    if (!key) continue;
-    const value = normalizeEnvValue(trimmed.slice(idx + 1));
-    out[key] = value;
-  }
-  return out;
-}
-
-function readSupabaseCliEnv() {
-  if (cachedSupabaseCliEnv) return cachedSupabaseCliEnv;
-  try {
-    const raw = execSync('supabase status --output env', {
-      cwd: process.cwd(),
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    });
-    cachedSupabaseCliEnv = parseEnvLines(raw);
-    return cachedSupabaseCliEnv;
-  } catch {
-    cachedSupabaseCliEnv = {};
-    return cachedSupabaseCliEnv;
-  }
-}
-
-function readSupabaseCliEnvValue(key) {
-  const env = readSupabaseCliEnv();
-  return normalizeEnvValue(env[key] || '');
-}
-
-function resolveLocalSupabaseAuthConfig() {
-  const baseUrl =
-    readSupabaseCliEnvValue('API_URL') ||
-    readSupabaseCliEnvValue('SUPABASE_URL') ||
-    readRuntimeValue('SUPABASE_URL', { allowLocalFallback: true }) ||
-    readRuntimeValue('NEXT_PUBLIC_SUPABASE_URL', { allowLocalFallback: true }) ||
-    readRuntimeValue('API_URL', { allowLocalFallback: true });
-  const anonKey =
-    readSupabaseCliEnvValue('ANON_KEY') ||
-    readSupabaseCliEnvValue('SUPABASE_ANON_KEY') ||
-    readSupabaseCliEnvValue('PUBLISHABLE_KEY') ||
-    readRuntimeValue('SUPABASE_ANON_KEY', { allowLocalFallback: true }) ||
-    readRuntimeValue('NEXT_PUBLIC_SUPABASE_ANON_KEY', { allowLocalFallback: true });
-  return {
-    baseUrl: baseUrl.replace(/\/+$/, ''),
-    anonKey,
-  };
-}
-
-function resolveCloudSupabaseAuthConfig() {
-  const baseUrl =
-    readRuntimeValue('RUNTIME_PARITY_SUPABASE_URL', { allowLocalFallback: true }) ||
-    readRuntimeValue('SUPABASE_URL', { allowLocalFallback: true }) ||
-    readRuntimeValue('NEXT_PUBLIC_SUPABASE_URL', { allowLocalFallback: true });
-  const anonKey =
-    readRuntimeValue('RUNTIME_PARITY_SUPABASE_ANON_KEY', { allowLocalFallback: true }) ||
-    readRuntimeValue('SUPABASE_ANON_KEY', { allowLocalFallback: true }) ||
-    readRuntimeValue('NEXT_PUBLIC_SUPABASE_ANON_KEY', { allowLocalFallback: true }) ||
-    readRuntimeValue('SUPABASE_SERVICE_ROLE_KEY', { allowLocalFallback: true });
-  return {
-    baseUrl: baseUrl.replace(/\/+$/, ''),
-    anonKey,
-  };
 }
 
 function resolveProbeCredentials(envName) {
@@ -214,62 +154,96 @@ function resolveProbeCredentials(envName) {
   };
 }
 
+function getSetCookies(response) {
+  if (typeof response.headers.getSetCookie === 'function') {
+    const values = response.headers.getSetCookie();
+    if (Array.isArray(values) && values.length > 0) return values;
+  }
+  const single = response.headers.get('set-cookie');
+  return single ? [single] : [];
+}
+
+function buildCookieHeader(setCookieHeaders) {
+  const pairs = [];
+  for (const header of setCookieHeaders) {
+    const raw = String(header || '').trim();
+    if (!raw) continue;
+    const first = raw.split(';')[0] || '';
+    const idx = first.indexOf('=');
+    if (idx <= 0) continue;
+    const name = first.slice(0, idx).trim();
+    const value = first.slice(idx + 1).trim();
+    if (!name) continue;
+    pairs.push(`${name}=${value}`);
+  }
+  return pairs.join('; ');
+}
+
 async function readJsonSafe(response) {
   return response.json().catch(() => null);
 }
 
-async function requestPasswordGrant(args) {
-  const response = await fetch(`${args.baseUrl}/auth/v1/token?grant_type=password`, {
+async function requestRomaLogin(romaBaseUrl, email, password) {
+  const response = await fetch(`${romaBaseUrl}/api/session/login`, {
     method: 'POST',
     headers: {
-      apikey: args.anonKey,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+      accept: 'application/json',
+      'content-type': 'application/json',
+      'cache-control': 'no-store',
     },
     cache: 'no-store',
-    body: JSON.stringify({
-      email: args.email,
-      password: args.password,
-    }),
+    body: JSON.stringify({ email, password }),
+  });
+  const payload = await readJsonSafe(response);
+  const cookieHeader = buildCookieHeader(getSetCookies(response));
+  return {
+    status: response.status,
+    ok: response.ok,
+    payload,
+    cookieHeader,
+  };
+}
+
+async function requestRomaAccessToken(romaBaseUrl, cookieHeader) {
+  const headers = {
+    accept: 'application/json',
+    'cache-control': 'no-store',
+  };
+  if (cookieHeader) headers.cookie = cookieHeader;
+
+  const response = await fetch(`${romaBaseUrl}/api/session/access-token`, {
+    method: 'GET',
+    headers,
+    cache: 'no-store',
   });
   const payload = await readJsonSafe(response);
   const accessToken =
-    response.ok && payload && typeof payload.access_token === 'string'
-      ? payload.access_token.trim()
-      : '';
+    response.ok && payload && typeof payload.accessToken === 'string' ? payload.accessToken.trim() : '';
   return {
     status: response.status,
     accessToken,
   };
 }
 
-async function mintSupabaseBearer(envName) {
-  const config = envName === 'local' ? resolveLocalSupabaseAuthConfig() : resolveCloudSupabaseAuthConfig();
-  if (!config.baseUrl || !config.anonKey) {
-    throw new Error(
-      `[runtime-parity] Missing ${envName} Supabase auth config (SUPABASE_URL + SUPABASE_ANON_KEY).`,
-    );
-  }
-
-  const credentials = resolveProbeCredentials(envName);
+async function mintAuthBearer(profile) {
+  const credentials = resolveProbeCredentials(profile.name);
   if (!credentials.emailCandidates.length || !credentials.password) {
     throw new Error(
-      `[runtime-parity] Missing ${envName} probe credentials. Set CK_ADMIN_EMAIL/CK_ADMIN_PASSWORD or RUNTIME_PARITY_PROBE_EMAIL/RUNTIME_PARITY_PROBE_PASSWORD.`,
+      `[runtime-parity] Missing ${profile.name} probe credentials. Set CK_ADMIN_EMAIL/CK_ADMIN_PASSWORD or RUNTIME_PARITY_PROBE_EMAIL/RUNTIME_PARITY_PROBE_PASSWORD.`,
     );
   }
 
   const attempts = [];
   for (const email of credentials.emailCandidates) {
     try {
-      const result = await requestPasswordGrant({
-        baseUrl: config.baseUrl,
-        anonKey: config.anonKey,
-        email,
-        password: credentials.password,
-      });
-      attempts.push(`${email}:${result.status}`);
-      if (result.accessToken) {
-        return result.accessToken;
+      const login = await requestRomaLogin(profile.romaBaseUrl, email, credentials.password);
+      attempts.push(`${email}:login(${login.status})`);
+      if (!login.ok || !login.cookieHeader) continue;
+
+      const token = await requestRomaAccessToken(profile.romaBaseUrl, login.cookieHeader);
+      attempts.push(`${email}:token(${token.status})`);
+      if (token.accessToken) {
+        return token.accessToken;
       }
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
@@ -278,17 +252,17 @@ async function mintSupabaseBearer(envName) {
   }
 
   throw new Error(
-    `[runtime-parity] Failed to mint ${envName} probe bearer (${attempts.join(', ')}). Export an explicit bearer (RUNTIME_PARITY_SUPABASE_BEARER[_CLOUD]) or verify probe credentials.`,
+    `[runtime-parity] Failed to mint ${profile.name} auth bearer (${attempts.join(', ')}). Export RUNTIME_PARITY_AUTH_BEARER[_CLOUD] or verify probe credentials + Roma auth routes.`,
   );
 }
 
 export async function ensureRuntimeProfileAuth(profile) {
   if (profile.mode !== 'auth') return profile;
-  if (profile.supabaseBearer) return profile;
-  const token = await mintSupabaseBearer(profile.name);
+  if (profile.authBearer) return profile;
+  const token = await mintAuthBearer(profile);
   return {
     ...profile,
-    supabaseBearer: token,
+    authBearer: token,
   };
 }
 
@@ -318,7 +292,7 @@ export function resolveRuntimeProfile(envName, options = {}) {
     tokyoBaseUrl: readUrl('RUNTIME_PARITY_TOKYO_BASE_URL', defaults.tokyoBaseUrl, allowLocalFallback),
     veniceBaseUrl: readUrl('RUNTIME_PARITY_VENICE_BASE_URL', defaults.veniceBaseUrl, allowLocalFallback),
     publishLatencyBudgetMs,
-    supabaseBearer: resolveSupabaseBearer(envName),
+    authBearer: resolveAuthBearer(envName),
     tokyoDevJwt: resolveTokyoDevJwt(envName, { required: requiresTokyoJwt }),
     probePublicId: readRuntimeValue('RUNTIME_PARITY_PUBLIC_ID', { allowLocalFallback }),
     probePublishPublicId: readRuntimeValue('RUNTIME_PARITY_PUBLISH_PUBLIC_ID', { allowLocalFallback }),

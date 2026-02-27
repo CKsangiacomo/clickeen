@@ -1,0 +1,25 @@
+name = "berlin-dev"
+main = "src/index.ts"
+compatibility_date = "2025-12-28"
+workers_dev = true
+routes = [
+  { pattern = "berlin.dev.clickeen.com/*", zone_name = "clickeen.com" },
+]
+
+[vars]
+BERLIN_ISSUER = "https://berlin.dev.clickeen.com"
+BERLIN_AUDIENCE = "clickeen.product"
+
+[[kv_namespaces]]
+binding = "BERLIN_SESSION_KV"
+id = "a9396f7fee7f47bc9b1be520c78a24c9"
+preview_id = "4d253b94b6b5434ab484cfe4a3a0fb9a"
+
+[env.local]
+name = "berlin-local"
+vars = { BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product" }
+
+[[env.local.kv_namespaces]]
+binding = "BERLIN_SESSION_KV"
+id = "00000000000000000000000000000000"
+preview_id = "00000000000000000000000000000000"

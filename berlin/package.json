@@ -1,0 +1,14 @@
+{
+  "name": "@clickeen/berlin",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local --env local --port 3005",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251228.0",
+    "wrangler": "^4.54.0"
+  }
+}

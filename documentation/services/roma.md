@@ -35,11 +35,11 @@ Roma bootstraps from:
 
 `/api/bootstrap` proxies to Paris `GET /api/roma/bootstrap` with the user bearer token.
 When no valid session is present, it returns `401` with auth error payload (`coreui.errors.auth.required`).
-Roma does not auto-bootstrap local auth sessions; local and Cloudflare require real Supabase session tokens.
+Roma does not auto-bootstrap local auth sessions; local and Cloudflare require real Berlin session tokens.
 Roma also exposes `GET /api/session/access-token` for Builder->Bob auth handoff; it resolves the current bearer server-side and forwards refreshed auth cookies when rotation occurs.
 Roma exposes explicit session endpoints for product auth UX:
-- `POST /api/session/login` (email/password -> Supabase password grant -> httpOnly session cookies)
-- `POST /api/session/logout` (clears Supabase session cookies)
+- `POST /api/session/login` (email/password -> Berlin auth login -> httpOnly session cookies)
+- `POST /api/session/logout` (best-effort Berlin logout + clears auth cookies)
 
 Bootstrap payload includes:
 - User/accounts/workspaces graph
@@ -109,6 +109,7 @@ Assets domain behavior:
 - Roma runs at `http://localhost:3004` via `bash scripts/dev-up.sh`.
 - Canonical entry: `http://localhost:3004/home`.
 - Uses local Paris through `PARIS_BASE_URL=http://localhost:3001`.
+- Uses local Berlin auth through `BERLIN_BASE_URL=http://localhost:3005`.
 - `dev-up` exports `ENV_STAGE=local` for Bob/Roma so local-only bypass logic stays stage-gated.
 - `dev-up` points Paris/Workers to local Supabase by default; remote Supabase is opt-in (`DEV_UP_USE_REMOTE_SUPABASE=1`).
 - `dev-up` seeds deterministic local auth personas (non-destructive) for parity testing:

@@ -10,7 +10,7 @@ This README is a quick operational guide. For the full endpoint and behavior con
 Core shipped endpoints in this repo snapshot include:
 - `GET /api/healthz`
 - `GET /api/me` (`workspaceId` query optional; when provided, defaults are resolved only for that membership)
-- `POST /api/accounts` (Supabase session + `Idempotency-Key`)
+- `POST /api/accounts` (Berlin session bearer + `Idempotency-Key`)
 - `GET /api/roma/widgets?workspaceId=<uuid>` (Roma widgets domain list; metadata only, no instance `config` payload; includes active-workspace user instances plus account-owned curated/main starters)
 - `GET /api/roma/templates?workspaceId=<uuid>` (Roma templates domain list; all curated/main starters available to authenticated workspace members)
 - `POST /api/roma/widgets/duplicate` (Roma widgets command; duplicates a source instance into workspace-owned user instance server-side)
@@ -31,7 +31,7 @@ Core shipped endpoints in this repo snapshot include:
 - `GET /api/workspaces/:workspaceId/ai/outcomes` (explicit unavailable in this snapshot)
 - `GET /api/accounts/:accountId`
 - `GET /api/accounts/:accountId/workspaces`
-- `POST /api/accounts/:accountId/workspaces` (Supabase session + `Idempotency-Key`)
+- `POST /api/accounts/:accountId/workspaces` (Berlin session bearer + `Idempotency-Key`)
 - `GET /api/accounts/:accountId/usage`
 - `GET /api/accounts/:accountId/assets`
   - query projections:
@@ -44,7 +44,7 @@ Core shipped endpoints in this repo snapshot include:
 - `POST /api/accounts/:accountId/billing/checkout-session` (explicit not-configured in this snapshot)
 - `POST /api/accounts/:accountId/billing/portal-session` (explicit not-configured in this snapshot)
 - `POST /api/minibob/handoff/start` (public; stores server-side handoff snapshot and returns `handoffId`)
-- `POST /api/minibob/handoff/complete` (Supabase session + `handoffId` + `Idempotency-Key`)
+- `POST /api/minibob/handoff/complete` (Berlin session bearer + `handoffId` + `Idempotency-Key`)
   - accepts only curated/base MiniBob source ids (`wgt_main_*` or `wgt_curated_*`) and always creates a new `wgt_*_u_*` record
 
 ## Curated vs user instances
@@ -60,9 +60,9 @@ Public in this repo snapshot:
 - `POST /api/ai/minibob/session`
 
 Non-public product endpoints require:
-- `Authorization: Bearer <Supabase session JWT>`
+- `Authorization: Bearer <Berlin access token>`
 
-Strict Supabase-only productized bootstrap contracts:
+Strict Berlin-authenticated productized bootstrap contracts:
 - `POST /api/accounts`
 - `POST /api/accounts/:accountId/workspaces`
 - `POST /api/minibob/handoff/complete`
@@ -73,6 +73,9 @@ Machine/internal endpoints can also use signature-based verification (for exampl
 
 - `SUPABASE_URL` (env var)
 - `SUPABASE_SERVICE_ROLE_KEY` (secret)
+- `BERLIN_BASE_URL` (env var)
+- `BERLIN_ISSUER` (env var; must match Berlin-issued token `iss`)
+- `BERLIN_AUDIENCE` (env var; must match Berlin-issued token `aud`)
 - `AI_GRANT_HMAC_SECRET` (secret, AI grants/outcomes)
 - `PARIS_DEV_JWT` (secret, internal service-to-service paths only; not accepted for product auth)
 

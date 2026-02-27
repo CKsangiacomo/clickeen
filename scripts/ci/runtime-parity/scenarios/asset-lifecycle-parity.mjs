@@ -56,7 +56,7 @@ async function runAssetFlow({
         )}?_t=${Date.now()}`,
         {
           method: 'DELETE',
-          headers: authHeaders(bearer),
+          headers: authHeaders(bearer, { 'x-clickeen-surface': 'roma-assets' }),
         },
       )
     : null;
@@ -68,7 +68,7 @@ async function runAssetFlow({
         )}?_t=${Date.now() + 1}`,
         {
           method: 'DELETE',
-          headers: authHeaders(bearer),
+          headers: authHeaders(bearer, { 'x-clickeen-surface': 'roma-assets' }),
         },
       )
     : null;
@@ -111,7 +111,7 @@ export async function runAssetLifecycleParityScenario({ profile, context }) {
     runAssetFlow({
       hostLabel: 'bob',
       hostBaseUrl: profile.bobBaseUrl,
-      bearer: profile.supabaseBearer,
+      bearer: profile.authBearer,
       accountId,
       workspaceId,
       tokyoBaseUrl: profile.tokyoBaseUrl,
@@ -121,7 +121,7 @@ export async function runAssetLifecycleParityScenario({ profile, context }) {
     runAssetFlow({
       hostLabel: 'roma',
       hostBaseUrl: profile.romaBaseUrl,
-      bearer: profile.supabaseBearer,
+      bearer: profile.authBearer,
       accountId,
       workspaceId,
       tokyoBaseUrl: profile.tokyoBaseUrl,

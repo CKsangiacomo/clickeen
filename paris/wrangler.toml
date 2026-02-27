@@ -5,6 +5,9 @@ workers_dev = true
 
 [vars]
 SANFRANCISCO_BASE_URL = "https://sanfrancisco.dev.clickeen.com"
+BERLIN_BASE_URL = "https://berlin.dev.clickeen.com"
+BERLIN_ISSUER = "https://berlin.dev.clickeen.com"
+BERLIN_AUDIENCE = "clickeen.product"
 
 [[kv_namespaces]]
 binding = "USAGE_KV"
@@ -32,6 +35,7 @@ crons = ["*/5 * * * *"]
 
 [env.local]
 name = "paris-local"
+vars = { BERLIN_BASE_URL = "http://localhost:3005", BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product" }
 
 [[env.local.kv_namespaces]]
 binding = "USAGE_KV"

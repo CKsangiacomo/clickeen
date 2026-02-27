@@ -19,6 +19,7 @@ LOCK_DIR="$ROOT_DIR/.dev-up.lock"
 TOKYO_WORKER_INSPECTOR_PORT=9231
 PARIS_INSPECTOR_PORT=9232
 SANFRANCISCO_INSPECTOR_PORT=9233
+BERLIN_INSPECTOR_PORT=9234
 
 DEV_UP_HEALTH_ATTEMPTS="${DEV_UP_HEALTH_ATTEMPTS:-60}"
 DEV_UP_HEALTH_INTERVAL="${DEV_UP_HEALTH_INTERVAL:-1}"
@@ -27,7 +28,7 @@ DEV_UP_PRAGUE_L10N=0
 DEV_UP_RESET=0
 NEEDS_PRAGUE_L10N_TRANSLATE=0
 STARTED_PID=""
-STACK_PORTS=(3000 3001 3002 3003 3004 4000 4321 5173 8790 8791)
+STACK_PORTS=(3000 3001 3002 3003 3004 3005 4000 4321 5173 8790 8791)
 
 ensure_lock() {
   if [ -d "$LOCK_DIR" ]; then
@@ -127,7 +128,7 @@ list_repo_wrangler_pids() {
     case "$cmd" in
       *"$ROOT_DIR"*wrangler*' dev --local '*)
         case "$cmd" in
-          *'--port 3001'*|*'--port 3002'*|*'--port 8790'*|*'--port 8791'*)
+          *'--port 3001'*|*'--port 3002'*|*'--port 3005'*|*'--port 8790'*|*'--port 8791'*)
             echo "$pid"
             ;;
         esac
@@ -183,7 +184,7 @@ ensure_stack_ports_healthy() {
   local attempts="${1:-8}"
   local interval_seconds="${2:-1}"
   local include_sf="${3:-0}"
-  local ports=(3000 3001 3003 3004 4000 4321 5173 8790 8791)
+  local ports=(3000 3001 3003 3004 3005 4000 4321 5173 8790 8791)
   if [ "$include_sf" = "1" ]; then
     ports+=(3002)
   fi
@@ -211,6 +212,7 @@ ensure_stack_ports_healthy() {
   done
   tail_log "$LOG_DIR/tokyo.dev.log"
   tail_log "$LOG_DIR/tokyo-worker.dev.log"
+  tail_log "$LOG_DIR/berlin.dev.log"
   tail_log "$LOG_DIR/paris.dev.log"
   tail_log "$LOG_DIR/venice.dev.log"
   tail_log "$LOG_DIR/bob.dev.log"
@@ -414,6 +416,12 @@ if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
   exit 1
 fi
 
+SUPABASE_ANON_KEY_VALUE="${ANON_KEY:-${SUPABASE_ANON_KEY:-${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}}}"
+if [ -z "${SUPABASE_ANON_KEY_VALUE:-}" ]; then
+  echo "[dev-up] Failed to resolve SUPABASE_ANON_KEY from Supabase status / env"
+  exit 1
+fi
+
 if [ "$DEV_UP_USE_REMOTE_SUPABASE" = "1" ] || [ "$DEV_UP_USE_REMOTE_SUPABASE" = "true" ]; then
   echo "[dev-up] Skipping local persona seed (remote Supabase mode)"
 else
@@ -469,6 +477,9 @@ if [ -z "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
 fi
 
 TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
+BERLIN_URL=${BERLIN_URL:-http://localhost:3005}
+BERLIN_ISSUER=${BERLIN_ISSUER:-$BERLIN_URL}
+BERLIN_AUDIENCE=${BERLIN_AUDIENCE:-clickeen.product}
 SF_BASE_URL=""
 if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
   SF_BASE_URL="http://localhost:3002"
@@ -500,7 +511,7 @@ else
 fi
 
 echo "[dev-up] Stopping stale listeners"
-for p in 3000 3001 3002 3003 3004 4000 4321 5173 8790 8791; do
+for p in 3000 3001 3002 3003 3004 3005 4000 4321 5173 8790 8791; do
   stop_port "$p"
 done
 
@@ -521,6 +532,9 @@ echo "[dev-up] Starting Tokyo Worker (8791)"
   VARS+=(--var "TOKYO_L10N_HTTP_BASE:$TOKYO_URL")
   VARS+=(--var "VENICE_BASE_URL:http://localhost:3003")
   VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
+  VARS+=(--var "BERLIN_BASE_URL:$BERLIN_URL")
+  VARS+=(--var "BERLIN_ISSUER:$BERLIN_ISSUER")
+  VARS+=(--var "BERLIN_AUDIENCE:$BERLIN_AUDIENCE")
   start_detached "$LOG_DIR/tokyo-worker.dev.log" pnpm exec wrangler dev --local --env local --port 8791 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$TOKYO_WORKER_INSPECTOR_PORT" \
     "${VARS[@]}"
   TOKYO_WORKER_PID="$STARTED_PID"
@@ -528,6 +542,29 @@ echo "[dev-up] Starting Tokyo Worker (8791)"
   register_pid "tokyo-worker" "$TOKYO_WORKER_PID" "8791" "$LOG_DIR/tokyo-worker.dev.log"
 )
 wait_for_url "http://localhost:8791/healthz" "Tokyo Worker" "$LOG_DIR/tokyo-worker.dev.log"
+
+echo "[dev-up] Starting Berlin Worker (3005)"
+(
+  cd "$ROOT_DIR/berlin"
+  VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_ANON_KEY:$SUPABASE_ANON_KEY_VALUE")
+  VARS+=(--var "BERLIN_ISSUER:$BERLIN_ISSUER")
+  VARS+=(--var "BERLIN_AUDIENCE:$BERLIN_AUDIENCE")
+  if [ -n "${BERLIN_REFRESH_SECRET:-}" ]; then
+    VARS+=(--var "BERLIN_REFRESH_SECRET:$BERLIN_REFRESH_SECRET")
+  fi
+  if [ -n "${BERLIN_ACCESS_PRIVATE_KEY_PEM:-}" ]; then
+    VARS+=(--var "BERLIN_ACCESS_PRIVATE_KEY_PEM:$BERLIN_ACCESS_PRIVATE_KEY_PEM")
+  fi
+  if [ -n "${BERLIN_ACCESS_PUBLIC_KEY_PEM:-}" ]; then
+    VARS+=(--var "BERLIN_ACCESS_PUBLIC_KEY_PEM:$BERLIN_ACCESS_PUBLIC_KEY_PEM")
+  fi
+  start_detached "$LOG_DIR/berlin.dev.log" pnpm exec wrangler dev --local --env local --port 3005 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$BERLIN_INSPECTOR_PORT" \
+    "${VARS[@]}"
+  BERLIN_PID="$STARTED_PID"
+  echo "[dev-up] Berlin PID: $BERLIN_PID"
+  register_pid "berlin" "$BERLIN_PID" "3005" "$LOG_DIR/berlin.dev.log"
+)
+wait_for_url "http://localhost:3005/internal/healthz" "Berlin" "$LOG_DIR/berlin.dev.log"
 
 echo "[dev-up] Syncing Tokyo fonts to local R2"
 if ! node "$ROOT_DIR/scripts/tokyo-fonts-sync.mjs" --local --persist-to "$WRANGLER_PERSIST_DIR"; then
@@ -546,6 +583,9 @@ echo "[dev-up] Starting Paris Worker (3001)"
   VARS+=(--var "TOKYO_BASE_URL:$TOKYO_URL")
   VARS+=(--var "TOKYO_WORKER_BASE_URL:http://localhost:8791")
   VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
+  VARS+=(--var "BERLIN_BASE_URL:$BERLIN_URL")
+  VARS+=(--var "BERLIN_ISSUER:$BERLIN_ISSUER")
+  VARS+=(--var "BERLIN_AUDIENCE:$BERLIN_AUDIENCE")
   VARS+=(--var "ENV_STAGE:local")
   if [ -n "$SF_BASE_URL" ]; then
     VARS+=(--var "SANFRANCISCO_BASE_URL:$SF_BASE_URL")
@@ -628,9 +668,9 @@ echo "[dev-up] Starting Bob (3000)"
 (
   cd "$ROOT_DIR/bob"
   if [ -n "$SF_BASE_URL" ]; then
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" CK_ADMIN_EMAIL="${CK_ADMIN_EMAIL:-}" CK_ADMIN_PASSWORD="${CK_ADMIN_PASSWORD:-}" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" CK_ADMIN_EMAIL="${CK_ADMIN_EMAIL:-}" CK_ADMIN_PASSWORD="${CK_ADMIN_PASSWORD:-}" pnpm dev
   else
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" CK_ADMIN_EMAIL="${CK_ADMIN_EMAIL:-}" CK_ADMIN_PASSWORD="${CK_ADMIN_PASSWORD:-}" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" CK_ADMIN_EMAIL="${CK_ADMIN_EMAIL:-}" CK_ADMIN_PASSWORD="${CK_ADMIN_PASSWORD:-}" pnpm dev
   fi
   BOB_PID="$STARTED_PID"
   echo "[dev-up] Bob PID: $BOB_PID"
@@ -662,7 +702,7 @@ wait_for_url "http://localhost:8790/healthz" "Pitch" "$LOG_DIR/pitch.dev.log"
 echo "[dev-up] Starting Roma (3004)"
 (
   cd "$ROOT_DIR/roma"
-  start_detached "$LOG_DIR/roma.dev.log" env PORT=3004 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+  start_detached "$LOG_DIR/roma.dev.log" env PORT=3004 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   ROMA_PID="$STARTED_PID"
   echo "[dev-up] Roma PID: $ROMA_PID"
   register_pid "roma" "$ROMA_PID" "3004" "$LOG_DIR/roma.dev.log"
@@ -681,6 +721,7 @@ wait_for_url "http://localhost:4321" "Prague" "$LOG_DIR/prague.dev.log"
 
 echo "[dev-up] URLs:"
 echo "  Tokyo:     http://localhost:4000/healthz"
+echo "  Berlin:    http://localhost:3005/internal/healthz"
 echo "  Paris:     http://localhost:3001"
 if [ -n "$SF_BASE_URL" ]; then
   echo "  SF:        http://localhost:3002/healthz"

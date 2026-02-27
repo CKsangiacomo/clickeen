@@ -19,7 +19,7 @@ type WorkspaceMembershipRow = {
 type WorkspaceAuthResult =
   | {
       ok: true;
-      auth: { source: 'dev' | 'supabase'; principal?: SupabaseAuthPrincipal };
+      auth: { source: 'dev' | 'berlin'; principal?: SupabaseAuthPrincipal };
       workspace: WorkspaceRow;
       role: MemberRole;
     }

@@ -637,7 +637,7 @@ type MinibobHandoffStateRecord = {
 type AccountAuthzResult =
   | {
       ok: true;
-      auth: { source: 'dev' | 'supabase'; principal?: { userId: string } };
+      auth: { source: 'dev' | 'berlin'; principal?: { userId: string } };
       account: AccountRow;
       role: MemberRole;
     }

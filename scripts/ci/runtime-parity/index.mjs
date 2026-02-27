@@ -16,16 +16,14 @@ Usage:
   node scripts/ci/runtime-parity/index.mjs --env <local|cloud-dev> [--mode <auth|public>] [--json-out <file>] [--compare <file>]
 
 Preferred explicit env vars (auth mode):
-  RUNTIME_PARITY_SUPABASE_BEARER_CLOUD
-                                      Supabase access token for cloud-dev probe user (preferred explicit bearer)
-  RUNTIME_PARITY_SUPABASE_BEARER      Supabase access token fallback (used when env-specific bearer is not set)
-  (If bearer vars are absent, runtime-parity auto-mints a probe bearer from Supabase URL + probe credentials.)
+  RUNTIME_PARITY_AUTH_BEARER_CLOUD
+                                    Auth bearer for cloud-dev probe user (preferred explicit bearer)
+  RUNTIME_PARITY_AUTH_BEARER         Auth bearer fallback (used when env-specific bearer is not set)
+  (If bearer vars are absent, runtime-parity auto-mints a probe bearer via Roma session routes + probe credentials.)
 
 Optional env vars:
-  RUNTIME_PARITY_SUPABASE_URL
-  RUNTIME_PARITY_SUPABASE_ANON_KEY
   RUNTIME_PARITY_TOKYO_DEV_JWT
-  RUNTIME_PARITY_SUPABASE_BEARER_LOCAL
+  RUNTIME_PARITY_AUTH_BEARER_LOCAL
   RUNTIME_PARITY_PROBE_EMAIL
   RUNTIME_PARITY_PROBE_PASSWORD
   RUNTIME_PARITY_PROBE_EMAIL_LOCAL

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolveBerlinBaseUrl } from '../env/berlin';
 
 export type SessionCookieSpec = {
   name: string;
@@ -28,11 +29,6 @@ type TokenBundle = {
   refreshCookieName: string;
 };
 
-type SupabaseAuthConfig = {
-  baseUrl: string;
-  anonKey: string;
-};
-
 type LocalDevBootstrapConfig = {
   baseUrl: string;
   serviceRoleKey: string;
@@ -49,8 +45,15 @@ type LocalDevIssuedSession = {
   userEmail: string;
 };
 
-const DEFAULT_ACCESS_COOKIE = 'sb-access-token';
-const DEFAULT_REFRESH_COOKIE = 'sb-refresh-token';
+type BerlinSessionBundle = {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenMaxAge: number;
+  refreshTokenMaxAge: number;
+};
+
+const ACCESS_COOKIE = 'ck-access-token';
+const REFRESH_COOKIE = 'ck-refresh-token';
 const LOCAL_DEV_DEFAULT_EMAIL = 'dev@clickeen.local';
 const LOCAL_DEV_DEFAULT_WORKSPACE_SLUG = 'ck-dev';
 const DEVSTUDIO_SURFACE = 'devstudio';
@@ -106,35 +109,13 @@ function tokenIsExpired(token: string, leewaySeconds = 30): boolean {
   return exp <= now + leewaySeconds;
 }
 
-function parseAuthTokenCookie(value: string): { accessToken?: string; refreshToken?: string } {
-  try {
-    const decoded = decodeURIComponent(value);
-    const parsed = JSON.parse(decoded) as unknown;
-    if (Array.isArray(parsed)) {
-      const accessToken = typeof parsed[0] === 'string' ? parsed[0] : undefined;
-      const refreshToken = typeof parsed[1] === 'string' ? parsed[1] : undefined;
-      return { accessToken, refreshToken };
-    }
-    if (parsed && typeof parsed === 'object') {
-      const record = parsed as Record<string, unknown>;
-      const accessToken =
-        typeof record.access_token === 'string'
-          ? record.access_token
-          : typeof record.accessToken === 'string'
-            ? record.accessToken
-            : undefined;
-      const refreshToken =
-        typeof record.refresh_token === 'string'
-          ? record.refresh_token
-          : typeof record.refreshToken === 'string'
-            ? record.refreshToken
-            : undefined;
-      return { accessToken, refreshToken };
-    }
-  } catch {
-    return {};
+function parsePositiveInt(value: unknown, fallback: number): number {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.floor(value);
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
   }
-  return {};
+  return fallback;
 }
 
 function resolveSupabaseBaseUrl(): string {
@@ -256,9 +237,7 @@ function resolveLocalDevBootstrapConfig(): LocalDevBootstrapConfig | null {
   const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim();
   if (!serviceRoleKey) return null;
 
-  const userEmailHint =
-    parseUserEmail(process.env.CK_ADMIN_EMAIL) ??
-    LOCAL_DEV_DEFAULT_EMAIL;
+  const userEmailHint = parseUserEmail(process.env.CK_ADMIN_EMAIL) ?? LOCAL_DEV_DEFAULT_EMAIL;
   const userPassword = (process.env.CK_ADMIN_PASSWORD ?? '').trim();
   if (!userPassword) return null;
 
@@ -449,6 +428,36 @@ async function ensureWorkspaceOwnerMembership(
   return createResponse.ok;
 }
 
+async function requestBerlinPasswordSession(
+  email: string,
+  password: string,
+): Promise<BerlinSessionBundle | null> {
+  const berlinBase = resolveBerlinBaseUrl();
+  const response = await fetch(`${berlinBase}/auth/login/password`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      accept: 'application/json',
+    },
+    cache: 'no-store',
+    body: JSON.stringify({ email, password }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!response.ok || !payload) return null;
+
+  const accessToken = typeof payload.accessToken === 'string' ? payload.accessToken.trim() : '';
+  const refreshToken = typeof payload.refreshToken === 'string' ? payload.refreshToken.trim() : '';
+  if (!accessToken || !refreshToken) return null;
+
+  return {
+    accessToken,
+    refreshToken,
+    accessTokenMaxAge: parsePositiveInt(payload.accessTokenMaxAge, 15 * 60),
+    refreshTokenMaxAge: parsePositiveInt(payload.refreshTokenMaxAge, 60 * 60 * 24 * 30),
+  };
+}
+
 async function bootstrapLocalDevSession(tokens: TokenBundle): Promise<SessionResolution | null> {
   const config = resolveLocalDevBootstrapConfig();
   if (!config) return null;
@@ -456,7 +465,9 @@ async function bootstrapLocalDevSession(tokens: TokenBundle): Promise<SessionRes
   try {
     const primarySession = await ensureLocalDevSession(config, config.userEmailHint);
     const fallbackEmail = withEmailAlias(config.userEmailHint, `${Date.now().toString(36)}_auto`);
-    const session = primarySession ?? (fallbackEmail === config.userEmailHint ? null : await ensureLocalDevSession(config, fallbackEmail));
+    const session =
+      primarySession ??
+      (fallbackEmail === config.userEmailHint ? null : await ensureLocalDevSession(config, fallbackEmail));
     if (!session) return null;
 
     const workspaceId = await resolveWorkspaceIdBySlug(config);
@@ -464,19 +475,22 @@ async function bootstrapLocalDevSession(tokens: TokenBundle): Promise<SessionRes
     const membershipReady = await ensureWorkspaceOwnerMembership(config, workspaceId, session.userId);
     if (!membershipReady) return null;
 
+    const berlinSession = await requestBerlinPasswordSession(session.userEmail, config.userPassword);
+    if (!berlinSession) return null;
+
     return {
       ok: true,
-      accessToken: session.accessToken,
+      accessToken: berlinSession.accessToken,
       setCookies: [
         {
-          name: tokens.accessCookieName || DEFAULT_ACCESS_COOKIE,
-          value: session.accessToken,
-          maxAge: session.maxAge,
+          name: tokens.accessCookieName || ACCESS_COOKIE,
+          value: berlinSession.accessToken,
+          maxAge: berlinSession.accessTokenMaxAge,
         },
         {
-          name: tokens.refreshCookieName || DEFAULT_REFRESH_COOKIE,
-          value: session.refreshToken,
-          maxAge: 60 * 60 * 24 * 30,
+          name: tokens.refreshCookieName || REFRESH_COOKIE,
+          value: berlinSession.refreshToken,
+          maxAge: berlinSession.refreshTokenMaxAge,
         },
       ],
     };
@@ -486,59 +500,15 @@ async function bootstrapLocalDevSession(tokens: TokenBundle): Promise<SessionRes
 }
 
 function extractSessionTokens(request: NextRequest): TokenBundle {
-  const cookies = request.cookies.getAll();
-  let accessToken: string | null = null;
-  let refreshToken: string | null = null;
-  let accessCookieName = DEFAULT_ACCESS_COOKIE;
-  let refreshCookieName = DEFAULT_REFRESH_COOKIE;
-
-  for (const cookie of cookies) {
-    const name = cookie.name;
-    const value = cookie.value;
-    if (!accessToken && (name === DEFAULT_ACCESS_COOKIE || (name.startsWith('sb-') && name.endsWith('-access-token')))) {
-      accessToken = value;
-      accessCookieName = name;
-      continue;
-    }
-    if (
-      !refreshToken &&
-      (name === DEFAULT_REFRESH_COOKIE || (name.startsWith('sb-') && name.endsWith('-refresh-token')))
-    ) {
-      refreshToken = value;
-      refreshCookieName = name;
-      continue;
-    }
-    if (name.startsWith('sb-') && name.endsWith('-auth-token')) {
-      const parsed = parseAuthTokenCookie(value);
-      if (!accessToken && parsed.accessToken) {
-        accessToken = parsed.accessToken;
-        accessCookieName = `${name.replace(/-auth-token$/, '')}-access-token`;
-      }
-      if (!refreshToken && parsed.refreshToken) {
-        refreshToken = parsed.refreshToken;
-        refreshCookieName = `${name.replace(/-auth-token$/, '')}-refresh-token`;
-      }
-    }
-  }
+  const accessToken = request.cookies.get(ACCESS_COOKIE)?.value?.trim() || null;
+  const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value?.trim() || null;
 
   return {
     accessToken,
     refreshToken,
-    accessCookieName,
-    refreshCookieName,
+    accessCookieName: ACCESS_COOKIE,
+    refreshCookieName: REFRESH_COOKIE,
   };
-}
-
-function resolveSupabaseAuthConfig():
-  | SupabaseAuthConfig
-  | null {
-  const baseUrl = resolveSupabaseBaseUrl();
-  if (!baseUrl) return null;
-
-  const anonKey = (process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').trim();
-  if (!anonKey) return null;
-
-  return { baseUrl, anonKey };
 }
 
 async function refreshSession(refreshToken: string): Promise<
@@ -546,50 +516,44 @@ async function refreshSession(refreshToken: string): Promise<
       ok: true;
       accessToken: string;
       refreshToken: string;
-      maxAge: number;
+      accessTokenMaxAge: number;
+      refreshTokenMaxAge: number;
     }
   | {
       ok: false;
       reason: string;
     }
 > {
-  const config = resolveSupabaseAuthConfig();
-  if (!config) return { ok: false, reason: 'roma.errors.auth.refresh_unavailable' };
+  let berlinBase = '';
+  try {
+    berlinBase = resolveBerlinBaseUrl();
+  } catch {
+    return { ok: false, reason: 'roma.errors.auth.refresh_unavailable' };
+  }
 
-  const response = await fetch(`${config.baseUrl}/auth/v1/token?grant_type=refresh_token`, {
+  const response = await fetch(`${berlinBase}/auth/refresh`, {
     method: 'POST',
     headers: {
-      apikey: config.anonKey,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
+      'content-type': 'application/json',
+      accept: 'application/json',
     },
-    body: JSON.stringify({ refresh_token: refreshToken }),
+    body: JSON.stringify({ refreshToken }),
     cache: 'no-store',
   });
 
   if (!response.ok) return { ok: false, reason: 'roma.errors.auth.refresh_failed' };
 
   const payload = (await response.json()) as Record<string, unknown>;
-  const nextAccessToken = typeof payload.access_token === 'string' ? payload.access_token : '';
-  const nextRefreshToken =
-    typeof payload.refresh_token === 'string' && payload.refresh_token.trim()
-      ? payload.refresh_token
-      : refreshToken;
-  if (!nextAccessToken) return { ok: false, reason: 'roma.errors.auth.refresh_failed' };
-
-  const expiresIn =
-    typeof payload.expires_in === 'number'
-      ? payload.expires_in
-      : typeof payload.expires_in === 'string'
-        ? Number.parseInt(payload.expires_in, 10)
-        : 3600;
-  const maxAge = Number.isFinite(expiresIn) && expiresIn > 0 ? expiresIn : 3600;
+  const nextAccessToken = typeof payload.accessToken === 'string' ? payload.accessToken.trim() : '';
+  const nextRefreshToken = typeof payload.refreshToken === 'string' ? payload.refreshToken.trim() : '';
+  if (!nextAccessToken || !nextRefreshToken) return { ok: false, reason: 'roma.errors.auth.refresh_failed' };
 
   return {
     ok: true,
     accessToken: nextAccessToken,
     refreshToken: nextRefreshToken,
-    maxAge,
+    accessTokenMaxAge: parsePositiveInt(payload.accessTokenMaxAge, 15 * 60),
+    refreshTokenMaxAge: parsePositiveInt(payload.refreshTokenMaxAge, 60 * 60 * 24 * 30),
   };
 }
 
@@ -638,8 +602,16 @@ export async function resolveSessionBearer(
     ok: true,
     accessToken: refreshed.accessToken,
     setCookies: [
-      { name: tokens.accessCookieName, value: refreshed.accessToken, maxAge: refreshed.maxAge },
-      { name: tokens.refreshCookieName, value: refreshed.refreshToken, maxAge: 60 * 60 * 24 * 30 },
+      {
+        name: tokens.accessCookieName,
+        value: refreshed.accessToken,
+        maxAge: refreshed.accessTokenMaxAge,
+      },
+      {
+        name: tokens.refreshCookieName,
+        value: refreshed.refreshToken,
+        maxAge: refreshed.refreshTokenMaxAge,
+      },
     ],
   };
 }

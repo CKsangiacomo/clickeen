@@ -7,7 +7,7 @@ function cacheIsNoStore(response) {
 }
 
 async function fetchEmbedHeaders({ profile, publicId }) {
-  const headers = authHeaders(profile.supabaseBearer);
+  const headers = authHeaders(profile.authBearer);
   const [r, e] = await Promise.all([
     fetchEnvelope(`${profile.veniceBaseUrl}/r/${encodeURIComponent(publicId)}?_t=${Date.now()}`, { headers }),
     fetchEnvelope(`${profile.veniceBaseUrl}/e/${encodeURIComponent(publicId)}?_t=${Date.now()}`, { headers }),
@@ -30,7 +30,7 @@ async function fetchPublishStatus({ profile, workspaceId, publicId }) {
     )}/publish/status?subject=workspace&_t=${Date.now()}`,
     {
       method: 'GET',
-      headers: authHeaders(profile.supabaseBearer),
+      headers: authHeaders(profile.authBearer),
     },
   );
 }
@@ -111,7 +111,7 @@ export async function runPublishImmediacyScenario({ profile, context }) {
     )}/render-snapshot?subject=workspace&_t=${Date.now()}`,
     {
       method: 'POST',
-      headers: authHeaders(profile.supabaseBearer),
+      headers: authHeaders(profile.authBearer),
       timeoutMs: Math.max(profile.publishLatencyBudgetMs + 12_000, 25_000),
       retries: 0,
     },

@@ -38,7 +38,7 @@ export async function runRomaAssetsUiCopyScenario({ profile, context }) {
     `${profile.romaBaseUrl}/api/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(fakeAssetId)}?_t=${Date.now()}`,
     {
       method: 'DELETE',
-      headers: authHeaders(profile.supabaseBearer),
+      headers: authHeaders(profile.authBearer),
     },
   );
   const reasonKey = parseReasonKey(response.json);

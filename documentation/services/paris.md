@@ -10,15 +10,15 @@ Runtime code + `supabase/migrations/` are operational truth; any mismatch here i
 **Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/me` (optional `workspaceId` query to resolve explicit active workspace defaults), `GET /api/widgets` (widget catalog), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId`, `GET /api/workspaces/:workspaceId/members`, `GET /api/workspaces/:workspaceId/policy`, `GET /api/workspaces/:workspaceId/entitlements`, `GET /api/workspaces/:workspaceId/ai/profile`, `GET /api/workspaces/:workspaceId/ai/limits`, `GET /api/workspaces/:workspaceId/ai/outcomes` (explicit unavailable contract in this snapshot), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=workspace|minibob`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=workspace|minibob`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=workspace|minibob`, `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=workspace|minibob`, `GET /api/workspaces/:workspaceId/instances/:publicId/publish/status?subject=workspace|minibob`, `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=workspace|minibob`, `POST /api/l10n/jobs/report`, `GET /api/instance/:publicId` (public; user-owned instances are published-only), `GET/POST /api/workspaces/:workspaceId/instances?subject=workspace|minibob`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace|minibob`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/workspaces/:workspaceId/website-creative` (local-only), `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (metering; HMAC-signed), `POST /api/submit/:publicId` (501).
 **Also shipped (account/Roma app domain):** `POST /api/accounts`, `GET /api/accounts/:accountId`, `GET/POST /api/accounts/:accountId/workspaces`, `GET /api/accounts/:accountId/usage`, `GET /api/accounts/:accountId/assets` (optional `view/workspaceId` projection), `GET /api/accounts/:accountId/assets/:assetId` (optional `view/workspaceId` projection), `DELETE /api/accounts/:accountId/assets/:assetId`, `GET /api/accounts/:accountId/billing/summary`, `POST /api/accounts/:accountId/billing/checkout-session` (explicit not-configured contract), `POST /api/accounts/:accountId/billing/portal-session` (explicit not-configured contract), `GET /api/roma/bootstrap` (identity + workspace/account authz capsules + account entitlement snapshot), `GET /api/roma/widgets?workspaceId=:workspaceId`, `GET /api/roma/templates?workspaceId=:workspaceId`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId?workspaceId=:workspaceId`, `POST /api/minibob/handoff/start`, `POST /api/minibob/handoff/complete`.
 **Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `accounts`, `account_assets`, `account_asset_variants`, `account_asset_usage`, `widget_instance_overlays`, `l10n_generate_state`, `l10n_base_snapshots`, `workspace_business_profiles`, `instance_enforcement_state`.
-**Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; non-public product endpoints require Supabase session JWT auth; workspace-scoped product endpoints enforce workspace membership + minimum role (`viewer` for reads, `editor` for writes); public `/api/instance/:publicId` is published-only for user-owned instances.
+**Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; non-public product endpoints require Berlin access-token auth; workspace-scoped product endpoints enforce workspace membership + minimum role (`viewer` for reads, `editor` for writes); public `/api/instance/:publicId` is published-only for user-owned instances.
 
 ## Runtime Reality (this repo snapshot)
 
 Paris in this repo is a **dev-focused Worker** with a deliberately small surface:
 
 - **Modular monolith:** Paris is organized by domain modules under `paris/src/domains/*` with shared utilities in `paris/src/shared/*`. It is a single Worker (no worker-to-worker microservices).
-- Non-public product endpoints require Supabase session JWT auth. `GET /api/instance/:publicId` is public and published-only for user-owned instances.
-- Local auth invariant: the Supabase JWT issuer must match the Supabase project configured in the running Paris worker. Cross-project tokens fail with `AUTH_INVALID` issuer mismatch.
+- Non-public product endpoints require Berlin access-token auth. `GET /api/instance/:publicId` is public and published-only for user-owned instances.
+- Local auth invariant: Berlin token issuer must match the issuer configured in the running Paris worker. Mismatches fail with `AUTH_INVALID` issuer mismatch.
 - `GET /api/me` defaults are explicit: when `workspaceId` query is supplied and membership exists, that workspace becomes default; without explicit selection, defaults are only emitted when membership is unambiguous (single workspace).
 - `GET /api/roma/bootstrap` returns identity/workspace graph plus:
   - short-lived signed workspace authz capsule (`x-ck-authz-capsule`),
@@ -127,8 +127,8 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 
 ### Identity bootstrap + MiniBob handoff (shipped)
 
-- `POST /api/accounts` — Supabase-only account bootstrap endpoint. Requires `Idempotency-Key`; creates account row + bootstrap-owner marker (KV).
-- `POST /api/accounts/:accountId/workspaces` — Supabase-only first-workspace (or additional workspace) create endpoint. Requires `Idempotency-Key`; accepts bootstrap-owner marker until first membership exists.
+- `POST /api/accounts` — Berlin-authenticated account bootstrap endpoint. Requires `Idempotency-Key`; creates account row + bootstrap-owner marker (KV).
+- `POST /api/accounts/:accountId/workspaces` — Berlin-authenticated first-workspace (or additional workspace) create endpoint. Requires `Idempotency-Key`; accepts bootstrap-owner marker until first membership exists.
 - `GET /api/roma/bootstrap` — Roma bootstrap endpoint that returns identity graph + active workspace defaults + signed authz context.
   - Workspace capsule header contract: `x-ck-authz-capsule`.
   - Account capsule header contract: `x-ck-account-capsule`.
@@ -138,7 +138,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `POST /api/minibob/handoff/start` — Public handoff-start endpoint used by Prague server relay. Stores handoff snapshot state in KV and returns opaque `handoffId`.
   - Source lineage constraint: `publicId` must be a curated/base source (`wgt_main_*` or `wgt_curated_*`), never a user instance id.
   - Stored snapshot: resolved `widgetType` + JSON config + source public id + expiry.
-- `POST /api/minibob/handoff/complete` — Supabase-only handoff completion endpoint. Requires `Idempotency-Key` + `handoffId`.
+- `POST /api/minibob/handoff/complete` — Berlin-authenticated handoff completion endpoint. Requires `Idempotency-Key` + `handoffId`.
   - Completion reads stored handoff snapshot from KV and materializes one canonical user instance in target workspace.
   - Deterministic outcome: public id is derived from `handoffId`; replay returns the same builder route for the same user/account/workspace.
 
@@ -154,7 +154,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 Rules:
 - Product ownership boundary for assets is account (`accountId`).
 - `workspace_id` on `account_assets` is provenance metadata only (`created_from_workspace`), not an ownership/read gate.
-- Auth uses Supabase session JWT for product paths.
+- Auth uses Berlin access tokens for product paths.
 - Curated platform assets are owned by `PLATFORM_ACCOUNT_ID` and are excluded from customer quota views by default.
 - Asset responses include deterministic usage mapping (`usageCount`, `usedBy[]`) from `account_asset_usage` with instance `publicId` + `configPath`.
 
@@ -254,11 +254,11 @@ Fallback (when custom domains aren’t configured yet): `{script}.workers.dev`
 
 - **Service Role Access**: Paris has `SUPABASE_SERVICE_ROLE_KEY` and can bypass RLS. Handlers MUST scope service-role usage to the smallest set of operations and MUST never expose this key to clients.
 - **No Public Secrets**: All server secrets live here, never exposed to client. Environment variables MUST remain server-only.
-- **Auth model (this repo snapshot):** non-public product endpoints require Supabase session JWT auth. `GET /api/instance/:publicId` is public and published-only for user-owned instances.
+- **Auth model (this repo snapshot):** non-public product endpoints require Berlin access-token auth. `GET /api/instance/:publicId` is public and published-only for user-owned instances.
 - **Local auth alignment:** `scripts/dev-up.sh` uses local Supabase by default; if you switch to remote Supabase (`DEV_UP_USE_REMOTE_SUPABASE=1`), all local product tokens must come from that same remote issuer.
 - **Rate limiting:** Not implemented in this repo snapshot (planned for write endpoints once usage/submissions ship).
 - **Front-door rule:** Third-party pages MUST NOT contact Paris directly. Browsers hit Venice only; Venice proxies to Paris over a server-to-server channel.
-- **CORS:** Intended production rule is an allowlist (Bob/Prague only). In this repo snapshot, treat Supabase auth enforcement as the primary gate.
+- **CORS:** Intended production rule is an allowlist (Bob/Prague only). In this repo snapshot, treat Berlin token verification as the primary gate.
 - **Transport Security**: Paris MUST enforce HTTPS, HSTS, and reject plaintext HTTP. Mutual TLS is not required but outbound fetches MUST verify certificates.
 
 ## Phase-1 API Endpoints
@@ -282,7 +282,7 @@ Issues an **AI Grant** that San Francisco can verify and execute under.
 
 Current repo behavior:
 
-- **Auth:** requires `Authorization: Bearer <Supabase session JWT>` on product paths (Bob/Roma proxy-forwarded).
+- **Auth:** requires `Authorization: Bearer <Berlin access token>` on product paths (Bob/Roma proxy-forwarded).
 - **Agent registry:** only known `agentId`s are accepted (registry-backed, with alias support; canonical IDs returned).
 - **Policy context:** `subject` + `workspaceId` determine the policy profile (defaults to `minibob` when missing).
 - **Widget-copilot canonicalization:** for `widget.copilot.v1`, `sdr.widget.copilot.v1`, and `cs.widget.copilot.v1`, Paris resolves to policy-safe canonical IDs:
@@ -380,7 +380,7 @@ Forwards an outcome event to San Francisco `/v1/outcome` with a signed `x-paris-
 
 Current repo behavior:
 
-- **Auth:** requires `Authorization: Bearer <Supabase session JWT>` on product paths (Bob/Roma proxy-forwarded).
+- **Auth:** requires `Authorization: Bearer <Berlin access token>` on product paths (Bob/Roma proxy-forwarded).
 - Validates payload shape and event enum.
 - Computes signature: `base64url(hmacSha256("outcome.v1.<bodyJson>", AI_GRANT_HMAC_SECRET))`.
 - Forwards to: `${SANFRANCISCO_BASE_URL}/v1/outcome`.
@@ -434,7 +434,7 @@ Required env vars:
 
   ```http
   PUT /api/workspaces/11111111-1111-1111-1111-111111111111/instance/wgt_42yx31?subject=workspace
-  Authorization: Bearer <Supabase session JWT>
+  Authorization: Bearer <Berlin access token>
   Content-Type: application/json
 
   { "status": "archived" }

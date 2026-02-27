@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 
 export const runtime = 'edge';
 
-const DEFAULT_ACCESS_COOKIE = 'sb-access-token';
-const DEFAULT_REFRESH_COOKIE = 'sb-refresh-token';
-const DEFAULT_REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
+const ACCESS_COOKIE = 'ck-access-token';
+const REFRESH_COOKIE = 'ck-refresh-token';
+const LEGACY_ACCESS_COOKIE = 'sb-access-token';
+const LEGACY_REFRESH_COOKIE = 'sb-refresh-token';
 
 const CACHE_HEADERS = {
   'cache-control': 'no-store',
@@ -12,38 +14,12 @@ const CACHE_HEADERS = {
   'cloudflare-cdn-cache-control': 'no-store',
 } as const;
 
-type SupabaseAuthConfig = {
-  baseUrl: string;
-  apiKey: string;
+type BerlinLoginPayload = {
+  accessToken?: unknown;
+  refreshToken?: unknown;
+  accessTokenMaxAge?: unknown;
+  refreshTokenMaxAge?: unknown;
 };
-
-type PasswordGrantSession = {
-  accessToken: string;
-  refreshToken: string;
-  maxAge: number;
-};
-
-function resolveSupabaseConfig(): SupabaseAuthConfig | null {
-  const baseUrl = (
-    process.env.SUPABASE_AUTH_URL ??
-    process.env.SUPABASE_URL ??
-    process.env.NEXT_PUBLIC_SUPABASE_URL ??
-    process.env.SUPABASE_BASE_URL ??
-    ''
-  )
-    .trim()
-    .replace(/\/+$/, '');
-  if (!baseUrl) return null;
-
-  const apiKey = (
-    process.env.SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    ''
-  ).trim();
-  if (!apiKey) return null;
-
-  return { baseUrl, apiKey };
-}
 
 function normalizeEmail(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -57,27 +33,13 @@ function normalizePassword(value: unknown): string | null {
   return normalized || null;
 }
 
-function parseSessionPayload(payload: unknown): PasswordGrantSession | null {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const record = payload as Record<string, unknown>;
-
-  const accessToken = typeof record.access_token === 'string' ? record.access_token.trim() : '';
-  const refreshToken = typeof record.refresh_token === 'string' ? record.refresh_token.trim() : '';
-  if (!accessToken || !refreshToken) return null;
-
-  const expiresIn =
-    typeof record.expires_in === 'number'
-      ? record.expires_in
-      : typeof record.expires_in === 'string'
-        ? Number.parseInt(record.expires_in, 10)
-        : 3600;
-  const maxAge = Number.isFinite(expiresIn) && expiresIn > 0 ? expiresIn : 3600;
-
-  return {
-    accessToken,
-    refreshToken,
-    maxAge,
-  };
+function parsePositiveInt(value: unknown, fallback: number): number {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.floor(value);
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return fallback;
 }
 
 function buildErrorResponse(reasonKey: string, status: number) {
@@ -93,8 +55,10 @@ function buildErrorResponse(reasonKey: string, status: number) {
 }
 
 export async function POST(request: NextRequest) {
-  const config = resolveSupabaseConfig();
-  if (!config) {
+  let berlinBase = '';
+  try {
+    berlinBase = resolveBerlinBaseUrl();
+  } catch {
     return buildErrorResponse('roma.errors.auth.config_missing', 503);
   }
 
@@ -105,49 +69,76 @@ export async function POST(request: NextRequest) {
     return buildErrorResponse('coreui.errors.auth.invalid_credentials', 422);
   }
 
-  const upstream = await fetch(`${config.baseUrl}/auth/v1/token?grant_type=password`, {
+  const upstream = await fetch(`${berlinBase}/auth/login/password`, {
     method: 'POST',
     headers: {
-      apikey: config.apiKey,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
+      'content-type': 'application/json',
+      accept: 'application/json',
     },
     cache: 'no-store',
     body: JSON.stringify({ email, password }),
   });
 
-  const upstreamPayload = (await upstream.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!upstream.ok) {
-    const upstreamCode = typeof upstreamPayload?.error_code === 'string' ? upstreamPayload.error_code : '';
-    const upstreamMessage = typeof upstreamPayload?.msg === 'string' ? upstreamPayload.msg : '';
-    const invalidCreds = upstream.status === 400 || upstreamCode === 'invalid_credentials' || upstreamMessage.includes('Invalid login credentials');
-    return buildErrorResponse(invalidCreds ? 'coreui.errors.auth.invalid_credentials' : 'coreui.errors.auth.login_failed', invalidCreds ? 401 : 502);
+  const payload = (await upstream.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!upstream.ok || !payload) {
+    const reasonKey =
+      payload && typeof payload.error === 'object' && payload.error
+        ? (payload.error as Record<string, unknown>).reasonKey
+        : null;
+    const normalizedReason = typeof reasonKey === 'string' ? reasonKey : 'coreui.errors.auth.login_failed';
+    return buildErrorResponse(normalizedReason, upstream.status === 401 ? 401 : 502);
   }
 
-  const session = parseSessionPayload(upstreamPayload);
-  if (!session) {
+  const login = payload as BerlinLoginPayload;
+  const accessToken = typeof login.accessToken === 'string' ? login.accessToken.trim() : '';
+  const refreshToken = typeof login.refreshToken === 'string' ? login.refreshToken.trim() : '';
+  if (!accessToken || !refreshToken) {
     return buildErrorResponse('coreui.errors.auth.login_failed', 502);
   }
+
+  const accessMaxAge = parsePositiveInt(login.accessTokenMaxAge, 15 * 60);
+  const refreshMaxAge = parsePositiveInt(login.refreshTokenMaxAge, 60 * 60 * 24 * 30);
 
   const secure = request.nextUrl.protocol === 'https:';
   const response = NextResponse.json({ ok: true }, { headers: CACHE_HEADERS });
   response.cookies.set({
-    name: DEFAULT_ACCESS_COOKIE,
-    value: session.accessToken,
+    name: ACCESS_COOKIE,
+    value: accessToken,
     httpOnly: true,
     secure,
     sameSite: 'lax',
     path: '/',
-    maxAge: session.maxAge,
+    maxAge: accessMaxAge,
   });
   response.cookies.set({
-    name: DEFAULT_REFRESH_COOKIE,
-    value: session.refreshToken,
+    name: REFRESH_COOKIE,
+    value: refreshToken,
     httpOnly: true,
     secure,
     sameSite: 'lax',
     path: '/',
-    maxAge: DEFAULT_REFRESH_MAX_AGE,
+    maxAge: refreshMaxAge,
   });
+
+  // Clear legacy Supabase cookies during boundary cutover.
+  response.cookies.set({
+    name: LEGACY_ACCESS_COOKIE,
+    value: '',
+    httpOnly: true,
+    secure,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+  response.cookies.set({
+    name: LEGACY_REFRESH_COOKIE,
+    value: '',
+    httpOnly: true,
+    secure,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+
   return response;
 }

@@ -60,8 +60,10 @@ export type Env = {
   VENICE_BASE_URL?: string;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
-  SUPABASE_JWT_ISSUER?: string;
-  SUPABASE_JWT_AUDIENCE?: string;
+  BERLIN_BASE_URL?: string;
+  BERLIN_JWKS_URL?: string;
+  BERLIN_ISSUER?: string;
+  BERLIN_AUDIENCE?: string;
   TOKYO_L10N_HTTP_BASE?: string;
   VENICE_INTERNAL_BYPASS_TOKEN?: string;
   CLOUDFLARE_ZONE_ID?: string;
@@ -105,6 +107,19 @@ type UploadAuthResult =
   | { ok: true; trusted: false; principal: UploadPrincipal }
   | { ok: false; response: Response };
 
+type BerlinJwksCacheEntry = {
+  fetchedAt: number;
+  expiresAt: number;
+  keys: Record<string, CryptoKey>;
+};
+
+type BerlinJwksStore = {
+  cacheByUrl: Record<string, BerlinJwksCacheEntry | undefined>;
+};
+
+const BERLIN_JWKS_CACHE_KEY = '__CK_TOKYO_BERLIN_JWKS_CACHE_V1__';
+const BERLIN_JWKS_CACHE_TTL_MS = 5 * 60_000;
+
 function decodeJwtPayload(token: string): JwtClaims | null {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
@@ -143,37 +158,187 @@ function audienceMatches(claim: unknown, expected: string): boolean {
   return false;
 }
 
-function resolveSupabaseIssuer(env: Env): string {
-  const configured = (typeof env.SUPABASE_JWT_ISSUER === 'string' ? env.SUPABASE_JWT_ISSUER.trim() : '') || null;
+function resolveBerlinIssuer(env: Env): string {
+  const configured = (typeof env.BERLIN_ISSUER === 'string' ? env.BERLIN_ISSUER.trim() : '') || null;
   if (configured) return configured.replace(/\/+$/, '');
-  const base = requireSupabaseEnv(env, 'SUPABASE_URL').replace(/\/+$/, '');
-  return `${base}/auth/v1`;
+  const base = requireEnvString(env.BERLIN_BASE_URL, 'BERLIN_BASE_URL').replace(/\/+$/, '');
+  return base;
 }
 
-function resolveSupabaseAudience(env: Env): string {
-  const configured = (typeof env.SUPABASE_JWT_AUDIENCE === 'string' ? env.SUPABASE_JWT_AUDIENCE.trim() : '') || null;
-  return configured || 'authenticated';
+function resolveBerlinAudience(env: Env): string {
+  const configured = (typeof env.BERLIN_AUDIENCE === 'string' ? env.BERLIN_AUDIENCE.trim() : '') || null;
+  return configured || 'clickeen.product';
 }
 
-async function fetchSupabaseUserId(token: string, env: Env): Promise<string | null> {
-  const baseUrl = requireSupabaseEnv(env, 'SUPABASE_URL').replace(/\/+$/, '');
-  const serviceKey = requireSupabaseEnv(env, 'SUPABASE_SERVICE_ROLE_KEY');
-  const response = await fetch(`${baseUrl}/auth/v1/user`, {
+function resolveBerlinJwksUrl(env: Env): string {
+  const configured = (typeof env.BERLIN_JWKS_URL === 'string' ? env.BERLIN_JWKS_URL.trim() : '') || null;
+  if (configured) return configured;
+  const base = requireEnvString(env.BERLIN_BASE_URL, 'BERLIN_BASE_URL').replace(/\/+$/, '');
+  return `${base}/.well-known/jwks.json`;
+}
+
+function isBerlinJwksStore(value: unknown): value is BerlinJwksStore {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  const cacheByUrl = record.cacheByUrl;
+  return Boolean(cacheByUrl && typeof cacheByUrl === 'object' && !Array.isArray(cacheByUrl));
+}
+
+function resolveBerlinJwksStore(): BerlinJwksStore {
+  const scope = globalThis as Record<string, unknown>;
+  const existing = scope[BERLIN_JWKS_CACHE_KEY];
+  if (isBerlinJwksStore(existing)) return existing;
+  const next: BerlinJwksStore = { cacheByUrl: {} };
+  scope[BERLIN_JWKS_CACHE_KEY] = next;
+  return next;
+}
+
+function fromBase64Url(value: string): Uint8Array | null {
+  try {
+    const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const binary = atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  } catch {
+    return null;
+  }
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  if (bytes.buffer instanceof ArrayBuffer && bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength) {
+    return bytes.buffer;
+  }
+  const cloned = new Uint8Array(bytes.byteLength);
+  cloned.set(bytes);
+  return cloned.buffer;
+}
+
+function jwkKid(value: JsonWebKey): string | null {
+  const raw = (value as Record<string, unknown>).kid;
+  if (typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  return trimmed || null;
+}
+
+function decodeJwtHeader(token: string): Record<string, unknown> | null {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const headerPart = parts[0];
+  if (!headerPart) return null;
+  try {
+    const normalized = headerPart.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const decoded = atob(padded);
+    const parsed = JSON.parse(decoded) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+async function importBerlinJwk(key: JsonWebKey): Promise<CryptoKey | null> {
+  if (key.kty !== 'RSA') return null;
+  if (!jwkKid(key)) return null;
+  if (typeof key.n !== 'string' || typeof key.e !== 'string') return null;
+  try {
+    return await crypto.subtle.importKey('jwk', key, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, [
+      'verify',
+    ]);
+  } catch {
+    return null;
+  }
+}
+
+async function fetchBerlinJwks(url: string): Promise<BerlinJwksCacheEntry> {
+  const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      apikey: serviceKey,
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
-    },
+    headers: { accept: 'application/json' },
     cache: 'no-store',
   });
+  if (!response.ok) throw new Error(`Berlin JWKS lookup failed (${response.status})`);
 
-  if (response.status === 401 || response.status === 403) return null;
-  if (!response.ok) throw new Error(`Supabase auth lookup failed (${response.status})`);
-  const parsed = (await response.json().catch(() => null)) as { id?: unknown } | null;
-  const userId = typeof parsed?.id === 'string' ? parsed.id.trim() : '';
-  if (!userId || !isUuid(userId)) return null;
-  return userId;
+  const parsed = (await response.json().catch(() => null)) as unknown;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Berlin JWKS response is malformed');
+  }
+  const keysRaw = (parsed as Record<string, unknown>).keys;
+  if (!Array.isArray(keysRaw)) throw new Error('Berlin JWKS keys missing');
+
+  const keys: Record<string, CryptoKey> = {};
+  for (const item of keysRaw) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+    const jwk = item as JsonWebKey;
+    const kid = jwkKid(jwk) || '';
+    if (!kid) continue;
+    const imported = await importBerlinJwk(jwk);
+    if (!imported) continue;
+    keys[kid] = imported;
+  }
+
+  const now = Date.now();
+  return {
+    fetchedAt: now,
+    expiresAt: now + BERLIN_JWKS_CACHE_TTL_MS,
+    keys,
+  };
+}
+
+async function resolveBerlinVerifyKey(env: Env, kid: string): Promise<CryptoKey | null> {
+  const url = resolveBerlinJwksUrl(env);
+  const store = resolveBerlinJwksStore();
+  const now = Date.now();
+  const cached = store.cacheByUrl[url];
+  if (cached && cached.expiresAt > now && cached.keys[kid]) {
+    return cached.keys[kid] || null;
+  }
+
+  const fresh = await fetchBerlinJwks(url);
+  store.cacheByUrl[url] = fresh;
+  return fresh.keys[kid] || null;
+}
+
+async function verifyBerlinJwtSignature(
+  token: string,
+  env: Env,
+): Promise<{ ok: true; claims: JwtClaims } | { ok: false; reason: string }> {
+  const parts = token.split('.');
+  if (parts.length !== 3) return { ok: false, reason: 'malformed_jwt' };
+
+  const header = decodeJwtHeader(token);
+  const claims = decodeJwtPayload(token);
+  if (!header || !claims) return { ok: false, reason: 'malformed_jwt' };
+
+  const alg = claimAsString(header.alg);
+  if (!alg || alg !== 'RS256') return { ok: false, reason: 'unsupported_alg' };
+
+  const kid = claimAsString(header.kid);
+  if (!kid) return { ok: false, reason: 'missing_kid' };
+
+  let key: CryptoKey | null = null;
+  try {
+    key = await resolveBerlinVerifyKey(env, kid);
+  } catch {
+    return { ok: false, reason: 'jwks_unavailable' };
+  }
+  if (!key) return { ok: false, reason: 'unknown_kid' };
+
+  const signature = fromBase64Url(parts[2] || '');
+  if (!signature) return { ok: false, reason: 'malformed_signature' };
+
+  const verified = await crypto.subtle.verify(
+    { name: 'RSASSA-PKCS1-v1_5' },
+    key,
+    toArrayBuffer(signature),
+    new TextEncoder().encode(`${parts[0]}.${parts[1]}`),
+  );
+  if (!verified) return { ok: false, reason: 'invalid_signature' };
+
+  return { ok: true, claims };
 }
 
 export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAuthResult> {
@@ -187,14 +352,28 @@ export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAu
     return { ok: true, trusted: true };
   }
 
-  const claims = decodeJwtPayload(token);
-  if (!claims) {
-    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+  const signature = await verifyBerlinJwtSignature(token, env);
+  if (!signature.ok) {
+    const status = signature.reason === 'jwks_unavailable' ? 502 : 403;
+    return {
+      ok: false,
+      response: json(
+        {
+          error: {
+            kind: signature.reason === 'jwks_unavailable' ? 'INTERNAL' : 'DENY',
+            reasonKey: signature.reason === 'jwks_unavailable' ? 'AUTH_PROVIDER_UNAVAILABLE' : 'AUTH_INVALID',
+            ...(signature.reason === 'jwks_unavailable' ? { detail: signature.reason } : {}),
+          },
+        },
+        { status },
+      ),
+    };
   }
+  const claims = signature.claims;
 
   const nowSec = Math.floor(Date.now() / 1000);
-  const issuer = resolveSupabaseIssuer(env);
-  const audience = resolveSupabaseAudience(env);
+  const issuer = resolveBerlinIssuer(env);
+  const audience = resolveBerlinAudience(env);
   const iss = claimAsString(claims.iss);
   if (!iss || iss !== issuer) {
     return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
@@ -211,19 +390,8 @@ export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAu
     return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
   }
 
-  let userId: string | null = null;
-  try {
-    userId = await fetchSupabaseUserId(token, env);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return { ok: false, response: json({ error: { kind: 'INTERNAL', reasonKey: 'AUTH_PROVIDER_UNAVAILABLE', detail } }, { status: 502 }) };
-  }
-  if (!userId) {
-    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
-  }
-
-  const sub = claimAsString(claims.sub);
-  if (sub && sub !== userId) {
+  const userId = claimAsString(claims.sub);
+  if (!userId || !isUuid(userId)) {
     return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
   }
 
@@ -247,6 +415,12 @@ function requireSupabaseEnv(env: Env, key: 'SUPABASE_URL' | 'SUPABASE_SERVICE_RO
     throw new Error(`[tokyo] Missing required env var: ${key}`);
   }
   return value.trim();
+}
+
+function requireEnvString(value: string | undefined, key: string): string {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  if (!normalized) throw new Error(`[tokyo] Missing required env var: ${key}`);
+  return normalized;
 }
 
 export function resolveL10nHttpBase(env: Env): string | null {

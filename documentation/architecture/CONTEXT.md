@@ -342,7 +342,8 @@ node scripts/compile-all-widgets.mjs
 **Local auth target (important):**
 - `bash scripts/dev-up.sh` uses local Supabase by default and ignores remote Supabase values in `.env.local`.
 - To force local services to use remote Supabase, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
-- Supabase session JWT issuer must match the Supabase project Paris is using; cross-project tokens are rejected (`AUTH_INVALID` issuer mismatch).
+- Berlin auth boundary runs locally at `http://localhost:3005`; Roma/Bob resolve product session tokens through Berlin.
+- Berlin session token issuer must match the Berlin issuer Paris is configured to trust; mismatched issuers are rejected (`AUTH_INVALID` issuer mismatch).
 
 ### Environments (Canonical)
 

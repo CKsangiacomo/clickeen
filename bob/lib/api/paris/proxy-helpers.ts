@@ -51,7 +51,7 @@ export async function resolveParisSession(request: NextRequest): Promise<
 }
 
 export function withParisDevAuthorization(headers: Headers, accessToken: string): Headers {
-  // Keep legacy helper name to avoid broad route churn; auth is Supabase session bearer only.
+  // Keep legacy helper name to avoid broad route churn; auth bearer comes from Berlin session resolution.
   headers.set('authorization', `Bearer ${accessToken}`);
   return headers;
 }

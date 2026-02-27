@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolveBerlinBaseUrl } from '../env/berlin';
 
 type SessionCookieSpec = {
   name: string;
@@ -24,13 +25,22 @@ type TokenBundle = {
   refreshCookieName: string;
 };
 
-type SupabaseAuthConfig = {
-  baseUrl: string;
-  anonKey: string;
-};
+type BerlinRefreshResult =
+  | {
+      ok: true;
+      accessToken: string;
+      refreshToken: string;
+      accessTokenMaxAge: number;
+      refreshTokenMaxAge: number;
+    }
+  | {
+      ok: false;
+      reason: string;
+      status: number;
+    };
 
-const DEFAULT_ACCESS_COOKIE = 'sb-access-token';
-const DEFAULT_REFRESH_COOKIE = 'sb-refresh-token';
+const ACCESS_COOKIE = 'ck-access-token';
+const REFRESH_COOKIE = 'ck-refresh-token';
 
 function unauthorized(reasonKey: string, status = 401) {
   return NextResponse.json(
@@ -83,148 +93,70 @@ function tokenIsExpired(token: string, leewaySeconds = 30): boolean {
   return exp <= now + leewaySeconds;
 }
 
-function parseAuthTokenCookie(value: string): { accessToken?: string; refreshToken?: string } {
-  try {
-    const decoded = decodeURIComponent(value);
-    const parsed = JSON.parse(decoded) as unknown;
-    if (Array.isArray(parsed)) {
-      const accessToken = typeof parsed[0] === 'string' ? parsed[0] : undefined;
-      const refreshToken = typeof parsed[1] === 'string' ? parsed[1] : undefined;
-      return { accessToken, refreshToken };
-    }
-    if (parsed && typeof parsed === 'object') {
-      const record = parsed as Record<string, unknown>;
-      const accessToken =
-        typeof record.access_token === 'string'
-          ? record.access_token
-          : typeof record.accessToken === 'string'
-            ? record.accessToken
-            : undefined;
-      const refreshToken =
-        typeof record.refresh_token === 'string'
-          ? record.refresh_token
-          : typeof record.refreshToken === 'string'
-            ? record.refreshToken
-            : undefined;
-      return { accessToken, refreshToken };
-    }
-  } catch {
-    return {};
-  }
-  return {};
-}
-
-function resolveSupabaseBaseUrl(): string {
-  const rawBase =
-    process.env.SUPABASE_AUTH_URL ??
-    process.env.SUPABASE_URL ??
-    process.env.NEXT_PUBLIC_SUPABASE_URL ??
-    process.env.SUPABASE_BASE_URL ??
-    '';
-  return rawBase.trim().replace(/\/+$/, '');
-}
-
 function extractSessionTokens(request: NextRequest): TokenBundle {
-  const cookies = request.cookies.getAll();
-  let accessToken: string | null = null;
-  let refreshToken: string | null = null;
-  let accessCookieName = DEFAULT_ACCESS_COOKIE;
-  let refreshCookieName = DEFAULT_REFRESH_COOKIE;
-
-  for (const cookie of cookies) {
-    const name = cookie.name;
-    const value = cookie.value;
-    if (!accessToken && (name === DEFAULT_ACCESS_COOKIE || (name.startsWith('sb-') && name.endsWith('-access-token')))) {
-      accessToken = value;
-      accessCookieName = name;
-      continue;
-    }
-    if (
-      !refreshToken &&
-      (name === DEFAULT_REFRESH_COOKIE || (name.startsWith('sb-') && name.endsWith('-refresh-token')))
-    ) {
-      refreshToken = value;
-      refreshCookieName = name;
-      continue;
-    }
-    if (name.startsWith('sb-') && name.endsWith('-auth-token')) {
-      const parsed = parseAuthTokenCookie(value);
-      if (!accessToken && parsed.accessToken) {
-        accessToken = parsed.accessToken;
-        accessCookieName = `${name.replace(/-auth-token$/, '')}-access-token`;
-      }
-      if (!refreshToken && parsed.refreshToken) {
-        refreshToken = parsed.refreshToken;
-        refreshCookieName = `${name.replace(/-auth-token$/, '')}-refresh-token`;
-      }
-    }
-  }
+  const accessToken = request.cookies.get(ACCESS_COOKIE)?.value?.trim() || null;
+  const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value?.trim() || null;
 
   return {
     accessToken,
     refreshToken,
-    accessCookieName,
-    refreshCookieName,
+    accessCookieName: ACCESS_COOKIE,
+    refreshCookieName: REFRESH_COOKIE,
   };
 }
 
-function resolveSupabaseAuthConfig(): SupabaseAuthConfig | null {
-  const baseUrl = resolveSupabaseBaseUrl();
-  if (!baseUrl) return null;
-
-  const anonKey = (process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').trim();
-  if (!anonKey) return null;
-
-  return { baseUrl, anonKey };
+function parsePositiveInt(value: unknown, fallback: number): number {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.floor(value);
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return fallback;
 }
 
-async function refreshSession(refreshToken: string): Promise<
-  | {
-      ok: true;
-      accessToken: string;
-      refreshToken: string;
-      maxAge: number;
-    }
-  | {
-      ok: false;
-      reason: string;
-    }
-> {
-  const config = resolveSupabaseAuthConfig();
-  if (!config) return { ok: false, reason: 'roma.errors.auth.refresh_unavailable' };
+async function refreshSession(refreshToken: string): Promise<BerlinRefreshResult> {
+  let berlinBase = '';
+  try {
+    berlinBase = resolveBerlinBaseUrl();
+  } catch {
+    return { ok: false, status: 503, reason: 'roma.errors.auth.refresh_unavailable' };
+  }
 
-  const response = await fetch(`${config.baseUrl}/auth/v1/token?grant_type=refresh_token`, {
+  const response = await fetch(`${berlinBase}/auth/refresh`, {
     method: 'POST',
     headers: {
-      apikey: config.anonKey,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
+      'content-type': 'application/json',
+      accept: 'application/json',
     },
-    body: JSON.stringify({ refresh_token: refreshToken }),
+    body: JSON.stringify({ refreshToken }),
     cache: 'no-store',
   });
 
-  if (!response.ok) return { ok: false, reason: 'roma.errors.auth.refresh_failed' };
+  const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!response.ok || !payload) {
+    return {
+      ok: false,
+      status: response.status,
+      reason: 'coreui.errors.auth.required',
+    };
+  }
 
-  const payload = (await response.json()) as Record<string, unknown>;
-  const nextAccessToken = typeof payload.access_token === 'string' ? payload.access_token : '';
-  const nextRefreshToken =
-    typeof payload.refresh_token === 'string' && payload.refresh_token.trim() ? payload.refresh_token : refreshToken;
-  if (!nextAccessToken) return { ok: false, reason: 'roma.errors.auth.refresh_failed' };
-
-  const expiresIn =
-    typeof payload.expires_in === 'number'
-      ? payload.expires_in
-      : typeof payload.expires_in === 'string'
-        ? Number.parseInt(payload.expires_in, 10)
-        : 3600;
-  const maxAge = Number.isFinite(expiresIn) && expiresIn > 0 ? expiresIn : 3600;
+  const nextAccessToken = typeof payload.accessToken === 'string' ? payload.accessToken.trim() : '';
+  const nextRefreshToken = typeof payload.refreshToken === 'string' ? payload.refreshToken.trim() : '';
+  if (!nextAccessToken || !nextRefreshToken) {
+    return {
+      ok: false,
+      status: 502,
+      reason: 'coreui.errors.auth.required',
+    };
+  }
 
   return {
     ok: true,
     accessToken: nextAccessToken,
     refreshToken: nextRefreshToken,
-    maxAge,
+    accessTokenMaxAge: parsePositiveInt(payload.accessTokenMaxAge, 15 * 60),
+    refreshTokenMaxAge: parsePositiveInt(payload.refreshTokenMaxAge, 60 * 60 * 24 * 30),
   };
 }
 
@@ -256,8 +188,8 @@ export async function resolveSessionBearer(request: NextRequest): Promise<Sessio
     ok: true,
     accessToken: refreshed.accessToken,
     setCookies: [
-      { name: tokens.accessCookieName, value: refreshed.accessToken, maxAge: refreshed.maxAge },
-      { name: tokens.refreshCookieName, value: refreshed.refreshToken, maxAge: 60 * 60 * 24 * 30 },
+      { name: tokens.accessCookieName, value: refreshed.accessToken, maxAge: refreshed.accessTokenMaxAge },
+      { name: tokens.refreshCookieName, value: refreshed.refreshToken, maxAge: refreshed.refreshTokenMaxAge },
     ],
   };
 }

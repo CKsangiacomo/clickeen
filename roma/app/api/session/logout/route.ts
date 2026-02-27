@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 
 export const runtime = 'edge';
 
-const DEFAULT_ACCESS_COOKIE = 'sb-access-token';
-const DEFAULT_REFRESH_COOKIE = 'sb-refresh-token';
+const ACCESS_COOKIE = 'ck-access-token';
+const REFRESH_COOKIE = 'ck-refresh-token';
+const LEGACY_ACCESS_COOKIE = 'sb-access-token';
+const LEGACY_REFRESH_COOKIE = 'sb-refresh-token';
 
 const CACHE_HEADERS = {
   'cache-control': 'no-store',
@@ -12,7 +15,7 @@ const CACHE_HEADERS = {
 } as const;
 
 function resolveSessionCookieNames(request: NextRequest): string[] {
-  const names = new Set<string>([DEFAULT_ACCESS_COOKIE, DEFAULT_REFRESH_COOKIE]);
+  const names = new Set<string>([ACCESS_COOKIE, REFRESH_COOKIE, LEGACY_ACCESS_COOKIE, LEGACY_REFRESH_COOKIE]);
   for (const cookie of request.cookies.getAll()) {
     const name = cookie.name;
     if (name.startsWith('sb-') && name.endsWith('-access-token')) names.add(name);
@@ -27,6 +30,25 @@ function resolveSessionCookieNames(request: NextRequest): string[] {
 }
 
 export async function POST(request: NextRequest) {
+  const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value?.trim() || '';
+
+  try {
+    const berlinBase = resolveBerlinBaseUrl();
+    if (refreshToken) {
+      await fetch(`${berlinBase}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json',
+        },
+        cache: 'no-store',
+        body: JSON.stringify({ refreshToken }),
+      }).catch(() => null);
+    }
+  } catch {
+    // Best-effort logout should still clear local cookies even when Berlin is unreachable.
+  }
+
   const secure = request.nextUrl.protocol === 'https:';
   const response = NextResponse.json({ ok: true }, { headers: CACHE_HEADERS });
   const cookieNames = resolveSessionCookieNames(request);

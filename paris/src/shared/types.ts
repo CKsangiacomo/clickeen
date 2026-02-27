@@ -6,6 +6,10 @@ export type Env = {
   SUPABASE_JWT_ISSUER?: string;
   SUPABASE_JWT_AUDIENCE?: string;
   PARIS_DEV_JWT: string;
+  BERLIN_BASE_URL?: string;
+  BERLIN_JWKS_URL?: string;
+  BERLIN_ISSUER?: string;
+  BERLIN_AUDIENCE?: string;
   TOKYO_BASE_URL?: string;
   TOKYO_WORKER_BASE_URL?: string;
   TOKYO_DEV_JWT?: string;

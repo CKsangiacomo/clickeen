@@ -13,7 +13,7 @@ function resolveNextPath(value: string | null): string {
 
 function resolveErrorMessage(reasonKey: string | null): string {
   if (reasonKey === 'coreui.errors.auth.invalid_credentials') return 'Invalid email or password.';
-  if (reasonKey === 'roma.errors.auth.config_missing') return 'Supabase auth is not configured for Roma.';
+  if (reasonKey === 'roma.errors.auth.config_missing') return 'Auth service is not configured for Roma.';
   if (reasonKey === 'coreui.errors.auth.login_failed') return 'Sign in failed. Try again.';
   if (reasonKey) return reasonKey;
   return 'Sign in failed. Try again.';

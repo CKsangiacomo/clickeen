@@ -41,7 +41,7 @@ export async function runInstanceOpenParityScenario({ profile, context }) {
     };
   }
 
-  const headers = authHeaders(profile.supabaseBearer);
+  const headers = authHeaders(profile.authBearer);
   const roma = await fetchEnvelope(
     `${profile.romaBaseUrl}/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
       workspaceId,

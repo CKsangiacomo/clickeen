@@ -28,7 +28,7 @@ function resolveProbePublicId(profile, romaPayload, bobPayload) {
 
 export async function runBootstrapParityScenario({ profile }) {
   const checks = [];
-  const headers = authHeaders(profile.supabaseBearer);
+  const headers = authHeaders(profile.authBearer);
 
   const roma = await fetchEnvelope(`${profile.romaBaseUrl}/api/bootstrap?_t=${Date.now()}`, { headers });
   const bob = await fetchEnvelope(`${profile.bobBaseUrl}/api/paris/roma/bootstrap?_t=${Date.now()}`, { headers });

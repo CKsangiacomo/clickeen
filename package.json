@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.15.1",
   "workspaces": [
     "admin",
+    "berlin",
     "bob",
     "dieter",
     "paris",
@@ -47,6 +48,7 @@
     "eval:copilot": "node scripts/eval-copilot.mjs",
     "dev:bob": "pnpm --filter @clickeen/bob dev",
     "dev:admin": "pnpm --filter @clickeen/devstudio dev",
+    "dev:berlin": "pnpm --filter @clickeen/berlin dev",
     "dev:paris": "pnpm --filter @clickeen/paris dev",
     "dev:prague": "pnpm --filter @clickeen/prague dev",
     "dev:roma": "pnpm --filter @clickeen/roma dev",

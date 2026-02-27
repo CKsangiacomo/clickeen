@@ -109,7 +109,7 @@ Build command (repo root):
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
-  - `POST /assets/upload` (requires `Authorization: Bearer <token>`; accepts Supabase session bearer for product uploads, or `TOKYO_DEV_JWT` for internal/dev automation. Required header: `x-account-id`. Optional headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`. When `x-workspace-id` is provided, worker enforces workspace membership + workspace/account binding; otherwise it enforces account membership.)
+  - `POST /assets/upload` (requires `Authorization: Bearer <token>`; accepts Berlin session bearer for product uploads, or `TOKYO_DEV_JWT` for internal/dev automation. Required header: `x-account-id`. Optional headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`. When `x-workspace-id` is provided, worker enforces workspace membership + workspace/account binding; otherwise it enforces account membership.)
   - `DELETE /assets/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; synchronous hard delete path)
   - `GET /assets/integrity/:accountId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /assets/integrity/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
@@ -120,7 +120,7 @@ Cloud-dev:
   - `/l10n/publish` (internal) materializes Supabase overlays into R2
 
 Security rule (executed):
-- `TOKYO_DEV_JWT` must never be used from a browser. Browser upload flows go through Bob server routes using Supabase session auth.
+- `TOKYO_DEV_JWT` must never be used from a browser. Browser upload flows go through Bob server routes using Berlin session auth.
 
 Asset-domain note:
 - Tokyo upload metadata is ownership/file-centric (`account_assets`, `account_asset_variants`).
