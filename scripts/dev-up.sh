@@ -190,15 +190,15 @@ ensure_stack_ports_healthy() {
   fi
 
   local attempt port
-  local missing_ports=()
+  local failed_ports=()
   for attempt in $(seq 1 "$attempts"); do
-    missing_ports=()
+    failed_ports=()
     for port in "${ports[@]}"; do
-      if ! is_port_listening "$port"; then
-        missing_ports+=("$port")
+      if ! is_stack_service_healthy "$port"; then
+        failed_ports+=("$port")
       fi
     done
-    if [ "${#missing_ports[@]}" -eq 0 ]; then
+    if [ "${#failed_ports[@]}" -eq 0 ]; then
       return 0
     fi
     if [ "$attempt" -lt "$attempts" ]; then
@@ -207,8 +207,8 @@ ensure_stack_ports_healthy() {
   done
 
   echo "[dev-up] ERROR: local stack failed readiness checks."
-  for port in "${missing_ports[@]}"; do
-    echo "[dev-up]   missing listener on port $port"
+  for port in "${failed_ports[@]}"; do
+    echo "[dev-up]   failed health check on port $port"
   done
   tail_log "$LOG_DIR/tokyo.dev.log"
   tail_log "$LOG_DIR/tokyo-worker.dev.log"
@@ -224,6 +224,30 @@ ensure_stack_ports_healthy() {
     tail_log "$LOG_DIR/sanfrancisco.dev.log"
   fi
   return 1
+}
+
+is_stack_service_healthy() {
+  local port="$1"
+  local url=""
+  case "$port" in
+    3000) url="http://localhost:3000" ;;
+    3001) url="http://localhost:3001/api/healthz" ;;
+    3002) url="http://localhost:3002/healthz" ;;
+    3003) url="http://localhost:3003/dieter/tokens/tokens.css" ;;
+    3004) url="http://localhost:3004/home" ;;
+    3005) url="http://localhost:3005/internal/healthz" ;;
+    4000) url="http://localhost:4000/healthz" ;;
+    4321) url="http://localhost:4321" ;;
+    5173) url="http://localhost:5173" ;;
+    8790) url="http://localhost:8790/healthz" ;;
+    8791) url="http://localhost:8791/healthz" ;;
+  esac
+
+  if [ -n "$url" ]; then
+    curl -sf "$url" >/dev/null 2>&1
+    return $?
+  fi
+  is_port_listening "$port"
 }
 
 tail_log() {
