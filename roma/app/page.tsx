@@ -10,3 +10,6 @@ export default async function RootPage() {
   }
   redirect(DEFAULT_HOME_ROUTE);
 }
+
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
