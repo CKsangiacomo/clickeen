@@ -21,6 +21,8 @@ export type RomaWorkspaceAuthzCapsulePayload = {
   workspaceSlug: string;
   workspaceWebsiteUrl: string | null;
   workspaceTier: WorkspaceRow['tier'];
+  workspaceL10nLocales?: unknown;
+  workspaceL10nPolicy?: unknown;
   role: MemberRole;
   authzVersion: string;
   iat: number;
@@ -150,6 +152,8 @@ function normalizePayload(
   const workspaceName = typeof record.workspaceName === 'string' ? record.workspaceName.trim() : '';
   const workspaceSlug = typeof record.workspaceSlug === 'string' ? record.workspaceSlug.trim() : '';
   const workspaceWebsiteUrlRaw = typeof record.workspaceWebsiteUrl === 'string' ? record.workspaceWebsiteUrl.trim() : '';
+  const workspaceL10nLocales = record.workspaceL10nLocales;
+  const workspaceL10nPolicy = record.workspaceL10nPolicy;
   const authzVersion = typeof record.authzVersion === 'string' ? record.authzVersion.trim() : '';
   const role = normalizeMemberRole(record.role);
   const workspaceTier = normalizeWorkspaceTier(record.workspaceTier);
@@ -176,6 +180,8 @@ function normalizePayload(
     workspaceSlug,
     workspaceWebsiteUrl: workspaceWebsiteUrlRaw || null,
     workspaceTier,
+    workspaceL10nLocales,
+    workspaceL10nPolicy,
     role,
     authzVersion,
     iat,

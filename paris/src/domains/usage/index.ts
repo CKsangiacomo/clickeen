@@ -1,6 +1,6 @@
 import { resolvePolicy } from '@clickeen/ck-policy';
 import { normalizeWidgetPublicId } from '@clickeen/ck-contracts';
-import type { Env, RenderSnapshotQueueJob } from '../../shared/types';
+import type { Env } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
@@ -192,11 +192,6 @@ async function clearFrozenInDb(args: { env: Env; publicId: string }): Promise<vo
   });
 }
 
-async function enqueueRenderSnapshot(env: Env, job: RenderSnapshotQueueJob): Promise<void> {
-  if (!env.RENDER_SNAPSHOT_QUEUE) return;
-  await env.RENDER_SNAPSHOT_QUEUE.send(job);
-}
-
 export async function handleUsageEvent(req: Request, env: Env): Promise<Response> {
   let payload: UsageEventPayload;
   try {
@@ -255,7 +250,6 @@ export async function handleUsageEvent(req: Request, env: Env): Promise<Response
   await kv.put(frozenMarker, '1', { expirationTtl: Math.max(60, Math.floor((resetAt.getTime() - now.getTime()) / 1000) + 60) });
 
   await markFrozenInDb({ env, publicId, periodKey, frozenAt: now, resetAt });
-  await enqueueRenderSnapshot(env, { v: 1, kind: 'render-snapshot', publicId, action: 'upsert', locales: ['en'] });
 
   return json({ ok: true, frozen: true }, { status: 204 });
 }
@@ -280,8 +274,6 @@ export async function handleFrozenResets(env: Env): Promise<void> {
       const publicId = row?.public_id ? String(row.public_id) : '';
       if (!publicId) return;
       await clearFrozenInDb({ env, publicId });
-      const locales = await resolveSnapshotLocalesForInstance(env, publicId);
-      await enqueueRenderSnapshot(env, { v: 1, kind: 'render-snapshot', publicId, action: 'upsert', locales });
     }),
   );
 }

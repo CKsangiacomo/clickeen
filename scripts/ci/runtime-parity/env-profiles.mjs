@@ -4,9 +4,9 @@ import path from 'node:path';
 const DEFAULTS = {
   local: {
     bobBaseUrl: 'http://localhost:3000',
-    romaBaseUrl: 'http://localhost:3004',
+    romaBaseUrl: '',
     parisBaseUrl: 'http://localhost:3001',
-    tokyoBaseUrl: 'http://localhost:8791',
+    tokyoBaseUrl: 'http://localhost:4000',
     veniceBaseUrl: 'http://localhost:3003',
     publishLatencyBudgetMs: 5_000,
   },
@@ -258,6 +258,7 @@ async function mintAuthBearer(profile) {
 
 export async function ensureRuntimeProfileAuth(profile) {
   if (profile.mode !== 'auth') return profile;
+  if (profile.name === 'local') return profile;
   if (profile.authBearer) return profile;
   const token = await mintAuthBearer(profile);
   return {

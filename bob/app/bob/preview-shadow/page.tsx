@@ -21,7 +21,6 @@ export default async function PreviewShadowPage(props: { searchParams?: Promise<
         strategy="afterInteractive"
         data-public-id={publicId}
         data-trigger="immediate"
-        data-force-shadow={seoGeoOptimization ? 'false' : 'true'}
         data-ck-optimization={seoGeoOptimization ? 'seo-geo' : undefined}
       />
     </main>

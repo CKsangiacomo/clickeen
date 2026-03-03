@@ -5,8 +5,8 @@ workers_dev = true
 
 [vars]
 SANFRANCISCO_BASE_URL = "https://sanfrancisco.dev.clickeen.com"
-BERLIN_BASE_URL = "https://berlin.dev.clickeen.com"
-BERLIN_ISSUER = "https://berlin.dev.clickeen.com"
+BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
+BERLIN_ISSUER = "https://berlin-dev.clickeen.workers.dev"
 BERLIN_AUDIENCE = "clickeen.product"
 
 [[kv_namespaces]]
@@ -17,10 +17,6 @@ preview_id = "4d253b94b6b5434ab484cfe4a3a0fb9a"
 [[queues.producers]]
 binding = "L10N_GENERATE_QUEUE"
 queue = "instance-l10n-generate-cloud-dev"
-
-[[queues.producers]]
-binding = "L10N_PUBLISH_QUEUE"
-queue = "instance-l10n-publish-cloud-dev"
 
 [[queues.producers]]
 binding = "RENDER_SNAPSHOT_QUEUE"
@@ -42,18 +38,11 @@ binding = "USAGE_KV"
 id = "00000000000000000000000000000000"
 preview_id = "00000000000000000000000000000000"
 
-[[env.local.queues.producers]]
-binding = "L10N_GENERATE_QUEUE"
-queue = "instance-l10n-generate-local"
-
-[[env.local.queues.producers]]
-binding = "L10N_PUBLISH_QUEUE"
-queue = "instance-l10n-publish-local"
+# L10N_GENERATE_QUEUE and SANFRANCISCO_COMMANDS_QUEUE are intentionally
+# omitted in local dev. Cross-worker queues don't work between separate
+# wrangler dev processes. Without these bindings, Paris falls back to
+# direct HTTP calls to SanFrancisco (see dispatch-jobs.ts and sanfrancisco.ts).
 
 [[env.local.queues.producers]]
 binding = "RENDER_SNAPSHOT_QUEUE"
 queue = "instance-render-snapshot-local"
-
-[[env.local.queues.producers]]
-binding = "SANFRANCISCO_COMMANDS_QUEUE"
-queue = "paris-sf-commands-local"

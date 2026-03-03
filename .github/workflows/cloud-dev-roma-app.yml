@@ -27,6 +27,7 @@ jobs:
 
       PARIS_BASE_URL: https://paris.dev.clickeen.com
       NEXT_PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
+      BERLIN_BASE_URL: https://berlin-dev.clickeen.workers.dev
 
       ROMA_PAGES_PROJECT: roma-dev
       BOB_PAGES_PROJECT: bob-dev
@@ -82,9 +83,8 @@ jobs:
           pnpm test:runtime-parity:cloud-dev:public
           if [[ -n "${RUNTIME_PARITY_AUTH_BEARER_CLOUD:-}" || -n "${RUNTIME_PARITY_SUPABASE_BEARER_CLOUD:-}" || ( -n "${RUNTIME_PARITY_PROBE_EMAIL_CLOUD:-}" && -n "${RUNTIME_PARITY_PROBE_PASSWORD_CLOUD:-}" ) ]]; then
             pnpm test:runtime-parity:cloud-dev:auth
-            pnpm test:runtime-parity:cross-env
           else
-            echo "[runtime-parity] Skipping cloud-dev auth + cross-env checks (missing cloud auth bearer/probe credentials)."
+            echo "[runtime-parity] Skipping cloud-dev auth checks (missing cloud auth bearer/probe credentials)."
           fi
 
       - name: Build Bob for Cloudflare Pages
@@ -97,6 +97,7 @@ jobs:
         run: |
           printf '%s' "$PARIS_BASE_URL" | pnpm -C tokyo-worker exec wrangler pages secret put PARIS_BASE_URL --project-name "$BOB_PAGES_PROJECT"
           printf '%s' "$NEXT_PUBLIC_TOKYO_URL" | pnpm -C tokyo-worker exec wrangler pages secret put NEXT_PUBLIC_TOKYO_URL --project-name "$BOB_PAGES_PROJECT"
+          printf '%s' "$BERLIN_BASE_URL" | pnpm -C tokyo-worker exec wrangler pages secret put BERLIN_BASE_URL --project-name "$BOB_PAGES_PROJECT"
 
       - name: Deploy Bob Pages (cloud-dev)
         run: pnpm -C tokyo-worker exec wrangler --cwd ../bob pages deploy .cloudflare/output/static --project-name "$BOB_PAGES_PROJECT" --branch main --commit-dirty=true
@@ -111,6 +112,7 @@ jobs:
         run: |
           printf '%s' "$PARIS_BASE_URL" | pnpm -C tokyo-worker exec wrangler pages secret put PARIS_BASE_URL --project-name "$ROMA_PAGES_PROJECT"
           printf '%s' "$NEXT_PUBLIC_TOKYO_URL" | pnpm -C tokyo-worker exec wrangler pages secret put NEXT_PUBLIC_TOKYO_URL --project-name "$ROMA_PAGES_PROJECT"
+          printf '%s' "$BERLIN_BASE_URL" | pnpm -C tokyo-worker exec wrangler pages secret put BERLIN_BASE_URL --project-name "$ROMA_PAGES_PROJECT"
 
       - name: Deploy Roma Pages (cloud-dev)
         run: pnpm -C tokyo-worker exec wrangler --cwd ../roma pages deploy .vercel/output/static --project-name "$ROMA_PAGES_PROJECT" --branch main --commit-dirty=true

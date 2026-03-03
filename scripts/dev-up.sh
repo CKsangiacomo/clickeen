@@ -28,7 +28,7 @@ DEV_UP_PRAGUE_L10N=0
 DEV_UP_RESET=0
 NEEDS_PRAGUE_L10N_TRANSLATE=0
 STARTED_PID=""
-STACK_PORTS=(3000 3001 3002 3003 3004 3005 4000 4321 5173 8790 8791)
+STACK_PORTS=(3000 3001 3002 3003 3005 4000 4321 5173 8790 8791)
 
 ensure_lock() {
   if [ -d "$LOCK_DIR" ]; then
@@ -184,7 +184,7 @@ ensure_stack_ports_healthy() {
   local attempts="${1:-8}"
   local interval_seconds="${2:-1}"
   local include_sf="${3:-0}"
-  local ports=(3000 3001 3003 3004 3005 4000 4321 5173 8790 8791)
+  local ports=(3000 3001 3003 3005 4000 4321 5173 8790 8791)
   if [ "$include_sf" = "1" ]; then
     ports+=(3002)
   fi
@@ -218,7 +218,6 @@ ensure_stack_ports_healthy() {
   tail_log "$LOG_DIR/bob.dev.log"
   tail_log "$LOG_DIR/devstudio.dev.log"
   tail_log "$LOG_DIR/pitch.dev.log"
-  tail_log "$LOG_DIR/roma.dev.log"
   tail_log "$LOG_DIR/prague.dev.log"
   if [ "$include_sf" = "1" ]; then
     tail_log "$LOG_DIR/sanfrancisco.dev.log"
@@ -234,7 +233,6 @@ is_stack_service_healthy() {
     3001) url="http://localhost:3001/api/healthz" ;;
     3002) url="http://localhost:3002/healthz" ;;
     3003) url="http://localhost:3003/dieter/tokens/tokens.css" ;;
-    3004) url="http://localhost:3004/home" ;;
     3005) url="http://localhost:3005/internal/healthz" ;;
     4000) url="http://localhost:4000/healthz" ;;
     4321) url="http://localhost:4321" ;;
@@ -449,25 +447,7 @@ fi
 if [ "$DEV_UP_USE_REMOTE_SUPABASE" = "1" ] || [ "$DEV_UP_USE_REMOTE_SUPABASE" = "true" ]; then
   echo "[dev-up] Skipping local persona seed (remote Supabase mode)"
 else
-  if [ -z "${CK_ADMIN_EMAIL:-}" ]; then
-    CK_ADMIN_EMAIL="local.admin@clickeen.local"
-    export CK_ADMIN_EMAIL
-    echo "[dev-up] CK_ADMIN_EMAIL not set. Defaulting to $CK_ADMIN_EMAIL"
-  fi
-  if [ -z "${CK_ADMIN_PASSWORD:-}" ]; then
-    if command -v openssl >/dev/null 2>&1; then
-      CK_ADMIN_PASSWORD="Local-$(openssl rand -hex 12)!A9"
-    else
-      CK_ADMIN_PASSWORD="Local-${RANDOM}${RANDOM}-Fallback!A9"
-    fi
-    export CK_ADMIN_PASSWORD
-    echo "[dev-up] CK_ADMIN_PASSWORD not set. Generated ephemeral local admin password for this run:"
-    echo "[dev-up]   CK_ADMIN_EMAIL=$CK_ADMIN_EMAIL"
-    echo "[dev-up]   CK_ADMIN_PASSWORD=$CK_ADMIN_PASSWORD"
-  fi
-  echo "[dev-up] Seeding deterministic local personas (non-destructive)"
-  SUPABASE_URL="$SUPABASE_URL" SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:-}" CK_ADMIN_EMAIL="${CK_ADMIN_EMAIL:-}" CK_ADMIN_PASSWORD="${CK_ADMIN_PASSWORD:-}" \
-    node "$ROOT_DIR/scripts/dev/seed-local-personas.mjs"
+  echo "[dev-up] Skipping local persona seed (local auth bootstrap is deprecated; DevStudio/Bob are tool-trusted)"
 fi
 
 PARIS_DEV_JWT_FILE="$ROOT_DIR/Execution_Pipeline_Docs/paris.dev.jwt"
@@ -535,7 +515,7 @@ else
 fi
 
 echo "[dev-up] Stopping stale listeners"
-for p in 3000 3001 3002 3003 3004 3005 4000 4321 5173 8790 8791; do
+for p in 3000 3001 3002 3003 3005 4000 4321 5173 8790 8791; do
   stop_port "$p"
 done
 
@@ -567,21 +547,17 @@ echo "[dev-up] Starting Tokyo Worker (8791)"
 )
 wait_for_url "http://localhost:8791/healthz" "Tokyo Worker" "$LOG_DIR/tokyo-worker.dev.log"
 
+if [ ! -f "$ROOT_DIR/berlin/.dev.vars" ]; then
+  echo "[dev-up] Generating Berlin signing keys (first run)"
+  node "$ROOT_DIR/scripts/dev/generate-berlin-keys.mjs"
+fi
+
 echo "[dev-up] Starting Berlin Worker (3005)"
 (
   cd "$ROOT_DIR/berlin"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_ANON_KEY:$SUPABASE_ANON_KEY_VALUE")
   VARS+=(--var "BERLIN_ISSUER:$BERLIN_ISSUER")
   VARS+=(--var "BERLIN_AUDIENCE:$BERLIN_AUDIENCE")
-  if [ -n "${BERLIN_REFRESH_SECRET:-}" ]; then
-    VARS+=(--var "BERLIN_REFRESH_SECRET:$BERLIN_REFRESH_SECRET")
-  fi
-  if [ -n "${BERLIN_ACCESS_PRIVATE_KEY_PEM:-}" ]; then
-    VARS+=(--var "BERLIN_ACCESS_PRIVATE_KEY_PEM:$BERLIN_ACCESS_PRIVATE_KEY_PEM")
-  fi
-  if [ -n "${BERLIN_ACCESS_PUBLIC_KEY_PEM:-}" ]; then
-    VARS+=(--var "BERLIN_ACCESS_PUBLIC_KEY_PEM:$BERLIN_ACCESS_PUBLIC_KEY_PEM")
-  fi
   start_detached "$LOG_DIR/berlin.dev.log" pnpm exec wrangler dev --local --env local --port 3005 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$BERLIN_INSPECTOR_PORT" \
     "${VARS[@]}"
   BERLIN_PID="$STARTED_PID"
@@ -692,9 +668,9 @@ echo "[dev-up] Starting Bob (3000)"
 (
   cd "$ROOT_DIR/bob"
   if [ -n "$SF_BASE_URL" ]; then
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" CK_ADMIN_EMAIL="${CK_ADMIN_EMAIL:-}" CK_ADMIN_PASSWORD="${CK_ADMIN_PASSWORD:-}" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   else
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" CK_ADMIN_EMAIL="${CK_ADMIN_EMAIL:-}" CK_ADMIN_PASSWORD="${CK_ADMIN_PASSWORD:-}" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   fi
   BOB_PID="$STARTED_PID"
   echo "[dev-up] Bob PID: $BOB_PID"
@@ -723,20 +699,10 @@ echo "[dev-up] Starting Pitch worker (8790)"
 )
 wait_for_url "http://localhost:8790/healthz" "Pitch" "$LOG_DIR/pitch.dev.log"
 
-echo "[dev-up] Starting Roma (3004)"
-(
-  cd "$ROOT_DIR/roma"
-  start_detached "$LOG_DIR/roma.dev.log" env PORT=3004 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
-  ROMA_PID="$STARTED_PID"
-  echo "[dev-up] Roma PID: $ROMA_PID"
-  register_pid "roma" "$ROMA_PID" "3004" "$LOG_DIR/roma.dev.log"
-)
-wait_for_url "http://localhost:3004/home" "Roma" "$LOG_DIR/roma.dev.log"
-
 echo "[dev-up] Starting Prague (4321)"
 (
   cd "$ROOT_DIR/prague"
-  start_detached "$LOG_DIR/prague.dev.log" env PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" PUBLIC_BOB_URL="http://localhost:3000" PUBLIC_VENICE_URL="http://localhost:3003" PUBLIC_ROMA_URL="http://localhost:3004" pnpm dev
+  start_detached "$LOG_DIR/prague.dev.log" env PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" PUBLIC_BOB_URL="http://localhost:3000" PUBLIC_VENICE_URL="http://localhost:3003" PUBLIC_ROMA_URL="https://roma.dev.clickeen.com" pnpm dev
   PRAGUE_PID="$STARTED_PID"
   echo "[dev-up] Prague PID: $PRAGUE_PID"
   register_pid "prague" "$PRAGUE_PID" "4321" "$LOG_DIR/prague.dev.log"
@@ -753,7 +719,6 @@ fi
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
 echo "  Pitch:     http://localhost:8790/healthz"
-echo "  Roma:      http://localhost:3004/home"
 echo "  Prague:    http://localhost:4321/us/en/widgets/faq"
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
 print_stack_port_status

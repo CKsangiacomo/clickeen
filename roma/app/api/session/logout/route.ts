@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
+import { resolveSessionCookieDomain, resolveSessionCookieNames } from '../../../../lib/auth/session';
 
 export const runtime = 'edge';
 
-const ACCESS_COOKIE = 'ck-access-token';
-const REFRESH_COOKIE = 'ck-refresh-token';
 const LEGACY_ACCESS_COOKIE = 'sb-access-token';
 const LEGACY_REFRESH_COOKIE = 'sb-refresh-token';
 
@@ -14,8 +13,16 @@ const CACHE_HEADERS = {
   'cloudflare-cdn-cache-control': 'no-store',
 } as const;
 
-function resolveSessionCookieNames(request: NextRequest): string[] {
-  const names = new Set<string>([ACCESS_COOKIE, REFRESH_COOKIE, LEGACY_ACCESS_COOKIE, LEGACY_REFRESH_COOKIE]);
+function resolveAllSessionCookieNames(request: NextRequest): string[] {
+  const active = resolveSessionCookieNames();
+  const names = new Set<string>([
+    active.access,
+    active.refresh,
+    'ck-access-token',
+    'ck-refresh-token',
+    LEGACY_ACCESS_COOKIE,
+    LEGACY_REFRESH_COOKIE,
+  ]);
   for (const cookie of request.cookies.getAll()) {
     const name = cookie.name;
     if (name.startsWith('sb-') && name.endsWith('-access-token')) names.add(name);
@@ -30,7 +37,8 @@ function resolveSessionCookieNames(request: NextRequest): string[] {
 }
 
 export async function POST(request: NextRequest) {
-  const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value?.trim() || '';
+  const active = resolveSessionCookieNames();
+  const refreshToken = request.cookies.get(active.refresh)?.value?.trim() || '';
 
   try {
     const berlinBase = resolveBerlinBaseUrl();
@@ -50,8 +58,9 @@ export async function POST(request: NextRequest) {
   }
 
   const secure = request.nextUrl.protocol === 'https:';
+  const domain = resolveSessionCookieDomain(request);
   const response = NextResponse.json({ ok: true }, { headers: CACHE_HEADERS });
-  const cookieNames = resolveSessionCookieNames(request);
+  const cookieNames = resolveAllSessionCookieNames(request);
   for (const cookieName of cookieNames) {
     response.cookies.set({
       name: cookieName,
@@ -62,6 +71,18 @@ export async function POST(request: NextRequest) {
       path: '/',
       maxAge: 0,
     });
+    if (domain) {
+      response.cookies.set({
+        name: cookieName,
+        value: '',
+        httpOnly: true,
+        secure,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+        domain,
+      });
+    }
   }
   return response;
 }

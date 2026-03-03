@@ -29,6 +29,10 @@ import {
   handleAccountAssetDelete,
   handleAccountAssetGet,
   handleAccountAssetsList,
+  handleAccountAssetsPurge,
+  handleAccountLifecyclePlanChange,
+  handleAccountNoticeDismiss,
+  handleAccountInstancesUnpublish,
 } from './domains/accounts';
 import {
   handleAccountCreate,
@@ -395,6 +399,29 @@ export default {
       if (accountAssetsMatch) {
         const accountId = decodeURIComponent(accountAssetsMatch[1]);
         if (req.method === 'GET') return handleAccountAssetsList(req, env, accountId);
+        if (req.method === 'DELETE') return handleAccountAssetsPurge(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountInstancesUnpublishMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/instances\/unpublish$/);
+      if (accountInstancesUnpublishMatch) {
+        const accountId = decodeURIComponent(accountInstancesUnpublishMatch[1]);
+        if (req.method === 'POST') return handleAccountInstancesUnpublish(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountPlanChangeMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/lifecycle\/plan-change$/);
+      if (accountPlanChangeMatch) {
+        const accountId = decodeURIComponent(accountPlanChangeMatch[1]);
+        if (req.method === 'POST') return handleAccountLifecyclePlanChange(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountNoticeDismissMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/notices\/([^/]+)\/dismiss$/);
+      if (accountNoticeDismissMatch) {
+        const accountId = decodeURIComponent(accountNoticeDismissMatch[1]);
+        const noticeId = decodeURIComponent(accountNoticeDismissMatch[2]);
+        if (req.method === 'POST') return handleAccountNoticeDismiss(req, env, accountId, noticeId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isUuid } from '@clickeen/ck-contracts';
-import { applySessionCookies } from '../../../../../lib/api/paris/proxy-helpers';
-import { resolveParisBaseUrl } from '../../../../../lib/env/paris';
 import {
-  isDevstudioLocalBootstrapRequest,
-  resolveSessionBearer,
-  type SessionCookieSpec,
-} from '../../../../../lib/auth/session';
+  applySessionCookies,
+  resolveParisSession,
+  withParisDevAuthorization,
+} from '../../../../../lib/api/paris/proxy-helpers';
+import { resolveParisBaseUrl } from '../../../../../lib/env/paris';
+import { type SessionCookieSpec } from '../../../../../lib/auth/session';
 
 export const runtime = 'edge';
 
@@ -44,9 +44,7 @@ async function forwardAssetRequest(
   context: RouteContext,
   method: 'GET' | 'DELETE',
 ): Promise<NextResponse> {
-  const session = await resolveSessionBearer(request, {
-    allowLocalDevBootstrap: isDevstudioLocalBootstrapRequest(request),
-  });
+  const session = await resolveParisSession(request);
   if (!session.ok) {
     return withCorsAndSession(request, session.response);
   }
@@ -75,8 +73,7 @@ async function forwardAssetRequest(
     );
   }
 
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${session.accessToken}`);
+  const headers = withParisDevAuthorization(new Headers(), session.accessToken);
   if (method === 'DELETE') {
     const surface = (request.headers.get('x-clickeen-surface') || '').trim();
     if (surface) headers.set('x-clickeen-surface', surface);

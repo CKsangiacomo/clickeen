@@ -6,6 +6,7 @@ type Env = {
   BERLIN_REFRESH_SECRET?: string;
   BERLIN_OAUTH_STATE_SECRET?: string;
   BERLIN_ALLOWED_PROVIDERS?: string;
+  BERLIN_LOGIN_CALLBACK_URL?: string;
   BERLIN_ACCESS_PRIVATE_KEY_PEM?: string;
   BERLIN_ACCESS_PUBLIC_KEY_PEM?: string;
   BERLIN_ACCESS_PREVIOUS_PUBLIC_KEY_PEM?: string;
@@ -82,6 +83,7 @@ type RefreshPayload = RefreshPayloadV1 | RefreshPayloadV2;
 type SessionState = {
   sid: string;
   currentRti: string;
+  rtiRotatedAt: number;
   userId: string;
   ver: number;
   revoked: boolean;
@@ -149,14 +151,13 @@ const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
 const ACCESS_TOKEN_SKEW_SECONDS = 30;
 const OAUTH_STATE_TTL_SECONDS = 10 * 60;
+const REFRESH_RTI_GRACE_MS = 30_000;
 
 const REFRESH_TOKEN_PREFIX = 'ckr';
 const DEFAULT_AUDIENCE = 'clickeen.product';
 const DEFAULT_ISSUER = 'berlin.local';
 const DEFAULT_REFRESH_SECRET = 'berlin-local-refresh-secret-change-me';
 
-const SESSION_STORE_KEY = '__CK_BERLIN_SESSION_STORE_V2__';
-const SESSION_USER_INDEX_STORE_KEY = '__CK_BERLIN_SESSION_USER_INDEX_V2__';
 const SIGNING_CONTEXT_KEY = '__CK_BERLIN_SIGNING_CONTEXT_V2__';
 const REFRESH_KEY_CACHE = '__CK_BERLIN_REFRESH_KEY_V2__';
 const OAUTH_STATE_KEY_CACHE = '__CK_BERLIN_OAUTH_STATE_KEY_V1__';
@@ -363,6 +364,18 @@ function resolveIssuer(env: Env): string {
   return (configured || DEFAULT_ISSUER).replace(/\/+$/, '');
 }
 
+function resolveLoginCallbackUrl(env: Env): string {
+  const configured = typeof env.BERLIN_LOGIN_CALLBACK_URL === 'string' ? env.BERLIN_LOGIN_CALLBACK_URL.trim() : '';
+  if (configured) {
+    try {
+      return new URL(configured).toString();
+    } catch {
+      throw new Error('[berlin] Invalid BERLIN_LOGIN_CALLBACK_URL');
+    }
+  }
+  return `${resolveIssuer(env)}/auth/login/provider/callback`;
+}
+
 function resolveAudience(env: Env): string {
   const configured = typeof env.BERLIN_AUDIENCE === 'string' ? env.BERLIN_AUDIENCE.trim() : '';
   return configured || DEFAULT_AUDIENCE;
@@ -433,28 +446,6 @@ async function readJsonBody(request: Request): Promise<Record<string, unknown> |
   return parsed as Record<string, unknown>;
 }
 
-function resolveSessionMemoryStore(): Map<string, SessionState> {
-  const scope = globalThis as Record<string, unknown>;
-  const existing = scope[SESSION_STORE_KEY];
-  if (existing instanceof Map) {
-    return existing as Map<string, SessionState>;
-  }
-  const next = new Map<string, SessionState>();
-  scope[SESSION_STORE_KEY] = next;
-  return next;
-}
-
-function resolveUserSessionIndexMemoryStore(): Map<string, Set<string>> {
-  const scope = globalThis as Record<string, unknown>;
-  const existing = scope[SESSION_USER_INDEX_STORE_KEY];
-  if (existing instanceof Map) {
-    return existing as Map<string, Set<string>>;
-  }
-  const next = new Map<string, Set<string>>();
-  scope[SESSION_USER_INDEX_STORE_KEY] = next;
-  return next;
-}
-
 function sessionKvKey(sid: string): string {
   return `${SESSION_KV_PREFIX}:${sid}`;
 }
@@ -468,6 +459,7 @@ function toSessionState(value: unknown): SessionState | null {
   const record = value as Record<string, unknown>;
   const sid = claimAsString(record.sid);
   const currentRti = claimAsString(record.currentRti);
+  const rtiRotatedAtRaw = claimAsNumber(record.rtiRotatedAt);
   const userId = claimAsString(record.userId);
   const ver = claimAsNumber(record.ver);
   const revoked = Boolean(record.revoked);
@@ -477,9 +469,11 @@ function toSessionState(value: unknown): SessionState | null {
   const createdAt = claimAsNumber(record.createdAt) || Date.now();
   const updatedAt = claimAsNumber(record.updatedAt) || Date.now();
   if (!sid || !currentRti || !userId || !ver || !supabaseRefreshToken) return null;
+  const rtiRotatedAt = rtiRotatedAtRaw || updatedAt || createdAt;
   return {
     sid,
     currentRti,
+    rtiRotatedAt,
     userId,
     ver,
     revoked,
@@ -492,19 +486,11 @@ function toSessionState(value: unknown): SessionState | null {
 }
 
 async function loadSessionState(env: Env, sid: string): Promise<SessionState | null> {
-  const memory = resolveSessionMemoryStore();
-  const existing = memory.get(sid) || null;
-  if (existing) return existing;
-
   const kv = env.BERLIN_SESSION_KV;
   if (!kv) return null;
 
   const raw = await kv.get(sessionKvKey(sid), 'json').catch(() => null);
-  const parsed = toSessionState(raw);
-  if (!parsed) return null;
-
-  memory.set(sid, parsed);
-  return parsed;
+  return toSessionState(raw);
 }
 
 async function saveSessionState(env: Env, state: SessionState): Promise<void> {
@@ -512,7 +498,6 @@ async function saveSessionState(env: Env, state: SessionState): Promise<void> {
     ...state,
     updatedAt: Date.now(),
   };
-  resolveSessionMemoryStore().set(next.sid, next);
   const kv = env.BERLIN_SESSION_KV;
   if (!kv) return;
 
@@ -522,23 +507,16 @@ async function saveSessionState(env: Env, state: SessionState): Promise<void> {
 }
 
 async function loadUserSessionIds(env: Env, userId: string): Promise<string[]> {
-  const memory = resolveUserSessionIndexMemoryStore();
-  const fromMemory = memory.get(userId);
-  if (fromMemory) return [...fromMemory];
-
   const kv = env.BERLIN_SESSION_KV;
   if (!kv) return [];
 
   const raw = await kv.get(userSessionIndexKvKey(userId), 'json').catch(() => null);
   if (!Array.isArray(raw)) return [];
-  const ids = raw.map((value) => claimAsString(value)).filter((value): value is string => Boolean(value));
-  memory.set(userId, new Set(ids));
-  return ids;
+  return raw.map((value) => claimAsString(value)).filter((value): value is string => Boolean(value));
 }
 
 async function saveUserSessionIds(env: Env, userId: string, sessionIds: string[]): Promise<void> {
   const unique = [...new Set(sessionIds.filter(Boolean))];
-  resolveUserSessionIndexMemoryStore().set(userId, new Set(unique));
 
   const kv = env.BERLIN_SESSION_KV;
   if (!kv) return;
@@ -689,6 +667,13 @@ async function resolveRefreshHmacKey(env: Env): Promise<CryptoKey> {
   ]);
   scope[REFRESH_KEY_CACHE] = key;
   return key;
+}
+
+async function deriveNextRti(env: Env, args: { sid: string; ver: number; rti: string }): Promise<string> {
+  const key = await resolveRefreshHmacKey(env);
+  const input = `${args.sid}.${args.ver}.${args.rti}`;
+  const signature = await crypto.subtle.sign('HMAC', key, enc.encode(input));
+  return toBase64Url(new Uint8Array(signature));
 }
 
 async function resolveOauthStateHmacKey(env: Env): Promise<CryptoKey> {
@@ -1017,11 +1002,27 @@ async function requestSupabaseOAuthUrl(
     method: 'GET',
     headers,
     cache: 'no-store',
+    redirect: 'manual',
   });
 
-  const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  const location = claimAsString(response.headers.get('location'));
+  if (location) return { ok: true, url: location };
+
+  const raw = await response.text().catch(() => '');
+  let payload: Record<string, unknown> | null = null;
+  try {
+    payload = raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+  } catch {
+    payload = null;
+  }
+
   if (!response.ok || !payload) {
-    const detail = payload && typeof payload.msg === 'string' ? payload.msg : undefined;
+    const detail =
+      payload && typeof payload.msg === 'string'
+        ? payload.msg
+        : raw
+          ? raw.slice(0, 200)
+          : undefined;
     return {
       ok: false,
       status: response.status === 401 ? 401 : 502,
@@ -1130,6 +1131,7 @@ async function issueSession(env: Env, args: SessionIssueArgs): Promise<SessionIs
   const nextState: SessionState = {
     sid,
     currentRti: rti,
+    rtiRotatedAt: nowMs,
     userId: args.userId,
     ver,
     revoked: false,
@@ -1158,7 +1160,10 @@ function resolveRefreshTokenFromRequest(request: Request, body: Record<string, u
   const fromBody = claimAsString(body?.refreshToken);
   if (fromBody) return fromBody;
 
-  const fromCookie = parseCookieValue(request, 'ck-refresh-token');
+  const fromCookie =
+    parseCookieValue(request, 'ck-refresh-token') ||
+    parseCookieValue(request, 'ck-roma-rt') ||
+    parseCookieValue(request, 'ck-bob-rt');
   if (fromCookie) return fromCookie;
 
   const bearer = asBearerToken(request.headers.get('authorization'));
@@ -1171,7 +1176,10 @@ function resolveAccessTokenFromRequest(request: Request): string | null {
   const fromBearer = asBearerToken(request.headers.get('authorization'));
   if (fromBearer && !fromBearer.startsWith(`${REFRESH_TOKEN_PREFIX}.`)) return fromBearer;
 
-  const fromCookie = parseCookieValue(request, 'ck-access-token');
+  const fromCookie =
+    parseCookieValue(request, 'ck-access-token') ||
+    parseCookieValue(request, 'ck-roma-at') ||
+    parseCookieValue(request, 'ck-bob-at');
   if (fromCookie) return fromCookie;
 
   return null;
@@ -1303,6 +1311,9 @@ async function handleProviderLoginStart(request: Request, env: Env): Promise<Res
     return authError('coreui.errors.auth.provider.notEnabled', 422, `provider=${provider}`);
   }
 
+  const supabase = resolveSupabaseConfig(env);
+  if (!supabase) return authError('berlin.errors.auth.config_missing', 503);
+
   const codeVerifier = createPkceCodeVerifier();
   const codeChallenge = await createPkceCodeChallenge(codeVerifier);
   const nowSec = Math.floor(Date.now() / 1000);
@@ -1316,19 +1327,19 @@ async function handleProviderLoginStart(request: Request, env: Env): Promise<Res
   };
   const state = await encodeSignedState(statePayload, env);
 
-  const callbackUrl = `${resolveIssuer(env)}/auth/login/provider/callback`;
-  const oauth = await requestSupabaseOAuthUrl(env, {
-    provider,
-    redirectTo: callbackUrl,
-    state,
-    codeChallenge,
-  });
-  if (!oauth.ok) return authError(oauth.reason, oauth.status, oauth.detail);
+  const callbackUrl = resolveLoginCallbackUrl(env);
+  const params = new URLSearchParams();
+  params.set('provider', provider);
+  params.set('redirect_to', callbackUrl);
+  params.set('state', state);
+  params.set('code_challenge', codeChallenge);
+  params.set('code_challenge_method', 's256');
+  const oauthUrl = `${supabase.baseUrl}/auth/v1/authorize?${params.toString()}`;
 
   return json({
     ok: true,
     provider,
-    url: oauth.url,
+    url: oauthUrl,
     expiresAt: new Date(statePayload.exp * 1000).toISOString(),
   });
 }
@@ -1560,15 +1571,17 @@ async function handleRefresh(request: Request, env: Env): Promise<Response> {
   let state = await loadSessionState(env, payload.sid);
 
   if (!state && payload.v === 1) {
+    const nowMs = Date.now();
     state = {
       sid: payload.sid,
       currentRti: payload.rti,
+      rtiRotatedAt: nowMs,
       userId: payload.userId,
       ver: payload.ver,
       revoked: false,
       supabaseRefreshToken: payload.supabaseRefreshToken,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: nowMs,
+      updatedAt: nowMs,
     };
     await saveSessionState(env, state);
     await addUserSessionId(env, state.userId, state.sid);
@@ -1577,44 +1590,76 @@ async function handleRefresh(request: Request, env: Env): Promise<Response> {
   if (!state) return authError('coreui.errors.auth.required', 401, 'session_not_found');
   if (state.revoked) return authError('coreui.errors.auth.required', 401, 'session_revoked');
 
-  if (state.currentRti !== payload.rti) {
-    await saveSessionState(env, { ...state, revoked: true });
-    return authError('coreui.errors.auth.required', 401, 'refresh_reuse_detected');
-  }
-
-  const grant = await requestSupabaseRefreshGrant(env, state.supabaseRefreshToken);
-  if (!grant.ok) {
-    await saveSessionState(env, { ...state, revoked: true });
-    return authError('coreui.errors.auth.required', grant.status, grant.reason);
-  }
-
-  const nowSec = Math.floor(Date.now() / 1000);
-  const userId = resolveUserIdFromSupabaseResponse(grant.payload);
-  const supabaseAccessToken = claimAsString(grant.payload.access_token);
-  const supabaseRefreshToken = claimAsString(grant.payload.refresh_token);
-  if (!userId || !supabaseAccessToken || !supabaseRefreshToken || userId !== state.userId) {
+  if (state.userId !== payload.userId) {
     await saveSessionState(env, { ...state, revoked: true });
     return authError('coreui.errors.auth.required', 401, 'refresh_subject_mismatch');
   }
 
-  const session = await issueSession(env, {
+  if (state.ver !== payload.ver) {
+    await saveSessionState(env, { ...state, revoked: true });
+    return authError('coreui.errors.auth.required', 401, 'refresh_version_mismatch');
+  }
+
+  const nowMs = Date.now();
+  const nowSec = Math.floor(nowMs / 1000);
+  let nextRti = '';
+  let shouldRotate = false;
+
+  if (state.currentRti === payload.rti) {
+    shouldRotate = true;
+    nextRti = await deriveNextRti(env, { sid: state.sid, ver: state.ver, rti: payload.rti });
+  } else {
+    const rotatedAt = Number.isFinite(state.rtiRotatedAt) ? state.rtiRotatedAt : state.updatedAt;
+    const withinGrace = nowMs >= rotatedAt && nowMs - rotatedAt < REFRESH_RTI_GRACE_MS;
+    if (withinGrace) {
+      const expectedCurrent = await deriveNextRti(env, { sid: state.sid, ver: state.ver, rti: payload.rti });
+      if (expectedCurrent === state.currentRti) {
+        nextRti = state.currentRti;
+      }
+    }
+    if (!nextRti) {
+      await saveSessionState(env, { ...state, revoked: true });
+      return authError('coreui.errors.auth.required', 401, 'refresh_reuse_detected');
+    }
+  }
+
+  if (shouldRotate) {
+    await saveSessionState(env, { ...state, currentRti: nextRti, rtiRotatedAt: nowMs });
+  }
+
+  const claims: AccessClaims = {
+    sub: state.userId,
     sid: state.sid,
     ver: state.ver,
-    userId,
-    supabaseRefreshToken,
-    supabaseAccessToken,
-    supabaseAccessExp: resolveSupabaseAccessExp(nowSec, grant.payload),
-  });
+    iat: nowSec,
+    exp: nowSec + ACCESS_TOKEN_TTL_SECONDS,
+    iss: resolveIssuer(env),
+    aud: resolveAudience(env),
+  };
+
+  const refreshPayload: RefreshPayloadV2 = {
+    v: 2,
+    sid: state.sid,
+    rti: nextRti,
+    ver: state.ver,
+    userId: state.userId,
+    exp: nowSec + REFRESH_TOKEN_TTL_SECONDS,
+  };
+
+  const [accessToken, nextRefreshToken] = await Promise.all([
+    signAccessToken(claims, env),
+    signRefreshToken(refreshPayload, env),
+  ]);
 
   return json({
     ok: true,
-    sessionId: session.sid,
-    userId,
-    accessToken: session.accessToken,
-    refreshToken: session.refreshToken,
-    accessTokenMaxAge: session.accessTokenMaxAge,
-    refreshTokenMaxAge: session.refreshTokenMaxAge,
-    expiresAt: session.expiresAt,
+    sessionId: state.sid,
+    userId: state.userId,
+    accessToken,
+    refreshToken: nextRefreshToken,
+    accessTokenMaxAge: ACCESS_TOKEN_TTL_SECONDS,
+    refreshTokenMaxAge: REFRESH_TOKEN_TTL_SECONDS,
+    expiresAt: new Date((nowSec + ACCESS_TOKEN_TTL_SECONDS) * 1000).toISOString(),
   });
 }
 

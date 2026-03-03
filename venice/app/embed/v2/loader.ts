@@ -9,7 +9,6 @@ function buildScript(): string {
 			    delay = '0',
 			    scrollPct,
 			    clickSelector,
-			    forceShadow = 'false',
 			    ckOptimization = 'none',
 			    cacheBust = 'false',
 		    maxWidth: maxWidthAttr,
@@ -73,14 +72,43 @@ function buildScript(): string {
 			    return value || '';
 			  };
 
-			  const resolveLocale = (raw) => {
-			    const preferred = normalizeLocaleToken(raw);
-			    if (preferred) return preferred;
-			    const nav = normalizeLocaleToken(navigator.language || '');
-			    return nav || 'en';
+			  const fixedLocale = normalizeLocaleToken(localeAttr);
+
+			  const parseGeoCountry = (response) => {
+			    const raw =
+			      response && response.headers
+			        ? response.headers.get('x-ck-geo-country') || response.headers.get('X-Ck-Geo-Country')
+			        : '';
+			    const normalized = String(raw || '').trim().toUpperCase();
+			    return /^[A-Z]{2}$/.test(normalized) ? normalized : 'ZZ';
 			  };
 
-			  const locale = resolveLocale(localeAttr);
+			  const computeEffectiveLocale = (pointer, geoCountry, fixedLocaleOverride) => {
+			    const policy =
+			      pointer && typeof pointer === 'object' && pointer.localePolicy && typeof pointer.localePolicy === 'object'
+			        ? pointer.localePolicy
+			        : null;
+			    const baseLocale = normalizeLocaleToken(policy && policy.baseLocale) || 'en';
+			    const availableLocales = Array.isArray(policy && policy.availableLocales)
+			      ? Array.from(new Set(policy.availableLocales.map(normalizeLocaleToken).filter(Boolean)))
+			      : [baseLocale];
+			    const ipEnabled =
+			      policy && typeof policy === 'object' && policy.ip && typeof policy.ip === 'object' && policy.ip.enabled === true;
+			    const mapping =
+			      policy && typeof policy === 'object' && policy.ip && typeof policy.ip === 'object' && policy.ip.countryToLocale
+			        ? policy.ip.countryToLocale
+			        : null;
+
+			    let locale = baseLocale;
+			    const fixed = normalizeLocaleToken(fixedLocaleOverride);
+			    if (fixed && availableLocales.indexOf(fixed) >= 0) {
+			      locale = fixed;
+			    } else if (ipEnabled) {
+			      const mapped = mapping && typeof mapping[geoCountry] === 'string' ? normalizeLocaleToken(mapping[geoCountry]) : '';
+			      if (mapped && availableLocales.indexOf(mapped) >= 0) locale = mapped;
+			    }
+			    return locale;
+			  };
 
 			  let missingIdErrorEl = null;
 			  let missingIdErrorTimer = null;
@@ -113,33 +141,24 @@ function buildScript(): string {
 		  const tsToken = explicitTs || (cacheBust === 'true' ? String(Date.now()) : '');
 		  const tsParam = tsToken ? { ts: tsToken } : {};
 
-		  const DEFAULT_MAX_WIDTH = 640;
-		  const DEFAULT_MIN_HEIGHT = 420;
-
-		  const parseMaxWidth = (rawValue, fallback) => {
+		  const parseMaxWidth = (rawValue) => {
 		    const raw = typeof rawValue === 'string' ? rawValue.trim() : '';
-		    if (!raw) return fallback;
+		    if (!raw) return 0;
 		    const n = Number(raw);
-		    if (!Number.isFinite(n) || n < 0) {
-		      console.warn('[Clickeen] Invalid data-max-width; using fallback');
-		      return fallback;
-		    }
+		    if (!Number.isFinite(n) || n < 0) return 0;
 		    return Math.round(n);
 		  };
 
-		  const parseMinHeight = (rawValue, fallback) => {
+		  const parseMinHeight = (rawValue) => {
 		    const raw = typeof rawValue === 'string' ? rawValue.trim() : '';
-		    if (!raw) return fallback;
+		    if (!raw) return 0;
 		    const n = Number(raw);
-		    if (!Number.isFinite(n) || n <= 0) {
-		      console.warn('[Clickeen] Invalid data-min-height; using fallback');
-		      return fallback;
-		    }
+		    if (!Number.isFinite(n) || n <= 0) return 0;
 		    return Math.round(n);
 		  };
 
-		  const maxWidthValue = parseMaxWidth(maxWidthAttr, DEFAULT_MAX_WIDTH);
-		  const minHeightValue = parseMinHeight(minHeightAttr, DEFAULT_MIN_HEIGHT);
+		  const maxWidthValue = parseMaxWidth(maxWidthAttr);
+		  const minHeightValue = parseMinHeight(minHeightAttr);
 
 	  const widthValue = typeof widthAttr === 'string' ? widthAttr.trim() : '';
 	  if (widthValue && widthValue !== '100%') {
@@ -271,7 +290,7 @@ function buildScript(): string {
 
 	  function mountIframe() {
 	    const iframe = document.createElement('iframe');
-	    iframe.src = embedUrl('/e/' + encodeURIComponent(publicId), { locale });
+	    iframe.src = embedUrl('/e/' + encodeURIComponent(publicId), fixedLocale ? { locale: fixedLocale } : {});
 	    iframe.setAttribute('loading', trigger === 'immediate' ? 'eager' : 'lazy');
 	    iframe.setAttribute('title', 'Clickeen widget');
 	    iframe.setAttribute('referrerpolicy', 'no-referrer');
@@ -392,114 +411,58 @@ function buildScript(): string {
     body.innerHTML = excerptHtml;
   }
 
-  function ensureWidgetGlobals(payload) {
-    window.CK_WIDGETS = window.CK_WIDGETS || {};
-    window.CK_WIDGETS[publicId] = payload;
-    window.CK_WIDGET = payload; // legacy single-widget accessor
-  }
-
-  function loadShadowScript(target, src) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.async = false;
-      const prev = window.CK_CURRENT_SCRIPT;
-      window.CK_CURRENT_SCRIPT = script;
-      script.onload = () => {
-        window.CK_CURRENT_SCRIPT = prev;
-        resolve();
-      };
-      script.onerror = () => {
-        window.CK_CURRENT_SCRIPT = prev;
-        reject(new Error('Failed to load script ' + src));
-      };
-      target.appendChild(script);
-    });
-  }
-
-  function loadShadowStyle(target, href) {
-    return new Promise((resolve, reject) => {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = href;
-      link.onload = () => resolve();
-      link.onerror = () => reject(new Error('Failed to load style ' + href));
-      target.appendChild(link);
-    });
-  }
-
-  function activateDeepLink(shadowRoot, state) {
-    if (!state || !state.geo || state.geo.enableDeepLinks !== true) return;
-    const hash = window.location.hash || '';
-    const targetId = hash.startsWith('#') ? hash.slice(1) : hash;
-    if (!targetId) return;
-
-    const el = shadowRoot.getElementById ? shadowRoot.getElementById(targetId) : shadowRoot.querySelector('#' + CSS.escape(targetId));
-    if (!el) return;
-    if (typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ block: 'start', behavior: 'auto' });
-    }
-    const btn = el.querySelector && el.querySelector('[data-role="faq-question"]');
-    if (btn && btn.getAttribute('aria-expanded') !== 'true') {
-      btn.click();
-    }
-  }
-
-  async function mountShadow(renderPayload) {
-    const shadow = container.attachShadow({ mode: 'open' });
-    container.setAttribute('data-ck-public-id', publicId);
-
-    const styles = (renderPayload && renderPayload.assets && renderPayload.assets.styles) || [];
-    const scripts = (renderPayload && renderPayload.assets && renderPayload.assets.scripts) || [];
-    const renderHtml = (renderPayload && renderPayload.renderHtml) || '';
-
-    // Render structure first (no scripts in renderHtml by contract)
-    const template = document.createElement('template');
-    template.innerHTML = renderHtml;
-    shadow.appendChild(template.content.cloneNode(true));
-
-    // Load styles first so initial paint is correct
-    for (const href of styles) {
-      await loadShadowStyle(shadow, assetUrl(href));
-    }
-
-    // Provide state for widget scripts
-    ensureWidgetGlobals({
-      widgetname: renderPayload.widgetType,
-      publicId: renderPayload.publicId,
-      status: renderPayload.status,
-      theme: renderPayload.theme,
-      device: renderPayload.device,
-      state: renderPayload.state,
-	    });
-
-		    upsertSchema(renderPayload.publicId || publicId, renderPayload.schemaJsonLd);
-		    if (seoGeoOptimization) {
-		      upsertExcerpt(renderPayload.publicId || publicId, container, maxWidthValue, renderPayload.excerptHtml);
-		    }
-
-    // Widgets expect their runtime scripts to be rendered inside the widget root
-    // so document.currentScript.closest('[data-ck-widget]') resolves deterministically.
-    const scriptTarget = shadow.querySelector && shadow.querySelector('[data-ck-widget]') || shadow;
-
-    // Load scripts sequentially, preserving dependency order.
-    // Shadow-root scripts cannot use document.currentScript, so we expose a deterministic fallback
-    // via window.CK_CURRENT_SCRIPT. To avoid multi-embed races, serialize shadow script execution.
-    const runScripts = async () => {
-      for (const src of scripts) {
-        await loadShadowScript(scriptTarget, assetUrl(src));
+  async function loadSeoGeoMeta(opts, targetPublicId, fixedLocaleOverride, anchorEl, maxWidthPx) {
+    try {
+      const pointerRes = await fetch(embedUrlFor(opts, '/r/' + encodeURIComponent(targetPublicId)), {
+        mode: 'cors',
+        credentials: 'omit',
+      });
+      const geoCountry = parseGeoCountry(pointerRes);
+      const pointer = await pointerRes.json().catch(() => null);
+      if (!pointerRes.ok || !pointer || typeof pointer !== 'object') {
+        console.warn('[Clickeen] SEO/GEO pointer unavailable', pointerRes.status, pointer);
+        return;
       }
-    };
-    window.CK_SHADOW_SCRIPT_QUEUE = window.CK_SHADOW_SCRIPT_QUEUE || Promise.resolve();
-    window.CK_SHADOW_SCRIPT_QUEUE = window.CK_SHADOW_SCRIPT_QUEUE.then(runScripts, runScripts);
-    await window.CK_SHADOW_SCRIPT_QUEUE;
 
-    // Deep link activation (initial + hash changes)
-    const onHash = () => activateDeepLink(shadow, renderPayload.state);
-    window.addEventListener('hashchange', onHash);
-    onHash();
+      // Not entitled / not published with SEO meta.
+      if (!pointer.seoGeo) return;
 
-    setReadyOnce();
+      const effectiveLocale = computeEffectiveLocale(pointer, geoCountry, fixedLocaleOverride);
+      const metaPointerRes = await fetch(
+        embedUrlFor(opts, '/r/' + encodeURIComponent(targetPublicId), { meta: '1', locale: effectiveLocale }),
+        { mode: 'cors', credentials: 'omit' },
+      );
+      const metaPointer = await metaPointerRes.json().catch(() => null);
+      const metaFp = metaPointer && typeof metaPointer.metaFp === 'string' ? metaPointer.metaFp.trim() : '';
+      if (!metaPointerRes.ok || !metaFp) {
+        console.warn('[Clickeen] SEO/GEO meta pointer unavailable', metaPointerRes.status, metaPointer);
+        return;
+      }
+
+      const metaPackRes = await fetch(
+        embedUrlFor(
+          opts,
+          '/renders/instances/' +
+            encodeURIComponent(targetPublicId) +
+            '/meta/' +
+            encodeURIComponent(effectiveLocale) +
+            '/' +
+            encodeURIComponent(metaFp) +
+            '.json',
+        ),
+        { mode: 'cors', credentials: 'omit' },
+      );
+      const metaPack = await metaPackRes.json().catch(() => null);
+      if (!metaPackRes.ok || !metaPack) {
+        console.warn('[Clickeen] SEO/GEO meta pack unavailable', metaPackRes.status, metaPack);
+        return;
+      }
+
+      upsertSchema(targetPublicId, metaPack.schemaJsonLd);
+      upsertExcerpt(targetPublicId, anchorEl, maxWidthPx, metaPack.excerptHtml);
+    } catch (err) {
+      console.warn('[Clickeen] SEO/GEO meta failed', err);
+    }
   }
 
 	  let mountStarted = false;
@@ -507,43 +470,10 @@ function buildScript(): string {
 	    if (mountStarted) return;
 	    mountStarted = true;
 
-		    // Default path (fast): iframe embed only.
-		    if (forceShadow !== 'true') {
-		      mountIframe();
-		      if (seoGeoOptimization) {
-		        try {
-		          const metaRes = await fetch(embedUrl('/r/' + encodeURIComponent(publicId), { locale, meta: '1' }), {
-		            mode: 'cors',
-		            credentials: 'omit',
-		          });
-		          const metaPayload = await metaRes.json().catch(() => null);
-		          if (!metaRes.ok || !metaPayload) {
-		            console.warn('[Clickeen] SEO/GEO meta failed', metaRes.status, metaPayload);
-		          } else {
-			            upsertSchema(publicId, metaPayload.schemaJsonLd);
-			            upsertExcerpt(publicId, container, maxWidthValue, metaPayload.excerptHtml);
-			          }
-		        } catch (err) {
-		          console.warn('[Clickeen] SEO/GEO meta failed', err);
-		        }
-		      }
-		      return;
-		    }
-
-		    // Shadow mode: fetch structured render payload (used by Bob preview-shadow / SEO flows).
-		    const renderRes = await fetch(embedUrl('/r/' + encodeURIComponent(publicId), { locale }), {
-		      mode: 'cors',
-		      credentials: 'omit',
-		    });
-	    const payload = await renderRes.json().catch(() => null);
-
-	    if (!renderRes.ok || !payload) {
-	      console.warn('[Clickeen] Render failed', renderRes.status, payload);
-	      mountIframe();
-	      return;
-	    }
-
-	    await mountShadow(payload);
+		    // PRD 54: public embed = iframe + Tokyo artifacts only. No dynamic shadow payload.
+		    mountIframe();
+		    if (!seoGeoOptimization) return;
+		    await loadSeoGeoMeta({ tsParam }, publicId, fixedLocale, container, maxWidthValue);
 	  }
 
   function triggerAndMount() {
@@ -609,8 +539,7 @@ function buildScript(): string {
     hostEl.setAttribute('data-ck-public-id', pid);
     clearMissingIdError();
 
-	    const hostLocaleRaw = typeof hostEl.dataset.locale === 'string' ? hostEl.dataset.locale : locale;
-	    const hostLocale = resolveLocale(hostLocaleRaw);
+	    const hostFixedLocale = normalizeLocaleToken(hostEl.dataset.locale);
 
     const hostExplicitTs = typeof hostEl.dataset.ts === 'string' ? hostEl.dataset.ts.trim() : '';
     const hostCacheBust = typeof hostEl.dataset.cacheBust === 'string' ? hostEl.dataset.cacheBust.trim().toLowerCase() : '';
@@ -631,9 +560,11 @@ function buildScript(): string {
     hostEl.style.minHeight = hostMinHeight + 'px';
 
     const iframe = document.createElement('iframe');
-	    iframe.src = embedUrlFor({ tsParam: hostTsParam }, '/e/' + encodeURIComponent(pid), {
-	      locale: hostLocale,
-	    });
+	    iframe.src = embedUrlFor(
+	      { tsParam: hostTsParam },
+	      '/e/' + encodeURIComponent(pid),
+	      hostFixedLocale ? { locale: hostFixedLocale } : {},
+	    );
     iframe.setAttribute('loading', 'lazy');
     iframe.setAttribute('title', 'Clickeen widget');
     iframe.setAttribute('referrerpolicy', 'no-referrer');
@@ -703,20 +634,7 @@ function buildScript(): string {
     const hostOptimization = typeof hostEl.dataset.ckOptimization === 'string' ? hostEl.dataset.ckOptimization.trim().toLowerCase() : '';
     const hostSeoGeoOptimization = hostOptimization === 'seo-geo';
     if (hostSeoGeoOptimization) {
-	      fetch(embedUrlFor({ tsParam: hostTsParam }, '/r/' + encodeURIComponent(pid), { locale: hostLocale, meta: '1' }), {
-	        mode: 'cors',
-	        credentials: 'omit',
-	      })
-        .then((res) => res.json().catch(() => null).then((payload) => ({ res, payload })))
-        .then(({ res, payload }) => {
-          if (!res.ok || !payload) {
-            console.warn('[Clickeen] SEO/GEO meta failed', res.status, payload);
-            return;
-          }
-          upsertSchema(pid, payload.schemaJsonLd);
-          upsertExcerpt(pid, hostEl, hostMaxWidth, payload.excerptHtml);
-        })
-        .catch((err) => console.warn('[Clickeen] SEO/GEO meta failed', err));
+      loadSeoGeoMeta({ tsParam: hostTsParam }, pid, hostFixedLocale, hostEl, hostMaxWidth);
     }
   }
 

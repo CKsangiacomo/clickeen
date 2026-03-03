@@ -77,6 +77,118 @@ export function normalizeSupportedLocaleToken(raw: unknown): string | null {
   return normalized;
 }
 
+export type WorkspaceL10nPolicy = {
+  v: 1;
+  baseLocale: string;
+  ip: {
+    enabled: boolean;
+    countryToLocale: Record<string, string>;
+  };
+  switcher: {
+    enabled: boolean;
+  };
+};
+
+const DEFAULT_WORKSPACE_L10N_POLICY: WorkspaceL10nPolicy = {
+  v: 1,
+  baseLocale: 'en',
+  ip: { enabled: false, countryToLocale: {} },
+  switcher: { enabled: true },
+};
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function resolveWorkspaceL10nPolicy(raw: unknown): WorkspaceL10nPolicy {
+  if (!isPlainRecord(raw) || raw.v !== 1) return DEFAULT_WORKSPACE_L10N_POLICY;
+
+  const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale) ?? DEFAULT_WORKSPACE_L10N_POLICY.baseLocale;
+
+  const ipRaw = isPlainRecord(raw.ip) ? raw.ip : null;
+  const ipEnabled = typeof ipRaw?.enabled === 'boolean' ? ipRaw.enabled : DEFAULT_WORKSPACE_L10N_POLICY.ip.enabled;
+  const countryToLocale: Record<string, string> = {};
+  const mapRaw = ipRaw && isPlainRecord(ipRaw.countryToLocale) ? ipRaw.countryToLocale : null;
+  if (mapRaw) {
+    for (const [countryRaw, localeRaw] of Object.entries(mapRaw)) {
+      const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
+      if (!/^[A-Z]{2}$/.test(country)) continue;
+      const locale = normalizeSupportedLocaleToken(localeRaw);
+      if (!locale) continue;
+      countryToLocale[country] = locale;
+    }
+  }
+
+  const switcherRaw = isPlainRecord(raw.switcher) ? raw.switcher : null;
+  const switcherEnabled =
+    typeof switcherRaw?.enabled === 'boolean' ? switcherRaw.enabled : DEFAULT_WORKSPACE_L10N_POLICY.switcher.enabled;
+
+  return {
+    v: 1,
+    baseLocale,
+    ip: { enabled: ipEnabled, countryToLocale },
+    switcher: { enabled: switcherEnabled },
+  };
+}
+
+export function parseWorkspaceL10nPolicy(raw: unknown): { ok: true; policy: WorkspaceL10nPolicy } | { ok: false; issues: Array<{ path: string; message: string }> } {
+  if (!isPlainRecord(raw)) {
+    return { ok: false, issues: [{ path: 'policy', message: 'policy must be an object' }] };
+  }
+  if (raw.v !== 1) {
+    return { ok: false, issues: [{ path: 'policy.v', message: 'policy.v must be 1' }] };
+  }
+
+  const issues: Array<{ path: string; message: string }> = [];
+
+  const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale);
+  if (!baseLocale) {
+    issues.push({ path: 'policy.baseLocale', message: 'baseLocale must be a supported locale token' });
+  }
+
+  const ipRaw = raw.ip;
+  const ip = isPlainRecord(ipRaw) ? ipRaw : null;
+  const ipEnabled = ip && typeof ip.enabled === 'boolean' ? ip.enabled : DEFAULT_WORKSPACE_L10N_POLICY.ip.enabled;
+  const countryToLocale: Record<string, string> = {};
+  if (ip && Object.prototype.hasOwnProperty.call(ip, 'countryToLocale')) {
+    const mapRaw = ip.countryToLocale;
+    if (!isPlainRecord(mapRaw)) {
+      issues.push({ path: 'policy.ip.countryToLocale', message: 'countryToLocale must be an object' });
+    } else {
+      for (const [countryRaw, localeRaw] of Object.entries(mapRaw)) {
+        const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
+        if (!/^[A-Z]{2}$/.test(country)) {
+          issues.push({ path: `policy.ip.countryToLocale.${countryRaw}`, message: 'country key must be ISO-3166 alpha-2' });
+          continue;
+        }
+        const locale = normalizeSupportedLocaleToken(localeRaw);
+        if (!locale) {
+          issues.push({ path: `policy.ip.countryToLocale.${country}`, message: 'locale must be a supported locale token' });
+          continue;
+        }
+        countryToLocale[country] = locale;
+      }
+    }
+  }
+
+  const switcherRaw = raw.switcher;
+  const switcher = isPlainRecord(switcherRaw) ? switcherRaw : null;
+  const switcherEnabled =
+    switcher && typeof switcher.enabled === 'boolean' ? switcher.enabled : DEFAULT_WORKSPACE_L10N_POLICY.switcher.enabled;
+
+  if (issues.length) return { ok: false, issues };
+
+  return {
+    ok: true,
+    policy: {
+      v: 1,
+      baseLocale: baseLocale!,
+      ip: { enabled: ipEnabled, countryToLocale },
+      switcher: { enabled: switcherEnabled },
+    },
+  };
+}
+
 export function normalizeL10nSource(raw: unknown): string | null {
   const value = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
   if (!value) return null;

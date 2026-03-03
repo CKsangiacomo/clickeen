@@ -42,12 +42,6 @@ export async function runInstanceOpenParityScenario({ profile, context }) {
   }
 
   const headers = authHeaders(profile.authBearer);
-  const roma = await fetchEnvelope(
-    `${profile.romaBaseUrl}/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
-      workspaceId,
-    )}&_t=${Date.now()}`,
-    { headers },
-  );
   const bob = await fetchEnvelope(
     `${profile.bobBaseUrl}/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
       publicId,
@@ -55,13 +49,52 @@ export async function runInstanceOpenParityScenario({ profile, context }) {
     { headers },
   );
 
+  checks.push(makeCheck('Bob workspace instance route responds 200', bob.status === 200, { actual: bob.status }));
+
+  const bobEnvelope = extractInstanceEnvelope(bob.json);
+
+  checks.push(makeCheck('Bob instance envelope includes publicId', Boolean(bobEnvelope.publicId), { actual: bobEnvelope.publicId }));
+
+  const bobMissingWorkspace = await fetchEnvelope(
+    `${profile.bobBaseUrl}/api/paris/instance/${encodeURIComponent(publicId)}?subject=workspace&_t=${Date.now()}`,
+    { headers },
+  );
+  const bobMissingReason = parseReasonKey(bobMissingWorkspace.json);
+
   checks.push(
-    makeCheck('Roma workspace instance route responds 200', roma.status === 200, { actual: roma.status }),
-    makeCheck('Bob workspace instance route responds 200', bob.status === 200, { actual: bob.status }),
+    makeCheck('Bob missing workspace context returns 422', bobMissingWorkspace.status === 422, {
+      actual: bobMissingWorkspace.status,
+    }),
+    makeCheck('Bob missing workspace reasonKey is coreui.errors.workspaceId.invalid', bobMissingReason === 'coreui.errors.workspaceId.invalid', {
+      actual: bobMissingReason,
+    }),
   );
 
+  if (profile.name === 'local') {
+    return {
+      scenario: 'instance-open-parity',
+      passed: scenarioPassed(checks),
+      checks,
+      fingerprint: {
+        publicId,
+        workspaceId,
+        ownerAccountId: bobEnvelope.ownerAccountId,
+        workspaceAccountId: bobEnvelope.workspaceAccountId,
+        missingWorkspaceReason: bobMissingReason,
+      },
+    };
+  }
+
+  const roma = await fetchEnvelope(
+    `${profile.romaBaseUrl}/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
+      workspaceId,
+    )}&_t=${Date.now()}`,
+    { headers },
+  );
+
+  checks.push(makeCheck('Roma workspace instance route responds 200', roma.status === 200, { actual: roma.status }));
+
   const romaEnvelope = extractInstanceEnvelope(roma.json);
-  const bobEnvelope = extractInstanceEnvelope(bob.json);
 
   checks.push(
     makeCheck('PublicId matches on Roma/Bob instance envelope', romaEnvelope.publicId === bobEnvelope.publicId, {
@@ -78,30 +111,26 @@ export async function runInstanceOpenParityScenario({ profile, context }) {
     }),
   );
 
-  const bobMissingWorkspace = await fetchEnvelope(
-    `${profile.bobBaseUrl}/api/paris/instance/${encodeURIComponent(publicId)}?subject=workspace&_t=${Date.now()}`,
-    { headers },
-  );
   const romaMissingWorkspace = await fetchEnvelope(
     `${profile.romaBaseUrl}/api/paris/instance/${encodeURIComponent(publicId)}?subject=workspace&_t=${Date.now()}`,
     { headers },
   );
-  const bobMissingReason = parseReasonKey(bobMissingWorkspace.json);
   const romaMissingReason = parseReasonKey(romaMissingWorkspace.json);
 
   checks.push(
-    makeCheck('Bob missing workspace context returns 422', bobMissingWorkspace.status === 422, {
-      actual: bobMissingWorkspace.status,
-    }),
     makeCheck('Roma missing workspace context returns 422', romaMissingWorkspace.status === 422, {
       actual: romaMissingWorkspace.status,
-    }),
-    makeCheck('Bob missing workspace reasonKey is coreui.errors.workspaceId.invalid', bobMissingReason === 'coreui.errors.workspaceId.invalid', {
-      actual: bobMissingReason,
     }),
     makeCheck('Roma missing workspace reasonKey is coreui.errors.workspaceId.invalid', romaMissingReason === 'coreui.errors.workspaceId.invalid', {
       actual: romaMissingReason,
     }),
+    makeCheck(
+      'Roma and Bob missing workspace reasonKey match',
+      romaMissingReason === bobMissingReason,
+      {
+        actual: { roma: romaMissingReason, bob: bobMissingReason },
+      },
+    ),
   );
 
   return {

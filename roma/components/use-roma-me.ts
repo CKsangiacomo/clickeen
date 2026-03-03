@@ -71,6 +71,7 @@ export type RomaMeResponse = {
         publicId: string;
         widgetType: string;
         displayName: string;
+        status: 'published' | 'unpublished';
         workspaceId: string | null;
         source: 'workspace' | 'curated';
         actions: {
@@ -159,6 +160,13 @@ export type RomaMeResponse = {
         role: string;
         workspaceCount: number;
       };
+      notices: Array<{
+        noticeId: string;
+        kind: string;
+        payload: Record<string, unknown>;
+        createdAt: string;
+        emailPending: boolean;
+      }>;
       workspaceSummary: {
         workspaceId: string;
         accountId: string;
@@ -290,7 +298,6 @@ const ROMA_ME_DEGRADED_SUCCESS_TTL_MS = 5_000;
 const ROMA_ME_MIN_SUCCESS_TTL_MS = 30_000;
 const ROMA_ME_AUTHZ_EXPIRY_SKEW_MS = 30_000;
 const ROMA_ME_STORE_KEY = '__CK_ROMA_ME_STORE_V1__';
-const ROMA_ME_SESSION_STORE_KEY = '__CK_ROMA_ME_SESSION_STORE_V1__';
 
 type RomaMeCacheEntry = {
   state: UseRomaMeState;
@@ -303,15 +310,6 @@ type RomaMeStore = {
   hydratedFromSession: boolean;
 };
 
-type RomaMeSessionCacheEntry = {
-  data: RomaMeResponse;
-  expiresAt: number;
-};
-
-type RomaMeSessionStore = {
-  v: 1;
-  cache: Record<string, RomaMeSessionCacheEntry | undefined>;
-};
 
 function isRomaMeStore(value: unknown): value is RomaMeStore {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -320,14 +318,6 @@ function isRomaMeStore(value: unknown): value is RomaMeStore {
   const inFlight = record.inFlight;
   if (!cache || typeof cache !== 'object' || Array.isArray(cache)) return false;
   if (!inFlight || typeof inFlight !== 'object' || Array.isArray(inFlight)) return false;
-  return true;
-}
-
-function isRomaMeSessionStore(value: unknown): value is RomaMeSessionStore {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const record = value as Record<string, unknown>;
-  if (record.v !== 1) return false;
-  if (!record.cache || typeof record.cache !== 'object' || Array.isArray(record.cache)) return false;
   return true;
 }
 
@@ -349,79 +339,6 @@ function hasDomainErrors(data: RomaMeResponse | null): boolean {
   return Object.keys(data.domainErrors).length > 0;
 }
 
-function persistRomaMeSessionStore(store: RomaMeStore): void {
-  if (typeof window === 'undefined') return;
-
-  try {
-    const now = Date.now();
-    const cache: Record<string, RomaMeSessionCacheEntry | undefined> = {};
-    Object.entries(store.cache).forEach(([key, entry]) => {
-      if (!entry) return;
-      if (entry.expiresAt <= now) return;
-      if (entry.state.error || !entry.state.data) return;
-      if (hasDomainErrors(entry.state.data)) return;
-      cache[key] = {
-        data: entry.state.data,
-        expiresAt: entry.expiresAt,
-      };
-    });
-
-    if (Object.keys(cache).length === 0) {
-      window.sessionStorage.removeItem(ROMA_ME_SESSION_STORE_KEY);
-      return;
-    }
-
-    const payload: RomaMeSessionStore = {
-      v: 1,
-      cache,
-    };
-    window.sessionStorage.setItem(ROMA_ME_SESSION_STORE_KEY, JSON.stringify(payload));
-  } catch {
-    // Ignore session storage failures.
-  }
-}
-
-function hydrateRomaMeStoreFromSession(store: RomaMeStore): void {
-  if (store.hydratedFromSession) return;
-  store.hydratedFromSession = true;
-  if (typeof window === 'undefined') return;
-
-  try {
-    const raw = window.sessionStorage.getItem(ROMA_ME_SESSION_STORE_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw) as unknown;
-    if (!isRomaMeSessionStore(parsed)) {
-      window.sessionStorage.removeItem(ROMA_ME_SESSION_STORE_KEY);
-      return;
-    }
-
-    const now = Date.now();
-    let hasExpired = false;
-    Object.entries(parsed.cache).forEach(([key, entry]) => {
-      if (!entry || typeof entry !== 'object') return;
-      const expiresAt = Number(entry.expiresAt);
-      const data = entry.data;
-      if (!Number.isFinite(expiresAt) || expiresAt <= now || !data || typeof data !== 'object' || Array.isArray(data)) {
-        hasExpired = true;
-        return;
-      }
-      store.cache[key] = {
-        state: {
-          loading: false,
-          data,
-          error: null,
-        },
-        expiresAt,
-      };
-    });
-    if (hasExpired) {
-      persistRomaMeSessionStore(store);
-    }
-  } catch {
-    // Ignore session storage failures.
-  }
-}
-
 function resolveRomaMeStore(): RomaMeStore {
   const scope = globalThis as Record<string, unknown>;
   const existing = scope[ROMA_ME_STORE_KEY];
@@ -435,7 +352,9 @@ function resolveRomaMeStore(): RomaMeStore {
     store = { cache: {}, inFlight: {}, hydratedFromSession: false };
   }
   scope[ROMA_ME_STORE_KEY] = store;
-  hydrateRomaMeStoreFromSession(store);
+  if (store.hydratedFromSession !== true) {
+    store.hydratedFromSession = true;
+  }
   return store;
 }
 
@@ -446,7 +365,6 @@ function readRomaMeCache(workspaceId: string | null): UseRomaMeState | null {
   if (!entry) return null;
   if (Date.now() >= entry.expiresAt) {
     delete store.cache[key];
-    persistRomaMeSessionStore(store);
     return null;
   }
   return entry.state;
@@ -464,7 +382,6 @@ function writeRomaMeCache(workspaceId: string | null, state: UseRomaMeState): Us
     state,
     expiresAt: Date.now() + ttl,
   };
-  persistRomaMeSessionStore(store);
   return state;
 }
 
@@ -517,7 +434,6 @@ async function loadRomaMeState(force: boolean, workspaceId: string | null): Prom
     if (cached) return cached;
   } else {
     delete store.cache[key];
-    persistRomaMeSessionStore(store);
   }
 
   const inFlight = store.inFlight[key];

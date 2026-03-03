@@ -237,7 +237,7 @@ Each release proceeds in 3 steps:
 | **Bob (Pages)** | `PARIS_BASE_URL` | `https://paris.dev.clickeen.com` | `https://paris.clickeen.com` | Bob’s same-origin proxy to Paris |
 | **Bob (Pages)** | `SANFRANCISCO_BASE_URL` | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Base URL for Copilot execution (San Francisco); some routes have local fallbacks |
 | **Roma (Pages)** | `PARIS_BASE_URL` | `https://paris.dev.clickeen.com` | `https://paris.clickeen.com` | Roma’s same-origin proxy to Paris |
-| **Roma (Pages)** | `NEXT_PUBLIC_BOB_URL` | `https://bob.dev.clickeen.com` | `https://app.clickeen.com` | Builder iframe origin fallback when no explicit `?bob=` override is provided |
+| **Roma (Pages)** | `NEXT_PUBLIC_BOB_URL` | `https://bob.dev.clickeen.com` | `https://app.clickeen.com` | Builder iframe origin (no query override; configured per environment) |
 | **Paris (Workers)** | `SUPABASE_URL` | dev project | prod project | Service role access |
 | **Paris (Workers)** | `SUPABASE_SERVICE_ROLE_KEY` | dev key | prod key | Never exposed to browsers |
 | **Paris (Workers)** | `TOKYO_BASE_URL` | `https://tokyo.dev.clickeen.com` | `https://tokyo.clickeen.com` | Widget type validation + limits lookup |

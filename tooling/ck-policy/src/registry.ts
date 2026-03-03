@@ -9,6 +9,7 @@ export const CAPABILITY_KEYS = [
   'l10n.versions.max',
   'personalization.sources.website.depth.max',
   'branding.remove',
+  'embed.seoGeo.enabled',
   'budget.copilot.turns',
   'budget.uploads.count',
   'budget.uploads.bytes',
@@ -28,6 +29,7 @@ export type CapabilityKey = (typeof CAPABILITY_KEYS)[number];
 
 export const FLAG_KEYS = [
   'branding.remove',
+  'embed.seoGeo.enabled',
 ] as const satisfies readonly CapabilityKey[];
 export type FlagKey = (typeof FLAG_KEYS)[number];
 
@@ -84,6 +86,10 @@ export const CAPABILITY_META: Record<CapabilityKey, CapabilityMeta> = {
   'branding.remove': {
     label: 'Remove branding',
     description: 'Allow removing Clickeen branding.',
+  },
+  'embed.seoGeo.enabled': {
+    label: 'SEO/GEO embed',
+    description: 'Allow generating and serving SEO/GEO optimized embed artifacts (Iframe++).',
   },
   'budget.copilot.turns': {
     label: 'Copilot turns',

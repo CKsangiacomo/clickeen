@@ -23,8 +23,7 @@ export type Env = {
   USAGE_KV?: KVNamespace;
   USAGE_EVENT_HMAC_SECRET?: string;
   L10N_GENERATE_QUEUE?: Queue<L10nJob>;
-  L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
-  RENDER_SNAPSHOT_QUEUE?: Queue<RenderSnapshotQueueJob>;
+  RENDER_SNAPSHOT_QUEUE?: Queue<TokyoMirrorQueueJob>;
   SANFRANCISCO_COMMANDS_QUEUE?: Queue<SanfranciscoCommandQueueJob>;
 };
 
@@ -70,6 +69,7 @@ export type WorkspaceRow = {
   slug: string;
   website_url: string | null;
   l10n_locales?: unknown;
+  l10n_policy?: unknown;
 };
 
 export type WorkspaceBusinessProfileRow = {
@@ -85,6 +85,8 @@ export type UpdatePayload = {
   status?: 'published' | 'unpublished';
   displayName?: string | null;
   meta?: Record<string, unknown> | null;
+  localePolicy?: LocalePolicy;
+  seoGeo?: boolean;
 };
 
 export type CreateInstancePayload = {
@@ -152,23 +154,75 @@ export type L10nJob = {
   envStage: string;
 };
 
-export type LayerPublishJob = {
-  v: 2;
-  publicId: string;
-  layer: string;
-  layerKey: string;
-  action?: 'upsert' | 'delete';
+export type LocalePolicy = {
+  baseLocale: string;
+  availableLocales: string[];
+  ip: {
+    enabled: boolean;
+    countryToLocale: Record<string, string>;
+  };
+  switcher: {
+    enabled: boolean;
+  };
 };
 
-export type L10nPublishQueueJob = LayerPublishJob;
-
-export type RenderSnapshotQueueJob = {
+export type WriteConfigPackJob = {
   v: 1;
-  kind: 'render-snapshot';
+  kind: 'write-config-pack';
   publicId: string;
-  action?: 'upsert' | 'delete';
-  locales?: string[];
+  widgetType: string;
+  configFp: string;
+  configPack: Record<string, unknown>;
 };
+
+export type WriteTextPackJob = {
+  v: 1;
+  kind: 'write-text-pack';
+  publicId: string;
+  locale: string;
+  textPack: Record<string, string>;
+};
+
+export type WriteMetaPackJob = {
+  v: 1;
+  kind: 'write-meta-pack';
+  publicId: string;
+  locale: string;
+  metaPack: Record<string, unknown>;
+};
+
+export type SyncLiveSurfaceJob = {
+  v: 1;
+  kind: 'sync-live-surface';
+  publicId: string;
+  live: boolean;
+  widgetType?: string;
+  configFp?: string;
+  localePolicy?: LocalePolicy;
+  seoGeo?: boolean;
+};
+
+export type EnforceLiveSurfaceJob = {
+  v: 1;
+  kind: 'enforce-live-surface';
+  publicId: string;
+  localePolicy: LocalePolicy;
+  seoGeo: boolean;
+};
+
+export type DeleteInstanceMirrorJob = {
+  v: 1;
+  kind: 'delete-instance-mirror';
+  publicId: string;
+};
+
+export type TokyoMirrorQueueJob =
+  | WriteConfigPackJob
+  | WriteTextPackJob
+  | WriteMetaPackJob
+  | SyncLiveSurfaceJob
+  | EnforceLiveSurfaceJob
+  | DeleteInstanceMirrorJob;
 
 export type SanfranciscoCommandName =
   | 'personalization.preview.enqueue'

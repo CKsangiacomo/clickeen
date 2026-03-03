@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isUuid, isWidgetPublicId, parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 import { resolveTokyoBaseUrl } from '../../../../lib/env/tokyo';
 import {
-  isDevstudioLocalBootstrapRequest,
   resolveSessionBearer,
   type SessionCookieSpec,
 } from '../../../../lib/auth/session';
@@ -14,7 +13,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST,OPTIONS',
   'Access-Control-Allow-Headers':
-    'authorization, content-type, x-account-id, x-workspace-id, x-public-id, x-widget-type, x-filename, x-variant, x-source',
+    'authorization, content-type, x-account-id, x-workspace-id, x-public-id, x-widget-type, x-filename, x-variant, x-source, x-clickeen-surface',
 } as const;
 
 function safeJsonParse(text: string): unknown | null {
@@ -61,11 +60,25 @@ function withCorsAndSession(
 }
 
 export async function POST(request: NextRequest) {
-  const session = await resolveSessionBearer(request, {
-    allowLocalDevBootstrap: isDevstudioLocalBootstrapRequest(request),
-  });
-  if (!session.ok) {
+  const stage = (process.env.ENV_STAGE ?? '').trim().toLowerCase();
+  const localStage = stage === 'local';
+  const session = localStage ? null : await resolveSessionBearer(request);
+  if (!localStage && session && !session.ok) {
     return withCorsAndSession(request, session.response);
+  }
+
+  const surface = (request.headers.get('x-clickeen-surface') || '').trim();
+  if (surface !== 'roma-assets') {
+    return withCorsAndSession(request, NextResponse.json(
+      {
+        error: {
+          kind: 'DENY',
+          reasonKey: 'coreui.errors.auth.forbidden',
+          detail: 'Asset upload is managed via Roma Assets.',
+        },
+      },
+      { status: 403 },
+    ), session && session.ok ? session.setCookies : undefined);
   }
 
   const accountId = (request.headers.get('x-account-id') || '').trim();
@@ -73,7 +86,7 @@ export async function POST(request: NextRequest) {
     return withCorsAndSession(request, NextResponse.json(
       { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
       { status: 422 },
-    ), session.setCookies);
+    ), session && session.ok ? session.setCookies : undefined);
   }
 
   const workspaceId = (request.headers.get('x-workspace-id') || '').trim();
@@ -81,7 +94,7 @@ export async function POST(request: NextRequest) {
     return withCorsAndSession(request, NextResponse.json(
       { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } },
       { status: 422 },
-    ), session.setCookies);
+    ), session && session.ok ? session.setCookies : undefined);
   }
 
   const filename = (request.headers.get('x-filename') || '').trim() || 'upload.bin';
@@ -95,11 +108,25 @@ export async function POST(request: NextRequest) {
     return withCorsAndSession(request, NextResponse.json(
       { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail: messageText } },
       { status: 500 },
-    ), session.setCookies);
+    ), session && session.ok ? session.setCookies : undefined);
   }
 
   const headers = new Headers();
-  headers.set('authorization', `Bearer ${session.accessToken}`);
+  if (localStage) {
+    const tokyoDevJwt = String(process.env.TOKYO_DEV_JWT || '').trim();
+    if (!tokyoDevJwt) {
+      return withCorsAndSession(
+        request,
+        NextResponse.json(
+          { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail: 'Missing TOKYO_DEV_JWT.' } },
+          { status: 500 },
+        ),
+      );
+    }
+    headers.set('authorization', `Bearer ${tokyoDevJwt}`);
+  } else if (session && session.ok) {
+    headers.set('authorization', `Bearer ${session.accessToken}`);
+  }
   headers.set('x-account-id', accountId);
   if (workspaceId) headers.set('x-workspace-id', workspaceId);
 
@@ -109,7 +136,7 @@ export async function POST(request: NextRequest) {
       return withCorsAndSession(request, NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } },
         { status: 422 },
-      ), session.setCookies);
+      ), session && session.ok ? session.setCookies : undefined);
     }
     headers.set('x-public-id', publicId);
   }
@@ -120,7 +147,7 @@ export async function POST(request: NextRequest) {
       return withCorsAndSession(request, NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } },
         { status: 422 },
-      ), session.setCookies);
+      ), session && session.ok ? session.setCookies : undefined);
     }
     headers.set('x-widget-type', widgetType);
   }
@@ -136,14 +163,14 @@ export async function POST(request: NextRequest) {
       return withCorsAndSession(request, NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } },
         { status: 422 },
-      ), session.setCookies);
+      ), session && session.ok ? session.setCookies : undefined);
     }
     const bodyStream = request.body;
     if (!bodyStream) {
       return withCorsAndSession(request, NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } },
         { status: 422 },
-      ), session.setCookies);
+      ), session && session.ok ? session.setCookies : undefined);
     }
 
     const contentType = (request.headers.get('content-type') || '').trim() || 'application/octet-stream';
@@ -162,7 +189,11 @@ export async function POST(request: NextRequest) {
     const payload = safeJsonParse(text);
     if (!res.ok) {
       if (payload && typeof payload === 'object' && (payload as any).error) {
-        return withCorsAndSession(request, NextResponse.json(payload, { status: res.status }), session.setCookies);
+        return withCorsAndSession(
+          request,
+          NextResponse.json(payload, { status: res.status }),
+          session && session.ok ? session.setCookies : undefined,
+        );
       }
       return withCorsAndSession(request, NextResponse.json(
         {
@@ -173,7 +204,7 @@ export async function POST(request: NextRequest) {
           },
         },
         { status: 502 },
-      ), session.setCookies);
+      ), session && session.ok ? session.setCookies : undefined);
     }
 
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
@@ -186,7 +217,7 @@ export async function POST(request: NextRequest) {
           },
         },
         { status: 502 },
-      ), session.setCookies);
+      ), session && session.ok ? session.setCookies : undefined);
     }
 
     const normalizedUrl = normalizeTokyoUploadUrl(tokyoBase, payload as Record<string, unknown>, accountId);
@@ -200,18 +231,18 @@ export async function POST(request: NextRequest) {
           },
         },
         { status: 502 },
-      ), session.setCookies);
+      ), session && session.ok ? session.setCookies : undefined);
     }
 
     return withCorsAndSession(request, NextResponse.json(
       { ...(payload as Record<string, unknown>), url: normalizedUrl },
       { status: 200 },
-    ), session.setCookies);
+    ), session && session.ok ? session.setCookies : undefined);
   } catch (err) {
     const messageText = err instanceof Error ? err.message : String(err);
     return withCorsAndSession(request, NextResponse.json(
       { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.assets.uploadFailed', detail: messageText } },
       { status: 502 },
-    ), session.setCookies);
+    ), session && session.ok ? session.setCookies : undefined);
   }
 }

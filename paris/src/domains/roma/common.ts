@@ -106,6 +106,7 @@ type RomaAssetsIntegritySnapshot = {
 
 type WorkspaceWidgetInstanceRow = {
   public_id: string;
+  status?: 'published' | 'unpublished' | null;
   display_name?: string | null;
   workspace_id: string;
   widget_id: string | null;
@@ -128,6 +129,7 @@ type RomaWidgetsInstancePayload = {
   publicId: string;
   widgetType: string;
   displayName: string;
+  status: 'published' | 'unpublished';
   workspaceId: string | null;
   source: 'workspace' | 'curated';
   actions: {
@@ -152,6 +154,7 @@ type RomaBootstrapDomainsPayload = {
       publicId: string;
       widgetType: string;
       displayName: string;
+      status: 'published' | 'unpublished';
       workspaceId: string | null;
       source: 'workspace' | 'curated';
       actions: {
@@ -231,6 +234,13 @@ type RomaBootstrapDomainsPayload = {
       role: string;
       workspaceCount: number;
     };
+    notices: Array<{
+      noticeId: string;
+      kind: string;
+      payload: Record<string, unknown>;
+      createdAt: string;
+      emailPending: boolean;
+    }>;
     workspaceSummary: {
       workspaceId: string;
       accountId: string;

@@ -661,5 +661,6 @@ export {
   handleGetAccountAsset,
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
+  handlePurgeAccountAssets,
   handleUploadAccountAsset,
 } from './assets-handlers';

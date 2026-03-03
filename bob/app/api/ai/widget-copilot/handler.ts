@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveParisBaseUrl } from '../../../../lib/env/paris';
 import { WIDGET_COPILOT_AGENT_ALIAS, WIDGET_COPILOT_AGENT_IDS } from '@clickeen/ck-policy';
-import { resolveSessionBearer } from '../../../../lib/auth/session';
+import { applySessionCookies, resolveParisSession, withParisDevAuthorization } from '../../../../lib/api/paris/proxy-helpers';
 
 export const runtime = 'edge';
 
@@ -190,10 +190,7 @@ async function getAiGrant(args: {
   }
 
   const baseUrl = parisBaseUrl.replace(/\/$/, '');
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${args.accessToken}`,
-  };
+  const headers = withParisDevAuthorization(new Headers({ 'Content-Type': 'application/json' }), args.accessToken);
 
   const useMinibobGrant = args.subject === 'minibob';
 
@@ -355,22 +352,30 @@ async function executeOnSanFrancisco(args: { grant: string; agentId: string; inp
 }
 
 export async function POST(req: NextRequest) {
-  const session = await resolveSessionBearer(req);
+  const session = await resolveParisSession(req);
   if (!session.ok) return session.response;
+  const withSession = (response: NextResponse) => applySessionCookies(response, req, session.setCookies);
 
   try {
     const resolved = await resolveSanFranciscoBaseUrl();
     if (!resolved) {
       // Return 200 so the UI can display a friendly message without triggering noisy console "Failed to load resource" logs.
-      return NextResponse.json({ message: 'Copilot is temporarily unavailable (SanFrancisco is not reachable). Please try again in a moment.' }, { status: 200 });
+      return withSession(
+        NextResponse.json(
+          { message: 'Copilot is temporarily unavailable (SanFrancisco is not reachable). Please try again in a moment.' },
+          { status: 200 },
+        ),
+      );
     }
 
     const limited = checkRateLimit(req);
     if (limited) {
       // Return 200 so the UI can show this inline (no red console errors).
-      return NextResponse.json(
-        { message: 'Too many Copilot requests. Please wait a moment and try again.' },
-        { status: 200, headers: { 'x-retry-after-ms': String(limited.retryAfterMs) } },
+      return withSession(
+        NextResponse.json(
+          { message: 'Too many Copilot requests. Please wait a moment and try again.' },
+          { status: 200, headers: { 'x-retry-after-ms': String(limited.retryAfterMs) } },
+        ),
       );
     }
 
@@ -402,7 +407,7 @@ export async function POST(req: NextRequest) {
     if (!ALLOWED_WIDGET_COPILOT_AGENT_IDS.has(requestedAgentId)) {
       issues.push({ path: 'agentId', message: 'agentId must be widget.copilot.v1, sdr.widget.copilot.v1, or cs.widget.copilot.v1' });
     }
-    if (issues.length) return NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 });
+    if (issues.length) return withSession(NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 }));
 
     const grantRes = await getAiGrant({
       agentId: requestedAgentId,
@@ -424,11 +429,18 @@ export async function POST(req: NextRequest) {
         const action = isMinibob ? ('signup' as const) : ('upgrade' as const);
         const ctaText = isMinibob ? 'Create a free account to continue' : 'Upgrade to continue';
         const message = isMinibob ? 'Copilot limit reached. Create a free account to continue.' : 'Copilot limit reached. Upgrade to continue.';
-        return NextResponse.json({ message, cta: { text: ctaText, action }, reasonKey: grantRes.message, detail: grantRes.detail }, { status: 200 });
+        return withSession(
+          NextResponse.json(
+            { message, cta: { text: ctaText, action }, reasonKey: grantRes.message, detail: grantRes.detail },
+            { status: 200 },
+          ),
+        );
       }
-      return NextResponse.json(
-        { message: grantRes.message || 'Copilot is temporarily unavailable. Please try again.' },
-        { status: 200 },
+      return withSession(
+        NextResponse.json(
+          { message: grantRes.message || 'Copilot is temporarily unavailable. Please try again.' },
+          { status: 200 },
+        ),
       );
     }
 
@@ -446,9 +458,11 @@ export async function POST(req: NextRequest) {
       },
     });
     if (!executed.ok) {
-      return NextResponse.json(
-        { message: executed.message || 'Copilot is temporarily unavailable. Please try again.' },
-        { status: 200 },
+      return withSession(
+        NextResponse.json(
+          { message: executed.message || 'Copilot is temporarily unavailable. Please try again.' },
+          { status: 200 },
+        ),
       );
     }
 
@@ -457,16 +471,18 @@ export async function POST(req: NextRequest) {
     if (requestId && isRecord(result)) {
       const baseMeta = isRecord((result as any).meta) ? ((result as any).meta as Record<string, unknown>) : {};
       const meta = { ...baseMeta, requestId };
-      return NextResponse.json({ ...(result as Record<string, unknown>), meta });
+      return withSession(NextResponse.json({ ...(result as Record<string, unknown>), meta }));
     }
 
-    return NextResponse.json(result);
+    return withSession(NextResponse.json(result));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // Return 200 so UI can surface the message inline without a console error spam.
-    return NextResponse.json(
-      { message: message || 'Copilot failed unexpectedly. Please try again.' },
-      { status: 200 },
+    return withSession(
+      NextResponse.json(
+        { message: message || 'Copilot failed unexpectedly. Please try again.' },
+        { status: 200 },
+      ),
     );
   }
 }

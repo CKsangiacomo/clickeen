@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { resolveBootstrapDomainState } from './bootstrap-domain-state';
 import { formatBytes, formatNumber } from '../lib/format';
-import { parseParisReason } from './paris-http';
+import { fetchParisJson, parseParisReason } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type AssetRecord = {
@@ -125,6 +125,10 @@ export function AssetsDomain() {
   const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const [purgeConfirm, setPurgeConfirm] = useState('');
+  const [purgeLoading, setPurgeLoading] = useState(false);
+  const [purgeError, setPurgeError] = useState<string | null>(null);
+  const [purgeResult, setPurgeResult] = useState<{ ok?: boolean; deleted?: number } | null>(null);
 
   useEffect(() => {
     if (!accountId) {
@@ -208,6 +212,33 @@ export function AssetsDomain() {
     [accountId, deleteAsset],
   );
 
+  const purgeAllAssetsEnabled = purgeConfirm.trim().toUpperCase() === 'PURGE';
+  const handlePurgeAllAssets = useCallback(async () => {
+    if (!accountId) return;
+    setPurgeLoading(true);
+    setPurgeError(null);
+    setPurgeResult(null);
+    try {
+      const payload = await fetchParisJson<{ ok?: boolean; deleted?: number }>(
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/assets?confirm=1`,
+        {
+          method: 'DELETE',
+          headers: {
+            'x-clickeen-surface': 'roma-assets',
+          },
+        },
+      );
+      setPurgeResult(payload ?? { ok: true });
+      setPurgeConfirm('');
+      await reloadMe();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setPurgeError(message);
+    } finally {
+      setPurgeLoading(false);
+    }
+  }, [accountId, reloadMe]);
+
   if (me.loading) return <section className="rd-canvas-module body-m">Loading workspace context...</section>;
   if (me.error || !me.data) {
     return <section className="rd-canvas-module body-m">Failed to load workspace context: {me.error ?? 'unknown_error'}</section>;
@@ -258,6 +289,38 @@ export function AssetsDomain() {
             {uploadsBytesBudget.max == null ? 'unlimited' : formatBytes(uploadsBytesBudget.max)}
           </p>
         ) : null}
+        <div className="roma-inline-stack">
+          <h2 className="heading-6">Danger zone: purge all assets</h2>
+          <p className="body-m">
+            Permanently deletes every asset blob + variant for this account from Tokyo/R2. This cannot be undone.
+          </p>
+          <div className="roma-toolbar">
+            <input
+              className="roma-input"
+              value={purgeConfirm}
+              onChange={(event) => setPurgeConfirm(event.target.value)}
+              placeholder="Type PURGE to enable"
+              aria-label="Confirm purge all assets"
+              disabled={purgeLoading}
+            />
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="secondary"
+              type="button"
+              onClick={() => void handlePurgeAllAssets()}
+              disabled={!purgeAllAssetsEnabled || purgeLoading}
+            >
+              <span className="diet-btn-txt__label body-m">{purgeLoading ? 'Purging...' : 'Purge all assets'}</span>
+            </button>
+          </div>
+          {purgeError ? <p className="body-m">Purge failed: {purgeError}</p> : null}
+          {purgeResult ? (
+            <p className="body-m">
+              Purge result: {purgeResult.ok ? 'ok' : 'unknown'} {typeof purgeResult.deleted === 'number' ? `(${purgeResult.deleted} deleted)` : ''}
+            </p>
+          ) : null}
+        </div>
         {deleteError ? <p className="body-m">Failed to delete asset: {deleteError}</p> : null}
         {integrity && !integrity.ok && integrity.missingInR2.length > 0 ? (
           <p className="body-s">

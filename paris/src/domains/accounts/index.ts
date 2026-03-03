@@ -1,11 +1,15 @@
-import type { Env } from '../../shared/types';
+import type { Env, LocalePolicy, WorkspaceRow } from '../../shared/types';
 import { ckError } from '../../shared/errors';
-import { assertDevAuth } from '../../shared/auth';
+import { assertDevAuth, isTrustedInternalServiceRequest } from '../../shared/auth';
 import { readRomaAccountAuthzCapsuleHeader, verifyRomaAccountAuthzCapsule } from '../../shared/authz-capsule';
 import { json, readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
 import { isUuid } from '../../shared/validation';
 import { toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
+import { resolveWorkspaceL10nPolicy } from '../../shared/l10n';
+import { loadWorkspaceById } from '../../shared/workspaces';
+import { enqueueTokyoMirrorJob, resolveActivePublishLocales } from '../workspaces/service';
+import { resolvePolicy, type Policy } from '@clickeen/ck-policy';
 
 type AccountRow = {
   id: string;
@@ -55,6 +59,16 @@ type WorkspaceAccountRow = {
   account_id: string;
 };
 
+type WorkspaceTier = 'free' | 'tier1' | 'tier2' | 'tier3';
+
+type WorkspaceInstanceStatus = 'published' | 'unpublished';
+type WorkspaceInstanceRow = {
+  public_id?: string | null;
+  workspace_id?: string | null;
+  status?: WorkspaceInstanceStatus | null;
+  created_at?: string | null;
+};
+
 type TokyoAssetIdentityIntegritySnapshot = {
   ok?: boolean;
   reasonKey?: string | null;
@@ -67,6 +81,27 @@ type TokyoAssetIdentityIntegritySnapshot = {
 };
 
 const ACCOUNT_ASSET_QUERY_PAGE_SIZE = 1000;
+
+function normalizeWorkspaceTier(value: unknown): WorkspaceTier | null {
+  const raw = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (raw === 'free' || raw === 'tier1' || raw === 'tier2' || raw === 'tier3') return raw;
+  return null;
+}
+
+function tierRank(tier: WorkspaceTier): number {
+  switch (tier) {
+    case 'tier3':
+      return 4;
+    case 'tier2':
+      return 3;
+    case 'tier1':
+      return 2;
+    case 'free':
+      return 1;
+    default:
+      return 0;
+  }
+}
 
 async function loadPagedRows<T>(args: {
   env: Env;
@@ -108,6 +143,28 @@ function assertAssetId(value: string) {
     return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' }, 422) };
   }
   return { ok: true as const, value: trimmed };
+}
+
+function assertNoticeId(value: string) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed || !isUuid(trimmed)) {
+    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422) };
+  }
+  return { ok: true as const, value: trimmed };
+}
+
+function normalizePublicIdList(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  raw.forEach((entry) => {
+    const value = typeof entry === 'string' ? entry.trim() : '';
+    if (!value) return;
+    if (seen.has(value)) return;
+    seen.add(value);
+    out.push(value);
+  });
+  return out;
 }
 
 function assertWorkspaceId(value: string) {
@@ -195,6 +252,183 @@ function resolveTokyoMutableAssetBase(env: Env): string | null {
 function resolveTokyoServiceToken(env: Env): string | null {
   const token = ((typeof env.TOKYO_DEV_JWT === 'string' ? env.TOKYO_DEV_JWT : '') || (typeof env.PARIS_DEV_JWT === 'string' ? env.PARIS_DEV_JWT : '')).trim();
   return token || null;
+}
+
+type KeepLiveInstanceRow = {
+  public_id?: string | null;
+  workspace_id?: string | null;
+  status?: string | null;
+  config?: unknown;
+};
+
+function buildTierDropLocalePolicy(args: {
+  workspace: WorkspaceRow;
+  policy: Policy;
+}): { localePolicy: LocalePolicy; invalidWorkspaceLocales: string | null } {
+  const workspaceL10nPolicy = resolveWorkspaceL10nPolicy(args.workspace.l10n_policy);
+  const baseLocale = workspaceL10nPolicy.baseLocale;
+  const publishLocales = resolveActivePublishLocales({
+    workspaceLocales: args.workspace.l10n_locales,
+    policy: args.policy,
+    baseLocale,
+  });
+  const availableLocales = publishLocales.locales;
+
+  const countryToLocale = Object.fromEntries(
+    Object.entries(workspaceL10nPolicy.ip.countryToLocale).filter(([, locale]) => availableLocales.includes(locale)),
+  );
+
+  return {
+    localePolicy: {
+      baseLocale,
+      availableLocales,
+      ip: {
+        enabled: workspaceL10nPolicy.ip.enabled,
+        countryToLocale: workspaceL10nPolicy.ip.enabled ? countryToLocale : {},
+      },
+      switcher: {
+        enabled: workspaceL10nPolicy.switcher.enabled,
+      },
+    },
+    invalidWorkspaceLocales: publishLocales.invalidWorkspaceLocales,
+  };
+}
+
+async function loadKeepLiveInstances(args: {
+  env: Env;
+  keepLivePublicIds: string[];
+}): Promise<{ ok: true; rows: Array<{ publicId: string; workspaceId: string; config: Record<string, unknown> }> } | { ok: false; response: Response }> {
+  if (args.keepLivePublicIds.length === 0) return { ok: true, rows: [] };
+  const params = new URLSearchParams({
+    select: 'public_id,workspace_id,status,config',
+    public_id: `in.(${args.keepLivePublicIds.join(',')})`,
+    limit: '1000',
+  });
+  const res = await supabaseFetch(args.env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    return {
+      ok: false,
+      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500),
+    };
+  }
+  const rows = ((await res.json().catch(() => null)) as KeepLiveInstanceRow[] | null) ?? [];
+  const out: Array<{ publicId: string; workspaceId: string; config: Record<string, unknown> }> = [];
+  const seen = new Set<string>();
+  for (const row of rows) {
+    const publicId = typeof row.public_id === 'string' ? row.public_id.trim() : '';
+    if (!publicId || seen.has(publicId)) continue;
+    seen.add(publicId);
+    const workspaceId = typeof row.workspace_id === 'string' ? row.workspace_id.trim() : '';
+    if (!workspaceId) {
+      return {
+        ok: false,
+        response: ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.db.readFailed',
+            detail: `keepLive instance missing workspace_id (${publicId})`,
+          },
+          500,
+        ),
+      };
+    }
+    const configRaw = row.config;
+    if (!configRaw || typeof configRaw !== 'object' || Array.isArray(configRaw)) {
+      return {
+        ok: false,
+        response: ckError(
+          { kind: 'INTERNAL', reasonKey: 'coreui.errors.config.invalid', detail: `keepLive instance config invalid (${publicId})` },
+          500,
+        ),
+      };
+    }
+    out.push({ publicId, workspaceId, config: configRaw as Record<string, unknown> });
+  }
+
+  const missing = args.keepLivePublicIds.filter((publicId) => !seen.has(publicId));
+  if (missing.length > 0) {
+    return {
+      ok: false,
+      response: ckError(
+        {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.payload.invalid',
+          detail: `keepLivePublicIds contains unknown publicId: ${missing[0]}`,
+        },
+        422,
+      ),
+    };
+  }
+
+  return { ok: true, rows: out };
+}
+
+async function enforceTierDropMirrorForKeptInstances(args: {
+  env: Env;
+  policy: Policy;
+  keepLivePublicIds: string[];
+}): Promise<{ ok: true; syncEnqueued: number; failed: string[]; failedDetails: Record<string, string> } | { ok: false; response: Response }> {
+  if (args.keepLivePublicIds.length === 0) return { ok: true, syncEnqueued: 0, failed: [], failedDetails: {} };
+
+  const seoGeoEntitled = args.policy.flags['embed.seoGeo.enabled'] === true;
+
+  const keepRows = await loadKeepLiveInstances({ env: args.env, keepLivePublicIds: args.keepLivePublicIds });
+  if (!keepRows.ok) return keepRows;
+
+  const workspaceCache = new Map<string, WorkspaceRow | null>();
+
+  const failed: string[] = [];
+  const failedDetails: Record<string, string> = {};
+  for (const row of keepRows.rows) {
+    const publicId = row.publicId;
+
+    let workspace = workspaceCache.get(row.workspaceId);
+    if (workspace === undefined) {
+      try {
+        workspace = await loadWorkspaceById(args.env, row.workspaceId);
+      } catch (error) {
+        workspace = null;
+        const detail = error instanceof Error ? error.message : String(error);
+        console.error('[ParisWorker] workspace load failed (plan change)', { workspaceId: row.workspaceId, detail });
+      }
+      workspaceCache.set(row.workspaceId, workspace);
+    }
+
+    if (!workspace) {
+      failed.push(publicId);
+      failedDetails[publicId] = 'WORKSPACE_NOT_FOUND';
+      continue;
+    }
+
+    const seoGeoConfigEnabled = Boolean((row.config as any)?.seoGeo?.enabled === true);
+    const nextSeoGeo = seoGeoEntitled && seoGeoConfigEnabled;
+
+    const { localePolicy, invalidWorkspaceLocales } = buildTierDropLocalePolicy({ workspace, policy: args.policy });
+    if (invalidWorkspaceLocales) {
+      console.warn('[ParisWorker] invalid workspace locales while enforcing plan change', { workspaceId: workspace.id, invalidWorkspaceLocales });
+    }
+
+    const enqueue = await enqueueTokyoMirrorJob(args.env, {
+      v: 1,
+      kind: 'enforce-live-surface',
+      publicId,
+      localePolicy,
+      seoGeo: nextSeoGeo,
+    });
+    if (!enqueue.ok) {
+      failed.push(publicId);
+      failedDetails[publicId] = enqueue.error;
+      console.error('[ParisWorker] tokyo enforce-live-surface enqueue failed (plan change)', { publicId, error: enqueue.error });
+    }
+  }
+
+  return {
+    ok: true,
+    syncEnqueued: Math.max(0, keepRows.rows.length - failed.length),
+    failed,
+    failedDetails,
+  };
 }
 
 async function ensureTokyoAssetIdentityIntegrity(
@@ -417,6 +651,10 @@ async function authorizeAccountAccess(
 ): Promise<Response | null> {
   const userId = auth.principal?.userId;
   if (!userId) {
+    const localStage = String(env.ENV_STAGE || '').trim().toLowerCase() === 'local';
+    if (localStage && isTrustedInternalServiceRequest(req, env)) {
+      return null;
+    }
     return ckError({ kind: 'AUTH', reasonKey: 'coreui.errors.auth.required' }, 401);
   }
 
@@ -466,6 +704,323 @@ async function loadAccount(env: Env, accountId: string): Promise<AccountRow | nu
   }
   const rows = (await res.json()) as AccountRow[];
   return rows?.[0] ?? null;
+}
+
+async function loadWorkspaceIdsForAccount(env: Env, accountId: string): Promise<string[]> {
+  const params = new URLSearchParams({
+    select: 'id',
+    account_id: `eq.${accountId}`,
+    limit: '500',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/workspaces?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load workspaces for account (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json().catch(() => null)) as Array<{ id?: unknown }> | null;
+  return (rows ?? [])
+    .map((row) => (typeof row?.id === 'string' ? row.id : ''))
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+type AccountWorkspaceTierRow = { id?: unknown; tier?: unknown };
+
+async function loadWorkspaceTiersForAccount(
+  env: Env,
+  accountId: string,
+): Promise<Array<{ id: string; tier: WorkspaceTier }>> {
+  const params = new URLSearchParams({
+    select: 'id,tier',
+    account_id: `eq.${accountId}`,
+    limit: '500',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/workspaces?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load workspace tiers for account (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json().catch(() => null)) as AccountWorkspaceTierRow[] | null;
+  const out: Array<{ id: string; tier: WorkspaceTier }> = [];
+  (rows ?? []).forEach((row) => {
+    const id = typeof row?.id === 'string' ? row.id.trim() : '';
+    const tier = normalizeWorkspaceTier(row?.tier);
+    if (!id || !tier) return;
+    out.push({ id, tier });
+  });
+  return out;
+}
+
+type AccountNoticeRow = {
+  notice_id: string;
+  account_id: string;
+  kind: string;
+  status: 'open' | 'dismissed' | 'resolved';
+  payload: unknown;
+  email_pending: boolean;
+  email_sent_at: string | null;
+  dismissed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+async function createAccountNotice(args: {
+  env: Env;
+  accountId: string;
+  kind: string;
+  payload: Record<string, unknown>;
+  emailPending: boolean;
+}): Promise<{ ok: true; notice: AccountNoticeRow } | { ok: false; response: Response }> {
+  const res = await supabaseFetch(args.env, `/rest/v1/account_notices`, {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({
+      account_id: args.accountId,
+      kind: args.kind,
+      status: 'open',
+      payload: args.payload,
+      email_pending: args.emailPending,
+    }),
+  });
+  if (!res.ok) {
+    const details = await readJson(res);
+    return {
+      ok: false,
+      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
+    };
+  }
+  const rows = (await res.json().catch(() => null)) as AccountNoticeRow[] | null;
+  const notice = rows?.[0] ?? null;
+  if (!notice?.notice_id) {
+    return {
+      ok: false,
+      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'notice insert did not return a row' }, 500),
+    };
+  }
+  return { ok: true, notice };
+}
+
+async function dismissAccountNotice(args: {
+  env: Env;
+  accountId: string;
+  noticeId: string;
+}): Promise<{ ok: true } | { ok: false; response: Response }> {
+  const now = new Date().toISOString();
+  const params = new URLSearchParams({
+    notice_id: `eq.${args.noticeId}`,
+    account_id: `eq.${args.accountId}`,
+  });
+  const res = await supabaseFetch(args.env, `/rest/v1/account_notices?${params.toString()}`, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ status: 'dismissed', dismissed_at: now }),
+  });
+  if (!res.ok) {
+    const details = await readJson(res);
+    return {
+      ok: false,
+      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
+    };
+  }
+  const rows = (await res.json().catch(() => null)) as Array<{ notice_id?: string }> | null;
+  if (!rows?.[0]?.notice_id) {
+    return { ok: false, response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.payload.invalid' }, 404) };
+  }
+  return { ok: true };
+}
+
+async function unpublishAccountInstances(args: {
+  env: Env;
+  accountId: string;
+  keepLivePublicIds: string[];
+}): Promise<
+  | { ok: true; unpublished: string[]; tokyo: { deleteEnqueued: number; failed: string[] } }
+  | { ok: false; response: Response }
+> {
+  const keepSet = new Set(args.keepLivePublicIds);
+
+  try {
+    const workspaceIds = await loadWorkspaceIdsForAccount(args.env, args.accountId);
+    if (workspaceIds.length === 0) {
+      return { ok: true, unpublished: [], tokyo: { deleteEnqueued: 0, failed: [] } };
+    }
+
+    const publishedRows = await loadPagedRows<WorkspaceInstanceRow>({
+      env: args.env,
+      table: 'widget_instances',
+      baseParams: {
+        select: 'public_id,workspace_id,status,created_at',
+        workspace_id: `in.(${workspaceIds.join(',')})`,
+        status: 'eq.published',
+        order: 'created_at.desc',
+      },
+    });
+    const publishedPublicIds = publishedRows
+      .map((row) => (typeof row.public_id === 'string' ? row.public_id.trim() : ''))
+      .filter(Boolean);
+    const publishedSet = new Set(publishedPublicIds);
+
+    const invalidKeeps = args.keepLivePublicIds.filter((publicId) => !publishedSet.has(publicId));
+    if (invalidKeeps.length > 0) {
+      return {
+        ok: false,
+        response: ckError(
+          {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.payload.invalid',
+            detail: `keepLivePublicIds contains unknown or non-live publicId: ${invalidKeeps[0]}`,
+          },
+          422,
+        ),
+      };
+    }
+
+    const toUnpublish = publishedPublicIds.filter((publicId) => !keepSet.has(publicId));
+    if (toUnpublish.length === 0) {
+      return { ok: true, unpublished: [], tokyo: { deleteEnqueued: 0, failed: [] } };
+    }
+
+    const patchParams = new URLSearchParams({
+      public_id: `in.(${toUnpublish.join(',')})`,
+      workspace_id: `in.(${workspaceIds.join(',')})`,
+    });
+    const patchRes = await supabaseFetch(args.env, `/rest/v1/widget_instances?${patchParams.toString()}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ status: 'unpublished' }),
+    });
+    if (!patchRes.ok) {
+      const details = await readJson(patchRes);
+      return {
+        ok: false,
+        response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
+      };
+    }
+
+    const failed: string[] = [];
+    for (const publicId of toUnpublish) {
+      const enqueue = await enqueueTokyoMirrorJob(args.env, { v: 1, kind: 'delete-instance-mirror', publicId });
+      if (!enqueue.ok) {
+        failed.push(publicId);
+        console.error('[ParisWorker] tokyo delete-instance-mirror enqueue failed', enqueue.error);
+      }
+    }
+
+    return {
+      ok: true,
+      unpublished: toUnpublish,
+      tokyo: {
+        deleteEnqueued: Math.max(0, toUnpublish.length - failed.length),
+        failed,
+      },
+    };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return { ok: false, response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500) };
+  }
+}
+
+async function purgeAccountAssets(args: {
+  env: Env;
+  accountId: string;
+}): Promise<{ ok: true; tokyo: Record<string, unknown> } | { ok: false; response: Response }> {
+  try {
+    const tokyoBase = resolveTokyoMutableAssetBase(args.env);
+    if (!tokyoBase) {
+      return {
+        ok: false,
+        response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_BASE_URL missing' }, 500),
+      };
+    }
+
+    const tokyoToken = resolveTokyoServiceToken(args.env);
+    if (!tokyoToken) {
+      return {
+        ok: false,
+        response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_DEV_JWT missing' }, 500),
+      };
+    }
+
+    const tokyoUrl = new URL(`${tokyoBase}/assets/purge/${encodeURIComponent(args.accountId)}`);
+    tokyoUrl.searchParams.set('confirm', '1');
+    const tokyoRes = await fetch(tokyoUrl.toString(), {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${tokyoToken}`,
+        accept: 'application/json',
+        'x-clickeen-surface': 'roma-assets',
+      },
+      cache: 'no-store',
+    });
+    const tokyoBody = await readJson(tokyoRes);
+    if (!tokyoRes.ok) {
+      return {
+        ok: false,
+        response: json(
+          (tokyoBody && typeof tokyoBody === 'object'
+            ? (tokyoBody as Record<string, unknown>)
+            : {
+                error: {
+                  kind: 'INTERNAL',
+                  reasonKey: 'coreui.errors.db.writeFailed',
+                  detail: JSON.stringify(tokyoBody),
+                },
+              }) as Record<string, unknown>,
+          { status: tokyoRes.status },
+        ),
+      };
+    }
+    return { ok: true, tokyo: (tokyoBody && typeof tokyoBody === 'object' ? (tokyoBody as Record<string, unknown>) : { ok: true }) };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return { ok: false, response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500) };
+  }
+}
+
+async function updateAccountWorkspaceTier(args: {
+  env: Env;
+  accountId: string;
+  nextTier: WorkspaceTier;
+}): Promise<{ ok: true; updated: number } | { ok: false; response: Response }> {
+  const params = new URLSearchParams({
+    account_id: `eq.${args.accountId}`,
+  });
+  const res = await supabaseFetch(args.env, `/rest/v1/workspaces?${params.toString()}`, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ tier: args.nextTier }),
+  });
+  if (!res.ok) {
+    const details = await readJson(res);
+    return {
+      ok: false,
+      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
+    };
+  }
+  const rows = (await res.json().catch(() => null)) as Array<{ id?: string }> | null;
+  return { ok: true, updated: rows?.length ?? 0 };
+}
+
+function selectDefaultKeepLivePublicIds(args: {
+  publishedRows: WorkspaceInstanceRow[];
+  maxPublishedPerWorkspace: number;
+}): string[] {
+  const max = Math.max(0, Math.floor(args.maxPublishedPerWorkspace));
+  if (max <= 0) return [];
+
+  const countsByWorkspace = new Map<string, number>();
+  const keep: string[] = [];
+  for (const row of args.publishedRows) {
+    const publicId = typeof row.public_id === 'string' ? row.public_id.trim() : '';
+    const workspaceId = typeof row.workspace_id === 'string' ? row.workspace_id.trim() : '';
+    if (!publicId || !workspaceId) continue;
+
+    const count = countsByWorkspace.get(workspaceId) ?? 0;
+    if (count >= max) continue;
+    countsByWorkspace.set(workspaceId, count + 1);
+    keep.push(publicId);
+  }
+  return keep;
 }
 
 async function assertWorkspaceInAccount(
@@ -684,6 +1239,291 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
+  }
+}
+
+export async function handleAccountAssetsPurge(req: Request, env: Env, accountIdRaw: string) {
+  const surfaceError = requireRomaAssetSurface(req);
+  if (surfaceError) return surfaceError;
+
+  const auth = await assertDevAuth(req, env);
+  if ('response' in auth) return auth.response;
+
+  const accountIdResult = assertAccountId(accountIdRaw);
+  if (!accountIdResult.ok) return accountIdResult.response;
+  const accountId = accountIdResult.value;
+
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, 'editor');
+  if (ownerError) return ownerError;
+
+  const confirmRaw = (new URL(req.url).searchParams.get('confirm') || '').trim().toLowerCase();
+  const confirmed = confirmRaw === '1' || confirmRaw === 'true' || confirmRaw === 'yes';
+  if (!confirmed) {
+    return ckError(
+      {
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.account.assetsPurgeConfirmRequired',
+        detail: 'confirm=1 is required to purge all account assets.',
+      },
+      409,
+    );
+  }
+
+  try {
+    const account = await loadAccount(env, accountId);
+    if (!account) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
+
+    const purged = await purgeAccountAssets({ env, accountId });
+    if (!purged.ok) return purged.response;
+
+    return json({ ok: true, accountId, tokyo: purged.tokyo });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
+  }
+}
+
+export async function handleAccountInstancesUnpublish(req: Request, env: Env, accountIdRaw: string) {
+  const auth = await assertDevAuth(req, env);
+  if ('response' in auth) return auth.response;
+
+  const accountIdResult = assertAccountId(accountIdRaw);
+  if (!accountIdResult.ok) return accountIdResult.response;
+  const accountId = accountIdResult.value;
+
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, 'editor');
+  if (ownerError) return ownerError;
+
+  const confirmRaw = (new URL(req.url).searchParams.get('confirm') || '').trim().toLowerCase();
+  const confirmed = confirmRaw === '1' || confirmRaw === 'true' || confirmRaw === 'yes';
+  if (!confirmed) {
+    return ckError(
+      {
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.account.instancesUnpublishConfirmRequired',
+        detail: 'confirm=1 is required to unpublish instances for an account.',
+      },
+      409,
+    );
+  }
+
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    payload = null;
+  }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+
+  const keepLivePublicIds = normalizePublicIdList((payload as any).keepLivePublicIds);
+
+  const result = await unpublishAccountInstances({ env, accountId, keepLivePublicIds });
+  if (!result.ok) return result.response;
+  return json({ ok: true, accountId, kept: keepLivePublicIds, unpublished: result.unpublished, tokyo: result.tokyo });
+}
+
+export async function handleAccountNoticeDismiss(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+  noticeIdRaw: string,
+) {
+  const auth = await assertDevAuth(req, env);
+  if ('response' in auth) return auth.response;
+
+  const accountIdResult = assertAccountId(accountIdRaw);
+  if (!accountIdResult.ok) return accountIdResult.response;
+  const accountId = accountIdResult.value;
+
+  const noticeIdResult = assertNoticeId(noticeIdRaw);
+  if (!noticeIdResult.ok) return noticeIdResult.response;
+  const noticeId = noticeIdResult.value;
+
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, 'viewer');
+  if (ownerError) return ownerError;
+
+  const dismissed = await dismissAccountNotice({ env, accountId, noticeId });
+  if (!dismissed.ok) return dismissed.response;
+  return json({ ok: true, accountId, noticeId });
+}
+
+export async function handleAccountLifecyclePlanChange(req: Request, env: Env, accountIdRaw: string) {
+  const auth = await assertDevAuth(req, env);
+  if ('response' in auth) return auth.response;
+
+  const accountIdResult = assertAccountId(accountIdRaw);
+  if (!accountIdResult.ok) return accountIdResult.response;
+  const accountId = accountIdResult.value;
+
+  const ownerError = await authorizeAccountAccess(req, env, accountId, auth, 'owner');
+  if (ownerError) return ownerError;
+
+  const confirmRaw = (new URL(req.url).searchParams.get('confirm') || '').trim().toLowerCase();
+  const confirmed = confirmRaw === '1' || confirmRaw === 'true' || confirmRaw === 'yes';
+  if (!confirmed) {
+    return ckError(
+      {
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.payload.invalid',
+        detail: 'confirm=1 is required to apply a plan change.',
+      },
+      409,
+    );
+  }
+
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    payload = null;
+  }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+
+  const nextTier = normalizeWorkspaceTier((payload as any).nextTier);
+  if (!nextTier) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+
+  const keepLivePublicIdsRaw = (payload as any).keepLivePublicIds;
+  const keepLivePublicIdsInput = keepLivePublicIdsRaw === undefined ? null : normalizePublicIdList(keepLivePublicIdsRaw);
+
+  try {
+    const workspaces = await loadWorkspaceTiersForAccount(env, accountId);
+    if (workspaces.length === 0) {
+      return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404);
+    }
+
+    const prevHighestTier = workspaces.reduce<WorkspaceTier>((best, workspace) => {
+      return tierRank(workspace.tier) > tierRank(best) ? workspace.tier : best;
+    }, 'free');
+
+    const tierUpdated = await updateAccountWorkspaceTier({ env, accountId, nextTier });
+    if (!tierUpdated.ok) return tierUpdated.response;
+
+    const isTierDrop = tierRank(nextTier) < tierRank(prevHighestTier);
+
+    let keepLivePublicIds: string[] = [];
+    let unpublished: string[] = [];
+    let tokyo = { deleteEnqueued: 0, failed: [] as string[] };
+    let tokyoResync = { syncEnqueued: 0, failed: [] as string[], failedDetails: {} as Record<string, string> };
+
+    if (isTierDrop) {
+      const policy = resolvePolicy({ profile: nextTier, role: 'owner' });
+      const maxPublished = policy.caps['instances.published.max'];
+
+      if (maxPublished == null) {
+        keepLivePublicIds = [];
+      } else if (!Number.isFinite(maxPublished) || maxPublished < 0) {
+        return ckError(
+          { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'instances.published.max invalid' },
+          500,
+        );
+      } else if (keepLivePublicIdsInput) {
+        if (keepLivePublicIdsInput.length > maxPublished) {
+          return ckError(
+            {
+              kind: 'VALIDATION',
+              reasonKey: 'coreui.errors.payload.invalid',
+              detail: `keepLivePublicIds exceeds instances.published.max (${maxPublished})`,
+            },
+            422,
+          );
+        }
+        keepLivePublicIds = keepLivePublicIdsInput;
+      } else {
+        const workspaceIds = workspaces.map((w) => w.id);
+        const publishedRows = await loadPagedRows<WorkspaceInstanceRow>({
+          env,
+          table: 'widget_instances',
+          baseParams: {
+            select: 'public_id,workspace_id,status,created_at',
+            workspace_id: `in.(${workspaceIds.join(',')})`,
+            status: 'eq.published',
+            order: 'created_at.desc',
+          },
+        });
+        keepLivePublicIds = selectDefaultKeepLivePublicIds({
+          publishedRows,
+          maxPublishedPerWorkspace: maxPublished,
+        });
+      }
+
+      if (maxPublished != null) {
+        const unpublish = await unpublishAccountInstances({ env, accountId, keepLivePublicIds });
+        if (!unpublish.ok) return unpublish.response;
+        unpublished = unpublish.unpublished;
+        tokyo = unpublish.tokyo;
+      }
+
+      if (keepLivePublicIds.length > 0) {
+        const mirror = await enforceTierDropMirrorForKeptInstances({
+          env,
+          policy,
+          keepLivePublicIds,
+        });
+        if (!mirror.ok) return mirror.response;
+        tokyoResync = { syncEnqueued: mirror.syncEnqueued, failed: mirror.failed, failedDetails: mirror.failedDetails };
+      }
+    }
+
+    let assetsPurged = false;
+    if (isTierDrop && nextTier === 'free') {
+      const purged = await purgeAccountAssets({ env, accountId });
+      if (!purged.ok) return purged.response;
+      assetsPurged = true;
+    }
+
+    if (!isTierDrop) {
+      return json({
+        ok: true,
+        accountId,
+        fromTier: prevHighestTier,
+        toTier: nextTier,
+        isTierDrop: false,
+        workspacesUpdated: tierUpdated.updated,
+      });
+    }
+
+    const noticePayload: Record<string, unknown> = {
+      fromTier: prevHighestTier,
+      toTier: nextTier,
+      workspacesUpdated: tierUpdated.updated,
+      enforcement: {
+        keptLivePublicIds: keepLivePublicIds,
+        unpublishedCount: unpublished.length,
+        assetsPurged,
+        tokyoResync,
+      },
+    };
+    const notice = await createAccountNotice({
+      env,
+      accountId,
+      kind: 'tier_drop',
+      payload: noticePayload,
+      emailPending: true,
+    });
+    if (!notice.ok) return notice.response;
+
+    return json({
+      ok: true,
+      accountId,
+      noticeId: notice.notice.notice_id,
+      fromTier: prevHighestTier,
+      toTier: nextTier,
+      isTierDrop: true,
+      keptLivePublicIds: keepLivePublicIds,
+      unpublished,
+      tokyo,
+      tokyoResync,
+      assetsPurged,
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
   }
 }
 

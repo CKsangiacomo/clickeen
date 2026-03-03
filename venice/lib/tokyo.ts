@@ -52,33 +52,30 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isL10nIndex = isL10n && normalized.endsWith('/index.json');
   const isL10nOverlay = isL10n && normalized.endsWith('.ops.json');
   const isL10nBaseSnapshot = isL10n && normalized.includes('/bases/') && normalized.endsWith('.snapshot.json');
+  const isL10nLivePointer = isL10n && /^\/l10n\/instances\/[^/]+\/live\/[^/]+\.json$/i.test(normalized);
+  const isL10nPack = isL10n && /^\/l10n\/instances\/[^/]+\/packs\/[^/]+\/[a-f0-9]{64}\.json$/i.test(normalized);
   const isI18n = normalized.startsWith('/i18n/');
   const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
   const isAccountAssetVersion = normalized.startsWith('/assets/v/');
   const isRender = normalized.startsWith('/renders/');
-  const isRenderPublishedPointer = isRender && normalized.endsWith('/published.json');
-  const isRenderRevisionIndex = /^\/renders\/instances\/[^/]+\/revisions\/[^/]+\/index\.json$/i.test(normalized);
-  const isRenderLegacyIndex = isRender && normalized.endsWith('/index.json') && !isRenderRevisionIndex;
-  const isRenderArtifact =
-    isRender &&
-    !isRenderPublishedPointer &&
-    !isRenderRevisionIndex &&
-    !isRenderLegacyIndex;
+  const isRenderLivePointer = isRender && /^\/renders\/instances\/[^/]+\/live\//i.test(normalized);
+  const isRenderConfigPack =
+    isRender && /^\/renders\/instances\/[^/]+\/config\/[a-f0-9]{64}\/config\.json$/i.test(normalized);
+  const isRenderMetaPack =
+    isRender && /^\/renders\/instances\/[^/]+\/meta\/[^/]+\/[a-f0-9]{64}\.json$/i.test(normalized);
+  const isRenderPack = isRenderConfigPack || isRenderMetaPack;
   const isDieter = normalized.startsWith('/dieter/');
   const isWidget = normalized.startsWith('/widgets/');
   const isFont = normalized.startsWith('/fonts/');
 
-  if (isL10nOverlay || isL10nBaseSnapshot || isAccountAssetVersion || isRenderArtifact || isRenderRevisionIndex) {
-    return { cache: 'force-cache', next: { revalidate: 31536000 } };
-  }
-  if (isRenderPublishedPointer) {
+  if (isL10nLivePointer || isRenderLivePointer) {
     return { cache: 'no-store' };
+  }
+  if (isL10nOverlay || isL10nBaseSnapshot || isL10nPack || isAccountAssetVersion || isRenderPack) {
+    return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
   if (isI18n && !isI18nManifest) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
-  }
-  if (isRenderLegacyIndex) {
-    return { cache: 'force-cache', next: { revalidate: 60 } };
   }
   if (isL10nIndex || isI18nManifest) {
     return { cache: 'force-cache', next: { revalidate: 300 } };

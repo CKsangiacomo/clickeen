@@ -70,7 +70,6 @@ type BobOpenEditorMessage = {
   type: typeof OPEN_EDITOR_LIFECYCLE.events.openEditor;
   requestId: string;
   sessionId: string;
-  sessionAccessToken: string;
   subjectMode: 'workspace';
   publicId: string;
   workspaceId: string;
@@ -86,21 +85,7 @@ type BobOpenEditorMessage = {
 
 type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId' | 'sessionId'>;
 
-function resolveBobBaseUrl(searchParams: { get(name: string): string | null }): string {
-  const fromQuery = String(searchParams.get('bob') || '').trim();
-  if (fromQuery) {
-    try {
-      return new URL(fromQuery).origin;
-    } catch {
-      // Ignore invalid override and fall back.
-    }
-  }
-
-  // In local/dev, align Roma Builder with DevStudio's Bob default.
-  if (process.env.NODE_ENV !== 'production') {
-    return 'http://localhost:3000';
-  }
-
+function resolveBobBaseUrl(): string {
   const fromEnv = String(process.env.NEXT_PUBLIC_BOB_URL || '').trim();
   if (fromEnv) {
     try {
@@ -119,7 +104,6 @@ function buildRomaBuilderRoute(args: {
   workspaceId: string;
   accountId: string;
   widgetType?: string;
-  bobOverride: string;
 }): string {
   const search = new URLSearchParams({
     workspaceId: args.workspaceId,
@@ -128,7 +112,6 @@ function buildRomaBuilderRoute(args: {
   });
   if (args.accountId) search.set('accountId', args.accountId);
   if (args.widgetType) search.set('widgetType', args.widgetType);
-  if (args.bobOverride) search.set('bob', args.bobOverride);
   return `/builder/${encodeURIComponent(args.publicId)}?${search.toString()}`;
 }
 
@@ -167,9 +150,8 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
     return context.workspaceId;
   }, [context.workspaceId, initialWorkspaceId, searchParams]);
   const accountId = context.accountId;
-  const bobOverride = useMemo(() => String(searchParams.get('bob') || '').trim(), [searchParams]);
   const widgetTypeHint = useMemo(() => normalizeCompiledWidgetType(searchParams.get('widgetType')), [searchParams]);
-  const bobBaseUrl = useMemo(() => resolveBobBaseUrl(searchParams), [searchParams]);
+  const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const searchQuery = searchParams.toString();
   const currentUrl = useMemo(() => (searchQuery ? `${pathname}?${searchQuery}` : pathname), [pathname, searchQuery]);
   const pathPublicId = useMemo(() => decodeBuilderPathPublicId(pathname), [pathname]);
@@ -191,11 +173,10 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
       workspaceId,
       accountId,
       widgetType: widgetTypeHint,
-      bobOverride,
     });
     if (nextRoute === currentUrl) return;
     router.replace(nextRoute, { scroll: false });
-  }, [accountId, activePublicId, bobOverride, currentUrl, router, widgetTypeHint, workspaceId]);
+  }, [accountId, activePublicId, currentUrl, router, widgetTypeHint, workspaceId]);
 
   useEffect(() => {
     const queryPublicId = String(searchParams.get('publicId') || '').trim();
@@ -327,33 +308,6 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
     [bobBaseUrl],
   );
 
-  const resolveBobSessionAccessToken = useCallback(async (): Promise<string> => {
-    const response = await fetch('/api/session/access-token', {
-      method: 'GET',
-      cache: 'no-store',
-    });
-    const payload = (await response.json().catch(() => null)) as
-      | {
-          accessToken?: unknown;
-          error?: { reasonKey?: unknown } | unknown;
-        }
-      | null;
-    if (!response.ok) {
-      const reasonKey =
-        payload?.error &&
-        typeof payload.error === 'object' &&
-        typeof (payload.error as { reasonKey?: unknown }).reasonKey === 'string'
-          ? String((payload.error as { reasonKey?: unknown }).reasonKey).trim()
-          : '';
-      throw new Error(reasonKey || 'coreui.errors.auth.required');
-    }
-    const accessToken = typeof payload?.accessToken === 'string' ? payload.accessToken.trim() : '';
-    if (!accessToken) {
-      throw new Error('coreui.errors.auth.required');
-    }
-    return accessToken;
-  }, []);
-
   const openActiveInstanceInBob = useCallback(async () => {
     const targetWindow = iframeRef.current?.contentWindow;
     if (!targetWindow || !workspaceId || !activePublicId) return;
@@ -363,13 +317,11 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
 
     try {
       const compileFetchStartedAt = performance.now();
-      const sessionAccessTokenPromise = resolveBobSessionAccessToken();
       const hintedCompiledPromise = widgetTypeHint ? getCompiledWidget(widgetTypeHint) : null;
       const instanceResult = await getWorkspaceInstance({
         workspaceId,
         publicId: activePublicId,
       });
-      const sessionAccessToken = await sessionAccessTokenPromise;
       const instance = instanceResult.payload;
 
       const widgetType = typeof instance.widgetType === 'string' ? instance.widgetType.trim() : '';
@@ -403,7 +355,6 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
       const message: BobOpenEditorPayload = {
         type: OPEN_EDITOR_LIFECYCLE.events.openEditor,
         subjectMode: 'workspace',
-        sessionAccessToken,
         publicId: resolvedPublicId,
         workspaceId,
         ownerAccountId,
@@ -436,7 +387,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [activePublicId, postOpenEditorAndWait, resolveBobSessionAccessToken, widgetTypeHint, workspaceId]);
+  }, [activePublicId, postOpenEditorAndWait, widgetTypeHint, workspaceId]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {

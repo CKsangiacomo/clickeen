@@ -1,5 +1,7 @@
 import { ckError } from './errors';
 import { isUuid as isContractUuid, parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
+import { normalizeSupportedLocaleToken } from './l10n';
+import type { LocalePolicy } from './types';
 
 export function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -302,6 +304,97 @@ export function assertStatus(status: unknown) {
     return { ok: false as const, issues: [{ path: 'status', message: 'invalid status' }] };
   }
   return { ok: true as const, value: status as 'published' | 'unpublished' };
+}
+
+export function assertSeoGeo(seoGeo: unknown) {
+  if (seoGeo === undefined) return { ok: true as const, value: undefined };
+  if (typeof seoGeo !== 'boolean') {
+    return { ok: false as const, issues: [{ path: 'seoGeo', message: 'seoGeo must be a boolean' }] };
+  }
+  return { ok: true as const, value: seoGeo };
+}
+
+export function assertLocalePolicy(localePolicy: unknown) {
+  if (localePolicy === undefined) return { ok: true as const, value: undefined };
+  if (!isRecord(localePolicy)) {
+    return { ok: false as const, issues: [{ path: 'localePolicy', message: 'localePolicy must be an object' }] };
+  }
+
+  const issues: Array<{ path: string; message: string }> = [];
+  const baseLocale = normalizeSupportedLocaleToken((localePolicy as any).baseLocale);
+  if (!baseLocale) {
+    issues.push({ path: 'localePolicy.baseLocale', message: 'baseLocale must be a supported locale token' });
+  }
+
+  const availableLocalesRaw = (localePolicy as any).availableLocales;
+  if (!Array.isArray(availableLocalesRaw)) {
+    issues.push({ path: 'localePolicy.availableLocales', message: 'availableLocales must be an array' });
+  }
+  const availableLocales: string[] = [];
+  const seenLocales = new Set<string>();
+  if (Array.isArray(availableLocalesRaw)) {
+    availableLocalesRaw.forEach((entry, index) => {
+      const normalized = normalizeSupportedLocaleToken(entry);
+      if (!normalized) {
+        issues.push({
+          path: `localePolicy.availableLocales[${index}]`,
+          message: 'locale must be a supported locale token',
+        });
+        return;
+      }
+      if (!seenLocales.has(normalized)) {
+        seenLocales.add(normalized);
+        availableLocales.push(normalized);
+      }
+    });
+  }
+
+  if (baseLocale && !seenLocales.has(baseLocale)) {
+    issues.push({
+      path: 'localePolicy.availableLocales',
+      message: 'availableLocales must include baseLocale',
+    });
+  }
+
+  const ipRaw = isRecord((localePolicy as any).ip) ? ((localePolicy as any).ip as Record<string, unknown>) : null;
+  const ipEnabled = typeof ipRaw?.enabled === 'boolean' ? ipRaw.enabled : false;
+  const countryToLocale: Record<string, string> = {};
+  if (ipRaw && Object.prototype.hasOwnProperty.call(ipRaw, 'countryToLocale')) {
+    const mapRaw = ipRaw.countryToLocale;
+    if (!isRecord(mapRaw)) {
+      issues.push({ path: 'localePolicy.ip.countryToLocale', message: 'countryToLocale must be an object' });
+    } else {
+      for (const [countryRaw, localeRaw] of Object.entries(mapRaw)) {
+        const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
+        if (!/^[A-Z]{2}$/.test(country)) continue;
+        const normalized = normalizeSupportedLocaleToken(localeRaw);
+        if (!normalized) continue;
+        if (!seenLocales.has(normalized)) continue;
+        countryToLocale[country] = normalized;
+      }
+    }
+  }
+
+  const switcherRaw = isRecord((localePolicy as any).switcher)
+    ? ((localePolicy as any).switcher as Record<string, unknown>)
+    : null;
+  const switcherEnabled = typeof switcherRaw?.enabled === 'boolean' ? switcherRaw.enabled : false;
+
+  if (issues.length) return { ok: false as const, issues };
+
+  const value: LocalePolicy = {
+    baseLocale: baseLocale || 'en',
+    availableLocales,
+    ip: {
+      enabled: ipEnabled,
+      countryToLocale: ipEnabled ? countryToLocale : {},
+    },
+    switcher: {
+      enabled: switcherEnabled,
+    },
+  };
+
+  return { ok: true as const, value };
 }
 
 export function assertDisplayName(displayName: unknown) {

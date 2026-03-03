@@ -336,8 +336,7 @@ export async function handleGetInstance(_req: Request, env: Env, publicId: strin
   const instance = await loadInstanceByPublicId(env, publicId);
   if (!instance) return json({ error: 'NOT_FOUND' }, { status: 404 });
 
-  const isCurated = resolveInstanceKind(instance) === 'curated';
-  if (!isCurated && instance.status !== 'published') {
+  if (instance.status !== 'published') {
     // Treat unpublished as not-found for public user-owned surfaces.
     return json({ error: 'NOT_FOUND' }, { status: 404 });
   }
@@ -357,12 +356,6 @@ export async function handleGetInstance(_req: Request, env: Env, publicId: strin
     } catch {
       policy = null;
     }
-  }
-
-  if (!policy && resolveInstanceKind(instance) === 'curated') {
-    // Curated/public reads should still use product policy profiles.
-    // Tier3 gives uncapped product entitlements without introducing a dedicated admin branch.
-    policy = resolvePolicy({ profile: 'tier3', role: 'editor' });
   }
 
   return json({

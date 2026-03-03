@@ -16,33 +16,42 @@ function isNoStore(cacheControl) {
 export async function runPublicAccessParityScenario({ profile, context }) {
   const checks = [];
 
-  const romaBootstrap = await fetchEnvelope(`${profile.romaBaseUrl}/api/bootstrap?_t=${Date.now()}`);
   const bobBootstrap = await fetchEnvelope(`${profile.bobBaseUrl}/api/paris/roma/bootstrap?_t=${Date.now()}`);
-  const romaBootstrapReason = parseReasonKey(romaBootstrap.json);
   const bobBootstrapReason = parseReasonKey(bobBootstrap.json);
 
-  checks.push(
-    makeCheck('Roma bootstrap without auth returns 401', romaBootstrap.status === 401, {
-      actual: romaBootstrap.status,
-    }),
-    makeCheck('Bob bootstrap without auth returns 401', bobBootstrap.status === 401, {
-      actual: bobBootstrap.status,
-    }),
-    makeCheck(
-      'Roma bootstrap without auth reasonKey is coreui.errors.auth.required',
-      romaBootstrapReason === 'coreui.errors.auth.required',
-      {
-        actual: romaBootstrapReason,
-      },
-    ),
-    makeCheck(
-      'Bob bootstrap without auth reasonKey is coreui.errors.auth.required',
-      bobBootstrapReason === 'coreui.errors.auth.required',
-      {
-        actual: bobBootstrapReason,
-      },
-    ),
-  );
+  if (profile.name === 'local') {
+    checks.push(
+      makeCheck('Local Bob bootstrap without auth returns 200 (tool-trusted)', bobBootstrap.status === 200, {
+        actual: bobBootstrap.status,
+      }),
+    );
+  } else {
+    const romaBootstrap = await fetchEnvelope(`${profile.romaBaseUrl}/api/bootstrap?_t=${Date.now()}`);
+    const romaBootstrapReason = parseReasonKey(romaBootstrap.json);
+
+    checks.push(
+      makeCheck('Roma bootstrap without auth returns 401', romaBootstrap.status === 401, {
+        actual: romaBootstrap.status,
+      }),
+      makeCheck('Bob bootstrap without auth returns 401', bobBootstrap.status === 401, {
+        actual: bobBootstrap.status,
+      }),
+      makeCheck(
+        'Roma bootstrap without auth reasonKey is coreui.errors.auth.required',
+        romaBootstrapReason === 'coreui.errors.auth.required',
+        {
+          actual: romaBootstrapReason,
+        },
+      ),
+      makeCheck(
+        'Bob bootstrap without auth reasonKey is coreui.errors.auth.required',
+        bobBootstrapReason === 'coreui.errors.auth.required',
+        {
+          actual: bobBootstrapReason,
+        },
+      ),
+    );
+  }
 
   const publicId = resolvePublicProbePublicId(profile, context);
   const hasPublicId = Boolean(publicId);
@@ -98,7 +107,6 @@ export async function runPublicAccessParityScenario({ profile, context }) {
     checks,
     fingerprint: {
       bootstrap: {
-        roma: { status: romaBootstrap.status, reasonKey: romaBootstrapReason },
         bob: { status: bobBootstrap.status, reasonKey: bobBootstrapReason },
       },
       publicId,

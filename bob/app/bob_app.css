@@ -747,3 +747,75 @@ body {
   justify-content: flex-end;
   gap: var(--space-2);
 }
+
+.localization-settings-actions {
+  margin-top: var(--space-2);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ck-localeOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: color-mix(in oklab, var(--color-system-black), transparent 70%);
+}
+
+.ck-localeModal {
+  width: min(720px, 100%);
+  max-height: min(740px, 100%);
+  overflow: auto;
+  border-radius: var(--control-radius-lg);
+  background: var(--color-system-white);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+  box-shadow: 0 24px 72px color-mix(in oklab, var(--color-system-black), transparent 82%);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ck-localeModal__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ck-localeModal__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ck-localeModal__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ck-localeModal__locales {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-2);
+}
+
+.ck-localeModal__toggle {
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 92%);
+  border-radius: var(--control-radius-md);
+  padding: var(--space-2);
+}
+
+.ck-localeModal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+select.ck-localeSelect {
+  cursor: pointer;
+}

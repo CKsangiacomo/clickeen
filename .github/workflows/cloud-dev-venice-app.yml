@@ -1,0 +1,56 @@
+name: cloud-dev venice app deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "venice/**"
+      - "scripts/build-venice-cf.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/cloud-dev-venice-app.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: cloud-dev-venice
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      PARIS_URL: https://paris.dev.clickeen.com
+      NEXT_PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
+
+      VENICE_PAGES_PROJECT: venice-dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: {}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Venice for Cloudflare Pages
+        run: pnpm -C venice build:cf
+
+      - name: Ensure Venice Pages project exists (cloud-dev)
+        run: pnpm -C tokyo-worker exec wrangler --cwd ../venice pages project create "$VENICE_PAGES_PROJECT" --production-branch main || true
+
+      - name: Align Venice Pages runtime vars (cloud-dev)
+        run: |
+          printf '%s' "$PARIS_URL" | pnpm -C tokyo-worker exec wrangler pages secret put PARIS_URL --project-name "$VENICE_PAGES_PROJECT"
+          printf '%s' "$NEXT_PUBLIC_TOKYO_URL" | pnpm -C tokyo-worker exec wrangler pages secret put NEXT_PUBLIC_TOKYO_URL --project-name "$VENICE_PAGES_PROJECT"
+
+      - name: Deploy Venice Pages (cloud-dev)
+        run: pnpm -C tokyo-worker exec wrangler --cwd ../venice pages deploy .vercel/output/static --project-name "$VENICE_PAGES_PROJECT" --branch main --commit-dirty=true

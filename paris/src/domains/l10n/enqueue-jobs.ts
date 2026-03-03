@@ -25,6 +25,36 @@ import { enforceL10nSelection, readWorkspaceLocales } from './shared';
 import { resolveL10nPlanningSnapshot } from './planning';
 import { dispatchL10nGenerateJobs } from './dispatch-jobs';
 
+function normalizeSnapshotPayload(snapshot: unknown): Record<string, string> {
+  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return {};
+  const out: Record<string, string> = {};
+  for (const [path, value] of Object.entries(snapshot as Record<string, unknown>)) {
+    if (!path || typeof value !== 'string') continue;
+    out[path] = value;
+  }
+  return out;
+}
+
+function diffL10nSnapshots(
+  previousSnapshot: unknown,
+  currentSnapshot: Record<string, string>,
+): { changedPaths: string[]; removedPaths: string[] } {
+  const previous = normalizeSnapshotPayload(previousSnapshot);
+  const changedPaths: string[] = [];
+  const removedPaths: string[] = [];
+
+  for (const [path, value] of Object.entries(currentSnapshot)) {
+    if (previous[path] !== value) changedPaths.push(path);
+  }
+  for (const path of Object.keys(previous)) {
+    if (!Object.prototype.hasOwnProperty.call(currentSnapshot, path)) removedPaths.push(path);
+  }
+
+  changedPaths.sort();
+  removedPaths.sort();
+  return { changedPaths, removedPaths };
+}
+
 function toFailedStateRows(args: {
   publicId: string;
   layer: string;
@@ -35,6 +65,8 @@ function toFailedStateRows(args: {
   widgetType: string;
   workspaceId: string;
   message: string;
+  defaultChangedPaths?: string[] | null;
+  defaultRemovedPaths?: string[] | null;
   occurredAtIso?: string;
 }): L10nGenerateStateRow[] {
   const occurredAtIso = args.occurredAtIso || new Date().toISOString();
@@ -59,8 +91,8 @@ function toFailedStateRows(args: {
       next_attempt_at: retry.nextAttemptAt,
       last_attempt_at: occurredAtIso,
       last_error: retry.lastError,
-      changed_paths: null,
-      removed_paths: null,
+      changed_paths: current?.changed_paths ?? args.defaultChangedPaths ?? null,
+      removed_paths: current?.removed_paths ?? args.defaultRemovedPaths ?? null,
     };
   });
 }
@@ -116,6 +148,11 @@ export async function enqueueL10nJobs(args: {
   const baseUpdatedAt = planning.plan.baseUpdatedAt ?? args.baseUpdatedAt ?? null;
   const previousSnapshot = await loadLatestL10nSnapshot(args.env, args.instance.public_id);
   const fingerprintChanged = previousSnapshot?.base_fingerprint !== baseFingerprint;
+  const snapshotDiff = fingerprintChanged
+    ? diffL10nSnapshots(previousSnapshot?.snapshot ?? null, l10nSnapshot)
+    : null;
+  const defaultChangedPaths = snapshotDiff?.changedPaths ?? null;
+  const defaultRemovedPaths = snapshotDiff?.removedPaths ?? null;
 
   const envStage = asTrimmedString(args.env.ENV_STAGE) ?? 'cloud-dev';
   const layer = 'locale';
@@ -149,6 +186,7 @@ export async function enqueueL10nJobs(args: {
   const existingStates = await loadL10nGenerateStates(args.env, publicId, layer, baseFingerprint);
   const pendingLocales: string[] = [];
   const dirtyRows: L10nGenerateStateRow[] = [];
+  const pendingLocaleDiffs = new Map<string, { changedPaths: string[] | null; removedPaths: string[] | null }>();
   const nowMs = Date.now();
   const allowRetryScheduleOverride = Boolean(args.allowNoDiff);
 
@@ -166,6 +204,9 @@ export async function enqueueL10nJobs(args: {
       const staleAttempt = isL10nGenerateInFlightStale(current.last_attempt_at, nowMs);
       if (!staleAttempt) return;
     }
+    const changedPaths = current?.changed_paths ?? defaultChangedPaths;
+    const removedPaths = current?.removed_paths ?? defaultRemovedPaths;
+    pendingLocaleDiffs.set(locale, { changedPaths, removedPaths });
     pendingLocales.push(locale);
     dirtyRows.push({
       public_id: publicId,
@@ -180,8 +221,8 @@ export async function enqueueL10nJobs(args: {
       next_attempt_at: null,
       last_attempt_at: current?.last_attempt_at ?? null,
       last_error: null,
-      changed_paths: null,
-      removed_paths: null,
+      changed_paths: changedPaths,
+      removed_paths: removedPaths,
     });
   });
 
@@ -199,6 +240,10 @@ export async function enqueueL10nJobs(args: {
   }
   const jobs: L10nJob[] = [];
   for (const locale of pendingLocales) {
+    const localeDiff = pendingLocaleDiffs.get(locale) ?? {
+      changedPaths: defaultChangedPaths,
+      removedPaths: defaultRemovedPaths,
+    };
     const issued = await issueAiGrant({
       env: args.env,
       agentId: 'l10n.instance.v1',
@@ -229,6 +274,8 @@ export async function enqueueL10nJobs(args: {
       kind,
       workspaceId,
       envStage,
+      changedPaths: localeDiff.changedPaths ?? undefined,
+      removedPaths: localeDiff.removedPaths ?? undefined,
     });
   }
 
@@ -244,6 +291,8 @@ export async function enqueueL10nJobs(args: {
       widgetType,
       workspaceId,
       message: dispatched.error,
+      defaultChangedPaths,
+      defaultRemovedPaths,
     });
     await upsertL10nGenerateStates(args.env, failedRows);
     return {
@@ -258,6 +307,10 @@ export async function enqueueL10nJobs(args: {
   const queuedRows: L10nGenerateStateRow[] = pendingLocales.map((locale) => {
     const current = existingStates.get(locale);
     const attempts = (current?.attempts ?? 0) + 1;
+    const diff = pendingLocaleDiffs.get(locale) ?? {
+      changedPaths: current?.changed_paths ?? defaultChangedPaths,
+      removedPaths: current?.removed_paths ?? defaultRemovedPaths,
+    };
     return {
       public_id: publicId,
       layer,
@@ -271,8 +324,8 @@ export async function enqueueL10nJobs(args: {
       next_attempt_at: null,
       last_attempt_at: queuedAt,
       last_error: null,
-      changed_paths: null,
-      removed_paths: null,
+      changed_paths: diff.changedPaths,
+      removed_paths: diff.removedPaths,
     };
   });
   await upsertL10nGenerateStates(args.env, queuedRows);

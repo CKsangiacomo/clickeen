@@ -1,5 +1,5 @@
 import { uploadEditorAsset } from '../shared/assetUpload';
-import { fetchImageAssetChoices, toAssetPickerOverlayItems } from './asset-picker-data';
+import { fetchImageAssetChoices, fetchVideoAssetChoices, toAssetPickerOverlayItems } from './asset-picker-data';
 import { normalizeAssetReferenceUrl, sameAssetReferenceUrl } from './color-utils';
 import { assetVersionIdFromUrl } from './fill-parser';
 import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fill';
@@ -17,6 +17,28 @@ export type MediaControllerDeps = {
   setRemoveFillState: (state: DropdownFillState, isEmpty: boolean) => void;
 };
 
+const ASSET_ENTITLEMENT_REASON_KEYS = new Set([
+  'coreui.upsell.reason.budgetExceeded',
+  'coreui.upsell.reason.capReached',
+]);
+
+function isAssetEntitlementReasonKey(value: string): boolean {
+  const reasonKey = String(value || '').trim();
+  return ASSET_ENTITLEMENT_REASON_KEYS.has(reasonKey);
+}
+
+function dispatchAssetEntitlementGate(root: HTMLElement, reasonKey: string): void {
+  root.dispatchEvent(
+    new CustomEvent('bob-upsell', {
+      bubbles: true,
+      detail: { reasonKey },
+    }),
+  );
+  if (typeof window === 'undefined') return;
+  if (!window.parent || window.parent === window) return;
+  window.parent.postMessage({ type: 'bob:asset-entitlement-denied', reasonKey }, '*');
+}
+
 function resolveAssetVersionId(src: string | null): string | null {
   if (!src) return null;
   return assetVersionIdFromUrl(src);
@@ -28,7 +50,7 @@ function setFillUploadingState(state: DropdownFillState, uploading: boolean): vo
   if (state.chooseButton) state.chooseButton.disabled = uploading;
   if (state.removeButton) state.removeButton.disabled = uploading;
   if (state.videoUploadButton) state.videoUploadButton.disabled = uploading;
-  if (state.videoReplaceButton) state.videoReplaceButton.disabled = uploading;
+  if (state.videoChooseButton) state.videoChooseButton.disabled = uploading;
   if (state.videoRemoveButton) state.videoRemoveButton.disabled = uploading;
 }
 
@@ -77,6 +99,10 @@ function syncImageMediaState(
   if (state.imagePanel) {
     state.imagePanel.dataset.hasImage = hasImage ? 'true' : 'false';
   }
+  if (state.removeButton) {
+    state.removeButton.hidden = !hasImage;
+    state.removeButton.disabled = !hasImage;
+  }
   if (state.imagePreview) {
     state.imagePreview.style.backgroundImage = hasImage ? `url("${state.imageSrc}")` : 'none';
   }
@@ -96,6 +122,10 @@ function syncVideoMediaState(
   const hasVideo = hasAvailableVideo(state);
   if (state.videoPanel) {
     state.videoPanel.dataset.hasVideo = hasVideo ? 'true' : 'false';
+  }
+  if (state.videoRemoveButton) {
+    state.videoRemoveButton.hidden = !hasVideo;
+    state.videoRemoveButton.disabled = !hasVideo;
   }
   if (opts.updateHeader !== false) {
     syncVideoHeader(state, deps);
@@ -130,21 +160,25 @@ function verifyImageAvailability(state: DropdownFillState, src: string, deps: Me
   probe.src = normalizedSrc;
 }
 
-async function openImageAssetPicker(state: DropdownFillState): Promise<void> {
-  if (!state.assetPickerOverlay || !state.chooseButton) return;
-  state.assetPickerOverlay.open(state.chooseButton);
+async function openAssetPicker(state: DropdownFillState, kind: 'image' | 'video'): Promise<void> {
+  if (!state.assetPickerOverlay) return;
+  state.assetPickerKind = kind;
+  const anchorButton = kind === 'video' ? state.videoChooseButton : state.chooseButton;
+  if (!anchorButton) return;
+  state.assetPickerOverlay.open(anchorButton);
   state.assetPickerOverlay.setMessage('Loading assets...');
   state.assetPickerOverlay.setRows([]);
   state.imageAssetPickerLoading = true;
 
   try {
-    const assets = await fetchImageAssetChoices();
+    const assets = kind === 'video' ? await fetchVideoAssetChoices() : await fetchImageAssetChoices();
     const rows = toAssetPickerOverlayItems(assets);
     state.assetPickerOverlay.setRows(rows);
     if (assets.length === 0) {
-      state.assetPickerOverlay.setMessage('No assets available.');
+      state.assetPickerOverlay.setMessage(kind === 'video' ? 'No video assets available.' : 'No image assets available.');
     } else {
-      state.assetPickerOverlay.setMessage(`Select from ${assets.length} image asset${assets.length === 1 ? '' : 's'}.`);
+      const mediaLabel = kind === 'video' ? 'video asset' : 'image asset';
+      state.assetPickerOverlay.setMessage(`Select from ${assets.length} ${mediaLabel}${assets.length === 1 ? '' : 's'}.`);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to load assets.';
@@ -260,8 +294,7 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
         state.assetPickerOverlay.close();
         return;
       }
-      state.assetPickerOverlay.open(chooseButton);
-      void openImageAssetPicker(state);
+      void openAssetPicker(state, 'image');
     });
   }
   if (removeButton) {
@@ -295,7 +328,11 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
           source: 'api',
         });
         setImageSrc(state, uploadedUrl, { commit: true }, deps);
-      } catch {
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
+        if (isAssetEntitlementReasonKey(message)) {
+          dispatchAssetEntitlementGate(state.root, message);
+        }
         state.imageName = previousName;
         setImageSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
         if (!previousSrc) {
@@ -310,7 +347,7 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
 }
 
 export function installVideoHandlers(state: DropdownFillState, deps: MediaControllerDeps): void {
-  const { videoUploadButton, videoReplaceButton, videoRemoveButton, videoFileInput } = state;
+  const { videoUploadButton, videoChooseButton, videoRemoveButton, videoFileInput } = state;
   if (state.videoPreview) {
     state.videoPreview.addEventListener('error', () => {
       const currentSrc = state.videoPreview?.currentSrc || state.videoPreview?.src || '';
@@ -334,11 +371,15 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
       videoFileInput.click();
     });
   }
-  if (videoReplaceButton && videoFileInput) {
-    videoReplaceButton.addEventListener('click', (event) => {
+  if (videoChooseButton) {
+    videoChooseButton.addEventListener('click', (event) => {
       event.preventDefault();
-      videoFileInput.value = '';
-      videoFileInput.click();
+      if (!state.assetPickerOverlay) return;
+      if (state.assetPickerOverlay.isOpen()) {
+        state.assetPickerOverlay.close();
+        return;
+      }
+      void openAssetPicker(state, 'video');
     });
   }
   if (videoRemoveButton) {
@@ -348,6 +389,7 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
         URL.revokeObjectURL(state.videoObjectUrl);
         state.videoObjectUrl = null;
       }
+      state.assetPickerOverlay?.close();
       setVideoSrc(state, null, { commit: true }, deps);
     });
   }
@@ -359,6 +401,7 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
       const previousName = state.videoName;
       state.videoName = file.name || null;
       setFillUploadingState(state, true);
+      state.assetPickerOverlay?.close();
       deps.updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
       const localPreviewUrl = URL.createObjectURL(file);
       state.videoObjectUrl = localPreviewUrl;
@@ -370,7 +413,11 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
           source: 'api',
         });
         setVideoSrc(state, uploadedUrl, { commit: true }, deps);
-      } catch {
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
+        if (isAssetEntitlementReasonKey(message)) {
+          dispatchAssetEntitlementGate(state.root, message);
+        }
         state.videoName = previousName;
         setVideoSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
         if (!previousSrc) {

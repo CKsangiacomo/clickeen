@@ -1,7 +1,7 @@
 'use client';
 
 import type { FormEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function resolveNextPath(value: string | null): string {
@@ -13,6 +13,9 @@ function resolveNextPath(value: string | null): string {
 
 function resolveErrorMessage(reasonKey: string | null): string {
   if (reasonKey === 'coreui.errors.auth.invalid_credentials') return 'Invalid email or password.';
+  if (reasonKey === 'coreui.errors.auth.provider.notEnabled') return 'Google login is not enabled yet for this environment.';
+  if (reasonKey === 'coreui.errors.auth.provider.denied') return 'Google sign-in was cancelled.';
+  if (reasonKey === 'coreui.errors.auth.provider.invalidCallback') return 'Google sign-in failed. Try again.';
   if (reasonKey === 'roma.errors.auth.config_missing') return 'Auth service is not configured for Roma.';
   if (reasonKey === 'coreui.errors.auth.login_failed') return 'Sign in failed. Try again.';
   if (reasonKey) return reasonKey;
@@ -23,11 +26,21 @@ export default function RomaLoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => resolveNextPath(searchParams.get('next')), [searchParams]);
+  const googleLoginHref = useMemo(
+    () => `/api/session/login/google?next=${encodeURIComponent(nextPath)}`,
+    [nextPath],
+  );
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const reason = searchParams.get('error');
+    if (!reason) return;
+    setError(resolveErrorMessage(reason));
+  }, [searchParams]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,7 +69,7 @@ export default function RomaLoginPage() {
       return;
     }
 
-    router.replace(nextPath);
+    router.replace(`/api/session/post-login?next=${encodeURIComponent(nextPath)}`);
     router.refresh();
   }
 
@@ -65,7 +78,12 @@ export default function RomaLoginPage() {
       <section className="rd-canvas">
         <article className="rd-canvas-module" style={{ maxWidth: 520 }}>
           <h1 className="heading-2" style={{ margin: 0 }}>Sign in to Roma</h1>
-          <p className="body-m">Use your workspace account credentials.</p>
+          <p className="body-m">Use Google (cloud-dev) or workspace credentials (local).</p>
+          <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start', marginBottom: 18 }}>
+            <a className="diet-btn-txt" data-size="lg" data-variant="primary" href={googleLoginHref}>
+              <span className="diet-btn-txt__label body-l">Continue with Google</span>
+            </a>
+          </div>
           <form className="roma-inline-stack" onSubmit={onSubmit}>
             <label className="label-s" htmlFor="roma-login-email">Email</label>
             <input

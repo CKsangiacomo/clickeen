@@ -65,7 +65,6 @@ Then they wait for Bob session readiness and post into Bob:
   type: 'ck:open-editor',
   requestId,
   sessionId,
-  sessionAccessToken, // Roma handoff bearer for Bob /api calls
   subjectMode, // 'workspace' | 'minibob'
   widgetname,
   compiled,
@@ -83,8 +82,8 @@ Bob listens in `bob/lib/session/useWidgetSession.tsx` and:
 - Never auto-picks a different instance when `publicId` is missing.
 - Replies with `bob:open-editor-ack`, then terminal `bob:open-editor-applied` or `bob:open-editor-failed`.
 - Keeps request idempotency state per `requestId` so repeated host sends do not apply duplicate open operations.
-- Uses `sessionAccessToken` (when present) to authorize Bob same-origin `/api/*` requests from the browser (no cookie bootstrap dependency for Roma message-boot).
-- Local unauth bootstrap fallback is DevStudio-scoped only: Bob may mint a local session only when `ENV_STAGE=local` and requests carry explicit DevStudio intent (`surface=devstudio`, `x-ck-surface: devstudio`, `x-source: devstudio`, or DevStudio local referrer/origin). Roma/product flows must use real Berlin sessions in local and cloud-dev.
+- In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
+- Local DevStudio/Bob are tool-trusted: there is **no local browser login** and **no local session bootstrap**. Bob proxies to Paris using `PARIS_DEV_JWT` server-side (plus `x-ck-internal-service: bob.local`), and DevStudio never handles credentials.
 
 ### URL bootstrap (deterministic, no auto-pick)
 Bob bootstraps from URL only when `?boot=url` and both `workspaceId` + `publicId` are present.
@@ -467,7 +466,7 @@ It:
 - Builds i18n bundles into `tokyo/i18n`
 - Verifies Prague l10n overlays (repo base + `tokyo/l10n/prague/**`)
 - Clears stale Next chunks (`bob/.next`)
-- Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), Roma (3004), DevStudio (5173), Prague (4321), Pitch (8790)
+- Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)
 - Uses **local Supabase by default**; to point local Workers at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`
 - Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).
 

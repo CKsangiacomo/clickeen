@@ -1,20 +1,22 @@
 import { can } from '@clickeen/ck-policy';
-import { computeBaseFingerprint } from '@clickeen/l10n';
+import { buildL10nSnapshot, computeBaseFingerprint, stableStringify } from '@clickeen/l10n';
 import type { CuratedInstanceRow, Env, InstanceRow, UpdatePayload } from '../../shared/types';
 import { readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
+import { loadWidgetLocalizationAllowlist } from '../../shared/l10n';
 import {
   assertConfig,
   assertDisplayName,
+  assertLocalePolicy,
   assertMeta,
+  assertSeoGeo,
   assertStatus,
   configAssetUrlContractIssues,
   configNonPersistableUrlIssues,
 } from '../../shared/validation';
 import { isKnownWidgetType } from '../../shared/tokyo';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
-import { consumeBudget } from '../../shared/budgets';
 import { authorizeWorkspace } from '../../shared/workspace-auth';
 import {
   allowCuratedWrites,
@@ -25,16 +27,17 @@ import {
 import { loadInstanceByWorkspaceAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import { enqueueL10nJobs } from '../l10n';
 import {
-  enqueueRenderSnapshot,
+  enqueueTokyoMirrorJob,
   loadEnforcement,
   normalizeActiveEnforcement,
-  resolveRenderSnapshotLocales,
 } from './service';
+import { applyTextPackToConfig, materializeTextPack, stripTextFromConfig } from '../../shared/mirror-packs';
+import { jsonSha256Hex } from '../../shared/stable-json';
+import { generateMetaPack } from '../../shared/seo-geo';
 import {
   DEFAULT_INSTANCE_DISPLAY_NAME,
   enforceLimits,
   resolveCuratedMetaUpdate,
-  rollbackInstanceWriteAfterPostCommitFailure,
   rollbackInstanceWriteOnUsageSyncFailure,
   syncAccountAssetUsageForInstanceStrict,
   validateAccountAssetUsageForInstanceStrict,
@@ -101,6 +104,34 @@ export async function handleWorkspaceUpdateInstance(
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' }, 422);
   }
 
+  const localePolicyResult = assertLocalePolicy(payload.localePolicy);
+  if (!localePolicyResult.ok) {
+    return ckError(
+      {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.payload.invalid',
+        detail: localePolicyResult.issues[0]?.message,
+        paths: localePolicyResult.issues.map((issue) => issue.path),
+      },
+      422,
+    );
+  }
+  const localePolicy = localePolicyResult.value;
+
+  const seoGeoResult = assertSeoGeo(payload.seoGeo);
+  if (!seoGeoResult.ok) {
+    return ckError(
+      {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.payload.invalid',
+        detail: seoGeoResult.issues[0]?.message,
+        paths: seoGeoResult.issues.map((issue) => issue.path),
+      },
+      422,
+    );
+  }
+  const seoGeoRequested = seoGeoResult.value;
+
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
   if (!instance)
     return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
@@ -132,16 +163,6 @@ export async function handleWorkspaceUpdateInstance(
   if (!isCurated && payload.meta !== undefined) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
-  if (isCurated && status === 'unpublished') {
-    return ckError(
-      {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.status.invalid',
-        detail: 'Curated instances are always published',
-      },
-      422,
-    );
-  }
   if (isCurated) {
     const isValidType = await isKnownWidgetType(env, widgetType);
     if (!isValidType) {
@@ -167,7 +188,7 @@ export async function handleWorkspaceUpdateInstance(
   const configForWriteValidation =
     configChanged
       ? config
-      : !isCurated && statusChanged && prevStatus !== 'published' && nextStatus === 'published'
+      : statusChanged && prevStatus !== 'published' && nextStatus === 'published'
         ? instance.config
         : undefined;
 
@@ -257,10 +278,27 @@ export async function handleWorkspaceUpdateInstance(
     }
   }
 
+  const needsLivePlanForMirror =
+    (prevStatus === 'published' && config !== undefined) || (statusChanged && nextStatus === 'published');
+  if (needsLivePlanForMirror) {
+    if (!localePolicy) {
+      return ckError(
+        { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid', detail: 'localePolicy is required to update a live instance.' },
+        422,
+      );
+    }
+    if (seoGeoRequested === undefined) {
+      return ckError(
+        { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid', detail: 'seoGeo is required to update a live instance.' },
+        422,
+      );
+    }
+  }
+
   const update: Record<string, unknown> = {};
   if (config !== undefined) update.config = config;
   if (isCurated) {
-    update.status = 'published';
+    if (status !== undefined) update.status = status;
     update.owner_account_id = workspace.account_id;
     const curatedMetaUpdate = resolveCuratedMetaUpdate({
       currentMetaRaw: isCuratedInstanceRow(instance) ? instance.meta : null,
@@ -304,22 +342,10 @@ export async function handleWorkspaceUpdateInstance(
   }
 
   if (updatedInstance) {
-    const rollbackAndReturn = async (response: Response): Promise<Response> => {
-      await rollbackInstanceWriteAfterPostCommitFailure({
-        env,
-        workspaceId,
-        publicId,
-        before: instance,
-        isCurated,
-        accountId: workspace.account_id,
-      });
-      return response;
-    };
-
     const configForUsageSync =
       configChanged
         ? config
-        : !isCurated && statusChanged && prevStatus !== 'published' && nextStatus === 'published'
+        : statusChanged && prevStatus !== 'published' && nextStatus === 'published'
           ? updatedInstance.config
           : undefined;
 
@@ -354,86 +380,169 @@ export async function handleWorkspaceUpdateInstance(
       });
       if (!enqueueResult.ok) {
         console.error('[ParisWorker] l10n enqueue failed', enqueueResult.error);
-        return rollbackAndReturn(
-          ckError(
-            {
-              kind: 'INTERNAL',
-              reasonKey: 'coreui.errors.l10n.enqueueFailed',
-              detail: enqueueResult.error,
-            },
-            500,
-          ),
-        );
       }
     }
 
-    // Keep Venice snapshots correct for the public embed path (PRD 38).
-    // Snapshot generation is async: publish/update enqueues work, status is observed via publish-status.
-    // Unpublish keeps delete semantics strict by removing the snapshot pointer via queue.
+    // PRD 54: Tokyo is the live mirror. Venice public serves Tokyo bytes only.
     const updatedPrevStatus = prevStatus;
     const updatedNextStatus = updatedInstance.status;
-    if (updatedNextStatus === 'published' && (statusChanged || configChanged)) {
-      const { locales: activeLocales } = await resolveRenderSnapshotLocales({
-        env,
-        publicId,
-        workspaceLocales: workspace.l10n_locales,
-        policy: policyResult.policy,
-      });
-      const maxRegens = policyResult.policy.budgets['budget.snapshots.regens']?.max ?? null;
-      const regen = await consumeBudget({
-        env,
-        scope: { kind: 'workspace', workspaceId },
-        budgetKey: 'budget.snapshots.regens',
-        max: maxRegens,
-        amount: 1,
-      });
-      if (!regen.ok) {
-        return rollbackAndReturn(
-          ckError(
-            {
-              kind: 'DENY',
-              reasonKey: regen.reasonKey,
-              upsell: 'UP',
-              detail: regen.detail,
-            },
-            403,
-          ),
-        );
+    if (updatedNextStatus === 'published' && needsLivePlanForMirror) {
+      const shouldSeed = updatedPrevStatus !== 'published';
+      const liveLocalePolicy = localePolicy!;
+      const baseLocale = liveLocalePolicy.baseLocale;
+      const availableLocales = liveLocalePolicy.availableLocales;
+      const seoGeoEntitled = policyResult.policy.flags['embed.seoGeo.enabled'] === true;
+      const seoGeoConfigEnabled = Boolean((updatedInstance.config as any)?.seoGeo?.enabled === true);
+      const seoGeoLive = seoGeoRequested === true && seoGeoEntitled && seoGeoConfigEnabled;
+
+      try {
+        const allowlist = await loadWidgetLocalizationAllowlist(env, widgetType);
+        const previousBaseTextPack = buildL10nSnapshot(instance.config, allowlist);
+        const nextBaseTextPack = buildL10nSnapshot(updatedInstance.config, allowlist);
+        const textChanged = stableStringify(previousBaseTextPack) !== stableStringify(nextBaseTextPack);
+
+        const nextConfigPack = stripTextFromConfig(updatedInstance.config, Object.keys(nextBaseTextPack));
+        const nextConfigFp = await jsonSha256Hex(nextConfigPack);
+
+        let configFpChanged = shouldSeed;
+        if (!configFpChanged) {
+          const previousConfigPack = stripTextFromConfig(instance.config, Object.keys(previousBaseTextPack));
+          const previousConfigFp = await jsonSha256Hex(previousConfigPack);
+          configFpChanged = previousConfigFp !== nextConfigFp;
+        }
+
+        const shouldWriteTextPacks = shouldSeed || textChanged;
+        const shouldWriteMetaPacks = seoGeoLive && (shouldSeed || textChanged || configFpChanged);
+
+        type LocaleOverlayRow = {
+          layer?: string | null;
+          layer_key?: string | null;
+          ops?: unknown;
+          base_fingerprint?: string | null;
+        };
+
+        let localeTextPacks: Array<{ locale: string; textPack: Record<string, string> }> | null = null;
+        if (shouldWriteTextPacks || shouldWriteMetaPacks) {
+          const baseFingerprint = await computeBaseFingerprint(nextBaseTextPack);
+          const localeOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
+          const userOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
+
+          try {
+            const params = new URLSearchParams({
+              select: 'layer,layer_key,ops,base_fingerprint',
+              public_id: `eq.${publicId}`,
+              layer: 'in.(locale,user)',
+              base_fingerprint: `eq.${baseFingerprint}`,
+              limit: '1000',
+            });
+            const overlaysRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
+              method: 'GET',
+            });
+            if (overlaysRes.ok) {
+              const rows = ((await overlaysRes.json().catch(() => null)) as LocaleOverlayRow[] | null) ?? [];
+              rows.forEach((row) => {
+                const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
+                const locale = typeof row?.layer_key === 'string' ? row.layer_key.trim() : '';
+                if (!locale) return;
+                if (!availableLocales.includes(locale)) return;
+                if (!Array.isArray(row.ops)) return;
+                if (layer === 'locale') {
+                  localeOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
+                } else if (layer === 'user') {
+                  userOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
+                }
+              });
+            } else {
+              const details = await readJson(overlaysRes).catch(() => null);
+              console.warn('[ParisWorker] Failed to load locale overlays for text packs', details);
+            }
+          } catch (error) {
+            const detail = error instanceof Error ? error.message : String(error);
+            console.warn('[ParisWorker] Failed to resolve locale overlays for text packs', detail);
+          }
+
+          localeTextPacks = availableLocales.map((locale) => {
+            if (locale === baseLocale) {
+              return { locale, textPack: { ...nextBaseTextPack } };
+            }
+            const localeOps = localeOpsByLocale.get(locale) ?? null;
+            const userOps = userOpsByLocale.get(locale) ?? null;
+            return {
+              locale,
+              textPack: materializeTextPack({ basePack: nextBaseTextPack, localeOps, userOps }),
+            };
+          });
+        }
+
+        if (shouldWriteTextPacks && localeTextPacks) {
+          for (const { locale, textPack } of localeTextPacks) {
+            const enqueue = await enqueueTokyoMirrorJob(env, {
+              v: 1,
+              kind: 'write-text-pack',
+              publicId,
+              locale,
+              textPack,
+            });
+            if (!enqueue.ok) {
+              console.error('[ParisWorker] tokyo write-text-pack enqueue failed', enqueue.error);
+            }
+          }
+        }
+
+        if (shouldWriteMetaPacks && localeTextPacks) {
+          for (const { locale, textPack } of localeTextPacks) {
+            const metaState = applyTextPackToConfig(nextConfigPack, textPack);
+            const metaPack = generateMetaPack({ widgetType, state: metaState, locale });
+            const enqueueMeta = await enqueueTokyoMirrorJob(env, {
+              v: 1,
+              kind: 'write-meta-pack',
+              publicId,
+              locale,
+              metaPack,
+            });
+            if (!enqueueMeta.ok) {
+              console.error('[ParisWorker] tokyo write-meta-pack enqueue failed', enqueueMeta.error);
+            }
+          }
+        }
+
+        // PRD 54: write packs first, move pointers last. `sync-live-surface` refuses to
+        // advance when any required locale/meta pointers are missing.
+        if (shouldSeed || configFpChanged) {
+          const writeConfig = await enqueueTokyoMirrorJob(env, {
+            v: 1,
+            kind: 'write-config-pack',
+            publicId,
+            widgetType,
+            configFp: nextConfigFp,
+            configPack: nextConfigPack,
+          });
+          if (!writeConfig.ok) {
+            console.error('[ParisWorker] tokyo write-config-pack enqueue failed', writeConfig.error);
+          }
+
+          const sync = await enqueueTokyoMirrorJob(env, {
+            v: 1,
+            kind: 'sync-live-surface',
+            publicId,
+            live: true,
+            widgetType,
+            configFp: nextConfigFp,
+            localePolicy: liveLocalePolicy,
+            seoGeo: seoGeoLive,
+          });
+          if (!sync.ok) {
+            console.error('[ParisWorker] tokyo sync-live-surface enqueue failed', sync.error);
+          }
+        }
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        console.error('[ParisWorker] tokyo mirror job planning failed', detail);
       }
-      const enqueue = await enqueueRenderSnapshot(env, {
-        publicId,
-        action: 'upsert',
-        locales: activeLocales,
-      });
+    } else if (updatedPrevStatus === 'published' && updatedNextStatus === 'unpublished') {
+      const enqueue = await enqueueTokyoMirrorJob(env, { v: 1, kind: 'delete-instance-mirror', publicId });
       if (!enqueue.ok) {
-        return rollbackAndReturn(
-          ckError(
-            {
-              kind: 'INTERNAL',
-              reasonKey: 'coreui.errors.publish.failed',
-              detail: enqueue.error,
-            },
-            503,
-          ),
-        );
-      }
-    } else if (
-      !isCurated &&
-      updatedPrevStatus === 'published' &&
-      updatedNextStatus === 'unpublished'
-    ) {
-      const enqueue = await enqueueRenderSnapshot(env, { publicId, action: 'delete' });
-      if (!enqueue.ok) {
-        return rollbackAndReturn(
-          ckError(
-            {
-              kind: 'INTERNAL',
-              reasonKey: 'coreui.errors.publish.failed',
-              detail: enqueue.error,
-            },
-            503,
-          ),
-        );
+        console.error('[ParisWorker] tokyo delete-instance-mirror enqueue failed', enqueue.error);
       }
     }
   }

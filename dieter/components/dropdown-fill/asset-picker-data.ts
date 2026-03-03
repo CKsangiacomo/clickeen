@@ -1,7 +1,7 @@
 import { isUuid } from '@clickeen/ck-contracts';
 import { type AssetPickerOverlayItem } from './asset-picker-overlay';
 
-export type ImageAssetChoice = {
+export type MediaAssetChoice = {
   assetId: string;
   accountId: string;
   normalizedFilename: string;
@@ -10,6 +10,8 @@ export type ImageAssetChoice = {
   usageCount: number;
   url: string;
 };
+
+export type AssetPickerMediaKind = 'image' | 'video';
 
 function readFillDocumentDatasetValue(key: string): string {
   if (typeof document === 'undefined') return '';
@@ -55,7 +57,7 @@ function pickAssetVariantUrl(asset: Record<string, unknown>): string | null {
   return (original || normalized[0])?.url || null;
 }
 
-export async function fetchImageAssetChoices(): Promise<ImageAssetChoice[]> {
+async function fetchMediaAssetChoices(kind: AssetPickerMediaKind): Promise<MediaAssetChoice[]> {
   const context = resolveImageAssetPickerContext();
   if (!context) {
     throw new Error('No account context available.');
@@ -82,7 +84,7 @@ export async function fetchImageAssetChoices(): Promise<ImageAssetChoice[]> {
       const assetId = String(asset.assetId || '').trim();
       if (!isUuid(assetId)) return null;
       const contentType = String(asset.contentType || '').trim().toLowerCase();
-      if (!contentType.startsWith('image/')) return null;
+      if (!contentType.startsWith(`${kind}/`)) return null;
       const normalizedFilename = String(asset.normalizedFilename || '').trim() || `asset-${assetId.slice(0, 8)}`;
       const sizeBytes = Number(asset.sizeBytes);
       const usageCount = Number(asset.usageCount);
@@ -96,12 +98,20 @@ export async function fetchImageAssetChoices(): Promise<ImageAssetChoice[]> {
         sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
         usageCount: Number.isFinite(usageCount) ? Math.max(0, Math.trunc(usageCount)) : 0,
         url,
-      } satisfies ImageAssetChoice;
+      } satisfies MediaAssetChoice;
     })
-    .filter((asset): asset is ImageAssetChoice => Boolean(asset));
+    .filter((asset): asset is MediaAssetChoice => Boolean(asset));
 }
 
-export function toAssetPickerOverlayItems(assets: ImageAssetChoice[]): AssetPickerOverlayItem[] {
+export function fetchImageAssetChoices(): Promise<MediaAssetChoice[]> {
+  return fetchMediaAssetChoices('image');
+}
+
+export function fetchVideoAssetChoices(): Promise<MediaAssetChoice[]> {
+  return fetchMediaAssetChoices('video');
+}
+
+export function toAssetPickerOverlayItems(assets: MediaAssetChoice[]): AssetPickerOverlayItem[] {
   return assets.map((asset) => ({
     assetId: asset.assetId,
     normalizedFilename: asset.normalizedFilename,

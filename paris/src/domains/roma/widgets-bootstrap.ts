@@ -6,9 +6,11 @@ import { ckError } from '../../shared/errors';
 import { mintRomaAccountAuthzCapsule, mintRomaWorkspaceAuthzCapsule } from '../../shared/authz-capsule';
 import { asTrimmedString, assertConfig } from '../../shared/validation';
 import { authorizeWorkspace as authorizeWorkspaceAccess } from '../../shared/workspace-auth';
+import { loadWorkspaceById } from '../../shared/workspaces';
 import { allowCuratedWrites, assertPublicId, assertWidgetType, isCuratedPublicId } from '../../shared/instances';
 import { loadInstanceByPublicId, loadInstanceByWorkspaceAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import { handleWorkspaceCreateInstance } from '../workspaces';
+import { enqueueTokyoMirrorJob } from '../workspaces/service';
 import { resolveIdentityMePayload } from '../identity';
 import type { AccountEntitlementsSnapshot, RomaBootstrapDomainsPayload, RomaWidgetsInstancePayload } from './common';
 import {
@@ -204,6 +206,18 @@ export async function handleRomaWidgetDelete(
       return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
     }
 
+    let tokyoCleanupQueued = false;
+    try {
+      const enqueue = await enqueueTokyoMirrorJob(env, { v: 1, kind: 'delete-instance-mirror', publicId });
+      tokyoCleanupQueued = enqueue.ok;
+      if (!enqueue.ok) {
+        console.error('[ParisWorker] tokyo delete-instance-mirror enqueue failed', enqueue.error);
+      }
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      console.error('[ParisWorker] tokyo delete-instance-mirror enqueue failed', detail);
+    }
+
     try {
       await deleteCuratedInstance(env, publicId);
     } catch (error) {
@@ -218,7 +232,7 @@ export async function handleRomaWidgetDelete(
     });
     if (usageSyncError) return usageSyncError;
 
-    return json({ workspaceId, publicId, source: 'curated', deleted: true }, { status: 200 });
+    return json({ workspaceId, publicId, source: 'curated', deleted: true, tokyoCleanupQueued }, { status: 200 });
   }
 
   let existing: Awaited<ReturnType<typeof loadInstanceByWorkspaceAndPublicId>> = null;
@@ -230,6 +244,18 @@ export async function handleRomaWidgetDelete(
   }
   if (!existing) {
     return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  }
+
+  let tokyoCleanupQueued = false;
+  try {
+    const enqueue = await enqueueTokyoMirrorJob(env, { v: 1, kind: 'delete-instance-mirror', publicId });
+    tokyoCleanupQueued = enqueue.ok;
+    if (!enqueue.ok) {
+      console.error('[ParisWorker] tokyo delete-instance-mirror enqueue failed', enqueue.error);
+    }
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error('[ParisWorker] tokyo delete-instance-mirror enqueue failed', detail);
   }
 
   try {
@@ -246,7 +272,7 @@ export async function handleRomaWidgetDelete(
   });
   if (usageSyncError) return usageSyncError;
 
-  return json({ workspaceId, publicId, source: 'workspace', deleted: true }, { status: 200 });
+  return json({ workspaceId, publicId, source: 'workspace', deleted: true, tokyoCleanupQueued }, { status: 200 });
 }
 
 export async function handleRomaBootstrap(req: Request, env: Env): Promise<Response> {
@@ -310,6 +336,19 @@ export async function handleRomaBootstrap(req: Request, env: Env): Promise<Respo
       asTrimmedString(workspace.membershipVersion) || `workspace:${workspace.workspaceId}:role:${workspace.role}`;
 
     if (role && profile && accountId) {
+      let workspaceL10nLocales: unknown = null;
+      let workspaceL10nPolicy: unknown = null;
+      try {
+        const workspaceRow = await loadWorkspaceById(env, workspace.workspaceId);
+        if (workspaceRow?.account_id === accountId) {
+          workspaceL10nLocales = workspaceRow.l10n_locales ?? null;
+          workspaceL10nPolicy = workspaceRow.l10n_policy ?? null;
+        }
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        console.warn('[ParisWorker] Failed to load workspace l10n settings for capsule', detail);
+      }
+
       const accountRecord = payload.accounts.find((entry) => asTrimmedString(entry.accountId) === accountId) ?? null;
       const accountStatus = asTrimmedString(accountRecord?.status) || 'active';
       const roleCandidates: MemberRole[] = [
@@ -336,6 +375,8 @@ export async function handleRomaBootstrap(req: Request, env: Env): Promise<Respo
             workspaceSlug: workspace.slug,
             workspaceWebsiteUrl: workspace.websiteUrl ?? null,
             workspaceTier: profile,
+            workspaceL10nLocales,
+            workspaceL10nPolicy,
             role,
             authzVersion,
             iat: nowSec,

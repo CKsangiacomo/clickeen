@@ -264,7 +264,7 @@ var Dieter = (() => {
         const td = document.createElement("td");
         td.colSpan = 5;
         td.className = "body-s";
-        td.textContent = "No image assets found.";
+        td.textContent = "No assets found.";
         tr.appendChild(td);
         this.rowsEl.appendChild(tr);
         return;
@@ -702,8 +702,11 @@ var Dieter = (() => {
       return { fit: "cover", position: "center", repeat: "no-repeat" };
     }
     const value = raw;
-    const assetVersionIdRaw = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.versionId || "").trim() : "";
-    const assetVersionId = assetVersionIdToPath(assetVersionIdRaw) ? assetVersionIdRaw : "";
+    const assetVersionIdDirect = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.versionId || "").trim() : "";
+    const assetVersionIdRaw = assetVersionIdDirect || "";
+    const assetVersionIdFromRef = assetVersionIdFromUrl(assetVersionIdRaw) ?? "";
+    const assetVersionIdCandidate = assetVersionIdToPath(assetVersionIdRaw) ? assetVersionIdRaw : assetVersionIdFromRef;
+    const assetVersionId = assetVersionIdToPath(assetVersionIdCandidate) ? assetVersionIdCandidate : "";
     const name = typeof value.name === "string" ? value.name.trim() : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
@@ -721,10 +724,14 @@ var Dieter = (() => {
       return { fit: "cover", position: "center", loop: true, muted: true, autoplay: true };
     }
     const value = raw;
-    const assetVersionIdRaw = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.versionId || "").trim() : "";
-    const posterVersionIdRaw = value.poster && typeof value.poster === "object" && !Array.isArray(value.poster) ? String(value.poster.versionId || "").trim() : "";
-    const assetVersionId = assetVersionIdToPath(assetVersionIdRaw) ? assetVersionIdRaw : "";
-    const posterVersionId = assetVersionIdToPath(posterVersionIdRaw) ? posterVersionIdRaw : "";
+    const assetVersionIdDirect = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.versionId || "").trim() : "";
+    const posterVersionIdDirect = value.poster && typeof value.poster === "object" && !Array.isArray(value.poster) ? String(value.poster.versionId || "").trim() : "";
+    const assetVersionIdFromRef = assetVersionIdFromUrl(assetVersionIdDirect || "") ?? "";
+    const posterVersionIdFromRef = assetVersionIdFromUrl(posterVersionIdDirect || "") ?? "";
+    const assetVersionIdCandidate = assetVersionIdToPath(assetVersionIdDirect) ? assetVersionIdDirect : assetVersionIdFromRef;
+    const posterVersionIdCandidate = assetVersionIdToPath(posterVersionIdDirect) ? posterVersionIdDirect : posterVersionIdFromRef;
+    const assetVersionId = assetVersionIdToPath(assetVersionIdCandidate) ? assetVersionIdCandidate : "";
+    const posterVersionId = assetVersionIdToPath(posterVersionIdCandidate) ? posterVersionIdCandidate : "";
     const name = typeof value.name === "string" ? value.name.trim() : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
@@ -979,7 +986,7 @@ var Dieter = (() => {
     const original = normalized.find((entry) => entry.variant === "original");
     return (original || normalized[0])?.url || null;
   }
-  async function fetchImageAssetChoices() {
+  async function fetchMediaAssetChoices(kind) {
     const context = resolveImageAssetPickerContext();
     if (!context) {
       throw new Error("No account context available.");
@@ -1002,7 +1009,7 @@ var Dieter = (() => {
       const assetId = String(asset.assetId || "").trim();
       if (!isUuid(assetId)) return null;
       const contentType = String(asset.contentType || "").trim().toLowerCase();
-      if (!contentType.startsWith("image/")) return null;
+      if (!contentType.startsWith(`${kind}/`)) return null;
       const normalizedFilename = String(asset.normalizedFilename || "").trim() || `asset-${assetId.slice(0, 8)}`;
       const sizeBytes = Number(asset.sizeBytes);
       const usageCount = Number(asset.usageCount);
@@ -1019,6 +1026,12 @@ var Dieter = (() => {
       };
     }).filter((asset) => Boolean(asset));
   }
+  function fetchImageAssetChoices() {
+    return fetchMediaAssetChoices("image");
+  }
+  function fetchVideoAssetChoices() {
+    return fetchMediaAssetChoices("video");
+  }
   function toAssetPickerOverlayItems(assets) {
     return assets.map((asset) => ({
       assetId: asset.assetId,
@@ -1031,6 +1044,25 @@ var Dieter = (() => {
   }
 
   // components/dropdown-fill/media-controller.ts
+  var ASSET_ENTITLEMENT_REASON_KEYS = /* @__PURE__ */ new Set([
+    "coreui.upsell.reason.budgetExceeded",
+    "coreui.upsell.reason.capReached"
+  ]);
+  function isAssetEntitlementReasonKey(value) {
+    const reasonKey = String(value || "").trim();
+    return ASSET_ENTITLEMENT_REASON_KEYS.has(reasonKey);
+  }
+  function dispatchAssetEntitlementGate(root, reasonKey) {
+    root.dispatchEvent(
+      new CustomEvent("bob-upsell", {
+        bubbles: true,
+        detail: { reasonKey }
+      })
+    );
+    if (typeof window === "undefined") return;
+    if (!window.parent || window.parent === window) return;
+    window.parent.postMessage({ type: "bob:asset-entitlement-denied", reasonKey }, "*");
+  }
   function resolveAssetVersionId(src) {
     if (!src) return null;
     return assetVersionIdFromUrl(src);
@@ -1041,7 +1073,7 @@ var Dieter = (() => {
     if (state.chooseButton) state.chooseButton.disabled = uploading;
     if (state.removeButton) state.removeButton.disabled = uploading;
     if (state.videoUploadButton) state.videoUploadButton.disabled = uploading;
-    if (state.videoReplaceButton) state.videoReplaceButton.disabled = uploading;
+    if (state.videoChooseButton) state.videoChooseButton.disabled = uploading;
     if (state.videoRemoveButton) state.videoRemoveButton.disabled = uploading;
   }
   function syncImageHeader(state, deps) {
@@ -1081,6 +1113,10 @@ var Dieter = (() => {
     if (state.imagePanel) {
       state.imagePanel.dataset.hasImage = hasImage ? "true" : "false";
     }
+    if (state.removeButton) {
+      state.removeButton.hidden = !hasImage;
+      state.removeButton.disabled = !hasImage;
+    }
     if (state.imagePreview) {
       state.imagePreview.style.backgroundImage = hasImage ? `url("${state.imageSrc}")` : "none";
     }
@@ -1095,6 +1131,10 @@ var Dieter = (() => {
     const hasVideo = hasAvailableVideo(state);
     if (state.videoPanel) {
       state.videoPanel.dataset.hasVideo = hasVideo ? "true" : "false";
+    }
+    if (state.videoRemoveButton) {
+      state.videoRemoveButton.hidden = !hasVideo;
+      state.videoRemoveButton.disabled = !hasVideo;
     }
     if (opts.updateHeader !== false) {
       syncVideoHeader(state, deps);
@@ -1125,20 +1165,24 @@ var Dieter = (() => {
     probe.addEventListener("error", () => finalize(false), { once: true });
     probe.src = normalizedSrc;
   }
-  async function openImageAssetPicker(state) {
-    if (!state.assetPickerOverlay || !state.chooseButton) return;
-    state.assetPickerOverlay.open(state.chooseButton);
+  async function openAssetPicker(state, kind) {
+    if (!state.assetPickerOverlay) return;
+    state.assetPickerKind = kind;
+    const anchorButton = kind === "video" ? state.videoChooseButton : state.chooseButton;
+    if (!anchorButton) return;
+    state.assetPickerOverlay.open(anchorButton);
     state.assetPickerOverlay.setMessage("Loading assets...");
     state.assetPickerOverlay.setRows([]);
     state.imageAssetPickerLoading = true;
     try {
-      const assets = await fetchImageAssetChoices();
+      const assets = kind === "video" ? await fetchVideoAssetChoices() : await fetchImageAssetChoices();
       const rows = toAssetPickerOverlayItems(assets);
       state.assetPickerOverlay.setRows(rows);
       if (assets.length === 0) {
-        state.assetPickerOverlay.setMessage("No assets available.");
+        state.assetPickerOverlay.setMessage(kind === "video" ? "No video assets available." : "No image assets available.");
       } else {
-        state.assetPickerOverlay.setMessage(`Select from ${assets.length} image asset${assets.length === 1 ? "" : "s"}.`);
+        const mediaLabel = kind === "video" ? "video asset" : "image asset";
+        state.assetPickerOverlay.setMessage(`Select from ${assets.length} ${mediaLabel}${assets.length === 1 ? "" : "s"}.`);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to load assets.";
@@ -1237,8 +1281,7 @@ var Dieter = (() => {
           state.assetPickerOverlay.close();
           return;
         }
-        state.assetPickerOverlay.open(chooseButton);
-        void openImageAssetPicker(state);
+        void openAssetPicker(state, "image");
       });
     }
     if (removeButton) {
@@ -1272,7 +1315,11 @@ var Dieter = (() => {
             source: "api"
           });
           setImageSrc(state, uploadedUrl, { commit: true }, deps);
-        } catch {
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "";
+          if (isAssetEntitlementReasonKey(message)) {
+            dispatchAssetEntitlementGate(state.root, message);
+          }
           state.imageName = previousName;
           setImageSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
           if (!previousSrc) {
@@ -1286,7 +1333,7 @@ var Dieter = (() => {
     }
   }
   function installVideoHandlers(state, deps) {
-    const { videoUploadButton, videoReplaceButton, videoRemoveButton, videoFileInput } = state;
+    const { videoUploadButton, videoChooseButton, videoRemoveButton, videoFileInput } = state;
     if (state.videoPreview) {
       state.videoPreview.addEventListener("error", () => {
         const currentSrc = state.videoPreview?.currentSrc || state.videoPreview?.src || "";
@@ -1310,11 +1357,15 @@ var Dieter = (() => {
         videoFileInput.click();
       });
     }
-    if (videoReplaceButton && videoFileInput) {
-      videoReplaceButton.addEventListener("click", (event) => {
+    if (videoChooseButton) {
+      videoChooseButton.addEventListener("click", (event) => {
         event.preventDefault();
-        videoFileInput.value = "";
-        videoFileInput.click();
+        if (!state.assetPickerOverlay) return;
+        if (state.assetPickerOverlay.isOpen()) {
+          state.assetPickerOverlay.close();
+          return;
+        }
+        void openAssetPicker(state, "video");
       });
     }
     if (videoRemoveButton) {
@@ -1324,6 +1375,7 @@ var Dieter = (() => {
           URL.revokeObjectURL(state.videoObjectUrl);
           state.videoObjectUrl = null;
         }
+        state.assetPickerOverlay?.close();
         setVideoSrc(state, null, { commit: true }, deps);
       });
     }
@@ -1335,6 +1387,7 @@ var Dieter = (() => {
         const previousName = state.videoName;
         state.videoName = file.name || null;
         setFillUploadingState(state, true);
+        state.assetPickerOverlay?.close();
         deps.updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
         const localPreviewUrl = URL.createObjectURL(file);
         state.videoObjectUrl = localPreviewUrl;
@@ -1346,7 +1399,11 @@ var Dieter = (() => {
             source: "api"
           });
           setVideoSrc(state, uploadedUrl, { commit: true }, deps);
-        } catch {
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "";
+          if (isAssetEntitlementReasonKey(message)) {
+            dispatchAssetEntitlementGate(state.root, message);
+          }
           state.videoName = previousName;
           setVideoSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
           if (!previousSrc) {
@@ -1469,7 +1526,7 @@ var Dieter = (() => {
     const videoPanel = root.querySelector(".diet-dropdown-fill__panel--video");
     const videoPreview = root.querySelector(".diet-dropdown-fill__video-preview");
     const videoUploadButton = root.querySelector(".diet-dropdown-fill__video-upload-btn");
-    const videoReplaceButton = root.querySelector(".diet-dropdown-fill__video-replace-btn");
+    const videoChooseButton = root.querySelector(".diet-dropdown-fill__video-choose-btn");
     const videoRemoveButton = root.querySelector(".diet-dropdown-fill__video-remove-btn");
     const videoFileInput = root.querySelector(".diet-dropdown-fill__video-file-input");
     if (!input || !hueInput || !alphaInput || !hexField || !alphaField || !svCanvas || !svThumb) {
@@ -1479,6 +1536,11 @@ var Dieter = (() => {
       onUse: (item) => {
         const current = states.get(root);
         if (!current) return;
+        if (current.assetPickerKind === "video") {
+          current.videoName = item.normalizedFilename;
+          setVideoSrc2(current, item.url, { commit: true });
+          return;
+        }
         current.imageName = item.normalizedFilename;
         setImageSrc2(current, item.url, { commit: true });
       },
@@ -1486,15 +1548,25 @@ var Dieter = (() => {
         const current = states.get(root);
         if (!current) return;
         current.imageAssetPickerOpen = open;
+        const imagePickerOpen = open && current.assetPickerKind === "image";
+        const videoPickerOpen = open && current.assetPickerKind === "video";
         if (current.chooseButton) {
-          current.chooseButton.setAttribute("aria-expanded", open ? "true" : "false");
-          current.chooseButton.classList.toggle("is-active", open);
+          current.chooseButton.setAttribute("aria-expanded", imagePickerOpen ? "true" : "false");
+          current.chooseButton.classList.toggle("is-active", imagePickerOpen);
+        }
+        if (current.videoChooseButton) {
+          current.videoChooseButton.setAttribute("aria-expanded", videoPickerOpen ? "true" : "false");
+          current.videoChooseButton.classList.toggle("is-active", videoPickerOpen);
         }
       }
     }) : null;
     if (chooseButton) {
       chooseButton.setAttribute("aria-haspopup", "dialog");
       chooseButton.setAttribute("aria-expanded", "false");
+    }
+    if (videoChooseButton) {
+      videoChooseButton.setAttribute("aria-haspopup", "dialog");
+      videoChooseButton.setAttribute("aria-expanded", "false");
     }
     const nativeValue = captureNativeValue(input);
     const allowedModes = parseAllowedModes(root);
@@ -1556,13 +1628,14 @@ var Dieter = (() => {
       videoPanel,
       videoPreview,
       videoUploadButton,
-      videoReplaceButton,
+      videoChooseButton,
       videoRemoveButton,
       videoFileInput,
       videoSrc: null,
       videoName: null,
       videoObjectUrl: null,
       videoUnavailable: false,
+      assetPickerKind: "image",
       allowedModes,
       mode,
       nativeValue,
@@ -2394,7 +2467,7 @@ var Dieter = (() => {
     if (state.headerLabel) {
       state.headerLabel.textContent = MODE_LABELS[next] || state.headerLabel.textContent;
     }
-    if (next !== "image" && state.imageAssetPickerOpen) {
+    if (next !== "image" && next !== "video" && state.imageAssetPickerOpen) {
       state.assetPickerOverlay?.close();
     }
   }

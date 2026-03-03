@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { PublishEmbedModal } from './PublishEmbedModal';
 
@@ -11,12 +11,13 @@ function resolveSubject(profile: string | null | undefined): 'workspace' | 'mini
 
 export function TopDrawer() {
   const session = useWidgetSession();
-  const { meta, policy, publish, isPublishing, isDirty, discardChanges, setInstanceLabel, apiFetch } = session;
+  const { meta, policy, status, setLive, save, isPublishing, isDirty, discardChanges, setInstanceLabel, apiFetch } = session;
   const [embedOpen, setEmbedOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState('');
   const [renameBusy, setRenameBusy] = useState(false);
   const [renameError, setRenameError] = useState<string | null>(null);
+  const liveToggleId = useId();
 
   const currentPublicId = typeof meta?.publicId === 'string' ? meta.publicId : '';
   const workspaceId = typeof meta?.workspaceId === 'string' ? meta.workspaceId : '';
@@ -29,6 +30,8 @@ export function TopDrawer() {
   const subject = useMemo(() => resolveSubject(policy?.profile ?? null), [policy?.profile]);
 
   const canRename = Boolean(currentPublicId && workspaceId && policy?.role !== 'viewer');
+  const isLive = status === 'published';
+  const liveDisabled = !canPublish || isPublishing || (!isLive && isDirty);
 
   const startRename = useCallback(() => {
     if (!canRename || renameBusy) return;
@@ -170,6 +173,26 @@ export function TopDrawer() {
       </div>
 
       <div className="topdrawer-actions">
+        {hasInstance ? (
+          <label className="diet-toggle diet-toggle--split" data-size="lg">
+            <span className="diet-toggle__label label-s" id={`${liveToggleId}-label`}>
+              Live
+            </span>
+            <input
+              id={liveToggleId}
+              className="diet-toggle__input sr-only"
+              type="checkbox"
+              role="switch"
+              aria-labelledby={`${liveToggleId}-label`}
+              checked={isLive}
+              disabled={liveDisabled}
+              onChange={(event) => void setLive(event.target.checked)}
+            />
+            <span className="diet-toggle__switch" aria-hidden="true">
+              <span className="diet-toggle__knob" />
+            </span>
+          </label>
+        ) : null}
         {isDirty ? (
           <>
             <button
@@ -188,7 +211,7 @@ export function TopDrawer() {
               data-variant="primary"
               type="button"
               disabled={!canPublish || isPublishing}
-              onClick={() => publish()}
+              onClick={() => save()}
             >
               <span className="diet-btn-txt__label">{isPublishing ? 'Saving…' : 'Save'}</span>
             </button>

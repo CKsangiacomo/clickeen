@@ -11,53 +11,31 @@ import {
   handleGetAccountAsset,
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
+  handlePurgeAccountAssets,
   handleUploadAccountAsset,
-  upsertInstanceRenderHealth,
 } from './domains/assets';
+import { handleGetL10nAsset } from './domains/l10n-read';
 import {
-  deleteLayerArtifacts,
-  deleteL10nOverlayVersions,
-  handleDeleteL10nLayerIndex,
-  handleDeleteL10nOverlay,
-  handleGetL10nAsset,
-  handlePublishLocaleRequest,
-  handlePutL10nBaseSnapshot,
-  handlePutL10nLayerIndex,
-  handlePutL10nOverlay,
-  isPublishJob,
-  listDirtyPublishStates,
-  loadPublishStateRow,
-  markPublishStateClean,
-  markPublishStateFailed,
-  normalizeLayer,
-  normalizeLayerKey,
-  publishLayerFromSupabase,
-  publishLayerIndex,
-  recordL10nOverlayVersion,
-  type L10nPublishQueueJob,
-} from './domains/l10n';
-import {
-  deleteRenderIndex,
-  generateRenderSnapshots,
-  handleGetRenderObject,
-  isRenderSnapshotJob,
-  normalizeRenderLocales,
-  normalizeRenderRevision,
-  renderArtifactKey,
-  renderPublishedPointerKey,
-  renderRevisionIndexKey,
-  type RenderSnapshotQueueJob,
+  deleteInstanceMirror,
+  enforceLiveSurface,
+  handleGetR2Object,
+  isTokyoMirrorJob,
+  renderConfigPackKey,
+  renderLivePointerKey,
+  renderMetaLivePointerKey,
+  renderMetaPackKey,
+  syncLiveSurface,
+  writeConfigPack,
+  writeMetaPack,
+  writeTextPack,
+  type TokyoMirrorQueueJob,
 } from './domains/render';
-
-export { generateRenderSnapshots };
 
 export type Env = {
   TOKYO_DEV_JWT: string;
   TOKYO_R2: R2Bucket;
   USAGE_KV?: KVNamespace;
-  L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
-  RENDER_SNAPSHOT_QUEUE?: Queue<RenderSnapshotQueueJob>;
-  VENICE_BASE_URL?: string;
+  RENDER_SNAPSHOT_QUEUE?: Queue<TokyoMirrorQueueJob>;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   BERLIN_BASE_URL?: string;
@@ -65,7 +43,6 @@ export type Env = {
   BERLIN_ISSUER?: string;
   BERLIN_AUDIENCE?: string;
   TOKYO_L10N_HTTP_BASE?: string;
-  VENICE_INTERNAL_BYPASS_TOKEN?: string;
   CLOUDFLARE_ZONE_ID?: string;
   CLOUDFLARE_API_TOKEN?: string;
 };
@@ -638,56 +615,6 @@ export function normalizeLocale(raw: unknown): string | null {
   return value;
 }
 
-function extractSnapshotLocalesFromL10nIndex(payload: unknown): string[] {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return ['en'];
-  const layers = (payload as any).layers;
-  if (!layers || typeof layers !== 'object' || Array.isArray(layers)) return ['en'];
-
-  const out: string[] = ['en'];
-  const seen = new Set<string>(out);
-  const appendLayerLocales = (layerName: 'locale' | 'user') => {
-    const layer = (layers as any)[layerName];
-    const keys = Array.isArray(layer?.keys) ? layer.keys : [];
-    for (const raw of keys) {
-      const key = typeof raw === 'string' ? raw.trim() : '';
-      if (!key) continue;
-      if (layerName === 'user' && key === 'global') continue;
-      const normalized = normalizeLocale(key);
-      if (!normalized || seen.has(normalized)) continue;
-      seen.add(normalized);
-      out.push(normalized);
-    }
-  };
-
-  appendLayerLocales('locale');
-  appendLayerLocales('user');
-  return out;
-}
-
-export async function loadSnapshotLocalesFromL10nIndex(args: {
-  env: Env;
-  publicId: string;
-  changedLayerKey?: string | null;
-}): Promise<string[]> {
-  const fallback = ['en'];
-  const changedLocale = normalizeLocale(args.changedLayerKey ?? null);
-  if (changedLocale && changedLocale !== 'en') fallback.push(changedLocale);
-
-  try {
-    const key = `l10n/instances/${args.publicId}/index.json`;
-    const obj = await args.env.TOKYO_R2.get(key);
-    if (!obj) return fallback;
-    const raw = await obj.text();
-    if (!raw) return fallback;
-    const parsed = JSON.parse(raw);
-    const locales = extractSnapshotLocalesFromL10nIndex(parsed);
-    if (changedLocale && !locales.includes(changedLocale)) locales.push(changedLocale);
-    return locales.length ? locales : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 export function normalizeSha256Hex(raw: unknown): string | null {
   const value = String(raw || '').trim().toLowerCase();
   if (!/^[a-f0-9]{64}$/.test(value)) return null;
@@ -695,9 +622,22 @@ export function normalizeSha256Hex(raw: unknown): string | null {
 }
 
 function stableStringify(value: any): string {
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
+  if (value === undefined) return 'null';
+  if (typeof value === 'function' || typeof value === 'symbol') return 'null';
+  if (Array.isArray(value)) {
+    return `[${value
+      .map((item) => (item === undefined || typeof item === 'function' || typeof item === 'symbol' ? 'null' : stableStringify(item)))
+      .join(',')}]`;
+  }
   if (value && typeof value === 'object') {
-    return `{${Object.keys(value).sort().map((k) => JSON.stringify(k) + ':' + stableStringify(value[k])).join(',')}}`;
+    const parts: string[] = [];
+    for (const key of Object.keys(value).sort()) {
+      const next = value[key];
+      if (next === undefined) continue;
+      if (typeof next === 'function' || typeof next === 'symbol') continue;
+      parts.push(`${JSON.stringify(key)}:${stableStringify(next)}`);
+    }
+    return `{${parts.join(',')}}`;
   }
   return JSON.stringify(value);
 }
@@ -729,47 +669,63 @@ export default {
         return withCors(json({ up: true }, { status: 200 }));
       }
 
-      const renderPublishedPointerMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/published\.json$/);
-      if (renderPublishedPointerMatch) {
+      const renderLivePointerMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/live\/r\.json$/);
+      if (renderLivePointerMatch) {
         if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const publicId = normalizePublicId(decodeURIComponent(renderPublishedPointerMatch[1]));
-        if (!publicId) return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
-        return withCors(
-          await handleGetRenderObject(
-            env,
-            renderPublishedPointerKey(publicId),
-            'no-store',
-          ),
-        );
+        const publicId = normalizePublicId(decodeURIComponent(renderLivePointerMatch[1]));
+        if (!publicId) {
+          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalidPublicId' } }, { status: 422 }));
+        }
+        return withCors(await handleGetR2Object(env, renderLivePointerKey(publicId), 'no-store'));
       }
 
-      const renderRevisionIndexMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/revisions\/([^/]+)\/index\.json$/);
-      if (renderRevisionIndexMatch) {
+      const renderMetaLivePointerMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/live\/meta\/([^/]+)\.json$/);
+      if (renderMetaLivePointerMatch) {
         if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const publicId = normalizePublicId(decodeURIComponent(renderRevisionIndexMatch[1]));
-        const revision = normalizeRenderRevision(decodeURIComponent(renderRevisionIndexMatch[2]));
-        if (!publicId || !revision) {
-          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
+        const publicId = normalizePublicId(decodeURIComponent(renderMetaLivePointerMatch[1]));
+        const locale = normalizeLocale(decodeURIComponent(renderMetaLivePointerMatch[2]));
+        if (!publicId || !locale) {
+          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } }, { status: 422 }));
+        }
+        return withCors(await handleGetR2Object(env, renderMetaLivePointerKey(publicId, locale), 'no-store'));
+      }
+
+      const renderConfigPackMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/config\/([^/]+)\/config\.json$/);
+      if (renderConfigPackMatch) {
+        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const publicId = normalizePublicId(decodeURIComponent(renderConfigPackMatch[1]));
+        const configFp = normalizeSha256Hex(decodeURIComponent(renderConfigPackMatch[2]));
+        if (!publicId || !configFp) {
+          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } }, { status: 422 }));
         }
         return withCors(
-          await handleGetRenderObject(
-            env,
-            renderRevisionIndexKey(publicId, revision),
-            'public, max-age=31536000, immutable',
-          ),
+          await handleGetR2Object(env, renderConfigPackKey(publicId, configFp), 'public, max-age=31536000, immutable'),
         );
       }
 
-      const renderLegacyIndexMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/index\.json$/);
-      if (renderLegacyIndexMatch) {
+      const renderMetaPackMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/meta\/([^/]+)\/([^/]+)\.json$/);
+      if (renderMetaPackMatch) {
+        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const publicId = normalizePublicId(decodeURIComponent(renderMetaPackMatch[1]));
+        const locale = normalizeLocale(decodeURIComponent(renderMetaPackMatch[2]));
+        const metaFp = normalizeSha256Hex(decodeURIComponent(renderMetaPackMatch[3]));
+        if (!publicId || !locale || !metaFp) {
+          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } }, { status: 422 }));
+        }
+        return withCors(
+          await handleGetR2Object(env, renderMetaPackKey(publicId, locale, metaFp), 'public, max-age=31536000, immutable'),
+        );
+      }
+
+      const legacyRenderSurfaceMatch = pathname.match(/^\/renders\/instances\/[^/]+\/(published|revisions|snapshot)(?:\/|$)/);
+      if (legacyRenderSurfaceMatch) {
         return withCors(
           json(
             {
               error: {
                 kind: 'VALIDATION',
-                reasonKey: 'tokyo.errors.render.legacyIndexUnsupported',
-                detail:
-                  'Legacy /renders/instances/{publicId}/index.json is not supported. Use /published.json + /revisions/{revision}/index.json.',
+                reasonKey: 'tokyo.errors.render.legacyUnsupported',
+                detail: 'Legacy render snapshot endpoints are removed. Use /renders/instances/{publicId}/live/r.json + config/text packs.',
               },
             },
             { status: 410 },
@@ -777,86 +733,18 @@ export default {
         );
       }
 
-      const renderArtifactMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/([^/]+)\/(e\.html|r\.json|meta\.json)$/);
-      if (renderArtifactMatch) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const publicId = normalizePublicId(decodeURIComponent(renderArtifactMatch[1]));
-        const fingerprint = normalizeSha256Hex(decodeURIComponent(renderArtifactMatch[2]));
-        const filename = renderArtifactMatch[3] as 'e.html' | 'r.json' | 'meta.json';
-        if (!publicId || !fingerprint) {
-          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
-        }
-        return withCors(
-          await handleGetRenderObject(
-            env,
-            renderArtifactKey(publicId, fingerprint, filename),
-            'public, max-age=31536000, immutable',
-          ),
-        );
-      }
-
-      const renderSnapshotMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/snapshot$/);
-      if (renderSnapshotMatch) {
-        if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const authError = requireDevAuth(req, env);
-        if (authError) return withCors(authError);
-        const publicId = normalizePublicId(decodeURIComponent(renderSnapshotMatch[1]));
-        if (!publicId) return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
-        let payload: { action?: string; locales?: unknown } | null = null;
-        try {
-          payload = (await req.json()) as any;
-        } catch {
-          payload = null;
-        }
-        const action = payload?.action === 'delete' ? 'delete' : 'upsert';
-        if (action === 'delete') {
-          await deleteRenderIndex(env, publicId);
-          return withCors(json({ ok: true, publicId, action }, { status: 200 }));
-        }
-        try {
-          const locales = normalizeRenderLocales(payload?.locales);
-          const resolvedLocales = locales.length
-            ? locales
-            : await loadSnapshotLocalesFromL10nIndex({
-                env,
-                publicId,
-              });
-          await generateRenderSnapshots({ env, publicId, locales: resolvedLocales });
-          try {
-            await upsertInstanceRenderHealth(env, {
-              publicId,
-              status: 'healthy',
-              reason: 'snapshot_revision_published',
-              detail: null,
-            });
-          } catch (healthErr) {
-            console.error('[tokyo] render health update failed (manual snapshot success)', healthErr);
-          }
-          return withCors(json({ ok: true, publicId, action, locales: resolvedLocales }, { status: 200 }));
-        } catch (error) {
-          const detail = error instanceof Error ? error.message : String(error);
-          try {
-            await upsertInstanceRenderHealth(env, {
-              publicId,
-              status: 'error',
-              reason: 'snapshot_generation_failed',
-              detail,
-            });
-          } catch (healthErr) {
-            console.error('[tokyo] render health update failed (manual snapshot failure)', healthErr);
-          }
-          throw error;
-        }
-      }
-
-      if (pathname === '/l10n/publish') {
-        if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        return withCors(await handlePublishLocaleRequest(req, env));
-      }
-
       if (pathname === '/assets/upload') {
         if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         return withCors(await handleUploadAccountAsset(req, env));
+      }
+
+      const accountAssetPurgeMatch = pathname.match(/^\/assets\/purge\/([0-9a-f-]{36})$/i);
+      if (accountAssetPurgeMatch) {
+        const accountId = decodeURIComponent(accountAssetPurgeMatch[1] || '');
+        if (req.method === 'DELETE') {
+          return withCors(await handlePurgeAccountAssets(req, env, accountId));
+        }
+        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
       }
 
       const accountAssetVersion = parseCanonicalAssetRef(pathname);
@@ -905,49 +793,6 @@ export default {
         return withCors(await handleGetTokyoFontAsset(env, pathname));
       }
 
-      const l10nIndexMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/index$/);
-      if (l10nIndexMatch) {
-        if (req.method !== 'POST' && req.method !== 'DELETE') {
-          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        }
-        const publicId = normalizePublicId(decodeURIComponent(l10nIndexMatch[1]));
-        if (!publicId) {
-          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
-        }
-        if (req.method === 'POST') {
-          return withCors(await handlePutL10nLayerIndex(req, env, publicId));
-        }
-        return withCors(await handleDeleteL10nLayerIndex(req, env, publicId));
-      }
-
-      const l10nBaseSnapshotMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/bases\/([^/]+)$/);
-      if (l10nBaseSnapshotMatch) {
-        if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const publicId = normalizePublicId(decodeURIComponent(l10nBaseSnapshotMatch[1]));
-        const baseFingerprint = normalizeSha256Hex(decodeURIComponent(l10nBaseSnapshotMatch[2]));
-        if (!publicId || !baseFingerprint) {
-          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
-        }
-        return withCors(await handlePutL10nBaseSnapshot(req, env, publicId, baseFingerprint));
-      }
-
-      const l10nLayerMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/);
-      if (l10nLayerMatch) {
-        if (req.method !== 'POST' && req.method !== 'DELETE') {
-          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        }
-        const publicId = normalizePublicId(decodeURIComponent(l10nLayerMatch[1]));
-        const layer = normalizeLayer(decodeURIComponent(l10nLayerMatch[2]));
-        const layerKey = layer ? normalizeLayerKey(layer, decodeURIComponent(l10nLayerMatch[3])) : null;
-        if (!publicId || !layer || !layerKey) {
-          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
-        }
-        if (req.method === 'POST') {
-          return withCors(await handlePutL10nOverlay(req, env, publicId, layer, layerKey));
-        }
-        return withCors(await handleDeleteL10nOverlay(req, env, publicId, layer, layerKey));
-      }
-
       const l10nVersionedMatch = pathname.match(/^\/l10n\/v\/[^/]+\/(.+)$/);
       if (l10nVersionedMatch) {
         if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
@@ -970,126 +815,65 @@ export default {
   },
 
   async queue(batch: MessageBatch<unknown>, env: Env): Promise<void> {
+    const retryDelaySeconds = (attempt: number, baseSeconds: number, capSeconds: number) =>
+      Math.min(capSeconds, baseSeconds * Math.max(1, attempt));
+    const shouldRetryMissingPrereqs = (error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      return message.includes('[tokyo] missing required');
+    };
+
     for (const msg of batch.messages) {
       const body = msg.body;
-      if (isRenderSnapshotJob(body)) {
-        const publicId = normalizePublicId(body.publicId);
-        if (!publicId) continue;
-        const action = body.action === 'delete' ? 'delete' : 'upsert';
-        try {
-          if (action === 'delete') {
-            await deleteRenderIndex(env, publicId);
-          } else {
-            const locales = normalizeRenderLocales(body.locales);
-            const resolvedLocales = locales.length
-              ? locales
-              : await loadSnapshotLocalesFromL10nIndex({
-                  env,
-                  publicId,
-                });
-            await generateRenderSnapshots({ env, publicId, locales: resolvedLocales });
-            try {
-              await upsertInstanceRenderHealth(env, {
-                publicId,
-                status: 'healthy',
-                reason: 'snapshot_revision_published',
-                detail: null,
-              });
-            } catch (healthErr) {
-              console.error('[tokyo] render health update failed (snapshot queue success)', healthErr);
-            }
-          }
-        } catch (err) {
-          console.error('[tokyo] render snapshot job failed', err);
-          const detail = err instanceof Error ? err.message : String(err);
-          try {
-            await upsertInstanceRenderHealth(env, {
-              publicId,
-              status: 'error',
-              reason: 'snapshot_generation_failed',
-              detail,
-            });
-          } catch (healthErr) {
-            console.error('[tokyo] render health update failed (snapshot queue failure)', healthErr);
-          }
-        }
+      if (!isTokyoMirrorJob(body)) {
+        msg.ack();
         continue;
       }
 
-      if (!isPublishJob(body)) continue;
       const publicId = normalizePublicId(body.publicId);
-      if (!publicId) continue;
-      const layer = normalizeLayer(body.layer);
-      const layerKey = layer ? normalizeLayerKey(layer, body.layerKey) : null;
-      if (!layer || !layerKey) continue;
+      if (!publicId) {
+        msg.ack();
+        continue;
+      }
+
       try {
-        const action = body.action === 'delete' ? 'delete' : 'upsert';
-        if (action === 'delete') {
-          await deleteLayerArtifacts(env, publicId, layer, layerKey);
-          await deleteL10nOverlayVersions(env, publicId, layer, layerKey);
-          const stateRow = await loadPublishStateRow(env, publicId, layer, layerKey);
-          if (stateRow?.base_fingerprint) {
-            await markPublishStateClean(env, publicId, layer, layerKey, stateRow.base_fingerprint);
-          }
-          await publishLayerIndex(env, publicId);
-        } else {
-          const result = await publishLayerFromSupabase(env, publicId, layer, layerKey);
-          if (result?.baseFingerprint) {
-            await markPublishStateClean(env, publicId, layer, layerKey, result.baseFingerprint);
-            await recordL10nOverlayVersion(env, result);
-          }
-          await publishLayerIndex(env, publicId);
+        switch (body.kind) {
+          case 'write-config-pack':
+            await writeConfigPack(env, body);
+            break;
+          case 'write-text-pack':
+            await writeTextPack(env, body);
+            break;
+          case 'write-meta-pack':
+            await writeMetaPack(env, body);
+            break;
+          case 'sync-live-surface':
+            await syncLiveSurface(env, body);
+            break;
+          case 'enforce-live-surface':
+            await enforceLiveSurface(env, body);
+            break;
+          case 'delete-instance-mirror':
+            await deleteInstanceMirror(env, publicId);
+            break;
+        }
+        msg.ack();
+      } catch (error) {
+        const attempt = typeof msg.attempts === 'number' && Number.isFinite(msg.attempts) ? msg.attempts : 0;
+        const maxAttempts = 10;
+        const message = error instanceof Error ? error.message : String(error);
+
+        if (attempt >= maxAttempts) {
+          console.error('[tokyo] queue job failed permanently', body.kind, publicId, message);
+          msg.ack();
+          continue;
         }
 
-        if ((layer === 'locale' || layer === 'user') && env.RENDER_SNAPSHOT_QUEUE) {
-          const locales = await loadSnapshotLocalesFromL10nIndex({
-            env,
-            publicId,
-            changedLayerKey: layerKey,
-          });
-          await env.RENDER_SNAPSHOT_QUEUE.send({
-            v: 1,
-            kind: 'render-snapshot',
-            publicId,
-            locales,
-            action: 'upsert',
-          });
-        }
-      } catch (err) {
-        console.error('[tokyo] publish job failed', err);
-        try {
-          const stateRow = await loadPublishStateRow(env, publicId, layer, layerKey);
-          const baseFingerprint = stateRow?.base_fingerprint ?? '';
-          if (baseFingerprint) {
-            const detail = err instanceof Error ? err.message : String(err);
-            await markPublishStateFailed(env, publicId, layer, layerKey, baseFingerprint, detail);
-          }
-        } catch (markErr) {
-          console.error('[tokyo] publish state update failed', markErr);
-        }
+        const delaySeconds = shouldRetryMissingPrereqs(error)
+          ? retryDelaySeconds(attempt, 2, 30)
+          : retryDelaySeconds(attempt, 5, 60);
+        console.warn('[tokyo] queue job failed, retrying', body.kind, publicId, `attempt=${attempt}`, message);
+        msg.retry({ delaySeconds });
       }
     }
-  },
-
-  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-    ctx.waitUntil(
-      (async () => {
-        try {
-          if (!env.L10N_PUBLISH_QUEUE) return;
-          const rows = await listDirtyPublishStates(env);
-          for (const row of rows) {
-            await env.L10N_PUBLISH_QUEUE.send({
-              v: 2,
-              publicId: row.public_id,
-              layer: row.layer,
-              layerKey: row.layer_key,
-              action: 'upsert',
-            });
-          }
-        } catch (err) {
-          console.error('[tokyo] scheduled publish failed', err);
-        }
-      })(),
-    );
   },
 };

@@ -12,6 +12,7 @@ import {
   sanitizeUploadFilename,
   sha256Hex,
   assertUploadAuth,
+  supabaseFetch,
 } from '../index';
 import type { Env } from '../index';
 import { isUuid } from '@clickeen/ck-contracts';
@@ -290,6 +291,45 @@ function jsonAssetIdentityIntegrityMismatch(
     },
     { status: 409 },
   );
+}
+
+async function deleteAccountAssetMetadataWithRetries(args: {
+  env: Env;
+  accountId: string;
+  assetId: string;
+  attempts?: number;
+}): Promise<void> {
+  const attempts = Number.isFinite(args.attempts as number) ? Math.max(1, Math.floor(args.attempts as number)) : 3;
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await deleteAccountAssetUsageByIdentity(args.env, args.accountId, args.assetId);
+      await deleteAccountAssetVariantsByIdentity(args.env, args.accountId, args.assetId);
+      await deleteAccountAssetByIdentity(args.env, args.accountId, args.assetId);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt >= attempts) break;
+      await new Promise((resolve) => setTimeout(resolve, attempt * 75));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError ?? 'unknown metadata delete failure'));
+}
+
+async function sweepResidualAssetBlobs(args: {
+  env: Env;
+  accountId: string;
+  assetId: string;
+  attempts?: number;
+}): Promise<string[]> {
+  const attempts = Number.isFinite(args.attempts as number) ? Math.max(1, Math.floor(args.attempts as number)) : 2;
+  let remaining: string[] = [];
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    remaining = await listAccountAssetR2KeysByIdentity(args.env, args.accountId, args.assetId);
+    if (!remaining.length) return [];
+    await args.env.TOKYO_R2.delete(remaining);
+  }
+  return listAccountAssetR2KeysByIdentity(args.env, args.accountId, args.assetId);
 }
 
 async function buildAccountAssetMirrorIntegrity(env: Env, accountId: string): Promise<AssetMirrorIntegritySnapshot> {
@@ -576,28 +616,66 @@ async function handleDeleteAccountAsset(
   }
 
   const variantKeys = await loadAccountAssetVariantKeys(env, accountId, assetId);
-  for (const key of variantKeys) {
-    try {
-      await env.TOKYO_R2.delete(key);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return json(
-        {
-          error: {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail: `failed to delete blob ${key}: ${detail}`,
-          },
-        },
-        { status: 500 },
-      );
+  try {
+    if (variantKeys.length) {
+      await env.TOKYO_R2.delete(variantKeys);
     }
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return json(
+      {
+        error: {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: `failed to delete asset blobs: ${detail}`,
+        },
+      },
+      { status: 500 },
+    );
   }
 
   try {
-    await deleteAccountAssetUsageByIdentity(env, accountId, assetId);
-    await deleteAccountAssetVariantsByIdentity(env, accountId, assetId);
-    await deleteAccountAssetByIdentity(env, accountId, assetId);
+    await deleteAccountAssetMetadataWithRetries({ env, accountId, assetId, attempts: 3 });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return json(
+      {
+        error: {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail,
+        },
+      },
+      { status: 500 },
+    );
+  }
+
+  try {
+    const residualKeys = await sweepResidualAssetBlobs({ env, accountId, assetId, attempts: 2 });
+    if (residualKeys.length > 0) {
+      return json(
+        {
+          error: {
+            kind: 'INTEGRITY',
+            reasonKey: 'coreui.errors.assets.integrityMismatch',
+            detail: `Residual blobs remain after delete (${residualKeys.length})`,
+          },
+          accountId,
+          assetId,
+          integrity: {
+            ok: false,
+            reasonKey: ASSET_INTEGRITY_REASON_ORPHAN_BLOB,
+            dbVariantCount: 0,
+            r2ObjectCount: residualKeys.length,
+            missingInR2Count: 0,
+            orphanInR2Count: residualKeys.length,
+            missingInR2: [],
+            orphanInR2: residualKeys.slice(0, ASSET_IDENTITY_INTEGRITY_SAMPLE_LIMIT),
+          },
+        },
+        { status: 409 },
+      );
+    }
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return json(
@@ -623,11 +701,150 @@ async function handleDeleteAccountAsset(
   );
 }
 
+async function purgeAccountAssetMetadata(env: Env, accountId: string): Promise<void> {
+  const tables = ['account_asset_usage', 'account_asset_variants', 'account_assets'] as const;
+  for (const table of tables) {
+    const params = new URLSearchParams({ account_id: `eq.${accountId}` });
+    const res = await supabaseFetch(env, `/rest/v1/${table}?${params.toString()}`, {
+      method: 'DELETE',
+      headers: { Prefer: 'return=minimal' },
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`[tokyo] Supabase ${table} purge failed (${res.status}) ${text}`.trim());
+    }
+  }
+}
+
+async function purgeR2NamespacePrefix(env: Env, prefix: string): Promise<{ deleted: number; sweeps: number; remaining: number }> {
+  let deleted = 0;
+  let sweeps = 0;
+
+  // Deleting while paginating with cursors can lead to occasional misses depending on
+  // listing behavior. Keep it simple and run a couple sweeps until empty (or we stop).
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    sweeps += 1;
+    let cursor: string | undefined;
+    let sweepDeleted = 0;
+    do {
+      const listed = await env.TOKYO_R2.list({
+        prefix,
+        limit: ACCOUNT_ASSET_R2_LIST_PAGE_SIZE,
+        cursor,
+      });
+      const keys = listed.objects
+        .map((obj) => (typeof obj.key === 'string' ? obj.key.trim() : ''))
+        .filter(Boolean);
+      if (keys.length) {
+        await env.TOKYO_R2.delete(keys);
+        deleted += keys.length;
+        sweepDeleted += keys.length;
+      }
+      cursor = listed.truncated ? listed.cursor : undefined;
+    } while (cursor);
+
+    if (sweepDeleted === 0) {
+      return { deleted, sweeps, remaining: 0 };
+    }
+  }
+
+  const remaining = await env.TOKYO_R2.list({ prefix, limit: 1 });
+  return { deleted, sweeps, remaining: remaining.objects.length };
+}
+
+async function handlePurgeAccountAssets(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+
+  const accountId = String(accountIdRaw || '').trim();
+  if (!accountId || !isUuid(accountId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
+  }
+
+  const confirmRaw = (new URL(req.url).searchParams.get('confirm') || '').trim().toLowerCase();
+  const confirmed = confirmRaw === '1' || confirmRaw === 'true' || confirmRaw === 'yes';
+  if (!confirmed) {
+    return json(
+      {
+        error: { kind: 'DENY', reasonKey: 'coreui.errors.account.assetsPurgeConfirmRequired' },
+        accountId,
+        requiresConfirm: true,
+      },
+      { status: 409 },
+    );
+  }
+
+  try {
+    await purgeAccountAssetMetadata(env, accountId);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return json(
+      {
+        error: {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail,
+        },
+      },
+      { status: 500 },
+    );
+  }
+
+  const prefix = resolveAccountAssetNamespacePrefix(accountId);
+  try {
+    const r2 = await purgeR2NamespacePrefix(env, prefix);
+    if (r2.remaining > 0) {
+      return json(
+        {
+          error: {
+            kind: 'INTEGRITY',
+            reasonKey: 'coreui.errors.assets.integrityMismatch',
+            detail: `Residual blobs remain after purge (prefix=${prefix}, remaining=${r2.remaining})`,
+          },
+          accountId,
+          deletedCount: r2.deleted,
+          sweeps: r2.sweeps,
+          remaining: r2.remaining,
+        },
+        { status: 409 },
+      );
+    }
+
+    return json(
+      {
+        ok: true,
+        accountId,
+        deletedCount: r2.deleted,
+        sweeps: r2.sweeps,
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return json(
+      {
+        error: {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: `failed to purge account asset blobs: ${detail}`,
+        },
+        accountId,
+      },
+      { status: 500 },
+    );
+  }
+}
+
 
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
+  handlePurgeAccountAssets,
   handleUploadAccountAsset,
 };

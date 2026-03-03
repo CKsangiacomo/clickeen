@@ -14,12 +14,7 @@ Usage:
   node scripts/ci/check-bob-bootstrap-boundary.mjs [--mode <strict|report>] [--report-only]
 `;
 
-const ALLOWLISTED_BOOTSTRAP_OPTION_COUNTS = {
-  'bob/lib/api/paris/proxy-helpers.ts': 1,
-  'bob/app/api/assets/upload/route.ts': 1,
-  'bob/app/api/assets/[accountId]/route.ts': 1,
-  'bob/app/api/assets/[accountId]/[assetId]/route.ts': 1,
-};
+const ALLOWLISTED_BOOTSTRAP_OPTION_COUNTS = {};
 
 const BOOTSTRAP_OPTION_PATTERN = /allowLocalDevBootstrap\s*:/g;
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../env/berlin';
 
-type SessionCookieSpec = {
+export type SessionCookieSpec = {
   name: string;
   value: string;
   maxAge: number;
@@ -39,8 +39,53 @@ type BerlinRefreshResult =
       status: number;
     };
 
-const ACCESS_COOKIE = 'ck-access-token';
-const REFRESH_COOKIE = 'ck-refresh-token';
+const SHARED_ACCESS_COOKIE = 'ck-access-token';
+const SHARED_REFRESH_COOKIE = 'ck-refresh-token';
+
+function isLocalHostname(hostname: string): boolean {
+  const normalized = hostname.trim().toLowerCase();
+  return normalized === 'localhost' || normalized === '127.0.0.1';
+}
+
+export function resolveSessionCookieNames(): { access: string; refresh: string } {
+  return { access: SHARED_ACCESS_COOKIE, refresh: SHARED_REFRESH_COOKIE };
+}
+
+export function resolveSessionCookieDomain(request: NextRequest): string | undefined {
+  const hostname = request.nextUrl.hostname.trim().toLowerCase();
+  if (!hostname || isLocalHostname(hostname)) return undefined;
+  if (hostname === 'clickeen.com') return '.clickeen.com';
+  if (!hostname.endsWith('.clickeen.com')) return undefined;
+
+  const parts = hostname.split('.').filter(Boolean);
+  if (parts.length <= 2) return '.clickeen.com';
+  return `.${parts.slice(1).join('.')}`;
+}
+
+export function applySessionCookies(
+  response: NextResponse,
+  request: NextRequest,
+  cookies?: SessionCookieSpec[],
+): NextResponse {
+  if (!cookies?.length) return response;
+  const secure = request.nextUrl.protocol === 'https:';
+  const domain = resolveSessionCookieDomain(request);
+
+  for (const cookie of cookies) {
+    response.cookies.set({
+      name: cookie.name,
+      value: cookie.value,
+      httpOnly: true,
+      secure,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: cookie.maxAge,
+      ...(domain ? { domain } : {}),
+    });
+  }
+
+  return response;
+}
 
 function unauthorized(reasonKey: string, status = 401) {
   return NextResponse.json(
@@ -94,14 +139,15 @@ function tokenIsExpired(token: string, leewaySeconds = 30): boolean {
 }
 
 function extractSessionTokens(request: NextRequest): TokenBundle {
-  const accessToken = request.cookies.get(ACCESS_COOKIE)?.value?.trim() || null;
-  const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value?.trim() || null;
+  const names = resolveSessionCookieNames();
+  const accessToken = request.cookies.get(names.access)?.value?.trim() || null;
+  const refreshToken = request.cookies.get(names.refresh)?.value?.trim() || null;
 
   return {
     accessToken,
     refreshToken,
-    accessCookieName: ACCESS_COOKIE,
-    refreshCookieName: REFRESH_COOKIE,
+    accessCookieName: names.access,
+    refreshCookieName: names.refresh,
   };
 }
 

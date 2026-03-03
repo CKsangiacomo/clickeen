@@ -1,5 +1,7 @@
 # PRD 50 - DevStudio/Roma Runtime Parity (Host + Context)
 
+> superseded by PRD 54
+
 ## Simple asset tenets (hard, cross-PRD)
 
 1. Asset flow is straightforward. User uploads Asset A in Bob -> Asset A is immediately linked in the instance and stored in Tokyo. User uploads Asset B in Bob -> Asset B is immediately linked in the instance and stored in Tokyo. Bob does not manage assets.

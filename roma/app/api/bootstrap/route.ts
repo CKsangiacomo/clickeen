@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveParisBaseUrl } from '../../../lib/env/paris';
-import { resolveSessionBearer } from '../../../lib/auth/session';
+import { applySessionCookies, resolveSessionBearer } from '../../../lib/auth/session';
 
 export const runtime = 'edge';
 
@@ -56,20 +56,7 @@ export async function GET(request: NextRequest) {
     response.headers.set('cdn-cache-control', 'no-store');
     response.headers.set('cloudflare-cdn-cache-control', 'no-store');
 
-    if (auth.setCookies?.length) {
-      const secure = request.nextUrl.protocol === 'https:';
-      for (const cookie of auth.setCookies) {
-        response.cookies.set({
-          name: cookie.name,
-          value: cookie.value,
-          httpOnly: true,
-          secure,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: cookie.maxAge,
-        });
-      }
-    }
+    applySessionCookies(response, request, auth.setCookies);
 
     return response;
   } catch (error) {

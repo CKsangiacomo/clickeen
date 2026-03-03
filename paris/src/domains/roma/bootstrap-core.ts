@@ -234,6 +234,47 @@ async function buildRomaUsageDomain(args: {
   };
 }
 
+type AccountNoticeBootstrapRow = {
+  notice_id: string;
+  kind: string;
+  payload: unknown;
+  email_pending: boolean;
+  created_at: string;
+};
+
+function normalizeNoticePayload(payload: unknown): Record<string, unknown> {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return {};
+  return payload as Record<string, unknown>;
+}
+
+async function loadAccountNoticesForBootstrap(
+  env: Env,
+  accountId: string,
+): Promise<RomaBootstrapDomainsPayload['settings']['notices']> {
+  const params = new URLSearchParams({
+    select: 'notice_id,kind,payload,email_pending,created_at',
+    account_id: `eq.${accountId}`,
+    status: 'eq.open',
+    order: 'created_at.desc',
+    limit: '20',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_notices?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load account notices (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = ((await res.json().catch(() => null)) as AccountNoticeBootstrapRow[] | null) ?? [];
+  return rows
+    .map((row) => ({
+      noticeId: row.notice_id,
+      kind: row.kind,
+      payload: normalizeNoticePayload(row.payload),
+      createdAt: row.created_at,
+      emailPending: Boolean(row.email_pending),
+    }))
+    .filter((row) => Boolean(row.noticeId));
+}
+
 async function buildRomaSettingsDomain(args: {
   env: Env;
   accountId: string;
@@ -248,7 +289,10 @@ async function buildRomaSettingsDomain(args: {
     role: MemberRole;
   };
 }): Promise<RomaBootstrapDomainsPayload['settings']> {
-  const accountWorkspaces = await loadAccountWorkspaces(args.env, args.accountId);
+  const [accountWorkspaces, notices] = await Promise.all([
+    loadAccountWorkspaces(args.env, args.accountId),
+    loadAccountNoticesForBootstrap(args.env, args.accountId),
+  ]);
   const accountRoleLabelValue = accountRoleLabel(args.accountRole);
   return {
     accountSummary: {
@@ -257,6 +301,7 @@ async function buildRomaSettingsDomain(args: {
       role: accountRoleLabelValue,
       workspaceCount: accountWorkspaces.length,
     },
+    notices,
     workspaceSummary: {
       workspaceId: args.workspace.workspaceId,
       accountId: args.workspace.accountId,

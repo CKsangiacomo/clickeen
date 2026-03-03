@@ -73,55 +73,41 @@ Rule: catalogs are content-hashed and cacheable; the manifest is the indirection
 
 Use `l10n` when the surface is “content inside an instance config” (copy, headings, CTA labels, etc.).
 
-**Tokyo output (layered)**
+**Tokyo output (served; PRD 54)**
 
-- `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`
-- `tokyo/l10n/instances/<publicId>/index.json` (layer keys + optional geoTargets for locale selection)
-- `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json` (allowlist snapshot values for safe stale apply)
+When an instance is live (`status=published`), Tokyo contains exactly two things for l10n:
 
-Rule: overlays are **set-only ops** applied on top of the base instance config at runtime.
-Rule: `baseFingerprint` is computed from the **allowlist snapshot** (translatable fields only), not the full config.
+- Full text pack (immutable):
+  - `l10n/instances/<publicId>/packs/<locale>/<textFp>.json`
+- Live locale pointer (mutable, tiny, `no-store`):
+  - `l10n/instances/<publicId>/live/<locale>.json` → `{ "textFp": "..." }`
 
-#### Why you see many locale files changing locally (expected)
+Rules:
+- Venice public never reads DB. It only reads the live pointers + packs from Tokyo.
+- `textFp` is the sha256 of the stable JSON bytes of the full text pack.
+- Text packs are **full packs** (not diffs). They contain only allowlisted keys.
 
-Two things happen when you run builds locally (`pnpm build` / `pnpm build:l10n`) or when CI publishes:
+Where the DB fits (write plane only):
+- Supabase stores the editable source (set-only ops) in `widget_instance_overlays`:
+  - `layer=locale` = generated/managed translation ops (agent/import/manual)
+  - `layer=user` = user overrides on top of the locale translation (delete this layer to “revert to auto-translate”)
+- Every overlay row is keyed by `baseFingerprint` (sha256 of the current allowlist snapshot).
+- Stale writes are rejected when `baseFingerprint` does not match.
+- These ops are **never** served publicly.
+- When an overlay changes and the instance is live, Paris rebuilds the full text pack and asks Tokyo-worker to write it:
+  - `fullPack = baseSnapshot + localeOps + userOps` (user ops win per key)
 
-- `l10n/instances/**` is the **repo-tracked overlay source** for curated/main instances (human/agent-curated outputs).
-- `tokyo/l10n/**` is the **deterministic build output** (what Venice/Prague consume locally and what gets uploaded to Tokyo/R2).
+**Generation + mirroring (current after PRD 54)**
 
-When the instance allowlist snapshot changes (new copy path, removed path, etc.), the `baseFingerprint` changes. That causes:
-
-- New `*.ops.json` files to appear under a new fingerprint directory.
-- Old fingerprint files to be deleted as stale.
-
-This is not “manual editing of locales” — it’s the expected artifact regeneration. Commit these changes together with the source widget/content changes.
-
-**Generation (current)**
-
-- Paris enqueues localization jobs on publish/update.
-- Paris builds a translatable snapshot from the widget allowlist and stores it in `l10n_base_snapshots`.
-- Paris diffs snapshots to compute `changedPaths` + `removedPaths`, and enqueues jobs with only the deltas.
-- Paris tracks generation state in `l10n_generate_state` (keyed by `publicId + layer + layerKey + baseFingerprint`) and schedules bounded retries (max attempts), then marks terminal failures.
-- Paris publish-status exposes finite orchestration buckets (`inFlight`, `retrying`, `failedTerminal`, `needsEnqueue`) so DevStudio/Bob can show explicit non-looping states.
-- Paris publish-status includes blocker reason counts (`stageReasons`) and an explicit operator hint (`nextAction`) to remove blackbox debugging.
-- `GET /l10n/status` and `GET /publish/status` are read-only status surfaces: they do not enqueue jobs and do not mutate state.
-- `GET /publish/status` falls back to overlay truth (`widget_instance_overlays.base_fingerprint`) so locales with matching overlays are treated as succeeded even if old state rows are absent.
-- Convergence gate for the canonical local stack: `pnpm gate:l10n` (polls `/publish/status` + `/l10n/status` for the curated/main instance set and fails on non-finite convergence, terminal failures, stalled blocked states, or freshness mismatches).
-- Cron retries include stale `queued`/`running` rows (stale in-flight recovery), and publish-triggered enqueue respects `failed.nextAttemptAt` backoff unless explicitly forced.
-- San Francisco runs the localization agent, translating only `changedPaths`, removing `removedPaths`, and emitting set-only ops.
-- Localization prompts preserve source acronym style and must not introduce parenthetical acronym expansions absent from source (especially heading/title strings).
-- San Francisco batches translation payloads and validates placeholder/tag parity plus richtext anchor integrity (text-bearing link parity + href parity) before writing locale ops; richtext items that fail parity auto-fallback to segment translation.
-- San Francisco Prague-string translation (`/v1/l10n/translate`) also enforces placeholder/tag/anchor parity for richtext items before returning translated outputs.
-- San Francisco bypasses LLM calls for obvious non-linguistic literals (URLs, emails, numeric/symbol-only strings) and carries them through unchanged.
-- San Francisco reports job status back to Paris via `POST /api/l10n/jobs/report` (`running | succeeded | failed | superseded`).
-- Paris stores overlays in Supabase (`widget_instance_overlays`, layer + layer_key).
-- Paris rebases user overrides onto the new snapshot fingerprint (drops removed paths, keeps valid overrides).
-- Paris marks `l10n_publish_state` as dirty and enqueues publish jobs.
-- Published base saves enqueue render snapshot regeneration asynchronously. Publish persistence does not block on EN pointer readiness; convergence is observed via publish-status.
-- Tokyo-worker materializes overlays into Tokyo/R2 using deterministic paths (no global manifest) and writes `index.json` for locale selection.
-- Venice public snapshot serving is strict and revision-coherent:
-  - **fresh/current revision:** locale artifact serves directly
-  - **missing locale artifact:** locale is unavailable (no serve-time EN fallback)
+- Paris extracts the base text snapshot from the widget allowlist (`tokyo/widgets/<widgetType>/localization.json`).
+- Paris diffs base snapshots to compute `changedPaths` + `removedPaths` and enqueues San Francisco jobs.
+- San Francisco translates only `changedPaths` and writes set-only ops back to Paris (`widget_instance_overlays`, `layer=locale`).
+- If the instance is live:
+  - Paris enqueues `write-text-pack` for that locale (full pack = base snapshot + locale ops + user ops).
+  - If SEO/GEO is entitled+enabled, Paris also enqueues `write-meta-pack` for that locale.
+- When an instance first goes live, Paris seeds **every entitled locale** with a text pack so the embed never requests a missing locale pointer.
+- When workspace locale/policy changes, Paris resyncs the Tokyo live pointers for all already-live instances (and seeds any newly added locales).
+- Unpublish (`status=unpublished`) deletes the full `l10n/instances/<publicId>/...` subtree from Tokyo (mirror rule).
 
 **Widget allowlist (authoritative)**
 
@@ -131,13 +117,15 @@ This is not “manual editing of locales” — it’s the expected artifact reg
 
 **Canonical store (Supabase)**
 
-- `widget_instance_overlays` is the layered source of truth for instance overlays.
-- `ops` = layer overlay ops (agent/system/base).
-- `user_ops` = manual overrides for layer=user only (set-only ops), merged last for the user layer.
-- Tokyo overlay files contain merged ops for layer=user (`ops + user_ops`); other layers use `ops` only.
-- `l10n_overlay_versions` is the version ledger used for cleanup and future rollbacks.
-- Tokyo-worker prunes versions using the `l10n.versions.max` entitlement cap.
-- `geo_targets` scopes locale selection only (fr vs fr-CA); geo overrides live in the geo layer.
+- `widget_instance_overlays` stores per-instance overlay ops for authoring/generation (write plane only).
+  - Locale translations: `layer='locale'`, `layer_key=<locale>`, `ops=[{ op:'set', path, value }]`, `base_fingerprint=<hash of base snapshot>`.
+  - User overrides: `layer='user'`, `layer_key=<locale>`, `ops=[{ op:'set', path, value }]`, `base_fingerprint=<hash of base snapshot>`.
+- These overlay ops are never served publicly.
+- Public embeds read only Tokyo packs + live pointers (`l10n/instances/.../live/*.json` and `l10n/instances/.../packs/...`).
+
+Notes:
+- `user_ops` is not used by PRD 54; overrides are stored as a separate `layer='user'` row so they can be reverted independently.
+- `geo_targets` is not used by PRD 54 public embed; IP mapping is driven by `localePolicy.ip.*` in `renders/.../live/r.json`.
 
 ### Prague localization (system-owned, Babel-aligned)
 

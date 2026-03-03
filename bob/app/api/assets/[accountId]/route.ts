@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isUuid } from '@clickeen/ck-contracts';
-import { applySessionCookies } from '../../../../lib/api/paris/proxy-helpers';
+import { applySessionCookies, resolveParisSession, withParisDevAuthorization } from '../../../../lib/api/paris/proxy-helpers';
 import { resolveParisBaseUrl } from '../../../../lib/env/paris';
-import {
-  isDevstudioLocalBootstrapRequest,
-  resolveSessionBearer,
-  type SessionCookieSpec,
-} from '../../../../lib/auth/session';
+import { type SessionCookieSpec } from '../../../../lib/auth/session';
 
 export const runtime = 'edge';
 
@@ -42,9 +38,7 @@ export function OPTIONS() {
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
-  const session = await resolveSessionBearer(request, {
-    allowLocalDevBootstrap: isDevstudioLocalBootstrapRequest(request),
-  });
+  const session = await resolveParisSession(request);
   if (!session.ok) {
     return withCorsAndSession(request, session.response);
   }
@@ -62,8 +56,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${session.accessToken}`);
+  const headers = withParisDevAuthorization(new Headers(), session.accessToken);
 
   try {
     const res = await fetch(resolveParisAssetsUrl(request, accountId), {

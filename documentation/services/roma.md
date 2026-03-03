@@ -35,8 +35,8 @@ Roma bootstraps from:
 
 `/api/bootstrap` proxies to Paris `GET /api/roma/bootstrap` with the user bearer token.
 When no valid session is present, it returns `401` with auth error payload (`coreui.errors.auth.required`).
-Roma does not auto-bootstrap local auth sessions; local and Cloudflare require real Berlin session tokens.
-Roma also exposes `GET /api/session/access-token` for Builder->Bob auth handoff; it resolves the current bearer server-side and forwards refreshed auth cookies when rotation occurs.
+Roma does not auto-bootstrap tool sessions; supported Roma runtimes always require real Berlin session tokens.
+Roma does not bridge session tokens through browser JS. Builder relies on shared httpOnly cookies across Roma/Bob on a custom `*.clickeen.com` domain.
 Roma exposes explicit session endpoints for product auth UX:
 - `POST /api/session/login` (email/password -> Berlin auth login -> httpOnly session cookies)
 - `POST /api/session/logout` (best-effort Berlin logout + clears auth cookies)
@@ -73,12 +73,11 @@ Roma injects both authz headers for Paris calls through `fetchParisJson` (`roma/
 
 `BuilderDomain` flow:
 1. Resolve active workspace + target publicId.
-2. Resolve Bob handoff bearer (`/api/session/access-token`).
-3. Load instance payload (`/api/paris/instance/:publicId?workspaceId=...`).
-4. Load compiled payload (`/api/widgets/:widgetType/compiled`).
-5. Wait for Bob `bob:session-ready` (`boot=message`).
-6. Send `ck:open-editor` with `requestId + sessionId + sessionAccessToken`.
-7. Require ack/applied lifecycle (`bob:open-editor-ack` → `bob:open-editor-applied` or `bob:open-editor-failed`).
+2. Load instance payload (`/api/paris/instance/:publicId?workspaceId=...`).
+3. Load compiled payload (`/api/widgets/:widgetType/compiled`).
+4. Wait for Bob `bob:session-ready` (`boot=message`).
+5. Send `ck:open-editor` with `requestId + sessionId` (no bearer handoff; Bob relies on shared cookies).
+6. Require ack/applied lifecycle (`bob:open-editor-ack` → `bob:open-editor-applied` or `bob:open-editor-failed`).
 
 Notes:
 - Builder retries open while waiting for ack (bounded attempts + timeout).
@@ -105,46 +104,12 @@ Assets domain behavior:
 
 ## Local vs cloud-dev
 
-### Local
-- Roma runs at `http://localhost:3004` via `bash scripts/dev-up.sh`.
-- Canonical entry: `http://localhost:3004/home`.
-- Uses local Paris through `PARIS_BASE_URL=http://localhost:3001`.
-- Uses local Berlin auth through `BERLIN_BASE_URL=http://localhost:3005`.
-- `dev-up` exports `ENV_STAGE=local` for Bob/Roma so local-only bypass logic stays stage-gated.
-- `dev-up` points Paris/Workers to local Supabase by default; remote Supabase is opt-in (`DEV_UP_USE_REMOTE_SUPABASE=1`).
-- `dev-up` seeds deterministic local auth personas (non-destructive) for parity testing:
-  - `local.free@clickeen.local` -> `ck-demo` (`free`, `owner`)
-  - `local.paid@clickeen.local` -> `ck-dev` (`tier3`, `owner`)
-  - `local.admin@clickeen.local` -> `ck-dev` (`tier3`, `admin`)
-  Admin identity env vars:
-  - `CK_ADMIN_EMAIL`
-  - `CK_ADMIN_PASSWORD`
-  `CK_ADMIN_PASSWORD` is required for local persona seeding and local DevStudio auth bootstrap.
-
 ### Cloud-dev
-- Roma runtime target: `https://roma.dev.clickeen.com` (or deployment-specific Pages domain).
+- Roma runtime target: `https://roma.dev.clickeen.com` (Pages `*.pages.dev` deploys are not supported for authenticated Builder because cookies cannot be shared to Bob).
 - Uses cloud-dev Paris/Tokyo/Bob URLs from env/config.
-
-## Local smoke baseline (2026-02-17)
-
-Validated flow in local stack:
-1. `POST /api/assets/upload` (Bob proxy -> Tokyo-worker)
-2. `GET /api/bootstrap` (Roma bootstrap; `domains.assets` carries account asset list + integrity snapshot)
-3. `DELETE /api/assets/:accountId/:assetId` (Roma proxy -> Bob -> Paris -> Tokyo-worker)
-4. `GET /api/bootstrap` confirms hard-delete removal
-
-Observed timings (single machine, warm services):
-- Paris `GET /api/me?workspaceId=...`: `~12ms`
-- Bob upload proxy: `~55ms`
-- Roma account assets list: `~48-89ms` over 5 consecutive calls
-- Roma account asset delete: `~49ms`
-- Roma list after delete: `~48ms`
-
-Validation result:
-- Uploaded asset present before delete (`count=1`) and absent after delete (`count=0`).
 
 ## Operational notes
 
 - Canonical startup script is `bash scripts/dev-up.sh`.
-- `dev-up` starts Roma with the rest of the local stack and relies on process/port health checks only.
+- Roma is **cloud-only** for supported product behavior. Local is for building blocks only (Bob/Paris/Berlin/Tokyo/Venice/DevStudio).
 - If services appear down after a successful start, verify the parent shell/session that launched `dev-up` is still alive.

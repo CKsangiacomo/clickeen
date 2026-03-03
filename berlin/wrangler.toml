@@ -7,8 +7,9 @@ routes = [
 ]
 
 [vars]
-BERLIN_ISSUER = "https://berlin.dev.clickeen.com"
+BERLIN_ISSUER = "https://berlin-dev.clickeen.workers.dev"
 BERLIN_AUDIENCE = "clickeen.product"
+BERLIN_LOGIN_CALLBACK_URL = "https://roma.dev.clickeen.com/api/session/login/google/callback"
 
 [[kv_namespaces]]
 binding = "BERLIN_SESSION_KV"

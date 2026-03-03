@@ -20,6 +20,7 @@ import {
   isCuratedInstanceRow,
   resolveCuratedRowKind,
 } from '../../shared/instances';
+import type { WorkspaceL10nPolicy } from '../../shared/l10n';
 import { normalizeActiveEnforcement } from './service';
 export type WorkspaceLocaleOverlayPayload = {
   locale: string;
@@ -53,6 +54,7 @@ export type WorkspaceInstanceEnvelope = {
     workspaceLocales: string[];
     invalidWorkspaceLocales: string | null;
     localeOverlays: WorkspaceLocaleOverlayPayload[];
+    policy: WorkspaceL10nPolicy;
   };
 };
 
@@ -70,6 +72,8 @@ export function validateWorkspaceInstanceEnvelope(payload: WorkspaceInstanceEnve
   if (!payload.workspace?.tier) return 'workspace.tier missing';
   if (!Array.isArray(payload.localization.workspaceLocales)) return 'localization.workspaceLocales invalid';
   if (!Array.isArray(payload.localization.localeOverlays)) return 'localization.localeOverlays invalid';
+  if (!payload.localization.policy || typeof payload.localization.policy !== 'object') return 'localization.policy invalid';
+  if ((payload.localization.policy as any).v !== 1) return 'localization.policy.v invalid';
   return null;
 }
 
@@ -174,11 +178,12 @@ export async function rollbackInstanceWriteOnUsageSyncFailure(args: {
     config: args.before.config,
   };
   if (args.isCurated) {
+    const beforeCurated = args.before as CuratedInstanceRow;
     rollbackPayload = {
       ...rollbackPayload,
-      status: 'published',
+      status: beforeCurated.status,
       kind: resolveCuratedRowKind(args.publicId),
-      meta: (args.before as CuratedInstanceRow).meta ?? null,
+      meta: beforeCurated.meta ?? null,
     };
   } else {
     const beforeUser = args.before as InstanceRow;

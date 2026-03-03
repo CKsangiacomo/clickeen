@@ -17,6 +17,19 @@ function readNotFoundCopyFromSource() {
 
 export async function runRomaAssetsUiCopyScenario({ profile, context }) {
   const checks = [];
+  if (profile.name === 'local') {
+    checks.push(
+      makeCheck('Roma assets UI copy scenario is skipped in local mode (Roma is cloud-only)', true, {
+        actual: profile.name,
+      }),
+    );
+    return {
+      scenario: 'roma-assets-ui-copy',
+      passed: scenarioPassed(checks),
+      checks,
+      fingerprint: { skipped: true },
+    };
+  }
   const accountId = readString(context.accountId);
 
   if (!accountId) {

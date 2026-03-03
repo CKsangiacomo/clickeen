@@ -56,7 +56,8 @@ export function PublishEmbedModal({ open, onClose }: PublishEmbedModalProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
-  const seoGeoEnabled = Boolean((session.instanceData as any)?.seoGeo?.enabled === true);
+  const seoGeoEntitled = session.policy.flags['embed.seoGeo.enabled'] === true;
+  const seoGeoEnabled = seoGeoEntitled;
 
   const embed = useMemo(() => {
     let veniceBase = '';
@@ -75,7 +76,7 @@ export function PublishEmbedModal({ open, onClose }: PublishEmbedModalProps) {
 
     const scriptlessSnippet = canRender
       ? `<iframe
-  src="${veniceBase}/e/${encodeURIComponent(publicId)}?locale=en"
+  src="${veniceBase}/e/${encodeURIComponent(publicId)}"
   title="Clickeen widget"
   loading="lazy"
   referrerpolicy="no-referrer"
@@ -201,7 +202,7 @@ export function PublishEmbedModal({ open, onClose }: PublishEmbedModalProps) {
                 </>
               ) : (
                 <div className="label-s label-muted">
-                  Enable “SEO/GEO optimization” in Settings to unlock the SEO/GEO embed snippet.
+                  SEO/GEO optimized embed is only available on entitled tiers.
                 </div>
               )}
             </div>

@@ -43,11 +43,14 @@ function normalizeImageValue(raw: unknown): ImageValue {
     return { fit: 'cover', position: 'center', repeat: 'no-repeat' };
   }
   const value = raw as Record<string, unknown>;
-  const assetVersionIdRaw =
+  const assetVersionIdDirect =
     value.asset && typeof value.asset === 'object' && !Array.isArray(value.asset)
       ? String((value.asset as Record<string, unknown>).versionId || '').trim()
       : '';
-  const assetVersionId = assetVersionIdToPath(assetVersionIdRaw) ? assetVersionIdRaw : '';
+  const assetVersionIdRaw = assetVersionIdDirect || '';
+  const assetVersionIdFromRef = assetVersionIdFromUrl(assetVersionIdRaw) ?? '';
+  const assetVersionIdCandidate = assetVersionIdToPath(assetVersionIdRaw) ? assetVersionIdRaw : assetVersionIdFromRef;
+  const assetVersionId = assetVersionIdToPath(assetVersionIdCandidate) ? assetVersionIdCandidate : '';
   const name = typeof value.name === 'string' ? value.name.trim() : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
@@ -66,16 +69,20 @@ function normalizeVideoValue(raw: unknown): VideoValue {
     return { fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true };
   }
   const value = raw as Record<string, unknown>;
-  const assetVersionIdRaw =
+  const assetVersionIdDirect =
     value.asset && typeof value.asset === 'object' && !Array.isArray(value.asset)
       ? String((value.asset as Record<string, unknown>).versionId || '').trim()
       : '';
-  const posterVersionIdRaw =
+  const posterVersionIdDirect =
     value.poster && typeof value.poster === 'object' && !Array.isArray(value.poster)
       ? String((value.poster as Record<string, unknown>).versionId || '').trim()
       : '';
-  const assetVersionId = assetVersionIdToPath(assetVersionIdRaw) ? assetVersionIdRaw : '';
-  const posterVersionId = assetVersionIdToPath(posterVersionIdRaw) ? posterVersionIdRaw : '';
+  const assetVersionIdFromRef = assetVersionIdFromUrl(assetVersionIdDirect || '') ?? '';
+  const posterVersionIdFromRef = assetVersionIdFromUrl(posterVersionIdDirect || '') ?? '';
+  const assetVersionIdCandidate = assetVersionIdToPath(assetVersionIdDirect) ? assetVersionIdDirect : assetVersionIdFromRef;
+  const posterVersionIdCandidate = assetVersionIdToPath(posterVersionIdDirect) ? posterVersionIdDirect : posterVersionIdFromRef;
+  const assetVersionId = assetVersionIdToPath(assetVersionIdCandidate) ? assetVersionIdCandidate : '';
+  const posterVersionId = assetVersionIdToPath(posterVersionIdCandidate) ? posterVersionIdCandidate : '';
   const name = typeof value.name === 'string' ? value.name.trim() : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';

@@ -6,7 +6,6 @@ import type {
   L10nGenerateStatus,
 } from '../../shared/types';
 import { readJson } from '../../shared/http';
-import { apiError } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
 
 async function loadInstanceOverlay(
@@ -53,41 +52,6 @@ async function loadInstanceOverlays(env: Env, publicId: string): Promise<Instanc
     );
   }
   return ((await res.json()) as InstanceOverlayRow[]).filter(Boolean);
-}
-
-async function markL10nPublishDirty(args: {
-  env: Env;
-  publicId: string;
-  layer: string;
-  layerKey: string;
-  baseFingerprint: string;
-}): Promise<Response | null> {
-  const { env, publicId, layer, layerKey, baseFingerprint } = args;
-  const payload = {
-    public_id: publicId,
-    locale: layer === 'locale' ? layerKey : null,
-    layer,
-    layer_key: layerKey,
-    base_fingerprint: baseFingerprint,
-    publish_state: 'dirty',
-    publish_attempts: 0,
-    publish_next_at: null,
-    last_error: null,
-  };
-  const res = await supabaseFetch(
-    env,
-    `/rest/v1/l10n_publish_state?on_conflict=public_id,layer,layer_key`,
-    {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify(payload),
-    },
-  );
-  if (!res.ok) {
-    const detail = await readJson(res);
-    return apiError('INTERNAL_ERROR', 'Failed to mark l10n publish state', 500, detail);
-  }
-  return null;
 }
 
 const L10N_GENERATE_STATUS: ReadonlySet<L10nGenerateStatus> = new Set([
@@ -409,7 +373,6 @@ export {
   loadLatestL10nSnapshot,
   loadL10nGenerateStateRow,
   loadL10nGenerateStates,
-  markL10nPublishDirty,
   resolveL10nFailureRetryState,
   supersedeL10nGenerateStates,
   toRetryExhaustedError,

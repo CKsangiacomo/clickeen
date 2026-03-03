@@ -273,7 +273,7 @@ function assertAssetLifecycleContracts49B() {
   assertExcludes('paris/src/domains/accounts/index.ts', ['handleAccountAssetReplaceContent']);
 
   assertIncludes('venice/lib/tokyo.ts', ["const isAccountAssetVersion = normalized.startsWith('/assets/v/');"]);
-  assertIncludes('tokyo-worker/src/index.ts', ["reasonKey: 'tokyo.errors.render.legacyIndexUnsupported'"]);
+  assertIncludes('tokyo-worker/src/index.ts', ["reasonKey: 'tokyo.errors.render.legacyUnsupported'"]);
   assertExcludes('tokyo-worker/src/index.ts', [
     "if (pathname.startsWith('/arsenale/'))",
     "reasonKey: 'tokyo.errors.assets.legacyPathUnsupported'",
@@ -355,11 +355,15 @@ function assertBootstrapContracts49C() {
 
 function main() {
   assertIncludes('venice/lib/tokyo.ts', ["cache: 'force-cache'", "cache: 'no-store'", 'resolveTokyoCache']);
-  assertIncludes('venice/lib/l10n.ts', ['/l10n/instances/', 'index.json']);
+  assertIncludesAny(['venice/app/e/[publicId]/route.ts', 'venice/lib/tokyo.ts', 'venice/app/l10n/[...path]/route.ts'], [
+    '/l10n/instances/',
+    'index.json',
+  ]);
 
-  assertIncludesAny(['tokyo-worker/src/index.ts', 'tokyo-worker/src/domains/l10n-core.ts', 'tokyo-worker/src/domains/l10n.ts'], [
-    'l10n/instances/${publicId}/${layer}/${layerKey}/',
-    'l10n/instances/${publicId}/index.json',
+  assertIncludesAny(['tokyo-worker/src/index.ts', 'tokyo-worker/src/domains/render.ts', 'tokyo-worker/src/domains/l10n-read.ts'], [
+    'l10n/instances/${publicId}/live',
+    'l10n/instances/${publicId}/packs',
+    '/index.json',
   ]);
   assertExcludes('tokyo/dev-server.mjs', ['l10n/manifest.json']);
   assertSchemas();

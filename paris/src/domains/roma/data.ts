@@ -156,7 +156,7 @@ async function loadWorkspaceWidgetsInstances(
     order: 'created_at.desc',
     limit: '500',
   });
-  withDisplayParams.set('select', 'public_id,display_name,workspace_id,widget_id');
+  withDisplayParams.set('select', 'public_id,status,display_name,workspace_id,widget_id');
   const instanceRes = await supabaseFetch(env, `/rest/v1/widget_instances?${withDisplayParams.toString()}`, {
     method: 'GET',
   });
@@ -174,10 +174,12 @@ async function loadWorkspaceWidgetsInstances(
   return rows.map((row) => {
     const widgetId = asTrimmedString(row.widget_id);
     const widgetType = widgetId ? widgetTypeById.get(widgetId) ?? 'unknown' : 'unknown';
+    const status = row.status === 'published' ? 'published' : 'unpublished';
     return {
       publicId: row.public_id,
       widgetType,
       displayName: asTrimmedString(row.display_name) || DEFAULT_INSTANCE_DISPLAY_NAME,
+      status,
       workspaceId: asTrimmedString(row.workspace_id) || null,
       source: 'workspace',
       actions: {
@@ -235,6 +237,7 @@ function mapCuratedRowsToRomaInstances(rows: CuratedWidgetInstanceListRow[]): Ro
       publicId,
       widgetType: normalizeWidgetTypeLabel(row.widget_type),
       displayName: formatCuratedDisplayName(meta, publicId),
+      status: 'published',
       workspaceId: null,
       source: 'curated',
       actions: {

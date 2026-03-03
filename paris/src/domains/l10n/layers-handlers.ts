@@ -1,4 +1,4 @@
-import type { Env, InstanceOverlayRow, L10nPublishQueueJob } from '../../shared/types';
+import type { Env, InstanceOverlayRow } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { apiError, ckError } from '../../shared/errors';
 import { asTrimmedString, isRecord } from '../../shared/validation';
@@ -7,10 +7,12 @@ import {
   loadWidgetLayerAllowlist,
   normalizeGeoCountries,
   normalizeL10nSource,
+  normalizeLocaleList,
   normalizeLayer,
   normalizeLayerKey,
   resolveUserOps,
   validateL10nOps,
+  resolveWorkspaceL10nPolicy,
 } from '../../shared/l10n';
 import {
   assertPublicId,
@@ -27,11 +29,13 @@ import {
   loadInstanceOverlay,
   loadInstanceOverlays,
   loadL10nGenerateStateRow,
-  markL10nPublishDirty,
   updateL10nGenerateStatus,
 } from './service';
 import { enforceLayerEntitlement } from './shared';
 import { resolveL10nPlanningSnapshot } from './planning';
+import { enqueueTokyoMirrorJob, resolveActivePublishLocales } from '../workspaces/service';
+import { applyTextPackToConfig, materializeTextPack, stripTextFromConfig } from '../../shared/mirror-packs';
+import { generateMetaPack } from '../../shared/seo-geo';
 
 export async function handleWorkspaceInstanceLayersList(
   req: Request,
@@ -455,31 +459,94 @@ export async function handleWorkspaceInstanceLayerUpsert(
     }
   }
 
-  if (!env.L10N_PUBLISH_QUEUE) {
-    return apiError('INTERNAL_ERROR', 'L10N_PUBLISH_QUEUE missing', 500);
-  }
-  const markDirty = await markL10nPublishDirty({
-    env,
-    publicId: publicIdResult.value,
-    layer,
-    layerKey,
-    baseFingerprint: computedFingerprint,
-  });
-  if (markDirty) return markDirty;
-  try {
-    await env.L10N_PUBLISH_QUEUE.send({
-      v: 2,
-      publicId: publicIdResult.value,
-      layer,
-      layerKey,
-      action: 'upsert',
-    } satisfies L10nPublishQueueJob);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
+  const resolvedSource = row?.source ?? source ?? null;
+
+  if ((layer === 'locale' || layer === 'user') && instance.status === 'published') {
+    const workspaceL10nPolicy = resolveWorkspaceL10nPolicy(workspace.l10n_policy);
+    const baseLocale = workspaceL10nPolicy.baseLocale;
+    const activeLocales = resolveActivePublishLocales({
+      workspaceLocales: workspace.l10n_locales,
+      policy: policyResult.policy,
+      baseLocale,
+    }).locales;
+
+    if (activeLocales.includes(layerKey)) {
+      const baseTextPack = planning.plan.snapshot;
+      let localeOps: Array<{ op: 'set'; path: string; value: unknown }> | null = null;
+      let userOps: Array<{ op: 'set'; path: string; value: unknown }> | null = null;
+
+      if (layerKey !== baseLocale) {
+        try {
+          const params = new URLSearchParams({
+            select: 'layer,ops',
+            public_id: `eq.${publicIdResult.value}`,
+            layer: 'in.(locale,user)',
+            layer_key: `eq.${layerKey}`,
+            base_fingerprint: `eq.${computedFingerprint}`,
+            limit: '2',
+          });
+          const overlaysRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
+            method: 'GET',
+          });
+          if (overlaysRes.ok) {
+            const rows =
+              ((await overlaysRes.json().catch(() => null)) as Array<{ layer?: string; ops?: unknown }> | null) ?? [];
+            rows.forEach((row) => {
+              const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
+              if (!Array.isArray(row.ops)) return;
+              if (layer === 'locale') {
+                localeOps = row.ops as Array<{ op: 'set'; path: string; value: unknown }>;
+              } else if (layer === 'user') {
+                userOps = row.ops as Array<{ op: 'set'; path: string; value: unknown }>;
+              }
+            });
+          } else {
+            const details = await readJson(overlaysRes).catch(() => null);
+            console.warn('[ParisWorker] Failed to load overlays for pack mirroring', details);
+          }
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
+          console.warn('[ParisWorker] Failed to resolve overlays for pack mirroring', detail);
+        }
+      }
+
+      const textPack =
+        layerKey === baseLocale
+          ? { ...baseTextPack }
+          : materializeTextPack({ basePack: baseTextPack, localeOps, userOps });
+
+      const enqueueText = await enqueueTokyoMirrorJob(env, {
+        v: 1,
+        kind: 'write-text-pack',
+        publicId: publicIdResult.value,
+        locale: layerKey,
+        textPack,
+      });
+      if (!enqueueText.ok) {
+        return apiError('INTERNAL_ERROR', 'Failed to enqueue tokyo text pack', 500, enqueueText.error);
+      }
+
+      const seoGeoEntitled = policyResult.policy.flags['embed.seoGeo.enabled'] === true;
+      const seoGeoConfigEnabled = Boolean((instance.config as any)?.seoGeo?.enabled === true);
+      const seoGeoLive = seoGeoEntitled && seoGeoConfigEnabled;
+      if (seoGeoLive) {
+        const configPack = stripTextFromConfig(instance.config, Object.keys(baseTextPack));
+        const metaState = applyTextPackToConfig(configPack, textPack);
+        const metaPack = generateMetaPack({ widgetType, state: metaState, locale: layerKey });
+        const enqueueMeta = await enqueueTokyoMirrorJob(env, {
+          v: 1,
+          kind: 'write-meta-pack',
+          publicId: publicIdResult.value,
+          locale: layerKey,
+          metaPack,
+        });
+        if (!enqueueMeta.ok) {
+          return apiError('INTERNAL_ERROR', 'Failed to enqueue tokyo meta pack', 500, enqueueMeta.error);
+        }
+      }
+    }
   }
 
-  const resolvedSource = row?.source ?? source ?? null;
   return json({
     publicId: publicIdResult.value,
     layer,
@@ -577,28 +644,89 @@ export async function handleWorkspaceInstanceLayerDelete(
     return apiError('INTERNAL_ERROR', 'Failed to delete layer overlay', 500, details);
   }
 
-  if (!env.L10N_PUBLISH_QUEUE) {
-    return apiError('INTERNAL_ERROR', 'L10N_PUBLISH_QUEUE missing', 500);
-  }
-  const markDirty = await markL10nPublishDirty({
-    env,
-    publicId: publicIdResult.value,
-    layer,
-    layerKey,
-    baseFingerprint: computedFingerprint,
-  });
-  if (markDirty) return markDirty;
-  try {
-    await env.L10N_PUBLISH_QUEUE.send({
-      v: 2,
-      publicId: publicIdResult.value,
-      layer,
-      layerKey,
-      action: 'delete',
-    } satisfies L10nPublishQueueJob);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
+  if ((layer === 'locale' || layer === 'user') && instance.status === 'published') {
+    const workspaceL10nPolicy = resolveWorkspaceL10nPolicy(workspace.l10n_policy);
+    const baseLocale = workspaceL10nPolicy.baseLocale;
+    const activeLocales = resolveActivePublishLocales({
+      workspaceLocales: workspace.l10n_locales,
+      policy: policyResult.policy,
+      baseLocale,
+    }).locales;
+
+    if (activeLocales.includes(layerKey)) {
+      const baseTextPack = planning.plan.snapshot;
+      let localeOps: Array<{ op: 'set'; path: string; value: unknown }> | null = null;
+      let userOps: Array<{ op: 'set'; path: string; value: unknown }> | null = null;
+
+      if (layerKey !== baseLocale) {
+        try {
+          const params = new URLSearchParams({
+            select: 'layer,ops',
+            public_id: `eq.${publicIdResult.value}`,
+            layer: 'in.(locale,user)',
+            layer_key: `eq.${layerKey}`,
+            base_fingerprint: `eq.${computedFingerprint}`,
+            limit: '2',
+          });
+          const overlaysRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
+            method: 'GET',
+          });
+          if (overlaysRes.ok) {
+            const rows =
+              ((await overlaysRes.json().catch(() => null)) as Array<{ layer?: string; ops?: unknown }> | null) ?? [];
+            rows.forEach((row) => {
+              const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
+              if (!Array.isArray(row.ops)) return;
+              if (layer === 'locale') {
+                localeOps = row.ops as Array<{ op: 'set'; path: string; value: unknown }>;
+              } else if (layer === 'user') {
+                userOps = row.ops as Array<{ op: 'set'; path: string; value: unknown }>;
+              }
+            });
+          } else {
+            const details = await readJson(overlaysRes).catch(() => null);
+            console.warn('[ParisWorker] Failed to load overlays for pack mirroring', details);
+          }
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
+          console.warn('[ParisWorker] Failed to resolve overlays for pack mirroring', detail);
+        }
+      }
+
+      const textPack =
+        layerKey === baseLocale
+          ? { ...baseTextPack }
+          : materializeTextPack({ basePack: baseTextPack, localeOps, userOps });
+      const enqueueText = await enqueueTokyoMirrorJob(env, {
+        v: 1,
+        kind: 'write-text-pack',
+        publicId: publicIdResult.value,
+        locale: layerKey,
+        textPack,
+      });
+      if (!enqueueText.ok) {
+        return apiError('INTERNAL_ERROR', 'Failed to enqueue tokyo text pack', 500, enqueueText.error);
+      }
+
+      const seoGeoEntitled = policyResult.policy.flags['embed.seoGeo.enabled'] === true;
+      const seoGeoConfigEnabled = Boolean((instance.config as any)?.seoGeo?.enabled === true);
+      const seoGeoLive = seoGeoEntitled && seoGeoConfigEnabled;
+      if (seoGeoLive) {
+        const configPack = stripTextFromConfig(instance.config, Object.keys(baseTextPack));
+        const metaState = applyTextPackToConfig(configPack, textPack);
+        const metaPack = generateMetaPack({ widgetType, state: metaState, locale: layerKey });
+        const enqueueMeta = await enqueueTokyoMirrorJob(env, {
+          v: 1,
+          kind: 'write-meta-pack',
+          publicId: publicIdResult.value,
+          locale: layerKey,
+          metaPack,
+        });
+        if (!enqueueMeta.ok) {
+          return apiError('INTERNAL_ERROR', 'Failed to enqueue tokyo meta pack', 500, enqueueMeta.error);
+        }
+      }
+    }
   }
 
   return json({ publicId: publicIdResult.value, layer, layerKey, deleted: true });

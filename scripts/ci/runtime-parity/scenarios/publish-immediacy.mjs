@@ -24,15 +24,24 @@ async function fetchEmbedHeaders({ profile, publicId }) {
 }
 
 async function fetchPublishStatus({ profile, workspaceId, publicId }) {
-  return fetchEnvelope(
-    `${profile.parisBaseUrl}/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
-      publicId,
-    )}/publish/status?subject=workspace&_t=${Date.now()}`,
-    {
-      method: 'GET',
-      headers: authHeaders(profile.authBearer),
-    },
-  );
+  const baseUrl =
+    profile.name === 'local'
+      ? `${profile.bobBaseUrl}/api/paris`
+      : profile.parisBaseUrl;
+
+  const url =
+    profile.name === 'local'
+      ? `${baseUrl}/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/publish/status?subject=workspace&_t=${Date.now()}`
+      : `${baseUrl}/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/publish/status?subject=workspace&_t=${Date.now()}`;
+
+  return fetchEnvelope(url, {
+    method: 'GET',
+    headers: authHeaders(profile.authBearer),
+  });
 }
 
 async function resolvePublishProbePublicId({ profile, context }) {
@@ -144,9 +153,13 @@ export async function runPublishImmediacyScenario({ profile, context }) {
   );
 
   const snapshot = await fetchEnvelope(
-    `${profile.parisBaseUrl}/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
-      publicId,
-    )}/render-snapshot?subject=workspace&_t=${Date.now()}`,
+    profile.name === 'local'
+      ? `${profile.bobBaseUrl}/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/render-snapshot?subject=workspace&_t=${Date.now()}`
+      : `${profile.parisBaseUrl}/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/render-snapshot?subject=workspace&_t=${Date.now()}`,
     {
       method: 'POST',
       headers: authHeaders(profile.authBearer),
@@ -156,11 +169,17 @@ export async function runPublishImmediacyScenario({ profile, context }) {
   );
 
   checks.push(
-    makeCheck('Paris render-snapshot orchestration command accepted (200/202)', snapshot.status === 200 || snapshot.status === 202, {
-      actual: snapshot.status,
-    }),
     makeCheck(
-      'Paris render-snapshot response includes snapshotState (queued|ready|pending)',
+      profile.name === 'local'
+        ? 'Render-snapshot orchestration command accepted (200/202)'
+        : 'Paris render-snapshot orchestration command accepted (200/202)',
+      snapshot.status === 200 || snapshot.status === 202,
+      { actual: snapshot.status },
+    ),
+    makeCheck(
+      profile.name === 'local'
+        ? 'Render-snapshot response includes snapshotState (queued|ready|pending)'
+        : 'Paris render-snapshot response includes snapshotState (queued|ready|pending)',
       ['queued', 'ready', 'pending'].includes(readString(snapshot.json?.snapshotState)),
       { actual: readString(snapshot.json?.snapshotState) || '<none>' },
     ),

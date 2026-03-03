@@ -154,7 +154,7 @@ export function ToolDrawer() {
                   {sessionError.source === 'load'
                     ? 'Instance load error'
                     : sessionError.source === 'publish'
-                      ? 'Publish rejected'
+                      ? 'Save rejected'
                       : 'Edit rejected'}
                 </div>
                 <pre className="caption" style={{ whiteSpace: 'pre-wrap', margin: 'var(--space-1) 0 0 0' }}>

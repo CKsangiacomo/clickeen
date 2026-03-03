@@ -4,6 +4,7 @@ export type WidgetInstance = {
   publicId: string;
   widgetType: string;
   displayName: string;
+  status: 'published' | 'unpublished';
   workspaceId: string | null;
   source: 'workspace' | 'curated';
   actions: {
@@ -17,6 +18,7 @@ type RawWidgetInstance = {
   publicId?: string | null;
   widgetType?: string | null;
   displayName?: string | null;
+  status?: string | null;
   workspaceId?: string | null;
   source?: string | null;
   actions?: {
@@ -48,6 +50,7 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
 
   const widgetType = normalizeWidgetType(raw.widgetType);
   const displayName = String(raw.displayName || '').trim() || DEFAULT_INSTANCE_DISPLAY_NAME;
+  const status = raw.status === 'published' ? 'published' : 'unpublished';
   const workspaceId = String(raw.workspaceId || '').trim() || null;
   const source = raw.source === 'curated' ? 'curated' : 'workspace';
   const actions = raw.actions && typeof raw.actions === 'object' ? raw.actions : null;
@@ -56,6 +59,7 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
     publicId,
     widgetType,
     displayName,
+    status,
     workspaceId,
     source,
     actions: {

@@ -30,6 +30,39 @@ export async function runBootstrapParityScenario({ profile }) {
   const checks = [];
   const headers = authHeaders(profile.authBearer);
 
+  if (profile.name === 'local') {
+    const bob = await fetchEnvelope(`${profile.bobBaseUrl}/api/paris/roma/bootstrap?_t=${Date.now()}`, { headers });
+    checks.push(makeCheck('Bob bootstrap responds 200', bob.status === 200, { actual: bob.status }));
+
+    const bobDefaults = extractDefaults(bob.json);
+    checks.push(
+      makeCheck('Bob default accountId is UUID', isUuid(bobDefaults.accountId), { actual: bobDefaults.accountId }),
+      makeCheck('Bob default workspaceId is UUID', isUuid(bobDefaults.workspaceId), { actual: bobDefaults.workspaceId }),
+    );
+
+    const resolvedAccountId = bobDefaults.accountId || '';
+    const resolvedWorkspaceId = bobDefaults.workspaceId || '';
+    const resolvedPublicId = resolveProbePublicId(profile, null, bob.json);
+
+    checks.push(makeCheck('Probe publicId resolved', Boolean(resolvedPublicId), { actual: resolvedPublicId }));
+
+    return {
+      scenario: 'bootstrap-parity',
+      passed: scenarioPassed(checks),
+      checks,
+      fingerprint: {
+        accountId: resolvedAccountId,
+        workspaceId: resolvedWorkspaceId,
+        probePublicId: resolvedPublicId,
+      },
+      contextUpdate: {
+        accountId: resolvedAccountId,
+        workspaceId: resolvedWorkspaceId,
+        probePublicId: resolvedPublicId,
+      },
+    };
+  }
+
   const roma = await fetchEnvelope(`${profile.romaBaseUrl}/api/bootstrap?_t=${Date.now()}`, { headers });
   const bob = await fetchEnvelope(`${profile.bobBaseUrl}/api/paris/roma/bootstrap?_t=${Date.now()}`, { headers });
 

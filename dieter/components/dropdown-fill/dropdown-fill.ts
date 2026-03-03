@@ -90,13 +90,14 @@ export type DropdownFillState = {
   videoPanel: HTMLElement | null;
   videoPreview: HTMLVideoElement | null;
   videoUploadButton: HTMLButtonElement | null;
-  videoReplaceButton: HTMLButtonElement | null;
+  videoChooseButton: HTMLButtonElement | null;
   videoRemoveButton: HTMLButtonElement | null;
   videoFileInput: HTMLInputElement | null;
   videoSrc: string | null;
   videoName: string | null;
   videoObjectUrl: string | null;
   videoUnavailable: boolean;
+  assetPickerKind: 'image' | 'video';
   allowedModes: FillMode[];
   mode: FillMode;
   nativeValue?: { get: () => string; set: (next: string) => void };
@@ -234,7 +235,7 @@ function createState(root: HTMLElement): DropdownFillState | null {
   const videoPanel = root.querySelector<HTMLElement>('.diet-dropdown-fill__panel--video');
   const videoPreview = root.querySelector<HTMLVideoElement>('.diet-dropdown-fill__video-preview');
   const videoUploadButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__video-upload-btn');
-  const videoReplaceButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__video-replace-btn');
+  const videoChooseButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__video-choose-btn');
   const videoRemoveButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__video-remove-btn');
   const videoFileInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__video-file-input');
 
@@ -247,6 +248,11 @@ function createState(root: HTMLElement): DropdownFillState | null {
         onUse: (item) => {
           const current = states.get(root);
           if (!current) return;
+          if (current.assetPickerKind === 'video') {
+            current.videoName = item.normalizedFilename;
+            setVideoSrc(current, item.url, { commit: true });
+            return;
+          }
           current.imageName = item.normalizedFilename;
           setImageSrc(current, item.url, { commit: true });
         },
@@ -254,9 +260,15 @@ function createState(root: HTMLElement): DropdownFillState | null {
           const current = states.get(root);
           if (!current) return;
           current.imageAssetPickerOpen = open;
+          const imagePickerOpen = open && current.assetPickerKind === 'image';
+          const videoPickerOpen = open && current.assetPickerKind === 'video';
           if (current.chooseButton) {
-            current.chooseButton.setAttribute('aria-expanded', open ? 'true' : 'false');
-            current.chooseButton.classList.toggle('is-active', open);
+            current.chooseButton.setAttribute('aria-expanded', imagePickerOpen ? 'true' : 'false');
+            current.chooseButton.classList.toggle('is-active', imagePickerOpen);
+          }
+          if (current.videoChooseButton) {
+            current.videoChooseButton.setAttribute('aria-expanded', videoPickerOpen ? 'true' : 'false');
+            current.videoChooseButton.classList.toggle('is-active', videoPickerOpen);
           }
         },
       })
@@ -264,6 +276,10 @@ function createState(root: HTMLElement): DropdownFillState | null {
   if (chooseButton) {
     chooseButton.setAttribute('aria-haspopup', 'dialog');
     chooseButton.setAttribute('aria-expanded', 'false');
+  }
+  if (videoChooseButton) {
+    videoChooseButton.setAttribute('aria-haspopup', 'dialog');
+    videoChooseButton.setAttribute('aria-expanded', 'false');
   }
 
   const nativeValue = captureNativeValue(input);
@@ -327,13 +343,14 @@ function createState(root: HTMLElement): DropdownFillState | null {
     videoPanel,
     videoPreview,
     videoUploadButton,
-    videoReplaceButton,
+    videoChooseButton,
     videoRemoveButton,
     videoFileInput,
     videoSrc: null,
     videoName: null,
     videoObjectUrl: null,
     videoUnavailable: false,
+    assetPickerKind: 'image',
     allowedModes,
     mode,
     nativeValue,
@@ -1266,7 +1283,7 @@ function setMode(state: DropdownFillState, mode: FillMode) {
     state.headerLabel.textContent = MODE_LABELS[next] || state.headerLabel.textContent;
   }
 
-  if (next !== 'image' && state.imageAssetPickerOpen) {
+  if (next !== 'image' && next !== 'video' && state.imageAssetPickerOpen) {
     state.assetPickerOverlay?.close();
   }
 }

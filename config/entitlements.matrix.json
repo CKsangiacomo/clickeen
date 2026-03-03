@@ -58,6 +58,16 @@
         "tier3": true
       }
     },
+    "embed.seoGeo.enabled": {
+      "kind": "flag",
+      "values": {
+        "minibob": false,
+        "free": false,
+        "tier1": false,
+        "tier2": true,
+        "tier3": true
+      }
+    },
     "budget.copilot.turns": {
       "kind": "budget",
       "values": {

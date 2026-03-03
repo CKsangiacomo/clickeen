@@ -197,7 +197,7 @@ export class AssetPickerOverlay {
       const td = document.createElement('td');
       td.colSpan = 5;
       td.className = 'body-s';
-      td.textContent = 'No image assets found.';
+      td.textContent = 'No assets found.';
       tr.appendChild(td);
       this.rowsEl.appendChild(tr);
       return;

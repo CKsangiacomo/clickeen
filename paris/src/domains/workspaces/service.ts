@@ -1,4 +1,4 @@
-import type { Env, InstanceOverlayRow, L10nGenerateStateRow } from '../../shared/types';
+import type { Env, InstanceOverlayRow, L10nGenerateStateRow, TokyoMirrorQueueJob } from '../../shared/types';
 import type { Policy } from '@clickeen/ck-policy';
 import { readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
@@ -14,7 +14,7 @@ type EnforcementRow = {
   reset_at: string;
 };
 
-type RenderSnapshotEnqueueResult = { ok: true } | { ok: false; error: string };
+type TokyoMirrorEnqueueResult = { ok: true } | { ok: false; error: string };
 type LocaleOverlayLayerKeyRow = { layer_key?: string | null };
 
 type RenderIndexEntry = { e: string; r: string; meta: string };
@@ -94,18 +94,21 @@ function resolveRenderIndexBases(env: Env): string[] {
 }
 
 function resolveActivePublishLocales(
-  workspaceLocales: unknown,
-  policy: Policy,
+  args: { workspaceLocales: unknown; policy: Policy; baseLocale: string },
 ): { locales: string[]; invalidWorkspaceLocales: string | null } {
-  const normalized = normalizeLocaleList(workspaceLocales, 'l10n_locales');
+  const normalized = normalizeLocaleList(args.workspaceLocales, 'l10n_locales');
   const additionalLocales = normalized.ok ? normalized.locales : [];
-  const maxLocalesTotalRaw = policy.caps['l10n.locales.max'];
-  const maxLocalesTotal =
-    maxLocalesTotalRaw == null ? null : Math.max(1, Math.floor(maxLocalesTotalRaw));
-  const deduped = Array.from(new Set(['en', ...additionalLocales]));
+  const maxLocalesTotal = resolveLocaleEntitlementMax(args.policy);
+  const baseLocale = typeof args.baseLocale === 'string' && args.baseLocale.trim() ? args.baseLocale.trim() : 'en';
+  const deduped = Array.from(new Set([baseLocale, ...additionalLocales]));
   const locales = maxLocalesTotal == null ? deduped : deduped.slice(0, maxLocalesTotal);
   const invalidWorkspaceLocales = normalized.ok ? null : JSON.stringify(normalized.issues);
   return { locales, invalidWorkspaceLocales };
+}
+
+function resolveLocaleEntitlementMax(policy: Policy): number | null {
+  const maxLocalesTotalRaw = policy.caps['l10n.locales.max'];
+  return maxLocalesTotalRaw == null ? null : Math.max(1, Math.floor(maxLocalesTotalRaw));
 }
 
 async function loadPersistedLocaleOverlayKeys(
@@ -141,12 +144,18 @@ async function resolveRenderSnapshotLocales(args: {
   publicId: string;
   workspaceLocales: unknown;
   policy: Policy;
+  baseLocale: string;
 }): Promise<{
   locales: string[];
   invalidWorkspaceLocales: string | null;
   hasOverlayLocaleFallback: boolean;
 }> {
-  const active = resolveActivePublishLocales(args.workspaceLocales, args.policy);
+  const active = resolveActivePublishLocales({
+    workspaceLocales: args.workspaceLocales,
+    policy: args.policy,
+    baseLocale: args.baseLocale,
+  });
+  const maxLocalesTotal = resolveLocaleEntitlementMax(args.policy);
   try {
     const persistedLocaleKeys = await loadPersistedLocaleOverlayKeys(args.env, args.publicId);
     if (persistedLocaleKeys.length === 0) {
@@ -157,10 +166,11 @@ async function resolveRenderSnapshotLocales(args: {
       };
     }
     const merged = Array.from(new Set([...active.locales, ...persistedLocaleKeys]));
+    const capped = maxLocalesTotal == null ? merged : merged.slice(0, maxLocalesTotal);
     return {
-      locales: merged,
+      locales: capped,
       invalidWorkspaceLocales: active.invalidWorkspaceLocales,
-      hasOverlayLocaleFallback: merged.length > active.locales.length,
+      hasOverlayLocaleFallback: capped.some((locale) => !active.locales.includes(locale)),
     };
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -173,30 +183,12 @@ async function resolveRenderSnapshotLocales(args: {
   }
 }
 
-async function enqueueRenderSnapshot(
-  env: Env,
-  job: { publicId: string; action: 'upsert' | 'delete'; locales?: string[] },
-): Promise<RenderSnapshotEnqueueResult> {
+async function enqueueTokyoMirrorJob(env: Env, job: TokyoMirrorQueueJob): Promise<TokyoMirrorEnqueueResult> {
   if (!env.RENDER_SNAPSHOT_QUEUE) {
     return { ok: false, error: 'RENDER_SNAPSHOT_QUEUE missing' };
   }
   try {
-    const locales = Array.isArray(job.locales)
-      ? Array.from(
-          new Set(
-            job.locales
-              .map((locale) => (typeof locale === 'string' ? locale.trim() : ''))
-              .filter(Boolean),
-          ),
-        )
-      : [];
-    await env.RENDER_SNAPSHOT_QUEUE.send({
-      v: 1,
-      kind: 'render-snapshot',
-      publicId: job.publicId,
-      action: job.action,
-      locales: locales.length ? locales : undefined,
-    });
+    await env.RENDER_SNAPSHOT_QUEUE.send(job);
     return { ok: true };
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -497,10 +489,10 @@ async function waitForEnSnapshotReady(args: {
   };
 }
 
-export type { RenderIndexEntry, RenderSnapshotEnqueueResult };
+export type { RenderIndexEntry, TokyoMirrorEnqueueResult };
 
 export {
-  enqueueRenderSnapshot,
+  enqueueTokyoMirrorJob,
   loadInstanceRenderHealth,
   loadEnforcement,
   loadL10nGenerateStatesForFingerprint,

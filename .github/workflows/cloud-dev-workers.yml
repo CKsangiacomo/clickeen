@@ -4,9 +4,11 @@ on:
   push:
     branches: [main]
     paths:
+      - "berlin/**"
       - "paris/**"
       - "sanfrancisco/**"
       - "tokyo-worker/**"
+      - "tokyo/widgets/**"
       - "tokyo/fonts/**"
       - "scripts/infra/**"
       - "scripts/tokyo-fonts-sync.mjs"
@@ -76,13 +78,15 @@ jobs:
           pnpm test:runtime-parity:cloud-dev:public
           if [[ -n "${RUNTIME_PARITY_AUTH_BEARER_CLOUD:-}" || -n "${RUNTIME_PARITY_SUPABASE_BEARER_CLOUD:-}" || ( -n "${RUNTIME_PARITY_PROBE_EMAIL_CLOUD:-}" && -n "${RUNTIME_PARITY_PROBE_PASSWORD_CLOUD:-}" ) ]]; then
             pnpm test:runtime-parity:cloud-dev:auth
-            pnpm test:runtime-parity:cross-env
           else
-            echo "[runtime-parity] Skipping cloud-dev auth + cross-env checks (missing cloud auth bearer/probe credentials)."
+            echo "[runtime-parity] Skipping cloud-dev auth checks (missing cloud auth bearer/probe credentials)."
           fi
 
       - name: Deploy paris-dev
         run: pnpm -C paris run deploy
+
+      - name: Deploy berlin-dev
+        run: pnpm -C berlin run deploy
 
       - name: Deploy sanfrancisco-dev
         run: pnpm -C sanfrancisco run deploy

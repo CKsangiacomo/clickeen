@@ -66,6 +66,7 @@ Recommended:
 - `BERLIN_REFRESH_SECRET`
 - `BERLIN_ALLOWED_PROVIDERS` (default: `google`)
 - `BERLIN_OAUTH_STATE_SECRET` (defaults to refresh secret when omitted)
+- `BERLIN_LOGIN_CALLBACK_URL` (OAuth redirect target for Google login; cloud-dev should point at Roma)
 
 Optional key override:
 - `BERLIN_ACCESS_PRIVATE_KEY_PEM`

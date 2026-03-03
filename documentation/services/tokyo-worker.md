@@ -1,101 +1,84 @@
-# System: Tokyo Worker - Asset Uploads + Instance l10n Publisher + Render Snapshots
+# System: Tokyo Worker — Assets + Tokyo Mirror Jobs (PRD 54)
 
-## Identity
-- Tier: Supporting
-- Purpose: Serve account-owned assets and materialize **instance** localization overlays + **published render snapshots** into Tokyo/R2.
+STATUS: REFERENCE — MUST MATCH RUNTIME  
+Last updated: 2026-03-01 (PRD 54 pivot)
 
-## Interfaces
-- `POST /assets/upload` (auth required; account-owned uploads; writes to R2 + Supabase metadata)
-- `GET /assets/v/:versionId` (public; immutable account asset version reads)
-- `DELETE /assets/:accountId/:assetId` (dev auth; synchronous hard delete of metadata + blobs)
-- `GET /assets/integrity/:accountId` (dev auth; account mirror integrity snapshot: DB variants vs R2 objects)
-- `GET /assets/integrity/:accountId/:assetId` (dev auth; per-asset identity integrity snapshot)
-- `POST /l10n/publish` (internal; publish or delete a layer overlay; body: `{ publicId, layer, layerKey, action? }`)
-- `POST /l10n/instances/:publicId/index` (dev auth; write layer index)
-- `DELETE /l10n/instances/:publicId/index` (dev auth; remove layer index)
-- `POST /l10n/instances/:publicId/bases/:baseFingerprint` (dev auth; write base snapshot metadata)
-- `POST /l10n/instances/:publicId/:layer/:layerKey` (dev auth; direct overlay write)
-- `DELETE /l10n/instances/:publicId/:layer/:layerKey` (dev auth; direct overlay delete)
-- `GET /l10n/**` (public; deterministic overlay paths; immutable by fingerprint, except `index.json`)
-- `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague; token is ignored for storage keys)
-- `GET /renders/instances/:publicId/published.json` (public; no-store published pointer with active revision id)
-- `GET /renders/instances/:publicId/revisions/:revision/index.json` (public; immutable per-revision locale artifact map)
-- `GET /renders/instances/:publicId/:fingerprint/(e.html|r.json|meta.json)` (public; immutable, cache-forever)
-- `POST /renders/instances/:publicId/snapshot` (dev auth; manually generate/delete render snapshot artifacts)
+Tokyo-worker has two responsibilities:
+1) **Assets** (Roma-owned): upload/read/delete account assets in Tokyo/R2 + minimal metadata.
+2) **Instance mirror** (PRD 54): write/delete the Tokyo files that Venice serves publicly (config/text/meta packs + live pointers).
 
-## Dependencies
-- Supabase (service role) for `widget_instance_overlays`, `l10n_publish_state`, `l10n_base_snapshots`, `instance_render_health`
-- Tokyo R2 bucket for artifacts
-- Paris for queueing publish jobs
-- Venice for render snapshot generation (Tokyo-worker fetches Venice dynamic endpoints; Venice remains the only renderer)
+Tokyo-worker does not “decide what is live”. Bob/Roma decides; Paris commits DB writes; Tokyo-worker mirrors bytes.
 
-Asset-domain note:
-- Tokyo-worker persists canonical ownership/file metadata in `account_assets` + `account_asset_variants`.
-- Instance/path usage mapping is maintained by Paris in `account_asset_usage` during instance config writes.
-- Asset delete reads `account_asset_usage` for in-use confirmation, then hard-deletes blobs + metadata in the same request path.
-- Delete does not trigger snapshot rebuilds or background repair flows.
-- Upload filename normalization enforces non-redundant variant/file naming.
-- Upload response includes deterministic metadata (`accountId`, `assetId`, `variant`, `key`, `url`, `workspaceId/publicId/widgetType` trace fields).
-- `workspace_id/public_id/widget_type` on `account_assets` are provenance fields only; ownership remains account-bound.
-- Upload auth contract:
-  - Product path: Supabase session bearer + required `x-account-id`.
-  - `x-workspace-id` is optional: when present, Tokyo-worker enforces workspace membership (`editor+`) and workspace/account binding; when absent, Tokyo-worker enforces account membership (`editor+`).
-  - Internal/dev path: `TOKYO_DEV_JWT` remains accepted for internal automation endpoints.
+---
 
-## Deployment
-- Cloudflare Workers + Queues
-- Queue names: `instance-l10n-publish-{env}` (`local`, `cloud-dev`, `prod`)
-- Queue names: `instance-render-snapshot-{env}` (`local`, `cloud-dev`, `prod`)
-- Scheduled repair publishes only dirty rows (bounded; no full-table scans).
+## Interfaces (this repo snapshot)
 
-## l10n Publish Flow (executed)
-- Reads `widget_instance_overlays` from Supabase (layered).
-- Merges `ops + user_ops` for layer=user (user_ops applied last).
-- Writes `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`.
-- Writes `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json` (allowlist snapshot metadata for diagnostics/non-public tooling).
-- Writes `tokyo/l10n/instances/<publicId>/index.json` with layer keys (hybrid index).
-- Marks publish state clean in `l10n_publish_state`.
-- Records versions in `l10n_overlay_versions` and prunes older versions per tier.
+### Assets
+- `POST /assets/upload` (auth required)
+- `GET /assets/v/:versionId` (public; immutable)
+- `DELETE /assets/:accountId/:assetId` (dev/internal; hard delete metadata + blobs)
+- `DELETE /assets/purge/:accountId?confirm=1` (dev/internal; hard delete **all** account asset metadata + blobs; used for downgrade/closure)
+- Integrity tools (dev/internal):
+  - `GET /assets/integrity/:accountId`
+  - `GET /assets/integrity/:accountId/:assetId`
 
-## Local Dev
-- If `TOKYO_L10N_HTTP_BASE` is set, publishes to the Tokyo dev server over HTTP.
-- `TOKYO_DEV_JWT` is required for dev-only endpoints.
+### Public reads (R2 backed)
+Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies):
+- `GET /renders/**`
+- `GET /l10n/**`
+- `GET /assets/**`
+- `GET /fonts/**`
 
-## Rules
-- Overlay files are set-only ops with `baseFingerprint` (required).
-- `publicId` is locale-free; locale is a runtime parameter.
-- Prague website strings are not handled here; they are published by `scripts/prague-l10n/*` into `tokyo/l10n/prague/**` (repo-owned base + ops overlays).
-- Cache semantics:
-  - `.../index.json` is mutable and served with a short TTL (`cache-control: public, max-age=60`).
-  - Fingerprinted overlay files are immutable (`cache-control: public, max-age=31536000, immutable`).
+---
 
-## Render Snapshots (PRD 38)
+## PRD 54 mirror model (what Tokyo-worker writes)
 
-**Goal:** allow Venice to serve published `/e/:publicId` + `/r/:publicId` without hitting Paris, by serving immutable artifacts from Tokyo/R2.
+Tokyo-worker writes two kinds of files:
 
-Artifacts (authoritative paths):
-- `renders/instances/<publicId>/published.json` (no-store pointer to active revision)
-- `renders/instances/<publicId>/revisions/<revision>/index.json` (immutable per-locale map for that revision)
-- `renders/instances/<publicId>/<fingerprint>/e.html` (immutable)
-- `renders/instances/<publicId>/<fingerprint>/r.json` (immutable)
-- `renders/instances/<publicId>/<fingerprint>/meta.json` (immutable)
+1) **Fingerprinted packs** (immutable)
+- Config pack: `renders/instances/<publicId>/config/<configFp>/config.json`
+- Text pack: `l10n/instances/<publicId>/packs/<locale>/<textFp>.json`
+- Meta pack (tier-gated): `renders/instances/<publicId>/meta/<locale>/<metaFp>.json`
 
-Cache semantics:
-- `renders/instances/<publicId>/published.json` is mutable and served `no-store`.
-- `renders/instances/<publicId>/revisions/<revision>/index.json` is immutable (`cache-control: public, max-age=31536000, immutable`).
-- Fingerprinted render artifacts are immutable (`cache-control: public, max-age=31536000, immutable`).
+2) **Live pointers** (tiny, mutable, `no-store`)
+- Render pointer: `renders/instances/<publicId>/live/r.json`
+- Text pointer: `l10n/instances/<publicId>/live/<locale>.json`
+- Meta pointer (tier-gated): `renders/instances/<publicId>/live/meta/<locale>.json`
 
-Generation:
-- Triggered by Paris on publish/unpublish (via `instance-render-snapshot-{env}` queue).
-- Also triggered by Tokyo-worker after l10n overlay publish; active locale set is resolved from l10n layer index and regenerated as one snapshot job.
-- Queue success marks instance render health `healthy`; queue failures mark `error` (fail-visible operational state).
-- Materialization is done by fetching Venice dynamic endpoints:
-  - `/e/:publicId?locale=<locale>`
-  - `/r/:publicId?locale=<locale>`
-  - `/r/:publicId?locale=<locale>&meta=1`
-  - Requests include `X-Ck-Snapshot-Bypass: 1` so Venice **never** serves the old snapshot while generating the next snapshot.
-- Snapshot safety rule: for non-EN locales, Tokyo-worker requires Venice responses to report consistent non-EN `X-Ck-L10n-Effective-Locale` and `X-Ck-L10n-Status=fresh`; otherwise snapshot generation fails and the published pointer does not move.
+Rule: **write packs first, move pointers last.**
 
-## Links
-- Tokyo: `documentation/services/tokyo.md`
-- Localization contract: `documentation/capabilities/localization.md`
+Safety gate (PRD 54):
+- `sync-live-surface` refuses to advance `renders/instances/<publicId>/live/r.json` unless:
+  - the referenced config pack exists, and
+  - **every locale** in `localePolicy.availableLocales` has a live text pointer, and
+  - when `seoGeo=true`, every locale also has a live meta pointer.
+
+---
+
+## Queue jobs (this repo snapshot)
+
+Queue binding (historical name, repurposed for PRD 54):
+- Paris enqueues mirror jobs onto `instance-render-snapshot-{env}` via `RENDER_SNAPSHOT_QUEUE`.
+
+Job kinds (v1):
+- `write-config-pack`
+- `write-text-pack`
+- `write-meta-pack` (only when entitled)
+- `sync-live-surface` (moves `live/r.json`; cleans up removed locales/meta)
+- `delete-instance-mirror` (hard delete instance subtree in Tokyo)
+
+Non-negotiable:
+- Mirror jobs are **DB-free**. Tokyo-worker must not read Supabase to “discover state”.
+
+Source of truth:
+- `tokyo-worker/src/domains/render.ts`
+
+---
+
+## Cleanup (Tokyo is a mirror, not an archive)
+
+When an instance is unpublished (or deleted), Tokyo-worker must remove it from Tokyo:
+- Deletes `renders/instances/<publicId>/...`
+- Deletes `l10n/instances/<publicId>/...`
+
+This prevents an R2 landfill and keeps “Venice is dumb” true forever.

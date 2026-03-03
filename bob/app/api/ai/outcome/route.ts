@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveParisBaseUrl } from '../../../../lib/env/paris';
-import { resolveSessionBearer } from '../../../../lib/auth/session';
+import { applySessionCookies, resolveParisSession, withParisDevAuthorization } from '../../../../lib/api/paris/proxy-helpers';
 
 export const runtime = 'edge';
 
@@ -55,15 +55,16 @@ function isValidOutcomePayload(value: unknown): value is {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await resolveSessionBearer(req);
+  const session = await resolveParisSession(req);
   if (!session.ok) return session.response;
 
   try {
     const body = (await req.json().catch(() => null)) as unknown;
     if (!isValidOutcomePayload(body)) {
-      return NextResponse.json(
-        { ok: false, message: 'Invalid outcome payload' },
-        { status: 200, headers: { 'cache-control': 'no-store' } },
+      return applySessionCookies(
+        NextResponse.json({ ok: false, message: 'Invalid outcome payload' }, { status: 200, headers: { 'cache-control': 'no-store' } }),
+        req,
+        session.setCookies,
       );
     }
 
@@ -72,17 +73,15 @@ export async function POST(req: NextRequest) {
       parisBaseUrl = resolveParisBaseUrl();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return NextResponse.json(
-        { ok: false, message },
-        { status: 200, headers: { 'cache-control': 'no-store' } },
+      return applySessionCookies(
+        NextResponse.json({ ok: false, message }, { status: 200, headers: { 'cache-control': 'no-store' } }),
+        req,
+        session.setCookies,
       );
     }
 
     const url = `${parisBaseUrl.replace(/\/$/, '')}/api/ai/outcome`;
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.accessToken}`,
-    };
+    const headers = withParisDevAuthorization(new Headers({ 'Content-Type': 'application/json' }), session.accessToken);
 
     const res = await fetch(url, {
       method: 'POST',
@@ -92,21 +91,30 @@ export async function POST(req: NextRequest) {
 
     const text = await res.text().catch(() => '');
     if (!res.ok) {
-      return NextResponse.json(
-        { ok: false, message: text || `Outcome attach failed (${res.status})` },
-        { status: 200, headers: { 'cache-control': 'no-store' } },
+      return applySessionCookies(
+        NextResponse.json(
+          { ok: false, message: text || `Outcome attach failed (${res.status})` },
+          { status: 200, headers: { 'cache-control': 'no-store' } },
+        ),
+        req,
+        session.setCookies,
       );
     }
 
-    return NextResponse.json(
-      { ok: true, data: safeJsonParse(text) },
-      { status: 200, headers: { 'cache-control': 'no-store' } },
+    return applySessionCookies(
+      NextResponse.json({ ok: true, data: safeJsonParse(text) }, { status: 200, headers: { 'cache-control': 'no-store' } }),
+      req,
+      session.setCookies,
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json(
-      { ok: false, message: message || 'Outcome attach failed' },
-      { status: 200, headers: { 'cache-control': 'no-store' } },
+    return applySessionCookies(
+      NextResponse.json(
+        { ok: false, message: message || 'Outcome attach failed' },
+        { status: 200, headers: { 'cache-control': 'no-store' } },
+      ),
+      req,
+      session.setCookies,
     );
   }
 }

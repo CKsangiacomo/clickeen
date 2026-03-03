@@ -42,6 +42,14 @@ export function can(policy: Policy, actionKey: ActionKey, _payload?: unknown): G
       return { allow: true };
     }
     case 'embed.seoGeo.toggle': {
+      if (policy.flags['embed.seoGeo.enabled'] !== true) {
+        return {
+          allow: false,
+          upsell: 'UP',
+          reasonKey: 'coreui.upsell.reason.flagBlocked',
+          detail: 'SEO/GEO optimized embed is not available on this plan.',
+        };
+      }
       return { allow: true };
     }
     case 'platform.upload': {

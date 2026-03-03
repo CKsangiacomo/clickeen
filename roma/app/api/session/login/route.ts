@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
+import { applySessionCookies, resolveSessionCookieDomain, resolveSessionCookieNames } from '../../../../lib/auth/session';
 
 export const runtime = 'edge';
 
-const ACCESS_COOKIE = 'ck-access-token';
-const REFRESH_COOKIE = 'ck-refresh-token';
 const LEGACY_ACCESS_COOKIE = 'sb-access-token';
 const LEGACY_REFRESH_COOKIE = 'sb-refresh-token';
 
@@ -20,6 +19,35 @@ type BerlinLoginPayload = {
   accessTokenMaxAge?: unknown;
   refreshTokenMaxAge?: unknown;
 };
+
+function clearCookie(
+  response: NextResponse,
+  options: { secure: boolean; domain?: string },
+  cookieName: string,
+) {
+  response.cookies.set({
+    name: cookieName,
+    value: '',
+    httpOnly: true,
+    secure: options.secure,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+
+  if (options.domain) {
+    response.cookies.set({
+      name: cookieName,
+      value: '',
+      httpOnly: true,
+      secure: options.secure,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+      domain: options.domain,
+    });
+  }
+}
 
 function normalizeEmail(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -99,46 +127,21 @@ export async function POST(request: NextRequest) {
   const accessMaxAge = parsePositiveInt(login.accessTokenMaxAge, 15 * 60);
   const refreshMaxAge = parsePositiveInt(login.refreshTokenMaxAge, 60 * 60 * 24 * 30);
 
-  const secure = request.nextUrl.protocol === 'https:';
+  const cookieNames = resolveSessionCookieNames();
   const response = NextResponse.json({ ok: true }, { headers: CACHE_HEADERS });
-  response.cookies.set({
-    name: ACCESS_COOKIE,
-    value: accessToken,
-    httpOnly: true,
-    secure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: accessMaxAge,
-  });
-  response.cookies.set({
-    name: REFRESH_COOKIE,
-    value: refreshToken,
-    httpOnly: true,
-    secure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: refreshMaxAge,
-  });
+  applySessionCookies(response, request, [
+    { name: cookieNames.access, value: accessToken, maxAge: accessMaxAge },
+    { name: cookieNames.refresh, value: refreshToken, maxAge: refreshMaxAge },
+  ]);
+
+  const cookieOptions = {
+    secure: request.nextUrl.protocol === 'https:',
+    domain: resolveSessionCookieDomain(request),
+  };
 
   // Clear legacy Supabase cookies during boundary cutover.
-  response.cookies.set({
-    name: LEGACY_ACCESS_COOKIE,
-    value: '',
-    httpOnly: true,
-    secure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 0,
-  });
-  response.cookies.set({
-    name: LEGACY_REFRESH_COOKIE,
-    value: '',
-    httpOnly: true,
-    secure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 0,
-  });
+  clearCookie(response, cookieOptions, LEGACY_ACCESS_COOKIE);
+  clearCookie(response, cookieOptions, LEGACY_REFRESH_COOKIE);
 
   return response;
 }

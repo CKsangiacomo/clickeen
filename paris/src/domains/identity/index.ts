@@ -1,5 +1,5 @@
 import type { SupabaseAuthPrincipal } from '../../shared/auth';
-import { assertDevAuth } from '../../shared/auth';
+import { assertDevAuth, isTrustedInternalServiceRequest } from '../../shared/auth';
 import type { Env } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
@@ -130,6 +130,108 @@ export async function resolveIdentityMePayload(req: Request, env: Env): Promise<
 
   const principal = auth.principal;
   if (!principal) {
+    const localStage = String(env.ENV_STAGE || '').trim().toLowerCase() === 'local';
+    if (localStage && isTrustedInternalServiceRequest(req, env)) {
+      type WorkspaceListRow = {
+        id?: unknown;
+        account_id?: unknown;
+        name?: unknown;
+        slug?: unknown;
+        tier?: unknown;
+        website_url?: unknown;
+      };
+
+      const workspacesRes = await supabaseFetch(
+        env,
+        `/rest/v1/workspaces?${new URLSearchParams({
+          select: 'id,account_id,name,slug,tier,website_url',
+          order: 'created_at.asc',
+          limit: '1000',
+        }).toString()}`,
+        { method: 'GET' },
+      );
+      if (!workspacesRes.ok) {
+        const details = await readJson(workspacesRes);
+        return {
+          ok: false,
+          response: json(
+            { error: 'WORKSPACE_LOOKUP_FAILED', detail: details },
+            { status: 502 },
+          ),
+        };
+      }
+
+      const workspaceRows = (await workspacesRes.json().catch(() => [])) as WorkspaceListRow[];
+      const workspaces: IdentityWorkspaceContext[] = workspaceRows
+        .map((row) => ({
+          workspaceId: asNonEmptyString(row?.id),
+          accountId: asNonEmptyString(row?.account_id),
+          role: 'owner',
+          name: asNonEmptyString(row?.name),
+          slug: asNonEmptyString(row?.slug),
+          tier: asNonEmptyString(row?.tier),
+          websiteUrl: asNonEmptyString(row?.website_url) || null,
+          membershipVersion: null,
+        }))
+        .filter((row) => Boolean(row.workspaceId && row.accountId));
+
+      const defaultWorkspace = workspaces.find((row) => row.slug === 'ck-dev') ?? workspaces[0] ?? null;
+
+      const accountRoleMap = new Map<string, Set<string>>();
+      for (const workspace of workspaces) {
+        if (!accountRoleMap.has(workspace.accountId)) {
+          accountRoleMap.set(workspace.accountId, new Set<string>());
+        }
+        accountRoleMap.get(workspace.accountId)?.add(workspace.role);
+      }
+
+      let accountRows: AccountRow[] = [];
+      const accountIds = [...accountRoleMap.keys()].filter(Boolean);
+      if (accountIds.length > 0) {
+        try {
+          accountRows = await loadAccountsByIds(env, accountIds);
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
+          return {
+            ok: false,
+            response: json(
+              {
+                error: 'ACCOUNT_LOOKUP_FAILED',
+                detail,
+              },
+              { status: 502 },
+            ),
+          };
+        }
+      }
+
+      const syntheticPrincipal: SupabaseAuthPrincipal = {
+        token: '',
+        userId: 'dev-local',
+        email: 'dev@clickeen.local',
+        role: 'superadmin',
+        claims: { sub: 'dev-local' },
+      };
+
+      return {
+        ok: true,
+        principal: syntheticPrincipal,
+        payload: {
+          user: {
+            id: syntheticPrincipal.userId,
+            email: syntheticPrincipal.email,
+            role: syntheticPrincipal.role,
+          },
+          accounts: toAccountPayload(accountRows, accountRoleMap),
+          workspaces,
+          defaults: {
+            accountId: defaultWorkspace?.accountId ?? null,
+            workspaceId: defaultWorkspace?.workspaceId ?? null,
+          },
+        },
+      };
+    }
+
     return { ok: false, response: json({ error: 'AUTH_REQUIRED' }, { status: 401 }) };
   }
 

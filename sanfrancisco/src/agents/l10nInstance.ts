@@ -1237,7 +1237,7 @@ export async function executeL10nJob(job: L10nJob, env: Env, grant: AIGrant): Pr
       jobChangedPaths == null ? null : expandPathPatterns(jobChangedPaths, candidatePaths);
     const expandedRemovedPaths = expandPathPatterns(jobRemovedPaths, candidatePaths);
     const removedSet = new Set(expandedRemovedPaths);
-    const translateAll = expandedChangedPaths == null;
+    const translateAll = existing == null || expandedChangedPaths == null;
     const targetPaths = translateAll ? entries.map((entry) => entry.path) : expandedChangedPaths;
 
     const fingerprintMatch =

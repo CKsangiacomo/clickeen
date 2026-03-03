@@ -141,7 +141,7 @@ admin/
 │   │   │   └── [other components...]
 │   │   ├── tools/
 │   │   │   ├── bob-ui-native.html       # Bob native UI showcase
-│   │   │   └── dev-widget-workspace.html # Bob iframe integration
+│   │   │   └── dev-widget-workspace.html # Deprecated (use cloud-dev Roma/Bob)
 │   │   └── foundations/
 │   │       ├── colors.html              # Color tokens showcase
 │   │       ├── typography.html          # Typography showcase
@@ -209,7 +209,7 @@ DevStudio auto-generates navigation from filesystem:
 
 ### 🛠️ **Tools**
 - **Bob UI Native** - Bob-specific UI components
-- **Dev Widget Workspace** - Bob iframe integration (for testing)
+- **Widget Workspace (Deprecated)** - old local↔cloud parity tool; use Cloudflare Roma/Bob instead
 
 ### 📐 **Foundations**
 - **Colors** - Color tokens and palettes
@@ -459,12 +459,12 @@ DevStudio is standalone but can integrate:
 
 | Service | Port | Integration | Purpose |
 |---------|------|-------------|---------|
-| **Bob** | 3000 | Iframe in dev-widget-workspace | Test widgets in DevStudio |
+| **Bob/Roma** | N/A | No local iframe integration (deprecated) | Use cloud-dev for editor/runtime |
 | **Paris** | 3001 | Not integrated | (Widget API) |
 | **Venice** | 3002 | Not integrated | (Widget SSR) |
 | **Dieter** | N/A | `@dieter` alias | Import source files |
 
-**Note:** DevStudio is primarily for Dieter documentation, not full-stack widget testing (use standalone Bob for that).
+**Note:** DevStudio is primarily for admin/building blocks (Dieter, entitlements, fixtures). End-to-end runtime validation happens in cloud-dev.
 
 ---
 

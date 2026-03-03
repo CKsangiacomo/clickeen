@@ -75,6 +75,17 @@ type LocaleState = {
   availableLocales: string[];
   overlayEntries: LocaleOverlayEntry[];
   workspaceLocalesInvalid: string | null;
+  workspaceL10nPolicy: {
+    v: 1;
+    baseLocale: string;
+    ip: {
+      enabled: boolean;
+      countryToLocale: Record<string, string>;
+    };
+    switcher: {
+      enabled: boolean;
+    };
+  };
   source: string | null;
   dirty: boolean;
   stale: boolean;
@@ -90,13 +101,13 @@ type LocaleState = {
 
 type SubjectMode = 'minibob' | 'workspace';
 type BootMode = 'message' | 'url';
-type HostSurface = 'roma' | 'devstudio' | 'unknown';
 
 type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
   baseInstanceData: Record<string, unknown>;
   publishedBaseInstanceData: Record<string, unknown>;
+  status: 'published' | 'unpublished';
   previewData: Record<string, unknown> | null;
   previewOps: WidgetOp[] | null;
   isDirty: boolean;
@@ -125,10 +136,10 @@ type EditorOpenMessage = {
   type: 'ck:open-editor';
   requestId?: string;
   sessionId?: string;
-  sessionAccessToken?: string;
   widgetname: string;
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
+  status?: 'published' | 'unpublished';
   localization?: unknown;
   policy?: Policy;
   enforcement?: unknown;
@@ -263,12 +274,12 @@ type BobExportInstanceDataResponseMessage = {
   isDirty?: boolean;
 };
 
-type BobPublishedMessage = {
-  type: 'bob:published';
+type BobInstanceSavedMessage = {
+  type: 'bob:instance-saved';
   publicId: string;
   workspaceId: string;
   widgetType: string;
-  status: 'published';
+  status: 'published' | 'unpublished';
   config: Record<string, unknown>;
 };
 
@@ -316,6 +327,12 @@ const DEFAULT_LOCALE_STATE: LocaleState = {
   availableLocales: [DEFAULT_LOCALE],
   overlayEntries: [],
   workspaceLocalesInvalid: null,
+  workspaceL10nPolicy: {
+    v: 1,
+    baseLocale: DEFAULT_LOCALE,
+    ip: { enabled: false, countryToLocale: {} },
+    switcher: { enabled: true },
+  },
   source: null,
   dirty: false,
   stale: false,
@@ -376,17 +393,48 @@ function normalizeLocalizationOps(raw: unknown): LocalizationOp[] {
 }
 
 function normalizeLocalizationSnapshotForOpen(raw: unknown): {
+  baseLocale: string;
   availableLocales: string[];
   overlayEntries: LocaleOverlayEntry[];
   workspaceLocalesInvalid: string | null;
+  workspaceL10nPolicy: LocaleState['workspaceL10nPolicy'];
 } {
   if (!isRecord(raw)) {
     return {
+      baseLocale: DEFAULT_LOCALE,
       availableLocales: [DEFAULT_LOCALE],
       overlayEntries: [],
       workspaceLocalesInvalid: null,
+      workspaceL10nPolicy: structuredClone(DEFAULT_LOCALE_STATE.workspaceL10nPolicy),
     };
   }
+
+  const policyRaw = isRecord((raw as any).policy) ? ((raw as any).policy as Record<string, unknown>) : null;
+  const baseLocale = normalizeLocaleToken(policyRaw?.baseLocale) ?? DEFAULT_LOCALE;
+  const ipRaw = policyRaw && isRecord(policyRaw.ip) ? (policyRaw.ip as Record<string, unknown>) : null;
+  const ipEnabled = typeof ipRaw?.enabled === 'boolean' ? ipRaw.enabled : DEFAULT_LOCALE_STATE.workspaceL10nPolicy.ip.enabled;
+  const countryToLocale: Record<string, string> = {};
+  const mapRaw = ipRaw && isRecord(ipRaw.countryToLocale) ? (ipRaw.countryToLocale as Record<string, unknown>) : null;
+  if (mapRaw) {
+    for (const [countryRaw, localeRaw] of Object.entries(mapRaw)) {
+      const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
+      if (!/^[A-Z]{2}$/.test(country)) continue;
+      const locale = normalizeLocaleToken(localeRaw);
+      if (!locale) continue;
+      countryToLocale[country] = locale;
+    }
+  }
+  const switcherRaw = policyRaw && isRecord(policyRaw.switcher) ? (policyRaw.switcher as Record<string, unknown>) : null;
+  const switcherEnabled =
+    typeof switcherRaw?.enabled === 'boolean'
+      ? switcherRaw.enabled
+      : DEFAULT_LOCALE_STATE.workspaceL10nPolicy.switcher.enabled;
+  const workspaceL10nPolicy: LocaleState['workspaceL10nPolicy'] = {
+    v: 1,
+    baseLocale,
+    ip: { enabled: ipEnabled, countryToLocale },
+    switcher: { enabled: switcherEnabled },
+  };
 
   const workspaceLocales = Array.isArray(raw.workspaceLocales)
     ? raw.workspaceLocales
@@ -420,22 +468,18 @@ function normalizeLocalizationSnapshotForOpen(raw: unknown): {
     });
   }
 
-  const normalizedLocales = Array.from(
-    new Set([
-      DEFAULT_LOCALE,
-      ...workspaceLocales,
-      ...Array.from(overlayEntriesMap.keys()),
-    ]),
-  );
-  const baseFirst = [DEFAULT_LOCALE, ...normalizedLocales.filter((locale) => locale !== DEFAULT_LOCALE).sort()];
+  const normalizedLocales = Array.from(new Set([baseLocale, ...workspaceLocales]));
+  const baseFirst = [baseLocale, ...normalizedLocales.filter((locale) => locale !== baseLocale).sort()];
 
   return {
+    baseLocale,
     availableLocales: baseFirst,
     overlayEntries: Array.from(overlayEntriesMap.values()).sort((a, b) => a.locale.localeCompare(b.locale)),
     workspaceLocalesInvalid:
       typeof raw.invalidWorkspaceLocales === 'string' && raw.invalidWorkspaceLocales.trim()
         ? raw.invalidWorkspaceLocales.trim()
         : null,
+    workspaceL10nPolicy,
   };
 }
 
@@ -480,15 +524,6 @@ function resolveBootModeFromUrl(): BootMode {
   return boot === 'url' ? 'url' : 'message';
 }
 
-function resolveHostSurfaceFromUrl(): HostSurface {
-  if (typeof window === 'undefined') return 'unknown';
-  const params = new URLSearchParams(window.location.search);
-  const surface = (params.get('surface') || '').trim().toLowerCase();
-  if (surface === 'roma') return 'roma';
-  if (surface === 'devstudio') return 'devstudio';
-  return 'unknown';
-}
-
 function resolvePolicySubject(policy: Policy): 'minibob' | 'workspace' {
   if (policy.profile === 'minibob') return 'minibob';
   return 'workspace';
@@ -524,6 +559,7 @@ function useWidgetSessionInternal() {
     instanceData: {},
     baseInstanceData: {},
     publishedBaseInstanceData: {},
+    status: 'unpublished',
     previewData: null,
     previewOps: null,
     isDirty: false,
@@ -550,35 +586,12 @@ function useWidgetSessionInternal() {
   const localeRequestRef = useRef(0);
   const localeSyncRunRef = useRef(0);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
-  const sessionAccessTokenRef = useRef('');
   const openRequestStatusRef = useRef<
     Map<string, { status: 'processing' | 'applied' | 'failed'; publicId?: string; widgetname?: string; error?: string }>
   >(new Map());
 
   const fetchApi = useCallback((input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const token = sessionAccessTokenRef.current.trim();
-    if (!token) {
-      return fetch(input, init);
-    }
-
-    const resolveUrl = (): URL | null => {
-      if (typeof window === 'undefined') return null;
-      if (typeof input === 'string') return new URL(input, window.location.origin);
-      if (input instanceof URL) return input;
-      if (typeof input.url === 'string') return new URL(input.url, window.location.origin);
-      return null;
-    };
-
-    const url = resolveUrl();
-    if (!url || url.origin !== window.location.origin || !url.pathname.startsWith('/api/')) {
-      return fetch(input, init);
-    }
-
-    const headers = new Headers(init?.headers ?? undefined);
-    if (!headers.has('authorization')) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    return fetch(input, { ...init, headers });
+    return fetch(input, init);
   }, []);
 
   useEffect(() => {
@@ -777,7 +790,7 @@ function useWidgetSessionInternal() {
 
       return applied;
     },
-    [state.compiled, state.instanceData, state.baseInstanceData, state.policy, state.locale]
+    [state.compiled, state.instanceData, state.baseInstanceData, state.policy, state.locale, state.enforcement]
   );
 
   const clearPreviewOps = useCallback(() => {
@@ -1225,11 +1238,7 @@ function useWidgetSessionInternal() {
             userOps,
             hasUserOps: userOps.length > 0,
           })),
-          availableLocales: prev.locale.availableLocales.includes(locale)
-            ? prev.locale.availableLocales
-            : [prev.locale.baseLocale, ...prev.locale.availableLocales.filter((entry) => entry !== prev.locale.baseLocale), locale]
-                .filter((entry, index, all) => all.indexOf(entry) === index)
-                .sort((a, b) => (a === prev.locale.baseLocale ? -1 : b === prev.locale.baseLocale ? 1 : a.localeCompare(b))),
+          availableLocales: prev.locale.availableLocales,
           userOps,
           dirty: false,
           stale: false,
@@ -1245,8 +1254,8 @@ function useWidgetSessionInternal() {
     }
   }, [fetchApi, loadLocaleAllowlist]);
 
-  const refreshLocaleTranslations = useCallback(async () => {
-    const rehydrateLocalizationSnapshot = async (args: {
+  const rehydrateLocalizationSnapshot = useCallback(
+    async (args: {
       publicId: string;
       workspaceId: string;
       subject: 'minibob' | 'workspace';
@@ -1254,9 +1263,9 @@ function useWidgetSessionInternal() {
       try {
         const res = await fetchApi(
           `/api/paris/workspaces/${encodeURIComponent(args.workspaceId)}/instance/${encodeURIComponent(
-            args.publicId
+            args.publicId,
           )}?subject=${encodeURIComponent(args.subject)}`,
-          { cache: 'no-store' }
+          { cache: 'no-store' },
         );
         const json = (await res.json().catch(() => null)) as any;
         if (!res.ok) {
@@ -1283,8 +1292,11 @@ function useWidgetSessionInternal() {
         const localizationSnapshot = normalizeLocalizationSnapshotForOpen(json.localization);
         const current = stateRef.current;
         const widgetType = current.compiled?.widgetname ?? current.meta?.widgetname;
-        const baseLocale = current.locale.baseLocale;
-        const activeLocale = normalizeLocaleToken(current.locale.activeLocale) ?? baseLocale;
+        const baseLocale = localizationSnapshot.baseLocale;
+        const previousActiveLocale = normalizeLocaleToken(current.locale.activeLocale) ?? baseLocale;
+        const activeLocale = localizationSnapshot.availableLocales.includes(previousActiveLocale)
+          ? previousActiveLocale
+          : baseLocale;
         let allowlist = current.locale.allowlist;
         if (!allowlist.length && widgetType) {
           allowlist = await loadLocaleAllowlist(widgetType);
@@ -1323,7 +1335,7 @@ function useWidgetSessionInternal() {
           }
           nextInstanceData = applyLocalizationOps(
             applyLocalizationOps(current.baseInstanceData, nextBaseOps),
-            nextUserOps
+            nextUserOps,
           );
         }
 
@@ -1332,9 +1344,11 @@ function useWidgetSessionInternal() {
           instanceData: nextInstanceData,
           locale: {
             ...prev.locale,
+            baseLocale,
             availableLocales: localizationSnapshot.availableLocales,
             overlayEntries: localizationSnapshot.overlayEntries,
             workspaceLocalesInvalid: localizationSnapshot.workspaceLocalesInvalid,
+            workspaceL10nPolicy: localizationSnapshot.workspaceL10nPolicy,
             activeLocale,
             baseOps: nextBaseOps,
             userOps: nextUserOps,
@@ -1355,9 +1369,31 @@ function useWidgetSessionInternal() {
         }));
         return { ok: false, message };
       }
-    };
+    },
+    [fetchApi, loadLocaleAllowlist],
+  );
 
-    const readPublishStatus = async (args: {
+  const reloadLocalizationSnapshot = useCallback(async (): Promise<{ ok: true } | { ok: false; message: string }> => {
+    const snapshot = stateRef.current;
+    const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
+    const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
+    const subject = resolvePolicySubject(snapshot.policy);
+
+    if (!publicId || !workspaceId) {
+      const message = 'Missing instance context';
+      return { ok: false as const, message };
+    }
+
+    setState((prev) => ({
+      ...prev,
+      locale: { ...prev.locale, loading: true, error: null },
+    }));
+
+    return rehydrateLocalizationSnapshot({ publicId, workspaceId, subject });
+  }, [rehydrateLocalizationSnapshot]);
+
+  const refreshLocaleTranslations = useCallback(async () => {
+    const readL10nStatus = async (args: {
       publicId: string;
       workspaceId: string;
       subject: 'minibob' | 'workspace';
@@ -1370,7 +1406,7 @@ function useWidgetSessionInternal() {
         const res = await fetchApi(
           `/api/paris/workspaces/${encodeURIComponent(args.workspaceId)}/instances/${encodeURIComponent(
             args.publicId
-          )}/publish/status?subject=${encodeURIComponent(args.subject)}&_t=${Date.now()}`,
+          )}/l10n/status?subject=${encodeURIComponent(args.subject)}&_t=${Date.now()}`,
           { cache: 'no-store' }
         );
         const json = (await res.json().catch(() => null)) as any;
@@ -1383,121 +1419,41 @@ function useWidgetSessionInternal() {
           return { stage: 'failed', detail };
         }
 
-        const statusV2 =
-          json?.status &&
-          typeof json.status === 'object' &&
-          json.status.v === 2 &&
-          json.status.locales &&
-          typeof json.status.locales === 'object'
-            ? (json.status as {
-                locales: Record<
-                  string,
-                  {
-                    overlayState?: 'current' | 'stale' | 'missing';
-                    snapshotState?: 'current' | 'generating' | 'missing';
-                  }
-                >;
-              })
-            : null;
-        if (statusV2) {
-          const localeEntries = Object.values(statusV2.locales || {});
-          const generating = localeEntries.filter((entry) => entry?.snapshotState === 'generating').length;
-          const stale = localeEntries.filter((entry) => entry?.overlayState === 'stale').length;
-          const missing = localeEntries.filter((entry) => entry?.overlayState === 'missing').length;
-          const pipelineOverall =
-            json?.pipeline && typeof json.pipeline.overall === 'string'
-              ? json.pipeline.overall
-              : '';
-          const failedTerminal =
-            typeof json?.pipeline?.l10n?.failedTerminal === 'number'
-              ? json.pipeline.l10n.failedTerminal
-              : 0;
-          const nextActionLabel =
-            typeof json?.pipeline?.l10n?.nextAction?.label === 'string'
-              ? json.pipeline.l10n.nextAction.label.trim()
-              : '';
-          const firstLocaleError = Array.isArray(json?.locales)
-            ? json.locales.find((entry: any) => typeof entry?.l10n?.lastError === 'string' && entry.l10n.lastError.trim())
-            : null;
-          const localeError =
-            firstLocaleError && typeof firstLocaleError.l10n.lastError === 'string'
-              ? firstLocaleError.l10n.lastError.trim()
-              : '';
+        const locales = Array.isArray(json?.locales) ? json.locales : [];
+        const failedLocale = locales.find(
+          (entry: any) => entry?.status === 'failed' && typeof entry?.lastError === 'string' && entry.lastError.trim()
+        );
+        if (failedLocale) {
+          return { stage: 'failed', detail: String(failedLocale.lastError || '').trim() || 'Translation failed.' };
+        }
+        const failedCount = locales.filter((entry: any) => entry?.status === 'failed').length;
+        if (failedCount > 0) return { stage: 'failed', detail: 'Translation failed for one or more locales.' };
 
-          if (json?.instanceStatus !== 'published') {
-            return { stage: 'failed', detail: 'Instance is unpublished. Publish base content before translating.' };
-          }
-          if (pipelineOverall === 'failed' || pipelineOverall === 'l10n_failed' || failedTerminal > 0) {
-            return {
-              stage: 'failed',
-              detail: localeError || nextActionLabel || 'Translation failed for one or more locales.',
-            };
-          }
-          if (generating > 0) {
-            return {
-              stage: 'translating',
-              detail: `${generating} locale snapshot${generating === 1 ? '' : 's'} generating.`,
-            };
-          }
-          if (stale > 0 || missing > 0 || pipelineOverall === 'awaiting_l10n') {
-            const pending = stale + missing;
-            return {
-              stage: 'translating',
-              detail:
-                pending > 0
-                  ? `${pending} locale${pending === 1 ? '' : 's'} pending translation.`
-                  : nextActionLabel || 'Translations are updating.',
-            };
-          }
-          return { stage: 'ready', detail: nextActionLabel || null };
+        const pendingLocales = locales.filter((entry: any) => entry?.status && entry.status !== 'succeeded');
+        if (pendingLocales.length > 0) {
+          const byStatus = pendingLocales.reduce((acc: Record<string, number>, entry: any) => {
+            const status = typeof entry?.status === 'string' ? entry.status : 'unknown';
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+          }, {});
+          const running = byStatus.running || 0;
+          const queued = byStatus.queued || 0;
+          const dirty = byStatus.dirty || 0;
+          const superseded = byStatus.superseded || 0;
+          const detail =
+            running > 0
+              ? `${running} locale${running === 1 ? '' : 's'} translating.`
+              : queued > 0
+                ? `${queued} locale${queued === 1 ? '' : 's'} queued for translation.`
+                : superseded > 0
+                  ? `${superseded} locale${superseded === 1 ? '' : 's'} out of date.`
+                  : dirty > 0
+                    ? `${dirty} locale${dirty === 1 ? '' : 's'} pending translation.`
+                    : 'Translations are updating.';
+          return { stage: 'translating', detail };
         }
 
-        const summary = json?.summary && typeof json.summary === 'object' ? json.summary : {};
-        const l10n = summary?.l10n && typeof summary.l10n === 'object' ? summary.l10n : {};
-        const failedTerminal = typeof l10n.failedTerminal === 'number' ? l10n.failedTerminal : 0;
-        const inFlight = typeof l10n.inFlight === 'number' ? l10n.inFlight : 0;
-        const retrying = typeof l10n.retrying === 'number' ? l10n.retrying : 0;
-        const awaitingL10n = typeof summary.awaitingL10n === 'number' ? summary.awaitingL10n : 0;
-        const awaitingSnapshot = typeof summary.awaitingSnapshot === 'number' ? summary.awaitingSnapshot : 0;
-        const failed = typeof summary.failed === 'number' ? summary.failed : 0;
-        const unpublished = typeof summary.unpublished === 'number' ? summary.unpublished : 0;
-        const nextActionLabel =
-          typeof json?.pipeline?.l10n?.nextAction?.label === 'string'
-            ? json.pipeline.l10n.nextAction.label.trim()
-            : '';
-        const firstLocaleError = Array.isArray(json?.locales)
-          ? json.locales.find((entry: any) => typeof entry?.l10n?.lastError === 'string' && entry.l10n.lastError.trim())
-          : null;
-        const localeError =
-          firstLocaleError && typeof firstLocaleError.l10n.lastError === 'string'
-            ? firstLocaleError.l10n.lastError.trim()
-            : '';
-
-        if (unpublished > 0) {
-          return { stage: 'failed', detail: 'Instance is unpublished. Publish base content before translating.' };
-        }
-        if (failedTerminal > 0 || failed > 0) {
-          return { stage: 'failed', detail: localeError || nextActionLabel || 'Translation failed for one or more locales.' };
-        }
-        if (inFlight > 0) {
-          return {
-            stage: 'translating',
-            detail: `${inFlight} locale translation job${inFlight === 1 ? '' : 's'} running.`,
-          };
-        }
-        if (retrying > 0) {
-          return { stage: 'translating', detail: `${retrying} locale${retrying === 1 ? '' : 's'} retrying.` };
-        }
-        if (awaitingSnapshot > 0) {
-          return { stage: 'translating', detail: 'Waiting for localized snapshot publish.' };
-        }
-        if (awaitingL10n > 0) {
-          return {
-            stage: 'translating',
-            detail: `${awaitingL10n} locale${awaitingL10n === 1 ? '' : 's'} queued for translation.`,
-          };
-        }
-        return { stage: 'ready', detail: nextActionLabel || null };
+        return { stage: 'ready', detail: null };
       } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         return { stage: 'failed', detail };
@@ -1515,7 +1471,7 @@ function useWidgetSessionInternal() {
       const timeoutMs = 45_000;
 
       while (args.runId === localeSyncRunRef.current) {
-        const status = await readPublishStatus({
+        const status = await readL10nStatus({
           publicId: args.publicId,
           workspaceId: args.workspaceId,
           subject: args.subject,
@@ -1787,7 +1743,7 @@ function useWidgetSessionInternal() {
       }));
       return { ok: false as const, message };
     }
-  }, [fetchApi, loadLocaleAllowlist]);
+  }, [fetchApi, rehydrateLocalizationSnapshot]);
 
   const revertLocaleOverrides = useCallback(async () => {
     const snapshot = stateRef.current;
@@ -1891,10 +1847,6 @@ function useWidgetSessionInternal() {
       message: EditorOpenMessage,
     ): Promise<{ ok: true; publicId?: string; widgetname?: string } | { ok: false; error: string }> => {
     try {
-      const sessionAccessToken =
-        typeof message.sessionAccessToken === 'string' ? message.sessionAccessToken.trim() : '';
-      sessionAccessTokenRef.current = sessionAccessToken;
-
       const compiled = message.compiled;
       if (!compiled) {
         throw new Error('[useWidgetSession] Missing compiled widget payload');
@@ -1947,6 +1899,7 @@ function useWidgetSessionInternal() {
       });
       resolved = applyWidgetNormalizations(compiled.normalization, resolved);
       const localizationSnapshot = normalizeLocalizationSnapshotForOpen(nextLocalizationSnapshotRaw);
+      const nextStatus = message.status === 'published' ? 'published' : 'unpublished';
 
       setState((prev) => ({
         ...prev,
@@ -1954,6 +1907,7 @@ function useWidgetSessionInternal() {
         instanceData: resolved,
         baseInstanceData: resolved,
         publishedBaseInstanceData: structuredClone(resolved),
+        status: nextStatus,
         isDirty: false,
         minibobPersonalizationUsed: false,
         policy: nextPolicy,
@@ -1963,9 +1917,12 @@ function useWidgetSessionInternal() {
         upsell: null,
         locale: {
           ...DEFAULT_LOCALE_STATE,
+          baseLocale: localizationSnapshot.baseLocale,
+          activeLocale: localizationSnapshot.baseLocale,
           availableLocales: localizationSnapshot.availableLocales,
           overlayEntries: localizationSnapshot.overlayEntries,
           workspaceLocalesInvalid: localizationSnapshot.workspaceLocalesInvalid,
+          workspaceL10nPolicy: localizationSnapshot.workspaceL10nPolicy,
         },
         lastUpdate: {
           source: 'load',
@@ -1987,7 +1944,6 @@ function useWidgetSessionInternal() {
         widgetname: compiled.widgetname,
       };
     } catch (err) {
-      sessionAccessTokenRef.current = '';
       if (process.env.NODE_ENV === 'development') {
         console.error('[useWidgetSession] Failed to load instance', err, message);
       }
@@ -2053,7 +2009,7 @@ function useWidgetSessionInternal() {
     }));
   }, []);
 
-  const publish = useCallback(async () => {
+  const save = useCallback(async () => {
     const publicId = state.meta?.publicId;
     const workspaceId = state.meta?.workspaceId;
     const widgetType = state.meta?.widgetname;
@@ -2105,21 +2061,37 @@ function useWidgetSessionInternal() {
       return;
     }
 
-    const subject = state.policy.profile === 'minibob' ? 'minibob' : 'workspace';
+      const subject = state.policy.profile === 'minibob' ? 'minibob' : 'workspace';
 
-    setState((prev) => ({ ...prev, isPublishing: true, error: null }));
-    try {
-      const configToPublish = state.baseInstanceData;
-      const res = await fetchApi(
-        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
-          publicId
-        )}?subject=${encodeURIComponent(subject)}`,
-        {
-          method: 'PUT',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ config: configToPublish, status: 'published' }),
-        }
-      );
+      setState((prev) => ({ ...prev, isPublishing: true, error: null }));
+      try {
+        const configToSave = state.baseInstanceData;
+        const localePolicy = {
+          baseLocale: state.locale.baseLocale,
+          availableLocales: state.locale.availableLocales,
+          ip: {
+            enabled: state.locale.workspaceL10nPolicy.ip.enabled,
+            countryToLocale: state.locale.workspaceL10nPolicy.ip.enabled
+              ? Object.fromEntries(
+                  Object.entries(state.locale.workspaceL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
+                    state.locale.availableLocales.includes(locale),
+                  ),
+                )
+              : {},
+          },
+          switcher: { enabled: state.locale.workspaceL10nPolicy.switcher.enabled },
+        };
+        const seoGeo = state.policy.flags['embed.seoGeo.enabled'] === true;
+        const res = await fetchApi(
+          `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+            publicId
+          )}?subject=${encodeURIComponent(subject)}`,
+          {
+            method: 'PUT',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ config: configToSave, localePolicy, seoGeo }),
+          }
+        );
 
       const json = (await res.json().catch(() => null)) as any;
       if (!res.ok) {
@@ -2157,6 +2129,7 @@ function useWidgetSessionInternal() {
         ...prev,
         isPublishing: false,
         isDirty: false,
+        status: json?.status === 'published' ? 'published' : 'unpublished',
         error: null,
         upsell: null,
         publishedBaseInstanceData:
@@ -2182,13 +2155,13 @@ function useWidgetSessionInternal() {
       }));
 
       try {
-        const message: BobPublishedMessage = {
-          type: 'bob:published',
+        const message: BobInstanceSavedMessage = {
+          type: 'bob:instance-saved',
           publicId,
           workspaceId,
           widgetType,
-          status: 'published',
-          config: configToPublish,
+          status: json?.status === 'published' ? 'published' : 'unpublished',
+          config: configToSave,
         };
         window.parent?.postMessage(message, '*');
       } catch {}
@@ -2199,11 +2172,156 @@ function useWidgetSessionInternal() {
   }, [
     fetchApi,
     state.baseInstanceData,
+    state.enforcement,
+    state.locale.availableLocales,
+    state.locale.baseLocale,
+    state.locale.workspaceL10nPolicy.ip.countryToLocale,
+    state.locale.workspaceL10nPolicy.ip.enabled,
+    state.locale.workspaceL10nPolicy.switcher.enabled,
     state.meta?.publicId,
     state.meta?.workspaceId,
     state.meta?.widgetname,
     state.policy,
   ]);
+
+  const setLive = useCallback(
+    async (nextLive: boolean) => {
+      const publicId = state.meta?.publicId ? String(state.meta.publicId) : '';
+      const workspaceId = state.meta?.workspaceId ? String(state.meta.workspaceId) : '';
+      const widgetType = state.meta?.widgetname ? String(state.meta.widgetname) : '';
+      if (!publicId || !workspaceId) return;
+
+      if (state.enforcement?.mode === 'frozen') {
+        setState((prev) => ({
+          ...prev,
+          error: {
+            source: 'publish',
+            message: 'Publishing is frozen for this instance.',
+            detail: `Frozen until ${state.enforcement?.resetAt}`,
+            cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+          },
+        }));
+        return;
+      }
+
+      if (state.policy.role === 'viewer') {
+        setState((prev) => ({
+          ...prev,
+          error: { source: 'publish', message: 'Read-only mode: publishing is disabled.' },
+        }));
+        return;
+      }
+
+      const gate = can(state.policy, 'instance.publish');
+      if (!gate.allow) {
+        setState((prev) => ({
+          ...prev,
+          error: null,
+          upsell: {
+            reasonKey: gate.reasonKey,
+            detail: gate.detail,
+            cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+          },
+        }));
+        return;
+      }
+
+      if (nextLive && state.isDirty) {
+        setState((prev) => ({
+          ...prev,
+          error: { source: 'publish', message: 'Save changes before going live.' },
+        }));
+        return;
+      }
+
+      const subject = state.policy.profile === 'minibob' ? 'minibob' : 'workspace';
+
+      setState((prev) => ({ ...prev, isPublishing: true, error: null }));
+      try {
+        const localePolicy = {
+          baseLocale: state.locale.baseLocale,
+          availableLocales: state.locale.availableLocales,
+          ip: {
+            enabled: state.locale.workspaceL10nPolicy.ip.enabled,
+            countryToLocale: state.locale.workspaceL10nPolicy.ip.enabled
+              ? Object.fromEntries(
+                  Object.entries(state.locale.workspaceL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
+                    state.locale.availableLocales.includes(locale),
+                  ),
+                )
+              : {},
+          },
+          switcher: { enabled: state.locale.workspaceL10nPolicy.switcher.enabled },
+        };
+        const seoGeo = state.policy.flags['embed.seoGeo.enabled'] === true;
+        const res = await fetchApi(
+          `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+            publicId,
+          )}?subject=${encodeURIComponent(subject)}`,
+          {
+            method: 'PUT',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(
+              nextLive ? { status: 'published', localePolicy, seoGeo } : { status: 'unpublished' },
+            ),
+          },
+        );
+
+        const json = (await res.json().catch(() => null)) as any;
+        if (!res.ok) {
+          const err = json?.error;
+          setState((prev) => ({
+            ...prev,
+            isPublishing: false,
+            error: { source: 'publish', message: err?.reasonKey || `Live toggle failed (HTTP ${res.status})` },
+          }));
+          return;
+        }
+
+        setState((prev) => ({
+          ...prev,
+          isPublishing: false,
+          status: json?.status === 'published' ? 'published' : 'unpublished',
+          policy: json?.policy && typeof json.policy === 'object' ? assertPolicy(json.policy) : prev.policy,
+          enforcement: Object.prototype.hasOwnProperty.call(json ?? {}, 'enforcement')
+            ? normalizeEnforcement(json?.enforcement)
+            : prev.enforcement,
+        }));
+
+        try {
+          const message: BobInstanceSavedMessage = {
+            type: 'bob:instance-saved',
+            publicId,
+            workspaceId,
+            widgetType,
+            status: json?.status === 'published' ? 'published' : 'unpublished',
+            config: state.baseInstanceData,
+          };
+          window.parent?.postMessage(message, '*');
+        } catch {}
+      } catch (err) {
+        const messageText = err instanceof Error ? err.message : String(err);
+        setState((prev) => ({
+          ...prev,
+          isPublishing: false,
+          error: { source: 'publish', message: messageText },
+        }));
+      }
+    },
+    [
+      fetchApi,
+      state.baseInstanceData,
+      state.enforcement,
+      state.isDirty,
+      state.locale.availableLocales,
+      state.locale.baseLocale,
+      state.locale.workspaceL10nPolicy.ip.countryToLocale,
+      state.locale.workspaceL10nPolicy.ip.enabled,
+      state.locale.workspaceL10nPolicy.switcher.enabled,
+      state.meta,
+      state.policy,
+    ],
+  );
 
   const discardChanges = useCallback(() => {
     setState((prev) => {
@@ -2274,6 +2392,7 @@ function useWidgetSessionInternal() {
       widgetname: widgetType,
       compiled,
       instanceData: instanceJson.config,
+      status: instanceJson.status === 'published' ? 'published' : 'unpublished',
       localization: instanceJson.localization,
       policy: instanceJson.policy,
       enforcement: instanceJson.enforcement,
@@ -2368,15 +2487,13 @@ function useWidgetSessionInternal() {
 
   useEffect(() => {
     const bootMode = resolveBootModeFromUrl();
-    const hostSurface = resolveHostSurfaceFromUrl();
     const postToParent = (
       payload:
         | BobSessionReadyMessage
         | BobOpenEditorAckMessage
         | BobOpenEditorAppliedMessage
         | BobOpenEditorFailedMessage
-        | BobExportInstanceDataResponseMessage
-        | BobPublishedMessage,
+        | BobExportInstanceDataResponseMessage,
       origin: string,
     ) => {
       try {
@@ -2458,10 +2575,6 @@ function useWidgetSessionInternal() {
           typeof (data as { subjectMode?: unknown }).subjectMode === 'string'
             ? String((data as { subjectMode?: unknown }).subjectMode).trim().toLowerCase()
             : '';
-        const resolvedSubjectMode =
-          rawSubjectMode === 'workspace' || rawSubjectMode === 'minibob'
-            ? rawSubjectMode
-            : resolveSubjectModeFromUrl();
         if (rawSubjectMode && rawSubjectMode !== 'workspace' && rawSubjectMode !== 'minibob') {
           const reasonKey = 'coreui.errors.builder.open.invalidRequest';
           openRequestStatusRef.current.set(requestId, {
@@ -2475,29 +2588,6 @@ function useWidgetSessionInternal() {
               sessionId,
               reasonKey,
               message: 'Invalid subjectMode in open-editor payload',
-            },
-            targetOrigin,
-          );
-          return;
-        }
-
-        const sessionAccessToken =
-          typeof (data as { sessionAccessToken?: unknown }).sessionAccessToken === 'string'
-            ? String((data as { sessionAccessToken?: unknown }).sessionAccessToken).trim()
-            : '';
-        if (hostSurface === 'roma' && resolvedSubjectMode === 'workspace' && !sessionAccessToken) {
-          const reasonKey = 'coreui.errors.auth.required';
-          openRequestStatusRef.current.set(requestId, {
-            status: 'failed',
-            error: reasonKey,
-          });
-          postToParent(
-            {
-              type: 'bob:open-editor-failed',
-              requestId,
-              sessionId,
-              reasonKey,
-              message: 'Missing sessionAccessToken for Roma workspace boot.',
             },
             targetOrigin,
           );
@@ -2606,6 +2696,7 @@ function useWidgetSessionInternal() {
           baseInstanceData: {},
           isDirty: false,
           minibobPersonalizationUsed: false,
+          status: 'unpublished',
           error: { source: 'load', message: messageText },
           upsell: null,
           locale: { ...DEFAULT_LOCALE_STATE },
@@ -2621,6 +2712,7 @@ function useWidgetSessionInternal() {
       compiled: state.compiled,
       instanceData: state.instanceData,
       baseInstanceData: state.baseInstanceData,
+      status: state.status,
       previewData: state.previewData,
       previewOps: state.previewOps,
       isDirty: state.isDirty,
@@ -2643,7 +2735,8 @@ function useWidgetSessionInternal() {
       clearPreviewOps,
       undoLastOps,
       commitLastOps,
-      publish,
+      save,
+      setLive,
       discardChanges,
       dismissUpsell,
       requestUpsell,
@@ -2652,6 +2745,7 @@ function useWidgetSessionInternal() {
       setPreview,
       setLocalePreview,
       saveLocaleOverrides,
+      reloadLocalizationSnapshot,
       refreshLocaleTranslations,
       revertLocaleOverrides,
       loadInstance,
@@ -2667,7 +2761,8 @@ function useWidgetSessionInternal() {
       clearPreviewOps,
       undoLastOps,
       commitLastOps,
-      publish,
+      save,
+      setLive,
       discardChanges,
       dismissUpsell,
       requestUpsell,
@@ -2675,6 +2770,7 @@ function useWidgetSessionInternal() {
       setPreview,
       setLocalePreview,
       saveLocaleOverrides,
+      reloadLocalizationSnapshot,
       refreshLocaleTranslations,
       revertLocaleOverrides,
       setSelectedPath,

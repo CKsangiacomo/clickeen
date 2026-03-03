@@ -163,6 +163,8 @@ function hydrateWorkspaceFromCapsule(payload: RomaWorkspaceAuthzCapsulePayload):
     name: payload.workspaceName,
     slug: payload.workspaceSlug,
     website_url: payload.workspaceWebsiteUrl ?? null,
+    l10n_locales: payload.workspaceL10nLocales,
+    l10n_policy: payload.workspaceL10nPolicy,
   };
 }
 
@@ -176,10 +178,11 @@ export async function authorizeWorkspace(
   if (!auth.ok) return { ok: false, response: auth.response };
 
   if (!auth.principal) {
+    const localStage = String(env.ENV_STAGE || '').trim().toLowerCase() === 'local';
     const trustedInternal =
       auth.source === 'dev' &&
       isTrustedInternalServiceRequest(req, env) &&
-      isInternalWorkspaceServicePathAllowed(req);
+      (localStage || isInternalWorkspaceServicePathAllowed(req));
     if (!trustedInternal) {
       return {
         ok: false,
