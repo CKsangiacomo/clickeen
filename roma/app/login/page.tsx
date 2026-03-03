@@ -12,6 +12,7 @@ function resolveNextPath(value: string | null): string {
 }
 
 function resolveErrorMessage(reasonKey: string | null): string {
+  if (reasonKey === 'coreui.errors.auth.required') return 'Please sign in to continue.';
   if (reasonKey === 'coreui.errors.auth.invalid_credentials') return 'Invalid email or password.';
   if (reasonKey === 'coreui.errors.auth.provider.notEnabled') return 'Google login is not enabled yet for this environment.';
   if (reasonKey === 'coreui.errors.auth.provider.denied') return 'Google sign-in was cancelled.';

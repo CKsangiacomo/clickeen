@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../../../lib/env/berlin';
 import {
   applySessionCookies,
+  resolveLegacyCookieDomainsToClear,
   resolveSessionCookieDomain,
   resolveSessionCookieNames,
 } from '../../../../../../lib/auth/session';
@@ -30,6 +31,7 @@ type BerlinLoginPayload = {
 function clearCookie(
   response: NextResponse,
   options: { secure: boolean; domain?: string },
+  extraDomains: string[],
   cookieName: string,
 ) {
   response.cookies.set({
@@ -52,6 +54,51 @@ function clearCookie(
       path: '/',
       maxAge: 0,
       domain: options.domain,
+    });
+  }
+
+  for (const domain of extraDomains) {
+    if (!domain || domain === options.domain) continue;
+    response.cookies.set({
+      name: cookieName,
+      value: '',
+      httpOnly: true,
+      secure: options.secure,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+      domain,
+    });
+  }
+}
+
+function clearCookieOnExtraDomains(
+  response: NextResponse,
+  options: { secure: boolean },
+  extraDomains: string[],
+  cookieName: string,
+) {
+  response.cookies.set({
+    name: cookieName,
+    value: '',
+    httpOnly: true,
+    secure: options.secure,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+
+  for (const domain of extraDomains) {
+    if (!domain) continue;
+    response.cookies.set({
+      name: cookieName,
+      value: '',
+      httpOnly: true,
+      secure: options.secure,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+      domain,
     });
   }
 }
@@ -152,6 +199,7 @@ export async function GET(request: NextRequest) {
     secure: request.nextUrl.protocol === 'https:',
     domain: resolveSessionCookieDomain(request),
   };
+  const legacyDomains = resolveLegacyCookieDomainsToClear(request);
 
   response.cookies.set({
     name: LOGIN_NEXT_COOKIE,
@@ -164,8 +212,13 @@ export async function GET(request: NextRequest) {
   });
 
   // Clear legacy Supabase cookies during boundary cutover.
-  clearCookie(response, cookieOptions, LEGACY_ACCESS_COOKIE);
-  clearCookie(response, cookieOptions, LEGACY_REFRESH_COOKIE);
+  clearCookie(response, cookieOptions, legacyDomains, LEGACY_ACCESS_COOKIE);
+  clearCookie(response, cookieOptions, legacyDomains, LEGACY_REFRESH_COOKIE);
+
+  // Clear historical broad-domain session cookies so they cannot shadow cloud-dev (`.dev.clickeen.com`) sessions.
+  const names = resolveSessionCookieNames();
+  clearCookieOnExtraDomains(response, { secure: cookieOptions.secure }, legacyDomains, names.access);
+  clearCookieOnExtraDomains(response, { secure: cookieOptions.secure }, legacyDomains, names.refresh);
 
   return response;
 }

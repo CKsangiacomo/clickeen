@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
-import { resolveSessionCookieDomain, resolveSessionCookieNames } from '../../../../lib/auth/session';
+import { resolveLegacyCookieDomainsToClear, resolveSessionCookieDomain, resolveSessionCookieNames } from '../../../../lib/auth/session';
 
 export const runtime = 'edge';
 
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
 
   const secure = request.nextUrl.protocol === 'https:';
   const domain = resolveSessionCookieDomain(request);
+  const legacyDomains = resolveLegacyCookieDomainsToClear(request);
   const response = NextResponse.json({ ok: true }, { headers: CACHE_HEADERS });
   const cookieNames = resolveAllSessionCookieNames(request);
   for (const cookieName of cookieNames) {
@@ -81,6 +82,20 @@ export async function POST(request: NextRequest) {
         path: '/',
         maxAge: 0,
         domain,
+      });
+    }
+
+    for (const legacy of legacyDomains) {
+      if (!legacy || legacy === domain) continue;
+      response.cookies.set({
+        name: cookieName,
+        value: '',
+        httpOnly: true,
+        secure,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+        domain: legacy,
       });
     }
   }

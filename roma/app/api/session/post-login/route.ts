@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveParisBaseUrl } from '../../../../lib/env/paris';
-import { applySessionCookies, resolveSessionBearer, resolveSessionCookieDomain, resolveSessionCookieNames } from '../../../../lib/auth/session';
+import {
+  applySessionCookies,
+  resolveLegacyCookieDomainsToClear,
+  resolveSessionBearer,
+  resolveSessionCookieDomain,
+  resolveSessionCookieNames,
+} from '../../../../lib/auth/session';
 
 export const runtime = 'edge';
 
@@ -31,6 +37,7 @@ function resolveLoginUrl(request: NextRequest, params: Record<string, string>): 
 function clearCookie(response: NextResponse, request: NextRequest, name: string): void {
   const secure = request.nextUrl.protocol === 'https:';
   const domain = resolveSessionCookieDomain(request);
+  const legacyDomains = resolveLegacyCookieDomainsToClear(request);
 
   response.cookies.set({
     name,
@@ -52,6 +59,20 @@ function clearCookie(response: NextResponse, request: NextRequest, name: string)
       path: '/',
       maxAge: 0,
       domain,
+    });
+  }
+
+  for (const legacy of legacyDomains) {
+    if (!legacy || legacy === domain) continue;
+    response.cookies.set({
+      name,
+      value: '',
+      httpOnly: true,
+      secure,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+      domain: legacy,
     });
   }
 }

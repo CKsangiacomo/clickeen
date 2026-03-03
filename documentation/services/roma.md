@@ -16,7 +16,7 @@ Roma is a host/orchestrator. Bob remains the editor kernel.
 ## Runtime surface (current repo snapshot)
 
 ### App routes
-- `/` → redirects to `/home`
+- `/` → redirects to `/home` when a session is present, otherwise `/login`
 - `/:domain` (`home|widgets|templates|assets|team|billing|usage|ai|settings`) via `roma/app/[domain]/page.tsx`
 - `/builder` and `/builder/:publicId`
 - `/widgets/:publicId` (detail placeholder)

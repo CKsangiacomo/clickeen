@@ -54,12 +54,22 @@ export function resolveSessionCookieNames(): { access: string; refresh: string }
 export function resolveSessionCookieDomain(request: NextRequest): string | undefined {
   const hostname = request.nextUrl.hostname.trim().toLowerCase();
   if (!hostname || isLocalHostname(hostname)) return undefined;
-  if (hostname === 'clickeen.com') return '.clickeen.com';
-  if (!hostname.endsWith('.clickeen.com')) return undefined;
 
-  const parts = hostname.split('.').filter(Boolean);
-  if (parts.length <= 2) return '.clickeen.com';
-  return `.${parts.slice(1).join('.')}`;
+  // Cloud-dev runs on `*.dev.clickeen.com` and must share cookies with Bob (`bob.dev.clickeen.com`).
+  if (hostname.endsWith('.dev.clickeen.com')) return '.dev.clickeen.com';
+
+  // Production is served from a single app host (`app.clickeen.com`). Keep cookies host-scoped so
+  // production sessions never bleed into cloud-dev (`*.dev.clickeen.com`).
+  return undefined;
+}
+
+export function resolveLegacyCookieDomainsToClear(request: NextRequest): string[] {
+  const hostname = request.nextUrl.hostname.trim().toLowerCase();
+  if (!hostname || isLocalHostname(hostname)) return [];
+  if (hostname === 'clickeen.com' || hostname.endsWith('.clickeen.com')) {
+    return ['.clickeen.com'];
+  }
+  return [];
 }
 
 export function applySessionCookies(
