@@ -457,9 +457,6 @@ WHERE c.account_id IS NULL
 ALTER TABLE public.comments
   ALTER COLUMN account_id SET NOT NULL;
 
-ALTER TABLE public.comments
-  DROP COLUMN IF EXISTS workspace_id;
-
 CREATE INDEX IF NOT EXISTS comments_account_id_idx
   ON public.comments (account_id);
 
@@ -502,6 +499,9 @@ CREATE POLICY comments_update_editors ON public.comments
         AND m.role IN ('owner', 'admin', 'editor')
     )
   );
+
+ALTER TABLE public.comments
+  DROP COLUMN IF EXISTS workspace_id;
 
 -- ---------------------------------------------------------------------------
 -- Business profiles: move to account scope (service role only)
