@@ -1,29 +1,80 @@
 import { authHeaders, extractDefaults, fetchEnvelope } from '../http.mjs';
 import { isUuid, makeCheck, readString, scenarioPassed } from '../utils.mjs';
+import crypto from 'node:crypto';
 
-function extractWidgetInstances(payload) {
+function extractAccountInstancePublicIds(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return [];
-  const domains =
-    payload.domains && typeof payload.domains === 'object' && !Array.isArray(payload.domains) ? payload.domains : null;
-  const widgets =
-    domains?.widgets && typeof domains.widgets === 'object' && !Array.isArray(domains.widgets) ? domains.widgets : null;
-  const instances = Array.isArray(widgets?.instances) ? widgets.instances : [];
+  const instances = Array.isArray(payload.instances) ? payload.instances : [];
   return instances
     .map((item) =>
-      item && typeof item === 'object' && !Array.isArray(item)
-        ? { publicId: readString(item.publicId), source: readString(item.source), widgetType: readString(item.widgetType) }
-        : { publicId: '', source: '', widgetType: '' },
+      item && typeof item === 'object' && !Array.isArray(item) ? readString(item.publicId) : '',
     )
-    .filter((item) => item.publicId);
+    .filter(Boolean);
 }
 
-function resolveProbePublicId(profile, romaPayload, bobPayload) {
+function createProbePublicId(widgetType) {
+  const normalized = readString(widgetType)
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  const stem = normalized || 'instance';
+  const suffix = `${Date.now().toString(36)}${crypto.randomUUID().replace(/-/g, '').slice(0, 10)}`;
+  return `wgt_${stem}_u_${suffix}`;
+}
+
+function resolveAccountInstancesUrl(profile, accountId) {
+  const normalizedAccountId = readString(accountId);
+  const base =
+    profile.name === 'local'
+      ? `${profile.bobBaseUrl.replace(/\\/+$/, '')}/api/paris`
+      : profile.parisBaseUrl.replace(/\\/+$/, '');
+  const path = profile.name === 'local'
+    ? `/accounts/${encodeURIComponent(normalizedAccountId)}/instances`
+    : `/api/accounts/${encodeURIComponent(normalizedAccountId)}/instances`;
+  return `${base}${path}?_t=${Date.now()}`;
+}
+
+function resolveAccountInstancesCreateUrl(profile, accountId) {
+  const normalizedAccountId = readString(accountId);
+  const base =
+    profile.name === 'local'
+      ? `${profile.bobBaseUrl.replace(/\\/+$/, '')}/api/paris`
+      : profile.parisBaseUrl.replace(/\\/+$/, '');
+  const path = profile.name === 'local'
+    ? `/accounts/${encodeURIComponent(normalizedAccountId)}/instances`
+    : `/api/accounts/${encodeURIComponent(normalizedAccountId)}/instances`;
+  return `${base}${path}?_t=${Date.now()}`;
+}
+
+async function resolveProbePublicId({ profile, headers, accountId }) {
   const explicit = readString(profile.probePublicId);
   if (explicit) return explicit;
-  const instances = [...extractWidgetInstances(romaPayload), ...extractWidgetInstances(bobPayload)];
-  const accountFirst = instances.find((item) => item.source === 'account');
-  if (accountFirst?.publicId) return accountFirst.publicId;
-  return instances[0]?.publicId || '';
+
+  const list = await fetchEnvelope(resolveAccountInstancesUrl(profile, accountId), { headers });
+  if (list.status === 200) {
+    const publicIds = extractAccountInstancePublicIds(list.json);
+    if (publicIds.length) return publicIds[0] || '';
+  }
+
+  if (profile.name !== 'local') return '';
+
+  const widgetType = 'countdown';
+  const publicId = createProbePublicId(widgetType);
+  const create = await fetchEnvelope(resolveAccountInstancesCreateUrl(profile, accountId), {
+    method: 'POST',
+    headers: authHeaders(profile.authBearer, { 'content-type': 'application/json' }),
+    body: JSON.stringify({
+      publicId,
+      widgetType,
+      status: 'unpublished',
+      config: {},
+    }),
+    retries: 0,
+  });
+  if (create.status !== 200) return '';
+  const createdPublicId = readString(create.json?.publicId);
+  return createdPublicId || publicId;
 }
 
 export async function runBootstrapParityScenario({ profile }) {
@@ -40,7 +91,7 @@ export async function runBootstrapParityScenario({ profile }) {
     );
 
     const resolvedAccountId = bobDefaults.accountId || '';
-    const resolvedPublicId = resolveProbePublicId(profile, null, bob.json);
+    const resolvedPublicId = await resolveProbePublicId({ profile, headers, accountId: resolvedAccountId });
 
     checks.push(makeCheck('Probe publicId resolved', Boolean(resolvedPublicId), { actual: resolvedPublicId }));
 
@@ -79,7 +130,7 @@ export async function runBootstrapParityScenario({ profile }) {
   );
 
   const resolvedAccountId = romaDefaults.accountId || bobDefaults.accountId || '';
-  const resolvedPublicId = resolveProbePublicId(profile, roma.json, bob.json);
+  const resolvedPublicId = await resolveProbePublicId({ profile, headers, accountId: resolvedAccountId });
 
   if (profile.probeAccountId) {
     checks.push(
