@@ -32,7 +32,7 @@ function resolveAccountInstancesUrl(profile, accountId) {
   const path = profile.name === 'local'
     ? `/accounts/${encodeURIComponent(normalizedAccountId)}/instances`
     : `/api/accounts/${encodeURIComponent(normalizedAccountId)}/instances`;
-  return `${base}${path}?_t=${Date.now()}`;
+  return `${base}${path}?subject=account&_t=${Date.now()}`;
 }
 
 function resolveAccountInstancesCreateUrl(profile, accountId) {
@@ -44,7 +44,7 @@ function resolveAccountInstancesCreateUrl(profile, accountId) {
   const path = profile.name === 'local'
     ? `/accounts/${encodeURIComponent(normalizedAccountId)}/instances`
     : `/api/accounts/${encodeURIComponent(normalizedAccountId)}/instances`;
-  return `${base}${path}?_t=${Date.now()}`;
+  return `${base}${path}?subject=account&_t=${Date.now()}`;
 }
 
 async function resolveProbePublicId({ profile, headers, accountId }) {
