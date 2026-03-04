@@ -1,7 +1,7 @@
 import type { Env } from './shared/types';
 import { corsPreflight, json } from './shared/http';
 import { assertAccountId } from './shared/validation';
-import { handleHealthz, handleNotImplemented } from './shared/handlers';
+import { handleHealthz, handleNotImplemented, handleSchemaHealthz } from './shared/handlers';
 import { handleAiGrant, handleAiMinibobGrant, handleAiMinibobSession, handleAiOutcome } from './domains/ai';
 import {
   handlePersonalizationOnboardingCreate,
@@ -74,6 +74,7 @@ export default {
 
       if (req.method === 'OPTIONS') return corsPreflight(req);
       if (pathname === '/api/healthz') return handleHealthz();
+      if (pathname === '/api/healthz/schema') return handleSchemaHealthz(env);
       if (pathname === '/api/me') {
         if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleMe(req, env);
