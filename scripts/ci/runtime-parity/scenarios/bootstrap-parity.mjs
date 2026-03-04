@@ -27,8 +27,8 @@ function resolveAccountInstancesUrl(profile, accountId) {
   const normalizedAccountId = readString(accountId);
   const base =
     profile.name === 'local'
-      ? `${profile.bobBaseUrl.replace(/\\/+$/, '')}/api/paris`
-      : profile.parisBaseUrl.replace(/\\/+$/, '');
+      ? `${profile.bobBaseUrl.replace(/\/+$/, '')}/api/paris`
+      : profile.parisBaseUrl.replace(/\/+$/, '');
   const path = profile.name === 'local'
     ? `/accounts/${encodeURIComponent(normalizedAccountId)}/instances`
     : `/api/accounts/${encodeURIComponent(normalizedAccountId)}/instances`;
@@ -39,8 +39,8 @@ function resolveAccountInstancesCreateUrl(profile, accountId) {
   const normalizedAccountId = readString(accountId);
   const base =
     profile.name === 'local'
-      ? `${profile.bobBaseUrl.replace(/\\/+$/, '')}/api/paris`
-      : profile.parisBaseUrl.replace(/\\/+$/, '');
+      ? `${profile.bobBaseUrl.replace(/\/+$/, '')}/api/paris`
+      : profile.parisBaseUrl.replace(/\/+$/, '');
   const path = profile.name === 'local'
     ? `/accounts/${encodeURIComponent(normalizedAccountId)}/instances`
     : `/api/accounts/${encodeURIComponent(normalizedAccountId)}/instances`;
