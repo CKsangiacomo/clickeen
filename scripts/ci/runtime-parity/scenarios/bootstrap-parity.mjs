@@ -49,18 +49,26 @@ function resolveAccountInstancesCreateUrl(profile, accountId) {
 
 async function resolveProbePublicId({ profile, headers, accountId }) {
   const explicit = readString(profile.probePublicId);
-  if (explicit) return explicit;
+  const debug = {
+    explicit: explicit || null,
+    list: { status: 0, count: 0 },
+    create: { attempted: false, status: 0, reasonKey: null },
+  };
+  if (explicit) return { publicId: explicit, debug };
 
   const list = await fetchEnvelope(resolveAccountInstancesUrl(profile, accountId), { headers });
+  debug.list.status = list.status;
   if (list.status === 200) {
     const publicIds = extractAccountInstancePublicIds(list.json);
-    if (publicIds.length) return publicIds[0] || '';
+    debug.list.count = publicIds.length;
+    if (publicIds.length) return { publicId: publicIds[0] || '', debug };
   }
 
-  if (profile.name !== 'local') return '';
+  if (profile.name !== 'local') return { publicId: '', debug };
 
   const widgetType = 'countdown';
   const publicId = createProbePublicId(widgetType);
+  debug.create.attempted = true;
   const create = await fetchEnvelope(resolveAccountInstancesCreateUrl(profile, accountId), {
     method: 'POST',
     headers: authHeaders(profile.authBearer, { 'content-type': 'application/json' }),
@@ -72,9 +80,11 @@ async function resolveProbePublicId({ profile, headers, accountId }) {
     }),
     retries: 0,
   });
-  if (create.status !== 200) return '';
+  debug.create.status = create.status;
+  debug.create.reasonKey = readString(create.json?.error?.reasonKey) || readString(create.json?.error) || null;
+  if (create.status !== 200) return { publicId: '', debug };
   const createdPublicId = readString(create.json?.publicId);
-  return createdPublicId || publicId;
+  return { publicId: createdPublicId || publicId, debug };
 }
 
 export async function runBootstrapParityScenario({ profile }) {
@@ -91,9 +101,10 @@ export async function runBootstrapParityScenario({ profile }) {
     );
 
     const resolvedAccountId = bobDefaults.accountId || '';
-    const resolvedPublicId = await resolveProbePublicId({ profile, headers, accountId: resolvedAccountId });
+    const resolvedProbe = await resolveProbePublicId({ profile, headers, accountId: resolvedAccountId });
+    const resolvedPublicId = readString(resolvedProbe.publicId);
 
-    checks.push(makeCheck('Probe publicId resolved', Boolean(resolvedPublicId), { actual: resolvedPublicId }));
+    checks.push(makeCheck('Probe publicId resolved', Boolean(resolvedPublicId), { actual: resolvedProbe }));
 
     return {
       scenario: 'bootstrap-parity',
@@ -130,7 +141,8 @@ export async function runBootstrapParityScenario({ profile }) {
   );
 
   const resolvedAccountId = romaDefaults.accountId || bobDefaults.accountId || '';
-  const resolvedPublicId = await resolveProbePublicId({ profile, headers, accountId: resolvedAccountId });
+  const resolvedProbe = await resolveProbePublicId({ profile, headers, accountId: resolvedAccountId });
+  const resolvedPublicId = readString(resolvedProbe.publicId);
 
   if (profile.probeAccountId) {
     checks.push(
@@ -139,7 +151,7 @@ export async function runBootstrapParityScenario({ profile }) {
       }),
     );
   }
-  checks.push(makeCheck('Probe publicId resolved', Boolean(resolvedPublicId), { actual: resolvedPublicId }));
+  checks.push(makeCheck('Probe publicId resolved', Boolean(resolvedPublicId), { actual: resolvedProbe }));
 
   return {
     scenario: 'bootstrap-parity',
