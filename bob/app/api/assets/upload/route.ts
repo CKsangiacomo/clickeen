@@ -13,7 +13,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST,OPTIONS',
   'Access-Control-Allow-Headers':
-    'authorization, content-type, x-account-id, x-workspace-id, x-public-id, x-widget-type, x-filename, x-variant, x-source, x-clickeen-surface',
+    'authorization, content-type, x-account-id, x-public-id, x-widget-type, x-filename, x-variant, x-source, x-clickeen-surface',
 } as const;
 
 function safeJsonParse(text: string): unknown | null {
@@ -89,14 +89,6 @@ export async function POST(request: NextRequest) {
     ), session && session.ok ? session.setCookies : undefined);
   }
 
-  const workspaceId = (request.headers.get('x-workspace-id') || '').trim();
-  if (workspaceId && !isUuid(workspaceId)) {
-    return withCorsAndSession(request, NextResponse.json(
-      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } },
-      { status: 422 },
-    ), session && session.ok ? session.setCookies : undefined);
-  }
-
   const filename = (request.headers.get('x-filename') || '').trim() || 'upload.bin';
   const variant = (request.headers.get('x-variant') || '').trim() || 'original';
 
@@ -128,7 +120,6 @@ export async function POST(request: NextRequest) {
     headers.set('authorization', `Bearer ${session.accessToken}`);
   }
   headers.set('x-account-id', accountId);
-  if (workspaceId) headers.set('x-workspace-id', workspaceId);
 
   const publicId = (request.headers.get('x-public-id') || '').trim();
   if (publicId) {

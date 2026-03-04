@@ -16,7 +16,7 @@ type LocalizationControlsProps = {
   section?: 'full' | 'selector' | 'footer';
 };
 
-type WorkspaceLocalesPayload = {
+type AccountLocalesPayload = {
   locales: string[];
   policy: {
     v: 1;
@@ -100,7 +100,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     revertLocaleOverrides,
   } = session;
   const publicId = meta?.publicId ? String(meta.publicId) : '';
-  const workspaceId = meta?.workspaceId ? String(meta.workspaceId) : '';
+  const accountId = meta?.accountId ? String(meta.accountId) : '';
   const widgetType = compiled?.widgetname ?? '';
   const isTranslatePanel = mode === 'translate';
   const minibobTranslationsLocked = policy.profile === 'minibob' && session.minibobPersonalizationUsed;
@@ -108,16 +108,16 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const inputRef = useRef<HTMLInputElement>(null);
   const showSelector = section !== 'footer';
   const showFooter = section !== 'selector';
-  const workspaceError = locale.workspaceLocalesInvalid;
+  const accountError = locale.accountLocalesInvalid;
   const instanceLocales = locale.overlayEntries;
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
-  const [draftBaseLocale, setDraftBaseLocale] = useState(locale.workspaceL10nPolicy.baseLocale);
+  const [draftBaseLocale, setDraftBaseLocale] = useState(locale.accountL10nPolicy.baseLocale);
   const [draftAdditionalLocales, setDraftAdditionalLocales] = useState<string[]>([]);
-  const [draftIpEnabled, setDraftIpEnabled] = useState(locale.workspaceL10nPolicy.ip.enabled);
-  const [draftSwitcherEnabled, setDraftSwitcherEnabled] = useState(locale.workspaceL10nPolicy.switcher.enabled);
+  const [draftIpEnabled, setDraftIpEnabled] = useState(locale.accountL10nPolicy.ip.enabled);
+  const [draftSwitcherEnabled, setDraftSwitcherEnabled] = useState(locale.accountL10nPolicy.switcher.enabled);
   const [draftCountryToLocale, setDraftCountryToLocale] = useState<Record<string, string>>({});
   const isSyncQueued = locale.sync.stage === 'queuing';
   const isSyncTranslating = locale.sync.stage === 'translating';
@@ -176,7 +176,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     hasInstance &&
     availableLocales.length > 1 &&
     overlayLocales.length <= 1 &&
-    !workspaceError &&
+    !accountError &&
     !minibobTranslationsLocked;
 
   const selectLocales = useMemo(() => {
@@ -217,7 +217,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const activeLocaleMissingOverlay =
     isLocaleMode &&
     !locale.loading &&
-    !workspaceError &&
+    !accountError &&
     !minibobTranslationsLocked &&
     !overlayLocaleSet.has(activeLocaleToken ?? '');
 
@@ -237,7 +237,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     if (locale.loading) {
       return { tone: 'pending', label: 'Loading' };
     }
-    if (workspaceError || locale.error) {
+    if (accountError || locale.error) {
       return { tone: 'unavailable', label: 'Unavailable' };
     }
     if (!hasInstance) {
@@ -264,7 +264,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     isSyncTranslating,
     minibobTranslationsLocked,
     materializedOverlayLocales.length,
-    workspaceError,
+    accountError,
   ]);
 
   const syncUpdatedAtLabel = useMemo(() => {
@@ -320,23 +320,23 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     setRefreshMessage(null);
   }, [publicId, activeLocale, locale.stale]);
 
-  const subject = policy.profile === 'minibob' ? 'minibob' : 'workspace';
-  const hasWorkspace = Boolean(workspaceId);
-  const canEditWorkspaceLocales = !minibobTranslationsLocked && hasWorkspace && policy.role !== 'viewer';
+  const subject = policy.profile === 'minibob' ? 'minibob' : 'account';
+  const hasAccount = Boolean(accountId);
+  const canEditAccountLocales = !minibobTranslationsLocked && hasAccount && policy.role !== 'viewer';
 
-  const loadWorkspaceLocales = useCallback(async () => {
-    if (!workspaceId) return;
+  const loadAccountLocales = useCallback(async () => {
+    if (!accountId) return;
     setSettingsLoading(true);
     setSettingsError(null);
     try {
       const res = await session.apiFetch(
-        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/locales?subject=${encodeURIComponent(subject)}&_t=${Date.now()}`,
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/locales?subject=${encodeURIComponent(subject)}&_t=${Date.now()}`,
         { cache: 'no-store' },
       );
       const json = (await res.json().catch(() => null)) as any;
       if (!res.ok) {
         const message =
-          json?.error?.message || json?.error?.reasonKey || json?.error?.code || `Failed to load workspace locales (HTTP ${res.status})`;
+          json?.error?.message || json?.error?.reasonKey || json?.error?.code || `Failed to load account locales (HTTP ${res.status})`;
         setSettingsError(message);
         setSettingsLoading(false);
         return;
@@ -348,7 +348,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
         .filter((entry): entry is string => entry !== null);
 
       const policyRaw = json?.policy && typeof json.policy === 'object' && !Array.isArray(json.policy) ? (json.policy as any) : null;
-      const nextBase = normalizeLocaleToken(policyRaw?.baseLocale) ?? locale.workspaceL10nPolicy.baseLocale;
+      const nextBase = normalizeLocaleToken(policyRaw?.baseLocale) ?? locale.accountL10nPolicy.baseLocale;
       const ipEnabled = policyRaw?.ip?.enabled === true;
       const switcherEnabled = policyRaw?.switcher?.enabled !== false;
       const mappingRaw = policyRaw?.ip?.countryToLocale;
@@ -374,19 +374,19 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
       setSettingsError(message);
       setSettingsLoading(false);
     }
-  }, [locale.workspaceL10nPolicy.baseLocale, session, subject, workspaceId]);
+  }, [locale.accountL10nPolicy.baseLocale, session, subject, accountId]);
 
   useEffect(() => {
     if (!settingsOpen) return;
-    void loadWorkspaceLocales();
-  }, [settingsOpen, loadWorkspaceLocales]);
+    void loadAccountLocales();
+  }, [settingsOpen, loadAccountLocales]);
 
-  const saveWorkspaceLocales = useCallback(async () => {
-    if (!workspaceId) return;
+  const saveAccountLocales = useCallback(async () => {
+    if (!accountId) return;
     setSettingsLoading(true);
     setSettingsError(null);
 
-    const nextBase = normalizeLocaleToken(draftBaseLocale) ?? locale.workspaceL10nPolicy.baseLocale;
+    const nextBase = normalizeLocaleToken(draftBaseLocale) ?? locale.accountL10nPolicy.baseLocale;
     const enabledLocales = [nextBase, ...draftAdditionalLocales]
       .map((entry) => normalizeLocaleToken(entry))
       .filter((entry): entry is string => Boolean(entry));
@@ -394,7 +394,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
       .filter((entry) => entry !== nextBase)
       .filter((entry, index, all) => all.indexOf(entry) === index);
 
-    const policyPayload: WorkspaceLocalesPayload['policy'] = {
+    const policyPayload: AccountLocalesPayload['policy'] = {
       v: 1,
       baseLocale: nextBase,
       ip: {
@@ -414,14 +414,14 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
       );
     }
 
-    const payload: WorkspaceLocalesPayload = {
+    const payload: AccountLocalesPayload = {
       locales: dedupedAdditional,
       policy: policyPayload,
     };
 
     try {
       const res = await session.apiFetch(
-        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/locales?subject=${encodeURIComponent(subject)}`,
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/locales?subject=${encodeURIComponent(subject)}`,
         {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },
@@ -458,19 +458,19 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     draftCountryToLocale,
     draftIpEnabled,
     draftSwitcherEnabled,
-    locale.workspaceL10nPolicy.baseLocale,
+    locale.accountL10nPolicy.baseLocale,
     session,
     subject,
-    workspaceId,
+    accountId,
   ]);
 
   const enabledLocaleSet = useMemo(() => {
-    const base = normalizeLocaleToken(draftBaseLocale) ?? locale.workspaceL10nPolicy.baseLocale;
+    const base = normalizeLocaleToken(draftBaseLocale) ?? locale.accountL10nPolicy.baseLocale;
     return new Set([base, ...draftAdditionalLocales].map((entry) => normalizeLocaleToken(entry)).filter(Boolean));
-  }, [draftAdditionalLocales, draftBaseLocale, locale.workspaceL10nPolicy.baseLocale]);
+  }, [draftAdditionalLocales, draftBaseLocale, locale.accountL10nPolicy.baseLocale]);
 
   const localeToggleEntries = useMemo(() => {
-    const base = normalizeLocaleToken(draftBaseLocale) ?? locale.workspaceL10nPolicy.baseLocale;
+    const base = normalizeLocaleToken(draftBaseLocale) ?? locale.accountL10nPolicy.baseLocale;
     return CANONICAL_LOCALES.filter((entry) => entry.code !== base).map((entry) => {
       const code = entry.code;
       return {
@@ -479,18 +479,18 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
         enabled: enabledLocaleSet.has(code),
       };
     });
-  }, [draftBaseLocale, enabledLocaleSet, locale.workspaceL10nPolicy.baseLocale]);
+  }, [draftBaseLocale, enabledLocaleSet, locale.accountL10nPolicy.baseLocale]);
 
   const localeSettingsModal = showSelector ? (
     <LocaleSettingsModal
       open={settingsOpen}
       loading={settingsLoading}
       error={settingsError}
-      canEdit={canEditWorkspaceLocales}
+      canEdit={canEditAccountLocales}
       baseLocale={draftBaseLocale}
       onChangeBaseLocale={(nextBase) => {
         const normalizedNext = normalizeLocaleToken(nextBase) ?? nextBase;
-        const prevBase = normalizeLocaleToken(draftBaseLocale) ?? locale.workspaceL10nPolicy.baseLocale;
+        const prevBase = normalizeLocaleToken(draftBaseLocale) ?? locale.accountL10nPolicy.baseLocale;
         const enabled = new Set<string>([prevBase, ...draftAdditionalLocales].filter(Boolean));
         enabled.add(normalizedNext);
         enabled.delete(normalizedNext);
@@ -501,7 +501,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
       ipEnabled={draftIpEnabled}
       switcherEnabled={draftSwitcherEnabled}
       onToggleLocale={(code, nextEnabled) => {
-        const base = normalizeLocaleToken(draftBaseLocale) ?? locale.workspaceL10nPolicy.baseLocale;
+        const base = normalizeLocaleToken(draftBaseLocale) ?? locale.accountL10nPolicy.baseLocale;
         if (code === base) return;
         setDraftAdditionalLocales((prev) => {
           const set = new Set(prev.map((entry) => normalizeLocaleToken(entry)).filter(Boolean) as string[]);
@@ -516,7 +516,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
         setSettingsOpen(false);
         setSettingsError(null);
       }}
-      onSave={() => saveWorkspaceLocales()}
+      onSave={() => saveAccountLocales()}
     />
   ) : null;
 
@@ -637,7 +637,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                   </div>
                 </div>
               </div>
-              {canEditWorkspaceLocales ? (
+              {canEditAccountLocales ? (
                 <div className="localization-settings-actions">
                   <button
                     className="diet-btn-txt"
@@ -655,7 +655,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                   </button>
                 </div>
               ) : null}
-              {workspaceError ? <div className="settings-panel__error">{workspaceError}</div> : null}
+              {accountError ? <div className="settings-panel__error">{accountError}</div> : null}
               {syncDetailMessage ? (
                 <div className={isSyncFailed ? 'settings-panel__error' : 'settings-panel__note'}>{syncDetailMessage}</div>
               ) : null}

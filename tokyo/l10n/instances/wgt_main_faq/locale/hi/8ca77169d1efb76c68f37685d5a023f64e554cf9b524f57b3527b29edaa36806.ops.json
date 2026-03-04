@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "अक्सर पूछे जाने वाले सवाल"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "सभी सवाल"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "क्या कोई मुफ़्त प्लान है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Clickeen क्या है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "मैं widget कैसे इंस्टॉल करूं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "मुझे Clickeen क्यों इस्तेमाल करना चाहिए"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "हाँ, core features के साथ एक active widget."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "ऐसे embeddable widgets जिनमें conversions पहले से built-in हैं."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Embed code कॉपी करें और अपनी साइट पर </body> से पहले पेस्ट कर दें।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "क्योंकि Clickeen एक शानदार नया प्लेटफ़ॉर्म है जो वेब को खूबसूरत और इस्तेमाल में आसान बनाता है।"
+    }
+  ],
+  "v": 1
+}

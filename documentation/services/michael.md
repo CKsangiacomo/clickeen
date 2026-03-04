@@ -6,11 +6,11 @@ Michael is Clickeen’s **minimal** persistence layer. It stores exactly what we
 
 The schema is defined by:
 - `supabase/migrations/20251228000000__base.sql`
-- `supabase/migrations/20260105000000__workspaces.sql`
 - `supabase/migrations/20260117090000__curated_widget_instances.sql`
 - `supabase/migrations/20260118090000__widget_instances_user_only.sql`
 - `supabase/migrations/20260216120000__widget_instances_display_name.sql`
 - `supabase/migrations/20260213160000__accounts_asset_domain_phase0.sql`
+- `supabase/migrations/20260304090000__account_only_tenancy.sql`
 
 If this document conflicts with those files, the SQL wins.
 
@@ -25,14 +25,14 @@ Core columns:
 - `name` (text) — human label
 
 ### `widget_instances`
-One row per **user instance**. This is the canonical config state tree for workspace-owned data.
+One row per **user instance**. This is the canonical config state tree for account-owned data.
 
 Core columns:
 - `id` (uuid) — internal (never exposed outside DB/services)
 - `widget_id` (uuid) — FK to `widgets.id`
-- `workspace_id` (uuid) — FK to `workspaces.id` (instances are workspace-owned)
+- `account_id` (uuid) — FK to `accounts.id` (instances are account-owned)
 - `public_id` (text) — the **only** identifier that crosses system boundaries
-- `display_name` (text, nullable) — workspace-facing instance label (defaults to `public_id` when missing)
+- `display_name` (text, nullable) — account-facing instance label (defaults to `public_id` when missing)
 - `kind` (text) — `user` (curated/baseline live in `curated_widget_instances`)
 - `status` (text) — `published` | `unpublished`
 - `config` (jsonb) — required object
@@ -49,7 +49,7 @@ Core columns:
 - `widget_type` (text) — denormalized widget type (validated against Tokyo registry at write time)
 - `kind` (text) — `baseline` | `curated`
 - `status` (text) — `published` | `unpublished`
-- `owner_account_id` (uuid) — FK to `accounts.id` (platform-owned curated rows currently map to `PLATFORM_ACCOUNT_ID`)
+- `owner_account_id` (uuid) — FK to `accounts.id` (curated rows are owned by the single admin account, `ADMIN_ACCOUNT_ID`)
 - `config` (jsonb) — required object
 
 ### `accounts`
@@ -59,10 +59,24 @@ Core columns:
 - `id` (uuid) — canonical account identity (opaque ID)
 - `status` (text) — `active` | `disabled`
 - `is_platform` (boolean) — platform-owned account marker
+- `tier` (text) — `free` | `tier1` | `tier2` | `tier3`
+- `name` (text)
+- `slug` (text, unique)
+- `website_url` (text, nullable) — account setting used by Copilot/personalization context
+- `l10n_locales` (jsonb, nullable) — account **active locales** (non‑EN; EN is implied)
+- `l10n_policy` (jsonb, nullable) — account locale policy (baseLocale + ip/switcher)
 - `created_at`, `updated_at` (timestamptz)
 
 Seeded platform account:
-- `00000000-0000-0000-0000-000000000100` (`is_platform=true`)
+- `ADMIN_ACCOUNT_ID = 00000000-0000-0000-0000-000000000100` (`is_platform=true`)
+
+### `account_members`
+One row per user membership (roles).
+
+Core columns:
+- `account_id` (uuid) — FK to `accounts.id`
+- `user_id` (uuid) — FK to `auth.users.id`
+- `role` (text) — `viewer` | `editor` | `admin` | `owner`
 
 ### `account_assets`
 Logical metadata for uploaded account-owned assets.
@@ -77,12 +91,8 @@ Core columns:
 - `created_at`, `updated_at` (timestamptz)
 
 Notes:
-- `workspace_id/public_id/widget_type` are nullable provenance columns (upload/source context), not ownership/read gates.
+- `public_id/widget_type` are nullable provenance columns (upload/source context), not ownership/read gates.
 - New usage truth lives in `account_asset_usage` (below).
-- Paris account asset projections map to this schema as:
-  - `view=all`: all rows by `account_id`
-  - `view=created_in_workspace`: filter by provenance `workspace_id`
-  - `view=used_in_workspace`: filter by `account_asset_usage.public_id` set for instances in that workspace
 
 ### `account_asset_variants`
 Physical storage mapping for account asset variants (for example `original`, and future optimized variants).
@@ -123,7 +133,7 @@ Core columns:
 - `base_updated_at` (timestamptz, nullable) — metadata only
 - `source` (text) — `agent` | `manual` | `import`
 - `geo_targets` (text[], nullable) — locale selection only (fr vs fr-CA)
-- `workspace_id` (uuid, nullable) — required for user instances, null for curated
+- `account_id` (uuid, nullable) — user instances are account-scoped; curated overlays may be global (`null`)
 - `updated_at`, `created_at` (timestamptz)
 
 Notes:
@@ -132,32 +142,8 @@ Notes:
 - Instance identity remains locale-free; overlays are keyed by `(public_id, layer, layer_key)`.
 - Uniqueness is enforced per `(public_id, layer, layer_key)`; history lives in R2 + version ledger.
 
-### `workspaces`
-One row per workspace/team (Figma model). Workspaces own instances.
-
-Core columns:
-- `id` (uuid) — internal
-- `account_id` (uuid) — FK to `accounts.id` (ownership roll-up for assets/metering)
-- `tier` (text) — `free` | `tier1` | `tier2` | `tier3`
-- `name` (text)
-- `slug` (text) — URL-safe workspace slug
-- `website_url` (text, nullable) — workspace setting used by Copilot/personalization context (action-gated; not tier-flagged)
-- `l10n_locales` (jsonb, nullable) — workspace **active locales** (non‑EN; EN is implied). Paris uses this set (bounded by tier entitlements + subject policy) to decide which locale overlays to generate/publish.
-
-Notes:
-- Workspace remains the collaboration boundary (`workspace_members`, `widget_instances.workspace_id`).
-- Account is the ownership/metering boundary for uploads and asset domain APIs.
-
-### `workspace_members`
-One row per user membership (roles).
-
-Core columns:
-- `workspace_id` (uuid) — FK to `workspaces.id`
-- `user_id` (uuid) — FK to `auth.users.id`
-- `role` (text) — `viewer` | `editor` | `admin` | `owner`
-
 ### `comments` (provisioned)
-A workspace moat: viewers can comment without editing (Figma model).
+An account moat: viewers can comment without editing (Figma model).
 
 This table exists even if the full UI/UX ships later.
 
@@ -251,7 +237,7 @@ Local DB is Supabase CLI + Docker:
 - After a reset, internal UUIDs (`widgets.id`, `widget_instances.id`, `widget_instances.widget_id`) will change. That’s normal.
 - The durable contract for a widget instance is:
   - `widget_instances.public_id` (stable string ID)
-  - `widget_instances.workspace_id` (required)
+  - `widget_instances.account_id` (required)
   - `widget_instances.config` (the JSON blob you care about)
 - The durable contract for uploaded assets is:
   - `account_assets.asset_id`
@@ -267,16 +253,11 @@ Local DB is Supabase CLI + Docker:
 
 Those concerns are intentionally outside Michael’s scope right now so the editor stays strict and the platform stays simple.
 
-## Deterministic dev workspaces
+## Deterministic admin account
 
-Migration `supabase/migrations/20260105000000__workspaces.sql` inserts two deterministic workspaces for dev:
-- `ck-dev` (`00000000-0000-0000-0000-000000000001`) — internal dev workspace (tier3)
-- `ck-demo` (`00000000-0000-0000-0000-000000000002`) — MiniBob demo workspace (free)
+Michael seeds one deterministic platform/admin account:
+- `ADMIN_ACCOUNT_ID = 00000000-0000-0000-0000-000000000100`
 
-Migration `supabase/migrations/20260213160000__accounts_asset_domain_phase0.sql` binds these to the seeded platform account:
-- `PLATFORM_ACCOUNT_ID = 00000000-0000-0000-0000-000000000100`
-- `workspaces.slug IN ('ck-dev','ck-demo') -> workspaces.account_id = PLATFORM_ACCOUNT_ID`
-- `curated_widget_instances.owner_account_id` backfilled to `PLATFORM_ACCOUNT_ID`
-
-DevStudio assumes `ck-dev` has its **workspace active locales** configured explicitly (no runtime fallbacks):
-- `supabase/migrations/20260209090000__seed_ck_dev_l10n_locales.sql` seeds `workspaces.l10n_locales` for `ck-dev` to all supported non‑EN locales (EN is implied).
+This account owns:
+- `curated_widget_instances` (baseline + curated starter designs)
+- internal/admin tooling surfaces (DevStudio/Roma admin)

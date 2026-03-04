@@ -5,8 +5,7 @@ export type WidgetInstance = {
   widgetType: string;
   displayName: string;
   status: 'published' | 'unpublished';
-  workspaceId: string | null;
-  source: 'workspace' | 'curated';
+  source: 'account' | 'curated';
   actions: {
     edit: boolean;
     duplicate: boolean;
@@ -19,7 +18,6 @@ type RawWidgetInstance = {
   widgetType?: string | null;
   displayName?: string | null;
   status?: string | null;
-  workspaceId?: string | null;
   source?: string | null;
   actions?: {
     edit?: boolean | null;
@@ -28,9 +26,8 @@ type RawWidgetInstance = {
   } | null;
 };
 
-export type RomaWidgetsSnapshot = {
+export type RomaWidgetsResponse = {
   accountId: string;
-  workspaceId: string;
   widgetTypes: string[];
   instances: WidgetInstance[];
 };
@@ -51,8 +48,7 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
   const widgetType = normalizeWidgetType(raw.widgetType);
   const displayName = String(raw.displayName || '').trim() || DEFAULT_INSTANCE_DISPLAY_NAME;
   const status = raw.status === 'published' ? 'published' : 'unpublished';
-  const workspaceId = String(raw.workspaceId || '').trim() || null;
-  const source = raw.source === 'curated' ? 'curated' : 'workspace';
+  const source = raw.source === 'curated' ? 'curated' : 'account';
   const actions = raw.actions && typeof raw.actions === 'object' ? raw.actions : null;
 
   return {
@@ -60,7 +56,6 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
     widgetType,
     displayName,
     status,
-    workspaceId,
     source,
     actions: {
       edit: actions?.edit !== false,
@@ -81,12 +76,17 @@ function normalizeWidgetTypeList(raw: unknown): string[] {
   ).sort((a, b) => a.localeCompare(b));
 }
 
-export function normalizeRomaWidgetsSnapshot(raw: unknown): RomaWidgetsSnapshot | null {
+export function normalizeRomaWidgetsResponse(raw: unknown): RomaWidgetsResponse | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
-  const accountId = typeof record.accountId === 'string' ? record.accountId.trim() : '';
-  const workspaceId = typeof record.workspaceId === 'string' ? record.workspaceId.trim() : '';
-  if (!accountId || !workspaceId) return null;
+  const account = record.account;
+  const accountId =
+    account && typeof account === 'object' && !Array.isArray(account) && typeof (account as any).accountId === 'string'
+      ? String((account as any).accountId).trim()
+      : typeof record.accountId === 'string'
+        ? record.accountId.trim()
+        : '';
+  if (!accountId) return null;
 
   const instances = Array.isArray(record.instances)
     ? record.instances
@@ -96,7 +96,6 @@ export function normalizeRomaWidgetsSnapshot(raw: unknown): RomaWidgetsSnapshot 
 
   return {
     accountId,
-    workspaceId,
     widgetTypes: normalizeWidgetTypeList(record.widgetTypes),
     instances,
   };
@@ -115,18 +114,14 @@ export function createUserInstancePublicId(widgetType: string): string {
 
 export function buildBuilderRoute(args: {
   publicId: string;
-  workspaceId: string;
   accountId: string;
   widgetType?: string | null;
 }): string {
   const search = new URLSearchParams({
-    workspaceId: args.workspaceId,
+    accountId: args.accountId,
     publicId: args.publicId,
-    subject: 'workspace',
+    subject: 'account',
   });
-  if (args.accountId) {
-    search.set('accountId', args.accountId);
-  }
   const normalizedWidgetType = normalizeWidgetType(args.widgetType);
   if (normalizedWidgetType !== 'unknown') {
     search.set('widgetType', normalizedWidgetType);

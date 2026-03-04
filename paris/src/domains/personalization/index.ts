@@ -5,7 +5,7 @@ import type { Env } from '../../shared/types';
 import { json } from '../../shared/http';
 import { assertDevAuth } from '../../shared/auth';
 import { asTrimmedString, isRecord } from '../../shared/validation';
-import { requireWorkspace } from '../../shared/workspaces';
+import { requireAccount } from '../../shared/accounts';
 import { consumeBudget, currentUtcBudgetPeriodKey } from '../../shared/budgets';
 import { callSanfranciscoJson, dispatchSanfranciscoCommand } from '../../shared/sanfrancisco';
 import { issueAiGrant } from '../ai';
@@ -188,7 +188,7 @@ async function dispatchPersonalizationOnboardingJob(args: {
   job: {
     agentId: string;
     grant: string;
-    workspaceId: string;
+    accountId: string;
     url: string;
     locale?: string;
     websiteDepth: number;
@@ -228,17 +228,17 @@ export async function handlePersonalizationOnboardingCreate(req: Request, env: E
     return json([{ path: 'body', message: 'body must be an object' }], { status: 422 });
   }
 
-  const workspaceId = asTrimmedString((body as any).workspaceId);
+  const accountId = asTrimmedString((body as any).accountId);
   const url = asTrimmedString((body as any).url);
-  if (!workspaceId || !url) {
-    return json([{ path: 'workspaceId', message: 'workspaceId and url are required' }], { status: 422 });
+  if (!accountId || !url) {
+    return json([{ path: 'accountId', message: 'accountId and url are required' }], { status: 422 });
   }
 
-  const workspaceRes = await requireWorkspace(env, workspaceId);
-  if (!workspaceRes.ok) return workspaceRes.response;
-  const workspace = workspaceRes.workspace;
+  const accountRes = await requireAccount(env, accountId);
+  if (!accountRes.ok) return accountRes.response;
+  const account = accountRes.account;
 
-  const policy = resolvePolicy({ profile: workspace.tier, role: 'editor' });
+  const policy = resolvePolicy({ profile: account.tier, role: 'editor' });
   const websiteDepth = resolveWebsiteDepthCap(policy);
 
   const localeRaw = normalizeLocaleToken((body as any).locale);
@@ -254,9 +254,9 @@ export async function handlePersonalizationOnboardingCreate(req: Request, env: E
   const issued = await issueAiGrant({
     env,
     agentId: 'agent.personalization.onboarding.v1',
-    subject: 'workspace',
-    workspaceId,
-    workspace,
+    subject: 'account',
+    accountId,
+    account,
     trace: { sessionId },
   });
   if (!issued.ok) return issued.response;
@@ -266,7 +266,7 @@ export async function handlePersonalizationOnboardingCreate(req: Request, env: E
     job: {
       agentId: issued.agentId,
       grant: issued.grant,
-      workspaceId,
+      accountId,
       url,
       websiteDepth,
       ...(localeRaw ? { locale: localeRaw } : {}),

@@ -240,7 +240,7 @@ Notes:
 - `sessionId` is used for learning + conversion attribution.
 - Each widget has an `agent.md` file defining editable paths, enums, and binding maps. Copilot uses this + `spec.json` to understand what's editable.
 - `agentId` (when provided by the UI) is restricted to widget-copilot IDs only: `widget.copilot.v1`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`.
-- `subject` is normalized server-side to `workspace|minibob` only (`workspace` requires `workspaceId`).
+- `subject` is normalized server-side to `account|minibob` only (`account` requires `accountId`).
 
 Response shape (success):
 ```json

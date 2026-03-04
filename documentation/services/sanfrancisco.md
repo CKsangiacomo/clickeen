@@ -7,7 +7,7 @@
 ## Interfaces
 - Queue consumers for agent jobs (e.g. instance localization).
 - HTTP endpoints for AI outcomes (called by Paris).
-- `POST /v1/l10n/plan` (internal auth; l10n planning snapshot for `{ widgetType, config }` or `{ widgetType, publicId, workspaceId }`)
+- `POST /v1/l10n/plan` (internal auth; l10n planning snapshot for `{ widgetType, config }` or `{ widgetType, publicId, accountId }` (legacy `workspaceId` accepted as alias))
 
 ## Dependencies
 - Paris (instance data + l10n overlay writes)
@@ -50,11 +50,11 @@
 - Status: `GET /v1/personalization/preview/:jobId` (internal).
 - Jobs are stored in KV with TTL; execution uses the `agent.personalization.preview.v1` policy grant.
 
-## Personalization Onboarding (workspace)
+## Personalization Onboarding (account)
 - Endpoint: `POST /v1/personalization/onboarding` (internal, requires `PARIS_DEV_JWT`).
 - Status: `GET /v1/personalization/onboarding/:jobId` (internal).
 - Jobs are stored in KV with TTL; execution uses the `agent.personalization.onboarding.v1` policy grant.
-- On success, SF calls Paris to persist the workspace business profile.
+- On success, SF calls Paris to persist the account business profile.
 
 ## l10n Agent Flow (executed)
 - Triggered by `instance-l10n-generate-{env}` jobs.

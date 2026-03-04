@@ -15,10 +15,10 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 
 export const isUuid = isContractUuid;
 
-export function assertWorkspaceId(value: unknown) {
+export function assertAccountId(value: unknown) {
   const trimmed = typeof value === 'string' ? value.trim() : '';
   if (!trimmed || !isUuid(trimmed)) {
-    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' }, 422) };
+    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' }, 422) };
   }
   return { ok: true as const, value: trimmed };
 }

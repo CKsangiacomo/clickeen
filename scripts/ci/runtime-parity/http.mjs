@@ -90,7 +90,7 @@ export async function fetchEnvelope(url, init = {}) {
 
 export function extractDefaults(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return { accountId: '', workspaceId: '' };
+    return { accountId: '' };
   }
   const defaults =
     payload.defaults && typeof payload.defaults === 'object' && !Array.isArray(payload.defaults)
@@ -98,6 +98,5 @@ export function extractDefaults(payload) {
       : null;
   return {
     accountId: readString(defaults?.accountId),
-    workspaceId: readString(defaults?.workspaceId),
   };
 }

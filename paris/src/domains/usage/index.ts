@@ -4,7 +4,7 @@ import type { Env } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
-import { normalizeLocaleList } from '../../shared/l10n';
+import { normalizeLocaleList, resolveAccountL10nPolicy } from '../../shared/l10n';
 
 type UsageEventPayload = {
   publicId?: unknown;
@@ -63,24 +63,24 @@ function getUtcNextMonthStart(date: Date): Date {
 async function resolveSnapshotLocalesForInstance(env: Env, publicId: string): Promise<string[]> {
   try {
     const instParams = new URLSearchParams({
-      select: 'workspace_id',
+      select: 'account_id',
       public_id: `eq.${publicId}`,
       limit: '1',
     });
     const instRes = await supabaseFetch(env, `/rest/v1/widget_instances?${instParams.toString()}`, { method: 'GET' });
     if (!instRes.ok) return ['en'];
-    const instRows = (await instRes.json().catch(() => null)) as Array<{ workspace_id?: unknown }> | null;
-    const workspaceId = instRows?.[0]?.workspace_id ? String(instRows[0].workspace_id) : '';
-    if (!workspaceId) return ['en'];
+    const instRows = (await instRes.json().catch(() => null)) as Array<{ account_id?: unknown }> | null;
+    const accountId = instRows?.[0]?.account_id ? String(instRows[0].account_id) : '';
+    if (!accountId) return ['en'];
 
     const wsParams = new URLSearchParams({
-      select: 'tier,l10n_locales',
-      id: `eq.${workspaceId}`,
+      select: 'tier,l10n_locales,l10n_policy',
+      id: `eq.${accountId}`,
       limit: '1',
     });
-    const wsRes = await supabaseFetch(env, `/rest/v1/workspaces?${wsParams.toString()}`, { method: 'GET' });
+    const wsRes = await supabaseFetch(env, `/rest/v1/accounts?${wsParams.toString()}`, { method: 'GET' });
     if (!wsRes.ok) return ['en'];
-    const wsRows = (await wsRes.json().catch(() => null)) as Array<{ tier?: unknown; l10n_locales?: unknown }> | null;
+    const wsRows = (await wsRes.json().catch(() => null)) as Array<{ tier?: unknown; l10n_locales?: unknown; l10n_policy?: unknown }> | null;
     const row = wsRows?.[0];
     const tier = row?.tier ? String(row.tier).trim().toLowerCase() : '';
     if (!tier) return ['en'];
@@ -91,7 +91,8 @@ async function resolveSnapshotLocalesForInstance(env: Env, publicId: string): Pr
 
     const normalized = normalizeLocaleList(row?.l10n_locales, 'l10n_locales');
     const locales = normalized.ok ? normalized.locales : [];
-    const deduped = Array.from(new Set(['en', ...locales]));
+    const baseLocale = resolveAccountL10nPolicy(row?.l10n_policy).baseLocale;
+    const deduped = Array.from(new Set([baseLocale || 'en', ...locales]));
     if (maxLocalesTotal == null) return deduped;
     return deduped.slice(0, maxLocalesTotal);
   } catch {

@@ -21,7 +21,6 @@ import {
   buildL10nSnapshot,
   computeL10nFingerprint,
   filterAllowlistedOps,
-  isCuratedPublicId,
   mergeLocalizationOps,
   normalizeLocaleToken,
   type AllowlistEntry,
@@ -74,8 +73,8 @@ type LocaleState = {
   allowlist: AllowlistEntry[];
   availableLocales: string[];
   overlayEntries: LocaleOverlayEntry[];
-  workspaceLocalesInvalid: string | null;
-  workspaceL10nPolicy: {
+  accountLocalesInvalid: string | null;
+  accountL10nPolicy: {
     v: 1;
     baseLocale: string;
     ip: {
@@ -99,7 +98,7 @@ type LocaleState = {
   };
 };
 
-type SubjectMode = 'minibob' | 'workspace';
+type SubjectMode = 'minibob' | 'account';
 type BootMode = 'message' | 'url';
 
 type SessionState = {
@@ -125,7 +124,7 @@ type SessionState = {
   copilotThreads: Record<string, CopilotThread>;
   meta: {
     publicId?: string;
-    workspaceId?: string;
+    accountId?: string;
     ownerAccountId?: string;
     widgetname?: string;
     label?: string;
@@ -144,7 +143,7 @@ type EditorOpenMessage = {
   policy?: Policy;
   enforcement?: unknown;
   publicId?: string;
-  workspaceId?: string;
+  accountId?: string;
   ownerAccountId?: string;
   label?: string;
   subjectMode?: SubjectMode;
@@ -259,7 +258,7 @@ type DevstudioExportInstanceDataMessage = {
   requestId: string;
   persistAssets?: boolean;
   exportMode?: 'current' | 'base';
-  assetScope?: 'workspace' | 'curated';
+  assetScope?: 'account' | 'curated';
   assetPublicId?: string;
   assetWidgetType?: string;
 };
@@ -277,7 +276,7 @@ type BobExportInstanceDataResponseMessage = {
 type BobInstanceSavedMessage = {
   type: 'bob:instance-saved';
   publicId: string;
-  workspaceId: string;
+  accountId: string;
   widgetType: string;
   status: 'published' | 'unpublished';
   config: Record<string, unknown>;
@@ -326,8 +325,8 @@ const DEFAULT_LOCALE_STATE: LocaleState = {
   allowlist: [],
   availableLocales: [DEFAULT_LOCALE],
   overlayEntries: [],
-  workspaceLocalesInvalid: null,
-  workspaceL10nPolicy: {
+  accountLocalesInvalid: null,
+  accountL10nPolicy: {
     v: 1,
     baseLocale: DEFAULT_LOCALE,
     ip: { enabled: false, countryToLocale: {} },
@@ -396,23 +395,23 @@ function normalizeLocalizationSnapshotForOpen(raw: unknown): {
   baseLocale: string;
   availableLocales: string[];
   overlayEntries: LocaleOverlayEntry[];
-  workspaceLocalesInvalid: string | null;
-  workspaceL10nPolicy: LocaleState['workspaceL10nPolicy'];
+  accountLocalesInvalid: string | null;
+  accountL10nPolicy: LocaleState['accountL10nPolicy'];
 } {
   if (!isRecord(raw)) {
     return {
       baseLocale: DEFAULT_LOCALE,
       availableLocales: [DEFAULT_LOCALE],
       overlayEntries: [],
-      workspaceLocalesInvalid: null,
-      workspaceL10nPolicy: structuredClone(DEFAULT_LOCALE_STATE.workspaceL10nPolicy),
+      accountLocalesInvalid: null,
+      accountL10nPolicy: structuredClone(DEFAULT_LOCALE_STATE.accountL10nPolicy),
     };
   }
 
   const policyRaw = isRecord((raw as any).policy) ? ((raw as any).policy as Record<string, unknown>) : null;
   const baseLocale = normalizeLocaleToken(policyRaw?.baseLocale) ?? DEFAULT_LOCALE;
   const ipRaw = policyRaw && isRecord(policyRaw.ip) ? (policyRaw.ip as Record<string, unknown>) : null;
-  const ipEnabled = typeof ipRaw?.enabled === 'boolean' ? ipRaw.enabled : DEFAULT_LOCALE_STATE.workspaceL10nPolicy.ip.enabled;
+  const ipEnabled = typeof ipRaw?.enabled === 'boolean' ? ipRaw.enabled : DEFAULT_LOCALE_STATE.accountL10nPolicy.ip.enabled;
   const countryToLocale: Record<string, string> = {};
   const mapRaw = ipRaw && isRecord(ipRaw.countryToLocale) ? (ipRaw.countryToLocale as Record<string, unknown>) : null;
   if (mapRaw) {
@@ -428,17 +427,17 @@ function normalizeLocalizationSnapshotForOpen(raw: unknown): {
   const switcherEnabled =
     typeof switcherRaw?.enabled === 'boolean'
       ? switcherRaw.enabled
-      : DEFAULT_LOCALE_STATE.workspaceL10nPolicy.switcher.enabled;
-  const workspaceL10nPolicy: LocaleState['workspaceL10nPolicy'] = {
+      : DEFAULT_LOCALE_STATE.accountL10nPolicy.switcher.enabled;
+  const accountL10nPolicy: LocaleState['accountL10nPolicy'] = {
     v: 1,
     baseLocale,
     ip: { enabled: ipEnabled, countryToLocale },
     switcher: { enabled: switcherEnabled },
   };
 
-  const workspaceLocales = Array.isArray(raw.workspaceLocales)
-    ? raw.workspaceLocales
-        .map((entry) => normalizeLocaleToken(entry))
+  const accountLocales = Array.isArray((raw as any).accountLocales)
+    ? ((raw as any).accountLocales as unknown[])
+        .map((entry: unknown) => normalizeLocaleToken(entry))
         .filter((entry): entry is string => Boolean(entry))
     : [];
 
@@ -468,18 +467,18 @@ function normalizeLocalizationSnapshotForOpen(raw: unknown): {
     });
   }
 
-  const normalizedLocales = Array.from(new Set([baseLocale, ...workspaceLocales]));
+  const normalizedLocales = Array.from(new Set([baseLocale, ...accountLocales]));
   const baseFirst = [baseLocale, ...normalizedLocales.filter((locale) => locale !== baseLocale).sort()];
 
   return {
     baseLocale,
     availableLocales: baseFirst,
     overlayEntries: Array.from(overlayEntriesMap.values()).sort((a, b) => a.locale.localeCompare(b.locale)),
-    workspaceLocalesInvalid:
-      typeof raw.invalidWorkspaceLocales === 'string' && raw.invalidWorkspaceLocales.trim()
-        ? raw.invalidWorkspaceLocales.trim()
+    accountLocalesInvalid:
+      typeof (raw as any).invalidAccountLocales === 'string' && (raw as any).invalidAccountLocales.trim()
+        ? (raw as any).invalidAccountLocales.trim()
         : null,
-    workspaceL10nPolicy,
+    accountL10nPolicy,
   };
 }
 
@@ -509,12 +508,12 @@ function upsertLocaleOverlayEntry(
 }
 
 function resolveSubjectModeFromUrl(): SubjectMode {
-  if (typeof window === 'undefined') return 'workspace';
+  if (typeof window === 'undefined') return 'account';
   const params = new URLSearchParams(window.location.search);
   const subject = (params.get('subject') || '').trim().toLowerCase();
-  if (subject === 'workspace') return 'workspace';
+  if (subject === 'account') return 'account';
   if (subject === 'minibob') return 'minibob';
-  return 'workspace';
+  return 'account';
 }
 
 function resolveBootModeFromUrl(): BootMode {
@@ -524,9 +523,9 @@ function resolveBootModeFromUrl(): BootMode {
   return boot === 'url' ? 'url' : 'message';
 }
 
-function resolvePolicySubject(policy: Policy): 'minibob' | 'workspace' {
+function resolvePolicySubject(policy: Policy): 'minibob' | 'account' {
   if (policy.profile === 'minibob') return 'minibob';
-  return 'workspace';
+  return 'account';
 }
 
 function resolveReadOnlyFromUrl(): boolean {
@@ -540,7 +539,7 @@ function resolveReadOnlyFromUrl(): boolean {
 
 function resolveDevPolicy(profile: SubjectMode): Policy {
   const role: Policy['role'] = resolveReadOnlyFromUrl() ? 'viewer' : 'editor';
-  const fallbackProfile = profile === 'workspace' ? 'free' : profile;
+  const fallbackProfile = profile === 'account' ? 'free' : profile;
   return resolveCkPolicy({ profile: fallbackProfile, role });
 }
 
@@ -1150,7 +1149,7 @@ function useWidgetSessionInternal() {
   const saveLocaleOverrides = useCallback(async () => {
     const snapshot = stateRef.current;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
-    const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
+    const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
     const locale = snapshot.locale.activeLocale;
     const subject = resolvePolicySubject(snapshot.policy);
@@ -1162,7 +1161,7 @@ function useWidgetSessionInternal() {
       }));
       return;
     }
-    if (!publicId || !widgetType || !workspaceId) {
+    if (!publicId || !widgetType || !accountId || subject !== 'account') {
       setState((prev) => ({
         ...prev,
         locale: { ...prev.locale, error: 'Missing instance context' },
@@ -1192,8 +1191,8 @@ function useWidgetSessionInternal() {
         return;
       }
       const res = await fetchApi(
-        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
-          publicId
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+          publicId,
         )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
         {
           method: 'PUT',
@@ -1257,14 +1256,18 @@ function useWidgetSessionInternal() {
   const rehydrateLocalizationSnapshot = useCallback(
     async (args: {
       publicId: string;
-      workspaceId: string;
-      subject: 'minibob' | 'workspace';
+      accountId: string;
+      subject: 'minibob' | 'account';
     }): Promise<{ ok: true } | { ok: false; message: string }> => {
       try {
+        const instanceUrl =
+          args.subject === 'minibob'
+            ? `/api/paris/instance/${encodeURIComponent(args.publicId)}?subject=${encodeURIComponent(args.subject)}`
+            : `/api/paris/accounts/${encodeURIComponent(args.accountId)}/instance/${encodeURIComponent(
+                args.publicId,
+              )}?subject=${encodeURIComponent(args.subject)}`;
         const res = await fetchApi(
-          `/api/paris/workspaces/${encodeURIComponent(args.workspaceId)}/instance/${encodeURIComponent(
-            args.publicId,
-          )}?subject=${encodeURIComponent(args.subject)}`,
+          instanceUrl,
           { cache: 'no-store' },
         );
         const json = (await res.json().catch(() => null)) as any;
@@ -1347,8 +1350,8 @@ function useWidgetSessionInternal() {
             baseLocale,
             availableLocales: localizationSnapshot.availableLocales,
             overlayEntries: localizationSnapshot.overlayEntries,
-            workspaceLocalesInvalid: localizationSnapshot.workspaceLocalesInvalid,
-            workspaceL10nPolicy: localizationSnapshot.workspaceL10nPolicy,
+            accountLocalesInvalid: localizationSnapshot.accountLocalesInvalid,
+            accountL10nPolicy: localizationSnapshot.accountL10nPolicy,
             activeLocale,
             baseOps: nextBaseOps,
             userOps: nextUserOps,
@@ -1376,10 +1379,10 @@ function useWidgetSessionInternal() {
   const reloadLocalizationSnapshot = useCallback(async (): Promise<{ ok: true } | { ok: false; message: string }> => {
     const snapshot = stateRef.current;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
-    const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
+    const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
     const subject = resolvePolicySubject(snapshot.policy);
 
-    if (!publicId || !workspaceId) {
+    if (!publicId || (subject !== 'minibob' && !accountId)) {
       const message = 'Missing instance context';
       return { ok: false as const, message };
     }
@@ -1389,14 +1392,14 @@ function useWidgetSessionInternal() {
       locale: { ...prev.locale, loading: true, error: null },
     }));
 
-    return rehydrateLocalizationSnapshot({ publicId, workspaceId, subject });
+    return rehydrateLocalizationSnapshot({ publicId, accountId, subject });
   }, [rehydrateLocalizationSnapshot]);
 
   const refreshLocaleTranslations = useCallback(async () => {
     const readL10nStatus = async (args: {
       publicId: string;
-      workspaceId: string;
-      subject: 'minibob' | 'workspace';
+      accountId: string;
+      subject: 'account';
     }): Promise<
       | { stage: 'ready'; detail: string | null }
       | { stage: 'translating'; detail: string | null }
@@ -1404,7 +1407,7 @@ function useWidgetSessionInternal() {
     > => {
       try {
         const res = await fetchApi(
-          `/api/paris/workspaces/${encodeURIComponent(args.workspaceId)}/instances/${encodeURIComponent(
+          `/api/paris/accounts/${encodeURIComponent(args.accountId)}/instances/${encodeURIComponent(
             args.publicId
           )}/l10n/status?subject=${encodeURIComponent(args.subject)}&_t=${Date.now()}`,
           { cache: 'no-store' }
@@ -1463,8 +1466,8 @@ function useWidgetSessionInternal() {
     const pollUntilSynced = async (args: {
       runId: number;
       publicId: string;
-      workspaceId: string;
-      subject: 'minibob' | 'workspace';
+      accountId: string;
+      subject: 'account';
     }) => {
       const startedAt = Date.now();
       const pollIntervalMs = 1500;
@@ -1473,7 +1476,7 @@ function useWidgetSessionInternal() {
       while (args.runId === localeSyncRunRef.current) {
         const status = await readL10nStatus({
           publicId: args.publicId,
-          workspaceId: args.workspaceId,
+          accountId: args.accountId,
           subject: args.subject,
         });
         if (args.runId !== localeSyncRunRef.current) return;
@@ -1500,7 +1503,7 @@ function useWidgetSessionInternal() {
         if (status.stage === 'ready') {
           const hydrated = await rehydrateLocalizationSnapshot({
             publicId: args.publicId,
-            workspaceId: args.workspaceId,
+            accountId: args.accountId,
             subject: args.subject,
           });
           if (args.runId !== localeSyncRunRef.current) return;
@@ -1578,7 +1581,7 @@ function useWidgetSessionInternal() {
 
     const snapshot = stateRef.current;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
-    const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
+    const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
     const subject = resolvePolicySubject(snapshot.policy);
 
     if (snapshot.policy.role === 'viewer') {
@@ -1599,7 +1602,7 @@ function useWidgetSessionInternal() {
       }));
       return { ok: false as const, message };
     }
-    if (!publicId || !workspaceId) {
+    if (!publicId || !accountId || subject !== 'account') {
       const message = 'Missing instance context';
       setState((prev) => ({
         ...prev,
@@ -1672,7 +1675,7 @@ function useWidgetSessionInternal() {
 
     try {
       const res = await fetchApi(
-        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId
         )}/l10n/enqueue-selected?subject=${encodeURIComponent(subject)}`,
         {
@@ -1723,7 +1726,7 @@ function useWidgetSessionInternal() {
           },
         },
       }));
-      void pollUntilSynced({ runId, publicId, workspaceId, subject });
+      void pollUntilSynced({ runId, publicId, accountId, subject });
       return { ok: true as const, queued, skipped };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -1748,7 +1751,7 @@ function useWidgetSessionInternal() {
   const revertLocaleOverrides = useCallback(async () => {
     const snapshot = stateRef.current;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
-    const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
+    const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
     const locale = snapshot.locale.activeLocale;
     const subject = resolvePolicySubject(snapshot.policy);
@@ -1759,18 +1762,11 @@ function useWidgetSessionInternal() {
       }));
       return;
     }
-    if (!publicId || !workspaceId) return;
+    if (!publicId || !accountId || subject !== 'account') return;
     if (!widgetType) {
       setState((prev) => ({
         ...prev,
         locale: { ...prev.locale, error: 'Missing widget context' },
-      }));
-      return;
-    }
-    if (!isCuratedPublicId(publicId) && !workspaceId) {
-      setState((prev) => ({
-        ...prev,
-        locale: { ...prev.locale, error: 'Missing workspace context' },
       }));
       return;
     }
@@ -1779,7 +1775,7 @@ function useWidgetSessionInternal() {
 
     try {
       const res = await fetchApi(
-        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId
         )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
         { method: 'DELETE' }
@@ -1861,7 +1857,7 @@ function useWidgetSessionInternal() {
       const defaults = compiled.defaults as Record<string, unknown>;
 
       let resolved: Record<string, unknown> = {};
-      const nextWorkspaceId = message.workspaceId;
+      const nextAccountId = message.accountId;
       const nextOwnerAccountId = message.ownerAccountId;
       const nextEnforcement: EnforcementState | null = normalizeEnforcement(message.enforcement);
       let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
@@ -1879,7 +1875,7 @@ function useWidgetSessionInternal() {
         nextPolicy = assertPolicy(message.policy);
       }
 
-      if (incoming == null && message.publicId && message.workspaceId) {
+      if (incoming == null && message.publicId && message.accountId) {
         throw new Error('[useWidgetSession] Missing instanceData in open-editor payload');
       }
       resolved = incoming == null ? structuredClone(defaults) : structuredClone(incoming);
@@ -1921,8 +1917,8 @@ function useWidgetSessionInternal() {
           activeLocale: localizationSnapshot.baseLocale,
           availableLocales: localizationSnapshot.availableLocales,
           overlayEntries: localizationSnapshot.overlayEntries,
-          workspaceLocalesInvalid: localizationSnapshot.workspaceLocalesInvalid,
-          workspaceL10nPolicy: localizationSnapshot.workspaceL10nPolicy,
+          accountLocalesInvalid: localizationSnapshot.accountLocalesInvalid,
+          accountL10nPolicy: localizationSnapshot.accountL10nPolicy,
         },
         lastUpdate: {
           source: 'load',
@@ -1932,7 +1928,7 @@ function useWidgetSessionInternal() {
         undoSnapshot: null,
         meta: {
           publicId: message.publicId,
-          workspaceId: nextWorkspaceId,
+          accountId: nextAccountId,
           ownerAccountId: nextOwnerAccountId,
           widgetname: compiled.widgetname,
           label: nextLabel,
@@ -2011,9 +2007,9 @@ function useWidgetSessionInternal() {
 
   const save = useCallback(async () => {
     const publicId = state.meta?.publicId;
-    const workspaceId = state.meta?.workspaceId;
+    const accountId = state.meta?.accountId;
     const widgetType = state.meta?.widgetname;
-    if (!publicId || !workspaceId) {
+    if (!publicId || !accountId) {
       setState((prev) => ({
         ...prev,
         error: { source: 'publish', message: 'coreui.errors.publish.missingInstanceContext' },
@@ -2061,37 +2057,37 @@ function useWidgetSessionInternal() {
       return;
     }
 
-      const subject = state.policy.profile === 'minibob' ? 'minibob' : 'workspace';
+    const subject = state.policy.profile === 'minibob' ? 'minibob' : 'account';
 
-      setState((prev) => ({ ...prev, isPublishing: true, error: null }));
-      try {
-        const configToSave = state.baseInstanceData;
-        const localePolicy = {
-          baseLocale: state.locale.baseLocale,
-          availableLocales: state.locale.availableLocales,
-          ip: {
-            enabled: state.locale.workspaceL10nPolicy.ip.enabled,
-            countryToLocale: state.locale.workspaceL10nPolicy.ip.enabled
-              ? Object.fromEntries(
-                  Object.entries(state.locale.workspaceL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
-                    state.locale.availableLocales.includes(locale),
-                  ),
-                )
-              : {},
-          },
-          switcher: { enabled: state.locale.workspaceL10nPolicy.switcher.enabled },
-        };
-        const seoGeo = state.policy.flags['embed.seoGeo.enabled'] === true;
-        const res = await fetchApi(
-          `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
-            publicId
-          )}?subject=${encodeURIComponent(subject)}`,
-          {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ config: configToSave, localePolicy, seoGeo }),
-          }
-        );
+    setState((prev) => ({ ...prev, isPublishing: true, error: null }));
+    try {
+      const configToSave = state.baseInstanceData;
+      const localePolicy = {
+        baseLocale: state.locale.baseLocale,
+        availableLocales: state.locale.availableLocales,
+        ip: {
+          enabled: state.locale.accountL10nPolicy.ip.enabled,
+          countryToLocale: state.locale.accountL10nPolicy.ip.enabled
+            ? Object.fromEntries(
+                Object.entries(state.locale.accountL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
+                  state.locale.availableLocales.includes(locale),
+                ),
+              )
+            : {},
+        },
+        switcher: { enabled: state.locale.accountL10nPolicy.switcher.enabled },
+      };
+      const seoGeo = state.policy.flags['embed.seoGeo.enabled'] === true;
+      const res = await fetchApi(
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
+          publicId
+        )}?subject=${encodeURIComponent(subject)}`,
+        {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ config: configToSave, localePolicy, seoGeo }),
+        }
+      );
 
       const json = (await res.json().catch(() => null)) as any;
       if (!res.ok) {
@@ -2158,7 +2154,7 @@ function useWidgetSessionInternal() {
         const message: BobInstanceSavedMessage = {
           type: 'bob:instance-saved',
           publicId,
-          workspaceId,
+          accountId,
           widgetType,
           status: json?.status === 'published' ? 'published' : 'unpublished',
           config: configToSave,
@@ -2175,11 +2171,11 @@ function useWidgetSessionInternal() {
     state.enforcement,
     state.locale.availableLocales,
     state.locale.baseLocale,
-    state.locale.workspaceL10nPolicy.ip.countryToLocale,
-    state.locale.workspaceL10nPolicy.ip.enabled,
-    state.locale.workspaceL10nPolicy.switcher.enabled,
+    state.locale.accountL10nPolicy.ip.countryToLocale,
+    state.locale.accountL10nPolicy.ip.enabled,
+    state.locale.accountL10nPolicy.switcher.enabled,
     state.meta?.publicId,
-    state.meta?.workspaceId,
+    state.meta?.accountId,
     state.meta?.widgetname,
     state.policy,
   ]);
@@ -2187,9 +2183,9 @@ function useWidgetSessionInternal() {
   const setLive = useCallback(
     async (nextLive: boolean) => {
       const publicId = state.meta?.publicId ? String(state.meta.publicId) : '';
-      const workspaceId = state.meta?.workspaceId ? String(state.meta.workspaceId) : '';
+      const accountId = state.meta?.accountId ? String(state.meta.accountId) : '';
       const widgetType = state.meta?.widgetname ? String(state.meta.widgetname) : '';
-      if (!publicId || !workspaceId) return;
+      if (!publicId || !accountId) return;
 
       if (state.enforcement?.mode === 'frozen') {
         setState((prev) => ({
@@ -2234,7 +2230,7 @@ function useWidgetSessionInternal() {
         return;
       }
 
-      const subject = state.policy.profile === 'minibob' ? 'minibob' : 'workspace';
+      const subject = state.policy.profile === 'minibob' ? 'minibob' : 'account';
 
       setState((prev) => ({ ...prev, isPublishing: true, error: null }));
       try {
@@ -2242,20 +2238,20 @@ function useWidgetSessionInternal() {
           baseLocale: state.locale.baseLocale,
           availableLocales: state.locale.availableLocales,
           ip: {
-            enabled: state.locale.workspaceL10nPolicy.ip.enabled,
-            countryToLocale: state.locale.workspaceL10nPolicy.ip.enabled
+            enabled: state.locale.accountL10nPolicy.ip.enabled,
+            countryToLocale: state.locale.accountL10nPolicy.ip.enabled
               ? Object.fromEntries(
-                  Object.entries(state.locale.workspaceL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
+                  Object.entries(state.locale.accountL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
                     state.locale.availableLocales.includes(locale),
                   ),
                 )
               : {},
           },
-          switcher: { enabled: state.locale.workspaceL10nPolicy.switcher.enabled },
+          switcher: { enabled: state.locale.accountL10nPolicy.switcher.enabled },
         };
         const seoGeo = state.policy.flags['embed.seoGeo.enabled'] === true;
         const res = await fetchApi(
-          `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+          `/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
             publicId,
           )}?subject=${encodeURIComponent(subject)}`,
           {
@@ -2292,7 +2288,7 @@ function useWidgetSessionInternal() {
           const message: BobInstanceSavedMessage = {
             type: 'bob:instance-saved',
             publicId,
-            workspaceId,
+            accountId,
             widgetType,
             status: json?.status === 'published' ? 'published' : 'unpublished',
             config: state.baseInstanceData,
@@ -2315,9 +2311,9 @@ function useWidgetSessionInternal() {
       state.isDirty,
       state.locale.availableLocales,
       state.locale.baseLocale,
-      state.locale.workspaceL10nPolicy.ip.countryToLocale,
-      state.locale.workspaceL10nPolicy.ip.enabled,
-      state.locale.workspaceL10nPolicy.switcher.enabled,
+      state.locale.accountL10nPolicy.ip.countryToLocale,
+      state.locale.accountL10nPolicy.ip.enabled,
+      state.locale.accountL10nPolicy.switcher.enabled,
       state.meta,
       state.policy,
     ],
@@ -2346,19 +2342,17 @@ function useWidgetSessionInternal() {
   const loadFromUrlParams = useCallback(async () => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
-    const workspaceId = (params.get('workspaceId') || '').trim();
+    const accountId = (params.get('accountId') || '').trim();
     const publicId = (params.get('publicId') || '').trim();
     if (!publicId) return;
 
     const subject = resolveSubjectModeFromUrl();
-    if (!workspaceId && subject !== 'minibob') return;
+    if (!accountId && subject !== 'minibob') return;
 
     const instanceUrl =
       subject === 'minibob'
         ? `/api/paris/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`
-        : `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
-            publicId,
-          )}?subject=${encodeURIComponent(subject)}`;
+        : `/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`;
     const instanceRes = await fetchApi(instanceUrl, { cache: 'no-store' });
     if (!instanceRes.ok) {
       throw new Error(`[useWidgetSession] Failed to load instance (HTTP ${instanceRes.status})`);
@@ -2397,7 +2391,7 @@ function useWidgetSessionInternal() {
       policy: instanceJson.policy,
       enforcement: instanceJson.enforcement,
       publicId: instanceJson.publicId ?? publicId,
-      workspaceId,
+      accountId,
       ownerAccountId:
         typeof instanceJson.ownerAccountId === 'string' ? instanceJson.ownerAccountId : undefined,
       label: displayName,
@@ -2575,7 +2569,7 @@ function useWidgetSessionInternal() {
           typeof (data as { subjectMode?: unknown }).subjectMode === 'string'
             ? String((data as { subjectMode?: unknown }).subjectMode).trim().toLowerCase()
             : '';
-        if (rawSubjectMode && rawSubjectMode !== 'workspace' && rawSubjectMode !== 'minibob') {
+        if (rawSubjectMode && rawSubjectMode !== 'account' && rawSubjectMode !== 'minibob') {
           const reasonKey = 'coreui.errors.builder.open.invalidRequest';
           openRequestStatusRef.current.set(requestId, {
             status: 'failed',

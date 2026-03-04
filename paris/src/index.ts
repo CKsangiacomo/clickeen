@@ -1,6 +1,6 @@
 import type { Env } from './shared/types';
 import { corsPreflight, json } from './shared/http';
-import { assertWorkspaceId } from './shared/validation';
+import { assertAccountId } from './shared/validation';
 import { handleHealthz, handleNotImplemented } from './shared/handlers';
 import { handleAiGrant, handleAiMinibobGrant, handleAiMinibobSession, handleAiOutcome } from './domains/ai';
 import {
@@ -15,22 +15,24 @@ import {
   handleListWidgets,
 } from './domains/instances';
 import {
-  handleWorkspaceBusinessProfileGet,
-  handleWorkspaceBusinessProfileUpsert,
-  handleWorkspaceCreateInstance,
-  handleWorkspaceEnsureWebsiteCreative,
-  handleWorkspaceGetInstance,
-  handleWorkspaceInstancePublishStatus,
-  handleWorkspaceInstanceRenderSnapshot,
-  handleWorkspaceInstances,
-  handleWorkspaceUpdateInstance,
-} from './domains/workspaces';
+  handleAccountBusinessProfileGet,
+  handleAccountBusinessProfileUpsert,
+  handleAccountCreateInstance,
+  handleAccountEnsureWebsiteCreative,
+  handleAccountGetInstance,
+  handleAccountInstancePublishStatus,
+  handleAccountInstanceRenderSnapshot,
+  handleAccountInstancesList,
+  handleAccountUpdateInstance,
+} from './domains/account-instances';
 import {
   handleAccountAssetDelete,
   handleAccountAssetGet,
   handleAccountAssetsList,
   handleAccountAssetsPurge,
   handleAccountLifecyclePlanChange,
+  handleAccountMembersList,
+  handleAccountNoticesList,
   handleAccountNoticeDismiss,
   handleAccountInstancesUnpublish,
 } from './domains/accounts';
@@ -40,18 +42,9 @@ import {
   handleAccountBillingPortalSession,
   handleAccountBillingSummary,
   handleAccountGet,
-  handleAccountCreateWorkspace,
   handleAccountUsage,
-  handleAccountWorkspaces,
   handleMinibobHandoffStart,
   handleMinibobHandoffComplete,
-  handleWorkspaceAiLimits,
-  handleWorkspaceAiOutcomes,
-  handleWorkspaceAiProfile,
-  handleWorkspaceEntitlements,
-  handleWorkspaceGet,
-  handleWorkspaceMembers,
-  handleWorkspacePolicy,
   handleRomaBootstrap,
   handleRomaTemplates,
   handleRomaWidgetDelete,
@@ -61,14 +54,14 @@ import {
 import {
   handleL10nGenerateReport,
   handleL10nGenerateRetries,
-  handleWorkspaceInstanceLayerDelete,
-  handleWorkspaceInstanceLayerGet,
-  handleWorkspaceInstanceLayerUpsert,
-  handleWorkspaceInstanceLayersList,
-  handleWorkspaceInstanceL10nEnqueueSelected,
-  handleWorkspaceInstanceL10nStatus,
-  handleWorkspaceLocalesGet,
-  handleWorkspaceLocalesPut,
+  handleAccountInstanceLayerDelete,
+  handleAccountInstanceLayerGet,
+  handleAccountInstanceLayerUpsert,
+  handleAccountInstanceLayersList,
+  handleAccountInstanceL10nEnqueueSelected,
+  handleAccountInstanceL10nStatus,
+  handleAccountLocalesGet,
+  handleAccountLocalesPut,
 } from './domains/l10n';
 import { handleFrozenResets, handleUsageEvent } from './domains/usage';
 import { handleMe } from './domains/identity';
@@ -183,187 +176,130 @@ export default {
         return handlePersonalizationOnboardingStatus(req, env, decodeURIComponent(onboardingStatusMatch[1]));
       }
 
-      const workspaceLocalesMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/locales$/);
-      if (workspaceLocalesMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceLocalesMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        if (req.method === 'GET') return handleWorkspaceLocalesGet(req, env, workspaceIdResult.value);
-        if (req.method === 'PUT') return handleWorkspaceLocalesPut(req, env, workspaceIdResult.value);
+      const accountLocalesMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/locales$/);
+      if (accountLocalesMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountLocalesMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        if (req.method === 'GET') return handleAccountLocalesGet(req, env, accountIdResult.value);
+        if (req.method === 'PUT') return handleAccountLocalesPut(req, env, accountIdResult.value);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const workspaceInstancesMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/instances$/);
-      if (workspaceInstancesMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstancesMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        if (req.method === 'GET') return handleWorkspaceInstances(req, env, workspaceIdResult.value);
-        if (req.method === 'POST') return handleWorkspaceCreateInstance(req, env, workspaceIdResult.value);
+      const accountInstancesMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/instances$/);
+      if (accountInstancesMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountInstancesMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        if (req.method === 'GET') return handleAccountInstancesList(req, env, accountIdResult.value);
+        if (req.method === 'POST') return handleAccountCreateInstance(req, env, accountIdResult.value);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const workspaceInstanceMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/instance\/([^/]+)$/);
-      if (workspaceInstanceMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        const publicId = decodeURIComponent(workspaceInstanceMatch[2]);
-        if (req.method === 'GET') return handleWorkspaceGetInstance(req, env, workspaceIdResult.value, publicId);
-        if (req.method === 'PUT') return handleWorkspaceUpdateInstance(req, env, workspaceIdResult.value, publicId);
+      const accountInstanceMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/instance\/([^/]+)$/);
+      if (accountInstanceMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountInstanceMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        const publicId = decodeURIComponent(accountInstanceMatch[2]);
+        if (req.method === 'GET') return handleAccountGetInstance(req, env, accountIdResult.value, publicId);
+        if (req.method === 'PUT') return handleAccountUpdateInstance(req, env, accountIdResult.value, publicId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const workspaceInstanceLayersMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/layers$/);
-      if (workspaceInstanceLayersMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceLayersMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        const publicId = decodeURIComponent(workspaceInstanceLayersMatch[2]);
+      const accountInstanceLayersMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/instances\/([^/]+)\/layers$/);
+      if (accountInstanceLayersMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountInstanceLayersMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        const publicId = decodeURIComponent(accountInstanceLayersMatch[2]);
         if (req.method === 'GET') {
-          return handleWorkspaceInstanceLayersList(req, env, workspaceIdResult.value, publicId);
+          return handleAccountInstanceLayersList(req, env, accountIdResult.value, publicId);
         }
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const workspaceInstanceLayerMatch = pathname.match(
-        /^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/layers\/([^/]+)\/([^/]+)$/
+      const accountInstanceLayerMatch = pathname.match(
+        /^\/api\/accounts\/([^/]+)\/instances\/([^/]+)\/layers\/([^/]+)\/([^/]+)$/
       );
-      if (workspaceInstanceLayerMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceLayerMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        const publicId = decodeURIComponent(workspaceInstanceLayerMatch[2]);
-        const layer = decodeURIComponent(workspaceInstanceLayerMatch[3]);
-        const layerKey = decodeURIComponent(workspaceInstanceLayerMatch[4]);
+      if (accountInstanceLayerMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountInstanceLayerMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        const publicId = decodeURIComponent(accountInstanceLayerMatch[2]);
+        const layer = decodeURIComponent(accountInstanceLayerMatch[3]);
+        const layerKey = decodeURIComponent(accountInstanceLayerMatch[4]);
         if (req.method === 'GET') {
-          return handleWorkspaceInstanceLayerGet(req, env, workspaceIdResult.value, publicId, layer, layerKey);
+          return handleAccountInstanceLayerGet(req, env, accountIdResult.value, publicId, layer, layerKey);
         }
         if (req.method === 'PUT') {
-          return handleWorkspaceInstanceLayerUpsert(req, env, workspaceIdResult.value, publicId, layer, layerKey);
+          return handleAccountInstanceLayerUpsert(req, env, accountIdResult.value, publicId, layer, layerKey);
         }
         if (req.method === 'DELETE') {
-          return handleWorkspaceInstanceLayerDelete(req, env, workspaceIdResult.value, publicId, layer, layerKey);
+          return handleAccountInstanceLayerDelete(req, env, accountIdResult.value, publicId, layer, layerKey);
         }
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const workspaceInstanceL10nMatch = pathname.match(
-        /^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/l10n\/status$/
+      const accountInstanceL10nMatch = pathname.match(
+        /^\/api\/accounts\/([^/]+)\/instances\/([^/]+)\/l10n\/status$/
       );
-      if (workspaceInstanceL10nMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceL10nMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        const publicId = decodeURIComponent(workspaceInstanceL10nMatch[2]);
-        if (req.method === 'GET') return handleWorkspaceInstanceL10nStatus(req, env, workspaceIdResult.value, publicId);
+      if (accountInstanceL10nMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountInstanceL10nMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        const publicId = decodeURIComponent(accountInstanceL10nMatch[2]);
+        if (req.method === 'GET') return handleAccountInstanceL10nStatus(req, env, accountIdResult.value, publicId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const workspaceInstancePublishStatusMatch = pathname.match(
-        /^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/publish\/status$/
+      const accountInstancePublishStatusMatch = pathname.match(
+        /^\/api\/accounts\/([^/]+)\/instances\/([^/]+)\/publish\/status$/
       );
-      if (workspaceInstancePublishStatusMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstancePublishStatusMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        const publicId = decodeURIComponent(workspaceInstancePublishStatusMatch[2]);
+      if (accountInstancePublishStatusMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountInstancePublishStatusMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        const publicId = decodeURIComponent(accountInstancePublishStatusMatch[2]);
         if (req.method === 'GET') {
-          return handleWorkspaceInstancePublishStatus(req, env, workspaceIdResult.value, publicId);
+          return handleAccountInstancePublishStatus(req, env, accountIdResult.value, publicId);
         }
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const workspaceInstanceL10nEnqueueSelectedMatch = pathname.match(
-        /^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/l10n\/enqueue-selected$/
+      const accountInstanceL10nEnqueueSelectedMatch = pathname.match(
+        /^\/api\/accounts\/([^/]+)\/instances\/([^/]+)\/l10n\/enqueue-selected$/
       );
-      if (workspaceInstanceL10nEnqueueSelectedMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceL10nEnqueueSelectedMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        const publicId = decodeURIComponent(workspaceInstanceL10nEnqueueSelectedMatch[2]);
+      if (accountInstanceL10nEnqueueSelectedMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountInstanceL10nEnqueueSelectedMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        const publicId = decodeURIComponent(accountInstanceL10nEnqueueSelectedMatch[2]);
         if (req.method === 'POST') {
-          return handleWorkspaceInstanceL10nEnqueueSelected(req, env, workspaceIdResult.value, publicId);
+          return handleAccountInstanceL10nEnqueueSelected(req, env, accountIdResult.value, publicId);
         }
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const workspaceInstanceRenderSnapshotMatch = pathname.match(
-        /^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/render-snapshot$/
+      const accountInstanceRenderSnapshotMatch = pathname.match(
+        /^\/api\/accounts\/([^/]+)\/instances\/([^/]+)\/render-snapshot$/
       );
-      if (workspaceInstanceRenderSnapshotMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceRenderSnapshotMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        const publicId = decodeURIComponent(workspaceInstanceRenderSnapshotMatch[2]);
+      if (accountInstanceRenderSnapshotMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountInstanceRenderSnapshotMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        const publicId = decodeURIComponent(accountInstanceRenderSnapshotMatch[2]);
         if (req.method === 'POST') {
-          return handleWorkspaceInstanceRenderSnapshot(req, env, workspaceIdResult.value, publicId);
+          return handleAccountInstanceRenderSnapshot(req, env, accountIdResult.value, publicId);
         }
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const workspaceWebsiteCreativeMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/website-creative$/);
-      if (workspaceWebsiteCreativeMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceWebsiteCreativeMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        if (req.method === 'POST') return handleWorkspaceEnsureWebsiteCreative(req, env, workspaceIdResult.value);
+      const accountWebsiteCreativeMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/website-creative$/);
+      if (accountWebsiteCreativeMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountWebsiteCreativeMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        if (req.method === 'POST') return handleAccountEnsureWebsiteCreative(req, env, accountIdResult.value);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const workspaceBusinessProfileMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/business-profile$/);
-      if (workspaceBusinessProfileMatch) {
-        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceBusinessProfileMatch[1]));
-        if (!workspaceIdResult.ok) return workspaceIdResult.response;
-        if (req.method === 'GET') return handleWorkspaceBusinessProfileGet(req, env, workspaceIdResult.value);
-        if (req.method === 'POST') return handleWorkspaceBusinessProfileUpsert(req, env, workspaceIdResult.value);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const workspaceMembersMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/members$/);
-      if (workspaceMembersMatch) {
-        const workspaceId = decodeURIComponent(workspaceMembersMatch[1]);
-        if (req.method === 'GET') return handleWorkspaceMembers(req, env, workspaceId);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const workspacePolicyMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/policy$/);
-      if (workspacePolicyMatch) {
-        const workspaceId = decodeURIComponent(workspacePolicyMatch[1]);
-        if (req.method === 'GET') return handleWorkspacePolicy(req, env, workspaceId);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const workspaceEntitlementsMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/entitlements$/);
-      if (workspaceEntitlementsMatch) {
-        const workspaceId = decodeURIComponent(workspaceEntitlementsMatch[1]);
-        if (req.method === 'GET') return handleWorkspaceEntitlements(req, env, workspaceId);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const workspaceAiProfileMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/ai\/profile$/);
-      if (workspaceAiProfileMatch) {
-        const workspaceId = decodeURIComponent(workspaceAiProfileMatch[1]);
-        if (req.method === 'GET') return handleWorkspaceAiProfile(req, env, workspaceId);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const workspaceAiLimitsMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/ai\/limits$/);
-      if (workspaceAiLimitsMatch) {
-        const workspaceId = decodeURIComponent(workspaceAiLimitsMatch[1]);
-        if (req.method === 'GET') return handleWorkspaceAiLimits(req, env, workspaceId);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const workspaceAiOutcomesMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/ai\/outcomes$/);
-      if (workspaceAiOutcomesMatch) {
-        const workspaceId = decodeURIComponent(workspaceAiOutcomesMatch[1]);
-        if (req.method === 'GET') return handleWorkspaceAiOutcomes(req, env, workspaceId);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const workspaceMatch = pathname.match(/^\/api\/workspaces\/([^/]+)$/);
-      if (workspaceMatch) {
-        const workspaceId = decodeURIComponent(workspaceMatch[1]);
-        if (req.method === 'GET') return handleWorkspaceGet(req, env, workspaceId);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const accountWorkspacesMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/workspaces$/);
-      if (accountWorkspacesMatch) {
-        const accountId = decodeURIComponent(accountWorkspacesMatch[1]);
-        if (req.method === 'GET') return handleAccountWorkspaces(req, env, accountId);
-        if (req.method === 'POST') return handleAccountCreateWorkspace(req, env, accountId);
+      const accountBusinessProfileMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/business-profile$/);
+      if (accountBusinessProfileMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(accountBusinessProfileMatch[1]));
+        if (!accountIdResult.ok) return accountIdResult.response;
+        if (req.method === 'GET') return handleAccountBusinessProfileGet(req, env, accountIdResult.value);
+        if (req.method === 'POST') return handleAccountBusinessProfileUpsert(req, env, accountIdResult.value);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
@@ -400,6 +336,20 @@ export default {
         const accountId = decodeURIComponent(accountAssetsMatch[1]);
         if (req.method === 'GET') return handleAccountAssetsList(req, env, accountId);
         if (req.method === 'DELETE') return handleAccountAssetsPurge(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountMembersMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/members$/);
+      if (accountMembersMatch) {
+        const accountId = decodeURIComponent(accountMembersMatch[1]);
+        if (req.method === 'GET') return handleAccountMembersList(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountNoticesMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/notices$/);
+      if (accountNoticesMatch) {
+        const accountId = decodeURIComponent(accountNoticesMatch[1]);
+        if (req.method === 'GET') return handleAccountNoticesList(req, env, accountId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

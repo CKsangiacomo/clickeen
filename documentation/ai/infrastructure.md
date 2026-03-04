@@ -36,7 +36,7 @@ Worker vars/secrets:
 - `ENVIRONMENT`: loose environment label used in logs and the `/healthz` response (`dev`, `prod`, etc)
 - `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret with Paris (grant verification + outcome signatures)
 - `PARIS_DEV_JWT` (secret): internal bearer token for San Francisco internal endpoints (`/v1/l10n*`, `/v1/personalization/*`) and Paris writeback calls
-- `PARIS_BASE_URL` (var): required for onboarding persistence path (San Francisco -> Paris workspace profile write)
+- `PARIS_BASE_URL` (var): required for onboarding persistence path (San Francisco -> Paris account business profile write)
 - `DEEPSEEK_API_KEY` (secret, optional): required only when an execution reaches the model provider
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
@@ -100,7 +100,7 @@ Auth:
 - `Authorization: Bearer ${PARIS_DEV_JWT}`
 
 ### `POST /v1/personalization/onboarding`
-Purpose: enqueue workspace onboarding personalization job.
+Purpose: enqueue account onboarding personalization job.
 
 Auth:
 - `Authorization: Bearer ${PARIS_DEV_JWT}`

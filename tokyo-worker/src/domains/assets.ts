@@ -1,7 +1,6 @@
 import { getEntitlementsMatrix } from '@clickeen/ck-policy';
 import { isUuid } from '@clickeen/ck-contracts';
 import {
-  assertUploadAuth,
   buildAccountAssetKey,
   guessContentTypeFromExt,
   json,
@@ -10,7 +9,6 @@ import {
   normalizeWidgetType,
   parseAccountAssetIdentityFromKey,
   pickExtension,
-  requireDevAuth,
   sanitizeUploadFilename,
   sha256Hex,
   supabaseFetch,
@@ -129,27 +127,6 @@ export function resolveUploadsBytesBudgetMax(tier: string | null): number | null
   return Math.floor(value);
 }
 
-export async function loadWorkspaceTier(env: Env, workspaceId: string): Promise<string | null> {
-  if (!isUuid(workspaceId)) return null;
-  const params = new URLSearchParams({
-    select: 'tier',
-    id: `eq.${workspaceId}`,
-    limit: '1',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/workspaces?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase workspace read failed (${res.status}) ${text}`.trim());
-  }
-  const rows = (await res.json().catch(() => [])) as Array<{ tier?: string | null }>;
-  return rows?.[0]?.tier ?? null;
-}
-
-type WorkspaceUploadContext = {
-  tier: string | null;
-  accountId: string | null;
-};
-
 export type MemberRole = 'viewer' | 'editor' | 'admin' | 'owner';
 
 function normalizeMemberRole(value: unknown): MemberRole | null {
@@ -179,92 +156,25 @@ export function roleRank(role: MemberRole): number {
   }
 }
 
-export async function loadWorkspaceUploadContext(env: Env, workspaceId: string): Promise<WorkspaceUploadContext | null> {
-  if (!isUuid(workspaceId)) return null;
-  const params = new URLSearchParams({
-    select: 'tier,account_id',
-    id: `eq.${workspaceId}`,
-    limit: '1',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/workspaces?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase workspace read failed (${res.status}) ${text}`.trim());
-  }
-  const rows = (await res.json().catch(() => [])) as Array<{
-    tier?: string | null;
-    account_id?: string | null;
-  }>;
-  const row = rows?.[0];
-  if (!row) return null;
-  return {
-    tier: typeof row.tier === 'string' ? row.tier : null,
-    accountId: typeof row.account_id === 'string' ? row.account_id : null,
-  };
-}
-
-export async function loadWorkspaceMembershipRole(
-  env: Env,
-  workspaceId: string,
-  userId: string,
-): Promise<MemberRole | null> {
-  if (!isUuid(workspaceId) || !isUuid(userId)) return null;
-  const params = new URLSearchParams({
-    select: 'role',
-    workspace_id: `eq.${workspaceId}`,
-    user_id: `eq.${userId}`,
-    limit: '1',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/workspace_members?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase workspace membership read failed (${res.status}) ${text}`.trim());
-  }
-  const rows = (await res.json().catch(() => [])) as Array<{ role?: unknown }>;
-  return normalizeMemberRole(rows?.[0]?.role);
-}
-
 export async function loadAccountMembershipRole(env: Env, accountId: string, userId: string): Promise<MemberRole | null> {
   if (!isUuid(accountId) || !isUuid(userId)) return null;
 
-  const workspaceParams = new URLSearchParams({
-    select: 'id',
-    account_id: `eq.${accountId}`,
-    limit: '500',
-  });
-  const workspaceRes = await supabaseFetch(env, `/rest/v1/workspaces?${workspaceParams.toString()}`, { method: 'GET' });
-  if (!workspaceRes.ok) {
-    const text = await workspaceRes.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account workspaces read failed (${workspaceRes.status}) ${text}`.trim());
-  }
-  const workspaces = (await workspaceRes.json().catch(() => [])) as Array<{ id?: unknown }>;
-  const workspaceIds = workspaces
-    .map((row) => (typeof row.id === 'string' ? row.id.trim() : ''))
-    .filter(Boolean);
-  if (!workspaceIds.length) return null;
-
-  const membershipParams = new URLSearchParams({
+  const params = new URLSearchParams({
     select: 'role',
+    account_id: `eq.${accountId}`,
     user_id: `eq.${userId}`,
-    workspace_id: `in.(${workspaceIds.join(',')})`,
-    limit: '500',
+    limit: '1',
   });
-  const membershipRes = await supabaseFetch(env, `/rest/v1/workspace_members?${membershipParams.toString()}`, {
+  const res = await supabaseFetch(env, `/rest/v1/account_members?${params.toString()}`, {
     method: 'GET',
   });
-  if (!membershipRes.ok) {
-    const text = await membershipRes.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account membership read failed (${membershipRes.status}) ${text}`.trim());
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account membership read failed (${res.status}) ${text}`.trim());
   }
 
-  const memberships = (await membershipRes.json().catch(() => [])) as Array<{ role?: unknown }>;
-  let highest: MemberRole | null = null;
-  memberships.forEach((entry) => {
-    const role = normalizeMemberRole(entry.role);
-    if (!role) return;
-    if (!highest || roleRank(role) > roleRank(highest)) highest = role;
-  });
-  return highest;
+  const rows = (await res.json().catch(() => [])) as Array<{ role?: unknown }>;
+  return normalizeMemberRole(rows?.[0]?.role);
 }
 
 type AccountAssetSource = 'bob.publish' | 'bob.export' | 'devstudio' | 'promotion' | 'api';
@@ -280,12 +190,13 @@ export function normalizeAccountAssetSource(raw: string | null): AccountAssetSou
 
 type AccountUploadProfile = {
   status: 'active' | 'disabled';
+  tier: string | null;
 };
 
 export async function loadAccountUploadProfile(env: Env, accountId: string): Promise<AccountUploadProfile | null> {
   if (!isUuid(accountId)) return null;
   const params = new URLSearchParams({
-    select: 'status',
+    select: 'status,tier',
     id: `eq.${accountId}`,
     limit: '1',
   });
@@ -294,19 +205,19 @@ export async function loadAccountUploadProfile(env: Env, accountId: string): Pro
     const text = await res.text().catch(() => '');
     throw new Error(`[tokyo] Supabase account read failed (${res.status}) ${text}`.trim());
   }
-  const rows = (await res.json().catch(() => [])) as Array<{ status?: unknown }>;
+  const rows = (await res.json().catch(() => [])) as Array<{ status?: unknown; tier?: unknown }>;
   const row = rows?.[0];
   if (!row) return null;
   const status = row.status === 'disabled' ? 'disabled' : row.status === 'active' ? 'active' : null;
   if (!status) return null;
-  return { status };
+  const tier = typeof row.tier === 'string' ? row.tier : null;
+  return { status, tier };
 }
 
 export async function persistAccountAssetMetadata(args: {
   env: Env;
   accountId: string;
   assetId: string;
-  workspaceId?: string | null;
   publicId?: string | null;
   widgetType?: string | null;
   variant: string;
@@ -321,7 +232,6 @@ export async function persistAccountAssetMetadata(args: {
   const assetRow = {
     asset_id: args.assetId,
     account_id: args.accountId,
-    workspace_id: args.workspaceId ?? null,
     public_id: args.publicId ?? null,
     widget_type: args.widgetType ?? null,
     source: args.source,

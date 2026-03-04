@@ -1,17 +1,9 @@
 import type { Env, L10nJob } from '../../shared/types';
 import { asTrimmedString } from '../../shared/validation';
-import { callSanfranciscoJson } from '../../shared/sanfrancisco';
 
 type DispatchResult =
-  | { ok: true; transport: 'queue' | 'http' }
+  | { ok: true; transport: 'queue' }
   | { ok: false; error: string };
-
-function shouldUseHttpFallback(env: Env): boolean {
-  if (env.L10N_GENERATE_QUEUE) return false;
-  const stage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
-  if (stage !== 'local') return false;
-  return Boolean(asTrimmedString(env.SANFRANCISCO_BASE_URL));
-}
 
 export async function dispatchL10nGenerateJobs(
   env: Env,
@@ -26,22 +18,9 @@ export async function dispatchL10nGenerateJobs(
     }
   }
 
-  if (shouldUseHttpFallback(env)) {
-    const dispatched = await callSanfranciscoJson({
-      env,
-      path: '/v1/l10n',
-      method: 'POST',
-      body: { jobs },
-    });
-    if (!dispatched.ok) {
-      const detail = await dispatched.response.text().catch(() => '');
-      return {
-        ok: false,
-        error: detail || `SanFrancisco /v1/l10n dispatch failed (${dispatched.response.status})`,
-      };
-    }
-    return { ok: true, transport: 'http' };
+  const stage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
+  if (stage === 'local') {
+    return { ok: false, error: 'Instance l10n generation is cloud-dev only (L10N_GENERATE_QUEUE missing in local).' };
   }
-
   return { ok: false, error: 'L10N_GENERATE_QUEUE missing' };
 }

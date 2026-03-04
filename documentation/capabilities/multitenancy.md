@@ -82,7 +82,7 @@ Day 14: Designer joins as editor to improve styling
 Day 30: 15 people viewing/commenting, 3 editors
 ```
 
-Every viewer is a potential editor. Every editor is a potential workspace owner.
+Every viewer is a potential editor. Every editor is a potential account owner.
 
 ### 2) No Friction for Adoption
 
@@ -98,7 +98,7 @@ User: *invites whole team, becomes dependent on Clickeen*
 
 ### 3) Switching Costs Compound
 
-More people in the workspace = harder to leave.
+More people in the account = harder to leave.
 
 If 20 people are viewing and commenting on widgets, switching means:
 - Re-training everyone
@@ -119,7 +119,7 @@ If 20 people are viewing and commenting on widgets, switching means:
 | **Owner** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 **Viewers:**
-- Can see all widgets in the workspace
+- Can see all widgets in the account
 - Can leave comments (feedback, suggestions, approvals)
 - Cannot edit or create widgets
 - Do not count toward seat limits
@@ -131,10 +131,10 @@ If 20 people are viewing and commenting on widgets, switching means:
 
 ---
 
-## Workspace Structure
+## Account Structure
 
 ```
-Workspace
+Account
 ├── Plan: { tier, billingEmail, ... }
 ├── Members[]
 │   ├── { userId, role: 'owner', joinedAt }
@@ -149,28 +149,28 @@ Workspace
     └── ...
 ```
 
-**Widgets belong to workspaces, not users.** If an editor leaves, their widgets stay.
+**Widgets belong to accounts, not users.** If an editor leaves, their widgets stay.
 
-## Account Layer (Shipped for Assets + Authz Context)
+## Account-Only Tenancy (Shipped)
 
-PRD 046 introduced an account layer above workspaces for uploads/asset metering. Current runtime also uses the account layer for Roma authz context and account-scoped entitlement projection:
+Accounts are the primary tenant boundary:
+- Collaboration boundary (roles, comments, instance ownership)
+- Ownership/metering boundary for uploads (`/assets/upload` → `account_id` required)
+- Policy/entitlement context for editor surfaces (Roma/Bob)
 
 ```
 account
-  ├── workspaces
-  │   ├── widget instances (workspace-owned)
-  │   └── members/roles (workspace boundary)
+  ├── widget instances (account-owned)
+  ├── members/roles (account boundary)
   ├── account-owned assets
-  └── account authz + entitlement context
+  └── authz + entitlement context
 ```
 
 Key boundary rules:
-- Workspaces remain the collaboration boundary (roles, comments, instance ownership).
-- Accounts are the ownership/metering boundary for uploads (`/assets/upload` -> `account_id` required).
-- Roma/Paris asset reads are account-canonical (`/api/accounts/:accountId/assets`) with optional workspace projection (`used_in_workspace` / `created_in_workspace`).
-- Roma bootstrap now includes an account capsule (`x-ck-account-capsule`) and an account entitlement snapshot for UI/runtime gating without per-screen membership checks.
-- `workspaces.account_id` is now required and deterministic.
-- Curated platform content is owned by `PLATFORM_ACCOUNT_ID` while remaining globally readable.
+- Instances, assets, locales, and membership are all account-scoped.
+- Roma/Paris asset reads are account-canonical (`/api/accounts/:accountId/assets`).
+- Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped Paris calls.
+- Curated platform content is owned by a single admin account (`ADMIN_ACCOUNT_ID`) while remaining globally readable.
 
 ---
 
@@ -180,14 +180,14 @@ Viewers need a way to provide feedback without editing. Comments are:
 - Tied to a widget instance
 - Optionally tied to a specific field/element (like Figma's comment pins)
 - Resolvable (mark as done)
-- Visible to all workspace members
+- Visible to all account members
 
 ### Comment Schema
 
 ```typescript
 type Comment = {
   id: string;
-  workspaceId: string;
+  accountId: string;
   widgetInstanceId: string;
   userId: string;
   text: string;
@@ -243,7 +243,7 @@ type Comment = {
 | Unlimited viewers on any file | Unlimited viewers on any widget |
 | Pay per editor seat | Upgrade tiers unlock more editors |
 | Comments on designs | Comments on widgets |
-| Workspace = organizing unit | Workspace = organizing unit |
+| Workspace = organizing unit | Account = organizing unit |
 | Switching cost = team is embedded | Switching cost = widgets are embedded everywhere |
 
 ---
@@ -280,7 +280,7 @@ Free user → invites team as viewers → viewers comment
 
 ## Technical Notes
 
-## Runtime Subjects (Workspace + MiniBob) — Durable policy architecture
+## Runtime Subjects (Account + MiniBob) — Durable policy architecture
 
 While we are building (before full auth/billing enforcement ships), we still need deterministic gating/caps across surfaces.
 
@@ -291,7 +291,7 @@ While we are building (before full auth/billing enforcement ships), we still nee
 **Budgets (MiniBob + Free conversion gates):**
 - Budgets are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls, snapshot regenerations).
 - Budgets are **metered and enforced server-side** at the point where cost is incurred (Paris/Tokyo-worker/Venice); Bob uses the resolved policy for UX gating + upsell messaging.
-- Budgets are defined by the subject policy (e.g. `minibob` vs `workspace`) and workspace tier, not by individual widgets.
+- Budgets are defined by the subject policy (e.g. `minibob` vs `account`) and account tier, not by individual widgets.
 
 **How this appears in widget PRDs (required):**
 - PRDs list **which entitlement keys** a widget uses and **how they map** to widget state (paths + metrics).
@@ -307,13 +307,13 @@ While we are building (before full auth/billing enforcement ships), we still nee
 - PRDs do **not** encode "free vs paid" in per-row copy; it is derived from the matrix deltas and current viewer profile.
 
 **Current runtime subjects:**
-- `workspace`: standard editor subject used by Roma and DevStudio.
+- `account`: standard editor subject used by Roma and DevStudio.
 - `minibob`: internal “demo” subject used by Prague MiniBob.
 
 **How the subject is set today (shipped in Bob):**
 - Bob accepts the subject via either:
-  - URL bootstrap mode: `?boot=url&subject=workspace|minibob` (used by URL-driven embeds like MiniBob)
-  - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'workspace'|'minibob', ... }` (used by Roma/DevStudio)
+  - URL bootstrap mode: `?boot=url&subject=account|minibob` (used by URL-driven embeds like MiniBob)
+  - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'account'|'minibob', ... }` (used by Roma/DevStudio)
 
 **What Bob enforces today (example):**
 - `branding.remove` maps to `behavior.showBacklink` and is sanitized on load when blocked.
@@ -323,12 +323,12 @@ While we are building (before full auth/billing enforcement ships), we still nee
 
 **Why this scales:**
 - New surfaces add a new `subjectMode` without changing widget code.
-- Later, real workspaces/roles/plans become another subject source, but Bob still consumes a single resolved `policy`.
+- Later, real roles/plans become another subject source, but Bob still consumes a single resolved `policy`.
 
 ### Paris Enforcement
 
 Current shipped behavior:
-- Workspace member listing is read-only via `GET /api/workspaces/:workspaceId/members` for authorized users.
+- Account member listing is read-only via `GET /api/accounts/:accountId/members` for authorized users.
 - Publish and editor behavior use policy/entitlement enforcement already wired in runtime.
 - There is no shipped seat-cap write-path enforcement in Paris yet.
 - There is no shipped `SEAT_LIMIT_EXCEEDED` runtime error yet.
@@ -341,7 +341,7 @@ Planned behavior (not shipped):
 ### Bob UX
 
 Current shipped behavior:
-- Role/policy-aware editing gates are enforced by resolved workspace policy.
+- Role/policy-aware editing gates are enforced by resolved account policy.
 
 Planned behavior (not shipped):
 - Explicit seat-remaining UI and editor seat warning states.
@@ -350,18 +350,18 @@ Planned behavior (not shipped):
 ### Michael Schema
 
 ```sql
-CREATE TABLE workspace_members (
+CREATE TABLE account_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  workspace_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  account_id UUID NOT NULL REFERENCES public.accounts(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'editor', 'viewer')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (workspace_id, user_id)
+  UNIQUE (account_id, user_id)
 );
 
 CREATE TABLE comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  workspace_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  account_id UUID NOT NULL REFERENCES public.accounts(id) ON DELETE CASCADE,
   widget_instance_id UUID NOT NULL REFERENCES public.widget_instances(id) ON DELETE CASCADE,
   user_id UUID NULL REFERENCES auth.users(id) ON DELETE SET NULL,
   text TEXT NOT NULL,
@@ -379,7 +379,7 @@ CREATE TABLE comments (
 1. **Viewers are always unlimited** — at every tier, including Free
 2. **Viewers can comment** — collaboration without editing
 3. **Editor seats are the upgrade lever** — capped in Free/Tier 1, unlimited in Tier 2/3
-4. **Widgets belong to workspaces** — portable, team-owned
+4. **Widgets belong to accounts** — portable, team-owned
 5. **No sales call for teams** — self-serve collaboration from day 1
 
 This is the Figma model applied to widgets: make adoption frictionless, let stickiness compound, charge for serious usage.

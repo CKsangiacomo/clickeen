@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import process from 'node:process';
 
-const CK_DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
-const CK_DEMO_WORKSPACE_ID = '00000000-0000-0000-0000-000000000002';
+const CK_DEV_ACCOUNT_ID = '00000000-0000-0000-0000-000000000001';
+const CK_DEMO_ACCOUNT_ID = '00000000-0000-0000-0000-000000000002';
+const CK_ADMIN_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
 
 const PERSONAS = [
   {
@@ -10,7 +11,7 @@ const PERSONAS = [
     emailEnv: 'CK_LOCAL_PERSONA_FREE_EMAIL',
     defaultEmail: 'local.free@clickeen.local',
     displayName: 'Local Free Persona',
-    workspaceId: CK_DEMO_WORKSPACE_ID,
+    accountId: CK_DEMO_ACCOUNT_ID,
     role: 'owner',
   },
   {
@@ -18,7 +19,7 @@ const PERSONAS = [
     emailEnv: 'CK_LOCAL_PERSONA_PAID_EMAIL',
     defaultEmail: 'local.paid@clickeen.local',
     displayName: 'Local Paid Persona',
-    workspaceId: CK_DEV_WORKSPACE_ID,
+    accountId: CK_DEV_ACCOUNT_ID,
     role: 'owner',
   },
   {
@@ -26,8 +27,8 @@ const PERSONAS = [
     emailEnv: 'CK_ADMIN_EMAIL',
     defaultEmail: 'local.admin@clickeen.local',
     displayName: 'Local Admin Persona',
-    workspaceId: CK_DEV_WORKSPACE_ID,
-    role: 'admin',
+    accountId: CK_ADMIN_ACCOUNT_ID,
+    role: 'owner',
   },
 ];
 
@@ -198,37 +199,42 @@ async function updateAdminUser({ baseUrl, serviceRoleKey, userId, password, pers
   }
 }
 
-async function ensureWorkspaceShape(baseUrl, serviceRoleKey) {
-  const workspaceTargets = [
-    { id: CK_DEV_WORKSPACE_ID, name: 'Clickeen Dev', tier: 'tier3' },
-    { id: CK_DEMO_WORKSPACE_ID, name: 'Clickeen Demo', tier: 'free' },
+async function ensureAccountShape(baseUrl, serviceRoleKey) {
+  const accountTargets = [
+    { id: CK_DEV_ACCOUNT_ID, name: 'Clickeen Dev', slug: 'ck-dev', tier: 'tier3', is_platform: false },
+    { id: CK_DEMO_ACCOUNT_ID, name: 'Clickeen Demo', slug: 'ck-demo', tier: 'free', is_platform: false },
+    { id: CK_ADMIN_ACCOUNT_ID, name: 'Clickeen Admin', slug: 'clickeen-admin', tier: 'tier3', is_platform: true },
   ];
 
-  for (const target of workspaceTargets) {
-    const params = new URLSearchParams({
-      id: `eq.${target.id}`,
-    });
-    const response = await fetch(`${baseUrl}/rest/v1/workspaces?${params.toString()}`, {
-      method: 'PATCH',
-      headers: restHeaders(serviceRoleKey, { Prefer: 'return=minimal' }),
-      cache: 'no-store',
-      body: JSON.stringify({
+  const response = await fetch(`${baseUrl}/rest/v1/accounts?on_conflict=id`, {
+    method: 'POST',
+    headers: restHeaders(serviceRoleKey, {
+      Prefer: 'resolution=merge-duplicates,return=minimal',
+    }),
+    cache: 'no-store',
+    body: JSON.stringify(
+      accountTargets.map((target) => ({
+        id: target.id,
+        status: 'active',
+        is_platform: target.is_platform,
         name: target.name,
+        slug: target.slug,
         tier: target.tier,
-      }),
-    });
-    if (!response.ok) {
-      const detail = await readJsonSafe(response);
-      throw new Error(
-        `[seed-local-personas] Failed to patch workspace ${target.id} (${response.status}): ${JSON.stringify(detail)}`,
-      );
-    }
+      })),
+    ),
+  });
+
+  if (!response.ok) {
+    const detail = await readJsonSafe(response);
+    throw new Error(
+      `[seed-local-personas] Failed to upsert accounts (${response.status}): ${JSON.stringify(detail)}`,
+    );
   }
 }
 
-async function ensureWorkspaceMembership({ baseUrl, serviceRoleKey, workspaceId, userId, role }) {
+async function ensureAccountMembership({ baseUrl, serviceRoleKey, accountId, userId, role }) {
   const response = await fetch(
-    `${baseUrl}/rest/v1/workspace_members?on_conflict=workspace_id,user_id`,
+    `${baseUrl}/rest/v1/account_members?on_conflict=account_id,user_id`,
     {
       method: 'POST',
       headers: restHeaders(serviceRoleKey, {
@@ -237,7 +243,7 @@ async function ensureWorkspaceMembership({ baseUrl, serviceRoleKey, workspaceId,
       cache: 'no-store',
       body: JSON.stringify([
         {
-          workspace_id: workspaceId,
+          account_id: accountId,
           user_id: userId,
           role,
         },
@@ -248,7 +254,7 @@ async function ensureWorkspaceMembership({ baseUrl, serviceRoleKey, workspaceId,
   if (!response.ok) {
     const detail = await readJsonSafe(response);
     throw new Error(
-      `[seed-local-personas] Failed to upsert workspace membership ${workspaceId}/${userId} (${response.status}): ${JSON.stringify(detail)}`,
+      `[seed-local-personas] Failed to upsert account membership ${accountId}/${userId} (${response.status}): ${JSON.stringify(detail)}`,
     );
   }
 }
@@ -295,15 +301,15 @@ async function ensurePersonaUser({ baseUrl, serviceRoleKey, password, persona, u
     displayName: persona.displayName,
   });
 
-  await ensureWorkspaceMembership({
+  await ensureAccountMembership({
     baseUrl,
     serviceRoleKey,
-    workspaceId: persona.workspaceId,
+    accountId: persona.accountId,
     userId,
     role: persona.role,
   });
 
-  return { email, userId, workspaceId: persona.workspaceId, role: persona.role };
+  return { email, userId, accountId: persona.accountId, role: persona.role };
 }
 
 async function main() {
@@ -311,7 +317,7 @@ async function main() {
   const serviceRoleKey = resolveServiceRoleToken();
   const password = resolvePersonaPassword();
 
-  await ensureWorkspaceShape(baseUrl, serviceRoleKey);
+  await ensureAccountShape(baseUrl, serviceRoleKey);
 
   const existingUsers = await listAdminUsers(baseUrl, serviceRoleKey);
   const usersByEmail = new Map(existingUsers.map((user) => [user.email, user.id]));
@@ -330,7 +336,7 @@ async function main() {
 
   for (const entry of results) {
     console.log(
-      `[seed-local-personas] persona=${entry.persona} email=${entry.email} workspaceId=${entry.workspaceId} role=${entry.role}`,
+      `[seed-local-personas] persona=${entry.persona} email=${entry.email} accountId=${entry.accountId} role=${entry.role}`,
     );
   }
   console.log('[seed-local-personas] OK');

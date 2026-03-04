@@ -2,7 +2,6 @@ import { isUuid, isWidgetPublicId, parseCanonicalAssetRef } from '@clickeen/ck-c
 
 type EditorAssetUploadContext = {
   accountId: string;
-  workspaceId?: string;
   publicId?: string;
   widgetType?: string;
 };
@@ -38,7 +37,6 @@ function readDatasetValue(name: string): string {
 
 function resolveContextFromDocument(): EditorAssetUploadContext | null {
   const accountId = readDatasetValue('ckOwnerAccountId');
-  const workspaceId = readDatasetValue('ckWorkspaceId');
   const publicId = readDatasetValue('ckPublicId');
   const widgetType = readDatasetValue('ckWidgetType');
 
@@ -48,7 +46,6 @@ function resolveContextFromDocument(): EditorAssetUploadContext | null {
     accountId,
   };
 
-  if (workspaceId && isUuid(workspaceId)) context.workspaceId = workspaceId;
   if (publicId && isPublicId(publicId)) context.publicId = publicId;
   if (widgetType && isWidgetType(widgetType)) context.widgetType = widgetType.toLowerCase();
   return context;
@@ -74,14 +71,10 @@ function normalizeAssetUrl(payload: Record<string, unknown>): string | null {
 
 function assertUploadContext(context: EditorAssetUploadContext): EditorAssetUploadContext {
   const accountId = String(context.accountId || '').trim();
-  const workspaceId = String(context.workspaceId || '').trim();
   const publicId = String(context.publicId || '').trim();
   const widgetType = String(context.widgetType || '').trim().toLowerCase();
   if (!isUuid(accountId)) {
     throw new Error('coreui.errors.accountId.invalid');
-  }
-  if (workspaceId && !isUuid(workspaceId)) {
-    throw new Error('coreui.errors.workspaceId.invalid');
   }
   if (publicId && !isPublicId(publicId)) {
     throw new Error('coreui.errors.publicId.invalid');
@@ -91,7 +84,6 @@ function assertUploadContext(context: EditorAssetUploadContext): EditorAssetUplo
   }
   return {
     accountId,
-    workspaceId: workspaceId || undefined,
     publicId: publicId || undefined,
     widgetType: widgetType || undefined,
   };
@@ -117,7 +109,6 @@ export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<st
   const headers = new Headers();
   headers.set('content-type', file.type || 'application/octet-stream');
   headers.set('x-account-id', context.accountId);
-  if (context.workspaceId) headers.set('x-workspace-id', context.workspaceId);
   headers.set('x-filename', file.name || 'upload.bin');
   headers.set('x-variant', variant);
   headers.set('x-source', source);

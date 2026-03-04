@@ -10,16 +10,16 @@ import {
   inferInstanceKindFromPublicId,
 } from '../../shared/instances';
 import type {
+  AccountRow,
   Env,
   L10nGenerateReportPayload,
   L10nGenerateStateRow,
   L10nJob,
-  WorkspaceRow,
 } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { assertDevAuth } from '../../shared/auth';
 import { supabaseFetch } from '../../shared/supabase';
-import { loadWorkspaceById } from '../../shared/workspaces';
+import { loadAccountById } from '../../shared/accounts';
 import { issueAiGrant } from '../ai';
 import {
   L10N_GENERATE_MAX_ATTEMPTS,
@@ -91,7 +91,7 @@ async function applyL10nGenerateReport(args: { env: Env; report: L10nGenerateRep
     baseFingerprint: report.baseFingerprint,
     status: report.status,
     widgetType: report.widgetType ?? existing?.widget_type ?? null,
-    workspaceId: report.workspaceId ?? existing?.workspace_id ?? null,
+    accountId: report.accountId ?? existing?.account_id ?? null,
     baseUpdatedAt: report.baseUpdatedAt ?? existing?.base_updated_at ?? null,
     attempts,
     nextAttemptAt,
@@ -153,10 +153,10 @@ export async function handleL10nGenerateReport(req: Request, env: Env): Promise<
       : { ok: true as const, value: null };
   if (!widgetTypeResult.ok) issues.push(...widgetTypeResult.issues);
 
-  const workspaceIdRaw = reportRaw.workspaceId;
-  const workspaceId = asTrimmedString(workspaceIdRaw);
-  if (workspaceId && !isUuid(workspaceId)) {
-    issues.push({ path: 'workspaceId', message: 'workspaceId must be a uuid' });
+  const accountIdRaw = reportRaw.accountId;
+  const accountId = asTrimmedString(accountIdRaw);
+  if (accountId && !isUuid(accountId)) {
+    issues.push({ path: 'accountId', message: 'accountId must be a uuid' });
   }
 
   const baseUpdatedAt = asTrimmedString(reportRaw.baseUpdatedAt);
@@ -174,7 +174,7 @@ export async function handleL10nGenerateReport(req: Request, env: Env): Promise<
     status: status!,
     ...(attempts !== undefined ? { attempts } : {}),
     widgetType: widgetTypeResult.ok ? widgetTypeResult.value : null,
-    workspaceId: workspaceId || null,
+    accountId: accountId || null,
     baseUpdatedAt: baseUpdatedAt ?? null,
     error: error ?? null,
     occurredAt: occurredAt ?? null,
@@ -199,7 +199,7 @@ async function loadPendingL10nGenerateStates(
       'base_fingerprint',
       'base_updated_at',
       'widget_type',
-      'workspace_id',
+      'account_id',
       'status',
       'attempts',
       'next_attempt_at',
@@ -239,22 +239,34 @@ async function requeueL10nGenerateStates(
   const envStage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
   const nowIso = new Date().toISOString();
 
-  const workspaceLocaleCache = new Map<string, Set<string>>();
-  const resolveWorkspaceLocaleSet = async (workspaceId: string): Promise<Set<string> | null> => {
-    const cached = workspaceLocaleCache.get(workspaceId);
-    if (cached) return cached;
-    let workspace: WorkspaceRow | null = null;
+  const accountLocaleCache = new Map<string, { account: AccountRow; locales: Set<string> } | null>();
+  const resolveAccountLocaleSnapshot = async (
+    accountId: string,
+  ): Promise<{ account: AccountRow; locales: Set<string> } | null> => {
+    const cached = accountLocaleCache.get(accountId);
+    if (cached !== undefined) return cached;
+
+    let account: AccountRow | null = null;
     try {
-      workspace = await loadWorkspaceById(env, workspaceId);
+      account = await loadAccountById(env, accountId);
     } catch {
+      accountLocaleCache.set(accountId, null);
       return null;
     }
-    if (!workspace) return null;
-    const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
-    if (!normalized.ok) return null;
-    const set = new Set<string>(normalized.locales);
-    workspaceLocaleCache.set(workspaceId, set);
-    return set;
+    if (!account) {
+      accountLocaleCache.set(accountId, null);
+      return null;
+    }
+
+    const normalized = normalizeLocaleList(account.l10n_locales, 'l10n_locales');
+    if (!normalized.ok) {
+      accountLocaleCache.set(accountId, null);
+      return null;
+    }
+
+    const snapshot = { account, locales: new Set<string>(normalized.locales) };
+    accountLocaleCache.set(accountId, snapshot);
+    return snapshot;
   };
 
   const jobs: L10nJob[] = [];
@@ -265,7 +277,7 @@ async function requeueL10nGenerateStates(
   for (const row of rows) {
     const locale = row.layer_key;
     const widgetType = row.widget_type ?? null;
-    const workspaceId = row.workspace_id ?? null;
+    const accountId = row.account_id ?? null;
     const currentAttempts = Math.max(0, Math.floor(row.attempts ?? 0));
     if (!canRetryL10nGenerate(currentAttempts)) {
       failedRows.push({
@@ -280,7 +292,7 @@ async function requeueL10nGenerateStates(
     }
     const attempts = currentAttempts + 1;
     const kind = inferInstanceKindFromPublicId(row.public_id);
-    if (!locale || !widgetType || !workspaceId) {
+    if (!locale || !widgetType || !accountId) {
       const retry = resolveL10nFailureRetryState({
         occurredAtIso: nowIso,
         attempts,
@@ -297,12 +309,12 @@ async function requeueL10nGenerateStates(
       continue;
     }
 
-    const selectedLocales = await resolveWorkspaceLocaleSet(workspaceId);
-    if (!selectedLocales) {
+    const localeSnapshot = await resolveAccountLocaleSnapshot(accountId);
+    if (!localeSnapshot) {
       const retry = resolveL10nFailureRetryState({
         occurredAtIso: nowIso,
         attempts,
-        message: 'workspace_locales_unavailable',
+        message: 'account_locales_unavailable',
       });
       failedRows.push({
         ...row,
@@ -315,7 +327,7 @@ async function requeueL10nGenerateStates(
       continue;
     }
 
-    if (!selectedLocales.has(locale)) {
+    if (!localeSnapshot.locales.has(locale)) {
       supersededRows.push({
         ...row,
         status: 'superseded',
@@ -329,8 +341,9 @@ async function requeueL10nGenerateStates(
     const issued = await issueAiGrant({
       env,
       agentId: 'l10n.instance.v1',
-      subject: 'workspace',
-      workspaceId,
+      subject: 'account',
+      accountId,
+      account: localeSnapshot.account,
       mode: 'ops',
       trace: { sessionId: crypto.randomUUID(), instancePublicId: row.public_id },
     });
@@ -364,7 +377,7 @@ async function requeueL10nGenerateStates(
       changedPaths: row.changed_paths ?? undefined,
       removedPaths: row.removed_paths ?? undefined,
       kind,
-      workspaceId,
+      accountId,
       envStage,
     });
     queuedRows.push({

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
@@ -11,6 +11,11 @@ type AccountNotice = {
   payload: Record<string, unknown>;
   createdAt: string;
   emailPending: boolean;
+};
+
+type AccountNoticesResponse = {
+  accountId: string;
+  notices: AccountNotice[];
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -50,7 +55,7 @@ function summarizeTierDropNotice(notice: AccountNotice): { title: string; lines:
   if (assetsPurged) {
     lines.push('We deleted your uploaded assets to keep storage costs aligned with the new plan.');
   }
-  lines.push('Review your workspace to choose what stays live.');
+  lines.push('Review your account to see what stays live.');
 
   return { title: 'Plan update', lines };
 }
@@ -60,10 +65,39 @@ export function RomaAccountNoticeModal() {
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
 
-  const notice = useMemo(() => {
-    const notices = (me.data?.domains?.settings?.notices ?? []) as AccountNotice[];
-    return notices.find((entry) => entry.kind === 'tier_drop') ?? null;
-  }, [me.data]);
+  const [noticesLoading, setNoticesLoading] = useState(false);
+  const [noticesError, setNoticesError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<AccountNotice | null>(null);
+
+  const refreshNotices = useCallback(async () => {
+    if (!accountId) {
+      setNotice(null);
+      setNoticesError(null);
+      return;
+    }
+    setNoticesLoading(true);
+    setNoticesError(null);
+    try {
+      const payload = await fetchParisJson<AccountNoticesResponse>(
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/notices?status=open`,
+        { method: 'GET' },
+      );
+      const list = Array.isArray(payload.notices) ? payload.notices : [];
+      setNotice(list.find((entry) => entry && entry.kind === 'tier_drop') ?? null);
+      setNoticesError(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setNotice(null);
+      setNoticesError(message);
+    } finally {
+      setNoticesLoading(false);
+    }
+  }, [accountId]);
+
+  useEffect(() => {
+    if (me.loading || me.error || !me.data) return;
+    void refreshNotices();
+  }, [me.data, me.error, me.loading, refreshNotices]);
 
   const [dismissError, setDismissError] = useState<string | null>(null);
   const [dismissLoading, setDismissLoading] = useState(false);
@@ -77,6 +111,7 @@ export function RomaAccountNoticeModal() {
         `/api/paris/accounts/${encodeURIComponent(accountId)}/notices/${encodeURIComponent(notice.noticeId)}/dismiss`,
         { method: 'POST' },
       );
+      await refreshNotices();
       await me.reload();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -88,6 +123,8 @@ export function RomaAccountNoticeModal() {
 
   if (me.loading || me.error || !me.data) return null;
   if (!accountId || !notice) return null;
+  if (noticesLoading) return null;
+  if (noticesError) return null;
 
   const summary = summarizeTierDropNotice(notice);
 
@@ -124,4 +161,3 @@ export function RomaAccountNoticeModal() {
     </div>
   );
 }
-

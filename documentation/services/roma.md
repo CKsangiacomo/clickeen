@@ -1,13 +1,13 @@
-# Roma — Product Shell (Workspace App)
+# Roma — Product Shell (Account App)
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
 Runtime code + deploy config are truth. If this doc drifts from `roma/*` behavior, update it immediately.
 
 ## Purpose
 
-Roma is the authenticated product shell for workspace users. It owns:
+Roma is the authenticated product shell for account users. It owns:
 - Domain navigation (`/home`, `/widgets`, `/templates`, `/builder`, etc.)
-- Active workspace context resolution
+- Active account context resolution
 - Lightweight catalog/list APIs for product UX
 - Bob editor orchestration via explicit message boot
 
@@ -28,7 +28,7 @@ Roma is a host/orchestrator. Bob remains the editor kernel.
 - No auto-pick/random-first-instance behavior exists.
 - Roma keeps URL and selected instance synchronized (`router.replace`) so state is deep-linkable.
 
-## Auth + account/workspace bootstrap
+## Auth + account bootstrap
 
 Roma bootstraps from:
 - `GET /api/bootstrap` (canonical)
@@ -42,38 +42,35 @@ Roma exposes explicit session endpoints for product auth UX:
 - `POST /api/session/logout` (best-effort Berlin logout + clears auth cookies)
 
 Bootstrap payload includes:
-- User/accounts/workspaces graph
-- Active defaults (`defaults.accountId`, `defaults.workspaceId`)
-- Signed workspace authz capsule (`authz.workspaceCapsule`, expiry metadata)
+- User + account membership graph
+- Active defaults (`defaults.accountId`)
 - Signed account authz capsule (`authz.accountCapsule`, expiry metadata)
 - Account entitlement snapshot (`authz.entitlements`) resolved once at bootstrap (`flags`, `caps`, `budgets{max,used}`)
 
 Client behavior (`use-roma-me.ts`):
-- Resolves requested workspace from URL `workspaceId` first, then localStorage fallback.
-- Caches bootstrap per workspace with TTL aligned to the earliest authz capsule expiry (workspace/account; min floor + fallback TTL).
+- Resolves requested account from URL `accountId` first, then localStorage fallback.
+- Caches bootstrap per account with TTL aligned to the authz capsule expiry (`authz.expiresAt`, with min floor + fallback TTL).
 - Persists successful bootstrap cache in sessionStorage for reload speed.
 - Guards and re-initializes global store shape if corrupted.
-- Pushes both capsules into shared transport state (`paris-http`) so subsequent calls avoid repeated identity/membership lookups.
+- Pushes the account capsule into shared transport state (`paris-http`) so subsequent calls avoid repeated identity/membership lookups.
 - When bootstrap returns `coreui.errors.auth.required`, Roma redirects to `/login?next=...` for explicit sign-in.
 
 ## Paris proxy model
 
 Roma talks to Paris only through same-origin API routes:
 - `roma/app/api/paris/[...path]/route.ts` (generic proxy)
-- `roma/app/api/paris/instance/[publicId]/route.ts` (workspace instance read/write shortcut)
 
-Roma injects both authz headers for Paris calls through `fetchParisJson` (`roma/components/paris-http.ts`):
-- `x-ck-authz-capsule` (workspace)
-- `x-ck-account-capsule` (account)
-- Reads capsules from memory/session storage.
-- Hydrates capsules from `/api/bootstrap` when missing.
+Roma injects the authz capsule for Paris calls through `fetchParisJson` (`roma/components/paris-http.ts`):
+- Header: `x-ck-authz-capsule` (account authz capsule)
+- Reads capsule from memory/session storage.
+- Hydrates capsule from `/api/bootstrap` when missing.
 - Retries once with forced capsule refresh on auth failures (`401/403` family).
 
 ## Bob orchestration contract (Roma Builder)
 
 `BuilderDomain` flow:
-1. Resolve active workspace + target publicId.
-2. Load instance payload (`/api/paris/instance/:publicId?workspaceId=...`).
+1. Resolve active account + target publicId.
+2. Load instance payload (`/api/paris/accounts/:accountId/instance/:publicId?subject=account`).
 3. Load compiled payload (`/api/widgets/:widgetType/compiled`).
 4. Wait for Bob `bob:session-ready` (`boot=message`).
 5. Send `ck:open-editor` with `requestId + sessionId` (no bearer handoff; Bob relies on shared cookies).
@@ -86,21 +83,21 @@ Notes:
 
 ## Data domains and caches (client-side)
 
-- `useRomaWidgets`: workspace list cache + in-flight dedupe.
+- `useRomaWidgets`: account list cache + in-flight dedupe.
 - `useRomaTemplates`: template list cache + in-flight dedupe.
-- `workspace-instance-cache`: per `(workspaceId, publicId)` cache for builder opens.
+- `account-instance-cache`: per `(accountId, publicId)` cache for builder opens.
 - `compiled-widget-cache`: per widget compiled payload cache.
 - Widgets/Templates prefetch compiled + likely instances to reduce open latency.
 
 Usage and AI domain behavior:
 - `UsageDomain` still reads live usage from account usage endpoint.
-- `UsageDomain` and `AiDomain` read profile/role/entitlements from bootstrap authz context (no extra workspace policy/entitlements fetches).
+- `UsageDomain` and `AiDomain` read profile/role/entitlements from bootstrap authz context (no extra policy/entitlements fetches).
 
 Assets domain behavior:
 - `AssetsDomain` reads account inventory + integrity from bootstrap (`GET /api/bootstrap` -> `domains.assets`), and performs per-asset operations through account-canonical Roma routes (`/api/assets/:accountId/:assetId`).
-- Roma also exposes account-level asset routes (`/api/assets/:accountId` and `/api/assets/upload`) that delegate to Bob server routes.
+- Roma also exposes account-level asset routes (`/api/assets/:accountId` and `/api/assets/upload`), and proxies writes to Tokyo/Paris with the user session bearer.
 - Delete is Roma-surface managed (`x-clickeen-surface=roma-assets`) and hard-deletes via Paris -> Tokyo-worker.
-- Workspace context is display/projection only; account is the ownership boundary.
+- Account is the ownership boundary.
 
 ## Local vs cloud-dev
 

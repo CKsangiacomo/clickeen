@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { resolveBootstrapDomainState } from './bootstrap-domain-state';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
@@ -11,7 +10,7 @@ import {
   buildBuilderRoute,
   DEFAULT_INSTANCE_DISPLAY_NAME,
   normalizeWidgetType,
-  normalizeRomaWidgetsSnapshot,
+  normalizeRomaWidgetsResponse,
   type WidgetInstance,
 } from './use-roma-widgets';
 
@@ -36,43 +35,41 @@ export function WidgetsDomain() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>([]);
   const [widgetTypes, setWidgetTypes] = useState<string[]>([]);
-  const [accountIdFromSnapshot, setAccountIdFromSnapshot] = useState('');
+  const [domainLoading, setDomainLoading] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  const workspaceId = context.workspaceId;
   const accountId = context.accountId;
   const searchIntent = useMemo(() => (searchParams.get('intent') || '').trim().toLowerCase(), [searchParams]);
   const searchWidgetType = useMemo(() => normalizeWidgetType(searchParams.get('widgetType')), [searchParams]);
-  const activeAccountId = accountId || accountIdFromSnapshot;
+
+  const refreshWidgets = useCallback(async () => {
+    if (!accountId) return;
+    setDomainLoading(true);
+    setDataError(null);
+    try {
+      const payload = await fetchParisJson<unknown>(`/api/paris/roma/widgets?accountId=${encodeURIComponent(accountId)}`, {
+        method: 'GET',
+      });
+      const normalized = normalizeRomaWidgetsResponse(payload);
+      if (!normalized || normalized.accountId !== accountId) {
+        throw new Error('coreui.errors.payload.invalid');
+      }
+      setWidgetInstances(normalized.instances);
+      setWidgetTypes(normalized.widgetTypes);
+      setDataError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setWidgetInstances([]);
+      setWidgetTypes([]);
+      setDataError(message);
+    } finally {
+      setDomainLoading(false);
+    }
+  }, [accountId]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setWidgetInstances([]);
-      setWidgetTypes([]);
-      setAccountIdFromSnapshot('');
-      setDataError(null);
-      return;
-    }
-    const snapshot = normalizeRomaWidgetsSnapshot(me.data?.domains?.widgets ?? null);
-    const hasDomainPayload = Boolean(snapshot && snapshot.workspaceId === workspaceId);
-    const domainState = resolveBootstrapDomainState({
-      data: me.data,
-      domainKey: 'widgets',
-      hasDomainPayload,
-    });
-    if (!hasDomainPayload || domainState.kind !== 'ok') {
-      setWidgetInstances([]);
-      setWidgetTypes([]);
-      setAccountIdFromSnapshot('');
-      setDataError(domainState.reasonKey);
-      return;
-    }
-    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
-    setWidgetInstances(safeSnapshot.instances);
-    setWidgetTypes(safeSnapshot.widgetTypes);
-    setAccountIdFromSnapshot(safeSnapshot.accountId);
-    setDataError(null);
-  }, [workspaceId, me.data]);
+    void refreshWidgets();
+  }, [refreshWidgets]);
 
   const availableWidgetTypes = useMemo(() => {
     const values = new Set<string>();
@@ -113,7 +110,7 @@ export function WidgetsDomain() {
 
   const createInstance = useCallback(
     async ({ widgetType, openBuilder, actionKey }: CreateInstanceArgs) => {
-      if (!workspaceId) return;
+      if (!accountId) return;
       const normalizedWidgetType = normalizeWidgetType(widgetType);
       if (normalizedWidgetType === 'unknown') {
         setCreateError('Widget type is required for this action.');
@@ -131,7 +128,7 @@ export function WidgetsDomain() {
               'content-type': 'application/json',
             },
             body: JSON.stringify({
-              workspaceId,
+              accountId,
               sourcePublicId,
             }),
           },
@@ -144,32 +141,12 @@ export function WidgetsDomain() {
         const createdType = normalizeWidgetType(
           payload && typeof payload.widgetType === 'string' ? payload.widgetType : normalizedWidgetType,
         );
-        setWidgetInstances((prev) => {
-          if (prev.some((instance) => instance.publicId === createdPublicId)) return prev;
-          return [
-            {
-              publicId: createdPublicId,
-              widgetType: createdType,
-              displayName: DEFAULT_INSTANCE_DISPLAY_NAME,
-              status: 'unpublished',
-              workspaceId,
-              source: 'workspace',
-              actions: { edit: true, duplicate: true, delete: true },
-            },
-            ...prev,
-          ];
-        });
-        setWidgetTypes((prev) => {
-          if (createdType === 'unknown' || prev.includes(createdType)) return prev;
-          return [...prev, createdType].sort((a, b) => a.localeCompare(b));
-        });
-        await me.reload();
+        await refreshWidgets();
         if (openBuilder) {
           router.push(
             buildBuilderRoute({
               publicId: createdPublicId,
-              workspaceId,
-              accountId: activeAccountId,
+              accountId,
               widgetType: createdType,
             }),
           );
@@ -181,13 +158,12 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [activeAccountId, me, router, workspaceId],
+    [accountId, refreshWidgets, router],
   );
 
   const handleDuplicateInstance = useCallback(
     async (instance: WidgetInstance) => {
-      const actionWorkspaceId = instance.workspaceId || workspaceId;
-      if (!actionWorkspaceId) return;
+      if (!accountId) return;
       const actionKey = `duplicate:${instance.publicId}`;
       setActiveActionKey(actionKey);
       setCreateError(null);
@@ -198,37 +174,16 @@ export function WidgetsDomain() {
             'content-type': 'application/json',
           },
           body: JSON.stringify({
-            workspaceId: actionWorkspaceId,
+            accountId,
             sourcePublicId: instance.publicId,
           }),
         });
         const duplicatedPublicId =
           payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
-        const duplicatedType = normalizeWidgetType(
-          payload && typeof payload.widgetType === 'string' ? payload.widgetType : instance.widgetType,
-        );
-        if (duplicatedPublicId) {
-          setWidgetInstances((prev) => {
-            if (prev.some((item) => item.publicId === duplicatedPublicId)) return prev;
-            return [
-              {
-                publicId: duplicatedPublicId,
-                widgetType: duplicatedType,
-                displayName: DEFAULT_INSTANCE_DISPLAY_NAME,
-                status: 'unpublished',
-                workspaceId: actionWorkspaceId,
-                source: 'workspace',
-                actions: { edit: true, duplicate: true, delete: true },
-              },
-              ...prev,
-            ];
-          });
-          setWidgetTypes((prev) => {
-            if (duplicatedType === 'unknown' || prev.includes(duplicatedType)) return prev;
-            return [...prev, duplicatedType].sort((a, b) => a.localeCompare(b));
-          });
+        if (!duplicatedPublicId) {
+          throw new Error('coreui.errors.payload.invalid');
         }
-        await me.reload();
+        await refreshWidgets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setCreateError(message);
@@ -236,25 +191,23 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [me, workspaceId],
+    [accountId, refreshWidgets],
   );
 
   const handleDeleteInstance = useCallback(
     async (instance: WidgetInstance) => {
-      const actionWorkspaceId = instance.workspaceId || workspaceId;
-      if (!actionWorkspaceId) return;
+      if (!accountId) return;
       const actionKey = `delete:${instance.publicId}`;
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
         await fetchParisJson<{ deleted?: boolean }>(
-          `/api/paris/roma/instances/${encodeURIComponent(instance.publicId)}?workspaceId=${encodeURIComponent(actionWorkspaceId)}`,
+          `/api/paris/roma/instances/${encodeURIComponent(instance.publicId)}?accountId=${encodeURIComponent(accountId)}`,
           {
             method: 'DELETE',
           },
         );
-        setWidgetInstances((prev) => prev.filter((item) => item.publicId !== instance.publicId));
-        await me.reload();
+        await refreshWidgets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setCreateError(message);
@@ -262,13 +215,13 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [me, workspaceId],
+    [accountId, refreshWidgets],
   );
 
   useEffect(() => {
     if (searchIntent !== 'create') return;
     if (autoCreateStartedRef.current) return;
-    if (!workspaceId || activeActionKey) return;
+    if (!accountId || activeActionKey) return;
     const targetWidgetType = searchWidgetType !== 'unknown' ? searchWidgetType : availableWidgetTypes[0];
     if (!targetWidgetType) return;
     autoCreateStartedRef.current = true;
@@ -277,7 +230,7 @@ export function WidgetsDomain() {
       openBuilder: true,
       actionKey: `intent:create:${targetWidgetType}`,
     });
-  }, [activeActionKey, availableWidgetTypes, createInstance, searchIntent, searchWidgetType, workspaceId]);
+  }, [accountId, activeActionKey, availableWidgetTypes, createInstance, searchIntent, searchWidgetType]);
 
   const handleCreateFromWidget = useCallback(
     (widgetType: string) => {
@@ -289,12 +242,12 @@ export function WidgetsDomain() {
     [createInstance],
   );
 
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading workspace context...</section>;
+  if (me.loading) return <section className="rd-canvas-module body-m">Loading account context...</section>;
   if (me.error || !me.data) {
-    return <section className="rd-canvas-module body-m">Failed to load workspace context: {me.error ?? 'unknown_error'}</section>;
+    return <section className="rd-canvas-module body-m">Failed to load account context: {me.error ?? 'unknown_error'}</section>;
   }
-  if (!workspaceId) {
-    return <section className="rd-canvas-module body-m">No workspace membership found for current user.</section>;
+  if (!accountId) {
+    return <section className="rd-canvas-module body-m">No account membership found for current user.</section>;
   }
 
   return (
@@ -305,7 +258,14 @@ export function WidgetsDomain() {
             <div className="roma-inline-stack">
               <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
               <p className="body-m">{dataError}</p>
-              <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="line2"
+                type="button"
+                onClick={() => void refreshWidgets()}
+                disabled={domainLoading}
+              >
                 <span className="diet-btn-txt__label body-m">Retry</span>
               </button>
             </div>
@@ -359,8 +319,7 @@ export function WidgetsDomain() {
                           <Link
                             href={buildBuilderRoute({
                               publicId: instance.publicId,
-                              workspaceId: instance.workspaceId || workspaceId,
-                              accountId: activeAccountId,
+                              accountId,
                               widgetType: instance.widgetType,
                             })}
                             className="diet-btn-txt"

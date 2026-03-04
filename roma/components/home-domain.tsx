@@ -9,7 +9,6 @@ import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 type MinibobHandoffCompleteResponse = {
   handoffId: string;
   accountId: string;
-  workspaceId: string;
   sourcePublicId: string;
   publicId: string;
   builderRoute: string;
@@ -34,11 +33,11 @@ export function HomeDomain() {
   const handoffId = useMemo(() => (searchParams.get('handoffId') || '').trim(), [searchParams]);
   const handoffPublicIdHint = useMemo(() => (searchParams.get('publicId') || '').trim(), [searchParams]);
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
-  const hasWorkspaceContext = Boolean(context.accountId && context.workspaceId);
+  const hasAccountContext = Boolean(context.accountId);
 
   const completeHandoff = useCallback(async () => {
-    if (!handoffId || !hasWorkspaceContext) return;
-    const attemptKey = `${handoffId}:${context.accountId}:${context.workspaceId}`;
+    if (!handoffId || !hasAccountContext) return;
+    const attemptKey = `${handoffId}:${context.accountId}`;
     if (handoffAttemptRef.current === attemptKey) return;
     handoffAttemptRef.current = attemptKey;
 
@@ -54,7 +53,6 @@ export function HomeDomain() {
         body: JSON.stringify({
           handoffId,
           accountId: context.accountId,
-          workspaceId: context.workspaceId,
         }),
       });
       router.replace(payload.builderRoute);
@@ -63,12 +61,12 @@ export function HomeDomain() {
       setHandoffStatus('failed');
       setHandoffError(message);
     }
-  }, [context.accountId, context.workspaceId, handoffId, hasWorkspaceContext, router]);
+  }, [context.accountId, handoffId, hasAccountContext, router]);
 
   useEffect(() => {
-    if (!handoffId || !me.data || !hasWorkspaceContext) return;
+    if (!handoffId || !me.data || !hasAccountContext) return;
     void completeHandoff();
-  }, [completeHandoff, handoffId, hasWorkspaceContext, me.data]);
+  }, [completeHandoff, handoffId, hasAccountContext, me.data]);
 
   if (me.loading) {
     return <section className="rd-canvas-module body-m">Loading identity and membership context...</section>;
@@ -87,10 +85,10 @@ export function HomeDomain() {
     );
   }
 
-  if (!hasWorkspaceContext) {
+  if (!hasAccountContext) {
     return (
       <section className="rd-canvas-module">
-        <p className="body-m">No workspace context is available for this account membership.</p>
+        <p className="body-m">No account context is available for this user.</p>
         <div className="rd-canvas-module__actions">
           <Link href="/settings" className="diet-btn-txt" data-size="md" data-variant="primary">
             <span className="diet-btn-txt__label body-m">Open settings</span>
@@ -138,8 +136,8 @@ export function HomeDomain() {
         ) : null}
 
         <p className="body-m">
-          Active workspace: {context.workspaceName || context.workspaceId}
-          {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
+          Active account: {context.accountName || context.accountId}
+          {context.accountSlug ? ` (${context.accountSlug})` : ''}
         </p>
       </section>
 

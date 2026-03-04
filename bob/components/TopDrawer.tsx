@@ -4,9 +4,9 @@ import { useCallback, useId, useMemo, useState } from 'react';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { PublishEmbedModal } from './PublishEmbedModal';
 
-function resolveSubject(profile: string | null | undefined): 'workspace' | 'minibob' {
+function resolveSubject(profile: string | null | undefined): 'account' | 'minibob' {
   if (profile === 'minibob') return 'minibob';
-  return 'workspace';
+  return 'account';
 }
 
 export function TopDrawer() {
@@ -20,16 +20,16 @@ export function TopDrawer() {
   const liveToggleId = useId();
 
   const currentPublicId = typeof meta?.publicId === 'string' ? meta.publicId : '';
-  const workspaceId = typeof meta?.workspaceId === 'string' ? meta.workspaceId : '';
+  const accountId = typeof meta?.accountId === 'string' ? meta.accountId : '';
   const hasInstance = Boolean(currentPublicId);
-  const canPublish = hasInstance && Boolean(workspaceId);
+  const canPublish = hasInstance && Boolean(accountId);
   const currentLabel = useMemo(
     () => (typeof meta?.label === 'string' ? meta.label.trim() : ''),
     [meta?.label]
   );
   const subject = useMemo(() => resolveSubject(policy?.profile ?? null), [policy?.profile]);
 
-  const canRename = Boolean(currentPublicId && workspaceId && policy?.role !== 'viewer');
+  const canRename = Boolean(currentPublicId && accountId && policy?.role !== 'viewer');
   const isLive = status === 'published';
   const liveDisabled = !canPublish || isPublishing || (!isLive && isDirty);
 
@@ -47,7 +47,7 @@ export function TopDrawer() {
   }, [currentLabel]);
 
   const commitRename = useCallback(async () => {
-    if (!canRename || !currentPublicId || !workspaceId || renameBusy) return;
+    if (!canRename || !currentPublicId || !accountId || renameBusy) return;
     const nextLabel = renameDraft.trim();
     if (!nextLabel) {
       setRenameError('Instance name cannot be empty.');
@@ -63,7 +63,7 @@ export function TopDrawer() {
     setRenameError(null);
     try {
       const response = await apiFetch(
-        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
           currentPublicId,
         )}?subject=${encodeURIComponent(subject)}`,
         {
@@ -112,7 +112,7 @@ export function TopDrawer() {
     } finally {
       setRenameBusy(false);
     }
-  }, [apiFetch, canRename, currentLabel, currentPublicId, renameBusy, renameDraft, setInstanceLabel, subject, workspaceId]);
+  }, [apiFetch, canRename, currentLabel, currentPublicId, renameBusy, renameDraft, setInstanceLabel, subject, accountId]);
 
   const handleRenameBlur = useCallback(() => {
     const nextLabel = renameDraft.trim();

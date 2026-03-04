@@ -67,15 +67,19 @@ const CK_ADMIN_PASSWORD = process.env.CK_ADMIN_PASSWORD || localEnv.CK_ADMIN_PAS
 const BASE = {
   berlin:
     process.env.CK_CLOUD_BERLIN_BASE_URL ||
+    localEnv.CK_CLOUD_BERLIN_BASE_URL ||
     'https://berlin-dev.clickeen.workers.dev',
   paris:
     process.env.CK_CLOUD_PARIS_BASE_URL ||
+    localEnv.CK_CLOUD_PARIS_BASE_URL ||
     'https://paris.dev.clickeen.com',
   venice:
     process.env.CK_CLOUD_VENICE_BASE_URL ||
+    localEnv.CK_CLOUD_VENICE_BASE_URL ||
     'https://venice.dev.clickeen.com',
   tokyo:
     process.env.CK_CLOUD_TOKYO_BASE_URL ||
+    localEnv.CK_CLOUD_TOKYO_BASE_URL ||
     'https://tokyo.dev.clickeen.com',
 };
 
@@ -115,27 +119,6 @@ async function createAccount(accessToken) {
   return accountId;
 }
 
-async function createWorkspace(accessToken, accountId) {
-  const slug = `gate6-${Date.now().toString(36)}`;
-  const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/workspaces`,
-    {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        accept: 'application/json',
-        'content-type': 'application/json',
-        'Idempotency-Key': crypto.randomUUID(),
-      },
-      body: JSON.stringify({ name: 'Gate 6 Workspace', slug }),
-    },
-  );
-  if (!res.ok) throw new Error(`Workspace create failed (${res.status}) ${text.slice(0, 200)}`);
-  const workspaceId = typeof data?.workspace?.workspaceId === 'string' ? data.workspace.workspaceId.trim() : '';
-  if (!workspaceId) throw new Error('Workspace create missing workspaceId.');
-  return workspaceId;
-}
-
 async function planChange(accessToken, accountId, nextTier, keepLivePublicIds = null) {
   const body = { nextTier };
   if (Array.isArray(keepLivePublicIds)) body.keepLivePublicIds = keepLivePublicIds;
@@ -156,7 +139,7 @@ async function planChange(accessToken, accountId, nextTier, keepLivePublicIds = 
   return data;
 }
 
-async function duplicateFaq(accessToken, workspaceId) {
+async function duplicateFaq(accessToken, accountId) {
   const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/roma/widgets/duplicate`, {
     method: 'POST',
     headers: {
@@ -164,7 +147,7 @@ async function duplicateFaq(accessToken, workspaceId) {
       accept: 'application/json',
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ workspaceId, sourcePublicId: 'wgt_main_faq' }),
+    body: JSON.stringify({ accountId, sourcePublicId: 'wgt_main_faq' }),
   });
   if (!res.ok) throw new Error(`Duplicate failed (${res.status}) ${text.slice(0, 200)}`);
   const publicId = typeof data?.publicId === 'string' ? data.publicId.trim() : '';
@@ -172,9 +155,9 @@ async function duplicateFaq(accessToken, workspaceId) {
   return publicId;
 }
 
-async function getInstance(accessToken, workspaceId, publicId) {
+async function getInstance(accessToken, accountId, publicId) {
   const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       headers: {
         authorization: `Bearer ${accessToken}`,
@@ -187,7 +170,7 @@ async function getInstance(accessToken, workspaceId, publicId) {
   return data;
 }
 
-async function publishInstance(accessToken, workspaceId, publicId) {
+async function publishInstance(accessToken, accountId, publicId) {
   const payload = {
     status: 'published',
     localePolicy: {
@@ -200,9 +183,9 @@ async function publishInstance(accessToken, workspaceId, publicId) {
   };
 
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
       publicId,
-    )}?subject=workspace`,
+    )}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -216,8 +199,8 @@ async function publishInstance(accessToken, workspaceId, publicId) {
   if (!res.ok) throw new Error(`Publish ${publicId} failed (${res.status}) ${text.slice(0, 200)}`);
 }
 
-async function enableSeoGeo(accessToken, workspaceId, publicId) {
-  const instance = await getInstance(accessToken, workspaceId, publicId);
+async function enableSeoGeo(accessToken, accountId, publicId) {
+  const instance = await getInstance(accessToken, accountId, publicId);
   const config = instance?.config;
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
     throw new Error('Instance config is missing or invalid');
@@ -237,9 +220,9 @@ async function enableSeoGeo(accessToken, workspaceId, publicId) {
   };
 
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
       publicId,
-    )}?subject=workspace`,
+    )}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -253,7 +236,7 @@ async function enableSeoGeo(accessToken, workspaceId, publicId) {
   if (!res.ok) throw new Error(`Enable SEO/GEO failed (${res.status}) ${text.slice(0, 200)}`);
 }
 
-async function uploadAsset(accessToken, accountId, workspaceId) {
+async function uploadAsset(accessToken, accountId) {
   const body = Buffer.from(`gate6-asset-${Date.now()}`, 'utf8');
   const url = `${BASE.tokyo.replace(/\/+$/, '')}/assets/upload?_t=${Date.now()}`;
   const res = await fetch(url, {
@@ -262,7 +245,6 @@ async function uploadAsset(accessToken, accountId, workspaceId) {
       authorization: `Bearer ${accessToken}`,
       accept: 'application/json',
       'x-account-id': accountId,
-      'x-workspace-id': workspaceId,
       'x-source': 'api',
       'x-filename': 'gate6.txt',
       'x-variant': 'original',
@@ -283,16 +265,16 @@ async function uploadAsset(accessToken, accountId, workspaceId) {
   return assetUrl;
 }
 
-async function readTierDropNotice(accessToken, workspaceId) {
+async function readTierDropNotice(accessToken, accountId) {
   const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/roma/bootstrap?workspaceId=${encodeURIComponent(workspaceId)}`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/notices?status=open`,
     {
       headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
       cache: 'no-store',
     },
   );
-  if (!res.ok) throw new Error(`Bootstrap failed (${res.status}) ${text.slice(0, 200)}`);
-  const notices = Array.isArray(data?.domains?.settings?.notices) ? data.domains.settings.notices : [];
+  if (!res.ok) throw new Error(`Notices list failed (${res.status}) ${text.slice(0, 200)}`);
+  const notices = Array.isArray(data?.notices) ? data.notices : [];
   return notices.find((notice) => notice?.kind === 'tier_drop') || null;
 }
 
@@ -301,22 +283,20 @@ async function main() {
 
   const accessToken = await loginPassword();
   const accountId = await createAccount(accessToken);
-  const workspaceId = await createWorkspace(accessToken, accountId);
 
   console.log(`[gate6] created account=${accountId}`);
-  console.log(`[gate6] created workspace=${workspaceId}`);
 
   const upgraded = await planChange(accessToken, accountId, 'tier3');
   console.log(`[gate6] upgrade → tier3 ok=${upgraded?.ok === true} isTierDrop=${Boolean(upgraded?.isTierDrop)}`);
 
   const instances = [];
   for (let i = 0; i < 3; i += 1) {
-    instances.push(await duplicateFaq(accessToken, workspaceId));
+    instances.push(await duplicateFaq(accessToken, accountId));
   }
   console.log(`[gate6] created instances=${instances.join(', ')}`);
 
   for (const publicId of instances) {
-    await publishInstance(accessToken, workspaceId, publicId);
+    await publishInstance(accessToken, accountId, publicId);
   }
 
   for (const publicId of instances) {
@@ -331,7 +311,7 @@ async function main() {
 
   // Gate 5: SEO/GEO is tier-only and mirrored (meta pointer exists only when entitled).
   const seoInstance = instances[0];
-  await enableSeoGeo(accessToken, workspaceId, seoInstance);
+  await enableSeoGeo(accessToken, accountId, seoInstance);
   const metaUrl = `${BASE.venice.replace(/\/+$/, '')}/r/${encodeURIComponent(seoInstance)}?meta=1&locale=en`;
   const metaPointerUrl = `${BASE.tokyo.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(seoInstance)}/live/meta/en.json`;
   const metaOk = await waitForStatus({ label: 'venice /r?meta=1', url: metaUrl, wanted: 200 });
@@ -340,7 +320,7 @@ async function main() {
   if (!metaPointerOk) process.exit(1);
   console.log('[gate6] seo/geo meta present (entitled tier)');
 
-  const assetUrl = await uploadAsset(accessToken, accountId, workspaceId);
+  const assetUrl = await uploadAsset(accessToken, accountId);
   const assetBefore = await headStatus(assetUrl);
   if (assetBefore !== 200) throw new Error(`Asset HEAD before drop expected 200, got ${assetBefore}`);
   console.log('[gate6] asset uploaded');
@@ -370,7 +350,7 @@ async function main() {
   if (!metaPointerGone) process.exit(1);
   console.log('[gate6] seo/geo meta removed on tier drop');
 
-  const notice = await readTierDropNotice(accessToken, workspaceId);
+  const notice = await readTierDropNotice(accessToken, accountId);
   if (!notice) throw new Error('Expected tier_drop notice, but none found.');
   if (notice.emailPending !== true) throw new Error('Expected tier_drop notice emailPending=true.');
   console.log('[gate6] notice persisted (email_pending=true)');

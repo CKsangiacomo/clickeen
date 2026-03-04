@@ -28,11 +28,11 @@ export async function POST(request: NextRequest) {
   if (!paris.ok) return paris.response;
 
   const reqUrl = new URL(request.url);
-  const workspaceId = (reqUrl.searchParams.get('workspaceId') || '').trim();
+  const accountId = (reqUrl.searchParams.get('accountId') || '').trim();
   const subject = (reqUrl.searchParams.get('subject') || '').trim();
-  if (!workspaceId) {
+  if (!accountId) {
     return NextResponse.json(
-      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } },
+      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
       { status: 422, headers: CORS_HEADERS },
     );
   }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const url = `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/website-creative?subject=${encodeURIComponent(subject)}`;
+  const url = `${paris.baseUrl.replace(/\/$/, '')}/api/accounts/${encodeURIComponent(accountId)}/website-creative?subject=${encodeURIComponent(subject)}`;
 
   const headers = withParisDevAuthorization(new Headers({ 'content-type': 'application/json' }), session.accessToken);
 

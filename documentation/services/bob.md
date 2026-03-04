@@ -25,7 +25,7 @@ The Settings panel is widget-defined behavior controls; it must not contain embe
 ### Builder chrome ownership (current)
 - Host surfaces (Roma/DevStudio) own widget-level navigation and host-only orchestration actions.
 - Roma Builder embeds Bob via iframe and keeps only the standard Roma domain header above it (no ad-hoc middle toolbars).
-- Bob TopDrawer owns current-instance context (instance selector + workspace-instance rename).
+- Bob TopDrawer owns current-instance context (instance selector + account-instance rename).
 - Translation status is shown in Bob’s Localization panel header (not in host page headers).
 
 ### Spec-driven + control-driven (not UI-driven)
@@ -65,11 +65,11 @@ Then they wait for Bob session readiness and post into Bob:
   type: 'ck:open-editor',
   requestId,
   sessionId,
-  subjectMode, // 'workspace' | 'minibob'
+  subjectMode, // 'account' | 'minibob'
   widgetname,
   compiled,
   instanceData,
-  workspaceId,
+  accountId,
   publicId,
   label
 }
@@ -86,29 +86,29 @@ Bob listens in `bob/lib/session/useWidgetSession.tsx` and:
 - Local DevStudio/Bob are tool-trusted: there is **no local browser login** and **no local session bootstrap**. Bob proxies to Paris using `PARIS_DEV_JWT` server-side (plus `x-ck-internal-service: bob.local`), and DevStudio never handles credentials.
 
 ### URL bootstrap (deterministic, no auto-pick)
-Bob bootstraps from URL only when `?boot=url` and both `workspaceId` + `publicId` are present.
+Bob bootstraps from URL only when `?boot=url` and both `accountId` + `publicId` are present.
 If URL mode is selected and either is missing, Bob stays unmounted.
 In `?boot=message`, Bob ignores URL instance params and waits for host `ck:open-editor`.
 Current architecture direction: Roma/DevStudio use `boot=message`; URL mode remains for explicit URL-bootstrap surfaces.
 Host intent is explicit via `surface` query param on the Bob iframe (`surface=roma` or `surface=devstudio`).
 
 ### Hybrid dev (DevStudio in cloud, Bob local)
-DevStudio’s widget workspace supports overriding the embedded Bob origin with a query param:
+DevStudio’s widget sandbox tool supports overriding the embedded Bob origin with a query param:
 
 - `?bob=http://localhost:3000` (example)
 
 This allows a fast loop where DevStudio runs from Cloudflare Pages while Bob runs locally.
 
-Source: `admin/src/html/tools/dev-widget-workspace.html` (see the “configurable via `?bob=`” comment).
+Source: `admin/src/html/tools/dev-widget-workspace.html` (historical filename; see the “configurable via `?bob=`” comment).
 
 ### Instance write surfaces (current)
-- Roma user flows can create/duplicate/delete workspace user instances via Paris (`/api/roma/*` + workspace instance endpoints).
-- Bob publish writes base config through workspace `PUT` endpoints from whichever host opened Bob.
+- Roma user flows can create/duplicate/delete account user instances via Paris (`/api/roma/*` + account instance endpoints).
+- Bob publish writes base config through account `PUT` endpoints from whichever host opened Bob.
 - DevStudio Local remains the superadmin surface for curated/main authoring actions, using Bob’s `/api/paris/*` proxy on `localhost`/`127.0.0.1`.
 
 ### Dev subjects and policy (durable)
 Bob resolves a single subject mode and computes a single policy object:
-- **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=workspace|minibob`.
+- **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=account|minibob`.
 - **Policy output**: `policy = { flags, caps, budgets }` used to gate controls and reject ops deterministically.
 
 Example enforcement (today):
@@ -121,9 +121,9 @@ Read-only mode (DevStudio cloud):
 
 ### Intended product shape (still aligned)
 Core base-config lifecycle per open session:
-1. One instance load `GET /api/paris/workspaces/:workspaceId/instance/:publicId?subject=workspace` (performed by host in message boot or by Bob in URL boot).
+1. One instance load `GET /api/paris/accounts/:accountId/instance/:publicId?subject=account` (performed by host in message boot or by Bob in URL boot).
 2. In-memory edits only (no base-config API writes).
-3. One publish `PUT /api/paris/workspaces/:workspaceId/instance/:publicId?subject=workspace` on explicit Publish (base persistence immediate; snapshot convergence async via publish-status).
+3. One publish `PUT /api/paris/accounts/:accountId/instance/:publicId?subject=account` on explicit Publish (base persistence immediate; snapshot convergence async via publish-status).
 
 Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
@@ -153,7 +153,7 @@ Bob loads `compiled.assets.htmlUrl` into an iframe and posts:
 ```
 
 Preview readiness behavior:
-- Workspace keeps the preview in a loading state until runtime sends `ck:ready`.
+- Bob keeps the preview in a loading state until runtime sends `ck:ready`.
 - A bounded fallback timer reveals the iframe even if `ck:ready` is delayed, to avoid permanent blank-canvas states.
 
 Widget runtime code (`tokyo/widgets/{widget}/widget.client.js`) must:
@@ -255,8 +255,8 @@ ToolDrawer has a single, global vertical rhythm. **Only clusters and groups defi
 
 Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file pick through Bob:
 - `POST /api/assets/upload` (Bob proxy) -> Tokyo-worker `POST /assets/upload`
-- Bob forwards Berlin session bearer and account/workspace/public/widget trace headers.
-- Tokyo-worker validates auth + workspace membership, enforces account/workspace binding, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
+- Bob forwards Berlin session bearer and account/public/widget trace headers.
+- Tokyo-worker validates auth + account membership, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
 
 Asset-aware controls persist immutable refs (`asset.versionId` / `poster.versionId`) on canonical media fields; runtime URLs are derived from those refs (no publish-time crawl/rewrite step).
 
@@ -265,11 +265,11 @@ Contracts:
   - original variant key: `assets/versions/{accountId}/{assetId}/{filename}`
   - non-original variant key: `assets/versions/{accountId}/{assetId}/{variant}/{filename}`
   - runtime path derived from ref: `/assets/v/{encodeURIComponent(versionId)}`
-- **Trace context**: `workspaceId`, `publicId`, `widgetType`, `source` remain provenance fields.
+- **Trace context**: `accountId`, `publicId`, `widgetType`, `source` remain provenance fields.
 - Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are unsupported on writes.
 
 Operational baseline (local smoke, 2026-02-17):
-- `POST /api/assets/upload` (1x1 PNG, account/workspace trace headers): `~55ms`
+- `POST /api/assets/upload` (1x1 PNG, account/public/widget trace headers): `~55ms`
 - End-to-end with Roma account asset APIs (list/delete) remained sub-100ms on warm services.
 
 Editor UX note:
@@ -288,7 +288,7 @@ Behavior:
 - Reports outcomes (keep/undo/CTA clicks) via `/api/ai/outcome` (best-effort).
 - Server-side hardening in `/api/ai/widget-copilot`:
   - Accepts only widget-copilot agent IDs (`widget.copilot.v1`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`).
-  - Normalizes `subject` on the server. Only `workspace|minibob` are accepted (`workspace` requires `workspaceId`).
+  - Normalizes `subject` on the server. Only `account|minibob` are accepted (`account` requires `accountId`).
   - For widget-copilot IDs (alias or canonical), grant routing is policy-resolved server-side (`free|minibob` -> SDR, `tier1|tier2|tier3` -> CS).
 
 Minibob keep gate (public UX):
@@ -315,14 +315,17 @@ Deployment note (verified on February 11, 2026):
 
 ---
 
-## Personalization onboarding (Settings panel)
+## Personalization onboarding (agent proxies)
 
-Bob exposes a lightweight onboarding personalization control in `Settings`:
-- Collects a website URL and starts a job via `POST /api/paris/personalization/onboarding`.
-- Polls job status via `GET /api/paris/personalization/onboarding/:jobId`.
-- Reads stored business profiles from `GET /api/paris/workspaces/:workspaceId/business-profile`.
+Bob exposes Paris proxy routes for personalization onboarding jobs:
+- `POST /api/paris/personalization/onboarding`
+- `GET /api/paris/personalization/onboarding/:jobId`
 
-This is a thin UX wrapper; San Francisco executes the agent and Paris persists `workspace_business_profiles`.
+Account-owned business profiles are persisted by Paris at:
+- `GET /api/paris/accounts/:accountId/business-profile?subject=account`
+- `POST /api/paris/accounts/:accountId/business-profile?subject=account`
+
+San Francisco executes the agent; Paris persists `account_business_profiles`.
 
 ---
 
@@ -361,14 +364,14 @@ This is the foundation for both strict manual editing and future Copilot editing
 
 ---
 
-## Preview (Workspace)
+## Preview (Bob Workspace component)
 
 `bob/components/Workspace.tsx`:
 - Loads the widget runtime iframe at `compiled.assets.htmlUrl` (canonical preview path).
 - Standard preview is Tokyo-runtime only; SEO/GEO “iframe++” is a **Venice embed optimization** and does not change the Bob preview engine.
 - Waits for iframe `load`.
 - Posts `ck:state-update` with `{ widgetname, state: instanceData, device, theme }`.
-- Supports **workspace modes** (`preview.host`) to resize/reposition the preview viewport: `canvas | column | banner | floating` (UI label “Inline” maps to `canvas`).
+- Supports **preview host modes** (`preview.host`) to resize/reposition the preview viewport: `canvas | column | banner | floating` (UI label “Inline” maps to `canvas`).
 
 The iframe is sandboxed (`allow-scripts allow-same-origin`).
 
@@ -410,7 +413,7 @@ See also:
 
 Bob supports instance-content localization (not editor chrome):
 
-- Locale preview uses layered overlays via `/api/workspaces/:workspaceId/instances/:publicId/layers/locale/:locale`.
+- Locale preview uses layered overlays via `/api/accounts/:accountId/instances/:publicId/layers/locale/:locale?subject=account`.
 - Manual overrides are stored in layer=user (`/layers/user/:locale` or `/layers/user/global`) and merged last at runtime.
 - In Translate mode, edits are saved as per-field overrides (layer=user) and never change structure.
 - Structural edits (add/remove items) happen only in the base locale (Edit mode), then publish to regenerate locale overlays.
@@ -438,20 +441,20 @@ Reference:
 
 ### Paris proxy (current code)
 Bob proxies Paris via:
+- `bob/app/api/paris/[...path]/route.ts` (generic proxy)
 - `bob/app/api/paris/curated-instances/route.ts`
+- `bob/app/api/paris/instance/[publicId]/route.ts` (minibob read shortcut; `subject=minibob`)
+- `bob/app/api/paris/personalization/onboarding/route.ts`
+- `bob/app/api/paris/personalization/onboarding/[jobId]/route.ts`
+- `bob/app/api/paris/roma/bootstrap/route.ts`
 - `bob/app/api/paris/widgets/route.ts`
-- `bob/app/api/paris/workspaces/[workspaceId]/instance/[publicId]/route.ts`
-- `bob/app/api/paris/workspaces/[workspaceId]/instances/route.ts`
-- `bob/app/api/paris/workspaces/[workspaceId]/instances/[publicId]/layers/route.ts`
-- `bob/app/api/paris/workspaces/[workspaceId]/instances/[publicId]/layers/[layer]/[layerKey]/route.ts`
-- `bob/app/api/paris/workspaces/[workspaceId]/locales/route.ts`
 - `bob/app/api/paris/website-creative/route.ts` (legacy; curated-only flow does not use this)
 
 The proxy currently supports:
 - `PARIS_BASE_URL` (preferred)
 - `NEXT_PUBLIC_PARIS_URL` / `http://localhost:3001` default (present in code today)
 
-Workspace-scoped proxy calls require `subject=workspace|minibob` to resolve policy.
+Account-scoped proxy calls require `subject=account|minibob` to resolve policy.
 
 **Security rule (executed):**
 - Bob’s Paris and AI proxy routes forward Berlin session bearer tokens. Product auth does not use `PARIS_DEV_JWT` passthrough.
@@ -509,5 +512,5 @@ Preview:
 ## Not solved yet (intentionally)
 - Backward compatibility / legacy instance migration.
 - Hardened embed runtime surface (Venice) as a product contract.
-- Copilot rollout/auth: Paris grant issuance is currently a dev-gated surface in this repo snapshot; production user/workspace auth + allowlists/flags evolve with the release model.
+- Copilot rollout/auth: Paris grant issuance is currently a dev-gated surface in this repo snapshot; production user/account auth + allowlists/flags evolve with the release model.
 - Copilot policy hardening: post-model “light edits only” caps + scope confirmation + deeper grounding to per-widget `agent.md` contracts (in progress).

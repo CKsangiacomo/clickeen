@@ -111,7 +111,7 @@ Keeping Paris and San Francisco separate prevents:
 
 ## Terms (Precise)
 - **Agent**: A named AI capability (e.g. `editor.faqAnswer`, `support.reply`, `ops.communityModeration`).
-- **AI Grant**: A signed authorization payload from Paris that defines what San Francisco is allowed to do for a subject (user/workspace) for a short time window.
+- **AI Grant**: A signed authorization payload from Paris that defines what San Francisco is allowed to do for a subject (user/account) for a short time window.
 - **Execution Request**: The payload sent to San Francisco containing `agentId`, input, and the AI Grant.
 - **Result**: Structured output from San Francisco (`ops[]` for editor agents, or a typed payload for non-editor agents).
 - **Playbook**: A versioned runtime contract attached to an `agentId` via the registry (server-resolved, not client-selected).
@@ -119,7 +119,7 @@ Keeping Paris and San Francisco separate prevents:
 ## High‑Level Data Flow
 
 ### Editor agents (inside Clickeen app)
-1) Instance snapshot is loaded via Paris (`GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace`): host-performed in Roma/DevStudio message boot, Bob-performed in URL boot.
+1) Instance snapshot is loaded via Paris (`GET /api/accounts/:accountId/instance/:publicId?subject=account`): host-performed in Roma/DevStudio message boot, Bob-performed in URL boot.
 2) Bob requests a short‑lived **AI Grant** from Paris (`POST /api/ai/grant`) for that editing session.
 3) Bob calls San Francisco with `{ grant, agentId, input, context }`.
 4) San Francisco returns `{ ops[], usage }`.
@@ -180,7 +180,7 @@ type AIGrant = {
   jti?: string; // unique grant id (used for per-grant budget tracking)
   sub:
     | { kind: 'anon'; sessionId: string } // Minibob / public experiences
-    | { kind: 'user'; userId: string; workspaceId: string } // Clickeen app
+    | { kind: 'user'; userId: string; accountId: string } // Clickeen app
     | { kind: 'service'; serviceId: string }; // internal automation
   exp: number; // epoch seconds
   caps: string[]; // allowed capabilities, e.g. ['agent:sdr.copilot']
@@ -257,7 +257,7 @@ Shipped (dev/local in this repo):
    - Paris signs the payload with `AI_GRANT_HMAC_SECRET` and forwards to San Francisco `/v1/outcome` using `SANFRANCISCO_BASE_URL`.
 
 Possible future (product ergonomics):
-- Return a grant on instance load (`GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace`) to reduce one extra round trip per chat session.
+- Return a grant on instance load (`GET /api/accounts/:accountId/instance/:publicId?subject=account`) to reduce one extra round trip per chat session.
 
 Paris does NOT execute AI calls. It only issues grants and forwards outcomes.
 
@@ -418,7 +418,7 @@ Definition of done:
   - `bob/app/api/ai/faq-copilot/route.ts` returns `410` and points callers to `/api/ai/widget-copilot`.
 
 ## Open Questions (next)
-- Grant transport: return grant in `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` vs separate `POST /api/ai/grant` (both work; choose based on desired session semantics).
+- Grant transport: return grant in `GET /api/accounts/:accountId/instance/:publicId?subject=account` vs separate `POST /api/ai/grant` (both work; choose based on desired session semantics).
 - Where AI usage is recorded for billing: Paris-only ledger via an internal San Francisco→Paris report, or a later aggregation pipeline.
 
 ## Links

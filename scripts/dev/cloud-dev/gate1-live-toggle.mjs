@@ -124,26 +124,7 @@ async function createAccount(accessToken) {
   return assertString(data?.accountId, 'accountId');
 }
 
-async function createWorkspace(accessToken, accountId) {
-  const slug = `gate1-${Date.now().toString(36)}`;
-  const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/workspaces`,
-    {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        accept: 'application/json',
-        'content-type': 'application/json',
-        'Idempotency-Key': crypto.randomUUID(),
-      },
-      body: JSON.stringify({ name: 'Gate 1 Workspace', slug }),
-    },
-  );
-  if (!res.ok) throw new Error(`Workspace create failed (${res.status}) ${text.slice(0, 200)}`);
-  return assertString(data?.workspace?.workspaceId, 'workspaceId');
-}
-
-async function duplicateFaq(accessToken, workspaceId) {
+async function duplicateFaq(accessToken, accountId) {
   const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/roma/widgets/duplicate`, {
     method: 'POST',
     headers: {
@@ -151,13 +132,13 @@ async function duplicateFaq(accessToken, workspaceId) {
       accept: 'application/json',
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ workspaceId, sourcePublicId: 'wgt_main_faq' }),
+    body: JSON.stringify({ accountId, sourcePublicId: 'wgt_main_faq' }),
   });
   if (!res.ok) throw new Error(`Duplicate failed (${res.status}) ${text.slice(0, 200)}`);
   return assertString(data?.publicId, 'publicId');
 }
 
-async function setLive(accessToken, workspaceId, publicId, live) {
+async function setLive(accessToken, accountId, publicId, live) {
   const payload = live
     ? {
         status: 'published',
@@ -181,7 +162,7 @@ async function setLive(accessToken, workspaceId, publicId, live) {
       };
 
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -198,14 +179,13 @@ async function setLive(accessToken, workspaceId, publicId, live) {
 async function main() {
   const accessToken = await loginPassword();
   const accountId = await createAccount(accessToken);
-  const workspaceId = await createWorkspace(accessToken, accountId);
-  const publicId = await duplicateFaq(accessToken, workspaceId);
+  const publicId = await duplicateFaq(accessToken, accountId);
 
-  console.log(`[gate1] workspaceId=${workspaceId}`);
+  console.log(`[gate1] accountId=${accountId}`);
   console.log(`[gate1] publicId=${publicId}`);
 
   console.log('[gate1] Turning live ON…');
-  await setLive(accessToken, workspaceId, publicId, true);
+  await setLive(accessToken, accountId, publicId, true);
 
   const tokyoRPointer = `${BASE.tokyo.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(publicId)}/live/r.json`;
   const okPointer = await waitForStatus({ label: 'tokyo live r.json', url: tokyoRPointer, wanted: 200 });
@@ -258,7 +238,7 @@ async function main() {
   console.log(`[gate1] textFp=${textFp}`);
 
   console.log('[gate1] Turning live OFF…');
-  await setLive(accessToken, workspaceId, publicId, false);
+  await setLive(accessToken, accountId, publicId, false);
 
   const okR404 = await waitForStatus({
     label: 'venice /r after unpublish',
@@ -299,4 +279,3 @@ main().catch((error) => {
   console.error(`[gate1] Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 });
-

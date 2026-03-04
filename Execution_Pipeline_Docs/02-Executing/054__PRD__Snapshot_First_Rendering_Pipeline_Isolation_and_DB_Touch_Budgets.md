@@ -61,7 +61,7 @@ For public traffic:
 
 ### T7) DB touch budgets are fixed and few
 Acceptable DB-touch moments:
-1. **Editor session load:** 1 read to load workspace + instance.
+1. **Editor session load:** 1 read to load account + instance.
 2. **Save (draft):** 1 write per explicit save boundary (draft config/text + minimal metadata).
 3. **Go live / go dark:** 1 write to flip the instance live flag (`published`) and enqueue Tokyo mirror jobs.
 4. **Instance create:** 1 write (plus minimal metadata), not a cascade.
@@ -196,7 +196,7 @@ Why this makes the system ~100× simpler:
 ### Why Auth is required to make this workable (V1 = Google login)
 
 If Roma lives in cloud-dev and becomes the integration truth:
-- We must control who can access the admin workspace and mutate instances/locales/assets.
+- We must control who can access the admin account and mutate instances/locales/assets.
 - We must have a trustworthy identity so Bob/Roma can apply entitlements server-side (the only brain).
 - We must avoid “shared links / shared secrets” that become permanent accidental architecture.
 
@@ -228,11 +228,11 @@ This section is intentionally “human workflow first”.
 ### Flow 1 — Editor load (1 DB read)
 
 What the human does:
-1. Opens a workspace + selects an instance in Bob/Roma.
+1. Opens an account + selects an instance in Bob/Roma.
 
 What the system does:
 1. Bob/Roma calls Paris once to load:
-   - workspace + instance draft/config + minimal metadata
+   - account + instance draft/config + minimal metadata
 2. Bob/Roma keeps everything else in memory for the editor session.
 
 DB budget:

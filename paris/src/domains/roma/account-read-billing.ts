@@ -1,10 +1,9 @@
 import type { Env } from '../../shared/types';
+import { authorizeAccount } from '../../shared/account-auth';
 import { ckError } from '../../shared/errors';
 import { json, readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
-import type { AccountAssetRow, AccountWorkspaceRow, InstanceListRow } from './common';
-import { assertAccountId } from './common';
-import { accountRoleLabel, authorizeAccount, inferHighestTier, loadAccountWorkspaces } from './data';
+import { assertAccountId } from '../../shared/validation';
 
 const ACCOUNT_USAGE_PAGE_SIZE = 1000;
 
@@ -34,6 +33,16 @@ async function loadPagedRows<T>(args: {
   return out;
 }
 
+type InstanceListRow = {
+  public_id?: string | null;
+  status?: 'published' | 'unpublished' | null;
+};
+
+type AccountAssetRow = {
+  asset_id?: string | null;
+  size_bytes?: number | null;
+};
+
 export async function handleAccountGet(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
@@ -42,51 +51,14 @@ export async function handleAccountGet(req: Request, env: Env, accountIdRaw: str
   const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
 
-  let workspaceCount = 0;
-  try {
-    const workspaces = await loadAccountWorkspaces(env, accountId);
-    workspaceCount = workspaces.length;
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-
   return json({
     accountId,
-    status: authorized.account.status,
-    role: accountRoleLabel(authorized.role),
-    workspaceCount,
-  });
-}
-
-export async function handleAccountWorkspaces(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
-  const accountIdResult = assertAccountId(accountIdRaw);
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
-  if (!authorized.ok) return authorized.response;
-
-  let workspaces: AccountWorkspaceRow[] = [];
-  try {
-    workspaces = await loadAccountWorkspaces(env, accountId);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-
-  return json({
-    accountId,
-    role: accountRoleLabel(authorized.role),
-    workspaces: workspaces.map((workspace) => ({
-      workspaceId: workspace.id,
-      accountId: workspace.account_id,
-      tier: workspace.tier,
-      name: workspace.name,
-      slug: workspace.slug,
-      createdAt: workspace.created_at ?? null,
-      updatedAt: workspace.updated_at ?? null,
-    })),
+    status: authorized.account.status ?? 'active',
+    tier: authorized.account.tier,
+    name: authorized.account.name,
+    slug: authorized.account.slug,
+    websiteUrl: authorized.account.website_url,
+    role: authorized.role,
   });
 }
 
@@ -98,32 +70,20 @@ export async function handleAccountUsage(req: Request, env: Env, accountIdRaw: s
   const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
 
-  let workspaces: AccountWorkspaceRow[] = [];
+  let instances: InstanceListRow[] = [];
   try {
-    workspaces = await loadAccountWorkspaces(env, accountId);
+    instances = await loadPagedRows<InstanceListRow>({
+      env,
+      table: 'widget_instances',
+      baseParams: {
+        select: 'public_id,status',
+        account_id: `eq.${accountId}`,
+        order: 'public_id.asc',
+      },
+    });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-
-  const workspaceIds = workspaces.map((workspace) => workspace.id).filter(Boolean);
-
-  let instances: InstanceListRow[] = [];
-  if (workspaceIds.length > 0) {
-    try {
-      instances = await loadPagedRows<InstanceListRow>({
-        env,
-        table: 'widget_instances',
-        baseParams: {
-          select: 'public_id,status,workspace_id',
-          workspace_id: `in.(${workspaceIds.join(',')})`,
-          order: 'public_id.asc',
-        },
-      });
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-    }
   }
 
   let assets: AccountAssetRow[] = [];
@@ -151,9 +111,8 @@ export async function handleAccountUsage(req: Request, env: Env, accountIdRaw: s
 
   return json({
     accountId,
-    role: accountRoleLabel(authorized.role),
+    role: authorized.role,
     usage: {
-      workspaces: workspaces.length,
       instances: {
         total: instances.length,
         published: publishedInstances,
@@ -176,36 +135,22 @@ export async function handleAccountBillingSummary(req: Request, env: Env, accoun
   const authorized = await authorizeAccount(req, env, accountId, 'editor');
   if (!authorized.ok) return authorized.response;
 
-  let workspaces: AccountWorkspaceRow[] = [];
-  try {
-    workspaces = await loadAccountWorkspaces(env, accountId);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-
-  const inferredTier = inferHighestTier(workspaces);
-
   return json({
     accountId,
-    role: accountRoleLabel(authorized.role),
+    role: authorized.role,
     provider: 'stripe',
     status: 'not_configured',
     reasonKey: 'coreui.errors.billing.notConfigured',
     plan: {
-      inferredTier,
-      workspaceCount: workspaces.length,
+      inferredTier: authorized.account.tier,
+      accountCount: 1,
     },
     checkoutAvailable: false,
     portalAvailable: false,
   });
 }
 
-export async function handleAccountBillingCheckoutSession(
-  req: Request,
-  env: Env,
-  accountIdRaw: string,
-): Promise<Response> {
+export async function handleAccountBillingCheckoutSession(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
@@ -240,3 +185,4 @@ export async function handleAccountBillingPortalSession(req: Request, env: Env, 
     503,
   );
 }
+

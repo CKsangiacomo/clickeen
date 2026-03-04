@@ -172,26 +172,7 @@ async function createAccount(accessToken) {
   return assertString(data?.accountId, 'accountId');
 }
 
-async function createWorkspace(accessToken, accountId) {
-  const slug = `gate2-${Date.now().toString(36)}`;
-  const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/workspaces`,
-    {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        accept: 'application/json',
-        'content-type': 'application/json',
-        'Idempotency-Key': crypto.randomUUID(),
-      },
-      body: JSON.stringify({ name: 'Gate 2 Workspace', slug }),
-    },
-  );
-  if (!res.ok) throw new Error(`Workspace create failed (${res.status}) ${text.slice(0, 200)}`);
-  return assertString(data?.workspace?.workspaceId, 'workspaceId');
-}
-
-async function duplicateFaq(accessToken, workspaceId) {
+async function duplicateFaq(accessToken, accountId) {
   const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/roma/widgets/duplicate`, {
     method: 'POST',
     headers: {
@@ -199,7 +180,7 @@ async function duplicateFaq(accessToken, workspaceId) {
       accept: 'application/json',
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ workspaceId, sourcePublicId: 'wgt_main_faq' }),
+    body: JSON.stringify({ accountId, sourcePublicId: 'wgt_main_faq' }),
   });
   if (!res.ok) throw new Error(`Duplicate failed (${res.status}) ${text.slice(0, 200)}`);
   return assertString(data?.publicId, 'publicId');
@@ -219,9 +200,9 @@ function livePayload(overrides = {}) {
   };
 }
 
-async function publishInstance(accessToken, workspaceId, publicId) {
+async function publishInstance(accessToken, accountId, publicId) {
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -235,9 +216,9 @@ async function publishInstance(accessToken, workspaceId, publicId) {
   if (!res.ok) throw new Error(`[gate2] Publish failed (${res.status}) ${text.slice(0, 200)}`);
 }
 
-async function unpublishInstance(accessToken, workspaceId, publicId) {
+async function unpublishInstance(accessToken, accountId, publicId) {
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -254,9 +235,9 @@ async function unpublishInstance(accessToken, workspaceId, publicId) {
   if (!res.ok) throw new Error(`[gate2] Unpublish failed (${res.status}) ${text.slice(0, 200)}`);
 }
 
-async function getInstance(accessToken, workspaceId, publicId) {
+async function getInstance(accessToken, accountId, publicId) {
   const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
       cache: 'no-store',
@@ -266,10 +247,10 @@ async function getInstance(accessToken, workspaceId, publicId) {
   return data;
 }
 
-async function updateInstanceConfig(accessToken, workspaceId, publicId, config) {
+async function updateInstanceConfig(accessToken, accountId, publicId, config) {
   const payload = livePayload({ config });
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -316,14 +297,13 @@ async function ensureTokyoTextPack(publicId, locale, textFp) {
 async function main() {
   const accessToken = await loginPassword();
   const accountId = await createAccount(accessToken);
-  const workspaceId = await createWorkspace(accessToken, accountId);
-  const publicId = await duplicateFaq(accessToken, workspaceId);
+  const publicId = await duplicateFaq(accessToken, accountId);
 
-  console.log(`[gate2] workspaceId=${workspaceId}`);
+  console.log(`[gate2] accountId=${accountId}`);
   console.log(`[gate2] publicId=${publicId}`);
 
   console.log('[gate2] Publishing…');
-  await publishInstance(accessToken, workspaceId, publicId);
+  await publishInstance(accessToken, accountId, publicId);
 
   const baseline = await waitFor({
     label: 'initial live pointer + l10n pointer',
@@ -343,11 +323,11 @@ async function main() {
   console.log(`[gate2] baseline textFp=${baseline.textFp}`);
 
   console.log('[gate2] Style-only change…');
-  const instance1 = await getInstance(accessToken, workspaceId, publicId);
+  const instance1 = await getInstance(accessToken, accountId, publicId);
   const config1 = instance1?.config;
   if (!isRecord(config1)) throw new Error('[gate2] Instance config missing/invalid');
   const styleConfig = applyStyleOnlyTweak(config1);
-  await updateInstanceConfig(accessToken, workspaceId, publicId, styleConfig);
+  await updateInstanceConfig(accessToken, accountId, publicId, styleConfig);
 
   const afterStyle = await waitFor({
     label: 'configFp to change (style edit)',
@@ -372,11 +352,11 @@ async function main() {
   console.log(`[gate2] after style textFp=${textAfterStyle}`);
 
   console.log('[gate2] Copy-only change…');
-  const instance2 = await getInstance(accessToken, workspaceId, publicId);
+  const instance2 = await getInstance(accessToken, accountId, publicId);
   const config2 = instance2?.config;
   if (!isRecord(config2)) throw new Error('[gate2] Instance config missing/invalid');
   const copyConfig = applyCopyOnlyTweak(config2);
-  await updateInstanceConfig(accessToken, workspaceId, publicId, copyConfig);
+  await updateInstanceConfig(accessToken, accountId, publicId, copyConfig);
 
   const afterCopy = await waitFor({
     label: 'textFp to change (copy edit)',
@@ -404,7 +384,7 @@ async function main() {
   console.log('[gate2] Fingerprints behave ✅');
 
   console.log('[gate2] Cleanup: unpublish…');
-  await unpublishInstance(accessToken, workspaceId, publicId);
+  await unpublishInstance(accessToken, accountId, publicId);
 
   await waitFor({
     label: 'venice /r to go 404',
@@ -423,4 +403,3 @@ main().catch((error) => {
   console.error(`[gate2] failed: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 });
-

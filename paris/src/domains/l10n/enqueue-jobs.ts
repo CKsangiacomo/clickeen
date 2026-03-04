@@ -1,15 +1,15 @@
 import type { Policy } from '@clickeen/ck-policy';
 import type {
+  AccountRow,
   CuratedInstanceRow,
   Env,
   InstanceRow,
   L10nGenerateStateRow,
   L10nJob,
-  WorkspaceRow,
 } from '../../shared/types';
 import { readJson } from '../../shared/http';
 import { asTrimmedString } from '../../shared/validation';
-import { resolveInstanceKind, resolveInstanceWorkspaceId } from '../../shared/instances';
+import { resolveInstanceAccountId, resolveInstanceKind } from '../../shared/instances';
 import { issueAiGrant } from '../ai';
 import {
   canRetryL10nGenerate,
@@ -21,7 +21,7 @@ import {
   upsertL10nGenerateStates,
   upsertL10nSnapshot,
 } from './service';
-import { enforceL10nSelection, readWorkspaceLocales } from './shared';
+import { enforceL10nSelection, readAccountLocales } from './shared';
 import { resolveL10nPlanningSnapshot } from './planning';
 import { dispatchL10nGenerateJobs } from './dispatch-jobs';
 
@@ -63,7 +63,7 @@ function toFailedStateRows(args: {
   baseFingerprint: string;
   baseUpdatedAt: string | null;
   widgetType: string;
-  workspaceId: string;
+  accountId: string;
   message: string;
   defaultChangedPaths?: string[] | null;
   defaultRemovedPaths?: string[] | null;
@@ -85,7 +85,7 @@ function toFailedStateRows(args: {
       base_fingerprint: args.baseFingerprint,
       base_updated_at: args.baseUpdatedAt,
       widget_type: args.widgetType,
-      workspace_id: args.workspaceId,
+      account_id: args.accountId,
       status: 'failed',
       attempts,
       next_attempt_at: retry.nextAttemptAt,
@@ -100,7 +100,7 @@ function toFailedStateRows(args: {
 export async function enqueueL10nJobs(args: {
   env: Env;
   instance: InstanceRow | CuratedInstanceRow;
-  workspace: WorkspaceRow;
+  account: AccountRow;
   widgetType: string | null;
   baseUpdatedAt: string | null | undefined;
   policy: Policy;
@@ -117,16 +117,16 @@ export async function enqueueL10nJobs(args: {
   }
 
   const kind = resolveInstanceKind(args.instance);
-  const workspaceLocales = readWorkspaceLocales(args.workspace);
-  if (workspaceLocales instanceof Response) {
+  const accountLocales = readAccountLocales(args.account);
+  if (accountLocales instanceof Response) {
     return {
       ok: false as const,
       queued: 0,
       skipped: 0,
-      error: 'coreui.errors.workspace.locales.invalid',
+      error: 'coreui.errors.account.locales.invalid',
     };
   }
-  const locales = args.localesOverride ?? workspaceLocales.locales;
+  const locales = args.localesOverride ?? accountLocales.locales;
   const entitlementGate = enforceL10nSelection(args.policy, locales);
   if (entitlementGate) {
     return { ok: true as const, queued: 0, skipped: locales.length };
@@ -134,7 +134,7 @@ export async function enqueueL10nJobs(args: {
 
   if (locales.length === 0) return { ok: true as const, queued: 0, skipped: 0 };
 
-  const workspaceId = resolveInstanceWorkspaceId(args.instance) ?? args.workspace.id;
+  const accountId = resolveInstanceAccountId(args.instance) ?? args.account.id;
   const planning = await resolveL10nPlanningSnapshot({
     env: args.env,
     widgetType: args.widgetType,
@@ -215,7 +215,7 @@ export async function enqueueL10nJobs(args: {
       base_fingerprint: baseFingerprint,
       base_updated_at: baseUpdatedAt,
       widget_type: widgetType,
-      workspace_id: workspaceId,
+      account_id: accountId,
       status: 'dirty',
       attempts: current?.attempts ?? 0,
       next_attempt_at: null,
@@ -230,12 +230,12 @@ export async function enqueueL10nJobs(args: {
 
   await upsertL10nGenerateStates(args.env, dirtyRows);
 
-  if (!workspaceId) {
+  if (!accountId) {
     return {
       ok: false as const,
       queued: 0,
       skipped: 0,
-      error: 'Missing workspaceId for l10n grant',
+      error: 'Missing accountId for l10n grant',
     };
   }
   const jobs: L10nJob[] = [];
@@ -247,8 +247,9 @@ export async function enqueueL10nJobs(args: {
     const issued = await issueAiGrant({
       env: args.env,
       agentId: 'l10n.instance.v1',
-      subject: 'workspace',
-      workspaceId,
+      subject: 'account',
+      accountId,
+      account: args.account,
       mode: 'ops',
       trace: { sessionId: crypto.randomUUID(), instancePublicId: publicId },
     });
@@ -272,7 +273,7 @@ export async function enqueueL10nJobs(args: {
       baseFingerprint,
       baseUpdatedAt,
       kind,
-      workspaceId,
+      accountId,
       envStage,
       changedPaths: localeDiff.changedPaths ?? undefined,
       removedPaths: localeDiff.removedPaths ?? undefined,
@@ -289,7 +290,7 @@ export async function enqueueL10nJobs(args: {
       baseFingerprint,
       baseUpdatedAt,
       widgetType,
-      workspaceId,
+      accountId,
       message: dispatched.error,
       defaultChangedPaths,
       defaultRemovedPaths,
@@ -318,7 +319,7 @@ export async function enqueueL10nJobs(args: {
       base_fingerprint: baseFingerprint,
       base_updated_at: baseUpdatedAt,
       widget_type: widgetType,
-      workspace_id: workspaceId,
+      account_id: accountId,
       status: 'queued',
       attempts,
       next_attempt_at: null,

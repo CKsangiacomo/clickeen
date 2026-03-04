@@ -30,8 +30,6 @@ import {
   loadAccountAssetVariantKeys,
   loadAccountMembershipRole,
   loadAccountUploadProfile,
-  loadWorkspaceMembershipRole,
-  loadWorkspaceUploadContext,
   normalizeAccountAssetSource,
   persistAccountAssetMetadata,
   resolveUploadSizeLimitBytes,
@@ -50,7 +48,7 @@ const ASSET_INTEGRITY_REASON_ORPHAN_BLOB = 'coreui.errors.assets.integrity.orpha
 const ASSET_INTEGRITY_REASON_VARIANTS_MISSING = 'coreui.errors.assets.integrity.variantsMissingForAsset';
 
 type UploadTierResolutionResult =
-  | { ok: true; tier: string | null }
+  | { ok: true }
   | { ok: false; response: Response };
 
 type UploadBudgetResult =
@@ -101,49 +99,15 @@ async function resolveUploadTierAndAuthorization(args: {
   env: Env;
   auth: Exclude<Awaited<ReturnType<typeof assertUploadAuth>>, { ok: false }>;
   accountId: string;
-  workspaceId: string;
 }): Promise<UploadTierResolutionResult> {
-  const { env, auth, accountId, workspaceId } = args;
-  if (!workspaceId) {
-    if (auth.trusted) return { ok: true, tier: null };
-    try {
-      const membershipRole = await loadAccountMembershipRole(env, accountId, auth.principal.userId);
-      if (!membershipRole || roleRank(membershipRole) < roleRank('editor')) {
-        return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
-      }
-      return { ok: true, tier: null };
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return {
-        ok: false,
-        response: json({ error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } }, { status: 500 }),
-      };
-    }
-  }
-
-  if (!isUuid(workspaceId)) {
-    return { ok: false, response: json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 }) };
-  }
-
-  const workspace = await loadWorkspaceUploadContext(env, workspaceId);
-  if (!workspace) {
-    return { ok: false, response: json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 }) };
-  }
-  if (!workspace.accountId || workspace.accountId !== accountId) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.account.workspaceMismatch' } }, { status: 422 }),
-    };
-  }
-
-  if (auth.trusted) return { ok: true, tier: workspace.tier ?? null };
-
+  const { env, auth, accountId } = args;
+  if (auth.trusted) return { ok: true };
   try {
-    const membershipRole = await loadWorkspaceMembershipRole(env, workspaceId, auth.principal.userId);
+    const membershipRole = await loadAccountMembershipRole(env, accountId, auth.principal.userId);
     if (!membershipRole || roleRank(membershipRole) < roleRank('editor')) {
       return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
     }
-    return { ok: true, tier: workspace.tier ?? null };
+    return { ok: true };
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return {
@@ -377,15 +341,13 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.source.invalid' } }, { status: 422 });
   }
 
-  const workspaceId = (req.headers.get('x-workspace-id') || '').trim();
   const tierResolution = await resolveUploadTierAndAuthorization({
     env,
     auth,
     accountId,
-    workspaceId,
   });
   if (!tierResolution.ok) return tierResolution.response;
-  const tier = tierResolution.tier;
+  const tier = account.tier;
 
   const publicIdRaw = (req.headers.get('x-public-id') || '').trim();
   const publicId = publicIdRaw ? normalizePublicId(publicIdRaw) : null;
@@ -438,7 +400,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       env,
       accountId,
       assetId,
-      workspaceId: workspaceId || null,
       publicId,
       widgetType,
       variant,
@@ -473,7 +434,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       key,
       url,
       source,
-      workspaceId: workspaceId || null,
       publicId: publicId ?? null,
       widgetType: widgetType ?? null,
     },

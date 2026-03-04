@@ -9,37 +9,35 @@ This README is a quick operational guide. For the full endpoint and behavior con
 
 Core shipped endpoints in this repo snapshot include:
 - `GET /api/healthz`
-- `GET /api/me` (`workspaceId` query optional; when provided, defaults are resolved only for that membership)
+- `GET /api/me` (optional `accountId` query; when provided, defaults are resolved for that membership)
 - `POST /api/accounts` (Berlin session bearer + `Idempotency-Key`)
-- `GET /api/roma/widgets?workspaceId=<uuid>` (Roma widgets domain list; metadata only, no instance `config` payload; includes active-workspace user instances plus account-owned curated/main starters)
-- `GET /api/roma/templates?workspaceId=<uuid>` (Roma templates domain list; all curated/main starters available to authenticated workspace members)
-- `POST /api/roma/widgets/duplicate` (Roma widgets command; duplicates a source instance into workspace-owned user instance server-side)
-- `DELETE /api/roma/instances/:publicId?workspaceId=<uuid>` (Roma widgets command; deletes workspace or account-owned curated instance when authorized)
+- `GET /api/roma/bootstrap` (Roma shell bootstrap; identity + account authz capsule)
+- `GET /api/roma/widgets?accountId=<uuid>` (Roma widgets domain list; includes account instances + curated owned by the admin account when authorized)
+- `GET /api/roma/templates?accountId=<uuid>` (Roma templates domain list; all published curated/main starters available to authenticated account members)
+- `POST /api/roma/widgets/duplicate` (Roma widgets command; duplicates a source instance into an account-owned user instance server-side)
+- `DELETE /api/roma/instances/:publicId?accountId=<uuid>` (Roma widgets command; deletes account-owned instance when authorized; curated deletion is restricted to the admin account)
 - `GET /api/curated-instances`
   - optional query: `includeConfig=0|1` (default `1`; set `0` for lightweight list responses without `config`)
-- `GET /api/workspaces/:workspaceId/instances`
-- `POST /api/workspaces/:workspaceId/instances`
-- `GET /api/workspaces/:workspaceId/instance/:publicId`
-- `PUT /api/workspaces/:workspaceId/instance/:publicId`
+- `GET /api/accounts/:accountId/instances`
+- `POST /api/accounts/:accountId/instances?subject=account`
+- `GET /api/accounts/:accountId/instance/:publicId?subject=account`
+- `PUT /api/accounts/:accountId/instance/:publicId?subject=account`
+- `GET /api/accounts/:accountId/instances/:publicId/publish/status`
+- `GET /api/accounts/:accountId/locales`
+- `PUT /api/accounts/:accountId/locales?subject=account`
+- `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account`
+- `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected?subject=account`
+- `GET/PUT/DELETE /api/accounts/:accountId/instances/:publicId/layers/...` (locale overrides storage)
 - `GET /api/instance/:publicId`
-- `GET /api/workspaces/:workspaceId`
-- `GET /api/workspaces/:workspaceId/members`
-- `GET /api/workspaces/:workspaceId/policy`
-- `GET /api/workspaces/:workspaceId/entitlements`
-- `GET /api/workspaces/:workspaceId/ai/profile`
-- `GET /api/workspaces/:workspaceId/ai/limits`
-- `GET /api/workspaces/:workspaceId/ai/outcomes` (explicit unavailable in this snapshot)
 - `GET /api/accounts/:accountId`
-- `GET /api/accounts/:accountId/workspaces`
-- `POST /api/accounts/:accountId/workspaces` (Berlin session bearer + `Idempotency-Key`)
 - `GET /api/accounts/:accountId/usage`
 - `GET /api/accounts/:accountId/assets`
-  - query projections:
-    - `view=all` (default account library)
-    - `view=used_in_workspace&workspaceId=<uuid>` (account assets currently used in that workspace)
-    - `view=created_in_workspace&workspaceId=<uuid>` (account assets created from that workspace)
-- `GET /api/accounts/:accountId/assets/:assetId` (supports the same optional `view/workspaceId` projection filters)
+- `GET /api/accounts/:accountId/assets/:assetId`
 - `DELETE /api/accounts/:accountId/assets/:assetId`
+- `DELETE /api/accounts/:accountId/assets?confirm=1` (forced hard delete all account assets; downgrade/closure)
+- `GET /api/accounts/:accountId/members`
+- `GET /api/accounts/:accountId/notices?status=open|dismissed|resolved`
+- `POST /api/accounts/:accountId/notices/:noticeId/dismiss`
 - `GET /api/accounts/:accountId/billing/summary`
 - `POST /api/accounts/:accountId/billing/checkout-session` (explicit not-configured in this snapshot)
 - `POST /api/accounts/:accountId/billing/portal-session` (explicit not-configured in this snapshot)
@@ -50,7 +48,7 @@ Core shipped endpoints in this repo snapshot include:
 ## Curated vs user instances
 
 - `wgt_main_*` and `wgt_curated_*` → `curated_widget_instances` (local-only writes, widget_type validated against Tokyo).
-- `wgt_*_u_*` → `widget_instances` (workspace-owned, RLS-enforced).
+- `wgt_*_u_*` → `widget_instances` (account-owned, RLS-enforced).
 
 ## Auth
 
@@ -64,7 +62,6 @@ Non-public product endpoints require:
 
 Strict Berlin-authenticated productized bootstrap contracts:
 - `POST /api/accounts`
-- `POST /api/accounts/:accountId/workspaces`
 - `POST /api/minibob/handoff/complete`
 
 Machine/internal endpoints can also use signature-based verification (for example metering and l10n job reporting).

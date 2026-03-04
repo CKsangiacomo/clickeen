@@ -77,7 +77,7 @@ export function normalizeSupportedLocaleToken(raw: unknown): string | null {
   return normalized;
 }
 
-export type WorkspaceL10nPolicy = {
+export type AccountL10nPolicy = {
   v: 1;
   baseLocale: string;
   ip: {
@@ -89,7 +89,7 @@ export type WorkspaceL10nPolicy = {
   };
 };
 
-const DEFAULT_WORKSPACE_L10N_POLICY: WorkspaceL10nPolicy = {
+export const DEFAULT_ACCOUNT_L10N_POLICY: AccountL10nPolicy = {
   v: 1,
   baseLocale: 'en',
   ip: { enabled: false, countryToLocale: {} },
@@ -100,13 +100,13 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-export function resolveWorkspaceL10nPolicy(raw: unknown): WorkspaceL10nPolicy {
-  if (!isPlainRecord(raw) || raw.v !== 1) return DEFAULT_WORKSPACE_L10N_POLICY;
+export function resolveAccountL10nPolicy(raw: unknown): AccountL10nPolicy {
+  if (!isPlainRecord(raw) || raw.v !== 1) return DEFAULT_ACCOUNT_L10N_POLICY;
 
-  const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale) ?? DEFAULT_WORKSPACE_L10N_POLICY.baseLocale;
+  const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale) ?? DEFAULT_ACCOUNT_L10N_POLICY.baseLocale;
 
   const ipRaw = isPlainRecord(raw.ip) ? raw.ip : null;
-  const ipEnabled = typeof ipRaw?.enabled === 'boolean' ? ipRaw.enabled : DEFAULT_WORKSPACE_L10N_POLICY.ip.enabled;
+  const ipEnabled = typeof ipRaw?.enabled === 'boolean' ? ipRaw.enabled : DEFAULT_ACCOUNT_L10N_POLICY.ip.enabled;
   const countryToLocale: Record<string, string> = {};
   const mapRaw = ipRaw && isPlainRecord(ipRaw.countryToLocale) ? ipRaw.countryToLocale : null;
   if (mapRaw) {
@@ -121,7 +121,7 @@ export function resolveWorkspaceL10nPolicy(raw: unknown): WorkspaceL10nPolicy {
 
   const switcherRaw = isPlainRecord(raw.switcher) ? raw.switcher : null;
   const switcherEnabled =
-    typeof switcherRaw?.enabled === 'boolean' ? switcherRaw.enabled : DEFAULT_WORKSPACE_L10N_POLICY.switcher.enabled;
+    typeof switcherRaw?.enabled === 'boolean' ? switcherRaw.enabled : DEFAULT_ACCOUNT_L10N_POLICY.switcher.enabled;
 
   return {
     v: 1,
@@ -131,7 +131,7 @@ export function resolveWorkspaceL10nPolicy(raw: unknown): WorkspaceL10nPolicy {
   };
 }
 
-export function parseWorkspaceL10nPolicy(raw: unknown): { ok: true; policy: WorkspaceL10nPolicy } | { ok: false; issues: Array<{ path: string; message: string }> } {
+export function parseAccountL10nPolicy(raw: unknown): { ok: true; policy: AccountL10nPolicy } | { ok: false; issues: Array<{ path: string; message: string }> } {
   if (!isPlainRecord(raw)) {
     return { ok: false, issues: [{ path: 'policy', message: 'policy must be an object' }] };
   }
@@ -148,7 +148,7 @@ export function parseWorkspaceL10nPolicy(raw: unknown): { ok: true; policy: Work
 
   const ipRaw = raw.ip;
   const ip = isPlainRecord(ipRaw) ? ipRaw : null;
-  const ipEnabled = ip && typeof ip.enabled === 'boolean' ? ip.enabled : DEFAULT_WORKSPACE_L10N_POLICY.ip.enabled;
+  const ipEnabled = ip && typeof ip.enabled === 'boolean' ? ip.enabled : DEFAULT_ACCOUNT_L10N_POLICY.ip.enabled;
   const countryToLocale: Record<string, string> = {};
   if (ip && Object.prototype.hasOwnProperty.call(ip, 'countryToLocale')) {
     const mapRaw = ip.countryToLocale;
@@ -174,7 +174,7 @@ export function parseWorkspaceL10nPolicy(raw: unknown): { ok: true; policy: Work
   const switcherRaw = raw.switcher;
   const switcher = isPlainRecord(switcherRaw) ? switcherRaw : null;
   const switcherEnabled =
-    switcher && typeof switcher.enabled === 'boolean' ? switcher.enabled : DEFAULT_WORKSPACE_L10N_POLICY.switcher.enabled;
+    switcher && typeof switcher.enabled === 'boolean' ? switcher.enabled : DEFAULT_ACCOUNT_L10N_POLICY.switcher.enabled;
 
   if (issues.length) return { ok: false, issues };
 

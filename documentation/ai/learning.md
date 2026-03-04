@@ -82,7 +82,8 @@ One row per `requestId` with “learning features” extracted from the raw even
 One row per `(requestId, event)`:
 - `day`, `occurredAtMs`, `sessionId`
 - `timeToDecisionMs` (for keep/undo)
-- `accountIdHash`, `workspaceIdHash` (optional, for cohort analysis)
+- `accountIdHash` (optional, for cohort analysis)
+- `workspaceIdHash` (legacy, optional; pre account-only tenancy pivot)
 
 ## 3) Versioning (so improvements are attributable)
 

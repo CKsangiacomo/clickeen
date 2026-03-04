@@ -7,18 +7,18 @@ import { ckError } from '../../shared/errors';
 import { assertDevAuth } from '../../shared/auth';
 import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString, assertConfig } from '../../shared/validation';
-import { loadWorkspaceById } from '../../shared/workspaces';
+import { loadAccountById } from '../../shared/accounts';
 import {
   isCuratedInstanceRow,
   isCuratedPublicId,
   resolveInstanceKind,
-  resolveInstanceWorkspaceId,
+  resolveInstanceAccountId,
 } from '../../shared/instances';
 
 const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 
 const USER_INSTANCE_SELECT_WITH_DISPLAY_NAME =
-  'public_id,display_name,status,config,created_at,updated_at,widget_id,workspace_id,kind';
+  'public_id,display_name,status,config,created_at,updated_at,widget_id,account_id,kind';
 
 const WIDGET_LOOKUP_CACHE_TTL_MS = 5 * 60_000;
 const WIDGET_LOOKUP_STORE_KEY = '__CK_PARIS_WIDGET_LOOKUP_STORE_V1__';
@@ -95,7 +95,7 @@ async function loadUserInstanceByPublicId(env: Env, publicId: string): Promise<I
 
 async function loadCuratedInstanceByPublicId(env: Env, publicId: string): Promise<CuratedInstanceRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,widget_type,status,config,created_at,updated_at,kind,meta',
+    select: 'public_id,widget_type,status,config,created_at,updated_at,kind,meta,owner_account_id',
     public_id: `eq.${publicId}`,
     limit: '1',
   });
@@ -123,14 +123,14 @@ export async function loadInstanceByPublicId(env: Env, publicId: string): Promis
   return loadUserInstanceByPublicId(env, publicId);
 }
 
-async function loadUserInstanceByWorkspaceAndPublicId(
+async function loadUserInstanceByAccountAndPublicId(
   env: Env,
-  workspaceId: string,
+  accountId: string,
   publicId: string,
 ): Promise<InstanceRow | null> {
   const params = new URLSearchParams({
     public_id: `eq.${publicId}`,
-    workspace_id: `eq.${workspaceId}`,
+    account_id: `eq.${accountId}`,
     limit: '1',
   });
   const result = await fetchUserInstanceRows(env, params);
@@ -141,15 +141,15 @@ async function loadUserInstanceByWorkspaceAndPublicId(
   return rows?.[0] ?? null;
 }
 
-export async function loadInstanceByWorkspaceAndPublicId(
+export async function loadInstanceByAccountAndPublicId(
   env: Env,
-  workspaceId: string,
+  accountId: string,
   publicId: string,
 ): Promise<InstanceRow | CuratedInstanceRow | null> {
   if (isCuratedPublicId(publicId)) {
     return loadCuratedInstanceByPublicId(env, publicId);
   }
-  return loadUserInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  return loadUserInstanceByAccountAndPublicId(env, accountId, publicId);
 }
 
 async function loadWidget(env: Env, widgetId: string): Promise<WidgetRow | null> {
@@ -346,12 +346,12 @@ export async function handleGetInstance(_req: Request, env: Env, publicId: strin
 
   const baseFingerprint = await computeBaseFingerprint(instance.config);
   let policy: Policy | null = null;
-  const workspaceId = resolveInstanceWorkspaceId(instance);
-  if (workspaceId) {
+  const accountId = resolveInstanceAccountId(instance);
+  if (accountId) {
     try {
-      const workspace = await loadWorkspaceById(env, workspaceId);
-      if (workspace) {
-        policy = resolvePolicy({ profile: workspace.tier, role: 'editor' });
+      const account = await loadAccountById(env, accountId);
+      if (account) {
+        policy = resolvePolicy({ profile: account.tier, role: 'editor' });
       }
     } catch {
       policy = null;

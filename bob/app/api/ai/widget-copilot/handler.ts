@@ -24,16 +24,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-type AiGrantSubject = 'minibob' | 'workspace';
+type AiGrantSubject = 'minibob' | 'account';
 
-function normalizeSubject(args: { rawSubject?: string; workspaceId?: string }): AiGrantSubject | null {
+function normalizeSubject(args: { rawSubject?: string; accountId?: string }): AiGrantSubject | null {
   const raw = (args.rawSubject || '').trim().toLowerCase();
-  const hasWorkspace = Boolean((args.workspaceId || '').trim());
+  const hasAccount = Boolean((args.accountId || '').trim());
 
   if (raw === 'minibob') return 'minibob';
-  if (raw === 'workspace') return hasWorkspace ? 'workspace' : null;
+  if (raw === 'account') return hasAccount ? 'account' : null;
   if (raw) return null;
-  if (hasWorkspace) return 'workspace';
+  if (hasAccount) return 'account';
   return 'minibob';
 }
 
@@ -175,7 +175,7 @@ async function getAiGrant(args: {
   sessionId: string;
   sessionToken?: string;
   instancePublicId?: string;
-  workspaceId?: string;
+  accountId?: string;
   subject?: AiGrantSubject;
   provider?: string;
   model?: string;
@@ -267,7 +267,7 @@ async function getAiGrant(args: {
         agentId: args.agentId,
         mode: args.mode,
         trace: { sessionId: args.sessionId, ...(args.instancePublicId ? { instancePublicId: args.instancePublicId } : {}) },
-        ...(args.workspaceId ? { workspaceId: args.workspaceId } : {}),
+        ...(args.accountId ? { accountId: args.accountId } : {}),
         ...(args.subject ? { subject: args.subject } : {}),
         ...(args.provider ? { provider: args.provider } : {}),
         ...(args.model ? { model: args.model } : {}),
@@ -385,9 +385,9 @@ export async function POST(req: NextRequest) {
     const sessionId = asTrimmedString(body?.sessionId);
     const sessionToken = asTrimmedString(body?.sessionToken);
     const instancePublicId = asTrimmedString(body?.instancePublicId) || undefined;
-    const workspaceId = asTrimmedString(body?.workspaceId) || undefined;
+    const accountId = asTrimmedString(body?.accountId) || undefined;
     const rawSubject = asTrimmedString(body?.subject) || undefined;
-    const subject = normalizeSubject({ rawSubject, workspaceId });
+    const subject = normalizeSubject({ rawSubject, accountId });
     const requestedAgentId = asTrimmedString(body?.agentId) || WIDGET_COPILOT_AGENT_ALIAS;
     const provider = asTrimmedString(body?.provider) || undefined;
     const model = asTrimmedString(body?.model) || undefined;
@@ -402,7 +402,7 @@ export async function POST(req: NextRequest) {
     if (!sessionId) issues.push({ path: 'sessionId', message: 'sessionId is required' });
     if (!isRecord(currentConfig)) issues.push({ path: 'currentConfig', message: 'currentConfig must be an object' });
     if (!Array.isArray(controls)) issues.push({ path: 'controls', message: 'controls must be an array' });
-    if (!subject) issues.push({ path: 'subject', message: 'subject must be workspace|minibob and workspace requires workspaceId' });
+    if (!subject) issues.push({ path: 'subject', message: 'subject must be account|minibob and account requires accountId' });
     if (isMinibob && !sessionToken) issues.push({ path: 'sessionToken', message: 'sessionToken is required for Minibob requests' });
     if (!ALLOWED_WIDGET_COPILOT_AGENT_IDS.has(requestedAgentId)) {
       issues.push({ path: 'agentId', message: 'agentId must be widget.copilot.v1, sdr.widget.copilot.v1, or cs.widget.copilot.v1' });
@@ -417,7 +417,7 @@ export async function POST(req: NextRequest) {
       sessionId,
       ...(isMinibob ? { sessionToken } : {}),
       instancePublicId,
-      workspaceId,
+      accountId,
       subject: subject ?? undefined,
       provider,
       model,

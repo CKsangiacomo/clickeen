@@ -528,7 +528,7 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, authorization, x-account-id, x-workspace-id, x-public-id, x-widget-type, x-filename, x-asset-id, x-variant, x-source, x-tokyo-l10n-bridge'
+    'Content-Type, authorization, x-account-id, x-public-id, x-widget-type, x-filename, x-asset-id, x-variant, x-source, x-tokyo-l10n-bridge'
   );
 
   if (req.method === 'OPTIONS') {

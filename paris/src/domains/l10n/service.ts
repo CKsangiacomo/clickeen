@@ -16,7 +16,7 @@ async function loadInstanceOverlay(
 ): Promise<InstanceOverlayRow | null> {
   const params = new URLSearchParams({
     select:
-      'public_id,layer,layer_key,ops,user_ops,base_fingerprint,base_updated_at,source,geo_targets,workspace_id,updated_at',
+      'public_id,layer,layer_key,ops,user_ops,base_fingerprint,base_updated_at,source,geo_targets,account_id,updated_at',
     public_id: `eq.${publicId}`,
     layer: `eq.${layer}`,
     layer_key: `eq.${layerKey}`,
@@ -38,7 +38,7 @@ async function loadInstanceOverlay(
 async function loadInstanceOverlays(env: Env, publicId: string): Promise<InstanceOverlayRow[]> {
   const params = new URLSearchParams({
     select:
-      'public_id,layer,layer_key,ops,user_ops,base_fingerprint,base_updated_at,source,geo_targets,workspace_id,updated_at',
+      'public_id,layer,layer_key,ops,user_ops,base_fingerprint,base_updated_at,source,geo_targets,account_id,updated_at',
     public_id: `eq.${publicId}`,
     order: 'layer.asc,layer_key.asc',
   });
@@ -136,7 +136,7 @@ async function loadL10nGenerateStates(
       'base_fingerprint',
       'base_updated_at',
       'widget_type',
-      'workspace_id',
+      'account_id',
       'status',
       'attempts',
       'next_attempt_at',
@@ -181,7 +181,7 @@ async function loadL10nGenerateStateRow(
       'base_fingerprint',
       'base_updated_at',
       'widget_type',
-      'workspace_id',
+      'account_id',
       'status',
       'attempts',
       'next_attempt_at',
@@ -315,7 +315,7 @@ async function updateL10nGenerateStatus(args: {
   baseFingerprint: string;
   status: L10nGenerateStatus;
   widgetType?: string | null;
-  workspaceId?: string | null;
+  accountId?: string | null;
   baseUpdatedAt?: string | null;
   lastError?: string | null;
   attempts?: number;
@@ -332,7 +332,7 @@ async function updateL10nGenerateStatus(args: {
     baseFingerprint,
     status,
     widgetType,
-    workspaceId,
+    accountId,
     baseUpdatedAt,
     lastError,
     attempts = 0,
@@ -349,7 +349,7 @@ async function updateL10nGenerateStatus(args: {
       base_fingerprint: baseFingerprint,
       base_updated_at: baseUpdatedAt ?? null,
       widget_type: widgetType ?? null,
-      workspace_id: workspaceId ?? null,
+      account_id: accountId ?? null,
       status,
       attempts,
       next_attempt_at: nextAttemptAt ?? null,

@@ -183,6 +183,7 @@ function main() {
       .readdirSync(instanceDir, { withFileTypes: true })
       .filter((d) => d.isDirectory() && !d.name.startsWith('.'))
       .map((d) => d.name)
+      .filter((name) => name !== 'bases')
       .sort();
 
     for (const layer of actualLayers) {

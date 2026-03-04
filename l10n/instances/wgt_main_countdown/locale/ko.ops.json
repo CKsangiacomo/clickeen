@@ -5,7 +5,7 @@
   "ops": [
     {
       "op": "set",
-      "path": "timer.headline",
+      "path": "header.title",
       "value": "늦기 전에 50% 할인받으세요 🎯"
     },
     {

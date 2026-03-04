@@ -3,12 +3,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const DEFAULT_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
+const DEFAULT_ACCOUNT_ID = '00000000-0000-0000-0000-000000000001';
 const DEFAULT_EXPECTED_INSTANCE_COUNT = 4;
 const DEFAULT_TIMEOUT_MS = 3 * 60_000;
 const DEFAULT_INTERVAL_MS = 5_000;
 const DEFAULT_STALL_MS = 90_000;
-const DEFAULT_SUBJECT = 'workspace';
+const DEFAULT_SUBJECT = 'account';
 const DEFAULT_IDS_FALLBACK = [
   'wgt_main_countdown',
   'wgt_main_faq',
@@ -52,8 +52,13 @@ function normalizeBaseUrl(value, fallback) {
 
 function parseArgs(argv) {
   const args = {
-    workspaceId:
-      process.env.L10N_GATE_WORKSPACE_ID || process.env.DEV_WORKSPACE_ID || DEFAULT_WORKSPACE_ID,
+    accountId:
+      process.env.L10N_GATE_ACCOUNT_ID ||
+      // Legacy aliases (pre account-only tenancy pivot).
+      process.env.L10N_GATE_WORKSPACE_ID ||
+      process.env.DEV_ACCOUNT_ID ||
+      process.env.DEV_WORKSPACE_ID ||
+      DEFAULT_ACCOUNT_ID,
     parisBaseUrl: normalizeBaseUrl(
       process.env.L10N_GATE_PARIS_BASE_URL ||
         process.env.PARIS_BASE_URL ||
@@ -94,12 +99,21 @@ function parseArgs(argv) {
       args.triggerCuratedEnqueue = true;
       continue;
     }
+    if (token.startsWith('--account-id=')) {
+      args.accountId = token.split('=').slice(1).join('=').trim();
+      continue;
+    }
+    if (token === '--account-id') {
+      args.accountId = String(argv[i + 1] || '').trim();
+      i += 1;
+      continue;
+    }
     if (token.startsWith('--workspace-id=')) {
-      args.workspaceId = token.split('=').slice(1).join('=').trim();
+      args.accountId = token.split('=').slice(1).join('=').trim();
       continue;
     }
     if (token === '--workspace-id') {
-      args.workspaceId = String(argv[i + 1] || '').trim();
+      args.accountId = String(argv[i + 1] || '').trim();
       i += 1;
       continue;
     }
@@ -184,7 +198,7 @@ function parseArgs(argv) {
     throw new Error(`[l10n-gate] Unknown argument: ${token}`);
   }
 
-  if (!args.workspaceId) throw new Error('[l10n-gate] workspaceId is required');
+  if (!args.accountId) throw new Error('[l10n-gate] accountId is required');
   if (!args.subject) throw new Error('[l10n-gate] subject is required');
   return args;
 }
@@ -193,7 +207,8 @@ function printHelp() {
   console.log(`Usage: node scripts/l10n/convergence-gate.mjs [options]
 
 Options:
-  --workspace-id <uuid>           Workspace id (default: ${DEFAULT_WORKSPACE_ID})
+  --account-id <uuid>             Account id (default: ${DEFAULT_ACCOUNT_ID})
+  --workspace-id <uuid>           Legacy alias for --account-id
   --paris-base-url <url>          Paris base URL (default: http://localhost:3001)
   --subject <name>                Subject query param (default: ${DEFAULT_SUBJECT})
   --public-id <id>                Explicit instance id (repeatable)
@@ -204,7 +219,7 @@ Options:
   --trigger-curated-enqueue       Auto-trigger enqueue-selected for curated instances before polling
   --json                          Print JSON result only
   --help                          Show this help
-`);
+  `);
 }
 
 function resolveInstanceIds(explicitIds) {
@@ -457,13 +472,13 @@ function evaluateSnapshot(entry) {
   };
 }
 
-async function fetchInstanceSnapshot({ parisBaseUrl, workspaceId, subject, headers, publicId }) {
+async function fetchInstanceSnapshot({ parisBaseUrl, accountId, subject, headers, publicId }) {
   const query = `subject=${encodeURIComponent(subject)}&_t=${Date.now()}`;
-  const publishUrl = `${parisBaseUrl}/api/workspaces/${encodeURIComponent(
-    workspaceId,
+  const publishUrl = `${parisBaseUrl}/api/accounts/${encodeURIComponent(
+    accountId,
   )}/instances/${encodeURIComponent(publicId)}/publish/status?${query}`;
-  const l10nUrl = `${parisBaseUrl}/api/workspaces/${encodeURIComponent(
-    workspaceId,
+  const l10nUrl = `${parisBaseUrl}/api/accounts/${encodeURIComponent(
+    accountId,
   )}/instances/${encodeURIComponent(publicId)}/l10n/status?${query}`;
   try {
     const [publish, l10n] = await Promise.all([
@@ -499,13 +514,13 @@ function isCuratedLikePublicId(publicId) {
   );
 }
 
-async function triggerCuratedEnqueue({ evaluations, parisBaseUrl, workspaceId, subject, headers }) {
+async function triggerCuratedEnqueue({ evaluations, parisBaseUrl, accountId, subject, headers }) {
   const triggered = [];
   for (const row of evaluations) {
     if (!isCuratedLikePublicId(row.publicId)) continue;
     if ((row.metrics?.overall ?? '') === 'ready') continue;
-    const url = `${parisBaseUrl}/api/workspaces/${encodeURIComponent(
-      workspaceId,
+    const url = `${parisBaseUrl}/api/accounts/${encodeURIComponent(
+      accountId,
     )}/instances/${encodeURIComponent(row.publicId)}/l10n/enqueue-selected?subject=${encodeURIComponent(
       subject,
     )}`;
@@ -547,7 +562,7 @@ async function main() {
 
   if (!args.json) {
     console.log(
-      `[l10n-gate] env=${environment} paris=${args.parisBaseUrl} workspace=${args.workspaceId} subject=${args.subject}`,
+      `[l10n-gate] env=${environment} paris=${args.parisBaseUrl} account=${args.accountId} subject=${args.subject}`,
     );
     console.log(`[l10n-gate] instances=${publicIds.join(', ')}`);
   }
@@ -558,7 +573,7 @@ async function main() {
       publicIds.map((publicId) =>
         fetchInstanceSnapshot({
           parisBaseUrl: args.parisBaseUrl,
-          workspaceId: args.workspaceId,
+          accountId: args.accountId,
           subject: args.subject,
           headers,
           publicId,
@@ -573,7 +588,7 @@ async function main() {
       const triggered = await triggerCuratedEnqueue({
         evaluations,
         parisBaseUrl: args.parisBaseUrl,
-        workspaceId: args.workspaceId,
+        accountId: args.accountId,
         subject: args.subject,
         headers,
       });
@@ -670,7 +685,7 @@ async function main() {
     ok,
     failureReason,
     environment,
-    workspaceId: args.workspaceId,
+    accountId: args.accountId,
     subject: args.subject,
     parisBaseUrl: args.parisBaseUrl,
     startedAt,

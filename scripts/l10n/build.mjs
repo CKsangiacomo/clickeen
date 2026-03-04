@@ -58,6 +58,7 @@ function normalizeLocaleToken(raw) {
 }
 
 const L10N_LAYER_ALLOWED = new Set(['locale', 'geo', 'industry', 'experiment', 'account', 'behavior', 'user']);
+const L10N_INSTANCE_META_DIRS_ALLOWED = new Set(['bases']);
 const LAYER_KEY_SLUG = /^[a-z0-9][a-z0-9_-]*$/;
 const LAYER_KEY_EXPERIMENT = /^exp_[a-z0-9][a-z0-9_-]*:[a-z0-9][a-z0-9_-]*$/;
 const LAYER_KEY_BEHAVIOR = /^behavior_[a-z0-9][a-z0-9_-]*$/;
@@ -371,7 +372,7 @@ function removeLegacyLayerDirs(instanceOutDir) {
   if (!fs.existsSync(instanceOutDir)) return;
   const entries = fs.readdirSync(instanceOutDir, { withFileTypes: true }).filter((d) => d.isDirectory());
   for (const entry of entries) {
-    if (L10N_LAYER_ALLOWED.has(entry.name)) continue;
+    if (L10N_LAYER_ALLOWED.has(entry.name) || L10N_INSTANCE_META_DIRS_ALLOWED.has(entry.name)) continue;
     fs.rmSync(path.join(instanceOutDir, entry.name), { recursive: true, force: true });
   }
 }

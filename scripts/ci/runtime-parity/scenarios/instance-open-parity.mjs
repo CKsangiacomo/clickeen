@@ -1,72 +1,65 @@
 import { authHeaders, fetchEnvelope } from '../http.mjs';
-import { makeCheck, parseReasonKey, readString, scenarioPassed } from '../utils.mjs';
+import { makeCheck, readString, scenarioPassed } from '../utils.mjs';
 
 function extractInstanceEnvelope(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return {
       publicId: '',
       ownerAccountId: '',
-      workspaceId: '',
-      workspaceAccountId: '',
+      accountId: '',
+      widgetType: '',
     };
   }
-  const workspace =
-    payload.workspace && typeof payload.workspace === 'object' && !Array.isArray(payload.workspace)
-      ? payload.workspace
+  const account =
+    payload.account && typeof payload.account === 'object' && !Array.isArray(payload.account)
+      ? payload.account
       : null;
   return {
     publicId: readString(payload.publicId),
     ownerAccountId: readString(payload.ownerAccountId),
-    workspaceId: readString(workspace?.id),
-    workspaceAccountId: readString(workspace?.accountId),
+    accountId: readString(account?.id),
+    widgetType: readString(payload.widgetType),
   };
 }
 
 export async function runInstanceOpenParityScenario({ profile, context }) {
   const checks = [];
-  const workspaceId = readString(context.workspaceId);
+  const accountId = readString(context.accountId);
   const publicId = readString(context.probePublicId);
 
-  if (!workspaceId || !publicId) {
+  if (!accountId || !publicId) {
     checks.push(
-      makeCheck('Bootstrap context includes workspaceId and probePublicId', false, {
-        actual: { workspaceId, publicId },
+      makeCheck('Bootstrap context includes accountId and probePublicId', false, {
+        actual: { accountId, publicId },
       }),
     );
     return {
       scenario: 'instance-open-parity',
       passed: false,
       checks,
-      fingerprint: { workspaceId, publicId },
+      fingerprint: { accountId, publicId },
     };
   }
 
   const headers = authHeaders(profile.authBearer);
   const bob = await fetchEnvelope(
-    `${profile.bobBaseUrl}/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(
+    `${profile.bobBaseUrl}/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
       publicId,
-    )}?subject=workspace&_t=${Date.now()}`,
+    )}?subject=account&_t=${Date.now()}`,
     { headers },
   );
 
-  checks.push(makeCheck('Bob workspace instance route responds 200', bob.status === 200, { actual: bob.status }));
+  checks.push(makeCheck('Bob account instance route responds 200', bob.status === 200, { actual: bob.status }));
 
   const bobEnvelope = extractInstanceEnvelope(bob.json);
 
   checks.push(makeCheck('Bob instance envelope includes publicId', Boolean(bobEnvelope.publicId), { actual: bobEnvelope.publicId }));
-
-  const bobMissingWorkspace = await fetchEnvelope(
-    `${profile.bobBaseUrl}/api/paris/instance/${encodeURIComponent(publicId)}?subject=workspace&_t=${Date.now()}`,
-    { headers },
-  );
-  const bobMissingReason = parseReasonKey(bobMissingWorkspace.json);
-
   checks.push(
-    makeCheck('Bob missing workspace context returns 422', bobMissingWorkspace.status === 422, {
-      actual: bobMissingWorkspace.status,
+    makeCheck('Bob instance envelope includes ownerAccountId', Boolean(bobEnvelope.ownerAccountId), {
+      actual: bobEnvelope.ownerAccountId,
     }),
-    makeCheck('Bob missing workspace reasonKey is coreui.errors.workspaceId.invalid', bobMissingReason === 'coreui.errors.workspaceId.invalid', {
-      actual: bobMissingReason,
+    makeCheck('Bob instance envelope ownerAccountId matches bootstrap accountId', bobEnvelope.ownerAccountId === accountId, {
+      actual: { expected: accountId, resolved: bobEnvelope.ownerAccountId },
     }),
   );
 
@@ -77,22 +70,21 @@ export async function runInstanceOpenParityScenario({ profile, context }) {
       checks,
       fingerprint: {
         publicId,
-        workspaceId,
+        accountId,
         ownerAccountId: bobEnvelope.ownerAccountId,
-        workspaceAccountId: bobEnvelope.workspaceAccountId,
-        missingWorkspaceReason: bobMissingReason,
+        widgetType: bobEnvelope.widgetType,
       },
     };
   }
 
   const roma = await fetchEnvelope(
-    `${profile.romaBaseUrl}/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
-      workspaceId,
-    )}&_t=${Date.now()}`,
+    `${profile.romaBaseUrl}/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
+      publicId,
+    )}?subject=account&_t=${Date.now()}`,
     { headers },
   );
 
-  checks.push(makeCheck('Roma workspace instance route responds 200', roma.status === 200, { actual: roma.status }));
+  checks.push(makeCheck('Roma account instance route responds 200', roma.status === 200, { actual: roma.status }));
 
   const romaEnvelope = extractInstanceEnvelope(roma.json);
 
@@ -103,34 +95,12 @@ export async function runInstanceOpenParityScenario({ profile, context }) {
     makeCheck('ownerAccountId matches on Roma/Bob instance envelope', romaEnvelope.ownerAccountId === bobEnvelope.ownerAccountId, {
       actual: { roma: romaEnvelope.ownerAccountId, bob: bobEnvelope.ownerAccountId },
     }),
-    makeCheck('workspace.id matches on Roma/Bob instance envelope', romaEnvelope.workspaceId === bobEnvelope.workspaceId, {
-      actual: { roma: romaEnvelope.workspaceId, bob: bobEnvelope.workspaceId },
+    makeCheck('account.id matches on Roma/Bob instance envelope', romaEnvelope.accountId === bobEnvelope.accountId, {
+      actual: { roma: romaEnvelope.accountId, bob: bobEnvelope.accountId },
     }),
-    makeCheck('workspace.accountId matches on Roma/Bob instance envelope', romaEnvelope.workspaceAccountId === bobEnvelope.workspaceAccountId, {
-      actual: { roma: romaEnvelope.workspaceAccountId, bob: bobEnvelope.workspaceAccountId },
+    makeCheck('widgetType matches on Roma/Bob instance envelope', romaEnvelope.widgetType === bobEnvelope.widgetType, {
+      actual: { roma: romaEnvelope.widgetType, bob: bobEnvelope.widgetType },
     }),
-  );
-
-  const romaMissingWorkspace = await fetchEnvelope(
-    `${profile.romaBaseUrl}/api/paris/instance/${encodeURIComponent(publicId)}?subject=workspace&_t=${Date.now()}`,
-    { headers },
-  );
-  const romaMissingReason = parseReasonKey(romaMissingWorkspace.json);
-
-  checks.push(
-    makeCheck('Roma missing workspace context returns 422', romaMissingWorkspace.status === 422, {
-      actual: romaMissingWorkspace.status,
-    }),
-    makeCheck('Roma missing workspace reasonKey is coreui.errors.workspaceId.invalid', romaMissingReason === 'coreui.errors.workspaceId.invalid', {
-      actual: romaMissingReason,
-    }),
-    makeCheck(
-      'Roma and Bob missing workspace reasonKey match',
-      romaMissingReason === bobMissingReason,
-      {
-        actual: { roma: romaMissingReason, bob: bobMissingReason },
-      },
-    ),
   );
 
   return {
@@ -139,10 +109,9 @@ export async function runInstanceOpenParityScenario({ profile, context }) {
     checks,
     fingerprint: {
       publicId,
-      workspaceId,
+      accountId,
       ownerAccountId: romaEnvelope.ownerAccountId,
-      workspaceAccountId: romaEnvelope.workspaceAccountId,
-      missingWorkspaceReason: romaMissingReason,
+      widgetType: romaEnvelope.widgetType,
     },
   };
 }

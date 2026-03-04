@@ -1,5 +1,5 @@
 import type { Policy } from '@clickeen/ck-policy';
-import type { WorkspaceRow } from '../../shared/types';
+import type { AccountRow } from '../../shared/types';
 import { ckError } from '../../shared/errors';
 import { normalizeLocaleList } from '../../shared/l10n';
 
@@ -10,13 +10,13 @@ function requirePolicyCap(policy: Policy, key: string): number | null {
   return policy.caps[key] as number | null;
 }
 
-export function readWorkspaceLocales(workspace: WorkspaceRow): Response | { locales: string[] } {
-  const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
+export function readAccountLocales(account: AccountRow): Response | { locales: string[] } {
+  const normalized = normalizeLocaleList(account.l10n_locales, 'l10n_locales');
   if (!normalized.ok) {
     return ckError(
       {
         kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.workspace.locales.invalid',
+        reasonKey: 'coreui.errors.account.locales.invalid',
         detail: JSON.stringify(normalized.issues),
       },
       500,
@@ -25,10 +25,10 @@ export function readWorkspaceLocales(workspace: WorkspaceRow): Response | { loca
   return { locales: normalized.locales };
 }
 
-export function resolveWorkspaceActiveLocales(args: {
-  workspace: WorkspaceRow;
+export function resolveAccountActiveLocales(args: {
+  account: AccountRow;
 }): Response | { locales: string[] } {
-  const configured = readWorkspaceLocales(args.workspace);
+  const configured = readAccountLocales(args.account);
   if (configured instanceof Response) return configured;
   return configured;
 }

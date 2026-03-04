@@ -109,9 +109,10 @@ function clampAiSelection(
   return { provider, model };
 }
 
-function aiStorageKey(args: { workspaceId?: string | null; subject: string }): string {
-  const ws = typeof args.workspaceId === 'string' && args.workspaceId.trim() ? args.workspaceId.trim() : 'local';
-  return `ck:ai.settings.v1:${args.subject}:${ws}`;
+function aiStorageKey(args: { accountId?: string | null; subject: string }): string {
+  const accountId =
+    typeof args.accountId === 'string' && args.accountId.trim() ? args.accountId.trim() : 'local';
+  return `ck:ai.settings.v1:${args.subject}:${accountId}`;
 }
 
 function readStoredAiSelection(key: string): RawAiSelection | null {
@@ -203,11 +204,11 @@ export function CopilotPane() {
 
   const widgetType = compiled?.widgetname ?? null;
   const instancePublicId = session.meta?.publicId ?? null;
-  const workspaceId = session.meta?.workspaceId ?? null;
+  const accountId = session.meta?.accountId ?? null;
   const policyProfile = session.policy?.profile ?? 'minibob';
-  const subject = policyProfile === 'minibob' ? 'minibob' : 'workspace';
+  const subject = policyProfile === 'minibob' ? 'minibob' : 'account';
   const isMinibob = subject === 'minibob';
-  const missingWorkspaceForWorkspaceSubject = subject === 'workspace' && !workspaceId;
+  const missingAccountForAccountSubject = subject === 'account' && !accountId;
   const widgetCopilotAgentId = useMemo(() => resolveWidgetCopilotAgentId({ policyProfile }), [policyProfile]);
 
   const aiPolicy = useMemo(() => {
@@ -219,11 +220,11 @@ export function CopilotPane() {
   const [aiSelection, setAiSelection] = useState<AiSelection | null>(null);
   useEffect(() => {
     if (!aiPolicy) return;
-    const key = aiStorageKey({ workspaceId, subject });
+    const key = aiStorageKey({ accountId, subject });
     const stored = readStoredAiSelection(key);
     const next = clampAiSelection(stored, aiPolicy);
     setAiSelection(next);
-  }, [aiPolicy, workspaceId, subject]);
+  }, [aiPolicy, accountId, subject]);
 
   const showAiSettings = useMemo(() => {
     if (widgetCopilotAgentId !== WIDGET_COPILOT_AGENT_IDS.cs) return false;
@@ -430,10 +431,10 @@ export function CopilotPane() {
       pushMessage({ role: 'assistant', text: 'Copilot session not ready. Please try again in a moment.' });
       return;
     }
-    if (missingWorkspaceForWorkspaceSubject) {
+    if (missingAccountForAccountSubject) {
       pushMessage({
         role: 'assistant',
-        text: 'Workspace context is missing. Reopen the instance from Roma/DevStudio and try again.',
+        text: 'Account context is missing. Reopen the instance from Roma/DevStudio and try again.',
       });
       return;
     }
@@ -471,7 +472,7 @@ export function CopilotPane() {
           sessionId,
           ...(isMinibob ? { sessionToken: minibobSessionToken } : {}),
           instancePublicId,
-          workspaceId,
+          accountId,
           subject,
           ...(selection?.provider ? { provider: selection.provider } : {}),
           ...(selection?.model ? { model: selection.model } : {}),
@@ -573,7 +574,7 @@ export function CopilotPane() {
                       const nextProvider = event.target.value;
                       const clamped = clampAiSelection({ provider: nextProvider, model: '' }, aiPolicy);
                       setAiSelection(clamped);
-                      writeStoredAiSelection(aiStorageKey({ workspaceId, subject }), clamped);
+                      writeStoredAiSelection(aiStorageKey({ accountId, subject }), clamped);
                     }}
                   >
                     {aiPolicy.allowedProviders.map((provider) => (
@@ -604,7 +605,7 @@ export function CopilotPane() {
                       const next: AiSelection = { provider: aiSelection.provider, model: event.target.value };
                       const clamped = clampAiSelection(next, aiPolicy);
                       setAiSelection(clamped);
-                      writeStoredAiSelection(aiStorageKey({ workspaceId, subject }), clamped);
+                      writeStoredAiSelection(aiStorageKey({ accountId, subject }), clamped);
                     }}
                   >
                     {(aiPolicy.models?.[aiSelection.provider]?.allowed ?? []).map((model) => (

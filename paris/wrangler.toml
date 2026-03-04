@@ -40,8 +40,8 @@ preview_id = "00000000000000000000000000000000"
 
 # L10N_GENERATE_QUEUE and SANFRANCISCO_COMMANDS_QUEUE are intentionally
 # omitted in local dev. Cross-worker queues don't work between separate
-# wrangler dev processes. Without these bindings, Paris falls back to
-# direct HTTP calls to SanFrancisco (see dispatch-jobs.ts and sanfrancisco.ts).
+# wrangler dev processes. Instance l10n generation is cloud-dev only, so
+# local dev will not enqueue l10n jobs without these bindings.
 
 [[env.local.queues.producers]]
 binding = "RENDER_SNAPSHOT_QUEUE"

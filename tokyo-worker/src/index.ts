@@ -594,7 +594,7 @@ function withCors(res: Response): Response {
   headers.set('access-control-allow-methods', 'GET,POST,PUT,DELETE,OPTIONS');
   headers.set(
     'access-control-allow-headers',
-    'authorization, content-type, x-account-id, x-workspace-id, x-filename, x-variant, x-public-id, x-widget-type, x-source, idempotency-key, x-tokyo-l10n-bridge',
+    'authorization, content-type, x-account-id, x-filename, x-variant, x-public-id, x-widget-type, x-source, idempotency-key, x-tokyo-l10n-bridge',
   );
   return new Response(res.body, { status: res.status, headers });
 }

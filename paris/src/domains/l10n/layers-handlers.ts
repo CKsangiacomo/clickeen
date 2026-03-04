@@ -12,19 +12,20 @@ import {
   normalizeLayerKey,
   resolveUserOps,
   validateL10nOps,
-  resolveWorkspaceL10nPolicy,
+  resolveAccountL10nPolicy,
 } from '../../shared/l10n';
 import {
   assertPublicId,
   assertWidgetType,
   resolveInstanceKind,
-  resolveInstanceWorkspaceId,
+  resolveInstanceAccountId,
 } from '../../shared/instances';
 import { consumeBudget } from '../../shared/budgets';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
-import { authorizeWorkspace } from '../../shared/workspace-auth';
+import { authorizeAccount } from '../../shared/account-auth';
+import { resolveAdminAccountId } from '../../shared/admin';
 import { supabaseFetch } from '../../shared/supabase';
-import { loadInstanceByWorkspaceAndPublicId, resolveWidgetTypeForInstance } from '../instances';
+import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import {
   loadInstanceOverlay,
   loadInstanceOverlays,
@@ -33,21 +34,21 @@ import {
 } from './service';
 import { enforceLayerEntitlement } from './shared';
 import { resolveL10nPlanningSnapshot } from './planning';
-import { enqueueTokyoMirrorJob, resolveActivePublishLocales } from '../workspaces/service';
+import { enqueueTokyoMirrorJob, resolveActivePublishLocales } from '../account-instances/service';
 import { applyTextPackToConfig, materializeTextPack, stripTextFromConfig } from '../../shared/mirror-packs';
 import { generateMetaPack } from '../../shared/seo-geo';
 
-export async function handleWorkspaceInstanceLayersList(
+export async function handleAccountInstanceLayersList(
   req: Request,
   env: Env,
-  workspaceId: string,
+  accountId: string,
   publicId: string,
 ) {
-  const authorized = await authorizeWorkspace(req, env, workspaceId, 'viewer');
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
-  const workspace = authorized.workspace;
+  const account = authorized.account;
 
-  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  const policyResult = resolveEditorPolicyFromRequest(req, account);
   if (!policyResult.ok) return policyResult.response;
 
   const publicIdResult = assertPublicId(publicId);
@@ -55,14 +56,19 @@ export async function handleWorkspaceInstanceLayersList(
     return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
   }
 
-  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
+  const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicIdResult.value);
   if (!instance)
     return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+
+  const adminAccountId = resolveAdminAccountId(env);
+  if (resolveInstanceKind(instance) === 'curated' && accountId !== adminAccountId) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+  }
 
   const rows = await loadInstanceOverlays(env, publicIdResult.value);
   return json({
     publicId: instance.public_id,
-    workspaceId: resolveInstanceWorkspaceId(instance),
+    accountId,
     layers: rows.map((row) => {
       const { userOps } = resolveUserOps(row);
       return {
@@ -79,19 +85,19 @@ export async function handleWorkspaceInstanceLayersList(
   });
 }
 
-export async function handleWorkspaceInstanceLayerGet(
+export async function handleAccountInstanceLayerGet(
   req: Request,
   env: Env,
-  workspaceId: string,
+  accountId: string,
   publicId: string,
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const authorized = await authorizeWorkspace(req, env, workspaceId, 'viewer');
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
-  const workspace = authorized.workspace;
+  const account = authorized.account;
 
-  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  const policyResult = resolveEditorPolicyFromRequest(req, account);
   if (!policyResult.ok) return policyResult.response;
 
   const publicIdResult = assertPublicId(publicId);
@@ -108,9 +114,14 @@ export async function handleWorkspaceInstanceLayerGet(
     return apiError('LAYER_KEY_INVALID', 'Invalid layerKey', 400, { layer, layerKey: layerKeyRaw });
   }
 
-  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
+  const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicIdResult.value);
   if (!instance)
     return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+
+  const adminAccountId = resolveAdminAccountId(env);
+  if (resolveInstanceKind(instance) === 'curated' && accountId !== adminAccountId) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+  }
 
   const row = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
   if (!row) {
@@ -132,24 +143,24 @@ export async function handleWorkspaceInstanceLayerGet(
     baseFingerprint: row.base_fingerprint,
     baseUpdatedAt: row.base_updated_at ?? null,
     geoTargets: row.geo_targets ?? null,
-    workspaceId: row.workspace_id ?? null,
+    accountId: row.account_id ?? accountId,
     updatedAt: row.updated_at ?? null,
   });
 }
 
-export async function handleWorkspaceInstanceLayerUpsert(
+export async function handleAccountInstanceLayerUpsert(
   req: Request,
   env: Env,
-  workspaceId: string,
+  accountId: string,
   publicId: string,
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  const authorized = await authorizeAccount(req, env, accountId, 'editor');
   if (!authorized.ok) return authorized.response;
-  const workspace = authorized.workspace;
+  const account = authorized.account;
 
-  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  const policyResult = resolveEditorPolicyFromRequest(req, account);
   if (!policyResult.ok) return policyResult.response;
 
   const publicIdResult = assertPublicId(publicId);
@@ -221,32 +232,24 @@ export async function handleWorkspaceInstanceLayerUpsert(
   const baseUpdatedAtRaw = asTrimmedString((payload as any).baseUpdatedAt);
   const widgetTypeRaw = asTrimmedString((payload as any).widgetType);
 
-  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
+  const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicIdResult.value);
   if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
 
   const instanceKind = resolveInstanceKind(instance);
-  const instanceWorkspaceId = resolveInstanceWorkspaceId(instance);
-  if (instanceKind === 'user') {
-    if (!instanceWorkspaceId) {
-      return apiError('WORKSPACE_MISMATCH', 'Instance missing workspace', 403, { publicId });
+  const adminAccountId = resolveAdminAccountId(env);
+  if (instanceKind === 'curated' && accountId !== adminAccountId) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+  }
+  if (instanceKind === 'user' && layer === 'locale') {
+    const normalized = normalizeLocaleList(account.l10n_locales, 'l10n_locales');
+    if (!normalized.ok) {
+      return apiError('LOCALE_INVALID', 'Account locales invalid', 500, normalized.issues);
     }
-    if (instanceWorkspaceId !== workspaceId) {
-      return apiError('WORKSPACE_MISMATCH', 'Instance does not belong to workspace', 403, {
-        publicId,
-        workspaceId,
+    if (!normalized.locales.includes(layerKey)) {
+      return apiError('LOCALE_NOT_ENTITLED', 'Locale not enabled for account', 403, {
+        locale: layerKey,
+        accountId,
       });
-    }
-    if (layer === 'locale') {
-      const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
-      if (!normalized.ok) {
-        return apiError('LOCALE_INVALID', 'Workspace locales invalid', 500, normalized.issues);
-      }
-      if (!normalized.locales.includes(layerKey)) {
-        return apiError('LOCALE_NOT_ENTITLED', 'Locale not enabled for workspace', 403, {
-          locale: layerKey,
-          workspaceId: instanceWorkspaceId,
-        });
-      }
     }
   }
 
@@ -317,7 +320,7 @@ export async function handleWorkspaceInstanceLayerUpsert(
   const maxPublishes = policyResult.policy.budgets['budget.l10n.publishes']?.max ?? null;
   const publish = await consumeBudget({
     env,
-    scope: { kind: 'workspace', workspaceId },
+    scope: { kind: 'account', accountId },
     budgetKey: 'budget.l10n.publishes',
     max: maxPublishes,
     amount: 1,
@@ -349,7 +352,7 @@ export async function handleWorkspaceInstanceLayerUpsert(
       base_updated_at: resolvedBaseUpdatedAt,
       source,
       geo_targets: geoTargets,
-      workspace_id: instanceWorkspaceId,
+      account_id: instanceKind === 'user' ? accountId : null,
     };
 
     const upsertRes = await supabaseFetch(
@@ -382,7 +385,7 @@ export async function handleWorkspaceInstanceLayerUpsert(
         base_updated_at: resolvedBaseUpdatedAt,
         source: 'user',
         geo_targets: null,
-        workspace_id: instanceWorkspaceId,
+        account_id: instanceKind === 'user' ? accountId : null,
       };
       const insertRes = await supabaseFetch(
         env,
@@ -444,7 +447,7 @@ export async function handleWorkspaceInstanceLayerUpsert(
           baseFingerprint: overlayFingerprint,
           status: 'succeeded',
           widgetType,
-          workspaceId: instanceWorkspaceId ?? workspaceId ?? null,
+          accountId,
           baseUpdatedAt: row?.base_updated_at ?? resolvedBaseUpdatedAt,
           attempts,
           nextAttemptAt: null,
@@ -462,10 +465,10 @@ export async function handleWorkspaceInstanceLayerUpsert(
   const resolvedSource = row?.source ?? source ?? null;
 
   if ((layer === 'locale' || layer === 'user') && instance.status === 'published') {
-    const workspaceL10nPolicy = resolveWorkspaceL10nPolicy(workspace.l10n_policy);
-    const baseLocale = workspaceL10nPolicy.baseLocale;
+    const accountL10nPolicy = resolveAccountL10nPolicy(account.l10n_policy);
+    const baseLocale = accountL10nPolicy.baseLocale;
     const activeLocales = resolveActivePublishLocales({
-      workspaceLocales: workspace.l10n_locales,
+      accountLocales: account.l10n_locales,
       policy: policyResult.policy,
       baseLocale,
     }).locales;
@@ -558,19 +561,19 @@ export async function handleWorkspaceInstanceLayerUpsert(
   });
 }
 
-export async function handleWorkspaceInstanceLayerDelete(
+export async function handleAccountInstanceLayerDelete(
   req: Request,
   env: Env,
-  workspaceId: string,
+  accountId: string,
   publicId: string,
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const authorized = await authorizeWorkspace(req, env, workspaceId, 'editor');
+  const authorized = await authorizeAccount(req, env, accountId, 'editor');
   if (!authorized.ok) return authorized.response;
-  const workspace = authorized.workspace;
+  const account = authorized.account;
 
-  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  const policyResult = resolveEditorPolicyFromRequest(req, account);
   if (!policyResult.ok) return policyResult.response;
 
   const publicIdResult = assertPublicId(publicId);
@@ -587,8 +590,13 @@ export async function handleWorkspaceInstanceLayerDelete(
     return apiError('LAYER_KEY_INVALID', 'Invalid layerKey', 400, { layer, layerKey: layerKeyRaw });
   }
 
-  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
+  const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicIdResult.value);
   if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+
+  const adminAccountId = resolveAdminAccountId(env);
+  if (resolveInstanceKind(instance) === 'curated' && accountId !== adminAccountId) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+  }
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
   if (!widgetType) return apiError('INTERNAL_ERROR', 'widgetType required for allowlist', 500);
@@ -617,7 +625,7 @@ export async function handleWorkspaceInstanceLayerDelete(
   const maxPublishes = policyResult.policy.budgets['budget.l10n.publishes']?.max ?? null;
   const publish = await consumeBudget({
     env,
-    scope: { kind: 'workspace', workspaceId },
+    scope: { kind: 'account', accountId },
     budgetKey: 'budget.l10n.publishes',
     max: maxPublishes,
     amount: 1,
@@ -645,10 +653,10 @@ export async function handleWorkspaceInstanceLayerDelete(
   }
 
   if ((layer === 'locale' || layer === 'user') && instance.status === 'published') {
-    const workspaceL10nPolicy = resolveWorkspaceL10nPolicy(workspace.l10n_policy);
-    const baseLocale = workspaceL10nPolicy.baseLocale;
+    const accountL10nPolicy = resolveAccountL10nPolicy(account.l10n_policy);
+    const baseLocale = accountL10nPolicy.baseLocale;
     const activeLocales = resolveActivePublishLocales({
-      workspaceLocales: workspace.l10n_locales,
+      accountLocales: account.l10n_locales,
       policy: policyResult.policy,
       baseLocale,
     }).locales;

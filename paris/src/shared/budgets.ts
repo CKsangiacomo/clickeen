@@ -2,7 +2,6 @@ import type { BudgetKey } from '@clickeen/ck-policy';
 import type { Env } from './types';
 
 export type BudgetScope =
-  | { kind: 'workspace'; workspaceId: string }
   | { kind: 'account'; accountId: string }
   | { kind: 'minibob'; sessionKey: string }
   | { kind: 'anon'; fingerprint: string };
@@ -29,7 +28,6 @@ function requireUsageKv(env: Env): KVNamespace | null {
 }
 
 function scopeKey(scope: BudgetScope): string {
-  if (scope.kind === 'workspace') return `ws:${scope.workspaceId}`;
   if (scope.kind === 'account') return `acct:${scope.accountId}`;
   if (scope.kind === 'minibob') return `minibob:${scope.sessionKey}`;
   return `anon:${scope.fingerprint}`;

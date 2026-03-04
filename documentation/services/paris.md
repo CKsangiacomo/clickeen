@@ -5,7 +5,7 @@ Last updated: 2026-03-01 (PRD 54 pivot)
 
 Paris is the **write boundary** for product state:
 - Authz + policy (entitlements) for editor surfaces (Roma/Bob)
-- Minimal Supabase reads/writes for workspaces/instances/assets metadata
+- Minimal Supabase reads/writes for accounts/instances/assets metadata
 - Enqueues Tokyo-worker jobs so Tokyo/R2 mirrors what is live
 
 Non-negotiable (PRD 54):
@@ -17,19 +17,21 @@ Non-negotiable (PRD 54):
 ## Shipped endpoints (this repo snapshot)
 
 ### Instances (editor surfaces only)
-- `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace|minibob` — editor load (1 DB read)
-- `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace|minibob` — save draft config/text (1 DB write)
-- `GET /api/workspaces/:workspaceId/instances` — list
-- `POST /api/workspaces/:workspaceId/instances` — create (idempotent by `publicId`)
+- `GET /api/accounts/:accountId/instance/:publicId?subject=account` — editor load (1 DB read)
+- `PUT /api/accounts/:accountId/instance/:publicId?subject=account` — save draft config/text (1 DB write)
+- `GET /api/accounts/:accountId/instances` — list
+- `POST /api/accounts/:accountId/instances?subject=account` — create (idempotent by `publicId` in payload)
 
 ### Locale pipeline (editor surfaces)
-- `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=workspace|minibob`
-- `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=workspace|minibob`
-- `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/...` (locale overrides storage)
+- `GET /api/accounts/:accountId/locales` (read active locales + policy)
+- `PUT /api/accounts/:accountId/locales?subject=account` (persist active locales + policy)
+- `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account`
+- `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected?subject=account`
+- `GET/PUT/DELETE /api/accounts/:accountId/instances/:publicId/layers/...` (locale overrides storage)
 
 ### PRD 54 deprecations / pivots
-- `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot` → `410` (deprecated)
-- `GET /api/workspaces/:workspaceId/instances/:publicId/publish/status` → minimal status only (no snapshot pipeline)
+- `POST /api/accounts/:accountId/instances/:publicId/render-snapshot` → `410` (deprecated)
+- `GET /api/accounts/:accountId/instances/:publicId/publish/status` → minimal status only (no snapshot pipeline)
 
 ### Assets (Roma Assets surface)
 - `GET /api/accounts/:accountId/assets` — list asset metadata (variants + usage)
@@ -60,7 +62,7 @@ If the instance is made non-live (`published → unpublished`):
 - enqueue `delete-instance-mirror` (Tokyo hard delete of instance subtree)
 
 Source of truth:
-- `paris/src/domains/workspaces/update-handler.ts`
+- `paris/src/domains/account-instances/update-handler.ts`
 - `paris/src/shared/mirror-packs.ts` (strip text from config packs so text edits don’t churn `configFp`)
 - `paris/src/shared/stable-json.ts` (stable JSON hashing; must match tokyo-worker)
 

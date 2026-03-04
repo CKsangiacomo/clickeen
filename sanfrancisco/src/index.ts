@@ -97,9 +97,9 @@ function assertInternalAuth(request: Request, env: Env): void {
   }
 }
 
-async function persistWorkspaceBusinessProfile(args: {
+async function persistAccountBusinessProfile(args: {
   env: Env;
-  workspaceId: string;
+  accountId: string;
   profile: Record<string, unknown>;
   sources?: Record<string, unknown>;
 }): Promise<{ ok: true } | { ok: false; message: string }> {
@@ -112,7 +112,7 @@ async function persistWorkspaceBusinessProfile(args: {
     return { ok: false, message: 'Missing PARIS_DEV_JWT' };
   }
 
-  const url = new URL(`/api/workspaces/${encodeURIComponent(args.workspaceId)}/business-profile`, baseUrl).toString();
+  const url = new URL(`/api/accounts/${encodeURIComponent(args.accountId)}/business-profile`, baseUrl).toString();
   let res: Response;
   try {
     res = await fetch(url, {
@@ -722,7 +722,7 @@ async function handleL10nPlan(request: Request, env: Env): Promise<Response> {
   const config = isRecord((body as any).config) ? ((body as any).config as Record<string, unknown>) : null;
   const baseUpdatedAt = asTrimmedString((body as any).baseUpdatedAt) ?? null;
   const publicId = asTrimmedString((body as any).publicId);
-  const workspaceId = asTrimmedString((body as any).workspaceId);
+  const accountId = asTrimmedString((body as any).accountId);
 
   if (!widgetType) {
     throw new HttpError(400, {
@@ -730,10 +730,10 @@ async function handleL10nPlan(request: Request, env: Env): Promise<Response> {
       message: 'Missing required field: widgetType',
     });
   }
-  if (!config && (!publicId || !workspaceId)) {
+  if (!config && (!publicId || !accountId)) {
     throw new HttpError(400, {
       code: 'BAD_REQUEST',
-      message: 'Missing required fields: config OR (publicId + workspaceId)',
+      message: 'Missing required fields: config OR (publicId + accountId)',
     });
   }
 
@@ -743,7 +743,7 @@ async function handleL10nPlan(request: Request, env: Env): Promise<Response> {
     config,
     baseUpdatedAt,
     publicId,
-    workspaceId,
+    accountId,
   });
   return noStore(json(plan));
 }
@@ -961,9 +961,9 @@ async function runPersonalizationOnboardingJob(args: {
       agentId: 'agent.personalization.onboarding.v1',
     };
 
-    const persist = await persistWorkspaceBusinessProfile({
+    const persist = await persistAccountBusinessProfile({
       env: args.env,
-      workspaceId: args.input.workspaceId,
+      accountId: args.input.accountId,
       profile: result.businessProfile,
       sources: sourcesMeta,
     });
@@ -1008,17 +1008,17 @@ async function enqueuePersonalizationOnboarding(args: {
     throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Unsupported agentId' });
   }
 
-  const workspaceId = asTrimmedString((payload as any).workspaceId);
+  const accountId = asTrimmedString((payload as any).accountId);
   const url = asTrimmedString((payload as any).url);
-  if (!workspaceId || !url) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing workspaceId or url' });
+  if (!accountId || !url) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing accountId or url' });
   }
 
   const grant = await verifyGrant(grantRaw, env.AI_GRANT_HMAC_SECRET);
   assertCap(grant, `agent:${agentId}`);
 
   const input: PersonalizationOnboardingInput = {
-    workspaceId,
+    accountId,
     url,
     ...(typeof (payload as any).locale === 'string' ? { locale: (payload as any).locale } : {}),
     ...(typeof (payload as any).websiteDepth === 'number' ? { websiteDepth: (payload as any).websiteDepth } : {}),

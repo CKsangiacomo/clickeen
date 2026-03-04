@@ -4,7 +4,7 @@
   "ops": [
     {
       "op": "set",
-      "path": "timer.headline",
+      "path": "header.title",
       "value": "Get 50% off before it's too late 🎯"
     },
     {

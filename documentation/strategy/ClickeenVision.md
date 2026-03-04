@@ -128,24 +128,24 @@ Every component declares a schema (contract) that defines:
 - Components are isolated (changing one cannot break another)
 - Refactoring is safe (contract enforced by runtime)
 
-### 5. Workspaces Enforce Isolation
+### 5. Accounts Enforce Isolation
 
 **What this means:**
-Every user asset belongs to a workspace. RLS (Row Level Security) enforces:
-- Users can only read their own workspace data
-- Users can only write to their own workspace
-- Cross-workspace access is impossible (enforced at DB)
+Every user asset belongs to an account. RLS (Row Level Security) enforces:
+- Users can only read their own account data
+- Users can only write to their own account
+- Cross-account access is impossible (enforced at DB)
 
 **Why this matters:**
 - **Multi-tenancy from core**: Not app-level checks, database-level enforcement
 - **No leaks**: Even compromised app code cannot bypass RLS
 - **Auditable**: Database tracks all access (who, when, what)
-- **Compliance**: GDPR deletion is transactional (delete workspace → cascade)
+- **Compliance**: GDPR deletion is transactional (delete account → cascade)
 
 **What this enables:**
-- AI agents operate per-workspace (scoped, isolated)
+- AI agents operate per-account (scoped, isolated)
 - User data never leaks (enforced at Postgres level)
-- Costs attributable per workspace (query storage by workspace_id)
+- Costs attributable per account (query storage by account_id)
 - Enterprise customers trust data isolation (database-enforced)
 
 ---
@@ -275,7 +275,7 @@ Businesses will migrate because **competitors operating on AI infrastructure mov
 - Content tangled with presentation (HTML soup)
 - No contracts (AI doesn't know what's safe)
 - No operations model (AI generates code, not data)
-- No workspace isolation (AI can leak data)
+- No account isolation (AI can leak data)
 
 **Result:** AI can suggest, but humans must execute.
 
@@ -283,7 +283,7 @@ Businesses will migrate because **competitors operating on AI infrastructure mov
 - Content is structured data (queryable, typed)
 - Contracts declared (AI knows schema)
 - Operations are data (AI generates ops, not code)
-- Workspaces isolated (RLS enforced)
+- Accounts isolated (RLS enforced)
 
 **Result:** AI can execute autonomously.
 
@@ -296,7 +296,7 @@ Once businesses build AI agents on Clickeen, **they cannot migrate back** (old s
 - More content in structured format → Better training data for AI
 - More operations generated → Smarter pattern recognition
 - More contracts declared → Richer schema library
-- More workspaces isolated → Stronger compliance guarantees
+- More accounts isolated → Stronger compliance guarantees
 
 **Result:** Clickeen gets better the more it's used (classic network effect).
 
@@ -310,13 +310,13 @@ Once businesses build AI agents on Clickeen, **they cannot migrate back** (old s
 - Content as HTML (not queryable)
 - No contracts (no schema)
 - No operations model (mutation = editing HTML)
-- No workspace isolation (no RLS)
+- No account isolation (no RLS)
 
 **To add Clickeen's model requires:**
 1. Parse HTML to extract structured content (impossible, ambiguous)
 2. Declare contracts for all components (breaking change for all customers)
 3. Implement operations layer (complete rewrite of editor)
-4. Add workspace isolation (requires new database with RLS)
+4. Add account isolation (requires new database with RLS)
 
 **Result:** Cannot bolt on. Must rebuild from scratch.
 
@@ -326,7 +326,7 @@ Once businesses build AI agents on Clickeen, **they cannot migrate back** (old s
 - Content in database (but unstructured, no schema)
 - Logic scattered across PHP files (no contracts)
 - Mutations are code (plugins modify HTML/DB directly)
-- No workspace isolation (multi-site = app-level isolation, not RLS)
+- No account isolation (multi-site = app-level isolation, not RLS)
 
 **To add Clickeen's model requires:**
 1. Restructure all content (breaking change for all sites)

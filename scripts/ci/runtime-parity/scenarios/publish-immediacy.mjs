@@ -23,7 +23,7 @@ async function fetchEmbedHeaders({ profile, publicId }) {
   };
 }
 
-async function fetchPublishStatus({ profile, workspaceId, publicId }) {
+async function fetchPublishStatus({ profile, accountId, publicId }) {
   const baseUrl =
     profile.name === 'local'
       ? `${profile.bobBaseUrl}/api/paris`
@@ -31,12 +31,12 @@ async function fetchPublishStatus({ profile, workspaceId, publicId }) {
 
   const url =
     profile.name === 'local'
-      ? `${baseUrl}/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+      ? `${baseUrl}/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId,
-        )}/publish/status?subject=workspace&_t=${Date.now()}`
-      : `${baseUrl}/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+        )}/publish/status?subject=account&_t=${Date.now()}`
+      : `${baseUrl}/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId,
-        )}/publish/status?subject=workspace&_t=${Date.now()}`;
+        )}/publish/status?subject=account&_t=${Date.now()}`;
 
   return fetchEnvelope(url, {
     method: 'GET',
@@ -83,15 +83,15 @@ function isNonBlockedPublishOverall(overall) {
 
 export async function runPublishImmediacyScenario({ profile, context }) {
   const checks = [];
-  const workspaceId = readString(context.workspaceId);
+  const accountId = readString(context.accountId);
   const configuredPublishProbePublicId = readString(profile.probePublishPublicId);
   const publishProbeConfigured = Boolean(configuredPublishProbePublicId);
   const resolved = await resolvePublishProbePublicId({ profile, context });
   const publicId = readString(resolved.publicId);
 
   checks.push(
-    makeCheck('Publish probe workspaceId is available in bootstrap context', Boolean(workspaceId), {
-      actual: workspaceId || '<none>',
+    makeCheck('Publish probe accountId is available in bootstrap context', Boolean(accountId), {
+      actual: accountId || '<none>',
     }),
     makeCheck('Publish probe publicId configuration (enables publish-immediacy checks)', true, {
       actual: publishProbeConfigured
@@ -100,12 +100,12 @@ export async function runPublishImmediacyScenario({ profile, context }) {
     }),
   );
 
-  if (!workspaceId) {
+  if (!accountId) {
     return {
       scenario: 'publish-immediacy',
       passed: false,
       checks,
-      fingerprint: { workspaceId, publicId },
+      fingerprint: { accountId, publicId },
     };
   }
 
@@ -120,7 +120,7 @@ export async function runPublishImmediacyScenario({ profile, context }) {
         scenario: 'publish-immediacy',
         passed: scenarioPassed(checks),
         checks,
-        fingerprint: { workspaceId, publicId },
+        fingerprint: { accountId, publicId },
       };
     }
 
@@ -133,7 +133,7 @@ export async function runPublishImmediacyScenario({ profile, context }) {
       scenario: 'publish-immediacy',
       passed: false,
       checks,
-      fingerprint: { workspaceId, publicId },
+      fingerprint: { accountId, publicId },
     };
   }
 
@@ -152,36 +152,43 @@ export async function runPublishImmediacyScenario({ profile, context }) {
     }),
   );
 
-  const snapshot = await fetchEnvelope(
+  const instanceUrl =
     profile.name === 'local'
-      ? `${profile.bobBaseUrl}/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+      ? `${profile.bobBaseUrl}/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
           publicId,
-        )}/render-snapshot?subject=workspace&_t=${Date.now()}`
-      : `${profile.parisBaseUrl}/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+        )}?subject=account&_t=${Date.now()}`
+      : `${profile.parisBaseUrl}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
           publicId,
-        )}/render-snapshot?subject=workspace&_t=${Date.now()}`,
-    {
-      method: 'POST',
-      headers: authHeaders(profile.authBearer),
-      timeoutMs: Math.max(profile.publishLatencyBudgetMs + 12_000, 25_000),
-      retries: 0,
-    },
-  );
+        )}?subject=account&_t=${Date.now()}`;
+
+  const beforeUpdate = await fetchEnvelope(instanceUrl, {
+    method: 'GET',
+    headers: authHeaders(profile.authBearer),
+  });
+
+  const currentConfig =
+    beforeUpdate.ok && beforeUpdate.json && typeof beforeUpdate.json === 'object' && !Array.isArray(beforeUpdate.json)
+      ? beforeUpdate.json.config
+      : null;
+
+  const update = await fetchEnvelope(instanceUrl, {
+    method: 'PUT',
+    headers: authHeaders(profile.authBearer, { 'content-type': 'application/json' }),
+    body: JSON.stringify({
+      config:
+        currentConfig && typeof currentConfig === 'object' && !Array.isArray(currentConfig)
+          ? { ...currentConfig, __runtimeParity: `publish-immediacy.${Date.now()}` }
+          : { __runtimeParity: `publish-immediacy.${Date.now()}` },
+    }),
+    timeoutMs: Math.max(profile.publishLatencyBudgetMs + 12_000, 25_000),
+    retries: 0,
+  });
 
   checks.push(
     makeCheck(
-      profile.name === 'local'
-        ? 'Render-snapshot orchestration command accepted (200/202)'
-        : 'Paris render-snapshot orchestration command accepted (200/202)',
-      snapshot.status === 200 || snapshot.status === 202,
-      { actual: snapshot.status },
-    ),
-    makeCheck(
-      profile.name === 'local'
-        ? 'Render-snapshot response includes snapshotState (queued|ready|pending)'
-        : 'Paris render-snapshot response includes snapshotState (queued|ready|pending)',
-      ['queued', 'ready', 'pending'].includes(readString(snapshot.json?.snapshotState)),
-      { actual: readString(snapshot.json?.snapshotState) || '<none>' },
+      profile.name === 'local' ? 'Account instance update accepted (200)' : 'Paris account instance update accepted (200)',
+      update.status === 200,
+      { actual: update.status },
     ),
   );
 
@@ -197,7 +204,7 @@ export async function runPublishImmediacyScenario({ profile, context }) {
   while (Date.now() <= deadlineMs) {
     const [sample, publishStatus] = await Promise.all([
       fetchEmbedHeaders({ profile, publicId }),
-      fetchPublishStatus({ profile, workspaceId, publicId }),
+      fetchPublishStatus({ profile, accountId, publicId }),
     ]);
     const rChanged = pointerChanged(sample.rPointerUpdatedAt, baselineR);
     const eChanged = pointerChanged(sample.ePointerUpdatedAt, baselineE);

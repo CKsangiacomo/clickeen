@@ -1,12 +1,9 @@
 'use client';
 
 const ROMA_AUTHZ_CAPSULE_HEADER = 'x-ck-authz-capsule';
-const ROMA_ACCOUNT_CAPSULE_HEADER = 'x-ck-account-capsule';
-const ROMA_AUTHZ_CAPSULE_STORE_KEY = '__CK_ROMA_AUTHZ_CAPSULE_V1__';
-const ROMA_AUTHZ_CAPSULE_SESSION_KEY = '__CK_ROMA_AUTHZ_CAPSULE_SESSION_V1__';
-const ROMA_ACCOUNT_CAPSULE_STORE_KEY = '__CK_ROMA_ACCOUNT_CAPSULE_V1__';
-const ROMA_ACCOUNT_CAPSULE_SESSION_KEY = '__CK_ROMA_ACCOUNT_CAPSULE_SESSION_V1__';
-const ROMA_AUTHZ_BOOTSTRAP_INFLIGHT_KEY = '__CK_ROMA_AUTHZ_BOOTSTRAP_INFLIGHT_V1__';
+const ROMA_AUTHZ_CAPSULE_STORE_KEY = '__CK_ROMA_AUTHZ_CAPSULE_V2__';
+const ROMA_AUTHZ_CAPSULE_SESSION_KEY = '__CK_ROMA_AUTHZ_CAPSULE_SESSION_V2__';
+const ROMA_AUTHZ_BOOTSTRAP_INFLIGHT_KEY = '__CK_ROMA_AUTHZ_BOOTSTRAP_INFLIGHT_V2__';
 const ROMA_AUTHZ_BOOTSTRAP_PATH = '/api/bootstrap';
 
 export function parseParisReason(payload: unknown, status: number): string {
@@ -23,7 +20,6 @@ export function parseParisReason(payload: unknown, status: number): string {
 type ParisFetchInit = RequestInit & { timeoutMs?: number };
 type ParisBootstrapPayload = {
   authz?: {
-    workspaceCapsule?: string | null;
     accountCapsule?: string | null;
   } | null;
 };
@@ -63,28 +59,6 @@ function writeStoredRomaAuthzCapsule(capsule: string | null): void {
   }
 }
 
-function readStoredRomaAccountCapsule(): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    return normalizeCapsule(window.sessionStorage.getItem(ROMA_ACCOUNT_CAPSULE_SESSION_KEY));
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredRomaAccountCapsule(capsule: string | null): void {
-  if (typeof window === 'undefined') return;
-  try {
-    if (capsule) {
-      window.sessionStorage.setItem(ROMA_ACCOUNT_CAPSULE_SESSION_KEY, capsule);
-      return;
-    }
-    window.sessionStorage.removeItem(ROMA_ACCOUNT_CAPSULE_SESSION_KEY);
-  } catch {
-    // Ignore session storage failures.
-  }
-}
-
 function readRomaAuthzCapsule(): string | null {
   const scope = globalThis as Record<string, unknown>;
   const inMemory = normalizeCapsule(scope[ROMA_AUTHZ_CAPSULE_STORE_KEY]);
@@ -108,44 +82,18 @@ export function setRomaAuthzCapsule(capsule: string | null): void {
   writeStoredRomaAuthzCapsule(null);
 }
 
-function readRomaAccountCapsule(): string | null {
-  const scope = globalThis as Record<string, unknown>;
-  const inMemory = normalizeCapsule(scope[ROMA_ACCOUNT_CAPSULE_STORE_KEY]);
-  if (inMemory) return inMemory;
+type HydratedCapsule = { capsule: string | null };
 
-  const persisted = readStoredRomaAccountCapsule();
-  if (!persisted) return null;
-  scope[ROMA_ACCOUNT_CAPSULE_STORE_KEY] = persisted;
-  return persisted;
-}
-
-export function setRomaAccountCapsule(capsule: string | null): void {
-  const scope = globalThis as Record<string, unknown>;
-  const normalized = normalizeCapsule(capsule);
-  if (normalized) {
-    scope[ROMA_ACCOUNT_CAPSULE_STORE_KEY] = normalized;
-    writeStoredRomaAccountCapsule(normalized);
-    return;
-  }
-  delete scope[ROMA_ACCOUNT_CAPSULE_STORE_KEY];
-  writeStoredRomaAccountCapsule(null);
-}
-
-type HydratedCapsules = {
-  workspace: string | null;
-  account: string | null;
-};
-
-function readBootstrapInFlight(): Promise<HydratedCapsules> | null {
+function readBootstrapInFlight(): Promise<HydratedCapsule> | null {
   const scope = globalThis as Record<string, unknown>;
   const value = scope[ROMA_AUTHZ_BOOTSTRAP_INFLIGHT_KEY];
   if (value && typeof (value as { then?: unknown }).then === 'function') {
-    return value as Promise<HydratedCapsules>;
+    return value as Promise<HydratedCapsule>;
   }
   return null;
 }
 
-function writeBootstrapInFlight(request: Promise<HydratedCapsules> | null): void {
+function writeBootstrapInFlight(request: Promise<HydratedCapsule> | null): void {
   const scope = globalThis as Record<string, unknown>;
   if (request) {
     scope[ROMA_AUTHZ_BOOTSTRAP_INFLIGHT_KEY] = request;
@@ -154,11 +102,10 @@ function writeBootstrapInFlight(request: Promise<HydratedCapsules> | null): void
   delete scope[ROMA_AUTHZ_BOOTSTRAP_INFLIGHT_KEY];
 }
 
-async function hydrateRomaAuthzCapsule(force = false): Promise<HydratedCapsules> {
-  const existingWorkspace = readRomaAuthzCapsule();
-  const existingAccount = readRomaAccountCapsule();
-  if (!force && (existingWorkspace || existingAccount)) {
-    return { workspace: existingWorkspace, account: existingAccount };
+async function hydrateRomaAuthzCapsule(force = false): Promise<HydratedCapsule> {
+  const existing = readRomaAuthzCapsule();
+  if (!force && existing) {
+    return { capsule: existing };
   }
 
   const inFlight = readBootstrapInFlight();
@@ -167,25 +114,16 @@ async function hydrateRomaAuthzCapsule(force = false): Promise<HydratedCapsules>
   const request = (async () => {
     try {
       const response = await fetch(ROMA_AUTHZ_BOOTSTRAP_PATH, { cache: 'no-store' });
-      const payload = (await response.json().catch(() => null)) as
-        | ParisBootstrapPayload
-        | { error?: unknown }
-        | null;
+      const payload = (await response.json().catch(() => null)) as ParisBootstrapPayload | { error?: unknown } | null;
       if (!response.ok) {
         setRomaAuthzCapsule(null);
-        setRomaAccountCapsule(null);
-        return { workspace: null, account: null };
+        return { capsule: null };
       }
-      const capsule = normalizeCapsule((payload as ParisBootstrapPayload)?.authz?.workspaceCapsule);
-      const accountCapsule = normalizeCapsule((payload as ParisBootstrapPayload)?.authz?.accountCapsule);
+      const capsule = normalizeCapsule((payload as ParisBootstrapPayload)?.authz?.accountCapsule);
       setRomaAuthzCapsule(capsule);
-      setRomaAccountCapsule(accountCapsule);
-      return { workspace: capsule, account: accountCapsule };
+      return { capsule };
     } catch {
-      return {
-        workspace: readRomaAuthzCapsule(),
-        account: readRomaAccountCapsule(),
-      };
+      return { capsule: readRomaAuthzCapsule() };
     } finally {
       writeBootstrapInFlight(null);
     }
@@ -218,19 +156,13 @@ function shouldRetryWithFreshCapsule(error: unknown): boolean {
   );
 }
 
-async function fetchParisJsonOnce<T = unknown>(
-  url: string,
-  init: ParisFetchInit | undefined,
-  timeoutMs: number,
-): Promise<T> {
+async function fetchParisJsonOnce<T = unknown>(url: string, init: ParisFetchInit | undefined, timeoutMs: number): Promise<T> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
   const headers = new Headers(init?.headers);
-  const workspaceCapsule = readRomaAuthzCapsule();
-  const accountCapsule = readRomaAccountCapsule();
-  if (isParisRequestUrl(url)) {
-    if (workspaceCapsule) headers.set(ROMA_AUTHZ_CAPSULE_HEADER, workspaceCapsule);
-    if (accountCapsule) headers.set(ROMA_ACCOUNT_CAPSULE_HEADER, accountCapsule);
+  const capsule = readRomaAuthzCapsule();
+  if (isParisRequestUrl(url) && capsule) {
+    headers.set(ROMA_AUTHZ_CAPSULE_HEADER, capsule);
   }
 
   const requestInit: RequestInit = {
@@ -266,7 +198,7 @@ export async function fetchParisJson<T = unknown>(url: string, init?: ParisFetch
       : DEFAULT_PARIS_FETCH_TIMEOUT_MS;
 
   const parisRequest = isParisRequestUrl(url);
-  if (parisRequest && !readRomaAuthzCapsule() && !readRomaAccountCapsule()) {
+  if (parisRequest && !readRomaAuthzCapsule()) {
     await hydrateRomaAuthzCapsule(false);
   }
 
@@ -277,10 +209,7 @@ export async function fetchParisJson<T = unknown>(url: string, init?: ParisFetch
       throw error;
     }
     await hydrateRomaAuthzCapsule(true);
-    try {
-      return await fetchParisJsonOnce<T>(url, init, timeoutMs);
-    } catch (retryError) {
-      throw retryError;
-    }
+    return fetchParisJsonOnce<T>(url, init, timeoutMs);
   }
 }
+

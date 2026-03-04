@@ -77,9 +77,9 @@ export default function RomaLoginPage() {
   return (
     <main className="rd-domain">
       <section className="rd-canvas">
-        <article className="rd-canvas-module" style={{ maxWidth: 520 }}>
+          <article className="rd-canvas-module" style={{ maxWidth: 520 }}>
           <h1 className="heading-2" style={{ margin: 0 }}>Sign in to Roma</h1>
-          <p className="body-m">Use Google (cloud-dev) or workspace credentials (local).</p>
+          <p className="body-m">Use Google (cloud-dev) or local email/password (local).</p>
           <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start', marginBottom: 18 }}>
             <a className="diet-btn-txt" data-size="lg" data-variant="primary" href={googleLoginHref}>
               <span className="diet-btn-txt__label body-l">Continue with Google</span>

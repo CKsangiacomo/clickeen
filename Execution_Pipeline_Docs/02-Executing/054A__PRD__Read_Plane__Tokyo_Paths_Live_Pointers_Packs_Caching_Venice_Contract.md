@@ -57,7 +57,7 @@ For public traffic:
 
 ### T7) DB touch budgets are fixed and few
 Acceptable DB-touch moments:
-1. **Editor session load:** 1 read to load workspace + instance.
+1. **Editor session load:** 1 read to load account + instance.
 2. **Save (draft):** 1 write per explicit save boundary (draft config/text + minimal metadata).
 3. **Go live / go dark:** 1 write to flip the instance live flag (`published`) and enqueue Tokyo mirror jobs.
 4. **Instance create:** 1 write (plus minimal metadata), not a cascade.

@@ -1,45 +1,328 @@
-import type { MemberRole } from '@clickeen/ck-policy';
 import type { Env } from '../../shared/types';
 import { assertSupabaseAuth } from '../../shared/auth';
+import { authorizeAccount } from '../../shared/account-auth';
 import { ckError } from '../../shared/errors';
 import { json, readJson } from '../../shared/http';
+import { DEFAULT_ACCOUNT_L10N_POLICY } from '../../shared/l10n';
 import { supabaseFetch } from '../../shared/supabase';
-import { asTrimmedString, assertConfig } from '../../shared/validation';
-import { assertWidgetType } from '../../shared/instances';
-import { authorizeWorkspace as authorizeWorkspaceAccess } from '../../shared/workspace-auth';
-import type { MinibobHandoffStateRecord } from './common';
-import {
-  MINIBOB_HANDOFF_MAX_CONFIG_BYTES,
-  MINIBOB_HANDOFF_STATE_TTL_SEC,
-  assertAccountId,
-  assertHandoffId,
-  assertWorkspaceId,
-  kvGetJson,
-  kvPutJson,
-  parseBodyAsRecord,
-  requireIdempotencyKey,
-  requireRomaAppKv,
-  resolveMinibobHandoffSnapshot,
-  resolveMinibobHandoffStateKey,
-  roleRank,
-  sanitizeWorkspaceName,
-  sanitizeWorkspaceSlug,
-} from './common';
-import { accountRoleLabel, loadAccount, resolveAccountMembershipRole } from './data';
-import {
-  clearBootstrapOwner,
-  createWorkspaceForAccount,
-  hasBootstrapOwnerAccess,
-  loadIdempotencyRecord,
-  materializeMinibobHandoffInstance,
-  replayFromIdempotency,
-  resolveMinibobHandoffRoute,
-  storeBootstrapOwner,
-  storeIdempotencyRecord,
-} from './bootstrap-core';
+import { asTrimmedString, assertAccountId, assertConfig, isRecord, isUuid } from '../../shared/validation';
+import { assertPublicId, assertWidgetType, isCuratedPublicId } from '../../shared/instances';
+import { handleAccountCreateInstance } from '../account-instances/create-handler';
+import { loadInstanceByPublicId, loadWidgetByType } from '../instances';
+
+const ROMA_IDEMPOTENCY_TTL_SEC = 60 * 60 * 24 * 7;
+const MINIBOB_HANDOFF_STATE_TTL_SEC = 60 * 60 * 24 * 7;
+const MINIBOB_HANDOFF_MAX_CONFIG_BYTES = 7000;
+
+type IdempotencyRecord = {
+  v: 1;
+  status: number;
+  body: unknown;
+  createdAt: string;
+};
+
+type MinibobHandoffStateRecord = {
+  v: 1;
+  handoffId: string;
+  sourcePublicId: string;
+  widgetType: string;
+  widgetId: string;
+  config: Record<string, unknown>;
+  status: 'pending' | 'consumed';
+  createdAt: string;
+  expiresAt: string;
+  consumedAt?: string;
+  consumedByUserId?: string;
+  consumedAccountId?: string;
+  resultPublicId?: string;
+};
+
+function requireRomaKv(env: Env): { ok: true; kv: KVNamespace } | { ok: false; response: Response } {
+  if (!env.USAGE_KV) {
+    return {
+      ok: false,
+      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.idempotency.unavailable' }, 503),
+    };
+  }
+  return { ok: true, kv: env.USAGE_KV };
+}
+
+async function kvGetJson<T>(kv: KVNamespace, key: string): Promise<T | null> {
+  const raw = await kv.get(key);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+async function kvPutJson(kv: KVNamespace, key: string, value: object, expirationTtl: number): Promise<void> {
+  await kv.put(key, JSON.stringify(value), { expirationTtl });
+}
+
+function requireIdempotencyKey(req: Request): { ok: true; value: string } | { ok: false; response: Response } {
+  const key = (req.headers.get('Idempotency-Key') || '').trim();
+  if (!key) {
+    return {
+      ok: false,
+      response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.idempotencyKey.required' }, 422),
+    };
+  }
+  if (!/^[a-z0-9_-]{8,200}$/i.test(key)) {
+    return {
+      ok: false,
+      response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.idempotencyKey.invalid' }, 422),
+    };
+  }
+  return { ok: true, value: key };
+}
+
+function replayFromIdempotency(record: IdempotencyRecord): Response {
+  const headers = new Headers();
+  headers.set('x-idempotent-replay', '1');
+  return json(record.body, { status: record.status, headers });
+}
+
+async function loadIdempotencyRecord(kv: KVNamespace, key: string): Promise<IdempotencyRecord | null> {
+  const existing = await kvGetJson<IdempotencyRecord>(kv, key);
+  if (!existing || existing.v !== 1) return null;
+  if (!Number.isFinite(existing.status) || existing.status < 100 || existing.status > 599) return null;
+  return existing;
+}
+
+async function storeIdempotencyRecord(kv: KVNamespace, key: string, status: number, body: unknown): Promise<void> {
+  const payload: IdempotencyRecord = {
+    v: 1,
+    status,
+    body,
+    createdAt: new Date().toISOString(),
+  };
+  await kvPutJson(kv, key, payload, ROMA_IDEMPOTENCY_TTL_SEC);
+}
+
+function slugifyAccountName(name: string): string {
+  const normalized = name
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return normalized || 'account';
+}
+
+function sanitizeAccountName(value: unknown): { ok: true; value: string } | { ok: false; response: Response } {
+  const name = asTrimmedString(value) ?? 'Account';
+  if (name.length < 2 || name.length > 80) {
+    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.account.name.invalid' }, 422) };
+  }
+  return { ok: true, value: name };
+}
+
+function sanitizeAccountSlug(raw: unknown, fallbackName: string): { ok: true; value: string } | { ok: false; response: Response } {
+  const fromInput = asTrimmedString(raw);
+  const candidate = fromInput ? slugifyAccountName(fromInput) : slugifyAccountName(fallbackName);
+  if (!candidate || candidate.length > 64 || !/^[a-z0-9][a-z0-9_-]*$/.test(candidate)) {
+    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.account.slug.invalid' }, 422) };
+  }
+  return { ok: true, value: candidate };
+}
+
+function sanitizeWebsiteUrl(raw: unknown): string | null {
+  const value = asTrimmedString(raw);
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+async function insertAccountWithSlugRetry(args: {
+  env: Env;
+  accountId: string;
+  name: string;
+  slugBase: string;
+  websiteUrl: string | null;
+}): Promise<{ ok: true; slug: string } | { ok: false; response: Response }> {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const slug = attempt === 0 ? args.slugBase : `${args.slugBase}-${attempt + 1}`;
+    const insertRes = await supabaseFetch(args.env, '/rest/v1/accounts', {
+      method: 'POST',
+      headers: {
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({
+        id: args.accountId,
+        status: 'active',
+        is_platform: false,
+        tier: 'free',
+        name: args.name,
+        slug,
+        website_url: args.websiteUrl,
+        l10n_locales: [],
+        l10n_policy: DEFAULT_ACCOUNT_L10N_POLICY,
+      }),
+    });
+    if (insertRes.ok) return { ok: true, slug };
+    if (insertRes.status === 409) continue;
+    const details = await readJson(insertRes);
+    return {
+      ok: false,
+      response: ckError(
+        { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) },
+        500,
+      ),
+    };
+  }
+
+  return {
+    ok: false,
+    response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.account.slug.conflict' }, 409),
+  };
+}
+
+function resolveMinibobHandoffStateKey(handoffId: string): string {
+  return `roma:minibob:handoff:state:${handoffId}`;
+}
+
+function assertHandoffId(value: unknown): { ok: true; value: string } | { ok: false; response: Response } {
+  const handoffId = asTrimmedString(value);
+  if (!handoffId || !/^mbh_[a-z0-9]{16,64}$/.test(handoffId)) {
+    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.minibobHandoff.idInvalid' }, 422) };
+  }
+  return { ok: true, value: handoffId };
+}
+
+async function resolveMinibobHandoffSnapshot(args: {
+  env: Env;
+  sourcePublicId: string;
+  widgetTypeHint?: string;
+  draftConfig?: Record<string, unknown>;
+}): Promise<
+  | {
+      ok: true;
+      sourcePublicId: string;
+      widgetType: string;
+      widgetId: string;
+      config: Record<string, unknown>;
+    }
+  | { ok: false; response: Response }
+> {
+  const sourcePublicIdResult = assertPublicId(args.sourcePublicId);
+  if (!sourcePublicIdResult.ok) {
+    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422) };
+  }
+  const sourcePublicId = sourcePublicIdResult.value;
+  if (!isCuratedPublicId(sourcePublicId)) {
+    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422) };
+  }
+
+  const sourceInstance =
+    args.widgetTypeHint && args.draftConfig ? null : await loadInstanceByPublicId(args.env, sourcePublicId).catch(() => null);
+  if (!sourceInstance && !args.draftConfig) {
+    return { ok: false, response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404) };
+  }
+  if (sourceInstance && !('widget_type' in sourceInstance)) {
+    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422) };
+  }
+
+  const resolvedWidgetType =
+    args.widgetTypeHint || (sourceInstance && 'widget_type' in sourceInstance ? asTrimmedString(sourceInstance.widget_type) : null);
+  const widgetTypeResult = assertWidgetType(resolvedWidgetType);
+  if (!widgetTypeResult.ok) {
+    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422) };
+  }
+  const widgetType = widgetTypeResult.value;
+
+  const widget = await loadWidgetByType(args.env, widgetType).catch(() => null);
+  if (!widget?.id || !isUuid(widget.id)) {
+    return { ok: false, response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.widget.notFound' }, 404) };
+  }
+
+  const configCandidate =
+    args.draftConfig ??
+    (sourceInstance && 'config' in sourceInstance ? (sourceInstance.config as Record<string, unknown>) : null);
+  const configResult = assertConfig(configCandidate);
+  if (!configResult.ok) {
+    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422) };
+  }
+  const serializedConfig = JSON.stringify(configResult.value);
+  if (serializedConfig.length > MINIBOB_HANDOFF_MAX_CONFIG_BYTES) {
+    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422) };
+  }
+
+  return {
+    ok: true,
+    sourcePublicId,
+    widgetType,
+    widgetId: widget.id,
+    config: JSON.parse(serializedConfig) as Record<string, unknown>,
+  };
+}
+
+function resolveMinibobHandoffRoute(publicId: string, accountId: string): string {
+  const search = new URLSearchParams({
+    accountId,
+    publicId,
+    subject: 'account',
+  });
+  return `/builder/${encodeURIComponent(publicId)}?${search.toString()}`;
+}
+
+function createUserInstancePublicIdFromHandoff(widgetType: string, handoffId: string): string {
+  const suffix = String(handoffId || '')
+    .replace(/^mbh_/, '')
+    .replace(/[^a-z0-9_-]/gi, '')
+    .slice(0, 48);
+  const safeSuffix = suffix || crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+  return `wgt_${widgetType}_u_${safeSuffix}`;
+}
+
+async function materializeMinibobHandoffInstance(args: {
+  req: Request;
+  env: Env;
+  accountId: string;
+  widgetType: string;
+  config: Record<string, unknown>;
+  publicId: string;
+}): Promise<{ ok: true; publicId: string } | { ok: false; response: Response }> {
+  const createUrl = new URL(args.req.url);
+  createUrl.pathname = `/api/accounts/${encodeURIComponent(args.accountId)}/instances`;
+  createUrl.search = '';
+  createUrl.searchParams.set('subject', 'account');
+
+  const createHeaders = new Headers();
+  const authorization = args.req.headers.get('authorization');
+  if (authorization) createHeaders.set('authorization', authorization);
+  const capsule = args.req.headers.get('x-ck-authz-capsule');
+  if (capsule) createHeaders.set('x-ck-authz-capsule', capsule);
+  createHeaders.set('content-type', 'application/json');
+
+  const createReq = new Request(createUrl.toString(), {
+    method: 'POST',
+    headers: createHeaders,
+    body: JSON.stringify({
+      publicId: args.publicId,
+      widgetType: args.widgetType,
+      status: 'unpublished',
+      config: args.config,
+    }),
+  });
+
+  const res = await handleAccountCreateInstance(createReq, args.env, args.accountId);
+  if (!res.ok) return { ok: false, response: res };
+  const payload = await readJson(res);
+  const createdPublicId =
+    payload && typeof payload === 'object' && 'publicId' in payload ? asTrimmedString((payload as any).publicId) : null;
+  return { ok: true, publicId: createdPublicId || args.publicId };
+}
 
 export async function handleMinibobHandoffStart(req: Request, env: Env): Promise<Response> {
-  const kvResult = requireRomaAppKv(env);
+  const kvResult = requireRomaKv(env);
   if (!kvResult.ok) return kvResult.response;
   const kv = kvResult.kv;
 
@@ -49,19 +332,18 @@ export async function handleMinibobHandoffStart(req: Request, env: Env): Promise
   } catch {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
-  const bodyResult = parseBodyAsRecord(bodyRaw);
-  if (!bodyResult.ok) return bodyResult.response;
+  if (!isRecord(bodyRaw)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
 
-  const sourcePublicId =
-    asTrimmedString(bodyResult.value.sourcePublicId) ||
-    asTrimmedString(bodyResult.value.publicId);
+  const sourcePublicId = asTrimmedString(bodyRaw.sourcePublicId) || asTrimmedString(bodyRaw.publicId);
   if (!sourcePublicId) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.minibobHandoff.sourcePublicIdRequired' }, 422);
   }
 
   let widgetTypeHint: string | undefined;
-  if (bodyResult.value.widgetType !== undefined) {
-    const widgetTypeResult = assertWidgetType(bodyResult.value.widgetType);
+  if (bodyRaw.widgetType !== undefined) {
+    const widgetTypeResult = assertWidgetType(bodyRaw.widgetType);
     if (!widgetTypeResult.ok) {
       return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
     }
@@ -69,8 +351,8 @@ export async function handleMinibobHandoffStart(req: Request, env: Env): Promise
   }
 
   let draftConfig: Record<string, unknown> | undefined;
-  if (bodyResult.value.draftConfig !== undefined) {
-    const configResult = assertConfig(bodyResult.value.draftConfig);
+  if (bodyRaw.draftConfig !== undefined) {
+    const configResult = assertConfig(bodyRaw.draftConfig);
     if (!configResult.ok) {
       return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
     }
@@ -132,7 +414,7 @@ export async function handleAccountCreate(req: Request, env: Env): Promise<Respo
   if (!idempotencyResult.ok) return idempotencyResult.response;
   const idempotencyKey = idempotencyResult.value;
 
-  const kvResult = requireRomaAppKv(env);
+  const kvResult = requireRomaKv(env);
   if (!kvResult.ok) return kvResult.response;
   const kv = kvResult.kv;
 
@@ -148,158 +430,48 @@ export async function handleAccountCreate(req: Request, env: Env): Promise<Respo
       return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
     }
   }
-  if (bodyRaw && typeof bodyRaw === 'object' && !Array.isArray(bodyRaw)) {
-    const ignoredName = asTrimmedString((bodyRaw as Record<string, unknown>).name);
-    if (ignoredName && ignoredName.length > 120) {
-      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.account.name.invalid' }, 422);
-    }
-  } else if (bodyRaw !== null && bodyRaw !== undefined) {
+  if (bodyRaw !== null && bodyRaw !== undefined && !isRecord(bodyRaw)) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
+  const body = isRecord(bodyRaw) ? bodyRaw : {};
+
+  const nameResult = sanitizeAccountName(body.name);
+  if (!nameResult.ok) return nameResult.response;
+  const slugResult = sanitizeAccountSlug(body.slug, nameResult.value);
+  if (!slugResult.ok) return slugResult.response;
+  const websiteUrl = sanitizeWebsiteUrl(body.websiteUrl ?? body.website_url);
 
   const accountId = crypto.randomUUID();
-  const insertRes = await supabaseFetch(env, '/rest/v1/accounts', {
-    method: 'POST',
-    headers: {
-      Prefer: 'return=representation',
-    },
-    body: JSON.stringify({
-      id: accountId,
-      status: 'active',
-      is_platform: false,
-    }),
-  });
-  if (!insertRes.ok) {
-    const details = await readJson(insertRes);
-    return ckError(
-      {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.db.writeFailed',
-        detail: JSON.stringify(details),
-      },
-      500,
-    );
-  }
-
-  try {
-    await storeBootstrapOwner(kv, accountId, auth.principal.userId);
-  } catch (error) {
-    await supabaseFetch(env, `/rest/v1/accounts?id=eq.${accountId}`, { method: 'DELETE' }).catch(() => undefined);
-    const detail = error instanceof Error ? error.message : String(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.idempotency.unavailable', detail }, 503);
-  }
-
-  const payload = {
-    accountId,
-    status: 'active',
-    role: 'account_owner',
-    bootstrap: {
-      needsWorkspace: true,
-      ownerSource: 'bootstrap_kv',
-    },
-  };
-  await storeIdempotencyRecord(kv, replayKey, 201, payload).catch(() => undefined);
-  return json(payload, { status: 201 });
-}
-
-export async function handleAccountCreateWorkspace(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
-  const accountIdResult = assertAccountId(accountIdRaw);
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const auth = await assertSupabaseAuth(req, env);
-  if (!auth.ok) return auth.response;
-  const userId = auth.principal.userId;
-
-  const idempotencyResult = requireIdempotencyKey(req);
-  if (!idempotencyResult.ok) return idempotencyResult.response;
-  const idempotencyKey = idempotencyResult.value;
-
-  const kvResult = requireRomaAppKv(env);
-  if (!kvResult.ok) return kvResult.response;
-  const kv = kvResult.kv;
-
-  const replayKey = `roma:idem:accounts:${accountId}:workspaces:create:${userId}:${idempotencyKey}`;
-  const existing = await loadIdempotencyRecord(kv, replayKey);
-  if (existing) return replayFromIdempotency(existing);
-
-  const account = await loadAccount(env, accountId).catch(() => null);
-  if (!account) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
-
-  let membershipRole: MemberRole | null = null;
-  try {
-    membershipRole = await resolveAccountMembershipRole(env, accountId, userId);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-
-  let bootstrapAllowed = false;
-  if (!membershipRole || roleRank(membershipRole) < roleRank('editor')) {
-    bootstrapAllowed = await hasBootstrapOwnerAccess(kv, accountId, userId).catch(() => false);
-    if (!bootstrapAllowed) {
-      return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
-    }
-    membershipRole = 'owner';
-  }
-
-  let bodyRaw: unknown;
-  try {
-    bodyRaw = await req.json();
-  } catch {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
-  }
-  const bodyResult = parseBodyAsRecord(bodyRaw);
-  if (!bodyResult.ok) return bodyResult.response;
-
-  const nameResult = sanitizeWorkspaceName(bodyResult.value.name);
-  if (!nameResult.ok) return nameResult.response;
-  const slugResult = sanitizeWorkspaceSlug(bodyResult.value.slug, nameResult.value);
-  if (!slugResult.ok) return slugResult.response;
-
-  const created = await createWorkspaceForAccount({
+  const inserted = await insertAccountWithSlugRetry({
     env,
     accountId,
     name: nameResult.value,
     slugBase: slugResult.value,
+    websiteUrl,
   });
-  if (!created.ok) return created.response;
+  if (!inserted.ok) return inserted.response;
 
-  const memberRes = await supabaseFetch(env, '/rest/v1/workspace_members', {
+  const memberRes = await supabaseFetch(env, '/rest/v1/account_members', {
     method: 'POST',
-    headers: {
-      Prefer: 'return=representation',
-    },
+    headers: { Prefer: 'return=minimal' },
     body: JSON.stringify({
-      workspace_id: created.workspace.id,
-      user_id: userId,
+      account_id: accountId,
+      user_id: auth.principal.userId,
       role: 'owner',
     }),
   });
   if (!memberRes.ok) {
     const details = await readJson(memberRes);
-    return ckError(
-      { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) },
-      500,
-    );
-  }
-
-  if (bootstrapAllowed) {
-    await clearBootstrapOwner(kv, accountId).catch(() => undefined);
+    await supabaseFetch(env, `/rest/v1/accounts?id=eq.${accountId}`, { method: 'DELETE' }).catch(() => undefined);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
   }
 
   const payload = {
     accountId,
-    role: accountRoleLabel(membershipRole),
-    workspace: {
-      workspaceId: created.workspace.id,
-      accountId: created.workspace.account_id,
-      tier: created.workspace.tier,
-      name: created.workspace.name,
-      slug: created.workspace.slug,
-      createdAt: created.workspace.created_at ?? null,
-      updatedAt: created.workspace.updated_at ?? null,
-    },
+    status: 'active',
+    role: 'owner',
+    slug: inserted.slug,
+    name: nameResult.value,
   };
   await storeIdempotencyRecord(kv, replayKey, 201, payload).catch(() => undefined);
   return json(payload, { status: 201 });
@@ -314,7 +486,7 @@ export async function handleMinibobHandoffComplete(req: Request, env: Env): Prom
   if (!idempotencyResult.ok) return idempotencyResult.response;
   const idempotencyKey = idempotencyResult.value;
 
-  const kvResult = requireRomaAppKv(env);
+  const kvResult = requireRomaKv(env);
   if (!kvResult.ok) return kvResult.response;
   const kv = kvResult.kv;
 
@@ -322,21 +494,17 @@ export async function handleMinibobHandoffComplete(req: Request, env: Env): Prom
   try {
     bodyRaw = await req.json();
   } catch {
+    bodyRaw = null;
+  }
+  if (!isRecord(bodyRaw)) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
-  const bodyResult = parseBodyAsRecord(bodyRaw);
-  if (!bodyResult.ok) return bodyResult.response;
 
-  const accountIdResult = assertAccountId(String(bodyResult.value.accountId || ''));
+  const accountIdResult = assertAccountId(bodyRaw.accountId);
   if (!accountIdResult.ok) return accountIdResult.response;
-  const workspaceIdResult = assertWorkspaceId(String(bodyResult.value.workspaceId || ''));
-  if (!workspaceIdResult.ok) return workspaceIdResult.response;
+  const accountId = accountIdResult.value;
 
-  const handoffIdRaw = asTrimmedString(bodyResult.value.handoffId);
-  if (!handoffIdRaw) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.minibobHandoff.idRequired' }, 422);
-  }
-  const handoffIdResult = assertHandoffId(handoffIdRaw);
+  const handoffIdResult = assertHandoffId(bodyRaw.handoffId);
   if (!handoffIdResult.ok) return handoffIdResult.response;
   const handoffId = handoffIdResult.value;
 
@@ -344,12 +512,8 @@ export async function handleMinibobHandoffComplete(req: Request, env: Env): Prom
   const idemExisting = await loadIdempotencyRecord(kv, replayKey);
   if (idemExisting) return replayFromIdempotency(idemExisting);
 
-  const workspaceAuth = await authorizeWorkspaceAccess(req, env, workspaceIdResult.value, 'viewer');
-  if (!workspaceAuth.ok) return workspaceAuth.response;
-  const workspace = workspaceAuth.workspace;
-  if (workspace.account_id !== accountIdResult.value) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.account.mismatch' }, 403);
-  }
+  const accountAuth = await authorizeAccount(req, env, accountId, 'editor');
+  if (!accountAuth.ok) return accountAuth.response;
 
   const handoffStateKey = resolveMinibobHandoffStateKey(handoffId);
   const existingHandoff = await kvGetJson<MinibobHandoffStateRecord>(kv, handoffStateKey);
@@ -368,41 +532,38 @@ export async function handleMinibobHandoffComplete(req: Request, env: Env): Prom
   if (existingHandoff.status === 'consumed') {
     const sameTarget =
       existingHandoff.consumedByUserId === userId &&
-      existingHandoff.consumedAccountId === accountIdResult.value &&
-      existingHandoff.consumedWorkspaceId === workspaceIdResult.value &&
+      existingHandoff.consumedAccountId === accountId &&
       typeof existingHandoff.resultPublicId === 'string' &&
       existingHandoff.resultPublicId.length > 0;
     if (!sameTarget) {
       return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.minibobHandoff.alreadyConsumed' }, 409);
     }
+
+    const resultPublicId = existingHandoff.resultPublicId as string;
     const replayPayload = {
       handoffId: existingHandoff.handoffId,
       accountId: existingHandoff.consumedAccountId as string,
-      workspaceId: existingHandoff.consumedWorkspaceId as string,
       sourcePublicId: existingHandoff.sourcePublicId,
-      publicId: existingHandoff.resultPublicId as string,
-      builderRoute: resolveMinibobHandoffRoute(
-        existingHandoff.resultPublicId as string,
-        existingHandoff.consumedWorkspaceId as string,
-        existingHandoff.consumedAccountId as string,
-      ),
+      publicId: resultPublicId,
+      builderRoute: resolveMinibobHandoffRoute(resultPublicId, existingHandoff.consumedAccountId as string),
       replay: true,
     };
     await storeIdempotencyRecord(kv, replayKey, 200, replayPayload).catch(() => undefined);
     return json(replayPayload, { status: 200 });
   }
+
   if (existingHandoff.status !== 'pending') {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.minibobHandoff.unavailable' }, 409);
   }
 
+  const publicId = createUserInstancePublicIdFromHandoff(existingHandoff.widgetType, handoffId);
   const materialized = await materializeMinibobHandoffInstance({
+    req,
     env,
-    accountId: accountIdResult.value,
-    workspaceId: workspaceIdResult.value,
-    handoffId,
+    accountId,
     widgetType: existingHandoff.widgetType,
-    widgetId: existingHandoff.widgetId,
     config: existingHandoff.config,
+    publicId,
   });
   if (!materialized.ok) return materialized.response;
 
@@ -411,21 +572,20 @@ export async function handleMinibobHandoffComplete(req: Request, env: Env): Prom
     status: 'consumed',
     consumedAt: new Date().toISOString(),
     consumedByUserId: userId,
-    consumedAccountId: accountIdResult.value,
-    consumedWorkspaceId: workspaceIdResult.value,
+    consumedAccountId: accountId,
     resultPublicId: materialized.publicId,
   };
   await kvPutJson(kv, handoffStateKey, completedState, MINIBOB_HANDOFF_STATE_TTL_SEC).catch(() => undefined);
 
   const payload = {
     handoffId,
-    accountId: accountIdResult.value,
-    workspaceId: workspaceIdResult.value,
+    accountId,
     sourcePublicId: existingHandoff.sourcePublicId,
     publicId: materialized.publicId,
-    builderRoute: resolveMinibobHandoffRoute(materialized.publicId, workspaceIdResult.value, accountIdResult.value),
+    builderRoute: resolveMinibobHandoffRoute(materialized.publicId, accountId),
     replay: false,
   };
   await storeIdempotencyRecord(kv, replayKey, 200, payload).catch(() => undefined);
   return json(payload, { status: 200 });
 }
+

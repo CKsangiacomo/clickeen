@@ -145,26 +145,7 @@ async function planChange(accessToken, accountId, nextTier) {
   if (!res.ok) throw new Error(`Plan change failed (${res.status}) ${text.slice(0, 200)}`);
 }
 
-async function createWorkspace(accessToken, accountId) {
-  const slug = `gate3-${Date.now().toString(36)}`;
-  const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/workspaces`,
-    {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        accept: 'application/json',
-        'content-type': 'application/json',
-        'Idempotency-Key': crypto.randomUUID(),
-      },
-      body: JSON.stringify({ name: 'Gate 3 Workspace', slug }),
-    },
-  );
-  if (!res.ok) throw new Error(`Workspace create failed (${res.status}) ${text.slice(0, 200)}`);
-  return assertString(data?.workspace?.workspaceId, 'workspaceId');
-}
-
-async function duplicateFaq(accessToken, workspaceId) {
+async function duplicateFaq(accessToken, accountId) {
   const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/roma/widgets/duplicate`, {
     method: 'POST',
     headers: {
@@ -172,7 +153,7 @@ async function duplicateFaq(accessToken, workspaceId) {
       accept: 'application/json',
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ workspaceId, sourcePublicId: 'wgt_main_faq' }),
+    body: JSON.stringify({ accountId, sourcePublicId: 'wgt_main_faq' }),
   });
   if (!res.ok) throw new Error(`Duplicate failed (${res.status}) ${text.slice(0, 200)}`);
   return assertString(data?.publicId, 'publicId');
@@ -192,9 +173,9 @@ function livePayload(overrides = {}) {
   };
 }
 
-async function publishInstance(accessToken, workspaceId, publicId) {
+async function publishInstance(accessToken, accountId, publicId) {
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -208,9 +189,9 @@ async function publishInstance(accessToken, workspaceId, publicId) {
   if (!res.ok) throw new Error(`[gate3] Publish failed (${res.status}) ${text.slice(0, 200)}`);
 }
 
-async function unpublishInstance(accessToken, workspaceId, publicId) {
+async function unpublishInstance(accessToken, accountId, publicId) {
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -242,9 +223,9 @@ async function readTextFp(publicId, locale) {
   return assertHex64(textFp) ? textFp : null;
 }
 
-async function enableWorkspaceLocale(accessToken, workspaceId, locale, policy) {
+async function enableAccountLocale(accessToken, accountId, locale, policy) {
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/locales?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/locales?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -255,12 +236,12 @@ async function enableWorkspaceLocale(accessToken, workspaceId, locale, policy) {
       body: JSON.stringify({ locales: [locale], policy }),
     },
   );
-  if (!res.ok) throw new Error(`[gate3] Workspace locales PUT failed (${res.status}) ${text.slice(0, 200)}`);
+  if (!res.ok) throw new Error(`[gate3] Account locales PUT failed (${res.status}) ${text.slice(0, 200)}`);
 }
 
-async function enqueueSelectedLocales(accessToken, workspaceId, publicId) {
+async function enqueueSelectedLocales(accessToken, accountId, publicId) {
   const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(publicId)}/l10n/enqueue-selected?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/l10n/enqueue-selected?subject=account`,
     {
       method: 'POST',
       headers: {
@@ -276,9 +257,9 @@ async function enqueueSelectedLocales(accessToken, workspaceId, publicId) {
   return data;
 }
 
-async function readL10nStatus(accessToken, workspaceId, publicId) {
+async function readL10nStatus(accessToken, accountId, publicId) {
   const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(publicId)}/l10n/status?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/l10n/status?subject=account`,
     {
       headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
       cache: 'no-store',
@@ -288,9 +269,9 @@ async function readL10nStatus(accessToken, workspaceId, publicId) {
   return data;
 }
 
-async function writeUserOverride(accessToken, workspaceId, publicId, locale, baseFingerprint, baseUpdatedAt) {
+async function writeUserOverride(accessToken, accountId, publicId, locale, baseFingerprint, baseUpdatedAt) {
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(publicId)}/layers/user/${encodeURIComponent(locale)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/layers/user/${encodeURIComponent(locale)}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -322,15 +303,14 @@ async function fetchVeniceEmbed(publicId, locale) {
 async function main() {
   const accessToken = await loginPassword();
   const accountId = await createAccount(accessToken);
-  const workspaceId = await createWorkspace(accessToken, accountId);
   await planChange(accessToken, accountId, 'tier3');
-  const publicId = await duplicateFaq(accessToken, workspaceId);
+  const publicId = await duplicateFaq(accessToken, accountId);
 
-  console.log(`[gate3] workspaceId=${workspaceId}`);
+  console.log(`[gate3] accountId=${accountId}`);
   console.log(`[gate3] publicId=${publicId}`);
 
   console.log('[gate3] Publishing…');
-  await publishInstance(accessToken, workspaceId, publicId);
+  await publishInstance(accessToken, accountId, publicId);
 
   const baseline = await waitFor({
     label: 'baseline pointers (en)',
@@ -347,8 +327,8 @@ async function main() {
   console.log(`[gate3] baseline configFp=${baseline.configFp}`);
   console.log(`[gate3] baseline en textFp=${baseline.enTextFp}`);
 
-  console.log('[gate3] Enable de locale at workspace…');
-  await enableWorkspaceLocale(accessToken, workspaceId, 'de', {
+  console.log('[gate3] Enable de locale at account…');
+  await enableAccountLocale(accessToken, accountId, 'de', {
     v: 1,
     baseLocale: 'en',
     ip: { enabled: false, countryToLocale: {} },
@@ -378,7 +358,7 @@ async function main() {
   await fetchVeniceEmbed(publicId, 'de');
 
   console.log('[gate3] Trigger translation enqueue-selected…');
-  const enqueue = await enqueueSelectedLocales(accessToken, workspaceId, publicId);
+  const enqueue = await enqueueSelectedLocales(accessToken, accountId, publicId);
   console.log(`[gate3] queued=${enqueue.queued} skipped=${enqueue.skipped}`);
 
   console.log('[gate3] Wait for de translation to land (textFp change)…');
@@ -395,12 +375,12 @@ async function main() {
   });
   console.log(`[gate3] de translated textFp=${deTranslated.deTextFp}`);
 
-  const status = await readL10nStatus(accessToken, workspaceId, publicId);
+  const status = await readL10nStatus(accessToken, accountId, publicId);
   const baseFingerprint = assertString(status?.baseFingerprint, 'l10nStatus.baseFingerprint');
   const baseUpdatedAt = status?.baseUpdatedAt ?? null;
 
   console.log('[gate3] Manual override (layer=user) for de…');
-  await writeUserOverride(accessToken, workspaceId, publicId, 'de', baseFingerprint, baseUpdatedAt);
+  await writeUserOverride(accessToken, accountId, publicId, 'de', baseFingerprint, baseUpdatedAt);
 
   const deManual = await waitFor({
     label: 'de textFp to change (manual override)',
@@ -418,7 +398,7 @@ async function main() {
   console.log('[gate3] Locale pipeline works ✅');
 
   console.log('[gate3] Cleanup: unpublish…');
-  await unpublishInstance(accessToken, workspaceId, publicId);
+  await unpublishInstance(accessToken, accountId, publicId);
 
   await waitFor({
     label: 'venice /r to go 404',

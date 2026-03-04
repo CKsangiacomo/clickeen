@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "คำถามที่พบบ่อย"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "คำถามทั้งหมด"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "มีแพลนฟรีไหม?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Clickeen คืออะไร?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "ติดตั้งวิดเจ็ตอย่างไร?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "ทำไมควรใช้ Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "มี—ใช้งานวิดเจ็ตได้ 1 ตัว พร้อมฟีเจอร์หลักครบถ้วน"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "วิดเจ็ตแบบฝัง (Embed) ที่ออกแบบมาเพื่อเพิ่มคอนเวอร์ชันในตัว"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "คัดลอกโค้ดสำหรับฝัง (Embed) แล้ววางไว้ก่อน </body> บนเว็บไซต์ของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "เพราะ Clickeen คือแพลตฟอร์มใหม่ที่ยอดเยี่ยม ช่วยทำให้เว็บสวยขึ้นและใช้งานง่ายขึ้น"
+    }
+  ],
+  "v": 1
+}

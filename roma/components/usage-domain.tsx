@@ -1,15 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatBytes, formatNumber } from '../lib/format';
-import { resolveBootstrapDomainState } from './bootstrap-domain-state';
+import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountUsageResponse = {
   accountId: string;
   role: string;
   usage: {
-    workspaces: number;
     instances: {
       total: number;
       published: number;
@@ -27,43 +26,48 @@ export function UsageDomain() {
   const me = useRomaMe();
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
-  const workspaceId = context.workspaceId;
-  const accountProfile = me.data?.authz?.accountProfile ?? me.data?.authz?.profile ?? null;
-  const accountRole = me.data?.authz?.accountRole ?? me.data?.authz?.role ?? null;
+  const accountProfile = me.data?.authz?.profile ?? null;
+  const accountRole = me.data?.authz?.role ?? null;
   const entitlements = me.data?.authz?.entitlements ?? null;
 
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<AccountUsageResponse | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const refreshUsage = useCallback(async () => {
     if (!accountId) {
       setUsage(null);
       setError(null);
       return;
     }
-    const snapshot = me.data?.domains?.usage ?? null;
-    const hasDomainPayload = Boolean(snapshot && snapshot.accountId === accountId);
-    const domainState = resolveBootstrapDomainState({
-      data: me.data,
-      domainKey: 'usage',
-      hasDomainPayload,
-    });
-    if (!hasDomainPayload || domainState.kind !== 'ok') {
-      setUsage(null);
-      setError(domainState.reasonKey);
-      return;
-    }
-    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
-    setUsage(safeSnapshot);
+    setLoading(true);
     setError(null);
-  }, [accountId, me.data]);
+    try {
+      const payload = await fetchParisJson<AccountUsageResponse>(
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/usage`,
+        { method: 'GET' },
+      );
+      setUsage(payload);
+      setError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setUsage(null);
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [accountId]);
+
+  useEffect(() => {
+    void refreshUsage();
+  }, [refreshUsage]);
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading usage context...</section>;
   if (me.error || !me.data) {
     return <section className="rd-canvas-module body-m">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
   }
-  if (!accountId || !workspaceId) {
-    return <section className="rd-canvas-module body-m">Missing account/workspace context for usage diagnostics.</section>;
+  if (!accountId) {
+    return <section className="rd-canvas-module body-m">Missing account context for usage diagnostics.</section>;
   }
 
   const enabledFlags = entitlements ? Object.values(entitlements.flags || {}).filter(Boolean).length : 0;
@@ -73,16 +77,19 @@ export function UsageDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">
-          Account: {accountId} | Workspace: {context.workspaceName || workspaceId}
-          {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
-        </p>
+        <p className="body-m">Account: {accountId}</p>
 
         {error ? (
           <div className="roma-inline-stack">
-            <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
             <p className="body-m">{error}</p>
-            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="line2"
+              type="button"
+              onClick={() => void refreshUsage()}
+              disabled={loading}
+            >
               <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
           </div>
@@ -91,11 +98,7 @@ export function UsageDomain() {
 
       {usage ? (
         <section className="rd-canvas-module">
-          <div className="roma-grid roma-grid--three">
-            <article className="roma-card">
-              <h2 className="heading-6">Workspaces</h2>
-              <p className="body-s">{formatNumber(usage.usage.workspaces)}</p>
-            </article>
+          <div className="roma-grid">
             <article className="roma-card">
               <h2 className="heading-6">Widget Instances</h2>
               <p className="body-s">

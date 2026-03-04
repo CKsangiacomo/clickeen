@@ -76,8 +76,8 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
   if (subKind === 'anon') {
     if (!asString(sub.sessionId)) throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant subject missing sessionId' });
   } else if (subKind === 'user') {
-    if (!asString(sub.userId) || !asString(sub.workspaceId)) {
-      throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant subject missing userId/workspaceId' });
+    if (!asString(sub.userId) || !asString(sub.accountId)) {
+      throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant subject missing userId/accountId' });
     }
   } else if (subKind === 'service') {
     if (!asString(sub.serviceId)) throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant subject missing serviceId' });

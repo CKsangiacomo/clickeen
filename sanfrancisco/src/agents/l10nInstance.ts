@@ -16,6 +16,8 @@ type L10nJobV1 = {
   locale: string;
   baseUpdatedAt: string;
   kind: 'curated' | 'user';
+  accountId?: string | null;
+  // Legacy alias for accountId (pre account-only tenancy pivot).
   workspaceId?: string | null;
   envStage?: string;
 };
@@ -32,6 +34,8 @@ type L10nJobV2 = {
   changedPaths?: string[];
   removedPaths?: string[];
   kind: 'curated' | 'user';
+  accountId?: string | null;
+  // Legacy alias for accountId (pre account-only tenancy pivot).
   workspaceId?: string | null;
   envStage?: string;
 };
@@ -116,6 +120,14 @@ export function isL10nJob(value: unknown): value is L10nJob {
     if (value.removedPaths != null && !Array.isArray(value.removedPaths)) return false;
   }
   return true;
+}
+
+function resolveJobAccountId(job: L10nJob): string | null {
+  const accountId = asString((job as any).accountId);
+  if (accountId) return accountId;
+  const legacyWorkspaceId = asString((job as any).workspaceId);
+  if (legacyWorkspaceId) return legacyWorkspaceId;
+  return null;
 }
 
 function requireEnvVar(value: unknown, name: string): string {
@@ -773,11 +785,11 @@ async function translateRichtextWithSegmentFallback(args: {
   return { value: restored, usage };
 }
 
-async function fetchInstanceByContext(args: { workspaceId: string; publicId: string }, env: Env): Promise<InstanceResponse> {
+async function fetchInstanceByContext(args: { accountId: string; publicId: string }, env: Env): Promise<InstanceResponse> {
   const baseUrl = requireEnvVar((env as any).PARIS_BASE_URL, 'PARIS_BASE_URL');
   const token = requireEnvVar((env as any).PARIS_DEV_JWT, 'PARIS_DEV_JWT');
   const url = new URL(
-    `/api/workspaces/${encodeURIComponent(args.workspaceId)}/instance/${encodeURIComponent(args.publicId)}?subject=workspace`,
+    `/api/accounts/${encodeURIComponent(args.accountId)}/instance/${encodeURIComponent(args.publicId)}?subject=account`,
     baseUrl,
   ).toString();
 
@@ -805,11 +817,11 @@ async function fetchInstanceByContext(args: { workspaceId: string; publicId: str
 }
 
 async function fetchInstance(job: L10nJob, env: Env): Promise<InstanceResponse> {
-  const workspaceId = asString(job.workspaceId);
-  if (!workspaceId) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing workspaceId' });
+  const accountId = resolveJobAccountId(job);
+  if (!accountId) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing accountId' });
   }
-  return fetchInstanceByContext({ workspaceId, publicId: job.publicId }, env);
+  return fetchInstanceByContext({ accountId, publicId: job.publicId }, env);
 }
 
 async function fetchAllowlist(widgetType: string, env: Env): Promise<AllowlistEntry[]> {
@@ -858,6 +870,8 @@ export async function resolveL10nPlanningSnapshot(args: {
   widgetType: string;
   config?: Record<string, unknown> | null;
   baseUpdatedAt?: string | null;
+  accountId?: string | null;
+  // Legacy alias for accountId (pre account-only tenancy pivot).
   workspaceId?: string | null;
   publicId?: string | null;
 }): Promise<L10nPlanningSnapshot> {
@@ -876,15 +890,15 @@ export async function resolveL10nPlanningSnapshot(args: {
   if (args.config && isRecord(args.config)) {
     config = args.config;
   } else {
-    const workspaceId = asString(args.workspaceId);
-    if (!workspaceId) {
-      throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing workspaceId' });
+    const accountId = asString(args.accountId) || asString(args.workspaceId);
+    if (!accountId) {
+      throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing accountId' });
     }
     const publicId = asString(args.publicId);
     if (!publicId) {
       throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing publicId' });
     }
-    const instance = await fetchInstanceByContext({ workspaceId, publicId }, args.env);
+    const instance = await fetchInstanceByContext({ accountId, publicId }, args.env);
     resolvedWidgetType = instance.widgetType ? String(instance.widgetType) : widgetTypeHint;
     config = instance.config;
     resolvedBaseUpdatedAt = instance.updatedAt ?? resolvedBaseUpdatedAt;
@@ -919,17 +933,17 @@ async function fetchExistingLocale(
   locale: string,
   env: Env,
 ): Promise<ExistingLocale | null> {
-  const workspaceId = asString(job.workspaceId);
-  if (!workspaceId) return null;
+  const accountId = resolveJobAccountId(job);
+  if (!accountId) return null;
   const baseUrl = requireEnvVar((env as any).PARIS_BASE_URL, 'PARIS_BASE_URL');
   const token = requireEnvVar((env as any).PARIS_DEV_JWT, 'PARIS_DEV_JWT');
   const url = new URL(
-    `/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+    `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
       job.publicId,
     )}/layers/locale/${encodeURIComponent(locale)}`,
     baseUrl,
   );
-  url.searchParams.set('subject', 'workspace');
+  url.searchParams.set('subject', 'account');
 
   const res = await fetch(url.toString(), {
     method: 'GET',
@@ -969,17 +983,17 @@ async function writeOverlay(
   },
   env: Env,
 ): Promise<OverlayWriteResult> {
-  const workspaceId = asString(job.workspaceId);
-  if (!workspaceId) return { ok: false, reason: 'stale_instance' };
+  const accountId = resolveJobAccountId(job);
+  if (!accountId) return { ok: false, reason: 'stale_instance' };
   const baseUrl = requireEnvVar((env as any).PARIS_BASE_URL, 'PARIS_BASE_URL');
   const token = requireEnvVar((env as any).PARIS_DEV_JWT, 'PARIS_DEV_JWT');
   const url = new URL(
-    `/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+    `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
       job.publicId,
     )}/layers/locale/${encodeURIComponent(locale)}`,
     baseUrl,
   );
-  url.searchParams.set('subject', 'workspace');
+  url.searchParams.set('subject', 'account');
   const res = await fetch(url.toString(), {
     method: 'PUT',
     headers: buildParisInternalHeaders(token, { 'content-type': 'application/json' }),
@@ -1029,11 +1043,12 @@ async function reportL10nGenerateStatus(args: {
   error?: string | null;
   occurredAtMs?: number;
   widgetType?: string | null;
-  workspaceId?: string | null;
+  accountId?: string | null;
 }) {
   const baseUrl = requireEnvVar((args.env as any).PARIS_BASE_URL, 'PARIS_BASE_URL');
   const token = requireEnvVar((args.env as any).PARIS_DEV_JWT, 'PARIS_DEV_JWT');
   const url = new URL('/api/l10n/jobs/report', baseUrl).toString();
+  const jobAccountId = resolveJobAccountId(args.job);
   const payload = {
     v: 1,
     publicId: args.job.publicId,
@@ -1042,7 +1057,7 @@ async function reportL10nGenerateStatus(args: {
     baseFingerprint: args.baseFingerprint,
     status: args.status,
     widgetType: args.widgetType ?? args.job.widgetType,
-    workspaceId: args.workspaceId ?? args.job.workspaceId ?? null,
+    accountId: asString(args.accountId) || jobAccountId,
     baseUpdatedAt: args.baseUpdatedAt ?? null,
     error: args.error ?? null,
     occurredAt: new Date(args.occurredAtMs ?? Date.now()).toISOString(),
@@ -1065,14 +1080,14 @@ async function reportL10nGenerateStatus(args: {
 
 export async function executeL10nJob(job: L10nJob, env: Env, grant: AIGrant): Promise<void> {
   const startedAt = Date.now();
-  const workspaceId = asString(job.workspaceId);
+  const accountId = resolveJobAccountId(job);
   const locale = normalizeLocaleToken(job.locale);
   const jobBaseUpdatedAt = job.v === 2 ? (job.baseUpdatedAt ?? null) : job.baseUpdatedAt;
   const jobBaseFingerprint = job.v === 2 ? job.baseFingerprint : null;
-  if (!workspaceId) {
+  if (!accountId) {
     await writeLog(env, job, jobBaseFingerprint, {
       status: 'skipped',
-      reason: 'missing_workspace',
+      reason: 'missing_account',
       job,
       occurredAtMs: startedAt,
     });
@@ -1084,7 +1099,7 @@ export async function executeL10nJob(job: L10nJob, env: Env, grant: AIGrant): Pr
         baseFingerprint: jobBaseFingerprint,
         baseUpdatedAt: jobBaseUpdatedAt,
         locale: job.locale,
-        error: 'missing_workspace',
+        error: 'missing_account',
         occurredAtMs: startedAt,
       });
     }

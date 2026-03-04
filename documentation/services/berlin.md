@@ -16,7 +16,7 @@ Responsibilities:
 - Publish JWKS for verifier services (`/.well-known/jwks.json`).
 
 Non-responsibilities:
-- No workspace/account authorization policy decisions (Paris owns AuthZ).
+- No account authorization policy decisions (Paris owns AuthZ).
 - No product business logic.
 
 ## Runtime surface (v1)

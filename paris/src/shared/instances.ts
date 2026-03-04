@@ -29,11 +29,6 @@ export function isCuratedPublicId(publicId: string): boolean {
   return inferInstanceKindFromPublicId(publicId) === 'curated';
 }
 
-export function allowCuratedWrites(env: Env): boolean {
-  const stage = (asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev').toLowerCase();
-  return stage === 'local' || stage === 'cloud-dev';
-}
-
 export function isCuratedInstanceRow(instance: InstanceRow | CuratedInstanceRow): instance is CuratedInstanceRow {
   return 'widget_type' in instance;
 }
@@ -50,7 +45,7 @@ export function resolveInstanceKind(instance: InstanceRow | CuratedInstanceRow):
   return inferred;
 }
 
-export function resolveInstanceWorkspaceId(instance: InstanceRow | CuratedInstanceRow): string | null {
+export function resolveInstanceAccountId(instance: InstanceRow | CuratedInstanceRow): string | null {
   if (isCuratedInstanceRow(instance)) return null;
-  return instance.workspace_id ?? null;
+  return instance.account_id ?? null;
 }

@@ -198,14 +198,12 @@ var Dieter = (() => {
   }
   function resolveContextFromDocument() {
     const accountId = readDatasetValue("ckOwnerAccountId");
-    const workspaceId = readDatasetValue("ckWorkspaceId");
     const publicId = readDatasetValue("ckPublicId");
     const widgetType = readDatasetValue("ckWidgetType");
     if (!accountId || !isUuid(accountId)) return null;
     const context = {
       accountId
     };
-    if (workspaceId && isUuid(workspaceId)) context.workspaceId = workspaceId;
     if (publicId && isPublicId(publicId)) context.publicId = publicId;
     if (widgetType && isWidgetType(widgetType)) context.widgetType = widgetType.toLowerCase();
     return context;
@@ -228,14 +226,10 @@ var Dieter = (() => {
   }
   function assertUploadContext(context) {
     const accountId = String(context.accountId || "").trim();
-    const workspaceId = String(context.workspaceId || "").trim();
     const publicId = String(context.publicId || "").trim();
     const widgetType = String(context.widgetType || "").trim().toLowerCase();
     if (!isUuid(accountId)) {
       throw new Error("coreui.errors.accountId.invalid");
-    }
-    if (workspaceId && !isUuid(workspaceId)) {
-      throw new Error("coreui.errors.workspaceId.invalid");
     }
     if (publicId && !isPublicId(publicId)) {
       throw new Error("coreui.errors.publicId.invalid");
@@ -245,7 +239,6 @@ var Dieter = (() => {
     }
     return {
       accountId,
-      workspaceId: workspaceId || void 0,
       publicId: publicId || void 0,
       widgetType: widgetType || void 0
     };
@@ -262,7 +255,6 @@ var Dieter = (() => {
     const headers = new Headers();
     headers.set("content-type", file.type || "application/octet-stream");
     headers.set("x-account-id", context.accountId);
-    if (context.workspaceId) headers.set("x-workspace-id", context.workspaceId);
     headers.set("x-filename", file.name || "upload.bin");
     headers.set("x-variant", variant);
     headers.set("x-source", source);

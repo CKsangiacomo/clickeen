@@ -6,6 +6,7 @@ export type Env = {
   SUPABASE_JWT_ISSUER?: string;
   SUPABASE_JWT_AUDIENCE?: string;
   PARIS_DEV_JWT: string;
+  CK_ADMIN_ACCOUNT_ID?: string;
   BERLIN_BASE_URL?: string;
   BERLIN_JWKS_URL?: string;
   BERLIN_ISSUER?: string;
@@ -37,7 +38,7 @@ export type InstanceRow = {
   created_at: string;
   updated_at?: string | null;
   widget_id: string | null;
-  workspace_id?: string | null;
+  account_id?: string | null;
   kind?: InstanceKind | null;
 };
 
@@ -47,6 +48,7 @@ export type CuratedInstanceRow = {
   public_id: string;
   widget_type: string;
   kind?: CuratedInstanceKind | null;
+  owner_account_id?: string | null;
   status: 'published' | 'unpublished';
   config: Record<string, unknown>;
   meta?: Record<string, unknown> | null;
@@ -61,19 +63,22 @@ export type WidgetRow = {
   catalog?: unknown;
 };
 
-export type WorkspaceRow = {
+export type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3';
+
+export type AccountRow = {
   id: string;
-  account_id: string;
-  tier: 'free' | 'tier1' | 'tier2' | 'tier3';
   name: string;
   slug: string;
+  status?: 'active' | 'disabled' | string;
+  is_platform?: boolean | null;
+  tier: AccountTier;
   website_url: string | null;
   l10n_locales?: unknown;
   l10n_policy?: unknown;
 };
 
-export type WorkspaceBusinessProfileRow = {
-  workspace_id: string;
+export type AccountBusinessProfileRow = {
+  account_id: string;
   profile: Record<string, unknown>;
   sources?: Record<string, unknown> | null;
   created_at?: string | null;
@@ -92,7 +97,7 @@ export type UpdatePayload = {
 export type CreateInstancePayload = {
   widgetType: string;
   publicId: string;
-  workspaceId: string;
+  accountId: string;
   config: Record<string, unknown>;
   status?: 'published' | 'unpublished';
   widgetName?: string;
@@ -113,7 +118,7 @@ export type CkErrorResponse = {
 
 export type GrantSubject =
   | { kind: 'anon'; sessionId: string }
-  | { kind: 'user'; userId: string; workspaceId: string }
+  | { kind: 'user'; userId: string; accountId: string }
   | { kind: 'service'; serviceId: string };
 
 export type AIGrant = {
@@ -150,7 +155,7 @@ export type L10nJob = {
   changedPaths?: string[];
   removedPaths?: string[];
   kind: InstanceKind;
-  workspaceId: string | null;
+  accountId: string | null;
   envStage: string;
 };
 
@@ -246,7 +251,7 @@ export type InstanceOverlayRow = {
   base_updated_at?: string | null;
   source: string;
   geo_targets?: string[] | null;
-  workspace_id?: string | null;
+  account_id?: string | null;
   updated_at?: string | null;
 };
 
@@ -259,7 +264,7 @@ export type L10nGenerateStateRow = {
   base_fingerprint: string;
   base_updated_at?: string | null;
   widget_type?: string | null;
-  workspace_id?: string | null;
+  account_id?: string | null;
   status: L10nGenerateStatus;
   attempts: number;
   next_attempt_at?: string | null;
@@ -287,7 +292,7 @@ export type L10nGenerateReportPayload = {
   status: L10nGenerateStatus;
   attempts?: number;
   widgetType?: string | null;
-  workspaceId?: string | null;
+  accountId?: string | null;
   baseUpdatedAt?: string | null;
   error?: string | null;
   occurredAt?: string | null;

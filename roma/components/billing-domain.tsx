@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { resolveBootstrapDomainState } from './bootstrap-domain-state';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
@@ -13,7 +12,7 @@ type BillingSummaryResponse = {
   reasonKey: string;
   plan: {
     inferredTier: string;
-    workspaceCount: number;
+    accountCount: number;
   };
   checkoutAvailable: boolean;
   portalAvailable: boolean;
@@ -28,29 +27,35 @@ export function BillingDomain() {
   const [summary, setSummary] = useState<BillingSummaryResponse | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<null | 'checkout' | 'portal'>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const refreshSummary = useCallback(async () => {
     if (!accountId) {
       setSummary(null);
       setError(null);
       return;
     }
-    const snapshot = me.data?.domains?.billing ?? null;
-    const hasDomainPayload = Boolean(snapshot && snapshot.accountId === accountId);
-    const domainState = resolveBootstrapDomainState({
-      data: me.data,
-      domainKey: 'billing',
-      hasDomainPayload,
-    });
-    if (!hasDomainPayload || domainState.kind !== 'ok') {
-      setSummary(null);
-      setError(domainState.reasonKey);
-      return;
-    }
-    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
-    setSummary(safeSnapshot);
+    setLoading(true);
     setError(null);
-  }, [accountId, me.data]);
+    try {
+      const payload = await fetchParisJson<BillingSummaryResponse>(
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/billing/summary`,
+        { method: 'GET' },
+      );
+      setSummary(payload);
+      setError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setSummary(null);
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [accountId]);
+
+  useEffect(() => {
+    void refreshSummary();
+  }, [refreshSummary]);
 
   const callBillingAction = async (kind: 'checkout' | 'portal') => {
     if (!accountId) return;
@@ -85,9 +90,15 @@ export function BillingDomain() {
 
         {error ? (
           <div className="roma-inline-stack">
-            <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
             <p className="body-m">{error}</p>
-            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="line2"
+              type="button"
+              onClick={() => void refreshSummary()}
+              disabled={loading}
+            >
               <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
           </div>

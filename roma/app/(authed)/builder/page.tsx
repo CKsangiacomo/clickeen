@@ -12,7 +12,7 @@ function singleParam(value: string | string[] | undefined): string {
 
 export default async function BuilderLandingPage({ searchParams }: BuilderLandingPageProps) {
   const query = (searchParams ? await searchParams : {}) ?? {};
-  const initialWorkspaceId = singleParam(query.workspaceId);
+  const initialAccountId = singleParam(query.accountId);
   const initialPublicId = singleParam(query.publicId);
 
   return (
@@ -22,7 +22,7 @@ export default async function BuilderLandingPage({ searchParams }: BuilderLandin
       canvasClassName="rd-canvas rd-canvas--builder"
       headerRight={<RomaShellDefaultActions />}
     >
-      <BuilderDomain initialPublicId={initialPublicId} initialWorkspaceId={initialWorkspaceId} />
+      <BuilderDomain initialPublicId={initialPublicId} initialAccountId={initialAccountId} />
     </RomaShell>
   );
 }

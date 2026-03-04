@@ -35,11 +35,11 @@ Optional env vars:
   RUNTIME_PARITY_PARIS_BASE_URL
   RUNTIME_PARITY_TOKYO_BASE_URL
   RUNTIME_PARITY_VENICE_BASE_URL
-  RUNTIME_PARITY_PUBLIC_ID
-  RUNTIME_PARITY_PUBLISH_PUBLIC_ID
-  RUNTIME_PARITY_ACCOUNT_ID
-  RUNTIME_PARITY_WORKSPACE_ID
-  RUNTIME_PARITY_PUBLISH_BUDGET_MS
+	  RUNTIME_PARITY_PUBLIC_ID
+	  RUNTIME_PARITY_PUBLISH_PUBLIC_ID
+	  RUNTIME_PARITY_ACCOUNT_ID
+	  RUNTIME_PARITY_WORKSPACE_ID        Legacy alias for RUNTIME_PARITY_ACCOUNT_ID
+	  RUNTIME_PARITY_PUBLISH_BUDGET_MS
 `;
 
 function parseArgs(argv) {
@@ -151,11 +151,10 @@ async function main() {
   const profile = await ensureRuntimeProfileAuth(resolvedProfile);
   const startedAt = new Date().toISOString();
 
-  const context = {
-    accountId: '',
-    workspaceId: '',
-    probePublicId: profile.probePublicId || '',
-  };
+	  const context = {
+	    accountId: '',
+	    probePublicId: profile.probePublicId || '',
+	  };
 
   const scenarioRunners =
     args.mode === 'auth'

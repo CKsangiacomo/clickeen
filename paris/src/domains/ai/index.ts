@@ -9,13 +9,13 @@ import {
   WIDGET_COPILOT_AGENT_IDS,
 } from '@clickeen/ck-policy';
 import type { BudgetKey, Policy, PolicyProfile } from '@clickeen/ck-policy';
-import type { AIGrant, Env, WorkspaceRow } from '../../shared/types';
+import type { AIGrant, AccountRow, Env } from '../../shared/types';
 import { json } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { assertDevAuth } from '../../shared/auth';
 import { asTrimmedString, isRecord, isUuid } from '../../shared/validation';
 import { consumeBudget } from '../../shared/budgets';
-import { requireWorkspace } from '../../shared/workspaces';
+import { requireAccount } from '../../shared/accounts';
 import { callSanfranciscoJson } from '../../shared/sanfrancisco';
 
 const OUTCOME_EVENTS = new Set([
@@ -233,9 +233,9 @@ async function mintGrant(grant: AIGrant, secret: string): Promise<string> {
   return `v1.${payloadB64}.${sigB64}`;
 }
 
-function normalizeAiSubject(value: unknown): 'minibob' | 'workspace' | null {
+function normalizeAiSubject(value: unknown): 'minibob' | 'account' | null {
   const raw = typeof value === 'string' ? value.trim().toLowerCase() : '';
-  if (raw === 'minibob' || raw === 'workspace') return raw;
+  if (raw === 'minibob' || raw === 'account') return raw;
   return null;
 }
 
@@ -249,14 +249,14 @@ function clampBudget(requested: number | null, allowed: number, hardCap: number)
 }
 
 function resolveAiSubjectPolicy(args: {
-  subject: 'minibob' | 'workspace';
-  workspace?: WorkspaceRow | null;
+  subject: 'minibob' | 'account';
+  account?: AccountRow | null;
 }): { policy: Policy; profile: PolicyProfile } {
   if (args.subject === 'minibob') {
     const policy = resolvePolicy({ profile: 'minibob', role: 'editor' });
     return { policy, profile: 'minibob' };
   }
-  const tier = args.workspace?.tier ?? 'free';
+  const tier = args.account?.tier ?? 'free';
   const policy = resolvePolicy({ profile: tier, role: 'editor' });
   return { policy, profile: tier };
 }
@@ -271,27 +271,27 @@ export async function issueAiGrant(args: {
   mode?: 'editor' | 'ops';
   requestedProvider?: string;
   requestedModel?: string;
-  subject?: 'minibob' | 'workspace';
-  workspaceId?: string;
-  workspace?: WorkspaceRow | null;
+  subject?: 'minibob' | 'account';
+  accountId?: string;
+  account?: AccountRow | null;
   trace?: { sessionId?: string; instancePublicId?: string };
   budgets?: { maxTokens?: number; timeoutMs?: number; maxRequests?: number };
 }): Promise<{ ok: true; grant: string; exp: number; agentId: string } | { ok: false; response: Response }> {
-  const subject = args.subject ?? (args.workspaceId ? 'workspace' : 'minibob');
-  let workspace: WorkspaceRow | null = args.workspace ?? null;
-  if (subject === 'workspace') {
-    const workspaceIdRaw = args.workspaceId ?? '';
-    if (!workspaceIdRaw || !isUuid(workspaceIdRaw)) {
-      return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' }, 422) };
+  const subject = args.subject ?? (args.accountId ? 'account' : 'minibob');
+  let account: AccountRow | null = args.account ?? null;
+  if (subject === 'account') {
+    const accountIdRaw = args.accountId ?? '';
+    if (!accountIdRaw || !isUuid(accountIdRaw)) {
+      return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' }, 422) };
     }
-    if (!workspace) {
-      const workspaceRes = await requireWorkspace(args.env, workspaceIdRaw);
-      if (!workspaceRes.ok) return { ok: false, response: workspaceRes.response };
-      workspace = workspaceRes.workspace;
+    if (!account) {
+      const accountRes = await requireAccount(args.env, accountIdRaw);
+      if (!accountRes.ok) return { ok: false, response: accountRes.response };
+      account = accountRes.account;
     }
   }
 
-  const { policy, profile } = resolveAiSubjectPolicy({ subject, workspace });
+  const { policy, profile } = resolveAiSubjectPolicy({ subject, account });
   const normalizedAgentId = resolveWidgetCopilotRequestedAgentId({
     requestedAgentId: args.agentId,
     policyProfile: profile,
@@ -312,8 +312,8 @@ export async function issueAiGrant(args: {
     }
   }
 
-  if (subject === 'workspace' && workspace?.id && entry.requiredEntitlements?.length) {
-    const scope = { kind: 'workspace' as const, workspaceId: workspace.id };
+  if (subject === 'account' && account?.id && entry.requiredEntitlements?.length) {
+    const scope = { kind: 'account' as const, accountId: account.id };
     for (const key of entry.requiredEntitlements) {
       if (!isBudgetEntitlementKey(policy, key)) continue;
       const max = policy.budgets[key]?.max ?? null;
@@ -407,13 +407,13 @@ export async function handleAiGrant(req: Request, env: Env) {
   const requestedProvider = typeof (body as any).provider === 'string' ? (body as any).provider.trim() : '';
   const requestedModel = typeof (body as any).model === 'string' ? (body as any).model.trim() : '';
 
-  const workspaceIdRaw = typeof (body as any).workspaceId === 'string' ? (body as any).workspaceId.trim() : '';
+  const accountIdRaw = typeof (body as any).accountId === 'string' ? (body as any).accountId.trim() : '';
   const subjectInput = typeof (body as any).subject === 'string' ? (body as any).subject.trim() : '';
   const subjectRaw = normalizeAiSubject(subjectInput);
   if (subjectInput && !subjectRaw) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.subject.invalid' }, 422);
   }
-  const subject = subjectRaw ?? (workspaceIdRaw ? 'workspace' : 'minibob');
+  const subject = subjectRaw ?? (accountIdRaw ? 'account' : 'minibob');
 
   const traceRaw = isRecord((body as any).trace) ? (body as any).trace : null;
   const trace = traceRaw
@@ -439,7 +439,7 @@ export async function handleAiGrant(req: Request, env: Env) {
     requestedProvider,
     requestedModel,
     subject,
-    workspaceId: workspaceIdRaw || undefined,
+    accountId: accountIdRaw || undefined,
     trace,
     budgets,
   });
@@ -493,10 +493,10 @@ export async function handleAiMinibobGrant(req: Request, env: Env) {
     return json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 });
   }
 
-  const workspaceIdRaw = asTrimmedString((body as any).workspaceId);
-  if (workspaceIdRaw) {
-    logMinibobMintDecision({ stage, mode, decision: 'deny', reason: 'workspace_not_allowed', sessionId, widgetType });
-    return json([{ path: 'workspaceId', message: 'workspaceId is not allowed for minibob grants' }], { status: 403 });
+  const accountIdRaw = asTrimmedString((body as any).accountId);
+  if (accountIdRaw) {
+    logMinibobMintDecision({ stage, mode, decision: 'deny', reason: 'account_not_allowed', sessionId, widgetType });
+    return json([{ path: 'accountId', message: 'accountId is not allowed for minibob grants' }], { status: 403 });
   }
 
   const agentIdRaw = asTrimmedString((body as any).agentId);
@@ -597,7 +597,6 @@ function isOutcomeAttachPayload(value: unknown): value is {
   occurredAtMs: number;
   timeToDecisionMs?: number;
   accountIdHash?: string;
-  workspaceIdHash?: string;
 } {
   if (!isRecord(value)) return false;
   const requestId = asTrimmedString((value as any).requestId);
@@ -606,7 +605,6 @@ function isOutcomeAttachPayload(value: unknown): value is {
   const occurredAtMs = (value as any).occurredAtMs;
   const timeToDecisionMs = (value as any).timeToDecisionMs;
   const accountIdHash = (value as any).accountIdHash;
-  const workspaceIdHash = (value as any).workspaceIdHash;
 
   if (!requestId) return false;
   if (!sessionId) return false;
@@ -615,7 +613,6 @@ function isOutcomeAttachPayload(value: unknown): value is {
   if (timeToDecisionMs !== undefined && (typeof timeToDecisionMs !== 'number' || !Number.isFinite(timeToDecisionMs) || timeToDecisionMs < 0))
     return false;
   if (accountIdHash !== undefined && (typeof accountIdHash !== 'string' || !accountIdHash.trim())) return false;
-  if (workspaceIdHash !== undefined && (typeof workspaceIdHash !== 'string' || !workspaceIdHash.trim())) return false;
   return true;
 }
 

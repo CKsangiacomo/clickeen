@@ -297,7 +297,9 @@ export function resolveRuntimeProfile(envName, options = {}) {
     tokyoDevJwt: resolveTokyoDevJwt(envName, { required: requiresTokyoJwt }),
     probePublicId: readRuntimeValue('RUNTIME_PARITY_PUBLIC_ID', { allowLocalFallback }),
     probePublishPublicId: readRuntimeValue('RUNTIME_PARITY_PUBLISH_PUBLIC_ID', { allowLocalFallback }),
-    probeAccountId: readRuntimeValue('RUNTIME_PARITY_ACCOUNT_ID', { allowLocalFallback }),
-    probeWorkspaceId: readRuntimeValue('RUNTIME_PARITY_WORKSPACE_ID', { allowLocalFallback }),
+    probeAccountId:
+      readRuntimeValue('RUNTIME_PARITY_ACCOUNT_ID', { allowLocalFallback }) ||
+      // Legacy alias (pre account-only tenancy pivot).
+      readRuntimeValue('RUNTIME_PARITY_WORKSPACE_ID', { allowLocalFallback }),
   };
 }

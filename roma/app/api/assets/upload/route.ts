@@ -8,7 +8,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST,OPTIONS',
   'Access-Control-Allow-Headers':
-    'authorization, content-type, x-account-id, x-workspace-id, x-public-id, x-widget-type, x-filename, x-variant, x-source, x-request-id',
+    'authorization, content-type, x-account-id, x-public-id, x-widget-type, x-filename, x-variant, x-source, x-request-id',
 } as const;
 
 function withCorsAndSession(
@@ -61,15 +61,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const workspaceId = (request.headers.get('x-workspace-id') || '').trim();
-  if (workspaceId && !isUuid(workspaceId)) {
-    return withCorsAndSession(
-      request,
-      NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 }),
-      session.setCookies,
-    );
-  }
-
   const filename = (request.headers.get('x-filename') || '').trim() || 'upload.bin';
   const variant = (request.headers.get('x-variant') || '').trim() || 'original';
 
@@ -106,7 +97,6 @@ export async function POST(request: NextRequest) {
   const headers = new Headers();
   headers.set('authorization', `Bearer ${session.accessToken}`);
   headers.set('x-account-id', accountId);
-  if (workspaceId) headers.set('x-workspace-id', workspaceId);
 
   const publicId = (request.headers.get('x-public-id') || '').trim();
   if (publicId) {

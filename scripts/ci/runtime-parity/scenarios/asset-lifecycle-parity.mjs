@@ -18,7 +18,6 @@ async function runAssetFlow({
   hostBaseUrl,
   bearer,
   accountId,
-  workspaceId,
   tokyoBaseUrl,
   bobBaseUrl,
   veniceBaseUrl,
@@ -38,7 +37,6 @@ async function runAssetFlow({
     'x-filename': `runtime-parity-${hostLabel}-upload.bin`,
     'x-variant': 'original',
     'x-account-id': accountId,
-    'x-workspace-id': workspaceId,
     'x-source': 'api',
   });
   let upload = null;
@@ -106,19 +104,18 @@ async function runAssetFlow({
 export async function runAssetLifecycleParityScenario({ profile, context }) {
   const checks = [];
   const accountId = readString(context.accountId);
-  const workspaceId = readString(context.workspaceId);
 
-  if (!accountId || !workspaceId) {
+  if (!accountId) {
     checks.push(
-      makeCheck('Bootstrap context includes accountId/workspaceId for asset lifecycle', false, {
-        actual: { accountId, workspaceId },
+      makeCheck('Bootstrap context includes accountId for asset lifecycle', false, {
+        actual: { accountId },
       }),
     );
     return {
       scenario: 'asset-lifecycle-parity',
       passed: false,
       checks,
-      fingerprint: { accountId, workspaceId },
+      fingerprint: { accountId },
     };
   }
 
@@ -128,7 +125,6 @@ export async function runAssetLifecycleParityScenario({ profile, context }) {
       hostBaseUrl: profile.bobBaseUrl,
       bearer: profile.authBearer,
       accountId,
-      workspaceId,
       tokyoBaseUrl: profile.tokyoBaseUrl,
       bobBaseUrl: profile.bobBaseUrl,
       veniceBaseUrl: profile.veniceBaseUrl,
@@ -140,7 +136,6 @@ export async function runAssetLifecycleParityScenario({ profile, context }) {
           hostBaseUrl: profile.romaBaseUrl,
           bearer: profile.authBearer,
           accountId,
-          workspaceId,
           tokyoBaseUrl: profile.tokyoBaseUrl,
           bobBaseUrl: profile.bobBaseUrl,
           veniceBaseUrl: profile.veniceBaseUrl,
@@ -217,7 +212,6 @@ export async function runAssetLifecycleParityScenario({ profile, context }) {
     checks,
     fingerprint: {
       accountId,
-      workspaceId,
       bobSecondDeleteReason: bobFlow.secondDeleteReason,
       romaSecondDeleteReason: romaFlow ? romaFlow.secondDeleteReason : null,
     },

@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { resolveBootstrapDomainState } from './bootstrap-domain-state';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
@@ -15,42 +14,42 @@ import { normalizeRomaTemplatesSnapshot, type TemplateInstance } from './use-rom
 export function TemplatesDomain() {
   const router = useRouter();
   const me = useRomaMe();
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [templateInstances, setTemplateInstances] = useState<TemplateInstance[]>([]);
-  const [accountIdFromSnapshot, setAccountIdFromSnapshot] = useState('');
+  const [domainLoading, setDomainLoading] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  const workspaceId = context.workspaceId;
+  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
-  const activeAccountId = accountId || accountIdFromSnapshot;
+  const activeAccountId = accountId;
+
+  const refreshTemplates = useCallback(async () => {
+    if (!accountId) return;
+    setDomainLoading(true);
+    setDataError(null);
+    try {
+      const payload = await fetchParisJson<unknown>(`/api/paris/roma/templates?accountId=${encodeURIComponent(accountId)}`, {
+        method: 'GET',
+      });
+      const normalized = normalizeRomaTemplatesSnapshot(payload);
+      if (!normalized || normalized.accountId !== accountId) {
+        throw new Error('coreui.errors.payload.invalid');
+      }
+      setTemplateInstances(normalized.instances);
+      setDataError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setTemplateInstances([]);
+      setDataError(message);
+    } finally {
+      setDomainLoading(false);
+    }
+  }, [accountId]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      setTemplateInstances([]);
-      setAccountIdFromSnapshot('');
-      setDataError(null);
-      return;
-    }
-    const snapshot = normalizeRomaTemplatesSnapshot(me.data?.domains?.templates ?? null);
-    const hasDomainPayload = Boolean(snapshot && snapshot.workspaceId === workspaceId);
-    const domainState = resolveBootstrapDomainState({
-      data: me.data,
-      domainKey: 'templates',
-      hasDomainPayload,
-    });
-    if (!hasDomainPayload || domainState.kind !== 'ok') {
-      setTemplateInstances([]);
-      setAccountIdFromSnapshot('');
-      setDataError(domainState.reasonKey);
-      return;
-    }
-    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
-    setTemplateInstances(safeSnapshot.instances);
-    setAccountIdFromSnapshot(safeSnapshot.accountId);
-    setDataError(null);
-  }, [workspaceId, me.data]);
+    void refreshTemplates();
+  }, [refreshTemplates]);
 
   const groupedTemplates = useMemo(() => {
     const groups = new Map<string, TemplateInstance[]>();
@@ -77,7 +76,7 @@ export function TemplatesDomain() {
 
   const handleUseTemplate = useCallback(
     async (instance: TemplateInstance) => {
-      if (!workspaceId) return;
+      if (!accountId) return;
       const actionKey = `template:${instance.publicId}`;
       setActiveActionKey(actionKey);
       setActionError(null);
@@ -88,7 +87,7 @@ export function TemplatesDomain() {
             'content-type': 'application/json',
           },
           body: JSON.stringify({
-            workspaceId,
+            accountId,
             sourcePublicId: instance.publicId,
           }),
         });
@@ -102,7 +101,6 @@ export function TemplatesDomain() {
         router.push(
           buildBuilderRoute({
             publicId: createdPublicId,
-            workspaceId,
             accountId: activeAccountId,
             widgetType: instance.widgetType,
           }),
@@ -114,31 +112,34 @@ export function TemplatesDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [activeAccountId, router, workspaceId],
+    [accountId, activeAccountId, router],
   );
 
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading workspace context...</section>;
+  if (me.loading) return <section className="rd-canvas-module body-m">Loading account context...</section>;
   if (me.error || !me.data) {
-    return <section className="rd-canvas-module body-m">Failed to load workspace context: {me.error ?? 'unknown_error'}</section>;
+    return <section className="rd-canvas-module body-m">Failed to load account context: {me.error ?? 'unknown_error'}</section>;
   }
-  if (!workspaceId) {
-    return <section className="rd-canvas-module body-m">No workspace membership found for current user.</section>;
+  if (!accountId) {
+    return <section className="rd-canvas-module body-m">No account membership found for current user.</section>;
   }
 
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">
-          Workspace: {context.workspaceName || workspaceId}
-          {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
-        </p>
+        <p className="body-m">Account: {accountId}</p>
         <p className="body-m">Showing all curated templates available.</p>
 
         {dataError ? (
           <div className="roma-inline-stack">
-            <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
             <p className="body-m">{dataError}</p>
-            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="line2"
+              type="button"
+              onClick={() => void refreshTemplates()}
+              disabled={domainLoading}
+            >
               <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
           </div>

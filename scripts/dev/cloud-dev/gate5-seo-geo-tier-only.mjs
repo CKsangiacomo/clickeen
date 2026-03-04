@@ -121,25 +121,6 @@ async function createAccount(accessToken, name) {
   return assertString(data?.accountId, 'accountId');
 }
 
-async function createWorkspace(accessToken, accountId, label) {
-  const slug = `${label.toLowerCase().replace(/\\s+/g, '-')}-${Date.now().toString(36)}`;
-  const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/workspaces`,
-    {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        accept: 'application/json',
-        'content-type': 'application/json',
-        'Idempotency-Key': crypto.randomUUID(),
-      },
-      body: JSON.stringify({ name: label, slug }),
-    },
-  );
-  if (!res.ok) throw new Error(`Workspace create failed (${res.status}) ${text.slice(0, 200)}`);
-  return assertString(data?.workspace?.workspaceId, 'workspaceId');
-}
-
 async function planChange(accessToken, accountId, nextTier) {
   const { res, text } = await fetchJson(
     `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/lifecycle/plan-change?confirm=1`,
@@ -156,7 +137,7 @@ async function planChange(accessToken, accountId, nextTier) {
   if (!res.ok) throw new Error(`Plan change failed (${res.status}) ${text.slice(0, 200)}`);
 }
 
-async function duplicateFaq(accessToken, workspaceId) {
+async function duplicateFaq(accessToken, accountId) {
   const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/roma/widgets/duplicate`, {
     method: 'POST',
     headers: {
@@ -164,15 +145,15 @@ async function duplicateFaq(accessToken, workspaceId) {
       accept: 'application/json',
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ workspaceId, sourcePublicId: 'wgt_main_faq' }),
+    body: JSON.stringify({ accountId, sourcePublicId: 'wgt_main_faq' }),
   });
   if (!res.ok) throw new Error(`Duplicate failed (${res.status}) ${text.slice(0, 200)}`);
   return assertString(data?.publicId, 'publicId');
 }
 
-async function getInstance(accessToken, workspaceId, publicId) {
+async function getInstance(accessToken, accountId, publicId) {
   const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       headers: {
         authorization: `Bearer ${accessToken}`,
@@ -185,8 +166,8 @@ async function getInstance(accessToken, workspaceId, publicId) {
   return data;
 }
 
-async function setSeoGeoEnabledInConfig(accessToken, workspaceId, publicId, enabled) {
-  const instance = await getInstance(accessToken, workspaceId, publicId);
+async function setSeoGeoEnabledInConfig(accessToken, accountId, publicId, enabled) {
+  const instance = await getInstance(accessToken, accountId, publicId);
   const config = instance?.config;
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
     throw new Error('Instance config is missing or invalid');
@@ -195,9 +176,9 @@ async function setSeoGeoEnabledInConfig(accessToken, workspaceId, publicId, enab
   return nextConfig;
 }
 
-async function setLive(accessToken, workspaceId, publicId, payload) {
+async function setLive(accessToken, accountId, publicId, payload) {
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -276,10 +257,9 @@ async function main() {
   console.log('[gate5] Non-entitled tier (free): meta must NOT exist…');
   {
     const accountId = await createAccount(accessToken, 'Gate 5 Free Account');
-    const workspaceId = await createWorkspace(accessToken, accountId, 'Gate 5 Free Workspace');
-    const publicId = await duplicateFaq(accessToken, workspaceId);
-    const config = await setSeoGeoEnabledInConfig(accessToken, workspaceId, publicId, true);
-    await setLive(accessToken, workspaceId, publicId, publishPayload(config, true));
+    const publicId = await duplicateFaq(accessToken, accountId);
+    const config = await setSeoGeoEnabledInConfig(accessToken, accountId, publicId, true);
+    await setLive(accessToken, accountId, publicId, publishPayload(config, true));
 
     // Live pointer should exist, but meta must not.
     await waitForStatus({
@@ -291,7 +271,7 @@ async function main() {
     await expectMetaUnavailable(publicId);
     console.log('[gate5] free tier meta unavailable ✅');
 
-    await setLive(accessToken, workspaceId, publicId, unpublishPayload(config));
+    await setLive(accessToken, accountId, publicId, unpublishPayload(config));
     await waitForStatus({
       label: 'venice /r',
       url: `${BASE.venice.replace(/\/+$/, '')}/r/${encodeURIComponent(publicId)}`,
@@ -303,11 +283,10 @@ async function main() {
   console.log('[gate5] Entitled tier (tier2): meta MUST exist…');
   {
     const accountId = await createAccount(accessToken, 'Gate 5 Tier2 Account');
-    const workspaceId = await createWorkspace(accessToken, accountId, 'Gate 5 Tier2 Workspace');
     await planChange(accessToken, accountId, 'tier2');
-    const publicId = await duplicateFaq(accessToken, workspaceId);
-    const config = await setSeoGeoEnabledInConfig(accessToken, workspaceId, publicId, true);
-    await setLive(accessToken, workspaceId, publicId, publishPayload(config, true));
+    const publicId = await duplicateFaq(accessToken, accountId);
+    const config = await setSeoGeoEnabledInConfig(accessToken, accountId, publicId, true);
+    await setLive(accessToken, accountId, publicId, publishPayload(config, true));
 
     await waitForStatus({
       label: 'venice /r',
@@ -319,7 +298,7 @@ async function main() {
     const meta = await waitForMetaAvailable(publicId);
     console.log(`[gate5] tier2 meta available ✅ metaFp=${meta.metaFp}`);
 
-    await setLive(accessToken, workspaceId, publicId, unpublishPayload(config));
+    await setLive(accessToken, accountId, publicId, unpublishPayload(config));
     await waitForStatus({
       label: 'venice /r',
       url: `${BASE.venice.replace(/\/+$/, '')}/r/${encodeURIComponent(publicId)}`,
@@ -341,4 +320,3 @@ main().catch((error) => {
   console.error(`[gate5] failed: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 });
-

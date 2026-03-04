@@ -21,8 +21,8 @@ function resolveProbePublicId(profile, romaPayload, bobPayload) {
   const explicit = readString(profile.probePublicId);
   if (explicit) return explicit;
   const instances = [...extractWidgetInstances(romaPayload), ...extractWidgetInstances(bobPayload)];
-  const workspaceFirst = instances.find((item) => item.source === 'workspace');
-  if (workspaceFirst?.publicId) return workspaceFirst.publicId;
+  const accountFirst = instances.find((item) => item.source === 'account');
+  if (accountFirst?.publicId) return accountFirst.publicId;
   return instances[0]?.publicId || '';
 }
 
@@ -37,11 +37,9 @@ export async function runBootstrapParityScenario({ profile }) {
     const bobDefaults = extractDefaults(bob.json);
     checks.push(
       makeCheck('Bob default accountId is UUID', isUuid(bobDefaults.accountId), { actual: bobDefaults.accountId }),
-      makeCheck('Bob default workspaceId is UUID', isUuid(bobDefaults.workspaceId), { actual: bobDefaults.workspaceId }),
     );
 
     const resolvedAccountId = bobDefaults.accountId || '';
-    const resolvedWorkspaceId = bobDefaults.workspaceId || '';
     const resolvedPublicId = resolveProbePublicId(profile, null, bob.json);
 
     checks.push(makeCheck('Probe publicId resolved', Boolean(resolvedPublicId), { actual: resolvedPublicId }));
@@ -52,12 +50,10 @@ export async function runBootstrapParityScenario({ profile }) {
       checks,
       fingerprint: {
         accountId: resolvedAccountId,
-        workspaceId: resolvedWorkspaceId,
         probePublicId: resolvedPublicId,
       },
       contextUpdate: {
         accountId: resolvedAccountId,
-        workspaceId: resolvedWorkspaceId,
         probePublicId: resolvedPublicId,
       },
     };
@@ -76,32 +72,19 @@ export async function runBootstrapParityScenario({ profile }) {
 
   checks.push(
     makeCheck('Roma default accountId is UUID', isUuid(romaDefaults.accountId), { actual: romaDefaults.accountId }),
-    makeCheck('Roma default workspaceId is UUID', isUuid(romaDefaults.workspaceId), { actual: romaDefaults.workspaceId }),
     makeCheck('Bob default accountId is UUID', isUuid(bobDefaults.accountId), { actual: bobDefaults.accountId }),
-    makeCheck('Bob default workspaceId is UUID', isUuid(bobDefaults.workspaceId), { actual: bobDefaults.workspaceId }),
     makeCheck('Roma/Bob accountId match', romaDefaults.accountId === bobDefaults.accountId, {
       actual: { roma: romaDefaults.accountId, bob: bobDefaults.accountId },
-    }),
-    makeCheck('Roma/Bob workspaceId match', romaDefaults.workspaceId === bobDefaults.workspaceId, {
-      actual: { roma: romaDefaults.workspaceId, bob: bobDefaults.workspaceId },
     }),
   );
 
   const resolvedAccountId = romaDefaults.accountId || bobDefaults.accountId || '';
-  const resolvedWorkspaceId = romaDefaults.workspaceId || bobDefaults.workspaceId || '';
   const resolvedPublicId = resolveProbePublicId(profile, roma.json, bob.json);
 
   if (profile.probeAccountId) {
     checks.push(
       makeCheck('Account matches configured probe accountId', resolvedAccountId === profile.probeAccountId, {
         actual: { expected: profile.probeAccountId, resolved: resolvedAccountId },
-      }),
-    );
-  }
-  if (profile.probeWorkspaceId) {
-    checks.push(
-      makeCheck('Workspace matches configured probe workspaceId', resolvedWorkspaceId === profile.probeWorkspaceId, {
-        actual: { expected: profile.probeWorkspaceId, resolved: resolvedWorkspaceId },
       }),
     );
   }
@@ -113,12 +96,10 @@ export async function runBootstrapParityScenario({ profile }) {
     checks,
     fingerprint: {
       accountId: resolvedAccountId,
-      workspaceId: resolvedWorkspaceId,
       probePublicId: resolvedPublicId,
     },
     contextUpdate: {
       accountId: resolvedAccountId,
-      workspaceId: resolvedWorkspaceId,
       probePublicId: resolvedPublicId,
     },
   };

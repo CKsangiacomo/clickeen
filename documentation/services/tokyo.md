@@ -75,7 +75,7 @@ Local dev:
 - `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` (so Venice can fetch published render snapshots from the same Tokyo origin).
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
 - `tokyo/dev-server.mjs` supports local upload endpoints:
-  - `POST /assets/upload` (account-owned uploads; required header: `x-account-id`; optional trace headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`)
+  - `POST /assets/upload` (account-owned uploads; required header: `x-account-id`; optional trace headers: `x-public-id`, `x-widget-type`, `x-source`)
   - `DELETE /assets/:accountId/:assetId` (synchronous hard delete of blobs + metadata; no snapshot rebuild)
   - `GET /assets/integrity/:accountId` (account mirror integrity snapshot)
   - `GET /assets/integrity/:accountId/:assetId` (per-asset integrity snapshot)
@@ -109,7 +109,7 @@ Build command (repo root):
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
-  - `POST /assets/upload` (requires `Authorization: Bearer <token>`; accepts Berlin session bearer for product uploads, or `TOKYO_DEV_JWT` for internal/dev automation. Required header: `x-account-id`. Optional headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`. When `x-workspace-id` is provided, worker enforces workspace membership + workspace/account binding; otherwise it enforces account membership.)
+  - `POST /assets/upload` (requires `Authorization: Bearer <token>`; accepts Berlin session bearer for product uploads, or `TOKYO_DEV_JWT` for internal/dev automation. Required header: `x-account-id`. Optional headers: `x-public-id`, `x-widget-type`, `x-source`.)
   - `DELETE /assets/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; synchronous hard delete path)
   - `GET /assets/integrity/:accountId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /assets/integrity/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)

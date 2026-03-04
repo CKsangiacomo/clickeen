@@ -29,17 +29,17 @@ This prevents “fan-out” (e.g. `wgt_curated_... .fr/.de/.es`) and keeps cachi
 ### Instance kinds (authoritative)
 
 - **Curated**: Clickeen-owned instances used for Prague embeds and template pickers.
-- **User**: Workspace-owned instances created by users (often by cloning curated).
+- **User**: Account-owned instances created by users (often by cloning curated).
 
-Curated + user instances localize within the workspace’s **active locales** (EN implied), bounded by tier entitlements and subject policy.
+Curated + user instances localize within the account’s **active locales** (EN implied), bounded by tier entitlements and subject policy.
 
 - **User instances** auto-enqueue l10n on publish/update (for the active locales set).
 - **Curated instances** also auto-enqueue l10n on save/update when status is published.
-- DevStudio can explicitly enqueue active locales via `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected` (manual/no-diff backfill path).
+- DevStudio can explicitly enqueue active locales via `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected?subject=account` (manual/no-diff backfill path).
 
 ### Entitlement + active locales model
 
-Effective localization = **entitlements** ∩ **subject policy** ∩ **workspace active locales**.
+Effective localization = **entitlements** ∩ **subject policy** ∩ **account active locales**.
 
 - Entitlement keys:
   - `l10n.locales.max` (cap; total locales including EN)
@@ -51,7 +51,7 @@ Effective localization = **entitlements** ∩ **subject policy** ∩ **workspace
   - Tier1: EN + 3 user-selected locales (total = 4)
   - Tier2+: unlimited locales
   - DevStudio: uncapped
-- Workspace active locales source: `workspaces.l10n_locales` (JSON array of **non‑EN** locales; EN is implied)
+- Account active locales source: `accounts.l10n_locales` (JSON array of **non‑EN** locales; EN is implied)
 
 ## Localization systems (runtime)
 
@@ -106,7 +106,7 @@ Where the DB fits (write plane only):
   - Paris enqueues `write-text-pack` for that locale (full pack = base snapshot + locale ops + user ops).
   - If SEO/GEO is entitled+enabled, Paris also enqueues `write-meta-pack` for that locale.
 - When an instance first goes live, Paris seeds **every entitled locale** with a text pack so the embed never requests a missing locale pointer.
-- When workspace locale/policy changes, Paris resyncs the Tokyo live pointers for all already-live instances (and seeds any newly added locales).
+- When account locale/policy changes, Paris resyncs the Tokyo live pointers for all already-live instances (and seeds any newly added locales).
 - Unpublish (`status=unpublished`) deletes the full `l10n/instances/<publicId>/...` subtree from Tokyo (mirror rule).
 
 **Widget allowlist (authoritative)**
@@ -342,7 +342,7 @@ User overrides (interactive):
 
 ## User-owned localization (current)
 
-Higher-tier workspaces can edit per-field translations in Bob. These edits are stored as layer=user overlays (layerKey=<locale>, optional `global` fallback) and persist across agent re-translation.
+Higher-tier accounts can edit per-field translations in Bob. These edits are stored as layer=user overlays (layerKey=<locale>, optional `global` fallback) and persist across agent re-translation.
 
 Non-goals for Phase 1:
 

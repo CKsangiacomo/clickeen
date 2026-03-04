@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Najczęściej zadawane pytania"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Wszystkie pytania"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Czy jest dostępny darmowy plan?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Czym jest Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Jak zainstalować widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Dlaczego warto korzystać z Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Tak — jeden aktywny widget z podstawowymi funkcjami."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Widgety do osadzenia z wbudowanymi konwersjami."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Skopiuj kod osadzenia i wklej go na swojej stronie przed </body>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Bo Clickeen to świetna nowa platforma, dzięki której web staje się piękny i łatwy w użyciu."
+    }
+  ],
+  "v": 1
+}

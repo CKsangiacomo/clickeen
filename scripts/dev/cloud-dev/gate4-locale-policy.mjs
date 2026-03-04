@@ -144,29 +144,8 @@ async function createAccount(accessToken, name) {
   return accountId;
 }
 
-async function createWorkspace(accessToken, accountId, label) {
-  const slug = `${label}-${Date.now().toString(36)}`;
-  const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/workspaces`,
-    {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        accept: 'application/json',
-        'content-type': 'application/json',
-        'Idempotency-Key': crypto.randomUUID(),
-      },
-      body: JSON.stringify({ name: label, slug }),
-    },
-  );
-  if (!res.ok) throw new Error(`Workspace create failed (${res.status}) ${text.slice(0, 200)}`);
-  const workspaceId = typeof data?.workspace?.workspaceId === 'string' ? data.workspace.workspaceId.trim() : '';
-  if (!workspaceId) throw new Error('Workspace create missing workspaceId.');
-  return workspaceId;
-}
-
-async function putWorkspaceLocales(accessToken, workspaceId, locales, policy) {
-  return fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/locales?subject=workspace`, {
+async function putAccountLocales(accessToken, accountId, locales, policy) {
+  return fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/locales?subject=account`, {
     method: 'PUT',
     headers: {
       authorization: `Bearer ${accessToken}`,
@@ -193,7 +172,7 @@ async function planChange(accessToken, accountId, nextTier) {
   if (!res.ok) throw new Error(`Plan change failed (${res.status}) ${text.slice(0, 200)}`);
 }
 
-async function duplicateFaq(accessToken, workspaceId) {
+async function duplicateFaq(accessToken, accountId) {
   const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/roma/widgets/duplicate`, {
     method: 'POST',
     headers: {
@@ -201,7 +180,7 @@ async function duplicateFaq(accessToken, workspaceId) {
       accept: 'application/json',
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ workspaceId, sourcePublicId: 'wgt_main_faq' }),
+    body: JSON.stringify({ accountId, sourcePublicId: 'wgt_main_faq' }),
   });
   if (!res.ok) throw new Error(`Duplicate failed (${res.status}) ${text.slice(0, 200)}`);
   const publicId = typeof data?.publicId === 'string' ? data.publicId.trim() : '';
@@ -223,9 +202,9 @@ function livePayload(overrides = {}) {
   };
 }
 
-async function publishInstance(accessToken, workspaceId, publicId) {
+async function publishInstance(accessToken, accountId, publicId) {
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -239,9 +218,9 @@ async function publishInstance(accessToken, workspaceId, publicId) {
   if (!res.ok) throw new Error(`[gate4] Publish failed (${res.status}) ${text.slice(0, 200)}`);
 }
 
-async function unpublishInstance(accessToken, workspaceId, publicId) {
+async function unpublishInstance(accessToken, accountId, publicId) {
   const { res, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=workspace`,
+    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     {
       method: 'PUT',
       headers: {
@@ -270,8 +249,7 @@ async function main() {
   console.log('[gate4] Cap check (free tier)…');
   {
     const accountId = await createAccount(accessToken, 'Gate 4 Free Account');
-    const workspaceId = await createWorkspace(accessToken, accountId, 'Gate 4 Free Workspace');
-    const { res, text } = await putWorkspaceLocales(accessToken, workspaceId, ['de', 'es'], {
+    const { res, text } = await putAccountLocales(accessToken, accountId, ['de', 'es'], {
       v: 1,
       baseLocale: 'en',
       ip: { enabled: false, countryToLocale: {} },
@@ -285,12 +263,11 @@ async function main() {
 
   console.log('[gate4] Policy toggles (tier3)…');
   const accountId = await createAccount(accessToken, 'Gate 4 Tier3 Account');
-  const workspaceId = await createWorkspace(accessToken, accountId, 'Gate 4 Tier3 Workspace');
   await planChange(accessToken, accountId, 'tier3');
-  const publicId = await duplicateFaq(accessToken, workspaceId);
-  await publishInstance(accessToken, workspaceId, publicId);
+  const publicId = await duplicateFaq(accessToken, accountId);
+  await publishInstance(accessToken, accountId, publicId);
 
-  console.log(`[gate4] workspaceId=${workspaceId}`);
+  console.log(`[gate4] accountId=${accountId}`);
   console.log(`[gate4] publicId=${publicId}`);
 
   // Enable one extra locale so we can test mapping + switcher semantics.
@@ -300,7 +277,7 @@ async function main() {
     ip: { enabled: false, countryToLocale: {} },
     switcher: { enabled: false },
   };
-  await putWorkspaceLocales(accessToken, workspaceId, ['de'], basePolicy);
+  await putAccountLocales(accessToken, accountId, ['de'], basePolicy);
 
   const baseline = await waitFor({
     label: 'venice pointer includes en+de',
@@ -320,7 +297,7 @@ async function main() {
     ip: { enabled: true, countryToLocale: { DE: 'de' } },
     switcher: { enabled: false },
   };
-  await putWorkspaceLocales(accessToken, workspaceId, ['de'], ipPolicy);
+  await putAccountLocales(accessToken, accountId, ['de'], ipPolicy);
 
   const ipEnabled = await waitFor({
     label: 'venice pointer shows ip.enabled=true and DE->de',
@@ -347,7 +324,7 @@ async function main() {
     ...ipPolicy,
     switcher: { enabled: true },
   };
-  await putWorkspaceLocales(accessToken, workspaceId, ['de'], switcherPolicy);
+  await putAccountLocales(accessToken, accountId, ['de'], switcherPolicy);
 
   await waitFor({
     label: 'venice pointer shows switcher.enabled=true',
@@ -365,7 +342,7 @@ async function main() {
     ip: { enabled: false, countryToLocale: {} },
     switcher: { enabled: true },
   };
-  await putWorkspaceLocales(accessToken, workspaceId, ['en'], baseDePolicy);
+  await putAccountLocales(accessToken, accountId, ['en'], baseDePolicy);
 
   const baseDePointer = await waitFor({
     label: 'venice pointer baseLocale=de and locales include de+en',
@@ -388,7 +365,7 @@ async function main() {
     ...baseDePolicy,
     ip: { enabled: true, countryToLocale: { US: 'en', DE: 'de' } },
   };
-  await putWorkspaceLocales(accessToken, workspaceId, ['en'], baseDeIpPolicy);
+  await putAccountLocales(accessToken, accountId, ['en'], baseDeIpPolicy);
 
   const baseDeIpPointer = await waitFor({
     label: 'venice pointer baseLocale=de ip.enabled=true',
@@ -409,7 +386,7 @@ async function main() {
   console.log('[gate4] Locale policy behavior ✅');
 
   console.log('[gate4] Cleanup: unpublish…');
-  await unpublishInstance(accessToken, workspaceId, publicId);
+  await unpublishInstance(accessToken, accountId, publicId);
   await waitFor({
     label: 'venice /r to go 404',
     timeoutMs: 90_000,
@@ -427,4 +404,3 @@ main().catch((error) => {
   console.error(`[gate4] failed: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 });
-

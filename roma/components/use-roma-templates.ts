@@ -16,7 +16,6 @@ type RawTemplateInstance = {
 
 export type RomaTemplatesSnapshot = {
   accountId: string;
-  workspaceId: string;
   widgetTypes: string[];
   instances: TemplateInstance[];
 };
@@ -45,9 +44,14 @@ function normalizeWidgetTypeList(raw: unknown): string[] {
 export function normalizeRomaTemplatesSnapshot(raw: unknown): RomaTemplatesSnapshot | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
-  const accountId = typeof record.accountId === 'string' ? record.accountId.trim() : '';
-  const workspaceId = typeof record.workspaceId === 'string' ? record.workspaceId.trim() : '';
-  if (!accountId || !workspaceId) return null;
+  const account = record.account;
+  const accountId =
+    account && typeof account === 'object' && !Array.isArray(account) && typeof (account as any).accountId === 'string'
+      ? String((account as any).accountId).trim()
+      : typeof record.accountId === 'string'
+        ? record.accountId.trim()
+        : '';
+  if (!accountId) return null;
 
   const instances = Array.isArray(record.instances)
     ? record.instances
@@ -57,7 +61,6 @@ export function normalizeRomaTemplatesSnapshot(raw: unknown): RomaTemplatesSnaps
 
   return {
     accountId,
-    workspaceId,
     widgetTypes: normalizeWidgetTypeList(record.widgetTypes),
     instances,
   };

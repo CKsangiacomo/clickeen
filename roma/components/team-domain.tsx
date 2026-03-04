@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { resolveBootstrapDomainState } from './bootstrap-domain-state';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
-type WorkspaceMembersResponse = {
-  workspaceId: string;
+type AccountMembersResponse = {
+  accountId: string;
   role: string;
   members: Array<{
     userId: string;
@@ -18,54 +18,63 @@ type WorkspaceMembersResponse = {
 export function TeamDomain() {
   const me = useRomaMe();
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
-  const workspaceId = context.workspaceId;
   const [error, setError] = useState<string | null>(null);
-  const [members, setMembers] = useState<WorkspaceMembersResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [members, setMembers] = useState<AccountMembersResponse | null>(null);
+  const accountId = context.accountId;
 
-  useEffect(() => {
-    if (!workspaceId) {
+  const refreshMembers = useCallback(async () => {
+    if (!accountId) {
       setMembers(null);
       setError(null);
       return;
     }
-    const snapshot = me.data?.domains?.team ?? null;
-    const hasDomainPayload = Boolean(snapshot && snapshot.workspaceId === workspaceId && Array.isArray(snapshot.members));
-    const domainState = resolveBootstrapDomainState({
-      data: me.data,
-      domainKey: 'team',
-      hasDomainPayload,
-    });
-    if (!hasDomainPayload || domainState.kind !== 'ok') {
-      setMembers(null);
-      setError(domainState.reasonKey);
-      return;
-    }
-    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
-    setMembers(safeSnapshot);
+    setLoading(true);
     setError(null);
-  }, [workspaceId, me.data]);
+    try {
+      const payload = await fetchParisJson<AccountMembersResponse>(
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/members`,
+        { method: 'GET' },
+      );
+      setMembers(payload);
+      setError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setMembers(null);
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [accountId]);
+
+  useEffect(() => {
+    void refreshMembers();
+  }, [refreshMembers]);
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading team context...</section>;
   if (me.error || !me.data) {
     return <section className="rd-canvas-module body-m">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
   }
-  if (!workspaceId) {
-    return <section className="rd-canvas-module body-m">No workspace membership found for team controls.</section>;
+  if (!accountId) {
+    return <section className="rd-canvas-module body-m">No account membership found for team controls.</section>;
   }
 
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">
-          Workspace: {context.workspaceName || workspaceId}
-          {context.workspaceSlug ? ` (${context.workspaceSlug})` : ''}
-        </p>
+        <p className="body-m">Account: {accountId}</p>
 
         {error ? (
           <div className="roma-inline-stack">
-            <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
             <p className="body-m">{error}</p>
-            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="line2"
+              type="button"
+              onClick={() => void refreshMembers()}
+              disabled={loading}
+            >
               <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
           </div>
@@ -93,7 +102,7 @@ export function TeamDomain() {
               {members.members.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="body-s">
-                    No members found for this workspace.
+                    No members found for this account.
                   </td>
                 </tr>
               ) : null}

@@ -1,9 +1,9 @@
 import { resolvePolicy } from '@clickeen/ck-policy';
 import type { Policy, PolicyProfile } from '@clickeen/ck-policy';
-import type { WorkspaceRow } from './types';
+import type { AccountRow } from './types';
 import { ckError } from './errors';
 
-export function resolveEditorPolicyFromRequest(req: Request, workspace: WorkspaceRow) {
+export function resolveEditorPolicyFromRequest(req: Request, account: AccountRow) {
   const url = new URL(req.url);
   const subject = (url.searchParams.get('subject') || '').trim().toLowerCase();
 
@@ -13,8 +13,8 @@ export function resolveEditorPolicyFromRequest(req: Request, workspace: Workspac
   if (subject === 'minibob') {
     profile = 'minibob';
     role = 'editor';
-  } else if (subject === 'workspace') {
-    profile = workspace.tier;
+  } else if (subject === 'account') {
+    profile = account.tier;
     role = 'editor';
   } else {
     return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.subject.invalid' }, 422) };

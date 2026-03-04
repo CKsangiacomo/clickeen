@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { resolveBootstrapDomainState } from './bootstrap-domain-state';
 import { formatBytes, formatNumber } from '../lib/format';
 import { fetchParisJson, parseParisReason } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
@@ -14,17 +13,6 @@ type AssetRecord = {
   sizeBytes: number;
   usageCount: number;
   createdAt: string;
-};
-
-type AssetIntegritySnapshot = {
-  ok: boolean;
-  reasonKey: string | null;
-  dbVariantCount: number;
-  r2ObjectCount: number;
-  missingInR2Count: number;
-  orphanInR2Count: number;
-  missingInR2: Array<{ assetId: string; r2Key: string }>;
-  orphanInR2: string[];
 };
 
 type DeleteAssetPayload = {
@@ -63,10 +51,6 @@ const DELETE_REASON_COPY: Record<string, string> = {
   'coreui.errors.assets.integrityUnavailable': 'Delete blocked: asset integrity check is unavailable right now. Try again.',
 };
 
-const INTEGRITY_REASON_COPY: Record<string, string> = {
-  'coreui.errors.assets.integrityMismatch': 'Asset integrity mismatch: metadata and R2 storage are out of sync.',
-  'coreui.errors.assets.integrityUnavailable': 'Asset integrity check is currently unavailable.',
-};
 
 function resolveDeleteErrorCopy(reason: string): string {
   const normalized = String(reason || '').trim();
@@ -77,11 +61,10 @@ function resolveDeleteErrorCopy(reason: string): string {
   return normalized;
 }
 
-function resolveIntegrityErrorCopy(reasonKey: string | null): string {
-  const normalized = String(reasonKey || '').trim();
-  if (!normalized) return 'Asset integrity mismatch detected.';
-  return INTEGRITY_REASON_COPY[normalized] ?? normalized;
-}
+type AccountAssetsListResponse = {
+  accountId: string;
+  assets: AssetRecord[];
+};
 
 async function requestDeleteAsset(accountId: string, assetId: string, confirmInUse: boolean): Promise<DeleteAssetPayload> {
   const search = confirmInUse ? '?confirmInUse=1' : '';
@@ -109,7 +92,6 @@ export function AssetsDomain() {
   const searchParams = useSearchParams();
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
-  const workspaceId = context.workspaceId;
   const redirectReasonKey = useMemo(() => String(searchParams.get('reasonKey') || '').trim(), [searchParams]);
   const entitlements = me.data?.authz?.entitlements ?? null;
   const uploadSizeCapBytes = useMemo(() => {
@@ -120,8 +102,8 @@ export function AssetsDomain() {
   const uploadsBytesBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
 
   const [assets, setAssets] = useState<AssetRecord[]>([]);
-  const [integrity, setIntegrity] = useState<AssetIntegritySnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
@@ -130,36 +112,33 @@ export function AssetsDomain() {
   const [purgeError, setPurgeError] = useState<string | null>(null);
   const [purgeResult, setPurgeResult] = useState<{ ok?: boolean; deleted?: number } | null>(null);
 
-  useEffect(() => {
+  const refreshAssets = useCallback(async () => {
     if (!accountId) {
       setAssets([]);
-      setIntegrity(null);
       setError(null);
       return;
     }
-    const snapshot = me.data?.domains?.assets ?? null;
-    const hasDomainPayload = Boolean(snapshot && snapshot.accountId === accountId && Array.isArray(snapshot.assets));
-    const domainState = resolveBootstrapDomainState({
-      data: me.data,
-      domainKey: 'assets',
-      hasDomainPayload,
-    });
-    if (!hasDomainPayload || domainState.kind !== 'ok') {
-      setAssets([]);
-      setIntegrity(null);
-      setError(domainState.reasonKey);
-      return;
-    }
-    const safeSnapshot = snapshot as NonNullable<typeof snapshot>;
-    setAssets(safeSnapshot.assets as AssetRecord[]);
-    setIntegrity((safeSnapshot.integrity as AssetIntegritySnapshot) ?? null);
+    setLoading(true);
     setError(null);
-  }, [accountId, me.data]);
+    try {
+      const payload = await fetchParisJson<AccountAssetsListResponse>(
+        `/api/paris/accounts/${encodeURIComponent(accountId)}/assets?limit=500`,
+        { method: 'GET' },
+      );
+      setAssets(Array.isArray(payload.assets) ? payload.assets : []);
+      setError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setAssets([]);
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [accountId]);
 
   useEffect(() => {
-    if (!accountId) return;
-    void reloadMe();
-  }, [accountId, workspaceId, reloadMe]);
+    void refreshAssets();
+  }, [refreshAssets]);
 
   const deleteAsset = useCallback(
     async (asset: AssetRecord, confirmInUse: boolean) => {
@@ -231,17 +210,18 @@ export function AssetsDomain() {
       setPurgeResult(payload ?? { ok: true });
       setPurgeConfirm('');
       await reloadMe();
+      await refreshAssets();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setPurgeError(message);
     } finally {
       setPurgeLoading(false);
     }
-  }, [accountId, reloadMe]);
+  }, [accountId, refreshAssets, reloadMe]);
 
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading workspace context...</section>;
+  if (me.loading) return <section className="rd-canvas-module body-m">Loading account context...</section>;
   if (me.error || !me.data) {
-    return <section className="rd-canvas-module body-m">Failed to load workspace context: {me.error ?? 'unknown_error'}</section>;
+    return <section className="rd-canvas-module body-m">Failed to load account context: {me.error ?? 'unknown_error'}</section>;
   }
   if (!accountId) {
     return <section className="rd-canvas-module body-m">No account membership found for current user.</section>;
@@ -250,25 +230,21 @@ export function AssetsDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">
-          Account: {accountId} | Workspace: {context.workspaceName || workspaceId}
-        </p>
+        <p className="body-m">Account: {accountId}</p>
 
         {error ? (
           <div className="roma-inline-stack">
-            <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
             <p className="body-m">{error}</p>
-            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void me.reload()}>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="line2"
+              type="button"
+              onClick={() => void refreshAssets()}
+              disabled={loading}
+            >
               <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
-          </div>
-        ) : null}
-        {integrity && !integrity.ok ? (
-          <div className="roma-inline-stack">
-            <p className="body-m">{resolveIntegrityErrorCopy(integrity.reasonKey)}</p>
-            <p className="body-s">
-              Missing in R2: {formatNumber(integrity.missingInR2Count)} | Orphan in R2: {formatNumber(integrity.orphanInR2Count)}
-            </p>
           </div>
         ) : null}
         {redirectReasonKey ? (
@@ -322,14 +298,6 @@ export function AssetsDomain() {
           ) : null}
         </div>
         {deleteError ? <p className="body-m">Failed to delete asset: {deleteError}</p> : null}
-        {integrity && !integrity.ok && integrity.missingInR2.length > 0 ? (
-          <p className="body-s">
-            Missing sample: {integrity.missingInR2[0].assetId} {'->'} {integrity.missingInR2[0].r2Key}
-          </p>
-        ) : null}
-        {integrity && !integrity.ok && integrity.orphanInR2.length > 0 ? (
-          <p className="body-s">Orphan sample: {integrity.orphanInR2[0]}</p>
-        ) : null}
       </section>
 
       <section className="rd-canvas-module">

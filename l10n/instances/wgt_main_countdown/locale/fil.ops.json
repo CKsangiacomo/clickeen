@@ -5,7 +5,7 @@
   "ops": [
     {
       "op": "set",
-      "path": "timer.headline",
+      "path": "header.title",
       "value": "Kunin ang 50% off bago mahuli ang lahat 🎯"
     },
     {

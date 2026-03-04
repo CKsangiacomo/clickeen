@@ -5,7 +5,7 @@ import { callChatCompletion } from '../ai/chat';
 import { fetchHeadMeta, fetchHtmlSnippet, isBlockedFetchUrl, normalizeUrl } from '../utils/webFetch';
 
 export type PersonalizationOnboardingInput = {
-  workspaceId: string;
+  accountId: string;
   url: string;
   locale?: string;
   websiteDepth?: number;
@@ -217,8 +217,9 @@ export async function executePersonalizationOnboarding(args: {
   grant: AIGrant;
   input: PersonalizationOnboardingInput;
 }): Promise<{ result: PersonalizationOnboardingResult; usage: Usage }> {
-  const workspaceId = asTrimmedString(args.input.workspaceId);
-  if (!workspaceId) throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing workspaceId' });
+  const accountId = asTrimmedString(args.input.accountId);
+  if (!accountId) throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing accountId' });
+  void accountId;
 
   const urlRaw = asTrimmedString(args.input.url);
   if (!urlRaw) throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing url' });

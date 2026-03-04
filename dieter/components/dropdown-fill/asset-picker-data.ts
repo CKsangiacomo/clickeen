@@ -19,13 +19,11 @@ function readFillDocumentDatasetValue(key: string): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function resolveImageAssetPickerContext(): { accountId: string; workspaceId: string | null } | null {
+function resolveImageAssetPickerContext(): { accountId: string } | null {
   const accountId = readFillDocumentDatasetValue('ckOwnerAccountId');
   if (!isUuid(accountId)) return null;
-  const workspaceIdRaw = readFillDocumentDatasetValue('ckWorkspaceId');
   return {
     accountId,
-    workspaceId: isUuid(workspaceIdRaw) ? workspaceIdRaw : null,
   };
 }
 
@@ -67,7 +65,6 @@ async function fetchMediaAssetChoices(kind: AssetPickerMediaKind): Promise<Media
     view: 'all',
     limit: '200',
   });
-  if (context.workspaceId) params.set('workspaceId', context.workspaceId);
 
   const response = await fetch(`/api/assets/${encodeURIComponent(context.accountId)}?${params.toString()}`, {
     cache: 'no-store',

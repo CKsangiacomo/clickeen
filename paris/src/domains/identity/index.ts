@@ -1,36 +1,35 @@
 import type { SupabaseAuthPrincipal } from '../../shared/auth';
 import { assertDevAuth, isTrustedInternalServiceRequest } from '../../shared/auth';
-import type { Env } from '../../shared/types';
+import type { AccountTier, Env } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
+import { asTrimmedString } from '../../shared/validation';
+import { DEFAULT_ACCOUNT_L10N_POLICY } from '../../shared/l10n';
+import { resolveAdminAccountId } from '../../shared/admin';
 
-type WorkspaceMembershipRow = {
-  workspace_id: string;
+type AccountMembershipRow = {
+  account_id: string;
   role: string;
   created_at?: string | null;
-  workspaces: {
+  accounts: {
     id: string;
-    account_id: string;
+    status: string;
+    is_platform?: boolean | null;
+    tier: AccountTier;
     name: string;
     slug: string;
-    tier: string;
     website_url?: string | null;
+    l10n_locales?: unknown;
+    l10n_policy?: unknown;
   } | null;
 };
 
-type AccountRow = {
-  id: string;
-  status: string;
-  is_platform: boolean;
-};
-
-export type IdentityWorkspaceContext = {
-  workspaceId: string;
+export type IdentityAccountContext = {
   accountId: string;
   role: string;
   name: string;
   slug: string;
-  tier: string;
+  tier: AccountTier;
   websiteUrl: string | null;
   membershipVersion: string | null;
 };
@@ -41,87 +40,133 @@ export type IdentityMePayload = {
     email: string | null;
     role: string | null;
   };
-  accounts: Array<{
-    accountId: string;
-    status: string;
-    derivedRole: 'account_owner' | 'account_admin' | 'account_member';
-    workspaceRoles: string[];
-  }>;
-  workspaces: IdentityWorkspaceContext[];
+  accounts: IdentityAccountContext[];
   defaults: {
     accountId: string | null;
-    workspaceId: string | null;
   };
 };
 
 type IdentityMeResolution =
-  | {
-      ok: true;
-      principal: SupabaseAuthPrincipal;
-      payload: IdentityMePayload;
-    }
-  | {
-      ok: false;
-      response: Response;
-    };
+  | { ok: true; principal: SupabaseAuthPrincipal; payload: IdentityMePayload }
+  | { ok: false; response: Response };
 
-function deriveAccountRole(workspaceRoles: string[]): 'account_owner' | 'account_admin' | 'account_member' {
-  if (workspaceRoles.includes('owner')) return 'account_owner';
-  if (workspaceRoles.includes('admin')) return 'account_admin';
-  return 'account_member';
+const ROLE_RANK: Record<string, number> = { viewer: 0, editor: 1, admin: 2, owner: 3 };
+
+function roleRank(role: string): number {
+  const normalized = typeof role === 'string' ? role.trim().toLowerCase() : '';
+  return ROLE_RANK[normalized] ?? -1;
 }
 
-function toAccountPayload(
-  accountRows: AccountRow[],
-  accountRoleMap: Map<string, Set<string>>,
-) {
-  return accountRows.map((row) => {
-    const roleSet = accountRoleMap.get(row.id);
-    const workspaceRoles = roleSet ? [...roleSet] : [];
-    return {
-      accountId: row.id,
-      status: row.status,
-      derivedRole: deriveAccountRole(workspaceRoles),
-      workspaceRoles,
-    };
-  });
+function resolveMembershipVersion(row: AccountMembershipRow): string | null {
+  const created = asTrimmedString(row.created_at);
+  return created || null;
 }
 
-function asNonEmptyString(value: unknown): string {
-  if (typeof value !== 'string') return '';
-  return value.trim();
-}
-
-function resolveMembershipVersion(row: WorkspaceMembershipRow): string | null {
-  const created = asNonEmptyString(row.created_at);
-  if (created) return created;
-  return null;
-}
-
-function resolveRequestedWorkspaceId(req: Request): string {
-  const value = new URL(req.url).searchParams.get('workspaceId');
+function resolveRequestedAccountId(req: Request): string {
+  const value = new URL(req.url).searchParams.get('accountId');
   if (!value) return '';
   return value.trim();
 }
 
-async function loadAccountsByIds(env: Env, accountIds: string[]): Promise<AccountRow[]> {
-  if (accountIds.length === 0) return [];
+function selectDefaultAccount(
+  accounts: IdentityAccountContext[],
+  env: Env,
+  requestedAccountId: string,
+): IdentityAccountContext | null {
+  if (accounts.length === 0) return null;
 
-  const accountsParams = new URLSearchParams({
-    select: 'id,status,is_platform',
-    id: `in.(${accountIds.join(',')})`,
-  });
-  const accountsRes = await supabaseFetch(env, `/rest/v1/accounts?${accountsParams.toString()}`, { method: 'GET' });
-  if (!accountsRes.ok) {
-    const details = await readJson(accountsRes);
-    throw new Error(`ACCOUNT_LOOKUP_FAILED: ${JSON.stringify(details)}`);
+  if (requestedAccountId) {
+    const requested = accounts.find((entry) => entry.accountId === requestedAccountId) ?? null;
+    if (requested) return requested;
   }
 
-  const rows = (await accountsRes.json()) as AccountRow[];
-  const mapById = new Map(rows.map((row) => [row.id, row]));
-  return accountIds
-    .map((accountId) => mapById.get(accountId) ?? null)
-    .filter((row): row is AccountRow => Boolean(row));
+  const adminAccountId = resolveAdminAccountId(env);
+  const admin = accounts.find((entry) => entry.accountId === adminAccountId) ?? null;
+  if (admin) return admin;
+
+  let best: IdentityAccountContext | null = null;
+  for (const candidate of accounts) {
+    if (!best) {
+      best = candidate;
+      continue;
+    }
+    const candidateRank = roleRank(candidate.role);
+    const bestRank = roleRank(best.role);
+    if (candidateRank > bestRank) best = candidate;
+  }
+  return best ?? accounts[0] ?? null;
+}
+
+async function ensureAccountExists(env: Env, accountId: string, slug: string, name: string): Promise<void> {
+  const insert = await supabaseFetch(env, `/rest/v1/accounts?on_conflict=id`, {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({
+      id: accountId,
+      status: 'active',
+      is_platform: false,
+      tier: 'free',
+      slug,
+      name,
+      l10n_locales: [],
+      l10n_policy: DEFAULT_ACCOUNT_L10N_POLICY,
+    }),
+  });
+  if (insert.ok) return;
+  if (insert.status === 409) return;
+  const details = await readJson(insert);
+  throw new Error(`ACCOUNT_INSERT_FAILED: ${JSON.stringify(details)}`);
+}
+
+async function ensureAccountMembership(env: Env, accountId: string, userId: string, role: string): Promise<void> {
+  const insert = await supabaseFetch(env, `/rest/v1/account_members?on_conflict=account_id,user_id`, {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({
+      account_id: accountId,
+      user_id: userId,
+      role,
+    }),
+  });
+  if (insert.ok) return;
+  if (insert.status === 409) return;
+  const details = await readJson(insert);
+  throw new Error(`ACCOUNT_MEMBERSHIP_INSERT_FAILED: ${JSON.stringify(details)}`);
+}
+
+async function loadAccountsForUser(env: Env, userId: string): Promise<AccountMembershipRow[]> {
+  const params = new URLSearchParams({
+    select: 'account_id,role,created_at,accounts(id,status,is_platform,tier,name,slug,website_url,l10n_locales,l10n_policy)',
+    user_id: `eq.${userId}`,
+    order: 'created_at.asc',
+    limit: '1000',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_members?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`ACCOUNT_MEMBERSHIP_LOOKUP_FAILED: ${JSON.stringify(details)}`);
+  }
+  return ((await res.json().catch(() => [])) as AccountMembershipRow[]) ?? [];
+}
+
+function normalizeAccountContexts(rows: AccountMembershipRow[]): IdentityAccountContext[] {
+  const out: IdentityAccountContext[] = [];
+  for (const row of rows) {
+    const account = row.accounts;
+    if (!account) continue;
+    const accountId = asTrimmedString(row.account_id);
+    if (!accountId) continue;
+    out.push({
+      accountId,
+      role: asTrimmedString(row.role) ?? 'viewer',
+      name: asTrimmedString(account.name) ?? 'Account',
+      slug: asTrimmedString(account.slug) ?? 'account',
+      tier: account.tier,
+      websiteUrl: asTrimmedString(account.website_url) || null,
+      membershipVersion: resolveMembershipVersion(row),
+    });
+  }
+  return out;
 }
 
 export async function resolveIdentityMePayload(req: Request, env: Env): Promise<IdentityMeResolution> {
@@ -132,78 +177,45 @@ export async function resolveIdentityMePayload(req: Request, env: Env): Promise<
   if (!principal) {
     const localStage = String(env.ENV_STAGE || '').trim().toLowerCase() === 'local';
     if (localStage && isTrustedInternalServiceRequest(req, env)) {
-      type WorkspaceListRow = {
+      type AccountListRow = {
         id?: unknown;
-        account_id?: unknown;
+        status?: unknown;
+        is_platform?: unknown;
+        tier?: unknown;
         name?: unknown;
         slug?: unknown;
-        tier?: unknown;
         website_url?: unknown;
       };
 
-      const workspacesRes = await supabaseFetch(
+      const accountsRes = await supabaseFetch(
         env,
-        `/rest/v1/workspaces?${new URLSearchParams({
-          select: 'id,account_id,name,slug,tier,website_url',
+        `/rest/v1/accounts?${new URLSearchParams({
+          select: 'id,status,is_platform,tier,name,slug,website_url',
           order: 'created_at.asc',
           limit: '1000',
         }).toString()}`,
         { method: 'GET' },
       );
-      if (!workspacesRes.ok) {
-        const details = await readJson(workspacesRes);
-        return {
-          ok: false,
-          response: json(
-            { error: 'WORKSPACE_LOOKUP_FAILED', detail: details },
-            { status: 502 },
-          ),
-        };
+      if (!accountsRes.ok) {
+        const details = await readJson(accountsRes);
+        return { ok: false, response: json({ error: 'ACCOUNT_LOOKUP_FAILED', detail: details }, { status: 502 }) };
       }
 
-      const workspaceRows = (await workspacesRes.json().catch(() => [])) as WorkspaceListRow[];
-      const workspaces: IdentityWorkspaceContext[] = workspaceRows
+      const accountRows = (await accountsRes.json().catch(() => [])) as AccountListRow[];
+      const accounts: IdentityAccountContext[] = accountRows
         .map((row) => ({
-          workspaceId: asNonEmptyString(row?.id),
-          accountId: asNonEmptyString(row?.account_id),
+          accountId: asTrimmedString(row?.id) ?? '',
           role: 'owner',
-          name: asNonEmptyString(row?.name),
-          slug: asNonEmptyString(row?.slug),
-          tier: asNonEmptyString(row?.tier),
-          websiteUrl: asNonEmptyString(row?.website_url) || null,
+          name: asTrimmedString(row?.name) ?? 'Account',
+          slug: asTrimmedString(row?.slug) ?? 'account',
+          tier: (asTrimmedString(row?.tier) as AccountTier) ?? 'free',
+          websiteUrl: asTrimmedString(row?.website_url) || null,
           membershipVersion: null,
         }))
-        .filter((row) => Boolean(row.workspaceId && row.accountId));
+        .filter((row) => Boolean(row.accountId));
 
-      const defaultWorkspace = workspaces.find((row) => row.slug === 'ck-dev') ?? workspaces[0] ?? null;
-
-      const accountRoleMap = new Map<string, Set<string>>();
-      for (const workspace of workspaces) {
-        if (!accountRoleMap.has(workspace.accountId)) {
-          accountRoleMap.set(workspace.accountId, new Set<string>());
-        }
-        accountRoleMap.get(workspace.accountId)?.add(workspace.role);
-      }
-
-      let accountRows: AccountRow[] = [];
-      const accountIds = [...accountRoleMap.keys()].filter(Boolean);
-      if (accountIds.length > 0) {
-        try {
-          accountRows = await loadAccountsByIds(env, accountIds);
-        } catch (error) {
-          const detail = error instanceof Error ? error.message : String(error);
-          return {
-            ok: false,
-            response: json(
-              {
-                error: 'ACCOUNT_LOOKUP_FAILED',
-                detail,
-              },
-              { status: 502 },
-            ),
-          };
-        }
-      }
+      const requestedAccountId = resolveRequestedAccountId(req);
+      const defaultAccount = selectDefaultAccount(accounts, env, requestedAccountId);
 
       const syntheticPrincipal: SupabaseAuthPrincipal = {
         token: '',
@@ -217,17 +229,9 @@ export async function resolveIdentityMePayload(req: Request, env: Env): Promise<
         ok: true,
         principal: syntheticPrincipal,
         payload: {
-          user: {
-            id: syntheticPrincipal.userId,
-            email: syntheticPrincipal.email,
-            role: syntheticPrincipal.role,
-          },
-          accounts: toAccountPayload(accountRows, accountRoleMap),
-          workspaces,
-          defaults: {
-            accountId: defaultWorkspace?.accountId ?? null,
-            workspaceId: defaultWorkspace?.workspaceId ?? null,
-          },
+          user: { id: syntheticPrincipal.userId, email: syntheticPrincipal.email, role: syntheticPrincipal.role },
+          accounts,
+          defaults: { accountId: defaultAccount?.accountId ?? null },
         },
       };
     }
@@ -235,102 +239,45 @@ export async function resolveIdentityMePayload(req: Request, env: Env): Promise<
     return { ok: false, response: json({ error: 'AUTH_REQUIRED' }, { status: 401 }) };
   }
 
-  const workspaceMembershipParams = new URLSearchParams({
-    select: 'workspace_id,role,created_at,workspaces(id,account_id,name,slug,tier,website_url)',
-    user_id: `eq.${principal.userId}`,
-    limit: '1000',
-    order: 'created_at.asc',
-  });
-
-  const workspaceMembershipRes = await supabaseFetch(
-    env,
-    `/rest/v1/workspace_members?${workspaceMembershipParams.toString()}`,
-    { method: 'GET' },
-  );
-  if (!workspaceMembershipRes.ok) {
-    const details = await readJson(workspaceMembershipRes);
-    return {
-      ok: false,
-      response: json(
-        {
-          error: 'MEMBERSHIP_LOOKUP_FAILED',
-          detail: details,
-        },
-        { status: 502 },
-      ),
-    };
+  let membershipRows: AccountMembershipRow[] = [];
+  try {
+    membershipRows = await loadAccountsForUser(env, principal.userId);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return { ok: false, response: json({ error: 'ACCOUNT_MEMBERSHIP_LOOKUP_FAILED', detail }, { status: 502 }) };
   }
 
-  const workspaceMembershipRows = (await workspaceMembershipRes.json()) as WorkspaceMembershipRow[];
-
-  const workspaces: IdentityWorkspaceContext[] = [];
-  for (const row of workspaceMembershipRows) {
-    if (!row.workspaces) continue;
-    workspaces.push({
-      workspaceId: row.workspaces.id,
-      accountId: row.workspaces.account_id,
-      role: row.role,
-      name: row.workspaces.name,
-      slug: row.workspaces.slug,
-      tier: row.workspaces.tier,
-      websiteUrl: asNonEmptyString(row.workspaces.website_url) || null,
-      membershipVersion: resolveMembershipVersion(row),
-    });
-  }
-
-  const accountRoleMap = new Map<string, Set<string>>();
-  for (const workspace of workspaces) {
-    if (!accountRoleMap.has(workspace.accountId)) {
-      accountRoleMap.set(workspace.accountId, new Set<string>());
-    }
-    accountRoleMap.get(workspace.accountId)?.add(workspace.role);
-  }
-
-  let accountRows: AccountRow[] = [];
-  const accountIds = [...accountRoleMap.keys()];
-  if (accountIds.length > 0) {
+  const shouldAutoProvisionAccount = membershipRows.length === 0;
+  if (shouldAutoProvisionAccount) {
     try {
-      accountRows = await loadAccountsByIds(env, accountIds);
+      const personalAccountId = principal.userId;
+      await ensureAccountExists(env, personalAccountId, `u-${personalAccountId}`, 'Personal');
+      await ensureAccountMembership(env, personalAccountId, principal.userId, 'owner');
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      return {
-        ok: false,
-        response: json(
-          {
-            error: 'ACCOUNT_LOOKUP_FAILED',
-            detail,
-          },
-          { status: 502 },
-        ),
-      };
+      return { ok: false, response: json({ error: 'BOOTSTRAP_PROVISION_FAILED', detail }, { status: 502 }) };
+    }
+
+    try {
+      membershipRows = await loadAccountsForUser(env, principal.userId);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      return { ok: false, response: json({ error: 'ACCOUNT_MEMBERSHIP_LOOKUP_FAILED', detail }, { status: 502 }) };
     }
   }
 
-  const accounts = toAccountPayload(accountRows, accountRoleMap);
+  const accounts = normalizeAccountContexts(membershipRows);
 
-  const requestedWorkspaceId = resolveRequestedWorkspaceId(req);
-  const requestedWorkspace = requestedWorkspaceId
-    ? workspaces.find((workspace) => workspace.workspaceId === requestedWorkspaceId) ?? null
-    : null;
-  const resolvedWorkspace = requestedWorkspace ?? (workspaces.length === 1 ? workspaces[0] : null);
-
-  const defaults = {
-    accountId: resolvedWorkspace?.accountId ?? null,
-    workspaceId: resolvedWorkspace?.workspaceId ?? null,
-  };
+  const requestedAccountId = resolveRequestedAccountId(req);
+  const resolvedAccount = selectDefaultAccount(accounts, env, requestedAccountId);
 
   return {
     ok: true,
     principal,
     payload: {
-      user: {
-        id: principal.userId,
-        email: principal.email,
-        role: principal.role,
-      },
+      user: { id: principal.userId, email: principal.email, role: principal.role },
       accounts,
-      workspaces,
-      defaults,
+      defaults: { accountId: resolvedAccount?.accountId ?? null },
     },
   };
 }
@@ -340,3 +287,4 @@ export async function handleMe(req: Request, env: Env): Promise<Response> {
   if (!resolved.ok) return resolved.response;
   return json(resolved.payload);
 }
+

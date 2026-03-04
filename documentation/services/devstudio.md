@@ -44,15 +44,15 @@ DevStudio Local supports curated instances as the single primitive:
 - **Reset instance from JSON**: pulls from compiled defaults (`spec.json`) and overwrites `wgt_main_{widget}`.
 - **Create curated instance**: creates `wgt_curated_{widget}_{styleSlug}` from the current editor config, storing metadata (`styleName`, `styleSlug`, and optional `variants`).
 - **Update curated instance**: overwrites the selected `wgt_curated_*` config in place with the current editor state.
-- **Refresh Prague preview**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=workspace` to enqueue curated snapshot regeneration (default locale `en`) for Venice/Prague.
-- **Translate locales**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=workspace` to enqueue locale jobs for the workspace active locale set.
+- **Refresh Prague preview**: uses the normal publish path (instance `PUT`) to enqueue Tokyo mirror jobs (render-snapshot is deprecated in PRD 54).
+- **Translate locales**: calls Paris `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected?subject=account` to enqueue locale jobs for the account active locale set.
 
 Notes:
 - Asset controls upload immediately at edit-time; persisted config should store immutable refs (`asset.versionId`) on asset fields, while runtime derives `/assets/v/{encodeURIComponent(versionId)}` paths.
 - Curated IDs are locale-free; do not create `wgt_curated_*.<locale>` variants. Locale is a runtime query param.
 - Curated metadata lives in `curated_widget_instances.meta`: `{ styleName, styleSlug, variants? }`.
 - DevStudio create flow keeps this intentionally minimal: required instance name + optional `variant`/`sub-variant`.
-- DevStudio uploads through the canonical Tokyo account route (`POST /assets/upload`) with explicit `x-account-id` + `x-workspace-id`.
+- DevStudio uploads through the canonical Tokyo account route (`POST /assets/upload`) with explicit `x-account-id`.
 - Curated/main flows use `PLATFORM_ACCOUNT_ID`; resulting URLs are canonical immutable version paths:
   - original variant key: `assets/versions/{accountId}/{assetId}/{filename}`
   - non-original variant key: `assets/versions/{accountId}/{assetId}/{variant}/{filename}`

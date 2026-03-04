@@ -1,19 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { setRomaAccountCapsule, setRomaAuthzCapsule } from './paris-http';
-
-export type RomaBootstrapDomainKey = 'widgets' | 'templates' | 'assets' | 'team' | 'billing' | 'usage' | 'settings';
-export type RomaBootstrapDomainError = {
-  reasonKey: string;
-  status: number;
-  detail?: string;
-};
-export type RomaBootstrapDomainOutcome = {
-  status: 'ok' | 'error';
-  httpStatus: number;
-  reasonKey?: string;
-};
+import { setRomaAuthzCapsule } from './paris-http';
 
 export type RomaMeResponse = {
   user: {
@@ -23,235 +11,85 @@ export type RomaMeResponse = {
   };
   accounts: Array<{
     accountId: string;
-    status: string;
-    derivedRole: 'account_owner' | 'account_admin' | 'account_member';
-    workspaceRoles: string[];
-  }>;
-  workspaces: Array<{
-    workspaceId: string;
-    accountId: string;
     role: string;
     name: string;
     slug: string;
     tier: string;
-    websiteUrl?: string | null;
-    membershipVersion?: string | null;
+    websiteUrl: string | null;
+    membershipVersion: string | null;
   }>;
   defaults: {
     accountId: string | null;
-    workspaceId: string | null;
   };
   authz?: {
-    workspaceCapsule?: string | null;
-    workspaceId?: string | null;
+    accountCapsule?: string | null;
     accountId?: string | null;
     role?: string | null;
     profile?: string | null;
     authzVersion?: string | null;
     issuedAt?: string | null;
     expiresAt?: string | null;
-    accountCapsule?: string | null;
-    accountRole?: string | null;
-    accountProfile?: string | null;
-    accountAuthzVersion?: string | null;
-    accountIssuedAt?: string | null;
-    accountExpiresAt?: string | null;
     entitlements?: {
       flags?: Record<string, boolean>;
       caps?: Record<string, number | null>;
       budgets?: Record<string, { max: number | null; used: number }>;
     } | null;
-  };
-  domains?: {
-    widgets?: {
-      accountId: string;
-      workspaceId: string;
-      widgetTypes: string[];
-      instances: Array<{
-        publicId: string;
-        widgetType: string;
-        displayName: string;
-        status: 'published' | 'unpublished';
-        workspaceId: string | null;
-        source: 'workspace' | 'curated';
-        actions: {
-          edit: boolean;
-          duplicate: boolean;
-          delete: boolean;
-        };
-      }>;
-    } | null;
-    templates?: {
-      accountId: string;
-      workspaceId: string;
-      widgetTypes: string[];
-      instances: Array<{
-        publicId: string;
-        widgetType: string;
-        displayName: string;
-      }>;
-    } | null;
-    assets?: {
-      accountId: string;
-      workspaceId: string | null;
-      assets: Array<{
-        assetId: string;
-        normalizedFilename: string;
-        contentType: string;
-        sizeBytes: number;
-        usageCount: number;
-        createdAt: string;
-      }>;
-      integrity: {
-        ok: boolean;
-        reasonKey: string | null;
-        dbVariantCount: number;
-        r2ObjectCount: number;
-        missingInR2Count: number;
-        orphanInR2Count: number;
-        missingInR2: Array<{ assetId: string; r2Key: string }>;
-        orphanInR2: string[];
-      };
-    } | null;
-    team?: {
-      workspaceId: string;
-      role: string;
-      members: Array<{
-        userId: string;
-        role: string;
-        createdAt: string | null;
-        updatedAt: string | null;
-      }>;
-    } | null;
-    billing?: {
-      accountId: string;
-      role: string;
-      provider: string;
-      status: string;
-      reasonKey: string;
-      plan: {
-        inferredTier: string;
-        workspaceCount: number;
-      };
-      checkoutAvailable: boolean;
-      portalAvailable: boolean;
-    } | null;
-    usage?: {
-      accountId: string;
-      role: string;
-      usage: {
-        workspaces: number;
-        instances: {
-          total: number;
-          published: number;
-          unpublished: number;
-        };
-        assets: {
-          total: number;
-          active: number;
-          bytesActive: number;
-        };
-      };
-    } | null;
-    settings?: {
-      accountSummary: {
-        accountId: string;
-        status: string;
-        role: string;
-        workspaceCount: number;
-      };
-      notices: Array<{
-        noticeId: string;
-        kind: string;
-        payload: Record<string, unknown>;
-        createdAt: string;
-        emailPending: boolean;
-      }>;
-      workspaceSummary: {
-        workspaceId: string;
-        accountId: string;
-        tier: string;
-        name: string;
-        slug: string;
-        role: string;
-      };
-      accountWorkspaces: Array<{
-        workspaceId: string;
-        accountId: string;
-        tier: string;
-        name: string;
-        slug: string;
-        createdAt: string | null;
-        updatedAt: string | null;
-      }>;
-    } | null;
   } | null;
-  domainErrors?: Partial<Record<RomaBootstrapDomainKey, RomaBootstrapDomainError>> | null;
-  bootstrapFanoutMs?: number | null;
-  bootstrapDomainOutcomes?: Partial<Record<RomaBootstrapDomainKey, RomaBootstrapDomainOutcome>> | null;
 };
 
 export type ResolvedRomaContext = {
   accountId: string;
-  workspaceId: string;
-  workspaceName: string;
-  workspaceSlug: string;
+  accountName: string;
+  accountSlug: string;
 };
 
-const ROMA_ACTIVE_WORKSPACE_STORE_KEY = '__CK_ROMA_ACTIVE_WORKSPACE_ID_V1__';
-const ROMA_EMPTY_WORKSPACE_CACHE_KEY = '__CK_ROMA_NO_WORKSPACE__';
+const ROMA_ACTIVE_ACCOUNT_STORE_KEY = '__CK_ROMA_ACTIVE_ACCOUNT_ID_V1__';
+const ROMA_EMPTY_ACCOUNT_CACHE_KEY = '__CK_ROMA_NO_ACCOUNT__';
 
-function normalizeWorkspaceId(value: unknown): string | null {
+function normalizeAccountId(value: unknown): string | null {
   const normalized = String(value || '').trim();
   return normalized || null;
 }
 
-function readWorkspaceIdFromLocation(): string | null {
+function readAccountIdFromLocation(): string | null {
   if (typeof window === 'undefined') return null;
   const url = new URL(window.location.href);
-  return normalizeWorkspaceId(url.searchParams.get('workspaceId'));
+  return normalizeAccountId(url.searchParams.get('accountId'));
 }
 
-function readStoredWorkspaceIdPreference(): string | null {
+function readStoredAccountIdPreference(): string | null {
   if (typeof window === 'undefined') return null;
   try {
-    return normalizeWorkspaceId(window.localStorage.getItem(ROMA_ACTIVE_WORKSPACE_STORE_KEY));
+    return normalizeAccountId(window.localStorage.getItem(ROMA_ACTIVE_ACCOUNT_STORE_KEY));
   } catch {
     return null;
   }
 }
 
-function writeStoredWorkspaceIdPreference(workspaceId: string | null): void {
+function writeStoredAccountIdPreference(accountId: string | null): void {
   if (typeof window === 'undefined') return;
   try {
-    if (workspaceId) {
-      window.localStorage.setItem(ROMA_ACTIVE_WORKSPACE_STORE_KEY, workspaceId);
+    if (accountId) {
+      window.localStorage.setItem(ROMA_ACTIVE_ACCOUNT_STORE_KEY, accountId);
       return;
     }
-    window.localStorage.removeItem(ROMA_ACTIVE_WORKSPACE_STORE_KEY);
+    window.localStorage.removeItem(ROMA_ACTIVE_ACCOUNT_STORE_KEY);
   } catch {
     // Ignore local storage failures.
   }
 }
 
-function resolveRequestedWorkspaceId(): string | null {
-  const fromLocation = readWorkspaceIdFromLocation();
+function resolveRequestedAccountId(): string | null {
+  const fromLocation = readAccountIdFromLocation();
   if (fromLocation) {
-    writeStoredWorkspaceIdPreference(fromLocation);
+    writeStoredAccountIdPreference(fromLocation);
     return fromLocation;
   }
-  return readStoredWorkspaceIdPreference();
+  return readStoredAccountIdPreference();
 }
 
-function toWorkspaceCacheKey(workspaceId: string | null): string {
-  return workspaceId || ROMA_EMPTY_WORKSPACE_CACHE_KEY;
-}
-
-function resolveWorkspaceCapsule(data: RomaMeResponse | null): string | null {
-  const candidate = data?.authz?.workspaceCapsule;
-  if (typeof candidate !== 'string') return null;
-  const normalized = candidate.trim();
-  return normalized || null;
+function toAccountCacheKey(accountId: string | null): string {
+  return accountId || ROMA_EMPTY_ACCOUNT_CACHE_KEY;
 }
 
 function resolveAccountCapsule(data: RomaMeResponse | null): string | null {
@@ -262,27 +100,12 @@ function resolveAccountCapsule(data: RomaMeResponse | null): string | null {
 }
 
 export function resolveDefaultRomaContext(data: RomaMeResponse | null): ResolvedRomaContext {
-  if (!data) {
-    return {
-      accountId: '',
-      workspaceId: '',
-      workspaceName: '',
-      workspaceSlug: '',
-    };
-  }
-
-  const preferredWorkspaceId = normalizeWorkspaceId(data.defaults.workspaceId);
-  const workspace = preferredWorkspaceId
-    ? data.workspaces.find((item) => item.workspaceId === preferredWorkspaceId) ?? null
-    : null;
-  const accountId =
-    workspace?.accountId || normalizeWorkspaceId(data.defaults.accountId) || '';
-
+  const defaultAccountId = normalizeAccountId(data?.defaults?.accountId);
+  const account = defaultAccountId ? data?.accounts?.find((item) => item.accountId === defaultAccountId) ?? null : null;
   return {
-    accountId,
-    workspaceId: workspace?.workspaceId ?? '',
-    workspaceName: workspace?.name ?? '',
-    workspaceSlug: workspace?.slug ?? '',
+    accountId: defaultAccountId || '',
+    accountName: account?.name ?? '',
+    accountSlug: account?.slug ?? '',
   };
 }
 
@@ -294,10 +117,9 @@ type UseRomaMeState = {
 
 const ROMA_ME_SUCCESS_FALLBACK_TTL_MS = 5 * 60_000;
 const ROMA_ME_ERROR_TTL_MS = 10_000;
-const ROMA_ME_DEGRADED_SUCCESS_TTL_MS = 5_000;
 const ROMA_ME_MIN_SUCCESS_TTL_MS = 30_000;
 const ROMA_ME_AUTHZ_EXPIRY_SKEW_MS = 30_000;
-const ROMA_ME_STORE_KEY = '__CK_ROMA_ME_STORE_V1__';
+const ROMA_ME_STORE_KEY = '__CK_ROMA_ME_STORE_V2__';
 
 type RomaMeCacheEntry = {
   state: UseRomaMeState;
@@ -307,9 +129,7 @@ type RomaMeCacheEntry = {
 type RomaMeStore = {
   cache: Record<string, RomaMeCacheEntry | undefined>;
   inFlight: Record<string, Promise<UseRomaMeState> | undefined>;
-  hydratedFromSession: boolean;
 };
-
 
 function isRomaMeStore(value: unknown): value is RomaMeStore {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -322,45 +142,26 @@ function isRomaMeStore(value: unknown): value is RomaMeStore {
 }
 
 function resolveRomaMeSuccessTtlMs(data: RomaMeResponse | null): number {
-  const workspaceExpiresAt = typeof data?.authz?.expiresAt === 'string' ? data.authz.expiresAt.trim() : '';
-  const accountExpiresAt = typeof data?.authz?.accountExpiresAt === 'string' ? data.authz.accountExpiresAt.trim() : '';
-  const expiryCandidates = [workspaceExpiresAt, accountExpiresAt]
-    .map((value) => Date.parse(value))
-    .filter((value) => Number.isFinite(value));
-  if (expiryCandidates.length === 0) return ROMA_ME_SUCCESS_FALLBACK_TTL_MS;
-  const expiresAtMs = Math.min(...expiryCandidates);
+  const expiresAt = typeof data?.authz?.expiresAt === 'string' ? data.authz.expiresAt.trim() : '';
+  const expiresAtMs = Date.parse(expiresAt);
+  if (!Number.isFinite(expiresAtMs)) return ROMA_ME_SUCCESS_FALLBACK_TTL_MS;
   const remainingMs = expiresAtMs - Date.now() - ROMA_ME_AUTHZ_EXPIRY_SKEW_MS;
   if (!Number.isFinite(remainingMs) || remainingMs <= 0) return ROMA_ME_MIN_SUCCESS_TTL_MS;
   return Math.max(ROMA_ME_MIN_SUCCESS_TTL_MS, Math.round(remainingMs));
 }
 
-function hasDomainErrors(data: RomaMeResponse | null): boolean {
-  if (!data || !data.domainErrors || typeof data.domainErrors !== 'object') return false;
-  return Object.keys(data.domainErrors).length > 0;
-}
-
 function resolveRomaMeStore(): RomaMeStore {
   const scope = globalThis as Record<string, unknown>;
   const existing = scope[ROMA_ME_STORE_KEY];
-  let store: RomaMeStore;
-  if (isRomaMeStore(existing)) {
-    store = existing as RomaMeStore;
-    if (store.hydratedFromSession !== true) {
-      store.hydratedFromSession = false;
-    }
-  } else {
-    store = { cache: {}, inFlight: {}, hydratedFromSession: false };
-  }
-  scope[ROMA_ME_STORE_KEY] = store;
-  if (store.hydratedFromSession !== true) {
-    store.hydratedFromSession = true;
-  }
-  return store;
+  if (isRomaMeStore(existing)) return existing;
+  const next: RomaMeStore = { cache: {}, inFlight: {} };
+  scope[ROMA_ME_STORE_KEY] = next;
+  return next;
 }
 
-function readRomaMeCache(workspaceId: string | null): UseRomaMeState | null {
+function readRomaMeCache(accountId: string | null): UseRomaMeState | null {
   const store = resolveRomaMeStore();
-  const key = toWorkspaceCacheKey(workspaceId);
+  const key = toAccountCacheKey(accountId);
   const entry = store.cache[key] ?? null;
   if (!entry) return null;
   if (Date.now() >= entry.expiresAt) {
@@ -370,14 +171,10 @@ function readRomaMeCache(workspaceId: string | null): UseRomaMeState | null {
   return entry.state;
 }
 
-function writeRomaMeCache(workspaceId: string | null, state: UseRomaMeState): UseRomaMeState {
+function writeRomaMeCache(accountId: string | null, state: UseRomaMeState): UseRomaMeState {
   const store = resolveRomaMeStore();
-  const ttl = state.error
-    ? ROMA_ME_ERROR_TTL_MS
-    : hasDomainErrors(state.data)
-      ? ROMA_ME_DEGRADED_SUCCESS_TTL_MS
-      : resolveRomaMeSuccessTtlMs(state.data);
-  const key = toWorkspaceCacheKey(workspaceId);
+  const ttl = state.error ? ROMA_ME_ERROR_TTL_MS : resolveRomaMeSuccessTtlMs(state.data);
+  const key = toAccountCacheKey(accountId);
   store.cache[key] = {
     state,
     expiresAt: Date.now() + ttl,
@@ -385,14 +182,11 @@ function writeRomaMeCache(workspaceId: string | null, state: UseRomaMeState): Us
   return state;
 }
 
-async function fetchRomaMeState(workspaceId: string | null): Promise<UseRomaMeState> {
+async function fetchRomaMeState(accountId: string | null): Promise<UseRomaMeState> {
   try {
-    const search = workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : '';
+    const search = accountId ? `?accountId=${encodeURIComponent(accountId)}` : '';
     const response = await fetch(`/api/bootstrap${search}`, { cache: 'no-store' });
-    const payload = (await response.json().catch(() => null)) as
-      | RomaMeResponse
-      | { error?: unknown }
-      | null;
+    const payload = (await response.json().catch(() => null)) as RomaMeResponse | { error?: unknown } | null;
     const authErrorReason = (payload as any)?.error?.reasonKey || (payload as any)?.error;
     if (response.ok && authErrorReason) {
       throw new Error(typeof authErrorReason === 'string' ? authErrorReason : 'coreui.errors.auth.required');
@@ -402,12 +196,11 @@ async function fetchRomaMeState(workspaceId: string | null): Promise<UseRomaMeSt
       throw new Error(typeof reason === 'string' ? reason : 'coreui.errors.auth.required');
     }
 
-    const activeWorkspaceId = normalizeWorkspaceId((payload as RomaMeResponse)?.defaults?.workspaceId);
-    if (activeWorkspaceId) {
-      writeStoredWorkspaceIdPreference(activeWorkspaceId);
+    const resolvedAccountId = normalizeAccountId((payload as RomaMeResponse)?.defaults?.accountId);
+    if (resolvedAccountId) {
+      writeStoredAccountIdPreference(resolvedAccountId);
     }
-    setRomaAuthzCapsule(resolveWorkspaceCapsule(payload as RomaMeResponse));
-    setRomaAccountCapsule(resolveAccountCapsule(payload as RomaMeResponse));
+    setRomaAuthzCapsule(resolveAccountCapsule(payload as RomaMeResponse));
 
     return {
       loading: false,
@@ -416,7 +209,6 @@ async function fetchRomaMeState(workspaceId: string | null): Promise<UseRomaMeSt
     };
   } catch (error) {
     setRomaAuthzCapsule(null);
-    setRomaAccountCapsule(null);
     const message = error instanceof Error ? error.message : String(error);
     return {
       loading: false,
@@ -426,11 +218,11 @@ async function fetchRomaMeState(workspaceId: string | null): Promise<UseRomaMeSt
   }
 }
 
-async function loadRomaMeState(force: boolean, workspaceId: string | null): Promise<UseRomaMeState> {
+async function loadRomaMeState(force: boolean, accountId: string | null): Promise<UseRomaMeState> {
   const store = resolveRomaMeStore();
-  const key = toWorkspaceCacheKey(workspaceId);
+  const key = toAccountCacheKey(accountId);
   if (!force) {
-    const cached = readRomaMeCache(workspaceId);
+    const cached = readRomaMeCache(accountId);
     if (cached) return cached;
   } else {
     delete store.cache[key];
@@ -439,8 +231,8 @@ async function loadRomaMeState(force: boolean, workspaceId: string | null): Prom
   const inFlight = store.inFlight[key];
   if (inFlight) return inFlight;
 
-  store.inFlight[key] = fetchRomaMeState(workspaceId)
-    .then((nextState) => writeRomaMeCache(workspaceId, nextState))
+  store.inFlight[key] = fetchRomaMeState(accountId)
+    .then((nextState) => writeRomaMeCache(accountId, nextState))
     .finally(() => {
       delete resolveRomaMeStore().inFlight[key];
     });
@@ -455,15 +247,15 @@ export function useRomaMe() {
   });
 
   const load = useCallback(async (force: boolean) => {
-    const requestedWorkspaceId = resolveRequestedWorkspaceId();
-    const cached = !force ? readRomaMeCache(requestedWorkspaceId) : null;
+    const requestedAccountId = resolveRequestedAccountId();
+    const cached = !force ? readRomaMeCache(requestedAccountId) : null;
     if (cached) {
       setState(cached);
       return;
     }
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    const nextState = await loadRomaMeState(force, requestedWorkspaceId);
+    const nextState = await loadRomaMeState(force, requestedAccountId);
     setState(nextState);
   }, []);
 
@@ -471,9 +263,9 @@ export function useRomaMe() {
     await load(true);
   }, [load]);
 
-  const setActiveWorkspace = useCallback(
-    async (workspaceId: string | null) => {
-      writeStoredWorkspaceIdPreference(normalizeWorkspaceId(workspaceId));
+  const setActiveAccount = useCallback(
+    async (accountId: string | null) => {
+      writeStoredAccountIdPreference(normalizeAccountId(accountId));
       await load(true);
     },
     [load],
@@ -484,12 +276,11 @@ export function useRomaMe() {
   }, [load]);
 
   useEffect(() => {
-    setRomaAuthzCapsule(resolveWorkspaceCapsule(state.data));
-    setRomaAccountCapsule(resolveAccountCapsule(state.data));
+    setRomaAuthzCapsule(resolveAccountCapsule(state.data));
     if (!state.data) return;
-    const activeWorkspaceId = normalizeWorkspaceId(state.data.defaults.workspaceId);
-    if (activeWorkspaceId) {
-      writeStoredWorkspaceIdPreference(activeWorkspaceId);
+    const resolvedAccountId = normalizeAccountId(state.data.defaults.accountId);
+    if (resolvedAccountId) {
+      writeStoredAccountIdPreference(resolvedAccountId);
     }
   }, [state.data]);
 
@@ -498,6 +289,7 @@ export function useRomaMe() {
     data: state.data,
     error: state.error,
     reload,
-    setActiveWorkspace,
+    setActiveAccount,
   };
 }
+

@@ -60,7 +60,7 @@ Mutable pointer  (tiny, always fetched fresh)
 | **Publish** | `published.json` (`no-store`) | Render artifacts at `/renders/instances/{publicId}/{fingerprint}/...` (cache forever) |
 | **Assets** | *(none in runtime contract; config stores immutable `asset.versionId` refs)* | Asset bytes at `/assets/v/{encodeURIComponent(versionId)}` |
 | **Auth** | JWT (short-lived, refreshable) | userId claim (stable identity) |
-| **Authz** | HMAC-signed capsule (expires) | Role/account/workspace snapshot at issuance |
+| **Authz** | HMAC-signed capsule (expires) | Role/account snapshot at issuance |
 | **Overlays** | Layer pointer in DB | Materialized overlay file on R2 (fingerprinted) |
 
 ### Why this matters
@@ -89,7 +89,7 @@ Every service section below is an instance of this pattern. Tokyo stores immutab
 |--------|-----------|--------|----------------|--------|
 | **Prague** | `prague/` | Cloudflare Pages | Marketing + SEO surface | ✅ Active |
 | **Bob** | `bob/` | Cloudflare Pages | Widget builder, compiler, ToolDrawer, preview | ✅ Active |
-| **Roma** | `roma/` | Cloudflare Pages | Product shell, workspace domains, Bob host orchestration | ✅ Active |
+| **Roma** | `roma/` | Cloudflare Pages | Product shell, account domains, Bob host orchestration | ✅ Active |
 | **Venice** | `venice/` | Cloudflare Pages (Next.js Edge) | SSR embed runtime, pixel, loader | ✅ Active |
 | **Paris** | `paris/` | Cloudflare Workers | HTTP API, instances, tokens, entitlements | ✅ Active |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration | ✅ Phase 1 |
@@ -177,16 +177,15 @@ Each release proceeds in 3 steps:
 
 #### Roma (Pages)
 - Roma is the domain shell (`/home`, `/widgets`, `/templates`, `/builder`, ...).
-- Roma resolves identity/workspace/authz context through `/api/bootstrap` (proxy to Paris `/api/roma/bootstrap`), including workspace capsule, account capsule, and account entitlement snapshot.
+- Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Paris `/api/roma/bootstrap`), including an account authz capsule and an account entitlement snapshot.
 - Roma proxies Paris under same-origin (`/api/paris/*`) and injects short-lived authz headers:
-  - `x-ck-authz-capsule` for workspace-scoped calls
-  - `x-ck-account-capsule` for account-scoped calls
+  - `x-ck-authz-capsule` for account-scoped calls
 - Roma Builder embeds Bob with `boot=message` and sends explicit `ck:open-editor` payloads after `bob:session-ready`.
 
 #### Paris (Workers)
 - Stateless API gateway to Michael (Supabase).
 - Public endpoints are under `/api/*`.
-- Shipped in this repo snapshot: `GET /api/instance/:publicId` (public; user-owned rows are published-only), `GET/POST /api/workspaces/:workspaceId/instances?subject=workspace|minibob`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace|minibob` (editor/dev tooling), Roma domain endpoints (`GET /api/roma/bootstrap`, `GET /api/roma/widgets`, `GET /api/roma/templates`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=workspace|minibob`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=workspace|minibob`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
+- Shipped in this repo snapshot: `GET /api/instance/:publicId` (public; user-owned rows are published-only), account-scoped editor endpoints (`GET/PUT /api/accounts/:accountId/instance/:publicId?subject=account`, `GET/POST /api/accounts/:accountId/instances`, `GET/PUT /api/accounts/:accountId/locales`), l10n/layers (`/api/accounts/:accountId/instances/:publicId/l10n/*`, `/api/accounts/:accountId/instances/:publicId/layers/*`), Roma domain endpoints (`GET /api/roma/bootstrap`, `GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`), `GET /api/curated-instances` (curated list), `POST /api/ai/grant`, `POST /api/ai/outcome`.
 - Layered l10n endpoints are canonical.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
@@ -217,13 +216,12 @@ Each release proceeds in 3 steps:
 - Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path using revisioned indices + atomic published pointer flip.
 
 #### Asset ownership model (canonical)
-- Ownership boundary is account (`account_id`), not workspace.
-- Workspace is a projection boundary for UX queries (`used_in_workspace`, `created_in_workspace`), not an ownership boundary.
+- Ownership boundary is account (`account_id`).
 - End-to-end flow:
-  1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional workspace/public/widget trace headers).
+  1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional public/widget trace headers).
   2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`) and returns canonical immutable version URL (`/assets/v/{encodeURIComponent(versionId)}`).
   3. Paris validates/syncs usage mappings (`account_asset_usage`) from instance config writes in the same request path.
-  4. Roma Assets reads/deletes via account endpoints (`/api/accounts/:accountId/assets*`) and optionally applies workspace projection; delete is Roma-surface-gated and delegates to Tokyo-worker hard delete.
+  4. Roma Assets reads/deletes via account endpoints (`/api/accounts/:accountId/assets*`); delete is Roma-surface-gated and delegates to Tokyo-worker hard delete.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
 - `/healthz`, `/v1/execute`, `/v1/outcome`, queue consumer for non-blocking log writes.
@@ -261,7 +259,7 @@ Each release proceeds in 3 steps:
 
 **Pages build settings**
 - Node + pnpm versions pinned so cloud builds match local.
-- Build command matches workspace build (Turbo fan-out).
+- Build command matches repo build (Turbo fan-out).
 
 **Caching**
 - Tokyo (`/dieter/**`, `/widgets/**`) uses long caching for versioned assets; avoid caching `spec.json` aggressively in dev.
@@ -299,7 +297,7 @@ Each release proceeds in 3 steps:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           EDITING FLOW                                  │
 │                                                                         │
-│  ┌─────────┐    GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace    ┌─────────┐             │
+│  ┌─────────┐    GET /api/accounts/:accountId/instance/:publicId?subject=account    ┌─────────┐             │
 │  │   Bob   │ ◄──────────────────────────────── │  Paris  │             │
 │  │ Builder │                                   │   API   │             │
 │  └────┬────┘                                   └────┬────┘             │
@@ -315,7 +313,7 @@ Each release proceeds in 3 steps:
 │       │ User clicks Publish                         │                   │
 │       │                                             ▼                   │
 │       └──────────────────────────────────────► ┌─────────┐             │
-│            PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace         │ Michael │             │
+│            PUT /api/accounts/:accountId/instance/:publicId?subject=account         │ Michael │             │
 │                                                │   DB    │             │
 │                                                └─────────┘             │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -397,18 +395,18 @@ Base config exists in EXACTLY 2 places during editing:
 
 **The Pattern:**
 ```
-1. Load:    GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace  → host (message boot) or Bob (URL boot) gets published config
+1. Load:    GET /api/accounts/:accountId/instance/:publicId?subject=account  → host (message boot) or Bob (URL boot) gets published config
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Publish: PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace  → Saves to Michael and enqueues async snapshot/l10n pipeline
+4. Publish: PUT /api/accounts/:accountId/instance/:publicId?subject=account  → Saves to Michael and enqueues async snapshot/l10n pipeline
 
 Snapshot/l10n convergence is observed via:
-- `GET /api/workspaces/:workspaceId/instances/:publicId/publish/status?subject=workspace|minibob`
+- `GET /api/accounts/:accountId/instances/:publicId/publish/status`
 ```
 
-In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Publish still goes through the same workspace `PUT` endpoint.
+In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Publish still goes through the same account `PUT` endpoint.
 
-`subject` is required on workspace endpoints (`workspace`, `minibob`) to resolve policy.
+`subject` is required on editor endpoints (`account`, `minibob`) to resolve policy.
 
 Localization is separate: overlay edits write to `widget_instance_overlays` via Paris and do not touch the base config.
 
@@ -575,12 +573,12 @@ All third-party embed traffic terminates at Venice:
 ### 1. Editing Flow
 
 ```
-User opens widget → Host (Roma/DevStudio message boot) or Bob (URL boot) GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace
+User opens widget → Host (Roma/DevStudio message boot) or Bob (URL boot) GET /api/accounts/:accountId/instance/:publicId?subject=account
                   → Paris reads from Michael
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
                   → User clicks Publish
-                  → Bob PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace
+                  → Bob PUT /api/accounts/:accountId/instance/:publicId?subject=account
                   → Paris writes to Michael
 ```
 

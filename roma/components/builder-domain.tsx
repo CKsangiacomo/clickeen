@@ -5,12 +5,12 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import openEditorLifecycleContractJson from '../../tooling/contracts/open-editor-lifecycle.v1.json';
 import { getCompiledWidget, normalizeCompiledWidgetType } from './compiled-widget-cache';
-import { getWorkspaceInstance, prefetchWorkspaceInstance } from './workspace-instance-cache';
+import { getAccountInstance, prefetchAccountInstance } from './account-instance-cache';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type BuilderDomainProps = {
   initialPublicId?: string;
-  initialWorkspaceId?: string;
+  initialAccountId?: string;
 };
 
 type OpenEditorLifecycleContract = {
@@ -70,9 +70,9 @@ type BobOpenEditorMessage = {
   type: typeof OPEN_EDITOR_LIFECYCLE.events.openEditor;
   requestId: string;
   sessionId: string;
-  subjectMode: 'workspace';
+  subjectMode: 'account';
   publicId: string;
-  workspaceId: string;
+  accountId: string;
   ownerAccountId?: string;
   label: string;
   widgetname: string;
@@ -101,16 +101,14 @@ function resolveBobBaseUrl(): string {
 
 function buildRomaBuilderRoute(args: {
   publicId: string;
-  workspaceId: string;
   accountId: string;
   widgetType?: string;
 }): string {
   const search = new URLSearchParams({
-    workspaceId: args.workspaceId,
+    accountId: args.accountId,
     publicId: args.publicId,
-    subject: 'workspace',
+    subject: 'account',
   });
-  if (args.accountId) search.set('accountId', args.accountId);
   if (args.widgetType) search.set('widgetType', args.widgetType);
   return `/builder/${encodeURIComponent(args.publicId)}?${search.toString()}`;
 }
@@ -125,7 +123,7 @@ function decodeBuilderPathPublicId(pathname: string): string {
   }
 }
 
-export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }: BuilderDomainProps) {
+export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: BuilderDomainProps) {
   const me = useRomaMe();
   const router = useRouter();
   const pathname = usePathname();
@@ -142,14 +140,13 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
   const [openError, setOpenError] = useState<string | null>(null);
 
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
-  const workspaceId = useMemo(() => {
-    const fromQuery = String(searchParams.get('workspaceId') || '').trim();
+  const accountId = useMemo(() => {
+    const fromQuery = String(searchParams.get('accountId') || '').trim();
     if (fromQuery) return fromQuery;
-    const fromProp = String(initialWorkspaceId || '').trim();
+    const fromProp = String(initialAccountId || '').trim();
     if (fromProp) return fromProp;
-    return context.workspaceId;
-  }, [context.workspaceId, initialWorkspaceId, searchParams]);
-  const accountId = context.accountId;
+    return context.accountId;
+  }, [context.accountId, initialAccountId, searchParams]);
   const widgetTypeHint = useMemo(() => normalizeCompiledWidgetType(searchParams.get('widgetType')), [searchParams]);
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const searchQuery = searchParams.toString();
@@ -157,26 +154,25 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
   const pathPublicId = useMemo(() => decodeBuilderPathPublicId(pathname), [pathname]);
 
   const bobSrc = useMemo(() => {
-    if (!workspaceId) return '';
+    if (!accountId) return '';
     const url = new URL('/bob', `${bobBaseUrl}/`);
     url.searchParams.set('boot', 'message');
-    url.searchParams.set('workspaceId', workspaceId);
-    url.searchParams.set('subject', 'workspace');
+    url.searchParams.set('accountId', accountId);
+    url.searchParams.set('subject', 'account');
     url.searchParams.set('surface', 'roma');
     return url.toString();
-  }, [bobBaseUrl, workspaceId]);
+  }, [accountId, bobBaseUrl]);
 
   useEffect(() => {
-    if (!workspaceId || !activePublicId) return;
+    if (!accountId || !activePublicId) return;
     const nextRoute = buildRomaBuilderRoute({
       publicId: activePublicId,
-      workspaceId,
       accountId,
       widgetType: widgetTypeHint,
     });
     if (nextRoute === currentUrl) return;
     router.replace(nextRoute, { scroll: false });
-  }, [accountId, activePublicId, currentUrl, router, widgetTypeHint, workspaceId]);
+  }, [accountId, activePublicId, currentUrl, router, widgetTypeHint]);
 
   useEffect(() => {
     const queryPublicId = String(searchParams.get('publicId') || '').trim();
@@ -190,9 +186,9 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
   }, [activePublicId, initialPublicId, pathPublicId, searchParams]);
 
   useEffect(() => {
-    if (!workspaceId || !activePublicId) return;
-    void prefetchWorkspaceInstance(workspaceId, activePublicId);
-  }, [activePublicId, workspaceId]);
+    if (!accountId || !activePublicId) return;
+    void prefetchAccountInstance(accountId, activePublicId);
+  }, [accountId, activePublicId]);
 
   const postOpenEditorAndWait = useCallback(
     (
@@ -310,7 +306,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
 
   const openActiveInstanceInBob = useCallback(async () => {
     const targetWindow = iframeRef.current?.contentWindow;
-    if (!targetWindow || !workspaceId || !activePublicId) return;
+    if (!targetWindow || !accountId || !activePublicId) return;
 
     const openSeq = ++openDispatchSeqRef.current;
     setOpenError(null);
@@ -318,8 +314,8 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
     try {
       const compileFetchStartedAt = performance.now();
       const hintedCompiledPromise = widgetTypeHint ? getCompiledWidget(widgetTypeHint) : null;
-      const instanceResult = await getWorkspaceInstance({
-        workspaceId,
+      const instanceResult = await getAccountInstance({
+        accountId,
         publicId: activePublicId,
       });
       const instance = instanceResult.payload;
@@ -354,9 +350,9 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
 
       const message: BobOpenEditorPayload = {
         type: OPEN_EDITOR_LIFECYCLE.events.openEditor,
-        subjectMode: 'workspace',
+        subjectMode: 'account',
         publicId: resolvedPublicId,
-        workspaceId,
+        accountId,
         ownerAccountId,
         label,
         widgetname: widgetType,
@@ -387,7 +383,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [activePublicId, postOpenEditorAndWait, widgetTypeHint, workspaceId]);
+  }, [accountId, activePublicId, postOpenEditorAndWait, widgetTypeHint]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {
@@ -426,7 +422,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
         const denial = data as BobAssetEntitlementDeniedMessage;
         const reasonKey = String(denial.reasonKey || '').trim();
         const search = new URLSearchParams();
-        if (workspaceId) search.set('workspaceId', workspaceId);
+        if (accountId) search.set('accountId', accountId);
         if (reasonKey) search.set('reasonKey', reasonKey);
         const nextRoute = search.size ? `/assets?${search.toString()}` : '/assets';
         router.push(nextRoute, { scroll: false });
@@ -435,7 +431,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activePublicId, bobBaseUrl, openActiveInstanceInBob, router, workspaceId]);
+  }, [accountId, activePublicId, bobBaseUrl, openActiveInstanceInBob, router]);
 
   useEffect(() => {
     bobReadyRef.current = false;
@@ -453,11 +449,11 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
     void openActiveInstanceInBob();
   }, [activePublicId, openActiveInstanceInBob]);
 
-  const hasWorkspaceId = Boolean(workspaceId);
-  const waitingForWorkspaceContext = !hasWorkspaceId && me.loading;
+  const hasAccountId = Boolean(accountId);
+  const waitingForAccountContext = !hasAccountId && me.loading;
 
-  if (!hasWorkspaceId) {
-    if (waitingForWorkspaceContext) {
+  if (!hasAccountId) {
+    if (waitingForAccountContext) {
       return (
         <div className="rd-canvas-module">
           <p className="body-m">Loading builder context…</p>
@@ -467,7 +463,7 @@ export function BuilderDomain({ initialPublicId = '', initialWorkspaceId = '' }:
 
     return (
       <div className="rd-canvas-module">
-        <p className="body-m">No workspace context found for Builder.</p>
+        <p className="body-m">No account context found for Builder.</p>
         <div className="rd-canvas-module__actions">
           <Link className="diet-btn-txt" data-size="md" data-variant="primary" href="/settings">
             <span className="diet-btn-txt__label body-m">Open settings</span>

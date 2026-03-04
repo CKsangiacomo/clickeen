@@ -320,17 +320,21 @@ function assertAssetLifecycleContracts49B() {
 }
 
 function assertBootstrapContracts49C() {
-  assertIncludes('paris/src/domains/roma/bootstrap-core.ts', [
-    'Promise.allSettled',
-    'domainErrors',
-    'domainOutcomes',
-    'bootstrapFanoutMs',
-  ]);
-
+  assertMissing('paris/src/domains/roma/bootstrap-core.ts');
   assertIncludes('paris/src/domains/roma/widgets-bootstrap.ts', [
-    'domainErrors',
+    'handleRomaBootstrap',
+    'resolveIdentityMePayload',
+    'ROMA_AUTHZ_CAPSULE_TTL_SEC',
+    'mintRomaAccountAuthzCapsule',
+    'authorizeAccount',
+    'accountCapsule',
+    'entitlements',
+  ]);
+  assertExcludes('paris/src/domains/roma/widgets-bootstrap.ts', [
     'bootstrapFanoutMs',
     'bootstrapDomainOutcomes',
+    'domainErrors',
+    'domainOutcomes',
   ]);
 
   assertIncludes('roma/app/api/bootstrap/route.ts', [
@@ -343,14 +347,15 @@ function assertBootstrapContracts49C() {
   assertMissing('roma/app/api/me/route.ts');
 
   assertIncludes('roma/components/use-roma-me.ts', [
-    'ROMA_ME_DEGRADED_SUCCESS_TTL_MS = 5_000',
-    'domainErrors?: Partial<Record<RomaBootstrapDomainKey, RomaBootstrapDomainError>> | null;',
+    'ROMA_ACTIVE_ACCOUNT_STORE_KEY',
+    'ROMA_ME_ERROR_TTL_MS',
+    'resolveRomaMeSuccessTtlMs',
+    'setRomaAuthzCapsule',
     "fetch(`/api/bootstrap${search}`, { cache: 'no-store' })",
   ]);
-  assertIncludes('roma/components/bootstrap-domain-state.ts', [
-    'roma.errors.bootstrap.domain_unavailable',
-    'roma.errors.bootstrap.domain_contract_violation',
-  ]);
+  assertExcludes('roma/components/use-roma-me.ts', ['ROMA_ME_DEGRADED_SUCCESS_TTL_MS', 'domainErrors?: Partial<Record']);
+  assertMissing('roma/components/bootstrap-domain-state.ts');
+  assertIncludes('roma/components/widgets-domain.tsx', ['roma.errors.bootstrap.domain_unavailable']);
 }
 
 function main() {

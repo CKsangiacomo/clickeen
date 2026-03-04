@@ -56,7 +56,7 @@ For public traffic:
 
 ### T7) DB touch budgets are fixed and few
 Acceptable DB-touch moments:
-1. **Editor session load:** 1 read to load workspace + instance.
+1. **Editor session load:** 1 read to load account + instance.
 2. **Save (draft):** 1 write per explicit save boundary (draft config/text + minimal metadata).
 3. **Go live / go dark:** 1 write to flip the instance live flag (`published`) and enqueue Tokyo mirror jobs.
 4. **Instance create:** 1 write (plus minimal metadata), not a cascade.
@@ -279,7 +279,7 @@ Already true in the repo (foundation is in place):
 - Bob now sends the **explicit live plan** (`localePolicy` + `seoGeo`) on live writes; Paris validates shape and mirrors exactly that (no recompute in the instance update path).
 - Bob “Save” no longer silently marks the instance as published (save ≠ live).
 - Bob gates the SEO/GEO embed snippet by entitlement (it is not shown to non-entitled tiers).
-- Locale policy is now a real product setting in Bob (base locale, enabled locales, IP mode, switcher) and is persisted via Paris workspace locale policy endpoints.
+- Locale policy is now a real product setting in Bob (base locale, enabled locales, IP mode, switcher) and is persisted via Paris account locale policy endpoints.
 
 Remaining blockers (must be green to claim PRD 54 executed):
 1. **Gate 0 infra: cloud-dev Auth V1 wiring**
@@ -339,7 +339,7 @@ Quick verify (no browser required):
 
 Expect:
 - You land back in Roma authenticated (httpOnly cookies set).
-- Bob can load a workspace/instance without copying tokens into localStorage.
+- Bob can load an account/instance without copying tokens into localStorage.
 - If Roma runs on `roma.dev.clickeen.com`, session cookies are shared across `.dev.clickeen.com`, so one login covers both Roma and Bob:
   - `ck-access-token` + `ck-refresh-token`
 
@@ -506,7 +506,7 @@ Expect:
   - an in-app popup explains what changed and where to go (Settings) to pick what stays live
   - when email is implemented, the same event produces an email alert
 
-Quick verify (repeatable, safe; uses a fresh test account so it won't destroy the admin workspace):
+Quick verify (repeatable, safe; uses a fresh test account so it won't destroy the admin account):
 - `node scripts/dev/cloud-dev/gate6-tier-drop.mjs`
 
 ---

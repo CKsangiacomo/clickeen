@@ -13,7 +13,7 @@ export function ToolDrawer() {
   const session = useWidgetSession();
   const compiled = session.compiled;
   const sessionError = session.error;
-  const workspaceId = session.meta?.workspaceId ? String(session.meta.workspaceId) : '';
+  const accountId = session.meta?.accountId ? String(session.meta.accountId) : '';
   const ownerAccountId = session.meta?.ownerAccountId ? String(session.meta.ownerAccountId) : '';
   const publicId = session.meta?.publicId ? String(session.meta.publicId) : '';
   const widgetType = session.meta?.widgetname ? String(session.meta.widgetname) : '';
@@ -39,15 +39,15 @@ export function ToolDrawer() {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
     const dataset = root.dataset as any;
-    if (workspaceId) dataset.ckWorkspaceId = workspaceId;
-    else delete dataset.ckWorkspaceId;
+    if (accountId) dataset.ckAccountId = accountId;
+    else delete dataset.ckAccountId;
     if (ownerAccountId) dataset.ckOwnerAccountId = ownerAccountId;
     else delete dataset.ckOwnerAccountId;
     if (publicId) dataset.ckPublicId = publicId;
     else delete dataset.ckPublicId;
     if (widgetType) dataset.ckWidgetType = widgetType;
     else delete dataset.ckWidgetType;
-  }, [workspaceId, ownerAccountId, publicId, widgetType]);
+  }, [accountId, ownerAccountId, publicId, widgetType]);
 
   const panelsById = useMemo(() => {
     const map: Record<string, CompiledPanel> = {};

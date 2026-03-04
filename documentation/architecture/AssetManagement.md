@@ -69,7 +69,7 @@ Managed (Roma) control-plane endpoint:
 ### Upload flow (Bob -> Tokyo-worker -> instance config)
 
 1. User uploads file in Bob.
-2. Bob posts to Tokyo-worker upload path with account/workspace trace headers.
+2. Bob posts to Tokyo-worker upload path with account/public/widget trace headers.
 3. Tokyo-worker writes R2 blob(s) and ownership metadata (`account_assets`, `account_asset_variants`).
 4. Response returns immutable asset identity/version reference.
 5. Bob writes `asset.versionId` into instance config immediately.

@@ -59,26 +59,26 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Instance configuration data (curated or user-owned)
 - Stored in Michael:
   - Clickeen-authored baseline + curated: `curated_widget_instances` with `widget_type`
-  - User/workspace instances: `widget_instances` with `widget_id` (FK to `widgets`)
+  - User/account instances: `widget_instances` with `widget_id` (FK to `widgets`)
 - Paris exposes over HTTP as `{ publicId, widgetType, config }`
 - Bob holds working copy in memory as `instanceData` during editing
 
 ### The Two-API-Call Pattern
 
 Core base-config editing follows EXACTLY 2 Paris instance calls per open session:
-1. **Load**: `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` once per instance open (host-performed in Roma/DevStudio message boot, Bob-performed in URL boot).
-2. **Publish**: `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish (always from Bob). Persist is synchronous; snapshot/l10n convergence is async via queue/status.
+1. **Load**: `GET /api/accounts/:accountId/instance/:publicId?subject=account` once per instance open (host-performed in Roma/DevStudio message boot, Bob-performed in URL boot).
+2. **Publish**: `PUT /api/accounts/:accountId/instance/:publicId?subject=account` when user clicks Publish (always from Bob). Persist is synchronous; snapshot/l10n convergence is async via queue/status.
 
 Publish pipeline status is observed through:
-- `GET /api/workspaces/:workspaceId/instances/:publicId/publish/status?subject=workspace|minibob`
+- `GET /api/accounts/:accountId/instances/:publicId/publish/status`
 
-`subject` is required on workspace-scoped endpoints (`workspace`, `minibob`) to resolve editor policy.
+`subject` is required on editor endpoints (`account`, `minibob`) to resolve editor policy.
 
 In the browser these flow through one of two host paths:
-- Bob URL boot path: Bob same-origin proxy (`/api/paris/workspaces/:workspaceId/instance/:publicId?subject=workspace`) forwards to the workspace-scoped Paris endpoints.
-- Roma/DevStudio message boot path: host fetches instance + compiled payload, then sends Bob a `ck:open-editor` message (Bob still enforces publish via the same Paris workspace endpoint).
+- Bob URL boot path: Bob same-origin proxy (`/api/paris/accounts/:accountId/instance/:publicId?subject=account`) forwards to the account-scoped Paris endpoints.
+- Roma/DevStudio message boot path: host fetches instance + compiled payload, then sends Bob a `ck:open-editor` message (Bob still enforces publish via the same Paris account endpoint).
 
-Localization is separate: Bob also calls workspace/instance locale endpoints when translating or applying overlay edits. Those writes are intentional and do **not** publish the base config.
+Localization is separate: Bob also calls account/instance locale endpoints when translating or applying overlay edits. Those writes are intentional and do **not** publish the base config.
 
 Between load and publish:
 - Base config edits happen in Bob's React state (in memory)
@@ -108,12 +108,12 @@ Between load and publish:
 1. Clickeen team authors baseline + curated instances in DevStudio.
 2. Instances use `wgt_main_{widgetType}` (baseline) and `wgt_curated_{curatedKey}` (curated).
 3. These instances are published one-way to cloud-dev and surfaced in the gallery.
-4. User browses gallery -> clicks "Use this" -> clones to their workspace as a user instance.
+4. User browses gallery -> clicks "Use this" -> clones to their account as a user instance.
 5. User customizes their copy freely (full ToolDrawer access).
 
 **Why this approach:**
 - **One editor**: Clickeen and users author in Bob; same config schema.
-- **Clean separation**: Curated content is global; user instances are workspace-scoped with RLS.
+- **Clean separation**: Curated content is global; user instances are account-scoped with RLS.
 - **Deterministic publish**: Clickeen-authored instances are one-way (local -> cloud-dev).
 - **Scales to marketplace**: Curated instances remain shareable configs, not a new content type.
 
@@ -144,7 +144,7 @@ curated_widget_instances.meta = {
 |--------|---------|---------|-----------|
 | **Prague** | Marketing site + gallery | Cloudflare Pages | `prague/` |
 | **Bob** | Widget builder app | Cloudflare Pages (Next.js) | `bob/` |
-| **Roma** | Product shell (workspace domains + Builder host orchestration) | Cloudflare Pages (Next.js) | `roma/` |
+| **Roma** | Product shell (account domains + Builder host orchestration) | Cloudflare Pages (Next.js) | `roma/` |
 | **Venice** | SSR embed runtime | Cloudflare Pages (Next.js Edge) | `venice/` |
 | **Paris** | HTTP API gateway | Cloudflare Workers | `paris/` |
 | **San Francisco** | AI Workforce OS (agents, learning) | Workers (D1/KV/R2/Queues) | `sanfrancisco/` |
@@ -160,7 +160,7 @@ curated_widget_instances.meta = {
 
 **Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, publishes via Paris (writes to Michael). Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot` (with legacy `/api/ai/sdr-copilot` compatibility where older deployments still run it).
 
-**Roma** — Product shell and workspace experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves active workspace context through `/api/bootstrap`, keeps short-lived workspace/account authz capsules for Paris calls, and opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle).
+**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves active account context through `/api/bootstrap`, keeps a short-lived account authz capsule for Paris calls, and opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle).
 
 **Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
@@ -224,7 +224,7 @@ All widgets use shared modules from `tokyo/widgets/shared/`:
 
 ### Stage/Pod Architecture
 
-- **Stage** = workspace backdrop (container surrounding the widget)
+- **Stage** = host backdrop (container surrounding the widget)
 - **Pod** = widget surface (actual widget container)
 - All widgets use `.stage > .pod > [data-ck-widget]` wrapper structure
 - Layout options: stage canvas mode (`wrap`/`viewport`/`fixed`), background (fill picker), padding per device (`desktop` + `mobile`, linked or per-side), corner radius (linked or per-corner), pod width mode (wrap/full/fixed), pod alignment, and optional floating overlay placement (`stage.floating.enabled|anchor|offset`) for widgets that opt in
@@ -284,8 +284,8 @@ Canonical reference:
 
 | System | Status | Notes |
 |--------|--------|-------|
-| Bob | ✅ Active | Compiler, ToolDrawer, Workspace, Ops engine |
-| Roma | ✅ Active | Domain shell, workspace bootstrap, widgets/templates/builder orchestration |
+| Bob | ✅ Active | Compiler, ToolDrawer, Account, Ops engine |
+| Roma | ✅ Active | Domain shell, account bootstrap, widgets/templates/builder orchestration |
 | Tokyo | ✅ Active | FAQ widget with shared modules |
 | Paris | ✅ Active | Instance API, tokens, entitlements, submissions |
 | Venice | ✅ Active | SSR embed runtime (published-only), loader, asset proxy (usage/submissions are stubbed in this repo snapshot) |

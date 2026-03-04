@@ -57,7 +57,7 @@ function budgetKey(grant: AIGrant, agentId: string): string {
     grant.sub.kind === 'anon'
       ? grant.sub.sessionId
       : grant.sub.kind === 'user'
-        ? `${grant.sub.userId}:${grant.sub.workspaceId}`
+        ? `${grant.sub.userId}:${grant.sub.accountId}`
         : grant.sub.serviceId;
   const sessionId = grant.trace?.sessionId ?? subjectKey;
   const capsKey = grant.caps.join(',');

@@ -2,7 +2,7 @@ import type { AiGrantPolicy } from '@clickeen/ck-policy';
 
 export type GrantSubject =
   | { kind: 'anon'; sessionId: string }
-  | { kind: 'user'; userId: string; workspaceId: string }
+  | { kind: 'user'; userId: string; accountId: string }
   | { kind: 'service'; serviceId: string };
 
 export type AIGrant = {

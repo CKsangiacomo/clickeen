@@ -5,7 +5,7 @@
   "ops": [
     {
       "op": "set",
-      "path": "timer.headline",
+      "path": "header.title",
       "value": "趁还来得及，立享 5 折优惠 🎯"
     },
     {
