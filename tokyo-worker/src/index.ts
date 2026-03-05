@@ -98,6 +98,7 @@ type BerlinJwksStore = {
 
 const BERLIN_JWKS_CACHE_KEY = '__CK_TOKYO_BERLIN_JWKS_CACHE_V1__';
 const BERLIN_JWKS_CACHE_TTL_MS = 5 * 60_000;
+const DEFAULT_BERLIN_BASE_URL = 'https://berlin-dev.clickeen.workers.dev';
 
 function decodeJwtPayload(token: string): JwtClaims | null {
   const parts = token.split('.');
@@ -137,11 +138,15 @@ function audienceMatches(claim: unknown, expected: string): boolean {
   return false;
 }
 
+function resolveBerlinBaseUrl(env: Env): string {
+  const configured = typeof env.BERLIN_BASE_URL === 'string' ? env.BERLIN_BASE_URL.trim() : '';
+  return (configured || DEFAULT_BERLIN_BASE_URL).replace(/\/+$/, '');
+}
+
 function resolveBerlinIssuer(env: Env): string {
   const configured = (typeof env.BERLIN_ISSUER === 'string' ? env.BERLIN_ISSUER.trim() : '') || null;
   if (configured) return configured.replace(/\/+$/, '');
-  const base = requireEnvString(env.BERLIN_BASE_URL, 'BERLIN_BASE_URL').replace(/\/+$/, '');
-  return base;
+  return resolveBerlinBaseUrl(env);
 }
 
 function resolveBerlinAudience(env: Env): string {
@@ -152,8 +157,7 @@ function resolveBerlinAudience(env: Env): string {
 function resolveBerlinJwksUrl(env: Env): string {
   const configured = (typeof env.BERLIN_JWKS_URL === 'string' ? env.BERLIN_JWKS_URL.trim() : '') || null;
   if (configured) return configured;
-  const base = requireEnvString(env.BERLIN_BASE_URL, 'BERLIN_BASE_URL').replace(/\/+$/, '');
-  return `${base}/.well-known/jwks.json`;
+  return `${resolveBerlinBaseUrl(env)}/.well-known/jwks.json`;
 }
 
 function isBerlinJwksStore(value: unknown): value is BerlinJwksStore {
@@ -239,7 +243,12 @@ async function fetchBerlinJwks(url: string): Promise<BerlinJwksCacheEntry> {
     headers: { accept: 'application/json' },
     cache: 'no-store',
   });
-  if (!response.ok) throw new Error(`Berlin JWKS lookup failed (${response.status})`);
+  if (!response.ok) {
+    const bodySnippet = (await response.text().catch(() => '')).slice(0, 160);
+    throw new Error(
+      `Berlin JWKS lookup failed (${response.status}) url=${url}${bodySnippet ? ` body=${bodySnippet}` : ''}`,
+    );
+  }
 
   const parsed = (await response.json().catch(() => null)) as unknown;
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -284,7 +293,7 @@ async function resolveBerlinVerifyKey(env: Env, kid: string): Promise<CryptoKey 
 async function verifyBerlinJwtSignature(
   token: string,
   env: Env,
-): Promise<{ ok: true; claims: JwtClaims } | { ok: false; reason: string }> {
+): Promise<{ ok: true; claims: JwtClaims } | { ok: false; reason: string; detail?: string }> {
   const parts = token.split('.');
   if (parts.length !== 3) return { ok: false, reason: 'malformed_jwt' };
 
@@ -301,8 +310,9 @@ async function verifyBerlinJwtSignature(
   let key: CryptoKey | null = null;
   try {
     key = await resolveBerlinVerifyKey(env, kid);
-  } catch {
-    return { ok: false, reason: 'jwks_unavailable' };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return { ok: false, reason: 'jwks_unavailable', detail };
   }
   if (!key) return { ok: false, reason: 'unknown_kid' };
 
@@ -341,7 +351,9 @@ export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAu
           error: {
             kind: signature.reason === 'jwks_unavailable' ? 'INTERNAL' : 'DENY',
             reasonKey: signature.reason === 'jwks_unavailable' ? 'AUTH_PROVIDER_UNAVAILABLE' : 'AUTH_INVALID',
-            ...(signature.reason === 'jwks_unavailable' ? { detail: signature.reason } : {}),
+            ...(signature.reason === 'jwks_unavailable'
+              ? { detail: signature.detail || signature.reason }
+              : {}),
           },
         },
         { status },

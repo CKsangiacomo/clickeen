@@ -20,7 +20,8 @@ function printUsage() {
   console.log(`Usage: node scripts/tokyo-assets-sync.mjs [options]
 
 Syncs missing canonical account asset blobs from remote Tokyo to local R2.
-Reads canonical asset keys from local Supabase account_asset_variants.
+Reads canonical asset keys from local Supabase when legacy asset tables exist.
+After PRD55 asset-table eviction, missing-table responses are treated as empty input.
 
 Options:
   --local-base <url>      Local Tokyo base URL (default: ${DEFAULT_LOCAL_BASE})
@@ -151,7 +152,19 @@ async function loadVariantKeys(client) {
       limit: String(DEFAULT_PAGE_SIZE),
       offset: String(offset),
     });
-    const rows = await supabaseFetch(client, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
+    let rows;
+    try {
+      rows = await supabaseFetch(client, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      const missingTable =
+        detail.includes('PGRST205') && detail.includes('account_asset_variants');
+      if (missingTable) {
+        console.log('[tokyo-assets-sync] account_asset_variants not present; skipping legacy sync source.');
+        break;
+      }
+      throw error;
+    }
     const batch = Array.isArray(rows) ? rows : [];
     if (!batch.length) break;
     for (const row of batch) {
@@ -287,4 +300,3 @@ main().catch((error) => {
   console.error('[tokyo-assets-sync] failed:', detail);
   process.exit(1);
 });
-

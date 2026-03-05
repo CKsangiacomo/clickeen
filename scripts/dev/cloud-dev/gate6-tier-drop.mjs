@@ -63,6 +63,12 @@ const localEnv = loadDotenv(path.join(process.cwd(), '.env.local'));
 
 const CK_ADMIN_EMAIL = process.env.CK_ADMIN_EMAIL || localEnv.CK_ADMIN_EMAIL || '';
 const CK_ADMIN_PASSWORD = process.env.CK_ADMIN_PASSWORD || localEnv.CK_ADMIN_PASSWORD || '';
+const TOKYO_DEV_JWT =
+  process.env.TOKYO_DEV_JWT ||
+  localEnv.TOKYO_DEV_JWT ||
+  process.env.PARIS_DEV_JWT ||
+  localEnv.PARIS_DEV_JWT ||
+  '';
 
 const BASE = {
   berlin:
@@ -239,43 +245,67 @@ async function enableSeoGeo(accessToken, accountId, publicId) {
 async function uploadAsset(accessToken, accountId) {
   const body = Buffer.from(`gate6-asset-${Date.now()}`, 'utf8');
   const url = `${BASE.tokyo.replace(/\/+$/, '')}/assets/upload?_t=${Date.now()}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      accept: 'application/json',
-      'x-account-id': accountId,
-      'x-source': 'api',
-      'x-filename': 'gate6.txt',
-      'x-variant': 'original',
-      'content-type': 'text/plain; charset=utf-8',
-    },
-    body,
-  });
-  const text = await res.text();
-  let data = null;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    data = null;
+
+  const attemptUpload = async (token) => {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        accept: 'application/json',
+        'x-account-id': accountId,
+        'x-source': 'api',
+        'x-filename': 'gate6.txt',
+        'x-variant': 'original',
+        'content-type': 'text/plain; charset=utf-8',
+      },
+      body,
+    });
+    const text = await res.text();
+    let data = null;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+    return { res, text, data };
+  };
+
+  const primary = await attemptUpload(accessToken);
+  if (primary.res.ok) {
+    const assetUrl = typeof primary.data?.url === 'string' ? primary.data.url.trim() : '';
+    if (!assetUrl) throw new Error('Asset upload missing url.');
+    return { assetUrl, authMode: 'berlin' };
   }
-  if (!res.ok) throw new Error(`Asset upload failed (${res.status}) ${text.slice(0, 200)}`);
-  const assetUrl = typeof data?.url === 'string' ? data.url.trim() : '';
-  if (!assetUrl) throw new Error('Asset upload missing url.');
-  return assetUrl;
+
+  const primaryReason = primary.data?.error?.reasonKey || null;
+  const shouldFallback =
+    primary.res.status === 502 &&
+    primaryReason === 'AUTH_PROVIDER_UNAVAILABLE' &&
+    Boolean(TOKYO_DEV_JWT);
+  if (!shouldFallback) {
+    throw new Error(`Asset upload failed (${primary.res.status}) ${primary.text.slice(0, 200)}`);
+  }
+
+  const fallback = await attemptUpload(TOKYO_DEV_JWT);
+  if (!fallback.res.ok) {
+    throw new Error(`Asset upload fallback failed (${fallback.res.status}) ${fallback.text.slice(0, 200)}`);
+  }
+  const assetUrl = typeof fallback.data?.url === 'string' ? fallback.data.url.trim() : '';
+  if (!assetUrl) throw new Error('Asset upload fallback missing url.');
+  return { assetUrl, authMode: 'tokyo-dev-jwt' };
 }
 
-async function readTierDropNotice(accessToken, accountId) {
-  const { res, data, text } = await fetchJson(
-    `${BASE.paris.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/notices?status=open`,
-    {
-      headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
-      cache: 'no-store',
-    },
-  );
-  if (!res.ok) throw new Error(`Notices list failed (${res.status}) ${text.slice(0, 200)}`);
-  const notices = Array.isArray(data?.notices) ? data.notices : [];
-  return notices.find((notice) => notice?.kind === 'tier_drop') || null;
+async function readTierDropLifecycleNotice(accessToken, accountId) {
+  const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/me`, {
+    headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error(`Me read failed (${res.status}) ${text.slice(0, 200)}`);
+  const accounts = Array.isArray(data?.accounts) ? data.accounts : [];
+  const match = accounts.find((row) => row?.accountId === accountId) || null;
+  const lifecycleNotice = match?.lifecycleNotice;
+  if (!lifecycleNotice || typeof lifecycleNotice !== 'object' || Array.isArray(lifecycleNotice)) return null;
+  return lifecycleNotice;
 }
 
 async function main() {
@@ -320,10 +350,11 @@ async function main() {
   if (!metaPointerOk) process.exit(1);
   console.log('[gate6] seo/geo meta present (entitled tier)');
 
-  const assetUrl = await uploadAsset(accessToken, accountId);
+  const uploaded = await uploadAsset(accessToken, accountId);
+  const assetUrl = uploaded.assetUrl;
   const assetBefore = await headStatus(assetUrl);
   if (assetBefore !== 200) throw new Error(`Asset HEAD before drop expected 200, got ${assetBefore}`);
-  console.log('[gate6] asset uploaded');
+  console.log(`[gate6] asset uploaded (auth=${uploaded.authMode})`);
 
   const keep = [instances[0]];
   const dropped = await planChange(accessToken, accountId, 'free', keep);
@@ -350,10 +381,21 @@ async function main() {
   if (!metaPointerGone) process.exit(1);
   console.log('[gate6] seo/geo meta removed on tier drop');
 
-  const notice = await readTierDropNotice(accessToken, accountId);
-  if (!notice) throw new Error('Expected tier_drop notice, but none found.');
-  if (notice.emailPending !== true) throw new Error('Expected tier_drop notice emailPending=true.');
-  console.log('[gate6] notice persisted (email_pending=true)');
+  const lifecycleNotice = await readTierDropLifecycleNotice(accessToken, accountId);
+  if (!lifecycleNotice) throw new Error('Expected lifecycleNotice on /api/me account payload, but none found.');
+  if (!lifecycleNotice.tierChangedAt) throw new Error('Expected lifecycleNotice.tierChangedAt after tier drop.');
+  if (lifecycleNotice.tierChangedFrom !== 'tier3') {
+    throw new Error(`Expected lifecycleNotice.tierChangedFrom=tier3, got ${String(lifecycleNotice.tierChangedFrom)}`);
+  }
+  if (lifecycleNotice.tierChangedTo !== 'free') {
+    throw new Error(`Expected lifecycleNotice.tierChangedTo=free, got ${String(lifecycleNotice.tierChangedTo)}`);
+  }
+  if (lifecycleNotice.tierDropEmailSentAt !== null) {
+    throw new Error(
+      `Expected lifecycleNotice.tierDropEmailSentAt=null (pending), got ${String(lifecycleNotice.tierDropEmailSentAt)}`,
+    );
+  }
+  console.log('[gate6] lifecycle notice persisted on accounts columns (email pending)');
 
   console.log('[gate6] done');
 }
