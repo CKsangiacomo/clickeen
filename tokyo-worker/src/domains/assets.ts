@@ -229,46 +229,36 @@ export async function persistAccountAssetMetadata(args: {
   sizeBytes: number;
   sha256: string;
 }): Promise<void> {
-  const assetRow = {
-    asset_id: args.assetId,
-    account_id: args.accountId,
-    public_id: args.publicId ?? null,
-    widget_type: args.widgetType ?? null,
-    source: args.source,
-    original_filename: args.originalFilename,
-    normalized_filename: args.normalizedFilename,
-    content_type: args.contentType,
-    size_bytes: args.sizeBytes,
-    sha256: args.sha256,
-  };
-  const assetRes = await supabaseFetch(args.env, '/rest/v1/account_assets', {
-    method: 'POST',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify(assetRow),
-  });
-  if (!assetRes.ok) {
-    const text = await assetRes.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account_assets insert failed (${assetRes.status}) ${text}`.trim());
-  }
-
-  const variantRow = {
-    asset_id: args.assetId,
-    account_id: args.accountId,
+  const existing = await loadAccountAssetManifestByIdentity(args.env, args.accountId, args.assetId);
+  const nowIso = new Date().toISOString();
+  const nextVariant: AccountAssetVariantMeta = {
     variant: args.variant,
-    r2_key: args.key,
+    key: args.key,
     filename: args.normalizedFilename,
-    content_type: args.contentType,
-    size_bytes: args.sizeBytes,
+    contentType: args.contentType,
+    sizeBytes: args.sizeBytes,
+    createdAt: nowIso,
   };
-  const variantRes = await supabaseFetch(args.env, '/rest/v1/account_asset_variants', {
-    method: 'POST',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify(variantRow),
-  });
-  if (!variantRes.ok) {
-    const text = await variantRes.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account_asset_variants insert failed (${variantRes.status}) ${text}`.trim());
-  }
+  const variants = (existing?.variants ?? []).filter((variant) => variant.variant !== args.variant);
+  variants.push(nextVariant);
+
+  const manifest: AccountAssetManifest = {
+    assetId: args.assetId,
+    accountId: args.accountId,
+    publicId: args.publicId ?? existing?.publicId ?? null,
+    widgetType: args.widgetType ?? existing?.widgetType ?? null,
+    source: args.source,
+    originalFilename: args.originalFilename,
+    normalizedFilename: args.normalizedFilename,
+    contentType: args.contentType,
+    sizeBytes: args.sizeBytes,
+    sha256: args.sha256,
+    createdAt: existing?.createdAt ?? nowIso,
+    updatedAt: nowIso,
+    variants,
+  };
+
+  await saveAccountAssetManifest(args.env, manifest);
 }
 
 type AccountAssetRow = {
@@ -276,60 +266,190 @@ type AccountAssetRow = {
   account_id: string;
 };
 
+export type AccountAssetVariantMeta = {
+  variant: string;
+  key: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  createdAt: string;
+};
+
+export type AccountAssetManifest = {
+  assetId: string;
+  accountId: string;
+  publicId: string | null;
+  widgetType: string | null;
+  source: AccountAssetSource;
+  originalFilename: string;
+  normalizedFilename: string;
+  contentType: string;
+  sizeBytes: number;
+  sha256: string;
+  createdAt: string;
+  updatedAt: string;
+  variants: AccountAssetVariantMeta[];
+};
+
+const ACCOUNT_ASSET_META_PREFIX = 'assets/meta/accounts';
+
+function accountAssetManifestKey(accountId: string, assetId: string): string {
+  return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/${assetId}.json`;
+}
+
+function accountAssetManifestPrefix(accountId: string): string {
+  return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/`;
+}
+
+function normalizeAssetVariantMeta(raw: unknown): AccountAssetVariantMeta | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const row = raw as Record<string, unknown>;
+  const variant = typeof row.variant === 'string' ? row.variant.trim() : '';
+  const key = typeof row.key === 'string' ? row.key.trim() : '';
+  if (!variant || !key) return null;
+  return {
+    variant,
+    key,
+    filename: typeof row.filename === 'string' && row.filename.trim() ? row.filename.trim() : 'asset.bin',
+    contentType:
+      typeof row.contentType === 'string' && row.contentType.trim()
+        ? row.contentType.trim()
+        : 'application/octet-stream',
+    sizeBytes:
+      typeof row.sizeBytes === 'number' && Number.isFinite(row.sizeBytes) && row.sizeBytes >= 0
+        ? Math.floor(row.sizeBytes)
+        : 0,
+    createdAt:
+      typeof row.createdAt === 'string' && row.createdAt.trim()
+        ? row.createdAt.trim()
+        : new Date().toISOString(),
+  };
+}
+
+function normalizeAccountAssetManifest(raw: unknown): AccountAssetManifest | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const row = raw as Record<string, unknown>;
+  const accountId = typeof row.accountId === 'string' ? row.accountId.trim() : '';
+  const assetId = typeof row.assetId === 'string' ? row.assetId.trim() : '';
+  const source = normalizeAccountAssetSource(typeof row.source === 'string' ? row.source : null);
+  if (!accountId || !assetId || !source) return null;
+  return {
+    accountId,
+    assetId,
+    publicId: typeof row.publicId === 'string' && row.publicId.trim() ? row.publicId.trim() : null,
+    widgetType: typeof row.widgetType === 'string' && row.widgetType.trim() ? row.widgetType.trim() : null,
+    source,
+    originalFilename:
+      typeof row.originalFilename === 'string' && row.originalFilename.trim()
+        ? row.originalFilename.trim()
+        : 'upload.bin',
+    normalizedFilename:
+      typeof row.normalizedFilename === 'string' && row.normalizedFilename.trim()
+        ? row.normalizedFilename.trim()
+        : 'upload.bin',
+    contentType:
+      typeof row.contentType === 'string' && row.contentType.trim()
+        ? row.contentType.trim()
+        : 'application/octet-stream',
+    sizeBytes:
+      typeof row.sizeBytes === 'number' && Number.isFinite(row.sizeBytes) && row.sizeBytes >= 0
+        ? Math.floor(row.sizeBytes)
+        : 0,
+    sha256: typeof row.sha256 === 'string' && row.sha256.trim() ? row.sha256.trim() : '',
+    createdAt:
+      typeof row.createdAt === 'string' && row.createdAt.trim()
+        ? row.createdAt.trim()
+        : new Date().toISOString(),
+    updatedAt:
+      typeof row.updatedAt === 'string' && row.updatedAt.trim()
+        ? row.updatedAt.trim()
+        : new Date().toISOString(),
+    variants: Array.isArray(row.variants)
+      ? row.variants
+          .map((variant) => normalizeAssetVariantMeta(variant))
+          .filter((variant): variant is AccountAssetVariantMeta => Boolean(variant))
+      : [],
+  };
+}
+
+async function saveAccountAssetManifest(env: Env, manifest: AccountAssetManifest): Promise<void> {
+  await env.TOKYO_R2.put(accountAssetManifestKey(manifest.accountId, manifest.assetId), JSON.stringify(manifest), {
+    httpMetadata: { contentType: 'application/json' },
+  });
+}
+
+export async function loadAccountAssetManifestByIdentity(
+  env: Env,
+  accountId: string,
+  assetId: string,
+): Promise<AccountAssetManifest | null> {
+  const key = accountAssetManifestKey(accountId, assetId);
+  const obj = await env.TOKYO_R2.get(key);
+  if (!obj) return null;
+  const payload = (await obj.json().catch(() => null)) as unknown;
+  const manifest = normalizeAccountAssetManifest(payload);
+  if (!manifest) return null;
+  if (manifest.accountId !== accountId || manifest.assetId !== assetId) return null;
+  return manifest;
+}
+
+export async function listAccountAssetManifestsByAccount(
+  env: Env,
+  accountId: string,
+): Promise<AccountAssetManifest[]> {
+  const prefix = accountAssetManifestPrefix(accountId);
+  const manifests: AccountAssetManifest[] = [];
+  let cursor: string | undefined;
+  do {
+    const listed = await env.TOKYO_R2.list({ prefix, cursor, limit: 1000 });
+    const batch = await Promise.all(
+      listed.objects.map(async (entry: { key?: string }) => {
+        const key = typeof entry.key === 'string' ? entry.key.trim() : '';
+        if (!key || !key.endsWith('.json')) return null;
+        const obj = await env.TOKYO_R2.get(key);
+        if (!obj) return null;
+        const payload = (await obj.json().catch(() => null)) as unknown;
+        const manifest = normalizeAccountAssetManifest(payload);
+        if (!manifest) return null;
+        if (manifest.accountId !== accountId) return null;
+        return manifest;
+      }),
+    );
+    batch.forEach((item: AccountAssetManifest | null) => {
+      if (item) manifests.push(item);
+    });
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+  return manifests;
+}
+
 export async function loadAccountAssetByIdentity(
   env: Env,
   accountId: string,
   assetId: string,
 ): Promise<AccountAssetRow | null> {
-  const params = new URLSearchParams({
-    select: 'asset_id,account_id',
-    account_id: `eq.${accountId}`,
-    asset_id: `eq.${assetId}`,
-    limit: '1',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account_assets read failed (${res.status}) ${text}`.trim());
-  }
-  const rows = (await res.json().catch(() => [])) as AccountAssetRow[];
-  return rows?.[0] ?? null;
+  const manifest = await loadAccountAssetManifestByIdentity(env, accountId, assetId);
+  if (!manifest) return null;
+  return {
+    asset_id: manifest.assetId,
+    account_id: manifest.accountId,
+  };
 }
-
-type AccountAssetVariantKeyRow = {
-  variant?: string | null;
-  r2_key?: string | null;
-  filename?: string | null;
-  content_type?: string | null;
-  size_bytes?: number | null;
-};
 
 export type AccountAssetVariantIdentity = {
   assetId: string;
   r2Key: string;
 };
 
-const ACCOUNT_VARIANT_PAGE_SIZE = 1000;
-
 export async function loadAccountAssetVariantKeys(
   env: Env,
   accountId: string,
   assetId: string,
 ): Promise<string[]> {
-  const params = new URLSearchParams({
-    select: 'variant,r2_key',
-    account_id: `eq.${accountId}`,
-    asset_id: `eq.${assetId}`,
-    limit: '200',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account_asset_variants list failed (${res.status}) ${text}`.trim());
-  }
-  const rows = (await res.json().catch(() => [])) as AccountAssetVariantKeyRow[];
-  return rows
-    .map((row) => (typeof row.r2_key === 'string' ? row.r2_key.trim() : ''))
+  const manifest = await loadAccountAssetManifestByIdentity(env, accountId, assetId);
+  if (!manifest) return [];
+  return manifest.variants
+    .map((variant) => variant.key)
     .filter(Boolean);
 }
 
@@ -337,30 +457,15 @@ export async function loadAccountAssetVariantIdentitiesByAccount(
   env: Env,
   accountId: string,
 ): Promise<AccountAssetVariantIdentity[]> {
+  const manifests = await listAccountAssetManifestsByAccount(env, accountId);
   const out: AccountAssetVariantIdentity[] = [];
-  for (let offset = 0; ; offset += ACCOUNT_VARIANT_PAGE_SIZE) {
-    const params = new URLSearchParams({
-      select: 'asset_id,r2_key',
-      account_id: `eq.${accountId}`,
-      order: 'created_at.asc',
-      limit: String(ACCOUNT_VARIANT_PAGE_SIZE),
-      offset: String(offset),
+  manifests.forEach((manifest) => {
+    manifest.variants.forEach((variant) => {
+      const r2Key = typeof variant.key === 'string' ? variant.key.trim() : '';
+      if (!r2Key) return;
+      out.push({ assetId: manifest.assetId, r2Key });
     });
-    const res = await supabaseFetch(env, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new Error(`[tokyo] Supabase account_asset_variants account read failed (${res.status}) ${text}`.trim());
-    }
-    const rows = (await res.json().catch(() => [])) as Array<{ asset_id?: unknown; r2_key?: unknown }>;
-    if (!rows.length) break;
-    rows.forEach((row) => {
-      const assetId = typeof row.asset_id === 'string' ? row.asset_id.trim() : '';
-      const r2Key = typeof row.r2_key === 'string' ? row.r2_key.trim() : '';
-      if (!assetId || !r2Key) return;
-      out.push({ assetId, r2Key });
-    });
-    if (rows.length < ACCOUNT_VARIANT_PAGE_SIZE) break;
-  }
+  });
   return out;
 }
 
@@ -369,208 +474,46 @@ export async function loadPrimaryAccountAssetKey(
   accountId: string,
   assetId: string,
 ): Promise<string | null> {
-  const params = new URLSearchParams({
-    select: 'variant,r2_key',
-    account_id: `eq.${accountId}`,
-    asset_id: `eq.${assetId}`,
-    order: 'created_at.asc',
-    limit: '32',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account_asset_variants read failed (${res.status}) ${text}`.trim());
-  }
-  const rows = (await res.json().catch(() => [])) as AccountAssetVariantKeyRow[];
-  if (!rows.length) return null;
-  const original = rows.find((row) => typeof row.variant === 'string' && row.variant.toLowerCase() === 'original');
-  const preferred = original ?? rows[0];
-  const key = typeof preferred?.r2_key === 'string' ? preferred.r2_key.trim() : '';
+  const manifest = await loadAccountAssetManifestByIdentity(env, accountId, assetId);
+  if (!manifest || !manifest.variants.length) return null;
+  const original = manifest.variants.find((row) => row.variant.toLowerCase() === 'original');
+  const preferred = original ?? manifest.variants[0];
+  const key = typeof preferred?.key === 'string' ? preferred.key.trim() : '';
   return key || null;
 }
 
-export async function loadAccountAssetUsageCountByIdentity(env: Env, accountId: string, assetId: string): Promise<number> {
-  const params = new URLSearchParams({
-    select: 'asset_id',
-    account_id: `eq.${accountId}`,
-    asset_id: `eq.${assetId}`,
-    limit: '5000',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_asset_usage?${params.toString()}`, {
-    method: 'GET',
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account_asset_usage read failed (${res.status}) ${text}`.trim());
-  }
-  const rows = (await res.json().catch(() => [])) as Array<{ asset_id?: unknown }>;
-  return rows.length;
+export async function loadAccountAssetUsageCountByIdentity(_env: Env, _accountId: string, _assetId: string): Promise<number> {
+  return 0;
 }
 
 export async function loadAccountAssetUsagePublicIdsByIdentity(
-  env: Env,
-  accountId: string,
-  assetId: string,
+  _env: Env,
+  _accountId: string,
+  _assetId: string,
 ): Promise<string[]> {
-  const params = new URLSearchParams({
-    select: 'public_id',
-    account_id: `eq.${accountId}`,
-    asset_id: `eq.${assetId}`,
-    limit: '5000',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_asset_usage?${params.toString()}`, {
-    method: 'GET',
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account_asset_usage public ids read failed (${res.status}) ${text}`.trim());
-  }
-  const rows = (await res.json().catch(() => [])) as Array<{ public_id?: unknown }>;
-  const out: string[] = [];
-  const seen = new Set<string>();
-  rows.forEach((row) => {
-    const normalized = normalizePublicId(row?.public_id);
-    if (!normalized || seen.has(normalized)) return;
-    seen.add(normalized);
-    out.push(normalized);
-  });
-  return out;
+  return [];
 }
 
-export type InstanceRenderHealthStatus = 'healthy' | 'degraded' | 'error';
-
-type InstanceRenderHealthUpsert = {
-  publicId: string;
-  status: InstanceRenderHealthStatus;
-  reason?: string | null;
-  detail?: string | null;
-};
-
-function normalizeRenderHealthReason(raw: string | null | undefined): string | null {
-  const value = String(raw || '').trim();
-  if (!value) return null;
-  return value.slice(0, 120);
+export async function deleteAccountAssetUsageByIdentity(_env: Env, _accountId: string, _assetId: string): Promise<void> {
+  // Usage index is no longer persisted in Supabase.
 }
 
-function normalizeRenderHealthDetail(raw: string | null | undefined): string | null {
-  const value = String(raw || '').trim();
-  if (!value) return null;
-  return value.slice(0, 1000);
-}
-
-export async function upsertInstanceRenderHealth(
-  env: Env,
-  update: InstanceRenderHealthUpsert,
-): Promise<void> {
-  const publicId = normalizePublicId(update.publicId);
-  if (!publicId) return;
-  const status = update.status;
-  if (status !== 'healthy' && status !== 'degraded' && status !== 'error') return;
-  const row = {
-    public_id: publicId,
-    status,
-    reason: normalizeRenderHealthReason(update.reason),
-    detail: normalizeRenderHealthDetail(update.detail),
-    updated_at: new Date().toISOString(),
-  };
-  const res = await supabaseFetch(env, '/rest/v1/instance_render_health?on_conflict=public_id', {
-    method: 'POST',
-    headers: {
-      Prefer: 'resolution=merge-duplicates,return=minimal',
-    },
-    body: JSON.stringify(row),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase instance_render_health upsert failed (${res.status}) ${text}`.trim());
-  }
-}
-
-export async function upsertInstanceRenderHealthBatch(
-  env: Env,
-  updates: InstanceRenderHealthUpsert[],
-): Promise<void> {
-  if (!updates.length) return;
-  const rows = updates
-    .map((update) => {
-      const publicId = normalizePublicId(update.publicId);
-      if (!publicId) return null;
-      const status = update.status;
-      if (status !== 'healthy' && status !== 'degraded' && status !== 'error') return null;
-      return {
-        public_id: publicId,
-        status,
-        reason: normalizeRenderHealthReason(update.reason),
-        detail: normalizeRenderHealthDetail(update.detail),
-        updated_at: new Date().toISOString(),
-      };
-    })
-    .filter((row): row is { public_id: string; status: InstanceRenderHealthStatus; reason: string | null; detail: string | null; updated_at: string } => Boolean(row));
-  if (!rows.length) return;
-  const res = await supabaseFetch(env, '/rest/v1/instance_render_health?on_conflict=public_id', {
-    method: 'POST',
-    headers: {
-      Prefer: 'resolution=merge-duplicates,return=minimal',
-    },
-    body: JSON.stringify(rows),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase instance_render_health batch upsert failed (${res.status}) ${text}`.trim());
-  }
-}
-
-export async function deleteAccountAssetUsageByIdentity(env: Env, accountId: string, assetId: string): Promise<void> {
-  const params = new URLSearchParams({
-    account_id: `eq.${accountId}`,
-    asset_id: `eq.${assetId}`,
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_asset_usage?${params.toString()}`, {
-    method: 'DELETE',
-    headers: { Prefer: 'return=minimal' },
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account_asset_usage cleanup failed (${res.status}) ${text}`.trim());
-  }
-}
-
-export async function deleteAccountAssetVariantsByIdentity(env: Env, accountId: string, assetId: string): Promise<void> {
-  const params = new URLSearchParams({
-    account_id: `eq.${accountId}`,
-    asset_id: `eq.${assetId}`,
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_asset_variants?${params.toString()}`, {
-    method: 'DELETE',
-    headers: { Prefer: 'return=minimal' },
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account_asset_variants cleanup failed (${res.status}) ${text}`.trim());
-  }
+export async function deleteAccountAssetVariantsByIdentity(_env: Env, _accountId: string, _assetId: string): Promise<void> {
+  // Variant metadata is embedded in the asset manifest and removed with deleteAccountAssetByIdentity.
 }
 
 export async function deleteAccountAssetByIdentity(env: Env, accountId: string, assetId: string): Promise<void> {
-  const params = new URLSearchParams({
-    account_id: `eq.${accountId}`,
-    asset_id: `eq.${assetId}`,
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, {
-    method: 'DELETE',
-    headers: { Prefer: 'return=minimal' },
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account_assets cleanup failed (${res.status}) ${text}`.trim());
-  }
+  await env.TOKYO_R2.delete(accountAssetManifestKey(accountId, assetId));
 }
 
 
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
+  handleGetAccountAssetMetadata,
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
+  handleListAccountAssetMetadata,
   handlePurgeAccountAssets,
   handleUploadAccountAsset,
 } from './assets-handlers';

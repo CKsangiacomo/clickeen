@@ -31,9 +31,8 @@ import {
   handleAccountAssetsList,
   handleAccountAssetsPurge,
   handleAccountLifecyclePlanChange,
+  handleAccountLifecycleTierDropDismiss,
   handleAccountMembersList,
-  handleAccountNoticesList,
-  handleAccountNoticeDismiss,
   handleAccountInstancesUnpublish,
 } from './domains/accounts';
 import {
@@ -63,7 +62,7 @@ import {
   handleAccountLocalesGet,
   handleAccountLocalesPut,
 } from './domains/l10n';
-import { handleFrozenResets, handleUsageEvent } from './domains/usage';
+import { handleUsageEvent } from './domains/usage';
 import { handleMe } from './domains/identity';
 
 export default {
@@ -347,13 +346,6 @@ export default {
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const accountNoticesMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/notices$/);
-      if (accountNoticesMatch) {
-        const accountId = decodeURIComponent(accountNoticesMatch[1]);
-        if (req.method === 'GET') return handleAccountNoticesList(req, env, accountId);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
       const accountInstancesUnpublishMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/instances\/unpublish$/);
       if (accountInstancesUnpublishMatch) {
         const accountId = decodeURIComponent(accountInstancesUnpublishMatch[1]);
@@ -368,11 +360,10 @@ export default {
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
-      const accountNoticeDismissMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/notices\/([^/]+)\/dismiss$/);
-      if (accountNoticeDismissMatch) {
-        const accountId = decodeURIComponent(accountNoticeDismissMatch[1]);
-        const noticeId = decodeURIComponent(accountNoticeDismissMatch[2]);
-        if (req.method === 'POST') return handleAccountNoticeDismiss(req, env, accountId, noticeId);
+      const accountTierDropDismissMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/lifecycle\/tier-drop\/dismiss$/);
+      if (accountTierDropDismissMatch) {
+        const accountId = decodeURIComponent(accountTierDropDismissMatch[1]);
+        if (req.method === 'POST') return handleAccountLifecycleTierDropDismiss(req, env, accountId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
@@ -417,6 +408,5 @@ export default {
   },
   async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(handleL10nGenerateRetries(env));
-    ctx.waitUntil(handleFrozenResets(env));
   },
 };

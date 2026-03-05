@@ -40,13 +40,6 @@ type SessionError =
   | { source: 'ops'; errors: WidgetOpError[] }
   | { source: 'publish'; message: string; paths?: string[] };
 
-type EnforcementState = {
-  mode: 'frozen';
-  periodKey: string;
-  frozenAt: string;
-  resetAt: string;
-};
-
 type PreviewSettings = {
   device: 'desktop' | 'mobile';
   theme: 'light' | 'dark';
@@ -112,7 +105,6 @@ type SessionState = {
   isDirty: boolean;
   minibobPersonalizationUsed: boolean;
   policy: Policy;
-  enforcement: EnforcementState | null;
   upsell: { reasonKey: string; detail?: string; cta: 'signup' | 'upgrade' } | null;
   isPublishing: boolean;
   preview: PreviewSettings;
@@ -141,7 +133,6 @@ type EditorOpenMessage = {
   status?: 'published' | 'unpublished';
   localization?: unknown;
   policy?: Policy;
-  enforcement?: unknown;
   publicId?: string;
   accountId?: string;
   ownerAccountId?: string;
@@ -360,21 +351,6 @@ function assertPolicy(value: unknown): Policy {
   return value as Policy;
 }
 
-function normalizeEnforcement(raw: unknown): EnforcementState | null {
-  if (!isRecord(raw)) return null;
-  if ((raw as any).mode !== 'frozen') return null;
-  const resetAt = typeof (raw as any).resetAt === 'string' ? (raw as any).resetAt : '';
-  if (!resetAt) return null;
-  const resetMs = Date.parse(resetAt);
-  if (!Number.isFinite(resetMs) || resetMs <= Date.now()) return null;
-  return {
-    mode: 'frozen',
-    periodKey: typeof (raw as any).periodKey === 'string' ? (raw as any).periodKey : '',
-    frozenAt: typeof (raw as any).frozenAt === 'string' ? (raw as any).frozenAt : '',
-    resetAt,
-  };
-}
-
 function normalizeLocalizationOps(raw: unknown): LocalizationOp[] {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -564,7 +540,6 @@ function useWidgetSessionInternal() {
     isDirty: false,
     minibobPersonalizationUsed: false,
     policy: initialPolicy,
-    enforcement: null,
     upsell: null,
     isPublishing: false,
     preview: DEFAULT_PREVIEW,
@@ -660,7 +635,7 @@ function useWidgetSessionInternal() {
         return result;
       }
 
-      // Policy enforcement (gate on interaction; fail-closed).
+      // Policy gating (interaction-time, fail-closed).
       const denyOps = (
         opIndex: number,
         path: string | undefined,
@@ -681,13 +656,6 @@ function useWidgetSessionInternal() {
         }));
         return result;
       };
-
-      if (state.enforcement?.mode === 'frozen') {
-        return denyOps(0, ops[0]?.path, {
-          reasonKey: 'coreui.upsell.reason.viewsFrozen',
-          detail: `Frozen until ${state.enforcement.resetAt}`,
-        });
-      }
 
       let opsToApply = ops;
 
@@ -789,7 +757,7 @@ function useWidgetSessionInternal() {
 
       return applied;
     },
-    [state.compiled, state.instanceData, state.baseInstanceData, state.policy, state.locale, state.enforcement]
+    [state.compiled, state.instanceData, state.baseInstanceData, state.policy, state.locale]
   );
 
   const clearPreviewOps = useCallback(() => {
@@ -1859,7 +1827,6 @@ function useWidgetSessionInternal() {
       let resolved: Record<string, unknown> = {};
       const nextAccountId = message.accountId;
       const nextOwnerAccountId = message.ownerAccountId;
-      const nextEnforcement: EnforcementState | null = normalizeEnforcement(message.enforcement);
       let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
       const nextLocalizationSnapshotRaw: unknown = message.localization;
 
@@ -1907,7 +1874,6 @@ function useWidgetSessionInternal() {
         isDirty: false,
         minibobPersonalizationUsed: false,
         policy: nextPolicy,
-        enforcement: nextEnforcement,
         selectedPath: null,
         error: null,
         upsell: null,
@@ -1954,7 +1920,6 @@ function useWidgetSessionInternal() {
         minibobPersonalizationUsed: false,
         error: { source: 'load', message: messageText },
         upsell: null,
-        enforcement: null,
         locale: { ...DEFAULT_LOCALE_STATE },
         meta: null,
       }));
@@ -2020,18 +1985,6 @@ function useWidgetSessionInternal() {
       setState((prev) => ({
         ...prev,
         error: { source: 'publish', message: 'coreui.errors.widgetType.invalid' },
-      }));
-      return;
-    }
-    if (state.enforcement?.mode === 'frozen') {
-      setState((prev) => ({
-        ...prev,
-        error: null,
-        upsell: {
-          reasonKey: 'coreui.upsell.reason.viewsFrozen',
-          detail: `Frozen until ${state.enforcement?.resetAt}`,
-          cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
-        },
       }));
       return;
     }
@@ -2145,9 +2098,6 @@ function useWidgetSessionInternal() {
           return nextBase;
         })(),
         policy: json?.policy && typeof json.policy === 'object' ? assertPolicy(json.policy) : prev.policy,
-        enforcement: Object.prototype.hasOwnProperty.call(json ?? {}, 'enforcement')
-          ? normalizeEnforcement(json?.enforcement)
-          : prev.enforcement,
       }));
 
       try {
@@ -2168,7 +2118,6 @@ function useWidgetSessionInternal() {
   }, [
     fetchApi,
     state.baseInstanceData,
-    state.enforcement,
     state.locale.availableLocales,
     state.locale.baseLocale,
     state.locale.accountL10nPolicy.ip.countryToLocale,
@@ -2186,19 +2135,6 @@ function useWidgetSessionInternal() {
       const accountId = state.meta?.accountId ? String(state.meta.accountId) : '';
       const widgetType = state.meta?.widgetname ? String(state.meta.widgetname) : '';
       if (!publicId || !accountId) return;
-
-      if (state.enforcement?.mode === 'frozen') {
-        setState((prev) => ({
-          ...prev,
-          error: {
-            source: 'publish',
-            message: 'Publishing is frozen for this instance.',
-            detail: `Frozen until ${state.enforcement?.resetAt}`,
-            cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
-          },
-        }));
-        return;
-      }
 
       if (state.policy.role === 'viewer') {
         setState((prev) => ({
@@ -2279,9 +2215,6 @@ function useWidgetSessionInternal() {
           isPublishing: false,
           status: json?.status === 'published' ? 'published' : 'unpublished',
           policy: json?.policy && typeof json.policy === 'object' ? assertPolicy(json.policy) : prev.policy,
-          enforcement: Object.prototype.hasOwnProperty.call(json ?? {}, 'enforcement')
-            ? normalizeEnforcement(json?.enforcement)
-            : prev.enforcement,
         }));
 
         try {
@@ -2307,7 +2240,6 @@ function useWidgetSessionInternal() {
     [
       fetchApi,
       state.baseInstanceData,
-      state.enforcement,
       state.isDirty,
       state.locale.availableLocales,
       state.locale.baseLocale,
@@ -2389,7 +2321,6 @@ function useWidgetSessionInternal() {
       status: instanceJson.status === 'published' ? 'published' : 'unpublished',
       localization: instanceJson.localization,
       policy: instanceJson.policy,
-      enforcement: instanceJson.enforcement,
       publicId: instanceJson.publicId ?? publicId,
       accountId,
       ownerAccountId:

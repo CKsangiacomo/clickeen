@@ -1,10 +1,9 @@
 import { resolvePolicy } from '@clickeen/ck-policy';
 import { normalizeWidgetPublicId } from '@clickeen/ck-contracts';
 import type { Env } from '../../shared/types';
-import { json, readJson } from '../../shared/http';
+import { json } from '../../shared/http';
 import { ckError } from '../../shared/errors';
-import { supabaseFetch } from '../../shared/supabase';
-import { normalizeLocaleList, resolveAccountL10nPolicy } from '../../shared/l10n';
+import { asTrimmedString } from '../../shared/validation';
 
 type UsageEventPayload = {
   publicId?: unknown;
@@ -12,17 +11,6 @@ type UsageEventPayload = {
   tier?: unknown;
   sig?: unknown;
   timestamp?: unknown;
-};
-
-type EnforcementMode = 'frozen';
-
-type EnforcementRow = {
-  public_id: string;
-  mode: EnforcementMode;
-  period_key: string;
-  frozen_at: string;
-  reset_at: string;
-  updated_at?: string | null;
 };
 
 function normalizeEvent(raw: unknown): 'view' | null {
@@ -51,53 +39,6 @@ function getUtcPeriodKey(date: Date): string {
   const y = date.getUTCFullYear();
   const m = date.getUTCMonth() + 1;
   return `${y}-${String(m).padStart(2, '0')}`;
-}
-
-function getUtcNextMonthStart(date: Date): Date {
-  const y = date.getUTCFullYear();
-  const m = date.getUTCMonth();
-  // First day of next month at 00:00:00Z
-  return new Date(Date.UTC(y, m + 1, 1, 0, 0, 0, 0));
-}
-
-async function resolveSnapshotLocalesForInstance(env: Env, publicId: string): Promise<string[]> {
-  try {
-    const instParams = new URLSearchParams({
-      select: 'account_id',
-      public_id: `eq.${publicId}`,
-      limit: '1',
-    });
-    const instRes = await supabaseFetch(env, `/rest/v1/widget_instances?${instParams.toString()}`, { method: 'GET' });
-    if (!instRes.ok) return ['en'];
-    const instRows = (await instRes.json().catch(() => null)) as Array<{ account_id?: unknown }> | null;
-    const accountId = instRows?.[0]?.account_id ? String(instRows[0].account_id) : '';
-    if (!accountId) return ['en'];
-
-    const wsParams = new URLSearchParams({
-      select: 'tier,l10n_locales,l10n_policy',
-      id: `eq.${accountId}`,
-      limit: '1',
-    });
-    const wsRes = await supabaseFetch(env, `/rest/v1/accounts?${wsParams.toString()}`, { method: 'GET' });
-    if (!wsRes.ok) return ['en'];
-    const wsRows = (await wsRes.json().catch(() => null)) as Array<{ tier?: unknown; l10n_locales?: unknown; l10n_policy?: unknown }> | null;
-    const row = wsRows?.[0];
-    const tier = row?.tier ? String(row.tier).trim().toLowerCase() : '';
-    if (!tier) return ['en'];
-
-    const policy = resolvePolicy({ profile: tier as any, role: 'editor' });
-    const maxLocalesTotalRaw = policy.caps['l10n.locales.max'];
-    const maxLocalesTotal = maxLocalesTotalRaw == null ? null : Math.max(1, maxLocalesTotalRaw);
-
-    const normalized = normalizeLocaleList(row?.l10n_locales, 'l10n_locales');
-    const locales = normalized.ok ? normalized.locales : [];
-    const baseLocale = resolveAccountL10nPolicy(row?.l10n_policy).baseLocale;
-    const deduped = Array.from(new Set([baseLocale || 'en', ...locales]));
-    if (maxLocalesTotal == null) return deduped;
-    return deduped.slice(0, maxLocalesTotal);
-  } catch {
-    return ['en'];
-  }
 }
 
 function requireUsageSecret(env: Env): string {
@@ -131,23 +72,11 @@ async function isValidUsageSignature(args: {
   return expected === args.sig;
 }
 
-function resolveMonthlyViewsCap(tier: string): number | null {
-  // Policy profile matches product tiers and minibob only.
-  const policy = resolvePolicy({ profile: tier as any, role: 'editor' });
-  const cap = policy.caps['views.monthly.max'];
-  if (cap == null) return null;
-  return typeof cap === 'number' && Number.isFinite(cap) && cap >= 0 ? cap : null;
-}
-
 function resolvePublishedInstancesCap(tier: string): number | null {
   const policy = resolvePolicy({ profile: tier as any, role: 'editor' });
   const cap = policy.caps['instances.published.max'];
   if (cap == null) return null;
   return typeof cap === 'number' && Number.isFinite(cap) && cap >= 0 ? cap : null;
-}
-
-function isCappedTier(tier: string): boolean {
-  return tier === 'free' || tier === 'tier1';
 }
 
 function requireUsageKv(env: Env): KVNamespace {
@@ -157,40 +86,6 @@ function requireUsageKv(env: Env): KVNamespace {
 
 function usageCounterKey(args: { publicId: string; periodKey: string }): string {
   return `usage.views.v1.${args.periodKey}.${args.publicId}`;
-}
-
-function usageFrozenMarkerKey(args: { publicId: string; periodKey: string }): string {
-  return `usage.frozen.v1.${args.periodKey}.${args.publicId}`;
-}
-
-async function markFrozenInDb(args: {
-  env: Env;
-  publicId: string;
-  periodKey: string;
-  frozenAt: Date;
-  resetAt: Date;
-}): Promise<void> {
-  const payload = {
-    public_id: args.publicId,
-    mode: 'frozen',
-    period_key: args.periodKey,
-    frozen_at: args.frozenAt.toISOString(),
-    reset_at: args.resetAt.toISOString(),
-  };
-  const res = await supabaseFetch(args.env, `/rest/v1/instance_enforcement_state`, {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates' },
-    body: JSON.stringify(payload),
-  });
-  if (res.ok) return;
-  const details = await readJson(res);
-  throw new Error(`[ParisWorker] Failed to write enforcement state (${res.status}): ${JSON.stringify(details)}`);
-}
-
-async function clearFrozenInDb(args: { env: Env; publicId: string }): Promise<void> {
-  await supabaseFetch(args.env, `/rest/v1/instance_enforcement_state?public_id=eq.${encodeURIComponent(args.publicId)}`, {
-    method: 'DELETE',
-  });
 }
 
 export async function handleUsageEvent(req: Request, env: Env): Promise<Response> {
@@ -217,24 +112,8 @@ export async function handleUsageEvent(req: Request, env: Env): Promise<Response
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.usage.signatureInvalid' }, 403);
   }
 
-  // Only capped tiers are metered today (PRD 37). Everyone else is unlimited and we skip counting to avoid extra cost.
-  if (!isCappedTier(tier)) {
-    return json({ ok: true, skipped: true }, { status: 204 });
-  }
-
-  const cap = resolveMonthlyViewsCap(tier);
-  if (!cap || cap <= 0) {
-    return json({ ok: true, skipped: true }, { status: 204 });
-  }
-
   const kv = requireUsageKv(env);
-  const now = new Date();
-  const periodKey = getUtcPeriodKey(now);
-  const frozenMarker = usageFrozenMarkerKey({ publicId, periodKey });
-  const alreadyFrozen = await kv.get(frozenMarker);
-  if (alreadyFrozen) {
-    return json({ ok: true, frozen: true }, { status: 204 });
-  }
+  const periodKey = getUtcPeriodKey(new Date());
 
   const counterKey = usageCounterKey({ publicId, periodKey });
   const prevRaw = await kv.get(counterKey);
@@ -242,41 +121,11 @@ export async function handleUsageEvent(req: Request, env: Env): Promise<Response
   const next = Number.isFinite(prev) && prev >= 0 ? prev + 1 : 1;
   await kv.put(counterKey, String(next), { expirationTtl: 400 * 24 * 60 * 60 }); // ~400 days
 
-  // Freeze on first overage view (cap reached → next view triggers freeze).
-  if (next <= cap) {
-    return json({ ok: true }, { status: 204 });
-  }
-
-  const resetAt = getUtcNextMonthStart(now);
-  await kv.put(frozenMarker, '1', { expirationTtl: Math.max(60, Math.floor((resetAt.getTime() - now.getTime()) / 1000) + 60) });
-
-  await markFrozenInDb({ env, publicId, periodKey, frozenAt: now, resetAt });
-
-  return json({ ok: true, frozen: true }, { status: 204 });
+  return json({ ok: true, tier: asTrimmedString(tier) ?? null }, { status: 204 });
 }
 
-export async function handleFrozenResets(env: Env): Promise<void> {
-  // Best-effort cleanup: remove expired frozen rows and regenerate live snapshots.
-  // Bounded by a small limit to keep cron safe.
-  const now = new Date();
-  const iso = now.toISOString();
-  const params = new URLSearchParams({
-    select: 'public_id,mode,period_key,frozen_at,reset_at',
-    reset_at: `lte.${iso}`,
-    limit: '50',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/instance_enforcement_state?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) return;
-  const rows = (await res.json().catch(() => null)) as EnforcementRow[] | null;
-  if (!rows || rows.length === 0) return;
-
-  await Promise.all(
-    rows.map(async (row) => {
-      const publicId = row?.public_id ? String(row.public_id) : '';
-      if (!publicId) return;
-      await clearFrozenInDb({ env, publicId });
-    }),
-  );
+export async function handleFrozenResets(_env: Env): Promise<void> {
+  // Freeze-by-views has been removed. Keep scheduler contract with a no-op.
 }
 
 export function getPublishedInstancesCapForTier(tier: string): number | null {

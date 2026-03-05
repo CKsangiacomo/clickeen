@@ -12,7 +12,6 @@ import {
   sanitizeUploadFilename,
   sha256Hex,
   assertUploadAuth,
-  supabaseFetch,
 } from '../index';
 import type { Env } from '../index';
 import { isUuid } from '@clickeen/ck-contracts';
@@ -20,12 +19,15 @@ import {
   UPLOAD_SIZE_CAP_KEY,
   UPLOADS_BYTES_BUDGET_KEY,
   UPLOADS_COUNT_BUDGET_KEY,
+  type AccountAssetManifest,
   consumeAccountBudget,
   deleteAccountAssetByIdentity,
   deleteAccountAssetUsageByIdentity,
   deleteAccountAssetVariantsByIdentity,
   loadAccountAssetByIdentity,
+  loadAccountAssetManifestByIdentity,
   loadAccountAssetUsagePublicIdsByIdentity,
+  listAccountAssetManifestsByAccount,
   loadAccountAssetVariantIdentitiesByAccount,
   loadAccountAssetVariantKeys,
   loadAccountMembershipRole,
@@ -150,8 +152,43 @@ function resolveAccountAssetNamespacePrefix(accountId: string): string {
   return `${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/`;
 }
 
+function resolveAccountAssetMetadataPrefix(accountId: string): string {
+  return `assets/meta/accounts/${accountId}/assets/`;
+}
+
 function resolveAccountAssetIdentityPrefix(accountId: string, assetId: string): string {
   return `${resolveAccountAssetNamespacePrefix(accountId)}${assetId}/`;
+}
+
+function serializeAccountAssetManifest(
+  manifest: AccountAssetManifest,
+  origin: string,
+): Record<string, unknown> {
+  return {
+    assetId: manifest.assetId,
+    accountId: manifest.accountId,
+    publicId: manifest.publicId,
+    widgetType: manifest.widgetType,
+    source: manifest.source,
+    originalFilename: manifest.originalFilename,
+    normalizedFilename: manifest.normalizedFilename,
+    contentType: manifest.contentType,
+    sizeBytes: manifest.sizeBytes,
+    sha256: manifest.sha256,
+    createdAt: manifest.createdAt,
+    updatedAt: manifest.updatedAt,
+    usageCount: 0,
+    usedBy: [],
+    variants: manifest.variants.map((variant) => ({
+      variant: variant.variant,
+      key: variant.key,
+      filename: variant.filename,
+      contentType: variant.contentType,
+      sizeBytes: variant.sizeBytes,
+      createdAt: variant.createdAt,
+      url: `${origin}${buildAccountAssetVersionPath(variant.key)}`,
+    })),
+  };
 }
 
 async function listAccountAssetR2Keys(env: Env, accountId: string): Promise<string[]> {
@@ -164,7 +201,7 @@ async function listAccountAssetR2Keys(env: Env, accountId: string): Promise<stri
       limit: ACCOUNT_ASSET_R2_LIST_PAGE_SIZE,
       cursor,
     });
-    listed.objects.forEach((obj) => {
+    listed.objects.forEach((obj: { key?: string }) => {
       const key = typeof obj.key === 'string' ? obj.key.trim() : '';
       if (key) keys.push(key);
     });
@@ -183,7 +220,7 @@ async function listAccountAssetR2KeysByIdentity(env: Env, accountId: string, ass
       limit: ACCOUNT_ASSET_R2_LIST_PAGE_SIZE,
       cursor,
     });
-    listed.objects.forEach((obj) => {
+    listed.objects.forEach((obj: { key?: string }) => {
       const key = typeof obj.key === 'string' ? obj.key.trim() : '';
       if (key) keys.push(key);
     });
@@ -441,7 +478,10 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   );
 }
 
-function respondImmutableR2Asset(key: string, obj: R2ObjectBody): Response {
+function respondImmutableR2Asset(
+  key: string,
+  obj: { body: ReadableStream | null; httpMetadata?: { contentType?: string | null } | null },
+): Response {
   const ext = key.split('.').pop() || '';
   const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
   const headers = new Headers();
@@ -463,6 +503,53 @@ async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
   const canonicalObj = await env.TOKYO_R2.get(canonical);
   if (canonicalObj) return respondImmutableR2Asset(canonical, canonicalObj);
   return new Response('Not found', { status: 404 });
+}
+
+async function handleListAccountAssetMetadata(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+  const accountId = String(accountIdRaw || '').trim();
+  if (!accountId || !isUuid(accountId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
+  }
+  const origin = new URL(req.url).origin;
+  const manifests = await listAccountAssetManifestsByAccount(env, accountId);
+  manifests.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  return json({
+    accountId,
+    assets: manifests.map((manifest) => serializeAccountAssetManifest(manifest, origin)),
+  });
+}
+
+async function handleGetAccountAssetMetadata(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+  assetIdRaw: string,
+): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+  const accountId = String(accountIdRaw || '').trim();
+  const assetId = String(assetIdRaw || '').trim();
+  if (!accountId || !isUuid(accountId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
+  }
+  if (!assetId || !isUuid(assetId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' } }, { status: 422 });
+  }
+  const manifest = await loadAccountAssetManifestByIdentity(env, accountId, assetId);
+  if (!manifest) {
+    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
+  }
+  const origin = new URL(req.url).origin;
+  return json({
+    accountId,
+    asset: serializeAccountAssetManifest(manifest, origin),
+  });
 }
 
 async function handleGetAccountAssetIdentityIntegrity(
@@ -661,21 +748,6 @@ async function handleDeleteAccountAsset(
   );
 }
 
-async function purgeAccountAssetMetadata(env: Env, accountId: string): Promise<void> {
-  const tables = ['account_asset_usage', 'account_asset_variants', 'account_assets'] as const;
-  for (const table of tables) {
-    const params = new URLSearchParams({ account_id: `eq.${accountId}` });
-    const res = await supabaseFetch(env, `/rest/v1/${table}?${params.toString()}`, {
-      method: 'DELETE',
-      headers: { Prefer: 'return=minimal' },
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new Error(`[tokyo] Supabase ${table} purge failed (${res.status}) ${text}`.trim());
-    }
-  }
-}
-
 async function purgeR2NamespacePrefix(env: Env, prefix: string): Promise<{ deleted: number; sweeps: number; remaining: number }> {
   let deleted = 0;
   let sweeps = 0;
@@ -693,7 +765,7 @@ async function purgeR2NamespacePrefix(env: Env, prefix: string): Promise<{ delet
         cursor,
       });
       const keys = listed.objects
-        .map((obj) => (typeof obj.key === 'string' ? obj.key.trim() : ''))
+        .map((obj: { key?: string }) => (typeof obj.key === 'string' ? obj.key.trim() : ''))
         .filter(Boolean);
       if (keys.length) {
         await env.TOKYO_R2.delete(keys);
@@ -738,37 +810,25 @@ async function handlePurgeAccountAssets(
     );
   }
 
+  const blobPrefix = resolveAccountAssetNamespacePrefix(accountId);
+  const metadataPrefix = resolveAccountAssetMetadataPrefix(accountId);
   try {
-    await purgeAccountAssetMetadata(env, accountId);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.db.writeFailed',
-          detail,
-        },
-      },
-      { status: 500 },
-    );
-  }
-
-  const prefix = resolveAccountAssetNamespacePrefix(accountId);
-  try {
-    const r2 = await purgeR2NamespacePrefix(env, prefix);
-    if (r2.remaining > 0) {
+    const [blobs, metadata] = await Promise.all([
+      purgeR2NamespacePrefix(env, blobPrefix),
+      purgeR2NamespacePrefix(env, metadataPrefix),
+    ]);
+    if (blobs.remaining > 0 || metadata.remaining > 0) {
       return json(
         {
           error: {
             kind: 'INTEGRITY',
             reasonKey: 'coreui.errors.assets.integrityMismatch',
-            detail: `Residual blobs remain after purge (prefix=${prefix}, remaining=${r2.remaining})`,
+            detail: `Residual objects remain after purge (blobs=${blobs.remaining}, metadata=${metadata.remaining})`,
           },
           accountId,
-          deletedCount: r2.deleted,
-          sweeps: r2.sweeps,
-          remaining: r2.remaining,
+          deletedCount: blobs.deleted + metadata.deleted,
+          sweeps: blobs.sweeps + metadata.sweeps,
+          remaining: blobs.remaining + metadata.remaining,
         },
         { status: 409 },
       );
@@ -778,8 +838,8 @@ async function handlePurgeAccountAssets(
       {
         ok: true,
         accountId,
-        deletedCount: r2.deleted,
-        sweeps: r2.sweeps,
+        deletedCount: blobs.deleted + metadata.deleted,
+        sweeps: blobs.sweeps + metadata.sweeps,
       },
       { status: 200 },
     );
@@ -803,7 +863,9 @@ async function handlePurgeAccountAssets(
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
+  handleGetAccountAssetMetadata,
   handleGetAccountAssetIdentityIntegrity,
+  handleListAccountAssetMetadata,
   handleGetAccountAssetMirrorIntegrity,
   handlePurgeAccountAssets,
   handleUploadAccountAsset,

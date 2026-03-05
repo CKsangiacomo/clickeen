@@ -38,11 +38,6 @@ type InstanceListRow = {
   status?: 'published' | 'unpublished' | null;
 };
 
-type AccountAssetRow = {
-  asset_id?: string | null;
-  size_bytes?: number | null;
-};
-
 export async function handleAccountGet(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
@@ -86,27 +81,6 @@ export async function handleAccountUsage(req: Request, env: Env, accountIdRaw: s
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
   }
 
-  let assets: AccountAssetRow[] = [];
-  try {
-    assets = await loadPagedRows<AccountAssetRow>({
-      env,
-      table: 'account_assets',
-      baseParams: {
-        select: 'asset_id,size_bytes',
-        account_id: `eq.${accountId}`,
-        order: 'created_at.asc',
-      },
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-
-  const assetBytes = assets.reduce((sum, asset) => {
-    const size = Number.isFinite(asset.size_bytes) ? asset.size_bytes : 0;
-    return sum + Math.max(0, size);
-  }, 0);
-
   const publishedInstances = instances.filter((instance) => instance.status === 'published').length;
 
   return json({
@@ -119,9 +93,9 @@ export async function handleAccountUsage(req: Request, env: Env, accountIdRaw: s
         unpublished: Math.max(0, instances.length - publishedInstances),
       },
       assets: {
-        total: assets.length,
-        active: assets.length,
-        bytesActive: assetBytes,
+        total: 0,
+        active: 0,
+        bytesActive: 0,
       },
     },
   });
@@ -185,4 +159,3 @@ export async function handleAccountBillingPortalSession(req: Request, env: Env, 
     503,
   );
 }
-

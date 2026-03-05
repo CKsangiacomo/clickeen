@@ -21,10 +21,8 @@ type SchemaProbeFailure = {
 const SCHEMA_PROBES: readonly SchemaProbe[] = [
   { table: 'widget_instances', select: 'public_id,account_id' },
   { table: 'curated_widget_instances', select: 'public_id,owner_account_id' },
-  { table: 'widget_instance_overlays', select: 'public_id,layer,layer_key,account_id' },
-  { table: 'l10n_generate_state', select: 'public_id,layer,layer_key,account_id' },
-  { table: 'account_assets', select: 'asset_id,account_id' },
-  { table: 'account_business_profiles', select: 'account_id,profile' },
+  { table: 'accounts', select: 'id,slug,tier' },
+  { table: 'account_members', select: 'account_id,user_id,role' },
 ];
 
 async function runSchemaProbe(env: Env, probe: SchemaProbe): Promise<SchemaProbeFailure | null> {

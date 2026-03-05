@@ -21,7 +21,20 @@ type AccountMembershipRow = {
     website_url?: string | null;
     l10n_locales?: unknown;
     l10n_policy?: unknown;
+    tier_changed_at?: string | null;
+    tier_changed_from?: string | null;
+    tier_changed_to?: string | null;
+    tier_drop_dismissed_at?: string | null;
+    tier_drop_email_sent_at?: string | null;
   } | null;
+};
+
+type IdentityLifecycleNoticeState = {
+  tierChangedAt: string | null;
+  tierChangedFrom: AccountTier | null;
+  tierChangedTo: AccountTier | null;
+  tierDropDismissedAt: string | null;
+  tierDropEmailSentAt: string | null;
 };
 
 export type IdentityAccountContext = {
@@ -32,6 +45,7 @@ export type IdentityAccountContext = {
   tier: AccountTier;
   websiteUrl: string | null;
   membershipVersion: string | null;
+  lifecycleNotice: IdentityLifecycleNoticeState;
 };
 
 export type IdentityMePayload = {
@@ -60,6 +74,18 @@ function roleRank(role: string): number {
 function resolveMembershipVersion(row: AccountMembershipRow): string | null {
   const created = asTrimmedString(row.created_at);
   return created || null;
+}
+
+function normalizeAccountTier(raw: unknown): AccountTier | null {
+  switch (raw) {
+    case 'free':
+    case 'tier1':
+    case 'tier2':
+    case 'tier3':
+      return raw;
+    default:
+      return null;
+  }
 }
 
 function resolveRequestedAccountId(req: Request): string {
@@ -136,7 +162,8 @@ async function ensureAccountMembership(env: Env, accountId: string, userId: stri
 
 async function loadAccountsForUser(env: Env, userId: string): Promise<AccountMembershipRow[]> {
   const params = new URLSearchParams({
-    select: 'account_id,role,created_at,accounts(id,status,is_platform,tier,name,slug,website_url,l10n_locales,l10n_policy)',
+    select:
+      'account_id,role,created_at,accounts(id,status,is_platform,tier,name,slug,website_url,l10n_locales,l10n_policy,tier_changed_at,tier_changed_from,tier_changed_to,tier_drop_dismissed_at,tier_drop_email_sent_at)',
     user_id: `eq.${userId}`,
     order: 'created_at.asc',
     limit: '1000',
@@ -164,6 +191,13 @@ function normalizeAccountContexts(rows: AccountMembershipRow[]): IdentityAccount
       tier: account.tier,
       websiteUrl: asTrimmedString(account.website_url) || null,
       membershipVersion: resolveMembershipVersion(row),
+      lifecycleNotice: {
+        tierChangedAt: asTrimmedString(account.tier_changed_at) || null,
+        tierChangedFrom: normalizeAccountTier(account.tier_changed_from),
+        tierChangedTo: normalizeAccountTier(account.tier_changed_to),
+        tierDropDismissedAt: asTrimmedString(account.tier_drop_dismissed_at) || null,
+        tierDropEmailSentAt: asTrimmedString(account.tier_drop_email_sent_at) || null,
+      },
     });
   }
   return out;
@@ -185,12 +219,18 @@ export async function resolveIdentityMePayload(req: Request, env: Env): Promise<
         name?: unknown;
         slug?: unknown;
         website_url?: unknown;
+        tier_changed_at?: unknown;
+        tier_changed_from?: unknown;
+        tier_changed_to?: unknown;
+        tier_drop_dismissed_at?: unknown;
+        tier_drop_email_sent_at?: unknown;
       };
 
       const accountsRes = await supabaseFetch(
         env,
         `/rest/v1/accounts?${new URLSearchParams({
-          select: 'id,status,is_platform,tier,name,slug,website_url',
+          select:
+            'id,status,is_platform,tier,name,slug,website_url,tier_changed_at,tier_changed_from,tier_changed_to,tier_drop_dismissed_at,tier_drop_email_sent_at',
           order: 'created_at.asc',
           limit: '1000',
         }).toString()}`,
@@ -211,6 +251,13 @@ export async function resolveIdentityMePayload(req: Request, env: Env): Promise<
           tier: (asTrimmedString(row?.tier) as AccountTier) ?? 'free',
           websiteUrl: asTrimmedString(row?.website_url) || null,
           membershipVersion: null,
+          lifecycleNotice: {
+            tierChangedAt: asTrimmedString(row?.tier_changed_at) || null,
+            tierChangedFrom: normalizeAccountTier(row?.tier_changed_from),
+            tierChangedTo: normalizeAccountTier(row?.tier_changed_to),
+            tierDropDismissedAt: asTrimmedString(row?.tier_drop_dismissed_at) || null,
+            tierDropEmailSentAt: asTrimmedString(row?.tier_drop_email_sent_at) || null,
+          },
         }))
         .filter((row) => Boolean(row.accountId));
 
@@ -287,4 +334,3 @@ export async function handleMe(req: Request, env: Env): Promise<Response> {
   if (!resolved.ok) return resolved.response;
   return json(resolved.payload);
 }
-

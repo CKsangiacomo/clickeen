@@ -379,35 +379,19 @@ export async function handleAccountLocalesPut(req: Request, env: Env, accountId:
       const userOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
       if (overlayLocales.length > 0) {
         try {
-          const params = new URLSearchParams({
-            select: 'layer,layer_key,ops',
-            public_id: `eq.${publicId}`,
-            layer: 'in.(locale,user)',
-            base_fingerprint: `eq.${baseFingerprint}`,
-            limit: '1000',
+          const rows = await loadInstanceOverlays(env, publicId);
+          rows.forEach((row) => {
+            const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
+            const locale = typeof row?.layer_key === 'string' ? row.layer_key.trim() : '';
+            if (!locale || !overlayLocaleSet.has(locale)) return;
+            if (row.base_fingerprint !== baseFingerprint) return;
+            if (!Array.isArray(row.ops)) return;
+            if (layer === 'locale') {
+              localeOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
+            } else if (layer === 'user') {
+              userOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
+            }
           });
-          const overlaysRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
-            method: 'GET',
-          });
-          if (overlaysRes.ok) {
-            const rows =
-              ((await overlaysRes.json().catch(() => null)) as Array<{ layer?: string | null; layer_key?: string | null; ops?: unknown }> | null) ??
-              [];
-            rows.forEach((row) => {
-              const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
-              const locale = typeof row?.layer_key === 'string' ? row.layer_key.trim() : '';
-              if (!locale || !overlayLocaleSet.has(locale)) return;
-              if (!Array.isArray(row.ops)) return;
-              if (layer === 'locale') {
-                localeOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
-              } else if (layer === 'user') {
-                userOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
-              }
-            });
-          } else {
-            const details = await readJson(overlaysRes).catch(() => null);
-            console.warn('[ParisWorker] Failed to load overlays for locale resync', { publicId, details });
-          }
         } catch (error) {
           const detail = error instanceof Error ? error.message : String(error);
           console.warn('[ParisWorker] Failed to resolve overlays for locale resync', { publicId, detail });

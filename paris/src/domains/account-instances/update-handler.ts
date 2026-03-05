@@ -27,11 +27,8 @@ import {
 import { resolveAdminAccountId } from '../../shared/admin';
 import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import { enqueueL10nJobs } from '../l10n';
-import {
-  enqueueTokyoMirrorJob,
-  loadEnforcement,
-  normalizeActiveEnforcement,
-} from './service';
+import { loadInstanceOverlays } from '../l10n/service';
+import { enqueueTokyoMirrorJob } from './service';
 import { applyTextPackToConfig, materializeTextPack, stripTextFromConfig } from '../../shared/mirror-packs';
 import { jsonSha256Hex } from '../../shared/stable-json';
 import { generateMetaPack } from '../../shared/seo-geo';
@@ -140,20 +137,6 @@ export async function handleAccountUpdateInstance(
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
   if (!widgetType)
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
-
-  const enforcementRow = await loadEnforcement(env, publicId);
-  const enforcement = normalizeActiveEnforcement(enforcementRow);
-  if (enforcement && config !== undefined) {
-    return ckError(
-      {
-        kind: 'DENY',
-        reasonKey: 'coreui.upsell.reason.viewsFrozen',
-        upsell: 'UP',
-        detail: `Frozen until ${enforcement.resetAt}`,
-      },
-      403,
-    );
-  }
 
   const isCurated = resolveInstanceKind(instance) === 'curated';
   if (isCurated) {
@@ -420,13 +403,6 @@ export async function handleAccountUpdateInstance(
         const shouldWriteTextPacks = shouldSeed || textChanged;
         const shouldWriteMetaPacks = seoGeoLive && (shouldSeed || textChanged || configFpChanged);
 
-        type LocaleOverlayRow = {
-          layer?: string | null;
-          layer_key?: string | null;
-          ops?: unknown;
-          base_fingerprint?: string | null;
-        };
-
         let localeTextPacks: Array<{ locale: string; textPack: Record<string, string> }> | null = null;
         if (shouldWriteTextPacks || shouldWriteMetaPacks) {
           const baseFingerprint = await computeBaseFingerprint(nextBaseTextPack);
@@ -434,34 +410,20 @@ export async function handleAccountUpdateInstance(
           const userOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
 
           try {
-            const params = new URLSearchParams({
-              select: 'layer,layer_key,ops,base_fingerprint',
-              public_id: `eq.${publicId}`,
-              layer: 'in.(locale,user)',
-              base_fingerprint: `eq.${baseFingerprint}`,
-              limit: '1000',
+            const rows = await loadInstanceOverlays(env, publicId);
+            rows.forEach((row) => {
+              const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
+              const locale = typeof row?.layer_key === 'string' ? row.layer_key.trim() : '';
+              if (!locale) return;
+              if (!availableLocales.includes(locale)) return;
+              if (row.base_fingerprint !== baseFingerprint) return;
+              if (!Array.isArray(row.ops)) return;
+              if (layer === 'locale') {
+                localeOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
+              } else if (layer === 'user') {
+                userOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
+              }
             });
-            const overlaysRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
-              method: 'GET',
-            });
-            if (overlaysRes.ok) {
-              const rows = ((await overlaysRes.json().catch(() => null)) as LocaleOverlayRow[] | null) ?? [];
-              rows.forEach((row) => {
-                const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
-                const locale = typeof row?.layer_key === 'string' ? row.layer_key.trim() : '';
-                if (!locale) return;
-                if (!availableLocales.includes(locale)) return;
-                if (!Array.isArray(row.ops)) return;
-                if (layer === 'locale') {
-                  localeOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
-                } else if (layer === 'user') {
-                  userOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
-                }
-              });
-            } else {
-              const details = await readJson(overlaysRes).catch(() => null);
-              console.warn('[ParisWorker] Failed to load locale overlays for text packs', details);
-            }
           } catch (error) {
             const detail = error instanceof Error ? error.message : String(error);
             console.warn('[ParisWorker] Failed to resolve locale overlays for text packs', detail);

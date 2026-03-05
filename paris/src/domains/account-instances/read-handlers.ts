@@ -11,11 +11,7 @@ import { resolveAdminAccountId } from '../../shared/admin';
 import { normalizeSupportedLocaleToken, resolveAccountL10nPolicy } from '../../shared/l10n';
 import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import { loadInstanceOverlays } from '../l10n/service';
-import {
-  loadEnforcement,
-  normalizeActiveEnforcement,
-  resolveActivePublishLocales,
-} from './service';
+import { resolveActivePublishLocales } from './service';
 import {
   DEFAULT_INSTANCE_DISPLAY_NAME,
   normalizeLocalizationOpsForPayload,
@@ -160,8 +156,6 @@ export async function handleAccountGetInstance(
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
   const baseFingerprint = await computeBaseFingerprint(instance.config);
-  const enforcementRow = await loadEnforcement(env, publicId);
-  const enforcement = normalizeActiveEnforcement(enforcementRow);
   const accountL10nPolicy = resolveAccountL10nPolicy(account.l10n_policy);
   const baseLocale = accountL10nPolicy.baseLocale;
   const { locales: accountLocales, invalidAccountLocales } = resolveActivePublishLocales(
@@ -247,7 +241,6 @@ export async function handleAccountGetInstance(
     meta: isCuratedInstanceRow(instance) ? (instance.meta ?? null) : null,
     updatedAt: instance.updated_at ?? null,
     baseFingerprint,
-    enforcement,
     policy: policyResult.policy,
     account: {
       id: account.id,

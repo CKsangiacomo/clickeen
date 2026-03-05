@@ -21,7 +21,6 @@ import {
   resolveCuratedRowKind,
 } from '../../shared/instances';
 import type { AccountL10nPolicy } from '../../shared/l10n';
-import { normalizeActiveEnforcement } from './service';
 export type AccountLocaleOverlayPayload = {
   locale: string;
   source: string | null;
@@ -42,7 +41,6 @@ export type AccountInstanceEnvelope = {
   meta: Record<string, unknown> | null;
   updatedAt: string | null;
   baseFingerprint: string;
-  enforcement: ReturnType<typeof normalizeActiveEnforcement>;
   policy: Policy;
   account: {
     id: string;
@@ -206,24 +204,6 @@ export async function rollbackInstanceWriteOnUsageSyncFailure(args: {
   }
 }
 
-async function deleteAccountAssetUsageRowsForPublicId(args: {
-  env: Env;
-  publicId: string;
-}): Promise<void> {
-  const deleteParams = new URLSearchParams({ public_id: `eq.${args.publicId}` });
-  const deleteRes = await supabaseFetch(
-    args.env,
-    `/rest/v1/account_asset_usage?${deleteParams.toString()}`,
-    { method: 'DELETE' },
-  );
-  if (!deleteRes.ok) {
-    const details = await readJson(deleteRes);
-    console.error(
-      `[ParisWorker] Failed to delete account_asset_usage during rollback (${deleteRes.status}): ${JSON.stringify(details)}`,
-    );
-  }
-}
-
 export async function rollbackCreatedInstanceAfterPostCommitFailure(args: {
   env: Env;
   accountId: string;
@@ -231,7 +211,6 @@ export async function rollbackCreatedInstanceAfterPostCommitFailure(args: {
   isCurated: boolean;
 }): Promise<void> {
   await rollbackCreatedInstanceOnUsageSyncFailure(args);
-  await deleteAccountAssetUsageRowsForPublicId({ env: args.env, publicId: args.publicId });
 }
 
 export async function rollbackInstanceWriteAfterPostCommitFailure(args: {
@@ -252,7 +231,7 @@ export async function rollbackInstanceWriteAfterPostCommitFailure(args: {
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     console.error(
-      `[ParisWorker] Failed to restore account_asset_usage after rollback for ${args.publicId}: ${detail}`,
+      `[ParisWorker] Failed to restore asset usage references after rollback for ${args.publicId}: ${detail}`,
     );
   }
 }

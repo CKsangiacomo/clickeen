@@ -1,5 +1,4 @@
 import { resolvePolicy, type Policy } from '@clickeen/ck-policy';
-import { toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 import type { AccountRow, Env, LocalePolicy } from '../../shared/types';
 import { authorizeAccount } from '../../shared/account-auth';
 import { ckError } from '../../shared/errors';
@@ -9,71 +8,13 @@ import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString, isUuid } from '../../shared/validation';
 import { enqueueTokyoMirrorJob, resolveActivePublishLocales } from '../account-instances/service';
 
-type AccountAssetRow = {
-  asset_id: string;
-  account_id: string;
-  public_id?: string | null;
-  widget_type?: string | null;
-  source: string;
-  original_filename: string;
-  normalized_filename: string;
-  content_type: string;
-  size_bytes: number;
-  sha256?: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-type AccountAssetVariantRow = {
-  asset_id: string;
-  variant: string;
-  r2_key: string;
-  filename: string;
-  content_type: string;
-  size_bytes: number;
-  created_at: string;
-};
-
-type AccountAssetUsageRow = {
-  account_id: string;
-  asset_id: string;
-  public_id: string;
-  config_path: string;
-  created_at: string;
-  updated_at: string;
-};
-
 type AccountTier = AccountRow['tier'];
-
-type AccountNoticeRow = {
-  notice_id: string;
-  account_id: string;
-  kind: string;
-  status: 'open' | 'dismissed' | 'resolved';
-  payload: unknown;
-  email_pending: boolean;
-  email_sent_at: string | null;
-  dismissed_at: string | null;
-  created_at: string;
-  updated_at: string;
-};
 
 type AccountMemberRow = {
   account_id: string;
   user_id: string;
   role: string;
   created_at: string;
-};
-
-type TokyoAssetIdentityIntegritySnapshot = {
-  ok?: boolean;
-  reasonKey?: string | null;
-  dbVariantCount?: number;
-  r2ObjectCount?: number;
-  missingInR2Count?: number;
-  orphanInR2Count?: number;
-  missingInR2?: string[];
-  orphanInR2?: string[];
 };
 
 const ACCOUNT_QUERY_PAGE_SIZE = 1000;
@@ -93,14 +34,6 @@ function assertAssetId(value: string) {
   const trimmed = String(value || '').trim();
   if (!trimmed || !isUuid(trimmed)) {
     return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' }, 422) };
-  }
-  return { ok: true as const, value: trimmed };
-}
-
-function assertNoticeId(value: string) {
-  const trimmed = String(value || '').trim();
-  if (!trimmed || !isUuid(trimmed)) {
-    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422) };
   }
   return { ok: true as const, value: trimmed };
 }
@@ -132,13 +65,6 @@ function tierRank(tier: AccountTier): number {
   }
 }
 
-function resolveListLimit(req: Request): number {
-  const url = new URL(req.url);
-  const raw = Number.parseInt((url.searchParams.get('limit') || '').trim(), 10);
-  if (!Number.isFinite(raw) || raw <= 0) return 50;
-  return Math.min(raw, 200);
-}
-
 function requireRomaAssetSurface(req: Request): Response | null {
   const surface = (req.headers.get('x-clickeen-surface') || '').trim();
   if (surface === 'roma-assets') return null;
@@ -150,11 +76,6 @@ function requireRomaAssetSurface(req: Request): Response | null {
     },
     403,
   );
-}
-
-function resolveTokyoPublicAssetBase(env: Env): string | null {
-  const raw = ((env.TOKYO_BASE_URL || '') || (env.TOKYO_WORKER_BASE_URL || '')).trim().replace(/\/+$/, '');
-  return raw || null;
 }
 
 function resolveTokyoMutableAssetBase(env: Env): string | null {
@@ -193,230 +114,6 @@ async function loadPagedRows<T>(args: {
   }
 
   return out;
-}
-
-async function loadVariantsByAssetIds(
-  env: Env,
-  accountId: string,
-  assetIds: string[],
-): Promise<Map<string, AccountAssetVariantRow[]>> {
-  const out = new Map<string, AccountAssetVariantRow[]>();
-  if (assetIds.length === 0) return out;
-
-  const rows = await loadPagedRows<AccountAssetVariantRow>({
-    env,
-    table: 'account_asset_variants',
-    baseParams: {
-      select: 'asset_id,variant,r2_key,filename,content_type,size_bytes,created_at',
-      account_id: `eq.${accountId}`,
-      asset_id: `in.(${assetIds.join(',')})`,
-      order: 'created_at.desc',
-    },
-  });
-  rows.forEach((row) => {
-    const current = out.get(row.asset_id);
-    if (current) current.push(row);
-    else out.set(row.asset_id, [row]);
-  });
-  return out;
-}
-
-async function loadUsageByAssetIds(env: Env, accountId: string, assetIds: string[]): Promise<Map<string, AccountAssetUsageRow[]>> {
-  const out = new Map<string, AccountAssetUsageRow[]>();
-  if (assetIds.length === 0) return out;
-
-  const rows = await loadPagedRows<AccountAssetUsageRow>({
-    env,
-    table: 'account_asset_usage',
-    baseParams: {
-      select: 'account_id,asset_id,public_id,config_path,created_at,updated_at',
-      account_id: `eq.${accountId}`,
-      asset_id: `in.(${assetIds.join(',')})`,
-      order: 'updated_at.desc',
-    },
-  });
-  rows.forEach((row) => {
-    const current = out.get(row.asset_id);
-    if (current) current.push(row);
-    else out.set(row.asset_id, [row]);
-  });
-  return out;
-}
-
-async function loadAccountAsset(env: Env, accountId: string, assetId: string): Promise<AccountAssetRow | null> {
-  const params = new URLSearchParams({
-    select: [
-      'asset_id',
-      'account_id',
-      'public_id',
-      'widget_type',
-      'source',
-      'original_filename',
-      'normalized_filename',
-      'content_type',
-      'size_bytes',
-      'sha256',
-      'created_at',
-      'updated_at',
-    ].join(','),
-    account_id: `eq.${accountId}`,
-    asset_id: `eq.${assetId}`,
-    limit: '1',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load account asset (${res.status}): ${JSON.stringify(details)}`);
-  }
-  const rows = (await res.json()) as AccountAssetRow[];
-  return rows?.[0] ?? null;
-}
-
-function normalizeAssetVariant(
-  row: AccountAssetVariantRow,
-  tokyoBase: string | null,
-): {
-  variant: string;
-  key: string;
-  filename: string;
-  contentType: string;
-  sizeBytes: number;
-  createdAt: string;
-  url: string | null;
-} {
-  const key = row.r2_key;
-  const versionPath = toCanonicalAssetVersionPath(key);
-  const url = tokyoBase && versionPath ? `${tokyoBase}${versionPath}` : null;
-  return {
-    variant: row.variant,
-    key,
-    filename: row.filename,
-    contentType: row.content_type,
-    sizeBytes: row.size_bytes,
-    createdAt: row.created_at,
-    url,
-  };
-}
-
-function normalizeAccountAsset(
-  row: AccountAssetRow,
-  variants: AccountAssetVariantRow[],
-  usageRows: AccountAssetUsageRow[],
-  tokyoBase: string | null,
-) {
-  const usage = usageRows.map((item) => ({
-    publicId: item.public_id,
-    configPath: item.config_path,
-    createdAt: item.created_at,
-    updatedAt: item.updated_at,
-  }));
-
-  return {
-    assetId: row.asset_id,
-    accountId: row.account_id,
-    publicId: row.public_id ?? null,
-    widgetType: row.widget_type ?? null,
-    source: row.source,
-    originalFilename: row.original_filename,
-    normalizedFilename: row.normalized_filename,
-    contentType: row.content_type,
-    sizeBytes: row.size_bytes,
-    sha256: row.sha256 ?? null,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    usageCount: usage.length,
-    usedBy: usage,
-    variants: variants.map((variant) => normalizeAssetVariant(variant, tokyoBase)),
-  };
-}
-
-async function ensureTokyoAssetIdentityIntegrity(
-  env: Env,
-  accountId: string,
-  assetId: string,
-): Promise<{ ok: true } | { ok: false; response: Response }> {
-  const tokyoBase = resolveTokyoMutableAssetBase(env);
-  const tokyoToken = resolveTokyoServiceToken(env);
-  if (!tokyoBase || !tokyoToken) {
-    return {
-      ok: false,
-      response: ckError(
-        {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.assets.integrityUnavailable',
-          detail: !tokyoBase ? 'TOKYO_BASE_URL missing' : 'TOKYO_DEV_JWT missing',
-        },
-        500,
-      ),
-    };
-  }
-
-  let res: Response;
-  let payload:
-    | {
-        error?: { reasonKey?: string | null; detail?: string | null };
-        accountId?: string;
-        assetId?: string;
-        integrity?: TokyoAssetIdentityIntegritySnapshot;
-      }
-    | null = null;
-  try {
-    const url = `${tokyoBase}/assets/integrity/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`;
-    res = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${tokyoToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
-    payload = (await readJson(res)) as
-      | {
-          error?: { reasonKey?: string | null; detail?: string | null };
-          accountId?: string;
-          assetId?: string;
-          integrity?: TokyoAssetIdentityIntegritySnapshot;
-        }
-      | null;
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return {
-      ok: false,
-      response: ckError(
-        {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.assets.integrityUnavailable',
-          detail,
-        },
-        500,
-      ),
-    };
-  }
-
-  if (res.ok) return { ok: true };
-
-  if (res.status === 404) {
-    return { ok: false, response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404) };
-  }
-
-  if (res.status === 409 && payload && typeof payload === 'object') {
-    return {
-      ok: false,
-      response: json(payload as Record<string, unknown>, { status: 409 }),
-    };
-  }
-
-  return {
-    ok: false,
-    response: ckError(
-      {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.assets.integrityUnavailable',
-        detail: JSON.stringify(payload),
-      },
-      500,
-    ),
-  };
 }
 
 function normalizePublicIdList(raw: unknown): string[] {
@@ -764,22 +461,24 @@ async function purgeAccountAssets(args: {
   }
 }
 
-async function createAccountNotice(args: {
+async function recordTierDropLifecycleState(args: {
   env: Env;
   accountId: string;
-  kind: string;
-  payload: Record<string, unknown>;
+  fromTier: AccountTier;
+  toTier: AccountTier;
   emailPending: boolean;
-}): Promise<{ ok: true; notice: AccountNoticeRow } | { ok: false; response: Response }> {
-  const res = await supabaseFetch(args.env, `/rest/v1/account_notices`, {
-    method: 'POST',
+}): Promise<{ ok: true } | { ok: false; response: Response }> {
+  const params = new URLSearchParams({ id: `eq.${args.accountId}` });
+  const now = new Date().toISOString();
+  const res = await supabaseFetch(args.env, `/rest/v1/accounts?${params.toString()}`, {
+    method: 'PATCH',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify({
-      account_id: args.accountId,
-      kind: args.kind,
-      status: 'open',
-      payload: args.payload,
-      email_pending: args.emailPending,
+      tier_changed_at: now,
+      tier_changed_from: args.fromTier,
+      tier_changed_to: args.toTier,
+      tier_drop_dismissed_at: null,
+      tier_drop_email_sent_at: args.emailPending ? null : now,
     }),
   });
   if (!res.ok) {
@@ -789,31 +488,22 @@ async function createAccountNotice(args: {
       response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
     };
   }
-  const rows = (await res.json().catch(() => null)) as AccountNoticeRow[] | null;
-  const notice = rows?.[0] ?? null;
-  if (!notice?.notice_id) {
-    return {
-      ok: false,
-      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'notice insert did not return a row' }, 500),
-    };
+  const rows = (await res.json().catch(() => null)) as Array<{ id?: string }> | null;
+  if (!rows?.[0]?.id) {
+    return { ok: false, response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.payload.invalid' }, 404) };
   }
-  return { ok: true, notice };
+  return { ok: true };
 }
 
-async function dismissAccountNotice(args: {
+async function dismissTierDropLifecycleState(args: {
   env: Env;
   accountId: string;
-  noticeId: string;
 }): Promise<{ ok: true } | { ok: false; response: Response }> {
-  const now = new Date().toISOString();
-  const params = new URLSearchParams({
-    notice_id: `eq.${args.noticeId}`,
-    account_id: `eq.${args.accountId}`,
-  });
-  const res = await supabaseFetch(args.env, `/rest/v1/account_notices?${params.toString()}`, {
+  const params = new URLSearchParams({ id: `eq.${args.accountId}` });
+  const res = await supabaseFetch(args.env, `/rest/v1/accounts?${params.toString()}`, {
     method: 'PATCH',
     headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({ status: 'dismissed', dismissed_at: now }),
+    body: JSON.stringify({ tier_drop_dismissed_at: new Date().toISOString() }),
   });
   if (!res.ok) {
     const details = await readJson(res);
@@ -821,10 +511,6 @@ async function dismissAccountNotice(args: {
       ok: false,
       response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
     };
-  }
-  const rows = (await res.json().catch(() => null)) as Array<{ notice_id?: string }> | null;
-  if (!rows?.[0]?.notice_id) {
-    return { ok: false, response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.payload.invalid' }, 404) };
   }
   return { ok: true };
 }
@@ -837,49 +523,33 @@ export async function handleAccountAssetsList(req: Request, env: Env, accountIdR
   const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
 
-  const limit = resolveListLimit(req);
-  const params = new URLSearchParams({
-    select: [
-      'asset_id',
-      'account_id',
-      'public_id',
-      'widget_type',
-      'source',
-      'original_filename',
-      'normalized_filename',
-      'content_type',
-      'size_bytes',
-      'sha256',
-      'created_at',
-      'updated_at',
-    ].join(','),
-    account_id: `eq.${accountId}`,
-    order: 'created_at.desc',
-    limit: String(limit),
-  });
-  const tokyoBase = resolveTokyoPublicAssetBase(env);
+  void req;
+  const tokyoBase = resolveTokyoMutableAssetBase(env);
+  const tokyoToken = resolveTokyoServiceToken(env);
+  if (!tokyoBase || !tokyoToken) {
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: 'Tokyo service config missing' }, 500);
+  }
 
   try {
-    const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
-    if (!res.ok) {
-      const details = await readJson(res);
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
+    const tokyoRes = await fetch(`${tokyoBase}/assets/account/${encodeURIComponent(accountId)}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${tokyoToken}`,
+        accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+    const payload = await readJson(tokyoRes);
+    if (!tokyoRes.ok) {
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(payload) }, 500);
     }
-
-    const assets = (await res.json()) as AccountAssetRow[];
-    const assetIds = assets.map((asset) => asset.asset_id).filter(Boolean);
-    const [variantsByAssetId, usageByAssetId] = await Promise.all([
-      loadVariantsByAssetIds(env, accountId, assetIds),
-      loadUsageByAssetIds(env, accountId, assetIds),
-    ]);
+    const assets = Array.isArray((payload as any)?.assets) ? ((payload as any).assets as unknown[]) : [];
 
     return json({
       accountId,
-      assets: assets.map((asset) =>
-        normalizeAccountAsset(asset, variantsByAssetId.get(asset.asset_id) ?? [], usageByAssetId.get(asset.asset_id) ?? [], tokyoBase),
-      ),
+      assets,
       pagination: {
-        limit,
+        limit: assets.length,
         count: assets.length,
       },
     });
@@ -988,7 +658,7 @@ export async function handleAccountMembersList(req: Request, env: Env, accountId
   });
 }
 
-export async function handleAccountNoticesList(req: Request, env: Env, accountIdRaw: string) {
+export async function handleAccountLifecycleTierDropDismiss(req: Request, env: Env, accountIdRaw: string) {
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
@@ -996,52 +666,9 @@ export async function handleAccountNoticesList(req: Request, env: Env, accountId
   const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
 
-  const url = new URL(req.url);
-  const statusRaw = (url.searchParams.get('status') || 'open').trim().toLowerCase();
-  const status = statusRaw === 'dismissed' || statusRaw === 'resolved' ? statusRaw : 'open';
-
-  const params = new URLSearchParams({
-    select: 'notice_id,kind,status,payload,email_pending,created_at',
-    account_id: `eq.${accountId}`,
-    status: `eq.${status}`,
-    order: 'created_at.desc',
-    limit: '50',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_notices?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const details = await readJson(res);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
-  }
-  const rows = ((await res.json().catch(() => null)) as Array<Pick<AccountNoticeRow, 'notice_id' | 'kind' | 'payload' | 'email_pending' | 'created_at'>> | null) ?? [];
-
-  return json({
-    accountId,
-    role: authorized.role,
-    notices: rows.map((row) => ({
-      noticeId: row.notice_id,
-      kind: row.kind,
-      payload: row.payload && typeof row.payload === 'object' && !Array.isArray(row.payload) ? (row.payload as Record<string, unknown>) : {},
-      createdAt: row.created_at,
-      emailPending: row.email_pending,
-    })),
-  });
-}
-
-export async function handleAccountNoticeDismiss(req: Request, env: Env, accountIdRaw: string, noticeIdRaw: string) {
-  const accountIdResult = assertAccountId(accountIdRaw);
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const noticeIdResult = assertNoticeId(noticeIdRaw);
-  if (!noticeIdResult.ok) return noticeIdResult.response;
-  const noticeId = noticeIdResult.value;
-
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
-  if (!authorized.ok) return authorized.response;
-
-  const dismissed = await dismissAccountNotice({ env, accountId, noticeId });
+  const dismissed = await dismissTierDropLifecycleState({ env, accountId });
   if (!dismissed.ok) return dismissed.response;
-  return json({ ok: true, accountId, noticeId });
+  return json({ ok: true, accountId, kind: 'tier_drop' });
 }
 
 export async function handleAccountLifecyclePlanChange(req: Request, env: Env, accountIdRaw: string) {
@@ -1165,29 +792,19 @@ export async function handleAccountLifecyclePlanChange(req: Request, env: Env, a
     assetsPurged = true;
   }
 
-  const noticePayload: Record<string, unknown> = {
-    fromTier: prevTier,
-    toTier: nextTier,
-    enforcement: {
-      keptLivePublicIds: keepLivePublicIds,
-      unpublishedCount: unpublished.length,
-      assetsPurged,
-      tokyoResync,
-    },
-  };
-  const notice = await createAccountNotice({
+  const lifecycle = await recordTierDropLifecycleState({
     env,
     accountId,
-    kind: 'tier_drop',
-    payload: noticePayload,
+    fromTier: prevTier,
+    toTier: nextTier,
     emailPending: true,
   });
-  if (!notice.ok) return notice.response;
+  if (!lifecycle.ok) return lifecycle.response;
 
   return json({
     ok: true,
     accountId,
-    noticeId: notice.notice.notice_id,
+    noticeId: 'tier_drop',
     fromTier: prevTier,
     toTier: nextTier,
     isTierDrop: true,
@@ -1211,22 +828,32 @@ export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw
   const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
 
-  const tokyoBase = resolveTokyoPublicAssetBase(env);
+  const tokyoBase = resolveTokyoMutableAssetBase(env);
+  const tokyoToken = resolveTokyoServiceToken(env);
+  if (!tokyoBase || !tokyoToken) {
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: 'Tokyo service config missing' }, 500);
+  }
 
   try {
-    const asset = await loadAccountAsset(env, accountId, assetId);
-    if (!asset) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
-
-    const [variantsByAssetId, usageByAssetId, integrity] = await Promise.all([
-      loadVariantsByAssetIds(env, accountId, [assetId]),
-      loadUsageByAssetIds(env, accountId, [assetId]),
-      ensureTokyoAssetIdentityIntegrity(env, accountId, assetId),
-    ]);
-    if (!integrity.ok) return integrity.response;
+    const tokyoRes = await fetch(`${tokyoBase}/assets/account/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${tokyoToken}`,
+        accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+    const payload = await readJson(tokyoRes);
+    if (tokyoRes.status === 404) {
+      return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
+    }
+    if (!tokyoRes.ok) {
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(payload) }, 500);
+    }
 
     return json({
       accountId,
-      asset: normalizeAccountAsset(asset, variantsByAssetId.get(assetId) ?? [], usageByAssetId.get(assetId) ?? [], tokyoBase),
+      asset: (payload as any)?.asset ?? null,
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -1250,9 +877,6 @@ export async function handleAccountAssetDelete(req: Request, env: Env, accountId
   if (!authorized.ok) return authorized.response;
 
   try {
-    const existing = await loadAccountAsset(env, accountId, assetId);
-    if (!existing) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
-
     const tokyoBase = resolveTokyoMutableAssetBase(env);
     if (!tokyoBase) {
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_BASE_URL missing' }, 500);

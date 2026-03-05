@@ -31,6 +31,7 @@ import {
 import { resolveAdminAccountId } from '../../shared/admin';
 import { loadInstanceByPublicId, loadWidgetByType } from '../instances';
 import { enqueueL10nJobs } from '../l10n';
+import { loadInstanceOverlays } from '../l10n/service';
 import {
   enqueueTokyoMirrorJob,
   resolveActivePublishLocales,
@@ -432,39 +433,24 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
         const configPack = stripTextFromConfig(createdInstance.config, Object.keys(baseTextPack));
         const configFp = await jsonSha256Hex(configPack);
 
-        type OverlayRow = { layer?: string | null; layer_key?: string | null; ops?: unknown };
         const baseFingerprint = await computeBaseFingerprint(baseTextPack);
         const localeOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
         const userOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
         try {
-          const params = new URLSearchParams({
-            select: 'layer,layer_key,ops',
-            public_id: `eq.${publicId}`,
-            layer: 'in.(locale,user)',
-            base_fingerprint: `eq.${baseFingerprint}`,
-            limit: '1000',
+          const rows = await loadInstanceOverlays(env, publicId);
+          rows.forEach((row) => {
+            const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
+            const locale = typeof row?.layer_key === 'string' ? row.layer_key.trim() : '';
+            if (!locale) return;
+            if (!availableLocales.includes(locale)) return;
+            if (row.base_fingerprint !== baseFingerprint) return;
+            if (!Array.isArray(row.ops)) return;
+            if (layer === 'locale') {
+              localeOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
+            } else if (layer === 'user') {
+              userOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
+            }
           });
-          const overlaysRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
-            method: 'GET',
-          });
-          if (overlaysRes.ok) {
-            const rows = ((await overlaysRes.json().catch(() => null)) as OverlayRow[] | null) ?? [];
-            rows.forEach((row) => {
-              const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
-              const locale = typeof row?.layer_key === 'string' ? row.layer_key.trim() : '';
-              if (!locale) return;
-              if (!availableLocales.includes(locale)) return;
-              if (!Array.isArray(row.ops)) return;
-              if (layer === 'locale') {
-                localeOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
-              } else if (layer === 'user') {
-                userOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
-              }
-            });
-          } else {
-            const details = await readJson(overlaysRes).catch(() => null);
-            console.warn('[ParisWorker] Failed to load overlays for text packs', details);
-          }
         } catch (error) {
           const detail = error instanceof Error ? error.message : String(error);
           console.warn('[ParisWorker] Failed to resolve overlays for text packs', detail);

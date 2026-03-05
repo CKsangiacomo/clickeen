@@ -22,6 +22,9 @@ export type Env = {
   MINIBOB_RATELIMIT_KV?: KVNamespace;
   MINIBOB_RATELIMIT_MODE?: 'off' | 'log' | 'enforce';
   USAGE_KV?: KVNamespace;
+  L10N_STATE_KV?: KVNamespace;
+  OVERLAYS_R2?: R2Bucket;
+  ACCOUNT_ENRICHMENT_R2?: R2Bucket;
   USAGE_EVENT_HMAC_SECRET?: string;
   L10N_GENERATE_QUEUE?: Queue<L10nJob>;
   RENDER_SNAPSHOT_QUEUE?: Queue<TokyoMirrorQueueJob>;

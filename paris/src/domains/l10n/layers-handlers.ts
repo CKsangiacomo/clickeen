@@ -1,5 +1,5 @@
 import type { Env, InstanceOverlayRow } from '../../shared/types';
-import { json, readJson } from '../../shared/http';
+import { json } from '../../shared/http';
 import { apiError, ckError } from '../../shared/errors';
 import { asTrimmedString, isRecord } from '../../shared/validation';
 import {
@@ -24,12 +24,13 @@ import { consumeBudget } from '../../shared/budgets';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { authorizeAccount } from '../../shared/account-auth';
 import { resolveAdminAccountId } from '../../shared/admin';
-import { supabaseFetch } from '../../shared/supabase';
 import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import {
+  deleteInstanceOverlay,
   loadInstanceOverlay,
   loadInstanceOverlays,
   loadL10nGenerateStateRow,
+  upsertInstanceOverlay,
   updateL10nGenerateStatus,
 } from './service';
 import { enforceLayerEntitlement } from './shared';
@@ -355,24 +356,7 @@ export async function handleAccountInstanceLayerUpsert(
       account_id: instanceKind === 'user' ? accountId : null,
     };
 
-    const upsertRes = await supabaseFetch(
-      env,
-      `/rest/v1/widget_instance_overlays?on_conflict=public_id,layer,layer_key`,
-      {
-        method: 'POST',
-        headers: {
-          Prefer: 'resolution=merge-duplicates,return=representation',
-        },
-        body: JSON.stringify(payloadRow),
-      },
-    );
-    if (!upsertRes.ok) {
-      const details = await readJson(upsertRes);
-      return apiError('INTERNAL_ERROR', 'Failed to upsert layer', 500, details);
-    }
-
-    const rows = (await upsertRes.json().catch(() => [])) as InstanceOverlayRow[];
-    row = rows?.[0] ?? null;
+    row = await upsertInstanceOverlay(env, payloadRow as InstanceOverlayRow);
   } else if (hasUserOps && userOpsResult?.ok) {
     if (!existing) {
       const payloadRow = {
@@ -387,43 +371,12 @@ export async function handleAccountInstanceLayerUpsert(
         geo_targets: null,
         account_id: instanceKind === 'user' ? accountId : null,
       };
-      const insertRes = await supabaseFetch(
-        env,
-        `/rest/v1/widget_instance_overlays?on_conflict=public_id,layer,layer_key`,
-        {
-          method: 'POST',
-          headers: {
-            Prefer: 'resolution=merge-duplicates,return=representation',
-          },
-          body: JSON.stringify(payloadRow),
-        },
-      );
-      if (!insertRes.ok) {
-        const details = await readJson(insertRes);
-        return apiError('INTERNAL_ERROR', 'Failed to create layer overrides', 500, details);
-      }
-      const rows = (await insertRes.json().catch(() => [])) as InstanceOverlayRow[];
-      row = rows?.[0] ?? null;
+      row = await upsertInstanceOverlay(env, payloadRow as InstanceOverlayRow);
     } else {
-      const patchRes = await supabaseFetch(
-        env,
-        `/rest/v1/widget_instance_overlays?public_id=eq.${encodeURIComponent(
-          publicIdResult.value,
-        )}&layer=eq.${encodeURIComponent(layer)}&layer_key=eq.${encodeURIComponent(layerKey)}`,
-        {
-          method: 'PATCH',
-          headers: {
-            Prefer: 'return=representation',
-          },
-          body: JSON.stringify({ user_ops: userOpsResult.ops }),
-        },
-      );
-      if (!patchRes.ok) {
-        const details = await readJson(patchRes);
-        return apiError('INTERNAL_ERROR', 'Failed to update layer overrides', 500, details);
-      }
-      const rows = (await patchRes.json().catch(() => [])) as InstanceOverlayRow[];
-      row = rows?.[0] ?? null;
+      row = await upsertInstanceOverlay(env, {
+        ...existing,
+        user_ops: userOpsResult.ops,
+      });
     }
   }
 
@@ -480,33 +433,17 @@ export async function handleAccountInstanceLayerUpsert(
 
       if (layerKey !== baseLocale) {
         try {
-          const params = new URLSearchParams({
-            select: 'layer,ops',
-            public_id: `eq.${publicIdResult.value}`,
-            layer: 'in.(locale,user)',
-            layer_key: `eq.${layerKey}`,
-            base_fingerprint: `eq.${computedFingerprint}`,
-            limit: '2',
+          const rows = await loadInstanceOverlays(env, publicIdResult.value);
+          rows.forEach((overlay) => {
+            if (overlay.layer_key !== layerKey) return;
+            if (overlay.base_fingerprint !== computedFingerprint) return;
+            if (!Array.isArray(overlay.ops)) return;
+            if (overlay.layer === 'locale') {
+              localeOps = overlay.ops;
+            } else if (overlay.layer === 'user') {
+              userOps = overlay.ops;
+            }
           });
-          const overlaysRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
-            method: 'GET',
-          });
-          if (overlaysRes.ok) {
-            const rows =
-              ((await overlaysRes.json().catch(() => null)) as Array<{ layer?: string; ops?: unknown }> | null) ?? [];
-            rows.forEach((row) => {
-              const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
-              if (!Array.isArray(row.ops)) return;
-              if (layer === 'locale') {
-                localeOps = row.ops as Array<{ op: 'set'; path: string; value: unknown }>;
-              } else if (layer === 'user') {
-                userOps = row.ops as Array<{ op: 'set'; path: string; value: unknown }>;
-              }
-            });
-          } else {
-            const details = await readJson(overlaysRes).catch(() => null);
-            console.warn('[ParisWorker] Failed to load overlays for pack mirroring', details);
-          }
         } catch (error) {
           const detail = error instanceof Error ? error.message : String(error);
           console.warn('[ParisWorker] Failed to resolve overlays for pack mirroring', detail);
@@ -637,20 +574,7 @@ export async function handleAccountInstanceLayerDelete(
     );
   }
 
-  const deleteRes = await supabaseFetch(
-    env,
-    `/rest/v1/widget_instance_overlays?public_id=eq.${encodeURIComponent(
-      publicIdResult.value,
-    )}&layer=eq.${encodeURIComponent(layer)}&layer_key=eq.${encodeURIComponent(layerKey)}`,
-    {
-      method: 'DELETE',
-      headers: { Prefer: 'return=representation' },
-    },
-  );
-  if (!deleteRes.ok) {
-    const details = await readJson(deleteRes);
-    return apiError('INTERNAL_ERROR', 'Failed to delete layer overlay', 500, details);
-  }
+  await deleteInstanceOverlay(env, publicIdResult.value, layer, layerKey);
 
   if ((layer === 'locale' || layer === 'user') && instance.status === 'published') {
     const accountL10nPolicy = resolveAccountL10nPolicy(account.l10n_policy);
@@ -668,33 +592,17 @@ export async function handleAccountInstanceLayerDelete(
 
       if (layerKey !== baseLocale) {
         try {
-          const params = new URLSearchParams({
-            select: 'layer,ops',
-            public_id: `eq.${publicIdResult.value}`,
-            layer: 'in.(locale,user)',
-            layer_key: `eq.${layerKey}`,
-            base_fingerprint: `eq.${computedFingerprint}`,
-            limit: '2',
+          const rows = await loadInstanceOverlays(env, publicIdResult.value);
+          rows.forEach((overlay) => {
+            if (overlay.layer_key !== layerKey) return;
+            if (overlay.base_fingerprint !== computedFingerprint) return;
+            if (!Array.isArray(overlay.ops)) return;
+            if (overlay.layer === 'locale') {
+              localeOps = overlay.ops;
+            } else if (overlay.layer === 'user') {
+              userOps = overlay.ops;
+            }
           });
-          const overlaysRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
-            method: 'GET',
-          });
-          if (overlaysRes.ok) {
-            const rows =
-              ((await overlaysRes.json().catch(() => null)) as Array<{ layer?: string; ops?: unknown }> | null) ?? [];
-            rows.forEach((row) => {
-              const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
-              if (!Array.isArray(row.ops)) return;
-              if (layer === 'locale') {
-                localeOps = row.ops as Array<{ op: 'set'; path: string; value: unknown }>;
-              } else if (layer === 'user') {
-                userOps = row.ops as Array<{ op: 'set'; path: string; value: unknown }>;
-              }
-            });
-          } else {
-            const details = await readJson(overlaysRes).catch(() => null);
-            console.warn('[ParisWorker] Failed to load overlays for pack mirroring', details);
-          }
         } catch (error) {
           const detail = error instanceof Error ? error.message : String(error);
           console.warn('[ParisWorker] Failed to resolve overlays for pack mirroring', detail);

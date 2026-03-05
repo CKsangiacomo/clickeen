@@ -1,17 +1,10 @@
 import type { Env } from './types';
-import { readJson } from './http';
-import { supabaseFetch } from './supabase';
 import { isUuid } from './validation';
 import { parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 
 type AccountAssetRef = {
   accountId: string;
   assetId: string;
-};
-
-type SyncAccountAssetUsageRpcRow = {
-  count?: unknown;
-  sync_account_asset_usage?: unknown;
 };
 
 export type AccountAssetUsageRef = {
@@ -130,44 +123,6 @@ async function resolveValidatedAccountAssetUsageRefs(args: {
     if (!assetIds.length) {
       throw new AssetUsageValidationError('Account asset references are missing asset ids');
     }
-
-    const existingKeys = new Set<string>();
-    const existingParams = new URLSearchParams({
-      select: 'account_id,asset_id',
-      account_id: `eq.${accountId}`,
-      asset_id: `in.(${assetIds.join(',')})`,
-      limit: String(Math.max(assetIds.length, 1)),
-    });
-    const existingRes = await supabaseFetch(
-      args.env,
-      `/rest/v1/account_assets?${existingParams.toString()}`,
-      { method: 'GET' },
-    );
-    if (!existingRes.ok) {
-      const details = await readJson(existingRes);
-      throw new Error(
-        `[ParisWorker] Failed to validate account assets (${existingRes.status}): ${JSON.stringify(details)}`,
-      );
-    }
-    const existingRows = (await existingRes.json().catch(() => null)) as Array<{
-      account_id?: string;
-      asset_id?: string;
-    }> | null;
-    if (Array.isArray(existingRows)) {
-      for (const row of existingRows) {
-        const rowAccountId = typeof row?.account_id === 'string' ? row.account_id.trim() : '';
-        const rowAssetId = typeof row?.asset_id === 'string' ? row.asset_id.trim() : '';
-        if (!rowAccountId || !rowAssetId) continue;
-        existingKeys.add(`${rowAccountId}|${rowAssetId}`);
-      }
-    }
-
-    const missingRef = refs.find((row) => !existingKeys.has(`${row.accountId}|${row.assetId}`));
-    if (missingRef) {
-      throw new AssetUsageValidationError(
-        `Missing or deleted account asset reference at ${missingRef.configPath}: account_id=${missingRef.accountId}, asset_id=${missingRef.assetId}`,
-      );
-    }
   }
 
   return refs;
@@ -190,48 +145,6 @@ export async function syncAccountAssetUsageForInstance(args: {
   config: Record<string, unknown>;
 }): Promise<{ count: number }> {
   const refs = await resolveValidatedAccountAssetUsageRefs(args);
-  const accountId = String(args.accountId || '').trim();
-  const publicId = String(args.publicId || '').trim();
-
-  const rpcRows = refs.map((ref) => ({
-    asset_id: ref.assetId,
-    config_path: ref.configPath,
-  }));
-  const syncRes = await supabaseFetch(args.env, '/rest/v1/rpc/sync_account_asset_usage', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({
-      p_account_id: accountId,
-      p_public_id: publicId,
-      p_refs: rpcRows,
-    }),
-  });
-  if (!syncRes.ok) {
-    const details = await readJson(syncRes);
-    throw new Error(
-      `[ParisWorker] Failed to sync account asset usage atomically (${syncRes.status}): ${JSON.stringify(details)}`,
-    );
-  }
-
-  const payload = (await readJson(syncRes)) as
-    | SyncAccountAssetUsageRpcRow
-    | SyncAccountAssetUsageRpcRow[]
-    | number
-    | null;
-  const first =
-    Array.isArray(payload) && payload.length > 0 && payload[0] && typeof payload[0] === 'object'
-      ? payload[0]
-      : null;
-  const rawCount =
-    (first?.count ?? first?.sync_account_asset_usage) ??
-    (payload && typeof payload === 'object' && !Array.isArray(payload)
-      ? ((payload as SyncAccountAssetUsageRpcRow).count ??
-          (payload as SyncAccountAssetUsageRpcRow).sync_account_asset_usage)
-      : null) ??
-    (typeof payload === 'number' ? payload : null);
-  if (typeof rawCount === 'number' && Number.isFinite(rawCount) && rawCount >= 0) {
-    return { count: Math.trunc(rawCount) };
-  }
-
+  void args.env;
   return { count: refs.length };
 }

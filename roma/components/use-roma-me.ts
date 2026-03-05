@@ -17,6 +17,13 @@ export type RomaMeResponse = {
     tier: string;
     websiteUrl: string | null;
     membershipVersion: string | null;
+    lifecycleNotice?: {
+      tierChangedAt?: string | null;
+      tierChangedFrom?: string | null;
+      tierChangedTo?: string | null;
+      tierDropDismissedAt?: string | null;
+      tierDropEmailSentAt?: string | null;
+    } | null;
   }>;
   defaults: {
     accountId: string | null;
@@ -292,4 +299,3 @@ export function useRomaMe() {
     setActiveAccount,
   };
 }
-

@@ -1,21 +1,11 @@
-import type { Env, InstanceOverlayRow, L10nGenerateStateRow, TokyoMirrorQueueJob } from '../../shared/types';
+import type { Env, L10nGenerateStateRow, TokyoMirrorQueueJob } from '../../shared/types';
 import type { Policy } from '@clickeen/ck-policy';
-import { readJson } from '../../shared/http';
-import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString } from '../../shared/validation';
 import { requireTokyoBase } from '../../shared/tokyo';
 import { normalizeLocaleList } from '../../shared/l10n';
-
-type EnforcementRow = {
-  public_id: string;
-  mode: 'frozen';
-  period_key: string;
-  frozen_at: string;
-  reset_at: string;
-};
+import { loadInstanceOverlays, loadL10nGenerateStates } from '../l10n/service';
 
 type TokyoMirrorEnqueueResult = { ok: true } | { ok: false; error: string };
-type LocaleOverlayLayerKeyRow = { layer_key?: string | null };
 
 type RenderIndexEntry = { e: string; r: string; meta: string };
 type RenderPublishedPointer = { revision: string; updatedAt: string | null };
@@ -24,50 +14,9 @@ type RenderSnapshotState = {
   pointerUpdatedAt: string | null;
   current: Record<string, RenderIndexEntry> | null;
 };
-type InstanceRenderHealthStatus = 'healthy' | 'degraded' | 'error';
-type InstanceRenderHealthState = {
-  status: InstanceRenderHealthStatus;
-  reason: string | null;
-  detail: string | null;
-  updatedAt: string | null;
-};
 type WaitForEnSnapshotReadyResult =
   | { ok: true; state: RenderSnapshotState; waitedMs: number }
   | { ok: false; error: string; state: RenderSnapshotState | null; waitedMs: number };
-
-async function loadEnforcement(env: Env, publicId: string): Promise<EnforcementRow | null> {
-  const params = new URLSearchParams({
-    select: 'public_id,mode,period_key,frozen_at,reset_at',
-    public_id: `eq.${publicId}`,
-    limit: '1',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/instance_enforcement_state?${params.toString()}`, {
-    method: 'GET',
-  });
-  if (!res.ok) return null;
-  const rows = (await res.json().catch(() => null)) as EnforcementRow[] | null;
-  return rows?.[0] ?? null;
-}
-
-function normalizeActiveEnforcement(row: EnforcementRow | null): null | {
-  mode: 'frozen';
-  periodKey: string;
-  frozenAt: string;
-  resetAt: string;
-} {
-  if (!row) return null;
-  const resetAt = typeof row.reset_at === 'string' ? row.reset_at : '';
-  if (!resetAt) return null;
-  const resetMs = Date.parse(resetAt);
-  if (!Number.isFinite(resetMs)) return null;
-  if (resetMs <= Date.now()) return null;
-  return {
-    mode: 'frozen',
-    periodKey: row.period_key,
-    frozenAt: row.frozen_at,
-    resetAt: row.reset_at,
-  };
-}
 
 function normalizeOptionalBaseUrl(value: string | null | undefined): string | null {
   const trimmed = asTrimmedString(value);
@@ -115,23 +64,9 @@ async function loadPersistedLocaleOverlayKeys(
   env: Env,
   publicId: string,
 ): Promise<string[]> {
-  const params = new URLSearchParams({
-    select: 'layer_key',
-    public_id: `eq.${publicId}`,
-    layer: 'eq.locale',
-    limit: '1000',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
-    method: 'GET',
-  });
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(
-      `[ParisWorker] Failed to load persisted locale overlays (${res.status}): ${JSON.stringify(details)}`,
-    );
-  }
-  const rows = ((await res.json().catch(() => null)) as LocaleOverlayLayerKeyRow[] | null) ?? [];
+  const rows = await loadInstanceOverlays(env, publicId);
   const layerKeys = rows
+    .filter((row) => row.layer === 'locale')
     .map((row) => asTrimmedString(row.layer_key))
     .filter((value): value is string => Boolean(value));
   const normalized = normalizeLocaleList(layerKeys, 'overlay.layer_key');
@@ -201,42 +136,7 @@ async function loadL10nGenerateStatesForFingerprint(args: {
   publicId: string;
   baseFingerprint: string;
 }): Promise<Map<string, L10nGenerateStateRow>> {
-  const params = new URLSearchParams({
-    select: [
-      'public_id',
-      'layer',
-      'layer_key',
-      'base_fingerprint',
-      'base_updated_at',
-      'widget_type',
-      'account_id',
-      'status',
-      'attempts',
-      'next_attempt_at',
-      'last_attempt_at',
-      'last_error',
-      'changed_paths',
-      'removed_paths',
-    ].join(','),
-    public_id: `eq.${args.publicId}`,
-    layer: 'eq.locale',
-    base_fingerprint: `eq.${args.baseFingerprint}`,
-  });
-  const res = await supabaseFetch(args.env, `/rest/v1/l10n_generate_state?${params.toString()}`, {
-    method: 'GET',
-  });
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(
-      `[ParisWorker] Failed to load l10n generate state (${res.status}): ${JSON.stringify(details)}`,
-    );
-  }
-  const rows = (await res.json()) as L10nGenerateStateRow[];
-  const map = new Map<string, L10nGenerateStateRow>();
-  rows?.forEach((row) => {
-    if (row?.layer_key) map.set(row.layer_key, row);
-  });
-  return map;
+  return loadL10nGenerateStates(args.env, args.publicId, 'locale', args.baseFingerprint);
 }
 
 async function loadLocaleOverlayMatchesForFingerprint(args: {
@@ -244,26 +144,7 @@ async function loadLocaleOverlayMatchesForFingerprint(args: {
   publicId: string;
   baseFingerprint: string;
 }): Promise<Set<string>> {
-  const params = new URLSearchParams({
-    select: ['layer', 'layer_key', 'base_fingerprint'].join(','),
-    public_id: `eq.${args.publicId}`,
-    layer: 'eq.locale',
-    base_fingerprint: `eq.${args.baseFingerprint}`,
-  });
-  const res = await supabaseFetch(
-    args.env,
-    `/rest/v1/widget_instance_overlays?${params.toString()}`,
-    {
-      method: 'GET',
-    },
-  );
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(
-      `[ParisWorker] Failed to load locale overlay matches (${res.status}): ${JSON.stringify(details)}`,
-    );
-  }
-  const rows = (await res.json()) as InstanceOverlayRow[];
+  const rows = await loadInstanceOverlays(args.env, args.publicId);
   const out = new Set<string>();
   rows?.forEach((row) => {
     if (row?.layer !== 'locale') return;
@@ -380,42 +261,6 @@ async function loadRenderSnapshotState(args: {
   };
 }
 
-async function loadInstanceRenderHealth(
-  env: Env,
-  publicId: string,
-): Promise<InstanceRenderHealthState | null> {
-  const params = new URLSearchParams({
-    select: 'public_id,status,reason,detail,updated_at',
-    public_id: `eq.${publicId}`,
-    limit: '1',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/instance_render_health?${params.toString()}`, {
-    method: 'GET',
-  });
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(
-      `[ParisWorker] Failed to load render health (${res.status}): ${JSON.stringify(details)}`,
-    );
-  }
-  const rows = ((await res.json().catch(() => null)) as Array<{
-    status?: unknown;
-    reason?: unknown;
-    detail?: unknown;
-    updated_at?: unknown;
-  }> | null) ?? [];
-  const row = rows[0];
-  if (!row) return null;
-  const statusRaw = asTrimmedString(row.status)?.toLowerCase();
-  if (statusRaw !== 'healthy' && statusRaw !== 'degraded' && statusRaw !== 'error') return null;
-  return {
-    status: statusRaw,
-    reason: asTrimmedString(row.reason),
-    detail: asTrimmedString(row.detail),
-    updatedAt: asTrimmedString(row.updated_at),
-  };
-}
-
 function hasPointerAdvanced(args: {
   state: RenderSnapshotState;
   baselinePointerUpdatedAt: string | null;
@@ -493,14 +338,11 @@ export type { RenderIndexEntry, TokyoMirrorEnqueueResult };
 
 export {
   enqueueTokyoMirrorJob,
-  loadInstanceRenderHealth,
-  loadEnforcement,
   loadL10nGenerateStatesForFingerprint,
   loadPersistedLocaleOverlayKeys,
   loadLocaleOverlayMatchesForFingerprint,
   loadRenderIndexCurrent,
   loadRenderSnapshotState,
-  normalizeActiveEnforcement,
   resolveActivePublishLocales,
   resolveRenderSnapshotLocales,
   waitForEnSnapshotReady,

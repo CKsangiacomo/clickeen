@@ -1,63 +1,47 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
-type AccountNotice = {
-  noticeId: string;
-  kind: string;
-  payload: Record<string, unknown>;
-  createdAt: string;
-  emailPending: boolean;
-};
+type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3';
 
-type AccountNoticesResponse = {
-  accountId: string;
-  notices: AccountNotice[];
-};
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  return value as Record<string, unknown>;
+function normalizeTier(value: unknown): AccountTier | null {
+  switch (value) {
+    case 'free':
+    case 'tier1':
+    case 'tier2':
+    case 'tier3':
+      return value;
+    default:
+      return null;
+  }
 }
 
-function asString(value: unknown): string | null {
-  const trimmed = typeof value === 'string' ? value.trim() : '';
-  return trimmed || null;
+function tierRank(tier: AccountTier): number {
+  switch (tier) {
+    case 'tier3':
+      return 4;
+    case 'tier2':
+      return 3;
+    case 'tier1':
+      return 2;
+    case 'free':
+      return 1;
+    default:
+      return 0;
+  }
 }
 
-function asNumber(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  return null;
-}
-
-function summarizeTierDropNotice(notice: AccountNotice): { title: string; lines: string[] } {
-  const payload = notice.payload ?? {};
-  const fromTier = asString(payload.fromTier);
-  const toTier = asString(payload.toTier);
-  const enforcement = asRecord(payload.enforcement);
-
-  const unpublishedCount = asNumber(enforcement?.unpublishedCount);
-  const assetsPurged = enforcement?.assetsPurged === true;
-
-  const lines: string[] = [];
-  if (fromTier && toTier) {
-    lines.push(`Your plan changed from ${fromTier} → ${toTier}.`);
-  } else {
-    lines.push('Your plan changed.');
-  }
-
-  if (unpublishedCount != null && unpublishedCount > 0) {
-    lines.push(`We turned off ${unpublishedCount} instance${unpublishedCount === 1 ? '' : 's'} to match the new plan.`);
-  }
-  if (assetsPurged) {
-    lines.push('We deleted your uploaded assets to keep storage costs aligned with the new plan.');
-  }
-  lines.push('Review your account to see what stays live.');
-
-  return { title: 'Plan update', lines };
+function summarizeTierDrop(fromTier: AccountTier, toTier: AccountTier): { title: string; lines: string[] } {
+  return {
+    title: 'Plan update',
+    lines: [
+      `Your plan changed from ${fromTier} -> ${toTier}.`,
+      'Review your account to see what stays live.',
+    ],
+  };
 }
 
 export function RomaAccountNoticeModal() {
@@ -65,53 +49,30 @@ export function RomaAccountNoticeModal() {
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
 
-  const [noticesLoading, setNoticesLoading] = useState(false);
-  const [noticesError, setNoticesError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<AccountNotice | null>(null);
+  const account =
+    accountId && Array.isArray(me.data?.accounts)
+      ? me.data.accounts.find((entry) => entry?.accountId === accountId) ?? null
+      : null;
+  const lifecycle = account?.lifecycleNotice ?? null;
 
-  const refreshNotices = useCallback(async () => {
-    if (!accountId) {
-      setNotice(null);
-      setNoticesError(null);
-      return;
-    }
-    setNoticesLoading(true);
-    setNoticesError(null);
-    try {
-      const payload = await fetchParisJson<AccountNoticesResponse>(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/notices?status=open`,
-        { method: 'GET' },
-      );
-      const list = Array.isArray(payload.notices) ? payload.notices : [];
-      setNotice(list.find((entry) => entry && entry.kind === 'tier_drop') ?? null);
-      setNoticesError(null);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setNotice(null);
-      setNoticesError(message);
-    } finally {
-      setNoticesLoading(false);
-    }
-  }, [accountId]);
-
-  useEffect(() => {
-    if (me.loading || me.error || !me.data) return;
-    void refreshNotices();
-  }, [me.data, me.error, me.loading, refreshNotices]);
+  const changedAt = typeof lifecycle?.tierChangedAt === 'string' ? lifecycle.tierChangedAt : null;
+  const fromTier = normalizeTier(lifecycle?.tierChangedFrom);
+  const toTier = normalizeTier(lifecycle?.tierChangedTo);
+  const dismissedAt = typeof lifecycle?.tierDropDismissedAt === 'string' ? lifecycle.tierDropDismissedAt : null;
+  const isTierDrop = Boolean(fromTier && toTier && tierRank(toTier) < tierRank(fromTier));
+  const noticeOpen = Boolean(changedAt && isTierDrop && !dismissedAt);
 
   const [dismissError, setDismissError] = useState<string | null>(null);
   const [dismissLoading, setDismissLoading] = useState(false);
 
   const dismiss = async () => {
-    if (!accountId || !notice) return;
+    if (!accountId || !noticeOpen) return;
     setDismissLoading(true);
     setDismissError(null);
     try {
-      await fetchParisJson(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/notices/${encodeURIComponent(notice.noticeId)}/dismiss`,
-        { method: 'POST' },
-      );
-      await refreshNotices();
+      await fetchParisJson(`/api/paris/accounts/${encodeURIComponent(accountId)}/lifecycle/tier-drop/dismiss`, {
+        method: 'POST',
+      });
       await me.reload();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -122,11 +83,9 @@ export function RomaAccountNoticeModal() {
   };
 
   if (me.loading || me.error || !me.data) return null;
-  if (!accountId || !notice) return null;
-  if (noticesLoading) return null;
-  if (noticesError) return null;
+  if (!accountId || !noticeOpen || !fromTier || !toTier) return null;
 
-  const summary = summarizeTierDropNotice(notice);
+  const summary = summarizeTierDrop(fromTier, toTier);
 
   return (
     <div className="roma-modal-backdrop" role="presentation">

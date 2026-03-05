@@ -18,7 +18,6 @@ import type {
 } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { assertDevAuth } from '../../shared/auth';
-import { supabaseFetch } from '../../shared/supabase';
 import { loadAccountById } from '../../shared/accounts';
 import { issueAiGrant } from '../ai';
 import {
@@ -26,6 +25,7 @@ import {
   L10N_GENERATE_STALE_REQUEUE_MS,
   canRetryL10nGenerate,
   isL10nGenerateStatus,
+  loadAllL10nGenerateStateRows,
   loadL10nGenerateStateRow,
   resolveL10nFailureRetryState,
   toRetryExhaustedError,
@@ -189,44 +189,37 @@ async function loadPendingL10nGenerateStates(
   env: Env,
   limit = 50,
 ): Promise<L10nGenerateStateRow[]> {
-  const nowIso = new Date().toISOString();
-  const staleBeforeIso = new Date(Date.now() - L10N_GENERATE_STALE_REQUEUE_MS).toISOString();
-  const params = new URLSearchParams({
-    select: [
-      'public_id',
-      'layer',
-      'layer_key',
-      'base_fingerprint',
-      'base_updated_at',
-      'widget_type',
-      'account_id',
-      'status',
-      'attempts',
-      'next_attempt_at',
-      'last_attempt_at',
-      'last_error',
-      'changed_paths',
-      'removed_paths',
-    ].join(','),
-    layer: 'eq.locale',
-    order: 'next_attempt_at.asc.nullsfirst,last_attempt_at.asc.nullsfirst',
-    limit: String(limit),
-  });
-  params.set(
-    'or',
-    `(status.eq.dirty,and(status.eq.failed,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},next_attempt_at.lte.${nowIso}),and(status.eq.failed,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},next_attempt_at.is.null),and(status.eq.queued,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},last_attempt_at.lte.${staleBeforeIso}),and(status.eq.queued,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},last_attempt_at.is.null),and(status.eq.running,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},last_attempt_at.lte.${staleBeforeIso}),and(status.eq.running,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},last_attempt_at.is.null))`,
-  );
-  const res = await supabaseFetch(env, `/rest/v1/l10n_generate_state?${params.toString()}`, {
-    method: 'GET',
-  });
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(
-      `[ParisWorker] Failed to load pending l10n generate state (${res.status}): ${JSON.stringify(details)}`,
-    );
-  }
-  const rows = (await res.json()) as L10nGenerateStateRow[];
-  return rows?.filter(Boolean) ?? [];
+  const nowMs = Date.now();
+  const staleBeforeMs = nowMs - L10N_GENERATE_STALE_REQUEUE_MS;
+  const rows = await loadAllL10nGenerateStateRows(env);
+
+  const shouldRequeue = (row: L10nGenerateStateRow): boolean => {
+    const attempts = Math.max(0, Math.floor(row.attempts || 0));
+    if (!canRetryL10nGenerate(attempts)) return false;
+    if (row.layer !== 'locale') return false;
+    if (row.status === 'dirty') return true;
+    if (row.status === 'failed') {
+      if (!row.next_attempt_at) return true;
+      const nextAttemptMs = Date.parse(row.next_attempt_at);
+      return Number.isFinite(nextAttemptMs) ? nextAttemptMs <= nowMs : true;
+    }
+    if (row.status !== 'queued' && row.status !== 'running') return false;
+    if (!row.last_attempt_at) return true;
+    const lastAttemptMs = Date.parse(row.last_attempt_at);
+    return Number.isFinite(lastAttemptMs) ? lastAttemptMs <= staleBeforeMs : true;
+  };
+
+  const sortBySchedule = (a: L10nGenerateStateRow, b: L10nGenerateStateRow): number => {
+    const aNext = a.next_attempt_at ? Date.parse(a.next_attempt_at) : Number.NEGATIVE_INFINITY;
+    const bNext = b.next_attempt_at ? Date.parse(b.next_attempt_at) : Number.NEGATIVE_INFINITY;
+    const aLast = a.last_attempt_at ? Date.parse(a.last_attempt_at) : Number.NEGATIVE_INFINITY;
+    const bLast = b.last_attempt_at ? Date.parse(b.last_attempt_at) : Number.NEGATIVE_INFINITY;
+    const nextCmp = aNext - bNext;
+    if (nextCmp !== 0) return nextCmp;
+    return aLast - bLast;
+  };
+
+  return rows.filter(shouldRequeue).sort(sortBySchedule).slice(0, Math.max(1, limit));
 }
 
 async function requeueL10nGenerateStates(

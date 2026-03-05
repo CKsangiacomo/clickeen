@@ -1,31 +1,43 @@
-import type { AccountBusinessProfileRow, Env } from '../../shared/types';
-import { json, readJson } from '../../shared/http';
-import { supabaseFetch } from '../../shared/supabase';
+import type { Env } from '../../shared/types';
+import { json } from '../../shared/http';
 import { isRecord } from '../../shared/validation';
 import { authorizeAccount } from '../../shared/account-auth';
+
+type AccountBusinessProfileDoc = {
+  accountId: string;
+  profile: Record<string, unknown>;
+  sources?: Record<string, unknown> | null;
+  updatedAt?: string | null;
+};
+
+function requireAccountEnrichmentBucket(env: Env): R2Bucket {
+  if (!env.ACCOUNT_ENRICHMENT_R2) {
+    throw new Error('[ParisWorker] Missing ACCOUNT_ENRICHMENT_R2 binding');
+  }
+  return env.ACCOUNT_ENRICHMENT_R2;
+}
+
+function accountBusinessProfileKey(accountId: string): string {
+  return `account-enrichment/v1/accounts/${encodeURIComponent(accountId)}/profile.json`;
+}
 
 async function loadAccountBusinessProfile(
   env: Env,
   accountId: string,
-): Promise<AccountBusinessProfileRow | null> {
-  const params = new URLSearchParams({
-    select: 'account_id,profile,sources,created_at,updated_at',
-    account_id: `eq.${accountId}`,
-    limit: '1',
-  });
-  const res = await supabaseFetch(
-    env,
-    `/rest/v1/account_business_profiles?${params.toString()}`,
-    { method: 'GET' },
-  );
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(
-      `[ParisWorker] Failed to load account business profile (${res.status}): ${JSON.stringify(details)}`,
-    );
-  }
-  const rows = (await res.json()) as AccountBusinessProfileRow[];
-  return rows?.[0] ?? null;
+): Promise<AccountBusinessProfileDoc | null> {
+  const bucket = requireAccountEnrichmentBucket(env);
+  const key = accountBusinessProfileKey(accountId);
+  const obj = await bucket.get(key);
+  if (!obj) return null;
+  const payload = (await obj.json().catch(() => null)) as AccountBusinessProfileDoc | null;
+  if (!payload || typeof payload !== 'object') return null;
+  if (!isRecord(payload.profile)) return null;
+  return {
+    accountId,
+    profile: payload.profile,
+    sources: isRecord(payload.sources) ? payload.sources : null,
+    updatedAt: typeof payload.updatedAt === 'string' ? payload.updatedAt : null,
+  };
 }
 
 async function upsertAccountBusinessProfile(args: {
@@ -33,29 +45,19 @@ async function upsertAccountBusinessProfile(args: {
   accountId: string;
   profile: Record<string, unknown>;
   sources?: Record<string, unknown>;
-}): Promise<AccountBusinessProfileRow | null> {
-  const payload = {
-    account_id: args.accountId,
+}): Promise<AccountBusinessProfileDoc> {
+  const bucket = requireAccountEnrichmentBucket(args.env);
+  const updatedAt = new Date().toISOString();
+  const payload: AccountBusinessProfileDoc = {
+    accountId: args.accountId,
     profile: args.profile,
-    ...(args.sources ? { sources: args.sources } : {}),
+    sources: args.sources ?? null,
+    updatedAt,
   };
-  const res = await supabaseFetch(
-    args.env,
-    `/rest/v1/account_business_profiles?on_conflict=account_id`,
-    {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify(payload),
-    },
-  );
-  if (!res.ok) {
-    const details = await readJson(res);
-    throw new Error(
-      `[ParisWorker] Failed to upsert account business profile (${res.status}): ${JSON.stringify(details)}`,
-    );
-  }
-  const rows = (await res.json()) as AccountBusinessProfileRow[];
-  return rows?.[0] ?? null;
+  await bucket.put(accountBusinessProfileKey(args.accountId), JSON.stringify(payload), {
+    httpMetadata: { contentType: 'application/json' },
+  });
+  return payload;
 }
 
 export async function handleAccountBusinessProfileGet(
@@ -72,11 +74,11 @@ export async function handleAccountBusinessProfileGet(
     return json({
       profile: row.profile,
       sources: row.sources ?? null,
-      updatedAt: row.updated_at ?? null,
+      updatedAt: row.updatedAt ?? null,
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    return json({ error: 'DB_ERROR', detail }, { status: 500 });
+    return json({ error: 'STORAGE_ERROR', detail }, { status: 500 });
   }
 }
 
@@ -113,10 +115,10 @@ export async function handleAccountBusinessProfileUpsert(
     return json({
       profile: row?.profile ?? profile,
       sources: row?.sources ?? sources ?? null,
-      updatedAt: row?.updated_at ?? null,
+      updatedAt: row?.updatedAt ?? null,
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    return json({ error: 'DB_ERROR', detail }, { status: 500 });
+    return json({ error: 'STORAGE_ERROR', detail }, { status: 500 });
   }
 }
