@@ -127,23 +127,52 @@ function parsePositiveInt(value: unknown, fallback: number): number {
   return fallback;
 }
 
+function extractReasonKey(payload: BerlinLoginPayload | null): string {
+  const reasonKey =
+    payload && typeof payload.error === 'object' && payload.error
+      ? (payload.error as Record<string, unknown>).reasonKey
+      : null;
+  return typeof reasonKey === 'string' ? reasonKey : 'coreui.errors.auth.login_failed';
+}
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = String(url.searchParams.get('code') || '').trim();
   const state = String(url.searchParams.get('state') || '').trim();
-  if (!code || !state) {
-    const response = NextResponse.redirect(resolveLoginUrl(request, { error: 'coreui.errors.auth.provider.invalidCallback' }), {
-      headers: CACHE_HEADERS,
-    });
-    response.cookies.set({ name: LOGIN_NEXT_COOKIE, value: '', path: '/', maxAge: 0 });
-    return response;
-  }
+  const oauthError = String(url.searchParams.get('error') || '').trim();
+  const oauthErrorDescription = String(url.searchParams.get('error_description') || '').trim();
 
   let berlinBase = '';
   try {
     berlinBase = resolveBerlinBaseUrl();
   } catch {
     const response = NextResponse.redirect(resolveLoginUrl(request, { error: 'roma.errors.auth.config_missing' }), {
+      headers: CACHE_HEADERS,
+    });
+    response.cookies.set({ name: LOGIN_NEXT_COOKIE, value: '', path: '/', maxAge: 0 });
+    return response;
+  }
+
+  if (oauthError) {
+    const upstream = await fetch(
+      `${berlinBase}/auth/login/provider/callback?error=${encodeURIComponent(oauthError)}&error_description=${encodeURIComponent(oauthErrorDescription)}`,
+      {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+        cache: 'no-store',
+      },
+    );
+
+    const payload = (await upstream.json().catch(() => null)) as BerlinLoginPayload | null;
+    const response = NextResponse.redirect(resolveLoginUrl(request, { error: extractReasonKey(payload) }), {
+      headers: CACHE_HEADERS,
+    });
+    response.cookies.set({ name: LOGIN_NEXT_COOKIE, value: '', path: '/', maxAge: 0 });
+    return response;
+  }
+
+  if (!code || !state) {
+    const response = NextResponse.redirect(resolveLoginUrl(request, { error: 'coreui.errors.auth.provider.invalidCallback' }), {
       headers: CACHE_HEADERS,
     });
     response.cookies.set({ name: LOGIN_NEXT_COOKIE, value: '', path: '/', maxAge: 0 });
@@ -161,12 +190,7 @@ export async function GET(request: NextRequest) {
 
   const payload = (await upstream.json().catch(() => null)) as BerlinLoginPayload | null;
   if (!upstream.ok || !payload) {
-    const reasonKey =
-      payload && typeof payload.error === 'object' && payload.error
-        ? (payload.error as Record<string, unknown>).reasonKey
-        : null;
-    const normalizedReason = typeof reasonKey === 'string' ? reasonKey : 'coreui.errors.auth.login_failed';
-    const response = NextResponse.redirect(resolveLoginUrl(request, { error: normalizedReason }), { headers: CACHE_HEADERS });
+    const response = NextResponse.redirect(resolveLoginUrl(request, { error: extractReasonKey(payload) }), { headers: CACHE_HEADERS });
     response.cookies.set({ name: LOGIN_NEXT_COOKIE, value: '', path: '/', maxAge: 0 });
     return response;
   }

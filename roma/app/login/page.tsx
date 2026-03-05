@@ -15,8 +15,9 @@ function resolveErrorMessage(reasonKey: string | null): string {
   if (reasonKey === 'coreui.errors.auth.required') return 'Please sign in to continue.';
   if (reasonKey === 'coreui.errors.auth.invalid_credentials') return 'Invalid email or password.';
   if (reasonKey === 'coreui.errors.auth.provider.notEnabled') return 'Google login is not enabled yet for this environment.';
-  if (reasonKey === 'coreui.errors.auth.provider.denied') return 'Google sign-in was cancelled.';
+  if (reasonKey === 'coreui.errors.auth.provider.denied') return 'Google sign-in was denied or blocked. Try a different Google account or use email/password.';
   if (reasonKey === 'coreui.errors.auth.provider.invalidCallback') return 'Google sign-in failed. Try again.';
+  if (reasonKey === 'coreui.errors.auth.provider.exchangeFailed') return 'Google sign-in could not complete token exchange. Try again or use email/password.';
   if (reasonKey === 'roma.errors.auth.config_missing') return 'Auth service is not configured for Roma.';
   if (reasonKey === 'coreui.errors.auth.login_failed') return 'Sign in failed. Try again.';
   if (reasonKey) return reasonKey;
