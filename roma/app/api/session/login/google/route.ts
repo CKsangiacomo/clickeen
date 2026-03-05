@@ -62,7 +62,21 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const response = NextResponse.redirect(oauthUrl, { headers: CACHE_HEADERS });
+  let redirectUrl = oauthUrl;
+  try {
+    // Force provider return to Roma login so we can always complete in one place
+    // (query code/state OR hash tokens), independent of callback quirks.
+    const parsed = new URL(oauthUrl);
+    parsed.searchParams.set('redirect_to', new URL('/login', request.url).toString());
+    parsed.searchParams.delete('code_challenge');
+    parsed.searchParams.delete('code_challenge_method');
+    parsed.searchParams.delete('state');
+    redirectUrl = parsed.toString();
+  } catch {
+    redirectUrl = oauthUrl;
+  }
+
+  const response = NextResponse.redirect(redirectUrl, { headers: CACHE_HEADERS });
   const secure = request.nextUrl.protocol === 'https:';
   response.cookies.set({
     name: LOGIN_NEXT_COOKIE,

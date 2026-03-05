@@ -54,9 +54,21 @@ export default function RomaLoginPage() {
 
   useEffect(() => {
     const hash = window.location.hash;
-    if (!hash || !hash.includes('refresh_token=')) return;
+    if (!hash) return;
 
     const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+    const hashError = hashParams.get('error')?.trim() || '';
+    const hashErrorDescription = hashParams.get('error_description')?.trim() || '';
+    if (hashError) {
+      setError(resolveErrorMessage('coreui.errors.auth.provider.denied'));
+      if (hashErrorDescription) {
+        console.warn('[Roma] Google OAuth hash error:', hashErrorDescription);
+      }
+      const cleanUrl = `${window.location.pathname}${window.location.search}`;
+      window.history.replaceState(null, '', cleanUrl);
+      return;
+    }
+
     const refreshToken = hashParams.get('refresh_token')?.trim() || '';
     if (!refreshToken) return;
 
