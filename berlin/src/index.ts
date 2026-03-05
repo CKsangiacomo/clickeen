@@ -1006,10 +1006,17 @@ async function requestSupabaseOAuthUrl(
   params.set('state', args.state);
   params.set('code_challenge', args.codeChallenge);
   params.set('code_challenge_method', 's256');
-  params.set('skip_http_redirect', 'true');
   if (args.scopes) params.set('scopes', args.scopes);
 
-  const endpoint = args.link ? '/auth/v1/user/identities/authorize' : '/auth/v1/authorize';
+  // Standard login should be browser-redirected so Supabase owns PKCE cookies.
+  if (!args.link) {
+    const url = `${config.baseUrl}/auth/v1/authorize?${params.toString()}`;
+    return { ok: true, url };
+  }
+
+  // Link flow requires backend request with bearer user context.
+  params.set('skip_http_redirect', 'true');
+  const endpoint = '/auth/v1/user/identities/authorize';
   const headers: Record<string, string> = {
     apikey: config.anonKey,
     accept: 'application/json',
@@ -1044,7 +1051,7 @@ async function requestSupabaseOAuthUrl(
     return {
       ok: false,
       status: response.status === 401 ? 401 : 502,
-      reason: args.link ? 'coreui.errors.auth.provider.linkFailed' : 'coreui.errors.auth.provider.notEnabled',
+      reason: 'coreui.errors.auth.provider.linkFailed',
       detail,
     };
   }
@@ -1417,42 +1424,6 @@ async function handleProviderLoginCallback(request: Request, env: Env): Promise<
   });
 }
 
-async function handleProviderLoginFragment(request: Request, env: Env): Promise<Response> {
-  const body = await readJsonBody(request);
-  const refreshToken = claimAsString(body?.refreshToken);
-  if (!refreshToken) return validationError('coreui.errors.auth.provider.invalidCallback');
-
-  const grant = await requestSupabaseRefreshGrant(env, refreshToken);
-  if (!grant.ok) return authError('coreui.errors.auth.provider.exchangeFailed', grant.status, grant.detail || grant.reason);
-
-  const nowSec = Math.floor(Date.now() / 1000);
-  const supabaseAccessToken = claimAsString(grant.payload.access_token);
-  const supabaseRefreshToken = claimAsString(grant.payload.refresh_token);
-  const userId = resolveUserIdFromSupabaseResponse(grant.payload);
-  if (!supabaseAccessToken || !supabaseRefreshToken || !userId) {
-    return authError('coreui.errors.auth.provider.exchangeFailed', 502);
-  }
-
-  const session = await issueSession(env, {
-    userId,
-    supabaseRefreshToken,
-    supabaseAccessToken,
-    supabaseAccessExp: resolveSupabaseAccessExp(nowSec, grant.payload),
-  });
-
-  return json({
-    ok: true,
-    provider: 'google',
-    sessionId: session.sid,
-    userId,
-    accessToken: session.accessToken,
-    refreshToken: session.refreshToken,
-    accessTokenMaxAge: session.accessTokenMaxAge,
-    refreshTokenMaxAge: session.refreshTokenMaxAge,
-    expiresAt: session.expiresAt,
-  });
-}
-
 async function handleLinkStart(request: Request, env: Env): Promise<Response> {
   const principal = await resolvePrincipalSession(request, env);
   if (!principal.ok) return principal.response;
@@ -1809,11 +1780,6 @@ export default {
       if (pathname === '/auth/login/provider/callback') {
         if (request.method !== 'GET') return methodNotAllowed();
         return await handleProviderLoginCallback(request, env);
-      }
-
-      if (pathname === '/auth/login/provider/fragment') {
-        if (request.method !== 'POST') return methodNotAllowed();
-        return await handleProviderLoginFragment(request, env);
       }
 
       if (pathname === '/auth/link/start') {
