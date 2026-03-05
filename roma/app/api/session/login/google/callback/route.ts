@@ -78,16 +78,6 @@ function clearCookieOnExtraDomains(
   extraDomains: string[],
   cookieName: string,
 ) {
-  response.cookies.set({
-    name: cookieName,
-    value: '',
-    httpOnly: true,
-    secure: options.secure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 0,
-  });
-
   for (const domain of extraDomains) {
     if (!domain) continue;
     response.cookies.set({
