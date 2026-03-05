@@ -4,7 +4,6 @@ type Env = {
   BERLIN_ISSUER?: string;
   BERLIN_AUDIENCE?: string;
   BERLIN_REFRESH_SECRET?: string;
-  BERLIN_OAUTH_STATE_SECRET?: string;
   BERLIN_ALLOWED_PROVIDERS?: string;
   BERLIN_LOGIN_CALLBACK_URL?: string;
   BERLIN_ACCESS_PRIVATE_KEY_PEM?: string;
@@ -94,13 +93,13 @@ type SessionState = {
   updatedAt: number;
 };
 
-type SignedStatePayload = {
+type OAuthTransaction = {
   v: 1;
   flow: 'login' | 'link';
   provider: string;
   codeVerifier: string;
-  iat: number;
-  exp: number;
+  createdAt: number;
+  expiresAt: number;
   sid?: string;
   userId?: string;
 };
@@ -160,10 +159,10 @@ const DEFAULT_REFRESH_SECRET = 'berlin-local-refresh-secret-change-me';
 
 const SIGNING_CONTEXT_KEY = '__CK_BERLIN_SIGNING_CONTEXT_V2__';
 const REFRESH_KEY_CACHE = '__CK_BERLIN_REFRESH_KEY_V2__';
-const OAUTH_STATE_KEY_CACHE = '__CK_BERLIN_OAUTH_STATE_KEY_V1__';
 
 const SESSION_KV_PREFIX = 'berlin:session:v1';
 const USER_INDEX_KV_PREFIX = 'berlin:user-sessions:v1';
+const OAUTH_TXN_KV_PREFIX = 'berlin:oauth-txn:v1';
 
 const CACHE_HEADERS = {
   'cache-control': 'no-store',
@@ -454,6 +453,72 @@ function userSessionIndexKvKey(userId: string): string {
   return `${USER_INDEX_KV_PREFIX}:${userId}`;
 }
 
+function oauthTxnKvKey(stateId: string): string {
+  return `${OAUTH_TXN_KV_PREFIX}:${stateId}`;
+}
+
+function createOauthStateId(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  return toBase64Url(bytes);
+}
+
+function isValidOauthStateId(value: string | null): value is string {
+  if (!value) return false;
+  return /^[A-Za-z0-9_-]{16,120}$/.test(value);
+}
+
+function toOauthTransaction(value: unknown): OAuthTransaction | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const version = claimAsNumber(record.v);
+  const flow = claimAsString(record.flow);
+  const provider = normalizeProvider(record.provider);
+  const codeVerifier = claimAsString(record.codeVerifier);
+  const createdAt = claimAsNumber(record.createdAt);
+  const expiresAt = claimAsNumber(record.expiresAt);
+  const sid = claimAsString(record.sid) || undefined;
+  const userId = claimAsString(record.userId) || undefined;
+
+  if (version !== 1) return null;
+  if ((flow !== 'login' && flow !== 'link') || !provider || !codeVerifier) return null;
+  if (!createdAt || !expiresAt || expiresAt <= createdAt) return null;
+  if (flow === 'link' && (!sid || !userId)) return null;
+
+  return {
+    v: 1,
+    flow,
+    provider,
+    codeVerifier,
+    createdAt,
+    expiresAt,
+    ...(sid ? { sid } : {}),
+    ...(userId ? { userId } : {}),
+  };
+}
+
+async function saveOauthTransaction(env: Env, stateId: string, txn: OAuthTransaction): Promise<boolean> {
+  const kv = env.BERLIN_SESSION_KV;
+  if (!kv) return false;
+  await kv.put(oauthTxnKvKey(stateId), JSON.stringify(txn), {
+    expirationTtl: OAUTH_STATE_TTL_SECONDS + 60,
+  });
+  return true;
+}
+
+async function consumeOauthTransaction(env: Env, stateId: string): Promise<OAuthTransaction | null> {
+  const kv = env.BERLIN_SESSION_KV;
+  if (!kv) return null;
+  const key = oauthTxnKvKey(stateId);
+  const raw = await kv.get(key, 'json').catch(() => null);
+  await kv.delete(key).catch(() => undefined);
+
+  const txn = toOauthTransaction(raw);
+  if (!txn) return null;
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (txn.expiresAt <= nowSec) return null;
+  return txn;
+}
+
 function toSessionState(value: unknown): SessionState | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
@@ -676,23 +741,6 @@ async function deriveNextRti(env: Env, args: { sid: string; ver: number; rti: st
   return toBase64Url(new Uint8Array(signature));
 }
 
-async function resolveOauthStateHmacKey(env: Env): Promise<CryptoKey> {
-  const scope = globalThis as Record<string, unknown>;
-  const cached = scope[OAUTH_STATE_KEY_CACHE];
-  if (cached instanceof CryptoKey) return cached;
-
-  const secret =
-    (typeof env.BERLIN_OAUTH_STATE_SECRET === 'string' ? env.BERLIN_OAUTH_STATE_SECRET.trim() : '') ||
-    (typeof env.BERLIN_REFRESH_SECRET === 'string' ? env.BERLIN_REFRESH_SECRET.trim() : '') ||
-    `${DEFAULT_REFRESH_SECRET}:oauth-state`;
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, [
-    'sign',
-    'verify',
-  ]);
-  scope[OAUTH_STATE_KEY_CACHE] = key;
-  return key;
-}
-
 async function signAccessToken(claims: AccessClaims, env: Env): Promise<string> {
   const context = await resolveSigningContext(env);
   const header: JwtHeader = {
@@ -829,35 +877,6 @@ async function verifyRefreshToken(token: string, env: Env, options: { allowExpir
   }
 
   return { ok: true, payload };
-}
-
-async function encodeSignedState(payload: SignedStatePayload, env: Env): Promise<string> {
-  const body = encodeJsonBase64Url(payload);
-  const key = await resolveOauthStateHmacKey(env);
-  const signature = await crypto.subtle.sign('HMAC', key, enc.encode(body));
-  return `${body}.${toBase64Url(new Uint8Array(signature))}`;
-}
-
-async function decodeSignedState(value: string, env: Env): Promise<SignedStatePayload | null> {
-  const parts = value.split('.');
-  if (parts.length !== 2) return null;
-  const body = parts[0] || '';
-  const signature = fromBase64Url(parts[1] || '');
-  if (!signature) return null;
-
-  const key = await resolveOauthStateHmacKey(env);
-  const verified = await crypto.subtle.verify('HMAC', key, toArrayBuffer(signature), enc.encode(body));
-  if (!verified) return null;
-
-  const payload = decodeJsonBase64Url<SignedStatePayload>(body);
-  if (!payload || payload.v !== 1) return null;
-
-  const nowSec = Math.floor(Date.now() / 1000);
-  if (!payload.exp || payload.exp <= nowSec) return null;
-  if (!payload.iat || payload.iat > nowSec + ACCESS_TOKEN_SKEW_SECONDS) return null;
-  if (!payload.provider || !payload.codeVerifier || !payload.flow) return null;
-
-  return payload;
 }
 
 function createPkceCodeVerifier(): string {
@@ -1311,36 +1330,35 @@ async function handleProviderLoginStart(request: Request, env: Env): Promise<Res
     return authError('coreui.errors.auth.provider.notEnabled', 422, `provider=${provider}`);
   }
 
-  const supabase = resolveSupabaseConfig(env);
-  if (!supabase) return authError('berlin.errors.auth.config_missing', 503);
-
   const codeVerifier = createPkceCodeVerifier();
   const codeChallenge = await createPkceCodeChallenge(codeVerifier);
   const nowSec = Math.floor(Date.now() / 1000);
-  const statePayload: SignedStatePayload = {
+  const stateId = createOauthStateId();
+  const transaction: OAuthTransaction = {
     v: 1,
     flow: 'login',
     provider,
     codeVerifier,
-    iat: nowSec,
-    exp: nowSec + OAUTH_STATE_TTL_SECONDS,
+    createdAt: nowSec,
+    expiresAt: nowSec + OAUTH_STATE_TTL_SECONDS,
   };
-  const state = await encodeSignedState(statePayload, env);
+  const stored = await saveOauthTransaction(env, stateId, transaction);
+  if (!stored) return authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_state_store');
 
   const callbackUrl = resolveLoginCallbackUrl(env);
-  const params = new URLSearchParams();
-  params.set('provider', provider);
-  params.set('redirect_to', callbackUrl);
-  params.set('state', state);
-  params.set('code_challenge', codeChallenge);
-  params.set('code_challenge_method', 's256');
-  const oauthUrl = `${supabase.baseUrl}/auth/v1/authorize?${params.toString()}`;
+  const oauth = await requestSupabaseOAuthUrl(env, {
+    provider,
+    redirectTo: callbackUrl,
+    state: stateId,
+    codeChallenge,
+  });
+  if (!oauth.ok) return authError(oauth.reason, oauth.status, oauth.detail);
 
   return json({
     ok: true,
     provider,
-    url: oauthUrl,
-    expiresAt: new Date(statePayload.exp * 1000).toISOString(),
+    url: oauth.url,
+    expiresAt: new Date(transaction.expiresAt * 1000).toISOString(),
   });
 }
 
@@ -1353,16 +1371,21 @@ async function handleProviderLoginCallback(request: Request, env: Env): Promise<
   }
 
   const authCode = claimAsString(url.searchParams.get('code'));
-  const stateToken = claimAsString(url.searchParams.get('state'));
-  if (!authCode || !stateToken) return validationError('coreui.errors.auth.provider.invalidCallback');
+  const stateId = claimAsString(url.searchParams.get('state'));
+  if (!authCode || !isValidOauthStateId(stateId)) return validationError('coreui.errors.auth.provider.invalidCallback');
 
-  const state = await decodeSignedState(stateToken, env);
-  if (!state || state.flow !== 'login') return validationError('coreui.errors.auth.provider.invalidCallback');
+  if (!env.BERLIN_SESSION_KV) {
+    return authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_state_store');
+  }
+  const transaction = await consumeOauthTransaction(env, stateId);
+  if (!transaction || transaction.flow !== 'login') return validationError('coreui.errors.auth.provider.invalidCallback');
 
   const allowed = parseAllowedProviders(env);
-  if (!allowed.has(state.provider)) return authError('coreui.errors.auth.provider.notEnabled', 422, `provider=${state.provider}`);
+  if (!allowed.has(transaction.provider)) {
+    return authError('coreui.errors.auth.provider.notEnabled', 422, `provider=${transaction.provider}`);
+  }
 
-  const grant = await requestSupabasePkceGrant(env, authCode, state.codeVerifier);
+  const grant = await requestSupabasePkceGrant(env, authCode, transaction.codeVerifier);
   if (!grant.ok) return authError(grant.reason, grant.status, grant.detail);
 
   const nowSec = Math.floor(Date.now() / 1000);
@@ -1382,7 +1405,7 @@ async function handleProviderLoginCallback(request: Request, env: Env): Promise<
 
   return json({
     ok: true,
-    provider: state.provider,
+    provider: transaction.provider,
     sessionId: session.sid,
     userId,
     accessToken: session.accessToken,
@@ -1422,23 +1445,25 @@ async function handleLinkStart(request: Request, env: Env): Promise<Response> {
   const codeVerifier = createPkceCodeVerifier();
   const codeChallenge = await createPkceCodeChallenge(codeVerifier);
   const nowSec = Math.floor(Date.now() / 1000);
-  const statePayload: SignedStatePayload = {
+  const stateId = createOauthStateId();
+  const transaction: OAuthTransaction = {
     v: 1,
     flow: 'link',
     provider,
     codeVerifier,
     sid: principal.sid,
     userId: principal.userId,
-    iat: nowSec,
-    exp: nowSec + OAUTH_STATE_TTL_SECONDS,
+    createdAt: nowSec,
+    expiresAt: nowSec + OAUTH_STATE_TTL_SECONDS,
   };
-  const state = await encodeSignedState(statePayload, env);
+  const stored = await saveOauthTransaction(env, stateId, transaction);
+  if (!stored) return authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_state_store');
 
   const callbackUrl = `${resolveIssuer(env)}/auth/link/callback`;
   const oauth = await requestSupabaseOAuthUrl(env, {
     provider,
     redirectTo: callbackUrl,
-    state,
+    state: stateId,
     codeChallenge,
     jwt: supabaseAuth.accessToken,
     link: true,
@@ -1449,7 +1474,7 @@ async function handleLinkStart(request: Request, env: Env): Promise<Response> {
     ok: true,
     provider,
     url: oauth.url,
-    expiresAt: new Date(statePayload.exp * 1000).toISOString(),
+    expiresAt: new Date(transaction.expiresAt * 1000).toISOString(),
   });
 }
 
@@ -1462,22 +1487,27 @@ async function handleLinkCallback(request: Request, env: Env): Promise<Response>
   }
 
   const authCode = claimAsString(url.searchParams.get('code'));
-  const stateToken = claimAsString(url.searchParams.get('state'));
-  if (!authCode || !stateToken) return validationError('coreui.errors.auth.provider.invalidCallback');
+  const stateId = claimAsString(url.searchParams.get('state'));
+  if (!authCode || !isValidOauthStateId(stateId)) return validationError('coreui.errors.auth.provider.invalidCallback');
 
-  const state = await decodeSignedState(stateToken, env);
-  if (!state || state.flow !== 'link' || !state.sid || !state.userId) {
+  if (!env.BERLIN_SESSION_KV) {
+    return authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_state_store');
+  }
+  const transaction = await consumeOauthTransaction(env, stateId);
+  if (!transaction || transaction.flow !== 'link' || !transaction.sid || !transaction.userId) {
     return validationError('coreui.errors.auth.provider.invalidCallback');
   }
 
   const allowed = parseAllowedProviders(env);
-  if (!allowed.has(state.provider)) return authError('coreui.errors.auth.provider.notEnabled', 422, `provider=${state.provider}`);
+  if (!allowed.has(transaction.provider)) {
+    return authError('coreui.errors.auth.provider.notEnabled', 422, `provider=${transaction.provider}`);
+  }
 
-  const existing = await loadSessionState(env, state.sid);
+  const existing = await loadSessionState(env, transaction.sid);
   if (!existing || existing.revoked) return authError('coreui.errors.auth.required', 401, 'session_revoked');
-  if (existing.userId !== state.userId) return authError('coreui.errors.auth.required', 401, 'session_subject_mismatch');
+  if (existing.userId !== transaction.userId) return authError('coreui.errors.auth.required', 401, 'session_subject_mismatch');
 
-  const grant = await requestSupabasePkceGrant(env, authCode, state.codeVerifier);
+  const grant = await requestSupabasePkceGrant(env, authCode, transaction.codeVerifier);
   if (!grant.ok) return authError(grant.reason, grant.status, grant.detail);
 
   const nowSec = Math.floor(Date.now() / 1000);
@@ -1488,12 +1518,12 @@ async function handleLinkCallback(request: Request, env: Env): Promise<Response>
     return authError('coreui.errors.auth.provider.linkFailed', 502);
   }
 
-  if (userId !== state.userId) {
+  if (userId !== transaction.userId) {
     return conflictError('coreui.errors.auth.provider.linkConflict', 'provider_identity_owned_by_another_user');
   }
 
   const session = await issueSession(env, {
-    sid: state.sid,
+    sid: transaction.sid,
     ver: existing.ver,
     userId,
     supabaseRefreshToken,
@@ -1503,7 +1533,7 @@ async function handleLinkCallback(request: Request, env: Env): Promise<Response>
 
   return json({
     ok: true,
-    provider: state.provider,
+    provider: transaction.provider,
     sessionId: session.sid,
     userId,
     accessToken: session.accessToken,

@@ -208,6 +208,9 @@ export async function GET(request: NextRequest) {
   const nextPath = resolveNextPath(request.cookies.get(LOGIN_NEXT_COOKIE)?.value ?? null);
   const postLoginUrl = new URL('/api/session/post-login', request.url);
   postLoginUrl.searchParams.set('next', nextPath);
+  if (request.nextUrl.protocol === 'https:' || request.headers.get('x-forwarded-proto') === 'https') {
+    postLoginUrl.protocol = 'https:';
+  }
   const response = NextResponse.redirect(postLoginUrl, { headers: CACHE_HEADERS });
 
   const accessMaxAge = parsePositiveInt(payload.accessTokenMaxAge, 15 * 60);

@@ -47,6 +47,9 @@ Internal:
 - Session state persistence:
   - `BERLIN_SESSION_KV` (authoritative state in cloud-dev/prod, local-bound in local env)
   - in-memory cache as runtime optimization
+- OAuth transaction state:
+  - One-time opaque `state` IDs are persisted in `BERLIN_SESSION_KV` with short TTL
+  - PKCE verifier + flow metadata are never encoded in callback URLs
 
 ## Dependencies
 
@@ -65,7 +68,6 @@ Recommended:
 - `BERLIN_AUDIENCE`
 - `BERLIN_REFRESH_SECRET`
 - `BERLIN_ALLOWED_PROVIDERS` (default: `google`)
-- `BERLIN_OAUTH_STATE_SECRET` (defaults to refresh secret when omitted)
 - `BERLIN_LOGIN_CALLBACK_URL` (OAuth redirect target for Google login; cloud-dev should point at Roma)
 
 Optional key override:

@@ -45,7 +45,7 @@ export function resolveBerlinBaseUrl(): string {
         process.env.VERCEL ||
         process.env.NETLIFY),
   );
-  if (!isCloudEnv) return 'https://berlin.dev.clickeen.com';
+  if (!isCloudEnv) return 'http://localhost:3005';
 
   throw new Error('[Roma] Missing BERLIN_BASE_URL (base URL for Berlin auth service; Roma is cloud-only)');
 }
