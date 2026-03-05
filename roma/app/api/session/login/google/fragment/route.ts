@@ -70,27 +70,6 @@ function clearCookie(
   }
 }
 
-function clearCookieOnExtraDomains(
-  response: NextResponse,
-  options: { secure: boolean },
-  extraDomains: string[],
-  cookieName: string,
-) {
-  for (const domain of extraDomains) {
-    if (!domain) continue;
-    response.cookies.set({
-      name: cookieName,
-      value: '',
-      httpOnly: true,
-      secure: options.secure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 0,
-      domain,
-    });
-  }
-}
-
 function parsePositiveInt(value: unknown, fallback: number): number {
   if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.floor(value);
   if (typeof value === 'string') {
@@ -161,8 +140,5 @@ export async function POST(request: NextRequest) {
 
   clearCookie(response, cookieOptions, legacyDomains, LEGACY_ACCESS_COOKIE);
   clearCookie(response, cookieOptions, legacyDomains, LEGACY_REFRESH_COOKIE);
-  clearCookieOnExtraDomains(response, { secure: cookieOptions.secure }, legacyDomains, cookieNames.access);
-  clearCookieOnExtraDomains(response, { secure: cookieOptions.secure }, legacyDomains, cookieNames.refresh);
-
   return response;
 }

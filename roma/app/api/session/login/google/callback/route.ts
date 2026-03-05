@@ -72,27 +72,6 @@ function clearCookie(
   }
 }
 
-function clearCookieOnExtraDomains(
-  response: NextResponse,
-  options: { secure: boolean },
-  extraDomains: string[],
-  cookieName: string,
-) {
-  for (const domain of extraDomains) {
-    if (!domain) continue;
-    response.cookies.set({
-      name: cookieName,
-      value: '',
-      httpOnly: true,
-      secure: options.secure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 0,
-      domain,
-    });
-  }
-}
-
 function resolveNextPath(value: string | null): string {
   const normalized = String(value || '').trim();
   if (!normalized.startsWith('/')) return '/home';
@@ -231,11 +210,6 @@ export async function GET(request: NextRequest) {
   // Clear legacy Supabase cookies during boundary cutover.
   clearCookie(response, cookieOptions, legacyDomains, LEGACY_ACCESS_COOKIE);
   clearCookie(response, cookieOptions, legacyDomains, LEGACY_REFRESH_COOKIE);
-
-  // Clear historical broad-domain session cookies so they cannot shadow cloud-dev (`.dev.clickeen.com`) sessions.
-  const names = resolveSessionCookieNames();
-  clearCookieOnExtraDomains(response, { secure: cookieOptions.secure }, legacyDomains, names.access);
-  clearCookieOnExtraDomains(response, { secure: cookieOptions.secure }, legacyDomains, names.refresh);
 
   return response;
 }
