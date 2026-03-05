@@ -510,7 +510,6 @@ async function consumeOauthTransaction(env: Env, stateId: string): Promise<OAuth
   if (!kv) return null;
   const key = oauthTxnKvKey(stateId);
   const raw = await kv.get(key, 'json').catch(() => null);
-  await kv.delete(key).catch(() => undefined);
 
   const txn = toOauthTransaction(raw);
   if (!txn) return null;
@@ -1334,6 +1333,8 @@ async function handleProviderLoginStart(request: Request, env: Env): Promise<Res
   const codeChallenge = await createPkceCodeChallenge(codeVerifier);
   const nowSec = Math.floor(Date.now() / 1000);
   const stateId = createOauthStateId();
+  const supabase = resolveSupabaseConfig(env);
+  if (!supabase) return authError('berlin.errors.auth.config_missing', 503);
   const transaction: OAuthTransaction = {
     v: 1,
     flow: 'login',
@@ -1346,18 +1347,18 @@ async function handleProviderLoginStart(request: Request, env: Env): Promise<Res
   if (!stored) return authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_state_store');
 
   const callbackUrl = resolveLoginCallbackUrl(env);
-  const oauth = await requestSupabaseOAuthUrl(env, {
-    provider,
-    redirectTo: callbackUrl,
-    state: stateId,
-    codeChallenge,
-  });
-  if (!oauth.ok) return authError(oauth.reason, oauth.status, oauth.detail);
+  const params = new URLSearchParams();
+  params.set('provider', provider);
+  params.set('redirect_to', callbackUrl);
+  params.set('state', stateId);
+  params.set('code_challenge', codeChallenge);
+  params.set('code_challenge_method', 's256');
+  const oauthUrl = `${supabase.baseUrl}/auth/v1/authorize?${params.toString()}`;
 
   return json({
     ok: true,
     provider,
-    url: oauth.url,
+    url: oauthUrl,
     expiresAt: new Date(transaction.expiresAt * 1000).toISOString(),
   });
 }
