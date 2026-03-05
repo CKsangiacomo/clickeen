@@ -36,6 +36,7 @@ export default function RomaLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleCompleting, setGoogleCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,9 +45,62 @@ export default function RomaLoginPage() {
     setError(resolveErrorMessage(reason));
   }, [searchParams]);
 
+  useEffect(() => {
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    if (!code || !state) return;
+    window.location.replace(`/api/session/login/google/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('refresh_token=')) return;
+
+    const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+    const refreshToken = hashParams.get('refresh_token')?.trim() || '';
+    if (!refreshToken) return;
+
+    const cleanUrl = `${window.location.pathname}${window.location.search}`;
+    window.history.replaceState(null, '', cleanUrl);
+
+    let cancelled = false;
+    setGoogleCompleting(true);
+    setError(null);
+
+    (async () => {
+      const response = await fetch('/api/session/login/google/fragment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ refreshToken }),
+      });
+      const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+      if (!response.ok) {
+        const reason =
+          typeof payload?.error === 'string'
+            ? payload.error
+            : payload?.error && typeof payload.error === 'object'
+              ? (payload.error as Record<string, unknown>).reasonKey
+              : null;
+        if (!cancelled) {
+          setError(resolveErrorMessage(typeof reason === 'string' ? reason : 'coreui.errors.auth.login_failed'));
+          setGoogleCompleting(false);
+        }
+        return;
+      }
+      if (cancelled) return;
+      router.replace(`/api/session/post-login?next=${encodeURIComponent(nextPath)}`);
+      router.refresh();
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [nextPath, router]);
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (loading) return;
+    if (loading || googleCompleting) return;
     setLoading(true);
     setError(null);
 
@@ -83,7 +137,7 @@ export default function RomaLoginPage() {
           <p className="body-m">Use Google (cloud-dev) or local email/password (local).</p>
           <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start', marginBottom: 18 }}>
             <a className="diet-btn-txt" data-size="lg" data-variant="primary" href={googleLoginHref}>
-              <span className="diet-btn-txt__label body-l">Continue with Google</span>
+              <span className="diet-btn-txt__label body-l">{googleCompleting ? 'Completing Google sign-in...' : 'Continue with Google'}</span>
             </a>
           </div>
           <form className="roma-inline-stack" onSubmit={onSubmit}>

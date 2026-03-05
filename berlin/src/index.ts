@@ -1417,6 +1417,42 @@ async function handleProviderLoginCallback(request: Request, env: Env): Promise<
   });
 }
 
+async function handleProviderLoginFragment(request: Request, env: Env): Promise<Response> {
+  const body = await readJsonBody(request);
+  const refreshToken = claimAsString(body?.refreshToken);
+  if (!refreshToken) return validationError('coreui.errors.auth.provider.invalidCallback');
+
+  const grant = await requestSupabaseRefreshGrant(env, refreshToken);
+  if (!grant.ok) return authError('coreui.errors.auth.provider.exchangeFailed', grant.status, grant.detail || grant.reason);
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const supabaseAccessToken = claimAsString(grant.payload.access_token);
+  const supabaseRefreshToken = claimAsString(grant.payload.refresh_token);
+  const userId = resolveUserIdFromSupabaseResponse(grant.payload);
+  if (!supabaseAccessToken || !supabaseRefreshToken || !userId) {
+    return authError('coreui.errors.auth.provider.exchangeFailed', 502);
+  }
+
+  const session = await issueSession(env, {
+    userId,
+    supabaseRefreshToken,
+    supabaseAccessToken,
+    supabaseAccessExp: resolveSupabaseAccessExp(nowSec, grant.payload),
+  });
+
+  return json({
+    ok: true,
+    provider: 'google',
+    sessionId: session.sid,
+    userId,
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
+    accessTokenMaxAge: session.accessTokenMaxAge,
+    refreshTokenMaxAge: session.refreshTokenMaxAge,
+    expiresAt: session.expiresAt,
+  });
+}
+
 async function handleLinkStart(request: Request, env: Env): Promise<Response> {
   const principal = await resolvePrincipalSession(request, env);
   if (!principal.ok) return principal.response;
@@ -1773,6 +1809,11 @@ export default {
       if (pathname === '/auth/login/provider/callback') {
         if (request.method !== 'GET') return methodNotAllowed();
         return await handleProviderLoginCallback(request, env);
+      }
+
+      if (pathname === '/auth/login/provider/fragment') {
+        if (request.method !== 'POST') return methodNotAllowed();
+        return await handleProviderLoginFragment(request, env);
       }
 
       if (pathname === '/auth/link/start') {
