@@ -97,48 +97,6 @@ function assertInternalAuth(request: Request, env: Env): void {
   }
 }
 
-async function persistAccountBusinessProfile(args: {
-  env: Env;
-  accountId: string;
-  profile: Record<string, unknown>;
-  sources?: Record<string, unknown>;
-}): Promise<{ ok: true } | { ok: false; message: string }> {
-  const baseUrl = asTrimmedString(args.env.PARIS_BASE_URL);
-  if (!baseUrl) {
-    return { ok: false, message: 'Missing PARIS_BASE_URL' };
-  }
-  const token = asTrimmedString(args.env.PARIS_DEV_JWT);
-  if (!token) {
-    return { ok: false, message: 'Missing PARIS_DEV_JWT' };
-  }
-
-  const url = new URL(`/api/accounts/${encodeURIComponent(args.accountId)}/business-profile`, baseUrl).toString();
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        profile: args.profile,
-        ...(args.sources ? { sources: args.sources } : {}),
-      }),
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { ok: false, message: `Paris request failed: ${message}` };
-  }
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    return { ok: false, message: `Paris returned ${res.status}: ${text || 'error'}` };
-  }
-
-  return { ok: true };
-}
-
 function toIsoDay(ms: number): string {
   try {
     return new Date(ms).toISOString().slice(0, 10);
@@ -200,8 +158,6 @@ type OnboardingJobRecord = {
   result?: PersonalizationOnboardingResult;
   usage?: Usage;
   error?: { message: string };
-  persisted?: boolean;
-  persistError?: string;
 };
 
 function isSanfranciscoCommandMessage(value: unknown): value is SanfranciscoCommandMessage {
@@ -951,30 +907,12 @@ async function runPersonalizationOnboardingJob(args: {
 
   try {
     const { result, usage } = await executePersonalizationOnboarding({ env: args.env, grant: args.grant, input: args.input });
-    const sourcesMeta: Record<string, unknown> = {
-      sourcesUsed: result.sourcesUsed,
-      confidence: result.confidence,
-      ...(result.recommendations ? { recommendations: result.recommendations } : {}),
-      ...(result.notes ? { notes: result.notes } : {}),
-      inputUrl: args.input.url,
-      locale: args.input.locale ?? null,
-      agentId: 'agent.personalization.onboarding.v1',
-    };
-
-    const persist = await persistAccountBusinessProfile({
-      env: args.env,
-      accountId: args.input.accountId,
-      profile: result.businessProfile,
-      sources: sourcesMeta,
-    });
 
     const completed: OnboardingJobRecord = {
       ...runningRecord,
       status: 'completed',
       result,
       usage,
-      persisted: persist.ok,
-      ...(persist.ok ? {} : { persistError: persist.message }),
       updatedAtMs: Date.now(),
     };
     await saveOnboardingJob(args.env, completed);
@@ -1088,7 +1026,6 @@ async function handlePersonalizationOnboardingStatus(request: Request, env: Env,
       status: record.status,
       ...(record.result ? { result: record.result } : {}),
       ...(record.error ? { error: record.error } : {}),
-      ...(record.persisted === false ? { persistError: record.persistError } : {}),
       updatedAtMs: record.updatedAtMs,
     }),
   );

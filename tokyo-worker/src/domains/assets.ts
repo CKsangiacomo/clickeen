@@ -510,7 +510,6 @@ export async function deleteAccountAssetByIdentity(env: Env, accountId: string, 
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
-  handleGetAccountAssetMetadata,
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
   handleListAccountAssetMetadata,

@@ -3,15 +3,10 @@ import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import { resolveParisBaseUrl } from '../../../../lib/env/paris';
 import {
   applySessionCookies,
-  resolveLegacyCookieDomainsToClear,
-  resolveSessionCookieDomain,
   resolveSessionCookieNames,
 } from '../../../../lib/auth/session';
 
 export const runtime = 'edge';
-
-const LEGACY_ACCESS_COOKIE = 'sb-access-token';
-const LEGACY_REFRESH_COOKIE = 'sb-refresh-token';
 
 const CACHE_HEADERS = {
   'cache-control': 'no-store',
@@ -77,49 +72,6 @@ function extractReasonKey(payload: Record<string, unknown> | null, fallback: str
       ? (payload.error as Record<string, unknown>).reasonKey
       : payload?.error;
   return typeof reason === 'string' && reason.trim() ? reason.trim() : fallback;
-}
-
-function clearCookie(response: NextResponse, request: NextRequest, name: string): void {
-  const secure = request.nextUrl.protocol === 'https:';
-  const domain = resolveSessionCookieDomain(request);
-  const legacyDomains = resolveLegacyCookieDomainsToClear(request);
-
-  response.cookies.set({
-    name,
-    value: '',
-    httpOnly: true,
-    secure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 0,
-  });
-
-  if (domain) {
-    response.cookies.set({
-      name,
-      value: '',
-      httpOnly: true,
-      secure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 0,
-      domain,
-    });
-  }
-
-  for (const legacy of legacyDomains) {
-    if (!legacy || legacy === domain) continue;
-    response.cookies.set({
-      name,
-      value: '',
-      httpOnly: true,
-      secure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 0,
-      domain: legacy,
-    });
-  }
 }
 
 function normalizeIntent(value: unknown): LoginIntent {
@@ -300,8 +252,6 @@ function applyFinishSessionCookies(args: {
     { name: cookieNames.access, value: args.accessToken, maxAge: args.accessMaxAge },
     { name: cookieNames.refresh, value: args.refreshToken, maxAge: args.refreshMaxAge },
   ]);
-  clearCookie(args.response, args.request, LEGACY_ACCESS_COOKIE);
-  clearCookie(args.response, args.request, LEGACY_REFRESH_COOKIE);
 }
 
 export async function GET(request: NextRequest) {

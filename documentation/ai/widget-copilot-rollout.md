@@ -21,9 +21,8 @@ This runbook captures the rollout status for widget copilot routing:
 
 | Environment | Browser endpoint | Observed status |
 |---|---|---|
-| Local | `POST /api/ai/widget-copilot` | Primary route (with `/api/ai/sdr-copilot` shim) |
+| Local | `POST /api/ai/widget-copilot` | Active primary route |
 | Cloud-dev (`bob.dev`) | `POST /api/ai/widget-copilot` | Active primary route |
-| Cloud-dev (`bob.dev`) | `POST /api/ai/sdr-copilot` | Active compatibility shim |
 | Cloud-dev (`paris.dev`) | `POST /api/ai/minibob/session` | `200`, returns session token |
 | Cloud-dev (`paris.dev`) | `POST /api/ai/minibob/grant` | `200`, canonical SDR grant |
 | Cloud-dev (`paris.dev`) | `POST /api/ai/minibob/grant` with `agentId=cs.widget.copilot.v1` | `403` (blocked by contract) |
@@ -31,7 +30,7 @@ This runbook captures the rollout status for widget copilot routing:
 ## Cloud-dev verification findings (February 11, 2026)
 
 Pre-deploy finding (earlier same day):
-- `bob.dev` was missing `/api/ai/widget-copilot` and effectively operating through `/api/ai/sdr-copilot`.
+- `bob.dev` was missing `/api/ai/widget-copilot` and temporarily operating through `/api/ai/sdr-copilot` (now removed).
 
 Post-deploy findings:
 - Bob cloud-dev now serves `/api/ai/widget-copilot`.
@@ -57,7 +56,6 @@ Core runtime files:
 - `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`
 - `bob/app/api/ai/widget-copilot/handler.ts`
 - `bob/app/api/ai/widget-copilot/route.ts`
-- `bob/app/api/ai/sdr-copilot/route.ts`
 - `bob/components/CopilotPane.tsx`
 - `admin/src/html/tools/entitlements.html`
 

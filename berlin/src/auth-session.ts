@@ -110,7 +110,7 @@ export async function resolvePrincipalSession(
   request: Request,
   env: Env,
 ): Promise<
-  | { ok: true; userId: string; sid: string; session: SessionState }
+  | { ok: true; userId: string; sid: string; session: SessionState; claims: AccessClaims }
   | { ok: false; response: Response }
 > {
   const token = resolveAccessTokenFromRequest(request);
@@ -127,7 +127,7 @@ export async function resolvePrincipalSession(
   if (!session || session.revoked) return { ok: false, response: authError('coreui.errors.auth.required', 401, 'session_revoked') };
   if (session.userId !== userId) return { ok: false, response: authError('coreui.errors.auth.required', 401, 'session_subject_mismatch') };
 
-  return { ok: true, userId, sid, session };
+  return { ok: true, userId, sid, session, claims: verified.claims };
 }
 
 export async function ensureSupabaseAccessToken(

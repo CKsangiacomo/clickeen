@@ -1,7 +1,7 @@
 import type { Env } from '../../shared/types';
 import { assertSupabaseAuth } from '../../shared/auth';
 import { authorizeAccount } from '../../shared/account-auth';
-import { ckError } from '../../shared/errors';
+import { ckError, errorDetail } from '../../shared/errors';
 import { json, readJson } from '../../shared/http';
 import { DEFAULT_ACCOUNT_L10N_POLICY } from '../../shared/l10n';
 import { supabaseFetch } from '../../shared/supabase';
@@ -391,7 +391,7 @@ export async function handleMinibobHandoffStart(req: Request, env: Env): Promise
   try {
     await kvPutJson(kv, resolveMinibobHandoffStateKey(handoffId), record, MINIBOB_HANDOFF_STATE_TTL_SEC);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.minibobHandoff.unavailable', detail }, 503);
   }
 
@@ -588,4 +588,3 @@ export async function handleMinibobHandoffComplete(req: Request, env: Env): Prom
   await storeIdempotencyRecord(kv, replayKey, 200, payload).catch(() => undefined);
   return json(payload, { status: 200 });
 }
-

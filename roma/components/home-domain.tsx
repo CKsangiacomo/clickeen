@@ -44,7 +44,7 @@ export function HomeDomain() {
     setHandoffStatus('running');
     setHandoffError(null);
     try {
-      const payload = await fetchParisJson<MinibobHandoffCompleteResponse>('/api/paris/minibob/handoff/complete', {
+      const payload = await fetchParisJson<MinibobHandoffCompleteResponse>('/api/minibob/handoff/complete', {
         method: 'POST',
         headers: {
           'content-type': 'application/json',

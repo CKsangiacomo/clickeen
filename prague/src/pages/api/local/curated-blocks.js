@@ -101,69 +101,6 @@ async function readCuratedInstancesFromLocalTokyo(widget) {
   }
 }
 
-function mergeCuratedLists(localInstances, parisInstances) {
-  const byPublicId = new Map();
-
-  localInstances.forEach((entry) => {
-    if (!entry || !entry.publicId) return;
-    byPublicId.set(entry.publicId, entry);
-  });
-
-  parisInstances.forEach((entry) => {
-    if (!entry || !entry.publicId) return;
-    byPublicId.set(entry.publicId, entry);
-  });
-
-  return sortInstances(Array.from(byPublicId.values()));
-}
-
-async function fetchWithTimeout(url, init, timeoutMs) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-async function readCuratedInstancesFromParis(widget) {
-  const baseUrl = String(process.env.PUBLIC_PARIS_URL || process.env.PARIS_BASE_URL || 'http://localhost:3001')
-    .trim()
-    .replace(/\/+$/, '');
-  const token = String(process.env.PARIS_DEV_JWT || '').trim();
-  const headers = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
-
-  const url = `${baseUrl}/api/curated-instances?includeConfig=0`;
-  const res = await fetchWithTimeout(url, { method: 'GET', headers, cache: 'no-store' }, 1500);
-  if (!res.ok) {
-    const payload = await res.json().catch(() => null);
-    const detail = payload && typeof payload.error === 'string' ? payload.error : `status ${res.status}`;
-    throw new Error(`Paris curated list failed (${detail})`);
-  }
-
-  const payload = await res.json().catch(() => ({}));
-  const rows = Array.isArray(payload?.instances) ? payload.instances : [];
-
-  const instances = rows
-    .map((row) => {
-      const publicId = asPublicId(row?.publicId);
-      const widgetType = asSlug(row?.widgetname);
-      if (!publicId || !widgetType) return null;
-      const displayNameRaw = String(row?.displayName || '').trim();
-      return {
-        publicId,
-        widgetType,
-        displayName: displayNameRaw || publicId,
-      };
-    })
-    .filter((row) => Boolean(row));
-
-  const filtered = widget ? instances.filter((row) => row.widgetType === widget) : instances;
-  return sortInstances(filtered);
-}
-
 function ensureBlockArray(pageJson) {
   if (!pageJson || typeof pageJson !== 'object' || Array.isArray(pageJson)) {
     throw new Error('Invalid page JSON root.');
@@ -224,22 +161,10 @@ export async function GET({ request }) {
 
   const url = new URL(request.url);
   const widget = asSlug(url.searchParams.get('widget'));
-  const localInstances = await readCuratedInstancesFromLocalTokyo(widget);
-  let parisInstances = [];
-  let warning = '';
-
-  try {
-    parisInstances = await readCuratedInstancesFromParis(widget);
-  } catch (error) {
-    warning = error instanceof Error ? error.message : String(error);
-  }
-
-  const instances = mergeCuratedLists(localInstances, parisInstances);
+  const instances = await readCuratedInstancesFromLocalTokyo(widget);
   return json({
     instances,
-    localCount: localInstances.length,
-    parisCount: parisInstances.length,
-    ...(warning ? { warning } : {}),
+    localCount: instances.length,
   });
 }
 

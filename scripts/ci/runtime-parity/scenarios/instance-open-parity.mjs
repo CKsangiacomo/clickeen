@@ -43,7 +43,7 @@ export async function runInstanceOpenParityScenario({ profile, context }) {
 
   const headers = authHeaders(profile.authBearer);
   const bob = await fetchEnvelope(
-    `${profile.bobBaseUrl}/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
+    `${profile.bobBaseUrl.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
       publicId,
     )}?subject=account&_t=${Date.now()}`,
     { headers },
@@ -78,7 +78,7 @@ export async function runInstanceOpenParityScenario({ profile, context }) {
   }
 
   const roma = await fetchEnvelope(
-    `${profile.romaBaseUrl}/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
+    `${profile.romaBaseUrl.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
       publicId,
     )}?subject=account&_t=${Date.now()}`,
     { headers },

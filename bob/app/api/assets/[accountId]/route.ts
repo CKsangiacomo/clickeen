@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isUuid } from '@clickeen/ck-contracts';
-import { applySessionCookies, resolveParisSession, withParisDevAuthorization } from '../../../../lib/api/paris/proxy-helpers';
-import { resolveParisBaseUrl } from '../../../../lib/env/paris';
-import { type SessionCookieSpec } from '../../../../lib/auth/session';
+import { resolveParisSession, withSessionAndCors } from '../../../../lib/api/paris/proxy-helpers';
+import { resolveTokyoBaseUrl } from '../../../../lib/env/tokyo';
 
 export const runtime = 'edge';
 
@@ -14,76 +13,88 @@ const CORS_HEADERS = {
 
 type RouteContext = { params: Promise<{ accountId: string }> };
 
-function withCorsAndSession(
-  request: NextRequest,
-  response: NextResponse,
-  setCookies?: SessionCookieSpec[],
-): NextResponse {
-  const next = applySessionCookies(response, request, setCookies);
-  Object.entries(CORS_HEADERS).forEach(([key, value]) => next.headers.set(key, value));
-  return next;
-}
-
-function resolveParisAssetsUrl(request: NextRequest, accountId: string): string {
-  const parisBase = resolveParisBaseUrl().replace(/\/$/, '');
-  const target = new URL(`${parisBase}/api/accounts/${encodeURIComponent(accountId)}/assets`);
-  request.nextUrl.searchParams.forEach((value, key) => {
-    if (value) target.searchParams.set(key, value);
-  });
-  return target.toString();
-}
-
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
   const session = await resolveParisSession(request);
-  if (!session.ok) {
-    return withCorsAndSession(request, session.response);
-  }
+  if (!session.ok) return withSessionAndCors(request, session.response, undefined, CORS_HEADERS);
 
   const params = await context.params;
   const accountId = String(params.accountId || '').trim();
   if (!isUuid(accountId)) {
-    return withCorsAndSession(
+    return withSessionAndCors(
       request,
       NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
-        { status: 422 },
+        { status: 422, headers: CORS_HEADERS },
       ),
       session.setCookies,
+      CORS_HEADERS,
     );
   }
 
-  const headers = withParisDevAuthorization(new Headers(), session.accessToken);
-
+  let tokyoBase = '';
   try {
-    const res = await fetch(resolveParisAssetsUrl(request, accountId), {
-      method: 'GET',
-      headers,
-      cache: 'no-store',
-    });
-    const text = await res.text().catch(() => '');
-    return withCorsAndSession(
-      request,
-      new NextResponse(text, {
-        status: res.status,
-        headers: {
-          'Content-Type': res.headers.get('Content-Type') || 'application/json',
-        },
-      }),
-      session.setCookies,
-    );
-  } catch (err) {
-    const messageText = err instanceof Error ? err.message : String(err);
-    return withCorsAndSession(
+    tokyoBase = resolveTokyoBaseUrl().replace(/\/+$/, '');
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSessionAndCors(
       request,
       NextResponse.json(
-        { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.db.readFailed', detail: messageText } },
-        { status: 502 },
+        { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail } },
+        { status: 500, headers: CORS_HEADERS },
       ),
       session.setCookies,
+      CORS_HEADERS,
+    );
+  }
+
+  const target = new URL(`${tokyoBase}/assets/account/${encodeURIComponent(accountId)}`);
+  request.nextUrl.searchParams.forEach((value, key) => target.searchParams.set(key, value));
+
+  try {
+    const upstream = await fetch(target.toString(), {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${session.accessToken}`,
+        accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    const text = await upstream.text().catch(() => '');
+    let payload: unknown = null;
+    if (text) {
+      try {
+        payload = JSON.parse(text) as unknown;
+      } catch {
+        payload = null;
+      }
+    }
+
+    return withSessionAndCors(
+      request,
+      NextResponse.json(
+        payload && typeof payload === 'object'
+          ? payload
+          : { error: { kind: 'INTERNAL', reasonKey: `HTTP_${upstream.status}` } },
+        { status: upstream.status, headers: CORS_HEADERS },
+      ),
+      session.setCookies,
+      CORS_HEADERS,
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSessionAndCors(
+      request,
+      NextResponse.json(
+        { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'bob.errors.proxy.tokyo_unavailable', detail } },
+        { status: 502, headers: CORS_HEADERS },
+      ),
+      session.setCookies,
+      CORS_HEADERS,
     );
   }
 }

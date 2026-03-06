@@ -1,5 +1,6 @@
 import type { MemberRole } from '@clickeen/ck-policy';
 import type { AccountRow, Env } from './types';
+import { normalizeMemberRole } from './roles';
 
 export const ROMA_AUTHZ_CAPSULE_HEADER = 'x-ck-authz-capsule';
 
@@ -90,24 +91,12 @@ function timingSafeEqual(a: string, b: string): boolean {
   return mismatch === 0;
 }
 
-function normalizeAccountTier(value: unknown): AccountRow['tier'] | null {
+export function normalizeAccountTier(value: unknown): AccountRow['tier'] | null {
   switch (value) {
     case 'free':
     case 'tier1':
     case 'tier2':
     case 'tier3':
-      return value;
-    default:
-      return null;
-  }
-}
-
-function normalizeMemberRole(value: unknown): MemberRole | null {
-  switch (value) {
-    case 'viewer':
-    case 'editor':
-    case 'admin':
-    case 'owner':
       return value;
     default:
       return null;

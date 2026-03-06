@@ -29,8 +29,8 @@ Asset behavior was previously spread across service docs and PRDs. This file cen
 |---|---|---|
 | Bob (editor) | Upload file, set `asset.versionId` in config | Asset inventory ownership, hidden repair logic |
 | DevStudio | Internal host/orchestration for Bob workflows | Separate asset policy from Roma |
-| Roma Assets panel | List, inspect usage, delete, entitlement visibility | Runtime fallback behavior |
-| Paris | Authz + surface gate + proxy orchestration | Silent rewrite/heal of asset refs |
+| Roma Assets panel | List, inspect metadata/integrity, delete, entitlement visibility | Runtime fallback behavior |
+| Paris | Asset-ref validation during instance writes | Asset inventory CRUD, silent rewrite/heal of asset refs |
 | Tokyo-worker | Upload, immutable read, delete, integrity checks | Replace-in-place semantics |
 | Venice | Serve canonical asset path proxy and render output | Fallback image/video substitution |
 
@@ -41,11 +41,10 @@ Asset behavior was previously spread across service docs and PRDs. This file cen
 - Persisted config stores logical immutable refs: `asset.versionId`.
 - Runtime materializes canonical read path: `/assets/v/{encodeURIComponent(versionId)}`.
 - Legacy persisted URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, `/assets/v/*`-backed `logoFill`) are outside contract.
-
-Ownership and usage tables:
-- `account_assets` (asset identity + ownership metadata)
-- `account_asset_variants` (immutable blob variants with R2 keys)
-- `account_asset_usage` (deterministic where-used mapping from config writes/publish paths)
+- Asset bytes live in Tokyo R2 under `assets/versions/{accountId}/...`.
+- Asset metadata lives as manifest JSON in Tokyo R2 under `assets/meta/accounts/{accountId}/assets/{assetId}.json`.
+- Variant metadata is embedded in that manifest.
+- There is no canonical persisted "where used" table in Michael/Supabase in this repo snapshot. Paris validates asset refs during instance writes, but usage rows are not stored as DB truth.
 
 ---
 
@@ -57,10 +56,10 @@ Authoritative runtime endpoints:
 - `GET /assets/integrity/:accountId` (Tokyo-worker): account mirror integrity snapshot
 - `GET /assets/integrity/:accountId/:assetId` (Tokyo-worker): per-asset identity integrity snapshot
 
-Managed (Roma) control-plane endpoint:
-- `DELETE /api/accounts/:accountId/assets/:assetId` (Paris): Roma-surface-gated delete, delegated to Tokyo-worker hard delete
-  - Requires `x-clickeen-surface: roma-assets`
-  - Non-Roma surfaces receive `403`
+Managed (Roma) control-plane endpoints:
+- `GET /api/assets/:accountId` (Roma route): account asset manifest list, delegated to Tokyo-worker
+- `DELETE /api/assets/:accountId/:assetId` (Roma route): hard delete delegated to Tokyo-worker
+- `DELETE /api/assets/:accountId?confirm=1` (Roma route): account purge delegated to Tokyo-worker
 
 ---
 
@@ -70,10 +69,10 @@ Managed (Roma) control-plane endpoint:
 
 1. User uploads file in Bob.
 2. Bob posts to Tokyo-worker upload path with account/public/widget trace headers.
-3. Tokyo-worker writes R2 blob(s) and ownership metadata (`account_assets`, `account_asset_variants`).
+3. Tokyo-worker writes R2 blob(s) and a per-asset manifest JSON record.
 4. Response returns immutable asset identity/version reference.
 5. Bob writes `asset.versionId` into instance config immediately.
-6. Paris write paths sync deterministic usage rows into `account_asset_usage`.
+6. Paris validates referenced assets during instance writes; there is no separate usage-row sync step.
 
 Operational note:
 - Upload/attach success is independent from render snapshot convergence. Asset persistence must not be reported as failed only because publish snapshot processing is still in-flight.
@@ -81,9 +80,9 @@ Operational note:
 ### Delete flow (Roma Assets only)
 
 1. User deletes from Roma Assets panel.
-2. Roma/Paris enforce Roma-surface gate.
-3. Tokyo-worker validates integrity for that asset identity.
-4. Tokyo-worker deletes variant blob keys and corresponding metadata rows (`account_asset_usage`, `account_asset_variants`, `account_assets`) in request path.
+2. Roma route forwards the request to Tokyo-worker using Berlin session auth.
+3. Tokyo-worker enforces account membership role (`editor+`) and validates integrity for that asset identity.
+4. Tokyo-worker deletes variant blob keys and the corresponding manifest JSON in the request path.
 5. Response is success only when delete path completes; no snapshot rebuild or runtime healing side effects.
 
 ### Render flow (Venice/Bob preview)
@@ -100,7 +99,7 @@ For each account namespace:
 - `missingInR2Count == 0`
 - `orphanInR2Count == 0`
 
-Integrity endpoints are required for operational visibility in Roma Assets. Mismatch is explicit and actionable, never silently hidden.
+Integrity endpoints compare manifest-declared variant keys to actual R2 objects. Mismatch is explicit and actionable, never silently hidden.
 
 ---
 
@@ -116,4 +115,4 @@ Local and cloud-dev must follow the same asset contract and endpoint semantics. 
 - Deleting in Roma never triggers automatic snapshot rebuild or fallback behavior.
 - Non-Roma delete attempts are blocked (`403`).
 - Embed/runtime serves exact ref or missing state; no healing.
-- Roma integrity UI can expose DB<->R2 mismatch state using integrity endpoints.
+- Roma integrity UI can expose manifest<->R2 mismatch state using integrity endpoints.

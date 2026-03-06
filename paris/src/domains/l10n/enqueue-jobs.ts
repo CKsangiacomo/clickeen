@@ -7,6 +7,7 @@ import type {
   L10nGenerateStateRow,
   L10nJob,
 } from '../../shared/types';
+import { errorDetail } from '../../shared/errors';
 import { readJson } from '../../shared/http';
 import { asTrimmedString } from '../../shared/validation';
 import { resolveInstanceAccountId, resolveInstanceKind } from '../../shared/instances';
@@ -168,7 +169,7 @@ export async function enqueueL10nJobs(args: {
         base_updated_at: baseUpdatedAt ?? null,
       });
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
+      const detail = errorDetail(error);
       return { ok: false as const, queued: 0, skipped: 0, error: detail };
     }
   }

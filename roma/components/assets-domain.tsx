@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatBytes, formatNumber } from '../lib/format';
-import { fetchParisJson, parseParisReason } from './paris-http';
+import { parseParisReason } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type AssetRecord = {
@@ -121,11 +121,18 @@ export function AssetsDomain() {
     setLoading(true);
     setError(null);
     try {
-      const payload = await fetchParisJson<AccountAssetsListResponse>(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/assets?limit=500`,
-        { method: 'GET' },
-      );
-      setAssets(Array.isArray(payload.assets) ? payload.assets : []);
+      const response = await fetch(`/api/assets/${encodeURIComponent(accountId)}?limit=500`, {
+        method: 'GET',
+        cache: 'no-store',
+      });
+      const payload = (await response.json().catch(() => null)) as AccountAssetsListResponse | { error?: unknown } | null;
+      if (!response.ok) {
+        throw new Error(parseParisReason(payload, response.status));
+      }
+      const resolvedAssets = payload && typeof payload === 'object' && Array.isArray((payload as AccountAssetsListResponse).assets)
+        ? (payload as AccountAssetsListResponse).assets
+        : [];
+      setAssets(resolvedAssets);
       setError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -198,16 +205,18 @@ export function AssetsDomain() {
     setPurgeError(null);
     setPurgeResult(null);
     try {
-      const payload = await fetchParisJson<{ ok?: boolean; deleted?: number }>(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/assets?confirm=1`,
-        {
-          method: 'DELETE',
-          headers: {
-            'x-clickeen-surface': 'roma-assets',
-          },
+      const response = await fetch(`/api/assets/${encodeURIComponent(accountId)}?confirm=1`, {
+        method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'x-clickeen-surface': 'roma-assets',
         },
-      );
-      setPurgeResult(payload ?? { ok: true });
+      });
+      const payload = (await response.json().catch(() => null)) as { ok?: boolean; deleted?: number; error?: unknown } | null;
+      if (!response.ok) {
+        throw new Error(parseParisReason(payload, response.status));
+      }
+      setPurgeResult((payload && typeof payload === 'object') ? payload : { ok: true });
       setPurgeConfirm('');
       await reloadMe();
       await refreshAssets();

@@ -1,83 +1,830 @@
 <style>
-  .dev-widget-workspace-deprecated {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    max-inline-size: 920px;
-  }
-
-  .dev-widget-workspace-deprecated__card {
-    padding: var(--space-4);
-    border-radius: var(--control-radius-lg);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
-    background: var(--color-system-white);
-    box-shadow: var(--shadow-floating);
-  }
-
-  .dev-widget-workspace-deprecated__card p {
-    margin: 0;
-  }
-
-  .dev-widget-workspace-deprecated__list {
-    margin: var(--space-2) 0 0;
-    padding-left: 18px;
+  .workspace-tool {
     display: grid;
-    gap: 8px;
+    gap: var(--space-4);
   }
 
-  .dev-widget-workspace-deprecated__pill {
+  .workspace-tool__hero {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .workspace-tool__pill {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 6px 10px;
     border-radius: 999px;
     border: 1px solid color-mix(in oklab, var(--role-border), transparent 35%);
-    background: color-mix(in oklab, var(--color-system-yellow), white 85%);
-    font: 600 var(--fs-12) / var(--lh-tight) var(--font-ui);
+    background: color-mix(in oklab, var(--color-system-blue), white 86%);
     color: var(--color-text);
+    font: 600 var(--fs-12) / var(--lh-tight) var(--font-ui);
     width: fit-content;
   }
 
-  .dev-widget-workspace-deprecated__pill-dot {
+  .workspace-tool__pill-dot {
     inline-size: 10px;
     block-size: 10px;
     border-radius: 999px;
-    background: var(--color-system-orange);
+    background: var(--color-system-blue);
+  }
+
+  .workspace-tool__lede,
+  .workspace-tool__note,
+  .workspace-tool__status,
+  .workspace-tool__context {
+    margin: 0;
+  }
+
+  .workspace-tool__grid {
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .workspace-tool__field {
+    display: grid;
+    gap: 6px;
+  }
+
+  .workspace-tool__label {
+    color: color-mix(in oklab, var(--color-text), transparent 35%);
+  }
+
+  .workspace-tool__input,
+  .workspace-tool__select {
+    inline-size: 100%;
+    min-block-size: var(--control-size-md, 2.5rem);
+    padding: 8px 10px;
+    border-radius: var(--control-radius-md, 0.375rem);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 15%);
+    background: var(--color-system-white);
+    color: var(--color-text);
+    font: 500 var(--fs-11) / var(--lh-tight) var(--font-ui);
+    letter-spacing: -0.01em;
+  }
+
+  .workspace-tool__input:focus-visible,
+  .workspace-tool__select:focus-visible,
+  .workspace-tool__button:focus-visible,
+  .workspace-tool__link:focus-visible {
+    outline: 2px solid var(--focus-ring-color, var(--color-system-blue));
+    outline-offset: 2px;
+  }
+
+  .workspace-tool__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .workspace-tool__button,
+  .workspace-tool__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--control-size-md, 2.5rem);
+    padding: 8px 12px;
+    border-radius: var(--control-radius-md, 0.375rem);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 15%);
+    font: 600 var(--fs-11) / var(--lh-tight) var(--font-ui);
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .workspace-tool__button {
+    background: color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), var(--color-system-white) 12%);
+    color: var(--color-text);
+  }
+
+  .workspace-tool__button:hover,
+  .workspace-tool__link:hover {
+    background: color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), var(--color-system-blue) 8%);
+  }
+
+  .workspace-tool__button[data-variant='primary'] {
+    background: var(--color-system-blue);
+    border-color: color-mix(in oklab, var(--color-system-blue), black 18%);
+    color: var(--color-system-white);
+  }
+
+  .workspace-tool__button[data-variant='primary']:hover {
+    background: color-mix(in oklab, var(--color-system-blue), black 10%);
+  }
+
+  .workspace-tool__link {
+    color: var(--color-text);
+    background: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 6%);
+  }
+
+  .workspace-tool__button:disabled,
+  .workspace-tool__link[aria-disabled='true'] {
+    opacity: 0.55;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .workspace-tool__note {
+    color: color-mix(in oklab, var(--color-text), transparent 40%);
+  }
+
+  .workspace-tool__status {
+    color: color-mix(in oklab, var(--color-text), transparent 32%);
+  }
+
+  .workspace-tool__context {
+    color: color-mix(in oklab, var(--color-text), transparent 28%);
+  }
+
+  .workspace-tool__callout,
+  .workspace-tool__error,
+  .workspace-tool__meta {
+    padding: var(--space-3);
+    border-radius: var(--control-radius-lg);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 22%);
+    background: var(--color-system-white);
+  }
+
+  .workspace-tool__callout {
+    display: grid;
+    gap: 8px;
+    background: color-mix(in oklab, var(--color-system-yellow), white 92%);
+  }
+
+  .workspace-tool__error {
+    background: color-mix(in oklab, var(--color-system-red), white 92%);
+    border-color: color-mix(in oklab, var(--color-system-red), transparent 68%);
+  }
+
+  .workspace-tool__meta {
+    display: grid;
+    gap: var(--space-2);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .workspace-tool__meta-label {
+    display: block;
+    margin-bottom: 4px;
+    color: color-mix(in oklab, var(--color-text), transparent 42%);
+  }
+
+  .workspace-tool__iframe {
+    inline-size: 100%;
+    block-size: min(78vh, 980px);
+    border-radius: var(--control-radius-lg);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 20%);
+    background:
+      linear-gradient(135deg, color-mix(in oklab, var(--color-system-blue), white 94%), transparent 48%),
+      linear-gradient(180deg, color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), white 6%), var(--color-system-white));
   }
 </style>
 
-<section class="dev-widget-workspace-deprecated">
-  <div class="dev-widget-workspace-deprecated__pill">
-    <span class="dev-widget-workspace-deprecated__pill-dot" aria-hidden="true"></span>
-    Deprecated
+<h1 class="heading-2 ck-m0">Widget Workspace</h1>
+
+<div class="workspace-tool">
+  <div class="devstudio-page-section">
+    <div class="workspace-tool__hero">
+      <div class="workspace-tool__pill">
+        <span class="workspace-tool__pill-dot" aria-hidden="true"></span>
+        Zero-to-one workspace
+      </div>
+
+      <p class="body-m workspace-tool__lede">
+        Open Bob from <strong>current source defaults</strong> or an existing <strong>admin starter</strong>. This is the
+        narrow DevStudio loop for widget birth work, not a local Roma clone.
+      </p>
+
+      <p class="body-s workspace-tool__note">
+        Source defaults mode is in-memory authoring from <code>tokyo/widgets/{widget}/spec.json</code>. Starter mode
+        opens a real curated or baseline row under the admin account so Bob keeps its normal save/publish/localization
+        behavior.
+      </p>
+    </div>
   </div>
 
-  <h1 class="heading-2 ck-m0">Widget Workspace</h1>
+  <div class="devstudio-page-section">
+    <div class="workspace-tool__grid">
+      <div class="workspace-tool__field">
+        <label class="label-s workspace-tool__label" for="workspace-widget-slug">Widget slug</label>
+        <input
+          class="workspace-tool__input"
+          id="workspace-widget-slug"
+          list="workspace-widget-slugs"
+          placeholder="faq"
+          spellcheck="false"
+          autocomplete="off"
+        />
+        <datalist id="workspace-widget-slugs"></datalist>
+      </div>
 
-  <div class="dev-widget-workspace-deprecated__card">
-    <p class="body-s">
-      This DevStudio tool was built for the old architecture (local ↔ cloud parity + embedding Bob in an iframe).
-      <strong>PRD 54 pivots the system</strong>: the canonical editor/runtime is Cloudflare Roma/Bob, and Venice public
-      serves Tokyo bytes only.
-    </p>
+      <div class="workspace-tool__field">
+        <label class="label-s workspace-tool__label" for="workspace-source-select">Working source</label>
+        <select class="workspace-tool__select" id="workspace-source-select"></select>
+      </div>
+    </div>
 
-    <ul class="dev-widget-workspace-deprecated__list body-s">
-      <li>
-        Use <strong>Cloudflare Roma/Bob</strong> for: editing instances, translations, Live on/off, and copying embed
-        code.
-      </li>
-      <li>
-        Use <strong>DevStudio (local)</strong> for: admin work (entitlements, system blocks, Dieter, curated fixtures),
-        not for “local Roma” parity.
-      </li>
-    </ul>
+    <div class="workspace-tool__actions" style="margin-top: var(--space-3);">
+      <button class="workspace-tool__button" data-variant="primary" id="workspace-open" type="button">Open workspace</button>
+      <button class="workspace-tool__button" id="workspace-refresh" type="button">Reload starters</button>
+      <a class="workspace-tool__link" id="workspace-open-tab" href="#" target="_blank" rel="noreferrer" aria-disabled="true">
+        Open starter in new tab
+      </a>
+    </div>
+
+    <p class="body-s workspace-tool__status" id="workspace-status"></p>
+    <p class="body-s workspace-tool__context" id="workspace-context"></p>
+
+    <div class="workspace-tool__error body-s" id="workspace-error" style="display:none"></div>
   </div>
 
-  <div class="dev-widget-workspace-deprecated__card">
-    <p class="body-s">
-      Reference: PRD 54C “Delta to full execution” and Gate 0 runbook in
-      <code>Execution_Pipeline_Docs/02-Executing/054C__PRD__Lifecycle_and_Execution__Unpublish_Downgrade_Cleanup_Gates.md</code>.
-    </p>
+  <div class="devstudio-page-section" id="workspace-cloud-note" style="display:none">
+    <div class="workspace-tool__callout">
+      <p class="body-s">
+        Widget Workspace is <strong>local-first</strong>. Run <code>bash scripts/dev-up.sh</code> and open
+        <code>http://localhost:5173</code> for the default loop.
+      </p>
+      <p class="body-s">
+        If you want hybrid dev from a remote DevStudio surface, pass <code>?bob=http://localhost:3000</code> on the page URL
+        so the workspace can attach to your local Bob/Paris/Tokyo stack.
+      </p>
+    </div>
   </div>
-</section>
 
+  <div class="devstudio-page-section">
+    <div class="workspace-tool__meta">
+      <div>
+        <span class="label-s workspace-tool__meta-label">Runtime</span>
+        <span class="body-s" id="workspace-runtime"></span>
+      </div>
+      <div>
+        <span class="label-s workspace-tool__meta-label">Bob origin</span>
+        <span class="body-s" id="workspace-bob-origin"></span>
+      </div>
+      <div>
+        <span class="label-s workspace-tool__meta-label">Selection</span>
+        <span class="body-s" id="workspace-selection"></span>
+      </div>
+      <div>
+        <span class="label-s workspace-tool__meta-label">Last open</span>
+        <span class="body-s" id="workspace-last-open"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="devstudio-page-section">
+    <iframe class="workspace-tool__iframe" id="bob-iframe" title="Bob editor" loading="lazy"></iframe>
+  </div>
+</div>
+
+<script type="module">
+  const ADMIN_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
+  const DEFAULT_BOB_BASE_URL = 'http://localhost:3000';
+  const SOURCE_DEFAULTS_PREFIX = 'defaults:';
+  const STARTER_PREFIX = 'starter:';
+
+  const state = {
+    runtimeProfile: 'cloud',
+    bobBaseUrl: '',
+    loadingCatalog: false,
+    widgetTypes: [],
+    starterInstances: [],
+    widgetSlug: '',
+    selectedSourceId: '',
+    openError: null,
+    lastLoadedAt: null,
+    lastOpenedLabel: '',
+    bobReady: false,
+    bobSessionId: '',
+    openSeq: 0,
+    activeRequestId: '',
+    pendingOpenSnapshot: null,
+  };
+
+  const widgetInput = document.getElementById('workspace-widget-slug');
+  const widgetDatalist = document.getElementById('workspace-widget-slugs');
+  const sourceSelect = document.getElementById('workspace-source-select');
+  const openButton = document.getElementById('workspace-open');
+  const refreshButton = document.getElementById('workspace-refresh');
+  const openTabLink = document.getElementById('workspace-open-tab');
+  const statusNode = document.getElementById('workspace-status');
+  const contextNode = document.getElementById('workspace-context');
+  const errorNode = document.getElementById('workspace-error');
+  const runtimeNode = document.getElementById('workspace-runtime');
+  const bobOriginNode = document.getElementById('workspace-bob-origin');
+  const selectionNode = document.getElementById('workspace-selection');
+  const lastOpenNode = document.getElementById('workspace-last-open');
+  const cloudNote = document.getElementById('workspace-cloud-note');
+  const iframe = document.getElementById('bob-iframe');
+
+  function asString(value) {
+    return typeof value === 'string' ? value.trim() : '';
+  }
+
+  function formatTime(date) {
+    if (!(date instanceof Date)) return '';
+    if (!Number.isFinite(date.getTime())) return '';
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function resolveWorkspaceParam(name) {
+    const url = new URL(window.location.href);
+    const direct = asString(url.searchParams.get(name));
+    if (direct) return direct;
+
+    const hash = asString(window.location.hash);
+    const queryIndex = hash.indexOf('?');
+    if (queryIndex === -1) return '';
+    const hashParams = new URLSearchParams(hash.slice(queryIndex + 1));
+    return asString(hashParams.get(name));
+  }
+
+  function resolveRuntimeProfile() {
+    try {
+      const hostname = new URL(window.location.href).hostname.trim().toLowerCase();
+      if (hostname === 'localhost' || hostname === '127.0.0.1') return 'local';
+      return 'cloud';
+    } catch {
+      return 'cloud';
+    }
+  }
+
+  const runtimeProfile = resolveRuntimeProfile();
+  const isLocalDevStudio = runtimeProfile === 'local';
+  state.runtimeProfile = runtimeProfile;
+
+  function normalizeWidgetSlug(value) {
+    return asString(value).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  }
+
+  function sanitizeBobBaseUrl(value) {
+    const raw = asString(value);
+    if (!raw) return '';
+    try {
+      const parsed = new URL(raw);
+      if (!/^https?:$/i.test(parsed.protocol)) return '';
+      return parsed.toString().replace(/\/+$/, '');
+    } catch {
+      return '';
+    }
+  }
+
+  state.bobBaseUrl = sanitizeBobBaseUrl(resolveWorkspaceParam('bob')) || (isLocalDevStudio ? DEFAULT_BOB_BASE_URL : '');
+
+  function resolveBobOrigin() {
+    if (!state.bobBaseUrl) return '';
+    try {
+      return new URL(state.bobBaseUrl).origin;
+    } catch {
+      return '';
+    }
+  }
+
+  function buildIframeUrl() {
+    if (!state.bobBaseUrl) return '';
+    const url = new URL('/bob', `${state.bobBaseUrl}/`);
+    url.searchParams.set('boot', 'message');
+    url.searchParams.set('surface', 'devstudio');
+    return url.toString();
+  }
+
+  function buildTemplatesUrl() {
+    const url = new URL('/api/roma/templates', `${state.bobBaseUrl}/`);
+    url.searchParams.set('accountId', ADMIN_ACCOUNT_ID);
+    url.searchParams.set('surface', 'devstudio');
+    url.searchParams.set('_t', String(Date.now()));
+    return url.toString();
+  }
+
+  function buildCompiledUrl(widgetSlug) {
+    const url = new URL(`/api/widgets/${encodeURIComponent(widgetSlug)}/compiled`, `${state.bobBaseUrl}/`);
+    url.searchParams.set('_t', String(Date.now()));
+    return url.toString();
+  }
+
+  function buildAccountInstanceUrl(publicId) {
+    const url = new URL(
+      `/api/accounts/${encodeURIComponent(ADMIN_ACCOUNT_ID)}/instance/${encodeURIComponent(publicId)}`,
+      `${state.bobBaseUrl}/`,
+    );
+    url.searchParams.set('subject', 'account');
+    url.searchParams.set('surface', 'devstudio');
+    url.searchParams.set('_t', String(Date.now()));
+    return url.toString();
+  }
+
+  function buildStarterEditorUrl(publicId) {
+    if (!state.bobBaseUrl) return '';
+    const url = new URL('/bob', `${state.bobBaseUrl}/`);
+    url.searchParams.set('boot', 'url');
+    url.searchParams.set('surface', 'devstudio');
+    url.searchParams.set('subject', 'account');
+    url.searchParams.set('accountId', ADMIN_ACCOUNT_ID);
+    url.searchParams.set('publicId', publicId);
+    url.searchParams.set('_t', String(Date.now()));
+    return url.toString();
+  }
+
+  function getStarterInstancesForWidget(widgetSlug) {
+    const normalized = normalizeWidgetSlug(widgetSlug);
+    return state.starterInstances.filter((instance) => normalizeWidgetSlug(instance.widgetType) === normalized);
+  }
+
+  function getSelectedStarterPublicId() {
+    if (!state.selectedSourceId.startsWith(STARTER_PREFIX)) return '';
+    return state.selectedSourceId.slice(STARTER_PREFIX.length);
+  }
+
+  function resolveSourceOptions(widgetSlug) {
+    const normalized = normalizeWidgetSlug(widgetSlug);
+    if (!normalized) return [];
+
+    const options = [
+      {
+        id: `${SOURCE_DEFAULTS_PREFIX}${normalized}`,
+        label: `Source defaults (${normalized}/spec.json)`,
+        kind: 'defaults',
+      },
+    ];
+
+    getStarterInstancesForWidget(normalized).forEach((instance) => {
+      const publicId = asString(instance.publicId);
+      if (!publicId) return;
+      const isBaseline = publicId.startsWith(`wgt_main_${normalized}`);
+      const displayName = asString(instance.displayName) || publicId;
+      options.push({
+        id: `${STARTER_PREFIX}${publicId}`,
+        label: isBaseline ? `Baseline starter - ${displayName}` : `Saved starter - ${displayName}`,
+        kind: 'starter',
+      });
+    });
+
+    return options;
+  }
+
+  function ensureSelection() {
+    const normalizedWidget = normalizeWidgetSlug(state.widgetSlug);
+    if (!normalizedWidget && state.widgetTypes[0]) {
+      state.widgetSlug = state.widgetTypes[0];
+    }
+
+    const options = resolveSourceOptions(state.widgetSlug);
+    const hasCurrent = options.some((option) => option.id === state.selectedSourceId);
+    if (!hasCurrent) {
+      state.selectedSourceId = options[0]?.id || '';
+    }
+  }
+
+  function setError(message) {
+    state.openError = asString(message) || null;
+    render();
+  }
+
+  function clearError() {
+    state.openError = null;
+  }
+
+  function render() {
+    ensureSelection();
+
+    widgetInput.value = state.widgetSlug;
+    widgetDatalist.innerHTML = '';
+    state.widgetTypes.forEach((widgetType) => {
+      const option = document.createElement('option');
+      option.value = widgetType;
+      widgetDatalist.append(option);
+    });
+
+    const sourceOptions = resolveSourceOptions(state.widgetSlug);
+    sourceSelect.innerHTML = '';
+    if (!sourceOptions.length) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = state.widgetSlug
+        ? 'No saved starters for this widget. Open source defaults.'
+        : 'Enter a widget slug or load starters.';
+      sourceSelect.append(option);
+    } else {
+      sourceOptions.forEach((optionData) => {
+        const option = document.createElement('option');
+        option.value = optionData.id;
+        option.textContent = optionData.label;
+        if (optionData.id === state.selectedSourceId) option.selected = true;
+        sourceSelect.append(option);
+      });
+    }
+
+    const hasBob = Boolean(state.bobBaseUrl);
+    const selectedStarterPublicId = getSelectedStarterPublicId();
+    const isSourceDefaults = state.selectedSourceId.startsWith(SOURCE_DEFAULTS_PREFIX);
+    const runtimeLabel = state.runtimeProfile === 'local' ? 'Local DevStudio' : 'Cloud DevStudio';
+    const loadedLabel = state.lastLoadedAt ? `Starters loaded ${formatTime(state.lastLoadedAt)}.` : 'Starters not loaded yet.';
+    const bobOrigin = resolveBobOrigin();
+
+    runtimeNode.textContent = hasBob ? `${runtimeLabel} - workspace attached` : `${runtimeLabel} - local-first`;
+    bobOriginNode.textContent = hasBob ? bobOrigin : 'No Bob target configured';
+    selectionNode.textContent = state.widgetSlug
+      ? isSourceDefaults
+        ? `Source defaults for ${state.widgetSlug}`
+        : selectedStarterPublicId || 'Saved starter'
+      : 'No widget selected';
+    lastOpenNode.textContent = state.lastOpenedLabel || 'Nothing opened yet';
+
+    const canOpen = hasBob && Boolean(normalizeWidgetSlug(state.widgetSlug));
+    openButton.disabled = !canOpen;
+    refreshButton.disabled = !hasBob || state.loadingCatalog;
+    widgetInput.disabled = state.loadingCatalog;
+    sourceSelect.disabled = !canOpen || state.loadingCatalog;
+
+    openTabLink.href = selectedStarterPublicId ? buildStarterEditorUrl(selectedStarterPublicId) : '#';
+    openTabLink.setAttribute('aria-disabled', selectedStarterPublicId ? 'false' : 'true');
+
+    cloudNote.style.display = hasBob ? 'none' : 'block';
+    iframe.style.display = hasBob ? 'block' : 'none';
+
+    if (state.openError) {
+      errorNode.style.display = 'block';
+      errorNode.textContent = state.openError;
+    } else {
+      errorNode.style.display = 'none';
+      errorNode.textContent = '';
+    }
+
+    const sourceHint = isSourceDefaults
+      ? 'Source defaults mode is in-memory only. Use a baseline or saved starter when you want Bob to write back through named account routes.'
+      : selectedStarterPublicId
+        ? `Saved starter mode uses admin account ${ADMIN_ACCOUNT_ID} through Bob's named account routes.`
+        : 'Select a source to start.';
+    const runtimeHint = hasBob
+      ? `Bob target: ${state.bobBaseUrl}. Host intent is explicit via surface=devstudio.`
+      : 'Attach a Bob origin with ?bob=http://localhost:3000 or open DevStudio locally to use the workspace.';
+
+    statusNode.textContent = state.loadingCatalog ? 'Loading starter catalog...' : loadedLabel;
+    contextNode.textContent = `${sourceHint} ${runtimeHint}`.trim();
+
+    const iframeUrl = buildIframeUrl();
+    if (hasBob && iframe.getAttribute('src') !== iframeUrl) {
+      state.bobReady = false;
+      state.bobSessionId = '';
+      iframe.setAttribute('src', iframeUrl);
+    }
+    if (!hasBob) {
+      iframe.removeAttribute('src');
+      state.bobReady = false;
+      state.bobSessionId = '';
+    }
+  }
+
+  async function readJson(response) {
+    return response.json().catch(() => null);
+  }
+
+  async function fetchJson(url) {
+    const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const payload = await readJson(response);
+    if (!response.ok) {
+      const message =
+        payload?.error?.detail ||
+        payload?.error?.reasonKey ||
+        payload?.error?.message ||
+        payload?.error ||
+        `HTTP_${response.status}`;
+      throw new Error(String(message));
+    }
+    return payload;
+  }
+
+  async function loadCatalog() {
+    if (!state.bobBaseUrl) {
+      render();
+      return;
+    }
+
+    state.loadingCatalog = true;
+    clearError();
+    render();
+
+    try {
+      const payload = await fetchJson(buildTemplatesUrl());
+      const widgetTypes = Array.isArray(payload?.widgetTypes)
+        ? payload.widgetTypes.map((value) => normalizeWidgetSlug(value)).filter(Boolean)
+        : [];
+      const instances = Array.isArray(payload?.instances)
+        ? payload.instances
+            .map((row) => ({
+              publicId: asString(row?.publicId),
+              widgetType: normalizeWidgetSlug(row?.widgetType),
+              displayName: asString(row?.displayName),
+            }))
+            .filter((row) => row.publicId && row.widgetType)
+        : [];
+
+      state.widgetTypes = Array.from(new Set(widgetTypes)).sort((a, b) => a.localeCompare(b));
+      state.starterInstances = instances.sort((a, b) => a.publicId.localeCompare(b.publicId));
+      state.lastLoadedAt = new Date();
+
+      if (!normalizeWidgetSlug(state.widgetSlug) && state.widgetTypes[0]) {
+        state.widgetSlug = state.widgetTypes[0];
+      }
+
+      clearError();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error));
+    } finally {
+      state.loadingCatalog = false;
+      render();
+    }
+  }
+
+  async function buildOpenPayload(snapshot) {
+    const widgetSlug = normalizeWidgetSlug(snapshot.widgetSlug);
+    if (!widgetSlug) {
+      throw new Error('Widget slug is required.');
+    }
+
+    if (snapshot.sourceId.startsWith(SOURCE_DEFAULTS_PREFIX)) {
+      const compiled = await fetchJson(buildCompiledUrl(widgetSlug));
+      return {
+        subjectMode: 'account',
+        widgetname: widgetSlug,
+        compiled,
+        label: `Source defaults - ${widgetSlug}`,
+        status: 'unpublished',
+      };
+    }
+
+    const publicId = snapshot.sourceId.startsWith(STARTER_PREFIX) ? snapshot.sourceId.slice(STARTER_PREFIX.length) : '';
+    if (!publicId) {
+      throw new Error('Select a valid working source.');
+    }
+
+    const instance = await fetchJson(buildAccountInstanceUrl(publicId));
+    const widgetType = normalizeWidgetSlug(instance?.widgetType || widgetSlug);
+    if (!widgetType) {
+      throw new Error('Starter instance is missing widgetType.');
+    }
+    const compiled = await fetchJson(buildCompiledUrl(widgetType));
+    const config = instance?.config && typeof instance.config === 'object' && !Array.isArray(instance.config) ? instance.config : null;
+    if (!config) {
+      throw new Error('Starter instance is missing config.');
+    }
+
+    return {
+      subjectMode: 'account',
+      widgetname: widgetType,
+      compiled,
+      instanceData: config,
+      localization: instance?.localization,
+      policy: instance?.policy,
+      publicId: asString(instance?.publicId) || publicId,
+      accountId: ADMIN_ACCOUNT_ID,
+      ownerAccountId: asString(instance?.ownerAccountId) || ADMIN_ACCOUNT_ID,
+      label: asString(instance?.displayName) || publicId,
+      status: instance?.status === 'published' ? 'published' : 'unpublished',
+    };
+  }
+
+  async function openSelection(snapshot) {
+    if (!state.bobReady || !state.bobSessionId) {
+      setError('Bob is still booting. Try again in a moment.');
+      return;
+    }
+
+    const targetWindow = iframe.contentWindow;
+    const targetOrigin = resolveBobOrigin();
+    if (!targetWindow || !targetOrigin) {
+      setError('Bob iframe is not ready.');
+      return;
+    }
+
+    clearError();
+    state.activeRequestId = crypto.randomUUID();
+    state.pendingOpenSnapshot = null;
+    render();
+
+    try {
+      const payload = await buildOpenPayload(snapshot);
+      if (snapshot.seq !== state.openSeq) return;
+      targetWindow.postMessage(
+        {
+          type: 'ck:open-editor',
+          requestId: state.activeRequestId,
+          sessionId: state.bobSessionId,
+          ...payload,
+        },
+        targetOrigin,
+      );
+      statusNode.textContent = `Opening ${payload.label || payload.widgetname}...`;
+    } catch (error) {
+      if (snapshot.seq !== state.openSeq) return;
+      setError(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  function queueOpenSelection() {
+    const widgetSlug = normalizeWidgetSlug(widgetInput.value);
+    if (!widgetSlug) {
+      setError('Widget slug is required.');
+      return;
+    }
+    if (!state.bobBaseUrl) {
+      setError('No Bob target configured. Run DevStudio locally or supply ?bob=http://localhost:3000.');
+      return;
+    }
+
+    state.widgetSlug = widgetSlug;
+    state.selectedSourceId = sourceSelect.value || `${SOURCE_DEFAULTS_PREFIX}${widgetSlug}`;
+    state.openSeq += 1;
+    const snapshot = {
+      seq: state.openSeq,
+      widgetSlug: state.widgetSlug,
+      sourceId: state.selectedSourceId,
+    };
+    state.pendingOpenSnapshot = snapshot;
+
+    render();
+    if (state.bobReady) {
+      void openSelection(snapshot);
+    } else {
+      statusNode.textContent = 'Waiting for Bob session...';
+    }
+  }
+
+  function handleBobMessage(event) {
+    const targetOrigin = resolveBobOrigin();
+    if (!targetOrigin || event.origin !== targetOrigin) return;
+    if (!iframe.contentWindow || event.source !== iframe.contentWindow) return;
+
+    const data = event.data;
+    if (!data || typeof data !== 'object') return;
+
+    if (data.type === 'bob:session-ready') {
+      const sessionId = asString(data.sessionId);
+      if (!sessionId) {
+        setError('Bob session missing.');
+        return;
+      }
+      state.bobReady = true;
+      state.bobSessionId = sessionId;
+      clearError();
+      render();
+      if (state.pendingOpenSnapshot) {
+        void openSelection(state.pendingOpenSnapshot);
+      }
+      return;
+    }
+
+    if (data.type === 'bob:open-editor-applied') {
+      if (asString(data.requestId) !== state.activeRequestId) return;
+      const widgetname = asString(data.widgetname) || normalizeWidgetSlug(state.widgetSlug);
+      const publicId = asString(data.publicId);
+      state.lastOpenedLabel = publicId ? `${publicId} (${widgetname})` : `Source defaults - ${widgetname}`;
+      clearError();
+      render();
+      return;
+    }
+
+    if (data.type === 'bob:open-editor-failed') {
+      if (state.activeRequestId && asString(data.requestId) !== state.activeRequestId) return;
+      const reason = asString(data.reasonKey) || asString(data.message) || 'Failed to open workspace.';
+      setError(reason);
+      return;
+    }
+
+    if (data.type === 'bob:request-instance-switch') {
+      const nextPublicId = asString(data.publicId);
+      if (!nextPublicId) return;
+      const exists = state.starterInstances.some((instance) => instance.publicId === nextPublicId);
+      if (!exists) return;
+      state.selectedSourceId = `${STARTER_PREFIX}${nextPublicId}`;
+      render();
+      queueOpenSelection();
+    }
+  }
+
+  widgetInput.addEventListener('input', (event) => {
+    state.widgetSlug = normalizeWidgetSlug(event.target.value);
+    render();
+  });
+
+  widgetInput.addEventListener('change', (event) => {
+    state.widgetSlug = normalizeWidgetSlug(event.target.value);
+    render();
+  });
+
+  sourceSelect.addEventListener('change', (event) => {
+    state.selectedSourceId = asString(event.target.value);
+    render();
+  });
+
+  openButton.addEventListener('click', () => queueOpenSelection());
+  refreshButton.addEventListener('click', () => void loadCatalog());
+
+  window.addEventListener('message', handleBobMessage);
+
+  render();
+  if (state.bobBaseUrl) {
+    void loadCatalog();
+  }
+</script>

@@ -16,15 +16,17 @@ function resolveCanonicalAssetPath(rawUrl) {
 async function runAssetFlow({
   hostLabel,
   hostBaseUrl,
+  deleteHostBaseUrl,
   bearer,
   accountId,
   tokyoBaseUrl,
   bobBaseUrl,
   veniceBaseUrl,
 }) {
+  const deleteBase = (deleteHostBaseUrl || hostBaseUrl).replace(/\/+$/, '');
   const deleteAsset = (resolvedAccountId, assetId, cacheBuster) =>
     fetchEnvelope(
-      `${hostBaseUrl}/api/assets/${encodeURIComponent(resolvedAccountId)}/${encodeURIComponent(assetId)}?_t=${cacheBuster}`,
+      `${deleteBase}/api/assets/${encodeURIComponent(resolvedAccountId)}/${encodeURIComponent(assetId)}?_t=${cacheBuster}`,
       {
         method: 'DELETE',
         headers: authHeaders(bearer, { 'x-clickeen-surface': 'roma-assets' }),
@@ -123,6 +125,7 @@ export async function runAssetLifecycleParityScenario({ profile, context }) {
     runAssetFlow({
       hostLabel: 'bob',
       hostBaseUrl: profile.bobBaseUrl,
+      deleteHostBaseUrl: profile.romaBaseUrl || profile.bobBaseUrl,
       bearer: profile.authBearer,
       accountId,
       tokyoBaseUrl: profile.tokyoBaseUrl,
@@ -134,6 +137,7 @@ export async function runAssetLifecycleParityScenario({ profile, context }) {
       : runAssetFlow({
           hostLabel: 'roma',
           hostBaseUrl: profile.romaBaseUrl,
+          deleteHostBaseUrl: profile.romaBaseUrl,
           bearer: profile.authBearer,
           accountId,
           tokyoBaseUrl: profile.tokyoBaseUrl,

@@ -9,7 +9,6 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
-  handleGetAccountAssetMetadata,
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
   handleListAccountAssetMetadata,
@@ -766,16 +765,6 @@ export default {
         const accountId = decodeURIComponent(accountAssetsListMatch[1] || '');
         if (req.method === 'GET') {
           return withCors(await handleListAccountAssetMetadata(req, env, accountId));
-        }
-        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-      }
-
-      const accountAssetMetadataMatch = pathname.match(/^\/assets\/account\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i);
-      if (accountAssetMetadataMatch) {
-        const accountId = decodeURIComponent(accountAssetMetadataMatch[1] || '');
-        const assetId = decodeURIComponent(accountAssetMetadataMatch[2] || '');
-        if (req.method === 'GET') {
-          return withCors(await handleGetAccountAssetMetadata(req, env, accountId, assetId));
         }
         return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
       }

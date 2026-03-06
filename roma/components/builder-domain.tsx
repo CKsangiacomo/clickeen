@@ -5,7 +5,13 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import openEditorLifecycleContractJson from '../../tooling/contracts/open-editor-lifecycle.v1.json';
 import { getCompiledWidget, normalizeCompiledWidgetType } from './compiled-widget-cache';
-import { getAccountInstance, prefetchAccountInstance } from './account-instance-cache';
+import {
+  getAccountInstance,
+  invalidateAccountInstanceCache,
+  prefetchAccountInstance,
+  primeAccountInstanceCache,
+  type AccountInstancePayload,
+} from './account-instance-cache';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type BuilderDomainProps = {
@@ -66,6 +72,36 @@ type BobAssetEntitlementDeniedMessage = {
   reasonKey?: string | null;
 };
 
+type BobAccountCommand =
+  | 'update-instance'
+  | 'put-user-locale-layer'
+  | 'delete-user-locale-layer'
+  | 'enqueue-selected-translations';
+
+type BobAccountCommandMessage = {
+  type: 'bob:account-command';
+  requestId?: string | null;
+  sessionId?: string | null;
+  command?: BobAccountCommand | null;
+  accountId?: string | null;
+  publicId?: string | null;
+  locale?: string | null;
+  body?: unknown;
+};
+
+type RomaAccountCommandResultMessage = {
+  type: 'roma:account-command-result';
+  requestId: string;
+  sessionId: string;
+  command: BobAccountCommand;
+  accountId: string;
+  publicId: string;
+  ok: boolean;
+  status: number;
+  payload?: unknown;
+  message?: string;
+};
+
 type BobOpenEditorMessage = {
   type: typeof OPEN_EDITOR_LIFECYCLE.events.openEditor;
   requestId: string;
@@ -111,6 +147,55 @@ function buildRomaBuilderRoute(args: {
   });
   if (args.widgetType) search.set('widgetType', args.widgetType);
   return `/builder/${encodeURIComponent(args.publicId)}?${search.toString()}`;
+}
+
+function isAccountInstancePayload(value: unknown): value is AccountInstancePayload {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function resolveBobAccountCommandRequest(args: {
+  command: BobAccountCommand;
+  accountId: string;
+  publicId: string;
+  locale?: string;
+}): { method: 'PUT' | 'POST' | 'DELETE'; path: string } | null {
+  const accountId = String(args.accountId || '').trim();
+  const publicId = String(args.publicId || '').trim();
+  const locale = String(args.locale || '').trim();
+  if (!accountId || !publicId) return null;
+
+  switch (args.command) {
+    case 'update-instance':
+      return {
+        method: 'PUT',
+        path: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
+      };
+    case 'put-user-locale-layer':
+      if (!locale) return null;
+      return {
+        method: 'PUT',
+        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/layers/user/${encodeURIComponent(locale)}?subject=account`,
+      };
+    case 'delete-user-locale-layer':
+      if (!locale) return null;
+      return {
+        method: 'DELETE',
+        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/layers/user/${encodeURIComponent(locale)}?subject=account`,
+      };
+    case 'enqueue-selected-translations':
+      return {
+        method: 'POST',
+        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/l10n/enqueue-selected?subject=account`,
+      };
+    default:
+      return null;
+  }
 }
 
 function decodeBuilderPathPublicId(pathname: string): string {
@@ -189,6 +274,102 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
     if (!accountId || !activePublicId) return;
     void prefetchAccountInstance(accountId, activePublicId);
   }, [accountId, activePublicId]);
+
+  const runBobAccountCommand = useCallback(
+    async (args: {
+      source: Window;
+      requestId: string;
+      sessionId: string;
+      command: BobAccountCommand;
+      accountId: string;
+      publicId: string;
+      locale?: string;
+      body?: unknown;
+    }) => {
+      const route = resolveBobAccountCommandRequest({
+        command: args.command,
+        accountId: args.accountId,
+        publicId: args.publicId,
+        locale: args.locale,
+      });
+
+      const reply = (payload: Omit<RomaAccountCommandResultMessage, 'type'>) => {
+        const message: RomaAccountCommandResultMessage = {
+          type: 'roma:account-command-result',
+          ...payload,
+        };
+        args.source.postMessage(message, bobBaseUrl);
+      };
+
+      if (!route) {
+        reply({
+          requestId: args.requestId,
+          sessionId: args.sessionId,
+          command: args.command,
+          accountId: args.accountId,
+          publicId: args.publicId,
+          ok: false,
+          status: 422,
+          message: 'coreui.errors.builder.command.invalid',
+        });
+        return;
+      }
+
+      try {
+        const init: RequestInit = {
+          method: route.method,
+          cache: 'no-store',
+        };
+        if (typeof args.body !== 'undefined') {
+          init.headers = { 'content-type': 'application/json' };
+          init.body = JSON.stringify(args.body);
+        }
+
+        const response = await fetch(route.path, init);
+        const payload = (await response.json().catch(() => null)) as unknown;
+
+        if (response.ok) {
+          if (args.command === 'update-instance' && isAccountInstancePayload(payload)) {
+            primeAccountInstanceCache(args.accountId, args.publicId, payload);
+          } else {
+            invalidateAccountInstanceCache(args.accountId, args.publicId);
+          }
+        }
+
+        reply({
+          requestId: args.requestId,
+          sessionId: args.sessionId,
+          command: args.command,
+          accountId: args.accountId,
+          publicId: args.publicId,
+          ok: response.ok,
+          status: response.status,
+          payload,
+          message:
+            response.ok || !payload || typeof payload !== 'object'
+              ? undefined
+              : typeof (payload as { error?: { reasonKey?: unknown; message?: unknown } }).error?.message === 'string'
+                ? String((payload as { error?: { message?: unknown } }).error?.message)
+                : typeof (payload as { error?: { reasonKey?: unknown } }).error?.reasonKey === 'string'
+                  ? String((payload as { error?: { reasonKey?: unknown } }).error?.reasonKey)
+                  : undefined,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        reply({
+          requestId: args.requestId,
+          sessionId: args.sessionId,
+          command: args.command,
+          accountId: args.accountId,
+          publicId: args.publicId,
+          ok: false,
+          status: 500,
+          message,
+        });
+      }
+    },
+    [bobBaseUrl],
+  );
 
   const postOpenEditorAndWait = useCallback(
     (
@@ -390,7 +571,12 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
       if (event.origin !== bobBaseUrl) return;
       const source = iframeRef.current?.contentWindow;
       if (!source || event.source !== source) return;
-      const data = event.data as BobReadyMessage | BobSwitchMessage | BobAssetEntitlementDeniedMessage | null;
+      const data = event.data as
+        | BobReadyMessage
+        | BobSwitchMessage
+        | BobAssetEntitlementDeniedMessage
+        | BobAccountCommandMessage
+        | null;
       if (!data || typeof data !== 'object') return;
       if (data.type === OPEN_EDITOR_LIFECYCLE.events.sessionReady) {
         const ready = data as BobReadyMessage;
@@ -418,6 +604,28 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         setActivePublicId(nextPublicId);
         return;
       }
+      if (data.type === 'bob:account-command') {
+        const message = data as BobAccountCommandMessage;
+        const requestId = typeof message.requestId === 'string' ? message.requestId.trim() : '';
+        const sessionId = typeof message.sessionId === 'string' ? message.sessionId.trim() : '';
+        const command = message.command ?? null;
+        const messageAccountId = typeof message.accountId === 'string' ? message.accountId.trim() : '';
+        const publicId = typeof message.publicId === 'string' ? message.publicId.trim() : '';
+        const locale = typeof message.locale === 'string' ? message.locale.trim() : '';
+        if (!requestId || !sessionId || !command || !messageAccountId || !publicId) return;
+        if (sessionId !== bobSessionIdRef.current.trim()) return;
+        void runBobAccountCommand({
+          source,
+          requestId,
+          sessionId,
+          command,
+          accountId: messageAccountId,
+          publicId,
+          ...(locale ? { locale } : {}),
+          ...(typeof message.body === 'undefined' ? {} : { body: message.body }),
+        });
+        return;
+      }
       if (data.type === 'bob:asset-entitlement-denied') {
         const denial = data as BobAssetEntitlementDeniedMessage;
         const reasonKey = String(denial.reasonKey || '').trim();
@@ -431,7 +639,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [accountId, activePublicId, bobBaseUrl, openActiveInstanceInBob, router]);
+  }, [accountId, activePublicId, bobBaseUrl, openActiveInstanceInBob, router, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;

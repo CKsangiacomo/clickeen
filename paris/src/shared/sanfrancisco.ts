@@ -1,4 +1,5 @@
 import type { Env, SanfranciscoCommandName, SanfranciscoCommandQueueJob } from './types';
+import { errorDetail } from './errors';
 import { json, readJson } from './http';
 import { asTrimmedString, isRecord } from './validation';
 
@@ -110,7 +111,7 @@ export async function dispatchSanfranciscoCommand(args: {
         },
       };
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
+      const detail = errorDetail(error);
       console.error(
         `[paris.sanfrancisco] queue dispatch failed command=${args.command}; falling back to HTTP: ${detail}`,
       );

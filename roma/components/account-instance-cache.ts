@@ -51,6 +51,29 @@ function resolveAccountInstanceStore(): AccountInstanceStore {
   return next;
 }
 
+export function primeAccountInstanceCache(accountId: string, publicId: string, payload: AccountInstancePayload): void {
+  const normalizedAccountId = normalizeEntityId(accountId);
+  const normalizedPublicId = normalizeEntityId(publicId);
+  if (!normalizedAccountId || !normalizedPublicId) return;
+  if (!isAccountInstancePayload(payload)) return;
+  const store = resolveAccountInstanceStore();
+  const key = toAccountInstanceCacheKey(normalizedAccountId, normalizedPublicId);
+  store.cache[key] = {
+    payload,
+    expiresAt: Date.now() + ACCOUNT_INSTANCE_CACHE_TTL_MS,
+  };
+}
+
+export function invalidateAccountInstanceCache(accountId: string, publicId: string): void {
+  const normalizedAccountId = normalizeEntityId(accountId);
+  const normalizedPublicId = normalizeEntityId(publicId);
+  if (!normalizedAccountId || !normalizedPublicId) return;
+  const store = resolveAccountInstanceStore();
+  const key = toAccountInstanceCacheKey(normalizedAccountId, normalizedPublicId);
+  delete store.cache[key];
+  delete store.inFlight[key];
+}
+
 function isAccountInstancePayload(value: unknown): value is AccountInstancePayload {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -88,7 +111,7 @@ export async function getAccountInstance(args: {
   }
 
   store.inFlight[key] = fetchParisJson<AccountInstancePayload>(
-    `/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
+    `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
   )
     .then((payload) => {
       if (!isAccountInstancePayload(payload)) {
@@ -115,4 +138,3 @@ export async function prefetchAccountInstance(accountId: string, publicId: strin
     // Prefetch is best-effort. Interactive flows still fetch on demand.
   }
 }
-

@@ -83,7 +83,7 @@ Bob listens in `bob/lib/session/useWidgetSession.tsx` and:
 - Replies with `bob:open-editor-ack`, then terminal `bob:open-editor-applied` or `bob:open-editor-failed`.
 - Keeps request idempotency state per `requestId` so repeated host sends do not apply duplicate open operations.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
-- Local DevStudio/Bob are tool-trusted: there is **no local browser login** and **no local session bootstrap**. Bob proxies to Paris using `PARIS_DEV_JWT` server-side (plus `x-ck-internal-service: bob.local`), and DevStudio never handles credentials.
+- Local DevStudio/Bob are tool-trusted only for the explicit `surface=devstudio` toolchain: there is **no local browser login** and **no local session bootstrap** for that tool path. Bob proxies to Paris using `PARIS_DEV_JWT` server-side (plus `x-ck-internal-service: bob.local`) only when the local request resolves to the DevStudio surface. All other Bob requests resolve real Berlin-backed session auth.
 
 ### URL bootstrap (deterministic, no auto-pick)
 Bob bootstraps from URL only when `?boot=url` and both `accountId` + `publicId` are present.
@@ -103,8 +103,9 @@ Source: `admin/src/html/tools/dev-widget-workspace.html` (historical filename; s
 
 ### Instance write surfaces (current)
 - Roma user flows can create/duplicate/delete account user instances via Paris (`/api/roma/*` + account instance endpoints).
-- Bob publish writes base config through account `PUT` endpoints from whichever host opened Bob.
-- DevStudio Local remains the superadmin surface for curated/main authoring actions, using Bob’s `/api/paris/*` proxy on `localhost`/`127.0.0.1`.
+- When Bob is hosted by Roma (`surface=roma`, `boot=message`, `subject=account`), Bob does not own the account mutation transport. It emits explicit editor commands back to the Roma host, and Roma executes the named same-origin account routes (`/api/accounts/...`) on Bob's behalf.
+- DevStudio Local remains the superadmin surface for curated/main authoring actions through Bob’s same-origin named API routes on `localhost`/`127.0.0.1`.
+- MiniBob and explicit URL-bootstrap surfaces still use Bob’s own named routes directly when there is no Roma host boundary.
 
 ### Dev subjects and policy (durable)
 Bob resolves a single subject mode and computes a single policy object:
@@ -121,9 +122,9 @@ Read-only mode (DevStudio cloud):
 
 ### Intended product shape (still aligned)
 Core base-config lifecycle per open session:
-1. One instance load `GET /api/paris/accounts/:accountId/instance/:publicId?subject=account` (performed by host in message boot or by Bob in URL boot).
+1. One instance load `GET /api/accounts/:accountId/instance/:publicId?subject=account` (performed by host in message boot or by Bob in URL boot).
 2. In-memory edits only (no base-config API writes).
-3. One publish `PUT /api/paris/accounts/:accountId/instance/:publicId?subject=account` on explicit Publish (base persistence immediate; snapshot convergence async via publish-status).
+3. One publish/write command on explicit Publish. In Roma-hosted flows, the command is delegated to Roma and Roma calls `PUT /api/accounts/:accountId/instance/:publicId?subject=account`; in URL/local flows Bob calls the named route directly. Base persistence remains immediate; snapshot convergence stays async via publish-status.
 
 Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
@@ -295,15 +296,15 @@ Minibob keep gate (public UX):
 - In Minibob (`subject=minibob`), edits are preview-only until signup.
 - After a change, the UI shows a **signup CTA** (“Create a free account to keep this change”) instead of “Keep”.
 - Undo remains available locally; “Keep” is gated behind signup/publish.
+- On publish/signup, the current draft snapshot is claimed into the new account-owned instance; draft context such as `context.websiteUrl` remains part of that instance when present.
 
 ### AI routes (current)
 - `/api/ai/widget-copilot`: Widget Copilot execution (Paris grant → San Francisco execute). Returns `422` for invalid payloads; returns `200 { message }` for upstream failures to avoid noisy “Failed to load resource” console errors.
-- `/api/ai/sdr-copilot`: Legacy compatibility shim to `/api/ai/widget-copilot`.
 - `/api/ai/outcome`: Outcome attach proxy (Bob → Paris → San Francisco). Always returns `200` (best-effort).
 
 Deployment note (verified on February 11, 2026):
 - Local Bob uses `/api/ai/widget-copilot` as primary.
-- Cloud-dev Bob (`bob.dev.clickeen.com`) now serves `/api/ai/widget-copilot` and still keeps `/api/ai/sdr-copilot` as compatibility shim.
+- Cloud-dev Bob (`bob.dev.clickeen.com`) serves `/api/ai/widget-copilot` as the only Copilot execution endpoint.
 - Cloud-dev verification confirms profile routing works through this endpoint (`free -> SDR`, `tier3 -> CS`) via `meta.promptRole`.
 
 ### User-Facing Controls (PRD 041)
@@ -312,20 +313,6 @@ Deployment note (verified on February 11, 2026):
 ### Copilot env vars (local + Cloud-dev)
 - `PARIS_BASE_URL` is used by Bob’s AI routes to request grants and attach outcomes.
 - `SANFRANCISCO_BASE_URL` should point at the San Francisco Worker. (`/api/ai/widget-copilot` also has local fallbacks + health probing.)
-
----
-
-## Personalization onboarding (agent proxies)
-
-Bob exposes Paris proxy routes for personalization onboarding jobs:
-- `POST /api/paris/personalization/onboarding`
-- `GET /api/paris/personalization/onboarding/:jobId`
-
-Account-owned business profiles are persisted by Paris at:
-- `GET /api/paris/accounts/:accountId/business-profile?subject=account`
-- `POST /api/paris/accounts/:accountId/business-profile?subject=account`
-
-San Francisco executes the agent; Paris persists `account_business_profiles`.
 
 ---
 
@@ -425,7 +412,8 @@ Bob supports instance-content localization (not editor chrome):
   - `Stale` = overlay fingerprint mismatch with base
 - If a locale is selected but no usable overlay exists, Bob must show explicit "not generated yet" state (no silent fallback-as-ready).
 
-Note: localization writes are separate from the base-config two-call pattern; overlays persist in `widget_instance_overlays` without publishing the base config.
+Note: localization writes are separate from the base-config two-call pattern; overlays persist through Paris's l10n storage layer (`OVERLAYS_R2` + `L10N_STATE_KV`) without publishing the base config.
+In Roma-hosted account flows, those localization writes also traverse the Roma host command boundary instead of Bob writing straight through itself.
 
 Reference:
 - `documentation/capabilities/localization.md`
@@ -440,15 +428,17 @@ Reference:
 - `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (used by the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
 
 ### Paris proxy (current code)
-Bob proxies Paris via:
-- `bob/app/api/paris/[...path]/route.ts` (generic proxy)
-- `bob/app/api/paris/curated-instances/route.ts`
-- `bob/app/api/paris/instance/[publicId]/route.ts` (minibob read shortcut; `subject=minibob`)
-- `bob/app/api/paris/personalization/onboarding/route.ts`
-- `bob/app/api/paris/personalization/onboarding/[jobId]/route.ts`
-- `bob/app/api/paris/roma/bootstrap/route.ts`
-- `bob/app/api/paris/widgets/route.ts`
-- `bob/app/api/paris/website-creative/route.ts` (legacy; curated-only flow does not use this)
+Bob keeps only named Paris routes, with no wildcard proxy:
+- `bob/app/api/roma/bootstrap/route.ts`
+- `bob/app/api/roma/templates/route.ts`
+
+Bob editor routes are explicit and non-`/api/paris`:
+- `bob/app/api/instance/[publicId]/route.ts` (minibob read shortcut; `subject=minibob`)
+- `bob/app/api/accounts/[accountId]/instance/[publicId]/route.ts`
+- `bob/app/api/accounts/[accountId]/instances/[publicId]/layers/user/[locale]/route.ts`
+- `bob/app/api/accounts/[accountId]/instances/[publicId]/l10n/status/route.ts`
+- `bob/app/api/accounts/[accountId]/instances/[publicId]/l10n/enqueue-selected/route.ts`
+- `bob/app/api/accounts/[accountId]/locales/route.ts` (`GET` direct Michael read + `PUT` Paris orchestration)
 
 The proxy currently supports:
 - `PARIS_BASE_URL` (preferred)
@@ -458,6 +448,7 @@ Account-scoped proxy calls require `subject=account|minibob` to resolve policy.
 
 **Security rule (executed):**
 - Bob’s Paris and AI proxy routes forward Berlin session bearer tokens. Product auth does not use `PARIS_DEV_JWT` passthrough.
+- Local `PARIS_DEV_JWT` is supplied by `bash scripts/dev-up.sh` / `.env.local` for DevStudio-local tooling only. It must not be committed in Bob Pages config.
 
 ### Dev-up
 Run:

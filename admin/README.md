@@ -141,7 +141,7 @@ admin/
 │   │   │   └── [other components...]
 │   │   ├── tools/
 │   │   │   ├── bob-ui-native.html       # Bob native UI showcase
-│   │   │   └── dev-widget-workspace.html # Deprecated (use cloud-dev Roma/Bob)
+│   │   │   └── dev-widget-workspace.html # Local-first zero-to-one widget workspace
 │   │   └── foundations/
 │   │       ├── colors.html              # Color tokens showcase
 │   │       ├── typography.html          # Typography showcase
@@ -209,7 +209,7 @@ DevStudio auto-generates navigation from filesystem:
 
 ### 🛠️ **Tools**
 - **Bob UI Native** - Bob-specific UI components
-- **Widget Workspace (Deprecated)** - old local↔cloud parity tool; use Cloudflare Roma/Bob instead
+- **Widget Workspace** - local-first zero-to-one authoring studio for source defaults and admin starters
 
 ### 📐 **Foundations**
 - **Colors** - Color tokens and palettes

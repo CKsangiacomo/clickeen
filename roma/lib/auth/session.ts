@@ -63,15 +63,6 @@ export function resolveSessionCookieDomain(request: NextRequest): string | undef
   return undefined;
 }
 
-export function resolveLegacyCookieDomainsToClear(request: NextRequest): string[] {
-  const hostname = request.nextUrl.hostname.trim().toLowerCase();
-  if (!hostname || isLocalHostname(hostname)) return [];
-  if (hostname === 'clickeen.com' || hostname.endsWith('.clickeen.com')) {
-    return ['.clickeen.com'];
-  }
-  return [];
-}
-
 export function applySessionCookies(
   response: NextResponse,
   request: NextRequest,

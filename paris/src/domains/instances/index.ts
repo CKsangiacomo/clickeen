@@ -4,7 +4,6 @@ import type { Policy } from '@clickeen/ck-policy';
 import type { CuratedInstanceRow, Env, InstanceRow, WidgetRow } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
-import { assertDevAuth } from '../../shared/auth';
 import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString, assertConfig } from '../../shared/validation';
 import { loadAccountById } from '../../shared/accounts';
@@ -19,41 +18,6 @@ const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 
 const USER_INSTANCE_SELECT_WITH_DISPLAY_NAME =
   'public_id,display_name,status,config,created_at,updated_at,widget_id,account_id,kind';
-
-const WIDGET_LOOKUP_CACHE_TTL_MS = 5 * 60_000;
-const WIDGET_LOOKUP_STORE_KEY = '__CK_PARIS_WIDGET_LOOKUP_STORE_V1__';
-
-type WidgetLookupCacheEntry = {
-  widget: WidgetRow | null;
-  expiresAt: number;
-};
-
-type WidgetLookupStore = {
-  cache: Record<string, WidgetLookupCacheEntry | undefined>;
-  inFlight: Record<string, Promise<WidgetRow | null> | undefined>;
-};
-
-function isWidgetLookupStore(value: unknown): value is WidgetLookupStore {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const record = value as Record<string, unknown>;
-  const cache = record.cache;
-  const inFlight = record.inFlight;
-  if (!cache || typeof cache !== 'object' || Array.isArray(cache)) return false;
-  if (!inFlight || typeof inFlight !== 'object' || Array.isArray(inFlight)) return false;
-  return true;
-}
-
-function resolveWidgetLookupStore(): WidgetLookupStore {
-  const scope = globalThis as Record<string, unknown>;
-  const existing = scope[WIDGET_LOOKUP_STORE_KEY];
-  if (isWidgetLookupStore(existing)) return existing;
-  const next: WidgetLookupStore = {
-    cache: {},
-    inFlight: {},
-  };
-  scope[WIDGET_LOOKUP_STORE_KEY] = next;
-  return next;
-}
 
 async function fetchUserInstanceRows(
   env: Env,
@@ -155,45 +119,18 @@ export async function loadInstanceByAccountAndPublicId(
 async function loadWidget(env: Env, widgetId: string): Promise<WidgetRow | null> {
   const normalizedWidgetId = String(widgetId || '').trim();
   if (!normalizedWidgetId) return null;
-
-  const store = resolveWidgetLookupStore();
-  const cached = store.cache[normalizedWidgetId];
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.widget;
+  const params = new URLSearchParams({
+    select: 'id,type,name',
+    id: `eq.${normalizedWidgetId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/widgets?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load widget (${res.status}): ${JSON.stringify(details)}`);
   }
-  if (cached) {
-    delete store.cache[normalizedWidgetId];
-  }
-
-  const existingRequest = store.inFlight[normalizedWidgetId];
-  if (existingRequest) return existingRequest;
-
-  const request = (async () => {
-    const params = new URLSearchParams({
-      select: 'id,type,name',
-      id: `eq.${normalizedWidgetId}`,
-      limit: '1',
-    });
-    const res = await supabaseFetch(env, `/rest/v1/widgets?${params.toString()}`, { method: 'GET' });
-    if (!res.ok) {
-      const details = await readJson(res);
-      throw new Error(`[ParisWorker] Failed to load widget (${res.status}): ${JSON.stringify(details)}`);
-    }
-    const rows = (await res.json()) as WidgetRow[];
-    return rows?.[0] ?? null;
-  })();
-  store.inFlight[normalizedWidgetId] = request;
-
-  try {
-    const widget = await request;
-    store.cache[normalizedWidgetId] = {
-      widget,
-      expiresAt: Date.now() + WIDGET_LOOKUP_CACHE_TTL_MS,
-    };
-    return widget;
-  } finally {
-    delete resolveWidgetLookupStore().inFlight[normalizedWidgetId];
-  }
+  const rows = (await res.json()) as WidgetRow[];
+  return rows?.[0] ?? null;
 }
 
 export async function loadWidgetByType(env: Env, widgetType: string): Promise<WidgetRow | null> {
@@ -226,30 +163,6 @@ export async function resolveWidgetTypeForInstance(
   return fallback ?? null;
 }
 
-export async function handleListWidgets(req: Request, env: Env) {
-  const auth = await assertDevAuth(req, env);
-  if ('response' in auth) return auth.response;
-
-  const params = new URLSearchParams({
-    select: 'type,name',
-    order: 'type.asc',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/widgets?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const details = await readJson(res);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
-  }
-  const rows = (await res.json().catch(() => [])) as Array<{ type?: string | null; name?: string | null }>;
-  return json(
-    {
-      widgets: rows
-        .map((row) => ({ type: typeof row.type === 'string' ? row.type : null, name: typeof row.name === 'string' ? row.name : null }))
-        .filter((row) => Boolean(row.type)),
-    },
-    { status: 200 },
-  );
-}
-
 function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   return raw as Record<string, unknown>;
@@ -268,64 +181,6 @@ function resolveInstanceDisplayName(instance: InstanceRow | CuratedInstanceRow):
     return formatCuratedDisplayName(meta, instance.public_id);
   }
   return asTrimmedString(instance.display_name) ?? DEFAULT_INSTANCE_DISPLAY_NAME;
-}
-
-export async function handleCuratedInstances(req: Request, env: Env) {
-  const auth = await assertDevAuth(req, env);
-  if ('response' in auth) return auth.response;
-
-  const requestUrl = new URL(req.url);
-  const includeConfigParam = String(requestUrl.searchParams.get('includeConfig') ?? '1')
-    .trim()
-    .toLowerCase();
-  const includeConfig = !['0', 'false', 'no'].includes(includeConfigParam);
-
-  const selectFields = includeConfig
-    ? 'public_id,widget_type,status,config,created_at,updated_at,kind,meta'
-    : 'public_id,widget_type,status,created_at,updated_at,kind,meta';
-
-  const params = new URLSearchParams({
-    select: selectFields,
-    order: 'created_at.desc',
-    limit: '100',
-  });
-
-  const res = await supabaseFetch(env, `/rest/v1/curated_widget_instances?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const details = await readJson(res);
-    return json({ error: 'DB_ERROR', details }, { status: 500 });
-  }
-
-  type CuratedListRow = Omit<CuratedInstanceRow, 'config'> & { config?: Record<string, unknown> };
-  const rows = ((await res.json()) as CuratedListRow[]).filter(Boolean);
-  if (includeConfig) {
-    for (const row of rows) {
-      const configResult = assertConfig(row.config);
-      if (!configResult.ok) {
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.payload.invalid',
-            detail: `Invalid persisted curated config for ${String(row.public_id || 'unknown')}: ${configResult.issues[0]?.message || 'invalid config'}`,
-          },
-          500,
-        );
-      }
-    }
-  }
-  const instances = rows.map((row) => {
-    const meta = readCuratedMeta(row.meta);
-    const base = {
-      publicId: row.public_id,
-      widgetname: row.widget_type || 'unknown',
-      displayName: formatCuratedDisplayName(meta, row.public_id),
-      meta,
-    };
-    if (!includeConfig) return base;
-    return { ...base, config: row.config ?? null };
-  });
-
-  return json({ instances, includeConfig });
 }
 
 export async function handleGetInstance(_req: Request, env: Env, publicId: string) {

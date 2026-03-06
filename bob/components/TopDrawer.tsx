@@ -63,7 +63,7 @@ export function TopDrawer() {
     setRenameError(null);
     try {
       const response = await apiFetch(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
+        `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
           currentPublicId,
         )}?subject=${encodeURIComponent(subject)}`,
         {

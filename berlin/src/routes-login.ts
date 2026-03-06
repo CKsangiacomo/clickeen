@@ -29,7 +29,16 @@ import { requestSupabaseOAuthUrl, requestSupabasePasswordGrant, requestSupabaseP
 import { OAUTH_FINISH_TTL_SECONDS, OAUTH_STATE_TTL_SECONDS, type Env, type OAuthFinishTransaction, type OAuthTransaction } from './types';
 import { loadSessionState } from './session-kv';
 
+function isLocalHostname(hostname: string): boolean {
+  const normalized = hostname.trim().toLowerCase();
+  return normalized === 'localhost' || normalized === '127.0.0.1';
+}
+
 export async function handlePasswordLogin(request: Request, env: Env): Promise<Response> {
+  if (!isLocalHostname(new URL(request.url).hostname)) {
+    return authError('coreui.errors.auth.password.localOnly', 403, 'password_login_local_only');
+  }
+
   const body = await readJsonBody(request);
   const email = normalizeEmail(body?.email);
   const password = normalizePassword(body?.password);
@@ -217,7 +226,7 @@ export async function handleFinish(request: Request, env: Env): Promise<Response
   const finishFromBody = claimAsString(body?.finishId);
   const finishFromQuery = claimAsString(new URL(request.url).searchParams.get('finishId'));
   const finishId = finishFromBody || finishFromQuery;
-  if (!isValidFinishId(finishId)) return authError('coreui.errors.auth.finish.invalidOrExpired', 401);
+  if (!isValidFinishId(finishId)) return validationError('coreui.errors.auth.finish.invalidOrExpired');
 
   const consumedFinish = await consumeOauthFinishTransaction(env, finishId);
   if (consumedFinish.outcome === 'storeUnavailable') {
@@ -230,7 +239,7 @@ export async function handleFinish(request: Request, env: Env): Promise<Response
     return authError('coreui.errors.auth.finish.invalidOrExpired', 410, 'finish_expired');
   }
   if (consumedFinish.outcome !== 'ok') {
-    return authError('coreui.errors.auth.finish.invalidOrExpired', 401);
+    return validationError('coreui.errors.auth.finish.invalidOrExpired');
   }
   const transaction = consumedFinish.ticket;
 

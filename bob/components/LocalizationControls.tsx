@@ -421,7 +421,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
 
     try {
       const res = await session.apiFetch(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/locales?subject=${encodeURIComponent(subject)}`,
+        `/api/accounts/${encodeURIComponent(accountId)}/locales?subject=${encodeURIComponent(subject)}`,
         {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },

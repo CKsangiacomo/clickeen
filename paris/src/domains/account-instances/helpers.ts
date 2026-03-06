@@ -5,7 +5,7 @@ import type {
   Env,
   InstanceRow,
 } from '../../shared/types';
-import { ckError } from '../../shared/errors';
+import { ckError, errorDetail } from '../../shared/errors';
 import { readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString } from '../../shared/validation';
@@ -96,7 +96,7 @@ export async function validateAccountAssetUsageForInstanceStrict(args: {
     await validateAccountAssetUsageForInstance(args);
     return null;
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     if (error instanceof AssetUsageValidationError) {
       return ckError(
         {
@@ -122,7 +122,7 @@ export async function syncAccountAssetUsageForInstanceStrict(args: {
     await syncAccountAssetUsageForInstance(args);
     return null;
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     if (error instanceof AssetUsageValidationError) {
       return ckError(
         {
@@ -229,7 +229,7 @@ export async function rollbackInstanceWriteAfterPostCommitFailure(args: {
       config: args.before.config,
     });
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     console.error(
       `[ParisWorker] Failed to restore asset usage references after rollback for ${args.publicId}: ${detail}`,
     );
@@ -296,7 +296,7 @@ export async function enforceLimits(
   try {
     limits = await loadWidgetLimits(env, widgetType);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.limits.loadFailed', detail }, 500);
   }
   if (!limits) return null;

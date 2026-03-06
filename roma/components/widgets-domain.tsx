@@ -47,7 +47,7 @@ export function WidgetsDomain() {
     setDomainLoading(true);
     setDataError(null);
     try {
-      const payload = await fetchParisJson<unknown>(`/api/paris/roma/widgets?accountId=${encodeURIComponent(accountId)}`, {
+      const payload = await fetchParisJson<unknown>(`/api/roma/widgets?accountId=${encodeURIComponent(accountId)}`, {
         method: 'GET',
       });
       const normalized = normalizeRomaWidgetsResponse(payload);
@@ -121,7 +121,7 @@ export function WidgetsDomain() {
       try {
         const sourcePublicId = buildMainPublicId(normalizedWidgetType);
         const payload = await fetchParisJson<{ publicId?: string; widgetType?: string }>(
-          `/api/paris/roma/widgets/duplicate`,
+          `/api/roma/widgets/duplicate`,
           {
             method: 'POST',
             headers: {
@@ -168,7 +168,7 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        const payload = await fetchParisJson<{ publicId?: string; widgetType?: string }>(`/api/paris/roma/widgets/duplicate`, {
+        const payload = await fetchParisJson<{ publicId?: string; widgetType?: string }>(`/api/roma/widgets/duplicate`, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
@@ -202,7 +202,7 @@ export function WidgetsDomain() {
       setCreateError(null);
       try {
         await fetchParisJson<{ deleted?: boolean }>(
-          `/api/paris/roma/instances/${encodeURIComponent(instance.publicId)}?accountId=${encodeURIComponent(accountId)}`,
+          `/api/roma/instances/${encodeURIComponent(instance.publicId)}?accountId=${encodeURIComponent(accountId)}`,
           {
             method: 'DELETE',
           },

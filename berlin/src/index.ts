@@ -2,7 +2,6 @@ import { BerlinAuthTicketDO } from './auth-ticket-store';
 import { internalError, json, methodNotAllowed } from './helpers';
 import { type Env } from './types';
 import { handleFinish, handlePasswordLogin, handleProviderLoginCallback, handleProviderLoginStart } from './routes-login';
-import { handleLinkCallback, handleLinkStart, handleUnlink } from './routes-link';
 import { handleHealthz, handleJwks, handleLogout, handleMichaelToken, handleRefresh, handleSession } from './routes-session';
 
 export { BerlinAuthTicketDO };
@@ -43,19 +42,9 @@ export default {
         return await handleFinish(request, env);
       }
 
-      if (pathname === '/auth/link/start') {
-        if (request.method !== 'POST') return methodNotAllowed();
-        return await handleLinkStart(request, env);
-      }
-
-      if (pathname === '/auth/link/callback') {
+      if (pathname === '/auth/session') {
         if (request.method !== 'GET') return methodNotAllowed();
-        return await handleLinkCallback(request, env);
-      }
-
-      if (pathname === '/auth/unlink') {
-        if (request.method !== 'POST') return methodNotAllowed();
-        return await handleUnlink(request, env);
+        return await handleSession(request, env);
       }
 
       if (pathname === '/auth/refresh') {
@@ -66,11 +55,6 @@ export default {
       if (pathname === '/auth/logout') {
         if (request.method !== 'POST') return methodNotAllowed();
         return await handleLogout(request, env);
-      }
-
-      if (pathname === '/auth/session' || pathname === '/auth/validate') {
-        if (request.method !== 'GET') return methodNotAllowed();
-        return await handleSession(request, env);
       }
 
       if (pathname === '/auth/michael/token') {

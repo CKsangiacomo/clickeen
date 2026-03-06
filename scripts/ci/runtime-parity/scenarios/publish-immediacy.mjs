@@ -24,17 +24,12 @@ async function fetchEmbedHeaders({ profile, publicId }) {
 }
 
 async function fetchPublishStatus({ profile, accountId, publicId }) {
-  const baseUrl =
-    profile.name === 'local'
-      ? `${profile.bobBaseUrl}/api/paris`
-      : profile.parisBaseUrl;
-
   const url =
     profile.name === 'local'
-      ? `${baseUrl}/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+      ? `${profile.bobBaseUrl.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId,
         )}/publish/status?subject=account&_t=${Date.now()}`
-      : `${baseUrl}/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+      : `${profile.parisBaseUrl.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId,
         )}/publish/status?subject=account&_t=${Date.now()}`;
 
@@ -154,10 +149,10 @@ export async function runPublishImmediacyScenario({ profile, context }) {
 
   const instanceUrl =
     profile.name === 'local'
-      ? `${profile.bobBaseUrl}/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
+      ? `${profile.bobBaseUrl.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
           publicId,
         )}?subject=account&_t=${Date.now()}`
-      : `${profile.parisBaseUrl}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
+      : `${profile.parisBaseUrl.replace(/\/+$/, '')}/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
           publicId,
         )}?subject=account&_t=${Date.now()}`;
 

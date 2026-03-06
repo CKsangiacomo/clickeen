@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveSessionBearer, type SessionCookieSpec, applySessionCookies } from '../../../../../lib/auth/session';
-import { resolveParisBaseUrl } from '../../../../../lib/env/paris';
+import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
+import { resolveTokyoBaseUrl } from '../../../../../lib/env/tokyo';
 
 export const runtime = 'edge';
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id, x-clickeen-surface',
-} as const;
-
 type RouteContext = { params: Promise<{ accountId: string; assetId: string }> };
 
-function withCorsAndSession(
+function withSession(
   request: NextRequest,
   response: NextResponse,
   setCookies?: SessionCookieSpec[],
 ): NextResponse {
   const next = applySessionCookies(response, request, setCookies);
-  Object.entries(CORS_HEADERS).forEach(([key, value]) => next.headers.set(key, value));
+  next.headers.set('cache-control', 'no-store');
+  next.headers.set('cdn-cache-control', 'no-store');
+  next.headers.set('cloudflare-cdn-cache-control', 'no-store');
   return next;
 }
 
@@ -26,87 +22,88 @@ function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
-function resolveParisAssetUrl(request: NextRequest, accountId: string, assetId: string): string {
-  const parisBase = resolveParisBaseUrl().replace(/\/$/, '');
-  const target = new URL(`${parisBase}/api/accounts/${encodeURIComponent(accountId)}/assets/${encodeURIComponent(assetId)}`);
-  request.nextUrl.searchParams.forEach((value, key) => {
-    if (value) target.searchParams.set(key, value);
-  });
-  return target.toString();
+function parseJson(text: string): unknown | null {
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
 }
 
-async function forwardAssetRequest(
-  request: NextRequest,
-  context: RouteContext,
-  method: 'GET' | 'DELETE',
-): Promise<NextResponse> {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   const session = await resolveSessionBearer(request);
-  if (!session.ok) {
-    return withCorsAndSession(request, session.response);
-  }
+  if (!session.ok) return withSession(request, session.response);
 
-  const params = await context.params;
-  const accountId = String(params.accountId || '').trim();
-  const assetId = String(params.assetId || '').trim();
-  if (!isUuid(accountId)) {
-    return withCorsAndSession(
-      request,
-      NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 }),
-      session.setCookies,
-    );
-  }
-  if (!isUuid(assetId)) {
-    return withCorsAndSession(
-      request,
-      NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' } }, { status: 422 }),
-      session.setCookies,
-    );
-  }
-
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${session.accessToken}`);
-  if (method === 'DELETE') {
-    headers.set('x-clickeen-surface', 'roma-assets');
-  }
-
-  try {
-    const res = await fetch(resolveParisAssetUrl(request, accountId, assetId), {
-      method,
-      headers,
-      cache: 'no-store',
-    });
-    const text = await res.text().catch(() => '');
-    return withCorsAndSession(
-      request,
-      new NextResponse(text, {
-        status: res.status,
-        headers: {
-          'Content-Type': res.headers.get('Content-Type') || 'application/json',
-        },
-      }),
-      session.setCookies,
-    );
-  } catch (err) {
-    const messageText = err instanceof Error ? err.message : String(err);
-    return withCorsAndSession(
+  const { accountId, assetId } = await context.params;
+  const normalizedAccountId = String(accountId || '').trim();
+  const normalizedAssetId = String(assetId || '').trim();
+  if (!isUuid(normalizedAccountId)) {
+    return withSession(
       request,
       NextResponse.json(
-        { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.db.writeFailed', detail: messageText } },
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
+        { status: 422 },
+      ),
+      session.setCookies,
+    );
+  }
+  if (!isUuid(normalizedAssetId)) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' } },
+        { status: 422 },
+      ),
+      session.setCookies,
+    );
+  }
+
+  let tokyoBase = '';
+  try {
+    tokyoBase = resolveTokyoBaseUrl().replace(/\/+$/, '');
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail } },
+        { status: 500 },
+      ),
+      session.setCookies,
+    );
+  }
+
+  const target = new URL(
+    `${tokyoBase}/assets/${encodeURIComponent(normalizedAccountId)}/${encodeURIComponent(normalizedAssetId)}`,
+  );
+  request.nextUrl.searchParams.forEach((value, key) => target.searchParams.set(key, value));
+
+  try {
+    const upstream = await fetch(target.toString(), {
+      method: 'DELETE',
+      headers: {
+        authorization: `Bearer ${session.accessToken}`,
+        accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+    const text = await upstream.text().catch(() => '');
+    const payload = parseJson(text);
+    const body =
+      payload && typeof payload === 'object'
+        ? payload
+        : { error: { kind: 'INTERNAL', reasonKey: `HTTP_${upstream.status}` } };
+    return withSession(request, NextResponse.json(body, { status: upstream.status }), session.setCookies);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'roma.errors.proxy.tokyo_unavailable', detail } },
         { status: 502 },
       ),
       session.setCookies,
     );
   }
-}
-
-export function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
-}
-
-export function GET(request: NextRequest, context: RouteContext) {
-  return forwardAssetRequest(request, context, 'GET');
-}
-
-export function DELETE(request: NextRequest, context: RouteContext) {
-  return forwardAssetRequest(request, context, 'DELETE');
 }

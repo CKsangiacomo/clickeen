@@ -4,10 +4,11 @@ import type { AccountRow, Env, InstanceRow, WidgetRow } from '../../shared/types
 import { authorizeAccount } from '../../shared/account-auth';
 import { mintRomaAccountAuthzCapsule } from '../../shared/authz-capsule';
 import { readBudgetUsed } from '../../shared/budgets';
-import { ckError } from '../../shared/errors';
+import { ckError, errorDetail } from '../../shared/errors';
 import { json, readJson } from '../../shared/http';
 import { loadAccountById } from '../../shared/accounts';
 import { resolveAdminAccountId } from '../../shared/admin';
+import { normalizeMemberRole, roleRank } from '../../shared/roles';
 import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString, assertAccountId, assertConfig, isRecord } from '../../shared/validation';
 import { assertPublicId, assertWidgetType, isCuratedInstanceRow, isCuratedPublicId } from '../../shared/instances';
@@ -24,33 +25,6 @@ type AccountEntitlementsSnapshot = {
   caps: Record<string, number | null>;
   budgets: Record<string, { max: number | null; used: number }>;
 };
-
-function normalizeMemberRole(value: unknown): MemberRole | null {
-  switch (value) {
-    case 'viewer':
-    case 'editor':
-    case 'admin':
-    case 'owner':
-      return value;
-    default:
-      return null;
-  }
-}
-
-function roleRank(role: MemberRole): number {
-  switch (role) {
-    case 'owner':
-      return 4;
-    case 'admin':
-      return 3;
-    case 'editor':
-      return 2;
-    case 'viewer':
-      return 1;
-    default:
-      return 0;
-  }
-}
 
 async function resolveAccountEntitlementsSnapshot(args: {
   env: Env;
@@ -252,7 +226,7 @@ export async function handleRomaBootstrap(req: Request, env: Env): Promise<Respo
   try {
     account = await loadAccountById(env, accountIdResult.value);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
   }
   if (!account) {
@@ -300,7 +274,7 @@ export async function handleRomaBootstrap(req: Request, env: Env): Promise<Respo
     accountCapsule = capsule.token;
     entitlements = entitlementsSnapshot;
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.auth.contextUnavailable', detail }, 500);
   }
 
@@ -342,7 +316,7 @@ export async function handleRomaWidgets(req: Request, env: Env): Promise<Respons
     instances = [...accountRows, ...ownedCuratedRows];
     allWidgetTypes = widgetTypes;
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
   }
 
@@ -457,7 +431,7 @@ export async function handleRomaWidgetDuplicate(req: Request, env: Env): Promise
   try {
     sourceInstance = await loadInstanceByAccountAndPublicId(env, accountId, sourcePublicId);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
   }
   if (!sourceInstance) {
@@ -468,7 +442,7 @@ export async function handleRomaWidgetDuplicate(req: Request, env: Env): Promise
   try {
     widgetType = await resolveWidgetTypeForInstance(env, sourceInstance);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
   }
   if (!widgetType) {
@@ -556,7 +530,7 @@ export async function handleRomaWidgetDelete(req: Request, env: Env, publicIdRaw
   try {
     existing = await loadInstanceByAccountAndPublicId(env, accountId, publicId);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
   }
   if (!existing) {
@@ -578,7 +552,7 @@ export async function handleRomaWidgetDelete(req: Request, env: Env, publicIdRaw
       console.error('[ParisWorker] tokyo delete-instance-mirror enqueue failed', enqueue.error);
     }
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     console.error('[ParisWorker] tokyo delete-instance-mirror enqueue failed', detail);
   }
 

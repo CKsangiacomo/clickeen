@@ -1,8 +1,7 @@
 import { authHeaders, extractDefaults, fetchEnvelope } from '../http.mjs';
 import { isUuid, makeCheck, readString, scenarioPassed } from '../utils.mjs';
-import crypto from 'node:crypto';
 
-function extractAccountInstancePublicIds(payload) {
+function extractWidgetPublicIds(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return [];
   const instances = Array.isArray(payload.instances) ? payload.instances : [];
   return instances
@@ -12,79 +11,28 @@ function extractAccountInstancePublicIds(payload) {
     .filter(Boolean);
 }
 
-function createProbePublicId(widgetType) {
-  const normalized = readString(widgetType)
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '');
-  const stem = normalized || 'instance';
-  const suffix = `${Date.now().toString(36)}${crypto.randomUUID().replace(/-/g, '').slice(0, 10)}`;
-  return `wgt_${stem}_u_${suffix}`;
-}
-
-function resolveAccountInstancesUrl(profile, accountId) {
+function resolveRomaWidgetsUrl(profile, accountId) {
   const normalizedAccountId = readString(accountId);
-  const base =
-    profile.name === 'local'
-      ? `${profile.bobBaseUrl.replace(/\/+$/, '')}/api/paris`
-      : profile.parisBaseUrl.replace(/\/+$/, '');
-  const path = profile.name === 'local'
-    ? `/accounts/${encodeURIComponent(normalizedAccountId)}/instances`
-    : `/api/accounts/${encodeURIComponent(normalizedAccountId)}/instances`;
-  return `${base}${path}?subject=account&_t=${Date.now()}`;
-}
-
-function resolveAccountInstancesCreateUrl(profile, accountId) {
-  const normalizedAccountId = readString(accountId);
-  const base =
-    profile.name === 'local'
-      ? `${profile.bobBaseUrl.replace(/\/+$/, '')}/api/paris`
-      : profile.parisBaseUrl.replace(/\/+$/, '');
-  const path = profile.name === 'local'
-    ? `/accounts/${encodeURIComponent(normalizedAccountId)}/instances`
-    : `/api/accounts/${encodeURIComponent(normalizedAccountId)}/instances`;
-  return `${base}${path}?subject=account&_t=${Date.now()}`;
+  const base = profile.bobBaseUrl.replace(/\/+$/, '');
+  return `${base}/api/roma/widgets?accountId=${encodeURIComponent(normalizedAccountId)}&_t=${Date.now()}`;
 }
 
 async function resolveProbePublicId({ profile, headers, accountId }) {
   const explicit = readString(profile.probePublicId);
   const debug = {
     explicit: explicit || null,
-    list: { status: 0, count: 0 },
-    create: { attempted: false, status: 0, reasonKey: null },
+    widgets: { status: 0, count: 0 },
   };
   if (explicit) return { publicId: explicit, debug };
 
-  const list = await fetchEnvelope(resolveAccountInstancesUrl(profile, accountId), { headers });
-  debug.list.status = list.status;
-  if (list.status === 200) {
-    const publicIds = extractAccountInstancePublicIds(list.json);
-    debug.list.count = publicIds.length;
-    if (publicIds.length) return { publicId: publicIds[0] || '', debug };
-  }
+  const widgets = await fetchEnvelope(resolveRomaWidgetsUrl(profile, accountId), { headers });
+  debug.widgets.status = widgets.status;
+  if (widgets.status !== 200) return { publicId: '', debug };
 
-  if (profile.name !== 'local') return { publicId: '', debug };
-
-  const widgetType = 'countdown';
-  const publicId = createProbePublicId(widgetType);
-  debug.create.attempted = true;
-  const create = await fetchEnvelope(resolveAccountInstancesCreateUrl(profile, accountId), {
-    method: 'POST',
-    headers: authHeaders(profile.authBearer, { 'content-type': 'application/json' }),
-    body: JSON.stringify({
-      publicId,
-      widgetType,
-      status: 'unpublished',
-      config: {},
-    }),
-    retries: 0,
-  });
-  debug.create.status = create.status;
-  debug.create.reasonKey = readString(create.json?.error?.reasonKey) || readString(create.json?.error) || null;
-  if (create.status !== 200) return { publicId: '', debug };
-  const createdPublicId = readString(create.json?.publicId);
-  return { publicId: createdPublicId || publicId, debug };
+  const publicIds = extractWidgetPublicIds(widgets.json);
+  debug.widgets.count = publicIds.length;
+  if (!publicIds.length) return { publicId: '', debug };
+  return { publicId: publicIds[0] || '', debug };
 }
 
 export async function runBootstrapParityScenario({ profile }) {
@@ -92,7 +40,7 @@ export async function runBootstrapParityScenario({ profile }) {
   const headers = authHeaders(profile.authBearer);
 
   if (profile.name === 'local') {
-    const bob = await fetchEnvelope(`${profile.bobBaseUrl}/api/paris/roma/bootstrap?_t=${Date.now()}`, { headers });
+    const bob = await fetchEnvelope(`${profile.bobBaseUrl.replace(/\/+$/, '')}/api/roma/bootstrap?_t=${Date.now()}`, { headers });
     checks.push(makeCheck('Bob bootstrap responds 200', bob.status === 200, { actual: bob.status }));
 
     const bobDefaults = extractDefaults(bob.json);
@@ -122,7 +70,7 @@ export async function runBootstrapParityScenario({ profile }) {
   }
 
   const roma = await fetchEnvelope(`${profile.romaBaseUrl}/api/bootstrap?_t=${Date.now()}`, { headers });
-  const bob = await fetchEnvelope(`${profile.bobBaseUrl}/api/paris/roma/bootstrap?_t=${Date.now()}`, { headers });
+  const bob = await fetchEnvelope(`${profile.bobBaseUrl.replace(/\/+$/, '')}/api/roma/bootstrap?_t=${Date.now()}`, { headers });
 
   checks.push(
     makeCheck('Roma bootstrap responds 200', roma.status === 200, { actual: roma.status }),

@@ -16,7 +16,7 @@ function isNoStore(cacheControl) {
 export async function runPublicAccessParityScenario({ profile, context }) {
   const checks = [];
 
-  const bobBootstrap = await fetchEnvelope(`${profile.bobBaseUrl}/api/paris/roma/bootstrap?_t=${Date.now()}`);
+  const bobBootstrap = await fetchEnvelope(`${profile.bobBaseUrl.replace(/\/+$/, '')}/api/roma/bootstrap?_t=${Date.now()}`);
   const bobBootstrapReason = parseReasonKey(bobBootstrap.json);
 
   if (profile.name === 'local') {

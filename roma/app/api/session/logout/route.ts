@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
-import { resolveLegacyCookieDomainsToClear, resolveSessionCookieDomain, resolveSessionCookieNames } from '../../../../lib/auth/session';
+import { resolveSessionCookieDomain, resolveSessionCookieNames } from '../../../../lib/auth/session';
 
 export const runtime = 'edge';
-
-const LEGACY_ACCESS_COOKIE = 'sb-access-token';
-const LEGACY_REFRESH_COOKIE = 'sb-refresh-token';
 
 const CACHE_HEADERS = {
   'cache-control': 'no-store',
@@ -13,27 +10,9 @@ const CACHE_HEADERS = {
   'cloudflare-cdn-cache-control': 'no-store',
 } as const;
 
-function resolveAllSessionCookieNames(request: NextRequest): string[] {
+function resolveAllSessionCookieNames(): string[] {
   const active = resolveSessionCookieNames();
-  const names = new Set<string>([
-    active.access,
-    active.refresh,
-    'ck-access-token',
-    'ck-refresh-token',
-    LEGACY_ACCESS_COOKIE,
-    LEGACY_REFRESH_COOKIE,
-  ]);
-  for (const cookie of request.cookies.getAll()) {
-    const name = cookie.name;
-    if (name.startsWith('sb-') && name.endsWith('-access-token')) names.add(name);
-    if (name.startsWith('sb-') && name.endsWith('-refresh-token')) names.add(name);
-    if (name.startsWith('sb-') && name.endsWith('-auth-token')) {
-      names.add(name);
-      names.add(`${name.replace(/-auth-token$/, '')}-access-token`);
-      names.add(`${name.replace(/-auth-token$/, '')}-refresh-token`);
-    }
-  }
-  return [...names];
+  return [active.access, active.refresh];
 }
 
 export async function POST(request: NextRequest) {
@@ -59,9 +38,8 @@ export async function POST(request: NextRequest) {
 
   const secure = request.nextUrl.protocol === 'https:';
   const domain = resolveSessionCookieDomain(request);
-  const legacyDomains = resolveLegacyCookieDomainsToClear(request);
   const response = NextResponse.json({ ok: true }, { headers: CACHE_HEADERS });
-  const cookieNames = resolveAllSessionCookieNames(request);
+  const cookieNames = resolveAllSessionCookieNames();
   for (const cookieName of cookieNames) {
     response.cookies.set({
       name: cookieName,
@@ -82,20 +60,6 @@ export async function POST(request: NextRequest) {
         path: '/',
         maxAge: 0,
         domain,
-      });
-    }
-
-    for (const legacy of legacyDomains) {
-      if (!legacy || legacy === domain) continue;
-      response.cookies.set({
-        name: cookieName,
-        value: '',
-        httpOnly: true,
-        secure,
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 0,
-        domain: legacy,
       });
     }
   }

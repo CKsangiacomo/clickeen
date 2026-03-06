@@ -89,7 +89,7 @@ Widget copilot routing (shipped):
   - `cs.widget.copilot.v1`: in-product editor copilot (control-driven edits, task-completion clarifications, no SDR website/seller loop).
 
 Deployment status (code-synced on February 26, 2026; last cloud-dev smoke notes from February 11, 2026):
-- Local target behavior: browser calls `POST /api/ai/widget-copilot` (with `/api/ai/sdr-copilot` as compatibility shim).
+- Local target behavior: browser calls `POST /api/ai/widget-copilot`.
 - Cloud-dev current behavior: `https://bob.dev.clickeen.com/api/ai/widget-copilot` is live (after Bob Pages deploy).
 - Verified post-deploy routing on cloud-dev:
   - free workspace -> `meta.promptRole = "sdr"`
@@ -139,8 +139,8 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `POST /v1/outcome` (outcome attach, signed by Paris)
   - `POST /v1/personalization/preview` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
   - `GET /v1/personalization/preview/:jobId` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
-  - `POST /v1/personalization/onboarding` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
-  - `GET /v1/personalization/onboarding/:jobId` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
+  - `POST /v1/personalization/onboarding` (internal legacy route name for post-signup account-context carry-forward; `Authorization: Bearer ${PARIS_DEV_JWT}`)
+  - `GET /v1/personalization/onboarding/:jobId` (internal legacy route name; polls the same post-signup account-context carry-forward job; `Authorization: Bearer ${PARIS_DEV_JWT}`)
   - `POST /v1/l10n/plan` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
   - `POST /v1/l10n` (internal/local tooling only; `Authorization: Bearer ${PARIS_DEV_JWT}`; `ENVIRONMENT=local` only)
   - `POST /v1/l10n/translate` (local + cloud-dev only; `Authorization: Bearer ${PARIS_DEV_JWT}`; `ENVIRONMENT in {local,dev}`)
@@ -414,8 +414,8 @@ Definition of done:
 Status: shipped (implemented as thin proxies)
 
 Definition of done:
-- Legacy FAQ-only proxy is explicitly deprecated:
-  - `bob/app/api/ai/faq-copilot/route.ts` returns `410` and points callers to `/api/ai/widget-copilot`.
+- Legacy compatibility AI routes are removed.
+- `bob/app/api/ai/widget-copilot` is the only Copilot execution path.
 
 ## Open Questions (next)
 - Grant transport: return grant in `GET /api/accounts/:accountId/instance/:publicId?subject=account` vs separate `POST /api/ai/grant` (both work; choose based on desired session semantics).

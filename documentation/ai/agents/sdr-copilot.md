@@ -221,8 +221,6 @@ From Bob's perspective, a single Copilot request uses **two platform services**:
 
 This is the only endpoint the browser should call for Copilot execution.
 
-Compatibility note (current cloud-dev deploys): `POST /api/ai/sdr-copilot` is still served as a compatibility entrypoint and forwards into the same handler path.
-
 Request body:
 ```json
 {

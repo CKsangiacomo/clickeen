@@ -1,7 +1,10 @@
 import type { SupabaseAuthPrincipal } from '../../shared/auth';
-import { assertDevAuth, isTrustedInternalServiceRequest } from '../../shared/auth';
+import { assertDevAuth } from '../../shared/auth';
+import { normalizeAccountTier } from '../../shared/authz-capsule';
+import { errorDetail } from '../../shared/errors';
 import type { AccountTier, Env } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
+import { roleRank } from '../../shared/roles';
 import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString } from '../../shared/validation';
 import { resolveAdminAccountId } from '../../shared/admin';
@@ -63,47 +66,16 @@ type IdentityMeResolution =
   | { ok: true; principal: SupabaseAuthPrincipal; payload: IdentityMePayload }
   | { ok: false; response: Response };
 
-const ROLE_RANK: Record<string, number> = { viewer: 0, editor: 1, admin: 2, owner: 3 };
-
-function roleRank(role: string): number {
-  const normalized = typeof role === 'string' ? role.trim().toLowerCase() : '';
-  return ROLE_RANK[normalized] ?? -1;
-}
-
 function resolveMembershipVersion(row: AccountMembershipRow): string | null {
   const created = asTrimmedString(row.created_at);
   return created || null;
 }
 
-function normalizeAccountTier(raw: unknown): AccountTier | null {
-  switch (raw) {
-    case 'free':
-    case 'tier1':
-    case 'tier2':
-    case 'tier3':
-      return raw;
-    default:
-      return null;
-  }
-}
-
-function resolveRequestedAccountId(req: Request): string {
-  const value = new URL(req.url).searchParams.get('accountId');
-  if (!value) return '';
-  return value.trim();
-}
-
 function selectDefaultAccount(
   accounts: IdentityAccountContext[],
   env: Env,
-  requestedAccountId: string,
 ): IdentityAccountContext | null {
   if (accounts.length === 0) return null;
-
-  if (requestedAccountId) {
-    const requested = accounts.find((entry) => entry.accountId === requestedAccountId) ?? null;
-    if (requested) return requested;
-  }
 
   const adminAccountId = resolveAdminAccountId(env);
   const admin = accounts.find((entry) => entry.accountId === adminAccountId) ?? null;
@@ -171,80 +143,6 @@ export async function resolveIdentityMePayload(req: Request, env: Env): Promise<
 
   const principal = auth.principal;
   if (!principal) {
-    const localStage = String(env.ENV_STAGE || '').trim().toLowerCase() === 'local';
-    if (localStage && isTrustedInternalServiceRequest(req, env)) {
-      type AccountListRow = {
-        id?: unknown;
-        status?: unknown;
-        is_platform?: unknown;
-        tier?: unknown;
-        name?: unknown;
-        slug?: unknown;
-        website_url?: unknown;
-        tier_changed_at?: unknown;
-        tier_changed_from?: unknown;
-        tier_changed_to?: unknown;
-        tier_drop_dismissed_at?: unknown;
-        tier_drop_email_sent_at?: unknown;
-      };
-
-      const accountsRes = await supabaseFetch(
-        env,
-        `/rest/v1/accounts?${new URLSearchParams({
-          select:
-            'id,status,is_platform,tier,name,slug,website_url,tier_changed_at,tier_changed_from,tier_changed_to,tier_drop_dismissed_at,tier_drop_email_sent_at',
-          order: 'created_at.asc',
-          limit: '1000',
-        }).toString()}`,
-        { method: 'GET' },
-      );
-      if (!accountsRes.ok) {
-        const details = await readJson(accountsRes);
-        return { ok: false, response: json({ error: 'ACCOUNT_LOOKUP_FAILED', detail: details }, { status: 502 }) };
-      }
-
-      const accountRows = (await accountsRes.json().catch(() => [])) as AccountListRow[];
-      const accounts: IdentityAccountContext[] = accountRows
-        .map((row) => ({
-          accountId: asTrimmedString(row?.id) ?? '',
-          role: 'owner',
-          name: asTrimmedString(row?.name) ?? 'Account',
-          slug: asTrimmedString(row?.slug) ?? 'account',
-          tier: (asTrimmedString(row?.tier) as AccountTier) ?? 'free',
-          websiteUrl: asTrimmedString(row?.website_url) || null,
-          membershipVersion: null,
-          lifecycleNotice: {
-            tierChangedAt: asTrimmedString(row?.tier_changed_at) || null,
-            tierChangedFrom: normalizeAccountTier(row?.tier_changed_from),
-            tierChangedTo: normalizeAccountTier(row?.tier_changed_to),
-            tierDropDismissedAt: asTrimmedString(row?.tier_drop_dismissed_at) || null,
-            tierDropEmailSentAt: asTrimmedString(row?.tier_drop_email_sent_at) || null,
-          },
-        }))
-        .filter((row) => Boolean(row.accountId));
-
-      const requestedAccountId = resolveRequestedAccountId(req);
-      const defaultAccount = selectDefaultAccount(accounts, env, requestedAccountId);
-
-      const syntheticPrincipal: SupabaseAuthPrincipal = {
-        token: '',
-        userId: 'dev-local',
-        email: 'dev@clickeen.local',
-        role: 'superadmin',
-        claims: { sub: 'dev-local' },
-      };
-
-      return {
-        ok: true,
-        principal: syntheticPrincipal,
-        payload: {
-          user: { id: syntheticPrincipal.userId, email: syntheticPrincipal.email, role: syntheticPrincipal.role },
-          accounts,
-          defaults: { accountId: defaultAccount?.accountId ?? null },
-        },
-      };
-    }
-
     return { ok: false, response: json({ error: 'AUTH_REQUIRED' }, { status: 401 }) };
   }
 
@@ -252,14 +150,12 @@ export async function resolveIdentityMePayload(req: Request, env: Env): Promise<
   try {
     membershipRows = await loadAccountsForUser(env, principal.userId);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return { ok: false, response: json({ error: 'ACCOUNT_MEMBERSHIP_LOOKUP_FAILED', detail }, { status: 502 }) };
   }
 
   const accounts = normalizeAccountContexts(membershipRows);
-
-  const requestedAccountId = resolveRequestedAccountId(req);
-  const resolvedAccount = selectDefaultAccount(accounts, env, requestedAccountId);
+  const resolvedAccount = selectDefaultAccount(accounts, env);
 
   return {
     ok: true,
@@ -270,10 +166,4 @@ export async function resolveIdentityMePayload(req: Request, env: Env): Promise<
       defaults: { accountId: resolvedAccount?.accountId ?? null },
     },
   };
-}
-
-export async function handleMe(req: Request, env: Env): Promise<Response> {
-  const resolved = await resolveIdentityMePayload(req, env);
-  if (!resolved.ok) return resolved.response;
-  return json(resolved.payload);
 }

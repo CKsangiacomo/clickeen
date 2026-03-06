@@ -1,7 +1,7 @@
 import type { AccountRow, Env } from './types';
 import { supabaseFetch } from './supabase';
 import { readJson } from './http';
-import { ckError } from './errors';
+import { ckError, errorDetail } from './errors';
 
 export async function loadAccountById(env: Env, accountId: string): Promise<AccountRow | null> {
   const params = new URLSearchParams({
@@ -26,11 +26,10 @@ export async function requireAccount(env: Env, accountId: string) {
     }
     return { ok: true as const, account };
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return {
       ok: false as const,
       response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500),
     };
   }
 }
-

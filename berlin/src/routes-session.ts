@@ -1,8 +1,8 @@
 import { authError, claimAsNumber, claimAsString, json } from './helpers';
-import { readJsonBody, resolveAccessTokenFromRequest, resolveRefreshTokenFromRequest } from './auth-request';
+import { readJsonBody, resolveRefreshTokenFromRequest } from './auth-request';
 import { ensureSupabaseAccessToken, rotateRefreshRti, resolvePrincipalSession } from './auth-session';
 import { addUserSessionId, loadSessionState, revokeSessionBySid, revokeSessionsByUserId, saveSessionState } from './session-kv';
-import { resolveSigningContext, signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from './jwt-crypto';
+import { resolveSigningContext, signAccessToken, signRefreshToken, verifyRefreshToken } from './jwt-crypto';
 import { resolveAudience, resolveIssuer } from './auth-config';
 import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS, type AccessClaims, type Env, type RefreshPayloadV2, type SessionState } from './types';
 
@@ -93,6 +93,19 @@ export async function handleRefresh(request: Request, env: Env): Promise<Respons
   });
 }
 
+export async function handleSession(request: Request, env: Env): Promise<Response> {
+  const principal = await resolvePrincipalSession(request, env);
+  if (!principal.ok) return principal.response;
+
+  const expiresAt = claimAsNumber(principal.claims.exp);
+  return json({
+    ok: true,
+    userId: principal.userId,
+    sid: principal.sid,
+    expiresAt: expiresAt ? new Date(expiresAt * 1000).toISOString() : null,
+  });
+}
+
 export async function handleLogout(request: Request, env: Env): Promise<Response> {
   const body = await readJsonBody(request);
   const all = body?.all === true || claimAsString(body?.scope) === 'user';
@@ -112,24 +125,6 @@ export async function handleLogout(request: Request, env: Env): Promise<Response
 
   await revokeSessionBySid(env, verified.payload.sid);
   return json({ ok: true, revokedScope: 'sid', sid: verified.payload.sid });
-}
-
-export async function handleSession(request: Request, env: Env): Promise<Response> {
-  const bearer = resolveAccessTokenFromRequest(request);
-  if (!bearer) return authError('coreui.errors.auth.required', 401);
-
-  const verified = await verifyAccessToken(bearer, env);
-  if (!verified.ok) return authError('coreui.errors.auth.required', 401, verified.reason);
-
-  return json({
-    ok: true,
-    valid: true,
-    userId: claimAsString(verified.claims.sub),
-    sid: claimAsString(verified.claims.sid),
-    exp: claimAsNumber(verified.claims.exp),
-    iss: claimAsString(verified.claims.iss),
-    aud: verified.claims.aud,
-  });
 }
 
 export async function handleMichaelToken(request: Request, env: Env): Promise<Response> {

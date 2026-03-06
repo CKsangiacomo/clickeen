@@ -62,11 +62,6 @@ const LOCAL_EXECUTION_PATTERN_RULES = [
     allowlist: {},
   },
   {
-    label: 'local-render-snapshot',
-    regex: /\/renders\/instances\/\$\{encodeURIComponent\(job\.publicId\)\}\/snapshot/g,
-    allowlist: {},
-  },
-  {
     label: 'command-sync-wait',
     regex: /await\s+waitForRenderSnapshotState\s*\(/g,
     allowlist: {},

@@ -83,7 +83,7 @@ export function SettingsDomain() {
     setPlanChangeResult(null);
     try {
       const payload = await fetchParisJson<PlanChangeResponse>(
-        `/api/paris/accounts/${encodeURIComponent(activeAccountId)}/lifecycle/plan-change?confirm=1`,
+        `/api/accounts/${encodeURIComponent(activeAccountId)}/lifecycle/plan-change?confirm=1`,
         {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -111,7 +111,7 @@ export function SettingsDomain() {
     setUnpublishResult(null);
     try {
       const payload = await fetchParisJson<InstancesUnpublishResponse>(
-        `/api/paris/accounts/${encodeURIComponent(activeAccountId)}/instances/unpublish?confirm=1`,
+        `/api/accounts/${encodeURIComponent(activeAccountId)}/instances/unpublish?confirm=1`,
         {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -275,4 +275,3 @@ export function SettingsDomain() {
     </>
   );
 }
-

@@ -301,6 +301,36 @@ type BobOpenEditorFailedMessage = {
   message?: string;
 };
 
+type BobAccountCommand =
+  | 'update-instance'
+  | 'put-user-locale-layer'
+  | 'delete-user-locale-layer'
+  | 'enqueue-selected-translations';
+
+type BobAccountCommandMessage = {
+  type: 'bob:account-command';
+  requestId: string;
+  sessionId: string;
+  command: BobAccountCommand;
+  accountId: string;
+  publicId: string;
+  locale?: string;
+  body?: unknown;
+};
+
+type RomaAccountCommandResultMessage = {
+  type: 'roma:account-command-result';
+  requestId: string;
+  sessionId: string;
+  command: BobAccountCommand;
+  accountId: string;
+  publicId: string;
+  ok: boolean;
+  status: number;
+  payload?: unknown;
+  message?: string;
+};
+
 const DEFAULT_PREVIEW: PreviewSettings = {
   device: 'desktop',
   theme: 'light',
@@ -499,6 +529,12 @@ function resolveBootModeFromUrl(): BootMode {
   return boot === 'url' ? 'url' : 'message';
 }
 
+function resolveSurfaceFromUrl(): string {
+  if (typeof window === 'undefined') return '';
+  const params = new URLSearchParams(window.location.search);
+  return (params.get('surface') || '').trim().toLowerCase();
+}
+
 function resolvePolicySubject(policy: Policy): 'minibob' | 'account' {
   if (policy.profile === 'minibob') return 'minibob';
   return 'account';
@@ -560,6 +596,9 @@ function useWidgetSessionInternal() {
   const localeRequestRef = useRef(0);
   const localeSyncRunRef = useRef(0);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const bootModeRef = useRef<BootMode>(resolveBootModeFromUrl());
+  const surfaceRef = useRef<string>(resolveSurfaceFromUrl());
+  const hostOriginRef = useRef<string | null>(null);
   const openRequestStatusRef = useRef<
     Map<string, { status: 'processing' | 'applied' | 'failed'; publicId?: string; widgetname?: string; error?: string }>
   >(new Map());
@@ -567,6 +606,110 @@ function useWidgetSessionInternal() {
   const fetchApi = useCallback((input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     return fetch(input, init);
   }, []);
+
+  const shouldDelegateAccountCommand = useCallback((subject: SubjectMode): boolean => {
+    return subject === 'account' && bootModeRef.current === 'message' && surfaceRef.current === 'roma';
+  }, []);
+
+  const dispatchRomaAccountCommand = useCallback(
+    (args: {
+      command: BobAccountCommand;
+      accountId: string;
+      publicId: string;
+      locale?: string;
+      body?: unknown;
+    }): Promise<{ ok: boolean; status: number; payload: any; message?: string }> => {
+      const targetOrigin = hostOriginRef.current;
+      const sessionId = sessionIdRef.current.trim();
+      if (!targetOrigin || !sessionId) {
+        return Promise.reject(new Error('coreui.errors.builder.command.hostUnavailable'));
+      }
+
+      const requestId = crypto.randomUUID();
+      const message: BobAccountCommandMessage = {
+        type: 'bob:account-command',
+        requestId,
+        sessionId,
+        command: args.command,
+        accountId: String(args.accountId || '').trim(),
+        publicId: String(args.publicId || '').trim(),
+        ...(args.locale ? { locale: String(args.locale || '').trim() } : {}),
+        ...(typeof args.body === 'undefined' ? {} : { body: args.body }),
+      };
+
+      return new Promise((resolve, reject) => {
+        let timeoutTimer: number | null = null;
+
+        const cleanup = () => {
+          if (timeoutTimer != null) window.clearTimeout(timeoutTimer);
+          window.removeEventListener('message', onMessage);
+        };
+
+        const onMessage = (event: MessageEvent) => {
+          if (event.origin !== targetOrigin) return;
+          if (event.source !== window.parent) return;
+          const data = event.data as RomaAccountCommandResultMessage | null;
+          if (!data || typeof data !== 'object' || data.type !== 'roma:account-command-result') return;
+          if (data.requestId !== requestId || data.sessionId !== sessionId) return;
+          cleanup();
+          resolve({
+            ok: data.ok === true,
+            status: typeof data.status === 'number' ? data.status : 500,
+            payload: data.payload ?? null,
+            message: typeof data.message === 'string' ? data.message : undefined,
+          });
+        };
+
+        window.addEventListener('message', onMessage);
+        timeoutTimer = window.setTimeout(() => {
+          cleanup();
+          reject(new Error('coreui.errors.builder.command.timeout'));
+        }, 15_000);
+
+        try {
+          window.parent?.postMessage(message, targetOrigin);
+        } catch (error) {
+          cleanup();
+          reject(error instanceof Error ? error : new Error(String(error)));
+        }
+      });
+    },
+    [],
+  );
+
+  const executeAccountCommand = useCallback(
+    async (args: {
+      subject: SubjectMode;
+      command: BobAccountCommand;
+      url: string;
+      method: 'PUT' | 'POST' | 'DELETE';
+      accountId: string;
+      publicId: string;
+      locale?: string;
+      body?: unknown;
+    }): Promise<{ ok: boolean; status: number; json: any }> => {
+      if (shouldDelegateAccountCommand(args.subject)) {
+        const result = await dispatchRomaAccountCommand({
+          command: args.command,
+          accountId: args.accountId,
+          publicId: args.publicId,
+          ...(args.locale ? { locale: args.locale } : {}),
+          ...(typeof args.body === 'undefined' ? {} : { body: args.body }),
+        });
+        return { ok: result.ok, status: result.status, json: result.payload };
+      }
+
+      const init: RequestInit = { method: args.method };
+      if (typeof args.body !== 'undefined') {
+        init.headers = { 'content-type': 'application/json' };
+        init.body = JSON.stringify(args.body);
+      }
+      const response = await fetchApi(args.url, init);
+      const json = (await response.json().catch(() => null)) as any;
+      return { ok: response.ok, status: response.status, json };
+    },
+    [dispatchRomaAccountCommand, fetchApi, shouldDelegateAccountCommand],
+  );
 
   useEffect(() => {
     previewOpsRef.current = state.previewOps;
@@ -1158,23 +1301,24 @@ function useWidgetSessionInternal() {
         }));
         return;
       }
-      const res = await fetchApi(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+      const { ok, json } = await executeAccountCommand({
+        subject,
+        command: 'put-user-locale-layer',
+        method: 'PUT',
+        url: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId,
         )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
-        {
-          method: 'PUT',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            ops: userOps,
-            baseFingerprint,
-            source: 'user',
-            widgetType,
-          }),
-        }
-      );
-      const json = (await res.json().catch(() => null)) as any;
-      if (!res.ok) {
+        accountId,
+        publicId,
+        locale,
+        body: {
+          ops: userOps,
+          baseFingerprint,
+          source: 'user',
+          widgetType,
+        },
+      });
+      if (!ok) {
         const errorCode = json?.error?.code || json?.error?.reasonKey;
         let message = json?.error?.message || errorCode || 'Failed to save locale overrides';
         if (errorCode === 'FINGERPRINT_MISMATCH') {
@@ -1219,7 +1363,7 @@ function useWidgetSessionInternal() {
         locale: { ...prev.locale, error: message },
       }));
     }
-  }, [fetchApi, loadLocaleAllowlist]);
+  }, [executeAccountCommand, loadLocaleAllowlist]);
 
   const rehydrateLocalizationSnapshot = useCallback(
     async (args: {
@@ -1230,8 +1374,8 @@ function useWidgetSessionInternal() {
       try {
         const instanceUrl =
           args.subject === 'minibob'
-            ? `/api/paris/instance/${encodeURIComponent(args.publicId)}?subject=${encodeURIComponent(args.subject)}`
-            : `/api/paris/accounts/${encodeURIComponent(args.accountId)}/instance/${encodeURIComponent(
+            ? `/api/instance/${encodeURIComponent(args.publicId)}?subject=${encodeURIComponent(args.subject)}`
+            : `/api/accounts/${encodeURIComponent(args.accountId)}/instance/${encodeURIComponent(
                 args.publicId,
               )}?subject=${encodeURIComponent(args.subject)}`;
         const res = await fetchApi(
@@ -1375,7 +1519,7 @@ function useWidgetSessionInternal() {
     > => {
       try {
         const res = await fetchApi(
-          `/api/paris/accounts/${encodeURIComponent(args.accountId)}/instances/${encodeURIComponent(
+          `/api/accounts/${encodeURIComponent(args.accountId)}/instances/${encodeURIComponent(
             args.publicId
           )}/l10n/status?subject=${encodeURIComponent(args.subject)}&_t=${Date.now()}`,
           { cache: 'no-store' }
@@ -1642,23 +1786,23 @@ function useWidgetSessionInternal() {
     }));
 
     try {
-      const res = await fetchApi(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+      const { ok, json, status } = await executeAccountCommand({
+        subject,
+        command: 'enqueue-selected-translations',
+        method: 'POST',
+        url: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId
         )}/l10n/enqueue-selected?subject=${encodeURIComponent(subject)}`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: '{}',
-        },
-      );
-      const json = (await res.json().catch(() => null)) as any;
-      if (!res.ok) {
+        accountId,
+        publicId,
+        body: {},
+      });
+      if (!ok) {
         const message =
           json?.error?.message ||
           json?.error?.reasonKey ||
           json?.error?.code ||
-          `Failed to refresh translations (HTTP ${res.status})`;
+          `Failed to refresh translations (HTTP ${status})`;
         setState((prev) => ({
           ...prev,
           locale: {
@@ -1714,7 +1858,7 @@ function useWidgetSessionInternal() {
       }));
       return { ok: false as const, message };
     }
-  }, [fetchApi, rehydrateLocalizationSnapshot]);
+  }, [executeAccountCommand, fetchApi, rehydrateLocalizationSnapshot]);
 
   const revertLocaleOverrides = useCallback(async () => {
     const snapshot = stateRef.current;
@@ -1742,14 +1886,18 @@ function useWidgetSessionInternal() {
     if (snapshot.locale.userOps.length === 0) return;
 
     try {
-      const res = await fetchApi(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+      const { ok, json } = await executeAccountCommand({
+        subject,
+        command: 'delete-user-locale-layer',
+        method: 'DELETE',
+        url: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId
         )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
-        { method: 'DELETE' }
-      );
-      if (!res.ok) {
-        const json = (await res.json().catch(() => null)) as any;
+        accountId,
+        publicId,
+        locale,
+      });
+      if (!ok) {
         const errorCode = json?.error?.code || json?.error?.reasonKey;
         const message = json?.error?.message || errorCode || 'Failed to revert locale overrides';
         setState((prev) => ({
@@ -1804,7 +1952,7 @@ function useWidgetSessionInternal() {
         locale: { ...prev.locale, error: message },
       }));
     }
-  }, [fetchApi, loadLocaleAllowlist]);
+  }, [executeAccountCommand, loadLocaleAllowlist]);
 
   const loadInstance = useCallback(
     async (
@@ -2031,19 +2179,18 @@ function useWidgetSessionInternal() {
         switcher: { enabled: state.locale.accountL10nPolicy.switcher.enabled },
       };
       const seoGeo = state.policy.flags['embed.seoGeo.enabled'] === true;
-      const res = await fetchApi(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
+      const { ok, json } = await executeAccountCommand({
+        subject,
+        command: 'update-instance',
+        method: 'PUT',
+        url: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
           publicId
         )}?subject=${encodeURIComponent(subject)}`,
-        {
-          method: 'PUT',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ config: configToSave, localePolicy, seoGeo }),
-        }
-      );
-
-      const json = (await res.json().catch(() => null)) as any;
-      if (!res.ok) {
+        accountId,
+        publicId,
+        body: { config: configToSave, localePolicy, seoGeo },
+      });
+      if (!ok) {
         const err = json?.error;
         if (err?.kind === 'DENY' && err?.upsell === 'UP') {
           setState((prev) => ({
@@ -2116,7 +2263,7 @@ function useWidgetSessionInternal() {
       setState((prev) => ({ ...prev, isPublishing: false, error: { source: 'publish', message: messageText } }));
     }
   }, [
-    fetchApi,
+    executeAccountCommand,
     state.baseInstanceData,
     state.locale.availableLocales,
     state.locale.baseLocale,
@@ -2186,26 +2333,23 @@ function useWidgetSessionInternal() {
           switcher: { enabled: state.locale.accountL10nPolicy.switcher.enabled },
         };
         const seoGeo = state.policy.flags['embed.seoGeo.enabled'] === true;
-        const res = await fetchApi(
-          `/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
+        const { ok, json, status } = await executeAccountCommand({
+          subject,
+          command: 'update-instance',
+          method: 'PUT',
+          url: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
             publicId,
           )}?subject=${encodeURIComponent(subject)}`,
-          {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(
-              nextLive ? { status: 'published', localePolicy, seoGeo } : { status: 'unpublished' },
-            ),
-          },
-        );
-
-        const json = (await res.json().catch(() => null)) as any;
-        if (!res.ok) {
+          accountId,
+          publicId,
+          body: nextLive ? { status: 'published', localePolicy, seoGeo } : { status: 'unpublished' },
+        });
+        if (!ok) {
           const err = json?.error;
           setState((prev) => ({
             ...prev,
             isPublishing: false,
-            error: { source: 'publish', message: err?.reasonKey || `Live toggle failed (HTTP ${res.status})` },
+            error: { source: 'publish', message: err?.reasonKey || `Live toggle failed (HTTP ${status})` },
           }));
           return;
         }
@@ -2238,7 +2382,7 @@ function useWidgetSessionInternal() {
       }
     },
     [
-      fetchApi,
+      executeAccountCommand,
       state.baseInstanceData,
       state.isDirty,
       state.locale.availableLocales,
@@ -2283,8 +2427,8 @@ function useWidgetSessionInternal() {
 
     const instanceUrl =
       subject === 'minibob'
-        ? `/api/paris/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`
-        : `/api/paris/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`;
+        ? `/api/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`
+        : `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`;
     const instanceRes = await fetchApi(instanceUrl, { cache: 'no-store' });
     if (!instanceRes.ok) {
       throw new Error(`[useWidgetSession] Failed to load instance (HTTP ${instanceRes.status})`);
@@ -2412,6 +2556,8 @@ function useWidgetSessionInternal() {
 
   useEffect(() => {
     const bootMode = resolveBootModeFromUrl();
+    bootModeRef.current = bootMode;
+    surfaceRef.current = resolveSurfaceFromUrl();
     const postToParent = (
       payload:
         | BobSessionReadyMessage
@@ -2435,6 +2581,7 @@ function useWidgetSessionInternal() {
         const requestId = typeof data.requestId === 'string' ? data.requestId.trim() : '';
         const sessionId = typeof data.sessionId === 'string' ? data.sessionId.trim() : '';
         const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
+        hostOriginRef.current = targetOrigin === '*' ? hostOriginRef.current : targetOrigin;
         if (!requestId || !sessionId) {
           postToParent(
             {

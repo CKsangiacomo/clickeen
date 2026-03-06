@@ -16,6 +16,8 @@ Execution log (2026-03-05, initial slice):
 - RLS repair migration applied to cloud-dev Supabase: `20260305193000__rls_flat_reads_repair.sql` (fixes recursive `account_members` policy and grants authenticated read privileges for Category A tables).
 - Cloud-dev revalidation after migration: brokered direct reads now succeed (`account_members`, `accounts`, `widget_instances` = `200`), and non-member account query returns empty set (`[]`) as expected.
 - Bob migration slice implemented in local code: new `bob/lib/michael.ts`, new `GET /api/accounts/:accountId/locales`, and `LocalizationControls` locales **read** path moved from `/api/paris/accounts/:accountId/locales` to `/api/accounts/:accountId/locales` (PUT write path remains Paris-owned).
+- Paris hard-cut applied in local code: external `GET/POST /api/accounts/:accountId/instances` route removed from Paris router; instance creation remains server-owned through Roma domain orchestration (`/api/roma/widgets/duplicate` -> Paris internal create handler).
+- Hosted Builder command-boundary slice implemented in local code: Roma Builder now owns Bob account mutations on the product surface. In `surface=roma` account flows, Bob sends save/publish/live-toggle and account l10n mutation intents back to Roma over postMessage; Roma executes named same-origin account routes (`/api/accounts/...`) and returns the payload to Bob. Bob same-origin mutation routes remain for local DevStudio / URL-bootstrap surfaces only.
 
 > Core mandate: Paris is "one boring thing" — validate auth, commit DB write, enqueue mirror jobs. Everything else that Paris does today is architectural debt that must be unwound.
 
@@ -108,6 +110,39 @@ Restore product-aligned service boundaries: Roma owns widget/instance commands, 
 | `seoGeoConfigEnabled = Boolean((x.config as any)?.seoGeo?.enabled === true)` | 6 | Same files |
 | Tokyo mirror enqueue ceremony | ~25 call sites | 7 files |
 
+Execution update (2026-03-05, local):
+- `normalizeAccountTier()` duplication removed. Canonical copy now only in `shared/authz-capsule.ts`.
+- seoGeo decision logic centralized via `shared/seo-geo.ts` (`isSeoGeoEntitled`, `isSeoGeoConfigEnabled`, `isSeoGeoLive`) and reused across previously duplicated handlers.
+- Legacy Paris `/api/accounts/:accountId/members` compatibility route stub removed from `paris/src/index.ts` (hard-cut; no fallback path).
+- Roma catch-all Paris proxy removed: `roma/app/api/paris/[...path]/route.ts` deleted.
+- Roma components rewired from `/api/paris/...` URLs to named explicit routes (`/api/accounts/...`, `/api/roma/...`, `/api/minibob/...`).
+- Roma added thin named proxy routes backed by `roma/lib/api/paris-proxy.ts`; no wildcard proxy remains.
+- Bob editor flow hard-cut off wildcard Paris proxy: `/api/paris/[...path]` removed, `/api/paris/instance/[publicId]` moved to `/api/instance/[publicId]`, and editor calls now use named Bob routes (`/api/accounts/.../instance/...`, `/api/accounts/.../instances/.../layers/user/...`, `/api/accounts/.../instances/.../l10n/*`).
+- Bob removed remaining `/api/paris/*` namespace routes for curated/bootstrap and replaced them with named routes (`/api/roma/bootstrap`, `/api/roma/templates`); runtime parity scripts and DevStudio curated tool were rewired to the named paths.
+- Bob route boilerplate trimmed: instance/assets proxies now use shared `proxyToParisRoute(...)` contracts (auth mode + forwarded headers) with duplicated route-level proxy logic removed.
+- Paris dead endpoints removed: unused `/api/widgets`, `/api/personalization/onboarding*`, and `/api/submit/:publicId` route stubs deleted from router + domain handlers (hard-cut, no compatibility layer).
+- Bob dead compatibility AI routes removed: `/api/ai/sdr-copilot` and `/api/ai/faq-copilot` deleted; `widget-copilot` is the single execution endpoint.
+- Paris hard-cut continued: external `GET /api/accounts/:accountId` removed from router + handler export (no in-repo callers; direct/boundary reads are now named per-surface).
+- Paris hard-cut continued: external `/api/accounts/:accountId/business-profile` route and `business-profile-handler.ts` removed (dead path, no in-repo callers).
+- Roma asset hard-cut: `/api/assets/:accountId` and `/api/assets/:accountId/:assetId` no longer proxy to Paris; they now forward directly to Tokyo with Berlin session auth (list, delete, purge). `/api/bootstrap` remains the Paris orchestration path.
+- Venice dead submission proxy removed: `POST /s/:publicId` route and `venice/lib/paris.ts` deleted after prior Paris `/api/submit/:publicId` hard-cut, removing a broken cross-service legacy path.
+- Paris hard-cut continued: orphaned `POST /api/usage` route and `paris/src/domains/usage/index.ts` removed (no in-repo caller after Venice pixel simplification).
+- Billing placeholder surface hard-cut: removed Roma `/api/accounts/:accountId/billing/*` proxy routes and Paris `/api/accounts/:accountId/billing/*` handlers; Billing UI now uses bootstrap context only and shows explicit not-configured state without backend round-trips.
+- Usage diagnostics surface hard-cut: removed Roma `/api/accounts/:accountId/usage` proxy route and Paris `/api/accounts/:accountId/usage` handler; Usage UI now renders bootstrap/authz context only.
+- Paris dead identity passthrough hard-cut: removed external `GET /api/me` route/handler; identity payload resolution remains internal to Roma bootstrap orchestration.
+- Asset detail read hard-cut: removed single-asset `GET` path (`/api/accounts/:accountId/assets/:assetId`) from Paris and host proxies; canonical asset flow is now list (`GET /api/assets/:accountId`), upload, and delete only.
+- SanFrancisco onboarding legacy persistence cut: removed dead call-path that attempted to write business-profile data to a removed Paris endpoint; onboarding job completion is now self-contained in SanFrancisco state without cross-service drift.
+- Tokyo-worker dead metadata endpoint hard-cut: removed `GET /assets/account/:accountId/:assetId` handler and exports after Paris single-asset read removal; canonical asset reads are list (`/assets/account/:accountId`) and canonical-version blob fetch only.
+- Bob asset-delete route hard-cut: removed `bob/app/api/assets/[accountId]/[assetId]/route.ts` so per-asset management remains Roma-owned; runtime parity cleanup now deletes Bob-uploaded assets through Roma host route.
+- Paris auth fallback hard-cut: removed local trusted-internal synthetic identity fallback in `resolveIdentityMePayload`; bootstrap identity now requires a real Berlin-authenticated principal.
+- Paris schema probe surface hard-cut: removed `/api/healthz/schema` route and schema-probe handler complexity; retained single boring health endpoint (`/api/healthz`).
+- Paris account-auth simplification: removed unused `auth.source` payload from `authorizeAccount` success contract (callers only consume role/account), reducing internal coupling.
+- Paris identity default-account simplification: removed `accountId` query override path from bootstrap identity selection; default account resolution now follows canonical membership/admin selection only.
+- Bob asset read hard-cut: `bob/app/api/assets/[accountId]/route.ts` no longer proxies to Paris and now calls Tokyo directly with Berlin session auth.
+- Paris asset passthrough hard-cut: removed `/api/accounts/:accountId/assets` and `/api/accounts/:accountId/assets/:assetId` handlers/routes; account asset CRUD is no longer exposed by Paris.
+- Tokyo auth boundary simplification: account asset list/delete/purge endpoints now accept Berlin-authenticated principals with account membership checks (viewer/editor) instead of service-token-only access.
+- Curated list hard-cut: removed Paris `GET /api/curated-instances` and the Bob `/api/curated-instances` proxy route; curated picker now uses Roma templates domain route (`/api/roma/templates?accountId=...`) as the single source.
+
 ### The root cause
 
 Paris is the sole holder of `SUPABASE_SERVICE_ROLE_KEY`. Any operation that needs DB data gravitates to Paris because no other service can reach Supabase. This created a mandatory bottleneck: every button click in Roma or Bob round-trips through Paris for what is often a single DB read.
@@ -168,7 +203,6 @@ Strictly flat single-table reads where RLS already enforces access and the handl
 | Operation | Current Paris handler | Why it qualifies |
 |---|---|---|
 | List members | `GET /api/accounts/:accountId/members` | Flat scan of `account_members`. No composition. |
-| List instances (flat) | `GET /api/accounts/:accountId/instances` | Flat scan of `widget_instances`. Verify handler doesn't compose policy/overlay data into list response. |
 | Read locales | `GET /api/accounts/:accountId/locales` | Single field read from `accounts` table. Verify no policy derivation in handler. |
 | Get account metadata (flat fields) | `GET /api/accounts/:accountId` | Single-row account read if response is not composed with additional policy/envelope data. |
 
@@ -194,7 +228,6 @@ All writes, all composed reads, all cross-service coordination:
 | AI grant issuance | Budget check + HMAC signing + rate limiting (KV) |
 | MiniBob sessions | AI session orchestration |
 | Personalization jobs | SanFrancisco dispatch + status tracking |
-| Usage event ingestion | KV write + aggregation |
 
 No change in this PRD for Tokyo-worker and SanFrancisco ownership boundaries.
 
@@ -298,9 +331,8 @@ If any check fails, the endpoint stays in Paris. No exceptions.
 Migrate in order (verified flat reads only):
 1. `GET /api/accounts/:accountId/members` → Roma queries `account_members` via `michael.ts`.
 2. `GET /api/accounts/:accountId/locales` → Roma queries `accounts` via `michael.ts` (flat fields only).
-3. `GET /api/accounts/:accountId/instances` → Roma queries `widget_instances` via `michael.ts` (only if handler is flat).
-4. `GET /api/accounts/:accountId` → Roma queries `accounts` via `michael.ts` (only if response is flat, no composition).
-5. Additional flat reads identified during audit.
+3. `GET /api/accounts/:accountId` → Roma queries `accounts` via `michael.ts` (only if response is flat, no composition).
+4. Additional flat reads identified during audit.
 
 **Minimal verification per endpoint** (no framework-heavy harness):
 1. Add one contract test that validates required response keys/types for the migrated read.
@@ -378,11 +410,11 @@ In scope:
 - Update `documentation/services/paris.md`.
 
 Out of scope:
-- All writes (stay in Paris — no client-side draft/publish split).
+- Instance/config writes (stay in Paris — no client-side draft/publish split).
 - Composed reads like GET instance editor load (stays in Paris — envelope composition is orchestration).
 - Decomposition of Paris's composed reads into simpler patterns (future PRD if needed).
 - Changes to Venice (embed path is already Paris-free per PRD 054).
-- Changes to Tokyo/Tokyo-worker ownership boundaries (already correct).
+- Tokyo render/l10n ownership changes (already correct).
 - Changes to SanFrancisco (already owns its state).
 - New comments feature design/work (not an active product feature in this phase).
 - New user-facing features.

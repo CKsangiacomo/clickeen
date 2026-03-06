@@ -38,3 +38,8 @@ export async function readJson(res: Response) {
     return text;
   }
 }
+
+export function hasConfirmedQueryParam(req: Request, key = 'confirm'): boolean {
+  const raw = (new URL(req.url).searchParams.get(key) || '').trim().toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes';
+}

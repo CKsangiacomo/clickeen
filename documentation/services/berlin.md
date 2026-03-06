@@ -8,8 +8,8 @@ Runtime code + deploy config are truth. If this doc drifts from `berlin/*`, upda
 Berlin is Clickeen's dedicated AuthN boundary.
 
 Responsibilities:
-- Accept user credentials for sign-in (`/auth/login/password` in v1).
-- Orchestrate provider login/link OAuth start+callback (`/auth/login/provider/*`, `/auth/link/*`).
+- Accept user credentials for sign-in (`/auth/login/password` in v1, local-only diagnostic path).
+- Orchestrate provider login OAuth start+callback (`/auth/login/provider/*`).
 - Mint short-lived Berlin access tokens (`RS256`) with stable product claims (`sub`, `sid`, `ver`, `iat`, `exp`, `iss`, `aud`).
 - Rotate refresh tokens via `/auth/refresh`.
 - Revoke sessions via `/auth/logout`.
@@ -22,17 +22,13 @@ Non-responsibilities:
 ## Runtime surface (v1)
 
 Public:
-- `POST /auth/login/password`
+- `POST /auth/login/password` (local-only diagnostic path)
 - `POST /auth/login/provider/start` (canonical callback->finish flow only)
 - `GET /auth/login/provider/callback`
 - `POST /auth/finish`
-- `POST /auth/link/start`
-- `GET /auth/link/callback`
-- `POST /auth/unlink`
+- `GET /auth/session` (identity/session status only)
 - `POST /auth/refresh`
 - `POST /auth/logout`
-- `GET /auth/session`
-- `GET /auth/validate` (alias to session validation contract)
 
 Internal:
 - `GET /.well-known/jwks.json`
@@ -49,10 +45,10 @@ Internal:
   - `BERLIN_SESSION_KV` (authoritative state in cloud-dev/prod, local-bound in local env)
   - in-memory cache as runtime optimization
 - OAuth transaction state:
-  - One-time opaque `state` IDs are persisted in `BERLIN_SESSION_KV` with short TTL
+  - One-time opaque `state` IDs are persisted in `BERLIN_AUTH_TICKETS` (Durable Object) with consume-once semantics
   - PKCE verifier + flow metadata are never encoded in callback URLs
 - OAuth finish state:
-  - One-time opaque `finishId` records are persisted in `BERLIN_SESSION_KV` with short TTL
+  - One-time opaque `finishId` records are persisted in `BERLIN_AUTH_TICKETS` (Durable Object) with consume-once semantics
   - Browser callback redirects only carry `finishId` (no access/refresh tokens in URL)
   - Provider redirect allow-list must target Berlin callback URLs only (no Roma callback entries)
 
@@ -66,6 +62,7 @@ Internal:
 Required:
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
+- `BERLIN_AUTH_TICKETS` (Wrangler Durable Object binding)
 - `BERLIN_SESSION_KV` (Wrangler binding)
 
 Recommended:

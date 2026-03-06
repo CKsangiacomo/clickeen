@@ -50,11 +50,12 @@
 - Status: `GET /v1/personalization/preview/:jobId` (internal).
 - Jobs are stored in KV with TTL; execution uses the `agent.personalization.preview.v1` policy grant.
 
-## Personalization Onboarding (account)
+## Account-context carry-forward (legacy route name: personalization/onboarding)
 - Endpoint: `POST /v1/personalization/onboarding` (internal, requires `PARIS_DEV_JWT`).
 - Status: `GET /v1/personalization/onboarding/:jobId` (internal).
 - Jobs are stored in KV with TTL; execution uses the `agent.personalization.onboarding.v1` policy grant.
-- On success, SF calls Paris to persist the account business profile.
+- Despite the route name, this is not a separate user-facing onboarding product. It is an internal post-signup/account-context helper for users who started editing before they had an account.
+- MiniBob remains one journey: edit a draft, click Publish, create an account, then continue in Roma. Draft context such as a captured website can travel with the claimed instance.
 
 ## l10n Agent Flow (executed)
 - Triggered by `instance-l10n-generate-{env}` jobs.

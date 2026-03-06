@@ -232,10 +232,7 @@ export type TokyoMirrorQueueJob =
   | EnforceLiveSurfaceJob
   | DeleteInstanceMirrorJob;
 
-export type SanfranciscoCommandName =
-  | 'personalization.preview.enqueue'
-  | 'personalization.onboarding.enqueue'
-  | 'ai.outcome.attach';
+export type SanfranciscoCommandName = 'ai.outcome.attach';
 
 export type SanfranciscoCommandQueueJob = {
   v: 1;

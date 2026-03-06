@@ -102,8 +102,8 @@ Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
    - Serves `/widgets/**` and `/dieter/**` directly from the repo.
 2) **Local Bob** reads widget definitions from Tokyo:
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `http://localhost:4000` in dev.
-3) **Local DevStudio** embeds Bob and reads the same Tokyo base:
-   - `admin/src/html/tools/dev-widget-workspace.html` resolves Tokyo to `http://localhost:4000` on localhost.
+3) **Local DevStudio** opens Bob in message boot for widget authoring:
+   - `admin/src/html/tools/dev-widget-workspace.html` targets local Bob by default, and Bob resolves Tokyo to `http://localhost:4000` on localhost.
 4) **Local Roma** resolves account bootstrap from local Paris and hosts Bob in message boot mode:
    - `roma/app/api/bootstrap/route.ts` → local Paris `/api/roma/bootstrap`
    - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`.

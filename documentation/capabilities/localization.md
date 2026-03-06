@@ -87,21 +87,23 @@ Rules:
 - `textFp` is the sha256 of the stable JSON bytes of the full text pack.
 - Text packs are **full packs** (not diffs). They contain only allowlisted keys.
 
-Where the DB fits (write plane only):
-- Supabase stores the editable source (set-only ops) in `widget_instance_overlays`:
+Where the write plane fits (current repo snapshot):
+- Paris stores editable overlay rows in its own R2 bucket (`OVERLAYS_R2`) using keys like `overlays/<publicId>/<layer>/<layerKey>.json`.
   - `layer=locale` = generated/managed translation ops (agent/import/manual)
   - `layer=user` = user overrides on top of the locale translation (delete this layer to “revert to auto-translate”)
+- Paris stores generation/status state in `L10N_STATE_KV`, and keeps base snapshots in overlay storage for diffing + status.
 - Every overlay row is keyed by `baseFingerprint` (sha256 of the current allowlist snapshot).
 - Stale writes are rejected when `baseFingerprint` does not match.
-- These ops are **never** served publicly.
-- When an overlay changes and the instance is live, Paris rebuilds the full text pack and asks Tokyo-worker to write it:
+- These authoring records are **never** served publicly.
+- When overlay/base state changes and the instance is live, Paris rebuilds the full text pack and enqueues Tokyo-worker to write it:
   - `fullPack = baseSnapshot + localeOps + userOps` (user ops win per key)
 
 **Generation + mirroring (current after PRD 54)**
 
 - Paris extracts the base text snapshot from the widget allowlist (`tokyo/widgets/<widgetType>/localization.json`).
 - Paris diffs base snapshots to compute `changedPaths` + `removedPaths` and enqueues San Francisco jobs.
-- San Francisco translates only `changedPaths` and writes set-only ops back to Paris (`widget_instance_overlays`, `layer=locale`).
+- San Francisco translates only `changedPaths` and writes set-only ops back to Paris.
+- Paris persists those overlay rows in its overlay store (`OVERLAYS_R2`) and updates l10n generation state in `L10N_STATE_KV`.
 - If the instance is live:
   - Paris enqueues `write-text-pack` for that locale (full pack = base snapshot + locale ops + user ops).
   - If SEO/GEO is entitled+enabled, Paris also enqueues `write-meta-pack` for that locale.
@@ -115,13 +117,15 @@ Where the DB fits (write plane only):
 - Non-locale layer allowlists: `tokyo/widgets/{widgetType}/layers/{layer}.allowlist.json` (404 = no allowed paths)
 - Agents must not mutate paths outside the relevant allowlist.
 
-**Canonical store (Supabase)**
+**Canonical write-plane store (Paris runtime)**
 
-- `widget_instance_overlays` stores per-instance overlay ops for authoring/generation (write plane only).
-  - Locale translations: `layer='locale'`, `layer_key=<locale>`, `ops=[{ op:'set', path, value }]`, `base_fingerprint=<hash of base snapshot>`.
-  - User overrides: `layer='user'`, `layer_key=<locale>`, `ops=[{ op:'set', path, value }]`, `base_fingerprint=<hash of base snapshot>`.
-- These overlay ops are never served publicly.
+- `OVERLAYS_R2` stores per-instance overlay rows for authoring/generation (write plane only).
+  - Locale translations: `layer='locale'`, `layer_key=<locale>`, set-only ops, `base_fingerprint=<hash of base snapshot>`.
+  - User overrides: `layer='user'`, `layer_key=<locale>`, set-only ops, `base_fingerprint=<hash of base snapshot>`.
+- `L10N_STATE_KV` stores per-fingerprint generation state used by status/retry orchestration.
+- These authoring records are never served publicly.
 - Public embeds read only Tokyo packs + live pointers (`l10n/instances/.../live/*.json` and `l10n/instances/.../packs/...`).
+- `widget_instance_overlays` is not part of the active Michael schema in this repo snapshot.
 
 Notes:
 - `user_ops` is not used by PRD 54; overrides are stored as a separate `layer='user'` row so they can be reverted independently.
@@ -182,55 +186,28 @@ There is exactly **one** instance row per curated embed in Michael. Locale selec
 
 **Strict rule:** `wgt_curated_*.<locale>` URLs are invalid and must 404 (no legacy support).
 
-## Overlay format (set-only)
+## Overlay format (set-only authoring state)
 
-Manual overlay sources (dev-only, repo-local):
+Paris write-plane storage:
 
-- `l10n/instances/<publicId>/<layer>/<layerKey>.ops.json` (build computes `baseFingerprint`; locale layer uses layerKey=<locale>)
+- Overlay row: `overlays/<publicId>/<layer>/<layerKey>.json` in `OVERLAYS_R2`
+- Base snapshots: `l10n/snapshots/<publicId>/<baseFingerprint>.json` plus `l10n/snapshots/<publicId>/latest.json`
 
-Materialized output (Tokyo/R2):
+Public Tokyo output:
 
-- `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`
-
-Locale index (Tokyo/R2):
-
-- `tokyo/l10n/instances/<publicId>/index.json`
-- `index.json` shape (layered, hybrid):
-
-```json
-{
-  "v": 1,
-  "publicId": "wgt_main_faq",
-  "layers": {
-    "locale": {
-      "keys": ["en", "fr"],
-      "lastPublishedFingerprint": {
-        "en": "sha256-hex",
-        "fr": "sha256-hex"
-      },
-      "geoTargets": {
-        "fr": ["FR", "BE"]
-      }
-    },
-    "industry": { "keys": ["dentist"] }
-  }
-}
-```
-
-Rules:
-
-- `index.json` is updated by Tokyo-worker whenever locales are published or deleted.
-- `geoTargets` is optional and is used only for **variant selection within a language** (e.g. `fr` vs `fr-ca`); it must never override an explicit unrelated locale.
-- Runtime prefers overlays whose `overlay.baseFingerprint` matches the current base fingerprint.
-  - Venice public snapshot materialization does not apply stale overlays and does not EN-fallback for missing locale artifacts; missing locale snapshots are unavailable until publish succeeds.
+- Text pack: `tokyo/l10n/instances/<publicId>/packs/<locale>/<textFp>.json`
+- Live locale pointer: `tokyo/l10n/instances/<publicId>/live/<locale>.json`
+- Optional base snapshots for diagnostics/non-public tooling: `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`
 
 Example:
 
 ```json
 {
-  "v": 1,
-  "baseFingerprint": "sha256-hex",
-  "baseUpdatedAt": null,
+  "public_id": "wgt_main_faq",
+  "layer": "locale",
+  "layer_key": "fr",
+  "base_fingerprint": "sha256-hex",
+  "source": "agent",
   "ops": [{ "op": "set", "path": "headline", "value": "..." }]
 }
 ```
@@ -251,7 +228,7 @@ We use one staleness guard everywhere (Prague pages, curated instances, user ins
   - Safe stale apply compares current base values to the published base snapshot for the stale overlay fingerprint.
 - Venice public snapshot materialization does not use safe stale apply.
 
-This keeps “locale overlays” deterministic across file-based content (Prague pages) and DB-based content (instances).
+This keeps “locale overlays” deterministic across file-based content (Prague pages) and service-backed content (instances).
 
 **Strict rule (Phase 1+):**
 
@@ -266,7 +243,7 @@ This keeps “locale overlays” deterministic across file-based content (Prague
 
 We use ops overlays because they scale cleanly:
 
-- **No DB fan-out:** one canonical base config per instance.
+- **No instance fan-out:** one canonical base config per instance.
 - **Cacheable at the edge:** baseFingerprint-named overlay files can be `immutable`.
 - **Diff-friendly:** small changes don’t require re-storing the entire JSON blob.
 - **Safe by construction:** set-only prevents structural drift and merge conflicts.
@@ -302,7 +279,7 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
 Canonical migrations:
 
 - `supabase/migrations/20260116090000__public_id_prefixes.sql` (historical rename to canonical prefixes)
-- `supabase/migrations/20260211143000__curated_ids_strict_and_faq_renames.sql` (current strict constraints for instance/curated/overlay tables)
+- `supabase/migrations/20260211143000__curated_ids_strict_and_faq_renames.sql` (current strict constraints for active instance tables)
 - `supabase/migrations/20260201090000__drop_widget_instance_locales.sql` (legacy locales table removed)
 
 Effect:
@@ -319,20 +296,13 @@ Apply:
 
 1. Paris enqueues an l10n job on publish/update.
 2. San Francisco runs the localization agent (allowlist + budgets).
-3. Paris writes overlays to Supabase (`widget_instance_overlays`).
-4. Tokyo-worker publishes overlays to Tokyo/R2 using deterministic paths.
-
-Manual override (optional, dev-only for curated overlays):
-
-- Create/update: `l10n/instances/<publicId>/<layer>/<layerKey>.ops.json` (locale layer: layerKey=<locale>)
-- Overlay files must include `baseFingerprint` (or be built with SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY so the build can compute it).
-- Build + validate: `pnpm build:l10n` (enforces allowlists + fingerprints)
-- Ensure Tokyo serves the output (`tokyo/dev-server.mjs` serves `/l10n/**` from `tokyo/l10n/**` locally).
+3. Paris writes overlay rows to its own overlay store (`OVERLAYS_R2`) and updates generation state in `L10N_STATE_KV`.
+4. If the instance is live, Paris enqueues Tokyo-worker to publish text packs + live pointers to Tokyo/R2.
 
 User overrides (interactive):
 
-- Saved via Bob to Supabase as layer=user overlays (layerKey=<locale> with optional `global` fallback).
-- Never written directly to `tokyo/l10n/**`; Tokyo-worker publishes the user layer like other overlays.
+- Saved via Bob through Paris into the overlay store as layer=user rows (`layerKey=<locale>`; optional `global` when supported by the endpoint).
+- Never written directly to public `tokyo/l10n/**`; Tokyo-worker publishes live text artifacts from Paris-managed state.
 
 ### 3) Consume overlays
 
@@ -342,7 +312,7 @@ User overrides (interactive):
 
 ## User-owned localization (current)
 
-Higher-tier accounts can edit per-field translations in Bob. These edits are stored as layer=user overlays (layerKey=<locale>, optional `global` fallback) and persist across agent re-translation.
+Higher-tier accounts can edit per-field translations in Bob. These edits are stored as layer=user overlays in Paris's overlay store and persist across agent re-translation.
 
 Non-goals for Phase 1:
 

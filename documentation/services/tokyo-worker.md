@@ -1,10 +1,10 @@
 # System: Tokyo Worker — Assets + Tokyo Mirror Jobs (PRD 54)
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
-Last updated: 2026-03-01 (PRD 54 pivot)
+Last updated: 2026-03-06 (asset auth convergence + l10n storage sync)
 
 Tokyo-worker has two responsibilities:
-1) **Assets** (Roma-owned): upload/read/delete account assets in Tokyo/R2 + minimal metadata.
+1) **Assets** (Roma-owned): upload/read/delete account assets in Tokyo/R2 + manifest metadata.
 2) **Instance mirror** (PRD 54): write/delete the Tokyo files that Venice serves publicly (config/text/meta packs + live pointers).
 
 Tokyo-worker does not “decide what is live”. Bob/Roma decides; Paris commits DB writes; Tokyo-worker mirrors bytes.
@@ -15,12 +15,18 @@ Tokyo-worker does not “decide what is live”. Bob/Roma decides; Paris commits
 
 ### Assets
 - `POST /assets/upload` (auth required)
+- `GET /assets/account/:accountId` (auth required; member-scoped asset manifest list)
 - `GET /assets/v/:versionId` (public; immutable)
-- `DELETE /assets/:accountId/:assetId` (dev/internal; hard delete metadata + blobs)
-- `DELETE /assets/purge/:accountId?confirm=1` (dev/internal; hard delete **all** account asset metadata + blobs; used for downgrade/closure)
+- `DELETE /assets/:accountId/:assetId` (auth required; editor+ hard delete metadata + blobs)
+- `DELETE /assets/purge/:accountId?confirm=1` (auth required; editor+ hard delete **all** account asset metadata + blobs; used for downgrade/closure)
 - Integrity tools (dev/internal):
   - `GET /assets/integrity/:accountId`
   - `GET /assets/integrity/:accountId/:assetId`
+
+Asset metadata model (current repo snapshot):
+- Blob bytes live in Tokyo R2 under `assets/versions/{accountId}/...`.
+- Per-asset manifest JSON lives in Tokyo R2 under `assets/meta/accounts/{accountId}/assets/{assetId}.json`.
+- There is no Michael/Supabase asset table contract in the active runtime.
 
 ### Public reads (R2 backed)
 Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies):
@@ -69,6 +75,7 @@ Job kinds (v1):
 
 Non-negotiable:
 - Mirror jobs are **DB-free**. Tokyo-worker must not read Supabase to “discover state”.
+- For l10n, Tokyo-worker writes public packs/live pointers from self-contained Paris jobs; authoring overlays remain in Paris-managed storage.
 
 Source of truth:
 - `tokyo-worker/src/domains/render.ts`

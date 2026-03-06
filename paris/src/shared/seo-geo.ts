@@ -46,6 +46,28 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>;
 }
 
+type PolicyLike = {
+  flags?: Record<string, unknown> | null;
+} | null | undefined;
+
+export function isSeoGeoEntitled(policy: PolicyLike): boolean {
+  const flags = policy?.flags;
+  if (!flags || typeof flags !== 'object') return false;
+  return (flags as Record<string, unknown>)['embed.seoGeo.enabled'] === true;
+}
+
+export function isSeoGeoConfigEnabled(config: unknown): boolean {
+  if (!config || typeof config !== 'object' || Array.isArray(config)) return false;
+  const seoGeo = (config as Record<string, unknown>).seoGeo;
+  if (!seoGeo || typeof seoGeo !== 'object' || Array.isArray(seoGeo)) return false;
+  return (seoGeo as Record<string, unknown>).enabled === true;
+}
+
+export function isSeoGeoLive(args: { policy: PolicyLike; config: unknown; requested?: boolean }): boolean {
+  if (args.requested === false) return false;
+  return isSeoGeoEntitled(args.policy) && isSeoGeoConfigEnabled(args.config);
+}
+
 type FaqState = {
   title?: string;
   sections?: Array<{
@@ -250,4 +272,3 @@ export function generateMetaPack(args: {
   }
   return { schemaJsonLd: '', excerptHtml: '' };
 }
-

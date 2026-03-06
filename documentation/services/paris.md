@@ -1,11 +1,11 @@
 # System: Paris — DB + Policy + Mirror Job Queue (PRD 54)
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
-Last updated: 2026-03-01 (PRD 54 pivot)
+Last updated: 2026-03-06 (PRD 56/57 hard-cut sync)
 
 Paris is the **write boundary** for product state:
 - Authz + policy (entitlements) for editor surfaces (Roma/Bob)
-- Minimal Supabase reads/writes for accounts/instances/assets metadata
+- Minimal Supabase reads/writes for accounts/instances plus Paris-owned l10n overlay state in R2/KV
 - Enqueues Tokyo-worker jobs so Tokyo/R2 mirrors what is live
 
 Non-negotiable (PRD 54):
@@ -19,24 +19,20 @@ Non-negotiable (PRD 54):
 ### Instances (editor surfaces only)
 - `GET /api/accounts/:accountId/instance/:publicId?subject=account` — editor load (1 DB read)
 - `PUT /api/accounts/:accountId/instance/:publicId?subject=account` — save draft config/text (1 DB write)
-- `GET /api/accounts/:accountId/instances` — list
-- `POST /api/accounts/:accountId/instances?subject=account` — create (idempotent by `publicId` in payload)
 
 ### Locale pipeline (editor surfaces)
-- `GET /api/accounts/:accountId/locales` (read active locales + policy)
 - `PUT /api/accounts/:accountId/locales?subject=account` (persist active locales + policy)
 - `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account`
 - `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected?subject=account`
 - `GET/PUT/DELETE /api/accounts/:accountId/instances/:publicId/layers/...` (locale overrides storage)
 
-### PRD 54 deprecations / pivots
-- `POST /api/accounts/:accountId/instances/:publicId/render-snapshot` → `410` (deprecated)
-- `GET /api/accounts/:accountId/instances/:publicId/publish/status` → minimal status only (no snapshot pipeline)
+Locale read note:
+- Flat locales reads moved to direct Michael access in Bob (`/api/accounts/:accountId/locales` in Bob runtime), so Paris keeps only the write/orchestration path.
 
-### Assets (Roma Assets surface)
-- `GET /api/accounts/:accountId/assets` — list asset metadata (variants + usage)
-- `DELETE /api/accounts/:accountId/assets/:assetId` — hard delete one asset (metadata + blobs)
-- `DELETE /api/accounts/:accountId/assets?confirm=1` — forced hard delete all account assets (downgrade/closure)
+### Assets boundary
+- Asset list/delete/purge are no longer exposed by Paris.
+- Roma/Bob call Tokyo asset endpoints directly with Berlin-backed auth on server routes.
+- Paris still triggers asset purge internally during tier-drop orchestration when required.
 
 ---
 

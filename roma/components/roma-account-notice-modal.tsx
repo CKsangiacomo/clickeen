@@ -70,7 +70,7 @@ export function RomaAccountNoticeModal() {
     setDismissLoading(true);
     setDismissError(null);
     try {
-      await fetchParisJson(`/api/paris/accounts/${encodeURIComponent(accountId)}/lifecycle/tier-drop/dismiss`, {
+      await fetchParisJson(`/api/accounts/${encodeURIComponent(accountId)}/lifecycle/tier-drop/dismiss`, {
         method: 'POST',
       });
       await me.reload();

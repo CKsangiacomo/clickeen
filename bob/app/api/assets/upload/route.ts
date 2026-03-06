@@ -3,9 +3,8 @@ import { isUuid, isWidgetPublicId, parseCanonicalAssetRef, toCanonicalAssetVersi
 import { resolveTokyoBaseUrl } from '../../../../lib/env/tokyo';
 import {
   resolveSessionBearer,
-  type SessionCookieSpec,
 } from '../../../../lib/auth/session';
-import { applySessionCookies } from '../../../../lib/api/paris/proxy-helpers';
+import { withSessionAndCors } from '../../../../lib/api/paris/proxy-helpers';
 
 export const runtime = 'edge';
 
@@ -49,27 +48,17 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-function withCorsAndSession(
-  request: NextRequest,
-  response: NextResponse,
-  setCookies?: SessionCookieSpec[],
-): NextResponse {
-  const next = applySessionCookies(response, request, setCookies);
-  Object.entries(CORS_HEADERS).forEach(([key, value]) => next.headers.set(key, value));
-  return next;
-}
-
 export async function POST(request: NextRequest) {
   const stage = (process.env.ENV_STAGE ?? '').trim().toLowerCase();
   const localStage = stage === 'local';
   const session = localStage ? null : await resolveSessionBearer(request);
   if (!localStage && session && !session.ok) {
-    return withCorsAndSession(request, session.response);
+    return withSessionAndCors(request, session.response, undefined, CORS_HEADERS);
   }
 
   const surface = (request.headers.get('x-clickeen-surface') || '').trim();
   if (surface !== 'roma-assets') {
-    return withCorsAndSession(request, NextResponse.json(
+    return withSessionAndCors(request, NextResponse.json(
       {
         error: {
           kind: 'DENY',
@@ -78,15 +67,15 @@ export async function POST(request: NextRequest) {
         },
       },
       { status: 403 },
-    ), session && session.ok ? session.setCookies : undefined);
+    ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
   }
 
   const accountId = (request.headers.get('x-account-id') || '').trim();
   if (!accountId || !isUuid(accountId)) {
-    return withCorsAndSession(request, NextResponse.json(
+    return withSessionAndCors(request, NextResponse.json(
       { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
       { status: 422 },
-    ), session && session.ok ? session.setCookies : undefined);
+    ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
   }
 
   const filename = (request.headers.get('x-filename') || '').trim() || 'upload.bin';
@@ -97,22 +86,24 @@ export async function POST(request: NextRequest) {
     tokyoBase = resolveTokyoBaseUrl().replace(/\/$/, '');
   } catch (err) {
     const messageText = err instanceof Error ? err.message : String(err);
-    return withCorsAndSession(request, NextResponse.json(
+    return withSessionAndCors(request, NextResponse.json(
       { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail: messageText } },
       { status: 500 },
-    ), session && session.ok ? session.setCookies : undefined);
+    ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
   }
 
   const headers = new Headers();
   if (localStage) {
     const tokyoDevJwt = String(process.env.TOKYO_DEV_JWT || '').trim();
     if (!tokyoDevJwt) {
-      return withCorsAndSession(
+      return withSessionAndCors(
         request,
         NextResponse.json(
           { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail: 'Missing TOKYO_DEV_JWT.' } },
           { status: 500 },
         ),
+        undefined,
+        CORS_HEADERS,
       );
     }
     headers.set('authorization', `Bearer ${tokyoDevJwt}`);
@@ -124,10 +115,10 @@ export async function POST(request: NextRequest) {
   const publicId = (request.headers.get('x-public-id') || '').trim();
   if (publicId) {
     if (!isWidgetPublicId(publicId)) {
-      return withCorsAndSession(request, NextResponse.json(
+      return withSessionAndCors(request, NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } },
         { status: 422 },
-      ), session && session.ok ? session.setCookies : undefined);
+      ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
     }
     headers.set('x-public-id', publicId);
   }
@@ -135,10 +126,10 @@ export async function POST(request: NextRequest) {
   const widgetType = (request.headers.get('x-widget-type') || '').trim().toLowerCase();
   if (widgetType) {
     if (!isWidgetType(widgetType)) {
-      return withCorsAndSession(request, NextResponse.json(
+      return withSessionAndCors(request, NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } },
         { status: 422 },
-      ), session && session.ok ? session.setCookies : undefined);
+      ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
     }
     headers.set('x-widget-type', widgetType);
   }
@@ -151,17 +142,17 @@ export async function POST(request: NextRequest) {
   try {
     const contentLength = Number(request.headers.get('content-length') || '');
     if (Number.isFinite(contentLength) && contentLength <= 0) {
-      return withCorsAndSession(request, NextResponse.json(
+      return withSessionAndCors(request, NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } },
         { status: 422 },
-      ), session && session.ok ? session.setCookies : undefined);
+      ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
     }
     const bodyStream = request.body;
     if (!bodyStream) {
-      return withCorsAndSession(request, NextResponse.json(
+      return withSessionAndCors(request, NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } },
         { status: 422 },
-      ), session && session.ok ? session.setCookies : undefined);
+      ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
     }
 
     const contentType = (request.headers.get('content-type') || '').trim() || 'application/octet-stream';
@@ -180,13 +171,14 @@ export async function POST(request: NextRequest) {
     const payload = safeJsonParse(text);
     if (!res.ok) {
       if (payload && typeof payload === 'object' && (payload as any).error) {
-        return withCorsAndSession(
+        return withSessionAndCors(
           request,
           NextResponse.json(payload, { status: res.status }),
           session && session.ok ? session.setCookies : undefined,
+          CORS_HEADERS,
         );
       }
-      return withCorsAndSession(request, NextResponse.json(
+      return withSessionAndCors(request, NextResponse.json(
         {
           error: {
             kind: 'INTERNAL',
@@ -195,11 +187,11 @@ export async function POST(request: NextRequest) {
           },
         },
         { status: 502 },
-      ), session && session.ok ? session.setCookies : undefined);
+      ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
     }
 
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-      return withCorsAndSession(request, NextResponse.json(
+      return withSessionAndCors(request, NextResponse.json(
         {
           error: {
             kind: 'INTERNAL',
@@ -208,12 +200,12 @@ export async function POST(request: NextRequest) {
           },
         },
         { status: 502 },
-      ), session && session.ok ? session.setCookies : undefined);
+      ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
     }
 
     const normalizedUrl = normalizeTokyoUploadUrl(tokyoBase, payload as Record<string, unknown>, accountId);
     if (!normalizedUrl) {
-      return withCorsAndSession(request, NextResponse.json(
+      return withSessionAndCors(request, NextResponse.json(
         {
           error: {
             kind: 'INTERNAL',
@@ -222,18 +214,18 @@ export async function POST(request: NextRequest) {
           },
         },
         { status: 502 },
-      ), session && session.ok ? session.setCookies : undefined);
+      ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
     }
 
-    return withCorsAndSession(request, NextResponse.json(
+    return withSessionAndCors(request, NextResponse.json(
       { ...(payload as Record<string, unknown>), url: normalizedUrl },
       { status: 200 },
-    ), session && session.ok ? session.setCookies : undefined);
+    ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
   } catch (err) {
     const messageText = err instanceof Error ? err.message : String(err);
-    return withCorsAndSession(request, NextResponse.json(
+    return withSessionAndCors(request, NextResponse.json(
       { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.assets.uploadFailed', detail: messageText } },
       { status: 502 },
-    ), session && session.ok ? session.setCookies : undefined);
+    ), session && session.ok ? session.setCookies : undefined, CORS_HEADERS);
   }
 }

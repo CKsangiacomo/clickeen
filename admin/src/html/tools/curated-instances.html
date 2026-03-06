@@ -262,14 +262,19 @@
   async function loadCuratedInstances() {
     setStatus({ loading: true, lastError: null });
     try {
-      const url = `${bobBaseUrl.replace(/\\/+$/, '')}/api/paris/curated-instances?includeConfig=0&_t=${Date.now()}`;
+      const url = `${bobBaseUrl.replace(/\\/+$/, '')}/api/roma/templates?accountId=${encodeURIComponent(ADMIN_ACCOUNT_ID)}&_t=${Date.now()}`;
       const res = await fetch(url, { method: 'GET', cache: 'no-store' });
       const json = await res.json().catch(() => null);
       if (!res.ok) {
         const message = json?.error?.detail || json?.error?.reasonKey || json?.error || `HTTP_${res.status}`;
         throw new Error(String(message));
       }
-      const instances = Array.isArray(json?.instances) ? json.instances : [];
+      const instances = Array.isArray(json?.instances)
+        ? json.instances.map((row) => ({
+            ...row,
+            widgetname: row?.widgetname || row?.widgetType || 'unknown',
+          }))
+        : [];
       setStatus({ instances, lastLoadedAt: new Date(), loading: false, lastError: null });
     } catch (err) {
       setStatus({ loading: false, lastError: err instanceof Error ? err.message : String(err) });

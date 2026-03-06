@@ -29,7 +29,7 @@ export function TemplatesDomain() {
     setDomainLoading(true);
     setDataError(null);
     try {
-      const payload = await fetchParisJson<unknown>(`/api/paris/roma/templates?accountId=${encodeURIComponent(accountId)}`, {
+      const payload = await fetchParisJson<unknown>(`/api/roma/templates?accountId=${encodeURIComponent(accountId)}`, {
         method: 'GET',
       });
       const normalized = normalizeRomaTemplatesSnapshot(payload);
@@ -81,7 +81,7 @@ export function TemplatesDomain() {
       setActiveActionKey(actionKey);
       setActionError(null);
       try {
-        const payload = await fetchParisJson<{ publicId?: string }>(`/api/paris/roma/widgets/duplicate`, {
+        const payload = await fetchParisJson<{ publicId?: string }>(`/api/roma/widgets/duplicate`, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',

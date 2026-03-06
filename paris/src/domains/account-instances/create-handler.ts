@@ -2,12 +2,22 @@ import { can } from '@clickeen/ck-policy';
 import { buildL10nSnapshot, computeBaseFingerprint } from '@clickeen/l10n';
 import type { CuratedInstanceRow, Env, InstanceRow, WidgetRow } from '../../shared/types';
 import { readJson } from '../../shared/http';
-import { ckError } from '../../shared/errors';
+import { ckError, errorDetail } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
 import { loadWidgetLocalizationAllowlist, resolveAccountL10nPolicy } from '../../shared/l10n';
-import { applyTextPackToConfig, materializeTextPack, stripTextFromConfig } from '../../shared/mirror-packs';
+import {
+  buildLocaleTextPacks,
+  collectLocaleOverlayOps,
+  enqueueConfigPack,
+  enqueueLiveSurfaceSync,
+  enqueueLocaleMetaPacks,
+  enqueueLocaleTextPacks,
+  logMirrorEnqueueError,
+  logMirrorEnqueueFailures,
+  stripTextFromConfig,
+} from '../../shared/mirror-packs';
 import { jsonSha256Hex } from '../../shared/stable-json';
-import { generateMetaPack } from '../../shared/seo-geo';
+import { isSeoGeoLive } from '../../shared/seo-geo';
 import {
   assertConfig,
   assertDisplayName,
@@ -423,9 +433,10 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
           enabled: accountL10nPolicy.switcher.enabled,
         },
       };
-      const seoGeoEntitled = policyResult.policy.flags['embed.seoGeo.enabled'] === true;
-      const seoGeoConfigEnabled = Boolean((createdInstance.config as any)?.seoGeo?.enabled === true);
-      const seoGeoLive = seoGeoEntitled && seoGeoConfigEnabled;
+      const seoGeoLive = isSeoGeoLive({
+        policy: policyResult.policy,
+        config: createdInstance.config,
+      });
 
       try {
         const allowlist = await loadWidgetLocalizationAllowlist(env, widgetType);
@@ -434,98 +445,72 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
         const configFp = await jsonSha256Hex(configPack);
 
         const baseFingerprint = await computeBaseFingerprint(baseTextPack);
-        const localeOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
-        const userOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
+        let localeOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
+        let userOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
         try {
           const rows = await loadInstanceOverlays(env, publicId);
-          rows.forEach((row) => {
-            const layer = typeof row?.layer === 'string' ? row.layer.trim().toLowerCase() : '';
-            const locale = typeof row?.layer_key === 'string' ? row.layer_key.trim() : '';
-            if (!locale) return;
-            if (!availableLocales.includes(locale)) return;
-            if (row.base_fingerprint !== baseFingerprint) return;
-            if (!Array.isArray(row.ops)) return;
-            if (layer === 'locale') {
-              localeOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
-            } else if (layer === 'user') {
-              userOpsByLocale.set(locale, row.ops as Array<{ op: 'set'; path: string; value: unknown }>);
-            }
-          });
+          ({ localeOpsByLocale, userOpsByLocale } = collectLocaleOverlayOps({
+            rows,
+            locales: availableLocales,
+            baseFingerprint,
+          }));
         } catch (error) {
-          const detail = error instanceof Error ? error.message : String(error);
+          const detail = errorDetail(error);
           console.warn('[ParisWorker] Failed to resolve overlays for text packs', detail);
         }
 
-        const textPacksByLocale = new Map<string, Record<string, string>>();
-        for (const locale of availableLocales) {
-          if (locale === baseLocale) {
-            textPacksByLocale.set(locale, { ...baseTextPack });
-            continue;
-          }
-          const localeOps = localeOpsByLocale.get(locale) ?? null;
-          const userOps = userOpsByLocale.get(locale) ?? null;
-          textPacksByLocale.set(locale, materializeTextPack({ basePack: baseTextPack, localeOps, userOps }));
-        }
+        const textPacksByLocale = new Map(
+          buildLocaleTextPacks({
+            locales: availableLocales,
+            baseLocale,
+            basePack: baseTextPack,
+            localeOpsByLocale,
+            userOpsByLocale,
+          }).map(({ locale, textPack }) => [locale, textPack] as const),
+        );
 
-        for (const locale of availableLocales) {
-          const textPack = textPacksByLocale.get(locale) ?? baseTextPack;
-          const enqueueText = await enqueueTokyoMirrorJob(env, {
-            v: 1,
-            kind: 'write-text-pack',
-            publicId,
-            locale,
-            textPack,
-          });
-          if (!enqueueText.ok) {
-            console.error('[ParisWorker] tokyo write-text-pack enqueue failed', enqueueText.error);
-          }
-        }
+        const localeTextPacks = availableLocales.map((locale) => ({
+          locale,
+          textPack: textPacksByLocale.get(locale) ?? baseTextPack,
+        }));
+        const textFailures = await enqueueLocaleTextPacks({
+          publicId,
+          localeTextPacks,
+          enqueue: (job) => enqueueTokyoMirrorJob(env, job),
+        });
+        logMirrorEnqueueFailures({ kind: 'write-text-pack', failures: textFailures });
 
         if (seoGeoLive) {
-          for (const locale of availableLocales) {
-            const textPack = textPacksByLocale.get(locale) ?? baseTextPack;
-            const metaState = applyTextPackToConfig(configPack, textPack);
-            const metaPack = generateMetaPack({ widgetType, state: metaState, locale });
-            const enqueueMeta = await enqueueTokyoMirrorJob(env, {
-              v: 1,
-              kind: 'write-meta-pack',
-              publicId,
-              locale,
-              metaPack,
-            });
-            if (!enqueueMeta.ok) {
-              console.error('[ParisWorker] tokyo write-meta-pack enqueue failed', enqueueMeta.error);
-            }
-          }
+          const metaFailures = await enqueueLocaleMetaPacks({
+            publicId,
+            widgetType,
+            configPack,
+            localeTextPacks,
+            enqueue: (job) => enqueueTokyoMirrorJob(env, job),
+          });
+          logMirrorEnqueueFailures({ kind: 'write-meta-pack', failures: metaFailures });
         }
 
-        const writeConfig = await enqueueTokyoMirrorJob(env, {
-          v: 1,
-          kind: 'write-config-pack',
+        const configError = await enqueueConfigPack({
           publicId,
           widgetType,
           configFp,
           configPack,
+          enqueue: (job) => enqueueTokyoMirrorJob(env, job),
         });
-        if (!writeConfig.ok) {
-          console.error('[ParisWorker] tokyo write-config-pack enqueue failed', writeConfig.error);
-        }
+        logMirrorEnqueueError({ kind: 'write-config-pack', error: configError });
 
-        const sync = await enqueueTokyoMirrorJob(env, {
-          v: 1,
-          kind: 'sync-live-surface',
+        const syncError = await enqueueLiveSurfaceSync({
           publicId,
-          live: true,
           widgetType,
           configFp,
           localePolicy,
           seoGeo: seoGeoLive,
+          enqueue: (job) => enqueueTokyoMirrorJob(env, job),
         });
-        if (!sync.ok) {
-          console.error('[ParisWorker] tokyo sync-live-surface enqueue failed', sync.error);
-        }
+        logMirrorEnqueueError({ kind: 'sync-live-surface', error: syncError });
       } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
+        const detail = errorDetail(error);
         console.error('[ParisWorker] tokyo mirror job planning failed', detail);
       }
     }

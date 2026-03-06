@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { setRomaAuthzCapsule } from './paris-http';
 
 export type RomaMeResponse = {
   user: {
@@ -97,13 +96,6 @@ function resolveRequestedAccountId(): string | null {
 
 function toAccountCacheKey(accountId: string | null): string {
   return accountId || ROMA_EMPTY_ACCOUNT_CACHE_KEY;
-}
-
-function resolveAccountCapsule(data: RomaMeResponse | null): string | null {
-  const candidate = data?.authz?.accountCapsule;
-  if (typeof candidate !== 'string') return null;
-  const normalized = candidate.trim();
-  return normalized || null;
 }
 
 export function resolveDefaultRomaContext(data: RomaMeResponse | null): ResolvedRomaContext {
@@ -207,7 +199,6 @@ async function fetchRomaMeState(accountId: string | null): Promise<UseRomaMeStat
     if (resolvedAccountId) {
       writeStoredAccountIdPreference(resolvedAccountId);
     }
-    setRomaAuthzCapsule(resolveAccountCapsule(payload as RomaMeResponse));
 
     return {
       loading: false,
@@ -215,7 +206,6 @@ async function fetchRomaMeState(accountId: string | null): Promise<UseRomaMeStat
       error: null,
     };
   } catch (error) {
-    setRomaAuthzCapsule(null);
     const message = error instanceof Error ? error.message : String(error);
     return {
       loading: false,
@@ -283,7 +273,6 @@ export function useRomaMe() {
   }, [load]);
 
   useEffect(() => {
-    setRomaAuthzCapsule(resolveAccountCapsule(state.data));
     if (!state.data) return;
     const resolvedAccountId = normalizeAccountId(state.data.defaults.accountId);
     if (resolvedAccountId) {

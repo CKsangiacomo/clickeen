@@ -9,7 +9,7 @@
 - Serves widget definitions/assets (core runtime + contract files):
   - `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
   - `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
-- Serves localization overlays for instances (`tokyo/l10n/**`) materialized from Supabase overlays
+- Serves published localization artifacts for instances (`tokyo/l10n/**`) written by Paris/Tokyo-worker
 - Serves published render snapshots for Venice (`tokyo/renders/instances/**`) materialized by `tokyo-worker` (PRD 38)
 - Prague website base copy is repo-local in `tokyo/widgets/*/pages/*.json`; localized overlays are stored under `tokyo/l10n/prague/**` and fetched by Prague from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/**` (Chrome UI strings remain in `prague/content/base/v1/chrome.json`; build token defaults to `CF_PAGES_COMMIT_SHA`, with `PUBLIC_PRAGUE_BUILD_ID` as optional override).
 
@@ -80,51 +80,40 @@ Local dev:
   - `GET /assets/integrity/:accountId` (account mirror integrity snapshot)
   - `GET /assets/integrity/:accountId/:assetId` (per-asset integrity snapshot)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
-  - `POST /l10n/instances/:publicId/:layer/:layerKey` (dev-only; layered path)
-  - `DELETE /l10n/instances/:publicId/:layer/:layerKey` (dev-only; layered path)
-  - `POST /l10n/instances/:publicId/bases/:baseFingerprint` (dev-only; writes `tokyo/l10n/instances/**/bases/*.snapshot.json`)
-  - `POST /l10n/instances/:publicId/index` (dev-only; writes layer index into `tokyo/l10n/**`)
-  - `DELETE /l10n/instances/:publicId/index` (dev-only; removes layer index from `tokyo/l10n/**`)
-- Local l10n publish path: `tokyo-worker` reads Supabase and POSTs to the dev server when `TOKYO_L10N_HTTP_BASE` is set.
-- `scripts/dev-up.sh` starts the dev server and workers, builds Dieter + i18n, and verifies Prague l10n overlays (auto-translates missing overlays when SF is running), but does **not** build/push instance l10n overlays; run `pnpm build:l10n` or trigger the Paris/SF pipeline when you need instance overlays.
+- `scripts/dev-up.sh` starts the dev server and workers, builds Dieter + i18n, and verifies Prague l10n overlays. Instance l10n publish is driven by the Paris -> Tokyo-worker pipeline.
 
-## l10n overlays (executed)
+## l10n published artifacts (executed)
 
-Tokyo serves **instance localization overlays** as deterministic baseFingerprint ops patches:
+Tokyo serves **published instance localization artifacts**:
 
-- Build output path: `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json` (locale + user layers active; other layers use the same path)
-- Locale index: `tokyo/l10n/instances/<publicId>/index.json` (hybrid layer index)
-- Base snapshots: `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json` (allowlist snapshot values; used by Venice for safe stale apply)
+- Text pack: `tokyo/l10n/instances/<publicId>/packs/<locale>/<textFp>.json`
+- Live locale pointer: `tokyo/l10n/instances/<publicId>/live/<locale>.json`
+- Base snapshots for diagnostics/non-public tooling: `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`
 
 Rules:
-- Overlays are set-only ops (no structural mutations).
-- Overlays include `baseFingerprint` and are rejected if missing.
 - Instance identity is locale-free (`publicId` never contains locale).
-- Consumers should treat overlay files as cacheable (immutable baseFingerprint filenames); no global manifest is used.
-- Overlay files are materialized by `tokyo-worker` from Supabase `widget_instance_overlays` (layered; locale + user are active).
-- `index.json` is materialized by `tokyo-worker` and lists available layer keys (hybrid index).
-
-Build command (repo root):
-- `pnpm build:l10n`
+- Public runtime reads packs + live pointers only.
+- Authoring overlay state is not stored in Tokyo; Paris keeps that in `OVERLAYS_R2` + `L10N_STATE_KV`.
+- Fingerprinted packs are immutable/cacheable; live pointers are tiny mutable `no-store` files.
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
   - `POST /assets/upload` (requires `Authorization: Bearer <token>`; accepts Berlin session bearer for product uploads, or `TOKYO_DEV_JWT` for internal/dev automation. Required header: `x-account-id`. Optional headers: `x-public-id`, `x-widget-type`, `x-source`.)
-  - `DELETE /assets/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; synchronous hard delete path)
+  - `GET /assets/account/:accountId` (requires `Authorization: Bearer <token>`; Berlin session bearer or `TOKYO_DEV_JWT`; member-scoped list)
+  - `DELETE /assets/:accountId/:assetId` (requires `Authorization: Bearer <token>`; Berlin session bearer or `TOKYO_DEV_JWT`; editor+-scoped hard delete path)
+  - `DELETE /assets/purge/:accountId?confirm=1` (requires `Authorization: Bearer <token>`; Berlin session bearer or `TOKYO_DEV_JWT`; editor+-scoped account purge)
   - `GET /assets/integrity/:accountId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /assets/integrity/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /assets/v/:versionId` (public, immutable, cacheable; canonical account-owned asset reads)
-  - `POST /l10n/instances/:publicId/:layer/:layerKey` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
-  - `GET /l10n/**` (public; deterministic overlay paths; immutable by fingerprint, except `index.json`)
+  - `GET /l10n/**` (public; serves published instance packs/live pointers plus Prague overlays)
   - `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague)
-  - `/l10n/publish` (internal) materializes Supabase overlays into R2
 
 Security rule (executed):
 - `TOKYO_DEV_JWT` must never be used from a browser. Browser upload flows go through Bob server routes using Berlin session auth.
 
 Asset-domain note:
-- Tokyo upload metadata is ownership/file-centric (`account_assets`, `account_asset_variants`).
-- "Where used" indexing is maintained by Paris in `account_asset_usage` from instance config writes.
+- Tokyo upload metadata is ownership/file-centric and stored as per-asset manifest JSON in Tokyo R2.
+- The current repo snapshot does not persist a canonical "where used" index in Michael/Supabase.
 
 ## Links
 - Back: ../../CONTEXT.md

@@ -4,6 +4,15 @@ Status: EXECUTING (P0 remediation + convergence)
 Date: 2026-03-05
 Owner: Product Dev Team
 
+Execution update (local):
+- Berlin `/auth/finish` deterministic failure mapping tightened: malformed/unknown `finishId` now returns `422` (validation), replay returns `409`, expired returns `410`.
+- Berlin `GET /auth/session` restored as a minimal identity/session-status route (`userId`, `sid`, `expiresAt`) so the route contract matches runtime again.
+- Paris external bypass route removed: `GET/POST /api/accounts/:accountId/instances` no longer exposed from Paris router; instance creation remains server-owned through Roma orchestration handlers.
+- Roma legacy password-login alias removed: `GET /api/session/post-login` hard-cut and login now routes directly to canonical `next` destination after cookie issuance.
+- Password login hard-gated to local only: Berlin rejects `/auth/login/password` on non-local hosts, Roma rejects `POST /api/session/login` on non-local hosts, and the cloud Roma login page now hides the password form.
+- Berlin legacy provider-link surface hard-cut: `/auth/link/start`, `/auth/link/callback`, `/auth/unlink`, and `/auth/validate` alias removed from runtime and docs.
+- Roma auth completion/logout legacy cookie compatibility branches hard-cut: removed transitional `sb-*` cleanup logic and legacy-domain cookie-clearing loops from login/finish/logout handlers.
+
 > Core mandate: Berlin is the gatekeeper to dreamland. Once user is in, services must stop fighting and each service must do only its job.
 
 Context note:
@@ -639,6 +648,9 @@ Stop conditions (any day):
 ### Phase 5 evidence
 1. Removed route list (legacy paths gone).
 2. Route probe proving canonical paths only.
+3. 2026-03-05 (local): removed legacy Roma OAuth callback alias route file:
+   - `roma/app/api/session/login/google/callback/route.ts`
+4. 2026-03-05 (local): verified no source references remain to `/api/session/login/google/callback`.
 
 ---
 

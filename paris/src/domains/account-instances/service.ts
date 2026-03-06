@@ -1,5 +1,6 @@
 import type { Env, L10nGenerateStateRow, TokyoMirrorQueueJob } from '../../shared/types';
 import type { Policy } from '@clickeen/ck-policy';
+import { errorDetail } from '../../shared/errors';
 import { asTrimmedString } from '../../shared/validation';
 import { requireTokyoBase } from '../../shared/tokyo';
 import { normalizeLocaleList } from '../../shared/l10n';
@@ -108,7 +109,7 @@ async function resolveRenderSnapshotLocales(args: {
       hasOverlayLocaleFallback: capped.some((locale) => !active.locales.includes(locale)),
     };
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     console.warn('[ParisWorker] Failed to resolve persisted locale overlay keys for snapshot locales', detail);
     return {
       locales: active.locales,
@@ -126,7 +127,7 @@ async function enqueueTokyoMirrorJob(env: Env, job: TokyoMirrorQueueJob): Promis
     await env.RENDER_SNAPSHOT_QUEUE.send(job);
     return { ok: true };
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return { ok: false, error: detail };
   }
 }
@@ -319,7 +320,7 @@ async function waitForEnSnapshotReady(args: {
         return { ok: true, state, waitedMs: Date.now() - startedAt };
       }
     } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
+      lastError = errorDetail(error);
     }
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }

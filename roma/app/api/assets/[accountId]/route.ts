@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveSessionBearer, type SessionCookieSpec, applySessionCookies } from '../../../../lib/auth/session';
-import { resolveParisBaseUrl } from '../../../../lib/env/paris';
+import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../lib/auth/session';
+import { resolveTokyoBaseUrl } from '../../../../lib/env/tokyo';
 
 export const runtime = 'edge';
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id',
-} as const;
-
 type RouteContext = { params: Promise<{ accountId: string }> };
 
-function withCorsAndSession(
+function withSession(
   request: NextRequest,
   response: NextResponse,
   setCookies?: SessionCookieSpec[],
 ): NextResponse {
   const next = applySessionCookies(response, request, setCookies);
-  Object.entries(CORS_HEADERS).forEach(([key, value]) => next.headers.set(key, value));
+  next.headers.set('cache-control', 'no-store');
+  next.headers.set('cdn-cache-control', 'no-store');
+  next.headers.set('cloudflare-cdn-cache-control', 'no-store');
   return next;
 }
 
@@ -26,64 +22,91 @@ function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
-function resolveParisAssetsUrl(request: NextRequest, accountId: string): string {
-  const parisBase = resolveParisBaseUrl().replace(/\/$/, '');
-  const target = new URL(`${parisBase}/api/accounts/${encodeURIComponent(accountId)}/assets`);
-  request.nextUrl.searchParams.forEach((value, key) => {
-    if (value) target.searchParams.set(key, value);
-  });
-  return target.toString();
-}
-
-export function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
-}
-
-export async function GET(request: NextRequest, context: RouteContext) {
-  const session = await resolveSessionBearer(request);
-  if (!session.ok) {
-    return withCorsAndSession(request, session.response);
-  }
-
-  const params = await context.params;
-  const accountId = String(params.accountId || '').trim();
-  if (!isUuid(accountId)) {
-    return withCorsAndSession(
-      request,
-      NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 }),
-      session.setCookies,
-    );
-  }
-
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${session.accessToken}`);
-
+function upstreamJsonOrNull(text: string): unknown | null {
+  if (!text) return null;
   try {
-    const res = await fetch(resolveParisAssetsUrl(request, accountId), {
-      method: 'GET',
-      headers,
-      cache: 'no-store',
-    });
-    const text = await res.text().catch(() => '');
-    return withCorsAndSession(
-      request,
-      new NextResponse(text, {
-        status: res.status,
-        headers: {
-          'Content-Type': res.headers.get('Content-Type') || 'application/json',
-        },
-      }),
-      session.setCookies,
-    );
-  } catch (err) {
-    const messageText = err instanceof Error ? err.message : String(err);
-    return withCorsAndSession(
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+async function forwardToTokyo(
+  request: NextRequest,
+  accountId: string,
+  method: 'GET' | 'DELETE',
+): Promise<NextResponse> {
+  const session = await resolveSessionBearer(request);
+  if (!session.ok) return withSession(request, session.response);
+
+  let tokyoBase = '';
+  try {
+    tokyoBase = resolveTokyoBaseUrl().replace(/\/+$/, '');
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSession(
       request,
       NextResponse.json(
-        { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.db.readFailed', detail: messageText } },
+        { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail } },
+        { status: 500 },
+      ),
+      session.setCookies,
+    );
+  }
+
+  const target = new URL(
+    method === 'GET'
+      ? `${tokyoBase}/assets/account/${encodeURIComponent(accountId)}`
+      : `${tokyoBase}/assets/purge/${encodeURIComponent(accountId)}`,
+  );
+  request.nextUrl.searchParams.forEach((value, key) => target.searchParams.set(key, value));
+
+  try {
+    const upstream = await fetch(target.toString(), {
+      method,
+      headers: {
+        authorization: `Bearer ${session.accessToken}`,
+        accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+    const text = await upstream.text().catch(() => '');
+    const payload = upstreamJsonOrNull(text);
+    const body = payload && typeof payload === 'object' ? payload : { error: { kind: 'INTERNAL', reasonKey: `HTTP_${upstream.status}` } };
+    return withSession(request, NextResponse.json(body, { status: upstream.status }), session.setCookies);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'roma.errors.proxy.tokyo_unavailable', detail } },
         { status: 502 },
       ),
       session.setCookies,
     );
   }
+}
+
+export async function GET(request: NextRequest, context: RouteContext) {
+  const { accountId } = await context.params;
+  const normalizedAccountId = String(accountId || '').trim();
+  if (!isUuid(normalizedAccountId)) {
+    return NextResponse.json(
+      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
+      { status: 422 },
+    );
+  }
+  return forwardToTokyo(request, normalizedAccountId, 'GET');
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const { accountId } = await context.params;
+  const normalizedAccountId = String(accountId || '').trim();
+  if (!isUuid(normalizedAccountId)) {
+    return NextResponse.json(
+      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
+      { status: 422 },
+    );
+  }
+  return forwardToTokyo(request, normalizedAccountId, 'DELETE');
 }

@@ -8,3 +8,7 @@ export function ckError(error: CkErrorResponse['error'], status: number) {
 export function apiError(code: string, message: string, status: number, detail?: unknown) {
   return json({ error: { code, message, detail } }, { status });
 }
+
+export function errorDetail(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}

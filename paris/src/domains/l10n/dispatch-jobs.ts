@@ -1,4 +1,5 @@
 import type { Env, L10nJob } from '../../shared/types';
+import { errorDetail } from '../../shared/errors';
 import { asTrimmedString } from '../../shared/validation';
 
 type DispatchResult =
@@ -14,7 +15,7 @@ export async function dispatchL10nGenerateJobs(
       await env.L10N_GENERATE_QUEUE.sendBatch(jobs.map((job) => ({ body: job })));
       return { ok: true, transport: 'queue' };
     } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) };
+      return { ok: false, error: errorDetail(error) };
     }
   }
 

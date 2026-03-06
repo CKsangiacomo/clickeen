@@ -1,75 +1,19 @@
 import { resolvePolicy, type Policy } from '@clickeen/ck-policy';
 import type { AccountRow, Env, LocalePolicy } from '../../shared/types';
 import { authorizeAccount } from '../../shared/account-auth';
-import { ckError } from '../../shared/errors';
-import { json, readJson } from '../../shared/http';
+import { normalizeAccountTier } from '../../shared/authz-capsule';
+import { ckError, errorDetail } from '../../shared/errors';
+import { hasConfirmedQueryParam, json, readJson } from '../../shared/http';
 import { resolveAccountL10nPolicy } from '../../shared/l10n';
+import { tierRank } from '../../shared/roles';
+import { isSeoGeoLive } from '../../shared/seo-geo';
 import { supabaseFetch } from '../../shared/supabase';
-import { asTrimmedString, isUuid } from '../../shared/validation';
+import { asTrimmedString, assertAccountId } from '../../shared/validation';
 import { enqueueTokyoMirrorJob, resolveActivePublishLocales } from '../account-instances/service';
 
 type AccountTier = AccountRow['tier'];
 
 const ACCOUNT_QUERY_PAGE_SIZE = 1000;
-
-function assertAccountId(value: string) {
-  const trimmed = String(value || '').trim();
-  if (!trimmed || !isUuid(trimmed)) {
-    return {
-      ok: false as const,
-      response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' }, 422),
-    };
-  }
-  return { ok: true as const, value: trimmed };
-}
-
-function assertAssetId(value: string) {
-  const trimmed = String(value || '').trim();
-  if (!trimmed || !isUuid(trimmed)) {
-    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' }, 422) };
-  }
-  return { ok: true as const, value: trimmed };
-}
-
-function normalizeAccountTier(raw: unknown): AccountTier | null {
-  switch (raw) {
-    case 'free':
-    case 'tier1':
-    case 'tier2':
-    case 'tier3':
-      return raw;
-    default:
-      return null;
-  }
-}
-
-function tierRank(tier: AccountTier): number {
-  switch (tier) {
-    case 'tier3':
-      return 4;
-    case 'tier2':
-      return 3;
-    case 'tier1':
-      return 2;
-    case 'free':
-      return 1;
-    default:
-      return 0;
-  }
-}
-
-function requireRomaAssetSurface(req: Request): Response | null {
-  const surface = (req.headers.get('x-clickeen-surface') || '').trim();
-  if (surface === 'roma-assets') return null;
-  return ckError(
-    {
-      kind: 'DENY',
-      reasonKey: 'coreui.errors.auth.forbidden',
-      detail: 'Asset delete is managed via Roma Assets.',
-    },
-    403,
-  );
-}
 
 function resolveTokyoMutableAssetBase(env: Env): string | null {
   const raw = ((env.TOKYO_WORKER_BASE_URL || '') || (env.TOKYO_BASE_URL || '')).trim().replace(/\/+$/, '');
@@ -220,7 +164,7 @@ async function unpublishAccountInstances(args: {
       },
     };
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return { ok: false, response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500) };
   }
 }
@@ -358,7 +302,6 @@ async function enforceTierDropMirrorForKeptInstances(args: {
 }): Promise<{ ok: true; syncEnqueued: number; failed: string[]; failedDetails: Record<string, string> } | { ok: false; response: Response }> {
   if (args.keepLivePublicIds.length === 0) return { ok: true, syncEnqueued: 0, failed: [], failedDetails: {} };
 
-  const seoGeoEntitled = args.policy.flags['embed.seoGeo.enabled'] === true;
   const { localePolicy, invalidAccountLocales } = buildTierDropLocalePolicy({ account: args.account, policy: args.policy });
   if (invalidAccountLocales) {
     console.warn('[ParisWorker] invalid account locales while enforcing plan change', { accountId: args.account.id, invalidAccountLocales });
@@ -372,8 +315,10 @@ async function enforceTierDropMirrorForKeptInstances(args: {
 
   for (const row of keepRows.rows) {
     const publicId = row.publicId;
-    const seoGeoConfigEnabled = Boolean((row.config as any)?.seoGeo?.enabled === true);
-    const nextSeoGeo = seoGeoEntitled && seoGeoConfigEnabled;
+    const nextSeoGeo = isSeoGeoLive({
+      policy: args.policy,
+      config: row.config,
+    });
 
     const enqueue = await enqueueTokyoMirrorJob(args.env, {
       v: 1,
@@ -449,7 +394,7 @@ async function purgeAccountAssets(args: {
     }
     return { ok: true, tokyo: (tokyoBody && typeof tokyoBody === 'object' ? (tokyoBody as Record<string, unknown>) : { ok: true }) };
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = errorDetail(error);
     return { ok: false, response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500) };
   }
 }
@@ -508,79 +453,6 @@ async function dismissTierDropLifecycleState(args: {
   return { ok: true };
 }
 
-export async function handleAccountAssetsList(req: Request, env: Env, accountIdRaw: string) {
-  const accountIdResult = assertAccountId(accountIdRaw);
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
-  if (!authorized.ok) return authorized.response;
-
-  void req;
-  const tokyoBase = resolveTokyoMutableAssetBase(env);
-  const tokyoToken = resolveTokyoServiceToken(env);
-  if (!tokyoBase || !tokyoToken) {
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: 'Tokyo service config missing' }, 500);
-  }
-
-  try {
-    const tokyoRes = await fetch(`${tokyoBase}/assets/account/${encodeURIComponent(accountId)}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${tokyoToken}`,
-        accept: 'application/json',
-      },
-      cache: 'no-store',
-    });
-    const payload = await readJson(tokyoRes);
-    if (!tokyoRes.ok) {
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(payload) }, 500);
-    }
-    const assets = Array.isArray((payload as any)?.assets) ? ((payload as any).assets as unknown[]) : [];
-
-    return json({
-      accountId,
-      assets,
-      pagination: {
-        limit: assets.length,
-        count: assets.length,
-      },
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-}
-
-export async function handleAccountAssetsPurge(req: Request, env: Env, accountIdRaw: string) {
-  const surfaceError = requireRomaAssetSurface(req);
-  if (surfaceError) return surfaceError;
-
-  const accountIdResult = assertAccountId(accountIdRaw);
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const authorized = await authorizeAccount(req, env, accountId, 'editor');
-  if (!authorized.ok) return authorized.response;
-
-  const confirmRaw = (new URL(req.url).searchParams.get('confirm') || '').trim().toLowerCase();
-  const confirmed = confirmRaw === '1' || confirmRaw === 'true' || confirmRaw === 'yes';
-  if (!confirmed) {
-    return ckError(
-      {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.account.assetsPurgeConfirmRequired',
-        detail: 'confirm=1 is required to purge all account assets.',
-      },
-      409,
-    );
-  }
-
-  const purged = await purgeAccountAssets({ env, accountId });
-  if (!purged.ok) return purged.response;
-  return json({ ok: true, accountId, tokyo: purged.tokyo });
-}
-
 export async function handleAccountInstancesUnpublish(req: Request, env: Env, accountIdRaw: string) {
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
@@ -589,9 +461,7 @@ export async function handleAccountInstancesUnpublish(req: Request, env: Env, ac
   const authorized = await authorizeAccount(req, env, accountId, 'editor');
   if (!authorized.ok) return authorized.response;
 
-  const confirmRaw = (new URL(req.url).searchParams.get('confirm') || '').trim().toLowerCase();
-  const confirmed = confirmRaw === '1' || confirmRaw === 'true' || confirmRaw === 'yes';
-  if (!confirmed) {
+  if (!hasConfirmedQueryParam(req)) {
     return ckError(
       {
         kind: 'DENY',
@@ -640,9 +510,7 @@ export async function handleAccountLifecyclePlanChange(req: Request, env: Env, a
   if (!authorized.ok) return authorized.response;
   const account = authorized.account;
 
-  const confirmRaw = (new URL(req.url).searchParams.get('confirm') || '').trim().toLowerCase();
-  const confirmed = confirmRaw === '1' || confirmRaw === 'true' || confirmRaw === 'yes';
-  if (!confirmed) {
+  if (!hasConfirmedQueryParam(req)) {
     return ckError(
       {
         kind: 'DENY',
@@ -774,121 +642,4 @@ export async function handleAccountLifecyclePlanChange(req: Request, env: Env, a
     tokyoResync,
     assetsPurged,
   });
-}
-
-export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
-  const accountIdResult = assertAccountId(accountIdRaw);
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const assetIdResult = assertAssetId(assetIdRaw);
-  if (!assetIdResult.ok) return assetIdResult.response;
-  const assetId = assetIdResult.value;
-
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
-  if (!authorized.ok) return authorized.response;
-
-  const tokyoBase = resolveTokyoMutableAssetBase(env);
-  const tokyoToken = resolveTokyoServiceToken(env);
-  if (!tokyoBase || !tokyoToken) {
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: 'Tokyo service config missing' }, 500);
-  }
-
-  try {
-    const tokyoRes = await fetch(`${tokyoBase}/assets/account/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${tokyoToken}`,
-        accept: 'application/json',
-      },
-      cache: 'no-store',
-    });
-    const payload = await readJson(tokyoRes);
-    if (tokyoRes.status === 404) {
-      return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
-    }
-    if (!tokyoRes.ok) {
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(payload) }, 500);
-    }
-
-    return json({
-      accountId,
-      asset: (payload as any)?.asset ?? null,
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-}
-
-export async function handleAccountAssetDelete(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
-  const surfaceError = requireRomaAssetSurface(req);
-  if (surfaceError) return surfaceError;
-
-  const accountIdResult = assertAccountId(accountIdRaw);
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const assetIdResult = assertAssetId(assetIdRaw);
-  if (!assetIdResult.ok) return assetIdResult.response;
-  const assetId = assetIdResult.value;
-
-  const authorized = await authorizeAccount(req, env, accountId, 'editor');
-  if (!authorized.ok) return authorized.response;
-
-  try {
-    const tokyoBase = resolveTokyoMutableAssetBase(env);
-    if (!tokyoBase) {
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_BASE_URL missing' }, 500);
-    }
-
-    const tokyoToken = resolveTokyoServiceToken(env);
-    if (!tokyoToken) {
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_DEV_JWT missing' }, 500);
-    }
-
-    const confirmInUse = (new URL(req.url).searchParams.get('confirmInUse') || '').trim();
-    const tokyoUrl = new URL(`${tokyoBase}/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`);
-    if (confirmInUse) tokyoUrl.searchParams.set('confirmInUse', confirmInUse);
-
-    const tokyoRes = await fetch(tokyoUrl.toString(), {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${tokyoToken}`,
-        'Content-Type': 'application/json',
-        'x-clickeen-surface': 'roma-assets',
-      },
-      cache: 'no-store',
-    });
-    const tokyoBody = await readJson(tokyoRes);
-    if (tokyoRes.status === 404) {
-      return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
-    }
-    if (tokyoRes.status === 409 && tokyoBody && typeof tokyoBody === 'object') {
-      return json(tokyoBody as Record<string, unknown>, { status: 409 });
-    }
-    if (!tokyoRes.ok) {
-      return ckError(
-        {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.db.writeFailed',
-          detail: JSON.stringify(tokyoBody),
-        },
-        500,
-      );
-    }
-
-    return json(
-      (tokyoBody && typeof tokyoBody === 'object'
-        ? tokyoBody
-        : {
-            accountId,
-            assetId,
-            deleted: true,
-          }) as Record<string, unknown>,
-    );
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
-  }
 }

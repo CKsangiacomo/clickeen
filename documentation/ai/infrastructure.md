@@ -36,7 +36,7 @@ Worker vars/secrets:
 - `ENVIRONMENT`: loose environment label used in logs and the `/healthz` response (`dev`, `prod`, etc)
 - `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret with Paris (grant verification + outcome signatures)
 - `PARIS_DEV_JWT` (secret): internal bearer token for San Francisco internal endpoints (`/v1/l10n*`, `/v1/personalization/*`) and Paris writeback calls
-- `PARIS_BASE_URL` (var): required for onboarding persistence path (San Francisco -> Paris account business profile write)
+- `PARIS_BASE_URL` (var): required for internal post-signup account-context writeback when San Francisco sends data back to Paris
 - `DEEPSEEK_API_KEY` (secret, optional): required only when an execution reaches the model provider
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
@@ -100,13 +100,13 @@ Auth:
 - `Authorization: Bearer ${PARIS_DEV_JWT}`
 
 ### `POST /v1/personalization/onboarding`
-Purpose: enqueue account onboarding personalization job.
+Purpose: enqueue post-signup account-context carry-forward job (`/personalization/onboarding` is the current internal legacy route name).
 
 Auth:
 - `Authorization: Bearer ${PARIS_DEV_JWT}`
 
 ### `GET /v1/personalization/onboarding/:jobId`
-Purpose: poll onboarding personalization job status.
+Purpose: poll post-signup account-context carry-forward job status.
 
 Auth:
 - `Authorization: Bearer ${PARIS_DEV_JWT}`
@@ -202,6 +202,8 @@ Budget matrix (`maxTokens / timeoutMs / maxRequests`):
 | `l10n.prague.strings.v1` | `1500 / 60s / 1` | `1500 / 60s / 1` | `2000 / 60s / 1` | `2200 / 60s / 1` |
 | `agent.personalization.preview.v1` | `400 / 25s / 1` | `500 / 30s / 1` | `650 / 30s / 1` | `800 / 30s / 1` |
 | `agent.personalization.onboarding.v1` | `900 / 30s / 2` | `1200 / 45s / 2` | `1800 / 60s / 3` | `2200 / 60s / 3` |
+
+`agent.personalization.onboarding.v1` is the legacy grant identifier for the same post-signup account-context carry-forward path.
 
 Minibob public mint override (Paris endpoint `/api/ai/minibob/grant`):
 - `local` stage: `650 / 45s / 2`

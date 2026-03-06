@@ -20,6 +20,7 @@ import {
   UPLOADS_BYTES_BUDGET_KEY,
   UPLOADS_COUNT_BUDGET_KEY,
   type AccountAssetManifest,
+  type MemberRole,
   consumeAccountBudget,
   deleteAccountAssetByIdentity,
   deleteAccountAssetUsageByIdentity,
@@ -101,12 +102,13 @@ async function resolveUploadTierAndAuthorization(args: {
   env: Env;
   auth: Exclude<Awaited<ReturnType<typeof assertUploadAuth>>, { ok: false }>;
   accountId: string;
+  minRole?: MemberRole;
 }): Promise<UploadTierResolutionResult> {
-  const { env, auth, accountId } = args;
+  const { env, auth, accountId, minRole = 'editor' } = args;
   if (auth.trusted) return { ok: true };
   try {
     const membershipRole = await loadAccountMembershipRole(env, accountId, auth.principal.userId);
-    if (!membershipRole || roleRank(membershipRole) < roleRank('editor')) {
+    if (!membershipRole || roleRank(membershipRole) < roleRank(minRole)) {
       return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
     }
     return { ok: true };
@@ -117,6 +119,24 @@ async function resolveUploadTierAndAuthorization(args: {
       response: json({ error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } }, { status: 500 }),
     };
   }
+}
+
+async function authorizeAccountAssetAccess(args: {
+  req: Request;
+  env: Env;
+  accountId: string;
+  minRole: MemberRole;
+}): Promise<Response | null> {
+  const auth = await assertUploadAuth(args.req, args.env);
+  if (!auth.ok) return auth.response;
+  const authorized = await resolveUploadTierAndAuthorization({
+    env: args.env,
+    auth,
+    accountId: args.accountId,
+    minRole: args.minRole,
+  });
+  if (!authorized.ok) return authorized.response;
+  return null;
 }
 
 async function enforceUploadBudgets(args: {
@@ -510,45 +530,18 @@ async function handleListAccountAssetMetadata(
   env: Env,
   accountIdRaw: string,
 ): Promise<Response> {
-  const authErr = requireDevAuth(req, env);
-  if (authErr) return authErr;
   const accountId = String(accountIdRaw || '').trim();
   if (!accountId || !isUuid(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
+  const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'viewer' });
+  if (authErr) return authErr;
   const origin = new URL(req.url).origin;
   const manifests = await listAccountAssetManifestsByAccount(env, accountId);
   manifests.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   return json({
     accountId,
     assets: manifests.map((manifest) => serializeAccountAssetManifest(manifest, origin)),
-  });
-}
-
-async function handleGetAccountAssetMetadata(
-  req: Request,
-  env: Env,
-  accountIdRaw: string,
-  assetIdRaw: string,
-): Promise<Response> {
-  const authErr = requireDevAuth(req, env);
-  if (authErr) return authErr;
-  const accountId = String(accountIdRaw || '').trim();
-  const assetId = String(assetIdRaw || '').trim();
-  if (!accountId || !isUuid(accountId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
-  }
-  if (!assetId || !isUuid(assetId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' } }, { status: 422 });
-  }
-  const manifest = await loadAccountAssetManifestByIdentity(env, accountId, assetId);
-  if (!manifest) {
-    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
-  }
-  const origin = new URL(req.url).origin;
-  return json({
-    accountId,
-    asset: serializeAccountAssetManifest(manifest, origin),
   });
 }
 
@@ -625,13 +618,12 @@ async function handleDeleteAccountAsset(
   accountIdRaw: string,
   assetIdRaw: string,
 ): Promise<Response> {
-  const authErr = requireDevAuth(req, env);
-  if (authErr) return authErr;
-
   const accountId = String(accountIdRaw || '').trim();
   if (!accountId || !isUuid(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
+  const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'editor' });
+  if (authErr) return authErr;
   const assetId = String(assetIdRaw || '').trim();
   if (!assetId || !isUuid(assetId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' } }, { status: 422 });
@@ -789,13 +781,12 @@ async function handlePurgeAccountAssets(
   env: Env,
   accountIdRaw: string,
 ): Promise<Response> {
-  const authErr = requireDevAuth(req, env);
-  if (authErr) return authErr;
-
   const accountId = String(accountIdRaw || '').trim();
   if (!accountId || !isUuid(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
+  const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'editor' });
+  if (authErr) return authErr;
 
   const confirmRaw = (new URL(req.url).searchParams.get('confirm') || '').trim().toLowerCase();
   const confirmed = confirmRaw === '1' || confirmRaw === 'true' || confirmRaw === 'yes';
@@ -863,7 +854,6 @@ async function handlePurgeAccountAssets(
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
-  handleGetAccountAssetMetadata,
   handleGetAccountAssetIdentityIntegrity,
   handleListAccountAssetMetadata,
   handleGetAccountAssetMirrorIntegrity,

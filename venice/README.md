@@ -7,15 +7,12 @@ Key routes (shipped):
 - `GET /r/:publicId` (render JSON; `?meta=1` for SEO/GEO metadata payload)
 - `GET /widgets/*` and `GET /dieter/*` (Tokyo asset proxy)
 - `GET /embed/latest/loader.js` and `GET /embed/v2/loader.js` (embed loader)
-- `GET /embed/pixel` (best-effort usage meter forwarding)
-- `POST /s/:publicId` (submission proxy to Paris)
+- `GET /embed/pixel` (compat no-op `204`)
 
 Required env (deployed environments):
-- `PARIS_URL` (or `NEXT_PUBLIC_PARIS_URL`)
 - `TOKYO_URL` (or `TOKYO_BASE_URL` / `NEXT_PUBLIC_TOKYO_URL`)
 
 Optional:
-- `USAGE_EVENT_HMAC_SECRET` (required only for signed usage forwarding in `/embed/pixel`)
 - `VENICE_INTERNAL_BYPASS_TOKEN` (required outside local for tokyo-worker access to internal snapshot-source routes)
 
 Local dev:

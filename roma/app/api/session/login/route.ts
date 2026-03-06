@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
-import { applySessionCookies, resolveSessionCookieDomain, resolveSessionCookieNames } from '../../../../lib/auth/session';
+import { applySessionCookies, resolveSessionCookieNames } from '../../../../lib/auth/session';
+import { isLocalHostname } from '../../../../lib/env/runtime';
 
 export const runtime = 'edge';
-
-const LEGACY_ACCESS_COOKIE = 'sb-access-token';
-const LEGACY_REFRESH_COOKIE = 'sb-refresh-token';
 
 const CACHE_HEADERS = {
   'cache-control': 'no-store',
@@ -19,35 +17,6 @@ type BerlinLoginPayload = {
   accessTokenMaxAge?: unknown;
   refreshTokenMaxAge?: unknown;
 };
-
-function clearCookie(
-  response: NextResponse,
-  options: { secure: boolean; domain?: string },
-  cookieName: string,
-) {
-  response.cookies.set({
-    name: cookieName,
-    value: '',
-    httpOnly: true,
-    secure: options.secure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 0,
-  });
-
-  if (options.domain) {
-    response.cookies.set({
-      name: cookieName,
-      value: '',
-      httpOnly: true,
-      secure: options.secure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 0,
-      domain: options.domain,
-    });
-  }
-}
 
 function normalizeEmail(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -83,6 +52,10 @@ function buildErrorResponse(reasonKey: string, status: number) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isLocalHostname(request.nextUrl.hostname)) {
+    return buildErrorResponse('coreui.errors.auth.password.localOnly', 403);
+  }
+
   let berlinBase = '';
   try {
     berlinBase = resolveBerlinBaseUrl();
@@ -133,15 +106,6 @@ export async function POST(request: NextRequest) {
     { name: cookieNames.access, value: accessToken, maxAge: accessMaxAge },
     { name: cookieNames.refresh, value: refreshToken, maxAge: refreshMaxAge },
   ]);
-
-  const cookieOptions = {
-    secure: request.nextUrl.protocol === 'https:',
-    domain: resolveSessionCookieDomain(request),
-  };
-
-  // Clear legacy Supabase cookies during boundary cutover.
-  clearCookie(response, cookieOptions, LEGACY_ACCESS_COOKIE);
-  clearCookie(response, cookieOptions, LEGACY_REFRESH_COOKIE);
 
   return response;
 }

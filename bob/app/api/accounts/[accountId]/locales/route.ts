@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isUuid } from '@clickeen/ck-contracts';
-import { type SessionCookieSpec } from '../../../../../lib/auth/session';
-import { applySessionCookies, resolveParisSession } from '../../../../../lib/api/paris/proxy-helpers';
+import { proxyToParisRoute, resolveParisSession, withSessionAndCors } from '../../../../../lib/api/paris/proxy-helpers';
 import { getAccountLocalesRow } from '../../../../../lib/michael';
 
 export const runtime = 'edge';
@@ -10,19 +9,9 @@ type RouteContext = { params: Promise<{ accountId: string }> };
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,OPTIONS',
+  'Access-Control-Allow-Methods': 'GET,PUT,OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id',
 } as const;
-
-function withCorsAndSession(
-  request: NextRequest,
-  response: NextResponse,
-  setCookies?: SessionCookieSpec[],
-): NextResponse {
-  const next = applySessionCookies(response, request, setCookies);
-  Object.entries(CORS_HEADERS).forEach(([key, value]) => next.headers.set(key, value));
-  return next;
-}
 
 function normalizeLocaleList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -43,26 +32,27 @@ export function OPTIONS() {
 export async function GET(request: NextRequest, context: RouteContext) {
   const session = await resolveParisSession(request);
   if (!session.ok) {
-    return withCorsAndSession(request, session.response);
+    return withSessionAndCors(request, session.response, undefined, CORS_HEADERS);
   }
 
   const params = await context.params;
   const accountId = String(params.accountId || '').trim();
   if (!isUuid(accountId)) {
-    return withCorsAndSession(
+    return withSessionAndCors(
       request,
       NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
         { status: 422 },
       ),
       session.setCookies,
+      CORS_HEADERS,
     );
   }
 
   const rowResult = await getAccountLocalesRow(accountId, session.accessToken);
   if (!rowResult.ok) {
     const status = rowResult.status === 401 ? 401 : 502;
-    return withCorsAndSession(
+    return withSessionAndCors(
       request,
       NextResponse.json(
         {
@@ -75,17 +65,19 @@ export async function GET(request: NextRequest, context: RouteContext) {
         { status },
       ),
       session.setCookies,
+      CORS_HEADERS,
     );
   }
 
   if (!rowResult.row) {
-    return withCorsAndSession(
+    return withSessionAndCors(
       request,
       NextResponse.json(
         { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
         { status: 403 },
       ),
       session.setCookies,
+      CORS_HEADERS,
     );
   }
 
@@ -95,7 +87,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       ? rowResult.row.l10n_policy
       : null;
 
-  return withCorsAndSession(
+  return withSessionAndCors(
     request,
     NextResponse.json({
       accountId,
@@ -103,5 +95,28 @@ export async function GET(request: NextRequest, context: RouteContext) {
       policy,
     }),
     session.setCookies,
+    CORS_HEADERS,
   );
+}
+
+export async function PUT(request: NextRequest, context: RouteContext) {
+  const params = await context.params;
+  const accountId = String(params.accountId || '').trim();
+  if (!isUuid(accountId)) {
+    return withSessionAndCors(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
+        { status: 422 },
+      ),
+      undefined,
+      CORS_HEADERS,
+    );
+  }
+
+  return proxyToParisRoute(request, {
+    path: `/api/accounts/${encodeURIComponent(accountId)}/locales`,
+    method: 'PUT',
+    corsHeaders: CORS_HEADERS,
+  });
 }

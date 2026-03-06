@@ -173,24 +173,24 @@ Each release proceeds in 3 steps:
 
 #### Bob (Pages)
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
-- Bob proxies Paris under same-origin (`/api/paris/*`) using `PARIS_BASE_URL` (preferred).
+- Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/roma/bootstrap`, `/api/roma/templates`) backed by Paris/Michael boundaries.
 
 #### Roma (Pages)
 - Roma is the domain shell (`/home`, `/widgets`, `/templates`, `/builder`, ...).
 - Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Paris `/api/roma/bootstrap`), including an account authz capsule and an account entitlement snapshot.
-- Roma proxies Paris under same-origin (`/api/paris/*`) and injects short-lived authz headers:
+- Roma uses named same-origin routes for Paris orchestration endpoints and injects short-lived authz headers:
   - `x-ck-authz-capsule` for account-scoped calls
 - Roma Builder embeds Bob with `boot=message` and sends explicit `ck:open-editor` payloads after `bob:session-ready`.
 
 #### Paris (Workers)
-- Stateless API gateway to Michael (Supabase).
+- Stateless write boundary over Michael (Supabase) plus Paris-owned l10n write-plane storage.
 - Public endpoints are under `/api/*`.
-- Shipped in this repo snapshot: `GET /api/instance/:publicId` (public; user-owned rows are published-only), account-scoped editor endpoints (`GET/PUT /api/accounts/:accountId/instance/:publicId?subject=account`, `GET/POST /api/accounts/:accountId/instances`, `GET/PUT /api/accounts/:accountId/locales`), l10n/layers (`/api/accounts/:accountId/instances/:publicId/l10n/*`, `/api/accounts/:accountId/instances/:publicId/layers/*`), Roma domain endpoints (`GET /api/roma/bootstrap`, `GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`), `GET /api/curated-instances` (curated list), `POST /api/ai/grant`, `POST /api/ai/outcome`.
+- Shipped in this repo snapshot: `GET /api/instance/:publicId` (public; user-owned rows are published-only), account-scoped editor endpoints (`GET/PUT /api/accounts/:accountId/instance/:publicId?subject=account`, `GET/PUT /api/accounts/:accountId/locales`), l10n/layers (`/api/accounts/:accountId/instances/:publicId/l10n/*`, `/api/accounts/:accountId/instances/:publicId/layers/*`), Roma domain endpoints (`GET /api/roma/bootstrap`, `GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`), `POST /api/ai/grant`, `POST /api/ai/outcome`.
 - Layered l10n endpoints are canonical.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
-- Publish control-plane writes are transactional for base/account usage persistence; snapshot generation is async (queue + publish-status) and does not block publish persistence on pointer advancement.
+- Publish control-plane writes are transactional for base persistence + validation; snapshot generation is async (queue + publish-status) and does not block publish persistence on pointer advancement.
 
 #### Venice (Workers)
 - Public embed surface (third-party websites only talk to Venice).
@@ -202,26 +202,26 @@ Each release proceeds in 3 steps:
 #### Tokyo (R2)
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
 - **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
-- Serves materialized instance l10n overlays (`/l10n/**`) published from Supabase (including per-fingerprint base snapshots for diagnostics/non-public tooling).
+- Serves published instance l10n artifacts (`/l10n/**`) written by Paris/Tokyo-worker, including text packs, live pointers, and per-fingerprint base snapshots for diagnostics/non-public tooling.
 - Prague website base copy lives in `tokyo/widgets/*/pages/*.json` (single source per page), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 #### Tokyo Worker (Workers + Queues)
 - Canonical asset management contract (cross-surface behavior): [AssetManagement.md](./AssetManagement.md)
-- Handles canonical account-owned uploads (`POST /assets/upload`) and stores metadata in Michael (`account_assets`, `account_asset_variants`).
-- Asset usage ("where used") is tracked by Paris in `account_asset_usage` via deterministic sync on instance config writes/publishes.
+- Handles canonical account-owned uploads (`POST /assets/upload`) and stores asset bytes + manifest metadata in Tokyo R2.
+- Paris validates account-owned asset refs on instance writes, but this repo snapshot does not persist a canonical "where used" table in Michael.
 - Serves immutable account asset version reads (`GET /assets/v/{versionId}`); legacy `/arsenale/*` paths are hard-failed.
 - Asset delete is synchronous hard delete (`metadata + blob delete`) with no snapshot rebuild enqueue or runtime healing.
 - Tokyo-worker exposes integrity endpoints for managed surfaces (`GET /assets/integrity/:accountId`, `GET /assets/integrity/:accountId/:assetId`).
-- Reads `widget_instance_overlays` from Supabase (layered), merges `ops + user_ops` for layer=user, and publishes overlays to Tokyo/R2.
+- Writes l10n text/meta/config packs and live pointers to Tokyo/R2 from self-contained Paris jobs; Tokyo-worker does not read Michael/Supabase to discover overlay state.
 - Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path using revisioned indices + atomic published pointer flip.
 
 #### Asset ownership model (canonical)
 - Ownership boundary is account (`account_id`).
 - End-to-end flow:
   1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional public/widget trace headers).
-  2. Tokyo-worker writes ownership metadata (`account_assets`, `account_asset_variants`) and returns canonical immutable version URL (`/assets/v/{encodeURIComponent(versionId)}`).
-  3. Paris validates/syncs usage mappings (`account_asset_usage`) from instance config writes in the same request path.
-  4. Roma Assets reads/deletes via account endpoints (`/api/accounts/:accountId/assets*`); delete is Roma-surface-gated and delegates to Tokyo-worker hard delete.
+  2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable version URL (`/assets/v/{encodeURIComponent(versionId)}`).
+  3. Paris validates asset refs from instance config writes in the same request path.
+  4. Roma Assets reads/deletes via Roma asset routes (`/api/assets/:accountId*`) which forward to Tokyo-worker with Berlin session auth; Tokyo-worker enforces account membership role.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
 - `/healthz`, `/v1/execute`, `/v1/outcome`, queue consumer for non-blocking log writes.
@@ -383,7 +383,7 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 Notes:
 - `envStage` is stamped into grants by Paris (`ENV_STAGE`) so San Francisco can index learning data by exposure stage.
 - San Francisco stores raw interaction payloads in R2 and indexes a queryable subset in D1 (see `documentation/ai/learning.md`).
-- Deployment compatibility: local and cloud-dev both use `POST /api/ai/widget-copilot`; `/api/ai/sdr-copilot` remains as compatibility shim.
+- Deployment contract: local and cloud-dev both use `POST /api/ai/widget-copilot` as the single Copilot endpoint.
 
 ---
 
@@ -398,17 +398,17 @@ Base config exists in EXACTLY 2 places during editing:
 1. Load:    GET /api/accounts/:accountId/instance/:publicId?subject=account  → host (message boot) or Bob (URL boot) gets published config
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Publish: PUT /api/accounts/:accountId/instance/:publicId?subject=account  → Saves to Michael and enqueues async snapshot/l10n pipeline
+4. Publish: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/accounts/:accountId/instance/:publicId?subject=account`  → Saves to Michael and enqueues async snapshot/l10n pipeline
 
 Snapshot/l10n convergence is observed via:
 - `GET /api/accounts/:accountId/instances/:publicId/publish/status`
 ```
 
-In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Publish still goes through the same account `PUT` endpoint.
+In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. In Roma-hosted account flows, save/publish/l10n mutations also return through the host boundary before hitting the account routes.
 
 `subject` is required on editor endpoints (`account`, `minibob`) to resolve policy.
 
-Localization is separate: overlay edits write to `widget_instance_overlays` via Paris and do not touch the base config.
+Localization is separate: overlay edits write through Paris into its l10n overlay store (R2/KV-backed) and do not touch the base config.
 
 **Between load and publish:** Zero base-config writes. 10,000 users editing = 10,000 in-memory states, no server load for base config.
 
@@ -540,7 +540,7 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 ## Venice Embed Architecture
 
-**Current Status:** Shipped SSR embed assembler (`/e/:publicId`) with published-only enforcement. (Pixel/submission routes exist but Paris returns `501` in this repo snapshot.)
+**Current Status:** Shipped SSR embed assembler (`/e/:publicId`) with published-only enforcement. (Submission route is hard-cut; `/embed/pixel` remains as compat no-op `204`.)
 
 ### Endpoints
 
@@ -548,7 +548,7 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 |-------|---------|
 | `GET /e/:publicId` | SSR widget HTML |
 | `/embed/v{semver}/loader.js` | Overlay/popup loader |
-| `/embed/pixel` | Usage tracking (fire-and-forget) |
+| `/embed/pixel` | Compatibility no-op (`204`) |
 
 ### Caching Strategy
 
@@ -589,17 +589,14 @@ Visitor loads embed → Venice GET /e/:publicId
 	                    → Venice calls Paris for instance (`GET /api/instance/:publicId`)
 	                    → Paris reads from Michael
 	                    → Venice renders SSR HTML from Tokyo widget assets
-	                    → Venice fires usage pixel
+	                    → Venice optional pixel endpoint is currently no-op (`204`)
 ```
 
 ### 3. Form Submission Flow
 
 ```
-User submits form → POST /s/:publicId to Venice (planned)
-	                  → Venice validates + proxies to Paris
-	                  → Paris POST /api/submit/:publicId (planned)
-	                  → Paris writes to Michael (widget_submissions)
-	                  → Rate limited, no PII in events
+Submission proxy path hard-cut in this repo snapshot.
+`POST /s/:publicId` and Paris `/api/submit/:publicId` are not active runtime contracts.
 ```
 
 ---

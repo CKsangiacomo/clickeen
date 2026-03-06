@@ -16,13 +16,17 @@ DevStudio is Clickeen’s internal admin surface for docs + tools. In this repo 
 Route: `/#/dieter/dev-widget-workspace`
 
 What it does:
-- Embeds Bob in an iframe (default or via `?bob=http://localhost:3000`).
+- Embeds Bob in message-boot mode as a local-first widget authoring studio (default local Bob or explicit `?bob=http://localhost:3000` on the page URL).
 - Marks iframe host intent as `surface=devstudio` (pairs with `surface=roma` in Roma Builder for explicit host behavior).
-- Loads instances via Bob’s `/api/paris/*` proxy (DevStudio never calls Paris directly).
+- Opens Bob from one of two honest sources:
+  - **Source defaults**: compiles `tokyo/widgets/{widget}/spec.json` through Bob and opens an in-memory session with no persisted row required.
+  - **Saved starter**: loads an existing admin-account baseline/curated row through Bob named routes and opens Bob with real `{ accountId, publicId }` context.
+- Uses Bob’s same-origin named routes only (`/api/roma/templates`, `/api/accounts/*`, `/api/widgets/*`) (DevStudio never calls Paris directly).
 - Local-only unauth convenience is isolated here: DevStudio Local carries explicit `devstudio` surface markers so Bob can mint local sessions only for this toolchain, and only when `ENV_STAGE=local`. Roma/product routes do not get this bypass.
-- In **DevStudio Local only**, shows local-only actions (update defaults, reset instance from JSON, create curated instance, update curated, refresh Prague preview, translate locales).
-- Uses a 2-step selector in Widget Workspace: pick `Widget` first, then pick an instance from that widget’s scoped list.
-- Instance list fetch uses `GET /api/curated-instances?includeConfig=0` and lazy-loads each instance config on selection.
+- Uses a 2-step flow: pick `Widget slug`, then choose `Source defaults` or a saved starter scoped to that widget.
+- Starter list fetch uses `GET /api/roma/templates?accountId=<admin-account-id>&surface=devstudio`.
+- Starter opens lazy-load the full admin-account instance envelope on selection.
+- In-memory source-default sessions are for zero-to-one spec/runtime iteration. Saved-starter sessions are the path that keeps Bob save/publish/localization behavior alive.
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
@@ -37,28 +41,10 @@ Important behavior:
 - For paid profiles (`tier1|tier2|tier3`), both gates must allow a CS-capable provider/model and runtime access for `cs.widget.copilot.v1`.
 - Free + Minibob remain constrained to `sdr.widget.copilot.v1` by design.
 
-### Curated instances (single source of truth)
-
-DevStudio Local supports curated instances as the single primitive:
-- **Update default config**: pushes current editor state into `tokyo/widgets/{widget}/spec.json` and upserts `wgt_main_{widget}`.
-- **Reset instance from JSON**: pulls from compiled defaults (`spec.json`) and overwrites `wgt_main_{widget}`.
-- **Create curated instance**: creates `wgt_curated_{widget}_{styleSlug}` from the current editor config, storing metadata (`styleName`, `styleSlug`, and optional `variants`).
-- **Update curated instance**: overwrites the selected `wgt_curated_*` config in place with the current editor state.
-- **Refresh Prague preview**: uses the normal publish path (instance `PUT`) to enqueue Tokyo mirror jobs (render-snapshot is deprecated in PRD 54).
-- **Translate locales**: calls Paris `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected?subject=account` to enqueue locale jobs for the account active locale set.
-
-Notes:
-- Asset controls upload immediately at edit-time; persisted config should store immutable refs (`asset.versionId`) on asset fields, while runtime derives `/assets/v/{encodeURIComponent(versionId)}` paths.
-- Curated IDs are locale-free; do not create `wgt_curated_*.<locale>` variants. Locale is a runtime query param.
-- Curated metadata lives in `curated_widget_instances.meta`: `{ styleName, styleSlug, variants? }`.
-- DevStudio create flow keeps this intentionally minimal: required instance name + optional `variant`/`sub-variant`.
-- DevStudio uploads through the canonical Tokyo account route (`POST /assets/upload`) with explicit `x-account-id`.
-- Curated/main flows use `PLATFORM_ACCOUNT_ID`; resulting URLs are canonical immutable version paths:
-  - original variant key: `assets/versions/{accountId}/{assetId}/{filename}`
-  - non-original variant key: `assets/versions/{accountId}/{assetId}/{variant}/{filename}`
-  - runtime path derived from version ref: `/assets/v/{encodeURIComponent(versionId)}`
-- Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are invalid for DevStudio flows.
-- Curated actions export the current editor state from Bob (not the last published config).
+Current boundary:
+- Widget Workspace is restored for zero-to-one authoring, not for full local product parity.
+- The tool no longer pretends DevStudio is the operational owner for day-2 widget/account workflows.
+- Product/admin operational work still belongs in Roma cloud with a real admin account.
 
 ## Troubleshooting
 

@@ -296,11 +296,11 @@ async function uploadAsset(accessToken, accountId) {
 }
 
 async function readTierDropLifecycleNotice(accessToken, accountId) {
-  const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/me`, {
+  const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/roma/bootstrap`, {
     headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
     cache: 'no-store',
   });
-  if (!res.ok) throw new Error(`Me read failed (${res.status}) ${text.slice(0, 200)}`);
+  if (!res.ok) throw new Error(`Bootstrap read failed (${res.status}) ${text.slice(0, 200)}`);
   const accounts = Array.isArray(data?.accounts) ? data.accounts : [];
   const match = accounts.find((row) => row?.accountId === accountId) || null;
   const lifecycleNotice = match?.lifecycleNotice;
@@ -382,7 +382,7 @@ async function main() {
   console.log('[gate6] seo/geo meta removed on tier drop');
 
   const lifecycleNotice = await readTierDropLifecycleNotice(accessToken, accountId);
-  if (!lifecycleNotice) throw new Error('Expected lifecycleNotice on /api/me account payload, but none found.');
+  if (!lifecycleNotice) throw new Error('Expected lifecycleNotice on /api/roma/bootstrap account payload, but none found.');
   if (!lifecycleNotice.tierChangedAt) throw new Error('Expected lifecycleNotice.tierChangedAt after tier drop.');
   if (lifecycleNotice.tierChangedFrom !== 'tier3') {
     throw new Error(`Expected lifecycleNotice.tierChangedFrom=tier3, got ${String(lifecycleNotice.tierChangedFrom)}`);

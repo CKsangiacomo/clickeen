@@ -38,7 +38,7 @@ When no valid session is present, it returns `401` with auth error payload (`cor
 Roma does not auto-bootstrap tool sessions; supported Roma runtimes always require real Berlin session tokens.
 Roma does not bridge session tokens through browser JS. Builder relies on shared httpOnly cookies across Roma/Bob on a custom `*.clickeen.com` domain.
 Roma exposes explicit session endpoints for product auth UX:
-- `POST /api/session/login` (email/password -> Berlin auth login -> httpOnly session cookies)
+- `POST /api/session/login` (local-only email/password diagnostic path -> Berlin auth login -> httpOnly session cookies)
 - `POST /api/session/logout` (best-effort Berlin logout + clears auth cookies)
 
 Bootstrap payload includes:
@@ -58,7 +58,7 @@ Client behavior (`use-roma-me.ts`):
 ## Paris proxy model
 
 Roma talks to Paris only through same-origin API routes:
-- `roma/app/api/paris/[...path]/route.ts` (generic proxy)
+- Named explicit route handlers under `roma/app/api/**` backed by `roma/lib/api/paris-proxy.ts` (no generic wildcard proxy).
 
 Roma injects the authz capsule for Paris calls through `fetchParisJson` (`roma/components/paris-http.ts`):
 - Header: `x-ck-authz-capsule` (account authz capsule)
@@ -70,7 +70,7 @@ Roma injects the authz capsule for Paris calls through `fetchParisJson` (`roma/c
 
 `BuilderDomain` flow:
 1. Resolve active account + target publicId.
-2. Load instance payload (`/api/paris/accounts/:accountId/instance/:publicId?subject=account`).
+2. Load instance payload (`/api/accounts/:accountId/instance/:publicId?subject=account`).
 3. Load compiled payload (`/api/widgets/:widgetType/compiled`).
 4. Wait for Bob `bob:session-ready` (`boot=message`).
 5. Send `ck:open-editor` with `requestId + sessionId` (no bearer handoff; Bob relies on shared cookies).
@@ -80,6 +80,7 @@ Notes:
 - Builder retries open while waiting for ack (bounded attempts + timeout).
 - Bob URL-bootstrap (`boot=url`) still exists for explicit URL-mode surfaces, but Roma Builder uses message boot as canonical.
 - Roma marks Bob iframe host intent with `surface=roma` to keep host-specific auth behavior explicit.
+- In hosted account-editing flows, Bob sends save/publish/live-toggle and account l10n mutation intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
 
 ## Data domains and caches (client-side)
 
@@ -89,14 +90,15 @@ Notes:
 - `compiled-widget-cache`: per widget compiled payload cache.
 - Widgets/Templates prefetch compiled + likely instances to reduce open latency.
 
-Usage and AI domain behavior:
-- `UsageDomain` still reads live usage from account usage endpoint.
+Usage, billing, and AI domain behavior:
+- `UsageDomain` is bootstrap-driven today. It does not expose live metering in current environments; detailed counters render as "not configured".
+- `BillingDomain` is a placeholder surface today; billing is not configured in current environments.
 - `UsageDomain` and `AiDomain` read profile/role/entitlements from bootstrap authz context (no extra policy/entitlements fetches).
 
 Assets domain behavior:
-- `AssetsDomain` reads account inventory + integrity from bootstrap (`GET /api/bootstrap` -> `domains.assets`), and performs per-asset operations through account-canonical Roma routes (`/api/assets/:accountId/:assetId`).
-- Roma also exposes account-level asset routes (`/api/assets/:accountId` and `/api/assets/upload`), and proxies writes to Tokyo/Paris with the user session bearer.
-- Delete is Roma-surface managed (`x-clickeen-surface=roma-assets`) and hard-deletes via Paris -> Tokyo-worker.
+- `AssetsDomain` reads account inventory from `/api/assets/:accountId` and performs per-asset delete via `/api/assets/:accountId/:assetId`.
+- Roma exposes account-level asset routes (`/api/assets/:accountId`, `/api/assets/:accountId/:assetId`, `/api/assets/upload`) and forwards them directly to Tokyo-worker with the user session bearer.
+- Account purge (`DELETE /api/assets/:accountId?confirm=1`) is also forwarded to Tokyo-worker and remains explicit confirm-only.
 - Account is the ownership boundary.
 
 ## Local vs cloud-dev
@@ -104,6 +106,7 @@ Assets domain behavior:
 ### Cloud-dev
 - Roma runtime target: `https://roma.dev.clickeen.com` (Pages `*.pages.dev` deploys are not supported for authenticated Builder because cookies cannot be shared to Bob).
 - Uses cloud-dev Paris/Tokyo/Bob URLs from env/config.
+- Cloud product auth is Google-first. The password form is hidden, and `POST /api/session/login` rejects on non-local hosts.
 
 ## Operational notes
 
