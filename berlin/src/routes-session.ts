@@ -1,6 +1,6 @@
 import { authError, claimAsNumber, claimAsString, json } from './helpers';
 import { readJsonBody, resolveAccessTokenFromRequest, resolveRefreshTokenFromRequest } from './auth-request';
-import { rotateRefreshRti, resolvePrincipalSession } from './auth-session';
+import { ensureSupabaseAccessToken, rotateRefreshRti, resolvePrincipalSession } from './auth-session';
 import { addUserSessionId, loadSessionState, revokeSessionBySid, revokeSessionsByUserId, saveSessionState } from './session-kv';
 import { resolveSigningContext, signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from './jwt-crypto';
 import { resolveAudience, resolveIssuer } from './auth-config';
@@ -60,6 +60,7 @@ export async function handleRefresh(request: Request, env: Env): Promise<Respons
     sub: state.userId,
     sid: state.sid,
     ver: state.ver,
+    role: 'authenticated',
     iat: nowSec,
     exp: nowSec + ACCESS_TOKEN_TTL_SECONDS,
     iss: resolveIssuer(env),
@@ -128,6 +129,24 @@ export async function handleSession(request: Request, env: Env): Promise<Respons
     exp: claimAsNumber(verified.claims.exp),
     iss: claimAsString(verified.claims.iss),
     aud: verified.claims.aud,
+  });
+}
+
+export async function handleMichaelToken(request: Request, env: Env): Promise<Response> {
+  const principal = await resolvePrincipalSession(request, env);
+  if (!principal.ok) return principal.response;
+
+  const ensured = await ensureSupabaseAccessToken(env, principal.session);
+  if (!ensured.ok) return ensured.response;
+
+  return json({
+    ok: true,
+    userId: principal.userId,
+    accessToken: ensured.accessToken,
+    expiresAt:
+      Number.isFinite(ensured.session.supabaseAccessExp) && (ensured.session.supabaseAccessExp as number) > 0
+        ? new Date((ensured.session.supabaseAccessExp as number) * 1000).toISOString()
+        : null,
   });
 }
 

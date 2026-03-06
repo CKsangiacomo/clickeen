@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountMembersResponse = {
@@ -32,11 +31,28 @@ export function TeamDomain() {
     setLoading(true);
     setError(null);
     try {
-      const payload = await fetchParisJson<AccountMembersResponse>(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/members`,
-        { method: 'GET' },
-      );
-      setMembers(payload);
+      const response = await fetch(`/api/accounts/${encodeURIComponent(accountId)}/members`, {
+        method: 'GET',
+        cache: 'no-store',
+      });
+      const payload = (await response.json().catch(() => null)) as AccountMembersResponse | { error?: unknown } | null;
+      if (!response.ok) {
+        const errorPayload =
+          payload && typeof payload === 'object' && !Array.isArray(payload)
+            ? (payload as { error?: unknown })
+            : null;
+        const errorObject = errorPayload?.error;
+        const reason =
+          errorObject && typeof errorObject === 'object'
+            ? String((errorObject as { reasonKey?: unknown }).reasonKey || `HTTP_${response.status}`)
+            : `HTTP_${response.status}`;
+        throw new Error(reason);
+      }
+      const parsed = payload as AccountMembersResponse | null;
+      if (!parsed || !Array.isArray(parsed.members)) {
+        throw new Error('coreui.errors.payload.invalid');
+      }
+      setMembers(parsed);
       setError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

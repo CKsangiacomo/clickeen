@@ -7,6 +7,16 @@ Priority: P0 (architectural debt — blocks scalability and simplicity goals)
 
 Execution start: 2026-03-05
 
+Execution log (2026-03-05, initial slice):
+- Cloud-dev probe result: Berlin password login succeeded (`200`), but Supabase PostgREST with Berlin JWT returned `401` on `account_members` reads.
+- Berlin claim-contract delta implemented in code: access tokens now include `role: "authenticated"` on both session issue and refresh paths. Deployment + cloud-dev retest still required.
+- Roma migration slice implemented in local code: new direct boundary `roma/lib/michael.ts`, new route `GET /api/accounts/:accountId/members`, and Team UI moved from `/api/paris/accounts/:accountId/members` to the new direct route.
+- Cloud-dev probe detail after deploy: PostgREST error was `PGRST301` ("No suitable key or wrong key type"), confirming JWT trust/key mismatch rather than application logic.
+- Execution unblock applied: Berlin now exposes `GET /auth/michael/token` (session-validated broker for Supabase access token), and Roma `michael.ts` consumes this token for direct PostgREST reads (still no Paris hop).
+- RLS repair migration applied to cloud-dev Supabase: `20260305193000__rls_flat_reads_repair.sql` (fixes recursive `account_members` policy and grants authenticated read privileges for Category A tables).
+- Cloud-dev revalidation after migration: brokered direct reads now succeed (`account_members`, `accounts`, `widget_instances` = `200`), and non-member account query returns empty set (`[]`) as expected.
+- Bob migration slice implemented in local code: new `bob/lib/michael.ts`, new `GET /api/accounts/:accountId/locales`, and `LocalizationControls` locales **read** path moved from `/api/paris/accounts/:accountId/locales` to `/api/accounts/:accountId/locales` (PUT write path remains Paris-owned).
+
 > Core mandate: Paris is "one boring thing" — validate auth, commit DB write, enqueue mirror jobs. Everything else that Paris does today is architectural debt that must be unwound.
 
 > Review correction (v4): architecture is locked to product flow, not theory. Roma owns widget/instance command orchestration. Bob is editor UX only. Direct Supabase is for flat reads only; composed reads and writes stay server-side through Roma -> Paris orchestration.

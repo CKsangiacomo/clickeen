@@ -330,7 +330,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     setSettingsError(null);
     try {
       const res = await session.apiFetch(
-        `/api/paris/accounts/${encodeURIComponent(accountId)}/locales?subject=${encodeURIComponent(subject)}&_t=${Date.now()}`,
+        `/api/accounts/${encodeURIComponent(accountId)}/locales?_t=${Date.now()}`,
         { cache: 'no-store' },
       );
       const json = (await res.json().catch(() => null)) as any;
@@ -374,7 +374,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
       setSettingsError(message);
       setSettingsLoading(false);
     }
-  }, [locale.accountL10nPolicy.baseLocale, session, subject, accountId]);
+  }, [locale.accountL10nPolicy.baseLocale, session, accountId]);
 
   useEffect(() => {
     if (!settingsOpen) return;

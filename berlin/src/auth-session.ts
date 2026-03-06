@@ -57,6 +57,7 @@ export async function issueSession(env: Env, args: SessionIssueArgs): Promise<Se
     sub: args.userId,
     sid,
     ver,
+    role: 'authenticated',
     iat: nowSec,
     exp: nowSec + ACCESS_TOKEN_TTL_SECONDS,
     iss: resolveIssuer(env),

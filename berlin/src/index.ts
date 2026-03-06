@@ -3,7 +3,7 @@ import { internalError, json, methodNotAllowed } from './helpers';
 import { type Env } from './types';
 import { handleFinish, handlePasswordLogin, handleProviderLoginCallback, handleProviderLoginStart } from './routes-login';
 import { handleLinkCallback, handleLinkStart, handleUnlink } from './routes-link';
-import { handleHealthz, handleJwks, handleLogout, handleRefresh, handleSession } from './routes-session';
+import { handleHealthz, handleJwks, handleLogout, handleMichaelToken, handleRefresh, handleSession } from './routes-session';
 
 export { BerlinAuthTicketDO };
 
@@ -71,6 +71,11 @@ export default {
       if (pathname === '/auth/session' || pathname === '/auth/validate') {
         if (request.method !== 'GET') return methodNotAllowed();
         return await handleSession(request, env);
+      }
+
+      if (pathname === '/auth/michael/token') {
+        if (request.method !== 'GET') return methodNotAllowed();
+        return await handleMichaelToken(request, env);
       }
 
       return json({ error: 'NOT_FOUND' }, { status: 404 });
