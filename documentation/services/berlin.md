@@ -23,8 +23,9 @@ Non-responsibilities:
 
 Public:
 - `POST /auth/login/password`
-- `POST /auth/login/provider/start`
+- `POST /auth/login/provider/start` (canonical callback->finish flow only)
 - `GET /auth/login/provider/callback`
+- `POST /auth/finish`
 - `POST /auth/link/start`
 - `GET /auth/link/callback`
 - `POST /auth/unlink`
@@ -50,6 +51,10 @@ Internal:
 - OAuth transaction state:
   - One-time opaque `state` IDs are persisted in `BERLIN_SESSION_KV` with short TTL
   - PKCE verifier + flow metadata are never encoded in callback URLs
+- OAuth finish state:
+  - One-time opaque `finishId` records are persisted in `BERLIN_SESSION_KV` with short TTL
+  - Browser callback redirects only carry `finishId` (no access/refresh tokens in URL)
+  - Provider redirect allow-list must target Berlin callback URLs only (no Roma callback entries)
 
 ## Dependencies
 
@@ -68,7 +73,8 @@ Recommended:
 - `BERLIN_AUDIENCE`
 - `BERLIN_REFRESH_SECRET`
 - `BERLIN_ALLOWED_PROVIDERS` (default: `google`)
-- `BERLIN_LOGIN_CALLBACK_URL` (OAuth redirect target for Google login; cloud-dev should point at Roma)
+- `BERLIN_LOGIN_CALLBACK_URL` (OAuth provider callback URL; cloud-dev should point at Berlin `/auth/login/provider/callback`)
+- `BERLIN_FINISH_REDIRECT_URL` (post-callback browser redirect; cloud-dev should point at Roma `/api/session/finish`)
 
 Optional key override:
 - `BERLIN_ACCESS_PRIVATE_KEY_PEM`

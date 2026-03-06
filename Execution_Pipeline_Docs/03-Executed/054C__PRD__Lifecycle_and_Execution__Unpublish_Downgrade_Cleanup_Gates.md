@@ -1,12 +1,14 @@
 # PRD 54C — Lifecycle + Execution: Unpublish, Downgrades, Cleanup, and Acceptance Gates
 
-Status: EXECUTING (spec)
+Status: EXECUTED (with systemic regressions; remediated by subsequent PRDs)
 Date: 2026-03-01
 Owner: Product Dev Team
 Priority: P0
 
+> **Execution Note (2026-03-05):** This PRD was executed and moved to `03-Executed`. Multiple parts of the rollout caused systemic failures across auth, runtime, and storage contracts. Those failures are addressed by subsequent PRDs (starting with PRD 56 and follow-ons). Treat this document as execution history, not the current runtime source of truth.
+
 Part of:
-- PRD 54 (spine): `Execution_Pipeline_Docs/02-Executing/054__PRD__Snapshot_First_Rendering_Pipeline_Isolation_and_DB_Touch_Budgets.md`
+- PRD 54 (spine): `Execution_Pipeline_Docs/03-Executed/054__PRD__Snapshot_First_Rendering_Pipeline_Isolation_and_DB_Touch_Budgets.md`
 
 Environment contract:
 - Canonical integration truth: cloud-dev (Cloudflare) — Roma on the admin account

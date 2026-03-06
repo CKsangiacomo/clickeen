@@ -4,7 +4,6 @@ import type { AccountTier, Env } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString } from '../../shared/validation';
-import { DEFAULT_ACCOUNT_L10N_POLICY } from '../../shared/l10n';
 import { resolveAdminAccountId } from '../../shared/admin';
 
 type AccountMembershipRow = {
@@ -121,43 +120,6 @@ function selectDefaultAccount(
     if (candidateRank > bestRank) best = candidate;
   }
   return best ?? accounts[0] ?? null;
-}
-
-async function ensureAccountExists(env: Env, accountId: string, slug: string, name: string): Promise<void> {
-  const insert = await supabaseFetch(env, `/rest/v1/accounts?on_conflict=id`, {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({
-      id: accountId,
-      status: 'active',
-      is_platform: false,
-      tier: 'free',
-      slug,
-      name,
-      l10n_locales: [],
-      l10n_policy: DEFAULT_ACCOUNT_L10N_POLICY,
-    }),
-  });
-  if (insert.ok) return;
-  if (insert.status === 409) return;
-  const details = await readJson(insert);
-  throw new Error(`ACCOUNT_INSERT_FAILED: ${JSON.stringify(details)}`);
-}
-
-async function ensureAccountMembership(env: Env, accountId: string, userId: string, role: string): Promise<void> {
-  const insert = await supabaseFetch(env, `/rest/v1/account_members?on_conflict=account_id,user_id`, {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({
-      account_id: accountId,
-      user_id: userId,
-      role,
-    }),
-  });
-  if (insert.ok) return;
-  if (insert.status === 409) return;
-  const details = await readJson(insert);
-  throw new Error(`ACCOUNT_MEMBERSHIP_INSERT_FAILED: ${JSON.stringify(details)}`);
 }
 
 async function loadAccountsForUser(env: Env, userId: string): Promise<AccountMembershipRow[]> {
@@ -292,25 +254,6 @@ export async function resolveIdentityMePayload(req: Request, env: Env): Promise<
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return { ok: false, response: json({ error: 'ACCOUNT_MEMBERSHIP_LOOKUP_FAILED', detail }, { status: 502 }) };
-  }
-
-  const shouldAutoProvisionAccount = membershipRows.length === 0;
-  if (shouldAutoProvisionAccount) {
-    try {
-      const personalAccountId = principal.userId;
-      await ensureAccountExists(env, personalAccountId, `u-${personalAccountId}`, 'Personal');
-      await ensureAccountMembership(env, personalAccountId, principal.userId, 'owner');
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return { ok: false, response: json({ error: 'BOOTSTRAP_PROVISION_FAILED', detail }, { status: 502 }) };
-    }
-
-    try {
-      membershipRows = await loadAccountsForUser(env, principal.userId);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return { ok: false, response: json({ error: 'ACCOUNT_MEMBERSHIP_LOOKUP_FAILED', detail }, { status: 502 }) };
-    }
   }
 
   const accounts = normalizeAccountContexts(membershipRows);

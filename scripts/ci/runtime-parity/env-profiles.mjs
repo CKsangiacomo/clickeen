@@ -179,6 +179,23 @@ function buildCookieHeader(setCookieHeaders) {
   return pairs.join('; ');
 }
 
+function extractTokenFromCookieHeader(cookieHeader) {
+  const source = String(cookieHeader || '').trim();
+  if (!source) return '';
+  const entries = source.split(';');
+  for (const entry of entries) {
+    const trimmed = entry.trim();
+    if (!trimmed) continue;
+    if (trimmed.startsWith('ck-access-token=')) {
+      return trimmed.slice('ck-access-token='.length).trim();
+    }
+    if (trimmed.startsWith('sb-access-token=')) {
+      return trimmed.slice('sb-access-token='.length).trim();
+    }
+  }
+  return '';
+}
+
 async function readJsonSafe(response) {
   return response.json().catch(() => null);
 }
@@ -219,6 +236,17 @@ async function requestRomaAccessToken(romaBaseUrl, cookieHeader) {
   const payload = await readJsonSafe(response);
   const accessToken =
     response.ok && payload && typeof payload.accessToken === 'string' ? payload.accessToken.trim() : '';
+
+  if (!accessToken) {
+    const fallback = extractTokenFromCookieHeader(cookieHeader);
+    if (fallback) {
+      return {
+        status: response.status,
+        accessToken: fallback,
+      };
+    }
+  }
+
   return {
     status: response.status,
     accessToken,

@@ -1,9 +1,11 @@
 # PRD 55 — Supabase Eviction for Overlays, Assets, L10n, Runtime Ephemeral State, Account Enrichment, and Notices (R2/KV Cutover)
 
-Status: EXECUTING (pre-implementation lock)  
+Status: EXECUTED (with systemic regressions; remediated by subsequent PRDs)  
 Date: 2026-03-04  
 Owner: Product Dev Team  
 Priority: P0
+
+> **Execution Note (2026-03-05):** This PRD was executed and moved to `03-Executed`. Multiple parts of the rollout caused systemic failures across auth, runtime, and storage contracts. Those failures are addressed by subsequent PRDs (starting with PRD 56 and follow-ons). Treat this document as execution history, not the current runtime source of truth.
 
 Environment contract:
 - Canonical integration truth: cloud-dev (Cloudflare + shared remote Supabase "Michael").

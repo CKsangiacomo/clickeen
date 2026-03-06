@@ -18,7 +18,11 @@ function resolveErrorMessage(reasonKey: string | null): string {
   if (reasonKey === 'coreui.errors.auth.provider.denied') return 'Google sign-in was denied or blocked. Try a different Google account or use email/password.';
   if (reasonKey === 'coreui.errors.auth.provider.invalidCallback') return 'Google sign-in failed. Try again.';
   if (reasonKey === 'coreui.errors.auth.provider.exchangeFailed') return 'Google sign-in could not complete token exchange. Try again or use email/password.';
+  if (reasonKey === 'coreui.errors.auth.finish.invalidOrExpired') return 'Your sign-in session expired. Please try again.';
+  if (reasonKey === 'coreui.errors.auth.finish.alreadyConsumed') return 'This sign-in callback was already used. Please start login again.';
+  if (reasonKey === 'coreui.errors.auth.unavailable') return 'Auth service is temporarily unavailable. Please try again.';
   if (reasonKey === 'roma.errors.auth.config_missing') return 'Auth service is not configured for Roma.';
+  if (reasonKey === 'coreui.errors.account.createFailed') return 'Account setup failed. Please try again.';
   if (reasonKey === 'coreui.errors.auth.login_failed') return 'Sign in failed. Try again.';
   if (reasonKey) return reasonKey;
   return 'Sign in failed. Try again.';
@@ -28,6 +32,8 @@ export default function RomaLoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => resolveNextPath(searchParams.get('next')), [searchParams]);
+  const intent = useMemo(() => String(searchParams.get('intent') || '').trim(), [searchParams]);
+  const handoffId = useMemo(() => String(searchParams.get('handoffId') || '').trim().toLowerCase(), [searchParams]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,13 +44,6 @@ export default function RomaLoginPage() {
     const reason = searchParams.get('error');
     if (!reason) return;
     setError(resolveErrorMessage(reason));
-  }, [searchParams]);
-
-  useEffect(() => {
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
-    if (!code || !state) return;
-    window.location.replace(`/api/session/login/google/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`);
   }, [searchParams]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -86,6 +85,8 @@ export default function RomaLoginPage() {
           <p className="body-m">Use Google (cloud-dev) or local email/password (local).</p>
           <form action="/api/session/login/google" method="GET" style={{ marginBottom: 18 }}>
             <input type="hidden" name="next" value={nextPath} />
+            {intent ? <input type="hidden" name="intent" value={intent} /> : null}
+            {handoffId ? <input type="hidden" name="handoffId" value={handoffId} /> : null}
             <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
               <button aria-label="Continue with Google" className="diet-btn-txt" data-size="lg" data-variant="primary" type="submit">
                 <span className="diet-btn-txt__label body-l">Continue with Google</span>

@@ -3,19 +3,60 @@ import { resolveBerlinBaseUrl } from '../../../../../lib/env/berlin';
 
 export const runtime = 'edge';
 
-const LOGIN_NEXT_COOKIE = 'ck-roma-login-next';
-
 const CACHE_HEADERS = {
   'cache-control': 'no-store',
   'cdn-cache-control': 'no-store',
   'cloudflare-cdn-cache-control': 'no-store',
 } as const;
 
+type LoginIntent = 'signin' | 'signup_prague' | 'signup_minibob_publish';
+
 function resolveNextPath(value: string | null): string {
   const normalized = String(value || '').trim();
   if (!normalized.startsWith('/')) return '/home';
   if (normalized.startsWith('//')) return '/home';
   return normalized;
+}
+
+function resolveIntent(value: string | null): LoginIntent {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (normalized === 'signup_prague') return 'signup_prague';
+  if (normalized === 'signup_minibob_publish') return 'signup_minibob_publish';
+  return 'signin';
+}
+
+function resolveHandoffId(value: string | null): string | null {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized) return null;
+  if (!/^mbh_[a-z0-9]{16,64}$/.test(normalized)) return null;
+  return normalized;
+}
+
+function parseNextUrl(nextPath: string): URL {
+  return new URL(nextPath, 'https://roma.local');
+}
+
+function deriveIntent(args: {
+  explicitIntent: LoginIntent;
+  explicitIntentRaw: string | null;
+  nextPath: string;
+  handoffId: string | null;
+}): LoginIntent {
+  if (args.explicitIntentRaw) return args.explicitIntent;
+  if (args.handoffId) return 'signup_minibob_publish';
+
+  try {
+    const nextUrl = parseNextUrl(args.nextPath);
+    const nextIntent = resolveIntent(nextUrl.searchParams.get('intent'));
+    if (!args.handoffId && nextIntent !== 'signin') return nextIntent;
+
+    const from = (nextUrl.searchParams.get('from') || '').trim().toLowerCase();
+    if (from === 'prague_create') return 'signup_prague';
+  } catch {
+    // Ignore parse failures and fall through to signin.
+  }
+
+  return 'signin';
 }
 
 function resolveLoginUrl(request: NextRequest, params: Record<string, string>): URL {
@@ -29,6 +70,23 @@ function resolveLoginUrl(request: NextRequest, params: Record<string, string>): 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const nextPath = resolveNextPath(url.searchParams.get('next'));
+  const explicitIntentRaw = url.searchParams.get('intent');
+  const explicitIntent = resolveIntent(explicitIntentRaw);
+  const handoffFromQuery = resolveHandoffId(url.searchParams.get('handoffId'));
+  const handoffFromNext = (() => {
+    try {
+      return resolveHandoffId(parseNextUrl(nextPath).searchParams.get('handoffId'));
+    } catch {
+      return null;
+    }
+  })();
+  const handoffId = handoffFromQuery || handoffFromNext;
+  const intent = deriveIntent({
+    explicitIntent,
+    explicitIntentRaw,
+    nextPath,
+    handoffId,
+  });
 
   let berlinBase = '';
   try {
@@ -46,7 +104,12 @@ export async function GET(request: NextRequest) {
       accept: 'application/json',
     },
     cache: 'no-store',
-    body: JSON.stringify({ provider: 'google' }),
+    body: JSON.stringify({
+      provider: 'google',
+      intent,
+      next: nextPath,
+      ...(handoffId ? { handoffId } : {}),
+    }),
   });
 
   const payload = (await upstream.json().catch(() => null)) as Record<string, unknown> | null;
@@ -62,16 +125,5 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const response = NextResponse.redirect(oauthUrl, { headers: CACHE_HEADERS });
-  const secure = request.nextUrl.protocol === 'https:';
-  response.cookies.set({
-    name: LOGIN_NEXT_COOKIE,
-    value: nextPath,
-    httpOnly: true,
-    secure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 10 * 60,
-  });
-  return response;
+  return NextResponse.redirect(oauthUrl, { headers: CACHE_HEADERS });
 }

@@ -223,12 +223,9 @@ export async function resolveSessionBearer(request: NextRequest): Promise<Sessio
   }
 
   const tokens = extractSessionTokens(request);
-  if (!tokens.accessToken) {
-    return { ok: false, response: unauthorized('coreui.errors.auth.required', 401) };
-  }
-
-  if (!tokenIsExpired(tokens.accessToken)) {
-    return { ok: true, accessToken: tokens.accessToken };
+  const hasUsableAccessToken = Boolean(tokens.accessToken && !tokenIsExpired(tokens.accessToken));
+  if (hasUsableAccessToken) {
+    return { ok: true, accessToken: tokens.accessToken as string };
   }
 
   if (!tokens.refreshToken) {

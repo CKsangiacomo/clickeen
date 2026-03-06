@@ -1,9 +1,11 @@
 # PRD 54 — Live Pointers + Hashed Parts (Config/Text), Venice Dumb, Pipeline Isolation, and Fixed DB-Touch Budgets
 
-Status: EXECUTING (spec)
+Status: EXECUTED (with systemic regressions; remediated by subsequent PRDs)
 Date: 2026-03-01
 Owner: Product Dev Team
 Priority: P0
+
+> **Execution Note (2026-03-05):** This PRD was executed and moved to `03-Executed`. Multiple parts of the rollout caused systemic failures across auth, runtime, and storage contracts. Those failures are addressed by subsequent PRDs (starting with PRD 56 and follow-ons). Treat this document as execution history, not the current runtime source of truth.
 
 Environment contract:
 - Canonical integration truth: cloud-dev (Cloudflare) — Roma on the admin account
@@ -108,9 +110,9 @@ Plain English:
 
 This is a core architecture refactor PRD, so it is split into three “detail specs”:
 
-- Read plane (Tokyo paths + caching + Venice contract): `Execution_Pipeline_Docs/02-Executing/054A__PRD__Read_Plane__Tokyo_Paths_Live_Pointers_Packs_Caching_Venice_Contract.md`
-- Write plane (Bob/Roma → Paris → Tokyo-worker jobs + l10n contracts): `Execution_Pipeline_Docs/02-Executing/054B__PRD__Write_Plane__Bob_Roma_Paris_TokyoWorker_Mirror_Jobs_and_L10n.md`
-- Lifecycle + execution (unpublish/downgrade cleanup + gates): `Execution_Pipeline_Docs/02-Executing/054C__PRD__Lifecycle_and_Execution__Unpublish_Downgrade_Cleanup_Gates.md`
+- Read plane (Tokyo paths + caching + Venice contract): `Execution_Pipeline_Docs/03-Executed/054A__PRD__Read_Plane__Tokyo_Paths_Live_Pointers_Packs_Caching_Venice_Contract.md`
+- Write plane (Bob/Roma → Paris → Tokyo-worker jobs + l10n contracts): `Execution_Pipeline_Docs/03-Executed/054B__PRD__Write_Plane__Bob_Roma_Paris_TokyoWorker_Mirror_Jobs_and_L10n.md`
+- Lifecycle + execution (unpublish/downgrade cleanup + gates): `Execution_Pipeline_Docs/03-Executed/054C__PRD__Lifecycle_and_Execution__Unpublish_Downgrade_Cleanup_Gates.md`
 
 This spine doc stays “human workflow first” and holds the pivot narrative.
 

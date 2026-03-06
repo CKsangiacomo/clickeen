@@ -9,18 +9,27 @@ routes = [
 [vars]
 BERLIN_ISSUER = "https://berlin-dev.clickeen.workers.dev"
 BERLIN_AUDIENCE = "clickeen.product"
-BERLIN_LOGIN_CALLBACK_URL = "https://roma.dev.clickeen.com/api/session/login/google/callback"
+BERLIN_LOGIN_CALLBACK_URL = "https://berlin-dev.clickeen.workers.dev/auth/login/provider/callback"
+BERLIN_FINISH_REDIRECT_URL = "https://roma.dev.clickeen.com/api/session/finish"
 
 [[kv_namespaces]]
 binding = "BERLIN_SESSION_KV"
 id = "a9396f7fee7f47bc9b1be520c78a24c9"
 preview_id = "4d253b94b6b5434ab484cfe4a3a0fb9a"
 
+[[durable_objects.bindings]]
+name = "BERLIN_AUTH_TICKETS"
+class_name = "BerlinAuthTicketDO"
+
 [env.local]
 name = "berlin-local"
-vars = { BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product" }
+vars = { BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product", BERLIN_FINISH_REDIRECT_URL = "http://localhost:3000/api/session/finish" }
 
 [[env.local.kv_namespaces]]
 binding = "BERLIN_SESSION_KV"
 id = "00000000000000000000000000000000"
 preview_id = "00000000000000000000000000000000"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["BerlinAuthTicketDO"]

@@ -23,7 +23,7 @@ export function RomaAuthRedirect({ children }: RomaAuthRedirectProps) {
 
     const search = searchParams.toString();
     const next = search ? `${pathname}?${search}` : pathname;
-    window.location.replace(`/login?next=${encodeURIComponent(next)}`);
+    window.location.replace(`/login?error=${AUTH_REQUIRED_REASON_KEY}&next=${encodeURIComponent(next)}`);
   }, [me.error, pathname, searchParams]);
 
   if (me.error === AUTH_REQUIRED_REASON_KEY) {

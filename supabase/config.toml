@@ -123,8 +123,9 @@ enabled = true
 site_url = "https://roma.dev.clickeen.com"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
-  "https://roma.dev.clickeen.com/api/session/login/google/callback",
-  "https://roma-dev.pages.dev/api/session/login/google/callback",
+  "https://berlin.dev.clickeen.com/auth/login/provider/callback",
+  "https://berlin-dev.clickeen.workers.dev/auth/login/provider/callback",
+  "http://localhost:3005/auth/login/provider/callback",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 28800

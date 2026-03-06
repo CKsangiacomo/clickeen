@@ -213,6 +213,7 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
 
     function buildSignupUrl(baseHref, args) {
       const url = new URL(baseHref, window.location.href);
+      url.searchParams.set('intent', 'signup_minibob_publish');
       url.searchParams.set('handoffId', args.handoffId);
       url.searchParams.set('publicId', args.publicId);
       return url.toString();
