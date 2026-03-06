@@ -9,7 +9,8 @@ DevStudio is Clickeen’s internal admin surface for docs + tools. In this repo 
   - Allowed to create/update instance rows (internal-only workflows).
 - **DevStudio Cloudflare** (`https://devstudio.dev.clickeen.com`)
   - Fast “did the deploy work?” verification surface.
-  - Treated as **read-only** (no DB writes); DevStudio sets `?readonly=1` on the Bob iframe.
+  - Treated as **read-only by default**.
+  - If Widget Workspace is opened there with `?bob=http://localhost:3000`, the page is only a remote shell attached to your local Bob toolchain. Any writes still go through that local Bob/Paris stack and its chosen Supabase target.
 
 ## Widget Workspace tool
 
@@ -26,7 +27,12 @@ What it does:
 - Uses a 2-step flow: pick `Widget slug`, then choose `Source defaults` or a saved starter scoped to that widget.
 - Starter list fetch uses `GET /api/roma/templates?accountId=<admin-account-id>&surface=devstudio`.
 - Starter opens lazy-load the full admin-account instance envelope on selection.
-- In-memory source-default sessions are for zero-to-one spec/runtime iteration. Saved-starter sessions are the path that keeps Bob save/publish/localization behavior alive.
+- In-memory source-default sessions are for zero-to-one spec/runtime iteration.
+- Saved-starter sessions are the path for:
+  - loading `wgt_main_*` / curated starters
+  - updating baseline/main or curated config
+  - checking translations/localization in Bob before wider rollout
+- Bob exposes `GET /api/dev/runtime` so Widget Workspace can show which Supabase target (`local` vs `remote`) the attached Bob toolchain is using.
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
@@ -42,7 +48,8 @@ Important behavior:
 - Free + Minibob remain constrained to `sdr.widget.copilot.v1` by design.
 
 Current boundary:
-- Widget Workspace is restored for zero-to-one authoring, not for full local product parity.
+- Widget Workspace is restored for widget authoring, not for full local product parity.
+- That includes source-defaults work plus admin-account baseline/curated starter iteration and translation checks.
 - The tool no longer pretends DevStudio is the operational owner for day-2 widget/account workflows.
 - Product/admin operational work still belongs in Roma cloud with a real admin account.
 

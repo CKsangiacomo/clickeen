@@ -116,7 +116,7 @@ Result: editing `tokyo/widgets/**` immediately changes **local** Bob + Roma + De
 ### A.1) Local auth issuer alignment (critical)
 Local app servers use the Supabase target chosen by `bash scripts/dev-up.sh`:
 - Default: local Supabase (`http://127.0.0.1:54321`)
-- Optional override: remote Supabase (`DEV_UP_USE_REMOTE_SUPABASE=1` + `.env.local` credentials)
+- Optional override: remote Supabase (`DEV_UP_USE_REMOTE_SUPABASE=1` + `.env.local` `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_ANON_KEY`)
 
 Invariant:
 - The Supabase JWT used against local Paris/Bob/Roma must be issued by the **same** Supabase project Paris is configured to use.

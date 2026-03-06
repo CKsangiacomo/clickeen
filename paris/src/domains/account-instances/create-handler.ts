@@ -7,13 +7,13 @@ import { supabaseFetch } from '../../shared/supabase';
 import { loadWidgetLocalizationAllowlist, resolveAccountL10nPolicy } from '../../shared/l10n';
 import {
   buildLocaleTextPacks,
-  collectLocaleOverlayOps,
   enqueueConfigPack,
   enqueueLiveSurfaceSync,
   enqueueLocaleMetaPacks,
   enqueueLocaleTextPacks,
   logMirrorEnqueueError,
   logMirrorEnqueueFailures,
+  resolveLocaleOverlayOps,
   stripTextFromConfig,
 } from '../../shared/mirror-packs';
 import { jsonSha256Hex } from '../../shared/stable-json';
@@ -445,19 +445,12 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
         const configFp = await jsonSha256Hex(configPack);
 
         const baseFingerprint = await computeBaseFingerprint(baseTextPack);
-        let localeOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
-        let userOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
-        try {
-          const rows = await loadInstanceOverlays(env, publicId);
-          ({ localeOpsByLocale, userOpsByLocale } = collectLocaleOverlayOps({
-            rows,
-            locales: availableLocales,
-            baseFingerprint,
-          }));
-        } catch (error) {
-          const detail = errorDetail(error);
-          console.warn('[ParisWorker] Failed to resolve overlays for text packs', detail);
-        }
+        const { localeOpsByLocale, userOpsByLocale } = await resolveLocaleOverlayOps({
+          loadRows: () => loadInstanceOverlays(env, publicId),
+          locales: availableLocales,
+          baseFingerprint,
+          warnMessage: '[ParisWorker] Failed to resolve overlays for text packs',
+        });
 
         const textPacksByLocale = new Map(
           buildLocaleTextPacks({

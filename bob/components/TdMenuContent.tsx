@@ -121,70 +121,55 @@ function loadScript(src: string): Promise<void> {
   return p;
 }
 
+function applyDisabledState(
+  el: { disabled: boolean; dataset: DOMStringMap },
+  readOnly: boolean,
+  disabledKey: string,
+) {
+  if (readOnly) {
+    if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
+    el.disabled = true;
+    return;
+  }
+  if (disabledKey in el.dataset) {
+    el.disabled = el.dataset[disabledKey] === '1';
+    delete el.dataset[disabledKey];
+  }
+}
+
+function applyReadOnlyFlag(
+  el: { readOnly: boolean; dataset: DOMStringMap },
+  readOnly: boolean,
+  readonlyKey: string,
+) {
+  if (readOnly) {
+    if (!(readonlyKey in el.dataset)) el.dataset[readonlyKey] = el.readOnly ? '1' : '0';
+    el.readOnly = true;
+    return;
+  }
+  if (readonlyKey in el.dataset) {
+    el.readOnly = el.dataset[readonlyKey] === '1';
+    delete el.dataset[readonlyKey];
+  }
+}
+
 function applyReadOnlyState(container: HTMLElement, readOnly: boolean) {
   const disabledKey = 'ckReadonlyDisabled';
   const readonlyKey = 'ckReadonlyReadonly';
   const contentEditableKey = 'ckReadonlyContenteditable';
 
-  container.querySelectorAll<HTMLInputElement>('input').forEach((el) => {
-    if (readOnly) {
-      if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
-      if (!(readonlyKey in el.dataset)) el.dataset[readonlyKey] = el.readOnly ? '1' : '0';
-      el.readOnly = true;
-      el.disabled = true;
-      return;
-    }
-    if (disabledKey in el.dataset) {
-      el.disabled = el.dataset[disabledKey] === '1';
-      delete el.dataset[disabledKey];
-    }
-    if (readonlyKey in el.dataset) {
-      el.readOnly = el.dataset[readonlyKey] === '1';
-      delete el.dataset[readonlyKey];
-    }
-  });
-
-  container.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((el) => {
-    if (readOnly) {
-      if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
-      if (!(readonlyKey in el.dataset)) el.dataset[readonlyKey] = el.readOnly ? '1' : '0';
-      el.readOnly = true;
-      el.disabled = true;
-      return;
-    }
-    if (disabledKey in el.dataset) {
-      el.disabled = el.dataset[disabledKey] === '1';
-      delete el.dataset[disabledKey];
-    }
-    if (readonlyKey in el.dataset) {
-      el.readOnly = el.dataset[readonlyKey] === '1';
-      delete el.dataset[readonlyKey];
-    }
+  container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea').forEach((el) => {
+    applyDisabledState(el, readOnly, disabledKey);
+    applyReadOnlyFlag(el, readOnly, readonlyKey);
   });
 
   container.querySelectorAll<HTMLSelectElement>('select').forEach((el) => {
-    if (readOnly) {
-      if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
-      el.disabled = true;
-      return;
-    }
-    if (disabledKey in el.dataset) {
-      el.disabled = el.dataset[disabledKey] === '1';
-      delete el.dataset[disabledKey];
-    }
+    applyDisabledState(el, readOnly, disabledKey);
   });
 
   container.querySelectorAll<HTMLButtonElement>('button').forEach((el) => {
     if (el.classList.contains('tdmenucontent__cluster-toggle')) return;
-    if (readOnly) {
-      if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
-      el.disabled = true;
-      return;
-    }
-    if (disabledKey in el.dataset) {
-      el.disabled = el.dataset[disabledKey] === '1';
-      delete el.dataset[disabledKey];
-    }
+    applyDisabledState(el, readOnly, disabledKey);
   });
 
   container.querySelectorAll<HTMLElement>('[contenteditable]').forEach((el) => {

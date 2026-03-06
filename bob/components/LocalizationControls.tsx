@@ -92,7 +92,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     locale,
     policy,
     isDirty,
-    isPublishing,
+    isSaving,
     save,
     setLocalePreview,
     saveLocaleOverrides,
@@ -169,8 +169,8 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     !hasInstance ||
     locale.loading ||
     availableLocales.length <= 1;
-  const publishGate = can(policy, 'instance.publish');
-  const canPublish = publishGate.allow;
+  const saveGate = can(policy, 'instance.update');
+  const canSaveBase = saveGate.allow;
   const showEmptyState =
     showSelector &&
     hasInstance &&
@@ -667,7 +667,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                     data-size="md"
                     data-variant="primary"
                     type="button"
-                    disabled={!canPublish || isPublishing || locale.loading || isSyncBusy}
+                    disabled={!canSaveBase || isSaving || locale.loading || isSyncBusy}
                     onClick={async () => {
                       setRefreshMessage(null);
                       if (isDirty) {
@@ -741,7 +741,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                             data-size="md"
                             data-variant="primary"
                             type="button"
-                            disabled={locale.loading || isPublishing || isSyncBusy}
+                            disabled={locale.loading || isSaving || isSyncBusy}
                             onClick={async () => {
                               setRefreshMessage(null);
                               const result = await refreshLocaleTranslations();

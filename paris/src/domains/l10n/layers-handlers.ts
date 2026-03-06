@@ -112,36 +112,79 @@ async function mirrorPublishedLayerLocale(args: {
   return null;
 }
 
+async function resolveLayerRequestContext(args: {
+  req: Request;
+  env: Env;
+  accountId: string;
+  publicId: string;
+  minRole: 'viewer' | 'editor';
+  onInstanceNotFound: (publicId: string) => Response;
+}): Promise<
+  | {
+      ok: true;
+      account: Awaited<ReturnType<typeof authorizeAccount>> extends { ok: true; account: infer T } ? T : never;
+      policy: ReturnType<typeof resolveEditorPolicyFromRequest> extends { ok: true; policy: infer T } ? T : never;
+      publicId: string;
+      instance: NonNullable<Awaited<ReturnType<typeof loadInstanceByAccountAndPublicId>>>;
+    }
+  | { ok: false; response: Response }
+> {
+  const authorized = await authorizeAccount(args.req, args.env, args.accountId, args.minRole);
+  if (!authorized.ok) return { ok: false, response: authorized.response };
+  const account = authorized.account;
+
+  const policyResult = resolveEditorPolicyFromRequest(args.req, account);
+  if (!policyResult.ok) return { ok: false, response: policyResult.response };
+
+  const publicIdResult = assertPublicId(args.publicId);
+  if (!publicIdResult.ok) {
+    return {
+      ok: false,
+      response: apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId: args.publicId }),
+    };
+  }
+
+  const instance = await loadInstanceByAccountAndPublicId(args.env, args.accountId, publicIdResult.value);
+  if (!instance) {
+    return {
+      ok: false,
+      response: args.onInstanceNotFound(args.publicId),
+    };
+  }
+
+  const adminAccountId = resolveAdminAccountId(args.env);
+  if (resolveInstanceKind(instance) === 'curated' && args.accountId !== adminAccountId) {
+    return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
+  }
+
+  return {
+    ok: true,
+    account,
+    policy: policyResult.policy,
+    publicId: publicIdResult.value,
+    instance,
+  };
+}
+
 export async function handleAccountInstanceLayersList(
   req: Request,
   env: Env,
   accountId: string,
   publicId: string,
 ) {
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
-  if (!authorized.ok) return authorized.response;
-  const account = authorized.account;
+  const resolved = await resolveLayerRequestContext({
+    req,
+    env,
+    accountId,
+    publicId,
+    minRole: 'viewer',
+    onInstanceNotFound: () => ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404),
+  });
+  if (!resolved.ok) return resolved.response;
 
-  const policyResult = resolveEditorPolicyFromRequest(req, account);
-  if (!policyResult.ok) return policyResult.response;
-
-  const publicIdResult = assertPublicId(publicId);
-  if (!publicIdResult.ok) {
-    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
-  }
-
-  const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicIdResult.value);
-  if (!instance)
-    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
-
-  const adminAccountId = resolveAdminAccountId(env);
-  if (resolveInstanceKind(instance) === 'curated' && accountId !== adminAccountId) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
-  }
-
-  const rows = await loadInstanceOverlays(env, publicIdResult.value);
+  const rows = await loadInstanceOverlays(env, resolved.publicId);
   return json({
-    publicId: instance.public_id,
+    publicId: resolved.instance.public_id,
     accountId,
     layers: rows.map((row) => {
       const { userOps } = resolveUserOps(row);
@@ -167,17 +210,15 @@ export async function handleAccountInstanceLayerGet(
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
-  if (!authorized.ok) return authorized.response;
-  const account = authorized.account;
-
-  const policyResult = resolveEditorPolicyFromRequest(req, account);
-  if (!policyResult.ok) return policyResult.response;
-
-  const publicIdResult = assertPublicId(publicId);
-  if (!publicIdResult.ok) {
-    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
-  }
+  const resolved = await resolveLayerRequestContext({
+    req,
+    env,
+    accountId,
+    publicId,
+    minRole: 'viewer',
+    onInstanceNotFound: () => ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404),
+  });
+  if (!resolved.ok) return resolved.response;
 
   const layer = normalizeLayer(layerRaw);
   if (!layer) {
@@ -188,16 +229,7 @@ export async function handleAccountInstanceLayerGet(
     return apiError('LAYER_KEY_INVALID', 'Invalid layerKey', 400, { layer, layerKey: layerKeyRaw });
   }
 
-  const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicIdResult.value);
-  if (!instance)
-    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
-
-  const adminAccountId = resolveAdminAccountId(env);
-  if (resolveInstanceKind(instance) === 'curated' && accountId !== adminAccountId) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
-  }
-
-  const row = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
+  const row = await loadInstanceOverlay(env, resolved.publicId, layer, layerKey);
   if (!row) {
     return apiError('LAYER_NOT_FOUND', 'Layer overlay not found', 404, {
       publicId,
@@ -230,17 +262,16 @@ export async function handleAccountInstanceLayerUpsert(
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const authorized = await authorizeAccount(req, env, accountId, 'editor');
-  if (!authorized.ok) return authorized.response;
-  const account = authorized.account;
-
-  const policyResult = resolveEditorPolicyFromRequest(req, account);
-  if (!policyResult.ok) return policyResult.response;
-
-  const publicIdResult = assertPublicId(publicId);
-  if (!publicIdResult.ok) {
-    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
-  }
+  const resolved = await resolveLayerRequestContext({
+    req,
+    env,
+    accountId,
+    publicId,
+    minRole: 'editor',
+    onInstanceNotFound: (rawPublicId) => apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId: rawPublicId }),
+  });
+  if (!resolved.ok) return resolved.response;
+  const { account, policy: editorPolicy, publicId: normalizedPublicId, instance } = resolved;
 
   const layer = normalizeLayer(layerRaw);
   if (!layer) {
@@ -250,7 +281,7 @@ export async function handleAccountInstanceLayerUpsert(
   if (!layerKey) {
     return apiError('LAYER_KEY_INVALID', 'Invalid layerKey', 400, { layer, layerKey: layerKeyRaw });
   }
-  if (layer === 'locale' && hasLocaleSuffix(publicIdResult.value, layerKey)) {
+  if (layer === 'locale' && hasLocaleSuffix(normalizedPublicId, layerKey)) {
     return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, {
       publicId,
       locale: layerKey,
@@ -259,7 +290,7 @@ export async function handleAccountInstanceLayerUpsert(
   if (
     layer === 'user' &&
     layerKey !== 'global' &&
-    hasLocaleSuffix(publicIdResult.value, layerKey)
+    hasLocaleSuffix(normalizedPublicId, layerKey)
   ) {
     return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, {
       publicId,
@@ -267,7 +298,7 @@ export async function handleAccountInstanceLayerUpsert(
     });
   }
 
-  const entitlementGate = enforceLayerEntitlement(policyResult.policy, layer);
+  const entitlementGate = enforceLayerEntitlement(editorPolicy, layer);
   if (entitlementGate) return entitlementGate;
 
   let payload: unknown;
@@ -305,15 +336,7 @@ export async function handleAccountInstanceLayerUpsert(
   const baseFingerprintRaw = asTrimmedString((payload as any).baseFingerprint);
   const baseUpdatedAtRaw = asTrimmedString((payload as any).baseUpdatedAt);
   const widgetTypeRaw = asTrimmedString((payload as any).widgetType);
-
-  const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicIdResult.value);
-  if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
-
   const instanceKind = resolveInstanceKind(instance);
-  const adminAccountId = resolveAdminAccountId(env);
-  if (instanceKind === 'curated' && accountId !== adminAccountId) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
-  }
   if (instanceKind === 'user' && layer === 'locale') {
     const normalized = normalizeLocaleList(account.l10n_locales, 'l10n_locales');
     if (!normalized.ok) {
@@ -369,7 +392,7 @@ export async function handleAccountInstanceLayerUpsert(
   }
   const allowlistPaths = allowlist.map((entry) => entry.path);
 
-  const existing = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
+  const existing = await loadInstanceOverlay(env, normalizedPublicId, layer, layerKey);
   const existingUserOps = resolveUserOps(existing).userOps;
 
   const geoResult = hasGeoTargets
@@ -391,7 +414,7 @@ export async function handleAccountInstanceLayerUpsert(
     return apiError(userOpsResult.code, userOpsResult.message, 400, userOpsResult.detail);
   }
 
-  const maxPublishes = policyResult.policy.budgets['budget.l10n.publishes']?.max ?? null;
+  const maxPublishes = editorPolicy.budgets['budget.l10n.publishes']?.max ?? null;
   const publish = await consumeBudget({
     env,
     scope: { kind: 'account', accountId },
@@ -412,7 +435,7 @@ export async function handleAccountInstanceLayerUpsert(
       ? (geoResult?.geoCountries ?? null)
       : (existing?.geo_targets ?? null);
     const payloadRow = {
-      public_id: publicIdResult.value,
+      public_id: normalizedPublicId,
       layer,
       layer_key: layerKey,
       ops: opsResult?.ok ? opsResult.ops : [],
@@ -433,7 +456,7 @@ export async function handleAccountInstanceLayerUpsert(
   } else if (hasUserOps && userOpsResult?.ok) {
     if (!existing) {
       const payloadRow = {
-        public_id: publicIdResult.value,
+        public_id: normalizedPublicId,
         layer,
         layer_key: layerKey,
         ops: [],
@@ -459,7 +482,7 @@ export async function handleAccountInstanceLayerUpsert(
       try {
         const existingState = await loadL10nGenerateStateRow(
           env,
-          publicIdResult.value,
+          normalizedPublicId,
           layer,
           layerKey,
           overlayFingerprint,
@@ -467,7 +490,7 @@ export async function handleAccountInstanceLayerUpsert(
         const attempts = existingState?.attempts ?? 1;
         await updateL10nGenerateStatus({
           env,
-          publicId: publicIdResult.value,
+          publicId: normalizedPublicId,
           layer,
           layerKey,
           baseFingerprint: overlayFingerprint,
@@ -495,28 +518,28 @@ export async function handleAccountInstanceLayerUpsert(
     const baseLocale = accountL10nPolicy.baseLocale;
     const activeLocales = resolveActivePublishLocales({
       accountLocales: account.l10n_locales,
-      policy: policyResult.policy,
+      policy: editorPolicy,
       baseLocale,
     }).locales;
 
     if (activeLocales.includes(layerKey)) {
       const mirrorError = await mirrorPublishedLayerLocale({
         env,
-        publicId: publicIdResult.value,
+        publicId: normalizedPublicId,
         layerKey,
         baseLocale,
         baseFingerprint: computedFingerprint,
         baseTextPack: planning.plan.snapshot,
         config: instance.config,
         widgetType,
-        policy: policyResult.policy,
+        policy: editorPolicy,
       });
       if (mirrorError) return mirrorError;
     }
   }
 
   return json({
-    publicId: publicIdResult.value,
+    publicId: normalizedPublicId,
     layer,
     layerKey,
     source: resolvedSource,
@@ -534,17 +557,16 @@ export async function handleAccountInstanceLayerDelete(
   layerRaw: string,
   layerKeyRaw: string,
 ) {
-  const authorized = await authorizeAccount(req, env, accountId, 'editor');
-  if (!authorized.ok) return authorized.response;
-  const account = authorized.account;
-
-  const policyResult = resolveEditorPolicyFromRequest(req, account);
-  if (!policyResult.ok) return policyResult.response;
-
-  const publicIdResult = assertPublicId(publicId);
-  if (!publicIdResult.ok) {
-    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
-  }
+  const resolved = await resolveLayerRequestContext({
+    req,
+    env,
+    accountId,
+    publicId,
+    minRole: 'editor',
+    onInstanceNotFound: (rawPublicId) => apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId: rawPublicId }),
+  });
+  if (!resolved.ok) return resolved.response;
+  const { account, policy: editorPolicy, publicId: normalizedPublicId, instance } = resolved;
 
   const layer = normalizeLayer(layerRaw);
   if (!layer) {
@@ -553,14 +575,6 @@ export async function handleAccountInstanceLayerDelete(
   const layerKey = normalizeLayerKey(layer, layerKeyRaw);
   if (!layerKey) {
     return apiError('LAYER_KEY_INVALID', 'Invalid layerKey', 400, { layer, layerKey: layerKeyRaw });
-  }
-
-  const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicIdResult.value);
-  if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
-
-  const adminAccountId = resolveAdminAccountId(env);
-  if (resolveInstanceKind(instance) === 'curated' && accountId !== adminAccountId) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
   }
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
@@ -576,10 +590,10 @@ export async function handleAccountInstanceLayerDelete(
   }
   const computedFingerprint = planning.plan.baseFingerprint;
 
-  const existing = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
+  const existing = await loadInstanceOverlay(env, normalizedPublicId, layer, layerKey);
   if (!existing) {
     return json({
-      publicId: publicIdResult.value,
+      publicId: normalizedPublicId,
       layer,
       layerKey,
       deleted: false,
@@ -587,7 +601,7 @@ export async function handleAccountInstanceLayerDelete(
     });
   }
 
-  const maxPublishes = policyResult.policy.budgets['budget.l10n.publishes']?.max ?? null;
+  const maxPublishes = editorPolicy.budgets['budget.l10n.publishes']?.max ?? null;
   const publish = await consumeBudget({
     env,
     scope: { kind: 'account', accountId },
@@ -602,32 +616,32 @@ export async function handleAccountInstanceLayerDelete(
     );
   }
 
-  await deleteInstanceOverlay(env, publicIdResult.value, layer, layerKey);
+  await deleteInstanceOverlay(env, normalizedPublicId, layer, layerKey);
 
   if ((layer === 'locale' || layer === 'user') && instance.status === 'published') {
     const accountL10nPolicy = resolveAccountL10nPolicy(account.l10n_policy);
     const baseLocale = accountL10nPolicy.baseLocale;
     const activeLocales = resolveActivePublishLocales({
       accountLocales: account.l10n_locales,
-      policy: policyResult.policy,
+      policy: editorPolicy,
       baseLocale,
     }).locales;
 
     if (activeLocales.includes(layerKey)) {
       const mirrorError = await mirrorPublishedLayerLocale({
         env,
-        publicId: publicIdResult.value,
+        publicId: normalizedPublicId,
         layerKey,
         baseLocale,
         baseFingerprint: computedFingerprint,
         baseTextPack: planning.plan.snapshot,
         config: instance.config,
         widgetType,
-        policy: policyResult.policy,
+        policy: editorPolicy,
       });
       if (mirrorError) return mirrorError;
     }
   }
 
-  return json({ publicId: publicIdResult.value, layer, layerKey, deleted: true });
+  return json({ publicId: normalizedPublicId, layer, layerKey, deleted: true });
 }

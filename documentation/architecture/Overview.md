@@ -190,7 +190,7 @@ Each release proceeds in 3 steps:
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
-- Publish control-plane writes are transactional for base persistence + validation; snapshot generation is async (queue + publish-status) and does not block publish persistence on pointer advancement.
+- Base-config writes are transactional for persistence + validation; snapshot generation is async (queue + publish-status) and does not block save persistence on pointer advancement.
 
 #### Venice (Workers)
 - Public embed surface (third-party websites only talk to Venice).
@@ -310,7 +310,7 @@ Each release proceeds in 3 steps:
 │  │ iframe  │     from Tokyo                        │                   │
 │  └─────────┘                                        │                   │
 │       │                                             │                   │
-│       │ User clicks Publish                         │                   │
+│       │ User clicks Save                            │                   │
 │       │                                             ▼                   │
 │       └──────────────────────────────────────► ┌─────────┐             │
 │            PUT /api/accounts/:accountId/instance/:publicId?subject=account         │ Michael │             │
@@ -390,7 +390,7 @@ Notes:
 ## Base-Config Two-Call Architecture
 
 Base config exists in EXACTLY 2 places during editing:
-1. **Michael (database)** — Published version
+1. **Michael (database)** — Persisted base version
 2. **Bob's React state** — Working copy (`instanceData`)
 
 **The Pattern:**
@@ -398,19 +398,19 @@ Base config exists in EXACTLY 2 places during editing:
 1. Load:    GET /api/accounts/:accountId/instance/:publicId?subject=account  → host (message boot) or Bob (URL boot) gets published config
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Publish: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/accounts/:accountId/instance/:publicId?subject=account`  → Saves to Michael and enqueues async snapshot/l10n pipeline
+4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/accounts/:accountId/instance/:publicId?subject=account`  → Saves to Michael and enqueues async snapshot/l10n pipeline
 
 Snapshot/l10n convergence is observed via:
 - `GET /api/accounts/:accountId/instances/:publicId/publish/status`
 ```
 
-In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. In Roma-hosted account flows, save/publish/l10n mutations also return through the host boundary before hitting the account routes.
+In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. In Roma-hosted account flows, save/l10n mutations also return through the host boundary before hitting the account routes.
 
 `subject` is required on editor endpoints (`account`, `minibob`) to resolve policy.
 
 Localization is separate: overlay edits write through Paris into its l10n overlay store (R2/KV-backed) and do not touch the base config.
 
-**Between load and publish:** Zero base-config writes. 10,000 users editing = 10,000 in-memory states, no server load for base config.
+**Between load and save:** Zero base-config writes. 10,000 users editing = 10,000 in-memory states, no server load for base config.
 
 ---
 
@@ -577,7 +577,7 @@ User opens widget → Host (Roma/DevStudio message boot) or Bob (URL boot) GET /
                   → Paris reads from Michael
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
-                  → User clicks Publish
+                  → User clicks Save
                   → Bob PUT /api/accounts/:accountId/instance/:publicId?subject=account
                   → Paris writes to Michael
 ```

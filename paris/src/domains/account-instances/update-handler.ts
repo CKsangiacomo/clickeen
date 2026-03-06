@@ -31,13 +31,13 @@ import { loadInstanceOverlays } from '../l10n/service';
 import { enqueueTokyoMirrorJob } from './service';
 import {
   buildLocaleTextPacks,
-  collectLocaleOverlayOps,
   enqueueConfigPack,
   enqueueLiveSurfaceSync,
   enqueueLocaleMetaPacks,
   enqueueLocaleTextPacks,
   logMirrorEnqueueError,
   logMirrorEnqueueFailures,
+  resolveLocaleOverlayOps,
   stripTextFromConfig,
 } from '../../shared/mirror-packs';
 import { jsonSha256Hex } from '../../shared/stable-json';
@@ -65,10 +65,10 @@ export async function handleAccountUpdateInstance(
   const policyResult = resolveEditorPolicyFromRequest(req, account);
   if (!policyResult.ok) return policyResult.response;
 
-  const publishGate = can(policyResult.policy, 'instance.publish');
-  if (!publishGate.allow) {
+  const updateGate = can(policyResult.policy, 'instance.update');
+  if (!updateGate.allow) {
     return ckError(
-      { kind: 'DENY', reasonKey: publishGate.reasonKey, upsell: 'UP', detail: publishGate.detail },
+      { kind: 'DENY', reasonKey: updateGate.reasonKey, upsell: 'UP', detail: updateGate.detail },
       403,
     );
   }
@@ -418,20 +418,12 @@ export async function handleAccountUpdateInstance(
         let localeTextPacks: Array<{ locale: string; textPack: Record<string, string> }> | null = null;
         if (shouldWriteTextPacks || shouldWriteMetaPacks) {
           const baseFingerprint = await computeBaseFingerprint(nextBaseTextPack);
-          let localeOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
-          let userOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
-
-          try {
-            const rows = await loadInstanceOverlays(env, publicId);
-            ({ localeOpsByLocale, userOpsByLocale } = collectLocaleOverlayOps({
-              rows,
-              locales: availableLocales,
-              baseFingerprint,
-            }));
-          } catch (error) {
-            const detail = errorDetail(error);
-            console.warn('[ParisWorker] Failed to resolve locale overlays for text packs', detail);
-          }
+          const { localeOpsByLocale, userOpsByLocale } = await resolveLocaleOverlayOps({
+            loadRows: () => loadInstanceOverlays(env, publicId),
+            locales: availableLocales,
+            baseFingerprint,
+            warnMessage: '[ParisWorker] Failed to resolve locale overlays for text packs',
+          });
 
           localeTextPacks = buildLocaleTextPacks({
             locales: availableLocales,

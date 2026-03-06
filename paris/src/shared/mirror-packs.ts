@@ -1,4 +1,5 @@
 import { generateMetaPack } from './seo-geo';
+import { errorDetail } from './errors';
 import type {
   LocalePolicy,
   SyncLiveSurfaceJob,
@@ -142,6 +143,43 @@ export function collectLocaleOverlayOps(args: {
   });
 
   return { localeOpsByLocale, userOpsByLocale };
+}
+
+export async function resolveLocaleOverlayOps(args: {
+  loadRows: () => Promise<MirrorOverlayRow[]>;
+  locales: string[];
+  baseFingerprint: string;
+  warnMessage: string;
+  warnContext?: Record<string, unknown>;
+}): Promise<{
+  localeOpsByLocale: Map<string, L10nSetOp[]>;
+  userOpsByLocale: Map<string, L10nSetOp[]>;
+}> {
+  if (args.locales.length === 0) {
+    return {
+      localeOpsByLocale: new Map<string, L10nSetOp[]>(),
+      userOpsByLocale: new Map<string, L10nSetOp[]>(),
+    };
+  }
+
+  try {
+    return collectLocaleOverlayOps({
+      rows: await args.loadRows(),
+      locales: args.locales,
+      baseFingerprint: args.baseFingerprint,
+    });
+  } catch (error) {
+    const detail = errorDetail(error);
+    if (args.warnContext) {
+      console.warn(args.warnMessage, { ...args.warnContext, detail });
+    } else {
+      console.warn(args.warnMessage, detail);
+    }
+    return {
+      localeOpsByLocale: new Map<string, L10nSetOp[]>(),
+      userOpsByLocale: new Map<string, L10nSetOp[]>(),
+    };
+  }
 }
 
 export function buildLocaleTextPack(args: {

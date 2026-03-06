@@ -412,20 +412,27 @@ supabase migration up
 echo "[dev-up] Loading local Supabase connection values"
 ORIG_SUPABASE_URL="${SUPABASE_URL:-}"
 ORIG_SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"
+ORIG_SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:-${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}}"
 DEV_UP_USE_REMOTE_SUPABASE="${DEV_UP_USE_REMOTE_SUPABASE:-}"
+REMOTE_SUPABASE_MODE=0
+if [ "$DEV_UP_USE_REMOTE_SUPABASE" = "1" ] || [ "$DEV_UP_USE_REMOTE_SUPABASE" = "true" ]; then
+  REMOTE_SUPABASE_MODE=1
+fi
 # shellcheck disable=SC2046
 eval "$(supabase status --output env | grep -E '^[A-Z_]+=' || true)"
 SUPABASE_URL=${API_URL:-${SUPABASE_URL:-}}
 SUPABASE_SERVICE_ROLE_KEY=${SECRET_KEY:-${SUPABASE_SERVICE_ROLE_KEY:-}}
+SUPABASE_ANON_KEY_VALUE="${ANON_KEY:-${SUPABASE_ANON_KEY:-${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}}}"
 
 if [ -n "$ORIG_SUPABASE_URL" ] || [ -n "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ]; then
-  if [ "$DEV_UP_USE_REMOTE_SUPABASE" = "1" ] || [ "$DEV_UP_USE_REMOTE_SUPABASE" = "true" ]; then
-    if [ -z "$ORIG_SUPABASE_URL" ] || [ -z "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ]; then
-      echo "[dev-up] DEV_UP_USE_REMOTE_SUPABASE=1 requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in $ROOT_DIR/.env.local"
+  if [ "$REMOTE_SUPABASE_MODE" = "1" ]; then
+    if [ -z "$ORIG_SUPABASE_URL" ] || [ -z "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ] || [ -z "$ORIG_SUPABASE_ANON_KEY" ]; then
+      echo "[dev-up] DEV_UP_USE_REMOTE_SUPABASE=1 requires SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and SUPABASE_ANON_KEY in $ROOT_DIR/.env.local"
       exit 1
     fi
     SUPABASE_URL="$ORIG_SUPABASE_URL"
     SUPABASE_SERVICE_ROLE_KEY="$ORIG_SUPABASE_SERVICE_ROLE_KEY"
+    SUPABASE_ANON_KEY_VALUE="$ORIG_SUPABASE_ANON_KEY"
     echo "[dev-up] Using Supabase values from $ROOT_DIR/.env.local (remote mode)"
   else
     echo "[dev-up] Using local Supabase (ignoring SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY from $ROOT_DIR/.env.local)"
@@ -438,13 +445,18 @@ if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
   exit 1
 fi
 
-SUPABASE_ANON_KEY_VALUE="${ANON_KEY:-${SUPABASE_ANON_KEY:-${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}}}"
 if [ -z "${SUPABASE_ANON_KEY_VALUE:-}" ]; then
   echo "[dev-up] Failed to resolve SUPABASE_ANON_KEY from Supabase status / env"
   exit 1
 fi
 
-if [ "$DEV_UP_USE_REMOTE_SUPABASE" = "1" ] || [ "$DEV_UP_USE_REMOTE_SUPABASE" = "true" ]; then
+SUPABASE_TARGET_LABEL="local"
+if [ "$REMOTE_SUPABASE_MODE" = "1" ]; then
+  SUPABASE_TARGET_LABEL="remote"
+fi
+echo "[dev-up] Runtime data target: $SUPABASE_TARGET_LABEL Supabase"
+
+if [ "$REMOTE_SUPABASE_MODE" = "1" ]; then
   echo "[dev-up] Skipping local persona seed (remote Supabase mode)"
 else
   echo "[dev-up] Skipping local persona seed (local auth bootstrap is deprecated; DevStudio/Bob are tool-trusted)"
@@ -668,9 +680,9 @@ echo "[dev-up] Starting Bob (3000)"
 (
   cd "$ROOT_DIR/bob"
   if [ -n "$SF_BASE_URL" ]; then
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   else
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   fi
   BOB_PID="$STARTED_PID"
   echo "[dev-up] Bob PID: $BOB_PID"
@@ -718,6 +730,7 @@ if [ -n "$SF_BASE_URL" ]; then
 fi
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
+echo "  Workspace: http://localhost:5173/#/dieter/dev-widget-workspace ($SUPABASE_TARGET_LABEL Supabase)"
 echo "  Pitch:     http://localhost:8790/healthz"
 echo "  Prague:    http://localhost:4321/us/en/widgets/faq"
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"

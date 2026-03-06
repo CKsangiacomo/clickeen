@@ -67,24 +67,24 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 Core base-config editing follows EXACTLY 2 Paris instance calls per open session:
 1. **Load**: `GET /api/accounts/:accountId/instance/:publicId?subject=account` once per instance open (host-performed in Roma/DevStudio message boot, Bob-performed in URL boot).
-2. **Publish**: `PUT /api/accounts/:accountId/instance/:publicId?subject=account` when user clicks Publish (always from Bob). Persist is synchronous; snapshot/l10n convergence is async via queue/status.
+2. **Save**: `PUT /api/accounts/:accountId/instance/:publicId?subject=account` when the editor saves the base config. Persist is synchronous; snapshot/l10n convergence is async via queue/status.
 
-Publish pipeline status is observed through:
+Async snapshot/l10n pipeline status is observed through:
 - `GET /api/accounts/:accountId/instances/:publicId/publish/status`
 
 `subject` is required on editor endpoints (`account`, `minibob`) to resolve editor policy.
 
 In the browser these flow through one of two host paths:
 - Bob URL boot path: Bob same-origin account route (`/api/accounts/:accountId/instance/:publicId?subject=account`) forwards to the account-scoped Paris endpoints.
-- Roma/DevStudio message boot path: host fetches instance + compiled payload, then sends Bob a `ck:open-editor` message (Bob still enforces publish via the same Paris account endpoint).
+- Roma/DevStudio message boot path: host fetches instance + compiled payload, then sends Bob a `ck:open-editor` message (Bob still enforces save via the same Paris account endpoint).
 
-Localization is separate: Bob also calls account/instance locale endpoints when translating or applying overlay edits. Those writes are intentional and do **not** publish the base config.
+Localization is separate: Bob also calls account/instance locale endpoints when translating or applying overlay edits. Those writes are intentional and do **not** save the base config.
 
-Between load and publish:
+Between load and save:
 - Base config edits happen in Bob's React state (in memory)
 - Preview updates via postMessage (no Paris API calls for base config)
 - Localization edits persist to overlay state via Paris (Paris-managed R2/KV write plane)
-- ZERO database writes for base config until Publish
+- ZERO database writes for base config until Save
 - Base config is not required to be English; Minibob may author base config in the user’s ConversationLanguage.
 
 **Why:** 10,000 users editing simultaneously = no server load for base config. Localization writes are scoped overlays, enabling async translation while preserving user edits. Millions of landing page visitors = zero DB pollution until signup + publish.
@@ -95,7 +95,7 @@ Between load and publish:
 |------|-------------|
 | `publicId` | Instance unique identifier in DB |
 | `widgetType` | Widget identifier referencing the definition (e.g., "faq") |
-| `config` | Published instance values (stored in DB; served by Paris) |
+| `config` | Persisted base instance values (stored in DB; served by Paris) |
 | `instanceData` | Working copy of config in Bob during editing |
 | `spec.json` | Defaults + ToolDrawer markup; compiled by Bob |
 | `agent.md` | AI contract documenting editable paths and semantics |
@@ -158,13 +158,13 @@ curated_widget_instances.meta = {
 
 ## Glossary
 
-**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, publishes via Paris (writes to Michael). Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
+**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, and saves base config via Paris (writes to Michael). Bob does not own a published/unpublished toggle; its Publish affordance is embed-code only. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
 
 **Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves active account context through `/api/bootstrap`, keeps a short-lived account authz capsule for Paris calls, and opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle).
 
 **Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — HTTP write boundary (Cloudflare Workers). Reads/writes Michael using service role for core account/instance data, owns the l10n write plane in R2/KV, and handles entitlements + orchestration. Stateless compute layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). Publish control-plane writes are transactional for base instance persistence and validation; render snapshot generation is async (queue + publish-status), so save/publish persistence is not blocked on snapshot pointer advancement. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
+**Paris** — HTTP write boundary (Cloudflare Workers). Reads/writes Michael using service role for core account/instance data, owns the l10n write plane in R2/KV, and handles entitlements + orchestration. Stateless compute layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). Base-config writes are transactional for persistence and validation; render snapshot generation is async (queue + publish-status), so save persistence is not blocked on snapshot pointer advancement. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
@@ -336,12 +336,13 @@ node scripts/compile-all-widgets.mjs
 
 **Local instance data (important):**
 - Instances are **not** created by scripts anymore.
-- Supported instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
-- Local DevStudio is for building blocks (Dieter previews, entitlements, fixtures), not for “local Roma” parity.
+- Supported product/account instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
+- Local DevStudio is for widget authoring work, not for “local Roma” parity.
+- That local authoring scope includes Widget Workspace opening source defaults plus admin-account `wgt_main_*` / curated starters for config iteration and translation checks.
 
 **Local auth target (important):**
 - `bash scripts/dev-up.sh` uses local Supabase by default and ignores remote Supabase values in `.env.local`.
-- To force local services to use remote Supabase, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
+- To force local services to use remote Supabase, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`.
 - Berlin runs locally at `http://localhost:3005` for parity/unit work, but supported product auth happens in cloud Roma.
 - Berlin session token issuer must match the Berlin issuer Paris is configured to trust; mismatched issuers are rejected (`AUTH_INVALID` issuer mismatch).
 

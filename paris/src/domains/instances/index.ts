@@ -5,6 +5,7 @@ import type { CuratedInstanceRow, Env, InstanceRow, WidgetRow } from '../../shar
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
+import { formatCuratedDisplayName, readCuratedMeta } from '../../shared/curated-meta';
 import { asTrimmedString, assertConfig } from '../../shared/validation';
 import { loadAccountById } from '../../shared/accounts';
 import {
@@ -161,18 +162,6 @@ export async function resolveWidgetTypeForInstance(
     return widget?.type ?? fallback ?? null;
   }
   return fallback ?? null;
-}
-
-function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  return raw as Record<string, unknown>;
-}
-
-function formatCuratedDisplayName(meta: Record<string, unknown> | null, fallback: string): string {
-  if (!meta) return fallback;
-  const styleName = asTrimmedString(meta.styleName ?? meta.name ?? meta.title);
-  if (!styleName) return fallback;
-  return styleName;
 }
 
 function resolveInstanceDisplayName(instance: InstanceRow | CuratedInstanceRow): string {

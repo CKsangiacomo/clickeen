@@ -195,9 +195,9 @@ Venice runtime contract:
 ## Persistence and Idempotency Contract
 
 Berlin ticketing:
-1. Authoritative store: Supabase Postgres table for `stateId` and `finishId`.
-2. `stateId` TTL 10m, `finishId` TTL 2m.
-3. Atomic consume-once SQL semantics.
+1. Authoritative store: Berlin Durable Object binding (`BERLIN_AUTH_TICKETS`) for `stateId` and `finishId`.
+2. `stateId` TTL 10m, `finishId` TTL 5m.
+3. Atomic consume-once semantics per ticket id in Durable Object storage.
 4. Deterministic replay mapping:
 - expired -> 410
 - consumed -> 409
@@ -516,48 +516,39 @@ Required behavior:
 
 ---
 
-## Execution Annex D — Data Contracts and SQL Requirements
+## Execution Annex D — Data Contracts and Consume-Once Requirements
 
-### Berlin ticket table (required)
-Suggested table name: `berlin_auth_tickets`
+### Berlin ticket record contract (Durable Object authoritative)
+Ticket store owner: `BERLIN_AUTH_TICKETS` Durable Object.
 
-Required columns:
-1. `id text primary key`
-2. `ticket_type text not null` (`state` or `finish`)
-3. `provider text null`
-4. `intent text null`
-5. `next_path text null`
-6. `handoff_id text null`
-7. `code_verifier text null` (for `state`)
-8. `subject_user_id text null` (for `finish`)
-9. `status text not null default 'pending'`
-10. `expires_at timestamptz not null`
-11. `consumed_at timestamptz null`
-12. `created_at timestamptz not null default now()`
-13. `updated_at timestamptz not null default now()`
+Required stored fields:
+1. `kind` (`state` or `finish`)
+2. `payload` (ticket payload)
+3. `expiresAt` (unix seconds)
+4. `consumedAt` (unix seconds, nullable)
+5. `consumeOutcome` (`consumed` or `expired`, nullable)
+6. `cleanupAt` (unix seconds, marker retention cutoff)
 
-Required indexes:
-1. `(ticket_type, expires_at)`
-2. `(status, expires_at)`
-3. optional `(intent)` for diagnostics
+Required behavior:
+1. Single-ticket consume is atomic inside the owning Durable Object instance.
+2. First valid consume returns payload and marks consumed.
+3. Subsequent consume returns deterministic replay class (`alreadyConsumed`).
+4. Expired first consume marks expired and returns deterministic expiry class (`expired`).
+5. Missing/malformed maps to deterministic invalid class at Berlin route layer (`422`).
 
-### Atomic consume SQL semantics (required)
-Example pattern (must be equivalent atomically):
-```sql
-update berlin_auth_tickets
-set consumed_at = now(),
-    status = 'consumed',
-    updated_at = now()
-where id = $1
-  and ticket_type = 'finish'
-  and consumed_at is null
-  and expires_at > now()
-returning *;
-```
-
-Interpretation:
-1. 1 row returned -> valid consume.
-2. 0 rows returned -> follow deterministic classifier (expired/replayed/unknown) by bounded secondary lookup.
+### Atomic consume semantics (required)
+Equivalent behavior:
+1. Read current ticket record.
+2. If missing -> `missing`.
+3. If already consumed:
+- `consumeOutcome=expired` -> `expired`
+- otherwise -> `alreadyConsumed`
+4. If `expiresAt <= now`:
+- set `consumedAt=now`, `consumeOutcome=expired`, extend `cleanupAt`
+- return `expired`
+5. Otherwise:
+- set `consumedAt=now`, `consumeOutcome=consumed`, extend `cleanupAt`
+- return `ok` with original payload
 
 ### Paris ensure-account invariants (required)
 1. Subject/account relation uniqueness must be DB-enforced.
@@ -817,24 +808,23 @@ No silent bootstrap auto-provision fallback allowed after convergence cut.
 
 ## Execution Annex N — Berlin Data and Config Migration Plan
 
-### N1. Ticket storage migration (KV -> Postgres authoritative)
+### N1. Ticket storage migration (KV -> Durable Object authoritative)
 
-1. Create Supabase migration for `berlin_auth_tickets` table and indexes.
-2. Berlin writes new `stateId` tickets to Postgres immediately after deployment gate opens.
+1. Deploy Durable Object class + binding for `BERLIN_AUTH_TICKETS`.
+2. Berlin writes new `stateId` and `finishId` tickets to Durable Object immediately after deployment gate opens.
 3. During compatibility window, Berlin may read KV only for in-flight pre-cutover states.
 4. After window closes, KV state reads for auth tickets are removed.
 
-### N2. Berlin DB connectivity contract
+### N2. Berlin ticket-store connectivity contract
 
-Berlin requires server-side privileged access for ticket table writes/consumes.
+Berlin requires an authoritative ticket store binding for write/consume of one-time tickets.
 
-Required Berlin env/secrets:
-1. `SUPABASE_URL`
-2. `SUPABASE_SERVICE_ROLE_KEY` (or dedicated equivalent secret with same required privileges)
-3. existing session/JWT vars
+Required Berlin env/bindings:
+1. `BERLIN_AUTH_TICKETS` Durable Object binding
+2. existing session/JWT vars
 
 Fail-fast:
-- Berlin must fail startup in cloud-dev/prod if ticket-store write/consume dependencies are missing.
+- Berlin must fail auth ticket operations deterministically (`503`) when ticket-store dependencies are missing.
 
 ### N3. Callback configuration migration
 
@@ -1023,8 +1013,8 @@ Global sequencing policy:
 4. [ ] Confirm callback chain is provider -> Berlin callback -> Roma finish.
 
 #### B1. Data/store implementation
-1. [ ] Create and apply Berlin ticket migration for authoritative consume-once records (`stateId`, `finishId`).
-2. [ ] Enforce consume-once atomicity with transactional SQL semantics from Annex D.
+1. [ ] Deploy and bind `BERLIN_AUTH_TICKETS` as authoritative consume-once store for `stateId` and `finishId`.
+2. [ ] Enforce consume-once atomicity with Durable Object consume semantics from Annex D.
 3. [ ] Enforce TTL and consumed-at invariants for all one-time tickets.
 4. [ ] Remove KV from consume-once authority path for `stateId` and `finishId`.
 

@@ -150,9 +150,11 @@ But the purpose changes from “local parity tool” to:
 1. Open Bob locally for the widget under construction.
 2. Load a local baseline working instance for that widget.
 3. Reset local working state from current widget defaults.
-4. Write updated defaults back into the widget source of truth (`tokyo/widgets/{widget}/spec.json`) when explicitly requested.
-5. Sync the local baseline/main fixture needed to keep widget software and local authoring aligned.
-6. Provide the shortest loop for:
+4. Open admin-account baseline/main (`wgt_main_*`) and curated starters for real config iteration.
+5. Check translations/localization on those authoring starters in Bob.
+6. Write updated defaults back into the widget source of truth (`tokyo/widgets/{widget}/spec.json`) when explicitly requested.
+7. Sync the local baseline/main fixture needed to keep widget software and local authoring aligned.
+8. Provide the shortest loop for:
    - `spec.json` editing
    - control schema validation
    - Bob ToolDrawer behavior

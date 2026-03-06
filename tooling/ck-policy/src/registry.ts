@@ -196,7 +196,7 @@ assertMetaMatchesRegistry();
 
 export const ACTION_KEYS = [
   'instance.create',
-  'instance.publish',
+  'instance.update',
   'context.websiteUrl.set',
   'embed.seoGeo.toggle',
   'platform.upload',

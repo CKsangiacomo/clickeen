@@ -32,7 +32,7 @@ export function can(policy: Policy, actionKey: ActionKey, _payload?: unknown): G
       }
       return { allow: true };
     }
-    case 'instance.publish': {
+    case 'instance.update': {
       if (policy.profile === 'minibob') {
         return { allow: false, upsell: 'UP', reasonKey: 'coreui.upsell.reason.minibob.createAccount' };
       }

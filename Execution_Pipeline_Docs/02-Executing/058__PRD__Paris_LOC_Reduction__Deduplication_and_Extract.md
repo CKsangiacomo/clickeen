@@ -13,6 +13,12 @@ Execution update (local):
 - Cut 1 mostly landed: overlay-row -> locale/user ops map planning, locale text-pack materialization, and the repeated text/meta/config/sync enqueue loops are now shared in `paris/src/shared/mirror-packs.ts`; call sites still own the surrounding publish/l10n condition orchestration.
 - Cut 1 tightened further: the remaining Tokyo mirror enqueue error logging is now shared in `paris/src/shared/mirror-packs.ts`, so the surviving create/update/account-l10n handlers only express orchestration, not repeated failure-loop boilerplate.
 - `l10n/layers-handlers.ts` no longer carries the same published layer mirror block twice; the file now routes both upsert/delete paths through one local `mirrorPublishedLayerLocale()` helper.
+- Cut 2 landed: `bob/components/TdMenuContent.tsx` read-only toggling now uses shared helper functions (`applyDisabledState`, `applyReadOnlyFlag`) instead of duplicated input/textarea/select/button blocks.
+- Cut 5 landed as hard-cut simplification: `paris/src/domains/accounts/index.ts` removed local Tokyo base/token helper wrappers; purge path now uses one in-function contract with no duplicated wrapper functions.
+- Curated display helper cut landed: duplicated `readCuratedMeta()`/`formatCuratedDisplayName()` logic was removed from three Paris domains and replaced with one shared helper (`paris/src/shared/curated-meta.ts`).
+- Mirror overlay-op load cut landed: repeated overlay fetch + try/catch + map-init blocks in create/update/account-l10n handlers now use one shared `resolveLocaleOverlayOps()` helper in `paris/src/shared/mirror-packs.ts`.
+- Dead SanFrancisco queue-dispatch cut landed: unused `dispatchSanfranciscoCommand()` path and related queue command types were removed (`paris/src/shared/sanfrancisco.ts`, `paris/src/shared/types.ts`).
+- Layer handlers convergence cut landed: repeated auth/policy/publicId/instance/curated-gate setup across list/get/upsert/delete now resolves through one local `resolveLayerRequestContext()` helper in `paris/src/domains/l10n/layers-handlers.ts`.
 
 > Core mandate: Delete duplicated lines. Extract shared helpers. No behavior change. No new features. No new abstractions beyond what the duplication demands.
 

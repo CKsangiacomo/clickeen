@@ -28,7 +28,6 @@ export type Env = {
   USAGE_EVENT_HMAC_SECRET?: string;
   L10N_GENERATE_QUEUE?: Queue<L10nJob>;
   RENDER_SNAPSHOT_QUEUE?: Queue<TokyoMirrorQueueJob>;
-  SANFRANCISCO_COMMANDS_QUEUE?: Queue<SanfranciscoCommandQueueJob>;
 };
 
 export type InstanceKind = 'curated' | 'user';
@@ -231,15 +230,6 @@ export type TokyoMirrorQueueJob =
   | SyncLiveSurfaceJob
   | EnforceLiveSurfaceJob
   | DeleteInstanceMirrorJob;
-
-export type SanfranciscoCommandName = 'ai.outcome.attach';
-
-export type SanfranciscoCommandQueueJob = {
-  v: 1;
-  kind: 'sf.command';
-  command: SanfranciscoCommandName;
-  payload: Record<string, unknown>;
-};
 
 export type InstanceOverlayRow = {
   public_id: string;

@@ -7,6 +7,7 @@ import { readJson } from './http';
 import { normalizeMemberRole, roleRank } from './roles';
 import { supabaseFetch } from './supabase';
 import { requireAccount } from './accounts';
+import { resolveAdminAccountId } from './admin';
 
 type AccountMembershipRow = {
   role: string;
@@ -61,6 +62,14 @@ export async function authorizeAccount(req: Request, env: Env, accountId: string
   if (!auth.ok) return { ok: false, response: auth.response };
 
   if (!auth.principal) {
+    if (auth.source === 'dev') {
+      const adminAccountId = resolveAdminAccountId(env);
+      if (accountId === adminAccountId && roleRank('owner') >= roleRank(minRole)) {
+        const accountResult = await requireAccount(env, accountId);
+        if (!accountResult.ok) return { ok: false, response: accountResult.response };
+        return { ok: true, account: accountResult.account, role: 'owner' };
+      }
+    }
     return { ok: false, response: ckError({ kind: 'AUTH', reasonKey: 'coreui.errors.auth.required' }, 401) };
   }
 

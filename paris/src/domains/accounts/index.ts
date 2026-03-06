@@ -15,16 +15,6 @@ type AccountTier = AccountRow['tier'];
 
 const ACCOUNT_QUERY_PAGE_SIZE = 1000;
 
-function resolveTokyoMutableAssetBase(env: Env): string | null {
-  const raw = ((env.TOKYO_WORKER_BASE_URL || '') || (env.TOKYO_BASE_URL || '')).trim().replace(/\/+$/, '');
-  return raw || null;
-}
-
-function resolveTokyoServiceToken(env: Env): string | null {
-  const token = ((env.TOKYO_DEV_JWT || '') || (env.PARIS_DEV_JWT || '')).trim();
-  return token || null;
-}
-
 async function loadPagedRows<T>(args: {
   env: Env;
   table: string;
@@ -347,7 +337,7 @@ async function purgeAccountAssets(args: {
   accountId: string;
 }): Promise<{ ok: true; tokyo: Record<string, unknown> } | { ok: false; response: Response }> {
   try {
-    const tokyoBase = resolveTokyoMutableAssetBase(args.env);
+    const tokyoBase = ((args.env.TOKYO_WORKER_BASE_URL || '') || (args.env.TOKYO_BASE_URL || '')).trim().replace(/\/+$/, '');
     if (!tokyoBase) {
       return {
         ok: false,
@@ -355,7 +345,7 @@ async function purgeAccountAssets(args: {
       };
     }
 
-    const tokyoToken = resolveTokyoServiceToken(args.env);
+    const tokyoToken = ((args.env.TOKYO_DEV_JWT || '') || (args.env.PARIS_DEV_JWT || '')).trim();
     if (!tokyoToken) {
       return {
         ok: false,

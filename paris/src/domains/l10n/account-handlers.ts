@@ -20,12 +20,12 @@ import { resolveL10nPlanningSnapshot } from './planning';
 import { enforceL10nSelection, resolveAccountActiveLocales } from './shared';
 import {
   buildLocaleTextPacks,
-  collectLocaleOverlayOps,
   enqueueLiveSurfaceSync,
   enqueueLocaleMetaPacks,
   enqueueLocaleTextPacks,
   logMirrorEnqueueError,
   logMirrorEnqueueFailures,
+  resolveLocaleOverlayOps,
   stripTextFromConfig,
 } from '../../shared/mirror-packs';
 import { jsonSha256Hex } from '../../shared/stable-json';
@@ -370,21 +370,13 @@ export async function handleAccountLocalesPut(req: Request, env: Env, accountId:
       const configFp = await jsonSha256Hex(configPack);
 
       const overlayLocales = Array.from(localesToSeed).filter((locale) => locale && locale !== nextBaseLocale);
-      let localeOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
-      let userOpsByLocale = new Map<string, Array<{ op: 'set'; path: string; value: unknown }>>();
-      if (overlayLocales.length > 0) {
-        try {
-          const rows = await loadInstanceOverlays(env, publicId);
-          ({ localeOpsByLocale, userOpsByLocale } = collectLocaleOverlayOps({
-            rows,
-            locales: overlayLocales,
-            baseFingerprint,
-          }));
-        } catch (error) {
-          const detail = errorDetail(error);
-          console.warn('[ParisWorker] Failed to resolve overlays for locale resync', { publicId, detail });
-        }
-      }
+      const { localeOpsByLocale, userOpsByLocale } = await resolveLocaleOverlayOps({
+        loadRows: () => loadInstanceOverlays(env, publicId),
+        locales: overlayLocales,
+        baseFingerprint,
+        warnMessage: '[ParisWorker] Failed to resolve overlays for locale resync',
+        warnContext: { publicId },
+      });
 
       const seoGeoLive = isSeoGeoLive({
         policy: policyResult.policy,

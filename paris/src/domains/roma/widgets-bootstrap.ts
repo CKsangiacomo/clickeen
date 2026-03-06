@@ -10,6 +10,7 @@ import { loadAccountById } from '../../shared/accounts';
 import { resolveAdminAccountId } from '../../shared/admin';
 import { normalizeMemberRole, roleRank } from '../../shared/roles';
 import { supabaseFetch } from '../../shared/supabase';
+import { formatCuratedDisplayName, readCuratedMeta } from '../../shared/curated-meta';
 import { asTrimmedString, assertAccountId, assertConfig, isRecord } from '../../shared/validation';
 import { assertPublicId, assertWidgetType, isCuratedInstanceRow, isCuratedPublicId } from '../../shared/instances';
 import { syncAccountAssetUsageForInstanceStrict } from '../account-instances/helpers';
@@ -63,18 +64,6 @@ function createUserInstancePublicId(widgetType: string): string {
   const stem = normalized || 'instance';
   const suffix = `${Date.now().toString(36)}${crypto.randomUUID().replace(/-/g, '').slice(0, 10)}`;
   return `wgt_${stem}_u_${suffix}`;
-}
-
-function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  return raw as Record<string, unknown>;
-}
-
-function formatCuratedDisplayName(meta: Record<string, unknown> | null, fallback: string): string {
-  if (!meta) return fallback;
-  const styleName = asTrimmedString(meta.styleName ?? meta.name ?? meta.title);
-  if (!styleName) return fallback;
-  return styleName;
 }
 
 type RomaWidgetsInstancePayload = {

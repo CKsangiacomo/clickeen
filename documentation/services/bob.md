@@ -10,15 +10,16 @@ This document describes the **current** repo implementation.
 
 ### Editing is in-memory (two-place model)
 During an edit session, instance state exists in exactly two places:
-1. **Published state** in Paris/Michael (database).
+1. **Persisted base state** in Paris/Michael (database).
 2. **Working state** in Bob React state (`instanceData`).
 
-Between load and publish, Bob does not write intermediate edits to Paris.
+Between load and save, Bob does not write intermediate edits to Paris.
 
-### Publish UX (copy code lives under Publish)
+### Save + Publish affordances
 Bob intentionally separates:
 - **Saving config** (writes to Paris): appears as **Save / Discard** buttons only when the base config is dirty.
-- **Embedding** (copy code): always lives under the **Publish** button, which opens a modal containing embed snippets (safe iframe + gated iframe++ SEO/GEO).
+- **Publishing in Bob** is only the embed-code affordance: the **Publish** button opens a modal containing embed snippets (safe iframe + gated iframe++ SEO/GEO).
+- **Bob has no live/unlive toggle** and does not manage published/unpublished state.
 
 The Settings panel is widget-defined behavior controls; it must not contain embed code.
 
@@ -98,6 +99,11 @@ DevStudio’s widget sandbox tool supports overriding the embedded Bob origin wi
 - `?bob=http://localhost:3000` (example)
 
 This allows a fast loop where DevStudio runs from Cloudflare Pages while Bob runs locally.
+The write plane does **not** move to Cloudflare DevStudio in this setup; writes still go through the attached local Bob/Paris stack and its selected Supabase target.
+
+### Runtime status (local authoring clarity)
+- `GET /api/dev/runtime` returns Bob runtime hints for Widget Workspace (`envStage`, `supabaseTarget`, `localToolAuthEnabled`).
+- DevStudio uses this to show whether the attached local Bob toolchain is pointed at `local` or `remote` Supabase.
 
 Source: `admin/src/html/tools/dev-widget-workspace.html` (historical filename; see the “configurable via `?bob=`” comment).
 
@@ -113,18 +119,18 @@ Bob resolves a single subject mode and computes a single policy object:
 - **Policy output**: `policy = { flags, caps, budgets }` used to gate controls and reject ops deterministically.
 
 Example enforcement (today):
-- `minibob` cannot create/publish instances (`can(policy, 'instance.create'|'instance.publish')` denies with upsell).
+- `minibob` cannot create/save account instances (`can(policy, 'instance.create'|'instance.update')` denies with upsell).
 - Uploads + Copilot are bounded by budgets/caps (server-enforced; Bob uses policy for UX gating).
 
 Read-only mode (DevStudio cloud):
 - Passing `?readonly=1` (or `?role=viewer`) forces `policy.role = viewer`.
-- Bob blocks edits and publishing when in viewer role (read-only DevStudio experience).
+- Bob blocks edits and saves when in viewer role (read-only DevStudio experience).
 
 ### Intended product shape (still aligned)
 Core base-config lifecycle per open session:
 1. One instance load `GET /api/accounts/:accountId/instance/:publicId?subject=account` (performed by host in message boot or by Bob in URL boot).
 2. In-memory edits only (no base-config API writes).
-3. One publish/write command on explicit Publish. In Roma-hosted flows, the command is delegated to Roma and Roma calls `PUT /api/accounts/:accountId/instance/:publicId?subject=account`; in URL/local flows Bob calls the named route directly. Base persistence remains immediate; snapshot convergence stays async via publish-status.
+3. One save/write command on explicit Save. In Roma-hosted flows, the command is delegated to Roma and Roma calls `PUT /api/accounts/:accountId/instance/:publicId?subject=account`; in URL/local flows Bob calls the named route directly. Base persistence remains immediate; snapshot convergence stays async via publish-status.
 
 Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
@@ -461,7 +467,8 @@ It:
 - Verifies Prague l10n overlays (repo base + `tokyo/l10n/prague/**`)
 - Clears stale Next chunks (`bob/.next`)
 - Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)
-- Uses **local Supabase by default**; to point local Workers at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`
+- Uses **local Supabase by default**; to point the local stack at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`
+- Passes Bob the resolved Supabase target explicitly, so Widget Workspace and Bob locale reads use the same local-vs-remote Michael target as Berlin/Paris.
 - Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).
 
 ### Deterministic compilation gate (executed)

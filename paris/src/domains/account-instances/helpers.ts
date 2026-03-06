@@ -8,6 +8,7 @@ import type {
 import { ckError, errorDetail } from '../../shared/errors';
 import { readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
+import { formatCuratedDisplayName, readCuratedMeta } from '../../shared/curated-meta';
 import { asTrimmedString } from '../../shared/validation';
 import { loadWidgetLimits } from '../../shared/tokyo';
 import {
@@ -71,11 +72,6 @@ export function validateAccountInstanceEnvelope(payload: AccountInstanceEnvelope
   if (!payload.localization.policy || typeof payload.localization.policy !== 'object') return 'localization.policy invalid';
   if ((payload.localization.policy as any).v !== 1) return 'localization.policy.v invalid';
   return null;
-}
-
-function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  return raw as Record<string, unknown>;
 }
 
 export const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
@@ -234,13 +230,6 @@ export async function rollbackInstanceWriteAfterPostCommitFailure(args: {
       `[ParisWorker] Failed to restore asset usage references after rollback for ${args.publicId}: ${detail}`,
     );
   }
-}
-
-function formatCuratedDisplayName(meta: Record<string, unknown> | null, fallback: string): string {
-  if (!meta) return fallback;
-  const styleName = asTrimmedString(meta.styleName ?? meta.name ?? meta.title);
-  if (!styleName) return fallback;
-  return styleName;
 }
 
 export function resolveAccountInstanceDisplayName(instance: InstanceRow | CuratedInstanceRow): string {

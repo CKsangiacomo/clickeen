@@ -38,7 +38,7 @@ type UpdateMeta = {
 type SessionError =
   | { source: 'load'; message: string }
   | { source: 'ops'; errors: WidgetOpError[] }
-  | { source: 'publish'; message: string; paths?: string[] };
+  | { source: 'save'; message: string; paths?: string[] };
 
 type PreviewSettings = {
   device: 'desktop' | 'mobile';
@@ -98,15 +98,14 @@ type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
   baseInstanceData: Record<string, unknown>;
-  publishedBaseInstanceData: Record<string, unknown>;
-  status: 'published' | 'unpublished';
+  savedBaseInstanceData: Record<string, unknown>;
   previewData: Record<string, unknown> | null;
   previewOps: WidgetOp[] | null;
   isDirty: boolean;
   minibobPersonalizationUsed: boolean;
   policy: Policy;
   upsell: { reasonKey: string; detail?: string; cta: 'signup' | 'upgrade' } | null;
-  isPublishing: boolean;
+  isSaving: boolean;
   preview: PreviewSettings;
   locale: LocaleState;
   selectedPath: string | null;
@@ -130,7 +129,6 @@ type EditorOpenMessage = {
   widgetname: string;
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
-  status?: 'published' | 'unpublished';
   localization?: unknown;
   policy?: Policy;
   publicId?: string;
@@ -262,15 +260,6 @@ type BobExportInstanceDataResponseMessage = {
   instanceData?: Record<string, unknown>;
   meta?: SessionState['meta'];
   isDirty?: boolean;
-};
-
-type BobInstanceSavedMessage = {
-  type: 'bob:instance-saved';
-  publicId: string;
-  accountId: string;
-  widgetType: string;
-  status: 'published' | 'unpublished';
-  config: Record<string, unknown>;
 };
 
 type BobSessionReadyMessage = {
@@ -569,15 +558,14 @@ function useWidgetSessionInternal() {
     compiled: null,
     instanceData: {},
     baseInstanceData: {},
-    publishedBaseInstanceData: {},
-    status: 'unpublished',
+    savedBaseInstanceData: {},
     previewData: null,
     previewOps: null,
     isDirty: false,
     minibobPersonalizationUsed: false,
     policy: initialPolicy,
     upsell: null,
-    isPublishing: false,
+    isSaving: false,
     preview: DEFAULT_PREVIEW,
     locale: DEFAULT_LOCALE_STATE,
     selectedPath: null,
@@ -2010,15 +1998,13 @@ function useWidgetSessionInternal() {
       });
       resolved = applyWidgetNormalizations(compiled.normalization, resolved);
       const localizationSnapshot = normalizeLocalizationSnapshotForOpen(nextLocalizationSnapshotRaw);
-      const nextStatus = message.status === 'published' ? 'published' : 'unpublished';
 
       setState((prev) => ({
         ...prev,
         compiled,
         instanceData: resolved,
         baseInstanceData: resolved,
-        publishedBaseInstanceData: structuredClone(resolved),
-        status: nextStatus,
+        savedBaseInstanceData: structuredClone(resolved),
         isDirty: false,
         minibobPersonalizationUsed: false,
         policy: nextPolicy,
@@ -2063,7 +2049,7 @@ function useWidgetSessionInternal() {
         compiled: null,
         instanceData: {},
         baseInstanceData: {},
-        publishedBaseInstanceData: {},
+        savedBaseInstanceData: {},
         isDirty: false,
         minibobPersonalizationUsed: false,
         error: { source: 'load', message: messageText },
@@ -2125,26 +2111,26 @@ function useWidgetSessionInternal() {
     if (!publicId || !accountId) {
       setState((prev) => ({
         ...prev,
-        error: { source: 'publish', message: 'coreui.errors.publish.missingInstanceContext' },
+        error: { source: 'save', message: 'Missing instance context for save.' },
       }));
       return;
     }
     if (!widgetType) {
       setState((prev) => ({
         ...prev,
-        error: { source: 'publish', message: 'coreui.errors.widgetType.invalid' },
+        error: { source: 'save', message: 'coreui.errors.widgetType.invalid' },
       }));
       return;
     }
     if (state.policy.role === 'viewer') {
       setState((prev) => ({
         ...prev,
-        error: { source: 'publish', message: 'Read-only mode: publishing is disabled.' },
+        error: { source: 'save', message: 'Read-only mode: saving is disabled.' },
       }));
       return;
     }
 
-    const gate = can(state.policy, 'instance.publish');
+    const gate = can(state.policy, 'instance.update');
     if (!gate.allow) {
       setState((prev) => ({
         ...prev,
@@ -2160,7 +2146,7 @@ function useWidgetSessionInternal() {
 
     const subject = state.policy.profile === 'minibob' ? 'minibob' : 'account';
 
-    setState((prev) => ({ ...prev, isPublishing: true, error: null }));
+    setState((prev) => ({ ...prev, isSaving: true, error: null }));
     try {
       const configToSave = state.baseInstanceData;
       const localePolicy = {
@@ -2195,7 +2181,7 @@ function useWidgetSessionInternal() {
         if (err?.kind === 'DENY' && err?.upsell === 'UP') {
           setState((prev) => ({
             ...prev,
-            isPublishing: false,
+            isSaving: false,
             error: null,
             upsell: {
               reasonKey: err.reasonKey || 'coreui.errors.unknown',
@@ -2208,30 +2194,29 @@ function useWidgetSessionInternal() {
         if (err?.kind === 'VALIDATION') {
           setState((prev) => ({
             ...prev,
-            isPublishing: false,
-            error: { source: 'publish', message: err.reasonKey || 'coreui.errors.publish.failed', paths: err.paths },
+            isSaving: false,
+            error: { source: 'save', message: err.reasonKey || 'Save failed.', paths: err.paths },
           }));
           return;
         }
         setState((prev) => ({
           ...prev,
-          isPublishing: false,
-          error: { source: 'publish', message: err?.reasonKey || 'coreui.errors.publish.failed' },
+          isSaving: false,
+          error: { source: 'save', message: err?.reasonKey || 'Save failed.' },
         }));
         return;
       }
 
       setState((prev) => ({
         ...prev,
-        isPublishing: false,
+        isSaving: false,
         isDirty: false,
-        status: json?.status === 'published' ? 'published' : 'unpublished',
         error: null,
         upsell: null,
-        publishedBaseInstanceData:
+        savedBaseInstanceData:
           json?.config && typeof json.config === 'object' && !Array.isArray(json.config)
             ? structuredClone(json.config)
-            : prev.publishedBaseInstanceData,
+            : prev.savedBaseInstanceData,
         baseInstanceData:
           json?.config && typeof json.config === 'object' && !Array.isArray(json.config)
             ? structuredClone(json.config)
@@ -2246,21 +2231,9 @@ function useWidgetSessionInternal() {
         })(),
         policy: json?.policy && typeof json.policy === 'object' ? assertPolicy(json.policy) : prev.policy,
       }));
-
-      try {
-        const message: BobInstanceSavedMessage = {
-          type: 'bob:instance-saved',
-          publicId,
-          accountId,
-          widgetType,
-          status: json?.status === 'published' ? 'published' : 'unpublished',
-          config: configToSave,
-        };
-        window.parent?.postMessage(message, '*');
-      } catch {}
     } catch (err) {
       const messageText = err instanceof Error ? err.message : String(err);
-      setState((prev) => ({ ...prev, isPublishing: false, error: { source: 'publish', message: messageText } }));
+      setState((prev) => ({ ...prev, isSaving: false, error: { source: 'save', message: messageText } }));
     }
   }, [
     executeAccountCommand,
@@ -2276,128 +2249,9 @@ function useWidgetSessionInternal() {
     state.policy,
   ]);
 
-  const setLive = useCallback(
-    async (nextLive: boolean) => {
-      const publicId = state.meta?.publicId ? String(state.meta.publicId) : '';
-      const accountId = state.meta?.accountId ? String(state.meta.accountId) : '';
-      const widgetType = state.meta?.widgetname ? String(state.meta.widgetname) : '';
-      if (!publicId || !accountId) return;
-
-      if (state.policy.role === 'viewer') {
-        setState((prev) => ({
-          ...prev,
-          error: { source: 'publish', message: 'Read-only mode: publishing is disabled.' },
-        }));
-        return;
-      }
-
-      const gate = can(state.policy, 'instance.publish');
-      if (!gate.allow) {
-        setState((prev) => ({
-          ...prev,
-          error: null,
-          upsell: {
-            reasonKey: gate.reasonKey,
-            detail: gate.detail,
-            cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
-          },
-        }));
-        return;
-      }
-
-      if (nextLive && state.isDirty) {
-        setState((prev) => ({
-          ...prev,
-          error: { source: 'publish', message: 'Save changes before going live.' },
-        }));
-        return;
-      }
-
-      const subject = state.policy.profile === 'minibob' ? 'minibob' : 'account';
-
-      setState((prev) => ({ ...prev, isPublishing: true, error: null }));
-      try {
-        const localePolicy = {
-          baseLocale: state.locale.baseLocale,
-          availableLocales: state.locale.availableLocales,
-          ip: {
-            enabled: state.locale.accountL10nPolicy.ip.enabled,
-            countryToLocale: state.locale.accountL10nPolicy.ip.enabled
-              ? Object.fromEntries(
-                  Object.entries(state.locale.accountL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
-                    state.locale.availableLocales.includes(locale),
-                  ),
-                )
-              : {},
-          },
-          switcher: { enabled: state.locale.accountL10nPolicy.switcher.enabled },
-        };
-        const seoGeo = state.policy.flags['embed.seoGeo.enabled'] === true;
-        const { ok, json, status } = await executeAccountCommand({
-          subject,
-          command: 'update-instance',
-          method: 'PUT',
-          url: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
-            publicId,
-          )}?subject=${encodeURIComponent(subject)}`,
-          accountId,
-          publicId,
-          body: nextLive ? { status: 'published', localePolicy, seoGeo } : { status: 'unpublished' },
-        });
-        if (!ok) {
-          const err = json?.error;
-          setState((prev) => ({
-            ...prev,
-            isPublishing: false,
-            error: { source: 'publish', message: err?.reasonKey || `Live toggle failed (HTTP ${status})` },
-          }));
-          return;
-        }
-
-        setState((prev) => ({
-          ...prev,
-          isPublishing: false,
-          status: json?.status === 'published' ? 'published' : 'unpublished',
-          policy: json?.policy && typeof json.policy === 'object' ? assertPolicy(json.policy) : prev.policy,
-        }));
-
-        try {
-          const message: BobInstanceSavedMessage = {
-            type: 'bob:instance-saved',
-            publicId,
-            accountId,
-            widgetType,
-            status: json?.status === 'published' ? 'published' : 'unpublished',
-            config: state.baseInstanceData,
-          };
-          window.parent?.postMessage(message, '*');
-        } catch {}
-      } catch (err) {
-        const messageText = err instanceof Error ? err.message : String(err);
-        setState((prev) => ({
-          ...prev,
-          isPublishing: false,
-          error: { source: 'publish', message: messageText },
-        }));
-      }
-    },
-    [
-      executeAccountCommand,
-      state.baseInstanceData,
-      state.isDirty,
-      state.locale.availableLocales,
-      state.locale.baseLocale,
-      state.locale.accountL10nPolicy.ip.countryToLocale,
-      state.locale.accountL10nPolicy.ip.enabled,
-      state.locale.accountL10nPolicy.switcher.enabled,
-      state.meta,
-      state.policy,
-    ],
-  );
-
   const discardChanges = useCallback(() => {
     setState((prev) => {
-      const nextBase = structuredClone(prev.publishedBaseInstanceData);
+      const nextBase = structuredClone(prev.savedBaseInstanceData);
       const nextInstance =
         prev.locale.activeLocale !== prev.locale.baseLocale
           ? applyLocalizationOps(applyLocalizationOps(nextBase, prev.locale.baseOps), prev.locale.userOps)
@@ -2462,7 +2316,6 @@ function useWidgetSessionInternal() {
       widgetname: widgetType,
       compiled,
       instanceData: instanceJson.config,
-      status: instanceJson.status === 'published' ? 'published' : 'unpublished',
       localization: instanceJson.localization,
       policy: instanceJson.policy,
       publicId: instanceJson.publicId ?? publicId,
@@ -2766,9 +2619,9 @@ function useWidgetSessionInternal() {
           compiled: null,
           instanceData: {},
           baseInstanceData: {},
+          savedBaseInstanceData: {},
           isDirty: false,
           minibobPersonalizationUsed: false,
-          status: 'unpublished',
           error: { source: 'load', message: messageText },
           upsell: null,
           locale: { ...DEFAULT_LOCALE_STATE },
@@ -2784,7 +2637,6 @@ function useWidgetSessionInternal() {
       compiled: state.compiled,
       instanceData: state.instanceData,
       baseInstanceData: state.baseInstanceData,
-      status: state.status,
       previewData: state.previewData,
       previewOps: state.previewOps,
       isDirty: state.isDirty,
@@ -2792,7 +2644,7 @@ function useWidgetSessionInternal() {
       isMinibob: state.policy.profile === 'minibob',
       policy: state.policy,
       upsell: state.upsell,
-      isPublishing: state.isPublishing,
+      isSaving: state.isSaving,
       preview: state.preview,
       locale: state.locale,
       selectedPath: state.selectedPath,
@@ -2808,7 +2660,6 @@ function useWidgetSessionInternal() {
       undoLastOps,
       commitLastOps,
       save,
-      setLive,
       discardChanges,
       dismissUpsell,
       requestUpsell,
@@ -2834,7 +2685,6 @@ function useWidgetSessionInternal() {
       undoLastOps,
       commitLastOps,
       save,
-      setLive,
       discardChanges,
       dismissUpsell,
       requestUpsell,

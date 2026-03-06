@@ -1,7 +1,6 @@
-import type { Env, SanfranciscoCommandName, SanfranciscoCommandQueueJob } from './types';
-import { errorDetail } from './errors';
+import type { Env } from './types';
 import { json, readJson } from './http';
-import { asTrimmedString, isRecord } from './validation';
+import { asTrimmedString } from './validation';
 
 type SanfranciscoAuthMode = 'paris-dev-bearer' | 'none';
 
@@ -66,67 +65,4 @@ export async function callSanfranciscoJson(args: {
     };
   }
   return { ok: true, payload };
-}
-
-export async function dispatchSanfranciscoCommand(args: {
-  env: Env;
-  path: string;
-  command: SanfranciscoCommandName;
-  payload: unknown;
-  auth?: SanfranciscoAuthMode;
-  headers?: HeadersInit;
-}): Promise<
-  | { ok: true; payload: unknown }
-  | { ok: false; response: Response }
-> {
-  if (args.env.SANFRANCISCO_COMMANDS_QUEUE) {
-    if (!isRecord(args.payload)) {
-      return {
-        ok: false,
-        response: json(
-          {
-            error: 'INTERNAL',
-            message: 'SanFrancisco command payload must be an object',
-            detail: args.command,
-          },
-          { status: 500 },
-        ),
-      };
-    }
-
-    const message: SanfranciscoCommandQueueJob = {
-      v: 1,
-      kind: 'sf.command',
-      command: args.command,
-      payload: args.payload as Record<string, unknown>,
-    };
-    try {
-      await args.env.SANFRANCISCO_COMMANDS_QUEUE.send(message);
-      return {
-        ok: true,
-        payload: {
-          accepted: true,
-          transport: 'queue',
-          command: args.command,
-        },
-      };
-    } catch (error) {
-      const detail = errorDetail(error);
-      console.error(
-        `[paris.sanfrancisco] queue dispatch failed command=${args.command}; falling back to HTTP: ${detail}`,
-      );
-    }
-  }
-
-  return callSanfranciscoJson({
-    env: args.env,
-    path: args.path,
-    method: 'POST',
-    auth: args.auth,
-    headers: args.headers,
-    body: {
-      command: args.command,
-      payload: args.payload,
-    },
-  });
 }
