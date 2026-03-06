@@ -10,13 +10,6 @@ import { enqueueTokyoMirrorJob, resolveActivePublishLocales } from '../account-i
 
 type AccountTier = AccountRow['tier'];
 
-type AccountMemberRow = {
-  account_id: string;
-  user_id: string;
-  role: string;
-  created_at: string;
-};
-
 const ACCOUNT_QUERY_PAGE_SIZE = 1000;
 
 function assertAccountId(value: string) {
@@ -623,39 +616,6 @@ export async function handleAccountInstancesUnpublish(req: Request, env: Env, ac
   const result = await unpublishAccountInstances({ env, accountId, keepLivePublicIds });
   if (!result.ok) return result.response;
   return json({ ok: true, accountId, kept: keepLivePublicIds, unpublished: result.unpublished, tokyo: result.tokyo });
-}
-
-export async function handleAccountMembersList(req: Request, env: Env, accountIdRaw: string) {
-  const accountIdResult = assertAccountId(accountIdRaw);
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
-  if (!authorized.ok) return authorized.response;
-
-  const params = new URLSearchParams({
-    select: 'account_id,user_id,role,created_at',
-    account_id: `eq.${accountId}`,
-    order: 'created_at.asc',
-    limit: '500',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_members?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const details = await readJson(res);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
-  }
-  const rows = ((await res.json().catch(() => null)) as AccountMemberRow[] | null) ?? [];
-
-  return json({
-    accountId,
-    role: authorized.role,
-    members: rows.map((row) => ({
-      userId: row.user_id,
-      role: row.role,
-      createdAt: row.created_at ?? null,
-      updatedAt: null,
-    })),
-  });
 }
 
 export async function handleAccountLifecycleTierDropDismiss(req: Request, env: Env, accountIdRaw: string) {

@@ -11,7 +11,6 @@ export {
 export {
   handleAccountInstanceL10nEnqueueSelected,
   handleAccountInstanceL10nStatus,
-  handleAccountLocalesGet,
   handleAccountLocalesPut,
 } from './account-handlers';
 export { enqueueL10nJobs } from './enqueue-jobs';

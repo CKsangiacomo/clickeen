@@ -32,7 +32,6 @@ import {
   handleAccountAssetsPurge,
   handleAccountLifecyclePlanChange,
   handleAccountLifecycleTierDropDismiss,
-  handleAccountMembersList,
   handleAccountInstancesUnpublish,
 } from './domains/accounts';
 import {
@@ -59,7 +58,6 @@ import {
   handleAccountInstanceLayersList,
   handleAccountInstanceL10nEnqueueSelected,
   handleAccountInstanceL10nStatus,
-  handleAccountLocalesGet,
   handleAccountLocalesPut,
 } from './domains/l10n';
 import { handleUsageEvent } from './domains/usage';
@@ -180,7 +178,6 @@ export default {
       if (accountLocalesMatch) {
         const accountIdResult = assertAccountId(decodeURIComponent(accountLocalesMatch[1]));
         if (!accountIdResult.ok) return accountIdResult.response;
-        if (req.method === 'GET') return handleAccountLocalesGet(req, env, accountIdResult.value);
         if (req.method === 'PUT') return handleAccountLocalesPut(req, env, accountIdResult.value);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
@@ -341,8 +338,6 @@ export default {
 
       const accountMembersMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/members$/);
       if (accountMembersMatch) {
-        const accountId = decodeURIComponent(accountMembersMatch[1]);
-        if (req.method === 'GET') return handleAccountMembersList(req, env, accountId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

@@ -23,7 +23,6 @@ Core shipped endpoints in this repo snapshot include:
 - `GET /api/accounts/:accountId/instance/:publicId?subject=account`
 - `PUT /api/accounts/:accountId/instance/:publicId?subject=account`
 - `GET /api/accounts/:accountId/instances/:publicId/publish/status`
-- `GET /api/accounts/:accountId/locales`
 - `PUT /api/accounts/:accountId/locales?subject=account`
 - `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account`
 - `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected?subject=account`
@@ -35,7 +34,6 @@ Core shipped endpoints in this repo snapshot include:
 - `GET /api/accounts/:accountId/assets/:assetId`
 - `DELETE /api/accounts/:accountId/assets/:assetId`
 - `DELETE /api/accounts/:accountId/assets?confirm=1` (forced hard delete all account assets; downgrade/closure)
-- `GET /api/accounts/:accountId/members`
 - `GET /api/accounts/:accountId/notices?status=open|dismissed|resolved`
 - `POST /api/accounts/:accountId/notices/:noticeId/dismiss`
 - `GET /api/accounts/:accountId/billing/summary`

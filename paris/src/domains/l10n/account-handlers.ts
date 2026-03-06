@@ -176,19 +176,6 @@ export async function handleAccountInstanceL10nEnqueueSelected(
   });
 }
 
-export async function handleAccountLocalesGet(req: Request, env: Env, accountId: string) {
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
-  if (!authorized.ok) return authorized.response;
-  const account = authorized.account;
-
-  const policyResult = resolveEditorPolicyFromRequest(req, account);
-  if (!policyResult.ok) return policyResult.response;
-
-  const resolved = resolveAccountActiveLocales({ account });
-  if (resolved instanceof Response) return resolved;
-  return json({ locales: resolved.locales, policy: resolveAccountL10nPolicy(account.l10n_policy) });
-}
-
 export async function handleAccountLocalesPut(req: Request, env: Env, accountId: string) {
   const authorized = await authorizeAccount(req, env, accountId, 'editor');
   if (!authorized.ok) return authorized.response;
