@@ -1,6 +1,7 @@
 # Instagram Feed Widget — Competitor Analysis
 
 > **Purpose**: Document competitor features from Elfsight and Behold.so to inform Clickeen's Instagram Feed widget.
+> **Runtime status**: Research only. This file is not a shipped endpoint contract.
 
 ---
 
@@ -227,6 +228,5 @@ Behold takes a simpler, more performant approach that aligns with Clickeen's phi
 | `behold-09-builder-overview.png` | Behold builder UI |
 | `behold-10-widget-types.png` | Behold widget types |
 | `behold-11-customize-panel.png` | Behold customization |
-
 
 

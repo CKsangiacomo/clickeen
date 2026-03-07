@@ -63,6 +63,8 @@ const localEnv = loadDotenv(path.join(process.cwd(), '.env.local'));
 
 const CK_ADMIN_EMAIL = process.env.CK_ADMIN_EMAIL || localEnv.CK_ADMIN_EMAIL || '';
 const CK_ADMIN_PASSWORD = process.env.CK_ADMIN_PASSWORD || localEnv.CK_ADMIN_PASSWORD || '';
+const CK_ADMIN_ACCOUNT_ID =
+  process.env.CK_ADMIN_ACCOUNT_ID || localEnv.CK_ADMIN_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100';
 const TOKYO_DEV_JWT =
   process.env.TOKYO_DEV_JWT ||
   localEnv.TOKYO_DEV_JWT ||
@@ -109,20 +111,8 @@ async function loginPassword() {
 }
 
 async function createAccount(accessToken) {
-  const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/accounts`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      accept: 'application/json',
-      'content-type': 'application/json',
-      'Idempotency-Key': crypto.randomUUID(),
-    },
-    body: JSON.stringify({ name: 'Gate 6 Test' }),
-  });
-  if (!res.ok) throw new Error(`Account create failed (${res.status}) ${text.slice(0, 200)}`);
-  const accountId = typeof data?.accountId === 'string' ? data.accountId.trim() : '';
-  if (!accountId) throw new Error('Account create missing accountId.');
-  return accountId;
+  void accessToken;
+  return assertString(CK_ADMIN_ACCOUNT_ID, 'CK_ADMIN_ACCOUNT_ID');
 }
 
 async function planChange(accessToken, accountId, nextTier, keepLivePublicIds = null) {

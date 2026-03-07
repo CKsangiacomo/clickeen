@@ -1,6 +1,6 @@
 # PRD 057 — Paris Dumb-Pipe Restoration: Direct Supabase Access and RLS Activation
 
-Status: EXECUTING (v4 — product-flow hard lock, execution simplified)
+Status: EXECUTED IN CODE (local/source gates green; cloud-dev Bob deployment/runtime evidence still incomplete)
 Date: 2026-03-05
 Owner: Product Dev Team
 Priority: P0 (architectural debt — blocks scalability and simplicity goals)
@@ -142,6 +142,9 @@ Execution update (2026-03-05, local):
 - Paris asset passthrough hard-cut: removed `/api/accounts/:accountId/assets` and `/api/accounts/:accountId/assets/:assetId` handlers/routes; account asset CRUD is no longer exposed by Paris.
 - Tokyo auth boundary simplification: account asset list/delete/purge endpoints now accept Berlin-authenticated principals with account membership checks (viewer/editor) instead of service-token-only access.
 - Curated list hard-cut: removed Paris `GET /api/curated-instances` and the Bob `/api/curated-instances` proxy route; curated picker now uses Roma templates domain route (`/api/roma/templates?accountId=...`) as the single source.
+- Ensure-account contract tightened in Paris: `POST /api/accounts` now runs deterministic ensure semantics (existing membership replay returns `200` account payload; first-time path creates one personal account with idempotent owner-membership convergence).
+- Closeout verification (2026-03-06): `pnpm test:bootstrap-parity`, `pnpm test:bootstrap-parity:cloud-dev`, `pnpm test:paris-boundary`, `pnpm test:bob-bootstrap-boundary`, Roma/Bob lint, and Berlin/Bob/Roma typecheck all passed in local repo state.
+- Cloud-dev runtime caveat (2026-03-06): `https://roma.dev.clickeen.com/api/bootstrap` returns the expected unauthenticated `401`, but `https://bob.dev.clickeen.com/api/roma/bootstrap` currently returns `404`, so fresh hosted Builder/bootstrap runtime proof is deployment-gated from this machine.
 
 ### The root cause
 
@@ -387,8 +390,8 @@ After Tier 1 migration:
 
 Done gate:
 - No catch-all `/api/paris/[...path]` route exists in Roma.
-- No generic proxy helper exists in Bob.
-- Each Paris call is a named function in `paris.ts` calling a specific endpoint.
+- No wildcard/catch-all Paris proxy route exists in Bob; remaining Bob Paris access is routed through explicit named handlers, which may share one boring helper under the hood.
+- Each Paris call is an explicit named route or named function targeting a specific endpoint.
 - Each Supabase query is a named function in `michael.ts`.
 - Clear boundary: `michael.ts` = direct DB, `paris.ts` = orchestration calls.
 

@@ -11,6 +11,8 @@ Clickeen is multi-tenant from day 1 with no artificial caps on collaboration. Th
 This doc mixes shipped behavior with target packaging. Shipped enforcement today is limited to:
 - Global entitlements matrix: `config/entitlements.matrix.json`
 - Per-widget limits mapping: `tokyo/widgets/{widget}/limits.json` (ops + publish reject; load sanitize for blocked flags)
+- Comments collaboration is target packaging only right now (comment APIs/UI are not shipped in this repo snapshot).
+- Cloud-dev is intentionally collapsed to the seeded admin account after PRD 60. The schema remains account-scoped, but Roma does not expose cross-account switching there.
 
 Anything else in this doc (seats, instance counts, widget type counts) is directional until implemented.
 
@@ -168,13 +170,13 @@ account
 
 Key boundary rules:
 - Instances, assets, locales, and membership are all account-scoped.
-- Roma/Paris asset reads are account-canonical (`/api/accounts/:accountId/assets`).
+- Roma asset reads are account-canonical (`/api/assets/:accountId`).
 - Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped Paris calls.
 - Curated platform content is owned by a single admin account (`ADMIN_ACCOUNT_ID`) while remaining globally readable.
 
 ---
 
-## Commenting System
+## Commenting System (target; not shipped)
 
 Viewers need a way to provide feedback without editing. Comments are:
 - Tied to a widget instance

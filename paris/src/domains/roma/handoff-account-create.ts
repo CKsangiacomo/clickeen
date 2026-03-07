@@ -4,6 +4,8 @@ import { authorizeAccount } from '../../shared/account-auth';
 import { ckError, errorDetail } from '../../shared/errors';
 import { json, readJson } from '../../shared/http';
 import { DEFAULT_ACCOUNT_L10N_POLICY } from '../../shared/l10n';
+import { resolveAdminAccountId } from '../../shared/admin';
+import { normalizeMemberRole, roleRank } from '../../shared/roles';
 import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString, assertAccountId, assertConfig, isRecord, isUuid } from '../../shared/validation';
 import { assertPublicId, assertWidgetType, isCuratedPublicId } from '../../shared/instances';
@@ -13,6 +15,10 @@ import { loadInstanceByPublicId, loadWidgetByType } from '../instances';
 const ROMA_IDEMPOTENCY_TTL_SEC = 60 * 60 * 24 * 7;
 const MINIBOB_HANDOFF_STATE_TTL_SEC = 60 * 60 * 24 * 7;
 const MINIBOB_HANDOFF_MAX_CONFIG_BYTES = 7000;
+
+function isLocalStage(env: Env): boolean {
+  return (asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev').toLowerCase() === 'local';
+}
 
 type IdempotencyRecord = {
   v: 1;
@@ -26,7 +32,6 @@ type MinibobHandoffStateRecord = {
   handoffId: string;
   sourcePublicId: string;
   widgetType: string;
-  widgetId: string;
   config: Record<string, unknown>;
   status: 'pending' | 'consumed';
   createdAt: string;
@@ -35,6 +40,30 @@ type MinibobHandoffStateRecord = {
   consumedByUserId?: string;
   consumedAccountId?: string;
   resultPublicId?: string;
+};
+
+type AccountCreatePayload = {
+  accountId: string;
+  role: string;
+  slug: string;
+  name: string;
+};
+
+type AccountMembershipLookupRow = {
+  role?: unknown;
+  accounts?: {
+    id?: unknown;
+    status?: unknown;
+    slug?: unknown;
+    name?: unknown;
+  } | null;
+};
+
+type AccountRowShape = {
+  id: string;
+  status: string;
+  slug: string;
+  name: string;
 };
 
 function requireRomaKv(env: Env): { ok: true; kv: KVNamespace } | { ok: false; response: Response } {
@@ -101,74 +130,47 @@ async function storeIdempotencyRecord(kv: KVNamespace, key: string, status: numb
   await kvPutJson(kv, key, payload, ROMA_IDEMPOTENCY_TTL_SEC);
 }
 
-function slugifyAccountName(name: string): string {
-  const normalized = name
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return normalized || 'account';
+function resolveAccountSlug(accountId: string): string {
+  const suffix = accountId.replace(/-/g, '').slice(0, 12).toLowerCase();
+  return suffix ? `acct-${suffix}` : 'account';
 }
 
-function sanitizeAccountName(value: unknown): { ok: true; value: string } | { ok: false; response: Response } {
-  const name = asTrimmedString(value) ?? 'Account';
-  if (name.length < 2 || name.length > 80) {
-    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.account.name.invalid' }, 422) };
-  }
-  return { ok: true, value: name };
-}
-
-function sanitizeAccountSlug(raw: unknown, fallbackName: string): { ok: true; value: string } | { ok: false; response: Response } {
-  const fromInput = asTrimmedString(raw);
-  const candidate = fromInput ? slugifyAccountName(fromInput) : slugifyAccountName(fallbackName);
-  if (!candidate || candidate.length > 64 || !/^[a-z0-9][a-z0-9_-]*$/.test(candidate)) {
-    return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.account.slug.invalid' }, 422) };
-  }
-  return { ok: true, value: candidate };
-}
-
-function sanitizeWebsiteUrl(raw: unknown): string | null {
-  const value = asTrimmedString(raw);
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
-async function insertAccountWithSlugRetry(args: {
+async function createAccount(args: {
   env: Env;
   accountId: string;
   name: string;
-  slugBase: string;
-  websiteUrl: string | null;
-}): Promise<{ ok: true; slug: string } | { ok: false; response: Response }> {
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const slug = attempt === 0 ? args.slugBase : `${args.slugBase}-${attempt + 1}`;
-    const insertRes = await supabaseFetch(args.env, '/rest/v1/accounts', {
-      method: 'POST',
-      headers: {
-        Prefer: 'return=representation',
-      },
-      body: JSON.stringify({
-        id: args.accountId,
-        status: 'active',
-        is_platform: false,
-        tier: 'free',
-        name: args.name,
-        slug,
-        website_url: args.websiteUrl,
-        l10n_locales: [],
-        l10n_policy: DEFAULT_ACCOUNT_L10N_POLICY,
-      }),
-    });
-    if (insertRes.ok) return { ok: true, slug };
-    if (insertRes.status === 409) continue;
+}): Promise<{ ok: true; account: AccountRowShape; created: boolean } | { ok: false; response: Response }> {
+  const slug = resolveAccountSlug(args.accountId);
+  const insertRes = await supabaseFetch(args.env, '/rest/v1/accounts', {
+    method: 'POST',
+    headers: {
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify({
+      id: args.accountId,
+      status: 'active',
+      is_platform: false,
+      tier: 'free',
+      name: args.name,
+      slug,
+      website_url: null,
+      l10n_locales: [],
+      l10n_policy: DEFAULT_ACCOUNT_L10N_POLICY,
+    }),
+  });
+
+  if (insertRes.ok) {
+    const rows = (await insertRes.json().catch(() => null)) as unknown;
+    const created = Array.isArray(rows) ? toAccountRowShape(rows[0]) : null;
+    if (created) return { ok: true, account: created, created: true };
+    return {
+      ok: true,
+      account: { id: args.accountId, status: 'active', slug, name: args.name },
+      created: true,
+    };
+  }
+
+  if (insertRes.status !== 409) {
     const details = await readJson(insertRes);
     return {
       ok: false,
@@ -179,10 +181,111 @@ async function insertAccountWithSlugRetry(args: {
     };
   }
 
+  const existing = await loadAccountById(args.env, args.accountId);
+  if (!existing) {
+    return {
+      ok: false,
+      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'account_unresolved_after_conflict' }, 500),
+    };
+  }
+  return { ok: true, account: existing, created: false };
+}
+
+function toAccountRowShape(value: unknown): AccountRowShape | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const id = asTrimmedString(record.id);
+  const slug = asTrimmedString(record.slug);
+  const name = asTrimmedString(record.name);
+  const status = asTrimmedString(record.status) || 'active';
+  if (!id || !slug || !name) return null;
+  return { id, slug, name, status };
+}
+
+function toAccountCreatePayload(args: {
+  account: AccountRowShape;
+  role: string;
+}): AccountCreatePayload {
   return {
-    ok: false,
-    response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.account.slug.conflict' }, 409),
+    accountId: args.account.id,
+    role: args.role,
+    slug: args.account.slug,
+    name: args.account.name,
   };
+}
+
+async function loadAccountById(env: Env, accountId: string): Promise<AccountRowShape | null> {
+  const params = new URLSearchParams({
+    select: 'id,status,slug,name',
+    id: `eq.${accountId}`,
+    limit: '1',
+  });
+  const response = await supabaseFetch(env, `/rest/v1/accounts?${params.toString()}`, { method: 'GET' });
+  if (!response.ok) {
+    const details = await readJson(response);
+    throw new Error(`[ParisWorker] Failed to load account (${response.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await response.json().catch(() => null)) as unknown;
+  if (!Array.isArray(rows)) return null;
+  return toAccountRowShape(rows[0]) || null;
+}
+
+async function loadExistingUserAccount(env: Env, userId: string): Promise<AccountCreatePayload | null> {
+  const params = new URLSearchParams({
+    select: 'account_id,role,accounts(id,status,slug,name)',
+    user_id: `eq.${userId}`,
+    order: 'created_at.asc',
+    limit: '1000',
+  });
+  const response = await supabaseFetch(env, `/rest/v1/account_members?${params.toString()}`, { method: 'GET' });
+  if (!response.ok) {
+    const details = await readJson(response);
+    throw new Error(`[ParisWorker] Failed to load account memberships (${response.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = ((await response.json().catch(() => null)) as AccountMembershipLookupRow[] | null) || [];
+
+  const adminAccountId = resolveAdminAccountId(env);
+  let best: AccountCreatePayload | null = null;
+  for (const row of rows) {
+    const account = toAccountRowShape(row.accounts);
+    if (!account) continue;
+    const role = normalizeMemberRole(row.role) || 'viewer';
+    const candidate = toAccountCreatePayload({ account, role });
+    if (candidate.accountId === adminAccountId) return candidate;
+    if (!best || roleRank(candidate.role) > roleRank(best.role)) best = candidate;
+  }
+  return best;
+}
+
+async function ensureOwnerMembership(args: {
+  env: Env;
+  accountId: string;
+  userId: string;
+}): Promise<{ ok: true; role: string } | { ok: false; response: Response }> {
+  const response = await supabaseFetch(
+    args.env,
+    `/rest/v1/account_members?on_conflict=${encodeURIComponent('account_id,user_id')}`,
+    {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({
+        account_id: args.accountId,
+        user_id: args.userId,
+        role: 'owner',
+      }),
+    },
+  );
+  if (!response.ok) {
+    const details = await readJson(response);
+    return {
+      ok: false,
+      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
+    };
+  }
+
+  const rows = (await response.json().catch(() => null)) as Array<{ role?: unknown }> | null;
+  const role = normalizeMemberRole(rows?.[0]?.role) || 'owner';
+  return { ok: true, role };
 }
 
 function resolveMinibobHandoffStateKey(handoffId: string): string {
@@ -207,7 +310,6 @@ async function resolveMinibobHandoffSnapshot(args: {
       ok: true;
       sourcePublicId: string;
       widgetType: string;
-      widgetId: string;
       config: Record<string, unknown>;
     }
   | { ok: false; response: Response }
@@ -259,7 +361,6 @@ async function resolveMinibobHandoffSnapshot(args: {
     ok: true,
     sourcePublicId,
     widgetType,
-    widgetId: widget.id,
     config: JSON.parse(serializedConfig) as Record<string, unknown>,
   };
 }
@@ -381,7 +482,6 @@ export async function handleMinibobHandoffStart(req: Request, env: Env): Promise
     handoffId,
     sourcePublicId: snapshot.sourcePublicId,
     widgetType: snapshot.widgetType,
-    widgetId: snapshot.widgetId,
     config: snapshot.config,
     status: 'pending',
     createdAt,
@@ -422,59 +522,60 @@ export async function handleAccountCreate(req: Request, env: Env): Promise<Respo
   const existing = await loadIdempotencyRecord(kv, replayKey);
   if (existing) return replayFromIdempotency(existing);
 
-  let bodyRaw: unknown = {};
-  if (req.headers.get('content-length') !== '0') {
-    try {
-      bodyRaw = await req.json();
-    } catch {
-      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
-    }
+  let existingAccount: AccountCreatePayload | null = null;
+  try {
+    existingAccount = await loadExistingUserAccount(env, auth.principal.userId);
+  } catch (error) {
+    const detail = errorDetail(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
   }
-  if (bodyRaw !== null && bodyRaw !== undefined && !isRecord(bodyRaw)) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  if (existingAccount) {
+    await storeIdempotencyRecord(kv, replayKey, 200, existingAccount).catch(() => undefined);
+    return json(existingAccount, { status: 200 });
   }
-  const body = isRecord(bodyRaw) ? bodyRaw : {};
 
-  const nameResult = sanitizeAccountName(body.name);
-  if (!nameResult.ok) return nameResult.response;
-  const slugResult = sanitizeAccountSlug(body.slug, nameResult.value);
-  if (!slugResult.ok) return slugResult.response;
-  const websiteUrl = sanitizeWebsiteUrl(body.websiteUrl ?? body.website_url);
+  if (!isLocalStage(env)) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.account.createFailed', detail: 'account_creation_frozen_to_admin_only' }, 403);
+  }
 
-  const accountId = crypto.randomUUID();
-  const inserted = await insertAccountWithSlugRetry({
+  const accountId = auth.principal.userId;
+
+  let accountCreate:
+    | { ok: true; account: AccountRowShape; created: boolean }
+    | { ok: false; response: Response };
+  try {
+    accountCreate = await createAccount({
+      env,
+      accountId,
+      name: 'Personal',
+    });
+  } catch (error) {
+    const detail = errorDetail(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
+  }
+  if (!accountCreate.ok) return accountCreate.response;
+  const createdAccount = accountCreate.created;
+  const account = accountCreate.account;
+
+  const membership = await ensureOwnerMembership({
     env,
     accountId,
-    name: nameResult.value,
-    slugBase: slugResult.value,
-    websiteUrl,
+    userId: auth.principal.userId,
   });
-  if (!inserted.ok) return inserted.response;
-
-  const memberRes = await supabaseFetch(env, '/rest/v1/account_members', {
-    method: 'POST',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({
-      account_id: accountId,
-      user_id: auth.principal.userId,
-      role: 'owner',
-    }),
-  });
-  if (!memberRes.ok) {
-    const details = await readJson(memberRes);
-    await supabaseFetch(env, `/rest/v1/accounts?id=eq.${accountId}`, { method: 'DELETE' }).catch(() => undefined);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+  if (!membership.ok) {
+    if (createdAccount) {
+      await supabaseFetch(env, `/rest/v1/accounts?id=eq.${accountId}`, { method: 'DELETE' }).catch(() => undefined);
+    }
+    return membership.response;
   }
 
-  const payload = {
-    accountId,
-    status: 'active',
-    role: 'owner',
-    slug: inserted.slug,
-    name: nameResult.value,
-  };
-  await storeIdempotencyRecord(kv, replayKey, 201, payload).catch(() => undefined);
-  return json(payload, { status: 201 });
+  const payload = toAccountCreatePayload({
+    account,
+    role: membership.role,
+  });
+  const status = createdAccount ? 201 : 200;
+  await storeIdempotencyRecord(kv, replayKey, status, payload).catch(() => undefined);
+  return json(payload, { status });
 }
 
 export async function handleMinibobHandoffComplete(req: Request, env: Env): Promise<Response> {
@@ -503,6 +604,10 @@ export async function handleMinibobHandoffComplete(req: Request, env: Env): Prom
   const accountIdResult = assertAccountId(bodyRaw.accountId);
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
+  const adminAccountId = resolveAdminAccountId(env);
+  if (!isLocalStage(env) && accountId !== adminAccountId) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.minibobHandoff.unavailable', detail: 'minibob_handoff_admin_account_only' }, 403);
+  }
 
   const handoffIdResult = assertHandoffId(bodyRaw.handoffId);
   if (!handoffIdResult.ok) return handoffIdResult.response;

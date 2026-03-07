@@ -37,6 +37,8 @@ This doc describes the **current Venice runtime** after the PRD 54 pivot:
 - Loader:
   - `GET /embed/latest/loader.js` (alias of v2)
   - `GET /embed/v2/loader.js`
+- Compatibility:
+  - `GET /embed/pixel` (no-op `204`)
 
 Source of truth:
 - `venice/app/e/[publicId]/route.ts`
@@ -95,17 +97,24 @@ What it does (plain English):
 
 If any required Tokyo file is missing, Venice returns a clear error (no fallback).
 
+Headers:
+- `cache-control: public, max-age=60, s-maxage=86400`
+
 ---
 
 ## Caching rules (why it stays cheap)
 
-Venice enforces two caching classes:
+Venice enforces three caching classes:
 
-1) **Live pointers** (`.../live/...`)
+1) **Embed shell HTML** (`/e/:publicId`)
+- Short cache: `public, max-age=60, s-maxage=86400`
+- The shell is tiny and stable; freshness comes from the live pointers it fetches at runtime
+
+2) **Live pointers** (`.../live/...`)
 - Always `cache-control: no-store`
 - Must reflect changes immediately
 
-2) **Fingerprinted packs** (`.../<sha256>/...`)
+3) **Fingerprinted packs + widget assets** (`.../<sha256>/...`, `/widgets/*`, `/dieter/*`)
 - Cache forever: `public, max-age=31536000, immutable`
 - Fingerprints change when bytes change
 

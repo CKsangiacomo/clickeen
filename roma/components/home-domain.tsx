@@ -1,72 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { fetchParisJson } from './paris-http';
+import { useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
-
-type MinibobHandoffCompleteResponse = {
-  handoffId: string;
-  accountId: string;
-  sourcePublicId: string;
-  publicId: string;
-  builderRoute: string;
-  replay: boolean;
-};
-
-function nextIdempotencyKey() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return `ck_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
-}
 
 export function HomeDomain() {
   const me = useRomaMe();
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const handoffAttemptRef = useRef<string | null>(null);
-  const [handoffStatus, setHandoffStatus] = useState<'idle' | 'running' | 'failed'>('idle');
-  const [handoffError, setHandoffError] = useState<string | null>(null);
-
   const handoffId = useMemo(() => (searchParams.get('handoffId') || '').trim(), [searchParams]);
-  const handoffPublicIdHint = useMemo(() => (searchParams.get('publicId') || '').trim(), [searchParams]);
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const hasAccountContext = Boolean(context.accountId);
-
-  const completeHandoff = useCallback(async () => {
-    if (!handoffId || !hasAccountContext) return;
-    const attemptKey = `${handoffId}:${context.accountId}`;
-    if (handoffAttemptRef.current === attemptKey) return;
-    handoffAttemptRef.current = attemptKey;
-
-    setHandoffStatus('running');
-    setHandoffError(null);
-    try {
-      const payload = await fetchParisJson<MinibobHandoffCompleteResponse>('/api/minibob/handoff/complete', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'Idempotency-Key': nextIdempotencyKey(),
-        },
-        body: JSON.stringify({
-          handoffId,
-          accountId: context.accountId,
-        }),
-      });
-      router.replace(payload.builderRoute);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setHandoffStatus('failed');
-      setHandoffError(message);
-    }
-  }, [context.accountId, handoffId, hasAccountContext, router]);
-
-  useEffect(() => {
-    if (!handoffId || !me.data || !hasAccountContext) return;
-    void completeHandoff();
-  }, [completeHandoff, handoffId, hasAccountContext, me.data]);
 
   if (me.loading) {
     return <section className="rd-canvas-module body-m">Loading identity and membership context...</section>;
@@ -106,37 +50,12 @@ export function HomeDomain() {
       <section className="rd-canvas-module">
         {handoffId ? (
           <article className="roma-card">
-            <h2 className="heading-6">MiniBob Continuation</h2>
-            <p className="body-m">
-              {handoffStatus === 'running'
-                ? 'Continuing from MiniBob and opening Builder...'
-                : handoffStatus === 'failed'
-                  ? `MiniBob continuation failed: ${handoffError ?? 'unknown_error'}`
-                  : handoffPublicIdHint
-                    ? `Pending continuation for ${handoffPublicIdHint}.`
-                    : 'Pending continuation detected from MiniBob.'}
-            </p>
-            {handoffStatus === 'failed' ? (
-              <div className="rd-canvas-module__actions">
-                <button
-                  className="diet-btn-txt"
-                  data-size="md"
-                  data-variant="primary"
-                  type="button"
-                  onClick={() => {
-                    handoffAttemptRef.current = null;
-                    void completeHandoff();
-                  }}
-                >
-                  <span className="diet-btn-txt__label body-m">Retry continuation</span>
-                </button>
-              </div>
-            ) : null}
+            <p className="body-m">MiniBob continuation was not finalized in finish flow.</p>
           </article>
         ) : null}
 
         <p className="body-m">
-          Active account: {context.accountName || context.accountId}
+          Account: {context.accountName || context.accountId}
           {context.accountSlug ? ` (${context.accountSlug})` : ''}
         </p>
       </section>

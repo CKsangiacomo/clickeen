@@ -11,8 +11,8 @@ const DEFAULTS = {
     publishLatencyBudgetMs: 5_000,
   },
   'cloud-dev': {
-    bobBaseUrl: 'https://bob-dev.pages.dev',
-    romaBaseUrl: 'https://roma-dev.pages.dev',
+    bobBaseUrl: 'https://bob.dev.clickeen.com',
+    romaBaseUrl: 'https://roma.dev.clickeen.com',
     parisBaseUrl: 'https://paris.dev.clickeen.com',
     tokyoBaseUrl: 'https://tokyo.dev.clickeen.com',
     veniceBaseUrl: 'https://venice.dev.clickeen.com',

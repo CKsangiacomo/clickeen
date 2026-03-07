@@ -76,7 +76,7 @@ tokyo/themes/themes.json -> Bob injects theme dropdown
 
 Embed flow (Venice):
 ```
-Browser -> Venice /e/{publicId}?locale=... -> Venice loads instance (Paris) + widget files (Tokyo) + optional l10n overlay (Tokyo)
+Browser -> Venice /e/{publicId}?locale=... -> Venice loads live pointer + config pack + text pack + widget files (Tokyo)
 -> Venice injects window.CK_WIDGET (state + locale) -> widget.client.js applyState
 ```
 
@@ -126,5 +126,5 @@ Runtime must not depend on `window.CK_ASSET_ORIGIN`; Venice owns proxying these 
 | Tokyo | Store widget definitions | Store instance data |
 | Bob | Compile spec, render ToolDrawer, hold working state | Apply widget-specific defaults at runtime |
 | Paris | CRUD instance JSON | Transform widget state |
-| Venice | Compose instance JSON + widget files for embed | Modify widget state |
+| Venice | Serve published pointer/config/text/widget bytes for public embeds | Modify widget state or fetch Paris at request time |
 | Michael | Persist instance JSON | Per-widget validation |

@@ -19,20 +19,18 @@ Route: `/#/dieter/dev-widget-workspace`
 What it does:
 - Embeds Bob in message-boot mode as a local-first widget authoring studio (default local Bob or explicit `?bob=http://localhost:3000` on the page URL).
 - Marks iframe host intent as `surface=devstudio` (pairs with `surface=roma` in Roma Builder for explicit host behavior).
-- Opens Bob from one of two honest sources:
-  - **Source defaults**: compiles `tokyo/widgets/{widget}/spec.json` through Bob and opens an in-memory session with no persisted row required.
-  - **Saved starter**: loads an existing admin-account baseline/curated row through Bob named routes and opens Bob with real `{ accountId, publicId }` context.
 - Uses Bob’s same-origin named routes only (`/api/roma/templates`, `/api/accounts/*`, `/api/widgets/*`) (DevStudio never calls Paris directly).
 - Local-only unauth convenience is isolated here: DevStudio Local carries explicit `devstudio` surface markers so Bob can mint local sessions only for this toolchain, and only when `ENV_STAGE=local`. Roma/product routes do not get this bypass.
-- Uses a 2-step flow: pick `Widget slug`, then choose `Source defaults` or a saved starter scoped to that widget.
-- Starter list fetch uses `GET /api/roma/templates?accountId=<admin-account-id>&surface=devstudio`.
-- Starter opens lazy-load the full admin-account instance envelope on selection.
-- In-memory source-default sessions are for zero-to-one spec/runtime iteration.
-- Saved-starter sessions are the path for:
-  - loading `wgt_main_*` / curated starters
-  - updating baseline/main or curated config
-  - checking translations/localization in Bob before wider rollout
-- Bob exposes `GET /api/dev/runtime` so Widget Workspace can show which Supabase target (`local` vs `remote`) the attached Bob toolchain is using.
+- Uses a 2-dropdown flow:
+  - first dropdown = widget type
+  - second dropdown = admin-account `wgt_main_*` / `wgt_curated_*` rows available for that widget
+- The dropdown data comes from `GET /api/roma/templates?accountId=<admin-account-id>&surface=devstudio`.
+- Opening a selection lazy-loads the full admin-account instance envelope, then message-boots Bob with real `{ accountId, publicId }` context.
+- Current superadmin authoring actions remain local-first:
+  - update the baseline `wgt_main_*` row / default config
+  - create or update curated rows
+  - promote curated rows to cloud-dev
+  - inspect translation status and enqueue translation work
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
@@ -49,7 +47,7 @@ Important behavior:
 
 Current boundary:
 - Widget Workspace is restored for widget authoring, not for full local product parity.
-- That includes source-defaults work plus admin-account baseline/curated starter iteration and translation checks.
+- That includes admin-account baseline/curated iteration and translation checks inside Bob.
 - The tool no longer pretends DevStudio is the operational owner for day-2 widget/account workflows.
 - Product/admin operational work still belongs in Roma cloud with a real admin account.
 

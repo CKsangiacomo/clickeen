@@ -67,6 +67,8 @@ const localEnv = loadDotenv(path.join(process.cwd(), '.env.local'));
 
 const CK_ADMIN_EMAIL = process.env.CK_ADMIN_EMAIL || localEnv.CK_ADMIN_EMAIL || '';
 const CK_ADMIN_PASSWORD = process.env.CK_ADMIN_PASSWORD || localEnv.CK_ADMIN_PASSWORD || '';
+const CK_ADMIN_ACCOUNT_ID =
+  process.env.CK_ADMIN_ACCOUNT_ID || localEnv.CK_ADMIN_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100';
 
 const BASE = {
   berlin:
@@ -107,18 +109,9 @@ async function loginPassword() {
 }
 
 async function createAccount(accessToken, name) {
-  const { res, data, text } = await fetchJson(`${BASE.paris.replace(/\/+$/, '')}/api/accounts`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      accept: 'application/json',
-      'content-type': 'application/json',
-      'Idempotency-Key': crypto.randomUUID(),
-    },
-    body: JSON.stringify({ name }),
-  });
-  if (!res.ok) throw new Error(`Account create failed (${res.status}) ${text.slice(0, 200)}`);
-  return assertString(data?.accountId, 'accountId');
+  void accessToken;
+  void name;
+  return assertString(CK_ADMIN_ACCOUNT_ID, 'CK_ADMIN_ACCOUNT_ID');
 }
 
 async function planChange(accessToken, accountId, nextTier) {

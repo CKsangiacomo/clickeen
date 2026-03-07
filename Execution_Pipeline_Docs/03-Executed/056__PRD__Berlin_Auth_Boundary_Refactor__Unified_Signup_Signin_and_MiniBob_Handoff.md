@@ -1,6 +1,6 @@
 # PRD 56 — System Convergence: Berlin Gatekeeper and Service Non-Interference
 
-Status: EXECUTING (P0 remediation + convergence)
+Status: EXECUTED IN CODE (local/source gates green; cloud-dev auth/runtime verification remains deployment/credential gated)
 Date: 2026-03-05
 Owner: Product Dev Team
 
@@ -12,6 +12,12 @@ Execution update (local):
 - Password login hard-gated to local only: Berlin rejects `/auth/login/password` on non-local hosts, Roma rejects `POST /api/session/login` on non-local hosts, and the cloud Roma login page now hides the password form.
 - Berlin legacy provider-link surface hard-cut: `/auth/link/start`, `/auth/link/callback`, `/auth/unlink`, and `/auth/validate` alias removed from runtime and docs.
 - Roma auth completion/logout legacy cookie compatibility branches hard-cut: removed transitional `sb-*` cleanup logic and legacy-domain cookie-clearing loops from login/finish/logout handlers.
+- Roma client-side MiniBob continuation retry hard-cut: `HomeDomain` no longer performs post-login browser handoff completion, and the Roma proxy route `POST /api/minibob/handoff/complete` was removed. Canonical completion remains server-side in `GET /api/session/finish`.
+- Roma finish orchestration simplified: removed bootstrap re-fetch loops after ensure-account. `GET /api/session/finish` now consumes deterministic `POST /api/accounts` response (`accountId`) directly.
+- Venice/Tokyo boundary audit completed (local static inspection): Venice embed/runtime routes (`/r`, `/e`, `/embed/pixel`) call Tokyo/local embed paths only and no longer include Paris network dependencies on embed critical path.
+- Closeout verification (2026-03-06): `pnpm test:bootstrap-parity`, `pnpm test:bootstrap-parity:cloud-dev`, `pnpm test:paris-boundary`, `pnpm test:bob-bootstrap-boundary`, Roma/Bob lint, Berlin/Bob/Roma typecheck, and Roma production build all passed in local repo state.
+- Cloud-dev runtime caveat (2026-03-06): `https://roma.dev.clickeen.com/api/bootstrap` returns the expected unauthenticated `401`, but `https://bob.dev.clickeen.com/api/roma/bootstrap` currently returns `404`, so fresh cloud-dev Builder/bootstrap evidence is deployment-gated rather than source-gated from this machine.
+- Cloud-dev auth parity caveat (2026-03-06): explicit cloud bearer / probe credentials are not present on this machine, and cloud password login is intentionally disabled on non-local hosts, so auth parity was not rerun locally during closeout.
 
 > Core mandate: Berlin is the gatekeeper to dreamland. Once user is in, services must stop fighting and each service must do only its job.
 

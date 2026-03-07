@@ -1,6 +1,6 @@
 # PRD 058 — Paris LOC Reduction: Deduplication and Extract
 
-Status: EXECUTING
+Status: EXECUTED
 Date: 2026-03-06
 Owner: Product Dev Team
 Priority: P1 (code quality — zero functionality change)
@@ -19,6 +19,9 @@ Execution update (local):
 - Mirror overlay-op load cut landed: repeated overlay fetch + try/catch + map-init blocks in create/update/account-l10n handlers now use one shared `resolveLocaleOverlayOps()` helper in `paris/src/shared/mirror-packs.ts`.
 - Dead SanFrancisco queue-dispatch cut landed: unused `dispatchSanfranciscoCommand()` path and related queue command types were removed (`paris/src/shared/sanfrancisco.ts`, `paris/src/shared/types.ts`).
 - Layer handlers convergence cut landed: repeated auth/policy/publicId/instance/curated-gate setup across list/get/upsert/delete now resolves through one local `resolveLayerRequestContext()` helper in `paris/src/domains/l10n/layers-handlers.ts`.
+- Cut 11 landed: `roma/app/api/session/finish/route.ts` removed bootstrap re-fetch loops after ensure-account and now consumes deterministic account-create response directly (less orchestration branching).
+- Cut 10 slice landed: Bob session cookie domain policy in `bob/lib/auth/session.ts` is now deterministic and aligned to cloud-dev sharing (`.dev.clickeen.com`) with host-scoped production behavior; dynamic domain-derivation branches were removed.
+- Closeout verification (2026-03-06): `pnpm test:bootstrap-parity`, `pnpm test:bootstrap-parity:cloud-dev`, `pnpm test:paris-boundary`, `pnpm test:bob-bootstrap-boundary`, Roma/Bob lint, and Berlin/Bob/Roma typecheck all passed in local repo state.
 
 > Core mandate: Delete duplicated lines. Extract shared helpers. No behavior change. No new features. No new abstractions beyond what the duplication demands.
 

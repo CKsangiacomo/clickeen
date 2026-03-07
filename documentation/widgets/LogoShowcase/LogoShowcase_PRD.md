@@ -157,7 +157,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: which logos are rendered inside that strip, the selected image (in-memory while editing), link behavior, and hover caption text
   - **how**:
     - runtime renders children under the strip’s `[data-role="logos"]`
-- `strips[i].logos[j].asset.versionId` → canonical immutable logo asset ref used by runtime (`/assets/v/{encodeURIComponent(versionId)}`)
+- `strips[i].logos[j].asset.versionId` → canonical immutable logo asset ref used by runtime (`/assets/v/:versionId`)
 - `strips[i].logos[j].logoFill` → editor field state/preview value only (not runtime image authority)
     - `strips[i].logos[j].asset` → file metadata for editor display (object with `name`, optional `mime`, optional `source`, optional `versionId`)
     - `strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)

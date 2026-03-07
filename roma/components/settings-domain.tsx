@@ -42,29 +42,9 @@ export function SettingsDomain() {
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const activeAccountId = context.accountId;
 
-  const accounts = useMemo(() => {
-    const list = me.data?.accounts ?? [];
-    return list.slice().sort((a, b) => a.name.localeCompare(b.name));
-  }, [me.data?.accounts]);
-
   const activeAccount = useMemo(
-    () => accounts.find((entry) => entry.accountId === activeAccountId) ?? null,
-    [accounts, activeAccountId],
-  );
-
-  const [switchingAccountId, setSwitchingAccountId] = useState<string | null>(null);
-  const switchAccount = useCallback(
-    async (accountId: string) => {
-      const normalized = String(accountId || '').trim();
-      if (!normalized) return;
-      setSwitchingAccountId(normalized);
-      try {
-        await me.setActiveAccount(normalized);
-      } finally {
-        setSwitchingAccountId((current) => (current === normalized ? null : current));
-      }
-    },
-    [me],
+    () => (me.data?.accounts ?? []).find((entry) => entry.accountId === activeAccountId) ?? null,
+    [me.data?.accounts, activeAccountId],
   );
 
   const [nextTier, setNextTier] = useState<AccountTier>('free');
@@ -133,14 +113,10 @@ export function SettingsDomain() {
     return <section className="rd-canvas-module body-m">Failed to load account context: {me.error ?? 'unknown_error'}</section>;
   }
 
-  if (accounts.length === 0) {
-    return <section className="rd-canvas-module body-m">No accounts found for this user.</section>;
-  }
-
   if (!activeAccountId || !activeAccount) {
     return (
       <section className="rd-canvas-module">
-        <p className="body-m">No active account selected.</p>
+        <p className="body-m">No account context is available.</p>
         <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void me.reload()}>
           <span className="diet-btn-txt__label body-m">Reload</span>
         </button>
@@ -154,7 +130,7 @@ export function SettingsDomain() {
     <>
       <section className="rd-canvas-module">
         <p className="body-m">
-          Active account: {activeAccount.name} ({activeAccount.slug})
+          Account: {activeAccount.name} ({activeAccount.slug})
         </p>
         <p className="body-s">
           Account ID: {activeAccount.accountId} | Tier: {activeAccount.tier} | Role: {activeAccount.role}
@@ -168,49 +144,6 @@ export function SettingsDomain() {
             <span className="diet-btn-txt__label body-m">Open assets</span>
           </Link>
         </div>
-      </section>
-
-      <section className="rd-canvas-module">
-        <h2 className="heading-6">Switch account</h2>
-        <table className="roma-table">
-          <thead>
-            <tr>
-              <th className="table-header label-s">Name</th>
-              <th className="table-header label-s">Slug</th>
-              <th className="table-header label-s">Tier</th>
-              <th className="table-header label-s">Role</th>
-              <th className="table-header label-s">Active</th>
-              <th className="table-header label-s">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {accounts.map((account) => {
-              const isActive = account.accountId === activeAccountId;
-              const switching = switchingAccountId === account.accountId;
-              return (
-                <tr key={account.accountId}>
-                  <td className="body-s">{account.name}</td>
-                  <td className="body-s">{account.slug}</td>
-                  <td className="body-s">{account.tier}</td>
-                  <td className="body-s">{account.role}</td>
-                  <td className="body-s">{isActive ? 'Yes' : 'No'}</td>
-                  <td className="roma-cell-actions">
-                    <button
-                      className="diet-btn-txt"
-                      data-size="md"
-                      data-variant="secondary"
-                      type="button"
-                      onClick={() => void switchAccount(account.accountId)}
-                      disabled={isActive || Boolean(switchingAccountId)}
-                    >
-                      <span className="diet-btn-txt__label body-m">{switching ? 'Switching…' : 'Use account'}</span>
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
       </section>
 
       <section className="rd-canvas-module">

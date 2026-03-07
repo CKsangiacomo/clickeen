@@ -43,35 +43,40 @@ Roma exposes explicit session endpoints for product auth UX:
 
 Bootstrap payload includes:
 - User + account membership graph
-- Active defaults (`defaults.accountId`)
+- Default account (`defaults.accountId`)
 - Signed account authz capsule (`authz.accountCapsule`, expiry metadata)
 - Account entitlement snapshot (`authz.entitlements`) resolved once at bootstrap (`flags`, `caps`, `budgets{max,used}`)
 
 Client behavior (`use-roma-me.ts`):
-- Resolves requested account from URL `accountId` first, then localStorage fallback.
-- Caches bootstrap per account with TTL aligned to the authz capsule expiry (`authz.expiresAt`, with min floor + fallback TTL).
-- Persists successful bootstrap cache in sessionStorage for reload speed.
+- Resolves account context from `defaults.accountId` only.
+- Caches a single bootstrap payload in a process-global in-memory store with TTL aligned to the authz capsule expiry (`authz.expiresAt`, with min floor + fallback TTL).
+- Does not store account preference in localStorage.
+- Does not honor URL `accountId` overrides.
 - Guards and re-initializes global store shape if corrupted.
-- Pushes the account capsule into shared transport state (`paris-http`) so subsequent calls avoid repeated identity/membership lookups.
 - When bootstrap returns `coreui.errors.auth.required`, Roma redirects to `/login?next=...` for explicit sign-in.
+
+Current cloud-dev product rule:
+- Roma operates as a single-account shell there.
+- Bootstrap still returns `accounts[]` + `defaults.accountId`, but the product uses only the default account.
+- Settings does not expose account switching.
 
 ## Paris proxy model
 
 Roma talks to Paris only through same-origin API routes:
-- Named explicit route handlers under `roma/app/api/**` backed by `roma/lib/api/paris-proxy.ts` (no generic wildcard proxy).
+- Paris-backed routes are explicit handlers under `roma/app/api/**` using `roma/lib/api/paris-proxy.ts` (no generic wildcard proxy).
+- Non-Paris routes stay explicit as well (`/api/assets/*` -> Tokyo-worker, `/api/accounts/:accountId/members` -> Michael).
 
-Roma injects the authz capsule for Paris calls through `fetchParisJson` (`roma/components/paris-http.ts`):
-- Header: `x-ck-authz-capsule` (account authz capsule)
-- Reads capsule from memory/session storage.
-- Hydrates capsule from `/api/bootstrap` when missing.
-- Retries once with forced capsule refresh on auth failures (`401/403` family).
+Client fetch behavior:
+- Browser code calls same-origin Roma routes only.
+- `fetchParisJson` in the browser is just a no-store fetch + timeout/reason wrapper.
+- Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
 
 ## Bob orchestration contract (Roma Builder)
 
 `BuilderDomain` flow:
-1. Resolve active account + target publicId.
+1. Resolve default account + target publicId.
 2. Load instance payload (`/api/accounts/:accountId/instance/:publicId?subject=account`).
-3. Load compiled payload (`/api/widgets/:widgetType/compiled`).
+3. Load compiled payload (`/api/widgets/:widgetname/compiled`).
 4. Wait for Bob `bob:session-ready` (`boot=message`).
 5. Send `ck:open-editor` with `requestId + sessionId` (no bearer handoff; Bob relies on shared cookies).
 6. Require ack/applied lifecycle (`bob:open-editor-ack` → `bob:open-editor-applied` or `bob:open-editor-failed`).
@@ -80,7 +85,7 @@ Notes:
 - Builder retries open while waiting for ack (bounded attempts + timeout).
 - Bob URL-bootstrap (`boot=url`) still exists for explicit URL-mode surfaces, but Roma Builder uses message boot as canonical.
 - Roma marks Bob iframe host intent with `surface=roma` to keep host-specific auth behavior explicit.
-- In hosted account-editing flows, Bob sends save/publish/live-toggle and account l10n mutation intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
+- In hosted account-editing flows, Bob sends save and account l10n mutation intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
 
 ## Data domains and caches (client-side)
 
@@ -107,6 +112,7 @@ Assets domain behavior:
 - Roma runtime target: `https://roma.dev.clickeen.com` (Pages `*.pages.dev` deploys are not supported for authenticated Builder because cookies cannot be shared to Bob).
 - Uses cloud-dev Paris/Tokyo/Bob URLs from env/config.
 - Cloud product auth is Google-first. The password form is hidden, and `POST /api/session/login` rejects on non-local hosts.
+- Cloud-dev currently runs as one effective product account: admin. Roma does not expose account switching there.
 
 ## Operational notes
 

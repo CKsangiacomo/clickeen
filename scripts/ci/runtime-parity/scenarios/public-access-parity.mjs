@@ -13,6 +13,11 @@ function isNoStore(cacheControl) {
   return readString(cacheControl).toLowerCase().includes('no-store');
 }
 
+function isCacheableEmbedShell(cacheControl) {
+  const normalized = readString(cacheControl).toLowerCase();
+  return normalized.includes('public') && normalized.includes('s-maxage=');
+}
+
 export async function runPublicAccessParityScenario({ profile, context }) {
   const checks = [];
 
@@ -89,7 +94,7 @@ export async function runPublicAccessParityScenario({ profile, context }) {
       makeCheck('Venice /r cache-control includes no-store', isNoStore(veniceRCacheControl), {
         actual: veniceRCacheControl,
       }),
-      makeCheck('Venice /e cache-control includes no-store', isNoStore(veniceECacheControl), {
+      makeCheck('Venice /e cache-control is cacheable shell policy', isCacheableEmbedShell(veniceECacheControl), {
         actual: veniceECacheControl,
       }),
     );

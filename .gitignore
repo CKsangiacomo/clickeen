@@ -65,6 +65,7 @@ tooling/whisper/
 artifacts/
 Logs/
 prague-strings/compiled/
+scripts/dev/cloud-dev/.tmp/
 
 # User-uploaded assets (local dev only; served by Tokyo dev server)
 tokyo/arsenale/

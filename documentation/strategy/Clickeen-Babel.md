@@ -1889,6 +1889,8 @@ Reality: 40% conversion (4x improvement)
 
 ### Implementation Plan
 
+Runtime note: this section is strategy/proposal only. The `/api/scrape/*` endpoints below are not shipped in the current codebase.
+
 #### Phase 1: MVP (Week 1-2)
 
 **Prague UI:**

@@ -16,18 +16,48 @@ Non-negotiable (PRD 54):
 
 ## Shipped endpoints (this repo snapshot)
 
-### Instances (editor surfaces only)
+### Health + Roma domain
+- `GET /api/healthz`
+- `GET /api/roma/bootstrap`
+- `GET /api/roma/widgets`
+- `GET /api/roma/templates`
+- `POST /api/roma/widgets/duplicate`
+- `DELETE /api/roma/instances/:publicId`
+
+### Accounts + instance editing
+- `POST /api/accounts` (idempotent account ensure/create in local only; non-local stages reject new account creation)
 - `GET /api/accounts/:accountId/instance/:publicId?subject=account` — editor load (1 DB read)
 - `PUT /api/accounts/:accountId/instance/:publicId?subject=account` — save draft config/text (1 DB write)
+- `POST /api/accounts/:accountId/instances/unpublish`
+- `POST /api/accounts/:accountId/lifecycle/plan-change`
+- `POST /api/accounts/:accountId/lifecycle/tier-drop/dismiss`
 
 ### Locale pipeline (editor surfaces)
 - `PUT /api/accounts/:accountId/locales?subject=account` (persist active locales + policy)
 - `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account`
 - `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected?subject=account`
-- `GET/PUT/DELETE /api/accounts/:accountId/instances/:publicId/layers/...` (locale overrides storage)
+- `GET /api/accounts/:accountId/instances/:publicId/layers?subject=account`
+- `GET/PUT/DELETE /api/accounts/:accountId/instances/:publicId/layers/:layer/:layerKey?subject=account`
+
+### Minibob + AI + reporting
+- `POST /api/minibob/handoff/start`
+- `POST /api/minibob/handoff/complete` (non-local stages accept admin account only)
+- `POST /api/l10n/jobs/report`
+- `POST /api/ai/grant`
+- `POST /api/ai/minibob/session`
+- `POST /api/ai/minibob/grant`
+- `POST /api/ai/outcome`
+
+Current cloud-dev account rule:
+- Paris does not create new accounts there.
+- Finish/handoff flows complete only against the surviving admin account.
+
+### Public read boundary
+- `GET /api/instance/:publicId` (public read; user-owned rows are published-only)
 
 Locale read note:
 - Flat locales reads moved to direct Michael access in Bob (`/api/accounts/:accountId/locales` in Bob runtime), so Paris keeps only the write/orchestration path.
+- Members reads are served from Roma same-origin routes via direct Michael access (`/api/accounts/:accountId/members`), not Paris.
 
 ### Assets boundary
 - Asset list/delete/purge are no longer exposed by Paris.

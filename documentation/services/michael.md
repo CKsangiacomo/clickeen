@@ -215,4 +215,5 @@ Michael seeds one deterministic platform/admin account:
 
 This account owns:
 - `curated_widget_instances` (baseline + curated starter designs)
-- internal/admin tooling surfaces (DevStudio/Roma admin)
+- DevStudio internal authoring flows
+- the current cloud-dev product/runtime account context after PRD 60

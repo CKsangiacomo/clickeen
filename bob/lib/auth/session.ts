@@ -108,12 +108,12 @@ function isLocalHostname(hostname: string): boolean {
 export function resolveSessionCookieDomain(request: NextRequest): string | undefined {
   const hostname = request.nextUrl.hostname.trim().toLowerCase();
   if (!hostname || isLocalHostname(hostname)) return undefined;
-  if (hostname === 'clickeen.com') return '.clickeen.com';
-  if (!hostname.endsWith('.clickeen.com')) return undefined;
 
-  const parts = hostname.split('.').filter(Boolean);
-  if (parts.length <= 2) return '.clickeen.com';
-  return `.${parts.slice(1).join('.')}`;
+  // Cloud-dev runs on `*.dev.clickeen.com` and must share auth cookies between Roma and Bob.
+  if (hostname.endsWith('.dev.clickeen.com')) return '.dev.clickeen.com';
+
+  // Production remains host-scoped.
+  return undefined;
 }
 
 function extractSessionTokens(request: NextRequest): TokenBundle {
@@ -201,4 +201,3 @@ export async function resolveSessionBearer(request: NextRequest): Promise<Sessio
     ],
   };
 }
-

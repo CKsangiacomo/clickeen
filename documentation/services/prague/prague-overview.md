@@ -173,20 +173,22 @@ MiniBob publish/signup handoff:
 - Handoff start accepts only curated/base MiniBob source ids (`wgt_main_*` or `wgt_curated_*`), never user instance ids.
 - No signed payload token is carried in URL; Paris stores snapshot state server-side and Roma consumes by opaque `handoffId`.
 - The handoff snapshot is the current MiniBob draft. If the draft includes context such as `context.websiteUrl`, that context travels with the claimed account instance.
+- Current cloud-dev rule: finish does not mint a new account. Handoff completion succeeds only if the signed-in user already lands in the admin account context.
 
 ---
 
-## 3.1) Acquisition personalization preview (shipped)
+## 3.1) Acquisition personalization preview (dormant in current runtime)
 
-Prague exposes a lightweight “Make this widget yours” preview on widget overview pages:
+Prague still contains the UI component for a lightweight “Make this widget yours” preview:
 - UI: modal in the hero block (`prague/src/components/PersonalizationPreview.astro`)
-- API: `POST /api/personalization/preview` on Paris (public)
-- Polling: `GET /api/personalization/preview/:jobId`
-- Copy overrides are applied client-side via `data-ck-copy` hooks (hero, steps, CTA).
-- This is a fast pre-account copy preview on the marketing page. The durable keep/claim flow remains the MiniBob handoff above.
+- The component currently attempts:
+  - `POST {PUBLIC_PARIS_URL}/api/personalization/preview`
+  - `GET {PUBLIC_PARIS_URL}/api/personalization/preview/:jobId`
 
-Required env:
-- `PUBLIC_PARIS_URL` for the client to call Paris from Prague.
+Current runtime status:
+- Paris does not ship `/api/personalization/preview*` in this repo snapshot.
+- Treat this feature as dormant until the backend contract is reintroduced and documented.
+- Durable keep/claim remains the MiniBob handoff flow above.
 
 ---
 

@@ -7,5 +7,6 @@ export async function GET(request: NextRequest) {
   return proxyToParis(request, {
     method: 'GET',
     path: '/api/roma/bootstrap',
+    forwardQuery: false,
   });
 }

@@ -39,7 +39,7 @@ Asset behavior was previously spread across service docs and PRDs. This file cen
 ## Canonical data contract
 
 - Persisted config stores logical immutable refs: `asset.versionId`.
-- Runtime materializes canonical read path: `/assets/v/{encodeURIComponent(versionId)}`.
+- Runtime materializes canonical read path: `/assets/v/:versionId`.
 - Legacy persisted URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, `/assets/v/*`-backed `logoFill`) are outside contract.
 - Asset bytes live in Tokyo R2 under `assets/versions/{accountId}/...`.
 - Asset metadata lives as manifest JSON in Tokyo R2 under `assets/meta/accounts/{accountId}/assets/{assetId}.json`.

@@ -32,11 +32,6 @@ type ParisBootstrapPayload = {
   error?: unknown;
 };
 
-type ParisAccountCreatePayload = {
-  accountId?: unknown;
-  error?: unknown;
-};
-
 type ParisHandoffPayload = {
   builderRoute?: unknown;
   error?: unknown;
@@ -109,32 +104,6 @@ function nextIdempotencyKey(): string {
   return `ck_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
 }
 
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  const parts = token.split('.');
-  if (parts.length !== 3) return null;
-  try {
-    const payloadPart = parts[1] || '';
-    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-    const decoded = atob(padded);
-    const parsed = JSON.parse(decoded) as unknown;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-    return parsed as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-function resolveEnsureAccountIdempotencyKey(accessToken: string): string {
-  const payload = decodeJwtPayload(accessToken);
-  const rawSub = typeof payload?.sub === 'string' ? payload.sub.trim().toLowerCase() : '';
-  const normalizedSub = rawSub.replace(/[^a-z0-9_-]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
-  if (normalizedSub.length >= 4) {
-    return `ensureacct_${normalizedSub.slice(0, 120)}`;
-  }
-  return `ensureacct_${nextIdempotencyKey()}`;
-}
-
 function resolveAccountId(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
@@ -163,33 +132,6 @@ async function fetchBootstrap(parisBase: string, accessToken: string): Promise<{
     ok: true,
     accountId: resolveAccountId(payload?.defaults?.accountId),
   };
-}
-
-async function createAccountIfNeeded(
-  parisBase: string,
-  accessToken: string,
-): Promise<{ ok: true } | { ok: false; reasonKey: string }> {
-  const idempotencyKey = resolveEnsureAccountIdempotencyKey(accessToken);
-  const response = await fetch(`${parisBase}/api/accounts`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      'content-type': 'application/json',
-      accept: 'application/json',
-      'Idempotency-Key': idempotencyKey,
-    },
-    cache: 'no-store',
-    body: JSON.stringify({ name: 'Personal' }),
-  });
-
-  const payload = (await response.json().catch(() => null)) as ParisAccountCreatePayload | null;
-  if (!response.ok) {
-    return {
-      ok: false,
-      reasonKey: extractReasonKey(payload as Record<string, unknown> | null, 'coreui.errors.account.createFailed'),
-    };
-  }
-  return { ok: true };
 }
 
 async function completeHandoff(
@@ -327,29 +269,11 @@ export async function GET(request: NextRequest) {
   accountId = bootstrap.accountId;
 
   if (!accountId) {
-    const create = await createAccountIfNeeded(parisBase, accessToken);
-    if (!create.ok) {
-      // Account creation can race across parallel requests; re-read once before failing.
-      const recovered = await fetchBootstrap(parisBase, accessToken);
-      if (!recovered.ok || !recovered.accountId) {
-        return applySession(
-          NextResponse.redirect(buildRecoveryUrl(request, create.reasonKey, continuation.handoffId), {
-            headers: CACHE_HEADERS,
-          }),
-        );
-      }
-      accountId = recovered.accountId;
-    } else {
-      const refreshed = await fetchBootstrap(parisBase, accessToken);
-      if (!refreshed.ok) {
-        return applySession(
-          NextResponse.redirect(buildRecoveryUrl(request, refreshed.reasonKey, continuation.handoffId), {
-            headers: CACHE_HEADERS,
-          }),
-        );
-      }
-      accountId = refreshed.accountId;
-    }
+    return applySession(
+      NextResponse.redirect(buildRecoveryUrl(request, 'coreui.errors.account.createFailed', continuation.handoffId), {
+        headers: CACHE_HEADERS,
+      }),
+    );
   }
 
   let destinationPath = continuation.next;

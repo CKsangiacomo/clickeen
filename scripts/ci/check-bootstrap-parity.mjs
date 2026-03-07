@@ -73,6 +73,9 @@ function assertFileMissing(relPath) {
 function assertBootstrapProxyContract() {
   assertIncludes('roma/app/api/bootstrap/route.ts', [
     '/api/roma/bootstrap',
+    'proxyToParis(request, {',
+  ]);
+  assertIncludes('roma/lib/api/paris-proxy.ts', [
     "cache: 'no-store'",
     "response.headers.set('cache-control', 'no-store')",
     "response.headers.set('cdn-cache-control', 'no-store')",
@@ -82,61 +85,42 @@ function assertBootstrapProxyContract() {
 }
 
 function assertBootstrapEnvelopeContract() {
-  assertIncludes('paris/src/domains/roma/bootstrap-core.ts', [
-    'Promise.allSettled',
-    'domainErrors',
-    'domainOutcomes',
-    'bootstrapFanoutMs',
-    'Date.now() - fanoutStartedAt',
-  ]);
   assertIncludes('paris/src/domains/roma/widgets-bootstrap.ts', [
-    'domainErrors',
-    'bootstrapFanoutMs',
-    'bootstrapDomainOutcomes',
+    'export async function handleRomaBootstrap',
+    'resolveIdentityMePayload',
+    'mintRomaAccountAuthzCapsule',
+    'resolveAccountEntitlementsSnapshot',
+    'accountCapsule',
+    'entitlements',
+    'export async function handleRomaWidgets',
+    'export async function handleRomaTemplates',
   ]);
 }
 
-function assertRomaUiDegradedContract() {
+function assertRomaBootstrapClientContract() {
   assertIncludes('roma/components/use-roma-me.ts', [
-    'domainErrors?: Partial<Record<RomaBootstrapDomainKey, RomaBootstrapDomainError>> | null;',
-    'ROMA_ME_DEGRADED_SUCCESS_TTL_MS = 5_000',
-    'if (hasDomainErrors(entry.state.data)) return;',
+    'authz?: {',
+    'accountCapsule?: string | null;',
+    'entitlements?: {',
+    'const ROMA_ME_SUCCESS_FALLBACK_TTL_MS = 5 * 60_000;',
     "fetch(`/api/bootstrap${search}`, { cache: 'no-store' })",
   ]);
-
-  assertIncludes('roma/components/bootstrap-domain-state.ts', [
-    'roma.errors.bootstrap.domain_unavailable',
-    'roma.errors.bootstrap.domain_contract_violation',
+  assertIncludes('bob/app/api/roma/bootstrap/route.ts', [
+    "path: '/api/roma/bootstrap'",
+    'proxyToParisRoute(request, {',
   ]);
-
-  const domainScreens = [
-    ['roma/components/widgets-domain.tsx', "domainKey: 'widgets'"],
-    ['roma/components/templates-domain.tsx', "domainKey: 'templates'"],
-    ['roma/components/assets-domain.tsx', "domainKey: 'assets'"],
-    ['roma/components/team-domain.tsx', "domainKey: 'team'"],
-    ['roma/components/billing-domain.tsx', "domainKey: 'billing'"],
-    ['roma/components/usage-domain.tsx', "domainKey: 'usage'"],
-    ['roma/components/settings-domain.tsx', "domainKey: 'settings'"],
-  ];
-  for (const [file, domainKeyToken] of domainScreens) {
-    assertIncludes(file, [
-      "import { resolveBootstrapDomainState } from './bootstrap-domain-state';",
-      domainKeyToken,
-      'onClick={() => void me.reload()}',
-    ]);
-  }
 }
 
 function assertHostParityContract() {
   assertIncludes('admin/src/html/tools/dev-widget-workspace.html', [
-    'resolveRuntimeProfile',
-    "const isLocalDevStudio = runtimeProfile === 'local';",
+    "window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';",
+    "const defaultBob = isLocal ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';",
   ]);
-  assertExcludes('admin/src/html/tools/dev-widget-workspace.html', ['window.location.hostname']);
+  assertExcludes('admin/src/html/tools/dev-widget-workspace.html', ['bob-dev.pages.dev']);
 
   assertIncludes('roma/components/builder-domain.tsx', [
     'NEXT_PUBLIC_BOB_URL',
-    "if (process.env.NODE_ENV !== 'production') {",
+    'process.env.NODE_ENV ===',
   ]);
   assertExcludes('roma/components/builder-domain.tsx', ['window.location.hostname']);
 }
@@ -148,8 +132,9 @@ function assertAdminSubjectParityContract() {
 }
 
 function assertDevstudioLocalStageGate() {
-  assertIncludes('bob/lib/auth/session.ts', ["const envStage = (process.env.ENV_STAGE ?? '').trim().toLowerCase();"]);
-  assertIncludes('bob/lib/auth/session.ts', ["if (envStage !== 'local') return null;"]);
+  assertIncludes('bob/lib/api/paris/proxy-helpers.ts', ["const stage = (process.env.ENV_STAGE ?? '').trim().toLowerCase();"]);
+  assertIncludes('bob/lib/api/paris/proxy-helpers.ts', ["if (stage === 'local') {"]);
+  assertIncludes('bob/lib/api/paris/proxy-helpers.ts', ["if (resolveRequestSurface(request) === 'devstudio') {"]);
   assertIncludes('scripts/dev-up.sh', ['ENV_STAGE=local']);
 }
 
@@ -180,7 +165,7 @@ function main() {
 
   assertBootstrapProxyContract();
   assertBootstrapEnvelopeContract();
-  assertRomaUiDegradedContract();
+  assertRomaBootstrapClientContract();
   assertHostParityContract();
   assertAdminSubjectParityContract();
   assertDevstudioLocalStageGate();

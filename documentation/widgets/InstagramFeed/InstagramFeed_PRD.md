@@ -3,6 +3,7 @@
 > **Version**: 0.1 (MVP)  
 > **Status**: Draft  
 > **Competitor Analysis**: [InstagramFeed_competitoranalysis.md](./InstagramFeed_competitoranalysis.md)
+> **Runtime status**: Not implemented in current codebase. Any `/api/instagram/*` endpoints in this file are proposal-only.
 
 ---
 

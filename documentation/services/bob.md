@@ -130,7 +130,7 @@ Read-only mode (DevStudio cloud):
 Core base-config lifecycle per open session:
 1. One instance load `GET /api/accounts/:accountId/instance/:publicId?subject=account` (performed by host in message boot or by Bob in URL boot).
 2. In-memory edits only (no base-config API writes).
-3. One save/write command on explicit Save. In Roma-hosted flows, the command is delegated to Roma and Roma calls `PUT /api/accounts/:accountId/instance/:publicId?subject=account`; in URL/local flows Bob calls the named route directly. Base persistence remains immediate; snapshot convergence stays async via publish-status.
+3. One save/write command on explicit Save. In Roma-hosted flows, the command is delegated to Roma and Roma calls `PUT /api/accounts/:accountId/instance/:publicId?subject=account`; in URL/local flows Bob calls the named route directly. Base persistence remains immediate; mirror/l10n convergence stays async and is observed via l10n status routes.
 
 Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
@@ -271,7 +271,7 @@ Contracts:
 - **Canonical ownership**: uploads are account-owned and stored at:
   - original variant key: `assets/versions/{accountId}/{assetId}/{filename}`
   - non-original variant key: `assets/versions/{accountId}/{assetId}/{variant}/{filename}`
-  - runtime path derived from ref: `/assets/v/{encodeURIComponent(versionId)}`
+  - runtime path derived from ref: `/assets/v/:versionId`
 - **Trace context**: `accountId`, `publicId`, `widgetType`, `source` remain provenance fields.
 - Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are unsupported on writes.
 
@@ -406,7 +406,7 @@ See also:
 
 Bob supports instance-content localization (not editor chrome):
 
-- Locale preview uses layered overlays via `/api/accounts/:accountId/instances/:publicId/layers/locale/:locale?subject=account`.
+- Locale preview uses layered overlays via `/api/accounts/:accountId/instances/:publicId/layers/user/:locale?subject=account`.
 - Manual overrides are stored in layer=user (`/layers/user/:locale` or `/layers/user/global`) and merged last at runtime.
 - In Translate mode, edits are saved as per-field overrides (layer=user) and never change structure.
 - Structural edits (add/remove items) happen only in the base locale (Edit mode), then publish to regenerate locale overlays.

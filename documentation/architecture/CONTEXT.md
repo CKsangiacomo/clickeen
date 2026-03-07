@@ -69,8 +69,8 @@ Core base-config editing follows EXACTLY 2 Paris instance calls per open session
 1. **Load**: `GET /api/accounts/:accountId/instance/:publicId?subject=account` once per instance open (host-performed in Roma/DevStudio message boot, Bob-performed in URL boot).
 2. **Save**: `PUT /api/accounts/:accountId/instance/:publicId?subject=account` when the editor saves the base config. Persist is synchronous; snapshot/l10n convergence is async via queue/status.
 
-Async snapshot/l10n pipeline status is observed through:
-- `GET /api/accounts/:accountId/instances/:publicId/publish/status`
+Async l10n pipeline status is observed through:
+- `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account`
 
 `subject` is required on editor endpoints (`account`, `minibob`) to resolve editor policy.
 
@@ -160,11 +160,11 @@ curated_widget_instances.meta = {
 
 **Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, and saves base config via Paris (writes to Michael). Bob does not own a published/unpublished toggle; its Publish affordance is embed-code only. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
 
-**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves active account context through `/api/bootstrap`, keeps a short-lived account authz capsule for Paris calls, and opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle).
+**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for Paris calls, and opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle). In current cloud-dev, this collapses to one effective account: admin. Roma no longer exposes browser-side account switching there.
 
 **Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — HTTP write boundary (Cloudflare Workers). Reads/writes Michael using service role for core account/instance data, owns the l10n write plane in R2/KV, and handles entitlements + orchestration. Stateless compute layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). Base-config writes are transactional for persistence and validation; render snapshot generation is async (queue + publish-status), so save persistence is not blocked on snapshot pointer advancement. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
+**Paris** — HTTP write boundary (Cloudflare Workers). Reads/writes Michael using service role for core account/instance data, owns the l10n write plane in R2/KV, and handles entitlements + orchestration. Stateless compute layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). Base-config writes are transactional for persistence and validation; mirror/l10n convergence is async (queue + l10n status), so save persistence is not blocked on pointer advancement. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
@@ -172,11 +172,11 @@ curated_widget_instances.meta = {
 
 **Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and account-owned upload blobs.
 
-**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves immutable account asset version paths (`/assets/v/{encodeURIComponent(versionId)}`), writes published **instance** l10n artifacts into Tokyo/R2, and publishes Venice render snapshots.
+**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves immutable account asset version paths (`/assets/v/:versionId`), writes published **instance** l10n artifacts into Tokyo/R2, and publishes Venice render snapshots.
 
 **Asset URL contract (pre-GA strict):**
 - Full canonical contract: [AssetManagement.md](./AssetManagement.md)
-- Persisted widget config stores account assets as immutable `asset.versionId` refs; runtime materializes canonical root-relative paths: `/assets/v/{encodeURIComponent(versionId)}`.
+- Persisted widget config stores account assets as immutable `asset.versionId` refs; runtime materializes canonical root-relative paths: `/assets/v/:versionId`.
 - Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and `/assets/v/*`-backed `logoFill` strings) are outside contract and rejected on write.
 - Legacy `/arsenale/a/**` and `/arsenale/o/**` paths are outside the runtime contract and are rejected on new writes.
 - `DELETE` on an account asset version is synchronous in the delete path (metadata + variant blobs) with no snapshot rebuild/healing side effects; subsequent `/assets/v/**` reads return unavailable.
@@ -338,7 +338,7 @@ node scripts/compile-all-widgets.mjs
 - Instances are **not** created by scripts anymore.
 - Supported product/account instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
 - Local DevStudio is for widget authoring work, not for “local Roma” parity.
-- That local authoring scope includes Widget Workspace opening source defaults plus admin-account `wgt_main_*` / curated starters for config iteration and translation checks.
+- That local authoring scope currently centers on Widget Workspace loading admin-account `wgt_main_*` / `wgt_curated_*` rows for config iteration, curated authoring, and translation checks.
 
 **Local auth target (important):**
 - `bash scripts/dev-up.sh` uses local Supabase by default and ignores remote Supabase values in `.env.local`.

@@ -104,14 +104,15 @@ Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `http://localhost:4000` in dev.
 3) **Local DevStudio** opens Bob in message boot for widget authoring:
    - `admin/src/html/tools/dev-widget-workspace.html` targets local Bob by default, and Bob resolves Tokyo to `http://localhost:4000` on localhost.
-4) **Local Roma** resolves account bootstrap from local Paris and hosts Bob in message boot mode:
-   - `roma/app/api/bootstrap/route.ts` → local Paris `/api/roma/bootstrap`
-   - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`.
+4) **Cloud-dev Roma** is the supported product/account host surface:
+   - `roma/app/api/bootstrap/route.ts` proxies to Paris `/api/roma/bootstrap`
+   - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
+   - local code changes only appear there after deploy
 5) **Local Prague** loads widget marketing JSON from the repo:
    - `prague/src/lib/markdown.ts` bundles `tokyo/widgets/**/pages/*.json`.
    - `PUBLIC_TOKYO_URL=http://localhost:4000` provides tokens + overlay fetch base.
 
-Result: editing `tokyo/widgets/**` immediately changes **local** Bob + Roma + DevStudio + Prague.
+Result: editing `tokyo/widgets/**` immediately changes **local** Bob + DevStudio + Prague. Cloud-dev Roma reflects those changes only after deploy.
 
 ### A.1) Local auth issuer alignment (critical)
 Local app servers use the Supabase target chosen by `bash scripts/dev-up.sh`:
@@ -127,10 +128,10 @@ Instances are data (not code) and live in Paris/Michael. Assets live in Tokyo.
 
 1) **Roma + Bob handle account user-instance flows**:
    - Roma Widgets/Templates can create/duplicate/delete user instances via Paris.
-   - Bob publish writes base config via account `PUT`.
+   - Bob save writes base config via account `PUT`.
 2) **DevStudio Local handles curated/main authoring** (superadmin-only actions) via Paris + Tokyo.
 3) **Assets** referenced in configs point at local Tokyo (localhost:4000).
-4) **Venice embeds** render curated/user instances using Paris + Tokyo (local URLs).
+4) **Venice embeds** render curated/user instances from published Tokyo bytes only; local Paris is involved only earlier in the write/publish path.
 
 ### C) Cloud-dev propagation (explicit)
 Local changes do not auto-appear in cloud-dev. You must deploy.
@@ -184,8 +185,8 @@ If you change runtime behavior, update docs in the same PR/commit:
   - Copilot regression suite (golden set): `pnpm eval:copilot`
   - Compiler determinism: `node scripts/compile-all-widgets.mjs`
   - Quick grep for removed/renamed surfaces:
-    - `rg -n "/api/ai/|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
-    - `rg -n "claims/minibob/complete|/api/accounts/.*/assets|GET /api/instances|PUT /api/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`
-    - `rg -n "/api/roma/bootstrap|/api/roma/widgets|/api/minibob/handoff/start|/api/minibob/handoff/complete|/api/accounts/:accountId/assets" documentation --glob '*.md'`
+    - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/ai/minibob/session|/api/ai/minibob/grant|/api/ai/grant|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
+    - `rg -n "claims/minibob/complete|/api/assets/:accountId|GET /api/accounts/:accountId/instance/:publicId|PUT /api/accounts/:accountId/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`
+    - `rg -n "/api/roma/bootstrap|/api/roma/widgets|/api/minibob/handoff/start|/api/session/finish|/api/assets/:accountId" documentation --glob '*.md'`
 
 When drift is found: update docs to match the shipped code/config immediately; treat mismatches as P0 doc bugs.

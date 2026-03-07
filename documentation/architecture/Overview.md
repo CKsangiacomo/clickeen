@@ -58,7 +58,7 @@ Mutable pointer  (tiny, always fetched fresh)
 | Domain | Mutable pointer | Immutable artifact |
 |--------|----------------|--------------------|
 | **Publish** | `published.json` (`no-store`) | Render artifacts at `/renders/instances/{publicId}/{fingerprint}/...` (cache forever) |
-| **Assets** | *(none in runtime contract; config stores immutable `asset.versionId` refs)* | Asset bytes at `/assets/v/{encodeURIComponent(versionId)}` |
+| **Assets** | *(none in runtime contract; config stores immutable `asset.versionId` refs)* | Asset bytes at `/assets/v/:versionId` |
 | **Auth** | JWT (short-lived, refreshable) | userId claim (stable identity) |
 | **Authz** | HMAC-signed capsule (expires) | Role/account snapshot at issuance |
 | **Overlays** | Layer pointer in DB | Materialized overlay file on R2 (fingerprinted) |
@@ -173,28 +173,40 @@ Each release proceeds in 3 steps:
 
 #### Bob (Pages)
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
-- Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/roma/bootstrap`, `/api/roma/templates`) backed by Paris/Michael boundaries.
+- Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/roma/bootstrap`, `/api/roma/widgets`, `/api/roma/templates`) backed by Paris/Michael boundaries.
 
 #### Roma (Pages)
 - Roma is the domain shell (`/home`, `/widgets`, `/templates`, `/builder`, ...).
 - Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Paris `/api/roma/bootstrap`), including an account authz capsule and an account entitlement snapshot.
+- In current cloud-dev, Roma resolves one effective account context only: the admin account. It no longer exposes account switching or browser-side account preference overrides.
 - Roma uses named same-origin routes for Paris orchestration endpoints and injects short-lived authz headers:
   - `x-ck-authz-capsule` for account-scoped calls
+- Roma also serves direct-Michael account member reads on same-origin routes (`GET /api/accounts/:accountId/members`).
 - Roma Builder embeds Bob with `boot=message` and sends explicit `ck:open-editor` payloads after `bob:session-ready`.
 
 #### Paris (Workers)
 - Stateless write boundary over Michael (Supabase) plus Paris-owned l10n write-plane storage.
 - Public endpoints are under `/api/*`.
-- Shipped in this repo snapshot: `GET /api/instance/:publicId` (public; user-owned rows are published-only), account-scoped editor endpoints (`GET/PUT /api/accounts/:accountId/instance/:publicId?subject=account`, `GET/PUT /api/accounts/:accountId/locales`), l10n/layers (`/api/accounts/:accountId/instances/:publicId/l10n/*`, `/api/accounts/:accountId/instances/:publicId/layers/*`), Roma domain endpoints (`GET /api/roma/bootstrap`, `GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`), `POST /api/ai/grant`, `POST /api/ai/outcome`.
+- Shipped in this repo snapshot:
+  - Public read: `GET /api/instance/:publicId` (user-owned rows are published-only).
+  - Account editor endpoints: `GET/PUT /api/accounts/:accountId/instance/:publicId?subject=account`, `PUT /api/accounts/:accountId/locales`.
+  - L10n/layers: `GET /api/accounts/:accountId/instances/:publicId/l10n/status`, `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected`, `GET /api/accounts/:accountId/instances/:publicId/layers`, `GET/PUT/DELETE /api/accounts/:accountId/instances/:publicId/layers/:layer/:layerKey`.
+  - Roma domain endpoints: `GET /api/roma/bootstrap`, `GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`.
+  - Signup/handoff endpoints: `POST /api/accounts`, `POST /api/minibob/handoff/start`, `POST /api/minibob/handoff/complete`.
+  - AI endpoints: `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`.
+- Current cloud-dev account rule:
+  - `POST /api/accounts` does not mint new accounts there; non-local stages reject account creation and keep the environment on the admin account.
+  - `POST /api/minibob/handoff/complete` accepts only the admin account in non-local stages.
 - Layered l10n endpoints are canonical.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
-- Base-config writes are transactional for persistence + validation; snapshot generation is async (queue + publish-status) and does not block save persistence on pointer advancement.
+- Base-config writes are transactional for persistence + validation; mirror/l10n convergence is async (queue + l10n status) and does not block save persistence on pointer advancement.
 
 #### Venice (Workers)
 - Public embed surface (third-party websites only talk to Venice).
-- Runtime combines Tokyo widget assets with Paris instance config and locale overlays from Tokyo.
+- Runtime reads only Tokyo live pointers + fingerprinted config/text/widget bytes.
+- Public `/e/:publicId` and `/r/:publicId` do **0** Paris/Supabase calls at request time.
 - Public snapshot serving is revision-coherent: Venice reads one published revision and never mixes artifacts from previous revisions.
 - If a locale artifact is missing in the current revision, Venice returns unavailable for that locale (no serve-time locale fallback).
 - Public `/e/:publicId` and `/r/:publicId` serve snapshots from published pointers only (no public dynamic fallback). Dynamic rendering is restricted to controlled internal bypass.
@@ -209,7 +221,7 @@ Each release proceeds in 3 steps:
 - Canonical asset management contract (cross-surface behavior): [AssetManagement.md](./AssetManagement.md)
 - Handles canonical account-owned uploads (`POST /assets/upload`) and stores asset bytes + manifest metadata in Tokyo R2.
 - Paris validates account-owned asset refs on instance writes, but this repo snapshot does not persist a canonical "where used" table in Michael.
-- Serves immutable account asset version reads (`GET /assets/v/{versionId}`); legacy `/arsenale/*` paths are hard-failed.
+- Serves immutable account asset version reads (`GET /assets/v/:versionId`); legacy `/arsenale/*` paths are hard-failed.
 - Asset delete is synchronous hard delete (`metadata + blob delete`) with no snapshot rebuild enqueue or runtime healing.
 - Tokyo-worker exposes integrity endpoints for managed surfaces (`GET /assets/integrity/:accountId`, `GET /assets/integrity/:accountId/:assetId`).
 - Writes l10n text/meta/config packs and live pointers to Tokyo/R2 from self-contained Paris jobs; Tokyo-worker does not read Michael/Supabase to discover overlay state.
@@ -219,7 +231,7 @@ Each release proceeds in 3 steps:
 - Ownership boundary is account (`account_id`).
 - End-to-end flow:
   1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional public/widget trace headers).
-  2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable version URL (`/assets/v/{encodeURIComponent(versionId)}`).
+  2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable version URL (`/assets/v/:versionId`).
   3. Paris validates asset refs from instance config writes in the same request path.
   4. Roma Assets reads/deletes via Roma asset routes (`/api/assets/:accountId*`) which forward to Tokyo-worker with Berlin session auth; Tokyo-worker enforces account membership role.
 
@@ -263,7 +275,7 @@ Each release proceeds in 3 steps:
 
 **Caching**
 - Tokyo (`/dieter/**`, `/widgets/**`) uses long caching for versioned assets; avoid caching `spec.json` aggressively in dev.
-- Venice embed HTML uses conservative cache headers for draft vs published instances.
+- Venice uses three cache classes: short-cache embed shell (`/e`), `no-store` live pointers (`/r`, locale/meta live pointers), and immutable fingerprinted packs/assets.
 
 **Access control**
 - DevStudio behind Cloudflare Access (required).
@@ -287,7 +299,7 @@ Each release proceeds in 3 steps:
   - `PARIS_DEV_JWT` is **local/dev-worker-only** and must never exist in Pages prod env vars.
 - **Caching**:
   - Tokyo assets are long-cacheable when versioned; avoid cache on `spec.json` when iterating in dev.
-  - Venice sets conservative cache headers for embed HTML (draft vs published).
+  - Venice serves short-cache shell HTML, `no-store` live pointers, and immutable fingerprinted packs/assets.
 
 ---
 
@@ -322,15 +334,10 @@ Each release proceeds in 3 steps:
 │                           EMBED FLOW                                    │
 │                                                                         │
 │  ┌──────────────┐    GET /e/:publicId    ┌─────────┐    ┌─────────┐   │
-│  │ Third-party  │ ──────────────────────►│ Venice  │───►│  Paris  │   │
-│  │   Website    │                        │  Edge   │    │   API   │   │
-│  └──────────────┘ ◄──────────────────────└─────────┘    └────┬────┘   │
-│                     SSR HTML                                  │        │
-│                                                               ▼        │
-│                                                          ┌─────────┐   │
-│                                                          │ Michael │   │
-│                                                          │   DB    │   │
-│                                                          └─────────┘   │
+│  │ Third-party  │ ──────────────────────►│ Venice  │───►│  Tokyo  │   │
+│  │   Website    │                        │  Edge   │    │   R2    │   │
+│  └──────────────┘ ◄──────────────────────└─────────┘    └─────────┘   │
+│                     SSR HTML + bootstrapped state                       │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -401,7 +408,7 @@ Base config exists in EXACTLY 2 places during editing:
 4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/accounts/:accountId/instance/:publicId?subject=account`  → Saves to Michael and enqueues async snapshot/l10n pipeline
 
 Snapshot/l10n convergence is observed via:
-- `GET /api/accounts/:accountId/instances/:publicId/publish/status`
+- `GET /api/accounts/:accountId/instances/:publicId/l10n/status`
 ```
 
 In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. In Roma-hosted account flows, save/l10n mutations also return through the host boundary before hitting the account routes.
@@ -540,31 +547,34 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 ## Venice Embed Architecture
 
-**Current Status:** Shipped SSR embed assembler (`/e/:publicId`) with published-only enforcement. (Submission route is hard-cut; `/embed/pixel` remains as compat no-op `204`.)
+**Current Status:** Shipped DB-free public embed runtime. Venice assembles `/e/:publicId` from Tokyo-only bytes and published-only pointers. Submission routes are hard-cut; `/embed/pixel` remains a compatibility no-op (`204`).
 
 ### Endpoints
 
 | Route | Purpose |
 |-------|---------|
-| `GET /e/:publicId` | SSR widget HTML |
-| `/embed/v{semver}/loader.js` | Overlay/popup loader |
+| `GET /e/:publicId` | Embed shell HTML + runtime bootstrap |
+| `GET /r/:publicId` | Published live pointer proxy (`no-store`) |
+| `GET /r/:publicId?meta=1&locale=...` | SEO/GEO meta pointer proxy (`no-store`) |
+| `/embed/latest/loader.js` | Canonical loader alias |
+| `/embed/v2/loader.js` | Versioned loader |
 | `/embed/pixel` | Compatibility no-op (`204`) |
 
 ### Caching Strategy
 
-| State | Cache-Control |
-|-------|---------------|
-| Published | `public, max-age=300, s-maxage=600, stale-while-revalidate=1800` |
-| Draft | `public, max-age=60, s-maxage=60, stale-while-revalidate=300` |
-| Preview (`?ts`) | `no-store` |
+| Artifact | Cache-Control |
+|----------|---------------|
+| `/e/:publicId` shell HTML | `public, max-age=60, s-maxage=86400` |
+| Live pointers (`/r`, locale/meta live pointers) | `no-store` |
+| Fingerprinted packs + widget assets | `public, max-age=31536000, immutable` |
 
 ### Front-Door Pattern
 
 All third-party embed traffic terminates at Venice:
 - Browsers **never** call Paris directly
-- Venice validates tokens/branding/entitlements
-- Venice proxies to Paris over private channel
-- Venice enforces branding flags from Paris responses
+- Venice fetches only Tokyo live pointers and immutable runtime bytes
+- Paris + Tokyo-worker publish those bytes ahead of time during save/publish flows
+- If required Tokyo bytes are missing, Venice returns unavailable instead of healing or falling back
 
 ---
 
@@ -578,18 +588,18 @@ User opens widget → Host (Roma/DevStudio message boot) or Bob (URL boot) GET /
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
                   → User clicks Save
-                  → Bob PUT /api/accounts/:accountId/instance/:publicId?subject=account
                   → Paris writes to Michael
+                  → Paris/Tokyo-worker refresh Tokyo config/text/meta/live-pointer bytes when the instance is live
 ```
 
 ### 2. Embed View Flow
 
 ```
 Visitor loads embed → Venice GET /e/:publicId
-	                    → Venice calls Paris for instance (`GET /api/instance/:publicId`)
-	                    → Paris reads from Michael
-	                    → Venice renders SSR HTML from Tokyo widget assets
-	                    → Venice optional pixel endpoint is currently no-op (`204`)
+                    → Venice GET /r/:publicId (Tokyo live pointer)
+                    → Venice GET Tokyo config pack + locale text pointer + text pack + widget HTML
+                    → Venice returns SSR HTML / bootstraps CK_WIDGET
+                    → optional /embed/pixel remains a no-op (`204`)
 ```
 
 ### 3. Form Submission Flow
@@ -598,19 +608,6 @@ Visitor loads embed → Venice GET /e/:publicId
 Submission proxy path hard-cut in this repo snapshot.
 `POST /s/:publicId` and Paris `/api/submit/:publicId` are not active runtime contracts.
 ```
-
----
-
-## Plans & Entitlements
-
-Planned (not enforced in this repo snapshot).
-
-| Plan | Active Widgets | Branding | Premium Templates |
-|------|----------------|----------|-------------------|
-| Free | 1 | Enforced | Preview only |
-| Paid | Unlimited | Removable | Full access |
-
-Paris returns effective entitlements; Venice enforces branding flags exactly.
 
 ---
 
@@ -626,11 +623,8 @@ Paris returns effective entitlements; Venice enforces branding flags exactly.
 
 ## Security & Privacy
 
-- **RLS:** Supabase row-level security on all tables
-- **Embed tokens:** 128-bit random, rotatable, revocable
-- **Rate limiting:** Per-IP and per-instance on writes
 - **Embeds:** No third-party scripts, no cookies, no storage
-- **Secrets:** Supabase service role in Paris; LLM provider keys in San Francisco
+- **Secrets:** Supabase service role stays in Paris; LLM provider keys stay in San Francisco
 - **CSP:** Strict; no third-party; `form-action 'self'`
 
 ---

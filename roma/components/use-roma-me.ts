@@ -49,54 +49,11 @@ export type ResolvedRomaContext = {
   accountSlug: string;
 };
 
-const ROMA_ACTIVE_ACCOUNT_STORE_KEY = '__CK_ROMA_ACTIVE_ACCOUNT_ID_V1__';
-const ROMA_EMPTY_ACCOUNT_CACHE_KEY = '__CK_ROMA_NO_ACCOUNT__';
-
 function normalizeAccountId(value: unknown): string | null {
   const normalized = String(value || '').trim();
   return normalized || null;
 }
 
-function readAccountIdFromLocation(): string | null {
-  if (typeof window === 'undefined') return null;
-  const url = new URL(window.location.href);
-  return normalizeAccountId(url.searchParams.get('accountId'));
-}
-
-function readStoredAccountIdPreference(): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    return normalizeAccountId(window.localStorage.getItem(ROMA_ACTIVE_ACCOUNT_STORE_KEY));
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredAccountIdPreference(accountId: string | null): void {
-  if (typeof window === 'undefined') return;
-  try {
-    if (accountId) {
-      window.localStorage.setItem(ROMA_ACTIVE_ACCOUNT_STORE_KEY, accountId);
-      return;
-    }
-    window.localStorage.removeItem(ROMA_ACTIVE_ACCOUNT_STORE_KEY);
-  } catch {
-    // Ignore local storage failures.
-  }
-}
-
-function resolveRequestedAccountId(): string | null {
-  const fromLocation = readAccountIdFromLocation();
-  if (fromLocation) {
-    writeStoredAccountIdPreference(fromLocation);
-    return fromLocation;
-  }
-  return readStoredAccountIdPreference();
-}
-
-function toAccountCacheKey(accountId: string | null): string {
-  return accountId || ROMA_EMPTY_ACCOUNT_CACHE_KEY;
-}
 
 export function resolveDefaultRomaContext(data: RomaMeResponse | null): ResolvedRomaContext {
   const defaultAccountId = normalizeAccountId(data?.defaults?.accountId);
@@ -158,9 +115,9 @@ function resolveRomaMeStore(): RomaMeStore {
   return next;
 }
 
-function readRomaMeCache(accountId: string | null): UseRomaMeState | null {
+function readRomaMeCache(): UseRomaMeState | null {
   const store = resolveRomaMeStore();
-  const key = toAccountCacheKey(accountId);
+  const key = '__default__';
   const entry = store.cache[key] ?? null;
   if (!entry) return null;
   if (Date.now() >= entry.expiresAt) {
@@ -170,10 +127,10 @@ function readRomaMeCache(accountId: string | null): UseRomaMeState | null {
   return entry.state;
 }
 
-function writeRomaMeCache(accountId: string | null, state: UseRomaMeState): UseRomaMeState {
+function writeRomaMeCache(state: UseRomaMeState): UseRomaMeState {
   const store = resolveRomaMeStore();
   const ttl = state.error ? ROMA_ME_ERROR_TTL_MS : resolveRomaMeSuccessTtlMs(state.data);
-  const key = toAccountCacheKey(accountId);
+  const key = '__default__';
   store.cache[key] = {
     state,
     expiresAt: Date.now() + ttl,
@@ -181,10 +138,9 @@ function writeRomaMeCache(accountId: string | null, state: UseRomaMeState): UseR
   return state;
 }
 
-async function fetchRomaMeState(accountId: string | null): Promise<UseRomaMeState> {
+async function fetchRomaMeState(): Promise<UseRomaMeState> {
   try {
-    const search = accountId ? `?accountId=${encodeURIComponent(accountId)}` : '';
-    const response = await fetch(`/api/bootstrap${search}`, { cache: 'no-store' });
+    const response = await fetch('/api/bootstrap', { cache: 'no-store' });
     const payload = (await response.json().catch(() => null)) as RomaMeResponse | { error?: unknown } | null;
     const authErrorReason = (payload as any)?.error?.reasonKey || (payload as any)?.error;
     if (response.ok && authErrorReason) {
@@ -193,11 +149,6 @@ async function fetchRomaMeState(accountId: string | null): Promise<UseRomaMeStat
     if (!response.ok) {
       const reason = (payload as any)?.error?.reasonKey || (payload as any)?.error || `HTTP_${response.status}`;
       throw new Error(typeof reason === 'string' ? reason : 'coreui.errors.auth.required');
-    }
-
-    const resolvedAccountId = normalizeAccountId((payload as RomaMeResponse)?.defaults?.accountId);
-    if (resolvedAccountId) {
-      writeStoredAccountIdPreference(resolvedAccountId);
     }
 
     return {
@@ -215,11 +166,11 @@ async function fetchRomaMeState(accountId: string | null): Promise<UseRomaMeStat
   }
 }
 
-async function loadRomaMeState(force: boolean, accountId: string | null): Promise<UseRomaMeState> {
+async function loadRomaMeState(force: boolean): Promise<UseRomaMeState> {
   const store = resolveRomaMeStore();
-  const key = toAccountCacheKey(accountId);
+  const key = '__default__';
   if (!force) {
-    const cached = readRomaMeCache(accountId);
+    const cached = readRomaMeCache();
     if (cached) return cached;
   } else {
     delete store.cache[key];
@@ -228,8 +179,8 @@ async function loadRomaMeState(force: boolean, accountId: string | null): Promis
   const inFlight = store.inFlight[key];
   if (inFlight) return inFlight;
 
-  store.inFlight[key] = fetchRomaMeState(accountId)
-    .then((nextState) => writeRomaMeCache(accountId, nextState))
+  store.inFlight[key] = fetchRomaMeState()
+    .then((nextState) => writeRomaMeCache(nextState))
     .finally(() => {
       delete resolveRomaMeStore().inFlight[key];
     });
@@ -244,15 +195,14 @@ export function useRomaMe() {
   });
 
   const load = useCallback(async (force: boolean) => {
-    const requestedAccountId = resolveRequestedAccountId();
-    const cached = !force ? readRomaMeCache(requestedAccountId) : null;
+    const cached = !force ? readRomaMeCache() : null;
     if (cached) {
       setState(cached);
       return;
     }
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    const nextState = await loadRomaMeState(force, requestedAccountId);
+    const nextState = await loadRomaMeState(force);
     setState(nextState);
   }, []);
 
@@ -260,31 +210,14 @@ export function useRomaMe() {
     await load(true);
   }, [load]);
 
-  const setActiveAccount = useCallback(
-    async (accountId: string | null) => {
-      writeStoredAccountIdPreference(normalizeAccountId(accountId));
-      await load(true);
-    },
-    [load],
-  );
-
   useEffect(() => {
     void load(false);
   }, [load]);
-
-  useEffect(() => {
-    if (!state.data) return;
-    const resolvedAccountId = normalizeAccountId(state.data.defaults.accountId);
-    if (resolvedAccountId) {
-      writeStoredAccountIdPreference(resolvedAccountId);
-    }
-  }, [state.data]);
 
   return {
     loading: state.loading,
     data: state.data,
     error: state.error,
     reload,
-    setActiveAccount,
   };
 }
