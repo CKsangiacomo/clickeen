@@ -140,14 +140,17 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 - Base copy: `tokyo/widgets/*/pages/*.json`
 - Chrome base: `prague/content/base/v1/chrome.json`
 - Allowlists: `prague/content/allowlists/v1/**`
-- Overlays: `tokyo/l10n/prague/{pageId}/{layer}/{layerKey}/{baseFingerprint}.ops.json` (locale layer only in Phase 1)
+- Overlays: `tokyo/l10n/prague/{pageId}/locale/{locale}/{baseFingerprint}.ops.json`
 
 **Pipeline**
 
 - Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires `PARIS_DEV_JWT`).
 - Provider: OpenAI for Prague strings (system-owned); instance l10n agents follow the **Tiered AI Profile** (DeepSeek for Free, OpenAI/Anthropic for Paid).
 - `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/l10n/prague/**`.
-- `scripts/prague-l10n/verify.mjs` validates allowlists + overlay paths.
+- `scripts/prague-l10n/verify.mjs` is a read-only artifact validator:
+  - validates index/overlay presence and schema
+  - validates overlay fingerprint alignment
+  - does not mutate files or enforce allowlist policy
   - Default mode is **best-available**: it validates the currently published overlay fingerprints (from `index.json`) and will **warn** on missing locales instead of blocking builds.
   - Strict mode is `node scripts/prague-l10n/verify.mjs --strict-latest` (or `PRAGUE_L10N_VERIFY_STRICT=1`) and enforces “latest base fingerprint translated for all locales”.
 - `scripts/prague-sync.mjs` is the orchestrator used by CI: verify → (translate only if needed) → publish to Tokyo/R2.

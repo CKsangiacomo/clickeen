@@ -116,13 +116,9 @@ Roma control-plane routes proxy account-safe operations for product UI:
 8. Paris config validation rejects legacy media URL persistence and enforces `asset.ref`.
 9. Bob write path persists immutable refs (`asset.ref` / `poster.ref`) only.
 10. Roma assets domain uses strict upload/list/bulk-upload/delete contract only.
-11. Keep one migration utility:
-   - `scripts/migrate-asset-ref-hard-cut.mjs` (widget config normalization only; runtime manifest migration stage is retired after hard-cut)
-12. Migration run policy:
-   - dry-run first
-   - apply second
-   - post-apply dry-run must report no further config rewrites
-13. Delete obsolete legacy asset migration scripts and helpers outside the dedicated migration utility.
+11. Migration utility is retired after hard-cut completion (no persistent migration script in the repo).
+12. Delete obsolete legacy asset migration scripts and helpers.
+13. Post-cutover validation confirms no legacy config rewrite path remains.
 14. Keep docs aligned with this contract.
 15. Run validation matrix (classification, ownership, exact size, render path, delete, oversize fail, legacy rejection).
 16. Cloud-dev cutover: only new contract accepted; legacy contract rejected by design.

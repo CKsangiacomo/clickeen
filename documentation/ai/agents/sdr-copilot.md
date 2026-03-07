@@ -379,7 +379,7 @@ The golden set protects:
 Location + runner:
 - `fixtures/copilot/prompts.jsonl`
 - `fixtures/copilot/widgets/{widgetType}.json`
-- `scripts/eval-copilot.mjs` (`pnpm eval:copilot`)
+- Golden-set checks are manual/ad-hoc (no required scripted CI gate)
 
 ---
 

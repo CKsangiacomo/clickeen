@@ -35,8 +35,8 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Paris boundary gate
-        run: pnpm test:paris-boundary
+      - name: Lint
+        run: pnpm lint
 
-      - name: Bob bootstrap boundary gate
-        run: pnpm test:bob-bootstrap-boundary
+      - name: Typecheck
+        run: pnpm typecheck

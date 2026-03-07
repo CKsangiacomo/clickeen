@@ -24,7 +24,6 @@ BERLIN_INSPECTOR_PORT=9234
 DEV_UP_HEALTH_ATTEMPTS="${DEV_UP_HEALTH_ATTEMPTS:-60}"
 DEV_UP_HEALTH_INTERVAL="${DEV_UP_HEALTH_INTERVAL:-1}"
 DEV_UP_FULL_REBUILD=0
-DEV_UP_PRAGUE_L10N=0
 DEV_UP_RESET=0
 NEEDS_PRAGUE_L10N_TRANSLATE=0
 STARTED_PID=""
@@ -367,17 +366,16 @@ for arg in "$@"; do
       DEV_UP_FULL_REBUILD=1
       ;;
     --prague-l10n|--l10n)
-      DEV_UP_PRAGUE_L10N=1
+      echo "[dev-up] --prague-l10n is now automatic; keeping startup behavior unchanged."
       ;;
     --reset)
       DEV_UP_RESET=1
       ;;
     --help|-h)
-      echo "Usage: bash scripts/dev-up.sh [--full] [--prague-l10n] [--reset]"
+      echo "Usage: bash scripts/dev-up.sh [--full] [--reset]"
       echo ""
       echo "Options:"
       echo "  --full        Runs workspace build before starting services."
-      echo "  --prague-l10n Verifies Prague overlays and runs translation in the background if needed."
       echo "  --reset       Force a clean restart of the local stack managed by dev-up."
       exit 0
       ;;
@@ -518,11 +516,7 @@ else
     echo "[dev-up] Prague l10n overlays OK"
   else
     echo "[dev-up] Prague l10n overlays are out of date. See $PRAGUE_L10N_VERIFY_LOG"
-    if [ "$DEV_UP_PRAGUE_L10N" = "1" ]; then
-      NEEDS_PRAGUE_L10N_TRANSLATE=1
-    else
-      echo "[dev-up] Re-run with --prague-l10n to regenerate overlays in background."
-    fi
+    NEEDS_PRAGUE_L10N_TRANSLATE=1
   fi
 fi
 
@@ -664,9 +658,9 @@ fi
 
 if [ "$NEEDS_PRAGUE_L10N_TRANSLATE" = "1" ]; then
   if [ -z "${OPENAI_API_KEY:-}" ]; then
-    echo "[dev-up] --prague-l10n requested, but OPENAI_API_KEY is missing. Skipping translation."
+    echo "[dev-up] Prague l10n overlays are stale, but OPENAI_API_KEY is missing. Skipping translation."
   elif ! wait_for_url "http://localhost:3002/healthz" "SanFrancisco (for Prague l10n)" "$LOG_DIR/sanfrancisco.dev.log"; then
-    echo "[dev-up] --prague-l10n requested, but SanFrancisco is not reachable. Skipping translation."
+    echo "[dev-up] Prague l10n overlays are stale, but SanFrancisco is not reachable. Skipping translation."
   else
     echo "[dev-up] Starting Prague l10n translate in background"
     PRAGUE_L10N_TRANSLATE_LOG="$LOG_DIR/prague-l10n.translate.log"

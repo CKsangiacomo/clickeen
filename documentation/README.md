@@ -182,7 +182,6 @@ If you change runtime behavior, update docs in the same PR/commit:
 
 ## Drift Detection (cheap checks)
 
-  - Copilot regression suite (golden set): `pnpm eval:copilot`
   - Compiler determinism: `node scripts/compile-all-widgets.mjs`
   - Quick grep for removed/renamed surfaces:
     - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/ai/minibob/session|/api/ai/minibob/grant|/api/ai/grant|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`

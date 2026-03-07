@@ -109,15 +109,14 @@ Files:
   - `{ "currentConfig": {...}, "controls": [...] }`
 - `fixtures/copilot/prompts.jsonl`
   - one JSON object per line (comments allowed with `#`)
-- Runner: `scripts/eval-copilot.mjs`
-  - Script: `pnpm eval:copilot`
+- Runner: golden-set execution is manual/ad-hoc (no mandatory scripted CI gate)
 
 Current target size:
 - ≥ 50 prompts (enough to catch regressions, small enough to stay fast)
 
 How to run:
 - `bash scripts/dev-up.sh`
-- `pnpm eval:copilot`
+- Execute fixture-level harnesses owned by the active service test suite.
 
 How to expand safely:
 - Prefer prompts that hit deterministic routes (explain/clarify/guards) to avoid upstream flakiness.

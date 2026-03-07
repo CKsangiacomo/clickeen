@@ -64,9 +64,8 @@ Policy split notes (local runtime):
 - SDR path is constrained to FAQ sales workflow (rewrite existing Q&A, or website-based FAQ personalization).
 - CS path handles general control-driven editor requests and does not use the SDR website/seller clarification loop.
 
-Verification scripts:
-- `scripts/smoke-ai.mjs`
-- `scripts/eval-copilot.mjs`
+Verification:
+- service-owned integration tests and cloud-dev runtime checks.
 
 Documentation touched for this rollout:
 - `documentation/ai/overview.md`

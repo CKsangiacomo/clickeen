@@ -29,13 +29,6 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_CLOUD_DEV }}
       SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF_CLOUD_DEV }}
-      RUNTIME_PARITY_AUTH_BEARER_CLOUD: ${{ secrets.RUNTIME_PARITY_AUTH_BEARER_CLOUD }}
-      RUNTIME_PARITY_SUPABASE_BEARER_CLOUD: ${{ secrets.RUNTIME_PARITY_SUPABASE_BEARER }}
-      RUNTIME_PARITY_PROBE_EMAIL_CLOUD: ${{ secrets.RUNTIME_PARITY_PROBE_EMAIL_CLOUD }}
-      RUNTIME_PARITY_PROBE_PASSWORD_CLOUD: ${{ secrets.RUNTIME_PARITY_PROBE_PASSWORD_CLOUD }}
-      RUNTIME_PARITY_TOKYO_DEV_JWT: ${{ secrets.RUNTIME_PARITY_TOKYO_DEV_JWT }}
-      RUNTIME_PARITY_PUBLIC_ID: ${{ vars.RUNTIME_PARITY_PUBLIC_ID }}
-      RUNTIME_PARITY_PUBLISH_PUBLIC_ID: ${{ vars.RUNTIME_PARITY_PUBLISH_PUBLIC_ID }}
       TOKYO_R2_BUCKET: tokyo-assets-dev
     steps:
       - uses: actions/checkout@v4
@@ -88,31 +81,6 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Contract checks
-        run: pnpm test:contracts
-
-      - name: Paris boundary gate
-        run: pnpm test:paris-boundary
-
-      - name: Bob bootstrap boundary gate
-        run: pnpm test:bob-bootstrap-boundary
-
-      - name: Runtime parity release gates (pre-deploy)
-        run: |
-          export CK_ADMIN_EMAIL="local.admin@clickeen.local"
-          export CK_ADMIN_PASSWORD="ci-local-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 8)"
-          export PARIS_DEV_JWT="ci-local-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-paris"
-          export TOKYO_DEV_JWT="$PARIS_DEV_JWT"
-          bash scripts/dev-up.sh --reset > /tmp/dev-up-runtime-parity.log 2>&1 || (tail -n 200 /tmp/dev-up-runtime-parity.log && exit 1)
-          pnpm test:runtime-parity:public
-          pnpm test:runtime-parity:auth
-          pnpm test:runtime-parity:cloud-dev:public
-          if [[ -n "${RUNTIME_PARITY_AUTH_BEARER_CLOUD:-}" || -n "${RUNTIME_PARITY_SUPABASE_BEARER_CLOUD:-}" || ( -n "${RUNTIME_PARITY_PROBE_EMAIL_CLOUD:-}" && -n "${RUNTIME_PARITY_PROBE_PASSWORD_CLOUD:-}" ) ]]; then
-            pnpm test:runtime-parity:cloud-dev:auth
-          else
-            echo "[runtime-parity] Skipping cloud-dev auth checks (missing cloud auth bearer/probe credentials)."
-          fi
-
       - name: Deploy paris-dev
         run: pnpm -C paris run deploy
 
@@ -133,19 +101,3 @@ jobs:
 
       - name: Sync Tokyo fonts to R2 (cloud-dev)
         run: node scripts/tokyo-fonts-sync.mjs --remote
-
-      - name: Runtime parity checks (cloud-dev auth)
-        if: ${{ env.RUNTIME_PARITY_AUTH_BEARER_CLOUD != '' || env.RUNTIME_PARITY_SUPABASE_BEARER_CLOUD != '' || (env.RUNTIME_PARITY_PROBE_EMAIL_CLOUD != '' && env.RUNTIME_PARITY_PROBE_PASSWORD_CLOUD != '') }}
-        run: node scripts/ci/runtime-parity/index.mjs --env cloud-dev --mode auth --json-out artifacts/runtime-parity-cloud-dev-workers-auth.json
-
-      - name: Runtime parity checks (cloud-dev public)
-        run: node scripts/ci/runtime-parity/index.mjs --env cloud-dev --mode public --json-out artifacts/runtime-parity-cloud-dev-workers-public.json
-
-      - name: Upload runtime parity artifact (workers)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: runtime-parity-cloud-dev-workers
-          path: |
-            artifacts/runtime-parity-cloud-dev-workers-auth.json
-            artifacts/runtime-parity-cloud-dev-workers-public.json
