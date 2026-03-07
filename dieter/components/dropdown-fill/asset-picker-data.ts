@@ -2,12 +2,11 @@ import { isUuid } from '@clickeen/ck-contracts';
 import { type AssetPickerOverlayItem } from './asset-picker-overlay';
 
 export type MediaAssetChoice = {
-  assetId: string;
-  accountId: string;
-  normalizedFilename: string;
+  assetRef: string;
+  filename: string;
+  assetType: string;
   contentType: string;
   sizeBytes: number;
-  usageCount: number;
   url: string;
 };
 
@@ -34,27 +33,6 @@ export function formatAssetSizeLabel(sizeBytes: number): string {
   return `${(safe / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function pickAssetVariantUrl(asset: Record<string, unknown>): string | null {
-  const variantsRaw = Array.isArray(asset.variants) ? (asset.variants as Array<Record<string, unknown>>) : [];
-  if (!variantsRaw.length) return null;
-
-  const normalized = variantsRaw
-    .map((variant) => {
-      const variantName = String(variant.variant || '').trim().toLowerCase();
-      const url = String(variant.url || '').trim();
-      if (!url || (!url.startsWith('/') && !/^https?:\/\//i.test(url))) return null;
-      return {
-        variant: variantName,
-        url,
-      };
-    })
-    .filter((entry): entry is { variant: string; url: string } => Boolean(entry));
-
-  if (!normalized.length) return null;
-  const original = normalized.find((entry) => entry.variant === 'original');
-  return (original || normalized[0])?.url || null;
-}
-
 async function fetchMediaAssetChoices(kind: AssetPickerMediaKind): Promise<MediaAssetChoice[]> {
   const context = resolveImageAssetPickerContext();
   if (!context) {
@@ -78,22 +56,26 @@ async function fetchMediaAssetChoices(kind: AssetPickerMediaKind): Promise<Media
   const assets = Array.isArray(payload?.assets) ? (payload?.assets as Array<Record<string, unknown>>) : [];
   return assets
     .map((asset) => {
-      const assetId = String(asset.assetId || '').trim();
-      if (!isUuid(assetId)) return null;
+      const assetRef = String(asset.assetRef || '').trim();
+      if (!assetRef.startsWith('assets/versions/')) return null;
+      const assetType = String(asset.assetType || '').trim().toLowerCase();
+      if (kind === 'image') {
+        if (assetType !== 'image' && assetType !== 'vector') return null;
+      } else if (assetType !== 'video') {
+        return null;
+      }
       const contentType = String(asset.contentType || '').trim().toLowerCase();
-      if (!contentType.startsWith(`${kind}/`)) return null;
-      const normalizedFilename = String(asset.normalizedFilename || '').trim() || `asset-${assetId.slice(0, 8)}`;
+      const filename = String(asset.filename || '').trim();
+      if (!filename) return null;
       const sizeBytes = Number(asset.sizeBytes);
-      const usageCount = Number(asset.usageCount);
-      const url = pickAssetVariantUrl(asset);
-      if (!url) return null;
+      const url = String(asset.url || '').trim();
+      if (!url || (!url.startsWith('/') && !/^https?:\/\//i.test(url))) return null;
       return {
-        assetId,
-        accountId: context.accountId,
-        normalizedFilename,
+        assetRef,
+        filename,
+        assetType,
         contentType,
         sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
-        usageCount: Number.isFinite(usageCount) ? Math.max(0, Math.trunc(usageCount)) : 0,
         url,
       } satisfies MediaAssetChoice;
     })
@@ -110,11 +92,10 @@ export function fetchVideoAssetChoices(): Promise<MediaAssetChoice[]> {
 
 export function toAssetPickerOverlayItems(assets: MediaAssetChoice[]): AssetPickerOverlayItem[] {
   return assets.map((asset) => ({
-    assetId: asset.assetId,
-    normalizedFilename: asset.normalizedFilename,
-    contentType: asset.contentType,
+    assetId: asset.assetRef,
+    normalizedFilename: asset.filename,
+    contentType: asset.assetType || asset.contentType,
     sizeLabel: formatAssetSizeLabel(asset.sizeBytes),
-    usageCount: asset.usageCount,
     url: asset.url,
   }));
 }

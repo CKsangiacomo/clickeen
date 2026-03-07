@@ -1085,10 +1085,11 @@ function applyGradientFromFill(state: DropdownFillState, gradient: FillValue['gr
     state.gradientCss = css || null;
     return;
   }
+  if (!('kind' in gradient)) return;
   const angle = typeof gradient.angle === 'number' ? gradient.angle : DEFAULT_GRADIENT.angle;
   state.gradient.angle = clampNumber(angle, 0, 360);
   if (Array.isArray(gradient.stops) && gradient.stops.length >= 2) {
-    state.gradientStops = gradient.stops.map((stop) =>
+    state.gradientStops = gradient.stops.map((stop: GradientStop) =>
       createGradientStopState(state.root, {
         color: typeof stop?.color === 'string' ? stop.color : DEFAULT_GRADIENT.stops[0].color,
         position: typeof stop?.position === 'number' ? stop.position : 0,

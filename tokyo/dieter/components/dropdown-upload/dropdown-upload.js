@@ -100,7 +100,7 @@ var Dieter = (() => {
   var WIDGET_PUBLIC_ID_RE = /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
   var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   var ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
-  var ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
+  var ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/[^/]+$/;
   var CK_ERROR_CODE = Object.freeze({
     VALIDATION: "VALIDATION",
     NOT_FOUND: "NOT_FOUND",
@@ -250,13 +250,11 @@ var Dieter = (() => {
     }
     const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? {});
     const source = args.source || "api";
-    const variant = args.variant || "original";
     const endpoint = (args.endpoint || "/api/assets/upload").trim();
     const headers = new Headers();
     headers.set("content-type", file.type || "application/octet-stream");
     headers.set("x-account-id", context.accountId);
     headers.set("x-filename", file.name || "upload.bin");
-    headers.set("x-variant", variant);
     headers.set("x-source", source);
     if (context.publicId) headers.set("x-public-id", context.publicId);
     if (context.widgetType) headers.set("x-widget-type", context.widgetType);
@@ -467,17 +465,16 @@ var Dieter = (() => {
         setUploadingState(state, true);
         const uploadedUrl = await uploadEditorAsset({
           file,
-          variant: "original",
           source: "api"
         });
-        const uploadedVersionId = parseCanonicalAssetVersionId(uploadedUrl);
+        const uploadedAssetRef = parseCanonicalAssetRefKey(uploadedUrl);
         const existingMeta = readMeta(state);
         const nextMeta = {
           ...existingMeta || {},
           name: file.name
         };
-        if (uploadedVersionId) nextMeta.versionId = uploadedVersionId;
-        else delete nextMeta.versionId;
+        if (uploadedAssetRef) nextMeta.ref = uploadedAssetRef;
+        else delete nextMeta.ref;
         const { kind, ext } = classifyByNameAndType(file.name, file.type);
         state.root.dataset.localName = file.name;
         setMetaValue(state, nextMeta, true);
@@ -489,7 +486,7 @@ var Dieter = (() => {
           ext,
           hasFile: true
         });
-        setFileKey(state, uploadedVersionId ? "transparent" : uploadedUrl, true);
+        setFileKey(state, uploadedAssetRef ? "transparent" : uploadedUrl, true);
         clearError(state);
       } catch (error2) {
         const message = error2 instanceof Error ? error2.message : "coreui.errors.assets.uploadFailed";
@@ -580,16 +577,16 @@ var Dieter = (() => {
       return value;
     }
   }
-  function parseCanonicalAssetVersionId(raw) {
+  function parseCanonicalAssetRefKey(raw) {
     const parsed = parseCanonicalAssetRef(raw);
     if (!parsed || parsed.kind !== "version") return null;
-    const versionId = String(parsed.versionKey || "").trim();
-    return versionId || null;
+    const ref = String(parsed.versionKey || "").trim();
+    return ref || null;
   }
   function assetUrlFromMeta(meta) {
-    const versionId = typeof meta?.versionId === "string" ? meta.versionId.trim() : "";
-    if (!versionId) return "";
-    const path = toCanonicalAssetVersionPath(versionId);
+    const ref = typeof meta?.ref === "string" ? meta.ref.trim() : "";
+    if (!ref) return "";
+    const path = toCanonicalAssetVersionPath(ref);
     return path || "";
   }
   function previewFromUrl(state, raw, name, kindName) {

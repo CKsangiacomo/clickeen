@@ -104,7 +104,7 @@ Cloud-dev:
   - `DELETE /assets/purge/:accountId?confirm=1` (requires `Authorization: Bearer <token>`; Berlin session bearer or `TOKYO_DEV_JWT`; editor+-scoped account purge)
   - `GET /assets/integrity/:accountId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /assets/integrity/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
-  - `GET /assets/v/:versionId` (public, immutable, cacheable; canonical account-owned asset reads)
+  - `GET /assets/v/:assetRef` (public, immutable, cacheable; canonical account-owned asset reads)
   - `GET /l10n/**` (public; serves published instance packs/live pointers plus Prague overlays)
   - `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague)
 

@@ -27,7 +27,7 @@ These are required patterns to keep editor UX deterministic and prevent dead con
   - Strip item container (generated): `[data-role="strip"]`
   - Logos list per strip: `[data-role="logos"]`
   - Logo tile (generated): `[data-role="logo"]`
-  - Logo visual surface (tile inner): `[data-role="logo-visual"]` (runtime image source resolves from `asset.versionId`; `logoFill` is editor field state only)
+  - Logo visual surface (tile inner): `[data-role="logo-visual"]` (runtime image source resolves from `asset.ref`; `logoFill` is editor field state only)
   - Optional caption: `[data-role="logo-caption"]`
 - **Editor arrays pattern**:
   - Use `object-manager` + nested `repeater` templates for `strips[] → strips[i].logos[]` so editing/reorder is standard and stable.
@@ -157,9 +157,9 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: which logos are rendered inside that strip, the selected image (in-memory while editing), link behavior, and hover caption text
   - **how**:
     - runtime renders children under the strip’s `[data-role="logos"]`
-- `strips[i].logos[j].asset.versionId` → canonical immutable logo asset ref used by runtime (`/assets/v/:versionId`)
+- `strips[i].logos[j].asset.ref` → canonical immutable logo asset ref used by runtime (`/assets/v/:assetRef`)
 - `strips[i].logos[j].logoFill` → editor field state/preview value only (not runtime image authority)
-    - `strips[i].logos[j].asset` → file metadata for editor display (object with `name`, optional `mime`, optional `source`, optional `versionId`)
+    - `strips[i].logos[j].asset` → file metadata for editor display (object with `name`, optional `mime`, optional `source`, optional `ref`)
     - `strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)
 - `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s)
 - `strips[i].logos[j].targetBlank=true` → set `target="_blank"`
@@ -172,7 +172,7 @@ Note: Links + media metadata are baseline product behavior (not tier-gated). Inv
 
   - **Editor control**:
     - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-upload` (image accept)
-      - value stored is editor field state; canonical persistence uses `strips[i].logos[j].asset.versionId`
+      - value stored is editor field state; canonical persistence uses `strips[i].logos[j].asset.ref`
     - the popover template stays minimal (caption/name only; see Section 4)
       - selecting an image updates asset metadata immediately through upload (no replace-in-place flow)
 
@@ -270,7 +270,7 @@ Below the Type picker, always show:
 #### Logo item editor (required, global pattern)
 Each logo item must use `dropdown-upload` for the logo image, and keep the per-item UI minimal.
 - **Logo image**: `dropdown-upload` bound to `strips[i].logos[j].logoFill`
-  - runtime image source is `strips[i].logos[j].asset.versionId`
+  - runtime image source is `strips[i].logos[j].asset.ref`
   - `logoFill` remains editor field state only
   - `template="..."` includes (allowed in all subjects):
     - `textfield` for `strips[i].logos[j].caption`
@@ -366,8 +366,8 @@ We intentionally ship **no custom tint** in v1. `appearance.logoLook` is limited
 
 ### Asset handling (implemented contract)
 - **Upload path**: `dropdown-upload` uploads immediately through Bob -> Tokyo-worker (`POST /assets/upload`).
-- **Persistence**: canonical asset identity is stored as `strips[i].logos[j].asset.versionId`.
-- **Runtime**: widget resolves logo bytes from `asset.versionId` only. If ref is missing/deleted, logo is missing (no fallback/healing).
+- **Persistence**: canonical asset identity is stored as `strips[i].logos[j].asset.ref`.
+- **Runtime**: widget resolves logo bytes from `asset.ref` only. If ref is missing/deleted, logo is missing (no fallback/healing).
 - **No replace flow**: changing a logo file creates a new immutable asset ref.
 
 ### Global defaults (apply to all types)

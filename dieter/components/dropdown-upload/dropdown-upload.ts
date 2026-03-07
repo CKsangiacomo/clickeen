@@ -6,7 +6,7 @@ type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
 type UploadMeta = {
   name?: string;
-  versionId?: string;
+  ref?: string;
 };
 
 type DropdownUploadState = {
@@ -256,17 +256,16 @@ function installHandlers(state: DropdownUploadState) {
       setUploadingState(state, true);
       const uploadedUrl = await uploadEditorAsset({
         file,
-        variant: 'original',
         source: 'api',
       });
-      const uploadedVersionId = parseCanonicalAssetVersionId(uploadedUrl);
+      const uploadedAssetRef = parseCanonicalAssetRefKey(uploadedUrl);
       const existingMeta = readMeta(state);
       const nextMeta: UploadMeta = {
         ...(existingMeta || {}),
         name: file.name,
       };
-      if (uploadedVersionId) nextMeta.versionId = uploadedVersionId;
-      else delete nextMeta.versionId;
+      if (uploadedAssetRef) nextMeta.ref = uploadedAssetRef;
+      else delete nextMeta.ref;
       const { kind, ext } = classifyByNameAndType(file.name, file.type);
       state.root.dataset.localName = file.name;
       setMetaValue(state, nextMeta, true);
@@ -278,7 +277,7 @@ function installHandlers(state: DropdownUploadState) {
         ext,
         hasFile: true,
       });
-      setFileKey(state, uploadedVersionId ? 'transparent' : uploadedUrl, true);
+      setFileKey(state, uploadedAssetRef ? 'transparent' : uploadedUrl, true);
       clearError(state);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
@@ -389,17 +388,17 @@ function normalizeUrlForCompare(raw: string): string {
   }
 }
 
-function parseCanonicalAssetVersionId(raw: string): string | null {
+function parseCanonicalAssetRefKey(raw: string): string | null {
   const parsed = parseCanonicalAssetRef(raw);
   if (!parsed || parsed.kind !== 'version') return null;
-  const versionId = String(parsed.versionKey || '').trim();
-  return versionId || null;
+  const ref = String(parsed.versionKey || '').trim();
+  return ref || null;
 }
 
 function assetUrlFromMeta(meta: UploadMeta | null): string {
-  const versionId = typeof meta?.versionId === 'string' ? meta.versionId.trim() : '';
-  if (!versionId) return '';
-  const path = toCanonicalAssetVersionPath(versionId);
+  const ref = typeof meta?.ref === 'string' ? meta.ref.trim() : '';
+  if (!ref) return '';
+  const path = toCanonicalAssetVersionPath(ref);
   return path || '';
 }
 

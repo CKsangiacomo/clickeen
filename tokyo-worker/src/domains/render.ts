@@ -111,7 +111,8 @@ function encodeStableJson(value: unknown): Uint8Array {
 
 function jsonSha256Hex(value: unknown): Promise<string> {
   const bytes = encodeStableJson(value);
-  return sha256Hex(bytes.buffer);
+  const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  return sha256Hex(arrayBuffer);
 }
 
 function normalizePublicId(value: unknown): string | null {

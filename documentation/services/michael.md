@@ -196,7 +196,7 @@ Local DB is Supabase CLI + Docker:
   - `widget_instances.account_id` (required)
   - `widget_instances.config` (the JSON blob you care about)
 - The durable contract for uploaded assets is:
-  - `asset.versionId` in instance config
+  - `asset.ref` in instance config
   - blob bytes under `assets/versions/{accountId}/...` in Tokyo R2
   - per-asset manifest metadata under `assets/meta/accounts/{accountId}/assets/{assetId}.json`
 

@@ -16,7 +16,7 @@ Tokyo-worker does not “decide what is live”. Bob/Roma decides; Paris commits
 ### Assets
 - `POST /assets/upload` (auth required)
 - `GET /assets/account/:accountId` (auth required; member-scoped asset manifest list)
-- `GET /assets/v/:versionId` (public; immutable)
+- `GET /assets/v/:assetRef` (public; immutable)
 - `DELETE /assets/:accountId/:assetId` (auth required; editor+ hard delete metadata + blobs)
 - `DELETE /assets/purge/:accountId?confirm=1` (auth required; editor+ hard delete **all** account asset metadata + blobs; used for downgrade/closure)
 - Integrity tools (dev/internal):
@@ -26,7 +26,9 @@ Tokyo-worker does not “decide what is live”. Bob/Roma decides; Paris commits
 Asset metadata model (current repo snapshot):
 - Blob bytes live in Tokyo R2 under `assets/versions/{accountId}/...`.
 - Per-asset manifest JSON lives in Tokyo R2 under `assets/meta/accounts/{accountId}/assets/{assetId}.json`.
+- Manifest stores one canonical immutable blob key (`assetRef`) per asset.
 - There is no Michael/Supabase asset table contract in the active runtime.
+- Upload contract rejects legacy variant mode (`x-variant` -> `422 coreui.errors.assets.variantUnsupported`).
 
 ### Public reads (R2 backed)
 Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies):

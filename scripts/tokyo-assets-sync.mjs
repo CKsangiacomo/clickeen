@@ -5,7 +5,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { toCanonicalAssetVersionPath } from '../tooling/ck-contracts/src/index.js';
+import { parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '../tooling/ck-contracts/src/index.js';
 
 const scriptPath = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(scriptPath), '..');
@@ -20,8 +20,7 @@ function printUsage() {
   console.log(`Usage: node scripts/tokyo-assets-sync.mjs [options]
 
 Syncs missing canonical account asset blobs from remote Tokyo to local R2.
-Reads canonical asset keys from local Supabase when legacy asset tables exist.
-After PRD55 asset-table eviction, missing-table responses are treated as empty input.
+Reads canonical asset refs from local Supabase widget instance configs.
 
 Options:
   --local-base <url>      Local Tokyo base URL (default: ${DEFAULT_LOCAL_BASE})
@@ -142,39 +141,74 @@ async function supabaseFetch(client, pathName, init = {}) {
   return text ? JSON.parse(text) : null;
 }
 
-async function loadVariantKeys(client) {
+function extractAssetKeyCandidate(raw) {
+  const direct = String(raw || '').trim();
+  if (!direct) return '';
+
+  const canonicalPath = toCanonicalAssetVersionPath(direct);
+  if (canonicalPath) {
+    const parsed = parseCanonicalAssetRef(canonicalPath);
+    if (parsed?.kind === 'version' && typeof parsed.versionKey === 'string' && parsed.versionKey.trim()) {
+      return parsed.versionKey.trim();
+    }
+  }
+
+  const parsed = parseCanonicalAssetRef(direct);
+  if (parsed?.kind === 'version' && typeof parsed.versionKey === 'string' && parsed.versionKey.trim()) {
+    return parsed.versionKey.trim();
+  }
+  return '';
+}
+
+function collectAssetKeysFromConfig(node, keys) {
+  if (!node || typeof node !== 'object') return;
+  if (Array.isArray(node)) {
+    node.forEach((entry) => collectAssetKeysFromConfig(entry, keys));
+    return;
+  }
+
+  const record = node;
+  for (const [field, value] of Object.entries(record)) {
+    if (field === 'ref' && typeof value === 'string') {
+      const key = extractAssetKeyCandidate(value);
+      if (key) keys.add(key);
+      continue;
+    }
+    collectAssetKeysFromConfig(value, keys);
+  }
+}
+
+async function loadAssetKeysFromTable(client, table) {
   const keys = [];
   let offset = 0;
   for (;;) {
     const params = new URLSearchParams({
-      select: 'r2_key',
+      select: 'config',
       order: 'created_at.asc',
       limit: String(DEFAULT_PAGE_SIZE),
       offset: String(offset),
     });
-    let rows;
-    try {
-      rows = await supabaseFetch(client, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      const missingTable =
-        detail.includes('PGRST205') && detail.includes('account_asset_variants');
-      if (missingTable) {
-        console.log('[tokyo-assets-sync] account_asset_variants not present; skipping legacy sync source.');
-        break;
-      }
-      throw error;
-    }
+    const rows = await supabaseFetch(client, `/rest/v1/${table}?${params.toString()}`, { method: 'GET' });
     const batch = Array.isArray(rows) ? rows : [];
     if (!batch.length) break;
     for (const row of batch) {
-      const key = String(row?.r2_key || '').trim();
-      if (key) keys.push(key);
+      const config = row?.config;
+      const found = new Set();
+      collectAssetKeysFromConfig(config, found);
+      found.forEach((entry) => keys.push(entry));
     }
     if (batch.length < DEFAULT_PAGE_SIZE) break;
     offset += DEFAULT_PAGE_SIZE;
   }
   return Array.from(new Set(keys));
+}
+
+async function loadAssetKeys(client) {
+  const [userKeys, curatedKeys] = await Promise.all([
+    loadAssetKeysFromTable(client, 'widget_instances'),
+    loadAssetKeysFromTable(client, 'curated_widget_instances'),
+  ]);
+  return Array.from(new Set([...userKeys, ...curatedKeys]));
 }
 
 async function hasLocalAsset(localBase, canonicalPath) {
@@ -221,7 +255,7 @@ function putLocalR2Object({ bucket, persistTo, key, filePath }) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const client = buildSupabaseClient();
-  const keys = await loadVariantKeys(client);
+  const keys = await loadAssetKeys(client);
   const canonical = keys
     .map((key) => ({ key, path: toCanonicalAssetVersionPath(key) }))
     .filter((entry) => Boolean(entry.path));

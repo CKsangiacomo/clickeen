@@ -157,24 +157,14 @@ function parseVersionKeyParts(versionKey) {
   const key = String(parsed.versionKey || '').trim();
   const suffix = key.replace(/^assets\/versions\//, '');
   const parts = suffix.split('/').filter(Boolean);
-  if (parts.length !== 3 && parts.length !== 4) return null;
+  if (parts.length !== 3) return null;
   const accountId = parts[0];
   const assetId = parts[1];
   if (!isUuid(accountId) || !isUuid(assetId)) return null;
-  if (parts.length === 3) {
-    return {
-      accountId,
-      assetId,
-      variant: 'original',
-      filename: parts[2],
-      versionKey: key,
-    };
-  }
   return {
     accountId,
     assetId,
-    variant: parts[2],
-    filename: parts[3],
+    filename: parts[2],
     versionKey: key,
   };
 }
@@ -204,13 +194,6 @@ function visitAssetRefs(node, callback, pathLabel = 'root') {
   }
 
   const record = node;
-  if (typeof record.versionId === 'string') {
-    const versionKey = parseAssetVersionKey(record.versionId);
-    if (versionKey) {
-      callback({ versionKey, kind: 'versionId', path: `${pathLabel}.versionId`, record });
-    }
-  }
-
   Object.entries(record).forEach(([key, value]) => {
     const nextPath = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)
       ? `${pathLabel}.${key}`
@@ -260,13 +243,6 @@ function rewriteAssetRefs(root, versionKeyMap) {
       return node.map((entry) => visit(entry));
     }
     const record = node;
-    if (typeof record.versionId === 'string') {
-      const versionKey = parseAssetVersionKey(record.versionId);
-      const nextVersionKey = versionKey ? versionKeyMap.get(versionKey) : null;
-      if (nextVersionKey && nextVersionKey !== versionKey) {
-        record.versionId = nextVersionKey;
-      }
-    }
     Object.entries(record).forEach(([key, value]) => {
       record[key] = visit(value);
     });
@@ -659,7 +635,6 @@ async function uploadAssetVersionToAdmin(env, accessToken, adminAccountId, versi
       'x-account-id': adminAccountId,
       'x-source': 'promotion',
       'x-filename': parsed.filename,
-      'x-variant': parsed.variant,
       'content-type': contentType,
     },
     body,

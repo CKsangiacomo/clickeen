@@ -16,14 +16,14 @@ function resolveAssetBaseHref(): string {
   return window.location.href || 'http://localhost/';
 }
 
-export function assetVersionIdToPath(versionIdRaw: string): string | null {
-  const versionId = String(versionIdRaw || '').trim();
-  const canonical = toCanonicalAssetVersionPath(versionId);
+export function assetRefToPath(refRaw: string): string | null {
+  const ref = String(refRaw || '').trim();
+  const canonical = toCanonicalAssetVersionPath(ref);
   return canonical || null;
 }
 
-export function assetVersionIdToUrl(versionIdRaw: string): string | null {
-  const path = assetVersionIdToPath(versionIdRaw);
+export function assetRefToUrl(refRaw: string): string | null {
+  const path = assetRefToPath(refRaw);
   if (!path) return null;
   try {
     return new URL(path, resolveAssetBaseHref()).toString();
@@ -32,7 +32,7 @@ export function assetVersionIdToUrl(versionIdRaw: string): string | null {
   }
 }
 
-export function assetVersionIdFromUrl(raw: string): string | null {
+export function assetRefFromUrl(raw: string): string | null {
   const parsed = parseCanonicalAssetRef(raw);
   if (!parsed || parsed.kind !== 'version') return null;
   return parsed.versionKey;
@@ -43,20 +43,19 @@ function normalizeImageValue(raw: unknown): ImageValue {
     return { fit: 'cover', position: 'center', repeat: 'no-repeat' };
   }
   const value = raw as Record<string, unknown>;
-  const assetVersionIdDirect =
+  const assetRefDirect =
     value.asset && typeof value.asset === 'object' && !Array.isArray(value.asset)
-      ? String((value.asset as Record<string, unknown>).versionId || '').trim()
+      ? String((value.asset as Record<string, unknown>).ref || '').trim()
       : '';
-  const assetVersionIdRaw = assetVersionIdDirect || '';
-  const assetVersionIdFromRef = assetVersionIdFromUrl(assetVersionIdRaw) ?? '';
-  const assetVersionIdCandidate = assetVersionIdToPath(assetVersionIdRaw) ? assetVersionIdRaw : assetVersionIdFromRef;
-  const assetVersionId = assetVersionIdToPath(assetVersionIdCandidate) ? assetVersionIdCandidate : '';
+  const assetRefFromCanonicalUrl = assetRefFromUrl(assetRefDirect) ?? '';
+  const assetRefCandidate = assetRefToPath(assetRefDirect) ? assetRefDirect : assetRefFromCanonicalUrl;
+  const assetRef = assetRefToPath(assetRefCandidate) ? assetRefCandidate : '';
   const name = typeof value.name === 'string' ? value.name.trim() : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
   const repeat = typeof value.repeat === 'string' && value.repeat.trim() ? value.repeat.trim() : 'no-repeat';
   return {
-    ...(assetVersionId ? { asset: { versionId: assetVersionId } } : {}),
+    ...(assetRef ? { asset: { ref: assetRef } } : {}),
     ...(name ? { name } : {}),
     fit,
     position,
@@ -69,20 +68,20 @@ function normalizeVideoValue(raw: unknown): VideoValue {
     return { fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true };
   }
   const value = raw as Record<string, unknown>;
-  const assetVersionIdDirect =
+  const assetRefDirect =
     value.asset && typeof value.asset === 'object' && !Array.isArray(value.asset)
-      ? String((value.asset as Record<string, unknown>).versionId || '').trim()
+      ? String((value.asset as Record<string, unknown>).ref || '').trim()
       : '';
-  const posterVersionIdDirect =
+  const posterRefDirect =
     value.poster && typeof value.poster === 'object' && !Array.isArray(value.poster)
-      ? String((value.poster as Record<string, unknown>).versionId || '').trim()
+      ? String((value.poster as Record<string, unknown>).ref || '').trim()
       : '';
-  const assetVersionIdFromRef = assetVersionIdFromUrl(assetVersionIdDirect || '') ?? '';
-  const posterVersionIdFromRef = assetVersionIdFromUrl(posterVersionIdDirect || '') ?? '';
-  const assetVersionIdCandidate = assetVersionIdToPath(assetVersionIdDirect) ? assetVersionIdDirect : assetVersionIdFromRef;
-  const posterVersionIdCandidate = assetVersionIdToPath(posterVersionIdDirect) ? posterVersionIdDirect : posterVersionIdFromRef;
-  const assetVersionId = assetVersionIdToPath(assetVersionIdCandidate) ? assetVersionIdCandidate : '';
-  const posterVersionId = assetVersionIdToPath(posterVersionIdCandidate) ? posterVersionIdCandidate : '';
+  const assetRefFromCanonicalUrl = assetRefFromUrl(assetRefDirect || '') ?? '';
+  const posterRefFromCanonicalUrl = assetRefFromUrl(posterRefDirect || '') ?? '';
+  const assetRefCandidate = assetRefToPath(assetRefDirect) ? assetRefDirect : assetRefFromCanonicalUrl;
+  const posterRefCandidate = assetRefToPath(posterRefDirect) ? posterRefDirect : posterRefFromCanonicalUrl;
+  const assetRef = assetRefToPath(assetRefCandidate) ? assetRefCandidate : '';
+  const posterRef = assetRefToPath(posterRefCandidate) ? posterRefCandidate : '';
   const name = typeof value.name === 'string' ? value.name.trim() : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
@@ -90,9 +89,9 @@ function normalizeVideoValue(raw: unknown): VideoValue {
   const muted = typeof value.muted === 'boolean' ? value.muted : true;
   const autoplay = typeof value.autoplay === 'boolean' ? value.autoplay : true;
   return {
-    ...(assetVersionId ? { asset: { versionId: assetVersionId } } : {}),
+    ...(assetRef ? { asset: { ref: assetRef } } : {}),
     ...(name ? { name } : {}),
-    ...(posterVersionId ? { poster: { versionId: posterVersionId } } : {}),
+    ...(posterRef ? { poster: { ref: posterRef } } : {}),
     fit,
     position,
     loop,
@@ -185,7 +184,7 @@ export function resolveModeFromFill(
   fill: FillValue,
 ): FillMode {
   const desired = fill.type === 'none' ? currentMode : fill.type;
-  if (desired !== 'none' && allowedModes.includes(desired)) return desired;
+  if (allowedModes.includes(desired)) return desired;
   return allowedModes[0] || 'color';
 }
 
@@ -198,15 +197,15 @@ export function readVideoName(fill: FillValue): string | null {
 }
 
 export function readImageSrc(fill: FillValue): string | null {
-  const versionId = String(fill.image?.asset?.versionId || '').trim();
-  if (!versionId) return null;
-  return assetVersionIdToUrl(versionId);
+  const ref = String(fill.image?.asset?.ref || '').trim();
+  if (!ref) return null;
+  return assetRefToUrl(ref);
 }
 
 export function readVideoSrc(fill: FillValue): string | null {
-  const versionId = String(fill.video?.asset?.versionId || '').trim();
-  if (!versionId) return null;
-  return assetVersionIdToUrl(versionId);
+  const ref = String(fill.video?.asset?.ref || '').trim();
+  if (!ref) return null;
+  return assetRefToUrl(ref);
 }
 
 export function defaultGradientAngle(): number {

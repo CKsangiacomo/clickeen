@@ -1,6 +1,7 @@
 import {
   buildAccountAssetKey,
   buildAccountAssetVersionPath,
+  classifyAccountAssetType,
   guessContentTypeFromExt,
   json,
   normalizeAccountAssetReadKey,
@@ -24,13 +25,11 @@ import {
   consumeAccountBudget,
   deleteAccountAssetByIdentity,
   deleteAccountAssetUsageByIdentity,
-  deleteAccountAssetVariantsByIdentity,
   loadAccountAssetByIdentity,
-  loadAccountAssetManifestByIdentity,
   loadAccountAssetUsagePublicIdsByIdentity,
   listAccountAssetManifestsByAccount,
-  loadAccountAssetVariantIdentitiesByAccount,
-  loadAccountAssetVariantKeys,
+  loadAccountAssetBlobIdentitiesByAccount,
+  loadAccountAssetBlobKeys,
   loadAccountMembershipRole,
   loadAccountUploadProfile,
   normalizeAccountAssetSource,
@@ -48,7 +47,7 @@ const ASSET_IDENTITY_INTEGRITY_SAMPLE_LIMIT = 50;
 
 const ASSET_INTEGRITY_REASON_POINTER_MISSING_BLOB = 'coreui.errors.assets.integrity.dbPointerMissingBlob';
 const ASSET_INTEGRITY_REASON_ORPHAN_BLOB = 'coreui.errors.assets.integrity.orphanBlob';
-const ASSET_INTEGRITY_REASON_VARIANTS_MISSING = 'coreui.errors.assets.integrity.variantsMissingForAsset';
+const ASSET_INTEGRITY_REASON_BLOB_MISSING_FOR_ASSET = 'coreui.errors.assets.integrity.blobMissingForAsset';
 
 type UploadTierResolutionResult =
   | { ok: true }
@@ -65,7 +64,7 @@ type AssetMirrorIntegritySampleRef = {
 
 type AssetMirrorIntegritySnapshot = {
   ok: boolean;
-  dbVariantCount: number;
+  dbBlobCount: number;
   r2ObjectCount: number;
   missingInR2Count: number;
   orphanInR2Count: number;
@@ -76,7 +75,7 @@ type AssetMirrorIntegritySnapshot = {
 type AssetIdentityIntegritySnapshot = {
   ok: boolean;
   reasonKey: string | null;
-  dbVariantCount: number;
+  dbBlobCount: number;
   r2ObjectCount: number;
   missingInR2Count: number;
   orphanInR2Count: number;
@@ -184,30 +183,15 @@ function serializeAccountAssetManifest(
   manifest: AccountAssetManifest,
   origin: string,
 ): Record<string, unknown> {
+  const assetRef = String(manifest.key || '').trim();
   return {
-    assetId: manifest.assetId,
-    accountId: manifest.accountId,
-    publicId: manifest.publicId,
-    widgetType: manifest.widgetType,
-    source: manifest.source,
-    originalFilename: manifest.originalFilename,
-    normalizedFilename: manifest.normalizedFilename,
+    assetRef,
+    assetType: manifest.assetType,
     contentType: manifest.contentType,
     sizeBytes: manifest.sizeBytes,
-    sha256: manifest.sha256,
+    filename: manifest.normalizedFilename,
     createdAt: manifest.createdAt,
-    updatedAt: manifest.updatedAt,
-    usageCount: 0,
-    usedBy: [],
-    variants: manifest.variants.map((variant) => ({
-      variant: variant.variant,
-      key: variant.key,
-      filename: variant.filename,
-      contentType: variant.contentType,
-      sizeBytes: variant.sizeBytes,
-      createdAt: variant.createdAt,
-      url: `${origin}${buildAccountAssetVersionPath(variant.key)}`,
-    })),
+    url: `${origin}${buildAccountAssetVersionPath(assetRef)}`,
   };
 }
 
@@ -250,11 +234,11 @@ async function listAccountAssetR2KeysByIdentity(env: Env, accountId: string, ass
 }
 
 function resolveAssetIdentityIntegrityReasonKey(args: {
-  dbVariantCount: number;
+  dbBlobCount: number;
   missingInR2Count: number;
   orphanInR2Count: number;
 }): string | null {
-  if (args.dbVariantCount === 0) return ASSET_INTEGRITY_REASON_VARIANTS_MISSING;
+  if (args.dbBlobCount === 0) return ASSET_INTEGRITY_REASON_BLOB_MISSING_FOR_ASSET;
   if (args.missingInR2Count > 0) return ASSET_INTEGRITY_REASON_POINTER_MISSING_BLOB;
   if (args.orphanInR2Count > 0) return ASSET_INTEGRITY_REASON_ORPHAN_BLOB;
   return null;
@@ -265,26 +249,26 @@ async function buildAccountAssetIdentityIntegrity(
   accountId: string,
   assetId: string,
 ): Promise<AssetIdentityIntegritySnapshot> {
-  const [variantKeys, r2Keys] = await Promise.all([
-    loadAccountAssetVariantKeys(env, accountId, assetId),
+  const [blobKeys, r2Keys] = await Promise.all([
+    loadAccountAssetBlobKeys(env, accountId, assetId),
     listAccountAssetR2KeysByIdentity(env, accountId, assetId),
   ]);
-  const variantKeySet = new Set<string>(variantKeys);
+  const blobKeySet = new Set<string>(blobKeys);
   const missingInR2: string[] = [];
-  for (const key of variantKeys) {
+  for (const key of blobKeys) {
     const found = await env.TOKYO_R2.head(key);
     if (!found) missingInR2.push(key);
   }
-  const orphanInR2 = r2Keys.filter((key) => !variantKeySet.has(key));
+  const orphanInR2 = r2Keys.filter((key) => !blobKeySet.has(key));
   const reasonKey = resolveAssetIdentityIntegrityReasonKey({
-    dbVariantCount: variantKeys.length,
+    dbBlobCount: blobKeys.length,
     missingInR2Count: missingInR2.length,
     orphanInR2Count: orphanInR2.length,
   });
   return {
     ok: reasonKey == null,
     reasonKey,
-    dbVariantCount: variantKeys.length,
+    dbBlobCount: blobKeys.length,
     r2ObjectCount: r2Keys.length,
     missingInR2Count: missingInR2.length,
     orphanInR2Count: orphanInR2.length,
@@ -325,7 +309,6 @@ async function deleteAccountAssetMetadataWithRetries(args: {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
       await deleteAccountAssetUsageByIdentity(args.env, args.accountId, args.assetId);
-      await deleteAccountAssetVariantsByIdentity(args.env, args.accountId, args.assetId);
       await deleteAccountAssetByIdentity(args.env, args.accountId, args.assetId);
       return;
     } catch (error) {
@@ -354,20 +337,20 @@ async function sweepResidualAssetBlobs(args: {
 }
 
 async function buildAccountAssetMirrorIntegrity(env: Env, accountId: string): Promise<AssetMirrorIntegritySnapshot> {
-  const [variantRefs, r2Keys] = await Promise.all([
-    loadAccountAssetVariantIdentitiesByAccount(env, accountId),
+  const [assetRefs, r2Keys] = await Promise.all([
+    loadAccountAssetBlobIdentitiesByAccount(env, accountId),
     listAccountAssetR2Keys(env, accountId),
   ]);
   const dbKeySet = new Set<string>();
-  variantRefs.forEach((ref) => dbKeySet.add(ref.r2Key));
+  assetRefs.forEach((ref) => dbKeySet.add(ref.r2Key));
   const r2KeySet = new Set<string>(r2Keys);
 
-  const missingInR2 = variantRefs.filter((ref) => !r2KeySet.has(ref.r2Key));
+  const missingInR2 = assetRefs.filter((ref) => !r2KeySet.has(ref.r2Key));
   const orphanInR2 = r2Keys.filter((key) => !dbKeySet.has(key));
 
   return {
     ok: missingInR2.length === 0 && orphanInR2.length === 0,
-    dbVariantCount: variantRefs.length,
+    dbBlobCount: assetRefs.length,
     r2ObjectCount: r2Keys.length,
     missingInR2Count: missingInR2.length,
     orphanInR2Count: orphanInR2.length,
@@ -383,6 +366,11 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   const accountId = (req.headers.get('x-account-id') || '').trim();
   if (!accountId || !isUuid(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
+  }
+
+  const legacyVariant = (req.headers.get('x-variant') || '').trim();
+  if (legacyVariant) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.variantUnsupported' } }, { status: 422 });
   }
 
   const account = await loadAccountUploadProfile(env, accountId);
@@ -418,15 +406,11 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } }, { status: 422 });
   }
 
-  const variant = (req.headers.get('x-variant') || '').trim() || 'original';
-  if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.variant.invalid' } }, { status: 422 });
-  }
-
   const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
   const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
   const ext = pickExtension(filename, contentType);
-  const safeFilename = sanitizeUploadFilename(filename, ext, variant);
+  const safeFilename = sanitizeUploadFilename(filename, ext);
+  const assetType = classifyAccountAssetType(contentType, ext);
 
   const maxBytes = resolveUploadSizeLimitBytes(tier);
   const body = await req.arrayBuffer();
@@ -449,7 +433,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   if (!budgetResult.ok) return budgetResult.response;
 
   const assetId = crypto.randomUUID();
-  const key = buildAccountAssetKey(accountId, assetId, variant, safeFilename);
+  const key = buildAccountAssetKey(accountId, assetId, safeFilename);
   await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
 
   try {
@@ -459,12 +443,12 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       assetId,
       publicId,
       widgetType,
-      variant,
       key,
       source,
       originalFilename: filename,
       normalizedFilename: safeFilename,
       contentType,
+      assetType,
       sizeBytes: body.byteLength,
       sha256: await sha256Hex(body),
     });
@@ -481,18 +465,13 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   const url = `${origin}${buildAccountAssetVersionPath(key)}`;
   return json(
     {
-      accountId,
-      assetId,
-      variant,
+      assetRef: key,
       filename: safeFilename,
-      ext,
+      assetType,
       contentType,
       sizeBytes: body.byteLength,
-      key,
       url,
-      source,
-      publicId: publicId ?? null,
-      widgetType: widgetType ?? null,
+      createdAt: new Date().toISOString(),
     },
     { status: 200 },
   );
@@ -654,10 +633,10 @@ async function handleDeleteAccountAsset(
     );
   }
 
-  const variantKeys = await loadAccountAssetVariantKeys(env, accountId, assetId);
+  const blobKeys = await loadAccountAssetBlobKeys(env, accountId, assetId);
   try {
-    if (variantKeys.length) {
-      await env.TOKYO_R2.delete(variantKeys);
+    if (blobKeys.length) {
+      await env.TOKYO_R2.delete(blobKeys);
     }
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -704,7 +683,7 @@ async function handleDeleteAccountAsset(
           integrity: {
             ok: false,
             reasonKey: ASSET_INTEGRITY_REASON_ORPHAN_BLOB,
-            dbVariantCount: 0,
+            dbBlobCount: 0,
             r2ObjectCount: residualKeys.length,
             missingInR2Count: 0,
             orphanInR2Count: residualKeys.length,
@@ -849,7 +828,6 @@ async function handlePurgeAccountAssets(
     );
   }
 }
-
 
 export {
   handleDeleteAccountAsset,

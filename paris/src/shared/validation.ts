@@ -91,8 +91,8 @@ function isLogoFillFieldPath(path: string): boolean {
   return /(?:^|[\].])logoFill$/.test(String(path || ''));
 }
 
-function isAssetVersionIdFieldPath(path: string): boolean {
-  return /(?:^|[\].])(?:asset|poster)\.versionId$/.test(String(path || ''));
+function isAssetRefFieldPath(path: string): boolean {
+  return /(?:^|[\].])(?:asset|poster)\.ref$/.test(String(path || ''));
 }
 
 function isMediaAssetRefFieldPath(path: string): boolean {
@@ -136,7 +136,7 @@ export function configAssetUrlContractIssues(
     if (pathname.startsWith('/arsenale/')) {
       issues.push({
         path,
-        message: `Legacy asset URL path is not supported: ${candidate}. Use asset.versionId refs only.`,
+        message: `Legacy asset URL path is not supported: ${candidate}. Use asset.ref only.`,
       });
       return;
     }
@@ -145,13 +145,13 @@ export function configAssetUrlContractIssues(
       if (isLogoFillFieldPath(path)) {
         issues.push({
           path,
-          message: `Persisted logoFill asset URL is not supported at ${path}. Use asset.versionId refs only.`,
+          message: `Persisted logoFill asset URL is not supported at ${path}. Use asset.ref only.`,
         });
         return;
       }
       issues.push({
         path,
-        message: `Persisted asset URL path is not supported at ${path}. Use asset.versionId refs only.`,
+        message: `Persisted asset URL path is not supported at ${path}. Use asset.ref only.`,
       });
       return;
     }
@@ -172,12 +172,12 @@ export function configAssetUrlContractIssues(
     });
   };
 
-  const inspectVersionIdCandidate = (candidateRaw: string, path: string) => {
+  const inspectAssetRefCandidate = (candidateRaw: string, path: string) => {
     const candidate = String(candidateRaw || '').trim();
     if (!candidate) {
       issues.push({
         path,
-        message: 'Asset version id is required',
+        message: 'Asset ref is required',
       });
       return;
     }
@@ -186,7 +186,7 @@ export function configAssetUrlContractIssues(
     if (!canonicalPath) {
       issues.push({
         path,
-        message: `Asset version id must be a canonical immutable key: ${candidate}`,
+        message: `Asset ref must be a canonical immutable key: ${candidate}`,
       });
       return;
     }
@@ -195,7 +195,7 @@ export function configAssetUrlContractIssues(
     if (!parsed || !isUuid(parsed.accountId) || !isUuid(parsed.assetId)) {
       issues.push({
         path,
-        message: `Asset version id is invalid: ${candidate}`,
+        message: `Asset ref is invalid: ${candidate}`,
       });
       return;
     }
@@ -203,7 +203,7 @@ export function configAssetUrlContractIssues(
     if (expectedAccount && parsed.accountId !== expectedAccount) {
       issues.push({
         path,
-        message: `Asset version account mismatch at ${path}: expected ${expectedAccount}, got ${parsed.accountId}`,
+        message: `Asset ref account mismatch at ${path}: expected ${expectedAccount}, got ${parsed.accountId}`,
       });
     }
   };
@@ -213,20 +213,20 @@ export function configAssetUrlContractIssues(
       if (isPersistedMediaUrlFieldPath(path)) {
         issues.push({
           path,
-          message: `Persisted media URL fields are not supported at ${path}. Use asset.versionId refs only.`,
+          message: `Persisted media URL fields are not supported at ${path}. Use asset.ref only.`,
         });
         return;
       }
 
-      if (isAssetVersionIdFieldPath(path)) {
-        inspectVersionIdCandidate(node, path);
+      if (isAssetRefFieldPath(path)) {
+        inspectAssetRefCandidate(node, path);
         return;
       }
 
       if (isMediaAssetRefFieldPath(path)) {
         issues.push({
           path,
-          message: `Asset ref at ${path} must be an object with versionId.`,
+          message: `Asset ref at ${path} must be an object with ref.`,
         });
         return;
       }

@@ -37,7 +37,6 @@ async function runAssetFlow({
     'content-type': 'application/octet-stream',
     'x-clickeen-surface': 'roma-assets',
     'x-filename': `runtime-parity-${hostLabel}-upload.bin`,
-    'x-variant': 'original',
     'x-account-id': accountId,
     'x-source': 'api',
   });

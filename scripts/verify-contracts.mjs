@@ -269,7 +269,7 @@ function assertAssetLifecycleContracts49B() {
     'Persisted media URL fields are not supported',
     'Persisted logoFill asset URL is not supported',
   ]);
-  assertIncludes('paris/src/domains/accounts/index.ts', ["tokyoUrl.searchParams.set('confirmInUse', confirmInUse);"]);
+  assertIncludes('paris/src/domains/accounts/index.ts', ["tokyoUrl.searchParams.set('confirm', '1');"]);
   assertExcludes('paris/src/domains/accounts/index.ts', ['handleAccountAssetReplaceContent']);
 
   assertIncludes('venice/lib/tokyo.ts', ["const isAccountAssetVersion = normalized.startsWith('/assets/v/');"]);
@@ -288,16 +288,16 @@ function assertAssetLifecycleContracts49B() {
   ]);
 
   assertIncludes('dieter/components/dropdown-upload/dropdown-upload.ts', [
-    'parseCanonicalAssetVersionId(uploadedUrl);',
+    'parseCanonicalAssetRefKey(uploadedUrl);',
     'setMetaValue(state, nextMeta, true);',
-    "setFileKey(state, uploadedVersionId ? 'transparent' : uploadedUrl, true);",
+    "setFileKey(state, uploadedAssetRef ? 'transparent' : uploadedUrl, true);",
   ]);
   assertExcludes('dieter/components/dropdown-upload/dropdown-upload.ts', [
     "setMetaValue(state, { name: file.name, mime: file.type || '', source: 'user' }, true)",
   ]);
 
   assertIncludes('dieter/components/dropdown-fill/fill-types.ts', [
-    'export type AssetRefValue = { versionId: string };',
+    'export type AssetRefValue = { ref: string };',
     'asset?: AssetRefValue;',
     'poster?: AssetRefValue;',
   ]);
@@ -339,19 +339,16 @@ function assertBootstrapContracts49C() {
 
   assertIncludes('roma/app/api/bootstrap/route.ts', [
     '/api/roma/bootstrap',
-    "cache: 'no-store'",
-    "response.headers.set('cache-control', 'no-store')",
-    "response.headers.set('cdn-cache-control', 'no-store')",
-    "response.headers.set('cloudflare-cdn-cache-control', 'no-store')",
+    'proxyToParis',
+    'forwardQuery: false',
   ]);
   assertMissing('roma/app/api/me/route.ts');
 
   assertIncludes('roma/components/use-roma-me.ts', [
-    'ROMA_ACTIVE_ACCOUNT_STORE_KEY',
+    'ROMA_ME_STORE_KEY',
     'ROMA_ME_ERROR_TTL_MS',
     'resolveRomaMeSuccessTtlMs',
-    'setRomaAuthzCapsule',
-    "fetch(`/api/bootstrap${search}`, { cache: 'no-store' })",
+    "fetch('/api/bootstrap', { cache: 'no-store' })",
   ]);
   assertExcludes('roma/components/use-roma-me.ts', ['ROMA_ME_DEGRADED_SUCCESS_TTL_MS', 'domainErrors?: Partial<Record']);
   assertMissing('roma/components/bootstrap-domain-state.ts');

@@ -245,7 +245,6 @@ async function uploadAsset(accessToken, accountId) {
         'x-account-id': accountId,
         'x-source': 'api',
         'x-filename': 'gate6.txt',
-        'x-variant': 'original',
         'content-type': 'text/plain; charset=utf-8',
       },
       body,

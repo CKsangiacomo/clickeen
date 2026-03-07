@@ -265,13 +265,12 @@ Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file p
 - Bob forwards Berlin session bearer and account/public/widget trace headers.
 - Tokyo-worker validates auth + account membership, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
 
-Asset-aware controls persist immutable refs (`asset.versionId` / `poster.versionId`) on canonical media fields; runtime URLs are derived from those refs (no publish-time crawl/rewrite step).
+Asset-aware controls persist immutable refs (`asset.ref` / `poster.ref`) on canonical media fields; runtime URLs are derived from those refs (no publish-time crawl/rewrite step).
 
 Contracts:
 - **Canonical ownership**: uploads are account-owned and stored at:
-  - original variant key: `assets/versions/{accountId}/{assetId}/{filename}`
-  - non-original variant key: `assets/versions/{accountId}/{assetId}/{variant}/{filename}`
-  - runtime path derived from ref: `/assets/v/:versionId`
+  - key: `assets/versions/{accountId}/{assetId}/{filename}`
+  - runtime path derived from ref: `/assets/v/:assetRef`
 - **Trace context**: `accountId`, `publicId`, `widgetType`, `source` remain provenance fields.
 - Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are unsupported on writes.
 

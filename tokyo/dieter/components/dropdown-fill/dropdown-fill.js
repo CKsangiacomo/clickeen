@@ -145,7 +145,6 @@ var Dieter = (() => {
                 <th class="label-s">Asset</th>
                 <th class="label-s">Type</th>
                 <th class="label-s">Size</th>
-                <th class="label-s">Usage</th>
                 <th class="label-s">Action</th>
               </tr>
             </thead>
@@ -262,7 +261,7 @@ var Dieter = (() => {
       if (!items.length) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 5;
+        td.colSpan = 4;
         td.className = "body-s";
         td.textContent = "No assets found.";
         tr.appendChild(td);
@@ -283,10 +282,6 @@ var Dieter = (() => {
         sizeCell.className = "body-s";
         sizeCell.textContent = item.sizeLabel;
         tr.appendChild(sizeCell);
-        const usageCell = document.createElement("td");
-        usageCell.className = "body-s";
-        usageCell.textContent = String(item.usageCount);
-        tr.appendChild(usageCell);
         const actionCell = document.createElement("td");
         const useButton = document.createElement("button");
         useButton.type = "button";
@@ -315,7 +310,7 @@ var Dieter = (() => {
   var WIDGET_PUBLIC_ID_RE = /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
   var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   var ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
-  var ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
+  var ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/[^/]+$/;
   var CK_ERROR_CODE = Object.freeze({
     VALIDATION: "VALIDATION",
     NOT_FOUND: "NOT_FOUND",
@@ -678,13 +673,13 @@ var Dieter = (() => {
     if (typeof window === "undefined") return "http://localhost/";
     return window.location.href || "http://localhost/";
   }
-  function assetVersionIdToPath(versionIdRaw) {
-    const versionId = String(versionIdRaw || "").trim();
-    const canonical = toCanonicalAssetVersionPath(versionId);
+  function assetRefToPath(refRaw) {
+    const ref = String(refRaw || "").trim();
+    const canonical = toCanonicalAssetVersionPath(ref);
     return canonical || null;
   }
-  function assetVersionIdToUrl(versionIdRaw) {
-    const path = assetVersionIdToPath(versionIdRaw);
+  function assetRefToUrl(refRaw) {
+    const path = assetRefToPath(refRaw);
     if (!path) return null;
     try {
       return new URL(path, resolveAssetBaseHref()).toString();
@@ -692,7 +687,7 @@ var Dieter = (() => {
       return path;
     }
   }
-  function assetVersionIdFromUrl(raw) {
+  function assetRefFromUrl(raw) {
     const parsed = parseCanonicalAssetRef(raw);
     if (!parsed || parsed.kind !== "version") return null;
     return parsed.versionKey;
@@ -702,17 +697,16 @@ var Dieter = (() => {
       return { fit: "cover", position: "center", repeat: "no-repeat" };
     }
     const value = raw;
-    const assetVersionIdDirect = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.versionId || "").trim() : "";
-    const assetVersionIdRaw = assetVersionIdDirect || "";
-    const assetVersionIdFromRef = assetVersionIdFromUrl(assetVersionIdRaw) ?? "";
-    const assetVersionIdCandidate = assetVersionIdToPath(assetVersionIdRaw) ? assetVersionIdRaw : assetVersionIdFromRef;
-    const assetVersionId = assetVersionIdToPath(assetVersionIdCandidate) ? assetVersionIdCandidate : "";
+    const assetRefDirect = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.ref || "").trim() : "";
+    const assetRefFromCanonicalUrl = assetRefFromUrl(assetRefDirect) ?? "";
+    const assetRefCandidate = assetRefToPath(assetRefDirect) ? assetRefDirect : assetRefFromCanonicalUrl;
+    const assetRef = assetRefToPath(assetRefCandidate) ? assetRefCandidate : "";
     const name = typeof value.name === "string" ? value.name.trim() : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
     const repeat = typeof value.repeat === "string" && value.repeat.trim() ? value.repeat.trim() : "no-repeat";
     return {
-      ...assetVersionId ? { asset: { versionId: assetVersionId } } : {},
+      ...assetRef ? { asset: { ref: assetRef } } : {},
       ...name ? { name } : {},
       fit,
       position,
@@ -724,14 +718,14 @@ var Dieter = (() => {
       return { fit: "cover", position: "center", loop: true, muted: true, autoplay: true };
     }
     const value = raw;
-    const assetVersionIdDirect = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.versionId || "").trim() : "";
-    const posterVersionIdDirect = value.poster && typeof value.poster === "object" && !Array.isArray(value.poster) ? String(value.poster.versionId || "").trim() : "";
-    const assetVersionIdFromRef = assetVersionIdFromUrl(assetVersionIdDirect || "") ?? "";
-    const posterVersionIdFromRef = assetVersionIdFromUrl(posterVersionIdDirect || "") ?? "";
-    const assetVersionIdCandidate = assetVersionIdToPath(assetVersionIdDirect) ? assetVersionIdDirect : assetVersionIdFromRef;
-    const posterVersionIdCandidate = assetVersionIdToPath(posterVersionIdDirect) ? posterVersionIdDirect : posterVersionIdFromRef;
-    const assetVersionId = assetVersionIdToPath(assetVersionIdCandidate) ? assetVersionIdCandidate : "";
-    const posterVersionId = assetVersionIdToPath(posterVersionIdCandidate) ? posterVersionIdCandidate : "";
+    const assetRefDirect = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.ref || "").trim() : "";
+    const posterRefDirect = value.poster && typeof value.poster === "object" && !Array.isArray(value.poster) ? String(value.poster.ref || "").trim() : "";
+    const assetRefFromCanonicalUrl = assetRefFromUrl(assetRefDirect || "") ?? "";
+    const posterRefFromCanonicalUrl = assetRefFromUrl(posterRefDirect || "") ?? "";
+    const assetRefCandidate = assetRefToPath(assetRefDirect) ? assetRefDirect : assetRefFromCanonicalUrl;
+    const posterRefCandidate = assetRefToPath(posterRefDirect) ? posterRefDirect : posterRefFromCanonicalUrl;
+    const assetRef = assetRefToPath(assetRefCandidate) ? assetRefCandidate : "";
+    const posterRef = assetRefToPath(posterRefCandidate) ? posterRefCandidate : "";
     const name = typeof value.name === "string" ? value.name.trim() : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
@@ -739,9 +733,9 @@ var Dieter = (() => {
     const muted = typeof value.muted === "boolean" ? value.muted : true;
     const autoplay = typeof value.autoplay === "boolean" ? value.autoplay : true;
     return {
-      ...assetVersionId ? { asset: { versionId: assetVersionId } } : {},
+      ...assetRef ? { asset: { ref: assetRef } } : {},
       ...name ? { name } : {},
-      ...posterVersionId ? { poster: { versionId: posterVersionId } } : {},
+      ...posterRef ? { poster: { ref: posterRef } } : {},
       fit,
       position,
       loop,
@@ -822,7 +816,7 @@ var Dieter = (() => {
   }
   function resolveModeFromFill(currentMode, allowedModes, fill) {
     const desired = fill.type === "none" ? currentMode : fill.type;
-    if (desired !== "none" && allowedModes.includes(desired)) return desired;
+    if (allowedModes.includes(desired)) return desired;
     return allowedModes[0] || "color";
   }
   function readImageName(fill) {
@@ -832,14 +826,14 @@ var Dieter = (() => {
     return typeof fill.video?.name === "string" && fill.video.name.trim() ? fill.video.name.trim() : null;
   }
   function readImageSrc(fill) {
-    const versionId = String(fill.image?.asset?.versionId || "").trim();
-    if (!versionId) return null;
-    return assetVersionIdToUrl(versionId);
+    const ref = String(fill.image?.asset?.ref || "").trim();
+    if (!ref) return null;
+    return assetRefToUrl(ref);
   }
   function readVideoSrc(fill) {
-    const versionId = String(fill.video?.asset?.versionId || "").trim();
-    if (!versionId) return null;
-    return assetVersionIdToUrl(versionId);
+    const ref = String(fill.video?.asset?.ref || "").trim();
+    if (!ref) return null;
+    return assetRefToUrl(ref);
   }
 
   // components/shared/assetUpload.ts
@@ -908,13 +902,11 @@ var Dieter = (() => {
     }
     const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? {});
     const source = args.source || "api";
-    const variant = args.variant || "original";
     const endpoint = (args.endpoint || "/api/assets/upload").trim();
     const headers = new Headers();
     headers.set("content-type", file.type || "application/octet-stream");
     headers.set("x-account-id", context.accountId);
     headers.set("x-filename", file.name || "upload.bin");
-    headers.set("x-variant", variant);
     headers.set("x-source", source);
     if (context.publicId) headers.set("x-public-id", context.publicId);
     if (context.widgetType) headers.set("x-widget-type", context.widgetType);
@@ -960,22 +952,6 @@ var Dieter = (() => {
     if (safe < 1024 * 1024) return `${Math.round(safe / 1024)} KB`;
     return `${(safe / (1024 * 1024)).toFixed(1)} MB`;
   }
-  function pickAssetVariantUrl(asset) {
-    const variantsRaw = Array.isArray(asset.variants) ? asset.variants : [];
-    if (!variantsRaw.length) return null;
-    const normalized = variantsRaw.map((variant) => {
-      const variantName = String(variant.variant || "").trim().toLowerCase();
-      const url = String(variant.url || "").trim();
-      if (!url || !url.startsWith("/") && !/^https?:\/\//i.test(url)) return null;
-      return {
-        variant: variantName,
-        url
-      };
-    }).filter((entry) => Boolean(entry));
-    if (!normalized.length) return null;
-    const original = normalized.find((entry) => entry.variant === "original");
-    return (original || normalized[0])?.url || null;
-  }
   async function fetchMediaAssetChoices(kind) {
     const context = resolveImageAssetPickerContext();
     if (!context) {
@@ -995,22 +971,26 @@ var Dieter = (() => {
     }
     const assets = Array.isArray(payload?.assets) ? payload?.assets : [];
     return assets.map((asset) => {
-      const assetId = String(asset.assetId || "").trim();
-      if (!isUuid(assetId)) return null;
+      const assetRef = String(asset.assetRef || "").trim();
+      if (!assetRef.startsWith("assets/versions/")) return null;
+      const assetType = String(asset.assetType || "").trim().toLowerCase();
+      if (kind === "image") {
+        if (assetType !== "image" && assetType !== "vector") return null;
+      } else if (assetType !== "video") {
+        return null;
+      }
       const contentType = String(asset.contentType || "").trim().toLowerCase();
-      if (!contentType.startsWith(`${kind}/`)) return null;
-      const normalizedFilename = String(asset.normalizedFilename || "").trim() || `asset-${assetId.slice(0, 8)}`;
+      const filename = String(asset.filename || "").trim();
+      if (!filename) return null;
       const sizeBytes = Number(asset.sizeBytes);
-      const usageCount = Number(asset.usageCount);
-      const url = pickAssetVariantUrl(asset);
-      if (!url) return null;
+      const url = String(asset.url || "").trim();
+      if (!url || !url.startsWith("/") && !/^https?:\/\//i.test(url)) return null;
       return {
-        assetId,
-        accountId: context.accountId,
-        normalizedFilename,
+        assetRef,
+        filename,
+        assetType,
         contentType,
         sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
-        usageCount: Number.isFinite(usageCount) ? Math.max(0, Math.trunc(usageCount)) : 0,
         url
       };
     }).filter((asset) => Boolean(asset));
@@ -1023,11 +1003,10 @@ var Dieter = (() => {
   }
   function toAssetPickerOverlayItems(assets) {
     return assets.map((asset) => ({
-      assetId: asset.assetId,
-      normalizedFilename: asset.normalizedFilename,
-      contentType: asset.contentType,
+      assetId: asset.assetRef,
+      normalizedFilename: asset.filename,
+      contentType: asset.assetType || asset.contentType,
       sizeLabel: formatAssetSizeLabel(asset.sizeBytes),
-      usageCount: asset.usageCount,
       url: asset.url
     }));
   }
@@ -1052,9 +1031,9 @@ var Dieter = (() => {
     if (!window.parent || window.parent === window) return;
     window.parent.postMessage({ type: "bob:asset-entitlement-denied", reasonKey }, "*");
   }
-  function resolveAssetVersionId(src) {
+  function resolveAssetRef(src) {
     if (!src) return null;
-    return assetVersionIdFromUrl(src);
+    return assetRefFromUrl(src);
   }
   function setFillUploadingState(state, uploading) {
     state.root.dataset.uploading = uploading ? "true" : "false";
@@ -1198,11 +1177,11 @@ var Dieter = (() => {
       state.imageUnavailable = false;
     }
     if (opts.commit) {
-      const versionId = resolveAssetVersionId(src);
-      const fill = versionId ? {
+      const ref = resolveAssetRef(src);
+      const fill = ref ? {
         type: "image",
         image: {
-          asset: { versionId },
+          asset: { ref },
           ...state.imageName ? { name: state.imageName } : {},
           fit: "cover",
           position: "center",
@@ -1232,11 +1211,11 @@ var Dieter = (() => {
       state.videoUnavailable = false;
     }
     if (opts.commit) {
-      const versionId = resolveAssetVersionId(src);
-      const fill = versionId ? {
+      const ref = resolveAssetRef(src);
+      const fill = ref ? {
         type: "video",
         video: {
-          asset: { versionId },
+          asset: { ref },
           ...state.videoName ? { name: state.videoName } : {},
           fit: "cover",
           position: "center",
@@ -1300,7 +1279,6 @@ var Dieter = (() => {
         try {
           const uploadedUrl = await uploadEditorAsset({
             file,
-            variant: "original",
             source: "api"
           });
           setImageSrc(state, uploadedUrl, { commit: true }, deps);
@@ -1384,7 +1362,6 @@ var Dieter = (() => {
         try {
           const uploadedUrl = await uploadEditorAsset({
             file,
-            variant: "original",
             source: "api"
           });
           setVideoSrc(state, uploadedUrl, { commit: true }, deps);
@@ -2283,6 +2260,7 @@ var Dieter = (() => {
       state.gradientCss = css || null;
       return;
     }
+    if (!("kind" in gradient)) return;
     const angle = typeof gradient.angle === "number" ? gradient.angle : DEFAULT_GRADIENT.angle;
     state.gradient.angle = clampNumber2(angle, 0, 360);
     if (Array.isArray(gradient.stops) && gradient.stops.length >= 2) {

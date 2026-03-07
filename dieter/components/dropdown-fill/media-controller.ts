@@ -1,7 +1,7 @@
 import { uploadEditorAsset } from '../shared/assetUpload';
 import { fetchImageAssetChoices, fetchVideoAssetChoices, toAssetPickerOverlayItems } from './asset-picker-data';
 import { normalizeAssetReferenceUrl, sameAssetReferenceUrl } from './color-utils';
-import { assetVersionIdFromUrl } from './fill-parser';
+import { assetRefFromUrl } from './fill-parser';
 import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fill';
 import type { FillValue } from './fill-types';
 
@@ -39,9 +39,9 @@ function dispatchAssetEntitlementGate(root: HTMLElement, reasonKey: string): voi
   window.parent.postMessage({ type: 'bob:asset-entitlement-denied', reasonKey }, '*');
 }
 
-function resolveAssetVersionId(src: string | null): string | null {
+function resolveAssetRef(src: string | null): string | null {
   if (!src) return null;
-  return assetVersionIdFromUrl(src);
+  return assetRefFromUrl(src);
 }
 
 function setFillUploadingState(state: DropdownFillState, uploading: boolean): void {
@@ -211,12 +211,12 @@ export function setImageSrc(
     state.imageUnavailable = false;
   }
   if (opts.commit) {
-    const versionId = resolveAssetVersionId(src);
-    const fill: FillValue = versionId
+    const ref = resolveAssetRef(src);
+    const fill: FillValue = ref
       ? {
           type: 'image',
           image: {
-            asset: { versionId },
+            asset: { ref },
             ...(state.imageName ? { name: state.imageName } : {}),
             fit: 'cover',
             position: 'center',
@@ -253,12 +253,12 @@ export function setVideoSrc(
     state.videoUnavailable = false;
   }
   if (opts.commit) {
-    const versionId = resolveAssetVersionId(src);
-    const fill: FillValue = versionId
+    const ref = resolveAssetRef(src);
+    const fill: FillValue = ref
       ? {
           type: 'video',
           video: {
-            asset: { versionId },
+            asset: { ref },
             ...(state.videoName ? { name: state.videoName } : {}),
             fit: 'cover',
             position: 'center',
@@ -324,7 +324,6 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
       try {
         const uploadedUrl = await uploadEditorAsset({
           file,
-          variant: 'original',
           source: 'api',
         });
         setImageSrc(state, uploadedUrl, { commit: true }, deps);
@@ -409,7 +408,6 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
       try {
         const uploadedUrl = await uploadEditorAsset({
           file,
-          variant: 'original',
           source: 'api',
         });
         setVideoSrc(state, uploadedUrl, { commit: true }, deps);

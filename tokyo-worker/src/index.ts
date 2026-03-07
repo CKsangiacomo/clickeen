@@ -454,6 +454,27 @@ function extFromMime(mime: string): string | null {
   return null;
 }
 
+export type AccountAssetType = 'image' | 'vector' | 'video' | 'audio' | 'document' | 'other';
+
+function normalizeMimeType(raw: string): string {
+  return String(raw || '')
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
+}
+
+export function classifyAccountAssetType(contentType: string | null, ext: string | null): AccountAssetType {
+  const mime = normalizeMimeType(String(contentType || '').trim());
+  const normalizedExt = String(ext || '').trim().toLowerCase();
+
+  if (mime === 'image/svg+xml' || normalizedExt === 'svg') return 'vector';
+  if (mime.startsWith('image/')) return 'image';
+  if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('audio/')) return 'audio';
+  if (mime === 'application/pdf') return 'document';
+  return 'other';
+}
+
 export function pickExtension(filename: string | null, contentType: string | null): string {
   const rawName = String(filename || '').trim();
   const fromName = rawName ? rawName.split('.').pop()?.toLowerCase() : '';
@@ -463,32 +484,30 @@ export function pickExtension(filename: string | null, contentType: string | nul
   return 'bin';
 }
 
-export function sanitizeUploadFilename(filename: string | null, ext: string, variant?: string | null): string {
+export function sanitizeUploadFilename(filename: string | null, ext: string): string {
   const raw = String(filename || '').trim();
   const basename = raw.split(/[\\/]/).pop() || '';
   const stripped = basename.split('?')[0].split('#')[0];
   const stemRaw = stripped.replace(/\.[^.]+$/, '');
-  const normalizedStem = stemRaw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  const variantStem = String(variant || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  const safeStemBase = normalizedStem || 'upload';
-  const safeStem = (safeStemBase === variantStem ? 'file' : safeStemBase).slice(0, 64);
+  const withSafeSpaces = stemRaw.replace(/\s+/g, '-');
+  const safeStem = withSafeSpaces
+    .replace(/[^A-Za-z0-9._-]+/g, '')
+    .replace(/-{2,}/g, '-')
+    .replace(/_{2,}/g, '_')
+    .replace(/\.{2,}/g, '.')
+    .replace(/^[._-]+|[._-]+$/g, '')
+    .slice(0, 128);
+  const fallbackStem = safeStem || 'upload';
   const safeExt = String(ext || '')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '') || 'bin';
-  return `${safeStem}.${safeExt}`;
+  return `${fallbackStem}.${safeExt}`;
 }
 
 const ACCOUNT_ASSET_CANONICAL_PREFIX = 'assets/versions/';
 
-export function buildAccountAssetKey(accountId: string, assetId: string, variant: string, filename: string): string {
-  const normalizedVariant = String(variant || '').trim().toLowerCase();
-  if (normalizedVariant === 'original') {
-    return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
-  }
-  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${normalizedVariant}/${filename}`;
+export function buildAccountAssetKey(accountId: string, assetId: string, filename: string): string {
+  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
 }
 
 function normalizeCanonicalAccountAssetSuffix(suffix: string): string | null {
@@ -496,18 +515,11 @@ function normalizeCanonicalAccountAssetSuffix(suffix: string): string | null {
     .split('/')
     .map((entry) => entry.trim())
     .filter(Boolean);
-  if (parts.length === 3) {
-    const [accountId, assetId, filename] = parts;
-    return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
-  }
-  if (parts.length === 4) {
-    const [accountId, assetId, variant, filename] = parts;
-    if (variant.toLowerCase() === 'original') {
-      return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
-    }
-    return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${variant}/${filename}`;
-  }
-  return null;
+  if (parts.length !== 3) return null;
+  const [accountId, assetId, filename] = parts;
+  if (!accountId || !assetId || !filename) return null;
+  if (!isUuid(accountId) || !isUuid(assetId)) return null;
+  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
 }
 
 export function normalizeAccountAssetReadKey(pathname: string): string | null {
@@ -529,7 +541,7 @@ export function parseAccountAssetIdentityFromKey(key: string): AccountAssetIdent
   if (!normalized) return null;
   const suffix = normalized.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length);
   const parts = suffix.split('/').filter(Boolean);
-  if (parts.length !== 3 && parts.length !== 4) return null;
+  if (parts.length !== 3) return null;
   const accountId = parts[0];
   const assetId = parts[1];
   if (!accountId || !assetId || !isUuid(accountId) || !isUuid(assetId)) return null;
@@ -607,7 +619,7 @@ function withCors(res: Response): Response {
   headers.set('access-control-allow-methods', 'GET,POST,PUT,DELETE,OPTIONS');
   headers.set(
     'access-control-allow-headers',
-    'authorization, content-type, x-account-id, x-filename, x-variant, x-public-id, x-widget-type, x-source, idempotency-key, x-tokyo-l10n-bridge',
+    'authorization, content-type, x-account-id, x-filename, x-public-id, x-widget-type, x-source, idempotency-key, x-tokyo-l10n-bridge',
   );
   return new Response(res.body, { status: res.status, headers });
 }

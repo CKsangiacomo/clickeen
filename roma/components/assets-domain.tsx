@@ -2,16 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { parseCanonicalAssetRef } from '@clickeen/ck-contracts';
 import { formatBytes, formatNumber } from '../lib/format';
 import { parseParisReason } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type AssetRecord = {
-  assetId: string;
-  normalizedFilename: string;
+  assetRef: string;
+  assetType: string;
+  filename: string;
+  url: string;
   contentType: string;
   sizeBytes: number;
-  usageCount: number;
   createdAt: string;
 };
 
@@ -29,8 +31,8 @@ type DeletePreconditionPayload = {
 };
 
 type PendingDelete = {
-  assetId: string;
-  normalizedFilename: string;
+  assetRef: string;
+  filename: string;
   usageCount: number;
 };
 
@@ -47,7 +49,7 @@ const DELETE_REASON_COPY: Record<string, string> = {
   'coreui.errors.db.writeFailed': 'Asset delete failed on the server. Please try again.',
   'coreui.errors.assets.integrity.dbPointerMissingBlob': 'Delete blocked: this asset points to missing blobs in storage. Resolve in Assets panel.',
   'coreui.errors.assets.integrity.orphanBlob': 'Delete blocked: storage contains orphan blobs for this asset. Resolve in Assets panel.',
-  'coreui.errors.assets.integrity.variantsMissingForAsset': 'Delete blocked: this asset has no variant metadata. Resolve in Assets panel.',
+  'coreui.errors.assets.integrity.blobMissingForAsset': 'Delete blocked: this asset has no storage blob key. Resolve in Assets panel.',
   'coreui.errors.assets.integrityUnavailable': 'Delete blocked: asset integrity check is unavailable right now. Try again.',
 };
 
@@ -65,6 +67,12 @@ type AccountAssetsListResponse = {
   accountId: string;
   assets: AssetRecord[];
 };
+
+function extractAssetIdFromRef(assetRefRaw: string): string | null {
+  const parsed = parseCanonicalAssetRef(assetRefRaw);
+  if (!parsed || parsed.kind !== 'version') return null;
+  return parsed.assetId;
+}
 
 async function requestDeleteAsset(accountId: string, assetId: string, confirmInUse: boolean): Promise<DeleteAssetPayload> {
   const search = confirmInUse ? '?confirmInUse=1' : '';
@@ -150,12 +158,17 @@ export function AssetsDomain() {
   const deleteAsset = useCallback(
     async (asset: AssetRecord, confirmInUse: boolean) => {
       if (!accountId) return;
-      setDeletingAssetId(asset.assetId);
+      const assetId = extractAssetIdFromRef(asset.assetRef);
+      if (!assetId) {
+        setDeleteError('Asset delete failed. Invalid assetRef.');
+        return;
+      }
+      setDeletingAssetId(assetId);
       setDeleteError(null);
       try {
-        await requestDeleteAsset(accountId, asset.assetId, confirmInUse);
+        await requestDeleteAsset(accountId, assetId, confirmInUse);
         setPendingDelete(null);
-        setAssets((prev) => prev.filter((entry) => entry.assetId !== asset.assetId));
+        setAssets((prev) => prev.filter((entry) => entry.assetRef !== asset.assetRef));
       } catch (err) {
         const typed = err as DeleteRequestError;
         if (
@@ -165,12 +178,12 @@ export function AssetsDomain() {
           typed.payload.error?.reasonKey === 'coreui.errors.asset.inUseConfirmRequired'
         ) {
           setPendingDelete({
-            assetId: asset.assetId,
-            normalizedFilename: asset.normalizedFilename,
+            assetRef: asset.assetRef,
+            filename: asset.filename,
             usageCount:
               typeof typed.payload.usageCount === 'number' && Number.isFinite(typed.payload.usageCount)
                 ? Math.max(0, Math.trunc(typed.payload.usageCount))
-                : asset.usageCount,
+                : 0,
           });
           return;
         }
@@ -185,7 +198,7 @@ export function AssetsDomain() {
 
   const handleConfirmDelete = useCallback(async () => {
     if (!pendingDelete) return;
-    const asset = assets.find((entry) => entry.assetId === pendingDelete.assetId);
+    const asset = assets.find((entry) => entry.assetRef === pendingDelete.assetRef);
     if (!asset) return;
     await deleteAsset(asset, true);
   }, [assets, deleteAsset, pendingDelete]);
@@ -277,7 +290,7 @@ export function AssetsDomain() {
         <div className="roma-inline-stack">
           <h2 className="heading-6">Danger zone: purge all assets</h2>
           <p className="body-m">
-            Permanently deletes every asset blob + variant for this account from Tokyo/R2. This cannot be undone.
+            Permanently deletes every asset blob + metadata for this account from Tokyo/R2. This cannot be undone.
           </p>
           <div className="roma-toolbar">
             <input
@@ -315,18 +328,18 @@ export function AssetsDomain() {
             <tr>
               <th className="table-header label-s">Asset</th>
               <th className="table-header label-s">Type</th>
+              <th className="table-header label-s">MIME</th>
               <th className="table-header label-s">Size</th>
-              <th className="table-header label-s">Usage</th>
               <th className="table-header label-s">Actions</th>
             </tr>
           </thead>
           <tbody>
             {assets.map((asset) => (
-              <tr key={asset.assetId}>
-                <td className="body-s">{asset.normalizedFilename}</td>
+              <tr key={asset.assetRef}>
+                <td className="body-s">{asset.filename}</td>
+                <td className="body-s">{asset.assetType}</td>
                 <td className="body-s">{asset.contentType}</td>
                 <td className="body-s">{formatBytes(asset.sizeBytes)}</td>
-                <td className="body-s">{formatNumber(asset.usageCount)}</td>
                 <td className="roma-cell-actions">
                   <button
                     className="diet-btn-txt"
@@ -334,9 +347,11 @@ export function AssetsDomain() {
                     data-variant="secondary"
                     type="button"
                     onClick={() => handleDeleteAsset(asset)}
-                    disabled={deletingAssetId === asset.assetId}
+                    disabled={deletingAssetId === extractAssetIdFromRef(asset.assetRef)}
                   >
-                    <span className="diet-btn-txt__label body-m">{deletingAssetId === asset.assetId ? 'Deleting...' : 'Delete'}</span>
+                    <span className="diet-btn-txt__label body-m">
+                      {deletingAssetId === extractAssetIdFromRef(asset.assetRef) ? 'Deleting...' : 'Delete'}
+                    </span>
                   </button>
                 </td>
               </tr>
@@ -363,7 +378,7 @@ export function AssetsDomain() {
                 ? `This asset is used ${pendingDelete.usageCount} time${pendingDelete.usageCount === 1 ? '' : 's'}, are you sure you want to delete it?`
                 : 'Are you sure you want to delete this asset?'}
             </p>
-            <p className="body-m">Asset: {pendingDelete.normalizedFilename}</p>
+            <p className="body-m">Asset: {pendingDelete.filename}</p>
             <div className="roma-modal__actions">
               <button
                 className="diet-btn-txt"

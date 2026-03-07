@@ -10,7 +10,6 @@ type UploadSource = 'api' | 'devstudio' | 'bob.publish' | 'bob.export' | 'promot
 
 type UploadEditorAssetArgs = {
   file: File;
-  variant?: string;
   source?: UploadSource;
   context?: EditorAssetUploadContext;
   endpoint?: string;
@@ -103,14 +102,12 @@ export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<st
 
   const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? ({} as EditorAssetUploadContext));
   const source = args.source || 'api';
-  const variant = args.variant || 'original';
   const endpoint = (args.endpoint || '/api/assets/upload').trim();
 
   const headers = new Headers();
   headers.set('content-type', file.type || 'application/octet-stream');
   headers.set('x-account-id', context.accountId);
   headers.set('x-filename', file.name || 'upload.bin');
-  headers.set('x-variant', variant);
   headers.set('x-source', source);
   if (context.publicId) headers.set('x-public-id', context.publicId);
   if (context.widgetType) headers.set('x-widget-type', context.widgetType);

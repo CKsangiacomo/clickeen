@@ -1746,12 +1746,10 @@
       publicId,
       blob,
       filename,
-      variant = 'original',
     }) {
       const headers = new Headers();
       headers.set('content-type', blob.type || 'application/octet-stream');
       headers.set('x-filename', filename || 'upload.bin');
-      headers.set('x-variant', variant);
       if (scope !== 'widget') {
         if (!accountId) throw new Error('[DevStudio] Missing accountId for account asset upload');
         headers.set('x-account-id', accountId);

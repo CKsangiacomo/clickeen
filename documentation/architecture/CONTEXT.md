@@ -172,14 +172,14 @@ curated_widget_instances.meta = {
 
 **Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and account-owned upload blobs.
 
-**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves immutable account asset version paths (`/assets/v/:versionId`), writes published **instance** l10n artifacts into Tokyo/R2, and publishes Venice render snapshots.
+**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves immutable account asset paths (`/assets/v/:assetRef`), writes published **instance** l10n artifacts into Tokyo/R2, and publishes Venice render snapshots.
 
 **Asset URL contract (pre-GA strict):**
 - Full canonical contract: [AssetManagement.md](./AssetManagement.md)
-- Persisted widget config stores account assets as immutable `asset.versionId` refs; runtime materializes canonical root-relative paths: `/assets/v/:versionId`.
+- Persisted widget config stores account assets as immutable `asset.ref` refs; runtime materializes canonical root-relative paths: `/assets/v/:assetRef`.
 - Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and `/assets/v/*`-backed `logoFill` strings) are outside contract and rejected on write.
 - Legacy `/arsenale/a/**` and `/arsenale/o/**` paths are outside the runtime contract and are rejected on new writes.
-- `DELETE` on an account asset version is synchronous in the delete path (metadata + variant blobs) with no snapshot rebuild/healing side effects; subsequent `/assets/v/**` reads return unavailable.
+- `DELETE` on an account asset is synchronous in the delete path (metadata + blob) with no snapshot rebuild/healing side effects; subsequent `/assets/v/**` reads return unavailable.
 - Managed asset APIs expose explicit integrity checks (`/assets/integrity/:accountId` and `/assets/integrity/:accountId/:assetId`) so Roma can surface DB↔R2 mismatch states.
 - Runtime does not rely on `CK_ASSET_ORIGIN`; asset paths remain canonical root-relative and environment portability is provided by Bob/Venice proxy routes.
 - Legacy host-pinned/legacy paths (for example `/curated-assets/**`) are not supported.

@@ -1,16 +1,9 @@
 import { getEntitlementsMatrix } from '@clickeen/ck-policy';
 import { isUuid } from '@clickeen/ck-contracts';
 import {
-  buildAccountAssetKey,
-  guessContentTypeFromExt,
-  json,
+  classifyAccountAssetType,
+  type AccountAssetType,
   normalizeAccountAssetReadKey,
-  normalizePublicId,
-  normalizeWidgetType,
-  parseAccountAssetIdentityFromKey,
-  pickExtension,
-  sanitizeUploadFilename,
-  sha256Hex,
   supabaseFetch,
 } from '../index';
 import type { Env } from '../index';
@@ -220,27 +213,17 @@ export async function persistAccountAssetMetadata(args: {
   assetId: string;
   publicId?: string | null;
   widgetType?: string | null;
-  variant: string;
   key: string;
   source: AccountAssetSource;
   originalFilename: string;
   normalizedFilename: string;
   contentType: string;
+  assetType: AccountAssetType;
   sizeBytes: number;
   sha256: string;
 }): Promise<void> {
   const existing = await loadAccountAssetManifestByIdentity(args.env, args.accountId, args.assetId);
   const nowIso = new Date().toISOString();
-  const nextVariant: AccountAssetVariantMeta = {
-    variant: args.variant,
-    key: args.key,
-    filename: args.normalizedFilename,
-    contentType: args.contentType,
-    sizeBytes: args.sizeBytes,
-    createdAt: nowIso,
-  };
-  const variants = (existing?.variants ?? []).filter((variant) => variant.variant !== args.variant);
-  variants.push(nextVariant);
 
   const manifest: AccountAssetManifest = {
     assetId: args.assetId,
@@ -251,11 +234,12 @@ export async function persistAccountAssetMetadata(args: {
     originalFilename: args.originalFilename,
     normalizedFilename: args.normalizedFilename,
     contentType: args.contentType,
+    assetType: args.assetType,
     sizeBytes: args.sizeBytes,
     sha256: args.sha256,
     createdAt: existing?.createdAt ?? nowIso,
     updatedAt: nowIso,
-    variants,
+    key: args.key,
   };
 
   await saveAccountAssetManifest(args.env, manifest);
@@ -264,15 +248,6 @@ export async function persistAccountAssetMetadata(args: {
 type AccountAssetRow = {
   asset_id: string;
   account_id: string;
-};
-
-export type AccountAssetVariantMeta = {
-  variant: string;
-  key: string;
-  filename: string;
-  contentType: string;
-  sizeBytes: number;
-  createdAt: string;
 };
 
 export type AccountAssetManifest = {
@@ -284,11 +259,12 @@ export type AccountAssetManifest = {
   originalFilename: string;
   normalizedFilename: string;
   contentType: string;
+  assetType: AccountAssetType;
   sizeBytes: number;
   sha256: string;
   createdAt: string;
   updatedAt: string;
-  variants: AccountAssetVariantMeta[];
+  key: string;
 };
 
 const ACCOUNT_ASSET_META_PREFIX = 'assets/meta/accounts';
@@ -301,38 +277,41 @@ function accountAssetManifestPrefix(accountId: string): string {
   return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/`;
 }
 
-function normalizeAssetVariantMeta(raw: unknown): AccountAssetVariantMeta | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const row = raw as Record<string, unknown>;
-  const variant = typeof row.variant === 'string' ? row.variant.trim() : '';
-  const key = typeof row.key === 'string' ? row.key.trim() : '';
-  if (!variant || !key) return null;
-  return {
-    variant,
-    key,
-    filename: typeof row.filename === 'string' && row.filename.trim() ? row.filename.trim() : 'asset.bin',
-    contentType:
-      typeof row.contentType === 'string' && row.contentType.trim()
-        ? row.contentType.trim()
-        : 'application/octet-stream',
-    sizeBytes:
-      typeof row.sizeBytes === 'number' && Number.isFinite(row.sizeBytes) && row.sizeBytes >= 0
-        ? Math.floor(row.sizeBytes)
-        : 0,
-    createdAt:
-      typeof row.createdAt === 'string' && row.createdAt.trim()
-        ? row.createdAt.trim()
-        : new Date().toISOString(),
-  };
+function normalizeAssetManifestKey(row: Record<string, unknown>): string | null {
+  const directRaw = typeof row.key === 'string' ? row.key.trim() : '';
+  if (!directRaw) return null;
+  const direct = normalizeAccountAssetReadKey(directRaw.startsWith('/') ? directRaw : `/${directRaw}`);
+  return direct || null;
 }
 
-function normalizeAccountAssetManifest(raw: unknown): AccountAssetManifest | null {
+export function normalizeAccountAssetManifestStrict(raw: unknown): AccountAssetManifest | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const row = raw as Record<string, unknown>;
   const accountId = typeof row.accountId === 'string' ? row.accountId.trim() : '';
   const assetId = typeof row.assetId === 'string' ? row.assetId.trim() : '';
   const source = normalizeAccountAssetSource(typeof row.source === 'string' ? row.source : null);
   if (!accountId || !assetId || !source) return null;
+  const normalizedFilename =
+    typeof row.normalizedFilename === 'string' && row.normalizedFilename.trim()
+      ? row.normalizedFilename.trim()
+      : 'upload.bin';
+  const contentType =
+    typeof row.contentType === 'string' && row.contentType.trim()
+      ? row.contentType.trim()
+      : 'application/octet-stream';
+  const ext = normalizedFilename.includes('.') ? normalizedFilename.split('.').pop() || '' : '';
+  const fallbackAssetType = classifyAccountAssetType(contentType, ext);
+  const assetType =
+    row.assetType === 'image' ||
+    row.assetType === 'vector' ||
+    row.assetType === 'video' ||
+    row.assetType === 'audio' ||
+    row.assetType === 'document' ||
+    row.assetType === 'other'
+      ? row.assetType
+      : fallbackAssetType;
+  const key = normalizeAssetManifestKey(row);
+  if (!key) return null;
   return {
     accountId,
     assetId,
@@ -343,14 +322,9 @@ function normalizeAccountAssetManifest(raw: unknown): AccountAssetManifest | nul
       typeof row.originalFilename === 'string' && row.originalFilename.trim()
         ? row.originalFilename.trim()
         : 'upload.bin',
-    normalizedFilename:
-      typeof row.normalizedFilename === 'string' && row.normalizedFilename.trim()
-        ? row.normalizedFilename.trim()
-        : 'upload.bin',
-    contentType:
-      typeof row.contentType === 'string' && row.contentType.trim()
-        ? row.contentType.trim()
-        : 'application/octet-stream',
+    normalizedFilename,
+    contentType,
+    assetType,
     sizeBytes:
       typeof row.sizeBytes === 'number' && Number.isFinite(row.sizeBytes) && row.sizeBytes >= 0
         ? Math.floor(row.sizeBytes)
@@ -364,11 +338,7 @@ function normalizeAccountAssetManifest(raw: unknown): AccountAssetManifest | nul
       typeof row.updatedAt === 'string' && row.updatedAt.trim()
         ? row.updatedAt.trim()
         : new Date().toISOString(),
-    variants: Array.isArray(row.variants)
-      ? row.variants
-          .map((variant) => normalizeAssetVariantMeta(variant))
-          .filter((variant): variant is AccountAssetVariantMeta => Boolean(variant))
-      : [],
+    key,
   };
 }
 
@@ -387,7 +357,7 @@ export async function loadAccountAssetManifestByIdentity(
   const obj = await env.TOKYO_R2.get(key);
   if (!obj) return null;
   const payload = (await obj.json().catch(() => null)) as unknown;
-  const manifest = normalizeAccountAssetManifest(payload);
+  const manifest = normalizeAccountAssetManifestStrict(payload);
   if (!manifest) return null;
   if (manifest.accountId !== accountId || manifest.assetId !== assetId) return null;
   return manifest;
@@ -409,7 +379,7 @@ export async function listAccountAssetManifestsByAccount(
         const obj = await env.TOKYO_R2.get(key);
         if (!obj) return null;
         const payload = (await obj.json().catch(() => null)) as unknown;
-        const manifest = normalizeAccountAssetManifest(payload);
+        const manifest = normalizeAccountAssetManifestStrict(payload);
         if (!manifest) return null;
         if (manifest.accountId !== accountId) return null;
         return manifest;
@@ -436,35 +406,31 @@ export async function loadAccountAssetByIdentity(
   };
 }
 
-export type AccountAssetVariantIdentity = {
+export type AccountAssetBlobIdentity = {
   assetId: string;
   r2Key: string;
 };
 
-export async function loadAccountAssetVariantKeys(
+export async function loadAccountAssetBlobKeys(
   env: Env,
   accountId: string,
   assetId: string,
 ): Promise<string[]> {
   const manifest = await loadAccountAssetManifestByIdentity(env, accountId, assetId);
   if (!manifest) return [];
-  return manifest.variants
-    .map((variant) => variant.key)
-    .filter(Boolean);
+  return manifest.key ? [manifest.key] : [];
 }
 
-export async function loadAccountAssetVariantIdentitiesByAccount(
+export async function loadAccountAssetBlobIdentitiesByAccount(
   env: Env,
   accountId: string,
-): Promise<AccountAssetVariantIdentity[]> {
+): Promise<AccountAssetBlobIdentity[]> {
   const manifests = await listAccountAssetManifestsByAccount(env, accountId);
-  const out: AccountAssetVariantIdentity[] = [];
+  const out: AccountAssetBlobIdentity[] = [];
   manifests.forEach((manifest) => {
-    manifest.variants.forEach((variant) => {
-      const r2Key = typeof variant.key === 'string' ? variant.key.trim() : '';
-      if (!r2Key) return;
-      out.push({ assetId: manifest.assetId, r2Key });
-    });
+    const r2Key = typeof manifest.key === 'string' ? manifest.key.trim() : '';
+    if (!r2Key) return;
+    out.push({ assetId: manifest.assetId, r2Key });
   });
   return out;
 }
@@ -475,10 +441,8 @@ export async function loadPrimaryAccountAssetKey(
   assetId: string,
 ): Promise<string | null> {
   const manifest = await loadAccountAssetManifestByIdentity(env, accountId, assetId);
-  if (!manifest || !manifest.variants.length) return null;
-  const original = manifest.variants.find((row) => row.variant.toLowerCase() === 'original');
-  const preferred = original ?? manifest.variants[0];
-  const key = typeof preferred?.key === 'string' ? preferred.key.trim() : '';
+  if (!manifest) return null;
+  const key = typeof manifest.key === 'string' ? manifest.key.trim() : '';
   return key || null;
 }
 
@@ -496,10 +460,6 @@ export async function loadAccountAssetUsagePublicIdsByIdentity(
 
 export async function deleteAccountAssetUsageByIdentity(_env: Env, _accountId: string, _assetId: string): Promise<void> {
   // Usage index is no longer persisted in Supabase.
-}
-
-export async function deleteAccountAssetVariantsByIdentity(_env: Env, _accountId: string, _assetId: string): Promise<void> {
-  // Variant metadata is embedded in the asset manifest and removed with deleteAccountAssetByIdentity.
 }
 
 export async function deleteAccountAssetByIdentity(env: Env, accountId: string, assetId: string): Promise<void> {

@@ -8,7 +8,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST,OPTIONS',
   'Access-Control-Allow-Headers':
-    'authorization, content-type, x-account-id, x-public-id, x-widget-type, x-filename, x-variant, x-source, x-request-id',
+    'authorization, content-type, x-account-id, x-public-id, x-widget-type, x-filename, x-source, x-request-id',
 } as const;
 
 function withCorsAndSession(
@@ -61,8 +61,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const legacyVariant = (request.headers.get('x-variant') || '').trim();
+  if (legacyVariant) {
+    return withCorsAndSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.variantUnsupported' } },
+        { status: 422 },
+      ),
+      session.setCookies,
+    );
+  }
+
   const filename = (request.headers.get('x-filename') || '').trim() || 'upload.bin';
-  const variant = (request.headers.get('x-variant') || '').trim() || 'original';
 
   let tokyoBase = '';
   try {
@@ -128,7 +139,6 @@ export async function POST(request: NextRequest) {
   const contentType = (request.headers.get('content-type') || '').trim() || 'application/octet-stream';
   headers.set('content-type', contentType);
   headers.set('x-filename', filename);
-  headers.set('x-variant', variant);
 
   try {
     const tokyoUrl = `${tokyoBase}/assets/upload?_t=${Date.now()}`;

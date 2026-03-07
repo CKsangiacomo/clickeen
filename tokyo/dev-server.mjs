@@ -528,7 +528,7 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, authorization, x-account-id, x-public-id, x-widget-type, x-filename, x-asset-id, x-variant, x-source, x-tokyo-l10n-bridge'
+    'Content-Type, authorization, x-account-id, x-public-id, x-widget-type, x-filename, x-asset-id, x-source, x-tokyo-l10n-bridge'
   );
 
   if (req.method === 'OPTIONS') {
@@ -781,11 +781,6 @@ const server = http.createServer((req, res) => {
       }
 
       const filename = String(req.headers['x-filename'] || '').trim();
-      const variant = String(req.headers['x-variant'] || 'original').trim() || 'original';
-      if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
-        sendJson(res, 422, { error: 'INVALID_VARIANT' });
-        return;
-      }
 
       const assetId = crypto.randomUUID();
       const body = await readRequestBody(req);
@@ -797,15 +792,15 @@ const server = http.createServer((req, res) => {
       const ext = pickExtension({ filename, contentType: req.headers['content-type'] });
       const safeFilename = sanitizeUploadFilename(filename, ext);
       const baseRel = path.posix.join('widgets', widgetType, 'assets', 'uploads', assetId);
-      const relativePath = path.posix.join(baseRel, variant, safeFilename);
-      const absDir = path.join(baseDir, baseRel, variant);
+      const relativePath = path.posix.join(baseRel, safeFilename);
+      const absDir = path.join(baseDir, baseRel);
       const absPath = path.join(baseDir, relativePath);
       ensureDir(absDir);
       fs.writeFileSync(absPath, body);
 
       const host = req.headers.host || `localhost:${port}`;
       const publicUrl = `http://${host}/${relativePath}`;
-      sendJson(res, 200, { widgetType, assetId, variant, ext, relativePath, url: publicUrl });
+      sendJson(res, 200, { widgetType, assetId, ext, relativePath, url: publicUrl });
     })().catch((err) => {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');

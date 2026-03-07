@@ -58,7 +58,7 @@ Mutable pointer  (tiny, always fetched fresh)
 | Domain | Mutable pointer | Immutable artifact |
 |--------|----------------|--------------------|
 | **Publish** | `published.json` (`no-store`) | Render artifacts at `/renders/instances/{publicId}/{fingerprint}/...` (cache forever) |
-| **Assets** | *(none in runtime contract; config stores immutable `asset.versionId` refs)* | Asset bytes at `/assets/v/:versionId` |
+| **Assets** | *(none in runtime contract; config stores immutable `asset.ref` refs)* | Asset bytes at `/assets/v/:assetRef` |
 | **Auth** | JWT (short-lived, refreshable) | userId claim (stable identity) |
 | **Authz** | HMAC-signed capsule (expires) | Role/account snapshot at issuance |
 | **Overlays** | Layer pointer in DB | Materialized overlay file on R2 (fingerprinted) |
@@ -221,7 +221,7 @@ Each release proceeds in 3 steps:
 - Canonical asset management contract (cross-surface behavior): [AssetManagement.md](./AssetManagement.md)
 - Handles canonical account-owned uploads (`POST /assets/upload`) and stores asset bytes + manifest metadata in Tokyo R2.
 - Paris validates account-owned asset refs on instance writes, but this repo snapshot does not persist a canonical "where used" table in Michael.
-- Serves immutable account asset version reads (`GET /assets/v/:versionId`); legacy `/arsenale/*` paths are hard-failed.
+- Serves immutable account asset reads (`GET /assets/v/:assetRef`); legacy `/arsenale/*` paths are hard-failed.
 - Asset delete is synchronous hard delete (`metadata + blob delete`) with no snapshot rebuild enqueue or runtime healing.
 - Tokyo-worker exposes integrity endpoints for managed surfaces (`GET /assets/integrity/:accountId`, `GET /assets/integrity/:accountId/:assetId`).
 - Writes l10n text/meta/config packs and live pointers to Tokyo/R2 from self-contained Paris jobs; Tokyo-worker does not read Michael/Supabase to discover overlay state.
@@ -231,7 +231,7 @@ Each release proceeds in 3 steps:
 - Ownership boundary is account (`account_id`).
 - End-to-end flow:
   1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional public/widget trace headers).
-  2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable version URL (`/assets/v/:versionId`).
+  2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable URL (`/assets/v/:assetRef`).
   3. Paris validates asset refs from instance config writes in the same request path.
   4. Roma Assets reads/deletes via Roma asset routes (`/api/assets/:accountId*`) which forward to Tokyo-worker with Berlin session auth; Tokyo-worker enforces account membership role.
 

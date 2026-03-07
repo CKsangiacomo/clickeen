@@ -3,7 +3,6 @@ export type AssetPickerOverlayItem = {
   normalizedFilename: string;
   contentType: string;
   sizeLabel: string;
-  usageCount: number;
   url: string;
 };
 
@@ -60,7 +59,6 @@ export class AssetPickerOverlay {
                 <th class="label-s">Asset</th>
                 <th class="label-s">Type</th>
                 <th class="label-s">Size</th>
-                <th class="label-s">Usage</th>
                 <th class="label-s">Action</th>
               </tr>
             </thead>
@@ -195,7 +193,7 @@ export class AssetPickerOverlay {
     if (!items.length) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
-      td.colSpan = 5;
+      td.colSpan = 4;
       td.className = 'body-s';
       td.textContent = 'No assets found.';
       tr.appendChild(td);
@@ -220,11 +218,6 @@ export class AssetPickerOverlay {
       sizeCell.className = 'body-s';
       sizeCell.textContent = item.sizeLabel;
       tr.appendChild(sizeCell);
-
-      const usageCell = document.createElement('td');
-      usageCell.className = 'body-s';
-      usageCell.textContent = String(item.usageCount);
-      tr.appendChild(usageCell);
 
       const actionCell = document.createElement('td');
       const useButton = document.createElement('button');
