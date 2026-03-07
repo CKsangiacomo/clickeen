@@ -483,24 +483,16 @@ export function pickExtension(filename: string | null, contentType: string | nul
   return 'bin';
 }
 
-export function sanitizeUploadFilename(filename: string | null, ext: string): string {
+export function validateUploadFilename(filename: string | null): { ok: true; filename: string } | { ok: false; detail: string } {
   const raw = String(filename || '').trim();
-  const basename = raw.split(/[\\/]/).pop() || '';
-  const stripped = basename.split('?')[0].split('#')[0];
-  const stemRaw = stripped.replace(/\.[^.]+$/, '');
-  const withSafeSpaces = stemRaw.replace(/\s+/g, '-');
-  const safeStem = withSafeSpaces
-    .replace(/[^A-Za-z0-9._-]+/g, '')
-    .replace(/-{2,}/g, '-')
-    .replace(/_{2,}/g, '_')
-    .replace(/\.{2,}/g, '.')
-    .replace(/^[._-]+|[._-]+$/g, '')
-    .slice(0, 128);
-  const fallbackStem = safeStem || 'upload';
-  const safeExt = String(ext || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '') || 'bin';
-  return `${fallbackStem}.${safeExt}`;
+  if (!raw) return { ok: false, detail: 'filename required' };
+  if (raw.length > 180) return { ok: false, detail: 'filename too long (max 180 chars)' };
+  if (raw === '.' || raw === '..') return { ok: false, detail: 'filename reserved' };
+  if (raw.includes('/') || raw.includes('\\')) return { ok: false, detail: 'path separators are not allowed' };
+  if (/\s/.test(raw)) return { ok: false, detail: 'spaces are not allowed' };
+  if (/[?#%]/.test(raw)) return { ok: false, detail: 'url-reserved characters are not allowed' };
+  if (!/^[A-Za-z0-9._-]+$/.test(raw)) return { ok: false, detail: 'unsupported characters in filename' };
+  return { ok: true, filename: raw };
 }
 
 const ACCOUNT_ASSET_CANONICAL_PREFIX = 'assets/versions/';

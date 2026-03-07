@@ -58,9 +58,10 @@ Roma control-plane routes proxy account-safe operations for product UI:
 
 1. Auth + account membership (`editor+`) enforced.
 2. Tier caps and budgets enforced before write.
-3. Filename sanitization is minimal and predictable:
-   - whitespace -> `-`
-   - unsafe chars removed
+3. Filename rule is strict reject-only:
+   - spaces are rejected
+   - unsafe path/url chars are rejected
+   - no rename/rewrite policy is applied server-side
 4. Blob is written once; manifest is written once.
 5. Upload response returns immutable asset identity (`assetRef`), exact size (`sizeBytes`), MIME (`contentType`), and `assetType`.
 

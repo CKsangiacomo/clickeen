@@ -224,6 +224,13 @@ var Dieter = (() => {
     if (/^https?:\/\//i.test(direct)) return direct;
     return parsed.pathname;
   }
+  function normalizeAssetRef(payload) {
+    const direct = typeof payload.assetRef === "string" ? payload.assetRef.trim() : "";
+    if (!direct) return null;
+    const parsed = parseCanonicalAssetRef(direct);
+    if (!parsed || parsed.kind !== "version") return null;
+    return parsed.versionKey;
+  }
   function assertUploadContext(context) {
     const accountId = String(context.accountId || "").trim();
     const publicId = String(context.publicId || "").trim();
@@ -275,11 +282,27 @@ var Dieter = (() => {
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
-    const url = normalizeAssetUrl(payload);
-    if (!url) {
+    const payloadRecord = payload;
+    const assetRef = normalizeAssetRef(payloadRecord);
+    if (!assetRef) {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
-    return url;
+    const url = normalizeAssetUrl(payloadRecord) || toCanonicalAssetVersionPath(assetRef) || "";
+    if (!url) throw new Error("coreui.errors.assets.uploadFailed");
+    const assetType = typeof payloadRecord.assetType === "string" ? payloadRecord.assetType.trim() : "";
+    const contentType = typeof payloadRecord.contentType === "string" ? payloadRecord.contentType.trim() : "";
+    const sizeBytesRaw = Number(payloadRecord.sizeBytes);
+    const filename = typeof payloadRecord.filename === "string" ? payloadRecord.filename.trim() : "";
+    const createdAt = typeof payloadRecord.createdAt === "string" ? payloadRecord.createdAt.trim() : "";
+    return {
+      assetRef,
+      url,
+      assetType: assetType || "other",
+      contentType: contentType || file.type || "application/octet-stream",
+      sizeBytes: Number.isFinite(sizeBytesRaw) ? Math.max(0, Math.trunc(sizeBytesRaw)) : file.size,
+      filename: filename || file.name || "upload.bin",
+      createdAt: createdAt || (/* @__PURE__ */ new Date()).toISOString()
+    };
   }
 
   // components/dropdown-upload/dropdown-upload.ts
@@ -464,30 +487,28 @@ var Dieter = (() => {
       clearError(state);
       try {
         setUploadingState(state, true);
-        const uploadedUrl = await uploadEditorAsset({
+        const uploaded = await uploadEditorAsset({
           file,
           source: "api"
         });
-        const uploadedAssetRef = parseCanonicalAssetRefKey(uploadedUrl);
         const existingMeta = readMeta(state);
         const nextMeta = {
           ...existingMeta || {},
           name: file.name
         };
-        if (uploadedAssetRef) nextMeta.ref = uploadedAssetRef;
-        else delete nextMeta.ref;
+        nextMeta.ref = uploaded.assetRef;
         const { kind, ext } = classifyByNameAndType(file.name, file.type);
         state.root.dataset.localName = file.name;
         setMetaValue(state, nextMeta, true);
         setHeaderWithFile(state, file.name, false);
         setPreview(state, {
           kind,
-          previewUrl: kind === "image" || kind === "video" ? uploadedUrl : void 0,
+          previewUrl: kind === "image" || kind === "video" ? uploaded.url : void 0,
           name: file.name,
           ext,
           hasFile: true
         });
-        setFileKey(state, uploadedAssetRef ? "transparent" : uploadedUrl, true);
+        setFileKey(state, "transparent", true);
         clearError(state);
       } catch (error2) {
         const message = error2 instanceof Error ? error2.message : "coreui.errors.assets.uploadFailed";
@@ -577,12 +598,6 @@ var Dieter = (() => {
     } catch {
       return value;
     }
-  }
-  function parseCanonicalAssetRefKey(raw) {
-    const parsed = parseCanonicalAssetRef(raw);
-    if (!parsed || parsed.kind !== "version") return null;
-    const ref = String(parsed.versionKey || "").trim();
-    return ref || null;
   }
   function assetUrlFromMeta(meta) {
     const ref = typeof meta?.ref === "string" ? meta.ref.trim() : "";

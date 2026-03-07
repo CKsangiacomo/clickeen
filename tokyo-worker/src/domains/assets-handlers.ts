@@ -10,7 +10,7 @@ import {
   parseAccountAssetIdentityFromKey,
   pickExtension,
   requireDevAuth,
-  sanitizeUploadFilename,
+  validateUploadFilename,
   sha256Hex,
   assertUploadAuth,
 } from '../index';
@@ -402,10 +402,23 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } }, { status: 422 });
   }
 
-  const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
+  const filenameRaw = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
+  const filenameValidation = validateUploadFilename(filenameRaw);
+  if (!filenameValidation.ok) {
+    return json(
+      {
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.filename.invalid',
+          detail: filenameValidation.detail,
+        },
+      },
+      { status: 422 },
+    );
+  }
+  const filename = filenameValidation.filename;
   const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
   const ext = pickExtension(filename, contentType);
-  const safeFilename = sanitizeUploadFilename(filename, ext);
   const assetType = classifyAccountAssetType(contentType, ext);
 
   const maxBytes = resolveUploadSizeLimitBytes(tier);
@@ -429,7 +442,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   if (!budgetResult.ok) return budgetResult.response;
 
   const assetId = crypto.randomUUID();
-  const key = buildAccountAssetKey(accountId, assetId, safeFilename);
+  const key = buildAccountAssetKey(accountId, assetId, filename);
   await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
 
   try {
@@ -442,7 +455,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       key,
       source,
       originalFilename: filename,
-      normalizedFilename: safeFilename,
+      normalizedFilename: filename,
       contentType,
       assetType,
       sizeBytes: body.byteLength,
@@ -462,7 +475,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   return json(
     {
       assetRef: key,
-      filename: safeFilename,
+      filename,
       assetType,
       contentType,
       sizeBytes: body.byteLength,

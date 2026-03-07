@@ -876,6 +876,13 @@ var Dieter = (() => {
     if (/^https?:\/\//i.test(direct)) return direct;
     return parsed.pathname;
   }
+  function normalizeAssetRef(payload) {
+    const direct = typeof payload.assetRef === "string" ? payload.assetRef.trim() : "";
+    if (!direct) return null;
+    const parsed = parseCanonicalAssetRef(direct);
+    if (!parsed || parsed.kind !== "version") return null;
+    return parsed.versionKey;
+  }
   function assertUploadContext(context) {
     const accountId = String(context.accountId || "").trim();
     const publicId = String(context.publicId || "").trim();
@@ -927,11 +934,27 @@ var Dieter = (() => {
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
-    const url = normalizeAssetUrl(payload);
-    if (!url) {
+    const payloadRecord = payload;
+    const assetRef = normalizeAssetRef(payloadRecord);
+    if (!assetRef) {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
-    return url;
+    const url = normalizeAssetUrl(payloadRecord) || toCanonicalAssetVersionPath(assetRef) || "";
+    if (!url) throw new Error("coreui.errors.assets.uploadFailed");
+    const assetType = typeof payloadRecord.assetType === "string" ? payloadRecord.assetType.trim() : "";
+    const contentType = typeof payloadRecord.contentType === "string" ? payloadRecord.contentType.trim() : "";
+    const sizeBytesRaw = Number(payloadRecord.sizeBytes);
+    const filename = typeof payloadRecord.filename === "string" ? payloadRecord.filename.trim() : "";
+    const createdAt = typeof payloadRecord.createdAt === "string" ? payloadRecord.createdAt.trim() : "";
+    return {
+      assetRef,
+      url,
+      assetType: assetType || "other",
+      contentType: contentType || file.type || "application/octet-stream",
+      sizeBytes: Number.isFinite(sizeBytesRaw) ? Math.max(0, Math.trunc(sizeBytesRaw)) : file.size,
+      filename: filename || file.name || "upload.bin",
+      createdAt: createdAt || (/* @__PURE__ */ new Date()).toISOString()
+    };
   }
 
   // components/dropdown-fill/asset-picker-data.ts
@@ -1278,11 +1301,25 @@ var Dieter = (() => {
         state.imageObjectUrl = localPreviewUrl;
         setImageSrc(state, localPreviewUrl, { commit: false, updateHeader: true, updateRemove: true }, deps);
         try {
-          const uploadedUrl = await uploadEditorAsset({
+          const uploaded = await uploadEditorAsset({
             file,
             source: "api"
           });
-          setImageSrc(state, uploadedUrl, { commit: true }, deps);
+          setImageSrc(state, uploaded.url, { commit: false }, deps);
+          deps.setInputValue(
+            state,
+            {
+              type: "image",
+              image: {
+                asset: { ref: uploaded.assetRef },
+                ...state.imageName ? { name: state.imageName } : {},
+                fit: "cover",
+                position: "center",
+                repeat: "no-repeat"
+              }
+            },
+            true
+          );
         } catch (error) {
           const message = error instanceof Error ? error.message : "";
           if (isAssetEntitlementReasonKey(message)) {
@@ -1361,11 +1398,27 @@ var Dieter = (() => {
         state.videoObjectUrl = localPreviewUrl;
         setVideoSrc(state, localPreviewUrl, { commit: false, updateHeader: true, updateRemove: true }, deps);
         try {
-          const uploadedUrl = await uploadEditorAsset({
+          const uploaded = await uploadEditorAsset({
             file,
             source: "api"
           });
-          setVideoSrc(state, uploadedUrl, { commit: true }, deps);
+          setVideoSrc(state, uploaded.url, { commit: false }, deps);
+          deps.setInputValue(
+            state,
+            {
+              type: "video",
+              video: {
+                asset: { ref: uploaded.assetRef },
+                ...state.videoName ? { name: state.videoName } : {},
+                fit: "cover",
+                position: "center",
+                loop: true,
+                muted: true,
+                autoplay: true
+              }
+            },
+            true
+          );
         } catch (error) {
           const message = error instanceof Error ? error.message : "";
           if (isAssetEntitlementReasonKey(message)) {

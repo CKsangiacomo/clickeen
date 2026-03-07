@@ -28,6 +28,7 @@ Asset metadata model (current repo snapshot):
 - Manifest stores one canonical immutable blob key (`assetRef`) per asset.
 - There is no Michael/Supabase asset table contract in the active runtime.
 - Upload contract rejects legacy variant mode (`x-variant` -> `422 coreui.errors.assets.variantUnsupported`).
+- Upload contract rejects unsafe filenames (`422 coreui.errors.filename.invalid`) instead of rewriting names server-side.
 
 ### Public reads (R2 backed)
 Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies):

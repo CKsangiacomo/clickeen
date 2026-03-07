@@ -1,6 +1,6 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 import { uploadEditorAsset } from '../shared/assetUpload';
-import { parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
+import { toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
@@ -254,30 +254,28 @@ function installHandlers(state: DropdownUploadState) {
 
     try {
       setUploadingState(state, true);
-      const uploadedUrl = await uploadEditorAsset({
+      const uploaded = await uploadEditorAsset({
         file,
         source: 'api',
       });
-      const uploadedAssetRef = parseCanonicalAssetRefKey(uploadedUrl);
       const existingMeta = readMeta(state);
       const nextMeta: UploadMeta = {
         ...(existingMeta || {}),
         name: file.name,
       };
-      if (uploadedAssetRef) nextMeta.ref = uploadedAssetRef;
-      else delete nextMeta.ref;
+      nextMeta.ref = uploaded.assetRef;
       const { kind, ext } = classifyByNameAndType(file.name, file.type);
       state.root.dataset.localName = file.name;
       setMetaValue(state, nextMeta, true);
       setHeaderWithFile(state, file.name, false);
       setPreview(state, {
         kind,
-        previewUrl: kind === 'image' || kind === 'video' ? uploadedUrl : undefined,
+        previewUrl: kind === 'image' || kind === 'video' ? uploaded.url : undefined,
         name: file.name,
         ext,
         hasFile: true,
       });
-      setFileKey(state, uploadedAssetRef ? 'transparent' : uploadedUrl, true);
+      setFileKey(state, 'transparent', true);
       clearError(state);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
@@ -386,13 +384,6 @@ function normalizeUrlForCompare(raw: string): string {
   } catch {
     return value;
   }
-}
-
-function parseCanonicalAssetRefKey(raw: string): string | null {
-  const parsed = parseCanonicalAssetRef(raw);
-  if (!parsed || parsed.kind !== 'version') return null;
-  const ref = String(parsed.versionKey || '').trim();
-  return ref || null;
 }
 
 function assetUrlFromMeta(meta: UploadMeta | null): string {

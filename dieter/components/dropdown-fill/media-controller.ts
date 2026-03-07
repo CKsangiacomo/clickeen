@@ -322,11 +322,25 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
       state.imageObjectUrl = localPreviewUrl;
       setImageSrc(state, localPreviewUrl, { commit: false, updateHeader: true, updateRemove: true }, deps);
       try {
-        const uploadedUrl = await uploadEditorAsset({
+        const uploaded = await uploadEditorAsset({
           file,
           source: 'api',
         });
-        setImageSrc(state, uploadedUrl, { commit: true }, deps);
+        setImageSrc(state, uploaded.url, { commit: false }, deps);
+        deps.setInputValue(
+          state,
+          {
+            type: 'image',
+            image: {
+              asset: { ref: uploaded.assetRef },
+              ...(state.imageName ? { name: state.imageName } : {}),
+              fit: 'cover',
+              position: 'center',
+              repeat: 'no-repeat',
+            },
+          },
+          true,
+        );
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
         if (isAssetEntitlementReasonKey(message)) {
@@ -406,11 +420,27 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
       state.videoObjectUrl = localPreviewUrl;
       setVideoSrc(state, localPreviewUrl, { commit: false, updateHeader: true, updateRemove: true }, deps);
       try {
-        const uploadedUrl = await uploadEditorAsset({
+        const uploaded = await uploadEditorAsset({
           file,
           source: 'api',
         });
-        setVideoSrc(state, uploadedUrl, { commit: true }, deps);
+        setVideoSrc(state, uploaded.url, { commit: false }, deps);
+        deps.setInputValue(
+          state,
+          {
+            type: 'video',
+            video: {
+              asset: { ref: uploaded.assetRef },
+              ...(state.videoName ? { name: state.videoName } : {}),
+              fit: 'cover',
+              position: 'center',
+              loop: true,
+              muted: true,
+              autoplay: true,
+            },
+          },
+          true,
+        );
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
         if (isAssetEntitlementReasonKey(message)) {

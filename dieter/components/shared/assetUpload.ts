@@ -1,4 +1,4 @@
-import { isUuid, isWidgetPublicId, parseCanonicalAssetRef } from '@clickeen/ck-contracts';
+import { isUuid, isWidgetPublicId, parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
 
 type EditorAssetUploadContext = {
   accountId: string;
@@ -18,6 +18,16 @@ type UploadEditorAssetArgs = {
 export type EditorAssetIdentity = {
   accountId: string;
   assetId: string;
+};
+
+export type EditorAssetUploadResult = {
+  assetRef: string;
+  url: string;
+  assetType: string;
+  contentType: string;
+  sizeBytes: number;
+  filename: string;
+  createdAt: string;
 };
 
 function isPublicId(value: string): boolean {
@@ -68,6 +78,14 @@ function normalizeAssetUrl(payload: Record<string, unknown>): string | null {
   return parsed.pathname;
 }
 
+function normalizeAssetRef(payload: Record<string, unknown>): string | null {
+  const direct = typeof payload.assetRef === 'string' ? payload.assetRef.trim() : '';
+  if (!direct) return null;
+  const parsed = parseCanonicalAssetRef(direct);
+  if (!parsed || parsed.kind !== 'version') return null;
+  return parsed.versionKey;
+}
+
 function assertUploadContext(context: EditorAssetUploadContext): EditorAssetUploadContext {
   const accountId = String(context.accountId || '').trim();
   const publicId = String(context.publicId || '').trim();
@@ -94,7 +112,7 @@ export function parseEditorAssetIdentity(raw: string): EditorAssetIdentity | nul
   return { accountId: parsed.accountId, assetId: parsed.assetId };
 }
 
-export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<string> {
+export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<EditorAssetUploadResult> {
   const file = args.file;
   if (!(file instanceof File) || file.size <= 0) {
     throw new Error('coreui.errors.payload.empty');
@@ -134,9 +152,27 @@ export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<st
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw new Error('coreui.errors.assets.uploadFailed');
   }
-  const url = normalizeAssetUrl(payload as Record<string, unknown>);
-  if (!url) {
+  const payloadRecord = payload as Record<string, unknown>;
+  const assetRef = normalizeAssetRef(payloadRecord);
+  if (!assetRef) {
     throw new Error('coreui.errors.assets.uploadFailed');
   }
-  return url;
+  const url = normalizeAssetUrl(payloadRecord) || toCanonicalAssetVersionPath(assetRef) || '';
+  if (!url) throw new Error('coreui.errors.assets.uploadFailed');
+
+  const assetType = typeof payloadRecord.assetType === 'string' ? payloadRecord.assetType.trim() : '';
+  const contentType = typeof payloadRecord.contentType === 'string' ? payloadRecord.contentType.trim() : '';
+  const sizeBytesRaw = Number(payloadRecord.sizeBytes);
+  const filename = typeof payloadRecord.filename === 'string' ? payloadRecord.filename.trim() : '';
+  const createdAt = typeof payloadRecord.createdAt === 'string' ? payloadRecord.createdAt.trim() : '';
+
+  return {
+    assetRef,
+    url,
+    assetType: assetType || 'other',
+    contentType: contentType || file.type || 'application/octet-stream',
+    sizeBytes: Number.isFinite(sizeBytesRaw) ? Math.max(0, Math.trunc(sizeBytesRaw)) : file.size,
+    filename: filename || file.name || 'upload.bin',
+    createdAt: createdAt || new Date().toISOString(),
+  };
 }
