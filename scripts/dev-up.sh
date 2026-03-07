@@ -292,6 +292,10 @@ prewarm_bob_routes() {
   for widget_dir in "$widgets_dir"/*; do
     [ -d "$widget_dir" ] || continue
     widget="$(basename "$widget_dir")"
+    # Skip non-widget support folders in tokyo/widgets.
+    if [[ "$widget" == _* ]] || [ "$widget" = "shared" ]; then
+      continue
+    fi
 
     if ! curl -sf "$bob_base/api/widgets/$widget/compiled" >/dev/null 2>&1; then
       echo "[dev-up] Prewarm warning: failed GET /api/widgets/$widget/compiled"
@@ -490,7 +494,7 @@ if [ -z "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
   echo "[dev-up] USAGE_EVENT_HMAC_SECRET not set; view metering will be disabled in local dev."
 fi
 
-TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
+TOKYO_URL=${TOKYO_URL:-https://tokyo.dev.clickeen.com}
 BERLIN_URL=${BERLIN_URL:-http://localhost:3005}
 BERLIN_ISSUER=${BERLIN_ISSUER:-$BERLIN_URL}
 BERLIN_AUDIENCE=${BERLIN_AUDIENCE:-clickeen.product}
@@ -716,7 +720,8 @@ echo "[dev-up] Starting Prague (4321)"
 wait_for_url "http://localhost:4321" "Prague" "$LOG_DIR/prague.dev.log"
 
 echo "[dev-up] URLs:"
-echo "  Tokyo:     http://localhost:4000/healthz"
+echo "  Tokyo URL: $TOKYO_URL"
+echo "  Tokyo local stub: http://localhost:4000/healthz"
 echo "  Berlin:    http://localhost:3005/internal/healthz"
 echo "  Paris:     http://localhost:3001"
 if [ -n "$SF_BASE_URL" ]; then

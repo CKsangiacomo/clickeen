@@ -312,7 +312,7 @@ describe('DevStudio widget workspace tool', () => {
     dom.window.close();
   });
 
-  it('creates a curated instance with composed slug and requests asset persistence from Bob', async () => {
+  it('creates a curated instance with composed slug from the current Bob editor snapshot', async () => {
     const instances = [
       {
         publicId: 'wgt_curated_faq_simple',
@@ -370,9 +370,7 @@ describe('DevStudio widget workspace tool', () => {
 
     await flushDom(dom, 4);
 
-    expect(exportRequest?.persistAssets).toBe(true);
-    expect(exportRequest?.assetScope).toBe('curated');
-    expect(exportRequest?.assetWidgetType).toBe('faq');
+    expect(exportRequest?.exportMode).toBe('current');
 
     const createCall = fetchMock.mock.calls.find(([input, init]) => {
       const url = typeof input === 'string' ? input : input.toString();

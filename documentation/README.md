@@ -97,22 +97,22 @@ This repo is operated by **1 human architect + multiple AI dev teams**. The syst
 ### A) Widget definition path (local)
 Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
 
-1) **Local Tokyo CDN stub** serves the widget folder:
+1) **Local Tokyo CDN stub** serves the widget folder (optional local debug path):
    - `tokyo/dev-server.mjs` -> `http://localhost:4000`
    - Serves `/widgets/**` and `/dieter/**` directly from the repo.
-2) **Local Bob** reads widget definitions from Tokyo:
-   - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `http://localhost:4000` in dev.
+2) **Local Bob** reads widget definitions/assets from Tokyo:
+   - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
 3) **Local DevStudio** opens Bob in message boot for widget authoring:
-   - `admin/src/html/tools/dev-widget-workspace.html` targets local Bob by default, and Bob resolves Tokyo to `http://localhost:4000` on localhost.
+   - `admin/src/html/tools/dev-widget-workspace.html` targets local Bob by default, with cloud Tokyo (`https://tokyo.dev.clickeen.com`) as the default data plane.
 4) **Cloud-dev Roma** is the supported product/account host surface:
    - `roma/app/api/bootstrap/route.ts` proxies to Paris `/api/roma/bootstrap`
    - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
    - local code changes only appear there after deploy
 5) **Local Prague** loads widget marketing JSON from the repo:
    - `prague/src/lib/markdown.ts` bundles `tokyo/widgets/**/pages/*.json`.
-   - `PUBLIC_TOKYO_URL=http://localhost:4000` provides tokens + overlay fetch base.
+   - `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com` is the default overlay/token base (override to local Tokyo only for explicit local-debug workflows).
 
-Result: editing `tokyo/widgets/**` immediately changes **local** Bob + DevStudio + Prague. Cloud-dev Roma reflects those changes only after deploy.
+Result: local Bob + DevStudio use the same cloud Tokyo data plane as Roma by default. Editing `tokyo/widgets/**` still affects local Tokyo stub flows, but cloud surfaces reflect repo changes only after deploy.
 
 ### A.1) Local auth issuer alignment (critical)
 Local app servers use the Supabase target chosen by `bash scripts/dev-up.sh`:
@@ -130,7 +130,7 @@ Instances are data (not code) and live in Paris/Michael. Assets live in Tokyo.
    - Roma Widgets/Templates can create/duplicate/delete user instances via Paris.
    - Bob save writes base config via account `PUT`.
 2) **DevStudio Local handles curated/main authoring** (superadmin-only actions) via Paris + Tokyo.
-3) **Assets** referenced in configs point at local Tokyo (localhost:4000).
+3) **Assets** referenced in configs point at cloud Tokyo by default (`https://tokyo.dev.clickeen.com`).
 4) **Venice embeds** render curated/user instances from published Tokyo bytes only; local Paris is involved only earlier in the write/publish path.
 
 ### C) Cloud-dev propagation (explicit)

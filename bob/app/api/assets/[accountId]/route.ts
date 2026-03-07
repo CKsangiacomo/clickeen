@@ -18,8 +18,29 @@ export function OPTIONS() {
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
-  const session = await resolveParisSession(request);
-  if (!session.ok) return withSessionAndCors(request, session.response, undefined, CORS_HEADERS);
+  const stage = (process.env.ENV_STAGE ?? '').trim().toLowerCase();
+  let accessToken = '';
+  let setCookies: undefined | Parameters<typeof withSessionAndCors>[2];
+  if (stage === 'local') {
+    const tokyoDevJwt = String(process.env.TOKYO_DEV_JWT || '').trim();
+    if (!tokyoDevJwt) {
+      return withSessionAndCors(
+        request,
+        NextResponse.json(
+          { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail: 'Missing TOKYO_DEV_JWT.' } },
+          { status: 500, headers: CORS_HEADERS },
+        ),
+        undefined,
+        CORS_HEADERS,
+      );
+    }
+    accessToken = tokyoDevJwt;
+  } else {
+    const session = await resolveParisSession(request);
+    if (!session.ok) return withSessionAndCors(request, session.response, undefined, CORS_HEADERS);
+    accessToken = session.accessToken;
+    setCookies = session.setCookies;
+  }
 
   const params = await context.params;
   const accountId = String(params.accountId || '').trim();
@@ -30,7 +51,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
         { status: 422, headers: CORS_HEADERS },
       ),
-      session.setCookies,
+      setCookies,
       CORS_HEADERS,
     );
   }
@@ -46,7 +67,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail } },
         { status: 500, headers: CORS_HEADERS },
       ),
-      session.setCookies,
+      setCookies,
       CORS_HEADERS,
     );
   }
@@ -58,7 +79,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const upstream = await fetch(target.toString(), {
       method: 'GET',
       headers: {
-        authorization: `Bearer ${session.accessToken}`,
+        authorization: `Bearer ${accessToken}`,
         accept: 'application/json',
       },
       cache: 'no-store',
@@ -82,7 +103,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
           : { error: { kind: 'INTERNAL', reasonKey: `HTTP_${upstream.status}` } },
         { status: upstream.status, headers: CORS_HEADERS },
       ),
-      session.setCookies,
+      setCookies,
       CORS_HEADERS,
     );
   } catch (error) {
@@ -93,7 +114,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'bob.errors.proxy.tokyo_unavailable', detail } },
         { status: 502, headers: CORS_HEADERS },
       ),
-      session.setCookies,
+      setCookies,
       CORS_HEADERS,
     );
   }

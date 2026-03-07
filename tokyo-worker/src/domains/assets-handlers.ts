@@ -369,12 +369,16 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.variantUnsupported' } }, { status: 422 });
   }
 
-  const account = await loadAccountUploadProfile(env, accountId);
-  if (!account) {
-    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' } }, { status: 404 });
-  }
-  if (account.status !== 'active') {
-    return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
+  let tier: string | null = null;
+  if (!auth.trusted) {
+    const account = await loadAccountUploadProfile(env, accountId);
+    if (!account) {
+      return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' } }, { status: 404 });
+    }
+    if (account.status !== 'active') {
+      return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
+    }
+    tier = account.tier;
   }
 
   const source = normalizeAccountAssetSource(req.headers.get('x-source'));
@@ -388,7 +392,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     accountId,
   });
   if (!tierResolution.ok) return tierResolution.response;
-  const tier = account.tier;
 
   const publicIdRaw = (req.headers.get('x-public-id') || '').trim();
   const publicId = publicIdRaw ? normalizePublicId(publicIdRaw) : null;
@@ -421,25 +424,27 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   const ext = pickExtension(filename, contentType);
   const assetType = classifyAccountAssetType(contentType, ext);
 
-  const maxBytes = resolveUploadSizeLimitBytes(tier);
   const body = await req.arrayBuffer();
   if (!body || body.byteLength === 0) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
   }
-  if (maxBytes != null && body.byteLength > maxBytes) {
-    return denyEntitlement('coreui.upsell.reason.capReached', `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}`, 413);
-  }
+  if (!auth.trusted) {
+    const maxBytes = resolveUploadSizeLimitBytes(tier);
+    if (maxBytes != null && body.byteLength > maxBytes) {
+      return denyEntitlement('coreui.upsell.reason.capReached', `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}`, 413);
+    }
 
-  const uploadsMax = resolveUploadsCountBudgetMax(tier);
-  const uploadsBytesMax = resolveUploadsBytesBudgetMax(tier);
-  const budgetResult = await enforceUploadBudgets({
-    env,
-    accountId,
-    uploadsBytesMax,
-    uploadsCountMax: uploadsMax,
-    bodyBytes: body.byteLength,
-  });
-  if (!budgetResult.ok) return budgetResult.response;
+    const uploadsMax = resolveUploadsCountBudgetMax(tier);
+    const uploadsBytesMax = resolveUploadsBytesBudgetMax(tier);
+    const budgetResult = await enforceUploadBudgets({
+      env,
+      accountId,
+      uploadsBytesMax,
+      uploadsCountMax: uploadsMax,
+      bodyBytes: body.byteLength,
+    });
+    if (!budgetResult.ok) return budgetResult.response;
+  }
 
   const assetId = crypto.randomUUID();
   const key = buildAccountAssetKey(accountId, assetId, filename);

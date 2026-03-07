@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
   }
 
   const surface = (request.headers.get('x-clickeen-surface') || '').trim();
-  if (surface !== 'roma-assets') {
+  const allowedLocalSurface = surface === '' || surface === 'roma-assets' || surface === 'devstudio';
+  if ((!localStage && surface !== 'roma-assets') || (localStage && !allowedLocalSurface)) {
     return withSessionAndCors(request, NextResponse.json(
       {
         error: {

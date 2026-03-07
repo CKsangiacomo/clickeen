@@ -817,11 +817,16 @@
     const BOB_ORIGIN = requireBobOrigin();
 
     function resolveTokyoBaseUrl() {
-      // Keep in sync with bob/lib/env/tokyo.ts (but plain JS for DevStudio tools).
-      const isLocal =
-        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      if (isLocal) return 'http://localhost:4000';
-      // Cloudflare Pages build/runtime (dev). Keep stable even if env vars aren't wired yet.
+      // Keep in sync with bob/lib/env/tokyo.ts (plain JS variant for DevStudio tools).
+      // DevStudio defaults to the cloud-dev Tokyo data plane so workspace assets/configs
+      // match Roma admin behavior. `?tokyo=` can override for explicit local debug.
+      const params = new URLSearchParams(window.location.search);
+      const raw = (params.get('tokyo') || '').trim();
+      if (raw) {
+        try {
+          return new URL(raw).origin;
+        } catch {}
+      }
       return 'https://tokyo.dev.clickeen.com';
     }
 
@@ -1648,11 +1653,7 @@
 
     async function exportInstanceDataFromBob({
       timeoutMs = 2500,
-      persistAssets = false,
       exportMode = 'base',
-      assetScope = 'workspace',
-      assetPublicId,
-      assetWidgetType,
     } = {}) {
       const target = iframe.contentWindow;
       if (!target) throw new Error('[DevStudio] Bob iframe not ready');
@@ -1688,11 +1689,7 @@
           {
             type: 'devstudio:export-instance-data',
             requestId,
-            persistAssets,
             exportMode,
-            assetScope,
-            assetPublicId,
-            assetWidgetType,
           },
           BOB_ORIGIN,
         );
@@ -1702,169 +1699,6 @@
     function cloneJson(value) {
       // v1: config is JSON-only.
       return JSON.parse(JSON.stringify(value ?? null));
-    }
-
-    function extractPrimaryUrl(raw) {
-      const v = String(raw || '').trim();
-      if (!v) return null;
-      if (/^(?:data|blob):/i.test(v) || /^https?:\/\//i.test(v)) return v;
-      const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-      if (m && m[2]) return m[2];
-      return null;
-    }
-
-    function replacePrimaryUrl(raw, nextUrl) {
-      const v = String(raw || '');
-      const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-      if (m && m[2]) return v.replace(m[2], nextUrl);
-      return nextUrl;
-    }
-
-    function isNonPersistableUrl(rawUrl) {
-      const v = String(rawUrl || '').trim();
-      return /^(?:data|blob):/i.test(v);
-    }
-
-    function extFromMime(mime) {
-      const mt = String(mime || '').toLowerCase();
-      if (mt === 'image/png') return 'png';
-      if (mt === 'image/jpeg') return 'jpg';
-      if (mt === 'image/webp') return 'webp';
-      if (mt === 'image/gif') return 'gif';
-      if (mt === 'image/svg+xml') return 'svg';
-      if (mt === 'video/mp4') return 'mp4';
-      if (mt === 'video/webm') return 'webm';
-      if (mt === 'application/pdf') return 'pdf';
-      return 'bin';
-    }
-
-    async function uploadTokyoAsset({
-      scope,
-      accountId,
-      workspaceId,
-      widgetType,
-      publicId,
-      blob,
-      filename,
-    }) {
-      const headers = new Headers();
-      headers.set('content-type', blob.type || 'application/octet-stream');
-      headers.set('x-filename', filename || 'upload.bin');
-      if (scope !== 'widget') {
-        if (!accountId) throw new Error('[DevStudio] Missing accountId for account asset upload');
-        headers.set('x-account-id', accountId);
-        headers.set('x-source', 'devstudio');
-      }
-
-      let endpoint = '';
-      if (scope === 'workspace') {
-        if (!workspaceId)
-          throw new Error('[DevStudio] Missing workspaceId for workspace asset upload');
-        headers.set('x-workspace-id', workspaceId);
-        endpoint = `${TOKYO_BASE}/assets/upload`;
-      } else if (scope === 'curated') {
-        if (!publicId) throw new Error('[DevStudio] Missing publicId for curated asset upload');
-        const normalized =
-          normalizeWidgetname(widgetType) ||
-          String(widgetType || '')
-            .trim()
-            .toLowerCase();
-        if (!normalized) throw new Error('[DevStudio] Missing widgetType for curated asset upload');
-        headers.set('x-public-id', publicId);
-        headers.set('x-widget-type', normalized);
-        endpoint = `${TOKYO_BASE}/assets/upload`;
-      } else if (scope === 'widget') {
-        const normalized =
-          normalizeWidgetname(widgetType) ||
-          String(widgetType || '')
-            .trim()
-            .toLowerCase();
-        if (!normalized) throw new Error('[DevStudio] Missing widgetType for widget asset upload');
-        headers.set('x-widget-type', normalized);
-        endpoint = `${TOKYO_BASE}/widgets/upload`;
-      } else {
-        throw new Error(`[DevStudio] Unknown asset upload scope: ${String(scope)}`);
-      }
-
-      const res = await fetch(`${endpoint}?_t=${Date.now()}`, {
-        method: 'POST',
-        headers,
-        body: blob,
-      });
-      const text = await res.text().catch(() => '');
-      if (!res.ok) {
-        throw new Error(
-          `[DevStudio] Asset upload failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
-        );
-      }
-      const json = text ? JSON.parse(text) : null;
-      const keyCandidate =
-        typeof json?.key === 'string'
-          ? json.key.trim()
-          : typeof json?.relativePath === 'string'
-            ? json.relativePath.trim()
-            : '';
-      const directUrl = typeof json?.url === 'string' ? json.url.trim() : '';
-      const normalizedUrl =
-        directUrl ||
-        (keyCandidate
-          ? /^https?:\/\//i.test(keyCandidate)
-            ? keyCandidate
-            : `${TOKYO_BASE.replace(/\/+$/, '')}/${keyCandidate.replace(/^\/+/, '')}`
-          : '');
-      if (!normalizedUrl) throw new Error('[DevStudio] Asset upload missing url');
-      return normalizedUrl;
-    }
-
-    async function persistConfigAssetsToTokyo(
-      config,
-      { scope, accountId, workspaceId, widgetType, publicId },
-    ) {
-      if (!config || typeof config !== 'object') return config;
-
-      const cache = new Map();
-      const visit = async (node) => {
-        if (typeof node === 'string') {
-          const url = extractPrimaryUrl(node);
-          if (!url || !isNonPersistableUrl(url)) return;
-
-          if (!cache.has(url)) {
-            const blob = await fetch(url).then((r) => r.blob());
-            const ext = extFromMime(blob.type);
-            const filename = `upload.${ext}`;
-            const uploadedUrl = await uploadTokyoAsset({
-              scope,
-              accountId,
-              workspaceId,
-              widgetType,
-              publicId,
-              blob,
-              filename,
-              variant: 'original',
-            });
-            cache.set(url, uploadedUrl);
-          }
-          const uploaded = cache.get(url);
-          return replacePrimaryUrl(node, uploaded);
-        }
-
-        if (!node || typeof node !== 'object') return;
-        if (Array.isArray(node)) {
-          for (let i = 0; i < node.length; i += 1) {
-            const replaced = await visit(node[i]);
-            if (typeof replaced === 'string') node[i] = replaced;
-          }
-          return;
-        }
-
-        for (const [key, value] of Object.entries(node)) {
-          const replaced = await visit(value);
-          if (typeof replaced === 'string') node[key] = replaced;
-        }
-      };
-
-      await visit(config);
-      return config;
     }
 
     function stripTokyoBaseFromConfig(config, tokyoBase) {
@@ -1902,11 +1736,7 @@
     async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
       const publicId = `wgt_main_${widgetSlug}`;
       const exported = await exportInstanceDataFromBob({
-        persistAssets: true,
         exportMode: 'current',
-        assetScope: 'curated',
-        assetPublicId: publicId,
-        assetWidgetType: widgetSlug,
       });
       const config = exported?.instanceData;
       if (!config || typeof config !== 'object') {
@@ -2124,17 +1954,8 @@
         );
       }
 
-      const themeAssetPublicId =
-        isCuratedPublicId(currentPublicId) || currentPublicId.startsWith('wgt_main_')
-          ? currentPublicId
-          : `wgt_main_${widgetSlug}`;
-
       const exported = await exportInstanceDataFromBob({
-        persistAssets: true,
         exportMode: 'current',
-        assetScope: 'curated',
-        assetPublicId: themeAssetPublicId,
-        assetWidgetType: widgetSlug,
       });
       const config = exported?.instanceData;
       if (!config || typeof config !== 'object') {
@@ -2216,11 +2037,7 @@
       const widgetSlug = instance.widgetSlug || requireWidgetSlugForAction();
       const publicId = instance.publicId;
       const exported = await exportInstanceDataFromBob({
-        persistAssets: true,
         exportMode: 'current',
-        assetScope: 'curated',
-        assetPublicId: publicId,
-        assetWidgetType: widgetSlug,
       });
       const config = exported?.instanceData;
       if (!config || typeof config !== 'object') {
@@ -2379,11 +2196,7 @@
         throw new Error('[DevStudio] Instance key already exists. Choose a different name.');
       }
       const exported = await exportInstanceDataFromBob({
-        persistAssets: true,
         exportMode: 'current',
-        assetScope: 'curated',
-        assetPublicId: publicId,
-        assetWidgetType: curatedModalState.widgetSlug,
       });
       const sourceConfig = exported?.instanceData;
       if (!sourceConfig || typeof sourceConfig !== 'object') {

@@ -15,6 +15,7 @@
     conic: true,
   };
   var ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
+  var ASSET_VERSION_PATH_RE = /^\/assets\/v\/(.+)$/;
 
   function isRecord(value) {
     return Boolean(value && typeof value === 'object' && !Array.isArray(value));
@@ -31,16 +32,68 @@
     return ASSET_VERSION_KEY_RE.test(versionId);
   }
 
+  function decodeAssetVersionPathToken(raw) {
+    var token = String(raw || '').trim();
+    if (!token) return '';
+    var decoded = '';
+    try {
+      decoded = decodeURIComponent(token);
+    } catch (_err) {
+      return '';
+    }
+    return isCanonicalAssetVersionKey(decoded) ? decoded : '';
+  }
+
+  function parseAssetVersionFromPathname(pathname) {
+    var path = String(pathname || '').trim();
+    if (!path) return '';
+    var match = path.match(ASSET_VERSION_PATH_RE);
+    if (!match || !match[1]) return '';
+    return decodeAssetVersionPathToken(match[1]);
+  }
+
+  function coerceAssetVersionKey(raw) {
+    var candidate = String(raw || '').trim();
+    if (!candidate) return '';
+    if (isCanonicalAssetVersionKey(candidate)) return candidate;
+
+    if (/^https?:\/\//i.test(candidate)) {
+      try {
+        var fromUrl = new URL(candidate);
+        return parseAssetVersionFromPathname(fromUrl.pathname);
+      } catch (_err) {
+        return '';
+      }
+    }
+
+    if (candidate.indexOf('/assets/v/') === 0) {
+      return parseAssetVersionFromPathname(candidate);
+    }
+
+    return '';
+  }
+
   function assetVersionIdToPath(raw) {
-    var versionId = String(raw || '').trim();
-    if (!isCanonicalAssetVersionKey(versionId)) return '';
+    var versionId = coerceAssetVersionKey(raw);
+    if (!versionId) return '';
     return '/assets/v/' + encodeURIComponent(versionId);
   }
 
   function readAssetVersionId(raw) {
+    if (typeof raw === 'string') return coerceAssetVersionKey(raw);
     if (!isRecord(raw)) return '';
+    var ref = typeof raw.ref === 'string' ? raw.ref.trim() : '';
     var versionId = typeof raw.versionId === 'string' ? raw.versionId.trim() : '';
-    return isCanonicalAssetVersionKey(versionId) ? versionId : '';
+    return coerceAssetVersionKey(ref || versionId);
+  }
+
+  function readAssetSrc(raw) {
+    if (!isRecord(raw)) return '';
+    var direct = typeof raw.src === 'string' ? raw.src.trim() : '';
+    if (!direct) return '';
+    var fromPath = assetVersionIdToPath(direct);
+    if (fromPath) return fromPath;
+    return /^https?:\/\//i.test(direct) || direct.indexOf('/') === 0 ? direct : '';
   }
 
   function normalizeStringFill(raw) {
@@ -118,12 +171,12 @@
   function normalizeImage(raw) {
     if (!isRecord(raw)) return { src: '', fit: 'cover', position: 'center', repeat: 'no-repeat' };
     var assetVersionId = readAssetVersionId(raw.asset);
-    var src = assetVersionIdToPath(assetVersionId);
+    var src = assetVersionIdToPath(assetVersionId) || readAssetSrc(raw);
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var repeat = typeof raw.repeat === 'string' && raw.repeat.trim() ? raw.repeat.trim() : 'no-repeat';
     var out = { src: src, fit: fit, position: position, repeat: repeat };
-    if (assetVersionId) out.asset = { versionId: assetVersionId };
+    if (assetVersionId) out.asset = { ref: assetVersionId };
     return out;
   }
 
@@ -131,7 +184,7 @@
     if (!isRecord(raw)) return { src: '', poster: '', fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true };
     var assetVersionId = readAssetVersionId(raw.asset);
     var posterVersionId = readAssetVersionId(raw.poster);
-    var src = assetVersionIdToPath(assetVersionId);
+    var src = assetVersionIdToPath(assetVersionId) || readAssetSrc(raw);
     var poster = assetVersionIdToPath(posterVersionId);
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
@@ -147,8 +200,8 @@
       muted: muted,
       autoplay: autoplay,
     };
-    if (assetVersionId) out.asset = { versionId: assetVersionId };
-    if (posterVersionId) out.poster = { versionId: posterVersionId };
+    if (assetVersionId) out.asset = { ref: assetVersionId };
+    if (posterVersionId) out.posterAsset = { ref: posterVersionId };
     return out;
   }
 
@@ -178,7 +231,7 @@
     if (fill.type === 'color') return fill.color || 'transparent';
     if (fill.type === 'gradient') return buildGradientCss(fill.gradient);
     if (fill.type === 'image') {
-      if (!fill.image || !fill.image.src) throw new Error('[CKFill] Missing image asset source');
+      if (!fill.image || !fill.image.src) return 'transparent';
       var fit = fill.image.fit === 'contain' ? 'contain' : 'cover';
       var position = fill.image.position || 'center';
       var repeat = fill.image.repeat || 'no-repeat';
@@ -225,9 +278,6 @@
   function applyMediaLayer(container, raw, opts) {
     var fill = normalizeFill(raw);
     if (!fill) throw new Error('[CKFill] Invalid fill');
-    if (fill.type === 'video' && (!fill.video || !fill.video.src)) {
-      throw new Error('[CKFill] Missing video asset source');
-    }
     var wantsVideo = fill.type === 'video' && fill.video && fill.video.src;
     if (!wantsVideo) {
       clearLayer(container);

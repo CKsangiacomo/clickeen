@@ -24,12 +24,12 @@
 
 ## Canonical URLs (executed)
 
-- **Local**: `http://localhost:4000` (Tokyo dev server started by `bash scripts/dev-up.sh`)
+- **Local**: `https://tokyo.dev.clickeen.com` by default for Bob/DevStudio/Roma data parity. `http://localhost:4000` remains available as an explicit local Tokyo debug stub.
 - **Cloud-dev**: `https://tokyo.dev.clickeen.com` (Cloudflare dev)
 - **UAT / Limited GA / GA**: `https://tokyo.clickeen.com` (release stages share prod infra)
 
 Consumers should treat Tokyo as the **software plane**:
-- Widget definitions are fetched over HTTP (even locally) using `NEXT_PUBLIC_TOKYO_URL`
+- Widget definitions are fetched over HTTP using `NEXT_PUBLIC_TOKYO_URL` (cloud-dev Tokyo by default in local product flows)
 - Dieter build artifacts are served from Tokyo (`tokyo/dieter/**`)
 - i18n bundles are served from Tokyo (`tokyo/i18n/**`)
 
@@ -109,6 +109,7 @@ Cloud-dev:
 
 Security rule (executed):
 - `TOKYO_DEV_JWT` must never be used from a browser. Browser upload flows go through Bob server routes using Berlin session auth.
+- `TOKYO_DEV_JWT` is a trusted internal/dev automation path. In this path, account membership + tier budget caps are bypassed by design; keep token scope/operator access tightly controlled.
 
 Asset-domain note:
 - Tokyo upload metadata is ownership/file-centric and stored as per-asset manifest JSON in Tokyo R2.

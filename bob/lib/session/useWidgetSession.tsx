@@ -245,11 +245,7 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 type DevstudioExportInstanceDataMessage = {
   type: 'devstudio:export-instance-data';
   requestId: string;
-  persistAssets?: boolean;
   exportMode?: 'current' | 'base';
-  assetScope?: 'account' | 'curated';
-  assetPublicId?: string;
-  assetWidgetType?: string;
 };
 
 type BobExportInstanceDataResponseMessage = {

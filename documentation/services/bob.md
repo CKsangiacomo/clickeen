@@ -428,7 +428,7 @@ Reference:
 ## Environment & Dev Setup
 
 ### Required
-- `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local dev defaults to `http://localhost:4000`)
+- `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local dev defaults to `https://tokyo.dev.clickeen.com`)
 ### Optional
 - `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (used by the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
 
