@@ -101,7 +101,6 @@ Cloud-dev:
   - `POST /assets/upload` (requires `Authorization: Bearer <token>`; accepts Berlin session bearer for product uploads, or `TOKYO_DEV_JWT` for internal/dev automation. Required header: `x-account-id`. Optional headers: `x-public-id`, `x-widget-type`, `x-source`.)
   - `GET /assets/account/:accountId` (requires `Authorization: Bearer <token>`; Berlin session bearer or `TOKYO_DEV_JWT`; member-scoped list)
   - `DELETE /assets/:accountId/:assetId` (requires `Authorization: Bearer <token>`; Berlin session bearer or `TOKYO_DEV_JWT`; editor+-scoped hard delete path)
-  - `DELETE /assets/purge/:accountId?confirm=1` (requires `Authorization: Bearer <token>`; Berlin session bearer or `TOKYO_DEV_JWT`; editor+-scoped account purge)
   - `GET /assets/integrity/:accountId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /assets/integrity/:accountId/:assetId` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /assets/v/:assetRef` (public, immutable, cacheable; canonical account-owned asset reads)

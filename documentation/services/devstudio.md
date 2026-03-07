@@ -14,7 +14,7 @@ DevStudio is Clickeen’s internal admin surface for docs + tools. In this repo 
 
 ## Widget Workspace tool
 
-Route: `/#/dieter/dev-widget-workspace`
+Route: `/#/tools/dev-widget-workspace`
 
 What it does:
 - Embeds Bob in message-boot mode as a local-first widget authoring studio (default local Bob or explicit `?bob=http://localhost:3000` on the page URL).

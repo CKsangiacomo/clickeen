@@ -908,6 +908,7 @@ var Dieter = (() => {
     headers.set("x-account-id", context.accountId);
     headers.set("x-filename", file.name || "upload.bin");
     headers.set("x-source", source);
+    headers.set("x-clickeen-surface", "roma-assets");
     if (context.publicId) headers.set("x-public-id", context.publicId);
     if (context.widgetType) headers.set("x-widget-type", context.widgetType);
     const response = await fetch(`${endpoint.replace(/\/$/, "")}?_t=${Date.now()}`, {

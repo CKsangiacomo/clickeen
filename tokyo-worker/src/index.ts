@@ -12,7 +12,6 @@ import {
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
   handleListAccountAssetMetadata,
-  handlePurgeAccountAssets,
   handleUploadAccountAsset,
 } from './domains/assets';
 import { handleGetL10nAsset } from './domains/l10n-read';
@@ -761,15 +760,6 @@ export default {
       if (pathname === '/assets/upload') {
         if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         return withCors(await handleUploadAccountAsset(req, env));
-      }
-
-      const accountAssetPurgeMatch = pathname.match(/^\/assets\/purge\/([0-9a-f-]{36})$/i);
-      if (accountAssetPurgeMatch) {
-        const accountId = decodeURIComponent(accountAssetPurgeMatch[1] || '');
-        if (req.method === 'DELETE') {
-          return withCors(await handlePurgeAccountAssets(req, env, accountId));
-        }
-        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
       }
 
       const accountAssetsListMatch = pathname.match(/^\/assets\/account\/([0-9a-f-]{36})$/i);

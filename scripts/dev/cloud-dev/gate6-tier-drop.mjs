@@ -347,7 +347,7 @@ async function main() {
 
   const keep = [instances[0]];
   const dropped = await planChange(accessToken, accountId, 'free', keep);
-  console.log(`[gate6] drop → free ok=${dropped?.ok === true} assetsPurged=${Boolean(dropped?.assetsPurged)}`);
+  console.log(`[gate6] drop → free ok=${dropped?.ok === true}`);
 
   // Wait for Tokyo delete-instance-mirror jobs to complete.
   for (const publicId of instances.slice(1)) {
@@ -361,8 +361,8 @@ async function main() {
   console.log('[gate6] unpublished instances are dark');
 
   const assetAfter = await headStatus(assetUrl);
-  if (assetAfter !== 404) throw new Error(`Asset HEAD after drop expected 404, got ${assetAfter}`);
-  console.log('[gate6] assets purged');
+  if (assetAfter !== 200) throw new Error(`Asset HEAD after drop expected 200, got ${assetAfter}`);
+  console.log('[gate6] assets remain account-scoped after tier drop');
 
   const metaGone = await waitForStatus({ label: 'venice /r?meta=1', url: metaUrl, wanted: 404 });
   if (!metaGone) process.exit(1);

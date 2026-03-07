@@ -1,6 +1,6 @@
 {
   "component": "dropdown-upload",
-  "syntax": "<tooldrawer-field type='dropdown-upload' size='{{SIZE}}' path='{{PATH}}' meta-path='{{META_PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' accept='{{ACCEPT}}' maxImageKb='{{MAX_IMAGE_KB}}' maxVideoKb='{{MAX_VIDEO_KB}}' maxOtherKb='{{MAX_OTHER_KB}}' grantUrl='{{GRANT_URL}}' resolveUrl='{{RESOLVE_URL}}' template='{{TEMPLATE}}' />",
+  "syntax": "<tooldrawer-field type='dropdown-upload' size='{{SIZE}}' path='{{PATH}}' meta-path='{{META_PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' accept='{{ACCEPT}}' maxImageKb='{{MAX_IMAGE_KB}}' maxVideoKb='{{MAX_VIDEO_KB}}' maxOtherKb='{{MAX_OTHER_KB}}' template='{{TEMPLATE}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "path": { "optional": true },
@@ -16,8 +16,6 @@
     "maxImageKb": { "optional": true, "type": "number", "default": 512 },
     "maxVideoKb": { "optional": true, "type": "number", "default": 1536 },
     "maxOtherKb": { "optional": true, "type": "number", "default": 1536 },
-    "grantUrl": { "optional": true, "default": "/api/assets/grant" },
-    "resolveUrl": { "optional": true, "default": "/api/assets/resolve" },
     "template": { "optional": true }
   },
   "binding": { "path": "instanceData[PATH]", "type": "string" },
@@ -43,8 +41,6 @@
         "maxImageKb": 512,
         "maxVideoKb": 1536,
         "maxOtherKb": 1536,
-        "grantUrl": "/api/assets/grant",
-        "resolveUrl": "/api/assets/resolve",
         "template": ""
       },
       "sizeContext": {

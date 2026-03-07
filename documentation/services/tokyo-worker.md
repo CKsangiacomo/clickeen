@@ -18,7 +18,6 @@ Tokyo-worker does not “decide what is live”. Bob/Roma decides; Paris commits
 - `GET /assets/account/:accountId` (auth required; member-scoped asset manifest list)
 - `GET /assets/v/:assetRef` (public; immutable)
 - `DELETE /assets/:accountId/:assetId` (auth required; editor+ hard delete metadata + blobs)
-- `DELETE /assets/purge/:accountId?confirm=1` (auth required; editor+ hard delete **all** account asset metadata + blobs; used for downgrade/closure)
 - Integrity tools (dev/internal):
   - `GET /assets/integrity/:accountId`
   - `GET /assets/integrity/:accountId/:assetId`

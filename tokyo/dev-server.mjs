@@ -387,9 +387,6 @@ function shouldProxyMutableToWorker(req, pathname) {
   ) {
     return true;
   }
-  if (req.method === 'POST' && pathname === '/assets/purge-deleted') {
-    return true;
-  }
   if ((req.method === 'GET' || req.method === 'HEAD') && parseCanonicalAssetRef(pathname)) {
     return true;
   }

@@ -60,9 +60,9 @@ Locale read note:
 - Members reads are served from Roma same-origin routes via direct Michael access (`/api/accounts/:accountId/members`), not Paris.
 
 ### Assets boundary
-- Asset list/delete/purge are no longer exposed by Paris.
+- Asset list/upload/delete are not exposed by Paris.
 - Roma/Bob call Tokyo asset endpoints directly with Berlin-backed auth on server routes.
-- Paris still triggers asset purge internally during tier-drop orchestration when required.
+- Paris has no account-level asset operation beyond ref validation in instance writes.
 
 ---
 

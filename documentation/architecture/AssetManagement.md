@@ -44,14 +44,13 @@ Tokyo-worker authoritative endpoints:
 - `GET /assets/v/:assetRef`
 - `GET /assets/account/:accountId`
 - `DELETE /assets/:accountId/:assetId`
-- `DELETE /assets/purge/:accountId?confirm=1`
 - `GET /assets/integrity/:accountId` (dev/internal)
 - `GET /assets/integrity/:accountId/:assetId` (dev/internal)
 
 Roma control-plane routes proxy account-safe operations for product UI:
+- `POST /api/assets/upload`
 - `GET /api/assets/:accountId`
 - `DELETE /api/assets/:accountId/:assetId`
-- `DELETE /api/assets/:accountId?confirm=1`
 
 ---
 
@@ -81,7 +80,7 @@ Roma control-plane routes proxy account-safe operations for product UI:
 | Surface | Owns |
 |---|---|
 | Bob | Upload trigger + editor ref assignment |
-| Roma | Asset inventory UX (list/delete/purge, limits visibility) |
+| Roma | Asset inventory UX (list/upload/bulk-upload/delete, limits visibility) |
 | Paris | Ref validation in instance writes |
 | Tokyo-worker | Asset storage/read/delete/integrity |
 | Venice | Static serving of referenced bytes |
@@ -115,7 +114,7 @@ Roma control-plane routes proxy account-safe operations for product UI:
 7. Delete path uses `accountId + assetId` identity and hard-deletes blob + metadata.
 8. Paris config validation rejects legacy media URL persistence and enforces `asset.ref`.
 9. Bob write path persists immutable refs (`asset.ref` / `poster.ref`) only.
-10. Roma assets domain uses the strict list/delete contract only.
+10. Roma assets domain uses strict upload/list/bulk-upload/delete contract only.
 11. Keep one migration utility:
    - `scripts/migrate-asset-ref-hard-cut.mjs` (widget config normalization only; runtime manifest migration stage is retired after hard-cut)
 12. Migration run policy:

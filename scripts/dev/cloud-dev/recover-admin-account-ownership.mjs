@@ -652,25 +652,6 @@ async function uploadAssetVersionToAdmin(env, accessToken, adminAccountId, versi
   return nextVersionKey;
 }
 
-async function purgeAccountAssets(env, accessToken, accountId) {
-  const tokyoBase = assertString(env.CK_CLOUD_TOKYO_BASE_URL, 'CK_CLOUD_TOKYO_BASE_URL').replace(/\/+$/, '');
-  const tokyoToken = String(env.TOKYO_DEV_JWT || accessToken || '').trim();
-  const { res, data, text } = await fetchJson(
-    `${tokyoBase}/assets/purge/${encodeURIComponent(accountId)}?confirm=1&_t=${Date.now()}`,
-    {
-      method: 'DELETE',
-      headers: {
-        authorization: `Bearer ${tokyoToken}`,
-        accept: 'application/json',
-      },
-    },
-  );
-  if (!res.ok) {
-    throw new Error(`Tokyo asset purge failed for ${accountId} (${res.status}) ${text.slice(0, 220)}`);
-  }
-  return data;
-}
-
 async function buildInventory(env, client, accessToken, adminAccountId) {
   const bootstrap = await loadBootstrap(env, accessToken);
   const accounts = Array.isArray(bootstrap?.accounts) ? bootstrap.accounts : [];
@@ -1107,13 +1088,6 @@ async function deleteRecoveredAccounts(env, client, accessToken, checkpoint) {
 
   const adminAccountId = checkpoint.adminAccountId;
   const targetAccountIds = checkpoint.targetAccountIds.filter((accountId) => accountId !== adminAccountId);
-  const purgedAssets = [];
-
-  for (const accountId of targetAccountIds) {
-    const purgeResult = await purgeAccountAssets(env, accessToken, accountId);
-    purgedAssets.push({ accountId, purgeResult });
-    await sleep(100);
-  }
 
   await deleteSupabaseByAccountIds(client, ACCOUNT_NOTICE_TABLE, 'account_id', targetAccountIds, {
     ignoreMissingTable: true,
@@ -1133,7 +1107,6 @@ async function deleteRecoveredAccounts(env, client, accessToken, checkpoint) {
 
   return {
     completedAt: new Date().toISOString(),
-    purgedAssets,
     remainingAccounts,
     ok: remainingAccounts.length === 1 && remainingAccounts[0]?.accountId === adminAccountId,
   };

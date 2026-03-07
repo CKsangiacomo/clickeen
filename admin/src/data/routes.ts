@@ -47,6 +47,11 @@ const getFolderFromPath = (path: string): string => {
   return 'other';
 };
 
+const buildPagePath = (folder: string, slug: string): string => {
+  if (folder === 'tools') return `#/tools/${slug}`;
+  return `#/dieter/${slug}`;
+};
+
 const getFolderTitle = (folder: string): string => {
   if (folder === 'dieter') return 'Dieter Components';
   if (folder === 'components') return 'Dieter Components';
@@ -72,7 +77,7 @@ const staticShowcasePages: ShowcasePage[] = staticShowcasePaths.map((path) => {
   return {
     slug,
     title,
-    path: `#/dieter/${slug}`,
+    path: buildPagePath(folder, slug),
     htmlPath: path,
     css,
   };
@@ -80,7 +85,7 @@ const staticShowcasePages: ShowcasePage[] = staticShowcasePaths.map((path) => {
 
 export const showcasePages: ShowcasePage[] = staticShowcasePages;
 
-export const showcaseIndex = new Map(showcasePages.map((page) => [page.slug, page]));
+export const showcaseIndex = new Map(showcasePages.map((page) => [page.path, page]));
 
 const pageToNav = (page: ShowcasePage): NavItem => ({
   id: `showcase-${page.slug}`,

@@ -332,63 +332,6 @@ async function enforceTierDropMirrorForKeptInstances(args: {
   };
 }
 
-async function purgeAccountAssets(args: {
-  env: Env;
-  accountId: string;
-}): Promise<{ ok: true; tokyo: Record<string, unknown> } | { ok: false; response: Response }> {
-  try {
-    const tokyoBase = ((args.env.TOKYO_WORKER_BASE_URL || '') || (args.env.TOKYO_BASE_URL || '')).trim().replace(/\/+$/, '');
-    if (!tokyoBase) {
-      return {
-        ok: false,
-        response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_BASE_URL missing' }, 500),
-      };
-    }
-
-    const tokyoToken = ((args.env.TOKYO_DEV_JWT || '') || (args.env.PARIS_DEV_JWT || '')).trim();
-    if (!tokyoToken) {
-      return {
-        ok: false,
-        response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'TOKYO_DEV_JWT missing' }, 500),
-      };
-    }
-
-    const tokyoUrl = new URL(`${tokyoBase}/assets/purge/${encodeURIComponent(args.accountId)}`);
-    tokyoUrl.searchParams.set('confirm', '1');
-    const tokyoRes = await fetch(tokyoUrl.toString(), {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${tokyoToken}`,
-        accept: 'application/json',
-        'x-clickeen-surface': 'roma-assets',
-      },
-      cache: 'no-store',
-    });
-    const tokyoBody = await readJson(tokyoRes);
-    if (!tokyoRes.ok) {
-      return {
-        ok: false,
-        response: json(
-          (tokyoBody && typeof tokyoBody === 'object'
-            ? (tokyoBody as Record<string, unknown>)
-            : {
-                error: {
-                  kind: 'INTERNAL',
-                  reasonKey: 'coreui.errors.db.writeFailed',
-                  detail: JSON.stringify(tokyoBody),
-                },
-              }) as Record<string, unknown>,
-          { status: tokyoRes.status },
-        ),
-      };
-    }
-    return { ok: true, tokyo: (tokyoBody && typeof tokyoBody === 'object' ? (tokyoBody as Record<string, unknown>) : { ok: true }) };
-  } catch (error) {
-    const detail = errorDetail(error);
-    return { ok: false, response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500) };
-  }
-}
-
 async function recordTierDropLifecycleState(args: {
   env: Env;
   accountId: string;
@@ -603,13 +546,6 @@ export async function handleAccountLifecyclePlanChange(req: Request, env: Env, a
     tokyoResync = { syncEnqueued: mirror.syncEnqueued, failed: mirror.failed, failedDetails: mirror.failedDetails };
   }
 
-  let assetsPurged = false;
-  if (nextTier === 'free') {
-    const purged = await purgeAccountAssets({ env, accountId });
-    if (!purged.ok) return purged.response;
-    assetsPurged = true;
-  }
-
   const lifecycle = await recordTierDropLifecycleState({
     env,
     accountId,
@@ -630,6 +566,5 @@ export async function handleAccountLifecyclePlanChange(req: Request, env: Env, a
     unpublished,
     tokyo,
     tokyoResync,
-    assetsPurged,
   });
 }

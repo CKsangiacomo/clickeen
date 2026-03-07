@@ -27,7 +27,7 @@ Core shipped endpoints in this repo snapshot include:
   - accepts only curated/base MiniBob source ids (`wgt_main_*` or `wgt_curated_*`) and always creates a new `wgt_*_u_*` record
 
 Asset route note:
-- Asset list/delete/purge are now served via Tokyo-facing routes in Roma/Bob; Paris no longer exposes account asset CRUD endpoints.
+- Asset upload/list/delete are now served via Tokyo-facing routes in Roma/Bob; Paris no longer exposes account asset CRUD endpoints.
 
 ## Curated vs user instances
 

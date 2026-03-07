@@ -22,6 +22,11 @@ export const parseHash = (hash: string): RouteMatch => {
     return { kind: 'showcase', slug: slug || undefined };
   }
 
+  if (cleanHash.startsWith('#/tools/')) {
+    const slug = cleanHash.replace('#/tools/', '').trim();
+    return { kind: 'showcase', slug: slug || undefined };
+  }
+
   if (cleanHash.startsWith('#/dieter-components-new/')) {
     const slug = cleanHash.replace('#/dieter-components-new/', '').trim();
     const mapped = slug ? `dieter-new-${slug}` : undefined;

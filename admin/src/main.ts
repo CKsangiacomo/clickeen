@@ -263,9 +263,10 @@ function navigateTo(path: string) {
   }
 }
 
-function parseSlug(hash: string): string | null {
-  if (!hash.startsWith('#/dieter/')) return null;
-  return hash.replace('#/dieter/', '').split('?')[0];
+function parseShowcasePath(hash: string): string | null {
+  const cleanHash = hash.split('?')[0];
+  if (showcaseIndex.has(cleanHash)) return cleanHash;
+  return null;
 }
 
 function setActive(path: string) {
@@ -512,16 +513,16 @@ function hydrateTypographyPage(scope: ParentNode) {
 }
 
 function renderFromHash() {
-  const slug = parseSlug(window.location.hash);
-  if (!slug) {
+  const pagePath = parseShowcasePath(window.location.hash);
+  if (!pagePath) {
     const first = navGroups[0]?.items[0];
     if (first) navigateTo(first.path);
     return;
   }
 
-  const page = showcaseIndex.get(slug);
+  const page = showcaseIndex.get(pagePath);
   if (!page) {
-    main.replaceChildren(renderNotFound(slug));
+    main.replaceChildren(renderNotFound(pagePath));
     return;
   }
 
@@ -531,7 +532,7 @@ function renderFromHash() {
   }
 
   let content: DocumentFragment;
-  if (slug === 'bob-ui-native') {
+  if (page.slug === 'bob-ui-native') {
     content = renderBobNative();
   } else {
     content = renderHtmlPage(page.htmlPath, pageStyles);

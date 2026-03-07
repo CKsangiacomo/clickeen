@@ -23,7 +23,6 @@ type PlanChangeResponse =
       noticeId?: string;
       keptLivePublicIds?: string[];
       unpublished?: string[];
-      assetsPurged?: boolean;
     }
   | { ok?: false; error?: unknown };
 

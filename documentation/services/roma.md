@@ -103,7 +103,7 @@ Usage, billing, and AI domain behavior:
 Assets domain behavior:
 - `AssetsDomain` reads account inventory from `/api/assets/:accountId` and performs per-asset delete via `/api/assets/:accountId/:assetId`.
 - Roma exposes account-level asset routes (`/api/assets/:accountId`, `/api/assets/:accountId/:assetId`, `/api/assets/upload`) and forwards them directly to Tokyo-worker with the user session bearer.
-- Account purge (`DELETE /api/assets/:accountId?confirm=1`) is also forwarded to Tokyo-worker and remains explicit confirm-only.
+- Assets supports single upload, bulk upload (multi-file queue), list, and per-asset delete only.
 - Account is the ownership boundary.
 
 ## Local vs cloud-dev

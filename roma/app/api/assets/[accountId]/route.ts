@@ -34,7 +34,7 @@ function upstreamJsonOrNull(text: string): unknown | null {
 async function forwardToTokyo(
   request: NextRequest,
   accountId: string,
-  method: 'GET' | 'DELETE',
+  method: 'GET',
 ): Promise<NextResponse> {
   const session = await resolveSessionBearer(request);
   if (!session.ok) return withSession(request, session.response);
@@ -54,11 +54,7 @@ async function forwardToTokyo(
     );
   }
 
-  const target = new URL(
-    method === 'GET'
-      ? `${tokyoBase}/assets/account/${encodeURIComponent(accountId)}`
-      : `${tokyoBase}/assets/purge/${encodeURIComponent(accountId)}`,
-  );
+  const target = new URL(`${tokyoBase}/assets/account/${encodeURIComponent(accountId)}`);
   request.nextUrl.searchParams.forEach((value, key) => target.searchParams.set(key, value));
 
   try {
@@ -97,16 +93,4 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
   return forwardToTokyo(request, normalizedAccountId, 'GET');
-}
-
-export async function DELETE(request: NextRequest, context: RouteContext) {
-  const { accountId } = await context.params;
-  const normalizedAccountId = String(accountId || '').trim();
-  if (!isUuid(normalizedAccountId)) {
-    return NextResponse.json(
-      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
-      { status: 422 },
-    );
-  }
-  return forwardToTokyo(request, normalizedAccountId, 'DELETE');
 }

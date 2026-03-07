@@ -473,6 +473,5 @@ export {
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
   handleListAccountAssetMetadata,
-  handlePurgeAccountAssets,
   handleUploadAccountAsset,
 } from './assets-handlers';

@@ -171,10 +171,6 @@ function resolveAccountAssetNamespacePrefix(accountId: string): string {
   return `${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/`;
 }
 
-function resolveAccountAssetMetadataPrefix(accountId: string): string {
-  return `assets/meta/accounts/${accountId}/assets/`;
-}
-
 function resolveAccountAssetIdentityPrefix(accountId: string, assetId: string): string {
   return `${resolveAccountAssetNamespacePrefix(accountId)}${assetId}/`;
 }
@@ -719,122 +715,11 @@ async function handleDeleteAccountAsset(
   );
 }
 
-async function purgeR2NamespacePrefix(env: Env, prefix: string): Promise<{ deleted: number; sweeps: number; remaining: number }> {
-  let deleted = 0;
-  let sweeps = 0;
-
-  // Deleting while paginating with cursors can lead to occasional misses depending on
-  // listing behavior. Keep it simple and run a couple sweeps until empty (or we stop).
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    sweeps += 1;
-    let cursor: string | undefined;
-    let sweepDeleted = 0;
-    do {
-      const listed = await env.TOKYO_R2.list({
-        prefix,
-        limit: ACCOUNT_ASSET_R2_LIST_PAGE_SIZE,
-        cursor,
-      });
-      const keys = listed.objects
-        .map((obj: { key?: string }) => (typeof obj.key === 'string' ? obj.key.trim() : ''))
-        .filter(Boolean);
-      if (keys.length) {
-        await env.TOKYO_R2.delete(keys);
-        deleted += keys.length;
-        sweepDeleted += keys.length;
-      }
-      cursor = listed.truncated ? listed.cursor : undefined;
-    } while (cursor);
-
-    if (sweepDeleted === 0) {
-      return { deleted, sweeps, remaining: 0 };
-    }
-  }
-
-  const remaining = await env.TOKYO_R2.list({ prefix, limit: 1 });
-  return { deleted, sweeps, remaining: remaining.objects.length };
-}
-
-async function handlePurgeAccountAssets(
-  req: Request,
-  env: Env,
-  accountIdRaw: string,
-): Promise<Response> {
-  const accountId = String(accountIdRaw || '').trim();
-  if (!accountId || !isUuid(accountId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
-  }
-  const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'editor' });
-  if (authErr) return authErr;
-
-  const confirmRaw = (new URL(req.url).searchParams.get('confirm') || '').trim().toLowerCase();
-  const confirmed = confirmRaw === '1' || confirmRaw === 'true' || confirmRaw === 'yes';
-  if (!confirmed) {
-    return json(
-      {
-        error: { kind: 'DENY', reasonKey: 'coreui.errors.account.assetsPurgeConfirmRequired' },
-        accountId,
-        requiresConfirm: true,
-      },
-      { status: 409 },
-    );
-  }
-
-  const blobPrefix = resolveAccountAssetNamespacePrefix(accountId);
-  const metadataPrefix = resolveAccountAssetMetadataPrefix(accountId);
-  try {
-    const [blobs, metadata] = await Promise.all([
-      purgeR2NamespacePrefix(env, blobPrefix),
-      purgeR2NamespacePrefix(env, metadataPrefix),
-    ]);
-    if (blobs.remaining > 0 || metadata.remaining > 0) {
-      return json(
-        {
-          error: {
-            kind: 'INTEGRITY',
-            reasonKey: 'coreui.errors.assets.integrityMismatch',
-            detail: `Residual objects remain after purge (blobs=${blobs.remaining}, metadata=${metadata.remaining})`,
-          },
-          accountId,
-          deletedCount: blobs.deleted + metadata.deleted,
-          sweeps: blobs.sweeps + metadata.sweeps,
-          remaining: blobs.remaining + metadata.remaining,
-        },
-        { status: 409 },
-      );
-    }
-
-    return json(
-      {
-        ok: true,
-        accountId,
-        deletedCount: blobs.deleted + metadata.deleted,
-        sweeps: blobs.sweeps + metadata.sweeps,
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.db.writeFailed',
-          detail: `failed to purge account asset blobs: ${detail}`,
-        },
-        accountId,
-      },
-      { status: 500 },
-    );
-  }
-}
-
 export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
   handleGetAccountAssetIdentityIntegrity,
   handleListAccountAssetMetadata,
   handleGetAccountAssetMirrorIntegrity,
-  handlePurgeAccountAssets,
   handleUploadAccountAsset,
 };
