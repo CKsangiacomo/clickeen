@@ -84,12 +84,6 @@ jobs:
       - name: Deploy paris-dev
         run: pnpm -C paris run deploy
 
-      - name: Schema preflight (cloud-dev Paris)
-        run: |
-          set -euo pipefail
-          curl -fsS "https://paris.dev.clickeen.com/api/healthz/schema" | tee /tmp/paris-schema-health.json
-          node -e "const fs=require('fs');const payload=JSON.parse(fs.readFileSync('/tmp/paris-schema-health.json','utf8'));if(!payload||payload.up!==true||payload.schema!==true){console.error('Paris schema health check failed', payload);process.exit(1)}"
-
       - name: Deploy berlin-dev
         run: pnpm -C berlin run deploy
 

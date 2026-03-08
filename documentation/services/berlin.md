@@ -34,6 +34,9 @@ Internal:
 - `GET /.well-known/jwks.json`
 - `GET /internal/healthz`
 
+Health contract:
+- `GET /internal/healthz` -> `{ "ok": true, "service": "berlin" }`
+
 ## Token model (v1)
 
 - Access token: Berlin-signed JWT (`RS256`), default TTL 15 minutes.

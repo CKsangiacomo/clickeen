@@ -64,6 +64,16 @@ Locale read note:
 - Roma/Bob call Tokyo asset endpoints directly with Berlin-backed auth on server routes.
 - Paris has no account-level asset operation beyond ref validation in instance writes.
 
+## Health contract
+
+Paris publishes exactly one machine-health endpoint:
+- `GET /api/healthz` -> `{ "up": true }`
+
+Non-negotiable:
+- Paris does **not** publish `/api/healthz/schema`.
+- CI/deploy workflows must not invent health sub-routes that runtime does not expose.
+- Cross-service cloud-dev verification belongs in the dedicated runtime verification workflow, not inside unrelated app deploy workflows.
+
 ---
 
 ## PRD 54 write behavior (what happens on save / go-dark)

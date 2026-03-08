@@ -18,6 +18,7 @@ Tokyo-worker does not “decide what is live”. Bob/Roma decides; Paris commits
 - `GET /assets/account/:accountId` (auth required; member-scoped asset manifest list)
 - `GET /assets/v/:assetRef` (public; immutable)
 - `DELETE /assets/:accountId/:assetId` (auth required; editor+ hard delete metadata + blobs)
+- `GET /healthz` (worker health; workers.dev only)
 - Integrity tools (dev/internal):
   - `GET /assets/integrity/:accountId`
   - `GET /assets/integrity/:accountId/:assetId`
@@ -29,6 +30,10 @@ Asset metadata model (current repo snapshot):
 - There is no Michael/Supabase asset table contract in the active runtime.
 - Upload contract rejects legacy variant mode (`x-variant` -> `422 coreui.errors.assets.variantUnsupported`).
 - Upload contract rejects unsafe filenames (`422 coreui.errors.filename.invalid`) instead of rewriting names server-side.
+
+Health contract:
+- Worker health URL: `https://tokyo-assets-dev.clickeen.workers.dev/healthz` -> `{ "up": true }`
+- `https://tokyo.dev.clickeen.com` intentionally exposes only `/assets/*`, `/fonts/*`, `/l10n/*`, and `/renders/*`; `/healthz` is not routed there.
 
 ### Public reads (R2 backed)
 Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies):

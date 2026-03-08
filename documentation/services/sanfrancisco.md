@@ -5,6 +5,7 @@
 - Purpose: Agent execution and automation (localization, sales/support/ops agents, learning logs).
 
 ## Interfaces
+- `GET /healthz`
 - Queue consumers for agent jobs (e.g. instance localization).
 - HTTP endpoints for AI outcomes (called by Paris).
 - `POST /v1/l10n/plan` (internal auth; l10n planning snapshot for `{ widgetType, config }` or `{ widgetType, publicId, accountId }` (legacy `workspaceId` accepted as alias))
@@ -18,6 +19,9 @@
 ## Deployment
 - Cloudflare Workers (edge).
 - Uses KV + R2 + Queues.
+
+Health contract:
+- `GET /healthz` -> `{ "ok": true, "service": "sanfrancisco", "env": "<stage>", "ts": <unix_ms> }`
 
 ## Copilot execution (shipped)
 - Endpoint: `POST /v1/execute`.

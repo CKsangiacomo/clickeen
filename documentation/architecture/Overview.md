@@ -289,6 +289,26 @@ Each release proceeds in 3 steps:
 - **Cloud-dev** auto-deploys from `main` for fast iteration.
 - **UAT / Limited GA / GA** are release stages of the same release build, separated by **account-level exposure controls** (allowlist/percentage rollout) and an observation window.
 
+### Cloud-dev verification contract
+
+Deploy workflows own deployment for the surfaces they ship. They must not invent runtime contracts for other services.
+
+Canonical machine-health endpoints:
+
+| Surface | Canonical URL | Expected shape | Owner |
+|---|---|---|---|
+| Paris | `https://paris.dev.clickeen.com/api/healthz` | `{ "up": true }` | Paris |
+| Berlin | `https://berlin-dev.clickeen.workers.dev/internal/healthz` | `{ "ok": true, "service": "berlin" }` | Berlin |
+| Tokyo-worker | `https://tokyo-assets-dev.clickeen.workers.dev/healthz` | `{ "up": true }` | Tokyo-worker |
+| San Francisco | `https://sanfrancisco.dev.clickeen.com/healthz` | `{ "ok": true, "service": "sanfrancisco", "env": "...", "ts": ... }` | San Francisco |
+
+Pages surfaces do not currently publish dedicated machine-health JSON endpoints. Their app deploy workflows own build + deploy only; simple reachability smoke belongs in the centralized cloud-dev runtime verification workflow.
+
+Non-negotiable:
+- No workflow may probe undocumented health sub-routes.
+- Cross-service cloud-dev verification runs in one dedicated workflow.
+- When a service health contract changes, the service doc and the centralized verification workflow must change in the same commit.
+
 ### Security & config (Cloudflare-level defaults)
 
 - **HTTPS everywhere**: redirect HTTP → HTTPS; HSTS enabled on production domains.
