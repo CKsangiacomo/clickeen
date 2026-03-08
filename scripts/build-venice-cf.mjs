@@ -19,7 +19,7 @@ function run(cmd, args, opts = {}) {
 async function main() {
   const vercelBin = path.join(veniceRoot, 'node_modules', '.bin', 'vercel');
   const nextOnPagesBin = path.join(veniceRoot, 'node_modules', '.bin', 'next-on-pages');
-  const vercelDir = path.join(repoRoot, '.vercel');
+  const vercelDir = path.join(veniceRoot, '.vercel');
   const vercelProjectJsonPath = path.join(vercelDir, 'project.json');
   const vercelOutputDir = path.join(veniceRoot, '.vercel', 'output');
 
@@ -30,7 +30,7 @@ async function main() {
       {
         projectId: '_',
         orgId: '_',
-        settings: { framework: 'nextjs', rootDirectory: 'venice' },
+        settings: { framework: 'nextjs', rootDirectory: '.' },
       },
       null,
       0,
@@ -40,9 +40,8 @@ async function main() {
   await rm(vercelOutputDir, { recursive: true, force: true });
 
   // Build Vercel output first, then convert to Cloudflare Pages output.
-  run(vercelBin, ['build', '--output', vercelOutputDir], { cwd: repoRoot });
+  run(vercelBin, ['build', '--output', vercelOutputDir], { cwd: veniceRoot });
   run(nextOnPagesBin, ['--skip-build'], { cwd: veniceRoot });
 }
 
 await main();
-
