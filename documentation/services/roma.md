@@ -40,6 +40,12 @@ Roma does not bridge session tokens through browser JS. Builder relies on shared
 Roma exposes explicit session endpoints for product auth UX:
 - `POST /api/session/login` (local-only email/password diagnostic path -> Berlin auth login -> httpOnly session cookies)
 - `POST /api/session/logout` (best-effort Berlin logout + clears auth cookies)
+- `GET /api/session/login/google` (starts Google auth via Berlin)
+- `GET /api/session/finish` (redeems Berlin `finishId`, sets shared httpOnly session cookies, then redirects into Roma)
+
+Non-local auth rule:
+- Deployed Roma/Bob auth treats non-local hosts as HTTPS for redirect + cookie purposes, even if an upstream proxy presents `http` internally.
+- This prevents cloud-dev auth completion from losing `Set-Cookie` on an accidental HTTP->HTTPS hop.
 
 Bootstrap payload includes:
 - User + account membership graph

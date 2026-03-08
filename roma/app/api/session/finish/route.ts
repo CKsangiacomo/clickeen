@@ -3,6 +3,7 @@ import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import { resolveParisBaseUrl } from '../../../../lib/env/paris';
 import {
   applySessionCookies,
+  resolveRequestOrigin,
   resolveSessionCookieNames,
 } from '../../../../lib/auth/session';
 
@@ -45,7 +46,7 @@ function resolveNextPath(value: string | null): string {
 }
 
 function resolveLoginUrl(request: NextRequest, params: Record<string, string>): URL {
-  const url = new URL('/login', request.url);
+  const url = new URL('/login', resolveRequestOrigin(request));
   for (const [key, value] of Object.entries(params)) {
     if (value) url.searchParams.set(key, value);
   }
@@ -174,7 +175,7 @@ function appendHandoffToPath(path: string, handoffId: string): string {
 }
 
 function buildRecoveryUrl(request: NextRequest, reasonKey: string, handoffId: string | null): URL {
-  const recovery = new URL('/home', request.url);
+  const recovery = new URL('/home', resolveRequestOrigin(request));
   recovery.searchParams.set('authRecovery', '1');
   recovery.searchParams.set('error', reasonKey);
   if (handoffId) recovery.searchParams.set('handoffId', handoffId);
@@ -290,7 +291,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const destination = new URL(destinationPath, request.url);
+  const destination = new URL(destinationPath, resolveRequestOrigin(request));
   const response = NextResponse.redirect(destination, { headers: CACHE_HEADERS });
   return applySession(response);
 }

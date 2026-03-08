@@ -12,6 +12,7 @@ Context note:
 - A documentation correction pass on 2026-03-06 already fixed item `2` (usage/billing placeholder status) and item `3` (MiniBob -> account -> Roma is one continuous journey).
 - Execution update (local): password login is now hard-gated to local only. Berlin rejects `/auth/login/password` on non-local hosts, Roma rejects `POST /api/session/login` on non-local hosts, and the cloud Roma login page shows only the Google path.
 - Execution update (local): `admin/src/html/tools/dev-widget-workspace.html` is restored as a real local-first widget workspace. It now boots source-first from the local widget catalog / `spec.json` defaults and only layers in admin starters when cloud auth is available; it no longer presents DevStudio as a dead surface or depends on account templates just to open Bob.
+- Execution update (runtime contract): non-local Roma/Bob auth now canonicalizes redirects and cookie security to HTTPS at the request boundary, so cloud-dev auth completion does not depend on proxy-presented internal scheme.
 - The two remaining cross-cutting issues are coupled:
   1. DevStudio Widget Workspace was replaced by a deprecation page, even though zero-to-one widget creation still needs a local authoring studio.
   2. Auth is mid-transition: Berlin + Google login is the intended product path, but local tool-trusted behavior is still mixed into the broader story.

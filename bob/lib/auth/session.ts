@@ -105,8 +105,26 @@ function isLocalHostname(hostname: string): boolean {
   return normalized === 'localhost' || normalized === '127.0.0.1';
 }
 
+export function resolveRequestHostname(request: NextRequest): string {
+  const forwardedHost = request.headers.get('x-forwarded-host')?.trim().toLowerCase() || '';
+  if (forwardedHost) {
+    return forwardedHost.split(',')[0]?.trim().toLowerCase() || request.nextUrl.hostname.trim().toLowerCase();
+  }
+  return request.nextUrl.hostname.trim().toLowerCase();
+}
+
+export function resolveRequestProtocol(request: NextRequest): 'http:' | 'https:' {
+  const hostname = resolveRequestHostname(request);
+  if (!hostname || !isLocalHostname(hostname)) return 'https:';
+
+  const forwardedProto = request.headers.get('x-forwarded-proto')?.trim().toLowerCase() || '';
+  if (forwardedProto === 'https') return 'https:';
+  if (forwardedProto === 'http') return 'http:';
+  return request.nextUrl.protocol === 'http:' ? 'http:' : 'https:';
+}
+
 export function resolveSessionCookieDomain(request: NextRequest): string | undefined {
-  const hostname = request.nextUrl.hostname.trim().toLowerCase();
+  const hostname = resolveRequestHostname(request);
   if (!hostname || isLocalHostname(hostname)) return undefined;
 
   // Cloud-dev runs on `*.dev.clickeen.com` and must share auth cookies between Roma and Bob.

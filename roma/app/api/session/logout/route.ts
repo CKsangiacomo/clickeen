@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
-import { resolveSessionCookieDomain, resolveSessionCookieNames } from '../../../../lib/auth/session';
+import {
+  resolveRequestProtocol,
+  resolveSessionCookieDomain,
+  resolveSessionCookieNames,
+} from '../../../../lib/auth/session';
 
 export const runtime = 'edge';
 
@@ -36,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Best-effort logout should still clear local cookies even when Berlin is unreachable.
   }
 
-  const secure = request.nextUrl.protocol === 'https:';
+  const secure = resolveRequestProtocol(request) === 'https:';
   const domain = resolveSessionCookieDomain(request);
   const response = NextResponse.json({ ok: true }, { headers: CACHE_HEADERS });
   const cookieNames = resolveAllSessionCookieNames();

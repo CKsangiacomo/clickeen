@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../../lib/env/berlin';
+import { resolveRequestOrigin } from '../../../../../lib/auth/session';
 
 export const runtime = 'edge';
 
@@ -60,7 +61,7 @@ function deriveIntent(args: {
 }
 
 function resolveLoginUrl(request: NextRequest, params: Record<string, string>): URL {
-  const url = new URL('/login', request.url);
+  const url = new URL('/login', resolveRequestOrigin(request));
   for (const [key, value] of Object.entries(params)) {
     if (value) url.searchParams.set(key, value);
   }

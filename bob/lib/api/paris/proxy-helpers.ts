@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveParisBaseUrl } from '../../env/paris';
-import { resolveSessionCookieDomain, resolveSessionBearer, type SessionCookieSpec } from '../../auth/session';
+import {
+  resolveRequestProtocol,
+  resolveSessionCookieDomain,
+  resolveSessionBearer,
+  type SessionCookieSpec,
+} from '../../auth/session';
 
 export const PARIS_PROXY_READ_TIMEOUT_MS = 5_000;
 export const PARIS_PROXY_WRITE_TIMEOUT_MS = 20_000;
@@ -115,7 +120,7 @@ export function applySessionCookies(
   setCookies?: SessionCookieSpec[],
 ) {
   if (!setCookies?.length) return response;
-  const secure = request.nextUrl.protocol === 'https:';
+  const secure = resolveRequestProtocol(request) === 'https:';
   const domain = resolveSessionCookieDomain(request);
   for (const cookie of setCookies) {
     response.cookies.set({
