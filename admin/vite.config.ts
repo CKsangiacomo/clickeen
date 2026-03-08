@@ -16,6 +16,22 @@ const CK_DEV_PROFILE = String(process.env.CK_DEV_PROFILE || 'product')
   .toLowerCase();
 const IS_SOURCE_PROFILE = CK_DEV_PROFILE === 'source';
 
+function listLocalWidgetCatalog() {
+  const widgetsRoot = path.resolve(__dirname, '..', 'tokyo', 'widgets');
+  if (!fs.existsSync(widgetsRoot)) return [];
+  return fs
+    .readdirSync(widgetsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name.trim().toLowerCase())
+    .filter(Boolean)
+    .filter((widgetType) => fs.existsSync(path.join(widgetsRoot, widgetType, 'spec.json')))
+    .sort((a, b) => a.localeCompare(b))
+    .map((widgetType) => ({
+      widgetType,
+      sourcePublicId: `devstudio_source_${widgetType}`,
+    }));
+}
+
 export default defineConfig({
   build: {
     chunkSizeWarningLimit: 2000,
@@ -39,6 +55,34 @@ export default defineConfig({
     },
   },
   plugins: [
+    {
+      name: 'devstudio-widget-catalog',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const url = req.url || '';
+          const pathname = url.split('?')[0] || '';
+          if (pathname !== '/api/devstudio/widgets' || req.method !== 'GET') return next();
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-store');
+          try {
+            const widgets = listLocalWidgetCatalog();
+            res.statusCode = 200;
+            res.end(JSON.stringify({ widgets }));
+          } catch (error) {
+            res.statusCode = 500;
+            res.end(
+              JSON.stringify({
+                error: {
+                  kind: 'INTERNAL',
+                  reasonKey: 'coreui.errors.widgetCatalog.readFailed',
+                  detail: error instanceof Error ? error.message : String(error),
+                },
+              }),
+            );
+          }
+        });
+      },
+    },
     {
       name: 'open-editor-lifecycle-contract',
       buildStart() {

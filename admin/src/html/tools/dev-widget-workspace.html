@@ -842,9 +842,11 @@
     const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
     const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
     const DEVSTUDIO_ACCOUNT_ID = PLATFORM_ACCOUNT_ID;
+    const SOURCE_INSTANCE_PREFIX = 'devstudio_source_';
     let currentPublicId = null;
     let selectedWidgetSlug = null;
     let widgetTypes = [];
+    let cloudInstances = [];
     let instances = [];
     let isOpen = false;
     let bobSessionId = '';
@@ -1000,6 +1002,16 @@
     async function refreshL10nStatus(publicId) {
       if (!publicId) {
         setL10nStatusDisplay({ state: 'hidden', tone: 'unavailable', value: '-', meta: '' });
+        return;
+      }
+
+      if (isSourceInstancePublicId(publicId)) {
+        setL10nStatusDisplay({
+          state: 'ready',
+          tone: 'unavailable',
+          value: 'Source',
+          meta: 'Local source defaults; no cloud locale jobs',
+        });
         return;
       }
 
@@ -1168,6 +1180,34 @@
         .join(' ');
     }
 
+    function buildSourcePublicId(widgetSlug) {
+      const normalized = normalizeWidgetname(widgetSlug);
+      if (!normalized) throw new Error('[DevStudio] Invalid widget type for source instance.');
+      return `${SOURCE_INSTANCE_PREFIX}${normalized}`;
+    }
+
+    function isSourceInstancePublicId(publicId) {
+      return typeof publicId === 'string' && publicId.startsWith(SOURCE_INSTANCE_PREFIX);
+    }
+
+    function buildSourceInstance(widgetSlug) {
+      const normalized = normalizeWidgetname(widgetSlug);
+      if (!normalized) return null;
+      return {
+        publicId: buildSourcePublicId(normalized),
+        widgetname: normalized,
+        widgetSlug: normalized,
+        label: `${formatWidgetLabel(normalized)} Source defaults`,
+        status: 'draft',
+        source: 'source',
+        actions: null,
+        config: null,
+        localization: null,
+        policy: null,
+        meta: null,
+      };
+    }
+
     function listWidgetSlugs() {
       if (widgetTypes.length) return widgetTypes.slice();
       return Array.from(
@@ -1280,8 +1320,32 @@
       return envelope?.config ?? null;
     }
 
-    async function fetchInstances() {
-      console.log('[DevStudio] Fetching curated instances from Bob/Paris');
+    async function fetchLocalWidgetCatalog() {
+      const res = await fetch(`/api/devstudio/widgets?_t=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(
+          `[DevStudio] Failed to load local widget catalog (HTTP ${res.status})${text ? `: ${text}` : ''}`,
+        );
+      }
+      const data = await res.json().catch(() => null);
+      widgetTypes = Array.isArray(data?.widgets)
+        ? data.widgets
+            .map((entry) => normalizeWidgetname(entry?.widgetType))
+            .filter((widgetType) => typeof widgetType === 'string' && widgetType)
+        : [];
+      return widgetTypes.slice();
+    }
+
+    function rebuildWorkspaceInstances() {
+      const sourceInstances = widgetTypes
+        .map((widgetSlug) => buildSourceInstance(widgetSlug))
+        .filter((entry) => entry && typeof entry === 'object');
+      instances = [...sourceInstances, ...cloudInstances];
+    }
+
+    async function fetchCloudInstances() {
+      console.log('[DevStudio] Fetching optional cloud starters from Bob/Paris');
       const res = await fetchBob(
         buildBobApiUrl('/api/roma/templates', {
           accountId: DEVSTUDIO_ACCOUNT_ID,
@@ -1302,17 +1366,12 @@
           }
         } catch {}
         throw new Error(
-          `[DevStudio] Failed to fetch instances (HTTP ${res.status})${detail ? `: ${detail}` : ''}`,
+          `[DevStudio] Failed to fetch cloud starters (HTTP ${res.status})${detail ? `: ${detail}` : ''}`,
         );
       }
       const data = await res.json();
-      widgetTypes = Array.isArray(data?.widgetTypes)
-        ? data.widgetTypes
-            .map((widgetType) => normalizeWidgetname(widgetType))
-            .filter((widgetType) => typeof widgetType === 'string' && widgetType)
-        : [];
       const payload = Array.isArray(data.instances) ? data.instances : [];
-      instances = payload.map((inst) => ({
+      cloudInstances = payload.map((inst) => ({
         publicId: inst.publicId,
         widgetname: inst.widgetType,
         widgetSlug: normalizeWidgetname(inst.widgetType),
@@ -1328,11 +1387,25 @@
         policy: null,
         meta: null,
       }));
+      return cloudInstances.slice();
+    }
 
-      if (instances.length === 0) {
+    async function fetchWorkspaceBootstrap() {
+      await fetchLocalWidgetCatalog();
+
+      try {
+        await fetchCloudInstances();
+      } catch (error) {
+        cloudInstances = [];
+        console.warn('[DevStudio] Cloud starters unavailable; continuing source-first', error);
+      }
+
+      rebuildWorkspaceInstances();
+
+      if (widgetTypes.length === 0 || instances.length === 0) {
         selectedWidgetSlug = null;
         currentPublicId = null;
-        currentLabel.textContent = 'No instances yet';
+        currentLabel.textContent = 'No widgets found';
         valueField.value = '';
         menu.innerHTML = '';
         dropdown.style.display = 'none';
@@ -1341,16 +1414,19 @@
       }
       dropdown.style.display = 'inline-block';
 
-      if (!instances.some((inst) => inst.publicId === currentPublicId)) {
-        currentPublicId = instances[0].publicId;
+      if (!selectedWidgetSlug || !widgetTypes.includes(selectedWidgetSlug)) {
+        selectedWidgetSlug = widgetTypes[0];
       }
-      syncSelectedWidgetForPublicId(currentPublicId);
       syncWidgetSelector();
 
       const scopedInstances = getScopedInstances();
       if (!scopedInstances.some((inst) => inst.publicId === currentPublicId)) {
-        currentPublicId = scopedInstances[0]?.publicId || instances[0].publicId;
+        currentPublicId =
+          (selectedWidgetSlug ? buildSourcePublicId(selectedWidgetSlug) : null) ||
+          scopedInstances[0]?.publicId ||
+          instances[0].publicId;
       }
+      syncSelectedWidgetForPublicId(currentPublicId);
 
       console.log('[DevStudio] Current publicId', currentPublicId, 'instances', instances.length);
       updateCurrentLabel();
@@ -2253,7 +2329,7 @@
     }
 
     async function refreshInstancesAndSelect(publicId) {
-      await fetchInstances();
+      await fetchWorkspaceBootstrap();
       if (!publicId) return;
       const found = instances.find((inst) => inst.publicId === publicId);
       if (found) {
@@ -2534,6 +2610,32 @@
         throw new Error(`[DevStudio] Unable to derive widget slug for ${instance.widgetname}`);
       }
 
+      if (instance.source === 'source' || isSourceInstancePublicId(publicId)) {
+        const compiledStart = performance.now();
+        const compiled = await ensureCompiledWidget(instance.widgetname);
+        if (requestSeq !== sendInstanceSeq) return;
+        const defaults =
+          compiled?.defaults && typeof compiled.defaults === 'object' && !Array.isArray(compiled.defaults)
+            ? cloneJson(compiled.defaults)
+            : {};
+
+        await postOpenEditorAndWait(target, {
+          type: 'ck:open-editor',
+          subjectMode: 'account',
+          publicId,
+          label,
+          widgetname: slug,
+          compiled,
+          instanceData: defaults,
+        });
+        console.log('[DevStudio] Source defaults load timings', {
+          publicId,
+          compileMs: Math.round(performance.now() - compiledStart),
+          totalMs: Math.round(performance.now() - totalStart),
+        });
+        return;
+      }
+
       let compiled = compiledCache.get(slug);
       const hasInlineConfig = Boolean(
         instance.config && typeof instance.config === 'object' && !Array.isArray(instance.config),
@@ -2800,10 +2902,10 @@
 
     (async () => {
       try {
-        await fetchInstances();
+        await fetchWorkspaceBootstrap();
       } catch (error) {
-        console.error('[DevStudio] Failed to fetch instances', error);
-        currentLabel.textContent = 'Error loading instances';
+        console.error('[DevStudio] Failed to bootstrap workspace', error);
+        currentLabel.textContent = 'Error loading workspace';
       }
     })();
   </script>

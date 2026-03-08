@@ -12,6 +12,7 @@
   - Berlin: `https://berlin.dev.clickeen.com`
   - Paris: `https://paris.dev.clickeen.com`
 - Local Tokyo/Tokyo-worker are not part of this default workflow.
+- DevStudio Widget Workspace still boots source-first from the local widget catalog in this profile; only cloud starter/account rows depend on cloud auth.
 
 ## source
 - Purpose: low-level service development and local worker debugging.
@@ -19,6 +20,9 @@
 - Uses local Tokyo default: `http://localhost:4000`.
 - DevStudio workspace should be opened with source params:
   - `?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`
+- Source-profile-only file mutation remains explicit:
+  - `Update Config` writes `tokyo/widgets/*/spec.json`
+  - `Update Theme` writes `tokyo/configs/themes.json`
 
 ## Rules
 - Admin account in cloud-dev is `tier3` and is the unlimited profile for uploads/budgets.

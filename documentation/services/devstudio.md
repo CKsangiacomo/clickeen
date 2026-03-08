@@ -22,13 +22,17 @@ What it does:
 - Product profile default: cloud Bob + cloud Tokyo.
 - Source profile override: local Bob + local Tokyo.
 - Marks iframe host intent as `surface=devstudio` (pairs with `surface=roma` in Roma Builder for explicit host behavior).
-- Uses Bob’s same-origin named routes only (`/api/roma/templates`, `/api/accounts/*`, `/api/widgets/*`) (DevStudio never calls Paris directly).
+- Source-first bootstrap: loads the local widget catalog from `/api/devstudio/widgets`, compiles the selected widget, and opens Bob from source defaults even when cloud account auth is absent.
+- Optional cloud starter overlay: if DevStudio can read Bob’s account routes, it merges admin-account `wgt_main_*` / `wgt_curated_*` starters into the picker. If cloud auth is missing, the workspace still boots from source defaults.
+- Uses Bob’s same-origin named routes only for cloud starter / instance work (`/api/roma/templates`, `/api/accounts/*`, `/api/widgets/*`) (DevStudio never calls Paris directly).
 - Local-only trusted convenience is source-profile scoped (`ENV_STAGE=local`). Product profile stays on normal cloud auth/account checks.
 - Uses a 2-dropdown flow:
   - first dropdown = widget type
-  - second dropdown = admin-account `wgt_main_*` / `wgt_curated_*` rows available for that widget
-- The dropdown data comes from `GET /api/roma/templates?accountId=<admin-account-id>&surface=devstudio`.
-- Opening a selection lazy-loads the full admin-account instance envelope, then message-boots Bob with real `{ accountId, publicId }` context.
+  - second dropdown = source defaults + any available admin-account `wgt_main_*` / `wgt_curated_*` rows for that widget
+- The widget catalog comes from `GET /api/devstudio/widgets`.
+- Optional cloud starter rows come from `GET /api/roma/templates?accountId=<admin-account-id>&surface=devstudio`.
+- Opening a source-default entry message-boots Bob with inline compiled defaults and no required cloud account context.
+- Opening a cloud starter lazy-loads the full admin-account instance envelope, then message-boots Bob with real `{ accountId, publicId }` context.
 - Current superadmin authoring actions remain available through the same Bob routes:
   - update the baseline `wgt_main_*` row / default config
   - create or update curated rows
@@ -60,11 +64,14 @@ Current boundary:
 
 ## Troubleshooting
 
-If the instance dropdown shows “Error loading instances”:
+If the workspace opens but cloud starters are missing:
+- DevStudio source-first boot is still working.
+- Check Bob auth for `https://bob.dev.clickeen.com` if you expect admin-account starters to appear.
+
+If the workspace fails before any widget opens:
+- Local DevStudio must be able to read `/api/devstudio/widgets`.
 - Product profile default checks:
   - Bob cloud: `https://bob.dev.clickeen.com`
-  - Paris cloud: `https://paris.dev.clickeen.com/api/healthz`
 - Source profile checks:
   - Bob local: `http://localhost:3000`
-  - Paris local: `http://localhost:3001/api/healthz`
   - If local workers are wedged, re-run `bash scripts/dev-up.sh --source --reset`.

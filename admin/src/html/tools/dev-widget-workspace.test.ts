@@ -14,6 +14,8 @@ type FetchMockOptions = {
   compiledByWidget?: Record<string, Record<string, unknown>>;
   themes?: Array<{ id: string; label?: string }>;
   onThemeUpdate?: (payload: { themeId?: string; values?: Record<string, unknown> }) => void;
+  localWidgets?: string[];
+  romaTemplatesStatus?: number;
 };
 
 const HTML_PATH = new URL('./dev-widget-workspace.html', import.meta.url);
@@ -50,7 +52,26 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
     const method =
       init?.method ||
       (input instanceof Request ? input.method : 'GET');
+    if (url.includes('/api/devstudio/widgets')) {
+      const widgets = (options?.localWidgets || Array.from(new Set(instances.map((instance) => instance.widgetname))))
+        .map((widgetType) => String(widgetType || '').trim().toLowerCase())
+        .filter(Boolean)
+        .map((widgetType) => ({
+          widgetType,
+          sourcePublicId: `devstudio_source_${widgetType}`,
+        }));
+      return new Response(JSON.stringify({ widgets }), { status: 200 });
+    }
     if (url.includes('/api/roma/templates')) {
+      const status = options?.romaTemplatesStatus ?? 200;
+      if (status !== 200) {
+        return new Response(
+          JSON.stringify({
+            error: { reasonKey: 'coreui.errors.auth.required' },
+          }),
+          { status },
+        );
+      }
       return new Response(
         JSON.stringify({
           widgetTypes: Array.from(new Set(instances.map((instance) => instance.widgetname))),
@@ -219,17 +240,24 @@ describe('DevStudio widget workspace tool', () => {
   });
 
   it('shows the empty-state label when no curated instances exist', async () => {
-    const { dom } = await loadWorkspaceDom([]);
+    const { dom } = await loadWorkspaceDom([], {
+      fetch: {
+        localWidgets: ['faq'],
+        romaTemplatesStatus: 401,
+      },
+    });
     const label = dom.window.document.getElementById('current-instance-label');
     const dropdown = dom.window.document.getElementById('instance-dropdown');
+    const menu = dom.window.document.getElementById('instance-dropdown-menu');
 
-    expect(label?.textContent).toBe('No instances yet');
-    expect(dropdown?.getAttribute('style') || '').toContain('display: none');
+    expect(label?.textContent).toBe('Faq Source defaults');
+    expect(dropdown?.getAttribute('style') || '').toContain('display: inline-block');
+    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(1);
 
     dom.window.close();
   });
 
-  it('renders instance options and fetches compiled widget data', async () => {
+  it('boots source-first and keeps cloud starters optional', async () => {
     const instances = [
       {
         publicId: 'wgt_curated_faq_simple',
@@ -237,20 +265,41 @@ describe('DevStudio widget workspace tool', () => {
         displayName: 'FAQ Simple',
       },
     ];
-    const { dom, fetchMock } = await loadWorkspaceDom(instances);
+    const { dom, fetchMock } = await loadWorkspaceDom(instances, {
+      fetch: { localWidgets: ['faq'] },
+    });
     const label = dom.window.document.getElementById('current-instance-label');
     const menu = dom.window.document.getElementById('instance-dropdown-menu');
 
-    expect(label?.textContent).toBe('FAQ Simple');
-    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(1);
+    expect(label?.textContent).toBe('Faq Source defaults');
+    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(2);
 
     const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
+    expect(urls.some((url) => url.includes('/api/devstudio/widgets'))).toBe(true);
     expect(urls.some((url) => url.includes('/api/widgets/faq/compiled'))).toBe(true);
-    expect(
-      urls.some(
-        (url) => url.includes('/api/accounts/') && url.includes('/instance/wgt_curated_faq_simple'),
-      ),
-    ).toBe(true);
+    expect(urls.some((url) => url.includes('/api/accounts/') && url.includes('/instance/wgt_curated_faq_simple'))).toBe(false);
+
+    dom.window.close();
+  });
+
+  it('loads a cloud starter only when explicitly selected', async () => {
+    const instances = [
+      {
+        publicId: 'wgt_curated_faq_simple',
+        widgetname: 'faq',
+        displayName: 'FAQ Simple',
+      },
+    ];
+    const { dom, fetchMock } = await loadWorkspaceDom(instances, {
+      fetch: { localWidgets: ['faq'] },
+    });
+    const starterButton = dom.window.document.querySelector('[data-public-id="wgt_curated_faq_simple"]');
+
+    starterButton?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+    await flushDom(dom, 3);
+
+    const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
+    expect(urls.some((url) => url.includes('/api/accounts/') && url.includes('/instance/wgt_curated_faq_simple'))).toBe(true);
 
     dom.window.close();
   });
@@ -268,12 +317,14 @@ describe('DevStudio widget workspace tool', () => {
         displayName: 'Logo Main',
       },
     ];
-    const { dom, fetchMock } = await loadWorkspaceDom(instances);
+    const { dom, fetchMock } = await loadWorkspaceDom(instances, {
+      fetch: { localWidgets: ['faq', 'logoshowcase'] },
+    });
     const widgetSelect = dom.window.document.getElementById('widget-select') as HTMLSelectElement | null;
     const menu = dom.window.document.getElementById('instance-dropdown-menu');
 
     expect(widgetSelect?.value).toBe('faq');
-    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(1);
+    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(2);
 
     const initialUrls = fetchMock.mock.calls.map(([input]) =>
       typeof input === 'string' ? input : input.toString()
@@ -305,7 +356,9 @@ describe('DevStudio widget workspace tool', () => {
         displayName: 'FAQ Simple',
       },
     ];
-    const { dom } = await loadWorkspaceDom(instances);
+    const { dom } = await loadWorkspaceDom(instances, {
+      fetch: { localWidgets: ['faq'] },
+    });
     const openBtn = dom.window.document.getElementById('create-curated-instance');
     const modal = dom.window.document.getElementById('curated-modal');
     const confirm = dom.window.document.getElementById('curated-modal-confirm') as HTMLButtonElement | null;
@@ -338,6 +391,7 @@ describe('DevStudio widget workspace tool', () => {
 
     let exportRequest: any = null;
     const { dom, fetchMock } = await loadWorkspaceDom(instances, {
+      fetch: { localWidgets: ['faq'] },
       onBobPostMessage: (payload, origin, { dom: innerDom, bobWindow }) => {
         if (!payload || typeof payload !== 'object') return;
         const data = payload as { type?: string; requestId?: string };
@@ -417,6 +471,7 @@ describe('DevStudio widget workspace tool', () => {
 
     const { dom } = await loadWorkspaceDom(instances, {
       fetch: {
+        localWidgets: ['faq'],
         themes: [
           { id: 'light', label: 'Light' },
           { id: 'dark', label: 'Dark' },
@@ -469,6 +524,7 @@ describe('DevStudio widget workspace tool', () => {
 
     const { dom } = await loadWorkspaceDom(instances, {
       fetch: {
+        localWidgets: ['faq'],
         themes: [
           { id: 'light', label: 'Light' },
           { id: 'dark', label: 'Dark' },
@@ -534,19 +590,21 @@ describe('DevStudio widget workspace tool', () => {
     themeConfirm?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
     await flushDom(dom, 4);
 
-    expect(themeUpdatePayload?.themeId).toBe('dark');
-    expect(themeUpdatePayload?.values?.['stage.alignment']).toBe('center');
-    expect(themeUpdatePayload?.values?.['typography.globalFamily']).toBe('Inter');
-    expect(themeUpdatePayload?.values?.['typography.roles.button.weight']).toBe('600');
-    expect(themeUpdatePayload?.values?.['appearance.ctaTextColor']).toEqual({
+    expect(themeUpdatePayload).not.toBeNull();
+    const payload = themeUpdatePayload as { themeId?: string; values?: Record<string, unknown> };
+    expect(payload.themeId).toBe('dark');
+    expect(payload.values?.['stage.alignment']).toBe('center');
+    expect(payload.values?.['typography.globalFamily']).toBe('Inter');
+    expect(payload.values?.['typography.roles.button.weight']).toBe('600');
+    expect(payload.values?.['appearance.ctaTextColor']).toEqual({
       type: 'color',
       color: 'var(--color-system-white)',
     });
-    expect(themeUpdatePayload?.values?.['typography.roles.button.color']).toEqual({
+    expect(payload.values?.['typography.roles.button.color']).toEqual({
       type: 'color',
       color: 'var(--color-system-white)',
     });
-    expect(themeUpdatePayload?.values?.['typography.roles']).toBeUndefined();
+    expect(payload.values?.['typography.roles']).toBeUndefined();
 
     dom.window.close();
   });
