@@ -8,7 +8,7 @@ Runtime code + deploy config are truth. If this doc drifts from `berlin/*`, upda
 Berlin is Clickeen's dedicated AuthN boundary.
 
 Responsibilities:
-- Accept user credentials for sign-in (`/auth/login/password` in v1, local-only diagnostic path).
+- Accept user credentials for sign-in (`/auth/login/password` in v1).
 - Orchestrate provider login OAuth start+callback (`/auth/login/provider/*`).
 - Mint short-lived Berlin access tokens (`RS256`) with stable product claims (`sub`, `sid`, `ver`, `iat`, `exp`, `iss`, `aud`).
 - Rotate refresh tokens via `/auth/refresh`.
@@ -22,7 +22,7 @@ Non-responsibilities:
 ## Runtime surface (v1)
 
 Public:
-- `POST /auth/login/password` (local-only diagnostic path)
+- `POST /auth/login/password`
 - `POST /auth/login/provider/start` (canonical callback->finish flow only)
 - `GET /auth/login/provider/callback`
 - `POST /auth/finish`

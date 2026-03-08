@@ -29,16 +29,7 @@ import { requestSupabaseOAuthUrl, requestSupabasePasswordGrant, requestSupabaseP
 import { OAUTH_FINISH_TTL_SECONDS, OAUTH_STATE_TTL_SECONDS, type Env, type OAuthFinishTransaction, type OAuthTransaction } from './types';
 import { loadSessionState } from './session-kv';
 
-function isLocalHostname(hostname: string): boolean {
-  const normalized = hostname.trim().toLowerCase();
-  return normalized === 'localhost' || normalized === '127.0.0.1';
-}
-
 export async function handlePasswordLogin(request: Request, env: Env): Promise<Response> {
-  if (!isLocalHostname(new URL(request.url).hostname)) {
-    return authError('coreui.errors.auth.password.localOnly', 403, 'password_login_local_only');
-  }
-
   const body = await readJsonBody(request);
   const email = normalizeEmail(body?.email);
   const password = normalizePassword(body?.password);

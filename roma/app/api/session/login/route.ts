@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import { applySessionCookies, resolveSessionCookieNames } from '../../../../lib/auth/session';
-import { isLocalHostname } from '../../../../lib/env/runtime';
 
 export const runtime = 'edge';
 
@@ -52,10 +51,6 @@ function buildErrorResponse(reasonKey: string, status: number) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isLocalHostname(request.nextUrl.hostname)) {
-    return buildErrorResponse('coreui.errors.auth.password.localOnly', 403);
-  }
-
   let berlinBase = '';
   try {
     berlinBase = resolveBerlinBaseUrl();

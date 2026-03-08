@@ -38,7 +38,7 @@ When no valid session is present, it returns `401` with auth error payload (`cor
 Roma does not auto-bootstrap tool sessions; supported Roma runtimes always require real Berlin session tokens.
 Roma does not bridge session tokens through browser JS. Builder relies on shared httpOnly cookies across Roma/Bob on a custom `*.clickeen.com` domain.
 Roma exposes explicit session endpoints for product auth UX:
-- `POST /api/session/login` (local-only email/password diagnostic path -> Berlin auth login -> httpOnly session cookies)
+- `POST /api/session/login` (email/password -> Berlin auth login -> httpOnly session cookies)
 - `POST /api/session/logout` (best-effort Berlin logout + clears auth cookies)
 - `GET /api/session/login/google` (starts Google auth via Berlin)
 - `GET /api/session/finish` (redeems Berlin `finishId`, sets shared httpOnly session cookies, then redirects into Roma)
@@ -117,7 +117,7 @@ Assets domain behavior:
 ### Cloud-dev
 - Roma runtime target: `https://roma.dev.clickeen.com` (Pages `*.pages.dev` deploys are not supported for authenticated Builder because cookies cannot be shared to Bob).
 - Uses cloud-dev Paris/Tokyo/Bob URLs from env/config.
-- Cloud product auth is Google-first. The password form is hidden, and `POST /api/session/login` rejects on non-local hosts.
+- Cloud product auth currently supports both Google and email/password through Berlin-owned session endpoints.
 - Cloud-dev currently runs as one effective product account: admin. Roma does not expose account switching there.
 
 ## Operational notes

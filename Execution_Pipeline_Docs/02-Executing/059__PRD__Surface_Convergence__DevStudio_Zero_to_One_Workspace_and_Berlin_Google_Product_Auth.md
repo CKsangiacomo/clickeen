@@ -5,17 +5,17 @@ Date: 2026-03-06
 Owner: Product Dev Team
 Priority: P0 (product/runtime convergence)
 
-> Core mandate: DevStudio is not dead. It was over-cut. Restore it with the correct purpose. At the same time, finish auth around one product path and one local tool path only.
+> Core mandate: DevStudio is not dead. It was over-cut. Restore it with the correct purpose. At the same time, restore a working Berlin-owned Roma access path now without expanding this PRD into the full future auth/account program.
 
 Context note:
 - PRD 056 established the canonical auth boundary: Berlin is AuthN, Roma completes startup, Paris owns ensure-account + MiniBob handoff claim.
 - A documentation correction pass on 2026-03-06 already fixed item `2` (usage/billing placeholder status) and item `3` (MiniBob -> account -> Roma is one continuous journey).
-- Execution update (local): password login is now hard-gated to local only. Berlin rejects `/auth/login/password` on non-local hosts, Roma rejects `POST /api/session/login` on non-local hosts, and the cloud Roma login page shows only the Google path.
-- Execution update (local): `admin/src/html/tools/dev-widget-workspace.html` is restored as a real local-first widget workspace. It now boots source-first from the local widget catalog / `spec.json` defaults and only layers in admin starters when cloud auth is available; it no longer presents DevStudio as a dead surface or depends on account templates just to open Bob.
+- Execution update (runtime): DevStudio Widget Workspace is restored as a real local-first widget workspace. It now boots source-first from the local widget catalog / `spec.json` defaults and only layers in admin starters when cloud auth is available; it no longer depends on account templates just to open Bob.
+- Execution update (runtime): Roma access is currently restored through Berlin-owned session endpoints for both Google and email/password. This is an access-unblock decision, not the final long-term auth/account architecture.
 - Execution update (runtime contract): non-local Roma/Bob auth now canonicalizes redirects and cookie security to HTTPS at the request boundary, so cloud-dev auth completion does not depend on proxy-presented internal scheme.
 - The two remaining cross-cutting issues are coupled:
   1. DevStudio Widget Workspace was replaced by a deprecation page, even though zero-to-one widget creation still needs a local authoring studio.
-  2. Auth is mid-transition: Berlin + Google login is the intended product path, but local tool-trusted behavior is still mixed into the broader story.
+  2. Auth is still being separated from local tool behavior, but the larger multi-provider / multi-account redesign is not part of this PRD.
 - PRD 059 defines the target surface split and auth split so implementation and documentation can converge again.
 
 Environment contract:
@@ -34,7 +34,7 @@ Environment contract:
 Yes. This PRD reduces the system to:
 - one product admin surface (`Roma`)
 - one zero-to-one authoring surface (`DevStudio Local`)
-- one product auth mode (Berlin + Google)
+- one current product access boundary (Berlin-owned auth for Roma)
 - one local tool mode (explicit local-only tool auth)
 
 That scales across 100s of widgets because the split is by responsibility, not by widget.
@@ -67,7 +67,7 @@ Yes.
 
 ## One-line Objective
 
-Restore DevStudio Widget Workspace as a local-only zero-to-one widget studio, keep day-2 widget/admin operations in cloud Roma, and finish auth around a Google-first Berlin product path plus one explicit local tool path.
+Restore DevStudio Widget Workspace as a local-only zero-to-one widget studio, keep day-2 widget/admin operations in cloud Roma, and restore a working Berlin-owned Roma access path now without turning PRD 59 into the full future auth/account redesign.
 
 ---
 
@@ -106,11 +106,11 @@ This creates exactly the kind of ambiguity that causes drift:
 - supported cloud path vs local convenience path
 - runtime truth vs documented security model
 
-### 4. The product needs one boring auth story
+### 4. The product needs one boring access story now
 
 For users, the product should behave like one app:
 - Prague/MiniBob acquisition
-- Google login
+- Berlin login
 - Roma product shell
 - Bob editor
 
@@ -196,7 +196,7 @@ We restore a **narrower** tool with a cleaner job.
 This is the canonical product auth model for cloud-dev and the intended product architecture:
 
 1. User starts from Prague or Roma.
-2. Roma starts Google login via Berlin.
+2. Roma starts a Berlin-owned login path.
 3. Berlin handles provider start/callback and issues `finishId`.
 4. Roma `/api/session/finish` completes server-side:
    - redeem finish
@@ -208,7 +208,7 @@ This is the canonical product auth model for cloud-dev and the intended product 
 6. Paris/Tokyo-worker product-facing server routes trust Berlin bearer/session auth only.
 
 Product auth principles:
-- Google login is the canonical supported cloud-dev/product UX.
+- Current cloud-dev access may use Google or email/password if both converge into the same Berlin -> Roma session contract.
 - MiniBob publish/signup uses this same path.
 - No product auth flow uses `PARIS_DEV_JWT`.
 
@@ -241,14 +241,12 @@ Not allowed:
 
 ## Transitional Auth Reality
 
-PRD 59 allows one temporary transition:
+PRD 59 does not attempt to finish the full auth/account platform.
 
-- Email/password login may remain as a **local-only diagnostic path** while Google login becomes the supported cloud-dev/product path.
-
-If password login remains during the transition:
-- docs must say it is local-only
-- login UI copy must say Google is the supported cloud/product path
-- no product architecture doc may describe password as the primary model
+Current execution rule:
+- Roma cloud access must work now through Berlin-owned login paths.
+- Google and email/password are both acceptable current access modes if they converge into the same Roma session contract.
+- The future multi-provider / multi-user / paid-vs-free account model is a separate PRD.
 
 ---
 
@@ -280,10 +278,10 @@ Berlin:
 - `POST /auth/logout`
 
 Roma:
-- `GET /api/session/login/google` — canonical product login start
+- `GET /api/session/login/google` — Berlin-owned Google login start
 - `GET /api/session/finish` — canonical server-side completion gate
 - `POST /api/session/logout`
-- `POST /api/session/login` — local-only diagnostic path if temporarily retained
+- `POST /api/session/login` — Berlin-owned email/password login path
 
 Paris:
 - `POST /api/accounts`
@@ -323,15 +321,15 @@ Phase 1 gate:
 Phase 2 gate:
 - An AI team can tell, from docs alone, where a workflow belongs without guessing.
 
-### Phase 3 — Finish the Google-first product auth path
+### Phase 3 — Restore a working Berlin-owned Roma access path
 
-1. Make Google login through Berlin the canonical supported cloud-dev/product path.
+1. Make Roma cloud login work through Berlin-owned session endpoints.
 2. Confirm Roma finish remains the single server-side completion gate.
-3. Confirm MiniBob publish -> signup -> handoff completion works through the same path.
-4. Keep password login only if explicitly local-only during transition.
+3. Confirm Google and email/password both converge into the same Roma/Bob shared-cookie session model.
+4. Keep the larger auth/account redesign out of PRD 59.
 
 Phase 3 gate:
-- Cloud Roma login works via Google.
+- Cloud Roma login works.
 - MiniBob publish/signup lands the user in Roma with claimed instance continuity.
 
 ### Phase 4 — Hard-cut auth ambiguity
@@ -362,8 +360,8 @@ Phase 4 gate:
 ### Cloud-dev
 
 1. Start from Roma login.
-2. Continue with Google.
-3. Complete Berlin callback -> Roma finish.
+2. Complete either supported Berlin login path.
+3. Complete Berlin callback / login -> Roma finish when applicable.
 4. Land in Roma with usable account context.
 5. Open Builder and confirm Bob works with shared cookies.
 
@@ -372,7 +370,7 @@ Phase 4 gate:
 1. Start in Prague MiniBob.
 2. Change draft content and provide a website if applicable.
 3. Click Publish.
-4. Complete Google login/signup.
+4. Complete the supported login/signup path.
 5. Confirm the user lands in Roma with the claimed instance continuity intact.
 
 ### Auth boundary checks
@@ -388,7 +386,7 @@ Phase 4 gate:
 - Restore DevStudio Widget Workspace as a real local tool again.
 - Narrow DevStudio responsibility to zero-to-one widget authoring.
 - Reassert Roma as the operational/admin surface.
-- Define and finish the Google-first Berlin product auth path.
+- Restore a working Berlin-owned Roma access path.
 - Confine local tool-trusted auth to explicit local DevStudio flows.
 - Update canonical docs when the implementation lands.
 
@@ -398,7 +396,7 @@ Phase 4 gate:
 - Reworking MiniBob personalization product behavior.
 - Reopening assets/l10n storage decisions from prior PRDs.
 - Building local Roma parity.
-- Adding more auth providers.
+- Adding more auth providers or the full future account/auth model.
 - Large Bob editor refactors unrelated to surface/auth convergence.
 
 ---
@@ -421,7 +419,8 @@ Phase 4 gate:
 PRD 59 makes the system simpler, not broader:
 - DevStudio returns, but only as a zero-to-one widget studio.
 - Roma stays the real product/admin shell.
-- Google/Berlin becomes the boring product auth story.
+- Berlin owns the current Roma access story.
 - Local tool auth becomes explicit, local-only, and non-leaky.
+- The larger auth/account redesign is explicitly separate from this PRD.
 
 That is the clean split the repo should teach and the code should implement.
