@@ -36,6 +36,13 @@ export default function RomaLoginPage() {
   const nextPath = useMemo(() => resolveNextPath(searchParams.get('next')), [searchParams]);
   const intent = useMemo(() => String(searchParams.get('intent') || '').trim(), [searchParams]);
   const handoffId = useMemo(() => String(searchParams.get('handoffId') || '').trim().toLowerCase(), [searchParams]);
+  const googleLoginHref = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set('next', nextPath);
+    if (intent) params.set('intent', intent);
+    if (handoffId) params.set('handoffId', handoffId);
+    return `/api/session/login/google?${params.toString()}`;
+  }, [handoffId, intent, nextPath]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -95,16 +102,13 @@ export default function RomaLoginPage() {
               ? 'Use Google or local email/password during local development.'
               : 'Use Google to sign in.'}
           </p>
-          <form action="/api/session/login/google" method="GET" style={{ marginBottom: 18 }}>
-            <input type="hidden" name="next" value={nextPath} />
-            {intent ? <input type="hidden" name="intent" value={intent} /> : null}
-            {handoffId ? <input type="hidden" name="handoffId" value={handoffId} /> : null}
+          <div style={{ marginBottom: 18 }}>
             <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
-              <button aria-label="Continue with Google" className="diet-btn-txt" data-size="lg" data-variant="primary" type="submit">
+              <a aria-label="Continue with Google" className="diet-btn-txt" data-size="lg" data-variant="primary" href={googleLoginHref}>
                 <span className="diet-btn-txt__label body-l">Continue with Google</span>
-              </button>
+              </a>
             </div>
-          </form>
+          </div>
           {passwordLoginEnabled ? (
             <form className="roma-inline-stack" onSubmit={onSubmit}>
               <label className="label-s" htmlFor="roma-login-email">Email</label>

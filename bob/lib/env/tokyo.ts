@@ -38,6 +38,10 @@ export function resolveTokyoBaseUrl(): string {
       : undefined;
   const fromEnv = raw?.trim();
   if (fromEnv) return normalizeTokyoBaseUrl(fromEnv);
+  const profile =
+    typeof process !== 'undefined'
+      ? String(process.env.CK_DEV_PROFILE || 'product').trim().toLowerCase()
+      : 'product';
 
   const inferFromUrl = (value: string | null | undefined): string | null => {
     if (!value) return null;
@@ -78,7 +82,10 @@ export function resolveTokyoBaseUrl(): string {
         process.env.VERCEL ||
         process.env.NETLIFY),
   );
-  if (!isCloudEnv) return normalizeTokyoBaseUrl('https://tokyo.dev.clickeen.com');
+  if (!isCloudEnv) {
+    if (profile === 'source') return normalizeTokyoBaseUrl('http://localhost:4000');
+    return normalizeTokyoBaseUrl('https://tokyo.dev.clickeen.com');
+  }
 
   // Fail-fast in deployed environments: pointing at the wrong Tokyo is catastrophic (wrong widget software plane).
   throw new Error('[Bob] Missing NEXT_PUBLIC_TOKYO_URL (base URL for Tokyo widget assets)');

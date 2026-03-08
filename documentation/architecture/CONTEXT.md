@@ -320,8 +320,8 @@ pnpm build:dieter               # Build Dieter assets first
 pnpm build                      # Build all packages
 
 # Development
-bash scripts/dev-up.sh          # Start all (local): Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) (+ SF 3002 if enabled)
-                               # Also builds Dieter + i18n and verifies Prague l10n overlays (auto-translates missing overlays when SF is running).
+bash scripts/dev-up.sh          # Profile=product (default): local DevStudio shell + cloud-dev data plane (optional local Bob via CK_PRODUCT_LOCAL_BOB=1)
+bash scripts/dev-up.sh --source # Profile=source: full local stack (Tokyo/Tokyo-worker/Berlin/Paris/Venice/Bob/DevStudio/Prague/Pitch, + SF if enabled)
 pnpm dev:bob                    # Bob only
 pnpm dev:paris                  # Paris only
 pnpm dev:admin                  # DevStudio only
@@ -334,14 +334,16 @@ pnpm test
 node scripts/compile-all-widgets.mjs
 ```
 
+Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
+
 **Local instance data (important):**
 - Instances are **not** created by scripts anymore.
 - Supported product/account instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
 - Local DevStudio is for widget authoring work, not for “local Roma” parity.
 - That local authoring scope currently centers on Widget Workspace loading admin-account `wgt_main_*` / `wgt_curated_*` rows for config iteration, curated authoring, and translation checks.
 
-**Local auth target (important):**
-- `bash scripts/dev-up.sh` uses local Supabase by default and ignores remote Supabase values in `.env.local`.
+**Source-profile auth target (important):**
+- `bash scripts/dev-up.sh --source` uses local Supabase by default and ignores remote Supabase values in `.env.local`.
 - To force local services to use remote Supabase, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`.
 - Berlin runs locally at `http://localhost:3005` for parity/unit work, but supported product auth happens in cloud Roma.
 - Berlin session token issuer must match the Berlin issuer Paris is configured to trust; mismatched issuers are rejected (`AUTH_INVALID` issuer mismatch).
@@ -350,7 +352,8 @@ node scripts/compile-all-widgets.mjs
 
 | Environment | Bob | Roma | Paris | Tokyo | San Francisco | DevStudio |
 |---|---|---|---|---|---|---|
-| **Local** | `http://localhost:3000` | (cloud-only) | `http://localhost:3001` | `https://tokyo.dev.clickeen.com` (default; `http://localhost:4000` optional debug) | (optional) `http://localhost:3002` | `http://localhost:5173` |
+| **Local (product profile)** | optional `http://localhost:3000` | `https://roma.dev.clickeen.com` | `https://paris.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `http://localhost:5173` |
+| **Local (source profile)** | `http://localhost:3000` | (cloud-only) | `http://localhost:3001` | `http://localhost:4000` | (optional) `http://localhost:3002` | `http://localhost:5173` |
 | **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://paris.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.dev.clickeen.com` |
 | **UAT** | `https://app.clickeen.com` | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
 | **Limited GA** | `https://app.clickeen.com` | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |

@@ -5,8 +5,9 @@ DevStudio is Clickeen’s internal admin surface for docs + tools. In this repo 
 ## Environments
 
 - **DevStudio Local** (`http://localhost:5173`)
-  - Superadmin environment for development.
-  - Allowed to create/update instance rows (internal-only workflows).
+  - Superadmin shell for development.
+  - Default runtime profile is `product` (cloud Bob/Tokyo/Berlin/Paris data plane).
+  - `source` profile is explicit and local-stack oriented (`?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`).
 - **DevStudio Cloudflare** (`https://devstudio.dev.clickeen.com`)
   - Fast “did the deploy work?” verification surface.
   - Treated as **read-only by default**.
@@ -17,20 +18,26 @@ DevStudio is Clickeen’s internal admin surface for docs + tools. In this repo 
 Route: `/#/tools/dev-widget-workspace`
 
 What it does:
-- Embeds Bob in message-boot mode as a local-first widget authoring studio (default local Bob or explicit `?bob=http://localhost:3000` on the page URL).
+- Embeds Bob in message-boot mode as a widget authoring shell.
+- Product profile default: cloud Bob + cloud Tokyo.
+- Source profile override: local Bob + local Tokyo.
 - Marks iframe host intent as `surface=devstudio` (pairs with `surface=roma` in Roma Builder for explicit host behavior).
 - Uses Bob’s same-origin named routes only (`/api/roma/templates`, `/api/accounts/*`, `/api/widgets/*`) (DevStudio never calls Paris directly).
-- Local-only unauth convenience is isolated here: DevStudio Local carries explicit `devstudio` surface markers so Bob can mint local sessions only for this toolchain, and only when `ENV_STAGE=local`. Roma/product routes do not get this bypass.
+- Local-only trusted convenience is source-profile scoped (`ENV_STAGE=local`). Product profile stays on normal cloud auth/account checks.
 - Uses a 2-dropdown flow:
   - first dropdown = widget type
   - second dropdown = admin-account `wgt_main_*` / `wgt_curated_*` rows available for that widget
 - The dropdown data comes from `GET /api/roma/templates?accountId=<admin-account-id>&surface=devstudio`.
 - Opening a selection lazy-loads the full admin-account instance envelope, then message-boots Bob with real `{ accountId, publicId }` context.
-- Current superadmin authoring actions remain local-first:
+- Current superadmin authoring actions remain available through the same Bob routes:
   - update the baseline `wgt_main_*` row / default config
   - create or update curated rows
   - promote curated rows to cloud-dev
   - inspect translation status and enqueue translation work
+- Source-only local file mutation actions are explicitly gated to `profile=source`:
+  - `Update Config` (`/api/widget-spec-defaults`)
+  - `Update Theme` (`/api/themes/list`, `/api/themes/update`)
+  Product profile keeps these actions hidden and endpoints unavailable by design.
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
@@ -54,6 +61,10 @@ Current boundary:
 ## Troubleshooting
 
 If the instance dropdown shows “Error loading instances”:
-- Check Bob: `http://localhost:3000`
-- Check Paris: `http://localhost:3001/api/healthz`
-- If Paris is wedged, re-run `bash scripts/dev-up.sh` (it kills stale `wrangler/workerd` processes before starting services).
+- Product profile default checks:
+  - Bob cloud: `https://bob.dev.clickeen.com`
+  - Paris cloud: `https://paris.dev.clickeen.com/api/healthz`
+- Source profile checks:
+  - Bob local: `http://localhost:3000`
+  - Paris local: `http://localhost:3001/api/healthz`
+  - If local workers are wedged, re-run `bash scripts/dev-up.sh --source --reset`.

@@ -24,7 +24,8 @@
 
 ## Canonical URLs (executed)
 
-- **Local**: `https://tokyo.dev.clickeen.com` by default for Bob/DevStudio/Roma data parity. `http://localhost:4000` remains available as an explicit local Tokyo debug stub.
+- **Local (product profile)**: `https://tokyo.dev.clickeen.com` by default for Bob/DevStudio/Roma data parity.
+- **Local (source profile)**: `http://localhost:4000` (local Tokyo dev server + local Tokyo-worker path).
 - **Cloud-dev**: `https://tokyo.dev.clickeen.com` (Cloudflare dev)
 - **UAT / Limited GA / GA**: `https://tokyo.clickeen.com` (release stages share prod infra)
 
@@ -80,7 +81,7 @@ Local dev:
   - `GET /assets/integrity/:accountId` (account mirror integrity snapshot)
   - `GET /assets/integrity/:accountId/:assetId` (per-asset integrity snapshot)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
-- `scripts/dev-up.sh` starts the dev server and workers, builds Dieter + i18n, and runs Prague l10n verify on startup. If overlays are stale and San Francisco is reachable, it auto-runs translate + verify in the background. Instance l10n publish is driven by the Paris -> Tokyo-worker pipeline.
+- `scripts/dev-up.sh --source` starts the local Tokyo dev server + Tokyo-worker, builds Dieter + i18n, and runs Prague l10n verify on startup. If overlays are stale and San Francisco is reachable, it auto-runs translate + verify in the background. Instance l10n publish is driven by the Paris -> Tokyo-worker pipeline.
 
 ## l10n published artifacts (executed)
 
@@ -109,7 +110,6 @@ Cloud-dev:
 
 Security rule (executed):
 - `TOKYO_DEV_JWT` must never be used from a browser. Browser upload flows go through Bob server routes using Berlin session auth.
-- `TOKYO_DEV_JWT` is a trusted internal/dev automation path. In this path, account membership + tier budget caps are bypassed by design; keep token scope/operator access tightly controlled.
 
 Asset-domain note:
 - Tokyo upload metadata is ownership/file-centric and stored as per-asset manifest JSON in Tokyo R2.

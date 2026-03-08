@@ -40,3 +40,25 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Product Profile Smoke (static)
+        run: |
+          CK_DEV_PROFILE=product bash -n scripts/dev-up.sh
+          rg -n "CK_DEV_PROFILE|--source|--product" scripts/dev-up.sh > /dev/null
+
+      - name: Enforce Product Profile Asset/Data Plane Guards
+        run: |
+          rg -n "https://tokyo.dev.clickeen.com" bob/lib/env/tokyo.ts admin/src/html/tools/dev-widget-workspace.html > /dev/null
+          if rg -n "if \\(isLocal\\) return 'http://localhost:4000'|NODE_ENV === 'development'.*localhost:4000" bob/lib/env/tokyo.ts admin/src/html/tools/dev-widget-workspace.html; then
+            echo "[gate] Found unconditional localhost Tokyo default in product-profile files."
+            exit 1
+          fi
+          rg -n "IS_SOURCE_PROFILE" admin/src/html/tools/dev-widget-workspace.html admin/vite.config.ts > /dev/null
+          if ! rg -n "superadminUpdateDefaults\\.hidden = true|superadminUpdateTheme\\.hidden = true" admin/src/html/tools/dev-widget-workspace.html > /dev/null; then
+            echo "[gate] Source-only local mutation actions are not explicitly hidden in product profile."
+            exit 1
+          fi
+          if rg -n "TOKYO_BASE}/assets/upload|TOKYO_BASE}/widgets/upload|uploadTokyoAsset\\(" admin/src/html/tools/dev-widget-workspace.html; then
+            echo "[gate] DevStudio workspace reintroduced direct Tokyo product-write path."
+            exit 1
+          fi

@@ -149,11 +149,13 @@ async function loadWorkspaceDom(
   instances: InstancePayload[],
   options?: {
     fetch?: FetchMockOptions;
+    profile?: 'product' | 'source';
     onBobPostMessage?: (payload: unknown, origin: string, ctx: { dom: JSDOM; bobWindow: Window }) => void;
   }
 ) {
+  const profile = options?.profile === 'product' ? 'product' : 'source';
   const dom = new JSDOM(HTML_SOURCE, {
-    url: 'http://localhost:5173/#/tools/dev-widget-workspace',
+    url: `http://localhost:5173/?profile=${profile}#/tools/dev-widget-workspace`,
     pretendToBeVisual: true,
     runScripts: 'outside-only',
   });
@@ -203,6 +205,19 @@ async function loadWorkspaceDom(
 }
 
 describe('DevStudio widget workspace tool', () => {
+  it('hides source-only local file mutation actions in product profile', async () => {
+    const { dom } = await loadWorkspaceDom([], { profile: 'product' });
+    const updateConfigBtn = dom.window.document.getElementById('superadmin-update-defaults') as HTMLButtonElement | null;
+    const updateThemeBtn = dom.window.document.getElementById('superadmin-update-theme') as HTMLButtonElement | null;
+
+    expect(updateConfigBtn?.hidden).toBe(true);
+    expect(updateConfigBtn?.disabled).toBe(true);
+    expect(updateThemeBtn?.hidden).toBe(true);
+    expect(updateThemeBtn?.disabled).toBe(true);
+
+    dom.window.close();
+  });
+
   it('shows the empty-state label when no curated instances exist', async () => {
     const { dom } = await loadWorkspaceDom([]);
     const label = dom.window.document.getElementById('current-instance-label');

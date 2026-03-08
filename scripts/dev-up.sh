@@ -27,6 +27,8 @@ DEV_UP_FULL_REBUILD=0
 DEV_UP_RESET=0
 NEEDS_PRAGUE_L10N_TRANSLATE=0
 STARTED_PID=""
+DEV_PROFILE="${CK_DEV_PROFILE:-product}"
+CK_PRODUCT_LOCAL_BOB="${CK_PRODUCT_LOCAL_BOB:-0}"
 STACK_PORTS=(3000 3001 3002 3003 3005 4000 4321 5173 8790 8791)
 
 ensure_lock() {
@@ -375,12 +377,24 @@ for arg in "$@"; do
     --reset)
       DEV_UP_RESET=1
       ;;
+    --source)
+      DEV_PROFILE="source"
+      ;;
+    --product)
+      DEV_PROFILE="product"
+      ;;
     --help|-h)
-      echo "Usage: bash scripts/dev-up.sh [--full] [--reset]"
+      echo "Usage: bash scripts/dev-up.sh [--full] [--reset] [--product|--source]"
       echo ""
       echo "Options:"
       echo "  --full        Runs workspace build before starting services."
       echo "  --reset       Force a clean restart of the local stack managed by dev-up."
+      echo "  --product     Product profile (default): local DevStudio shell + cloud data plane."
+      echo "  --source      Source profile: full local stack for low-level service development."
+      echo ""
+      echo "Env:"
+      echo "  CK_DEV_PROFILE=product|source   Profile selector (default: product)"
+      echo "  CK_PRODUCT_LOCAL_BOB=1          Also start local Bob in product profile"
       exit 0
       ;;
     *)
@@ -389,6 +403,18 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+DEV_PROFILE="$(printf '%s' "$DEV_PROFILE" | tr '[:upper:]' '[:lower:]')"
+if [ "$DEV_PROFILE" != "product" ] && [ "$DEV_PROFILE" != "source" ]; then
+  echo "[dev-up] Invalid profile: $DEV_PROFILE (expected product|source)"
+  exit 1
+fi
+
+if [ "$DEV_PROFILE" = "product" ]; then
+  STACK_PORTS=(3000 5173)
+else
+  STACK_PORTS=(3000 3001 3002 3003 3005 4000 4321 5173 8790 8791)
+fi
 
 ensure_lock
 trap cleanup_lock EXIT
@@ -401,6 +427,59 @@ if [ -f "$ROOT_DIR/.env.local" ]; then
   # shellcheck disable=SC1091
   source "$ROOT_DIR/.env.local"
   set +a
+fi
+
+if [ "$DEV_PROFILE" = "product" ]; then
+  TOKYO_URL=${TOKYO_URL:-https://tokyo.dev.clickeen.com}
+  BOB_CLOUD_URL=${BOB_CLOUD_URL:-https://bob.dev.clickeen.com}
+  BERLIN_URL=${BERLIN_URL:-https://berlin.dev.clickeen.com}
+  PARIS_BASE_URL=${PARIS_BASE_URL:-https://paris.dev.clickeen.com}
+
+  echo "[dev-up] Profile: product (default)"
+  echo "[dev-up] Data plane: cloud-dev (Tokyo/Berlin/Paris)"
+  echo "[dev-up] Tokyo URL: $TOKYO_URL"
+  echo "[dev-up] Bob URL (default in DevStudio workspace): $BOB_CLOUD_URL"
+
+  stop_port "5173"
+  if [ "$CK_PRODUCT_LOCAL_BOB" = "1" ] || [ "$CK_PRODUCT_LOCAL_BOB" = "true" ]; then
+    stop_port "3000"
+    echo "[dev-up] Starting local Bob (product profile optional mode)"
+    (
+      cd "$ROOT_DIR/bob"
+      start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=product CK_DEV_PROFILE=product PARIS_BASE_URL="$PARIS_BASE_URL" BERLIN_BASE_URL="$BERLIN_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" SANFRANCISCO_BASE_URL="${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}" pnpm dev
+      BOB_PID="$STARTED_PID"
+      echo "[dev-up] Bob PID: $BOB_PID"
+      register_pid "bob" "$BOB_PID" "3000" "$LOG_DIR/bob.dev.log"
+    )
+    wait_for_url "http://localhost:3000" "Bob" "$LOG_DIR/bob.dev.log"
+    prewarm_bob_routes
+  fi
+
+  echo "[dev-up] Starting DevStudio (5173)"
+  (
+    cd "$ROOT_DIR/admin"
+    start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=product TOKYO_URL="$TOKYO_URL" pnpm dev
+    DEVSTUDIO_PID="$STARTED_PID"
+    echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
+    register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"
+  )
+  wait_for_url "http://localhost:5173" "DevStudio" "$LOG_DIR/devstudio.dev.log"
+
+  echo "[dev-up] URLs:"
+  if [ "$CK_PRODUCT_LOCAL_BOB" = "1" ] || [ "$CK_PRODUCT_LOCAL_BOB" = "true" ]; then
+    echo "  Bob local:  http://localhost:3000"
+    echo "  Workspace:  http://localhost:5173/#/dieter/dev-widget-workspace?profile=product&bob=http://localhost:3000"
+  else
+    echo "  Bob cloud:  $BOB_CLOUD_URL"
+    echo "  Workspace:  http://localhost:5173/#/dieter/dev-widget-workspace?profile=product"
+  fi
+  echo "  Tokyo URL:  $TOKYO_URL"
+  echo "  Berlin URL: $BERLIN_URL"
+  echo "  Paris URL:  $PARIS_BASE_URL"
+  echo "  DevStudio:  http://localhost:5173"
+  echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
+  print_stack_port_status
+  exit 0
 fi
 
 echo "[dev-up] Ensuring Supabase local DB is running"
@@ -494,7 +573,7 @@ if [ -z "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
   echo "[dev-up] USAGE_EVENT_HMAC_SECRET not set; view metering will be disabled in local dev."
 fi
 
-TOKYO_URL=${TOKYO_URL:-https://tokyo.dev.clickeen.com}
+TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
 BERLIN_URL=${BERLIN_URL:-http://localhost:3005}
 BERLIN_ISSUER=${BERLIN_ISSUER:-$BERLIN_URL}
 BERLIN_AUDIENCE=${BERLIN_AUDIENCE:-clickeen.product}
@@ -678,9 +757,9 @@ echo "[dev-up] Starting Bob (3000)"
 (
   cd "$ROOT_DIR/bob"
   if [ -n "$SF_BASE_URL" ]; then
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=source PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   else
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=source PARIS_BASE_URL="http://localhost:3001" BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   fi
   BOB_PID="$STARTED_PID"
   echo "[dev-up] Bob PID: $BOB_PID"
@@ -692,7 +771,7 @@ prewarm_bob_routes
 echo "[dev-up] Starting DevStudio (5173)"
 (
   cd "$ROOT_DIR/admin"
-  start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 TOKYO_URL="$TOKYO_URL" pnpm dev
+  start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=source TOKYO_URL="$TOKYO_URL" pnpm dev
   DEVSTUDIO_PID="$STARTED_PID"
   echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
   register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"
@@ -729,7 +808,7 @@ if [ -n "$SF_BASE_URL" ]; then
 fi
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
-echo "  Workspace: http://localhost:5173/#/dieter/dev-widget-workspace ($SUPABASE_TARGET_LABEL Supabase)"
+echo "  Workspace: http://localhost:5173/#/dieter/dev-widget-workspace?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000 ($SUPABASE_TARGET_LABEL Supabase)"
 echo "  Pitch:     http://localhost:8790/healthz"
 echo "  Prague:    http://localhost:4321/us/en/widgets/faq"
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"

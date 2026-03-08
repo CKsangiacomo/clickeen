@@ -3,6 +3,7 @@ import { compileWidgetServer } from '../../../../../lib/compiler.server';
 import type { RawWidget } from '../../../../../lib/compiler.shared';
 import { requireTokyoUrl } from '../../../../../lib/compiler/assets';
 import { parseLimitsSpec } from '@clickeen/ck-policy';
+import { resolveCorsHeaders } from '../../../../../lib/api/cors';
 
 export const runtime = 'edge';
 
@@ -41,10 +42,11 @@ async function sha256Hex(value: string) {
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname: string }> }) {
   const { widgetname } = await ctx.params;
+  const corsHeaders = resolveCorsHeaders(req, 'GET,OPTIONS');
   if (!widgetname) {
     return NextResponse.json(
       { error: 'Missing widgetname' },
-      { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } },
+      { status: 400, headers: corsHeaders },
     );
   }
 
@@ -59,7 +61,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
       if (cached && Date.now() - cached.cachedAt < COMPILED_WIDGET_HOT_CACHE_TTL_MS) {
         return NextResponse.json(cached.payload, {
           headers: {
-            'Access-Control-Allow-Origin': '*',
+            ...corsHeaders,
             'X-Bob-Compiled-Cache': 'hot',
           },
         });
@@ -74,19 +76,19 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
       if (specRes.status === 404) {
         return NextResponse.json(
           { error: `[Bob] Widget not found in Tokyo: ${widgetname}` },
-          { status: 404, headers: { 'Access-Control-Allow-Origin': '*' } },
+          { status: 404, headers: corsHeaders },
         );
       }
       return NextResponse.json(
         { error: `[Bob] Failed to fetch widget spec from Tokyo (${specRes.status} ${specRes.statusText})` },
-        { status: 502, headers: { 'Access-Control-Allow-Origin': '*' } },
+        { status: 502, headers: corsHeaders },
       );
     }
 
     if (!limitsRes.ok && limitsRes.status !== 404) {
       return NextResponse.json(
         { error: `[Bob] Failed to fetch widget limits from Tokyo (${limitsRes.status} ${limitsRes.statusText})` },
-        { status: 502, headers: { 'Access-Control-Allow-Origin': '*' } },
+        { status: 502, headers: corsHeaders },
       );
     }
 
@@ -107,7 +109,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
         });
         return NextResponse.json(cached.payload, {
           headers: {
-            'Access-Control-Allow-Origin': '*',
+            ...corsHeaders,
             'X-Bob-Compiled-Cache': 'hit',
           },
         });
@@ -135,7 +137,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
         });
         return NextResponse.json(cached.payload, {
           headers: {
-            'Access-Control-Allow-Origin': '*',
+            ...corsHeaders,
             'X-Bob-Compiled-Cache': 'hit',
           },
         });
@@ -160,7 +162,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
 
     return NextResponse.json(payload, {
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        ...corsHeaders,
         'X-Bob-Compiled-Cache': cacheBust ? 'bypass' : 'miss',
       },
     });
@@ -168,7 +170,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
       { error: `[Bob] Failed to compile widget ${widgetname}: ${message}` },
-      { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } }
+      { status: 500, headers: corsHeaders }
     );
   }
 }

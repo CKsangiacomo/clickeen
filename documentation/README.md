@@ -94,16 +94,22 @@ This repo is operated by **1 human architect + multiple AI dev teams**. The syst
 
 ## End-to-End Journey (widget folder → Roma/DevStudio/Bob/Prague → cloud-dev)
 
+Runtime profiles:
+- `product` (default): local DevStudio shell + cloud-dev data plane.
+- `source`: full local stack for low-level service development.
+- See `documentation/architecture/RuntimeProfiles.md`.
+
 ### A) Widget definition path (local)
 Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
 
 1) **Local Tokyo CDN stub** serves the widget folder (optional local debug path):
    - `tokyo/dev-server.mjs` -> `http://localhost:4000`
    - Serves `/widgets/**` and `/dieter/**` directly from the repo.
-2) **Local Bob** reads widget definitions/assets from Tokyo:
+2) **Bob runtime** reads widget definitions/assets from Tokyo:
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
 3) **Local DevStudio** opens Bob in message boot for widget authoring:
-   - `admin/src/html/tools/dev-widget-workspace.html` targets local Bob by default, with cloud Tokyo (`https://tokyo.dev.clickeen.com`) as the default data plane.
+   - `admin/src/html/tools/dev-widget-workspace.html` defaults to cloud Bob + cloud Tokyo in product profile.
+   - Source profile can explicitly target local Bob/Tokyo via `?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`.
 4) **Cloud-dev Roma** is the supported product/account host surface:
    - `roma/app/api/bootstrap/route.ts` proxies to Paris `/api/roma/bootstrap`
    - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
@@ -112,10 +118,10 @@ Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
    - `prague/src/lib/markdown.ts` bundles `tokyo/widgets/**/pages/*.json`.
    - `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com` is the default overlay/token base (override to local Tokyo only for explicit local-debug workflows).
 
-Result: local Bob + DevStudio use the same cloud Tokyo data plane as Roma by default. Editing `tokyo/widgets/**` still affects local Tokyo stub flows, but cloud surfaces reflect repo changes only after deploy.
+Result: product profile keeps DevStudio + Bob aligned with Roma on the same cloud Tokyo data plane by default. Local Tokyo is a source-profile path.
 
-### A.1) Local auth issuer alignment (critical)
-Local app servers use the Supabase target chosen by `bash scripts/dev-up.sh`:
+### A.1) Source-profile auth issuer alignment (critical)
+Source profile app servers use the Supabase target chosen by `bash scripts/dev-up.sh --source`:
 - Default: local Supabase (`http://127.0.0.1:54321`)
 - Optional override: remote Supabase (`DEV_UP_USE_REMOTE_SUPABASE=1` + `.env.local` `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_ANON_KEY`)
 

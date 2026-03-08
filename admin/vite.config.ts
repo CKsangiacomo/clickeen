@@ -11,6 +11,10 @@ const OPEN_EDITOR_CONTRACT_SOURCE_PATH = path.resolve(
   'open-editor-lifecycle.v1.json',
 );
 const OPEN_EDITOR_CONTRACT_ROUTE = '/tooling/contracts/open-editor-lifecycle.v1.json';
+const CK_DEV_PROFILE = String(process.env.CK_DEV_PROFILE || 'product')
+  .trim()
+  .toLowerCase();
+const IS_SOURCE_PROFILE = CK_DEV_PROFILE === 'source';
 
 export default defineConfig({
   build: {
@@ -236,6 +240,11 @@ export default defineConfig({
 
           res.setHeader('Content-Type', 'application/json');
           res.setHeader('Cache-Control', 'no-store');
+          if (!IS_SOURCE_PROFILE) {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.route.notFound' } }));
+            return;
+          }
 
           let body = '';
           req.on('data', (chunk) => {
@@ -376,19 +385,24 @@ export default defineConfig({
       },
     },
     {
-	      name: 'tokyo-update-theme',
-	      configureServer(server) {
-	        server.middlewares.use((req, res, next) => {
-	          const url = req.url || '';
-	          const pathname = url.split('?')[0] || '';
-	          const wantsList = pathname === '/api/themes/list' && req.method === 'GET';
-	          const wantsUpdate = pathname === '/api/themes/update' && req.method === 'POST';
-	          if (!wantsList && !wantsUpdate) return next();
+		      name: 'tokyo-update-theme',
+		      configureServer(server) {
+		        server.middlewares.use((req, res, next) => {
+		          const url = req.url || '';
+		          const pathname = url.split('?')[0] || '';
+		          const wantsList = pathname === '/api/themes/list' && req.method === 'GET';
+		          const wantsUpdate = pathname === '/api/themes/update' && req.method === 'POST';
+		          if (!wantsList && !wantsUpdate) return next();
 
-	          res.setHeader('Content-Type', 'application/json');
-	          res.setHeader('Cache-Control', 'no-store');
+		          res.setHeader('Content-Type', 'application/json');
+		          res.setHeader('Cache-Control', 'no-store');
+              if (!IS_SOURCE_PROFILE) {
+                res.statusCode = 404;
+                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.route.notFound' } }));
+                return;
+              }
 
-	          const themesPath = path.resolve(__dirname, '..', 'tokyo', 'themes', 'themes.json');
+		          const themesPath = path.resolve(__dirname, '..', 'tokyo', 'themes', 'themes.json');
 
 	          if (wantsList) {
 	            try {

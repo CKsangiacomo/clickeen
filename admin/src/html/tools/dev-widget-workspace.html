@@ -801,11 +801,17 @@
       window[CK_DEV_WIDGET_WORKSPACE_ABORT_KEY] = abortController;
     } catch {}
 
+    const PROFILE = (() => {
+      const params = new URLSearchParams(window.location.search);
+      const raw = (params.get('profile') || 'product').trim().toLowerCase();
+      return raw === 'source' ? 'source' : 'product';
+    })();
+    const IS_SOURCE_PROFILE = PROFILE === 'source';
+
     function requireBobOrigin() {
       const params = new URLSearchParams(window.location.search);
-      const isLocal =
-        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const defaultBob = isLocal ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';
+      const profile = PROFILE;
+      const defaultBob = profile === 'source' ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';
       const raw = (params.get('bob') || defaultBob).trim();
       try {
         return new URL(raw).origin;
@@ -818,15 +824,17 @@
 
     function resolveTokyoBaseUrl() {
       // Keep in sync with bob/lib/env/tokyo.ts (plain JS variant for DevStudio tools).
-      // DevStudio defaults to the cloud-dev Tokyo data plane so workspace assets/configs
-      // match Roma admin behavior. `?tokyo=` can override for explicit local debug.
+      // product profile: cloud-dev Tokyo (default)
+      // source profile: local Tokyo (explicit low-level service development)
       const params = new URLSearchParams(window.location.search);
+      const profile = PROFILE;
       const raw = (params.get('tokyo') || '').trim();
       if (raw) {
         try {
           return new URL(raw).origin;
         } catch {}
       }
+      if (profile === 'source') return 'http://localhost:4000';
       return 'https://tokyo.dev.clickeen.com';
     }
 
@@ -905,6 +913,17 @@
         url.searchParams.set(key, String(value));
       });
       return url.toString();
+    }
+
+    function fetchBob(url, init = {}) {
+      const requestInit = { ...init };
+      if (!Object.prototype.hasOwnProperty.call(requestInit, 'credentials')) {
+        requestInit.credentials = 'include';
+      }
+      if (!Object.prototype.hasOwnProperty.call(requestInit, 'mode')) {
+        requestInit.mode = 'cors';
+      }
+      return fetch(url, requestInit);
     }
 
     function setL10nStatusDisplay({ state, tone, value, meta }) {
@@ -992,7 +1011,7 @@
       setL10nStatusDisplay({ state: 'loading', tone: 'pending', value: 'Loading...', meta: '' });
 
       try {
-        const res = await fetch(
+        const res = await fetchBob(
           buildBobApiUrl(
             `/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instances/${encodeURIComponent(
               publicId,
@@ -1201,7 +1220,7 @@
       if (compiledPromiseCache.has(slug)) return compiledPromiseCache.get(slug);
 
       const promise = (async () => {
-        const res = await fetch(`${BOB_ORIGIN}/api/widgets/${slug}/compiled`, { cache: 'no-store' });
+        const res = await fetchBob(`${BOB_ORIGIN}/api/widgets/${slug}/compiled`, { cache: 'no-store' });
         if (!res.ok) {
           let details = '';
           try {
@@ -1239,7 +1258,7 @@
         return instanceEnvelopePromiseCache.get(cacheKey);
       }
       const promise = (async () => {
-        const res = await fetch(
+        const res = await fetchBob(
           buildBobApiUrl(
             `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}`,
             { subject: 'account', surface: 'devstudio', _t: Date.now() },
@@ -1263,7 +1282,7 @@
 
     async function fetchInstances() {
       console.log('[DevStudio] Fetching curated instances from Bob/Paris');
-      const res = await fetch(
+      const res = await fetchBob(
         buildBobApiUrl('/api/roma/templates', {
           accountId: DEVSTUDIO_ACCOUNT_ID,
           surface: 'devstudio',
@@ -1424,7 +1443,7 @@
 
     async function superadminFetch(url, init) {
       const headers = new Headers(init?.headers || {});
-      const attempt = async () => fetch(url, { ...init, headers });
+      const attempt = async () => fetchBob(url, { ...init, headers });
 
       const res = await attempt();
       if (res.status !== 403) return res;
@@ -1734,6 +1753,11 @@
     }
 
     async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
+      if (!IS_SOURCE_PROFILE) {
+        throw new Error(
+          '[DevStudio] Update Config is source-profile only. Re-open workspace with ?profile=source.',
+        );
+      }
       const publicId = `wgt_main_${widgetSlug}`;
       const exported = await exportInstanceDataFromBob({
         exportMode: 'current',
@@ -1938,6 +1962,11 @@
     }
 
     async function updateThemeFromEditor() {
+      if (!IS_SOURCE_PROFILE) {
+        throw new Error(
+          '[DevStudio] Update Theme is source-profile only. Re-open workspace with ?profile=source.',
+        );
+      }
       if (!currentPublicId) {
         throw new Error('[DevStudio] Select an instance first.');
       }
@@ -2268,6 +2297,17 @@
 
     if (isLocalDevStudio && superadminActions) {
       superadminActions.style.display = 'inline-flex';
+    }
+
+    if (!IS_SOURCE_PROFILE) {
+      if (superadminUpdateDefaults instanceof HTMLButtonElement) {
+        superadminUpdateDefaults.hidden = true;
+        superadminUpdateDefaults.disabled = true;
+      }
+      if (superadminUpdateTheme instanceof HTMLButtonElement) {
+        superadminUpdateTheme.hidden = true;
+        superadminUpdateTheme.disabled = true;
+      }
     }
 
     superadminUpdateDefaults?.addEventListener('click', async () => {
