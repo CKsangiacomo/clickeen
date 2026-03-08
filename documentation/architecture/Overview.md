@@ -174,6 +174,7 @@ Each release proceeds in 3 steps:
 #### Bob (Pages)
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
 - Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/roma/bootstrap`, `/api/roma/widgets`, `/api/roma/templates`) backed by Paris/Michael boundaries.
+- DevStudio local does not use `/api/roma/templates`; it uses its own trusted local `/api/devstudio/instances*` path to read/write the instances on the admin account.
 
 #### Roma (Pages)
 - Roma is the domain shell (`/home`, `/widgets`, `/templates`, `/builder`, ...).
@@ -199,7 +200,7 @@ Each release proceeds in 3 steps:
   - `POST /api/minibob/handoff/complete` accepts only the admin account in non-local stages.
 - Layered l10n endpoints are canonical.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
-  - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
+  - Instance routing uses `publicId` prefix: `wgt_main_*` marks the instance shown first in MiniBob, `wgt_curated_*` marks other starter instances, `wgt_*_u_*` marks instances in user accounts.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
 - Base-config writes are transactional for persistence + validation; mirror/l10n convergence is async (queue + l10n status) and does not block save persistence on pointer advancement.
 

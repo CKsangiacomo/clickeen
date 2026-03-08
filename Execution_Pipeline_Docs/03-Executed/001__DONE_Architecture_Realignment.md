@@ -43,7 +43,7 @@ This document realigns the system around a single “authority order” and shar
 - **`tokyo/`**: local CDN stub. Hosts widget artifacts and Dieter outputs in a “deployable” shape. Consumers always reference `NEXT_PUBLIC_TOKYO_URL` for assets.
 - **`dieter/`**: tokens + component stencils/specs. Build materializes assets into `tokyo/dieter/**`.
 - **`bob/`**: widget compiler + interactive editor. Compiles widget HTML into ToolDrawer-ready panels; runs editor session, ops application, undo.
-- **`admin/`**: DevStudio wrapper around Bob + docs generation. Embeds Bob editor and provides widget workspace UI. Generates component pages from stencils.
+- **`admin/`**: DevStudio wrapper around Bob + docs generation. Embeds Bob editor and provides instances tool UI. Generates component pages from stencils.
 - **`paris/`**: API gateway for persistence + entitlements (Supabase + Redis). Hosts instance CRUD/read and applies plan limits/branding decisions.
 
 ### High-level data and control flow

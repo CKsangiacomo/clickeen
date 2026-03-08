@@ -102,15 +102,15 @@ This allows a fast loop where DevStudio runs from Cloudflare Pages while Bob run
 The write plane does **not** move to Cloudflare DevStudio in this setup; writes still go through the attached local Bob/Paris stack and its selected Supabase target.
 
 ### Runtime status (local authoring clarity)
-- `GET /api/dev/runtime` returns Bob runtime hints for Widget Workspace (`envStage`, `supabaseTarget`, `localToolAuthEnabled`).
+- `GET /api/dev/runtime` returns Bob runtime hints for the DevStudio tool (`envStage`, `supabaseTarget`, `localToolAuthEnabled`).
 - DevStudio uses this to show whether the attached local Bob toolchain is pointed at `local` or `remote` Supabase.
 
-Source: `admin/src/html/tools/dev-widget-workspace.html` (historical filename; see the “configurable via `?bob=`” comment).
+Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
 ### Instance write surfaces (current)
 - Roma user flows can create/duplicate/delete account user instances via Paris (`/api/roma/*` + account instance endpoints).
 - When Bob is hosted by Roma (`surface=roma`, `boot=message`, `subject=account`), Bob does not own the account mutation transport. It emits explicit editor commands back to the Roma host, and Roma executes the named same-origin account routes (`/api/accounts/...`) on Bob's behalf.
-- DevStudio Local remains the superadmin surface for curated/main authoring actions through Bob’s same-origin named API routes on `localhost`/`127.0.0.1`.
+- DevStudio Local does not use Roma starter discovery. It reads/writes the admin account’s instances through the local DevStudio route family on `localhost` (`/api/devstudio/instances*`), while Bob remains only the editor kernel plus compiled widget route.
 - MiniBob and explicit URL-bootstrap surfaces still use Bob’s own named routes directly when there is no Roma host boundary.
 
 ### Dev subjects and policy (durable)
@@ -301,7 +301,7 @@ Minibob keep gate (public UX):
 - In Minibob (`subject=minibob`), edits are preview-only until signup.
 - After a change, the UI shows a **signup CTA** (“Create a free account to keep this change”) instead of “Keep”.
 - Undo remains available locally; “Keep” is gated behind signup/publish.
-- On publish/signup, the current draft snapshot is claimed into the new account-owned instance; draft context such as `context.websiteUrl` remains part of that instance when present.
+- On publish/signup, the current draft snapshot is claimed into the new instance in their account; draft context such as `context.websiteUrl` remains part of that instance when present.
 
 ### AI routes (current)
 - `/api/ai/widget-copilot`: Widget Copilot execution (Paris grant → San Francisco execute). Returns `422` for invalid payloads; returns `200 { message }` for upstream failures to avoid noisy “Failed to load resource” console errors.
@@ -437,6 +437,10 @@ Bob keeps only named Paris routes, with no wildcard proxy:
 - `bob/app/api/roma/bootstrap/route.ts`
 - `bob/app/api/roma/templates/route.ts`
 
+Important boundary:
+- `bob/app/api/roma/templates/route.ts` is Roma product starter discovery only.
+- DevStudio local must not use it for instance discovery.
+
 Bob editor routes are explicit and non-`/api/paris`:
 - `bob/app/api/instance/[publicId]/route.ts` (minibob read shortcut; `subject=minibob`)
 - `bob/app/api/accounts/[accountId]/instance/[publicId]/route.ts`
@@ -467,7 +471,7 @@ It:
 - Clears stale Next chunks (`bob/.next`)
 - Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)
 - Uses **local Supabase by default**; to point the local stack at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`
-- Passes Bob the resolved Supabase target explicitly, so Widget Workspace and Bob locale reads use the same local-vs-remote Michael target as Berlin/Paris.
+- Passes Bob the resolved Supabase target explicitly, so DevStudio and Bob locale reads use the same local-vs-remote Michael target as Berlin/Paris.
 - Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).
 
 ### Deterministic compilation gate (executed)

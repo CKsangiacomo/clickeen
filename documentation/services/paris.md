@@ -19,8 +19,8 @@ Non-negotiable (PRD 54):
 ### Health + Roma domain
 - `GET /api/healthz`
 - `GET /api/roma/bootstrap`
-- `GET /api/roma/widgets`
-- `GET /api/roma/templates`
+- `GET /api/roma/widgets` — account-visible instance set (`wgt_main_*` + `wgt_curated_*`) for authenticated Roma/admin flows
+- `GET /api/roma/templates` — Roma product starter catalog view over published starter instances
 - `POST /api/roma/widgets/duplicate`
 - `DELETE /api/roma/instances/:publicId`
 

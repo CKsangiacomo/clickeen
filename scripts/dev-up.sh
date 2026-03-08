@@ -433,14 +433,48 @@ if [ "$DEV_PROFILE" = "product" ]; then
   TOKYO_URL=${TOKYO_URL:-https://tokyo.dev.clickeen.com}
   BOB_CLOUD_URL=${BOB_CLOUD_URL:-https://bob.dev.clickeen.com}
   BERLIN_URL=${BERLIN_URL:-https://berlin.dev.clickeen.com}
-  PARIS_BASE_URL=${PARIS_BASE_URL:-https://paris.dev.clickeen.com}
+  PARIS_BASE_URL=${PARIS_BASE_URL:-http://localhost:3001}
+  PRODUCT_BERLIN_ISSUER=${BERLIN_ISSUER:-$BERLIN_URL}
+  PRODUCT_BERLIN_AUDIENCE=${BERLIN_AUDIENCE:-clickeen.product}
+  PRODUCT_TOKYO_DEV_JWT=${TOKYO_DEV_JWT:-$PARIS_DEV_JWT}
 
   echo "[dev-up] Profile: product (default)"
-  echo "[dev-up] Data plane: cloud-dev (Tokyo/Berlin/Paris)"
+  echo "[dev-up] Data plane: cloud-dev (Tokyo/Berlin) + local Paris trusted boundary"
   echo "[dev-up] Tokyo URL: $TOKYO_URL"
-  echo "[dev-up] Bob URL (default in DevStudio workspace): $BOB_CLOUD_URL"
+  echo "[dev-up] Bob URL (default in DevStudio): $BOB_CLOUD_URL"
 
+  if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+    echo "[dev-up] Product-profile Admin Instances requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in $ROOT_DIR/.env.local"
+    exit 1
+  fi
+
+  stop_port "3001"
   stop_port "5173"
+  echo "[dev-up] Starting local Paris trusted boundary (3001)"
+  (
+    cd "$ROOT_DIR/paris"
+    VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY" --var "PARIS_DEV_JWT:$PARIS_DEV_JWT")
+    VARS+=(--var "TOKYO_BASE_URL:$TOKYO_URL")
+    VARS+=(--var "TOKYO_WORKER_BASE_URL:$TOKYO_URL")
+    VARS+=(--var "TOKYO_DEV_JWT:$PRODUCT_TOKYO_DEV_JWT")
+    VARS+=(--var "BERLIN_BASE_URL:$BERLIN_URL")
+    VARS+=(--var "BERLIN_ISSUER:$PRODUCT_BERLIN_ISSUER")
+    VARS+=(--var "BERLIN_AUDIENCE:$PRODUCT_BERLIN_AUDIENCE")
+    VARS+=(--var "ENV_STAGE:local")
+    if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
+      VARS+=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
+    fi
+    if [ -n "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
+      VARS+=(--var "USAGE_EVENT_HMAC_SECRET:$USAGE_EVENT_HMAC_SECRET")
+    fi
+    start_detached "$LOG_DIR/paris.dev.log" pnpm exec wrangler dev --local --env local --port 3001 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$PARIS_INSPECTOR_PORT" \
+      "${VARS[@]}"
+    PARIS_PID="$STARTED_PID"
+    echo "[dev-up] Paris PID: $PARIS_PID"
+    register_pid "paris" "$PARIS_PID" "3001" "$LOG_DIR/paris.dev.log"
+  )
+  wait_for_url "http://localhost:3001/api/healthz" "Paris" "$LOG_DIR/paris.dev.log"
+
   if [ "$CK_PRODUCT_LOCAL_BOB" = "1" ] || [ "$CK_PRODUCT_LOCAL_BOB" = "true" ]; then
     stop_port "3000"
     echo "[dev-up] Starting local Bob (product profile optional mode)"
@@ -458,7 +492,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
   echo "[dev-up] Starting DevStudio (5173)"
   (
     cd "$ROOT_DIR/admin"
-    start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=product TOKYO_URL="$TOKYO_URL" pnpm dev
+    start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=product PARIS_BASE_URL="$PARIS_BASE_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" pnpm dev
     DEVSTUDIO_PID="$STARTED_PID"
     echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
     register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"
@@ -468,10 +502,10 @@ if [ "$DEV_PROFILE" = "product" ]; then
   echo "[dev-up] URLs:"
   if [ "$CK_PRODUCT_LOCAL_BOB" = "1" ] || [ "$CK_PRODUCT_LOCAL_BOB" = "true" ]; then
     echo "  Bob local:  http://localhost:3000"
-    echo "  Workspace:  http://localhost:5173/#/dieter/dev-widget-workspace?profile=product&bob=http://localhost:3000"
+    echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?profile=product&bob=http://localhost:3000"
   else
     echo "  Bob cloud:  $BOB_CLOUD_URL"
-    echo "  Workspace:  http://localhost:5173/#/dieter/dev-widget-workspace?profile=product"
+    echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?profile=product"
   fi
   echo "  Tokyo URL:  $TOKYO_URL"
   echo "  Berlin URL: $BERLIN_URL"
@@ -771,7 +805,7 @@ prewarm_bob_routes
 echo "[dev-up] Starting DevStudio (5173)"
 (
   cd "$ROOT_DIR/admin"
-  start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=source TOKYO_URL="$TOKYO_URL" pnpm dev
+  start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=source PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" pnpm dev
   DEVSTUDIO_PID="$STARTED_PID"
   echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
   register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"
@@ -808,7 +842,7 @@ if [ -n "$SF_BASE_URL" ]; then
 fi
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
-echo "  Workspace: http://localhost:5173/#/dieter/dev-widget-workspace?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000 ($SUPABASE_TARGET_LABEL Supabase)"
+echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000 ($SUPABASE_TARGET_LABEL Supabase)"
 echo "  Pitch:     http://localhost:8790/healthz"
 echo "  Prague:    http://localhost:4321/us/en/widgets/faq"
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"

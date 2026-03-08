@@ -141,7 +141,7 @@ admin/
 │   │   │   └── [other components...]
 │   │   ├── tools/
 │   │   │   ├── bob-ui-native.html       # Bob native UI showcase
-│   │   │   └── dev-widget-workspace.html # Local-first zero-to-one widget workspace
+│   │   │   └── instances.html           # Local-first instances tool
 │   │   └── foundations/
 │   │       ├── colors.html              # Color tokens showcase
 │   │       ├── typography.html          # Typography showcase
@@ -209,7 +209,7 @@ DevStudio auto-generates navigation from filesystem:
 
 ### 🛠️ **Tools**
 - **Bob UI Native** - Bob-specific UI components
-- **Widget Workspace** - local-first zero-to-one authoring studio for source defaults and admin starters
+- **Instances** - local-first tool for editing the admin account's instances
 
 ### 📐 **Foundations**
 - **Colors** - Color tokens and palettes

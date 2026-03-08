@@ -182,7 +182,7 @@ So we do the boring, correct thing:
 ### Directional effort: DevStudio becomes local Admin; Roma (cloud-dev) becomes the product surface
 
 This PRD is also a tooling pivot:
-- We will **deprecate** DevStudio “widget workspace” functionality that existed mainly to chase **local ↔ Cloudflare parity**.
+- We will **deprecate** DevStudio “instances tool” functionality that existed mainly to chase **local ↔ Cloudflare parity**.
 - DevStudio stays local, but it evolves into an **admin + system builder** tool:
   - manage system data (entitlements, accounts, users)
   - build/curate base blocks (widgets, curated instances, Dieter components)

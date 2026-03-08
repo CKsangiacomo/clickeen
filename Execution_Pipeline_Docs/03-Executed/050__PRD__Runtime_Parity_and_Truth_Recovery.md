@@ -39,7 +39,7 @@ DevStudio and Roma must run the same Bob workflow for curated instance open, edi
 
 ## Fixed tenets (do not reinterpret)
 
-1. DevStudio is an internal tooling surface. It embeds Bob. It uses the same admin account. Widget Workspace is where curated instances are created and managed. Nothing else.
+1. DevStudio is an internal tooling surface. It embeds Bob. It uses the same admin account. Instances tool is where curated instances are created and managed. Nothing else.
 2. Roma (`roma/`) is the product shell for workspace users. It is the product app with login. Right now we run with the admin account in `.env.local`.
 3. DevStudio and Roma are two hosts over the same runtime contracts. Local vs cloud-dev is deployment/config, not behavior forks.
 

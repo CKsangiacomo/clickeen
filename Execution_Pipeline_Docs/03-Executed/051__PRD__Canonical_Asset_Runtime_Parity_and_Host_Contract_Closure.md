@@ -290,7 +290,7 @@ Actions:
 
 Acceptance:
 1. Audit counts are zero for legacy persisted path contracts.
-2. No unresolved rows remain in admin-owned instances.
+2. No unresolved rows remain in instances on the admin account.
 
 ### Slice E - Update runtime/contract gates (P0)
 

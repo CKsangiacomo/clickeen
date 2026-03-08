@@ -82,7 +82,7 @@ This produces:
 
 1. Workspace-scoped instance APIs are canonical.
 2. Legacy parallel routes are removed, not deprecated forever.
-3. Roma/Bob use one canonical instance contract end-to-end.
+3. Roma/Bob use one instance contract end-to-end.
 
 ## 2.5 UX/context contracts
 
@@ -343,7 +343,7 @@ This produces:
 ## 7) Acceptance criteria (global)
 
 1. One product auth path (Supabase principal) for non-public endpoints.
-2. One canonical instance API family (workspace-scoped).
+2. One instance API family (workspace-scoped).
 3. Assets are workspace-owned in runtime model.
 4. Account usage/billing are aggregate-only commercial views.
 5. Dev/admin behavior uses super profile, not bypass transport logic.
@@ -387,4 +387,3 @@ This PRD is done only when:
 2. Legacy product paths are deleted, not just unused.
 3. Canonical `documentation/` reflects shipped behavior.
 4. Team can explain account/workspace/instance/asset model in one sentence without exceptions.
-

@@ -15,7 +15,7 @@ type FetchMockOptions = {
   themes?: Array<{ id: string; label?: string }>;
   onThemeUpdate?: (payload: { themeId?: string; values?: Record<string, unknown> }) => void;
   localWidgets?: string[];
-  romaTemplatesStatus?: number;
+  devstudioInstancesStatus?: number;
 };
 
 const HTML_PATH = new URL('./dev-widget-workspace.html', import.meta.url);
@@ -24,7 +24,7 @@ const HTML_SOURCE = readFileSync(HTML_PATH, 'utf8');
 function extractModuleScript(html: string): string {
   const match = html.match(/<script\s+type="module">([\s\S]*?)<\/script>/);
   if (!match) {
-    throw new Error('DevStudio workspace tool script not found');
+    throw new Error('DevStudio instances tool script not found');
   }
   return match[1];
 }
@@ -56,18 +56,15 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
       const widgets = (options?.localWidgets || Array.from(new Set(instances.map((instance) => instance.widgetname))))
         .map((widgetType) => String(widgetType || '').trim().toLowerCase())
         .filter(Boolean)
-        .map((widgetType) => ({
-          widgetType,
-          sourcePublicId: `devstudio_source_${widgetType}`,
-        }));
+        .map((widgetType) => ({ widgetType }));
       return new Response(JSON.stringify({ widgets }), { status: 200 });
     }
-    if (url.includes('/api/roma/templates')) {
-      const status = options?.romaTemplatesStatus ?? 200;
+    if (/\/api\/devstudio\/instances(?:\?|$)/.test(url) && method === 'GET') {
+      const status = options?.devstudioInstancesStatus ?? 200;
       if (status !== 200) {
         return new Response(
           JSON.stringify({
-            error: { reasonKey: 'coreui.errors.auth.required' },
+            error: { reasonKey: 'coreui.errors.devstudio.instanceProxyFailed' },
           }),
           { status },
         );
@@ -79,6 +76,8 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
             publicId: instance.publicId,
             widgetType: instance.widgetname,
             displayName: instance.displayName,
+            status: instance.publicId.startsWith('wgt_main_') ? 'published' : 'published',
+            source: instance.publicId.startsWith('wgt_curated_') ? 'curated' : 'account',
           })),
         }),
         { status: 200 },
@@ -109,14 +108,16 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
       options?.onThemeUpdate?.(payload);
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
-    if (url.includes('/api/accounts/') && url.includes('/instances') && method === 'POST') {
+    if (url.includes('/api/devstudio/instances') && method === 'POST') {
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
-    if (url.includes('/api/accounts/') && url.includes('/instance/')) {
-      const match = instances.find((instance) => url.includes(`/instance/${instance.publicId}`));
+    if (/\/api\/devstudio\/instances\/[^/?:]+(?:\?|$)/.test(url) && !url.includes('/l10n/status') && !url.includes('/enqueue-selected')) {
+      const match = instances.find((instance) => url.includes(`/api/devstudio/instances/${instance.publicId}`));
+      const publicId =
+        match?.publicId || decodeURIComponent((url.match(/\/api\/devstudio\/instances\/([^?]+)/)?.[1] || 'unknown'));
       return new Response(
         JSON.stringify({
-          publicId: match?.publicId || 'unknown',
+          publicId,
           widgetType: match?.widgetname || 'faq',
           displayName: match?.displayName || 'Untitled widget',
           ownerAccountId: '00000000-0000-0000-0000-000000000100',
@@ -144,7 +145,7 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         { status: 200 },
       );
     }
-    if (url.includes('/api/accounts/') && url.includes('/l10n/status')) {
+    if (url.includes('/api/devstudio/instances/') && url.includes('/l10n/status')) {
       return new Response(
         JSON.stringify({
           locales: [{ locale: 'fr', status: 'succeeded', attempts: 1, nextAttemptAt: null, lastError: null }],
@@ -152,7 +153,7 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         { status: 200 },
       );
     }
-    if (url.includes('/api/accounts/') && url.includes('/l10n/enqueue-selected') && method === 'POST') {
+    if (url.includes('/api/devstudio/instances/') && url.includes('/l10n/enqueue-selected') && method === 'POST') {
       return new Response(JSON.stringify({ ok: true, queued: 1, skipped: 0 }), { status: 200 });
     }
     return new Response('{}', { status: 404 });
@@ -166,7 +167,7 @@ async function flushDom(dom: JSDOM, ticks = 2) {
   }
 }
 
-async function loadWorkspaceDom(
+async function loadInstancesDom(
   instances: InstancePayload[],
   options?: {
     fetch?: FetchMockOptions;
@@ -174,7 +175,7 @@ async function loadWorkspaceDom(
     onBobPostMessage?: (payload: unknown, origin: string, ctx: { dom: JSDOM; bobWindow: Window }) => void;
   }
 ) {
-  const profile = options?.profile === 'product' ? 'product' : 'source';
+  const profile = options?.profile === 'source' ? 'source' : 'product';
   const dom = new JSDOM(HTML_SOURCE, {
     url: `http://localhost:5173/?profile=${profile}#/tools/dev-widget-workspace`,
     pretendToBeVisual: true,
@@ -195,6 +196,7 @@ async function loadWorkspaceDom(
 
   const iframe = dom.window.document.getElementById('bob-iframe');
   let bobWindow: Window | null = null;
+  const bobOrigin = profile === 'source' ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';
   if (iframe) {
     bobWindow = {
       postMessage: vi.fn((payload: unknown, origin: string) => {
@@ -216,7 +218,7 @@ async function loadWorkspaceDom(
           sessionId: 'test-session',
           bootMode: 'message',
         },
-        origin: 'http://localhost:3000',
+        origin: bobOrigin,
         source: bobWindow,
       }),
     );
@@ -225,9 +227,9 @@ async function loadWorkspaceDom(
   return { dom, fetchMock };
 }
 
-describe('DevStudio widget workspace tool', () => {
+describe('DevStudio instances tool', () => {
   it('hides source-only local file mutation actions in product profile', async () => {
-    const { dom } = await loadWorkspaceDom([], { profile: 'product' });
+    const { dom } = await loadInstancesDom([], { profile: 'product' });
     const updateConfigBtn = dom.window.document.getElementById('superadmin-update-defaults') as HTMLButtonElement | null;
     const updateThemeBtn = dom.window.document.getElementById('superadmin-update-theme') as HTMLButtonElement | null;
 
@@ -239,25 +241,24 @@ describe('DevStudio widget workspace tool', () => {
     dom.window.close();
   });
 
-  it('shows the empty-state label when no curated instances exist', async () => {
-    const { dom } = await loadWorkspaceDom([], {
+  it('shows the empty-state label when no instances exist', async () => {
+    const { dom } = await loadInstancesDom([], {
       fetch: {
         localWidgets: ['faq'],
-        romaTemplatesStatus: 401,
       },
     });
     const label = dom.window.document.getElementById('current-instance-label');
     const dropdown = dom.window.document.getElementById('instance-dropdown');
     const menu = dom.window.document.getElementById('instance-dropdown-menu');
 
-    expect(label?.textContent).toBe('Faq Source defaults');
+    expect(label?.textContent).toBe('No instances yet');
     expect(dropdown?.getAttribute('style') || '').toContain('display: inline-block');
-    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(1);
+    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(0);
 
     dom.window.close();
   });
 
-  it('boots source-first and keeps cloud starters optional', async () => {
+  it('boots product mode from instances and never calls the Roma starter route', async () => {
     const instances = [
       {
         publicId: 'wgt_curated_faq_simple',
@@ -265,24 +266,25 @@ describe('DevStudio widget workspace tool', () => {
         displayName: 'FAQ Simple',
       },
     ];
-    const { dom, fetchMock } = await loadWorkspaceDom(instances, {
+    const { dom, fetchMock } = await loadInstancesDom(instances, {
       fetch: { localWidgets: ['faq'] },
     });
     const label = dom.window.document.getElementById('current-instance-label');
     const menu = dom.window.document.getElementById('instance-dropdown-menu');
 
-    expect(label?.textContent).toBe('Faq Source defaults');
-    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(2);
+    expect(label?.textContent).toBe('FAQ Simple');
+    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(1);
 
     const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
     expect(urls.some((url) => url.includes('/api/devstudio/widgets'))).toBe(true);
     expect(urls.some((url) => url.includes('/api/widgets/faq/compiled'))).toBe(true);
-    expect(urls.some((url) => url.includes('/api/accounts/') && url.includes('/instance/wgt_curated_faq_simple'))).toBe(false);
+    expect(urls.some((url) => url.includes('/api/devstudio/instances') && !url.includes('/wgt_curated_faq_simple/l10n/status'))).toBe(true);
+    expect(urls.some((url) => url.includes('/api/roma/templates'))).toBe(false);
 
     dom.window.close();
   });
 
-  it('loads a cloud starter only when explicitly selected', async () => {
+  it('loads instance envelopes through the DevStudio local route', async () => {
     const instances = [
       {
         publicId: 'wgt_curated_faq_simple',
@@ -290,16 +292,11 @@ describe('DevStudio widget workspace tool', () => {
         displayName: 'FAQ Simple',
       },
     ];
-    const { dom, fetchMock } = await loadWorkspaceDom(instances, {
+    const { dom, fetchMock } = await loadInstancesDom(instances, {
       fetch: { localWidgets: ['faq'] },
     });
-    const starterButton = dom.window.document.querySelector('[data-public-id="wgt_curated_faq_simple"]');
-
-    starterButton?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
-    await flushDom(dom, 3);
-
     const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
-    expect(urls.some((url) => url.includes('/api/accounts/') && url.includes('/instance/wgt_curated_faq_simple'))).toBe(true);
+    expect(urls.some((url) => url.includes('/api/devstudio/instances/wgt_curated_faq_simple'))).toBe(true);
 
     dom.window.close();
   });
@@ -317,14 +314,14 @@ describe('DevStudio widget workspace tool', () => {
         displayName: 'Logo Main',
       },
     ];
-    const { dom, fetchMock } = await loadWorkspaceDom(instances, {
+    const { dom, fetchMock } = await loadInstancesDom(instances, {
       fetch: { localWidgets: ['faq', 'logoshowcase'] },
     });
     const widgetSelect = dom.window.document.getElementById('widget-select') as HTMLSelectElement | null;
     const menu = dom.window.document.getElementById('instance-dropdown-menu');
 
     expect(widgetSelect?.value).toBe('faq');
-    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(2);
+    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(1);
 
     const initialUrls = fetchMock.mock.calls.map(([input]) =>
       typeof input === 'string' ? input : input.toString()
@@ -356,7 +353,7 @@ describe('DevStudio widget workspace tool', () => {
         displayName: 'FAQ Simple',
       },
     ];
-    const { dom } = await loadWorkspaceDom(instances, {
+    const { dom } = await loadInstancesDom(instances, {
       fetch: { localWidgets: ['faq'] },
     });
     const openBtn = dom.window.document.getElementById('create-curated-instance');
@@ -390,7 +387,7 @@ describe('DevStudio widget workspace tool', () => {
     ];
 
     let exportRequest: any = null;
-    const { dom, fetchMock } = await loadWorkspaceDom(instances, {
+    const { dom, fetchMock } = await loadInstancesDom(instances, {
       fetch: { localWidgets: ['faq'] },
       onBobPostMessage: (payload, origin, { dom: innerDom, bobWindow }) => {
         if (!payload || typeof payload !== 'object') return;
@@ -443,11 +440,7 @@ describe('DevStudio widget workspace tool', () => {
 
     const createCall = fetchMock.mock.calls.find(([input, init]) => {
       const url = typeof input === 'string' ? input : input.toString();
-      return (
-        url.includes('/api/accounts/') &&
-        url.includes('/instances') &&
-        (init?.method || 'GET') === 'POST'
-      );
+      return url.includes('/api/devstudio/instances') && (init?.method || 'GET') === 'POST';
     });
     expect(createCall).toBeTruthy();
     const createBody = createCall?.[1]?.body ? JSON.parse(String(createCall[1].body)) : null;
@@ -469,7 +462,7 @@ describe('DevStudio widget workspace tool', () => {
       },
     ];
 
-    const { dom } = await loadWorkspaceDom(instances, {
+    const { dom } = await loadInstancesDom(instances, {
       fetch: {
         localWidgets: ['faq'],
         themes: [
@@ -477,6 +470,7 @@ describe('DevStudio widget workspace tool', () => {
           { id: 'dark', label: 'Dark' },
         ],
       },
+      profile: 'source',
       onBobPostMessage: (payload, origin, { dom: innerDom, bobWindow }) => {
         if (!payload || typeof payload !== 'object') return;
         const data = payload as { type?: string; requestId?: string };
@@ -522,7 +516,7 @@ describe('DevStudio widget workspace tool', () => {
 
     let themeUpdatePayload: { themeId?: string; values?: Record<string, unknown> } | null = null;
 
-    const { dom } = await loadWorkspaceDom(instances, {
+    const { dom } = await loadInstancesDom(instances, {
       fetch: {
         localWidgets: ['faq'],
         themes: [
@@ -545,6 +539,7 @@ describe('DevStudio widget workspace tool', () => {
           themeUpdatePayload = payload;
         },
       },
+      profile: 'source',
       onBobPostMessage: (payload, origin, { dom: innerDom, bobWindow }) => {
         if (!payload || typeof payload !== 'object') return;
         const data = payload as { type?: string; requestId?: string };

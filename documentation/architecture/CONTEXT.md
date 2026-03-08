@@ -105,15 +105,16 @@ Between load and save:
 **Clickeen does not have a separate gallery-preset content model.** "Starter designs" are Clickeen-authored instances stored in `curated_widget_instances` and exposed in the gallery.
 
 **How it works:**
-1. Clickeen team authors baseline + curated instances in DevStudio.
-2. Instances use `wgt_main_{widgetType}` (baseline) and `wgt_curated_{curatedKey}` (curated).
-3. These instances are published one-way to cloud-dev and surfaced in the gallery.
-4. User browses gallery -> clicks "Use this" -> clones to their account as a user instance.
-5. User customizes their copy freely (full ToolDrawer access).
+1. Clickeen team authors the starter instances in DevStudio.
+2. One instance per widget may be shown first in MiniBob (`wgt_main_{widgetType}` in current runtime naming).
+3. Other starter instances use `wgt_curated_{widgetType}_{styleSlug}` in current runtime naming.
+4. These instances are published one-way to cloud-dev and surfaced in the gallery.
+5. User browses gallery -> clicks "Use this" -> clones to their account as a user instance.
+6. User customizes their copy freely (full ToolDrawer access).
 
 **Why this approach:**
 - **One editor**: Clickeen and users author in Bob; same config schema.
-- **Clean separation**: Curated content is global; user instances are account-scoped with RLS.
+- **One instance set**: the same instances appear as DevStudio authoring targets, Roma starters, and Prague embeds.
 - **Deterministic publish**: Clickeen-authored instances are one-way (local -> cloud-dev).
 - **Scales to marketplace**: Curated instances remain shareable configs, not a new content type.
 
@@ -340,7 +341,7 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 - Instances are **not** created by scripts anymore.
 - Supported product/account instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
 - Local DevStudio is for widget authoring work, not for “local Roma” parity.
-- That local authoring scope currently centers on Widget Workspace loading admin-account `wgt_main_*` / `wgt_curated_*` rows for config iteration, curated authoring, and translation checks.
+- That local authoring scope currently centers on loading the instances on the admin account for config iteration and translation checks.
 
 **Source-profile auth target (important):**
 - `bash scripts/dev-up.sh --source` uses local Supabase by default and ignores remote Supabase values in `.env.local`.
@@ -352,7 +353,7 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 | Environment | Bob | Roma | Paris | Tokyo | San Francisco | DevStudio |
 |---|---|---|---|---|---|---|
-| **Local (product profile)** | optional `http://localhost:3000` | `https://roma.dev.clickeen.com` | `https://paris.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `http://localhost:5173` |
+| **Local (product profile)** | optional `http://localhost:3000` | `https://roma.dev.clickeen.com` | `http://localhost:3001` (trusted local boundary) | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `http://localhost:5173` |
 | **Local (source profile)** | `http://localhost:3000` | (cloud-only) | `http://localhost:3001` | `http://localhost:4000` | (optional) `http://localhost:3002` | `http://localhost:5173` |
 | **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://paris.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.dev.clickeen.com` |
 | **UAT** | `https://app.clickeen.com` | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |

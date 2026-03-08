@@ -7,19 +7,19 @@
 - Runs locally: DevStudio UI shell (`:5173`).
 - Optional local process: Bob (`CK_PRODUCT_LOCAL_BOB=1`).
 - Uses cloud-dev services by default:
-  - Bob: `https://bob.dev.clickeen.com` (default from DevStudio workspace)
+  - Bob: `https://bob.dev.clickeen.com` (default from DevStudio)
   - Tokyo: `https://tokyo.dev.clickeen.com`
   - Berlin: `https://berlin.dev.clickeen.com`
   - Paris: `https://paris.dev.clickeen.com`
 - Local Tokyo/Tokyo-worker are not part of this default workflow.
-- DevStudio Widget Workspace still boots source-first from the local widget catalog in this profile; only cloud starter/account rows depend on cloud auth.
+- DevStudio still boots from the local widget catalog in this profile; instance rows come from the admin account through the trusted local route, which resolves through local Paris in product profile.
 
 ## source
 - Purpose: low-level service development and local worker debugging.
 - Runs full local stack (Tokyo, Tokyo-worker, Berlin, Paris, Venice, Bob, DevStudio, Prague, Pitch, optional SanFrancisco).
 - Uses local Tokyo default: `http://localhost:4000`.
-- DevStudio workspace should be opened with source params:
-  - `?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`
+- DevStudio should be opened with source params:
+  - `/#/tools/dev-widget-workspace?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`
 - Source-profile-only file mutation remains explicit:
   - `Update Config` writes `tokyo/widgets/*/spec.json`
   - `Update Theme` writes `tokyo/configs/themes.json`

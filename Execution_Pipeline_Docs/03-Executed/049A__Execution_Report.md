@@ -62,7 +62,7 @@ PRD: `Execution_Pipeline_Docs/02-Executing/049A__PRD__Editor_Contract_and_Admin_
 
 ## Validation run
 
-1. `pnpm --filter @clickeen/devstudio test -- dev-widget-workspace`
+1. `pnpm --filter @clickeen/devstudio test -- instances`
 - Result: pass (7/7).
 
 2. `pnpm --filter @clickeen/devstudio build`

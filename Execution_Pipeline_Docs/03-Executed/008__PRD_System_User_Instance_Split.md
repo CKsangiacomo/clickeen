@@ -79,7 +79,7 @@ We need a hard architectural split so Clickeen-authored instances are authored l
 3. Clickeen-authored instances are editable only in local DevStudio.
 4. Cloud-dev can read Clickeen-authored instances but must never write them.
 5. User instances are editable only in cloud-dev and never written to local DB.
-6. i10n overlays are generated from the canonical instance store for that scope.
+6. i10n overlays are generated from the instance store for that scope.
 
 ---
 
@@ -188,7 +188,7 @@ Prague continues to use curated IDs; no change in public URLs.
 ### 4.6 Materialization pipeline (Tokyo)
 
 This is a hybrid architecture by design:
-- **Truth (DB)**: Supabase holds the canonical instance config and overlays.
+- **Truth (DB)**: Supabase holds the instance config and overlays.
 - **Delivery (CDN)**: Tokyo R2 stores materialized, immutable artifacts.
 - **Publisher bridge**: San Francisco + Tokyo Worker convert DB truth into CDN delivery.
 

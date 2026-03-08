@@ -15,6 +15,15 @@ const CK_DEV_PROFILE = String(process.env.CK_DEV_PROFILE || 'product')
   .trim()
   .toLowerCase();
 const IS_SOURCE_PROFILE = CK_DEV_PROFILE === 'source';
+const PLATFORM_ACCOUNT_ID = String(
+  process.env.CK_PLATFORM_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100',
+)
+  .trim()
+  .toLowerCase();
+const DEFAULT_PARIS_BASE_URL = String(process.env.PARIS_BASE_URL || 'https://paris.dev.clickeen.com')
+  .trim()
+  .replace(/\/+$/, '');
+const DEVSTUDIO_INTERNAL_SERVICE_ID = 'devstudio.local';
 
 function listLocalWidgetCatalog() {
   const widgetsRoot = path.resolve(__dirname, '..', 'tokyo', 'widgets');
@@ -26,10 +35,64 @@ function listLocalWidgetCatalog() {
     .filter(Boolean)
     .filter((widgetType) => fs.existsSync(path.join(widgetsRoot, widgetType, 'spec.json')))
     .sort((a, b) => a.localeCompare(b))
-    .map((widgetType) => ({
-      widgetType,
-      sourcePublicId: `devstudio_source_${widgetType}`,
-    }));
+    .map((widgetType) => ({ widgetType }));
+}
+
+function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
+    req.on('end', () => resolve(body));
+    req.on('error', reject);
+  });
+}
+
+function resolveDevstudioParisBaseUrl() {
+  return DEFAULT_PARIS_BASE_URL;
+}
+
+function resolveDevstudioAccountId(url: URL): string {
+  const accountId = String(url.searchParams.get('accountId') || PLATFORM_ACCOUNT_ID)
+    .trim()
+    .toLowerCase();
+  return accountId || PLATFORM_ACCOUNT_ID;
+}
+
+function createDevstudioParisHeaders(initHeaders?: HeadersInit): Headers {
+  const token = String(process.env.PARIS_DEV_JWT || '').trim();
+  if (!token) {
+    throw new Error('Missing PARIS_DEV_JWT for local DevStudio instance routes.');
+  }
+
+  const headers = new Headers(initHeaders || {});
+  headers.set('authorization', `Bearer ${token}`);
+  headers.set('x-ck-internal-service', DEVSTUDIO_INTERNAL_SERVICE_ID);
+  return headers;
+}
+
+async function proxyDevstudioParisJson(args: {
+  req: any;
+  res: any;
+  pathname: string;
+  method?: string;
+  body?: string;
+  headers?: HeadersInit;
+}) {
+  const upstream = await fetch(`${resolveDevstudioParisBaseUrl()}${args.pathname}`, {
+    method: args.method || args.req.method || 'GET',
+    headers: createDevstudioParisHeaders(args.headers),
+    body: args.body,
+    cache: 'no-store',
+  });
+
+  const text = await upstream.text();
+  const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+  args.res.statusCode = upstream.status;
+  args.res.setHeader('Content-Type', contentType);
+  args.res.setHeader('Cache-Control', 'no-store');
+  args.res.end(text);
 }
 
 export default defineConfig({
@@ -80,6 +143,131 @@ export default defineConfig({
               }),
             );
           }
+        });
+      },
+    },
+    {
+      name: 'devstudio-instance-routes',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          const rawUrl = req.url || '';
+          const requestUrl = new URL(rawUrl || '/', 'http://localhost:5173');
+          const pathname = requestUrl.pathname || '';
+          const accountId = resolveDevstudioAccountId(requestUrl);
+
+          const instanceMatch = pathname.match(/^\/api\/devstudio\/instances\/([^/]+)$/);
+          const statusMatch = pathname.match(/^\/api\/devstudio\/instances\/([^/]+)\/l10n\/status$/);
+          const enqueueMatch = pathname.match(/^\/api\/devstudio\/instances\/([^/]+)\/l10n\/enqueue-selected$/);
+
+          const wantsList = pathname === '/api/devstudio/instances' && req.method === 'GET';
+          const wantsCreate = pathname === '/api/devstudio/instances' && req.method === 'POST';
+          const wantsGetInstance = Boolean(instanceMatch && req.method === 'GET');
+          const wantsUpdateInstance = Boolean(instanceMatch && req.method === 'PUT');
+          const wantsStatus = Boolean(statusMatch && req.method === 'GET');
+          const wantsEnqueue = Boolean(enqueueMatch && req.method === 'POST');
+
+          if (
+            !wantsList &&
+            !wantsCreate &&
+            !wantsGetInstance &&
+            !wantsUpdateInstance &&
+            !wantsStatus &&
+            !wantsEnqueue
+          ) {
+            return next();
+          }
+
+          try {
+            if (wantsList) {
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: `/api/roma/widgets?accountId=${encodeURIComponent(accountId)}`,
+                method: 'GET',
+                headers: { accept: 'application/json' },
+              });
+            }
+
+            if (wantsCreate) {
+              const body = await readRequestBody(req);
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: `/api/accounts/${encodeURIComponent(accountId)}/instances?subject=account`,
+                method: 'POST',
+                body,
+                headers: { 'content-type': 'application/json', accept: 'application/json' },
+              });
+            }
+
+            if (wantsGetInstance && instanceMatch) {
+              const publicId = decodeURIComponent(instanceMatch[1] || '');
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
+                method: 'GET',
+                headers: { accept: 'application/json' },
+              });
+            }
+
+            if (wantsUpdateInstance && instanceMatch) {
+              const publicId = decodeURIComponent(instanceMatch[1] || '');
+              const body = await readRequestBody(req);
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
+                method: 'PUT',
+                body,
+                headers: { 'content-type': 'application/json', accept: 'application/json' },
+              });
+            }
+
+            if (wantsStatus && statusMatch) {
+              const publicId = decodeURIComponent(statusMatch[1] || '');
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+                  publicId,
+                )}/l10n/status?subject=account`,
+                method: 'GET',
+                headers: { accept: 'application/json' },
+              });
+            }
+
+            if (wantsEnqueue && enqueueMatch) {
+              const publicId = decodeURIComponent(enqueueMatch[1] || '');
+              const body = await readRequestBody(req);
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+                  publicId,
+                )}/l10n/enqueue-selected?subject=account`,
+                method: 'POST',
+                body,
+                headers: { 'content-type': 'application/json', accept: 'application/json' },
+              });
+            }
+          } catch (error) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-store');
+            res.end(
+              JSON.stringify({
+                error: {
+                  kind: 'INTERNAL',
+                  reasonKey: 'coreui.errors.devstudio.instanceProxyFailed',
+                  detail: error instanceof Error ? error.message : String(error),
+                },
+              }),
+            );
+            return;
+          }
+
+          return next();
         });
       },
     },

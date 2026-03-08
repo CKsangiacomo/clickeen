@@ -1,4 +1,4 @@
-# PRD 059 — Surface Convergence: DevStudio Zero-to-One Workspace and Berlin/Google Product Auth
+# PRD 059 — Surface Convergence: DevStudio Zero-to-One Tool and Berlin/Google Product Auth
 
 Status: EXECUTING
 Date: 2026-03-06
@@ -8,20 +8,20 @@ Priority: P0 (product/runtime convergence)
 > Core mandate: DevStudio is not dead. It was over-cut. Restore it with the correct purpose. At the same time, restore a working Berlin-owned Roma access path now without expanding this PRD into the full future auth/account program.
 
 Context note:
-- PRD 056 established the canonical auth boundary: Berlin is AuthN, Roma completes startup, Paris owns ensure-account + MiniBob handoff claim.
+- PRD 056 established the current auth boundary: Berlin is AuthN, Roma completes startup, Paris owns ensure-account + MiniBob handoff claim.
 - A documentation correction pass on 2026-03-06 already fixed item `2` (usage/billing placeholder status) and item `3` (MiniBob -> account -> Roma is one continuous journey).
-- Execution update (runtime): DevStudio Widget Workspace is restored as a real local-first widget workspace. It now boots source-first from the local widget catalog / `spec.json` defaults and only layers in admin starters when cloud auth is available; it no longer depends on account templates just to open Bob.
+- Execution update (runtime): DevStudio local is being corrected to read and write the admin account’s instances directly through an explicit trusted local path. It must not depend on Roma starter discovery or product session auth just to read those instances.
 - Execution update (runtime): Roma access is currently restored through Berlin-owned session endpoints for both Google and email/password. This is an access-unblock decision, not the final long-term auth/account architecture.
-- Execution update (runtime contract): non-local Roma/Bob auth now canonicalizes redirects and cookie security to HTTPS at the request boundary, so cloud-dev auth completion does not depend on proxy-presented internal scheme.
+- Execution update (runtime contract): non-local Roma/Bob auth now forces HTTPS redirects and cookie security at the request boundary, so cloud-dev auth completion does not depend on proxy-presented internal scheme.
 - The two remaining cross-cutting issues are coupled:
-  1. DevStudio Widget Workspace was replaced by a deprecation page, even though zero-to-one widget creation still needs a local authoring studio.
+  1. The DevStudio tool was replaced by a deprecation page, even though zero-to-one widget creation still needs a local authoring studio.
   2. Auth is still being separated from local tool behavior, but the larger multi-provider / multi-account redesign is not part of this PRD.
 - PRD 059 defines the target surface split and auth split so implementation and documentation can converge again.
 
 Environment contract:
-- Canonical integration truth: cloud-dev.
+- Integration truth: cloud-dev.
 - Local is for building and authoring iteration.
-- Canonical local startup: `bash scripts/dev-up.sh`.
+- Standard local startup: `bash scripts/dev-up.sh`.
 - No destructive Supabase resets.
 - No git reset/rebase/force-checkout.
 
@@ -67,7 +67,24 @@ Yes.
 
 ## One-line Objective
 
-Restore DevStudio Widget Workspace as a local-only zero-to-one widget studio, keep day-2 widget/admin operations in cloud Roma, and restore a working Berlin-owned Roma access path now without turning PRD 59 into the full future auth/account redesign.
+Restore the DevStudio tool as a local-only zero-to-one widget studio, keep day-2 widget/admin operations in cloud Roma, and restore a working Berlin-owned Roma access path now without turning PRD 59 into the full future auth/account redesign.
+
+---
+
+## Instance Model
+
+There is one set of instances on the admin account.
+
+- One instance per widget may be shown first in MiniBob.
+- That is what the team calls `main`.
+- Other instances for that widget are still just instances.
+- Roma shows those same instances as starters.
+- Prague renders those same instances as embeds.
+- Other accounts duplicate from those instances into their own account.
+
+Hard rule:
+- `main` is a designation, not a separate type.
+- DevStudio must not invent a second local/source instance type.
 
 ---
 
@@ -89,8 +106,8 @@ The intended split is:
 - DevStudio Local for the narrow zero-to-one authoring loop
 
 The repo currently contains both stories:
-- docs that still describe a real DevStudio workspace
-- a live DevStudio page that says the workspace is deprecated
+- docs that still describe a real DevStudio tool
+- a live DevStudio page that says the tool is deprecated
 
 ### 3. Auth currently mixes product and tool stories
 
@@ -136,12 +153,12 @@ Hard rule:
 
 ---
 
-## DevStudio Widget Workspace: Correct Purpose
+## DevStudio Tool: Correct Purpose
 
 ### DevStudio Local must exist again
 
 Route stays:
-- `/#/dieter/dev-widget-workspace`
+- `/#/tools/dev-widget-workspace`
 
 But the purpose changes from “local parity tool” to:
 - **zero-to-one widget authoring studio**
@@ -149,12 +166,12 @@ But the purpose changes from “local parity tool” to:
 ### DevStudio Local owns only these jobs
 
 1. Open Bob locally for the widget under construction.
-2. Load a local baseline working instance for that widget.
+2. Load the admin account’s instances for that widget through an explicit trusted local route.
 3. Reset local working state from current widget defaults.
-4. Open admin-account baseline/main (`wgt_main_*`) and curated starters for real config iteration.
-5. Check translations/localization on those authoring starters in Bob.
+4. Open the `wgt_main_*` instance and other instances for real config iteration.
+5. Check translations/localization on those instances in Bob.
 6. Write updated defaults back into the widget source of truth (`tokyo/widgets/{widget}/spec.json`) when explicitly requested.
-7. Sync the local baseline/main fixture needed to keep widget software and local authoring aligned.
+7. Keep widget defaults aligned with the current instance state when explicitly requested.
 8. Provide the shortest loop for:
    - `spec.json` editing
    - control schema validation
@@ -173,18 +190,18 @@ But the purpose changes from “local parity tool” to:
 ### Roma owns the 80% path
 
 Roma cloud with the admin account is the operational surface for:
-- curated/day-2 widget management
+- starter-catalog consumption using the instances on the admin account
 - product-facing instance workflows
 - publish/live behavior
 - translations/locales in normal product context
-- account-owned assets
+- account assets
 - embed/copy-code operational flow
 
 This is the intended simplification.
 
 ### Consequence
 
-We do **not** restore the old DevStudio workspace as-is.
+We do **not** restore the old DevStudio tool as-is.
 We restore a **narrower** tool with a cleaner job.
 
 ---
@@ -193,7 +210,7 @@ We restore a **narrower** tool with a cleaner job.
 
 ### Mode A — Product auth (supported path)
 
-This is the canonical product auth model for cloud-dev and the intended product architecture:
+This is the supported product auth model for cloud-dev and the intended product architecture:
 
 1. User starts from Prague or Roma.
 2. Roma starts a Berlin-owned login path.
@@ -258,7 +275,7 @@ The contract remains:
 1. User edits in MiniBob.
 2. User may provide website/context while editing.
 3. User clicks Publish.
-4. User creates/signs into an account via the canonical product auth path.
+4. User creates/signs into an account via the supported product auth path.
 5. Roma completes handoff.
 6. The draft instance is claimed into the account and the user continues in Roma.
 
@@ -268,7 +285,7 @@ PRD 59 depends on this contract staying simple.
 
 ## Route and Surface Contract
 
-### Keep / use as canonical
+### Keep / use
 
 Berlin:
 - `POST /auth/login/provider/start`
@@ -279,7 +296,7 @@ Berlin:
 
 Roma:
 - `GET /api/session/login/google` — Berlin-owned Google login start
-- `GET /api/session/finish` — canonical server-side completion gate
+- `GET /api/session/finish` — server-side completion gate
 - `POST /api/session/logout`
 - `POST /api/session/login` — Berlin-owned email/password login path
 
@@ -288,7 +305,7 @@ Paris:
 - `POST /api/minibob/handoff/complete`
 
 DevStudio:
-- `/#/dieter/dev-widget-workspace` — restored local zero-to-one workspace
+- `/#/tools/dev-widget-workspace` — restored local zero-to-one tool
 
 ### Must not be reintroduced
 
@@ -301,22 +318,25 @@ DevStudio:
 
 ## Execution Plan
 
-### Phase 1 — Restore DevStudio Widget Workspace with the correct scope
+### Phase 1 — Restore the DevStudio tool with the correct scope
 
-1. Replace the current deprecation-only page in `admin/src/html/tools/dev-widget-workspace.html` with a real local authoring workspace again.
+1. Replace the current deprecation-only page in `admin/src/html/tools/dev-widget-workspace.html` with a real local authoring tool again.
 2. Keep the route the same to avoid churn.
 3. Use Bob message boot with explicit `surface=devstudio`.
 4. Limit the tool to zero-to-one widget-authoring actions only.
 5. Remove any wording that implies DevStudio is a dead surface.
+6. Remove DevStudio dependence on `/api/roma/templates` and any product-session-gated starter discovery.
+7. Show the admin account’s instances directly, with one `main` instance shown first when it exists.
 
 Phase 1 gate:
-- A developer can start local with `bash scripts/dev-up.sh`, open Widget Workspace, and iterate on a widget package from source/defaults without needing cloud Roma.
+- A developer can start local with `bash scripts/dev-up.sh`, open DevStudio, and iterate on the admin account’s instances for a widget without product login.
 
 ### Phase 2 — Reassert Roma as the day-2 operational/admin surface
 
 1. Keep product/account/curated operational workflows in Roma cloud with a real admin account.
-2. Remove stale DevStudio docs/README text that still claim DevStudio is the general operational owner.
-3. Ensure documentation says DevStudio is for widget birth, Roma is for product/admin operations.
+2. Keep Roma starter discovery as a product view over the same instances on the admin account.
+3. Remove stale DevStudio docs/README text that still claim DevStudio is the general operational owner.
+4. Ensure documentation says DevStudio edits those instances, Roma consumes the same instances as starters, and Prague consumes the same instances as embeds.
 
 Phase 2 gate:
 - An AI team can tell, from docs alone, where a workflow belongs without guessing.
@@ -352,7 +372,7 @@ Phase 4 gate:
 ### Local
 
 1. `bash scripts/dev-up.sh`
-2. Open DevStudio Local Widget Workspace.
+2. Open the DevStudio tool.
 3. Load/open a widget under construction in Bob.
 4. Reset from current defaults.
 5. Apply changes and sync the local baseline/default-authoring flow.
@@ -383,12 +403,12 @@ Phase 4 gate:
 
 ## In Scope
 
-- Restore DevStudio Widget Workspace as a real local tool again.
+- Restore the DevStudio tool as a real local tool again.
 - Narrow DevStudio responsibility to zero-to-one widget authoring.
 - Reassert Roma as the operational/admin surface.
 - Restore a working Berlin-owned Roma access path.
 - Confine local tool-trusted auth to explicit local DevStudio flows.
-- Update canonical docs when the implementation lands.
+- Update instance docs when the implementation lands.
 
 ## Out of Scope
 

@@ -29,7 +29,7 @@ There is no "primary market."
 There is no retrofitting.
 There is no geography.
 
-**Phase 1 implementation detail:** Clickeen keeps a single canonical instance/config identity (locale-free) and applies locale-specific overlays at runtime. If a request does not specify locale, we use a deterministic default (`en`) for stability (not as an identity rule).
+**Phase 1 implementation detail:** Clickeen keeps a single instance/config identity (locale-free) and applies locale-specific overlays at runtime. If a request does not specify locale, we use a deterministic default (`en`) for stability (not as an identity rule).
 ```
 
 **This isn't "launching globally from day one." It's the absence of locale assumptions in the architecture.**

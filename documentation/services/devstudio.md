@@ -6,38 +6,37 @@ DevStudio is Clickeen’s internal admin surface for docs + tools. In this repo 
 
 - **DevStudio Local** (`http://localhost:5173`)
   - Superadmin shell for development.
-  - Default runtime profile is `product` (cloud Bob/Tokyo/Berlin/Paris data plane).
+  - Default runtime profile is `product` (cloud Bob/Tokyo/Berlin data plane with a local Paris trusted boundary for admin instance routes).
   - `source` profile is explicit and local-stack oriented (`?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`).
 - **DevStudio Cloudflare** (`https://devstudio.dev.clickeen.com`)
   - Fast “did the deploy work?” verification surface.
   - Treated as **read-only by default**.
-  - If Widget Workspace is opened there with `?bob=http://localhost:3000`, the page is only a remote shell attached to your local Bob toolchain. Any writes still go through that local Bob/Paris stack and its chosen Supabase target.
+  - If the instances tool is opened there with `?bob=http://localhost:3000`, the page is only a remote shell attached to your local Bob toolchain. Any writes still go through that local Bob/Paris stack and its chosen Supabase target.
 
-## Widget Workspace tool
+## Admin Instances
 
 Route: `/#/tools/dev-widget-workspace`
 
 What it does:
 - Embeds Bob in message-boot mode as a widget authoring shell.
-- Product profile default: cloud Bob + cloud Tokyo.
+- Product profile default: cloud Bob + cloud Tokyo, with instance discovery/edit reads proxied through local Paris.
 - Source profile override: local Bob + local Tokyo.
 - Marks iframe host intent as `surface=devstudio` (pairs with `surface=roma` in Roma Builder for explicit host behavior).
-- Source-first bootstrap: loads the local widget catalog from `/api/devstudio/widgets`, compiles the selected widget, and opens Bob from source defaults even when cloud account auth is absent.
-- Optional cloud starter overlay: if DevStudio can read Bob’s account routes, it merges admin-account `wgt_main_*` / `wgt_curated_*` starters into the picker. If cloud auth is missing, the workspace still boots from source defaults.
-- Uses Bob’s same-origin named routes only for cloud starter / instance work (`/api/roma/templates`, `/api/accounts/*`, `/api/widgets/*`) (DevStudio never calls Paris directly).
-- Local-only trusted convenience is source-profile scoped (`ENV_STAGE=local`). Product profile stays on normal cloud auth/account checks.
+- Widget type selection still comes from the local widget catalog (`/api/devstudio/widgets`).
+- Instance discovery now comes from the explicit local DevStudio route family (`/api/devstudio/instances*`), which proxies to the local Paris trusted boundary.
+- DevStudio no longer uses `/api/roma/templates`. That route is Roma product starter discovery, not DevStudio authoring discovery.
+- Product profile shows the admin account’s instances directly.
+- Source profile keeps widget defaults available only when a widget has no saved instance yet.
 - Uses a 2-dropdown flow:
   - first dropdown = widget type
-  - second dropdown = source defaults + any available admin-account `wgt_main_*` / `wgt_curated_*` rows for that widget
+  - second dropdown = the admin instances for that widget
 - The widget catalog comes from `GET /api/devstudio/widgets`.
-- Optional cloud starter rows come from `GET /api/roma/templates?accountId=<admin-account-id>&surface=devstudio`.
-- Opening a source-default entry message-boots Bob with inline compiled defaults and no required cloud account context.
-- Opening a cloud starter lazy-loads the full admin-account instance envelope, then message-boots Bob with real `{ accountId, publicId }` context.
-- Current superadmin authoring actions remain available through the same Bob routes:
-  - update the baseline `wgt_main_*` row / default config
-  - create or update curated rows
-  - promote curated rows to cloud-dev
-  - inspect translation status and enqueue translation work
+- Instances come from `GET /api/devstudio/instances?accountId=<admin-account-id>`.
+- Opening the `wgt_main_*` instance or any other instance lazy-loads the full admin-account instance envelope through `GET /api/devstudio/instances/:publicId`, then message-boots Bob with real `{ accountId, publicId }` context.
+- Current authoring actions use the same local DevStudio route family:
+  - create/update instances
+  - inspect translation status
+  - enqueue translation work
 - Source-only local file mutation actions are explicitly gated to `profile=source`:
   - `Update Config` (`/api/widget-spec-defaults`)
   - `Update Theme` (`/api/themes/list`, `/api/themes/update`)
@@ -57,18 +56,22 @@ Important behavior:
 - Free + Minibob remain constrained to `sdr.widget.copilot.v1` by design.
 
 Current boundary:
-- Widget Workspace is restored for widget authoring, not for full local product parity.
-- That includes admin-account baseline/curated iteration and translation checks inside Bob.
+- The DevStudio tool is restored for widget authoring, not for full local product parity.
+- That includes editing the admin account’s instances and running translation checks inside Bob.
 - The tool no longer pretends DevStudio is the operational owner for day-2 widget/account workflows.
 - Product/admin operational work still belongs in Roma cloud with a real admin account.
+- The same instances are:
+  - DevStudio authoring targets
+  - Roma starter catalog entries
+  - Prague embed sources
 
 ## Troubleshooting
 
-If the workspace opens but cloud starters are missing:
-- DevStudio source-first boot is still working.
-- Check Bob auth for `https://bob.dev.clickeen.com` if you expect admin-account starters to appear.
+If DevStudio local opens but instances are missing:
+- Check local `PARIS_DEV_JWT` / Paris connectivity for `/api/devstudio/instances`.
+- This is a local trusted-tool path, not a Roma product-auth path.
 
-If the workspace fails before any widget opens:
+If the page fails before any widget opens:
 - Local DevStudio must be able to read `/api/devstudio/widgets`.
 - Product profile default checks:
   - Bob cloud: `https://bob.dev.clickeen.com`

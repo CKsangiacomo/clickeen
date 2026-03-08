@@ -1,10 +1,10 @@
 <!--
   ═══════════════════════════════════════════════════════════════════════════
-  Widget Development Workspace (DevStudio Tools Page)
+  DevStudio Admin Instances Tool
   ═══════════════════════════════════════════════════════════════════════════
 
   PURPOSE:
-  This DevStudio page provides a workspace for developing and testing widgets
+  This DevStudio page provides an instance editor for developing and testing widgets
   with full integration across all Clickeen services.
 
   WHAT IT DOES:
@@ -38,7 +38,7 @@
       padding: 32px;
     }
 
-    .dev-widget-workspace-header {
+    .devstudio-instances-header {
       display: flex;
       align-items: center;
       gap: var(--space-4);
@@ -46,7 +46,7 @@
       width: 100%;
     }
 
-    .dev-widget-workspace-header > * {
+    .devstudio-instances-header > * {
       margin: 0;
     }
 
@@ -61,29 +61,29 @@
       box-shadow: var(--shadow-floating);
     }
 
-    #superadmin-actions .dev-widget-workspace__actions {
+    #superadmin-actions .devstudio-instances__actions {
       display: inline-flex;
       align-items: center;
       gap: var(--space-2);
       flex-wrap: wrap;
     }
 
-    #superadmin-actions .dev-widget-workspace__actions-group {
+    #superadmin-actions .devstudio-instances__actions-group {
       display: inline-flex;
       align-items: center;
       gap: var(--space-2);
       flex-wrap: wrap;
     }
 
-    #superadmin-actions .dev-widget-workspace__actions-divider {
+    #superadmin-actions .devstudio-instances__actions-divider {
       inline-size: 1px;
       block-size: 20px;
       background: color-mix(in oklab, var(--role-border), transparent 35%);
       border-radius: 999px;
     }
 
-    #superadmin-actions .dev-widget-workspace__action,
-    .dev-widget-workspace__modal .dev-widget-workspace__action {
+    #superadmin-actions .devstudio-instances__action,
+    .devstudio-instances__modal .devstudio-instances__action {
       --btn-border-width: 0px;
       --btn-border-color: transparent;
       --btn-bg: var(--action-bg);
@@ -96,38 +96,38 @@
       box-shadow: var(--shadow-floating);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='green4'],
-    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='green4'] {
+    #superadmin-actions .devstudio-instances__action[data-tone='green4'],
+    .devstudio-instances__modal .devstudio-instances__action[data-tone='green4'] {
       --action-bg: var(--color-system-green-4);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='purple4'],
-    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='purple4'] {
+    #superadmin-actions .devstudio-instances__action[data-tone='purple4'],
+    .devstudio-instances__modal .devstudio-instances__action[data-tone='purple4'] {
       --action-bg: var(--color-system-purple-4);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='pink4'],
-    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='pink4'] {
+    #superadmin-actions .devstudio-instances__action[data-tone='pink4'],
+    .devstudio-instances__modal .devstudio-instances__action[data-tone='pink4'] {
       --action-bg: var(--color-system-pink-4);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='indigo4'],
-    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='indigo4'] {
+    #superadmin-actions .devstudio-instances__action[data-tone='indigo4'],
+    .devstudio-instances__modal .devstudio-instances__action[data-tone='indigo4'] {
       --action-bg: var(--color-system-indigo-4);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='brown.5'],
-    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='brown.5'] {
+    #superadmin-actions .devstudio-instances__action[data-tone='brown.5'],
+    .devstudio-instances__modal .devstudio-instances__action[data-tone='brown.5'] {
       --action-bg: var(--color-system-brown-5);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='gray4.4'],
-    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='gray4.4'] {
+    #superadmin-actions .devstudio-instances__action[data-tone='gray4.4'],
+    .devstudio-instances__modal .devstudio-instances__action[data-tone='gray4.4'] {
       --action-bg: color-mix(in oklab, var(--color-system-gray-4), white 80%);
     }
 
-    #superadmin-actions .dev-widget-workspace__action[data-tone='teal.5'],
-    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='teal.5'] {
+    #superadmin-actions .devstudio-instances__action[data-tone='teal.5'],
+    .devstudio-instances__modal .devstudio-instances__action[data-tone='teal.5'] {
       --action-bg: color-mix(in oklab, var(--color-system-teal), white 90%);
     }
 
@@ -151,45 +151,45 @@
       display: none;
     }
 
-    .dev-widget-workspace__l10n-label {
+    .devstudio-instances__l10n-label {
       color: color-mix(in oklab, var(--color-text), transparent 25%);
       font-size: var(--fs-12);
     }
 
-    .dev-widget-workspace__l10n-dot {
+    .devstudio-instances__l10n-dot {
       inline-size: 8px;
       block-size: 8px;
       border-radius: 999px;
       background: var(--color-system-gray-6);
     }
 
-    #l10n-status[data-tone='ready'] .dev-widget-workspace__l10n-dot {
+    #l10n-status[data-tone='ready'] .devstudio-instances__l10n-dot {
       background: var(--color-system-green);
     }
 
-    #l10n-status[data-tone='pending'] .dev-widget-workspace__l10n-dot,
-    #l10n-status[data-tone='refreshing'] .dev-widget-workspace__l10n-dot {
+    #l10n-status[data-tone='pending'] .devstudio-instances__l10n-dot,
+    #l10n-status[data-tone='refreshing'] .devstudio-instances__l10n-dot {
       background: var(--color-system-yellow);
     }
 
-    #l10n-status[data-tone='running'] .dev-widget-workspace__l10n-dot {
+    #l10n-status[data-tone='running'] .devstudio-instances__l10n-dot {
       background: var(--color-system-blue);
     }
 
-    #l10n-status[data-tone='retrying'] .dev-widget-workspace__l10n-dot {
+    #l10n-status[data-tone='retrying'] .devstudio-instances__l10n-dot {
       background: var(--color-system-orange);
     }
 
-    #l10n-status[data-tone='unavailable'] .dev-widget-workspace__l10n-dot {
+    #l10n-status[data-tone='unavailable'] .devstudio-instances__l10n-dot {
       background: var(--color-system-gray-7);
     }
 
-    .dev-widget-workspace__l10n-value,
-    .dev-widget-workspace__l10n-meta {
+    .devstudio-instances__l10n-value,
+    .devstudio-instances__l10n-meta {
       display: none;
     }
 
-    .dev-widget-workspace__l10n-tooltip {
+    .devstudio-instances__l10n-tooltip {
       position: absolute;
       top: calc(100% + 8px);
       right: 0;
@@ -215,33 +215,33 @@
         visibility var(--duration-base);
     }
 
-    #l10n-status:hover .dev-widget-workspace__l10n-tooltip,
-    #l10n-status:focus-visible .dev-widget-workspace__l10n-tooltip {
+    #l10n-status:hover .devstudio-instances__l10n-tooltip,
+    #l10n-status:focus-visible .devstudio-instances__l10n-tooltip {
       opacity: 1;
       visibility: visible;
       transform: translateY(0);
     }
 
-    .dev-widget-workspace-header #instance-dropdown {
+    .devstudio-instances-header #instance-dropdown {
       min-inline-size: 240px;
     }
 
-    .dev-widget-workspace-header #widget-selector {
+    .devstudio-instances-header #widget-selector {
       flex: 0 0 160px;
       inline-size: 160px;
       min-inline-size: 160px;
       max-inline-size: 160px;
     }
 
-    .dev-widget-workspace-header #widget-selector .diet-textfield__control {
+    .devstudio-instances-header #widget-selector .diet-textfield__control {
       box-shadow: var(--shadow-floating);
     }
 
-    .dev-widget-workspace-header .diet-dropdown {
+    .devstudio-instances-header .diet-dropdown {
       position: relative;
     }
 
-    .dev-widget-workspace-header .diet-dropdown__control {
+    .devstudio-instances-header .diet-dropdown__control {
       display: inline-flex;
       align-items: center;
       justify-content: space-between;
@@ -260,51 +260,51 @@
         box-shadow var(--duration-base);
     }
 
-    .dev-widget-workspace-header .diet-dropdown__control:hover {
+    .devstudio-instances-header .diet-dropdown__control:hover {
       background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 6%);
       box-shadow: var(--shadow-floating);
     }
 
-    .dev-widget-workspace-header .diet-dropdown__control:focus-visible {
+    .devstudio-instances-header .diet-dropdown__control:focus-visible {
       outline: 2px solid var(--focus-ring-color, var(--color-system-blue));
       outline-offset: 2px;
     }
 
-    .dev-widget-workspace-header .diet-dropdown__value {
+    .devstudio-instances-header .diet-dropdown__value {
       display: inline-flex;
       align-items: baseline;
       gap: var(--space-0);
       min-inline-size: 0;
     }
 
-    .dev-widget-workspace-header .diet-dropdown__value-label {
+    .devstudio-instances-header .diet-dropdown__value-label {
       color: color-mix(in oklab, var(--color-text), transparent 40%);
       font: 500 var(--fs-12) / var(--lh-tight) var(--font-ui);
     }
 
-    .dev-widget-workspace-header .diet-dropdown__value-choice {
+    .devstudio-instances-header .diet-dropdown__value-choice {
       font: 600 var(--fs-14) / var(--lh-tight) var(--font-ui);
       letter-spacing: -0.01em;
     }
 
-    .dev-widget-workspace-header .diet-dropdown__icon {
+    .devstudio-instances-header .diet-dropdown__icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: color-mix(in oklab, var(--color-text), transparent 40%);
     }
 
-    .dev-widget-workspace-header .diet-dropdown__icon svg {
+    .devstudio-instances-header .diet-dropdown__icon svg {
       inline-size: var(--icon-size-16);
       block-size: var(--icon-size-16);
       transition: transform var(--duration-base);
     }
 
-    .dev-widget-workspace-header .diet-dropdown[data-state='open'] .diet-dropdown__icon svg {
+    .devstudio-instances-header .diet-dropdown[data-state='open'] .diet-dropdown__icon svg {
       transform: rotate(180deg);
     }
 
-    .dev-widget-workspace-header .diet-popover {
+    .devstudio-instances-header .diet-popover {
       display: none;
       position: absolute;
       inset-inline-start: 0;
@@ -318,16 +318,16 @@
       box-shadow: var(--shadow-floating-lg);
     }
 
-    .dev-widget-workspace-header .diet-dropdown[data-state='open'] .diet-popover {
+    .devstudio-instances-header .diet-dropdown[data-state='open'] .diet-popover {
       display: block;
     }
 
-    .dev-widget-workspace-header .diet-dropdown__options {
+    .devstudio-instances-header .diet-dropdown__options {
       display: grid;
       gap: var(--space-1);
     }
 
-    .dev-widget-workspace-header .diet-dropdown__option {
+    .devstudio-instances-header .diet-dropdown__option {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -338,34 +338,34 @@
       transition: background-color var(--duration-base);
     }
 
-    .dev-widget-workspace-header .diet-dropdown__option svg {
+    .devstudio-instances-header .diet-dropdown__option svg {
       inline-size: 1rem;
       block-size: 1rem;
     }
 
-    .dev-widget-workspace-header
+    .devstudio-instances-header
       .diet-dropdown__option:not(.is-selected)
       .diet-btn-menuactions__icon {
       opacity: 0;
     }
 
-    .dev-widget-workspace-header .diet-dropdown__option:hover {
+    .devstudio-instances-header .diet-dropdown__option:hover {
       background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 12%);
     }
 
-    .dev-widget-workspace-header .diet-dropdown__option.is-selected {
+    .devstudio-instances-header .diet-dropdown__option.is-selected {
       background: color-mix(in oklab, var(--color-system-blue), transparent 88%);
       color: var(--color-system-blue);
     }
 
-    .dev-widget-workspace-header .dev-widget-workspace__empty-option {
+    .devstudio-instances-header .devstudio-instances__empty-option {
       border-radius: var(--control-radius-md);
       padding: var(--space-2) var(--space-3);
       color: color-mix(in oklab, var(--color-text), transparent 35%);
       background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 12%);
     }
 
-    .dev-widget-workspace__modal {
+    .devstudio-instances__modal {
       position: fixed;
       inset: 0;
       display: flex;
@@ -376,11 +376,11 @@
       z-index: 50;
     }
 
-    .dev-widget-workspace__modal[hidden] {
+    .devstudio-instances__modal[hidden] {
       display: none;
     }
 
-    .dev-widget-workspace__modal-body {
+    .devstudio-instances__modal-body {
       inline-size: min(720px, 100%);
       max-block-size: min(80vh, 720px);
       overflow: hidden;
@@ -394,43 +394,43 @@
       box-shadow: var(--shadow-floating-lg);
     }
 
-    .dev-widget-workspace__modal-header {
+    .devstudio-instances__modal-header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: var(--space-3);
     }
 
-    .dev-widget-workspace__modal-title {
+    .devstudio-instances__modal-title {
       font: 600 var(--fs-16) / var(--lh-tight) var(--font-ui);
       letter-spacing: -0.01em;
     }
 
-    .dev-widget-workspace__modal-subtitle {
+    .devstudio-instances__modal-subtitle {
       font: 500 var(--fs-12) / var(--lh-tight) var(--font-ui);
       color: color-mix(in oklab, var(--color-text), transparent 40%);
     }
 
-    .dev-widget-workspace__modal-content {
+    .devstudio-instances__modal-content {
       overflow: auto;
       display: grid;
       gap: var(--space-4);
     }
 
-    .dev-widget-workspace__variant-grid {
+    .devstudio-instances__variant-grid {
       display: grid;
       gap: var(--space-3);
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
 
-    .dev-widget-workspace__field-helper {
+    .devstudio-instances__field-helper {
       font: 500 var(--fs-12) / var(--lh-tight) var(--font-ui);
       color: color-mix(in oklab, var(--color-text), transparent 35%);
       letter-spacing: -0.005em;
       overflow-wrap: anywhere;
     }
 
-    .dev-widget-workspace__modal-actions {
+    .devstudio-instances__modal-actions {
       display: flex;
       justify-content: flex-end;
       gap: var(--space-2);
@@ -438,13 +438,13 @@
   </style>
 
   <header class="devstudio-page__header" style="flex-shrink: 0">
-    <h1 class="heading-2" style="margin: 0">Widget Workspace</h1>
+    <h1 class="heading-2" style="margin: 0">Admin Instances</h1>
     <div id="superadmin-actions">
-      <div class="dev-widget-workspace__actions">
-        <div class="dev-widget-workspace__actions-group" data-group="primary">
+      <div class="devstudio-instances__actions">
+        <div class="devstudio-instances__actions-group" data-group="primary">
           <button
             type="button"
-            class="diet-btn-ictxt dev-widget-workspace__action"
+            class="diet-btn-ictxt devstudio-instances__action"
             id="superadmin-update-defaults"
             data-size="md"
             data-variant="secondary"
@@ -459,7 +459,7 @@
           </button>
           <button
             type="button"
-            class="diet-btn-ictxt dev-widget-workspace__action"
+            class="diet-btn-ictxt devstudio-instances__action"
             id="superadmin-reset-from-json"
             data-size="md"
             data-variant="secondary"
@@ -474,7 +474,7 @@
           </button>
           <button
             type="button"
-            class="diet-btn-ictxt dev-widget-workspace__action"
+            class="diet-btn-ictxt devstudio-instances__action"
             id="refresh-prague-preview"
             data-size="md"
             data-variant="secondary"
@@ -489,7 +489,7 @@
           </button>
           <button
             type="button"
-            class="diet-btn-ictxt dev-widget-workspace__action"
+            class="diet-btn-ictxt devstudio-instances__action"
             id="translate-selected-locales"
             data-size="md"
             data-variant="secondary"
@@ -500,7 +500,7 @@
           </button>
           <button
             type="button"
-            class="diet-btn-ictxt dev-widget-workspace__action"
+            class="diet-btn-ictxt devstudio-instances__action"
             id="superadmin-update-theme"
             data-size="md"
             data-variant="secondary"
@@ -514,11 +514,11 @@
             <span class="diet-btn-ictxt__label body-s">Update Theme</span>
           </button>
         </div>
-        <span class="dev-widget-workspace__actions-divider" aria-hidden="true"></span>
-        <div class="dev-widget-workspace__actions-group" data-group="secondary">
+        <span class="devstudio-instances__actions-divider" aria-hidden="true"></span>
+        <div class="devstudio-instances__actions-group" data-group="secondary">
           <button
             type="button"
-            class="diet-btn-ictxt dev-widget-workspace__action"
+            class="diet-btn-ictxt devstudio-instances__action"
             id="create-curated-instance"
             data-size="md"
             data-variant="secondary"
@@ -529,7 +529,7 @@
           </button>
           <button
             type="button"
-            class="diet-btn-ictxt dev-widget-workspace__action"
+            class="diet-btn-ictxt devstudio-instances__action"
             id="update-curated-instance"
             data-size="md"
             data-variant="secondary"
@@ -544,7 +544,7 @@
           </button>
           <button
             type="button"
-            class="diet-btn-ictxt dev-widget-workspace__action"
+            class="diet-btn-ictxt devstudio-instances__action"
             id="promote-curated-cloud"
             data-size="md"
             data-variant="secondary"
@@ -568,11 +568,11 @@
       data-tone="unavailable"
       tabindex="0"
     >
-      <span class="dev-widget-workspace__l10n-label">Translations</span>
-      <span class="dev-widget-workspace__l10n-dot" aria-hidden="true"></span>
-      <span class="dev-widget-workspace__l10n-value" id="l10n-status-value">-</span>
-      <span class="dev-widget-workspace__l10n-meta" id="l10n-status-meta"></span>
-      <span class="dev-widget-workspace__l10n-tooltip" id="l10n-status-tooltip"></span>
+      <span class="devstudio-instances__l10n-label">Translations</span>
+      <span class="devstudio-instances__l10n-dot" aria-hidden="true"></span>
+      <span class="devstudio-instances__l10n-value" id="l10n-status-value">-</span>
+      <span class="devstudio-instances__l10n-meta" id="l10n-status-meta"></span>
+      <span class="devstudio-instances__l10n-tooltip" id="l10n-status-tooltip"></span>
     </div>
     <div class="diet-textfield" data-size="md" id="widget-selector" style="display: none">
       <label class="diet-textfield__control">
@@ -635,19 +635,19 @@
     ></iframe>
   </div>
 
-  <div class="dev-widget-workspace__modal" id="curated-modal" hidden>
+  <div class="devstudio-instances__modal" id="curated-modal" hidden>
     <div
-      class="dev-widget-workspace__modal-body"
+      class="devstudio-instances__modal-body"
       role="dialog"
       aria-modal="true"
       aria-labelledby="curated-modal-title"
     >
-      <div class="dev-widget-workspace__modal-header">
+      <div class="devstudio-instances__modal-header">
         <div>
-          <div class="dev-widget-workspace__modal-title" id="curated-modal-title">
+          <div class="devstudio-instances__modal-title" id="curated-modal-title">
             Create curated instance
           </div>
-          <div class="dev-widget-workspace__modal-subtitle" id="curated-modal-subtitle"></div>
+          <div class="devstudio-instances__modal-subtitle" id="curated-modal-subtitle"></div>
         </div>
         <button
           class="diet-btn-txt"
@@ -659,7 +659,7 @@
           <span class="diet-btn-txt__label">Close</span>
         </button>
       </div>
-      <div class="dev-widget-workspace__modal-content">
+      <div class="devstudio-instances__modal-content">
         <div class="diet-textfield" data-size="md">
           <label class="diet-textfield__control">
             <span class="diet-textfield__display-label">Instance name</span>
@@ -672,7 +672,7 @@
             />
           </label>
         </div>
-        <div class="dev-widget-workspace__variant-grid">
+        <div class="devstudio-instances__variant-grid">
           <div class="diet-textfield" data-size="md">
             <label class="diet-textfield__control">
               <span class="diet-textfield__display-label">Variant (optional)</span>
@@ -698,9 +698,9 @@
             </label>
           </div>
         </div>
-        <div class="dev-widget-workspace__field-helper" id="curated-style-preview"></div>
+        <div class="devstudio-instances__field-helper" id="curated-style-preview"></div>
       </div>
-      <div class="dev-widget-workspace__modal-actions">
+      <div class="devstudio-instances__modal-actions">
         <button
           class="diet-btn-txt"
           type="button"
@@ -711,7 +711,7 @@
           <span class="diet-btn-txt__label">Cancel</span>
         </button>
         <button
-          class="diet-btn-ictxt dev-widget-workspace__action"
+          class="diet-btn-ictxt devstudio-instances__action"
           type="button"
           data-size="md"
           data-variant="secondary"
@@ -725,17 +725,17 @@
     </div>
   </div>
 
-  <div class="dev-widget-workspace__modal" id="theme-modal" hidden>
+  <div class="devstudio-instances__modal" id="theme-modal" hidden>
     <div
-      class="dev-widget-workspace__modal-body"
+      class="devstudio-instances__modal-body"
       role="dialog"
       aria-modal="true"
       aria-labelledby="theme-modal-title"
     >
-      <div class="dev-widget-workspace__modal-header">
+      <div class="devstudio-instances__modal-header">
         <div>
-          <div class="dev-widget-workspace__modal-title" id="theme-modal-title">Update theme</div>
-          <div class="dev-widget-workspace__modal-subtitle" id="theme-modal-subtitle">
+          <div class="devstudio-instances__modal-title" id="theme-modal-title">Update theme</div>
+          <div class="devstudio-instances__modal-subtitle" id="theme-modal-subtitle">
             Overwrite a Tokyo theme with the current editor state.
           </div>
         </div>
@@ -749,7 +749,7 @@
           <span class="diet-btn-txt__label">Close</span>
         </button>
       </div>
-      <div class="dev-widget-workspace__modal-content">
+      <div class="devstudio-instances__modal-content">
         <div class="diet-textfield" data-size="md">
           <label class="diet-textfield__control">
             <span class="diet-textfield__display-label">Theme</span>
@@ -757,7 +757,7 @@
           </label>
         </div>
       </div>
-      <div class="dev-widget-workspace__modal-actions">
+      <div class="devstudio-instances__modal-actions">
         <button
           class="diet-btn-txt"
           type="button"
@@ -768,7 +768,7 @@
           <span class="diet-btn-txt__label">Cancel</span>
         </button>
         <button
-          class="diet-btn-ictxt dev-widget-workspace__action"
+          class="diet-btn-ictxt devstudio-instances__action"
           type="button"
           data-size="md"
           data-variant="secondary"
@@ -791,14 +791,14 @@
     // DevStudio swaps DOM but does not automatically remove global event listeners.
     // Use an AbortController keyed on `window` so re-entering this tool page doesn't
     // accumulate listeners and spam postMessage loops.
-    const CK_DEV_WIDGET_WORKSPACE_ABORT_KEY = '__CK_DEV_WIDGET_WORKSPACE_ABORT__';
+    const CK_DEV_INSTANCES_ABORT_KEY = '__CK_DEV_INSTANCES_ABORT__';
     try {
-      const prev = window[CK_DEV_WIDGET_WORKSPACE_ABORT_KEY];
+      const prev = window[CK_DEV_INSTANCES_ABORT_KEY];
       if (prev && typeof prev.abort === 'function') prev.abort();
     } catch {}
     const abortController = new AbortController();
     try {
-      window[CK_DEV_WIDGET_WORKSPACE_ABORT_KEY] = abortController;
+      window[CK_DEV_INSTANCES_ABORT_KEY] = abortController;
     } catch {}
 
     const PROFILE = (() => {
@@ -842,11 +842,11 @@
     const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
     const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
     const DEVSTUDIO_ACCOUNT_ID = PLATFORM_ACCOUNT_ID;
-    const SOURCE_INSTANCE_PREFIX = 'devstudio_source_';
+    const LOCAL_DEFAULT_INSTANCE_PREFIX = 'devstudio_local_';
     let currentPublicId = null;
     let selectedWidgetSlug = null;
     let widgetTypes = [];
-    let cloudInstances = [];
+    let storedInstances = [];
     let instances = [];
     let isOpen = false;
     let bobSessionId = '';
@@ -928,6 +928,19 @@
       return fetch(url, requestInit);
     }
 
+    function buildDevStudioApiUrl(pathname, searchParams = {}) {
+      const url = new URL(pathname, window.location.origin);
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (value == null || value === '') return;
+        url.searchParams.set(key, String(value));
+      });
+      return url.toString();
+    }
+
+    function fetchDevStudio(url, init = {}) {
+      return fetch(url, { cache: 'no-store', ...init });
+    }
+
     function setL10nStatusDisplay({ state, tone, value, meta }) {
       if (!(l10nStatus instanceof HTMLElement)) return;
       l10nStatus.dataset.state = state || 'idle';
@@ -1005,12 +1018,12 @@
         return;
       }
 
-      if (isSourceInstancePublicId(publicId)) {
+      if (isLocalDefaultPublicId(publicId)) {
         setL10nStatusDisplay({
           state: 'ready',
           tone: 'unavailable',
-          value: 'Source',
-          meta: 'Local source defaults; no cloud locale jobs',
+          value: 'Local',
+          meta: 'Main instance from widget defaults; no cloud locale jobs',
         });
         return;
       }
@@ -1023,14 +1036,11 @@
       setL10nStatusDisplay({ state: 'loading', tone: 'pending', value: 'Loading...', meta: '' });
 
       try {
-        const res = await fetchBob(
-          buildBobApiUrl(
-            `/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instances/${encodeURIComponent(
-              publicId,
-            )}/l10n/status`,
-            { subject: 'account', surface: 'devstudio', _t: Date.now() },
-          ),
-          { cache: 'no-store' },
+        const res = await fetchDevStudio(
+          buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(publicId)}/l10n/status`, {
+            accountId: DEVSTUDIO_ACCOUNT_ID,
+            _t: Date.now(),
+          }),
         );
         const payload = await res.json().catch(() => null);
 
@@ -1100,7 +1110,7 @@
         if (data && data.type === 'bob:request-instance-switch') {
           const publicId = typeof data.publicId === 'string' ? data.publicId.trim() : '';
           if (!publicId) return;
-          if (!instances.some((inst) => inst.publicId === publicId)) return;
+          if (!findInstanceByPublicId(publicId)) return;
           switchInstance(publicId);
           return;
         }
@@ -1153,7 +1163,7 @@
         requestAnimationFrame(attachDropdown);
         return;
       }
-      header.classList.add('dev-widget-workspace-header');
+      header.classList.add('devstudio-instances-header');
       header.appendChild(widgetSelector);
       dropdown.style.display = 'inline-block';
       header.appendChild(dropdown);
@@ -1180,32 +1190,58 @@
         .join(' ');
     }
 
-    function buildSourcePublicId(widgetSlug) {
+    function buildLocalDefaultPublicId(widgetSlug) {
       const normalized = normalizeWidgetname(widgetSlug);
-      if (!normalized) throw new Error('[DevStudio] Invalid widget type for source instance.');
-      return `${SOURCE_INSTANCE_PREFIX}${normalized}`;
+      if (!normalized) throw new Error('[DevStudio] Invalid widget type for widget defaults.');
+      return `${LOCAL_DEFAULT_INSTANCE_PREFIX}${normalized}`;
     }
 
-    function isSourceInstancePublicId(publicId) {
-      return typeof publicId === 'string' && publicId.startsWith(SOURCE_INSTANCE_PREFIX);
+    function isLocalDefaultPublicId(publicId) {
+      return typeof publicId === 'string' && publicId.startsWith(LOCAL_DEFAULT_INSTANCE_PREFIX);
     }
 
-    function buildSourceInstance(widgetSlug) {
+    function buildLocalDefaultInstance(widgetSlug) {
       const normalized = normalizeWidgetname(widgetSlug);
       if (!normalized) return null;
       return {
-        publicId: buildSourcePublicId(normalized),
+        publicId: buildLocalDefaultPublicId(normalized),
         widgetname: normalized,
         widgetSlug: normalized,
-        label: `${formatWidgetLabel(normalized)} Source defaults`,
+        label: 'Main instance',
         status: 'draft',
-        source: 'source',
+        source: 'local',
         actions: null,
         config: null,
         localization: null,
         policy: null,
         meta: null,
       };
+    }
+
+    function isMainInstancePublicId(publicId, widgetSlug) {
+      const normalized = normalizeWidgetname(widgetSlug);
+      if (!normalized || typeof publicId !== 'string') return false;
+      return publicId.trim().toLowerCase() === `wgt_main_${normalized}`;
+    }
+
+    function formatInstanceLabel(instance) {
+      if (!instance || typeof instance !== 'object') return DEFAULT_INSTANCE_DISPLAY_NAME;
+      if (isMainInstancePublicId(instance.publicId, instance.widgetSlug || instance.widgetname)) {
+        return 'Main instance';
+      }
+      const raw = typeof instance.label === 'string' ? instance.label.trim() : '';
+      return raw || DEFAULT_INSTANCE_DISPLAY_NAME;
+    }
+
+    function findInstanceByPublicId(publicId) {
+      if (!publicId) return null;
+      const existing = instances.find((inst) => inst.publicId === publicId);
+      if (existing) return existing;
+      if (isLocalDefaultPublicId(publicId)) {
+        const widgetSlug = publicId.slice(LOCAL_DEFAULT_INSTANCE_PREFIX.length);
+        return buildLocalDefaultInstance(widgetSlug);
+      }
+      return null;
     }
 
     function listWidgetSlugs() {
@@ -1217,7 +1253,13 @@
 
     function getScopedInstances() {
       if (!selectedWidgetSlug) return instances;
-      return instances.filter((inst) => inst.widgetSlug === selectedWidgetSlug);
+      const scoped = instances.filter((inst) => inst.widgetSlug === selectedWidgetSlug);
+      if (scoped.length) return scoped;
+      if (PROFILE === 'source') {
+        const localDefault = buildLocalDefaultInstance(selectedWidgetSlug);
+        return localDefault ? [localDefault] : [];
+      }
+      return [];
     }
 
     function syncWidgetSelector() {
@@ -1245,7 +1287,7 @@
     }
 
     function syncSelectedWidgetForPublicId(publicId) {
-      const selected = instances.find((inst) => inst.publicId === publicId);
+      const selected = findInstanceByPublicId(publicId);
       const widgetSlug = selected?.widgetSlug || normalizeWidgetname(selected?.widgetname);
       if (!widgetSlug) return;
       if (widgetSlug === selectedWidgetSlug) return;
@@ -1298,12 +1340,11 @@
         return instanceEnvelopePromiseCache.get(cacheKey);
       }
       const promise = (async () => {
-        const res = await fetchBob(
-          buildBobApiUrl(
-            `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}`,
-            { subject: 'account', surface: 'devstudio', _t: Date.now() },
-          ),
-          { cache: 'no-store' },
+        const res = await fetchDevStudio(
+          buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(publicId)}`, {
+            accountId,
+            _t: Date.now(),
+          }),
         );
         if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
         return await res.json();
@@ -1337,22 +1378,26 @@
       return widgetTypes.slice();
     }
 
-    function rebuildWorkspaceInstances() {
-      const sourceInstances = widgetTypes
-        .map((widgetSlug) => buildSourceInstance(widgetSlug))
-        .filter((entry) => entry && typeof entry === 'object');
-      instances = [...sourceInstances, ...cloudInstances];
+    function rebuildInstances() {
+      instances = storedInstances.slice();
     }
 
-    async function fetchCloudInstances() {
-      console.log('[DevStudio] Fetching optional cloud starters from Bob/Paris');
-      const res = await fetchBob(
-        buildBobApiUrl('/api/roma/templates', {
+    function rebuildWidgetTypesFromInstances(localWidgetTypes) {
+      const instanceWidgetTypes = storedInstances
+        .map((instance) => normalizeWidgetname(instance.widgetSlug || instance.widgetname))
+        .filter((widgetSlug) => typeof widgetSlug === 'string' && widgetSlug);
+      widgetTypes = Array.from(new Set([...(localWidgetTypes || []), ...instanceWidgetTypes])).sort((a, b) =>
+        a.localeCompare(b),
+      );
+    }
+
+    async function fetchInstances() {
+      console.log('[DevStudio] Fetching instances');
+      const res = await fetchDevStudio(
+        buildDevStudioApiUrl('/api/devstudio/instances', {
           accountId: DEVSTUDIO_ACCOUNT_ID,
-          surface: 'devstudio',
           _t: Date.now(),
         }),
-        { cache: 'no-store' },
       );
       if (!res.ok) {
         const text = await res.text().catch(() => '');
@@ -1366,43 +1411,38 @@
           }
         } catch {}
         throw new Error(
-          `[DevStudio] Failed to fetch cloud starters (HTTP ${res.status})${detail ? `: ${detail}` : ''}`,
+          `[DevStudio] Failed to fetch instances (HTTP ${res.status})${detail ? `: ${detail}` : ''}`,
         );
       }
       const data = await res.json();
       const payload = Array.isArray(data.instances) ? data.instances : [];
-      cloudInstances = payload.map((inst) => ({
+      storedInstances = payload.map((inst) => ({
         publicId: inst.publicId,
         widgetname: inst.widgetType,
         widgetSlug: normalizeWidgetname(inst.widgetType),
-        label:
-          typeof inst.displayName === 'string' && inst.displayName.trim()
+        label: isMainInstancePublicId(inst.publicId, inst.widgetType)
+          ? 'Main instance'
+          : typeof inst.displayName === 'string' && inst.displayName.trim()
             ? inst.displayName.trim()
             : DEFAULT_INSTANCE_DISPLAY_NAME,
-        status: 'published',
-        source: 'curated',
-        actions: null,
+        status: inst.status === 'published' ? 'published' : 'unpublished',
+        source: inst.source === 'curated' ? 'curated' : 'account',
+        actions: inst.actions || null,
         config: null,
         localization: null,
         policy: null,
         meta: null,
       }));
-      return cloudInstances.slice();
+      return storedInstances.slice();
     }
 
-    async function fetchWorkspaceBootstrap() {
-      await fetchLocalWidgetCatalog();
+    async function loadInstances() {
+      const localWidgetTypes = await fetchLocalWidgetCatalog();
+      await fetchInstances();
+      rebuildInstances();
+      rebuildWidgetTypesFromInstances(localWidgetTypes);
 
-      try {
-        await fetchCloudInstances();
-      } catch (error) {
-        cloudInstances = [];
-        console.warn('[DevStudio] Cloud starters unavailable; continuing source-first', error);
-      }
-
-      rebuildWorkspaceInstances();
-
-      if (widgetTypes.length === 0 || instances.length === 0) {
+      if (widgetTypes.length === 0) {
         selectedWidgetSlug = null;
         currentPublicId = null;
         currentLabel.textContent = 'No widgets found';
@@ -1421,17 +1461,14 @@
 
       const scopedInstances = getScopedInstances();
       if (!scopedInstances.some((inst) => inst.publicId === currentPublicId)) {
-        currentPublicId =
-          (selectedWidgetSlug ? buildSourcePublicId(selectedWidgetSlug) : null) ||
-          scopedInstances[0]?.publicId ||
-          instances[0].publicId;
+        currentPublicId = scopedInstances[0]?.publicId || instances[0]?.publicId || null;
       }
       syncSelectedWidgetForPublicId(currentPublicId);
 
       console.log('[DevStudio] Current publicId', currentPublicId, 'instances', instances.length);
       updateCurrentLabel();
       renderInstances();
-      if (bobSessionId) {
+      if (bobSessionId && currentPublicId) {
         sendInstanceToIframe(currentPublicId).catch((error) => {
           console.error('[DevStudio] Failed to load initial instance into Bob', error);
         });
@@ -1445,15 +1482,15 @@
         valueField.value = '';
         return;
       }
-      const current = instances.find((inst) => inst.publicId === currentPublicId);
-      currentLabel.textContent = current?.label || DEFAULT_INSTANCE_DISPLAY_NAME;
+      const current = findInstanceByPublicId(currentPublicId);
+      currentLabel.textContent = formatInstanceLabel(current);
       valueField.value = currentPublicId;
     }
 
     function renderInstances() {
       const scopedInstances = getScopedInstances();
       if (!scopedInstances.length) {
-        menu.innerHTML = '<div class="dev-widget-workspace__empty-option body-s">No instances</div>';
+        menu.innerHTML = '<div class="devstudio-instances__empty-option body-s">No instances</div>';
         return;
       }
 
@@ -1541,7 +1578,7 @@
     }
 
     function requireWidgetSlugForAction() {
-      const current = instances.find((inst) => inst.publicId === currentPublicId);
+      const current = findInstanceByPublicId(currentPublicId);
       const fallback = current?.widgetSlug || normalizeWidgetname(current?.widgetname) || 'faq';
       const entered = window.prompt('Widget type (slug):', fallback);
       const slug = normalizeWidgetname(entered);
@@ -1639,18 +1676,10 @@
       return `wgt_curated_${normalizedWidgetSlug}_${normalizedStyleSlug}`;
     }
 
-    async function createWorkspaceInstance({
-      workspaceId,
-      widgetType,
-      publicId,
-      config,
-      status,
-      meta,
-    }) {
-      const res = await superadminFetch(
-        buildBobApiUrl(`/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instances`, {
-          subject: 'account',
-          surface: 'devstudio',
+    async function createInstance({ widgetType, publicId, config, status, meta }) {
+      const res = await fetchDevStudio(
+        buildDevStudioApiUrl('/api/devstudio/instances', {
+          accountId: DEVSTUDIO_ACCOUNT_ID,
           _t: Date.now(),
         }),
         {
@@ -1667,14 +1696,12 @@
       return text ? JSON.parse(text) : null;
     }
 
-    async function updateWorkspaceInstance({ workspaceId, publicId, config, status, meta }) {
-      const res = await superadminFetch(
-        buildBobApiUrl(
-          `/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instance/${encodeURIComponent(
-            publicId,
-          )}`,
-          { subject: 'account', surface: 'devstudio', _t: Date.now() },
-        ),
+    async function updateInstance({ publicId, config, status, meta }) {
+      const res = await fetchDevStudio(
+        buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(publicId)}`, {
+          accountId: DEVSTUDIO_ACCOUNT_ID,
+          _t: Date.now(),
+        }),
         {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },
@@ -1689,11 +1716,10 @@
       return text ? JSON.parse(text) : null;
     }
 
-    async function ensureWorkspaceInstance({ workspaceId, widgetType, publicId, config, status }) {
-      const res = await superadminFetch(
-        buildBobApiUrl(`/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instances`, {
-          subject: 'account',
-          surface: 'devstudio',
+    async function ensureInstance({ widgetType, publicId, config, status }) {
+      const res = await fetchDevStudio(
+        buildDevStudioApiUrl('/api/devstudio/instances', {
+          accountId: DEVSTUDIO_ACCOUNT_ID,
           _t: Date.now(),
         }),
         {
@@ -1710,7 +1736,7 @@
       // If the instance already exists, update it to the desired config/status.
       const text = await res.text().catch(() => '');
       if (res.status === 409 || (text || '').toLowerCase().includes('duplicate')) {
-        await updateWorkspaceInstance({ workspaceId, publicId, config, status });
+        await updateInstance({ publicId, config, status });
         return { ok: true, existed: true };
       }
 
@@ -1720,7 +1746,6 @@
     }
 
     async function promoteInstanceToCloud({
-      workspaceId,
       widgetType,
       publicId,
       config,
@@ -1731,7 +1756,7 @@
       const res = await fetch(`/api/promote-instance?_t=${Date.now()}`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ workspaceId, widgetType, publicId, config, status, ownerAccountId }),
+        body: JSON.stringify({ widgetType, publicId, config, status, ownerAccountId }),
       });
       const text = await res.text().catch(() => '');
       if (!res.ok) {
@@ -1831,7 +1856,7 @@
     async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
       if (!IS_SOURCE_PROFILE) {
         throw new Error(
-          '[DevStudio] Update Config is source-profile only. Re-open workspace with ?profile=source.',
+          '[DevStudio] Update Config is source-profile only. Re-open DevStudio with ?profile=source.',
         );
       }
       const publicId = `wgt_main_${widgetSlug}`;
@@ -1857,15 +1882,13 @@
       await updateTokyoWidgetSpecDefaults({ widgetSlug, defaults: defaultsForSpec });
       compiledCache.delete(widgetSlug);
 
-      await createWorkspaceInstance({
-        workspaceId: DEVSTUDIO_ACCOUNT_ID,
+      await createInstance({
         widgetType: widgetSlug,
         publicId,
         config,
         status: 'published',
       });
-      await updateWorkspaceInstance({
-        workspaceId: DEVSTUDIO_ACCOUNT_ID,
+      await updateInstance({
         publicId,
         config,
         status: 'published',
@@ -2040,13 +2063,13 @@
     async function updateThemeFromEditor() {
       if (!IS_SOURCE_PROFILE) {
         throw new Error(
-          '[DevStudio] Update Theme is source-profile only. Re-open workspace with ?profile=source.',
+          '[DevStudio] Update Theme is source-profile only. Re-open DevStudio with ?profile=source.',
         );
       }
       if (!currentPublicId) {
         throw new Error('[DevStudio] Select an instance first.');
       }
-      const current = instances.find((inst) => inst.publicId === currentPublicId);
+      const current = findInstanceByPublicId(currentPublicId);
       const widgetSlug = current?.widgetSlug || normalizeWidgetname(current?.widgetname);
       if (!widgetSlug) {
         throw new Error('[DevStudio] Unable to resolve widget type from the selected instance.');
@@ -2119,15 +2142,13 @@
       if (!ok) throw new Error('[DevStudio] Canceled');
 
       const config = cloneJson(defaults);
-      await createWorkspaceInstance({
-        workspaceId: DEVSTUDIO_ACCOUNT_ID,
+      await createInstance({
         widgetType: widgetSlug,
         publicId,
         config,
         status: 'published',
       });
-      await updateWorkspaceInstance({
-        workspaceId: DEVSTUDIO_ACCOUNT_ID,
+      await updateInstance({
         publicId,
         config,
         status: 'published',
@@ -2162,8 +2183,7 @@
       );
       if (!ok) throw new Error('[DevStudio] Canceled');
 
-      await updateWorkspaceInstance({
-        workspaceId: DEVSTUDIO_ACCOUNT_ID,
+      await updateInstance({
         publicId,
         config,
         status: 'published',
@@ -2315,8 +2335,7 @@
         meta.variants = styleVariants;
       }
 
-      await createWorkspaceInstance({
-        workspaceId: DEVSTUDIO_ACCOUNT_ID,
+      await createInstance({
         widgetType: curatedModalState.widgetSlug,
         publicId,
         config: sourceConfig,
@@ -2329,9 +2348,9 @@
     }
 
     async function refreshInstancesAndSelect(publicId) {
-      await fetchWorkspaceBootstrap();
+      await loadInstances();
       if (!publicId) return;
-      const found = instances.find((inst) => inst.publicId === publicId);
+      const found = findInstanceByPublicId(publicId);
       if (found) {
         switchInstance(publicId);
       }
@@ -2343,7 +2362,7 @@
         throw new Error('[DevStudio] Select a curated/main instance first.');
       }
 
-      const instance = instances.find((inst) => inst.publicId === currentPublicId);
+      const instance = findInstanceByPublicId(currentPublicId);
       const widgetSlug = instance?.widgetSlug || normalizeWidgetname(instance?.widgetname);
       if (!widgetSlug) {
         throw new Error('[DevStudio] Unable to resolve widget type from selected instance.');
@@ -2355,7 +2374,6 @@
       }
 
       const promoted = await promoteInstanceToCloud({
-        workspaceId: DEVSTUDIO_ACCOUNT_ID,
         widgetType: widgetSlug,
         publicId: currentPublicId,
         config,
@@ -2417,7 +2435,7 @@
     createCuratedInstanceBtn?.addEventListener('click', () => {
       try {
         if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-        const instance = instances.find((inst) => inst.publicId === currentPublicId);
+        const instance = findInstanceByPublicId(currentPublicId);
         const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
         openCuratedModal({ widgetSlug });
       } catch (err) {
@@ -2428,7 +2446,7 @@
     updateCuratedInstanceBtn?.addEventListener('click', async () => {
       try {
         if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-        const instance = instances.find((inst) => inst.publicId === currentPublicId);
+        const instance = findInstanceByPublicId(currentPublicId);
         const result = await updateCuratedInstanceFromEditor(instance);
         await refreshInstancesAndSelect(result.publicId);
       } catch (err) {
@@ -2481,13 +2499,11 @@
           throw new Error('[DevStudio] Select a curated instance first.');
         }
 
-        const res = await superadminFetch(
-          buildBobApiUrl(
-            `/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instances/${encodeURIComponent(
-              currentPublicId,
-            )}/l10n/enqueue-selected`,
-            { subject: 'account', surface: 'devstudio', _t: Date.now() },
-          ),
+        const res = await fetchDevStudio(
+          buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(currentPublicId)}/l10n/enqueue-selected`, {
+            accountId: DEVSTUDIO_ACCOUNT_ID,
+            _t: Date.now(),
+          }),
           {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
@@ -2596,7 +2612,7 @@
         throw new Error('[DevStudio] Bob iframe contentWindow unavailable');
       }
 
-      const instance = instances.find((inst) => inst.publicId === publicId);
+      const instance = findInstanceByPublicId(publicId);
       if (!instance) {
         throw new Error(`[DevStudio] Instance not found for publicId ${publicId}`);
       }
@@ -2610,7 +2626,7 @@
         throw new Error(`[DevStudio] Unable to derive widget slug for ${instance.widgetname}`);
       }
 
-      if (instance.source === 'source' || isSourceInstancePublicId(publicId)) {
+      if (instance.source === 'local' || isLocalDefaultPublicId(publicId)) {
         const compiledStart = performance.now();
         const compiled = await ensureCompiledWidget(instance.widgetname);
         if (requestSeq !== sendInstanceSeq) return;
@@ -2628,7 +2644,7 @@
           compiled,
           instanceData: defaults,
         });
-        console.log('[DevStudio] Source defaults load timings', {
+        console.log('[DevStudio] Main instance load timings', {
           publicId,
           compileMs: Math.round(performance.now() - compiledStart),
           totalMs: Math.round(performance.now() - totalStart),
@@ -2902,10 +2918,10 @@
 
     (async () => {
       try {
-        await fetchWorkspaceBootstrap();
+        await loadInstances();
       } catch (error) {
-        console.error('[DevStudio] Failed to bootstrap workspace', error);
-        currentLabel.textContent = 'Error loading workspace';
+        console.error('[DevStudio] Failed to load instances', error);
+        currentLabel.textContent = 'Error loading instances';
       }
     })();
   </script>
