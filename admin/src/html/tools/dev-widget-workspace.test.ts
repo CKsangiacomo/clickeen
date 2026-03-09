@@ -16,6 +16,7 @@ type FetchMockOptions = {
   onThemeUpdate?: (payload: { themeId?: string; values?: Record<string, unknown> }) => void;
   localWidgets?: string[];
   devstudioInstancesStatus?: number;
+  devstudioL10nUnavailable?: boolean;
 };
 
 const HTML_PATH = new URL('./dev-widget-workspace.html', import.meta.url);
@@ -146,6 +147,16 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
       );
     }
     if (url.includes('/api/devstudio/instances/') && url.includes('/l10n/status')) {
+      if (options?.devstudioL10nUnavailable) {
+        return new Response(
+          JSON.stringify({
+            unavailable: true,
+            locales: [],
+            error: { reasonKey: 'coreui.errors.devstudio.l10nStatusUnavailable' },
+          }),
+          { status: 200 },
+        );
+      }
       return new Response(
         JSON.stringify({
           locales: [{ locale: 'fr', status: 'succeeded', attempts: 1, nextAttemptAt: null, lastError: null }],
@@ -284,6 +295,30 @@ describe('DevStudio instances tool', () => {
     dom.window.close();
   });
 
+  it('passes DevStudio asset routes into the embedded Bob url', async () => {
+    const instances = [
+      {
+        publicId: 'wgt_curated_faq_simple',
+        widgetname: 'faq',
+        displayName: 'FAQ Simple',
+      },
+    ];
+    const { dom } = await loadInstancesDom(instances, {
+      fetch: { localWidgets: ['faq'] },
+    });
+    const iframe = dom.window.document.getElementById('bob-iframe') as HTMLIFrameElement | null;
+    const src = iframe?.getAttribute('src') || '';
+    const parsed = new URL(src);
+
+    expect(parsed.searchParams.get('surface')).toBe('devstudio');
+    expect(parsed.searchParams.get('assetApiBase')).toBe('http://localhost:5173/api/devstudio/assets');
+    expect(parsed.searchParams.get('assetUploadEndpoint')).toBe(
+      'http://localhost:5173/api/devstudio/assets/upload',
+    );
+
+    dom.window.close();
+  });
+
   it('loads instance envelopes through the DevStudio local route', async () => {
     const instances = [
       {
@@ -297,6 +332,26 @@ describe('DevStudio instances tool', () => {
     });
     const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
     expect(urls.some((url) => url.includes('/api/devstudio/instances/wgt_curated_faq_simple'))).toBe(true);
+
+    dom.window.close();
+  });
+
+  it('shows translations unavailable when status is unavailable', async () => {
+    const instances = [
+      {
+        publicId: 'wgt_curated_faq_simple',
+        widgetname: 'faq',
+        displayName: 'FAQ Simple',
+      },
+    ];
+    const { dom } = await loadInstancesDom(instances, {
+      fetch: { localWidgets: ['faq'], devstudioL10nUnavailable: true },
+    });
+    const l10nValue = dom.window.document.getElementById('l10n-status-value');
+    const l10nMeta = dom.window.document.getElementById('l10n-status-meta');
+
+    expect(l10nValue?.textContent).toBe('Unavailable');
+    expect(l10nMeta?.textContent).toBe('Translations status unavailable');
 
     dom.window.close();
   });

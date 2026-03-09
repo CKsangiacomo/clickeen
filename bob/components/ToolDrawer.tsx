@@ -21,6 +21,16 @@ export function ToolDrawer() {
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
 
+  function readQueryParam(name: string): string {
+    if (typeof window === 'undefined') return '';
+    try {
+      const value = new URL(window.location.href).searchParams.get(name);
+      return typeof value === 'string' ? value.trim() : '';
+    } catch {
+      return '';
+    }
+  }
+
   // Reset active panel when widget changes
   useEffect(() => {
     if (compiled?.panels && compiled.panels.length > 0) {
@@ -39,6 +49,8 @@ export function ToolDrawer() {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
     const dataset = root.dataset as any;
+    const assetApiBase = readQueryParam('assetApiBase');
+    const assetUploadEndpoint = readQueryParam('assetUploadEndpoint');
     if (accountId) dataset.ckAccountId = accountId;
     else delete dataset.ckAccountId;
     if (ownerAccountId) dataset.ckOwnerAccountId = ownerAccountId;
@@ -47,6 +59,10 @@ export function ToolDrawer() {
     else delete dataset.ckPublicId;
     if (widgetType) dataset.ckWidgetType = widgetType;
     else delete dataset.ckWidgetType;
+    if (assetApiBase) dataset.ckAssetApiBase = assetApiBase;
+    else delete dataset.ckAssetApiBase;
+    if (assetUploadEndpoint) dataset.ckAssetUploadEndpoint = assetUploadEndpoint;
+    else delete dataset.ckAssetUploadEndpoint;
   }, [accountId, ownerAccountId, publicId, widgetType]);
 
   const panelsById = useMemo(() => {

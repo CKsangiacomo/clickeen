@@ -495,7 +495,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
   echo "[dev-up] Starting DevStudio (5173)"
   (
     cd "$ROOT_DIR/admin"
-    start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=product PARIS_BASE_URL="$PARIS_BASE_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" pnpm dev
+    start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=product PARIS_BASE_URL="$PARIS_BASE_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" pnpm dev
     DEVSTUDIO_PID="$STARTED_PID"
     echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
     register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"
@@ -808,7 +808,7 @@ prewarm_bob_routes
 echo "[dev-up] Starting DevStudio (5173)"
 (
   cd "$ROOT_DIR/admin"
-  start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=source PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" pnpm dev
+  start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=source PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" pnpm dev
   DEVSTUDIO_PID="$STARTED_PID"
   echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
   register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"

@@ -44,6 +44,10 @@ function readDatasetValue(name: string): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function resolveAssetUploadEndpoint(): string {
+  return readDatasetValue('ckAssetUploadEndpoint').trim();
+}
+
 function resolveContextFromDocument(): EditorAssetUploadContext | null {
   const accountId = readDatasetValue('ckOwnerAccountId');
   const publicId = readDatasetValue('ckPublicId');
@@ -120,14 +124,14 @@ export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<Ed
 
   const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? ({} as EditorAssetUploadContext));
   const source = args.source || 'api';
-  const endpoint = (args.endpoint || '/api/assets/upload').trim();
+  const endpoint = (args.endpoint || resolveAssetUploadEndpoint() || '/api/assets/upload').trim();
 
   const headers = new Headers();
   headers.set('content-type', file.type || 'application/octet-stream');
   headers.set('x-account-id', context.accountId);
   headers.set('x-filename', file.name || 'upload.bin');
   headers.set('x-source', source);
-  headers.set('x-clickeen-surface', 'roma-assets');
+  headers.set('x-clickeen-surface', endpoint.includes('/api/devstudio/assets/upload') ? 'devstudio' : 'roma-assets');
   if (context.publicId) headers.set('x-public-id', context.publicId);
   if (context.widgetType) headers.set('x-widget-type', context.widgetType);
 

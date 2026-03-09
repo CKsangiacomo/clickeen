@@ -18,6 +18,10 @@ function readFillDocumentDatasetValue(key: string): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function resolveAssetApiBase(): string {
+  return readFillDocumentDatasetValue('ckAssetApiBase').replace(/\/+$/, '');
+}
+
 function resolveImageAssetPickerContext(): { accountId: string } | null {
   const accountId = readFillDocumentDatasetValue('ckOwnerAccountId');
   if (!isUuid(accountId)) return null;
@@ -43,8 +47,12 @@ async function fetchMediaAssetChoices(kind: AssetPickerMediaKind): Promise<Media
     view: 'all',
     limit: '200',
   });
+  const assetApiBase = resolveAssetApiBase();
+  const endpoint = assetApiBase
+    ? `${assetApiBase}/${encodeURIComponent(context.accountId)}?${params.toString()}`
+    : `/api/assets/${encodeURIComponent(context.accountId)}?${params.toString()}`;
 
-  const response = await fetch(`/api/assets/${encodeURIComponent(context.accountId)}?${params.toString()}`, {
+  const response = await fetch(endpoint, {
     cache: 'no-store',
   });
   const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;

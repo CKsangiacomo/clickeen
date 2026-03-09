@@ -11,6 +11,8 @@ Context note:
 - PRD 056 established the current auth boundary: Berlin is AuthN, Roma completes startup, Paris owns ensure-account + MiniBob handoff claim.
 - A documentation correction pass on 2026-03-06 already fixed item `2` (usage/billing placeholder status) and item `3` (MiniBob -> account -> Roma is one continuous journey).
 - Execution update (runtime): DevStudio local is being corrected to read and write the admin account’s instances directly through an explicit trusted local path. It must not depend on Roma starter discovery or product session auth just to read those instances.
+- Execution update (runtime): DevStudio local now also owns its asset route family (`/api/devstudio/assets*`) so Bob/Dieter inside DevStudio do not rely on product `/api/assets*` routes.
+- Execution update (runtime): DevStudio translation status is best-effort. If local San Francisco is unavailable, DevStudio returns `Unavailable` instead of surfacing hard `500` errors for the editor.
 - Execution update (runtime): Roma access is currently restored through Berlin-owned session endpoints for both Google and email/password. This is an access-unblock decision, not the final long-term auth/account architecture.
 - Execution update (runtime contract): non-local Roma/Bob auth now forces HTTPS redirects and cookie security at the request boundary, so cloud-dev auth completion does not depend on proxy-presented internal scheme.
 - The two remaining cross-cutting issues are coupled:
@@ -178,6 +180,11 @@ But the purpose changes from “local parity tool” to:
    - Bob ToolDrawer behavior
    - runtime preview behavior
    - widget-package birth work
+
+Current trusted local route family:
+- instances: `/api/devstudio/instances*`
+- assets: `/api/devstudio/assets*`
+- widget catalog: `/api/devstudio/widgets`
 
 ### DevStudio Local must not own these jobs
 

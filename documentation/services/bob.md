@@ -111,6 +111,10 @@ Source: `admin/src/html/tools/dev-widget-workspace.html`.
 - Roma user flows can create/duplicate/delete account user instances via Paris (`/api/roma/*` + account instance endpoints).
 - When Bob is hosted by Roma (`surface=roma`, `boot=message`, `subject=account`), Bob does not own the account mutation transport. It emits explicit editor commands back to the Roma host, and Roma executes the named same-origin account routes (`/api/accounts/...`) on Bob's behalf.
 - DevStudio Local does not use Roma starter discovery. It reads/writes the admin account’s instances through the local DevStudio route family on `localhost` (`/api/devstudio/instances*`), while Bob remains only the editor kernel plus compiled widget route.
+- In DevStudio, Bob/Dieter asset controls also use the local DevStudio route family:
+  - list/delete assets: `/api/devstudio/assets/:accountId`
+  - upload assets: `/api/devstudio/assets/upload`
+  This keeps DevStudio on the trusted local boundary instead of reusing product `/api/assets/*` routes.
 - MiniBob and explicit URL-bootstrap surfaces still use Bob’s own named routes directly when there is no Roma host boundary.
 
 ### Dev subjects and policy (durable)

@@ -37,6 +37,14 @@ What it does:
   - create/update instances
   - inspect translation status
   - enqueue translation work
+- Bob inside DevStudio receives explicit asset endpoints from the host page:
+  - list/delete assets through `/api/devstudio/assets/:accountId`
+  - upload assets through `/api/devstudio/assets/upload`
+  - DevStudio does **not** use Roma/Bob product `/api/assets/*` routes for this tool path.
+- Translation status is best-effort in DevStudio:
+  - `GET /api/devstudio/instances/:publicId/l10n/status`
+  - if local San Francisco is unavailable, DevStudio returns `200` with `unavailable: true` and the UI shows `Unavailable`
+  - the editor remains usable; background status does not hard-fail the tool
 - Source-only local file mutation actions are explicitly gated to `profile=source`:
   - `Update Config` (`/api/widget-spec-defaults`)
   - `Update Theme` (`/api/themes/list`, `/api/themes/update`)
@@ -70,6 +78,10 @@ Current boundary:
 If DevStudio local opens but instances are missing:
 - Check local `PARIS_DEV_JWT` / Paris connectivity for `/api/devstudio/instances`.
 - This is a local trusted-tool path, not a Roma product-auth path.
+
+If the asset picker is empty in DevStudio but Roma shows assets:
+- DevStudio must read assets through `/api/devstudio/assets/:accountId`.
+- This is a local trusted-tool path backed by `TOKYO_DEV_JWT`, not the product `/api/assets/*` route family.
 
 If the page fails before any widget opens:
 - Local DevStudio must be able to read `/api/devstudio/widgets`.

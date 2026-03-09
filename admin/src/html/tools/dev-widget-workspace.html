@@ -905,6 +905,8 @@
     bobUrl.searchParams.set('boot', 'message');
     bobUrl.searchParams.set('subject', 'account');
     bobUrl.searchParams.set('surface', 'devstudio');
+    bobUrl.searchParams.set('assetApiBase', `${window.location.origin}/api/devstudio/assets`);
+    bobUrl.searchParams.set('assetUploadEndpoint', `${window.location.origin}/api/devstudio/assets/upload`);
     if (!isLocalDevStudio) bobUrl.searchParams.set('readonly', '1');
     iframe.src = bobUrl.toString();
 
@@ -1060,6 +1062,16 @@
             tone: 'unavailable',
             value: 'Unavailable',
             meta: '',
+          });
+          return;
+        }
+
+        if (payload?.unavailable === true) {
+          setL10nStatusDisplay({
+            state: 'ready',
+            tone: 'unavailable',
+            value: 'Unavailable',
+            meta: 'Translations status unavailable',
           });
           return;
         }

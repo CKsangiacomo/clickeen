@@ -49,8 +49,31 @@ function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
   });
 }
 
+function readRequestBuffer(req: NodeJS.ReadableStream): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 function resolveDevstudioParisBaseUrl() {
   return DEFAULT_PARIS_BASE_URL;
+}
+
+function resolveDevstudioTokyoBaseUrl() {
+  const raw = String(
+    process.env.TOKYO_URL || process.env.NEXT_PUBLIC_TOKYO_URL || 'https://tokyo.dev.clickeen.com',
+  )
+    .trim()
+    .replace(/\/+$/, '');
+  if (!raw) {
+    throw new Error('Missing TOKYO_URL for local DevStudio asset routes.');
+  }
+  return raw;
 }
 
 function resolveDevstudioAccountId(url: URL): string {
@@ -69,6 +92,17 @@ function createDevstudioParisHeaders(initHeaders?: HeadersInit): Headers {
   const headers = new Headers(initHeaders || {});
   headers.set('authorization', `Bearer ${token}`);
   headers.set('x-ck-internal-service', DEVSTUDIO_INTERNAL_SERVICE_ID);
+  return headers;
+}
+
+function createDevstudioTokyoHeaders(initHeaders?: HeadersInit): Headers {
+  const token = String(process.env.TOKYO_DEV_JWT || '').trim();
+  if (!token) {
+    throw new Error('Missing TOKYO_DEV_JWT for local DevStudio asset routes.');
+  }
+
+  const headers = new Headers(initHeaders || {});
+  headers.set('authorization', `Bearer ${token}`);
   return headers;
 }
 
@@ -95,6 +129,42 @@ async function proxyDevstudioParisJson(args: {
   args.res.end(text);
 }
 
+async function proxyDevstudioTokyo(args: {
+  req: any;
+  res: any;
+  pathname: string;
+  method?: string;
+  body?: Buffer;
+  headers?: HeadersInit;
+}) {
+  const upstream = await fetch(`${resolveDevstudioTokyoBaseUrl()}${args.pathname}`, {
+    method: args.method || args.req.method || 'GET',
+    headers: createDevstudioTokyoHeaders(args.headers),
+    body: args.body,
+    cache: 'no-store',
+  } as RequestInit);
+
+  const bytes = Buffer.from(await upstream.arrayBuffer());
+  const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+  args.res.statusCode = upstream.status;
+  args.res.setHeader('Content-Type', contentType);
+  args.res.setHeader('Cache-Control', 'no-store');
+  args.res.end(bytes);
+}
+
+const DEVSTUDIO_ASSET_CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+  'Access-Control-Allow-Headers':
+    'authorization, content-type, x-account-id, x-public-id, x-widget-type, x-filename, x-source, x-clickeen-surface, x-request-id',
+} as const;
+
+function applyDevstudioAssetCors(res: any) {
+  Object.entries(DEVSTUDIO_ASSET_CORS_HEADERS).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+}
+
 export default defineConfig({
   build: {
     chunkSizeWarningLimit: 2000,
@@ -107,6 +177,21 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
+    cors: {
+      origin: '*',
+      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+      allowedHeaders: [
+        'authorization',
+        'content-type',
+        'x-account-id',
+        'x-public-id',
+        'x-widget-type',
+        'x-filename',
+        'x-source',
+        'x-clickeen-surface',
+        'x-request-id',
+      ],
+    },
     fs: {
       allow: [path.resolve(__dirname), path.resolve(__dirname, '..')],
     },
@@ -226,15 +311,44 @@ export default defineConfig({
 
             if (wantsStatus && statusMatch) {
               const publicId = decodeURIComponent(statusMatch[1] || '');
-              return await proxyDevstudioParisJson({
-                req,
-                res,
-                pathname: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+              try {
+                const upstream = await fetch(
+                  `${resolveDevstudioParisBaseUrl()}/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+                    publicId,
+                  )}/l10n/status?subject=account`,
+                  {
+                    method: 'GET',
+                    headers: createDevstudioParisHeaders({ accept: 'application/json' }),
+                    cache: 'no-store',
+                  },
+                );
+                const text = await upstream.text();
+                if (upstream.ok) {
+                  const contentType =
+                    upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+                  res.statusCode = upstream.status;
+                  res.setHeader('Content-Type', contentType);
+                  res.setHeader('Cache-Control', 'no-store');
+                  res.end(text);
+                  return;
+                }
+              } catch {}
+
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.setHeader('Cache-Control', 'no-store');
+              res.end(
+                JSON.stringify({
                   publicId,
-                )}/l10n/status?subject=account`,
-                method: 'GET',
-                headers: { accept: 'application/json' },
-              });
+                  unavailable: true,
+                  locales: [],
+                  error: {
+                    reasonKey: 'coreui.errors.devstudio.l10nStatusUnavailable',
+                    detail: 'Translations status unavailable.',
+                  },
+                }),
+              );
+              return;
             }
 
             if (wantsEnqueue && enqueueMatch) {
@@ -260,6 +374,100 @@ export default defineConfig({
                 error: {
                   kind: 'INTERNAL',
                   reasonKey: 'coreui.errors.devstudio.instanceProxyFailed',
+                  detail: error instanceof Error ? error.message : String(error),
+                },
+              }),
+            );
+            return;
+          }
+
+          return next();
+        });
+      },
+    },
+    {
+      name: 'devstudio-asset-routes',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          const rawUrl = req.url || '';
+          const requestUrl = new URL(rawUrl || '/', 'http://localhost:5173');
+          const pathname = requestUrl.pathname || '';
+
+          if (!pathname.startsWith('/api/devstudio/assets')) return next();
+
+          applyDevstudioAssetCors(res);
+
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204;
+            res.end();
+            return;
+          }
+
+          const listMatch = pathname.match(/^\/api\/devstudio\/assets\/([^/]+)$/);
+          const deleteMatch = pathname.match(/^\/api\/devstudio\/assets\/([^/]+)\/([^/]+)$/);
+          const wantsUpload = pathname === '/api/devstudio/assets/upload' && req.method === 'POST';
+          const wantsList = Boolean(listMatch && req.method === 'GET');
+          const wantsDelete = Boolean(deleteMatch && req.method === 'DELETE');
+
+          if (!wantsUpload && !wantsList && !wantsDelete) return next();
+
+          try {
+            if (wantsUpload) {
+              const body = await readRequestBuffer(req);
+              const headers = new Headers();
+              const forwardHeader = (name: string) => {
+                const value = req.headers[name];
+                if (typeof value === 'string' && value.trim()) headers.set(name, value.trim());
+              };
+              forwardHeader('content-type');
+              forwardHeader('x-account-id');
+              forwardHeader('x-filename');
+              forwardHeader('x-source');
+              forwardHeader('x-clickeen-surface');
+              forwardHeader('x-public-id');
+              forwardHeader('x-widget-type');
+              return await proxyDevstudioTokyo({
+                req,
+                res,
+                pathname: '/assets/upload',
+                method: 'POST',
+                body,
+                headers,
+              });
+            }
+
+            if (wantsList && listMatch) {
+              const accountId = decodeURIComponent(listMatch[1] || '');
+              const search = requestUrl.searchParams.toString();
+              return await proxyDevstudioTokyo({
+                req,
+                res,
+                pathname: `/assets/account/${encodeURIComponent(accountId)}${search ? `?${search}` : ''}`,
+                method: 'GET',
+                headers: { accept: 'application/json' },
+              });
+            }
+
+            if (wantsDelete && deleteMatch) {
+              const accountId = decodeURIComponent(deleteMatch[1] || '');
+              const assetId = decodeURIComponent(deleteMatch[2] || '');
+              return await proxyDevstudioTokyo({
+                req,
+                res,
+                pathname: `/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`,
+                method: 'DELETE',
+                headers: { accept: 'application/json' },
+              });
+            }
+          } catch (error) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-store');
+            res.end(
+              JSON.stringify({
+                error: {
+                  kind: 'INTERNAL',
+                  reasonKey: 'coreui.errors.devstudio.assetProxyFailed',
                   detail: error instanceof Error ? error.message : String(error),
                 },
               }),
