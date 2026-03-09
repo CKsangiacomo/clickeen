@@ -848,6 +848,9 @@ var Dieter = (() => {
     const value = document.documentElement.dataset?.[name];
     return typeof value === "string" ? value.trim() : "";
   }
+  function resolveAssetUploadEndpoint() {
+    return readDatasetValue("ckAssetUploadEndpoint").trim();
+  }
   function resolveContextFromDocument() {
     const accountId = readDatasetValue("ckOwnerAccountId");
     const publicId = readDatasetValue("ckPublicId");
@@ -909,13 +912,13 @@ var Dieter = (() => {
     }
     const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? {});
     const source = args.source || "api";
-    const endpoint = (args.endpoint || "/api/assets/upload").trim();
+    const endpoint = (args.endpoint || resolveAssetUploadEndpoint() || "/api/assets/upload").trim();
     const headers = new Headers();
     headers.set("content-type", file.type || "application/octet-stream");
     headers.set("x-account-id", context.accountId);
     headers.set("x-filename", file.name || "upload.bin");
     headers.set("x-source", source);
-    headers.set("x-clickeen-surface", "roma-assets");
+    headers.set("x-clickeen-surface", endpoint.includes("/api/devstudio/assets/upload") ? "devstudio" : "roma-assets");
     if (context.publicId) headers.set("x-public-id", context.publicId);
     if (context.widgetType) headers.set("x-widget-type", context.widgetType);
     const response = await fetch(`${endpoint.replace(/\/$/, "")}?_t=${Date.now()}`, {
@@ -963,6 +966,9 @@ var Dieter = (() => {
     const value = document.documentElement.dataset[key];
     return typeof value === "string" ? value.trim() : "";
   }
+  function resolveAssetApiBase() {
+    return readFillDocumentDatasetValue("ckAssetApiBase").replace(/\/+$/, "");
+  }
   function resolveImageAssetPickerContext() {
     const accountId = readFillDocumentDatasetValue("ckOwnerAccountId");
     if (!isUuid(accountId)) return null;
@@ -985,7 +991,9 @@ var Dieter = (() => {
       view: "all",
       limit: "200"
     });
-    const response = await fetch(`/api/assets/${encodeURIComponent(context.accountId)}?${params.toString()}`, {
+    const assetApiBase = resolveAssetApiBase();
+    const endpoint = assetApiBase ? `${assetApiBase}/${encodeURIComponent(context.accountId)}?${params.toString()}` : `/api/assets/${encodeURIComponent(context.accountId)}?${params.toString()}`;
+    const response = await fetch(endpoint, {
       cache: "no-store"
     });
     const payload = await response.json().catch(() => null);
