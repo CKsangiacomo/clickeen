@@ -433,6 +433,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
   TOKYO_URL=${TOKYO_URL:-https://tokyo.dev.clickeen.com}
   BOB_CLOUD_URL=${BOB_CLOUD_URL:-https://bob.dev.clickeen.com}
   BERLIN_URL=${BERLIN_URL:-https://berlin.dev.clickeen.com}
+  SF_BASE_URL=${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}
   PARIS_BASE_URL=${PARIS_BASE_URL:-http://localhost:3001}
   PRODUCT_BERLIN_ISSUER=${BERLIN_ISSUER:-$BERLIN_URL}
   PRODUCT_BERLIN_AUDIENCE=${BERLIN_AUDIENCE:-clickeen.product}
@@ -442,6 +443,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
   echo "[dev-up] Data plane: cloud-dev (Tokyo/Berlin) + local Paris trusted boundary"
   echo "[dev-up] Tokyo URL: $TOKYO_URL"
   echo "[dev-up] Bob URL (default in DevStudio): $BOB_CLOUD_URL"
+  echo "[dev-up] SanFrancisco URL: $SF_BASE_URL"
 
   if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
     echo "[dev-up] Product-profile Admin Instances requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in $ROOT_DIR/.env.local"
@@ -460,6 +462,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
     VARS+=(--var "BERLIN_BASE_URL:$BERLIN_URL")
     VARS+=(--var "BERLIN_ISSUER:$PRODUCT_BERLIN_ISSUER")
     VARS+=(--var "BERLIN_AUDIENCE:$PRODUCT_BERLIN_AUDIENCE")
+    VARS+=(--var "SANFRANCISCO_BASE_URL:$SF_BASE_URL")
     VARS+=(--var "ENV_STAGE:local")
     if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
       VARS+=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
