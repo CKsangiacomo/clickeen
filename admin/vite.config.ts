@@ -24,6 +24,42 @@ const DEFAULT_PARIS_BASE_URL = String(process.env.PARIS_BASE_URL || 'https://par
   .trim()
   .replace(/\/+$/, '');
 const DEVSTUDIO_INTERNAL_SERVICE_ID = 'devstudio.local';
+const ROOT_ENV_LOCAL_PATH = path.resolve(__dirname, '..', '.env.local');
+
+let cachedRootEnvLocal: Map<string, string> | null = null;
+
+function readRootEnvLocal(): Map<string, string> {
+  if (cachedRootEnvLocal) return cachedRootEnvLocal;
+  const values = new Map<string, string>();
+  if (!fs.existsSync(ROOT_ENV_LOCAL_PATH)) {
+    cachedRootEnvLocal = values;
+    return values;
+  }
+  const raw = fs.readFileSync(ROOT_ENV_LOCAL_PATH, 'utf8');
+  raw.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+    const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+    if (!match) return;
+    const [, key, remainder] = match;
+    let value = remainder.trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    values.set(key, value);
+  });
+  cachedRootEnvLocal = values;
+  return values;
+}
+
+function resolveRootEnvValue(name: string): string {
+  const direct = String(process.env[name] || '').trim();
+  if (direct) return direct;
+  return String(readRootEnvLocal().get(name) || '').trim();
+}
 
 function listLocalWidgetCatalog() {
   const widgetsRoot = path.resolve(__dirname, '..', 'tokyo', 'widgets');
@@ -84,7 +120,7 @@ function resolveDevstudioAccountId(url: URL): string {
 }
 
 function createDevstudioParisHeaders(initHeaders?: HeadersInit): Headers {
-  const token = String(process.env.PARIS_DEV_JWT || '').trim();
+  const token = resolveRootEnvValue('PARIS_DEV_JWT');
   if (!token) {
     throw new Error('Missing PARIS_DEV_JWT for local DevStudio instance routes.');
   }
@@ -96,7 +132,7 @@ function createDevstudioParisHeaders(initHeaders?: HeadersInit): Headers {
 }
 
 function createDevstudioTokyoHeaders(initHeaders?: HeadersInit): Headers {
-  const token = String(process.env.TOKYO_DEV_JWT || '').trim();
+  const token = resolveRootEnvValue('TOKYO_DEV_JWT') || resolveRootEnvValue('PARIS_DEV_JWT');
   if (!token) {
     throw new Error('Missing TOKYO_DEV_JWT for local DevStudio asset routes.');
   }
@@ -152,17 +188,38 @@ async function proxyDevstudioTokyo(args: {
   args.res.end(bytes);
 }
 
-const DEVSTUDIO_ASSET_CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, content-type, x-account-id, x-public-id, x-widget-type, x-filename, x-source, x-clickeen-surface, x-request-id',
-} as const;
+const DEVSTUDIO_ALLOWED_ASSET_ORIGINS = new Set([
+  'https://bob.dev.clickeen.com',
+  'https://bob.clickeen.com',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+]);
 
-function applyDevstudioAssetCors(res: any) {
-  Object.entries(DEVSTUDIO_ASSET_CORS_HEADERS).forEach(([key, value]) => {
-    res.setHeader(key, value);
-  });
+const DEVSTUDIO_ASSET_ALLOW_HEADERS = [
+  'authorization',
+  'content-type',
+  'x-account-id',
+  'x-public-id',
+  'x-widget-type',
+  'x-filename',
+  'x-source',
+  'x-clickeen-surface',
+  'x-request-id',
+].join(', ');
+
+function applyDevstudioAssetCors(req: any, res: any) {
+  const origin = typeof req.headers.origin === 'string' ? req.headers.origin.trim() : '';
+  if (origin && DEVSTUDIO_ALLOWED_ASSET_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin, Access-Control-Request-Private-Network');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', DEVSTUDIO_ASSET_ALLOW_HEADERS);
+  if (String(req.headers['access-control-request-private-network'] || '').trim().toLowerCase() === 'true') {
+    res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  }
 }
 
 export default defineConfig({
@@ -177,21 +234,7 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
-    cors: {
-      origin: '*',
-      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-      allowedHeaders: [
-        'authorization',
-        'content-type',
-        'x-account-id',
-        'x-public-id',
-        'x-widget-type',
-        'x-filename',
-        'x-source',
-        'x-clickeen-surface',
-        'x-request-id',
-      ],
-    },
+    cors: false,
     fs: {
       allow: [path.resolve(__dirname), path.resolve(__dirname, '..')],
     },
@@ -395,7 +438,7 @@ export default defineConfig({
 
           if (!pathname.startsWith('/api/devstudio/assets')) return next();
 
-          applyDevstudioAssetCors(res);
+          applyDevstudioAssetCors(req, res);
 
           if (req.method === 'OPTIONS') {
             res.statusCode = 204;
