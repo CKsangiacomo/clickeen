@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { rm, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,7 +21,8 @@ async function main() {
   const nextOnPagesBin = path.join(bobRoot, 'node_modules', '.bin', 'next-on-pages');
   const vercelDir = path.join(repoRoot, '.vercel');
   const vercelProjectJsonPath = path.join(vercelDir, 'project.json');
-  const outdir = path.join(bobRoot, '.cloudflare', 'output', 'static');
+  const outdir = path.join(repoRoot, '.cloudflare', 'output', 'static');
+  const tempOutdir = path.join(bobRoot, '.cloudflare', 'output', 'static');
   const vercelOutputDir = path.join(bobRoot, '.vercel', 'output');
 
   await mkdir(vercelDir, { recursive: true });
@@ -40,9 +41,13 @@ async function main() {
 
   await rm(vercelOutputDir, { recursive: true, force: true });
   await rm(outdir, { recursive: true, force: true });
+  await rm(tempOutdir, { recursive: true, force: true });
 
   run(vercelBin, ['build', '--output', vercelOutputDir], { cwd: repoRoot });
   run(nextOnPagesBin, ['--skip-build', '--outdir', '.cloudflare/output/static'], { cwd: bobRoot });
+
+  await mkdir(path.dirname(outdir), { recursive: true });
+  await rename(tempOutdir, outdir);
 }
 
 await main();

@@ -1,5 +1,5 @@
 name = "bob-dev"
-pages_build_output_dir = ".cloudflare/output/static"
+pages_build_output_dir = "../.cloudflare/output/static"
 compatibility_date = "2025-12-29"
 compatibility_flags = [ "nodejs_compat_populate_process_env", "nodejs_compat" ]
 
