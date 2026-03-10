@@ -4,7 +4,7 @@ import {
   verifyRomaAccountAuthzCapsule as verifySharedRomaAccountAuthzCapsule,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
-import type { Env } from './types';
+import type { AccountTier, Env } from './types';
 
 function resolveRomaAuthzCapsuleSecret(env: Env): string {
   const explicit = (env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
@@ -15,6 +15,18 @@ function resolveRomaAuthzCapsuleSecret(env: Env): string {
 }
 
 export { readRomaAuthzCapsuleHeader, type RomaAccountAuthzCapsulePayload };
+
+export function normalizeAccountTier(value: unknown): AccountTier | null {
+  switch (value) {
+    case 'free':
+    case 'tier1':
+    case 'tier2':
+    case 'tier3':
+      return value;
+    default:
+      return null;
+  }
+}
 
 export async function mintRomaAccountAuthzCapsule(
   env: Env,
