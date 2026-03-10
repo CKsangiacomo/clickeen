@@ -18,6 +18,7 @@ DevStudio is Clickeen’s internal admin surface for docs + tools. In this repo 
 Route: `/#/tools/dev-widget-workspace`
 
 What it does:
+
 - Embeds Bob in message-boot mode as a widget authoring shell.
 - Product profile default: local Bob + cloud Tokyo.
 - Source profile override: local Bob + local Tokyo.
@@ -33,12 +34,11 @@ What it does:
 - The widget catalog comes from `GET /api/devstudio/widgets`.
 - Instances come from `GET /api/devstudio/instances?accountId=<admin-account-id>`.
 - Opening the `wgt_main_*` instance or any other instance lazy-loads core instance state from Bob’s canonical same-origin route (`GET /api/accounts/:accountId/instance/:publicId?subject=account`) plus explicit localization rehydrate (`GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`), then message-boots Bob with real `{ accountId, publicId }` context.
+- Local startup explicitly repairs missing Tokyo saved authoring snapshots for historical `wgt_main_*` / `wgt_curated_*` rows before DevStudio opens them. This is a startup repair step, not read-time healing in Bob/DevStudio.
 - Current authoring actions use:
   - list through the local DevStudio route family
-  - create through Bob’s canonical same-origin route (`POST /api/accounts/:accountId/instances?subject=account`)
-  - save through Bob’s canonical same-origin route (`PUT /api/accounts/:accountId/instance/:publicId?subject=account`)
+  - open/save through Bob’s canonical same-origin account routes
   - inspect translation status
-  - enqueue translation work
 - Bob inside DevStudio receives explicit asset endpoints from the host page:
   - list/delete assets through `/api/devstudio/assets/:accountId`
   - upload assets through `/api/devstudio/assets/upload`
@@ -48,26 +48,28 @@ What it does:
   - if local San Francisco is unavailable, DevStudio returns `200` with `unavailable: true` and the UI shows `Unavailable`
   - the editor remains usable; background status does not hard-fail the tool
 - Source-only local file mutation actions are explicitly gated to `profile=source`:
-  - `Update Config` (`/api/widget-spec-defaults`)
   - `Update Theme` (`/api/themes/list`, `/api/themes/update`)
-  Product profile keeps these actions hidden and endpoints unavailable by design.
+    Product profile keeps this action hidden and the endpoints unavailable by design.
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
 ### Entitlements matrix (AI / LLM access)
 
 DevStudio has two separate gates for Copilot behavior:
+
 - **Profile/model gate** (AI / LLM Access): which providers/models are allowed by tier/profile.
 - **Agent runtime gate** (per-agent execution): which agent IDs can execute for each tier/profile.
 
 Important behavior:
+
 - Unlimited budget values alone do not enable CS Copilot.
 - For paid profiles (`tier1|tier2|tier3`), both gates must allow a CS-capable provider/model and runtime access for `cs.widget.copilot.v1`.
 - Free + Minibob remain constrained to `sdr.widget.copilot.v1` by design.
 
 Current boundary:
+
 - The DevStudio tool is restored for widget authoring, not for full local product parity.
-- That includes editing the admin account’s instances and running translation checks inside Bob.
+- That includes editing the admin account’s instances, running translation checks inside Bob, and applying local theme mutations in source profile.
 - The tool no longer pretends DevStudio is the operational owner for day-2 widget/account workflows.
 - Product/admin operational work still belongs in Roma cloud with a real admin account.
 - The same instances are:
@@ -78,14 +80,18 @@ Current boundary:
 ## Troubleshooting
 
 If DevStudio local opens but instances are missing:
+
 - Check local `PARIS_DEV_JWT` for discovery/status routes and Bob local availability for `/api/accounts/...`.
+- Check that `bash scripts/dev-up.sh --reset` completed the explicit curated/main Tokyo saved snapshot repair step.
 - DevStudio discovery remains a local trusted-tool path; core create/open/save now uses Bob’s canonical route instead of Paris.
 
 If the asset picker is empty in DevStudio but Roma shows assets:
+
 - DevStudio must read assets through `/api/devstudio/assets/:accountId`.
 - This is a local trusted-tool path backed by `TOKYO_DEV_JWT`, not the product `/api/assets/*` route family.
 
 If the page fails before any widget opens:
+
 - Local DevStudio must be able to read `/api/devstudio/widgets`.
 - Product profile default checks:
   - Bob local: `http://localhost:3000`

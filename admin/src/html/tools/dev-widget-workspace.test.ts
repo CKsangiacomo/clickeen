@@ -50,12 +50,17 @@ function ensureAbortController(win: Window & typeof globalThis) {
 function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions) {
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input.toString();
-    const method =
-      init?.method ||
-      (input instanceof Request ? input.method : 'GET');
+    const method = init?.method || (input instanceof Request ? input.method : 'GET');
     if (url.includes('/api/devstudio/widgets')) {
-      const widgets = (options?.localWidgets || Array.from(new Set(instances.map((instance) => instance.widgetname))))
-        .map((widgetType) => String(widgetType || '').trim().toLowerCase())
+      const widgets = (
+        options?.localWidgets ||
+        Array.from(new Set(instances.map((instance) => instance.widgetname)))
+      )
+        .map((widgetType) =>
+          String(widgetType || '')
+            .trim()
+            .toLowerCase(),
+        )
         .filter(Boolean)
         .map((widgetType) => ({ widgetType }));
       return new Response(JSON.stringify({ widgets }), { status: 200 });
@@ -109,9 +114,6 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
       options?.onThemeUpdate?.(payload);
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
-    if (/\/api\/accounts\/[^/]+\/instances(?:\?|$)/.test(url) && method === 'POST') {
-      return new Response(JSON.stringify({ ok: true }), { status: 200 });
-    }
     if (
       /\/api\/accounts\/[^/]+\/instance\/[^/?:]+/.test(url) &&
       !url.includes('/l10n/status') &&
@@ -119,7 +121,7 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
     ) {
       const match = instances.find((instance) => url.includes(`/instance/${instance.publicId}`));
       const publicId =
-        match?.publicId || decodeURIComponent((url.match(/\/instance\/([^?]+)/)?.[1] || 'unknown'));
+        match?.publicId || decodeURIComponent(url.match(/\/instance\/([^?]+)/)?.[1] || 'unknown');
       return new Response(
         JSON.stringify({
           publicId,
@@ -150,7 +152,11 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         { status: 200 },
       );
     }
-    if (url.includes('/api/accounts/') && url.includes('/instances/') && url.includes('/localization')) {
+    if (
+      url.includes('/api/accounts/') &&
+      url.includes('/instances/') &&
+      url.includes('/localization')
+    ) {
       return new Response(
         JSON.stringify({
           localization: {
@@ -176,7 +182,15 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
       }
       return new Response(
         JSON.stringify({
-          locales: [{ locale: 'fr', status: 'succeeded', attempts: 1, nextAttemptAt: null, lastError: null }],
+          locales: [
+            {
+              locale: 'fr',
+              status: 'succeeded',
+              attempts: 1,
+              nextAttemptAt: null,
+              lastError: null,
+            },
+          ],
         }),
         { status: 200 },
       );
@@ -197,8 +211,12 @@ async function loadInstancesDom(
   options?: {
     fetch?: FetchMockOptions;
     profile?: 'product' | 'source';
-    onBobPostMessage?: (payload: unknown, origin: string, ctx: { dom: JSDOM; bobWindow: Window }) => void;
-  }
+    onBobPostMessage?: (
+      payload: unknown,
+      origin: string,
+      ctx: { dom: JSDOM; bobWindow: Window },
+    ) => void;
+  },
 ) {
   const profile = options?.profile === 'source' ? 'source' : 'product';
   const dom = new JSDOM(HTML_SOURCE, {
@@ -253,15 +271,26 @@ async function loadInstancesDom(
 }
 
 describe('DevStudio instances tool', () => {
-  it('hides source-only local file mutation actions in product profile', async () => {
+  it('keeps only the theme action and hides the local toolbar in product profile', async () => {
     const { dom } = await loadInstancesDom([], { profile: 'product' });
-    const updateConfigBtn = dom.window.document.getElementById('superadmin-update-defaults') as HTMLButtonElement | null;
-    const updateThemeBtn = dom.window.document.getElementById('superadmin-update-theme') as HTMLButtonElement | null;
+    const actions = dom.window.document.getElementById('superadmin-actions') as HTMLElement | null;
+    const updateThemeBtn = dom.window.document.getElementById(
+      'superadmin-update-theme',
+    ) as HTMLButtonElement | null;
+    const removedButtons = [
+      'superadmin-update-defaults',
+      'superadmin-reset-from-json',
+      'refresh-prague-preview',
+      'create-curated-instance',
+      'update-curated-instance',
+      'promote-curated-cloud',
+    ];
 
-    expect(updateConfigBtn?.hidden).toBe(true);
-    expect(updateConfigBtn?.disabled).toBe(true);
-    expect(updateThemeBtn?.hidden).toBe(true);
-    expect(updateThemeBtn?.disabled).toBe(true);
+    expect(actions?.style.display).toBe('none');
+    expect(updateThemeBtn).toBeTruthy();
+    removedButtons.forEach((id) => {
+      expect(dom.window.document.getElementById(id)).toBeNull();
+    });
 
     dom.window.close();
   });
@@ -300,10 +329,18 @@ describe('DevStudio instances tool', () => {
     expect(label?.textContent).toBe('FAQ Simple');
     expect(menu?.querySelectorAll('[data-public-id]').length).toBe(1);
 
-    const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
+    const urls = fetchMock.mock.calls.map(([input]) =>
+      typeof input === 'string' ? input : input.toString(),
+    );
     expect(urls.some((url) => url.includes('/api/devstudio/widgets'))).toBe(true);
     expect(urls.some((url) => url.includes('/api/widgets/faq/compiled'))).toBe(true);
-    expect(urls.some((url) => url.includes('/api/devstudio/instances') && !url.includes('/wgt_curated_faq_simple/l10n/status'))).toBe(true);
+    expect(
+      urls.some(
+        (url) =>
+          url.includes('/api/devstudio/instances') &&
+          !url.includes('/wgt_curated_faq_simple/l10n/status'),
+      ),
+    ).toBe(true);
     expect(urls.some((url) => url.includes('/api/roma/templates'))).toBe(false);
 
     dom.window.close();
@@ -325,7 +362,9 @@ describe('DevStudio instances tool', () => {
     const parsed = new URL(src);
 
     expect(parsed.searchParams.get('surface')).toBe('devstudio');
-    expect(parsed.searchParams.get('assetApiBase')).toBe('http://localhost:5173/api/devstudio/assets');
+    expect(parsed.searchParams.get('assetApiBase')).toBe(
+      'http://localhost:5173/api/devstudio/assets',
+    );
     expect(parsed.searchParams.get('assetUploadEndpoint')).toBe(
       'http://localhost:5173/api/devstudio/assets/upload',
     );
@@ -344,9 +383,23 @@ describe('DevStudio instances tool', () => {
     const { dom, fetchMock } = await loadInstancesDom(instances, {
       fetch: { localWidgets: ['faq'] },
     });
-    const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
-    expect(urls.some((url) => url.includes('/api/accounts/00000000-0000-0000-0000-000000000100/instance/wgt_curated_faq_simple'))).toBe(true);
-    expect(urls.some((url) => url.includes('/api/accounts/00000000-0000-0000-0000-000000000100/instances/wgt_curated_faq_simple/localization'))).toBe(true);
+    const urls = fetchMock.mock.calls.map(([input]) =>
+      typeof input === 'string' ? input : input.toString(),
+    );
+    expect(
+      urls.some((url) =>
+        url.includes(
+          '/api/accounts/00000000-0000-0000-0000-000000000100/instance/wgt_curated_faq_simple',
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      urls.some((url) =>
+        url.includes(
+          '/api/accounts/00000000-0000-0000-0000-000000000100/instances/wgt_curated_faq_simple/localization',
+        ),
+      ),
+    ).toBe(true);
 
     dom.window.close();
   });
@@ -387,18 +440,20 @@ describe('DevStudio instances tool', () => {
     const { dom, fetchMock } = await loadInstancesDom(instances, {
       fetch: { localWidgets: ['faq', 'logoshowcase'] },
     });
-    const widgetSelect = dom.window.document.getElementById('widget-select') as HTMLSelectElement | null;
+    const widgetSelect = dom.window.document.getElementById(
+      'widget-select',
+    ) as HTMLSelectElement | null;
     const menu = dom.window.document.getElementById('instance-dropdown-menu');
 
     expect(widgetSelect?.value).toBe('faq');
     expect(menu?.querySelectorAll('[data-public-id]').length).toBe(1);
 
     const initialUrls = fetchMock.mock.calls.map(([input]) =>
-      typeof input === 'string' ? input : input.toString()
+      typeof input === 'string' ? input : input.toString(),
     );
     expect(initialUrls.some((url) => url.includes('/api/widgets/faq/compiled'))).toBe(true);
     expect(initialUrls.some((url) => url.includes('/api/widgets/logoshowcase/compiled'))).toBe(
-      false
+      false,
     );
 
     if (widgetSelect) {
@@ -408,117 +463,9 @@ describe('DevStudio instances tool', () => {
     await flushDom(dom, 2);
 
     const afterUrls = fetchMock.mock.calls.map(([input]) =>
-      typeof input === 'string' ? input : input.toString()
+      typeof input === 'string' ? input : input.toString(),
     );
     expect(afterUrls.some((url) => url.includes('/api/widgets/logoshowcase/compiled'))).toBe(true);
-
-    dom.window.close();
-  });
-
-  it('requires an instance name before enabling curated instance creation', async () => {
-    const instances = [
-      {
-        publicId: 'wgt_curated_faq_simple',
-        widgetname: 'faq',
-        displayName: 'FAQ Simple',
-      },
-    ];
-    const { dom } = await loadInstancesDom(instances, {
-      fetch: { localWidgets: ['faq'] },
-    });
-    const openBtn = dom.window.document.getElementById('create-curated-instance');
-    const modal = dom.window.document.getElementById('curated-modal');
-    const confirm = dom.window.document.getElementById('curated-modal-confirm') as HTMLButtonElement | null;
-    const nameField = dom.window.document.getElementById('curated-style-name') as HTMLInputElement | null;
-
-    expect(openBtn).toBeTruthy();
-    openBtn?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
-
-    expect(modal?.hasAttribute('hidden')).toBe(false);
-    expect(confirm?.disabled).toBe(true);
-
-    if (nameField) {
-      nameField.value = 'Clinic Friendly';
-      nameField.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-    }
-
-    expect(confirm?.disabled).toBe(false);
-
-    dom.window.close();
-  });
-
-  it('creates a curated instance with composed slug from the current Bob editor snapshot', async () => {
-    const instances = [
-      {
-        publicId: 'wgt_curated_faq_simple',
-        widgetname: 'faq',
-        displayName: 'FAQ Simple',
-      },
-    ];
-
-    let exportRequest: any = null;
-    const { dom, fetchMock } = await loadInstancesDom(instances, {
-      fetch: { localWidgets: ['faq'] },
-      onBobPostMessage: (payload, origin, { dom: innerDom, bobWindow }) => {
-        if (!payload || typeof payload !== 'object') return;
-        const data = payload as { type?: string; requestId?: string };
-        if (data.type !== 'devstudio:export-instance-data') return;
-        exportRequest = payload;
-        innerDom.window.dispatchEvent(
-          new innerDom.window.MessageEvent('message', {
-            data: {
-              type: 'bob:export-instance-data',
-              requestId: data.requestId,
-              ok: true,
-              instanceData: { hero: { image: 'data:image/png;base64,abc' } },
-              meta: { publicId: 'wgt_main_faq' },
-            },
-            origin,
-            source: bobWindow,
-          })
-        );
-      },
-    });
-
-    const openBtn = dom.window.document.getElementById('create-curated-instance');
-    const confirm = dom.window.document.getElementById('curated-modal-confirm') as HTMLButtonElement | null;
-    const nameField = dom.window.document.getElementById('curated-style-name') as HTMLInputElement | null;
-    const primaryVariantField = dom.window.document.getElementById(
-      'curated-variant-primary'
-    ) as HTMLInputElement | null;
-    const secondaryVariantField = dom.window.document.getElementById(
-      'curated-variant-secondary'
-    ) as HTMLInputElement | null;
-    openBtn?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
-    if (nameField) {
-      nameField.value = 'Lightblurs v01';
-      nameField.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-    }
-    if (primaryVariantField) {
-      primaryVariantField.value = 'Hospitality';
-      primaryVariantField.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-    }
-    if (secondaryVariantField) {
-      secondaryVariantField.value = 'Airbnb';
-      secondaryVariantField.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-    }
-    confirm?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
-
-    await flushDom(dom, 4);
-
-    expect(exportRequest?.exportMode).toBe('current');
-
-    const createCall = fetchMock.mock.calls.find(([input, init]) => {
-      const url = typeof input === 'string' ? input : input.toString();
-      return /\/api\/accounts\/[^/]+\/instances(?:\?|$)/.test(url) && (init?.method || 'GET') === 'POST';
-    });
-    expect(createCall).toBeTruthy();
-    const createBody = createCall?.[1]?.body ? JSON.parse(String(createCall[1].body)) : null;
-    expect(createBody?.publicId).toBe('wgt_curated_faq_lightblurs_hospitality_airbnb');
-    expect(createBody?.meta?.styleName).toBe('Lightblurs.Hospitality.Airbnb');
-    expect(createBody?.meta?.styleSlug).toBe('lightblurs_hospitality_airbnb');
-    expect(createBody?.meta?.variants?.primary).toBe('Hospitality');
-    expect(createBody?.meta?.variants?.secondary).toBe('Airbnb');
 
     dom.window.close();
   });
@@ -566,7 +513,9 @@ describe('DevStudio instances tool', () => {
     await flushDom(dom, 4);
 
     const themeModal = dom.window.document.getElementById('theme-modal');
-    const themeSelect = dom.window.document.getElementById('theme-modal-select') as HTMLSelectElement | null;
+    const themeSelect = dom.window.document.getElementById(
+      'theme-modal-select',
+    ) as HTMLSelectElement | null;
     expect(themeModal?.hasAttribute('hidden')).toBe(false);
     expect(themeSelect?.value).toBe('');
     expect(themeSelect?.options[0]?.value).toBe('');
@@ -649,14 +598,19 @@ describe('DevStudio instances tool', () => {
     updateThemeBtn?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
     await flushDom(dom, 3);
 
-    const themeSelect = dom.window.document.getElementById('theme-modal-select') as HTMLSelectElement | null;
+    const themeSelect = dom.window.document.getElementById(
+      'theme-modal-select',
+    ) as HTMLSelectElement | null;
     const themeConfirm = dom.window.document.getElementById('theme-modal-confirm');
     if (themeSelect) themeSelect.value = 'dark';
     themeConfirm?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
     await flushDom(dom, 4);
 
     expect(themeUpdatePayload).not.toBeNull();
-    const payload = themeUpdatePayload as { themeId?: string; values?: Record<string, unknown> };
+    if (!themeUpdatePayload) {
+      throw new Error('Expected theme update payload to be captured');
+    }
+    const payload = themeUpdatePayload;
     expect(payload.themeId).toBe('dark');
     expect(payload.values?.['stage.alignment']).toBe('center');
     expect(payload.values?.['typography.globalFamily']).toBe('Inter');

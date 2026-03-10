@@ -447,6 +447,13 @@ if [ "$DEV_PROFILE" = "product" ]; then
     exit 1
   fi
 
+  echo "[dev-up] Ensuring product-profile curated/main Tokyo saved snapshots"
+  if ! TOKYO_WORKER_BASE_URL="$TOKYO_URL" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" \
+    node "$ROOT_DIR/scripts/dev/ensure-curated-tokyo-saved.mjs"; then
+    echo "[dev-up] ERROR: product-profile curated/main Tokyo saved snapshot sync failed."
+    exit 1
+  fi
+
   stop_port "3001"
   stop_port "5173"
   echo "[dev-up] Starting local Paris trusted boundary (3001)"
@@ -690,6 +697,12 @@ fi
 echo "[dev-up] Syncing missing Tokyo account assets to local R2"
 if ! node "$ROOT_DIR/scripts/tokyo-assets-sync.mjs" --persist-to "$WRANGLER_PERSIST_DIR"; then
   echo "[dev-up] WARNING: Tokyo asset sync failed; some local /assets/v/* refs may return unavailable."
+fi
+
+echo "[dev-up] Ensuring local curated/main Tokyo saved snapshots"
+if ! TOKYO_WORKER_BASE_URL="http://localhost:8791" node "$ROOT_DIR/scripts/dev/ensure-curated-tokyo-saved.mjs"; then
+  echo "[dev-up] ERROR: local curated/main Tokyo saved snapshot sync failed."
+  exit 1
 fi
 
 echo "[dev-up] Starting Paris Worker (3001)"

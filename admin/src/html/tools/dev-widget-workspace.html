@@ -445,51 +445,6 @@
           <button
             type="button"
             class="diet-btn-ictxt devstudio-instances__action"
-            id="superadmin-update-defaults"
-            data-size="md"
-            data-variant="secondary"
-            data-tone="brown.5"
-          >
-            <span
-              class="diet-btn-ictxt__icon"
-              aria-hidden="true"
-              data-icon="arrow.trianglehead.clockwise"
-            ></span>
-            <span class="diet-btn-ictxt__label body-s">Update Config</span>
-          </button>
-          <button
-            type="button"
-            class="diet-btn-ictxt devstudio-instances__action"
-            id="superadmin-reset-from-json"
-            data-size="md"
-            data-variant="secondary"
-            data-tone="brown.5"
-          >
-            <span
-              class="diet-btn-ictxt__icon"
-              aria-hidden="true"
-              data-icon="square.and.arrow.down"
-            ></span>
-            <span class="diet-btn-ictxt__label body-s">Reset Json</span>
-          </button>
-          <button
-            type="button"
-            class="diet-btn-ictxt devstudio-instances__action"
-            id="refresh-prague-preview"
-            data-size="md"
-            data-variant="secondary"
-            data-tone="brown.5"
-          >
-            <span
-              class="diet-btn-ictxt__icon"
-              aria-hidden="true"
-              data-icon="arrow.trianglehead.clockwise"
-            ></span>
-            <span class="diet-btn-ictxt__label body-s">Refresh Prague</span>
-          </button>
-          <button
-            type="button"
-            class="diet-btn-ictxt devstudio-instances__action"
             id="superadmin-update-theme"
             data-size="md"
             data-variant="secondary"
@@ -501,50 +456,6 @@
               data-icon="paintbrush.pointed"
             ></span>
             <span class="diet-btn-ictxt__label body-s">Update Theme</span>
-          </button>
-        </div>
-        <span class="devstudio-instances__actions-divider" aria-hidden="true"></span>
-        <div class="devstudio-instances__actions-group" data-group="secondary">
-          <button
-            type="button"
-            class="diet-btn-ictxt devstudio-instances__action"
-            id="create-curated-instance"
-            data-size="md"
-            data-variant="secondary"
-            data-tone="gray4.4"
-          >
-            <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="plus.square"></span>
-            <span class="diet-btn-ictxt__label body-s">New Curated</span>
-          </button>
-          <button
-            type="button"
-            class="diet-btn-ictxt devstudio-instances__action"
-            id="update-curated-instance"
-            data-size="md"
-            data-variant="secondary"
-            data-tone="gray4.4"
-          >
-            <span
-              class="diet-btn-ictxt__icon"
-              aria-hidden="true"
-              data-icon="arrow.trianglehead.2.counterclockwise"
-            ></span>
-            <span class="diet-btn-ictxt__label body-s">Update Curated</span>
-          </button>
-          <button
-            type="button"
-            class="diet-btn-ictxt devstudio-instances__action"
-            id="promote-curated-cloud"
-            data-size="md"
-            data-variant="secondary"
-            data-tone="gray4.4"
-          >
-            <span
-              class="diet-btn-ictxt__icon"
-              aria-hidden="true"
-              data-icon="square.and.arrow.up"
-            ></span>
-            <span class="diet-btn-ictxt__label body-s">Promote Cloud</span>
           </button>
         </div>
       </div>
@@ -622,96 +533,6 @@
       style="width: 100%; height: 100%; border: 0; display: block"
       title="Bob Widget Builder"
     ></iframe>
-  </div>
-
-  <div class="devstudio-instances__modal" id="curated-modal" hidden>
-    <div
-      class="devstudio-instances__modal-body"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="curated-modal-title"
-    >
-      <div class="devstudio-instances__modal-header">
-        <div>
-          <div class="devstudio-instances__modal-title" id="curated-modal-title">
-            Create curated instance
-          </div>
-          <div class="devstudio-instances__modal-subtitle" id="curated-modal-subtitle"></div>
-        </div>
-        <button
-          class="diet-btn-txt"
-          type="button"
-          data-size="sm"
-          data-variant="neutral"
-          id="curated-modal-close"
-        >
-          <span class="diet-btn-txt__label">Close</span>
-        </button>
-      </div>
-      <div class="devstudio-instances__modal-content">
-        <div class="diet-textfield" data-size="md">
-          <label class="diet-textfield__control">
-            <span class="diet-textfield__display-label">Instance name</span>
-            <input
-              id="curated-style-name"
-              type="text"
-              class="diet-textfield__field"
-              placeholder="lightblurs"
-              autocomplete="off"
-            />
-          </label>
-        </div>
-        <div class="devstudio-instances__variant-grid">
-          <div class="diet-textfield" data-size="md">
-            <label class="diet-textfield__control">
-              <span class="diet-textfield__display-label">Variant (optional)</span>
-              <input
-                id="curated-variant-primary"
-                type="text"
-                class="diet-textfield__field"
-                placeholder="hospitality"
-                autocomplete="off"
-              />
-            </label>
-          </div>
-          <div class="diet-textfield" data-size="md">
-            <label class="diet-textfield__control">
-              <span class="diet-textfield__display-label">Sub-variant (optional)</span>
-              <input
-                id="curated-variant-secondary"
-                type="text"
-                class="diet-textfield__field"
-                placeholder="airbnb"
-                autocomplete="off"
-              />
-            </label>
-          </div>
-        </div>
-        <div class="devstudio-instances__field-helper" id="curated-style-preview"></div>
-      </div>
-      <div class="devstudio-instances__modal-actions">
-        <button
-          class="diet-btn-txt"
-          type="button"
-          data-size="md"
-          data-variant="secondary"
-          id="curated-modal-cancel"
-        >
-          <span class="diet-btn-txt__label">Cancel</span>
-        </button>
-        <button
-          class="diet-btn-ictxt devstudio-instances__action"
-          type="button"
-          data-size="md"
-          data-variant="secondary"
-          data-tone="green4"
-          id="curated-modal-confirm"
-        >
-          <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="plus.square"></span>
-          <span class="diet-btn-ictxt__label body-s">Create curated instance</span>
-        </button>
-      </div>
-    </div>
   </div>
 
   <div class="devstudio-instances__modal" id="theme-modal" hidden>
@@ -854,27 +675,11 @@
     const instanceEnvelopePromiseCache = new Map();
     let sendInstanceSeq = 0;
     const superadminActions = document.getElementById('superadmin-actions');
-    const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
     const superadminUpdateTheme = document.getElementById('superadmin-update-theme');
-    const superadminResetFromJson = document.getElementById('superadmin-reset-from-json');
-    const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
-    const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
-    const promoteCuratedCloudBtn = document.getElementById('promote-curated-cloud');
-    const refreshPraguePreviewBtn = document.getElementById('refresh-prague-preview');
     const l10nStatus = document.getElementById('l10n-status');
     const l10nStatusValue = document.getElementById('l10n-status-value');
     const l10nStatusMeta = document.getElementById('l10n-status-meta');
     const l10nStatusTooltip = document.getElementById('l10n-status-tooltip');
-    const curatedModal = document.getElementById('curated-modal');
-    const curatedModalTitle = document.getElementById('curated-modal-title');
-    const curatedModalSubtitle = document.getElementById('curated-modal-subtitle');
-    const curatedModalClose = document.getElementById('curated-modal-close');
-    const curatedModalCancel = document.getElementById('curated-modal-cancel');
-    const curatedModalConfirm = document.getElementById('curated-modal-confirm');
-    const curatedStyleNameField = document.getElementById('curated-style-name');
-    const curatedVariantPrimaryField = document.getElementById('curated-variant-primary');
-    const curatedVariantSecondaryField = document.getElementById('curated-variant-secondary');
-    const curatedStylePreview = document.getElementById('curated-style-preview');
     const themeModal = document.getElementById('theme-modal');
     const themeModalClose = document.getElementById('theme-modal-close');
     const themeModalCancel = document.getElementById('theme-modal-cancel');
@@ -882,10 +687,8 @@
     const themeModalSelect = document.getElementById('theme-modal-select');
     let l10nStatusTimer = null;
 
-    const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
     const THEME_UPDATE_LAST_ID_STORAGE = 'ck.devstudio.theme.update.lastThemeId';
 
-    let curatedModalState = null;
     let themeModalState = null;
 
     const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
@@ -893,7 +696,10 @@
     bobUrl.searchParams.set('subject', 'account');
     bobUrl.searchParams.set('surface', 'devstudio');
     bobUrl.searchParams.set('assetApiBase', `${window.location.origin}/api/devstudio/assets`);
-    bobUrl.searchParams.set('assetUploadEndpoint', `${window.location.origin}/api/devstudio/assets/upload`);
+    bobUrl.searchParams.set(
+      'assetUploadEndpoint',
+      `${window.location.origin}/api/devstudio/assets/upload`,
+    );
     if (!isLocalDevStudio) bobUrl.searchParams.set('readonly', '1');
     iframe.src = bobUrl.toString();
 
@@ -960,7 +766,9 @@
       const dirty = countStatus((entry) => entry?.status === 'dirty');
       const queued = countStatus((entry) => entry?.status === 'queued');
       const running = countStatus((entry) => entry?.status === 'running');
-      const retrying = countStatus((entry) => entry?.status === 'failed' && Boolean(entry?.nextAttemptAt));
+      const retrying = countStatus(
+        (entry) => entry?.status === 'failed' && Boolean(entry?.nextAttemptAt),
+      );
       const failed = countStatus((entry) => entry?.status === 'failed' && !entry?.nextAttemptAt);
       const superseded = countStatus((entry) => entry?.status === 'superseded');
 
@@ -993,7 +801,9 @@
         dirty > 0 ? `${dirty} dirty` : '',
         superseded > 0 ? `${superseded} superseded` : '',
         failed > 0 ? `${failed} failed` : '',
-        rawError ? `Last error: ${rawError.length > 120 ? `${rawError.slice(0, 117)}...` : rawError}` : '',
+        rawError
+          ? `Last error: ${rawError.length > 120 ? `${rawError.slice(0, 117)}...` : rawError}`
+          : '',
       ]
         .filter(Boolean)
         .join(' · ');
@@ -1026,10 +836,13 @@
 
       try {
         const res = await fetchDevStudio(
-          buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(publicId)}/l10n/status`, {
-            accountId: DEVSTUDIO_ACCOUNT_ID,
-            _t: Date.now(),
-          }),
+          buildDevStudioApiUrl(
+            `/api/devstudio/instances/${encodeURIComponent(publicId)}/l10n/status`,
+            {
+              accountId: DEVSTUDIO_ACCOUNT_ID,
+              _t: Date.now(),
+            },
+          ),
         );
         const payload = await res.json().catch(() => null);
 
@@ -1235,7 +1048,11 @@
     function listWidgetSlugs() {
       if (widgetTypes.length) return widgetTypes.slice();
       return Array.from(
-        new Set(instances.map((inst) => inst.widgetSlug).filter((slug) => typeof slug === 'string' && slug)),
+        new Set(
+          instances
+            .map((inst) => inst.widgetSlug)
+            .filter((slug) => typeof slug === 'string' && slug),
+        ),
       ).sort((a, b) => a.localeCompare(b));
     }
 
@@ -1290,7 +1107,9 @@
       if (compiledPromiseCache.has(slug)) return compiledPromiseCache.get(slug);
 
       const promise = (async () => {
-        const res = await fetchBob(`${BOB_ORIGIN}/api/widgets/${slug}/compiled`, { cache: 'no-store' });
+        const res = await fetchBob(`${BOB_ORIGIN}/api/widgets/${slug}/compiled`, {
+          cache: 'no-store',
+        });
         if (!res.ok) {
           let details = '';
           try {
@@ -1324,11 +1143,14 @@
 
     async function fetchInstanceCore(publicId, accountId = DEVSTUDIO_ACCOUNT_ID) {
       const res = await fetchBob(
-        buildBobApiUrl(`/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}`, {
-          subject: 'account',
-          surface: 'devstudio',
-          _t: Date.now(),
-        }),
+        buildBobApiUrl(
+          `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}`,
+          {
+            subject: 'account',
+            surface: 'devstudio',
+            _t: Date.now(),
+          },
+        ),
       );
       if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
       return await res.json();
@@ -1373,11 +1195,6 @@
       return promise;
     }
 
-    async function fetchInstanceConfig(publicId, accountId = DEVSTUDIO_ACCOUNT_ID) {
-      const envelope = await fetchInstanceEnvelope(publicId, accountId);
-      return envelope?.config ?? null;
-    }
-
     async function fetchLocalWidgetCatalog() {
       const res = await fetch(`/api/devstudio/widgets?_t=${Date.now()}`, { cache: 'no-store' });
       if (!res.ok) {
@@ -1403,8 +1220,8 @@
       const instanceWidgetTypes = storedInstances
         .map((instance) => normalizeWidgetname(instance.widgetSlug || instance.widgetname))
         .filter((widgetSlug) => typeof widgetSlug === 'string' && widgetSlug);
-      widgetTypes = Array.from(new Set([...(localWidgetTypes || []), ...instanceWidgetTypes])).sort((a, b) =>
-        a.localeCompare(b),
+      widgetTypes = Array.from(new Set([...(localWidgetTypes || []), ...instanceWidgetTypes])).sort(
+        (a, b) => a.localeCompare(b),
       );
     }
 
@@ -1558,243 +1375,7 @@
       refreshL10nStatus(publicId).catch(() => {});
     }
 
-    function requireSuperadminKey() {
-      if (!isLocalDevStudio) {
-        throw new Error('[DevStudio] Superadmin actions are only available on DevStudio Local.');
-      }
-      const existing = sessionStorage.getItem(SUPERADMIN_KEY_STORAGE);
-      if (existing && existing.trim()) return existing.trim();
-      const entered = window.prompt('Superadmin key (stored in sessionStorage):');
-      const key = (entered || '').trim();
-      if (!key) throw new Error('[DevStudio] Missing superadmin key');
-      sessionStorage.setItem(SUPERADMIN_KEY_STORAGE, key);
-      return key;
-    }
-
-    async function superadminFetch(url, init) {
-      const headers = new Headers(init?.headers || {});
-      const attempt = async () => fetchBob(url, { ...init, headers });
-
-      const res = await attempt();
-      if (res.status !== 403) return res;
-
-      // Only prompt for a superadmin key if Bob is enforcing it (via CK_SUPERADMIN_KEY).
-      // Retry once with the provided key.
-      try {
-        const clone = res.clone();
-        const data = await clone.json().catch(() => null);
-        const reasonKey = data?.error?.reasonKey;
-        if (reasonKey !== 'coreui.errors.superadmin.invalid') return res;
-      } catch {
-        return res;
-      }
-
-      const key = requireSuperadminKey();
-      headers.set('x-ck-superadmin-key', key);
-      return attempt();
-    }
-
-    function requireWidgetSlugForAction() {
-      const current = findInstanceByPublicId(currentPublicId);
-      const fallback = current?.widgetSlug || normalizeWidgetname(current?.widgetname) || 'faq';
-      const entered = window.prompt('Widget type (slug):', fallback);
-      const slug = normalizeWidgetname(entered);
-      if (!slug) throw new Error('[DevStudio] Missing widget type');
-      return slug;
-    }
-
-    function slugifyKey(raw) {
-      return String(raw || '')
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_+|_+$/g, '');
-    }
-
-    function escapeRegExp(raw) {
-      return String(raw || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
-    function normalizeCuratedNameSegment(raw, widgetSlug) {
-      const normalizedWidgetSlug = normalizeWidgetname(widgetSlug);
-      let value = String(raw || '').trim();
-      if (!value) return '';
-
-      value = value.replace(/^wgt_(?:curated|main)_/i, '');
-      if (normalizedWidgetSlug) {
-        const widgetPrefix = new RegExp(`^${escapeRegExp(normalizedWidgetSlug)}[._\\s-]*`, 'i');
-        value = value.replace(widgetPrefix, '');
-      }
-      value = value.replace(/[._\s-]*v\d+$/i, '');
-      return value.trim();
-    }
-
-    function isCuratedPublicId(publicId) {
-      return typeof publicId === 'string' && /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
-    }
-
-    function parseCuratedPublicId(publicId, widgetSlugHint) {
-      if (!isCuratedPublicId(publicId)) return null;
-      const widgetSlug = normalizeWidgetname(widgetSlugHint);
-      if (!widgetSlug) return null;
-      const match = new RegExp(`^wgt_curated_${escapeRegExp(widgetSlug)}_([a-z0-9][a-z0-9_-]*)$`, 'i').exec(publicId);
-      if (!match) return null;
-      return { widgetSlug, styleSlug: match[1] || null };
-    }
-
-    function normalizeCuratedVariants(raw) {
-      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-        return {
-          primary: null,
-          secondary: null,
-        };
-      }
-      const primary = typeof raw.primary === 'string' ? raw.primary.trim() : '';
-      const secondary = typeof raw.secondary === 'string' ? raw.secondary.trim() : '';
-      return {
-        primary: primary || null,
-        secondary: secondary || null,
-      };
-    }
-
-    function normalizeCuratedMeta(raw) {
-      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-      const styleName = typeof raw.styleName === 'string' ? raw.styleName.trim() : '';
-      const styleSlug = typeof raw.styleSlug === 'string' ? raw.styleSlug.trim() : '';
-      const variants = normalizeCuratedVariants(raw.variants || raw.variant || null);
-      return {
-        styleName: styleName || null,
-        styleSlug: styleSlug || null,
-        variants,
-      };
-    }
-
-    function resolveCuratedStyle(instance) {
-      if (!instance) return null;
-      const meta = normalizeCuratedMeta(instance.meta);
-      const parsed = parseCuratedPublicId(instance.publicId, instance.widgetSlug);
-      const styleSlug = meta?.styleSlug || parsed?.styleSlug || null;
-      const styleName = meta?.styleName || (styleSlug ? styleSlug.replace(/_/g, '.') : null);
-      const variants = meta?.variants ?? normalizeCuratedVariants(null);
-      return {
-        styleName,
-        styleSlug,
-        variants,
-        widgetSlug: instance.widgetSlug || parsed?.widgetSlug || null,
-      };
-    }
-
-    function buildCuratedPublicId(widgetSlug, styleSlug) {
-      const normalizedWidgetSlug = normalizeWidgetname(widgetSlug);
-      const normalizedStyleSlug = slugifyKey(styleSlug);
-      if (!normalizedWidgetSlug || !normalizedStyleSlug) {
-        throw new Error('[DevStudio] Invalid curated instance key.');
-      }
-      return `wgt_curated_${normalizedWidgetSlug}_${normalizedStyleSlug}`;
-    }
-
-    async function createInstance({ widgetType, publicId, config, status, meta }) {
-      const res = await fetchBob(
-        buildBobApiUrl(`/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instances`, {
-          subject: 'account',
-          surface: 'devstudio',
-          _t: Date.now(),
-        }),
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ widgetType, publicId, config, status, meta }),
-        },
-      );
-      const text = await res.text().catch(() => '');
-      if (!res.ok)
-        throw new Error(
-          `[DevStudio] Create instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
-        );
-      return text ? JSON.parse(text) : null;
-    }
-
-    async function updateInstance({ publicId, config }) {
-      const res = await fetchBob(
-        buildBobApiUrl(`/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instance/${encodeURIComponent(publicId)}`, {
-          subject: 'account',
-          surface: 'devstudio',
-          _t: Date.now(),
-        }),
-        {
-          method: 'PUT',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ config }),
-        },
-      );
-      const text = await res.text().catch(() => '');
-      if (!res.ok)
-        throw new Error(
-          `[DevStudio] Update instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
-        );
-      return text ? JSON.parse(text) : null;
-    }
-
-    async function ensureInstance({ widgetType, publicId, config, status }) {
-      const res = await fetchBob(
-        buildBobApiUrl(`/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instances`, {
-          subject: 'account',
-          surface: 'devstudio',
-          _t: Date.now(),
-        }),
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ widgetType, publicId, config, status }),
-        },
-      );
-      if (res.ok) {
-        const text = await res.text().catch(() => '');
-        return text ? JSON.parse(text) : null;
-      }
-
-      // If the instance already exists, update it to the desired saved config.
-      const text = await res.text().catch(() => '');
-      if (res.status === 409 || (text || '').toLowerCase().includes('duplicate')) {
-        await updateInstance({ publicId, config });
-        return { ok: true, existed: true };
-      }
-
-      throw new Error(
-        `[DevStudio] Ensure instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
-      );
-    }
-
-    async function promoteInstanceToCloud({
-      widgetType,
-      publicId,
-      config,
-      status,
-      ownerAccountId = PLATFORM_ACCOUNT_ID,
-    }) {
-      if (!isLocalDevStudio) return { ok: false, skipped: true };
-      const res = await fetch(`/api/promote-instance?_t=${Date.now()}`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ widgetType, publicId, config, status, ownerAccountId }),
-      });
-      const text = await res.text().catch(() => '');
-      if (!res.ok) {
-        let detail = text || `HTTP ${res.status}`;
-        try {
-          const parsed = text ? JSON.parse(text) : null;
-          detail = parsed?.error?.detail || parsed?.error?.reasonKey || detail;
-        } catch {}
-        console.warn('[DevStudio] Cloud promote failed', { publicId, detail });
-        return { ok: false, error: detail };
-      }
-      return { ok: true, detail: 'promoted' };
-    }
-
-    async function exportInstanceDataFromBob({
-      timeoutMs = 2500,
-      exportMode = 'base',
-    } = {}) {
+    async function exportInstanceDataFromBob({ timeoutMs = 2500, exportMode = 'base' } = {}) {
       const target = iframe.contentWindow;
       if (!target) throw new Error('[DevStudio] Bob iframe not ready');
       const requestId = crypto.randomUUID();
@@ -1871,63 +1452,6 @@
 
       visit(config);
       return config;
-    }
-
-    async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
-      if (!IS_SOURCE_PROFILE) {
-        throw new Error(
-          '[DevStudio] Update Config is source-profile only. Re-open DevStudio with ?profile=source.',
-        );
-      }
-      const publicId = `wgt_main_${widgetSlug}`;
-      const exported = await exportInstanceDataFromBob({
-        exportMode: 'current',
-      });
-      const config = exported?.instanceData;
-      if (!config || typeof config !== 'object') {
-        throw new Error('[DevStudio] Bob export did not include instanceData');
-      }
-
-      const exportedPublicId = exported?.meta?.publicId;
-      if (exportedPublicId && exportedPublicId !== publicId) {
-        const ok = window.confirm(
-          `Save the currently loaded editor state (${exportedPublicId}) into default instance (${publicId})?`,
-        );
-        if (!ok) throw new Error('[DevStudio] Canceled');
-      }
-
-      // Source-of-truth for compiled defaults is Tokyo widget spec.json. In local dev, keep it in sync
-      // so downstream curated instances deterministically inherit the updated baseline.
-      const defaultsForSpec = stripTokyoBaseFromConfig(cloneJson(config), TOKYO_BASE);
-      await updateTokyoWidgetSpecDefaults({ widgetSlug, defaults: defaultsForSpec });
-      compiledCache.delete(widgetSlug);
-
-      await createInstance({
-        widgetType: widgetSlug,
-        publicId,
-        config,
-        status: 'published',
-      });
-      await updateInstance({
-        publicId,
-        config,
-      });
-      return { publicId, config };
-    }
-
-    async function updateTokyoWidgetSpecDefaults({ widgetSlug, defaults }) {
-      const res = await fetch(`/api/widget-spec-defaults?_t=${Date.now()}`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ widgetType: widgetSlug, defaults }),
-      });
-      const text = await res.text().catch(() => '');
-      if (!res.ok) {
-        throw new Error(
-          `[DevStudio] Update widget spec defaults failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
-        );
-      }
-      return text ? JSON.parse(text) : null;
     }
 
     function readConfigValueAtPath(config, path) {
@@ -2124,8 +1648,7 @@
         Boolean(lastThemeId) &&
         lastThemeId !== 'custom' &&
         themes.some((theme) => theme.id === lastThemeId);
-      const defaultThemeId =
-        hasEditorTheme ? editorThemeId : hasLastTheme ? lastThemeId : '';
+      const defaultThemeId = hasEditorTheme ? editorThemeId : hasLastTheme ? lastThemeId : '';
       if (!themes?.length) throw new Error('[DevStudio] Theme list not found.');
       const themeId = await openThemeModal({ themes, defaultThemeId });
       if (!themeId) throw new Error('[DevStudio] Canceled');
@@ -2147,288 +1670,10 @@
       return { themeId, values: cleanedValues };
     }
 
-    async function resetMainInstanceFromJson(widgetSlug) {
-      compiledCache.delete(widgetSlug);
-      const compiled = await ensureCompiledWidget(widgetSlug);
-      const defaults =
-        compiled?.defaults && typeof compiled.defaults === 'object' ? compiled.defaults : null;
-      if (!defaults) throw new Error('[DevStudio] Compiled widget did not include defaults');
-
-      const publicId = `wgt_main_${widgetSlug}`;
-      const ok = window.confirm(
-        `Reset ${publicId} from JSON defaults? This will overwrite the current config.`,
-      );
-      if (!ok) throw new Error('[DevStudio] Canceled');
-
-      const config = cloneJson(defaults);
-      await createInstance({
-        widgetType: widgetSlug,
-        publicId,
-        config,
-        status: 'published',
-      });
-      await updateInstance({
-        publicId,
-        config,
-      });
-      return { publicId, config };
+    if (superadminActions instanceof HTMLElement) {
+      const showThemeAction = isLocalDevStudio && IS_SOURCE_PROFILE;
+      superadminActions.style.display = showThemeAction ? 'inline-flex' : 'none';
     }
-
-    async function updateCuratedInstanceFromEditor(instance) {
-      if (!instance || !isCuratedPublicId(instance.publicId)) {
-        throw new Error('[DevStudio] Select a curated instance first.');
-      }
-      const widgetSlug = instance.widgetSlug || requireWidgetSlugForAction();
-      const publicId = instance.publicId;
-      const exported = await exportInstanceDataFromBob({
-        exportMode: 'current',
-      });
-      const config = exported?.instanceData;
-      if (!config || typeof config !== 'object') {
-        throw new Error('[DevStudio] Bob export did not include instanceData');
-      }
-
-      const exportedPublicId = exported?.meta?.publicId;
-      if (exportedPublicId && exportedPublicId !== publicId) {
-        const ok = window.confirm(
-          `Update curated instance (${publicId}) with the currently loaded editor state (${exportedPublicId})?`,
-        );
-        if (!ok) throw new Error('[DevStudio] Canceled');
-      }
-
-      const ok = window.confirm(
-        `Update curated instance ${publicId} in place? This will overwrite the current config.`,
-      );
-      if (!ok) throw new Error('[DevStudio] Canceled');
-
-      await updateInstance({
-        publicId,
-        config,
-      });
-
-      return { publicId, config };
-    }
-
-    function readCuratedCreateDraft() {
-      const widgetSlug = curatedModalState?.widgetSlug || null;
-      const styleBaseRaw =
-        curatedStyleNameField instanceof HTMLInputElement ? curatedStyleNameField.value : '';
-      const variantPrimaryRaw =
-        curatedVariantPrimaryField instanceof HTMLInputElement
-          ? curatedVariantPrimaryField.value
-          : '';
-      const variantSecondaryRaw =
-        curatedVariantSecondaryField instanceof HTMLInputElement
-          ? curatedVariantSecondaryField.value
-          : '';
-
-      const styleBase = normalizeCuratedNameSegment(styleBaseRaw, widgetSlug);
-      const variantPrimary = normalizeCuratedNameSegment(variantPrimaryRaw, widgetSlug);
-      const variantSecondary = normalizeCuratedNameSegment(variantSecondaryRaw, widgetSlug);
-      const rawSegments = [styleBase, variantPrimary, variantSecondary].filter(Boolean);
-      const slugSegments = rawSegments.map((segment) => slugifyKey(segment)).filter(Boolean);
-      return {
-        styleBase,
-        variantPrimary,
-        variantSecondary,
-        styleName: rawSegments.join('.'),
-        styleSlug: slugSegments.join('_'),
-      };
-    }
-
-    function updateCuratedModalPreview() {
-      if (!(curatedStylePreview instanceof HTMLElement)) return;
-      if (!curatedModalState) {
-        curatedStylePreview.textContent = '';
-        return;
-      }
-      const draft = readCuratedCreateDraft();
-      if (!draft.styleBase) {
-        curatedStylePreview.textContent = 'Instance key preview: add an instance name.';
-        return;
-      }
-      if (!draft.styleSlug) {
-        curatedStylePreview.textContent = 'Instance key preview: use at least one letter or number.';
-        return;
-      }
-      curatedStylePreview.textContent = `Public ID: ${buildCuratedPublicId(
-        curatedModalState.widgetSlug,
-        draft.styleSlug,
-      )}`;
-    }
-
-    function updateCuratedModalConfirmState() {
-      if (!(curatedModalConfirm instanceof HTMLButtonElement)) return;
-      if (!curatedModalState) {
-        curatedModalConfirm.disabled = true;
-        updateCuratedModalPreview();
-        return;
-      }
-      const draft = readCuratedCreateDraft();
-      curatedModalConfirm.disabled = !draft.styleBase || !draft.styleSlug;
-      updateCuratedModalPreview();
-    }
-
-    function openCuratedModal({ widgetSlug }) {
-      if (
-        !curatedModal ||
-        !curatedModalConfirm ||
-        !(curatedStyleNameField instanceof HTMLInputElement)
-      )
-        return;
-      curatedModalState = {
-        widgetSlug,
-      };
-
-      if (curatedModalTitle instanceof HTMLElement) {
-        curatedModalTitle.textContent = 'Create curated instance';
-      }
-      if (curatedModalSubtitle instanceof HTMLElement) {
-        curatedModalSubtitle.textContent = `Creates wgt_curated_${widgetSlug}_<name>.`;
-      }
-
-      curatedStyleNameField.readOnly = false;
-      curatedStyleNameField.value = '';
-      if (curatedVariantPrimaryField instanceof HTMLInputElement) {
-        curatedVariantPrimaryField.readOnly = false;
-        curatedVariantPrimaryField.value = '';
-      }
-      if (curatedVariantSecondaryField instanceof HTMLInputElement) {
-        curatedVariantSecondaryField.readOnly = false;
-        curatedVariantSecondaryField.value = '';
-      }
-
-      const icon = curatedModalConfirm.querySelector('.diet-btn-ictxt__icon');
-      if (icon) icon.setAttribute('data-icon', 'plus.square');
-      const label = curatedModalConfirm.querySelector('.diet-btn-ictxt__label');
-      if (label) label.textContent = 'Create curated instance';
-      curatedModalConfirm.dataset.tone = 'green4';
-
-      updateCuratedModalConfirmState();
-      curatedModal.hidden = false;
-      curatedStyleNameField.focus();
-    }
-
-    function closeCuratedModal() {
-      if (curatedModal) curatedModal.hidden = true;
-      curatedModalState = null;
-      if (curatedStyleNameField instanceof HTMLInputElement) curatedStyleNameField.value = '';
-      if (curatedVariantPrimaryField instanceof HTMLInputElement) curatedVariantPrimaryField.value = '';
-      if (curatedVariantSecondaryField instanceof HTMLInputElement) curatedVariantSecondaryField.value = '';
-      if (curatedStylePreview instanceof HTMLElement) curatedStylePreview.textContent = '';
-      updateCuratedModalConfirmState();
-    }
-
-    async function submitCuratedModal() {
-      if (!curatedModalState) return;
-      if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-      const draft = readCuratedCreateDraft();
-      const styleName = draft.styleName;
-      const styleSlug = draft.styleSlug;
-      const styleVariants = {
-        primary: draft.variantPrimary || null,
-        secondary: draft.variantSecondary || null,
-      };
-      if (!draft.styleBase || !styleSlug) throw new Error('[DevStudio] Enter an instance name.');
-
-      const publicId = buildCuratedPublicId(curatedModalState.widgetSlug, styleSlug);
-      const existing = instances.find((inst) => String(inst.publicId || '').toLowerCase() === publicId.toLowerCase());
-      if (existing) {
-        throw new Error('[DevStudio] Instance key already exists. Choose a different name.');
-      }
-      const exported = await exportInstanceDataFromBob({
-        exportMode: 'current',
-      });
-      const sourceConfig = exported?.instanceData;
-      if (!sourceConfig || typeof sourceConfig !== 'object') {
-        throw new Error('[DevStudio] Bob export did not include instanceData');
-      }
-      const meta = {
-        styleName,
-        styleSlug,
-      };
-      if (styleVariants.primary || styleVariants.secondary) {
-        meta.variants = styleVariants;
-      }
-
-      await createInstance({
-        widgetType: curatedModalState.widgetSlug,
-        publicId,
-        config: sourceConfig,
-        status: 'published',
-        meta,
-      });
-
-      closeCuratedModal();
-      await refreshInstancesAndSelect(publicId);
-    }
-
-    async function refreshInstancesAndSelect(publicId) {
-      await loadInstances();
-      if (!publicId) return;
-      const found = findInstanceByPublicId(publicId);
-      if (found) {
-        switchInstance(publicId);
-      }
-    }
-
-    async function promoteCurrentInstanceToCloud() {
-      if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-      if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
-        throw new Error('[DevStudio] Select a curated/main instance first.');
-      }
-
-      const instance = findInstanceByPublicId(currentPublicId);
-      const widgetSlug = instance?.widgetSlug || normalizeWidgetname(instance?.widgetname);
-      if (!widgetSlug) {
-        throw new Error('[DevStudio] Unable to resolve widget type from selected instance.');
-      }
-
-      const config = await fetchInstanceConfig(currentPublicId, DEVSTUDIO_ACCOUNT_ID);
-      if (!config || typeof config !== 'object') {
-        throw new Error('[DevStudio] Failed to read persisted local config before cloud promote.');
-      }
-
-      const promoted = await promoteInstanceToCloud({
-        widgetType: widgetSlug,
-        publicId: currentPublicId,
-        config,
-        status: 'published',
-      });
-
-      if (!promoted.ok) {
-        throw new Error(
-          `[DevStudio] Cloud promote failed for ${currentPublicId}: ${promoted.error || 'unknown error'}`,
-        );
-      }
-
-      alert(`[DevStudio] Cloud promote completed for ${currentPublicId}.`);
-    }
-
-    if (isLocalDevStudio && superadminActions) {
-      superadminActions.style.display = 'inline-flex';
-    }
-
-    if (!IS_SOURCE_PROFILE) {
-      if (superadminUpdateDefaults instanceof HTMLButtonElement) {
-        superadminUpdateDefaults.hidden = true;
-        superadminUpdateDefaults.disabled = true;
-      }
-      if (superadminUpdateTheme instanceof HTMLButtonElement) {
-        superadminUpdateTheme.hidden = true;
-        superadminUpdateTheme.disabled = true;
-      }
-    }
-
-    superadminUpdateDefaults?.addEventListener('click', async () => {
-      try {
-        const widgetSlug = requireWidgetSlugForAction();
-        const result = await updateDefaultsMainInstanceFromEditor(widgetSlug);
-        await refreshInstancesAndSelect(result.publicId);
-      } catch (err) {
-        alert(err instanceof Error ? err.message : String(err));
-      }
-    });
 
     superadminUpdateTheme?.addEventListener('click', async () => {
       try {
@@ -2436,92 +1681,6 @@
       } catch (err) {
         alert(err instanceof Error ? err.message : String(err));
       }
-    });
-
-    superadminResetFromJson?.addEventListener('click', async () => {
-      try {
-        const widgetSlug = requireWidgetSlugForAction();
-        const result = await resetMainInstanceFromJson(widgetSlug);
-        await refreshInstancesAndSelect(result.publicId);
-      } catch (err) {
-        alert(err instanceof Error ? err.message : String(err));
-      }
-    });
-
-    createCuratedInstanceBtn?.addEventListener('click', () => {
-      try {
-        if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-        const instance = findInstanceByPublicId(currentPublicId);
-        const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
-        openCuratedModal({ widgetSlug });
-      } catch (err) {
-        alert(err instanceof Error ? err.message : String(err));
-      }
-    });
-
-    updateCuratedInstanceBtn?.addEventListener('click', async () => {
-      try {
-        if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-        const instance = findInstanceByPublicId(currentPublicId);
-        const result = await updateCuratedInstanceFromEditor(instance);
-        await refreshInstancesAndSelect(result.publicId);
-      } catch (err) {
-        alert(err instanceof Error ? err.message : String(err));
-      }
-    });
-
-    promoteCuratedCloudBtn?.addEventListener('click', async () => {
-      const labelEl = promoteCuratedCloudBtn?.querySelector('.diet-btn-ictxt__label');
-      const previousLabel = labelEl?.textContent || 'Promote Cloud';
-      try {
-        if (promoteCuratedCloudBtn) promoteCuratedCloudBtn.disabled = true;
-        if (labelEl) labelEl.textContent = 'Promoting...';
-        await promoteCurrentInstanceToCloud();
-        if (labelEl) labelEl.textContent = 'Promoted';
-        setTimeout(() => {
-          if (labelEl) labelEl.textContent = previousLabel;
-        }, 1400);
-      } catch (err) {
-        if (labelEl) labelEl.textContent = previousLabel;
-        alert(err instanceof Error ? err.message : String(err));
-      } finally {
-        if (promoteCuratedCloudBtn) promoteCuratedCloudBtn.disabled = false;
-      }
-    });
-
-    refreshPraguePreviewBtn?.addEventListener('click', async () => {
-      const labelEl = refreshPraguePreviewBtn?.querySelector('.diet-btn-ictxt__label');
-      const previousLabel = labelEl?.textContent || 'Refresh Prague';
-      try {
-        if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-        if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
-          throw new Error('[DevStudio] Select a curated instance first.');
-        }
-        throw new Error(
-          '[DevStudio] Refresh Prague uses a removed legacy snapshot endpoint. Restore this only after the new preview flow is defined.',
-        );
-      } catch (err) {
-        alert(err instanceof Error ? err.message : String(err));
-        if (labelEl) labelEl.textContent = previousLabel;
-      } finally {
-        if (refreshPraguePreviewBtn) refreshPraguePreviewBtn.disabled = false;
-      }
-    });
-
-    curatedModalConfirm?.addEventListener('click', async () => {
-      try {
-        await submitCuratedModal();
-      } catch (err) {
-        alert(err instanceof Error ? err.message : String(err));
-      }
-    });
-
-    curatedModalClose?.addEventListener('click', () => {
-      closeCuratedModal();
-    });
-
-    curatedModalCancel?.addEventListener('click', () => {
-      closeCuratedModal();
     });
 
     themeModalConfirm?.addEventListener('click', () => {
@@ -2559,16 +1718,6 @@
       { signal: abortController.signal },
     );
 
-    if (curatedStyleNameField instanceof HTMLInputElement) {
-      curatedStyleNameField.addEventListener('input', updateCuratedModalConfirmState);
-    }
-    if (curatedVariantPrimaryField instanceof HTMLInputElement) {
-      curatedVariantPrimaryField.addEventListener('input', updateCuratedModalConfirmState);
-    }
-    if (curatedVariantSecondaryField instanceof HTMLInputElement) {
-      curatedVariantSecondaryField.addEventListener('input', updateCuratedModalConfirmState);
-    }
-
     async function sendInstanceToIframe(publicId) {
       if (!publicId) {
         throw new Error('[DevStudio] Missing publicId for sendInstanceToIframe');
@@ -2600,7 +1749,9 @@
         const compiled = await ensureCompiledWidget(instance.widgetname);
         if (requestSeq !== sendInstanceSeq) return;
         const defaults =
-          compiled?.defaults && typeof compiled.defaults === 'object' && !Array.isArray(compiled.defaults)
+          compiled?.defaults &&
+          typeof compiled.defaults === 'object' &&
+          !Array.isArray(compiled.defaults)
             ? cloneJson(compiled.defaults)
             : {};
 
@@ -2650,7 +1801,10 @@
             durationMs: performance.now() - envelopeStart,
           }));
 
-      const [compiledResult, envelopeResult] = await Promise.all([compiledPromise, envelopePromise]);
+      const [compiledResult, envelopeResult] = await Promise.all([
+        compiledPromise,
+        envelopePromise,
+      ]);
       if (requestSeq !== sendInstanceSeq) return;
       compiled = compiledResult.value;
       const envelope = envelopeResult.value ?? {};
@@ -2757,7 +1911,9 @@
           }
 
           if (data.type === 'bob:open-editor-failed') {
-            const reason = String(data.reasonKey || data.message || '[DevStudio] Bob failed to apply instance');
+            const reason = String(
+              data.reasonKey || data.message || '[DevStudio] Bob failed to apply instance',
+            );
             fail(new Error(reason));
           }
         };

@@ -9,6 +9,7 @@ import {
 import {
   createAccountInstanceRow,
   deleteAccountInstanceRow,
+  getAccountInstanceCoreRow,
 } from '../../../../../../bob/lib/michael';
 import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../bob/lib/account-authz-capsule';
 import {
@@ -56,10 +57,6 @@ function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
   return normalized || null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function createUserInstancePublicId(widgetType: string): string {
@@ -116,111 +113,77 @@ async function loadDuplicateSource(args: {
   accountId: string;
   publicId: string;
   tokyoAccessToken: string;
+  berlinAccessToken: string;
 }): Promise<
   | { ok: true; value: DuplicateSource }
   | { ok: false; status: number; error: { kind: string; reasonKey: string; detail?: string } }
 > {
   const publicIdKind = classifyDuplicateSourcePublicId(args.publicId);
-  if (publicIdKind === 'user') {
-    const source = await loadTokyoPreferredAccountInstance({
-      accountId: args.accountId,
-      publicId: args.publicId,
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      tokyoAccessToken: args.tokyoAccessToken,
-    });
-    if (!source.ok) {
-      return {
-        ok: false,
-        status: source.status,
-        error: {
-          kind: source.error.kind,
-          reasonKey: source.error.reasonKey,
-          detail: source.error.detail,
-        },
-      };
-    }
-    return {
-      ok: true,
-      value: {
-        widgetType: source.value.row.widgetType,
-        config: source.value.config,
-        source: 'account',
-      },
-    };
-  }
-
-  try {
-    const response = await fetch(
-      `${resolveParisBaseUrl().replace(/\/+$/, '')}/api/instance/${encodeURIComponent(args.publicId)}`,
-      {
-        method: 'GET',
-        headers: { accept: 'application/json' },
-        cache: 'no-store',
-      },
-    );
-    const payload = (await response.json().catch(() => null)) as
-      | {
-          widgetType?: unknown;
-          config?: unknown;
-        }
-      | {
-          error?: unknown;
-        }
-      | null;
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        status: response.status === 404 ? 404 : 502,
-        error: {
-          kind: response.status === 404 ? 'NOT_FOUND' : 'UPSTREAM_UNAVAILABLE',
-          reasonKey:
-            response.status === 404
-              ? 'coreui.errors.instance.notFound'
-              : 'coreui.errors.db.readFailed',
-          detail:
-            payload && typeof payload === 'object' && 'error' in payload
-              ? JSON.stringify(payload.error)
-              : undefined,
-        },
-      };
-    }
-
-    const widgetType = asTrimmedString(
-      payload && 'widgetType' in payload ? payload.widgetType : null,
-    );
-    const config = payload && 'config' in payload ? payload.config : null;
-    if (!widgetType || !isRecord(config)) {
-      return {
-        ok: false,
-        status: 502,
-        error: {
-          kind: 'UPSTREAM_UNAVAILABLE',
-          reasonKey: 'coreui.errors.payload.invalid',
-          detail: 'duplicate_source_invalid',
-        },
-      };
-    }
-
-    return {
-      ok: true,
-      value: {
-        widgetType,
-        config,
-        source: 'curated',
-      },
-    };
-  } catch (error) {
+  if (!publicIdKind) {
     return {
       ok: false,
-      status: 502,
+      status: 422,
       error: {
-        kind: 'UPSTREAM_UNAVAILABLE',
-        reasonKey: 'coreui.errors.db.readFailed',
-        detail: error instanceof Error ? error.message : String(error),
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.payload.invalid',
+        detail: 'duplicate_source_public_id_invalid',
       },
     };
   }
+
+  const sourceCore = await getAccountInstanceCoreRow(
+    args.accountId,
+    args.publicId,
+    args.berlinAccessToken,
+  );
+  if (!sourceCore.ok) {
+    return {
+      ok: false,
+      status: sourceCore.status,
+      error: {
+        kind: sourceCore.status === 404 ? 'NOT_FOUND' : 'UPSTREAM_UNAVAILABLE',
+        reasonKey: sourceCore.reasonKey,
+        detail: sourceCore.detail,
+      },
+    };
+  }
+  if (!sourceCore.row) {
+    return {
+      ok: false,
+      status: 404,
+      error: {
+        kind: 'NOT_FOUND',
+        reasonKey: 'coreui.errors.instance.notFound',
+      },
+    };
+  }
+
+  const source = await loadTokyoPreferredAccountInstance({
+    accountId: sourceCore.row.accountId,
+    publicId: args.publicId,
+    tokyoBaseUrl: resolveTokyoBaseUrl(),
+    tokyoAccessToken: args.tokyoAccessToken,
+  });
+  if (!source.ok) {
+    return {
+      ok: false,
+      status: source.status,
+      error: {
+        kind: source.error.kind,
+        reasonKey: source.error.reasonKey,
+        detail: source.error.detail,
+      },
+    };
+  }
+
+  return {
+    ok: true,
+    value: {
+      widgetType: source.value.row.widgetType,
+      config: source.value.config,
+      source: sourceCore.row.source === 'account' ? 'account' : 'curated',
+    },
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -271,6 +234,7 @@ export async function POST(request: NextRequest) {
     accountId,
     publicId: sourcePublicId,
     tokyoAccessToken: session.accessToken,
+    berlinAccessToken: session.accessToken,
   });
   if (!source.ok) {
     return withSession(

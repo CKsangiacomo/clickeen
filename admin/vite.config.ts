@@ -20,7 +20,9 @@ const PLATFORM_ACCOUNT_ID = String(
 )
   .trim()
   .toLowerCase();
-const DEFAULT_PARIS_BASE_URL = String(process.env.PARIS_BASE_URL || 'https://paris.dev.clickeen.com')
+const DEFAULT_PARIS_BASE_URL = String(
+  process.env.PARIS_BASE_URL || 'https://paris.dev.clickeen.com',
+)
   .trim()
   .replace(/\/+$/, '');
 const DEVSTUDIO_INTERNAL_SERVICE_ID = 'devstudio.local';
@@ -217,7 +219,11 @@ function applyDevstudioAssetCors(req: any, res: any) {
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', DEVSTUDIO_ASSET_ALLOW_HEADERS);
-  if (String(req.headers['access-control-request-private-network'] || '').trim().toLowerCase() === 'true') {
+  if (
+    String(req.headers['access-control-request-private-network'] || '')
+      .trim()
+      .toLowerCase() === 'true'
+  ) {
     res.setHeader('Access-Control-Allow-Private-Network', 'true');
   }
 }
@@ -283,7 +289,9 @@ export default defineConfig({
           const pathname = requestUrl.pathname || '';
           const accountId = resolveDevstudioAccountId(requestUrl);
 
-          const statusMatch = pathname.match(/^\/api\/devstudio\/instances\/([^/]+)\/l10n\/status$/);
+          const statusMatch = pathname.match(
+            /^\/api\/devstudio\/instances\/([^/]+)\/l10n\/status$/,
+          );
           const wantsList = pathname === '/api/devstudio/instances' && req.method === 'GET';
           const wantsStatus = Boolean(statusMatch && req.method === 'GET');
 
@@ -343,7 +351,6 @@ export default defineConfig({
               );
               return;
             }
-
           } catch (error) {
             res.statusCode = 500;
             res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -506,7 +513,8 @@ export default defineConfig({
           const pathname = url.split('?')[0] || '';
 
           const wantsGet = pathname === '/api/entitlements/matrix' && req.method === 'GET';
-          const wantsUpdateCell = pathname === '/api/entitlements/matrix/cell' && req.method === 'POST';
+          const wantsUpdateCell =
+            pathname === '/api/entitlements/matrix/cell' && req.method === 'POST';
           if (!wantsGet && !wantsUpdateCell) return next();
 
           res.setHeader('Content-Type', 'application/json');
@@ -517,7 +525,11 @@ export default defineConfig({
           const readMatrix = () => {
             if (!fs.existsSync(matrixPath)) {
               res.statusCode = 404;
-              res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.entitlements.notFound' } }));
+              res.end(
+                JSON.stringify({
+                  error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.entitlements.notFound' },
+                }),
+              );
               return null;
             }
             const raw = fs.readFileSync(matrixPath, 'utf8');
@@ -555,7 +567,11 @@ export default defineConfig({
               payload = body ? JSON.parse(body) : null;
             } catch (_err) {
               res.statusCode = 422;
-              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } }));
+              res.end(
+                JSON.stringify({
+                  error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' },
+                }),
+              );
               return;
             }
 
@@ -565,13 +581,27 @@ export default defineConfig({
 
             if (!capabilityKey) {
               res.statusCode = 422;
-              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.entitlements.capabilityKey.invalid' } }));
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'VALIDATION',
+                    reasonKey: 'coreui.errors.entitlements.capabilityKey.invalid',
+                  },
+                }),
+              );
               return;
             }
 
             if (!tier) {
               res.statusCode = 422;
-              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.entitlements.tier.invalid' } }));
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'VALIDATION',
+                    reasonKey: 'coreui.errors.entitlements.tier.invalid',
+                  },
+                }),
+              );
               return;
             }
 
@@ -582,7 +612,15 @@ export default defineConfig({
               const tiers = Array.isArray(matrix?.tiers) ? (matrix.tiers as string[]) : [];
               if (!tiers.includes(tier)) {
                 res.statusCode = 422;
-                res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.entitlements.tier.unknown', detail: tier } }));
+                res.end(
+                  JSON.stringify({
+                    error: {
+                      kind: 'VALIDATION',
+                      reasonKey: 'coreui.errors.entitlements.tier.unknown',
+                      detail: tier,
+                    },
+                  }),
+                );
                 return;
               }
 
@@ -590,7 +628,12 @@ export default defineConfig({
               if (!cap || typeof cap !== 'object') {
                 res.statusCode = 404;
                 res.end(
-                  JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.entitlements.capability.notFound' } }),
+                  JSON.stringify({
+                    error: {
+                      kind: 'NOT_FOUND',
+                      reasonKey: 'coreui.errors.entitlements.capability.notFound',
+                    },
+                  }),
                 );
                 return;
               }
@@ -601,7 +644,11 @@ export default defineConfig({
                   res.statusCode = 422;
                   res.end(
                     JSON.stringify({
-                      error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.entitlements.value.invalid', detail: 'expected boolean' },
+                      error: {
+                        kind: 'VALIDATION',
+                        reasonKey: 'coreui.errors.entitlements.value.invalid',
+                        detail: 'expected boolean',
+                      },
                     }),
                   );
                   return;
@@ -611,7 +658,11 @@ export default defineConfig({
                   res.statusCode = 422;
                   res.end(
                     JSON.stringify({
-                      error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.entitlements.value.invalid', detail: 'expected number or null' },
+                      error: {
+                        kind: 'VALIDATION',
+                        reasonKey: 'coreui.errors.entitlements.value.invalid',
+                        detail: 'expected number or null',
+                      },
                     }),
                   );
                   return;
@@ -620,7 +671,11 @@ export default defineConfig({
                 res.statusCode = 500;
                 res.end(
                   JSON.stringify({
-                    error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.entitlements.kind.invalid', detail: kind },
+                    error: {
+                      kind: 'INTERNAL',
+                      reasonKey: 'coreui.errors.entitlements.kind.invalid',
+                      detail: kind,
+                    },
                   }),
                 );
                 return;
@@ -650,18 +705,67 @@ export default defineConfig({
       },
     },
     {
-      name: 'tokyo-update-widget-spec-defaults',
+      name: 'tokyo-update-theme',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           const url = req.url || '';
           const pathname = url.split('?')[0] || '';
-          if (pathname !== '/api/widget-spec-defaults' || req.method !== 'POST') return next();
+          const wantsList = pathname === '/api/themes/list' && req.method === 'GET';
+          const wantsUpdate = pathname === '/api/themes/update' && req.method === 'POST';
+          if (!wantsList && !wantsUpdate) return next();
 
           res.setHeader('Content-Type', 'application/json');
           res.setHeader('Cache-Control', 'no-store');
           if (!IS_SOURCE_PROFILE) {
             res.statusCode = 404;
-            res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.route.notFound' } }));
+            res.end(
+              JSON.stringify({
+                error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.route.notFound' },
+              }),
+            );
+            return;
+          }
+
+          const themesPath = path.resolve(__dirname, '..', 'tokyo', 'themes', 'themes.json');
+
+          if (wantsList) {
+            try {
+              if (!fs.existsSync(themesPath)) {
+                res.statusCode = 404;
+                res.end(
+                  JSON.stringify({
+                    error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' },
+                  }),
+                );
+                return;
+              }
+
+              const raw = fs.readFileSync(themesPath, 'utf8');
+              const json = JSON.parse(raw);
+              const themes = Array.isArray(json?.themes) ? json.themes : [];
+              res.statusCode = 200;
+              res.end(
+                JSON.stringify({
+                  themes: themes
+                    .map((theme) => ({
+                      id: String(theme?.id || '').trim(),
+                      label: String(theme?.label || '').trim(),
+                    }))
+                    .filter((theme) => Boolean(theme.id)),
+                }),
+              );
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.db.readFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+            }
             return;
           }
 
@@ -675,222 +779,41 @@ export default defineConfig({
               payload = body ? JSON.parse(body) : null;
             } catch (err) {
               res.statusCode = 422;
-              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } }));
-              return;
-            }
-
-            const widgetType = String(payload?.widgetType || '').trim().toLowerCase();
-            if (!widgetType || !/^[a-z0-9][a-z0-9_-]*$/.test(widgetType)) {
-              res.statusCode = 422;
-              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } }));
-              return;
-            }
-
-            const defaultPlatformAccountId = (
-              process.env.CK_PLATFORM_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100'
-            ).trim();
-            const ownerAccountId = String(payload?.ownerAccountId || defaultPlatformAccountId).trim();
-            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ownerAccountId)) {
-              res.statusCode = 422;
-              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }));
-              return;
-            }
-
-            const defaults = payload?.defaults;
-            if (!defaults || typeof defaults !== 'object' || Array.isArray(defaults)) {
-              res.statusCode = 422;
-              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } }));
-              return;
-            }
-
-            const containsNonPersistableUrl = (value: string): boolean => {
-              return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
-            };
-            const containsLegacyTokyoAssetUrl = (value: string): boolean => {
-              const isLegacyPath = (candidate: string): boolean => {
-                const trimmed = String(candidate || '').trim();
-                if (!trimmed) return false;
-                if (/^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(trimmed)) return true;
-                if (!/^https?:\/\//i.test(trimmed)) return false;
-                try {
-                  return /^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(new URL(trimmed).pathname);
-                } catch {
-                  return false;
-                }
-              };
-
-              if (isLegacyPath(value)) return true;
-              const m = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-              return Boolean(m?.[2] && isLegacyPath(m[2]));
-            };
-
-            const issues: Array<{ path: string; message: string }> = [];
-            const visit = (node: any, nodePath: string) => {
-              if (typeof node === 'string') {
-                if (containsNonPersistableUrl(node)) {
-                  issues.push({
-                    path: nodePath,
-                    message: 'non-persistable URL scheme found (data:/blob:). Persist stable URLs/keys only.',
-                  });
-                } else if (containsLegacyTokyoAssetUrl(node)) {
-                  issues.push({
-                    path: nodePath,
-                    message: 'legacy Tokyo asset URL found. Use canonical /assets/v/{token} URLs only.',
-                  });
-                }
-                return;
-              }
-              if (!node || typeof node !== 'object') return;
-              if (Array.isArray(node)) {
-                for (let i = 0; i < node.length; i += 1) visit(node[i], `${nodePath}[${i}]`);
-                return;
-              }
-              for (const [key, value] of Object.entries(node)) {
-                const nextPath = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)
-                  ? `${nodePath}.${key}`
-                  : `${nodePath}[${JSON.stringify(key)}]`;
-                visit(value, nextPath);
-              }
-            };
-            visit(defaults, 'defaults');
-
-            if (issues.length) {
-              res.statusCode = 422;
               res.end(
                 JSON.stringify({
-                  error: {
-                    kind: 'VALIDATION',
-                    reasonKey: 'coreui.errors.publish.nonPersistableUrl',
-                    detail: issues[0]?.message,
-                    paths: issues.map((i) => i.path),
-                  },
+                  error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' },
                 }),
               );
               return;
             }
 
-            const specPath = path.resolve(__dirname, '..', 'tokyo', 'widgets', widgetType, 'spec.json');
-            try {
-              if (!fs.existsSync(specPath)) {
-                res.statusCode = 404;
-                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.widget.notFound' } }));
-                return;
-              }
-              const raw = fs.readFileSync(specPath, 'utf8');
-              const spec = JSON.parse(raw);
-              if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
-                res.statusCode = 500;
-                res.end(JSON.stringify({ error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed' } }));
-                return;
-              }
-              spec.defaults = defaults;
-              fs.writeFileSync(specPath, `${JSON.stringify(spec, null, 2)}\n`, 'utf8');
-              res.statusCode = 200;
-              res.end(JSON.stringify({ ok: true, widgetType, specPath }));
-            } catch (error) {
-              res.statusCode = 500;
-              res.end(
-                JSON.stringify({
-                  error: {
-                    kind: 'INTERNAL',
-                    reasonKey: 'coreui.errors.db.writeFailed',
-                    detail: error instanceof Error ? error.message : String(error),
-                  },
-                }),
-              );
-            }
-          });
-        });
-      },
-    },
-    {
-		      name: 'tokyo-update-theme',
-		      configureServer(server) {
-		        server.middlewares.use((req, res, next) => {
-		          const url = req.url || '';
-		          const pathname = url.split('?')[0] || '';
-		          const wantsList = pathname === '/api/themes/list' && req.method === 'GET';
-		          const wantsUpdate = pathname === '/api/themes/update' && req.method === 'POST';
-		          if (!wantsList && !wantsUpdate) return next();
-
-		          res.setHeader('Content-Type', 'application/json');
-		          res.setHeader('Cache-Control', 'no-store');
-              if (!IS_SOURCE_PROFILE) {
-                res.statusCode = 404;
-                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.route.notFound' } }));
-                return;
-              }
-
-		          const themesPath = path.resolve(__dirname, '..', 'tokyo', 'themes', 'themes.json');
-
-	          if (wantsList) {
-	            try {
-	              if (!fs.existsSync(themesPath)) {
-	                res.statusCode = 404;
-	                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' } }));
-	                return;
-	              }
-
-	              const raw = fs.readFileSync(themesPath, 'utf8');
-	              const json = JSON.parse(raw);
-	              const themes = Array.isArray(json?.themes) ? json.themes : [];
-	              res.statusCode = 200;
-	              res.end(
-	                JSON.stringify({
-	                  themes: themes
-	                    .map((theme) => ({
-	                      id: String(theme?.id || '').trim(),
-	                      label: String(theme?.label || '').trim(),
-	                    }))
-	                    .filter((theme) => Boolean(theme.id)),
-	                })
-	              );
-	            } catch (error) {
-	              res.statusCode = 500;
-	              res.end(
-	                JSON.stringify({
-	                  error: {
-	                    kind: 'INTERNAL',
-	                    reasonKey: 'coreui.errors.db.readFailed',
-	                    detail: error instanceof Error ? error.message : String(error),
-	                  },
-	                })
-	              );
-	            }
-	            return;
-	          }
-
-	          let body = '';
-	          req.on('data', (chunk) => {
-	            body += chunk.toString();
-	          });
-	          req.on('end', () => {
-            let payload: any;
-            try {
-              payload = body ? JSON.parse(body) : null;
-            } catch (err) {
-              res.statusCode = 422;
-              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } }));
-              return;
-            }
-
-            const themeId = String(payload?.themeId || '').trim().toLowerCase();
+            const themeId = String(payload?.themeId || '')
+              .trim()
+              .toLowerCase();
             if (!themeId || !/^[a-z0-9][a-z0-9_-]*$/.test(themeId) || themeId === 'custom') {
               res.statusCode = 422;
-              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.theme.invalid' } }));
+              res.end(
+                JSON.stringify({
+                  error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.theme.invalid' },
+                }),
+              );
               return;
             }
 
             const values = payload?.values;
             if (!values || typeof values !== 'object' || Array.isArray(values)) {
               res.statusCode = 422;
-              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } }));
+              res.end(
+                JSON.stringify({
+                  error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' },
+                }),
+              );
               return;
             }
 
             const allowedPrefixes = ['stage.', 'pod.', 'appearance.', 'typography.'];
             const invalidKeys = Object.keys(values).filter(
-              (key) => !allowedPrefixes.some((prefix) => key.startsWith(prefix))
+              (key) => !allowedPrefixes.some((prefix) => key.startsWith(prefix)),
             );
             if (invalidKeys.length) {
               res.statusCode = 422;
@@ -901,7 +824,7 @@ export default defineConfig({
                     reasonKey: 'coreui.errors.payload.invalid',
                     detail: `Invalid theme path(s): ${invalidKeys.join(', ')}`,
                   },
-                })
+                }),
               );
               return;
             }
@@ -913,10 +836,13 @@ export default defineConfig({
               const isLegacyPath = (candidate: string): boolean => {
                 const trimmed = String(candidate || '').trim();
                 if (!trimmed) return false;
-                if (/^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(trimmed)) return true;
+                if (/^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(trimmed))
+                  return true;
                 if (!/^https?:\/\//i.test(trimmed)) return false;
                 try {
-                  return /^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(new URL(trimmed).pathname);
+                  return /^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(
+                    new URL(trimmed).pathname,
+                  );
                 } catch {
                   return false;
                 }
@@ -933,12 +859,14 @@ export default defineConfig({
                 if (containsNonPersistableUrl(node)) {
                   issues.push({
                     path: nodePath,
-                    message: 'non-persistable URL scheme found (data:/blob:). Persist stable URLs/keys only.',
+                    message:
+                      'non-persistable URL scheme found (data:/blob:). Persist stable URLs/keys only.',
                   });
                 } else if (containsLegacyTokyoAssetUrl(node)) {
                   issues.push({
                     path: nodePath,
-                    message: 'legacy Tokyo asset URL found. Use canonical /assets/v/{token} URLs only.',
+                    message:
+                      'legacy Tokyo asset URL found. Use canonical /assets/v/{token} URLs only.',
                   });
                 }
                 return;
@@ -967,24 +895,34 @@ export default defineConfig({
                     detail: issues[0]?.message,
                     paths: issues.map((i) => i.path),
                   },
-                })
+                }),
               );
-	              return;
-	            }
+              return;
+            }
 
-	            try {
-	              if (!fs.existsSync(themesPath)) {
-	                res.statusCode = 404;
-	                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' } }));
-	                return;
+            try {
+              if (!fs.existsSync(themesPath)) {
+                res.statusCode = 404;
+                res.end(
+                  JSON.stringify({
+                    error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' },
+                  }),
+                );
+                return;
               }
               const raw = fs.readFileSync(themesPath, 'utf8');
               const json = JSON.parse(raw);
               const themes = Array.isArray(json?.themes) ? json.themes : [];
-              const index = themes.findIndex((theme) => String(theme?.id || '').toLowerCase() === themeId);
+              const index = themes.findIndex(
+                (theme) => String(theme?.id || '').toLowerCase() === themeId,
+              );
               if (index < 0) {
                 res.statusCode = 404;
-                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' } }));
+                res.end(
+                  JSON.stringify({
+                    error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' },
+                  }),
+                );
                 return;
               }
               const current = themes[index] || {};
@@ -1003,7 +941,7 @@ export default defineConfig({
                     reasonKey: 'coreui.errors.db.writeFailed',
                     detail: error instanceof Error ? error.message : String(error),
                   },
-                })
+                }),
               );
             }
           });

@@ -61,6 +61,7 @@ Current runtime contract:
 - It stores the latest saved **user-instance** config in Tokyo under:
   - pointer: `renders/instances/<publicId>/saved/r.json`
   - pack: `renders/instances/<publicId>/saved/config/<configFp>.json`
+- Local `dev-up` may also use this surface once, explicitly, to repair missing saved authoring snapshots for historical curated/main rows before DevStudio/Bob open them. Editor reads never backfill on demand.
 - The saved pointer also carries editor-facing metadata needed on the normal open path (`widgetType`, `displayName`, `source`, `accountId`, `updatedAt`).
 - Bob/Roma product-path save writes this snapshot synchronously before returning success.
 - Bob/Roma product-path account reads use this Tokyo saved snapshot as the active open/save truth.
