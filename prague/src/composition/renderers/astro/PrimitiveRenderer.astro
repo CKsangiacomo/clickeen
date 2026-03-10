@@ -1,15 +1,12 @@
 ---
-import type { Primitive } from '../../src/core/schemas';
+import type { Primitive } from '../../core/schemas';
 
 type RenderWidget = (args: { curatedRef: string; className?: string; locale?: string }) => any;
-
-type Props = {
+const { primitives, locale, renderWidget } = Astro.props as {
   primitives: Primitive[];
   locale?: string;
   renderWidget?: RenderWidget;
 };
-
-const { primitives, locale, renderWidget } = Astro.props;
 
 const headingClassForLevel = (level: number) => {
   switch (level) {
@@ -104,7 +101,7 @@ const sanitizeAttrs = (attrs?: Record<string, string>) => {
         const baseClass = primitive.direction === 'horizontal' ? 'ck-row' : 'ck-stack';
         const className = joinClasses(baseClass, primitive.className);
         const attrs = sanitizeAttrs(primitive.attrs);
-        return <div class={className} {...attrs}>{primitive.children.map((child) => renderPrimitive(child))}</div>;
+        return <div class={className} {...attrs}>{primitive.children.map((child: Primitive) => renderPrimitive(child))}</div>;
       }
       case 'grid': {
         const className = joinClasses('ck-grid', primitive.className);
@@ -114,12 +111,12 @@ const sanitizeAttrs = (attrs?: Record<string, string>) => {
           gridTemplateColumns: `repeat(${primitive.columns}, minmax(0, 1fr))`,
         };
         const attrs = sanitizeAttrs(primitive.attrs);
-        return <div class={className} style={style} {...attrs}>{primitive.children.map((child) => renderPrimitive(child))}</div>;
+        return <div class={className} style={style} {...attrs}>{primitive.children.map((child: Primitive) => renderPrimitive(child))}</div>;
       }
       default:
         return null;
     }
   };
 
-  return primitives.map((primitive) => renderPrimitive(primitive));
+  return primitives.map((primitive: Primitive) => renderPrimitive(primitive));
 })()}

@@ -1,5 +1,5 @@
-import type { Primitive } from '../../src/core/schemas';
-import { actionGroupToPrimitives, type ActionGroup } from '../../src/core/actions';
+import type { Primitive } from '../../core/schemas';
+import { actionGroupToPrimitives, type ActionGroup } from '../../core/actions';
 
 type RenderOptions = {
   widgetPlaceholderClass?: string;
@@ -112,13 +112,13 @@ function renderPrimitive(primitive: Primitive, options: RenderOptions): string {
     case 'stack': {
       const baseClass = primitive.direction === 'horizontal' ? 'ck-row' : 'ck-stack';
       const className = joinClasses(baseClass, primitive.className);
-      const children = primitive.children.map((child) => renderPrimitive(child, options)).join('');
+      const children = primitive.children.map((child: Primitive) => renderPrimitive(child, options)).join('');
       return `<div class="${escapeHtml(className)}"${attrsToString(primitive.attrs)}>${children}</div>`;
     }
     case 'grid': {
       const className = joinClasses('ck-grid', primitive.className);
       const style = ` style="display:grid;gap:var(--prague-gap);grid-template-columns:repeat(${primitive.columns},minmax(0,1fr));"`;
-      const children = primitive.children.map((child) => renderPrimitive(child, options)).join('');
+      const children = primitive.children.map((child: Primitive) => renderPrimitive(child, options)).join('');
       return `<div class="${escapeHtml(className)}"${style}${attrsToString(primitive.attrs)}>${children}</div>`;
     }
     default:
