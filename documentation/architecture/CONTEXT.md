@@ -391,6 +391,12 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 UAT / Limited GA / GA are **release stages** (account-level exposure controls), not separate infrastructure.
 
+Pages deploy rule:
+- `bob`, `roma`, `venice`, and `prague` deploy through **Cloudflare Pages Git build only**.
+- GitHub Actions may verify Pages build contracts, but are not the Pages deploy plane and must not create Pages projects, sync Pages secrets, or deploy Pages artifacts.
+- The manual Pages project/env/host contract is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
+- Bob and Roma must use custom `*.dev.clickeen.com` hosts in cloud-dev; `*.pages.dev` is not a valid authenticated Builder runtime host.
+
 ### Deterministic compilation contract (anti-drift)
 
 - **Dieter bundling manifest (authoritative)**: `tokyo/dieter/manifest.json`

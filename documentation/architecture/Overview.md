@@ -143,6 +143,8 @@ Each release proceeds in 3 steps:
 - **Pages**: `{project}.pages.dev`
 - **Workers**: `{script}.workers.dev`
 
+Pages fallback hosts are platform defaults, not canonical product hosts. Bob and Roma must use `*.dev.clickeen.com` in cloud-dev because authenticated Builder flows rely on shared httpOnly cookies across those subdomains.
+
 ### Cloudflare primitives (what we use and why)
 
 | Primitive         | Used by                                                   | Why                                                      |
@@ -308,10 +310,13 @@ Each release proceeds in 3 steps:
 
 - **Cloud-dev** auto-deploys from `main` for fast iteration.
 - **UAT / Limited GA / GA** are release stages of the same release build, separated by **account-level exposure controls** (allowlist/percentage rollout) and an observation window.
+- **Pages apps** (`bob`, `roma`, `venice`, `prague`) deploy through **Cloudflare Pages Git build only**.
+- GitHub Actions may verify builds/tests, but must not create Pages projects, sync Pages secrets, or deploy Pages artifacts.
+- The manual Pages project contract lives in [CloudflarePagesCloudDevChecklist.md](./CloudflarePagesCloudDevChecklist.md).
 
 ### Cloud-dev verification contract
 
-Deploy workflows own deployment for the surfaces they ship. They must not invent runtime contracts for other services.
+Pages app workflows are verification-only. Cloudflare Pages Git build owns the Pages deploy plane, and workflows must not invent deploy-time contracts for those apps.
 
 Canonical machine-health endpoints:
 
@@ -322,7 +327,7 @@ Canonical machine-health endpoints:
 | Tokyo-worker  | `https://tokyo-assets-dev.clickeen.workers.dev/healthz`    | `{ "up": true }`                                                     | Tokyo-worker  |
 | San Francisco | `https://sanfrancisco.dev.clickeen.com/healthz`            | `{ "ok": true, "service": "sanfrancisco", "env": "...", "ts": ... }` | San Francisco |
 
-Pages surfaces do not currently publish dedicated machine-health JSON endpoints. Their app deploy workflows own build + deploy only; simple reachability smoke belongs in the centralized cloud-dev runtime verification workflow.
+Pages surfaces do not currently publish dedicated machine-health JSON endpoints. Their Git-connected Cloudflare Pages projects own deployment; GitHub workflows may only verify build contracts, and any runtime reachability smoke must not assume GitHub just performed the deploy.
 
 Non-negotiable:
 

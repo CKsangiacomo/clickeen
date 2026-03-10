@@ -10,6 +10,16 @@ Last updated: 2026-02-15
 
 Prague is the marketing + SEO surface, implemented as an **Astro** app deployed on **Cloudflare Pages**. GA routing is **market+locale** and pages render server-side so Prague can apply deterministic overlays and emit canonical SEO tags.
 
+Deploy contract:
+- Prague has **one deploy plane**: Git-connected Cloudflare Pages build.
+- Canonical cloud-dev host: `https://prague.dev.clickeen.com`
+- GitHub Actions may verify Prague builds and publish Prague content to Tokyo/R2, but must not create Pages projects, sync Pages secrets, or deploy Prague artifacts.
+- Prague’s Pages build contract is app-local:
+  - root: `prague/`
+  - build command: `pnpm build`
+  - output: `prague/dist`
+- Manual Cloudflare project/env alignment is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
+
 In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` (single source of layout + base copy) and localized via Tokyo overlays (R2 keys under `tokyo/l10n/prague/**`, fetched at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 At build time, Prague:

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,9 +21,17 @@ async function main() {
   const nextOnPagesBin = path.join(bobRoot, 'node_modules', '.bin', 'next-on-pages');
   const vercelDir = path.join(repoRoot, '.vercel');
   const vercelProjectJsonPath = path.join(vercelDir, 'project.json');
-  const outdir = path.join(repoRoot, '.cloudflare', 'output', 'static');
-  const tempOutdir = path.join(bobRoot, '.cloudflare', 'output', 'static');
+  const outdir = path.join(bobRoot, '.cloudflare', 'output', 'static');
   const vercelOutputDir = path.join(bobRoot, '.vercel', 'output');
+  let previousProjectJson = null;
+
+  // Bob's Pages artifact contract is app-local, but Vercel's monorepo Next.js
+  // builder still requires repo-root project metadata to resolve `rootDirectory`.
+  try {
+    previousProjectJson = await readFile(vercelProjectJsonPath, 'utf8');
+  } catch {
+    previousProjectJson = null;
+  }
 
   await mkdir(vercelDir, { recursive: true });
   await writeFile(
@@ -39,15 +47,19 @@ async function main() {
     ),
   );
 
-  await rm(vercelOutputDir, { recursive: true, force: true });
-  await rm(outdir, { recursive: true, force: true });
-  await rm(tempOutdir, { recursive: true, force: true });
+  try {
+    await rm(vercelOutputDir, { recursive: true, force: true });
+    await rm(outdir, { recursive: true, force: true });
 
-  run(vercelBin, ['build', '--output', vercelOutputDir], { cwd: repoRoot });
-  run(nextOnPagesBin, ['--skip-build', '--outdir', '.cloudflare/output/static'], { cwd: bobRoot });
-
-  await mkdir(path.dirname(outdir), { recursive: true });
-  await rename(tempOutdir, outdir);
+    run(vercelBin, ['build', '--output', vercelOutputDir], { cwd: repoRoot });
+    run(nextOnPagesBin, ['--skip-build', '--outdir', '.cloudflare/output/static'], { cwd: bobRoot });
+  } finally {
+    if (previousProjectJson === null) {
+      await rm(vercelProjectJsonPath, { force: true });
+    } else {
+      await writeFile(vercelProjectJsonPath, previousProjectJson);
+    }
+  }
 }
 
 await main();

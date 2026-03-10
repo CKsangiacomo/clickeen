@@ -2,6 +2,14 @@
 
 Prague is the marketing + SEO surface (Cloudflare Pages + Astro).
 
+Deploy plane:
+- Git-connected Cloudflare Pages build only
+- root: `prague/`
+- build command: `pnpm build`
+- output: `dist`
+- Canonical cloud-dev host: `https://prague.dev.clickeen.com`
+- GitHub Actions may verify Prague builds and publish Prague content to Tokyo/R2, but must not create Pages projects, sync Pages secrets, or deploy Prague artifacts.
+
 Status in this repo: active runtime.
 
 Canonical routes in this repo snapshot:

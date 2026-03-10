@@ -14,6 +14,19 @@ Roma is the authenticated product shell for account users. It owns:
 
 Roma is a host/orchestrator. Bob remains the editor kernel.
 
+## Deploy plane (cloud-dev/prod)
+
+- Roma is a Cloudflare Pages app with **one deploy plane**: Git-connected Cloudflare Pages build.
+- Canonical cloud-dev host: `https://roma.dev.clickeen.com`
+- Roma’s authenticated Builder host must be the custom `*.clickeen.com` domain shape. `*.pages.dev` is not a valid public runtime host for Builder flows.
+- GitHub Actions may verify Roma’s build contract, but must not create Pages projects, sync Pages secrets, or deploy Roma artifacts.
+- Roma’s Pages build contract is app-local:
+  - root: `roma/`
+  - build command: `pnpm build:cf`
+  - output: `roma/.vercel/output/static`
+- Roma’s build script still applies an **ephemeral repo-root `.vercel/project.json` shim** with `rootDirectory: 'roma'` because Vercel’s monorepo Next.js builder requires that metadata to resolve traces correctly. This is a builder prerequisite only; the final Pages artifact path stays app-local.
+- Manual Cloudflare project/env alignment is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
+
 ## Runtime surface (current repo snapshot)
 
 ### App routes

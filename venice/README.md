@@ -2,6 +2,13 @@
 
 Venice is the active embed runtime (Next.js Edge; deployed on Cloudflare Pages).
 
+Deploy plane:
+- Git-connected Cloudflare Pages build only
+- root: `venice/`
+- build command: `pnpm build:cf`
+- output: `.vercel/output/static`
+- GitHub Actions may verify the build contract, but must not create Pages projects, sync Pages secrets, or deploy Venice artifacts.
+
 Key routes (shipped):
 - `GET /e/:publicId` (SSR embed HTML)
 - `GET /r/:publicId` (render JSON; `?meta=1` for SEO/GEO metadata payload)

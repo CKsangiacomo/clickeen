@@ -506,6 +506,19 @@ Reference:
 
 ## Environment & Dev Setup
 
+### Deploy plane (cloud-dev/prod)
+
+- Bob is a Cloudflare Pages app with **one deploy plane**: Git-connected Cloudflare Pages build.
+- Canonical cloud-dev host: `https://bob.dev.clickeen.com`
+- Bob’s authenticated runtime host must be the custom `*.clickeen.com` domain shape. `*.pages.dev` is not a valid public runtime host for Builder flows.
+- GitHub Actions may verify Bob’s build contract, but must not create Pages projects, sync Pages secrets, or deploy Bob artifacts.
+- Bob’s Pages build contract is app-local:
+  - root: `bob/`
+  - build command: `pnpm build:cf`
+  - output: `bob/.cloudflare/output/static`
+- Bob’s build script still applies an **ephemeral repo-root `.vercel/project.json` shim** with `rootDirectory: 'bob'` because Vercel’s monorepo Next.js builder requires that metadata to resolve traces correctly. This is a builder prerequisite only; the final Pages artifact path stays app-local.
+- Manual Cloudflare project/env alignment is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
+
 ### Required
 
 - `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local `product` profile defaults to `https://tokyo.dev.clickeen.com`, local `source` profile defaults to `http://localhost:4000`)

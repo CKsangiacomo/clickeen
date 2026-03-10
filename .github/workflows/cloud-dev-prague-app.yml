@@ -1,4 +1,4 @@
-name: cloud-dev prague app deploy
+name: cloud-dev prague app verify
 
 on:
   push:
@@ -13,7 +13,7 @@ on:
       - "tokyo/widgets/**"
       - "tokyo/l10n/prague/**"
       - "scripts/prague-l10n/**"
-      - "config/locales.json"
+      - "packages/l10n/locales.json"
       - ".github/workflows/cloud-dev-prague-app.yml"
   workflow_dispatch: {}
 
@@ -22,21 +22,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  verify:
     runs-on: ubuntu-latest
     env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-      PUBLIC_BOB_URL: https://bob-dev.pages.dev
+      PUBLIC_BOB_URL: https://bob.dev.clickeen.com
       PUBLIC_PARIS_URL: https://paris.dev.clickeen.com
       PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
       PUBLIC_VENICE_URL: https://venice.dev.clickeen.com
-      PUBLIC_ROMA_URL: https://roma-dev.pages.dev
+      PUBLIC_ROMA_URL: https://roma.dev.clickeen.com
       PUBLIC_PRAGUE_BUILD_ID: ${{ github.sha }}
-
-      PRAGUE_PAGES_PROJECT: prague-dev
-      PRAGUE_BASE_URL: https://prague-dev.pages.dev
     steps:
       - uses: actions/checkout@v4
 
@@ -51,14 +45,5 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Build Prague (includes overlay verify)
+      - name: Build Prague Pages contract
         run: pnpm -C prague build
-
-      - name: Deploy Prague Pages (cloud-dev)
-        run: pnpm -C tokyo-worker exec wrangler pages deploy ../prague/dist --project-name "$PRAGUE_PAGES_PROJECT" --branch main --commit-dirty=true
-
-      - name: Smoke test (en)
-        run: |
-          set -euo pipefail
-          curl -fsSIL "$PRAGUE_BASE_URL/us/en/widgets/faq/" | tee /tmp/headers_en.txt
-          grep -qi "^x-prague-overlay-status: skipped" /tmp/headers_en.txt

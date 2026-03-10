@@ -1,11 +1,12 @@
 name = "bob-dev"
-pages_build_output_dir = "../.cloudflare/output/static"
+pages_build_output_dir = ".cloudflare/output/static"
 compatibility_date = "2025-12-29"
 compatibility_flags = [ "nodejs_compat_populate_process_env", "nodejs_compat" ]
 
 [vars]
 NEXT_PUBLIC_TOKYO_URL = "https://tokyo.dev.clickeen.com"
-PARIS_BASE_URL = "https://paris-dev.clickeen.workers.dev"
+PARIS_BASE_URL = "https://paris.dev.clickeen.com"
+BERLIN_BASE_URL = "https://berlin.dev.clickeen.com"
 
 [env.production]
 compatibility_flags = [ "nodejs_compat", "nodejs_compat_populate_process_env" ]

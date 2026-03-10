@@ -7,7 +7,7 @@ on:
       - "tokyo/widgets/**/pages/*.json"
       - "tokyo/l10n/prague/**"
       - "prague/content/**"
-      - "config/locales.json"
+      - "packages/l10n/locales.json"
       - "scripts/prague-sync.mjs"
       - "scripts/prague-l10n/**"
       - "scripts/prague-blocks/**"
@@ -28,15 +28,14 @@ jobs:
       PARIS_DEV_JWT: ${{ secrets.PARIS_DEV_JWT }}
       TOKYO_R2_BUCKET: tokyo-assets-dev
 
-      PUBLIC_BOB_URL: https://bob-dev.pages.dev
+      PUBLIC_BOB_URL: https://bob.dev.clickeen.com
       PUBLIC_PARIS_URL: https://paris.dev.clickeen.com
       PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
       PUBLIC_VENICE_URL: https://venice.dev.clickeen.com
-      PUBLIC_ROMA_URL: https://roma-dev.pages.dev
+      PUBLIC_ROMA_URL: https://roma.dev.clickeen.com
       PUBLIC_PRAGUE_BUILD_ID: ${{ github.sha }}
 
-      PRAGUE_PAGES_PROJECT: prague-dev
-      PRAGUE_BASE_URL: https://prague-dev.pages.dev
+      PRAGUE_BASE_URL: https://prague.dev.clickeen.com
     steps:
       - uses: actions/checkout@v4
 
@@ -59,9 +58,6 @@ jobs:
 
       - name: Build Prague (includes overlay verify)
         run: pnpm -C prague build
-
-      - name: Deploy Prague Pages (cloud-dev)
-        run: pnpm -C tokyo-worker exec wrangler pages deploy ../prague/dist --project-name "$PRAGUE_PAGES_PROJECT" --branch main --commit-dirty=true
 
       - name: Smoke test (en)
         run: |

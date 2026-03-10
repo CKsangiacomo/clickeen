@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { rm, mkdir, writeFile } from 'node:fs/promises';
+import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,6 +22,15 @@ async function main() {
   const vercelDir = path.join(repoRoot, '.vercel');
   const vercelProjectJsonPath = path.join(vercelDir, 'project.json');
   const vercelOutputDir = path.join(romaRoot, '.vercel', 'output');
+  let previousProjectJson = null;
+
+  // Roma's Pages artifact contract is app-local, but Vercel's monorepo Next.js
+  // builder still requires repo-root project metadata to resolve `rootDirectory`.
+  try {
+    previousProjectJson = await readFile(vercelProjectJsonPath, 'utf8');
+  } catch {
+    previousProjectJson = null;
+  }
 
   await mkdir(vercelDir, { recursive: true });
   await writeFile(
@@ -37,10 +46,18 @@ async function main() {
     ),
   );
 
-  await rm(vercelOutputDir, { recursive: true, force: true });
+  try {
+    await rm(vercelOutputDir, { recursive: true, force: true });
 
-  run(vercelBin, ['build', '--output', vercelOutputDir], { cwd: repoRoot });
-  run(nextOnPagesBin, ['--skip-build'], { cwd: romaRoot });
+    run(vercelBin, ['build', '--output', vercelOutputDir], { cwd: repoRoot });
+    run(nextOnPagesBin, ['--skip-build'], { cwd: romaRoot });
+  } finally {
+    if (previousProjectJson === null) {
+      await rm(vercelProjectJsonPath, { force: true });
+    } else {
+      await writeFile(vercelProjectJsonPath, previousProjectJson);
+    }
+  }
 }
 
 await main();

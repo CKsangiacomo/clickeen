@@ -7,6 +7,17 @@ This doc describes the **current Venice runtime** after the PRD 54 pivot:
 - Venice public routes are **Tokyo-only** (R2 bytes) and **DB-free**.
 - If the bytes are not in Tokyo, Venice returns an explicit “not live / not available” response.
 
+## Deploy plane (cloud-dev/prod)
+
+- Venice is a Cloudflare Pages app with **one deploy plane**: Git-connected Cloudflare Pages build.
+- Canonical cloud-dev host: `https://venice.dev.clickeen.com`
+- GitHub Actions may verify Venice’s build contract, but must not create Pages projects, sync Pages secrets, or deploy Venice artifacts.
+- Venice’s Pages build contract is app-local:
+  - root: `venice/`
+  - build command: `pnpm build:cf`
+  - output: `venice/.vercel/output/static`
+- Manual Cloudflare project/env alignment is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
+
 ---
 
 ## AIs Quick Scan
