@@ -283,25 +283,11 @@ export default defineConfig({
           const pathname = requestUrl.pathname || '';
           const accountId = resolveDevstudioAccountId(requestUrl);
 
-          const instanceMatch = pathname.match(/^\/api\/devstudio\/instances\/([^/]+)$/);
           const statusMatch = pathname.match(/^\/api\/devstudio\/instances\/([^/]+)\/l10n\/status$/);
-          const enqueueMatch = pathname.match(/^\/api\/devstudio\/instances\/([^/]+)\/l10n\/enqueue-selected$/);
-
           const wantsList = pathname === '/api/devstudio/instances' && req.method === 'GET';
-          const wantsCreate = pathname === '/api/devstudio/instances' && req.method === 'POST';
-          const wantsGetInstance = Boolean(instanceMatch && req.method === 'GET');
-          const wantsUpdateInstance = Boolean(instanceMatch && req.method === 'PUT');
           const wantsStatus = Boolean(statusMatch && req.method === 'GET');
-          const wantsEnqueue = Boolean(enqueueMatch && req.method === 'POST');
 
-          if (
-            !wantsList &&
-            !wantsCreate &&
-            !wantsGetInstance &&
-            !wantsUpdateInstance &&
-            !wantsStatus &&
-            !wantsEnqueue
-          ) {
+          if (!wantsList && !wantsStatus) {
             return next();
           }
 
@@ -313,42 +299,6 @@ export default defineConfig({
                 pathname: `/api/roma/widgets?accountId=${encodeURIComponent(accountId)}`,
                 method: 'GET',
                 headers: { accept: 'application/json' },
-              });
-            }
-
-            if (wantsCreate) {
-              const body = await readRequestBody(req);
-              return await proxyDevstudioParisJson({
-                req,
-                res,
-                pathname: `/api/accounts/${encodeURIComponent(accountId)}/instances?subject=account`,
-                method: 'POST',
-                body,
-                headers: { 'content-type': 'application/json', accept: 'application/json' },
-              });
-            }
-
-            if (wantsGetInstance && instanceMatch) {
-              const publicId = decodeURIComponent(instanceMatch[1] || '');
-              return await proxyDevstudioParisJson({
-                req,
-                res,
-                pathname: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
-                method: 'GET',
-                headers: { accept: 'application/json' },
-              });
-            }
-
-            if (wantsUpdateInstance && instanceMatch) {
-              const publicId = decodeURIComponent(instanceMatch[1] || '');
-              const body = await readRequestBody(req);
-              return await proxyDevstudioParisJson({
-                req,
-                res,
-                pathname: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
-                method: 'PUT',
-                body,
-                headers: { 'content-type': 'application/json', accept: 'application/json' },
               });
             }
 
@@ -394,20 +344,6 @@ export default defineConfig({
               return;
             }
 
-            if (wantsEnqueue && enqueueMatch) {
-              const publicId = decodeURIComponent(enqueueMatch[1] || '');
-              const body = await readRequestBody(req);
-              return await proxyDevstudioParisJson({
-                req,
-                res,
-                pathname: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
-                  publicId,
-                )}/l10n/enqueue-selected?subject=account`,
-                method: 'POST',
-                body,
-                headers: { 'content-type': 'application/json', accept: 'application/json' },
-              });
-            }
           } catch (error) {
             res.statusCode = 500;
             res.setHeader('Content-Type', 'application/json; charset=utf-8');

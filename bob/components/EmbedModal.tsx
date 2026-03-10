@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveVeniceBaseUrl } from '../lib/env/venice';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 
-type PublishEmbedModalProps = {
+type EmbedModalProps = {
   open: boolean;
   onClose: () => void;
 };
@@ -33,7 +33,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-export function PublishEmbedModal({ open, onClose }: PublishEmbedModalProps) {
+export function EmbedModal({ open, onClose }: EmbedModalProps) {
   const session = useWidgetSession();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const publicId = session.meta?.publicId ? String(session.meta.publicId) : '';
@@ -118,12 +118,12 @@ export function PublishEmbedModal({ open, onClose }: PublishEmbedModalProps) {
         className="ck-publishModal"
         role="dialog"
         aria-modal="true"
-        aria-label="Publish"
+        aria-label="Copy code to use this widget"
         onMouseDown={(ev) => ev.stopPropagation()}
       >
         <div className="ck-publishModal__header">
-          <div className="heading-3">Publish</div>
-          <div className="label-s label-muted">Copy embed code for this instance.</div>
+          <div className="heading-3">Copy code to use this widget</div>
+          <div className="label-s label-muted">Paste this code into your website where you want the widget to appear.</div>
         </div>
 
         {!publicId ? <div className="settings-panel__error">Instance publicId missing.</div> : null}

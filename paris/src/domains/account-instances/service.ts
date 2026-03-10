@@ -8,6 +8,27 @@ import { loadInstanceOverlays, loadL10nGenerateStates } from '../l10n/service';
 
 type TokyoMirrorEnqueueResult = { ok: true } | { ok: false; error: string };
 
+type TokyoSavedConfigResult =
+  | {
+      ok: true;
+      config: Record<string, unknown>;
+      widgetType: string;
+      configFp: string;
+      updatedAt: string;
+    }
+  | {
+      ok: false;
+      status: number;
+      error: string;
+    };
+
+export type TokyoSavedConfigState = {
+  config: Record<string, unknown>;
+  widgetType: string;
+  configFp: string;
+  updatedAt: string;
+};
+
 type RenderIndexEntry = { e: string; r: string; meta: string };
 type RenderPublishedPointer = { revision: string; updatedAt: string | null };
 type RenderSnapshotState = {
@@ -41,6 +62,29 @@ function resolveRenderIndexBases(env: Env): string[] {
   append(env.TOKYO_WORKER_BASE_URL);
   append(requireTokyoBase(env));
   return bases;
+}
+
+function resolveTokyoSavedConfigBases(env: Env): string[] {
+  const bases: string[] = [];
+  const append = (value: string | null | undefined) => {
+    const normalized = normalizeOptionalBaseUrl(value);
+    if (!normalized || bases.includes(normalized)) return;
+    bases.push(normalized);
+  };
+
+  append(env.TOKYO_WORKER_BASE_URL);
+  append(requireTokyoBase(env));
+  return bases;
+}
+
+function resolveTokyoInternalHeaders(env: Env): Headers {
+  const headers = new Headers({ accept: 'application/json' });
+  const token = asTrimmedString(env.TOKYO_DEV_JWT);
+  if (!token) {
+    throw new Error('TOKYO_DEV_JWT missing');
+  }
+  headers.set('authorization', `Bearer ${token}`);
+  return headers;
 }
 
 function resolveActivePublishLocales(
@@ -129,6 +173,130 @@ async function enqueueTokyoMirrorJob(env: Env, job: TokyoMirrorQueueJob): Promis
   } catch (error) {
     const detail = errorDetail(error);
     return { ok: false, error: detail };
+  }
+}
+
+async function requestTokyoSavedConfig(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  method: 'GET' | 'PUT';
+  body?: Record<string, unknown>;
+}): Promise<TokyoSavedConfigResult> {
+  const bases = resolveTokyoSavedConfigBases(args.env);
+  if (!bases.length) {
+    return { ok: false, status: 503, error: 'Tokyo base unavailable' };
+  }
+
+  const headers = resolveTokyoInternalHeaders(args.env);
+  headers.set('x-account-id', args.accountId);
+  if (args.body) {
+    headers.set('content-type', 'application/json');
+  }
+
+  let lastFailure: TokyoSavedConfigResult | null = null;
+  for (const base of bases) {
+    const url = `${base}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`;
+    try {
+      const response = await fetch(url, {
+        method: args.method,
+        headers,
+        cache: 'no-store',
+        ...(args.body ? { body: JSON.stringify(args.body) } : {}),
+      });
+      const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+      if (response.status === 404) {
+        return { ok: false, status: 404, error: 'not_found' };
+      }
+      if (!response.ok) {
+        lastFailure = {
+          ok: false,
+          status: response.status,
+          error:
+            typeof payload?.error === 'object' && payload.error && typeof (payload.error as { reasonKey?: unknown }).reasonKey === 'string'
+              ? String((payload.error as { reasonKey?: unknown }).reasonKey)
+              : `tokyo_saved_config_http_${response.status}`,
+        };
+        continue;
+      }
+
+      const config =
+        payload?.config && typeof payload.config === 'object' && !Array.isArray(payload.config)
+          ? (payload.config as Record<string, unknown>)
+          : null;
+      const widgetType = typeof payload?.widgetType === 'string' ? payload.widgetType.trim() : '';
+      const configFp = typeof payload?.configFp === 'string' ? payload.configFp.trim() : '';
+      const updatedAt = typeof payload?.updatedAt === 'string' ? payload.updatedAt.trim() : '';
+      if (!config || !widgetType || !configFp || !updatedAt) {
+        return { ok: false, status: 502, error: 'tokyo_saved_config_invalid_payload' };
+      }
+      return { ok: true, config, widgetType, configFp, updatedAt };
+    } catch (error) {
+      lastFailure = {
+        ok: false,
+        status: 502,
+        error: errorDetail(error),
+      };
+    }
+  }
+
+  return lastFailure ?? { ok: false, status: 502, error: 'tokyo_saved_config_unavailable' };
+}
+
+export async function loadSavedConfigFromTokyo(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+}): Promise<Record<string, unknown> | null> {
+  const result = await loadSavedConfigStateFromTokyo(args);
+  return result?.config ?? null;
+}
+
+export async function loadSavedConfigStateFromTokyo(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+}): Promise<TokyoSavedConfigState | null> {
+  const result = await requestTokyoSavedConfig({
+    env: args.env,
+    accountId: args.accountId,
+    publicId: args.publicId,
+    method: 'GET',
+  });
+  if (result.ok) {
+    return {
+      config: result.config,
+      widgetType: result.widgetType,
+      configFp: result.configFp,
+      updatedAt: result.updatedAt,
+    };
+  }
+  if (result.ok === false && result.status === 404) return null;
+  if (result.ok === false) {
+    throw new Error(result.error);
+  }
+  throw new Error('tokyo_saved_config_unavailable');
+}
+
+async function writeSavedConfigToTokyo(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  widgetType: string;
+  config: Record<string, unknown>;
+}): Promise<void> {
+  const result = await requestTokyoSavedConfig({
+    env: args.env,
+    accountId: args.accountId,
+    publicId: args.publicId,
+    method: 'PUT',
+    body: {
+      widgetType: args.widgetType,
+      config: args.config,
+    },
+  });
+  if (result.ok === false) {
+    throw new Error(result.error);
   }
 }
 
@@ -347,4 +515,5 @@ export {
   resolveActivePublishLocales,
   resolveRenderSnapshotLocales,
   waitForEnSnapshotReady,
+  writeSavedConfigToTokyo,
 };

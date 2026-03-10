@@ -89,6 +89,14 @@ export function ToolDrawer() {
       <LocalizationControls mode="translate" section="footer" />
     </div>
   ) : null;
+  const isCommittedSaveWarning = sessionError?.source === 'save' && Boolean(sessionError.committed);
+  const alertBorderColor = isCommittedSaveWarning
+    ? '1px solid color-mix(in oklab, var(--color-system-yellow), transparent 55%)'
+    : '1px solid color-mix(in oklab, var(--color-system-red), transparent 55%)';
+  const alertBackground = isCommittedSaveWarning
+    ? 'color-mix(in oklab, var(--color-system-yellow-5), transparent 82%)'
+    : 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';
+  const alertLabelColor = isCommittedSaveWarning ? 'var(--color-system-yellow)' : 'var(--color-system-red)';
 
   return (
     <aside className="tooldrawer">
@@ -162,15 +170,17 @@ export function ToolDrawer() {
                   margin: 'var(--space-2)',
                   padding: 'var(--space-2)',
                   borderRadius: 'var(--control-radius-md)',
-                  border: '1px solid color-mix(in oklab, var(--color-system-red), transparent 55%)',
-                  background: 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)',
+                  border: alertBorderColor,
+                  background: alertBackground,
                 }}
               >
-                <div className="label-s" style={{ color: 'var(--color-system-red)' }}>
+                <div className="label-s" style={{ color: alertLabelColor }}>
                   {sessionError.source === 'load'
                     ? 'Instance load error'
                     : sessionError.source === 'save'
-                      ? 'Save rejected'
+                      ? sessionError.committed
+                        ? 'Saved with warning'
+                        : 'Save rejected'
                       : 'Edit rejected'}
                 </div>
                 <pre className="caption" style={{ whiteSpace: 'pre-wrap', margin: 'var(--space-1) 0 0 0' }}>

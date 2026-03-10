@@ -59,14 +59,14 @@ documentation/
         └── {widget}_PRD.md
 ```
 
-| Folder | What It Answers |
-|--------|-----------------|
-| **strategy/** | WHY are we building this? |
-| **architecture/** | HOW is it designed? |
-| **services/** | WHAT systems run? |
-| **capabilities/** | WHAT features span systems? |
-| **ai/** | WHO runs the company? (AI workforce) |
-| **widgets/** | WHAT do we ship? |
+| Folder            | What It Answers                      |
+| ----------------- | ------------------------------------ |
+| **strategy/**     | WHY are we building this?            |
+| **architecture/** | HOW is it designed?                  |
+| **services/**     | WHAT systems run?                    |
+| **capabilities/** | WHAT features span systems?          |
+| **ai/**           | WHO runs the company? (AI workforce) |
+| **widgets/**      | WHAT do we ship?                     |
 
 ---
 
@@ -95,57 +95,64 @@ This repo is operated by **1 human architect + multiple AI dev teams**. The syst
 ## End-to-End Journey (widget folder → Roma/DevStudio/Bob/Prague → cloud-dev)
 
 Runtime profiles:
+
 - `product` (default): local DevStudio shell + cloud-dev data plane.
 - `source`: full local stack for low-level service development.
 - See `documentation/architecture/RuntimeProfiles.md`.
 
 ### A) Widget definition path (local)
+
 Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
 
-1) **Local Tokyo CDN stub** serves the widget folder (optional local debug path):
+1. **Local Tokyo CDN stub** serves the widget folder (optional local debug path):
    - `tokyo/dev-server.mjs` -> `http://localhost:4000`
    - Serves `/widgets/**` and `/dieter/**` directly from the repo.
-2) **Bob runtime** reads widget definitions/assets from Tokyo:
+2. **Bob runtime** reads widget definitions/assets from Tokyo:
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
-3) **Local DevStudio** opens Bob in message boot for widget authoring:
-   - `admin/src/html/tools/dev-widget-workspace.html` defaults to cloud Bob + cloud Tokyo in product profile.
+3. **Local DevStudio** opens Bob in message boot for widget authoring:
+   - `admin/src/html/tools/dev-widget-workspace.html` defaults to local Bob + cloud Tokyo in product profile.
    - Source profile can explicitly target local Bob/Tokyo via `?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`.
-4) **Cloud-dev Roma** is the supported product/account host surface:
+4. **Cloud-dev Roma** is the supported product/account host surface:
    - `roma/app/api/bootstrap/route.ts` proxies to Paris `/api/roma/bootstrap`
    - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
    - local code changes only appear there after deploy
-5) **Local Prague** loads widget marketing JSON from the repo:
+5. **Local Prague** loads widget marketing JSON from the repo:
    - `prague/src/lib/markdown.ts` bundles `tokyo/widgets/**/pages/*.json`.
    - `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com` is the default overlay/token base (override to local Tokyo only for explicit local-debug workflows).
 
 Result: product profile keeps DevStudio + Bob aligned with Roma on the same cloud Tokyo data plane by default. Local Tokyo is a source-profile path.
 
 ### A.1) Source-profile auth issuer alignment (critical)
+
 Source profile app servers use the Supabase target chosen by `bash scripts/dev-up.sh --source`:
+
 - Default: local Supabase (`http://127.0.0.1:54321`)
 - Optional override: remote Supabase (`DEV_UP_USE_REMOTE_SUPABASE=1` + `.env.local` `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_ANON_KEY`)
 
 Invariant:
+
 - The Supabase JWT used against local Paris/Bob/Roma must be issued by the **same** Supabase project Paris is configured to use.
 - If you use a token from a different Supabase project, Paris returns `403 AUTH_INVALID issuer_mismatch` by design.
 
 ### B) Instance + asset path (local)
+
 Instances are data (not code) and live in Paris/Michael. Assets live in Tokyo.
 
-1) **Roma + Bob handle account user-instance flows**:
-   - Roma Widgets/Templates can create/duplicate/delete user instances via Paris.
+1. **Roma + Bob handle account user-instance flows**:
+   - Roma Widgets/Templates create/duplicate/delete user instances through Roma same-origin routes.
    - Bob save writes base config via account `PUT`.
-2) **DevStudio Local handles curated/main authoring** (superadmin-only actions) via Paris + Tokyo.
-3) **Assets** referenced in configs point at cloud Tokyo by default (`https://tokyo.dev.clickeen.com`).
-4) **Venice embeds** render curated/user instances from published Tokyo bytes only; local Paris is involved only earlier in the write/publish path.
+2. **DevStudio Local handles curated/main authoring** (superadmin-only actions) via Paris + Tokyo.
+3. **Assets** referenced in configs point at cloud Tokyo by default (`https://tokyo.dev.clickeen.com`).
+4. **Venice embeds** render curated/user instances from published Tokyo bytes only; local Paris is involved only earlier in the write/publish path.
 
 ### C) Cloud-dev propagation (explicit)
+
 Local changes do not auto-appear in cloud-dev. You must deploy.
 
-1) **Prague/Bob/Roma/DevStudio**:
+1. **Prague/Bob/Roma/DevStudio**:
    - Code changes require Cloudflare deploys (Pages/Workers).
    - Cloud Prague/Bob/Roma read `https://tokyo.dev.clickeen.com`, not your local filesystem.
-2) **Marketing JSON updates**:
+2. **Marketing JSON updates**:
    - `tokyo/widgets/**/pages/*.json` updates require a Prague deployment to be visible in cloud-dev.
 
 Invariant: **Local propagation is automatic; cloud-dev propagation is explicit.** Treat any assumption otherwise as a bug.
@@ -188,10 +195,10 @@ If you change runtime behavior, update docs in the same PR/commit:
 
 ## Drift Detection (cheap checks)
 
-  - Compiler determinism: `node scripts/compile-all-widgets.mjs`
-  - Quick grep for removed/renamed surfaces:
-    - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/ai/minibob/session|/api/ai/minibob/grant|/api/ai/grant|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
-    - `rg -n "claims/minibob/complete|/api/assets/:accountId|GET /api/accounts/:accountId/instance/:publicId|PUT /api/accounts/:accountId/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`
-    - `rg -n "/api/roma/bootstrap|/api/roma/widgets|/api/minibob/handoff/start|/api/session/finish|/api/assets/:accountId" documentation --glob '*.md'`
+- Compiler determinism: `node scripts/compile-all-widgets.mjs`
+- Quick grep for removed/renamed surfaces:
+  - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/ai/minibob/session|/api/ai/minibob/grant|/api/ai/grant|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
+  - `rg -n "claims/minibob/complete|/api/assets/:accountId|GET /api/accounts/:accountId/instance/:publicId|PUT /api/accounts/:accountId/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`
+  - `rg -n "/api/roma/bootstrap|/api/roma/widgets|/api/minibob/handoff/start|/api/session/finish|/api/assets/:accountId" documentation --glob '*.md'`
 
 When drift is found: update docs to match the shipped code/config immediately; treat mismatches as P0 doc bugs.

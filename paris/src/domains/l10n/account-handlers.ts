@@ -15,9 +15,9 @@ import { resolveAdminAccountId } from '../../shared/admin';
 import { supabaseFetch } from '../../shared/supabase';
 import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import { loadL10nGenerateStates, loadInstanceOverlays } from './service';
-import { enqueueL10nJobs } from './enqueue-jobs';
 import { resolveL10nPlanningSnapshot } from './planning';
 import { enforceL10nSelection, resolveAccountActiveLocales } from './shared';
+import { enqueueL10nJobs } from './enqueue-jobs';
 import {
   buildLocaleTextPacks,
   enqueueLiveSurfaceSync,
@@ -30,8 +30,12 @@ import {
 } from '../../shared/mirror-packs';
 import { jsonSha256Hex } from '../../shared/stable-json';
 import { isSeoGeoLive } from '../../shared/seo-geo';
-import { enqueueTokyoMirrorJob, resolveActivePublishLocales } from '../account-instances/service';
-import { resolveInstanceKind } from '../../shared/instances';
+import {
+  enqueueTokyoMirrorJob,
+  loadSavedConfigStateFromTokyo,
+  resolveActivePublishLocales,
+} from '../account-instances/service';
+import { resolveInstanceAccountId, resolveInstanceKind } from '../../shared/instances';
 
 export async function handleAccountInstanceL10nStatus(
   req: Request,
@@ -39,11 +43,11 @@ export async function handleAccountInstanceL10nStatus(
   accountId: string,
   publicId: string,
 ) {
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer', { requireCapsule: true });
   if (!authorized.ok) return authorized.response;
   const account = authorized.account;
 
-  const policyResult = resolveEditorPolicyFromRequest(req, account);
+  const policyResult = resolveEditorPolicyFromRequest(req, account, authorized.role);
   if (!policyResult.ok) return policyResult.response;
 
   const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicId);
@@ -59,11 +63,27 @@ export async function handleAccountInstanceL10nStatus(
   if (!widgetType)
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
+  const savedState = await loadSavedConfigStateFromTokyo({
+    env,
+    accountId: resolveInstanceAccountId(instance) ?? accountId,
+    publicId,
+  });
+  if (!savedState) {
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.db.readFailed',
+        detail: 'saved Tokyo revision missing',
+      },
+      500,
+    );
+  }
+
   const planning = await resolveL10nPlanningSnapshot({
     env,
     widgetType,
-    config: instance.config,
-    baseUpdatedAt: instance.updated_at ?? null,
+    config: savedState.config,
+    baseUpdatedAt: savedState.updatedAt,
   });
   if (!planning.ok) {
     return apiError('INTERNAL_ERROR', 'Failed to resolve l10n planning snapshot', 500, planning.error);
@@ -121,76 +141,12 @@ export async function handleAccountInstanceL10nStatus(
   });
 }
 
-export async function handleAccountInstanceL10nEnqueueSelected(
-  req: Request,
-  env: Env,
-  accountId: string,
-  publicId: string,
-) {
-  const authorized = await authorizeAccount(req, env, accountId, 'editor');
-  if (!authorized.ok) return authorized.response;
-  const account = authorized.account;
-
-  const policyResult = resolveEditorPolicyFromRequest(req, account);
-  if (!policyResult.ok) return policyResult.response;
-
-  const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicId);
-  if (!instance)
-    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
-
-  const adminAccountId = resolveAdminAccountId(env);
-  if (resolveInstanceKind(instance) === 'curated' && accountId !== adminAccountId) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
-  }
-
-  const widgetType = await resolveWidgetTypeForInstance(env, instance);
-  if (!widgetType)
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
-
-  const accountLocales = resolveAccountActiveLocales({ account });
-  if (accountLocales instanceof Response) return accountLocales;
-  const locales = accountLocales.locales;
-  const entitlementGate = enforceL10nSelection(policyResult.policy, locales);
-  if (entitlementGate) return entitlementGate;
-
-  const baseUpdatedAt = instance.updated_at ?? null;
-  const enqueueResult = await enqueueL10nJobs({
-    env,
-    instance,
-    account,
-    widgetType,
-    baseUpdatedAt,
-    policy: policyResult.policy,
-    localesOverride: locales,
-    allowNoDiff: true,
-  });
-  if (!enqueueResult.ok) {
-    console.error('[ParisWorker] l10n enqueue failed (enqueue-selected)', enqueueResult.error);
-    return ckError(
-      {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.l10n.enqueueFailed',
-        detail: enqueueResult.error,
-      },
-      500,
-    );
-  }
-
-  return json({
-    ok: true,
-    publicId,
-    widgetType,
-    queued: enqueueResult.queued,
-    skipped: enqueueResult.skipped,
-  });
-}
-
 export async function handleAccountLocalesPut(req: Request, env: Env, accountId: string) {
-  const authorized = await authorizeAccount(req, env, accountId, 'editor');
+  const authorized = await authorizeAccount(req, env, accountId, 'editor', { requireCapsule: true });
   if (!authorized.ok) return authorized.response;
   const account = authorized.account;
 
-  const policyResult = resolveEditorPolicyFromRequest(req, account);
+  const policyResult = resolveEditorPolicyFromRequest(req, account, authorized.role);
   if (!policyResult.ok) return policyResult.response;
 
   let payload: unknown;
@@ -289,7 +245,7 @@ export async function handleAccountLocalesPut(req: Request, env: Env, accountId:
     let offset = 0;
     while (true) {
       const params = new URLSearchParams({
-        select: 'public_id,status,config,created_at,updated_at,widget_id,account_id,kind',
+        select: 'public_id,status,created_at,updated_at,widget_id,account_id,kind',
         account_id: `eq.${accountId}`,
         status: 'eq.published',
         limit: String(pageSize),
@@ -364,9 +320,21 @@ export async function handleAccountLocalesPut(req: Request, env: Env, accountId:
         }
       }
 
-      const baseTextPack = buildL10nSnapshot(instance.config, allowlist);
+      const savedState = await loadSavedConfigStateFromTokyo({
+        env,
+        accountId: resolveInstanceAccountId(instance) ?? accountId,
+        publicId,
+      }).catch((error) => {
+        const detail = errorDetail(error);
+        console.warn('[ParisWorker] locale resync skipped: tokyo saved config unavailable', { publicId, detail });
+        return null;
+      });
+      if (!savedState) continue;
+
+      const baseConfig = savedState.config;
+      const baseTextPack = buildL10nSnapshot(baseConfig, allowlist);
       const baseFingerprint = await computeBaseFingerprint(baseTextPack);
-      const configPack = stripTextFromConfig(instance.config, Object.keys(baseTextPack));
+      const configPack = stripTextFromConfig(baseConfig, Object.keys(baseTextPack));
       const configFp = await jsonSha256Hex(configPack);
 
       const overlayLocales = Array.from(localesToSeed).filter((locale) => locale && locale !== nextBaseLocale);
@@ -380,11 +348,11 @@ export async function handleAccountLocalesPut(req: Request, env: Env, accountId:
 
       const seoGeoLive = isSeoGeoLive({
         policy: policyResult.policy,
-        config: instance.config,
+        config: baseConfig,
       });
 
       const localeTextPacks = buildLocaleTextPacks({
-        locales: localesToSeed.filter((locale) => nextAvailableLocales.includes(locale)),
+        locales: Array.from(localesToSeed).filter((locale) => nextAvailableLocales.includes(locale)),
         baseLocale: nextBaseLocale,
         basePack: baseTextPack,
         localeOpsByLocale,
@@ -437,7 +405,8 @@ export async function handleAccountLocalesPut(req: Request, env: Env, accountId:
           instance,
           account,
           widgetType,
-          baseUpdatedAt: instance.updated_at ?? null,
+          config: baseConfig,
+          baseUpdatedAt: savedState.updatedAt,
           policy: policyResult.policy,
           localesOverride: addedAdditionalLocales,
           allowNoDiff: true,

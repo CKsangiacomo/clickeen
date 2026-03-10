@@ -49,9 +49,85 @@ export type ResolvedRomaContext = {
   accountSlug: string;
 };
 
+export type RomaAuthzPolicy = {
+  v: 1;
+  profile: 'minibob' | 'free' | 'tier1' | 'tier2' | 'tier3';
+  role: 'viewer' | 'editor' | 'admin' | 'owner';
+  flags: Record<string, boolean>;
+  caps: Record<string, number | null>;
+  budgets: Record<string, { max: number | null; used: number }>;
+};
+
 function normalizeAccountId(value: unknown): string | null {
   const normalized = String(value || '').trim();
   return normalized || null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeRole(value: unknown): RomaAuthzPolicy['role'] | null {
+  switch (value) {
+    case 'viewer':
+    case 'editor':
+    case 'admin':
+    case 'owner':
+      return value;
+    default:
+      return null;
+  }
+}
+
+function normalizeProfile(value: unknown): RomaAuthzPolicy['profile'] | null {
+  switch (value) {
+    case 'minibob':
+    case 'free':
+    case 'tier1':
+    case 'tier2':
+    case 'tier3':
+      return value;
+    default:
+      return null;
+  }
+}
+
+export function resolveAccountPolicyFromRomaAuthz(data: RomaMeResponse | null, accountId: string): RomaAuthzPolicy | null {
+  const normalizedAccountId = normalizeAccountId(accountId);
+  const authz = data?.authz;
+  if (!normalizedAccountId || !authz) return null;
+
+  const authzAccountId = normalizeAccountId(authz.accountId);
+  if (!authzAccountId || authzAccountId !== normalizedAccountId) return null;
+
+  const role = normalizeRole(authz.role);
+  const profile = normalizeProfile(authz.profile);
+  if (!role || !profile) return null;
+
+  const entitlements = isRecord(authz.entitlements) ? authz.entitlements : null;
+  const flags = isRecord(entitlements?.flags) ? (entitlements.flags as Record<string, boolean>) : {};
+  const caps = isRecord(entitlements?.caps) ? (entitlements.caps as Record<string, number | null>) : {};
+  const budgets = isRecord(entitlements?.budgets)
+    ? Object.fromEntries(
+        Object.entries(entitlements.budgets).flatMap(([key, value]) => {
+          if (!isRecord(value)) return [];
+          const max = value.max;
+          const used = value.used;
+          if (!(max === null || typeof max === 'number')) return [];
+          if (typeof used !== 'number' || !Number.isFinite(used)) return [];
+          return [[key, { max, used: Math.max(0, Math.trunc(used)) }]];
+        }),
+      )
+    : {};
+
+  return {
+    v: 1,
+    profile,
+    role,
+    flags: { ...flags },
+    caps: { ...caps },
+    budgets,
+  };
 }
 
 

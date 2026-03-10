@@ -15,7 +15,15 @@ import type { ApplyWidgetOpsResult, WidgetOp, WidgetOpError } from '../ops';
 import { applyWidgetOps } from '../ops';
 import type { CopilotThread } from '../copilot/types';
 import type { BudgetDecision, BudgetKey, Policy } from '@clickeen/ck-policy';
-import { can, canConsume, consume, evaluateLimits, sanitizeConfig, resolvePolicy as resolveCkPolicy } from '@clickeen/ck-policy';
+import {
+  can,
+  canConsume,
+  consume,
+  evaluateLimits,
+  sanitizeConfig,
+  resolvePolicy as resolveCkPolicy,
+  resolvePolicyFromEntitlementsSnapshot,
+} from '@clickeen/ck-policy';
 import {
   applyLocalizationOps,
   buildL10nSnapshot,
@@ -38,7 +46,7 @@ type UpdateMeta = {
 type SessionError =
   | { source: 'load'; message: string }
   | { source: 'ops'; errors: WidgetOpError[] }
-  | { source: 'save'; message: string; paths?: string[] };
+  | { source: 'save'; message: string; paths?: string[]; committed?: boolean };
 
 type PreviewSettings = {
   device: 'desktop' | 'mobile';
@@ -117,6 +125,7 @@ type SessionState = {
     publicId?: string;
     accountId?: string;
     ownerAccountId?: string;
+    accountCapsule?: string;
     widgetname?: string;
     label?: string;
   } | null;
@@ -134,6 +143,7 @@ type EditorOpenMessage = {
   publicId?: string;
   accountId?: string;
   ownerAccountId?: string;
+  accountCapsule?: string;
   label?: string;
   subjectMode?: SubjectMode;
 };
@@ -242,6 +252,14 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+function resolveAftermathSaveMessage(value: unknown): string | null {
+  if (!isPlainRecord(value)) return null;
+  const error = isPlainRecord(value.error) ? value.error : null;
+  const detail = typeof error?.detail === 'string' ? error.detail.trim() : '';
+  if (detail) return detail;
+  return 'Saved, but background updates need attention.';
+}
+
 type DevstudioExportInstanceDataMessage = {
   type: 'devstudio:export-instance-data';
   requestId: string;
@@ -289,8 +307,7 @@ type BobOpenEditorFailedMessage = {
 type BobAccountCommand =
   | 'update-instance'
   | 'put-user-locale-layer'
-  | 'delete-user-locale-layer'
-  | 'enqueue-selected-translations';
+  | 'delete-user-locale-layer';
 
 type BobAccountCommandMessage = {
   type: 'bob:account-command';
@@ -364,6 +381,87 @@ function assertPolicy(value: unknown): Policy {
   if (!isRecord(value.caps)) throw new Error('[useWidgetSession] policy.caps must be an object');
   if (!isRecord(value.budgets)) throw new Error('[useWidgetSession] policy.budgets must be an object');
   return value as Policy;
+}
+
+function normalizePolicyRole(value: unknown): Policy['role'] | null {
+  switch (value) {
+    case 'viewer':
+    case 'editor':
+    case 'admin':
+    case 'owner':
+      return value;
+    default:
+      return null;
+  }
+}
+
+function normalizePolicyProfile(value: unknown): Policy['profile'] | null {
+  switch (value) {
+    case 'minibob':
+    case 'free':
+    case 'tier1':
+    case 'tier2':
+    case 'tier3':
+      return value;
+    default:
+      return null;
+  }
+}
+
+function extractErrorReasonKey(value: unknown, fallback: string): string {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (!isRecord(value)) return fallback;
+  const error = isRecord(value.error) ? value.error : null;
+  if (typeof error?.reasonKey === 'string' && error.reasonKey.trim()) return error.reasonKey.trim();
+  if (typeof error?.message === 'string' && error.message.trim()) return error.message.trim();
+  if (typeof value.reasonKey === 'string' && value.reasonKey.trim()) return value.reasonKey.trim();
+  return fallback;
+}
+
+function resolveAccountCapsuleFromBootstrapPayload(payload: unknown, accountId: string): string | null {
+  if (!isRecord(payload)) return null;
+  const authz = isRecord(payload.authz) ? payload.authz : null;
+  if (!authz) return null;
+
+  const bootstrapAccountId = typeof authz.accountId === 'string' ? authz.accountId.trim() : '';
+  if (!bootstrapAccountId || bootstrapAccountId !== accountId) return null;
+
+  const accountCapsule = typeof authz.accountCapsule === 'string' ? authz.accountCapsule.trim() : '';
+  return accountCapsule || null;
+}
+
+function resolveAccountPolicyFromBootstrapPayload(payload: unknown, accountId: string): Policy {
+  if (!isRecord(payload)) {
+    throw new Error('[useWidgetSession] bootstrap payload must be an object');
+  }
+
+  const authz = isRecord(payload.authz) ? payload.authz : null;
+  if (!authz) {
+    throw new Error(extractErrorReasonKey(payload, 'coreui.errors.auth.required'));
+  }
+
+  const bootstrapAccountId = typeof authz.accountId === 'string' ? authz.accountId.trim() : '';
+  if (!bootstrapAccountId || bootstrapAccountId !== accountId) {
+    throw new Error('coreui.errors.auth.forbidden');
+  }
+
+  const role = normalizePolicyRole(authz.role);
+  const profile = normalizePolicyProfile(authz.profile);
+  if (!role || !profile) {
+    throw new Error('coreui.errors.auth.required');
+  }
+
+  return resolvePolicyFromEntitlementsSnapshot({
+    profile,
+    role,
+    entitlements: isRecord(authz.entitlements)
+      ? (authz.entitlements as {
+          flags?: Record<string, boolean> | null;
+          caps?: Record<string, number | null> | null;
+          budgets?: Record<string, { max: number | null; used: number } | null> | null;
+        })
+      : null,
+  });
 }
 
 function normalizeLocalizationOps(raw: unknown): LocalizationOp[] {
@@ -588,7 +686,25 @@ function useWidgetSessionInternal() {
   >(new Map());
 
   const fetchApi = useCallback((input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    return fetch(input, init);
+    const capsule = stateRef.current.meta?.accountCapsule?.trim();
+    const inputUrl =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input instanceof Request
+            ? input.url
+            : '';
+    if (!capsule || !inputUrl.startsWith('/api/accounts/')) {
+      return fetch(input, init);
+    }
+
+    const headers = new Headers(input instanceof Request ? input.headers : init?.headers);
+    headers.set('x-ck-authz-capsule', capsule);
+    return fetch(input, {
+      ...init,
+      headers,
+    });
   }, []);
 
   const shouldDelegateAccountCommand = useCallback((subject: SubjectMode): boolean => {
@@ -1123,11 +1239,53 @@ function useWidgetSessionInternal() {
     }
   }, [applyMinibobInjectedState, state.compiled]);
 
+  const fetchLocalizationSnapshot = useCallback(
+    async (args: {
+      publicId: string;
+      accountId: string;
+      subject: 'minibob' | 'account';
+    }): Promise<
+      | { ok: true; snapshot: ReturnType<typeof normalizeLocalizationSnapshotForOpen> }
+      | { ok: false; message: string }
+    > => {
+      try {
+        const localizationUrl =
+          args.subject === 'minibob'
+            ? `/api/instance/${encodeURIComponent(args.publicId)}?subject=${encodeURIComponent(args.subject)}`
+            : `/api/accounts/${encodeURIComponent(args.accountId)}/instances/${encodeURIComponent(
+                args.publicId,
+              )}/localization?subject=${encodeURIComponent(args.subject)}`;
+        const res = await fetchApi(localizationUrl, { cache: 'no-store' });
+        const json = (await res.json().catch(() => null)) as any;
+        if (!res.ok) {
+          const message =
+            json?.error?.message ||
+            json?.error?.reasonKey ||
+            json?.error?.code ||
+            `Failed to load localization snapshot (HTTP ${res.status})`;
+          return { ok: false, message };
+        }
+        if (!json || typeof json !== 'object') {
+          return { ok: false, message: 'Failed to load localization snapshot' };
+        }
+        return {
+          ok: true,
+          snapshot: normalizeLocalizationSnapshotForOpen(json.localization),
+        };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { ok: false, message };
+      }
+    },
+    [fetchApi],
+  );
+
   const setLocalePreview = useCallback(async (rawLocale: string) => {
     const normalized = normalizeLocaleToken(rawLocale) ?? DEFAULT_LOCALE;
     const snapshot = stateRef.current;
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
     const baseLocale = snapshot.locale.baseLocale;
+    const subject = resolvePolicySubject(snapshot.policy);
     if (!widgetType) {
       setState((prev) => ({
         ...prev,
@@ -1174,7 +1332,33 @@ function useWidgetSessionInternal() {
       const allowlist = await loadLocaleAllowlist(widgetType);
 
       if (localeRequestRef.current !== requestId) return;
-      const overlayEntry = resolveLocaleOverlayEntry(snapshot.locale.overlayEntries, normalized);
+      let localizationSnapshot = {
+        baseLocale: snapshot.locale.baseLocale,
+        availableLocales: snapshot.locale.availableLocales,
+        overlayEntries: snapshot.locale.overlayEntries,
+        accountLocalesInvalid: snapshot.locale.accountLocalesInvalid,
+        accountL10nPolicy: snapshot.locale.accountL10nPolicy,
+      };
+
+      if (
+        subject === 'account' &&
+        snapshot.meta?.publicId &&
+        snapshot.meta?.accountId &&
+        (!snapshot.locale.overlayEntries.length ||
+          !resolveLocaleOverlayEntry(snapshot.locale.overlayEntries, normalized))
+      ) {
+        const fetched = await fetchLocalizationSnapshot({
+          publicId: String(snapshot.meta.publicId),
+          accountId: String(snapshot.meta.accountId),
+          subject,
+        });
+        if (localeRequestRef.current !== requestId) return;
+        if (fetched.ok) {
+          localizationSnapshot = fetched.snapshot;
+        }
+      }
+
+      const overlayEntry = resolveLocaleOverlayEntry(localizationSnapshot.overlayEntries, normalized);
       const source = overlayEntry?.source ?? null;
       const l10nSnapshot = buildL10nSnapshot(snapshot.baseInstanceData, allowlist);
       const snapshotPaths = new Set(Object.keys(l10nSnapshot));
@@ -1220,6 +1404,10 @@ function useWidgetSessionInternal() {
         instanceData: localized,
         locale: {
           ...prev.locale,
+          availableLocales: localizationSnapshot.availableLocales,
+          overlayEntries: localizationSnapshot.overlayEntries,
+          accountLocalesInvalid: localizationSnapshot.accountLocalesInvalid,
+          accountL10nPolicy: localizationSnapshot.accountL10nPolicy,
           activeLocale: normalized,
           baseOps,
           userOps,
@@ -1239,9 +1427,9 @@ function useWidgetSessionInternal() {
         locale: { ...prev.locale, activeLocale: normalized, loading: false, error: message, stale: false },
       }));
     }
-  }, [loadLocaleAllowlist]);
+  }, [fetchLocalizationSnapshot, loadLocaleAllowlist]);
 
-  const saveLocaleOverrides = useCallback(async () => {
+  const persistLocaleEdits = useCallback(async () => {
     const snapshot = stateRef.current;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
     const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
@@ -1272,44 +1460,52 @@ function useWidgetSessionInternal() {
       return;
     }
 
+    setState((prev) => ({ ...prev, isSaving: true, locale: { ...prev.locale, error: null } }));
     try {
       const allowlist = snapshot.locale.allowlist.length
         ? snapshot.locale.allowlist
         : await loadLocaleAllowlist(widgetType);
       const baseFingerprint = await computeL10nFingerprint(snapshot.baseInstanceData, allowlist);
       const userOps = snapshot.locale.userOps;
-      if (!userOps.length) {
-        setState((prev) => ({
-          ...prev,
-          locale: { ...prev.locale, error: 'No localized changes to save' },
-        }));
-        return;
-      }
-      const { ok, json } = await executeAccountCommand({
-        subject,
-        command: 'put-user-locale-layer',
-        method: 'PUT',
-        url: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
-          publicId,
-        )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
-        accountId,
-        publicId,
-        locale,
-        body: {
-          ops: userOps,
-          baseFingerprint,
-          source: 'user',
-          widgetType,
-        },
-      });
+      const shouldDeleteUserLayer = snapshot.locale.dirty && userOps.length === 0;
+      const { ok, json } = shouldDeleteUserLayer
+        ? await executeAccountCommand({
+            subject,
+            command: 'delete-user-locale-layer',
+            method: 'DELETE',
+            url: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+              publicId,
+            )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
+            accountId,
+            publicId,
+            locale,
+          })
+        : await executeAccountCommand({
+            subject,
+            command: 'put-user-locale-layer',
+            method: 'PUT',
+            url: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+              publicId,
+            )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
+            accountId,
+            publicId,
+            locale,
+            body: {
+              ops: userOps,
+              baseFingerprint,
+              source: 'user',
+              widgetType,
+            },
+          });
       if (!ok) {
         const errorCode = json?.error?.code || json?.error?.reasonKey;
-        let message = json?.error?.message || errorCode || 'Failed to save locale overrides';
+        let message = json?.error?.message || errorCode || 'Failed to save localized changes';
         if (errorCode === 'FINGERPRINT_MISMATCH') {
-          message = 'Base content changed. Switch to Base, click "Save", refresh translations, then try saving overrides again.';
+          message = 'Base content changed. Switch to Base, click "Save", let translations update, then try saving overrides again.';
         }
         setState((prev) => ({
           ...prev,
+          isSaving: false,
           locale: { ...prev.locale, error: message, loading: false },
         }));
         return;
@@ -1322,6 +1518,7 @@ function useWidgetSessionInternal() {
         typeof json?.baseUpdatedAt === 'string' ? json.baseUpdatedAt : null;
       setState((prev) => ({
         ...prev,
+        isSaving: false,
         locale: {
           ...prev.locale,
           overlayEntries: upsertLocaleOverlayEntry(prev.locale.overlayEntries, locale, (current) => ({
@@ -1330,11 +1527,11 @@ function useWidgetSessionInternal() {
             baseFingerprint: persistedBaseFingerprint,
             baseUpdatedAt: persistedBaseUpdatedAt ?? current?.baseUpdatedAt ?? null,
             baseOps: current?.baseOps ?? [],
-            userOps,
-            hasUserOps: userOps.length > 0,
+            userOps: shouldDeleteUserLayer ? [] : userOps,
+            hasUserOps: shouldDeleteUserLayer ? false : userOps.length > 0,
           })),
           availableLocales: prev.locale.availableLocales,
-          userOps,
+          userOps: shouldDeleteUserLayer ? [] : userOps,
           dirty: false,
           stale: false,
           error: null,
@@ -1344,6 +1541,7 @@ function useWidgetSessionInternal() {
       const message = err instanceof Error ? err.message : String(err);
       setState((prev) => ({
         ...prev,
+        isSaving: false,
         locale: { ...prev.locale, error: message },
       }));
     }
@@ -1356,39 +1554,16 @@ function useWidgetSessionInternal() {
       subject: 'minibob' | 'account';
     }): Promise<{ ok: true } | { ok: false; message: string }> => {
       try {
-        const instanceUrl =
-          args.subject === 'minibob'
-            ? `/api/instance/${encodeURIComponent(args.publicId)}?subject=${encodeURIComponent(args.subject)}`
-            : `/api/accounts/${encodeURIComponent(args.accountId)}/instance/${encodeURIComponent(
-                args.publicId,
-              )}?subject=${encodeURIComponent(args.subject)}`;
-        const res = await fetchApi(
-          instanceUrl,
-          { cache: 'no-store' },
-        );
-        const json = (await res.json().catch(() => null)) as any;
-        if (!res.ok) {
-          const message =
-            json?.error?.message ||
-            json?.error?.reasonKey ||
-            json?.error?.code ||
-            `Failed to reload localization snapshot (HTTP ${res.status})`;
+        const localizationResult = await fetchLocalizationSnapshot(args);
+        if (!localizationResult.ok) {
           setState((prev) => ({
             ...prev,
-            locale: { ...prev.locale, loading: false, error: message },
+            locale: { ...prev.locale, loading: false, error: localizationResult.message },
           }));
-          return { ok: false, message };
-        }
-        if (!json || typeof json !== 'object') {
-          const message = 'Failed to reload localization snapshot';
-          setState((prev) => ({
-            ...prev,
-            locale: { ...prev.locale, loading: false, error: message },
-          }));
-          return { ok: false, message };
+          return localizationResult;
         }
 
-        const localizationSnapshot = normalizeLocalizationSnapshotForOpen(json.localization);
+        const localizationSnapshot = localizationResult.snapshot;
         const current = stateRef.current;
         const widgetType = current.compiled?.widgetname ?? current.meta?.widgetname;
         const baseLocale = localizationSnapshot.baseLocale;
@@ -1469,7 +1644,7 @@ function useWidgetSessionInternal() {
         return { ok: false, message };
       }
     },
-    [fetchApi, loadLocaleAllowlist],
+    [fetchLocalizationSnapshot, loadLocaleAllowlist],
   );
 
   const reloadLocalizationSnapshot = useCallback(async (): Promise<{ ok: true } | { ok: false; message: string }> => {
@@ -1491,7 +1666,7 @@ function useWidgetSessionInternal() {
     return rehydrateLocalizationSnapshot({ publicId, accountId, subject });
   }, [rehydrateLocalizationSnapshot]);
 
-  const refreshLocaleTranslations = useCallback(async () => {
+  const monitorLocaleTranslationsAfterSave = useCallback(async (initialDetail?: string | null) => {
     const readL10nStatus = async (args: {
       publicId: string;
       accountId: string;
@@ -1680,62 +1855,8 @@ function useWidgetSessionInternal() {
     const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
     const subject = resolvePolicySubject(snapshot.policy);
 
-    if (snapshot.policy.role === 'viewer') {
-      const message = 'Read-only mode: translation refresh is disabled.';
-      setState((prev) => ({
-        ...prev,
-        locale: {
-          ...prev.locale,
-          error: message,
-          loading: false,
-          sync: {
-            stage: 'failed',
-            detail: message,
-            lastUpdatedAt: new Date().toISOString(),
-            lastError: message,
-          },
-        },
-      }));
-      return { ok: false as const, message };
-    }
     if (!publicId || !accountId || subject !== 'account') {
       const message = 'Missing instance context';
-      setState((prev) => ({
-        ...prev,
-        locale: {
-          ...prev.locale,
-          error: message,
-          loading: false,
-          sync: {
-            stage: 'failed',
-            detail: message,
-            lastUpdatedAt: new Date().toISOString(),
-            lastError: message,
-          },
-        },
-      }));
-      return { ok: false as const, message };
-    }
-    if (snapshot.isDirty) {
-      const message = 'Base content changed. Click "Save" first, then refresh translations.';
-      setState((prev) => ({
-        ...prev,
-        locale: {
-          ...prev.locale,
-          error: message,
-          loading: false,
-          sync: {
-            stage: 'failed',
-            detail: message,
-            lastUpdatedAt: new Date().toISOString(),
-            lastError: message,
-          },
-        },
-      }));
-      return { ok: false as const, message };
-    }
-    if (snapshot.locale.activeLocale !== snapshot.locale.baseLocale && snapshot.locale.dirty) {
-      const message = 'Save or revert locale overrides before refreshing translations.';
       setState((prev) => ({
         ...prev,
         locale: {
@@ -1761,96 +1882,181 @@ function useWidgetSessionInternal() {
         loading: true,
         error: null,
         sync: {
-          stage: 'queuing',
-          detail: 'Queuing translation jobs...',
+          stage: 'translating',
+          detail: initialDetail?.trim() || 'Checking translation status...',
           lastUpdatedAt: prev.locale.sync.lastUpdatedAt,
           lastError: null,
         },
       },
     }));
 
-    try {
-      const { ok, json, status } = await executeAccountCommand({
-        subject,
-        command: 'enqueue-selected-translations',
-        method: 'POST',
-        url: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
-          publicId
-        )}/l10n/enqueue-selected?subject=${encodeURIComponent(subject)}`,
-        accountId,
-        publicId,
-        body: {},
-      });
-      if (!ok) {
-        const message =
-          json?.error?.message ||
-          json?.error?.reasonKey ||
-          json?.error?.code ||
-          `Failed to refresh translations (HTTP ${status})`;
-        setState((prev) => ({
-          ...prev,
-          locale: {
-            ...prev.locale,
-            loading: false,
-            error: message,
-            sync: {
-              stage: 'failed',
-              detail: message,
-              lastUpdatedAt: new Date().toISOString(),
-              lastError: message,
-            },
-          },
-        }));
-        return { ok: false as const, message };
-      }
-      const queued = typeof json?.queued === 'number' ? json.queued : 0;
-      const skipped = typeof json?.skipped === 'number' ? json.skipped : 0;
-      setState((prev) => ({
-        ...prev,
-        locale: {
-          ...prev.locale,
-          loading: false,
-          error: null,
-          sync: {
-            stage: 'translating',
-            detail:
-              queued > 0
-                ? `Queued ${queued} translation job${queued === 1 ? '' : 's'}.`
-                : 'Checking translation status...',
-            lastUpdatedAt: prev.locale.sync.lastUpdatedAt,
-            lastError: null,
-          },
-        },
-      }));
-      void pollUntilSynced({ runId, publicId, accountId, subject });
-      return { ok: true as const, queued, skipped };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setState((prev) => ({
-        ...prev,
-        locale: {
-          ...prev.locale,
-          loading: false,
-          error: message,
-          sync: {
-            stage: 'failed',
-            detail: message,
-            lastUpdatedAt: new Date().toISOString(),
-            lastError: message,
-          },
-        },
-      }));
-      return { ok: false as const, message };
-    }
-  }, [executeAccountCommand, fetchApi, rehydrateLocalizationSnapshot]);
+    void pollUntilSynced({ runId, publicId, accountId, subject });
+    return { ok: true as const };
+  }, [fetchApi, rehydrateLocalizationSnapshot]);
 
-  const revertLocaleOverrides = useCallback(async () => {
+  const save = useCallback(async () => {
     const snapshot = stateRef.current;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
     const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
-    const locale = snapshot.locale.activeLocale;
     const subject = resolvePolicySubject(snapshot.policy);
+
+    if (!publicId || !accountId) {
+      setState((prev) => ({
+        ...prev,
+        error: { source: 'save', message: 'Missing instance context for save.' },
+      }));
+      return;
+    }
+    if (!widgetType) {
+      setState((prev) => ({
+        ...prev,
+        error: { source: 'save', message: 'coreui.errors.widgetType.invalid' },
+      }));
+      return;
+    }
+    if (snapshot.policy.role === 'viewer') {
+      setState((prev) => ({
+        ...prev,
+        error: { source: 'save', message: 'Read-only mode: saving is disabled.' },
+      }));
+      return;
+    }
+
+    const gate = can(snapshot.policy, 'instance.update');
+    if (!gate.allow) {
+      setState((prev) => ({
+        ...prev,
+        error: null,
+        upsell: {
+          reasonKey: gate.reasonKey,
+          detail: gate.detail,
+          cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+        },
+      }));
+      return;
+    }
+
+    if (!snapshot.isDirty && snapshot.locale.activeLocale !== snapshot.locale.baseLocale && snapshot.locale.dirty) {
+      await persistLocaleEdits();
+      return;
+    }
+
+    setState((prev) => ({ ...prev, isSaving: true, error: null }));
+
+    let textChanged = false;
+    if (
+      subject === 'account' &&
+      snapshot.locale.availableLocales.some((locale) => locale !== snapshot.locale.baseLocale)
+    ) {
+      try {
+        const allowlist = snapshot.locale.allowlist.length
+          ? snapshot.locale.allowlist
+          : await loadLocaleAllowlist(widgetType);
+        const [savedFingerprint, nextFingerprint] = await Promise.all([
+          computeL10nFingerprint(snapshot.savedBaseInstanceData, allowlist),
+          computeL10nFingerprint(snapshot.baseInstanceData, allowlist),
+        ]);
+        textChanged = savedFingerprint !== nextFingerprint;
+      } catch {
+        textChanged = false;
+      }
+    }
+
+    try {
+      const configToSave = snapshot.baseInstanceData;
+      const { ok, json } = await executeAccountCommand({
+        subject,
+        command: 'update-instance',
+        method: 'PUT',
+        url: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
+          publicId
+        )}?subject=${encodeURIComponent(subject)}`,
+        accountId,
+        publicId,
+        body: { config: configToSave },
+      });
+      if (!ok) {
+        const err = json?.error;
+        if (err?.kind === 'DENY' && err?.upsell === 'UP') {
+          setState((prev) => ({
+            ...prev,
+            isSaving: false,
+            error: null,
+            upsell: {
+              reasonKey: err.reasonKey || 'coreui.errors.unknown',
+              detail: err.detail,
+              cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+            },
+          }));
+          return;
+        }
+        if (err?.kind === 'VALIDATION') {
+          setState((prev) => ({
+            ...prev,
+            isSaving: false,
+            error: { source: 'save', message: err.reasonKey || 'Save failed.', paths: err.paths },
+          }));
+          return;
+        }
+        setState((prev) => ({
+          ...prev,
+          isSaving: false,
+          error: { source: 'save', message: err?.reasonKey || 'Save failed.' },
+        }));
+        return;
+      }
+
+      const current = stateRef.current;
+      const nextBase =
+        json?.config && typeof json.config === 'object' && !Array.isArray(json.config)
+          ? structuredClone(json.config)
+          : structuredClone(current.baseInstanceData);
+      const aftermathMessage = resolveAftermathSaveMessage(json?.aftermath);
+      const nextLocale =
+        aftermathMessage && subject === 'account' && textChanged
+          ? {
+              ...current.locale,
+              sync: {
+                stage: 'failed' as const,
+                detail: aftermathMessage,
+                lastUpdatedAt: current.locale.sync.lastUpdatedAt,
+                lastError: aftermathMessage,
+              },
+            }
+          : current.locale;
+      const nextState: SessionState = {
+        ...current,
+        isSaving: false,
+        isDirty: false,
+        error: aftermathMessage ? { source: 'save', message: aftermathMessage, committed: true } : null,
+        upsell: null,
+        savedBaseInstanceData: structuredClone(nextBase),
+        baseInstanceData: structuredClone(nextBase),
+        locale: nextLocale,
+        instanceData:
+          current.locale.activeLocale !== current.locale.baseLocale
+            ? applyLocalizationOps(applyLocalizationOps(nextBase, current.locale.baseOps), current.locale.userOps)
+            : nextBase,
+      };
+      stateRef.current = nextState;
+      setState(nextState);
+
+      if (!aftermathMessage && subject === 'account' && textChanged && !current.locale.dirty) {
+        window.setTimeout(() => {
+          void monitorLocaleTranslationsAfterSave('Translations are updating.');
+        }, 0);
+      }
+    } catch (err) {
+      const messageText = err instanceof Error ? err.message : String(err);
+      setState((prev) => ({ ...prev, isSaving: false, error: { source: 'save', message: messageText } }));
+    }
+  }, [executeAccountCommand, loadLocaleAllowlist, monitorLocaleTranslationsAfterSave, persistLocaleEdits]);
+
+  const clearLocaleManualOverrides = useCallback(async () => {
+    const snapshot = stateRef.current;
+    const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
+    const locale = snapshot.locale.activeLocale;
     if (snapshot.policy.role === 'viewer') {
       setState((prev) => ({
         ...prev,
@@ -1858,7 +2064,6 @@ function useWidgetSessionInternal() {
       }));
       return;
     }
-    if (!publicId || !accountId || subject !== 'account') return;
     if (!widgetType) {
       setState((prev) => ({
         ...prev,
@@ -1870,26 +2075,6 @@ function useWidgetSessionInternal() {
     if (snapshot.locale.userOps.length === 0) return;
 
     try {
-      const { ok, json } = await executeAccountCommand({
-        subject,
-        command: 'delete-user-locale-layer',
-        method: 'DELETE',
-        url: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
-          publicId
-        )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
-        accountId,
-        publicId,
-        locale,
-      });
-      if (!ok) {
-        const errorCode = json?.error?.code || json?.error?.reasonKey;
-        const message = json?.error?.message || errorCode || 'Failed to revert locale overrides';
-        setState((prev) => ({
-          ...prev,
-          locale: { ...prev.locale, error: message },
-        }));
-        return;
-      }
       const allowlist = snapshot.locale.allowlist.length
         ? snapshot.locale.allowlist
         : await loadLocaleAllowlist(widgetType);
@@ -1910,20 +2095,11 @@ function useWidgetSessionInternal() {
         instanceData: localized,
         locale: {
           ...prev.locale,
-          overlayEntries: upsertLocaleOverlayEntry(prev.locale.overlayEntries, locale, (current) => ({
-            locale,
-            source: current?.source ?? overlayEntry?.source ?? null,
-            baseFingerprint: current?.baseFingerprint ?? overlayEntry?.baseFingerprint ?? null,
-            baseUpdatedAt: current?.baseUpdatedAt ?? overlayEntry?.baseUpdatedAt ?? null,
-            baseOps: current?.baseOps ?? overlayEntry?.baseOps ?? [],
-            userOps: [],
-            hasUserOps: false,
-          })),
           baseOps,
           userOps: [],
           allowlist,
           source: overlayEntry?.source ?? null,
-          dirty: false,
+          dirty: true,
           stale,
           loading: false,
           error: null,
@@ -1936,7 +2112,7 @@ function useWidgetSessionInternal() {
         locale: { ...prev.locale, error: message },
       }));
     }
-  }, [executeAccountCommand, loadLocaleAllowlist]);
+  }, [loadLocaleAllowlist]);
 
   const loadInstance = useCallback(
     async (
@@ -2026,6 +2202,10 @@ function useWidgetSessionInternal() {
           publicId: message.publicId,
           accountId: nextAccountId,
           ownerAccountId: nextOwnerAccountId,
+          accountCapsule:
+            typeof message.accountCapsule === 'string' && message.accountCapsule.trim()
+              ? message.accountCapsule.trim()
+              : undefined,
           widgetname: compiled.widgetname,
           label: nextLabel,
         },
@@ -2100,158 +2280,27 @@ function useWidgetSessionInternal() {
     }));
   }, []);
 
-  const save = useCallback(async () => {
-    const publicId = state.meta?.publicId;
-    const accountId = state.meta?.accountId;
-    const widgetType = state.meta?.widgetname;
-    if (!publicId || !accountId) {
-      setState((prev) => ({
-        ...prev,
-        error: { source: 'save', message: 'Missing instance context for save.' },
-      }));
-      return;
-    }
-    if (!widgetType) {
-      setState((prev) => ({
-        ...prev,
-        error: { source: 'save', message: 'coreui.errors.widgetType.invalid' },
-      }));
-      return;
-    }
-    if (state.policy.role === 'viewer') {
-      setState((prev) => ({
-        ...prev,
-        error: { source: 'save', message: 'Read-only mode: saving is disabled.' },
-      }));
-      return;
-    }
-
-    const gate = can(state.policy, 'instance.update');
-    if (!gate.allow) {
-      setState((prev) => ({
-        ...prev,
-        error: null,
-        upsell: {
-          reasonKey: gate.reasonKey,
-          detail: gate.detail,
-          cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
-        },
-      }));
-      return;
-    }
-
-    const subject = state.policy.profile === 'minibob' ? 'minibob' : 'account';
-
-    setState((prev) => ({ ...prev, isSaving: true, error: null }));
-    try {
-      const configToSave = state.baseInstanceData;
-      const localePolicy = {
-        baseLocale: state.locale.baseLocale,
-        availableLocales: state.locale.availableLocales,
-        ip: {
-          enabled: state.locale.accountL10nPolicy.ip.enabled,
-          countryToLocale: state.locale.accountL10nPolicy.ip.enabled
-            ? Object.fromEntries(
-                Object.entries(state.locale.accountL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
-                  state.locale.availableLocales.includes(locale),
-                ),
-              )
-            : {},
-        },
-        switcher: { enabled: state.locale.accountL10nPolicy.switcher.enabled },
-      };
-      const seoGeo = state.policy.flags['embed.seoGeo.enabled'] === true;
-      const { ok, json } = await executeAccountCommand({
-        subject,
-        command: 'update-instance',
-        method: 'PUT',
-        url: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
-          publicId
-        )}?subject=${encodeURIComponent(subject)}`,
-        accountId,
-        publicId,
-        body: { config: configToSave, localePolicy, seoGeo },
-      });
-      if (!ok) {
-        const err = json?.error;
-        if (err?.kind === 'DENY' && err?.upsell === 'UP') {
-          setState((prev) => ({
-            ...prev,
-            isSaving: false,
-            error: null,
-            upsell: {
-              reasonKey: err.reasonKey || 'coreui.errors.unknown',
-              detail: err.detail,
-              cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
-            },
-          }));
-          return;
-        }
-        if (err?.kind === 'VALIDATION') {
-          setState((prev) => ({
-            ...prev,
-            isSaving: false,
-            error: { source: 'save', message: err.reasonKey || 'Save failed.', paths: err.paths },
-          }));
-          return;
-        }
-        setState((prev) => ({
-          ...prev,
-          isSaving: false,
-          error: { source: 'save', message: err?.reasonKey || 'Save failed.' },
-        }));
-        return;
-      }
-
-      setState((prev) => ({
-        ...prev,
-        isSaving: false,
-        isDirty: false,
-        error: null,
-        upsell: null,
-        savedBaseInstanceData:
-          json?.config && typeof json.config === 'object' && !Array.isArray(json.config)
-            ? structuredClone(json.config)
-            : prev.savedBaseInstanceData,
-        baseInstanceData:
-          json?.config && typeof json.config === 'object' && !Array.isArray(json.config)
-            ? structuredClone(json.config)
-            : prev.baseInstanceData,
-        instanceData: (() => {
-          const nextBase =
-            json?.config && typeof json.config === 'object' && !Array.isArray(json.config) ? json.config : prev.baseInstanceData;
-          if (prev.locale.activeLocale !== prev.locale.baseLocale) {
-            return applyLocalizationOps(applyLocalizationOps(nextBase, prev.locale.baseOps), prev.locale.userOps);
-          }
-          return nextBase;
-        })(),
-        policy: json?.policy && typeof json.policy === 'object' ? assertPolicy(json.policy) : prev.policy,
-      }));
-    } catch (err) {
-      const messageText = err instanceof Error ? err.message : String(err);
-      setState((prev) => ({ ...prev, isSaving: false, error: { source: 'save', message: messageText } }));
-    }
-  }, [
-    executeAccountCommand,
-    state.baseInstanceData,
-    state.locale.availableLocales,
-    state.locale.baseLocale,
-    state.locale.accountL10nPolicy.ip.countryToLocale,
-    state.locale.accountL10nPolicy.ip.enabled,
-    state.locale.accountL10nPolicy.switcher.enabled,
-    state.meta?.publicId,
-    state.meta?.accountId,
-    state.meta?.widgetname,
-    state.policy,
-  ]);
-
   const discardChanges = useCallback(() => {
     setState((prev) => {
       const nextBase = structuredClone(prev.savedBaseInstanceData);
-      const nextInstance =
-        prev.locale.activeLocale !== prev.locale.baseLocale
-          ? applyLocalizationOps(applyLocalizationOps(nextBase, prev.locale.baseOps), prev.locale.userOps)
-          : nextBase;
+      const isLocaleMode = prev.locale.activeLocale !== prev.locale.baseLocale;
+      const overlayEntry = isLocaleMode
+        ? resolveLocaleOverlayEntry(prev.locale.overlayEntries, prev.locale.activeLocale)
+        : null;
+      const snapshotPaths = new Set(Object.keys(buildL10nSnapshot(nextBase, prev.locale.allowlist)));
+      const baseOps = isLocaleMode
+        ? filterAllowlistedOps(overlayEntry?.baseOps ?? [], prev.locale.allowlist).filtered.filter((op) =>
+            snapshotPaths.has(op.path)
+          )
+        : [];
+      const userOps = isLocaleMode
+        ? filterAllowlistedOps(overlayEntry?.userOps ?? [], prev.locale.allowlist).filtered.filter((op) =>
+            snapshotPaths.has(op.path)
+          )
+        : [];
+      const nextInstance = isLocaleMode
+        ? applyLocalizationOps(applyLocalizationOps(nextBase, baseOps), userOps)
+        : nextBase;
       return {
         ...prev,
         baseInstanceData: nextBase,
@@ -2260,6 +2309,15 @@ function useWidgetSessionInternal() {
         undoSnapshot: null,
         error: null,
         upsell: null,
+        locale: {
+          ...prev.locale,
+          baseOps,
+          userOps,
+          source: overlayEntry?.source ?? (isLocaleMode ? prev.locale.source : null),
+          dirty: false,
+          error: null,
+          stale: isLocaleMode && !prev.isDirty ? prev.locale.stale : false,
+        },
         lastUpdate: { source: 'load', path: '', ts: Date.now() },
       };
     });
@@ -2279,13 +2337,34 @@ function useWidgetSessionInternal() {
       subject === 'minibob'
         ? `/api/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`
         : `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`;
-    const instanceRes = await fetchApi(instanceUrl, { cache: 'no-store' });
+    const bootstrapRes = subject === 'account' ? await fetchApi('/api/roma/bootstrap', { cache: 'no-store' }) : null;
+    let accountCapsule: string | null = null;
+    let nextPolicy: Policy | undefined;
+    if (subject === 'account') {
+      if (!bootstrapRes) {
+        throw new Error('coreui.errors.auth.required');
+      }
+      const bootstrapJson = (await bootstrapRes.json().catch(() => null)) as unknown;
+      if (!bootstrapRes.ok) {
+        throw new Error(extractErrorReasonKey(bootstrapJson, `HTTP_${bootstrapRes.status}`));
+      }
+      nextPolicy = resolveAccountPolicyFromBootstrapPayload(bootstrapJson, accountId);
+      accountCapsule = resolveAccountCapsuleFromBootstrapPayload(bootstrapJson, accountId);
+      if (!accountCapsule) {
+        throw new Error('coreui.errors.auth.forbidden');
+      }
+    }
+
+    const instanceRes = await fetchApi(instanceUrl, {
+      cache: 'no-store',
+      ...(accountCapsule ? { headers: { 'x-ck-authz-capsule': accountCapsule } } : {}),
+    });
     if (!instanceRes.ok) {
       throw new Error(`[useWidgetSession] Failed to load instance (HTTP ${instanceRes.status})`);
     }
     const instanceJson = (await instanceRes.json().catch(() => null)) as any;
     if (!instanceJson || typeof instanceJson !== 'object') {
-      throw new Error('[useWidgetSession] Paris returned invalid JSON');
+      throw new Error('[useWidgetSession] Instance route returned invalid JSON');
     }
     if (instanceJson.error) {
       const reasonKey = instanceJson.error?.reasonKey ? String(instanceJson.error.reasonKey) : 'coreui.errors.unknown';
@@ -2294,6 +2373,28 @@ function useWidgetSessionInternal() {
     const widgetType = typeof instanceJson.widgetType === 'string' ? instanceJson.widgetType : '';
     if (!widgetType) {
       throw new Error('[useWidgetSession] Missing widgetType in instance payload');
+    }
+    let localizationPayload: unknown = instanceJson.localization;
+    if (subject === 'account') {
+      const localizationUrl = `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/localization?subject=${encodeURIComponent(subject)}`;
+      const localizationRes = await fetchApi(localizationUrl, {
+        cache: 'no-store',
+        ...(accountCapsule ? { headers: { 'x-ck-authz-capsule': accountCapsule } } : {}),
+      });
+      if (!localizationRes.ok) {
+        throw new Error(`[useWidgetSession] Failed to load localization (HTTP ${localizationRes.status})`);
+      }
+      const localizationJson = (await localizationRes.json().catch(() => null)) as any;
+      if (!localizationJson || typeof localizationJson !== 'object') {
+        throw new Error('[useWidgetSession] Localization route returned invalid JSON');
+      }
+      if (localizationJson.error) {
+        const reasonKey = localizationJson.error?.reasonKey
+          ? String(localizationJson.error.reasonKey)
+          : 'coreui.errors.unknown';
+        throw new Error(reasonKey);
+      }
+      localizationPayload = localizationJson.localization;
     }
     const displayName =
       typeof instanceJson.displayName === 'string' && instanceJson.displayName.trim()
@@ -2307,15 +2408,20 @@ function useWidgetSessionInternal() {
     const compiled = (await compiledRes.json().catch(() => null)) as CompiledWidget | null;
     if (!compiled) throw new Error('[useWidgetSession] Invalid compiled widget payload');
 
+    if (subject !== 'account') {
+      nextPolicy = instanceJson.policy;
+    }
+
     await loadInstance({
       type: 'ck:open-editor',
       widgetname: widgetType,
       compiled,
       instanceData: instanceJson.config,
-      localization: instanceJson.localization,
-      policy: instanceJson.policy,
+      localization: localizationPayload,
+      policy: nextPolicy,
       publicId: instanceJson.publicId ?? publicId,
       accountId,
+      accountCapsule: accountCapsule ?? undefined,
       ownerAccountId:
         typeof instanceJson.ownerAccountId === 'string' ? instanceJson.ownerAccountId : undefined,
       label: displayName,
@@ -2636,6 +2742,7 @@ function useWidgetSessionInternal() {
       previewData: state.previewData,
       previewOps: state.previewOps,
       isDirty: state.isDirty,
+      hasUnsavedChanges: state.isDirty || state.locale.dirty,
       minibobPersonalizationUsed: state.minibobPersonalizationUsed,
       isMinibob: state.policy.profile === 'minibob',
       policy: state.policy,
@@ -2663,10 +2770,8 @@ function useWidgetSessionInternal() {
       setInstanceLabel,
       setPreview,
       setLocalePreview,
-      saveLocaleOverrides,
+      clearLocaleManualOverrides,
       reloadLocalizationSnapshot,
-      refreshLocaleTranslations,
-      revertLocaleOverrides,
       loadInstance,
       consumeBudget,
       setCopilotThread,
@@ -2687,10 +2792,8 @@ function useWidgetSessionInternal() {
       loadInstance,
       setPreview,
       setLocalePreview,
-      saveLocaleOverrides,
+      clearLocaleManualOverrides,
       reloadLocalizationSnapshot,
-      refreshLocaleTranslations,
-      revertLocaleOverrides,
       setSelectedPath,
       setInstanceLabel,
       consumeBudget,

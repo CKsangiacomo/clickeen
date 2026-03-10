@@ -5,6 +5,7 @@ This is the technical reference for working in the Clickeen codebase. For strate
 **PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, ad‑hoc fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. (Exception: **best‑available localization overlays** are an explicit core contract; missing latest overlays must not break runtime.) Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/widgets/*`), defaults (`spec.json` → `defaults`), and curated local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high‑impact changes, still use safety rails (feature flags, rollback switches, and data‑safety checks) when a change can affect runtime behavior.
 
 **Debugging order (when something is unclear):**
+
 1. Runtime code + `supabase/migrations/` — actual behavior + DB schema truth
 2. Deployed Cloudflare config — environment variables/bindings can differ by stage
 3. `documentation/services/` + `documentation/widgets/` — operational guides (kept in sync with runtime)
@@ -20,23 +21,23 @@ Docs are the source of truth for intended behavior; runtime code + schema are th
 
 Clickeen is designed from the ground up to be **built by AI** and **run by AI**:
 
-| Layer | Who/What | Responsibility |
-|-------|----------|----------------|
-| **Vision & Architecture** | 1 Human | Product vision, system design, taste, strategic decisions |
-| **Building** | AI Coding (Cursor, Claude, GPT) | Write code from specs and PRDs |
-| **Operating** | AI Agents (San Francisco) | Sales, support, marketing, localization, ops |
+| Layer                     | Who/What                        | Responsibility                                            |
+| ------------------------- | ------------------------------- | --------------------------------------------------------- |
+| **Vision & Architecture** | 1 Human                         | Product vision, system design, taste, strategic decisions |
+| **Building**              | AI Coding (Cursor, Claude, GPT) | Write code from specs and PRDs                            |
+| **Operating**             | AI Agents (San Francisco)       | Sales, support, marketing, localization, ops              |
 
 **San Francisco is the Workforce OS** — not just a feature, but the system that runs the company:
 
-| Agent | Role | Replaces |
-|-------|------|----------|
-| SDR Copilot | Convert visitors in Minibob | Sales team |
-| Editor Copilot | Help users customize widgets | Product specialists |
-| Support Agent | Resolve user issues | Support team |
-| Marketing Copywriter | Funnels, landing pages, PLG copy | Marketing team |
-| Content Writer | Blog, SEO, help articles | Content team |
-| UI Translator | Product localization | Localization team |
-| Ops Monitor | Alerts, incidents, monitoring | DevOps/SRE team |
+| Agent                | Role                             | Replaces            |
+| -------------------- | -------------------------------- | ------------------- |
+| SDR Copilot          | Convert visitors in Minibob      | Sales team          |
+| Editor Copilot       | Help users customize widgets     | Product specialists |
+| Support Agent        | Resolve user issues              | Support team        |
+| Marketing Copywriter | Funnels, landing pages, PLG copy | Marketing team      |
+| Content Writer       | Blog, SEO, help articles         | Content team        |
+| UI Translator        | Product localization             | Localization team   |
+| Ops Monitor          | Alerts, incidents, monitoring    | DevOps/SRE team     |
 
 **All agents learn automatically** — outcomes feed back into the system, improving prompts and examples over time.
 
@@ -49,6 +50,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 ### Widget Definition vs Widget Instance
 
 **Widget Definition** (Tokyo widget folder) = THE SOFTWARE
+
 - Complete functional software for a widget type (e.g. FAQ)
 - Lives in `tokyo/widgets/{widgetType}/`
 - Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
@@ -56,55 +58,69 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Platform-controlled; **not stored in Michael** and **not served from Paris**
 
 **Widget Instance** = THE DATA
+
 - Instance configuration data (curated or user-owned)
 - Stored in Michael:
   - Clickeen-authored baseline + curated: `curated_widget_instances` with `widget_type`
   - User/account instances: `widget_instances` with `widget_id` (FK to `widgets`)
-- Paris exposes over HTTP as `{ publicId, widgetType, config }`
+- Product-path account open resolves the saved authoring revision from Tokyo; Michael remains the registry/shell metadata plane and localization-overlay state remains Paris-owned
 - Bob holds working copy in memory as `instanceData` during editing
 
-### The Two-API-Call Pattern
+### Product-Path Account Editing (Current PRD 61 Cutover)
 
-Core base-config editing follows EXACTLY 2 Paris instance calls per open session:
-1. **Load**: `GET /api/accounts/:accountId/instance/:publicId?subject=account` once per instance open (host-performed in Roma/DevStudio message boot, Bob-performed in URL boot).
-2. **Save**: `PUT /api/accounts/:accountId/instance/:publicId?subject=account` when the editor saves the base config. Persist is synchronous; snapshot/l10n convergence is async via queue/status.
+Core account editing currently uses direct app-owned read/write paths plus an explicit Paris aftermath step:
+
+1. **Open core instance**: `GET /api/accounts/:accountId/instance/:publicId?subject=account` once per instance open. Bob/Roma same-origin routes resolve the saved authoring revision from Tokyo only; live status is derived from Tokyo live pointers.
+2. **Save**: `PUT /api/accounts/:accountId/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, return success immediately, and schedule explicit Paris translation + published-surface aftermath after the response. The Tokyo commit is the save boundary.
+3. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership on each open/save/localization/status call.
+4. **After-save context**: the explicit Paris save-aftermath endpoints consume the bootstrap authz capsule plus caller-provided save context (`widgetType`, `status`, `source`, `previousConfig`) and the current Tokyo saved revision. They no longer need a second product-path instance-row lookup in Michael for normal account saves.
+
+Explicit localization-only reads are separate from core open:
+
+- `GET /api/accounts/:accountId/instances/:publicId/localization?subject=account` — same-origin explicit localization snapshot rehydrate (currently Paris-backed)
 
 Async l10n pipeline status is observed through:
+
 - `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account`
 
 `subject` is required on editor endpoints (`account`, `minibob`) to resolve editor policy.
 
 In the browser these flow through one of two host paths:
-- Bob URL boot path: Bob same-origin account route (`/api/accounts/:accountId/instance/:publicId?subject=account`) forwards to the account-scoped Paris endpoints.
-- Roma/DevStudio message boot path: host fetches instance + compiled payload, then sends Bob a `ck:open-editor` message (Bob still enforces save via the same Paris account endpoint).
 
-Localization is separate: Bob also calls account/instance locale endpoints when translating or applying overlay edits. Those writes are intentional and do **not** save the base config.
+- Bob URL boot path: Bob same-origin account route reads the saved authoring revision from Tokyo and separately rehydrates localization when needed.
+- Roma/DevStudio message boot path: host fetches the same core instance through its same-origin route, then sends Bob a `ck:open-editor` message. Save uses the same Tokyo-first direct route shape as Bob URL mode.
 
-Between load and save:
+Localization is separate: Bob also calls explicit account/instance localization endpoints when rehydrating overlay state or applying overlay edits. Those reads/writes are intentional and do **not** save the base config.
+
+Between open and save:
+
 - Base config edits happen in Bob's React state (in memory)
 - Preview updates via postMessage (no Paris API calls for base config)
-- Localization edits persist to overlay state via Paris (Paris-managed R2/KV write plane)
-- ZERO database writes for base config until Save
+- Core account instance open does not require Paris
+- Core account instance persistence does not proxy Paris
+- Localization overlay reads/writes still use Paris (Paris-managed R2/KV write plane)
+- ZERO database writes for base config during normal product open/save
 - Base config is not required to be English; Minibob may author base config in the user’s ConversationLanguage.
 
 **Why:** 10,000 users editing simultaneously = no server load for base config. Localization writes are scoped overlays, enabling async translation while preserving user edits. Millions of landing page visitors = zero DB pollution until signup + publish.
 
 ### Key Terms
 
-| Term | Description |
-|------|-------------|
-| `publicId` | Instance unique identifier in DB |
-| `widgetType` | Widget identifier referencing the definition (e.g., "faq") |
-| `config` | Persisted base instance values (stored in DB; served by Paris) |
-| `instanceData` | Working copy of config in Bob during editing |
-| `spec.json` | Defaults + ToolDrawer markup; compiled by Bob |
-| `agent.md` | AI contract documenting editable paths and semantics |
+| Term           | Description                                                                                              |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `publicId`     | Instance unique identifier in DB                                                                         |
+| `widgetType`   | Widget identifier referencing the definition (e.g., "faq")                                               |
+| `config`       | Persisted base instance values; active product account reads/writes use Tokyo's saved authoring snapshot |
+| `instanceData` | Working copy of config in Bob during editing                                                             |
+| `spec.json`    | Defaults + ToolDrawer markup; compiled by Bob                                                            |
+| `agent.md`     | AI contract documenting editable paths and semantics                                                     |
 
 ### Starter Designs (Curated Instances)
 
 **Clickeen does not have a separate gallery-preset content model.** "Starter designs" are Clickeen-authored instances stored in `curated_widget_instances` and exposed in the gallery.
 
 **How it works:**
+
 1. Clickeen team authors the starter instances in DevStudio.
 2. One instance per widget may be shown first in MiniBob (`wgt_main_{widgetType}` in current runtime naming).
 3. Other starter instances use `wgt_curated_{widgetType}_{styleSlug}` in current runtime naming.
@@ -113,12 +129,14 @@ Between load and save:
 6. User customizes their copy freely (full ToolDrawer access).
 
 **Why this approach:**
+
 - **One editor**: Clickeen and users author in Bob; same config schema.
 - **One instance set**: the same instances appear as DevStudio authoring targets, Roma starters, and Prague embeds.
 - **Deterministic publish**: Clickeen-authored instances are one-way (local -> cloud-dev).
 - **Scales to marketplace**: Curated instances remain shareable configs, not a new content type.
 
 **Naming convention for Clickeen starters:**
+
 ```
   wgt_main_{widgetType}
 wgt_curated_{widgetType}_{styleSlug}
@@ -130,6 +148,7 @@ Examples:
 **Publishing semantics:** Curated/owned instances are always publishable. In Michael, `curated_widget_instances.status` defaults to `published` and is not used as a user-facing gate (publishing is only a user-instance workflow).
 
 Curated metadata lives alongside the instance (not in the publicId):
+
 ```
 curated_widget_instances.meta = {
   styleName: "lightblurs.generic",
@@ -141,31 +160,31 @@ curated_widget_instances.meta = {
 
 ## Systems
 
-| System | Purpose | Runtime | Repo Path |
-|--------|---------|---------|-----------|
-| **Prague** | Marketing site + gallery | Cloudflare Pages | `prague/` |
-| **Bob** | Widget builder app | Cloudflare Pages (Next.js) | `bob/` |
-| **Roma** | Product shell (account domains + Builder host orchestration) | Cloudflare Pages (Next.js) | `roma/` |
-| **Venice** | SSR embed runtime | Cloudflare Pages (Next.js Edge) | `venice/` |
-| **Paris** | HTTP API gateway | Cloudflare Workers | `paris/` |
-| **San Francisco** | AI Workforce OS (agents, learning) | Workers (D1/KV/R2/Queues) | `sanfrancisco/` |
-| **Michael** | Database | Supabase Postgres | `supabase/` |
-| **Dieter** | Design system | Build artifacts in Tokyo | `dieter/` |
-| **Tokyo** | Asset storage & CDN | Cloudflare R2 | `tokyo/` |
-| **Tokyo Worker** | Account-owned asset uploads + l10n publisher + render snapshots | Cloudflare Workers + R2 | `tokyo-worker/` |
-| **Atlas** | Edge config cache (read-only) | Cloudflare KV | — |
+| System            | Purpose                                                         | Runtime                         | Repo Path       |
+| ----------------- | --------------------------------------------------------------- | ------------------------------- | --------------- |
+| **Prague**        | Marketing site + gallery                                        | Cloudflare Pages                | `prague/`       |
+| **Bob**           | Widget builder app                                              | Cloudflare Pages (Next.js)      | `bob/`          |
+| **Roma**          | Product shell (account domains + Builder host orchestration)    | Cloudflare Pages (Next.js)      | `roma/`         |
+| **Venice**        | SSR embed runtime                                               | Cloudflare Pages (Next.js Edge) | `venice/`       |
+| **Paris**         | HTTP API gateway                                                | Cloudflare Workers              | `paris/`        |
+| **San Francisco** | AI Workforce OS (agents, learning)                              | Workers (D1/KV/R2/Queues)       | `sanfrancisco/` |
+| **Michael**       | Database                                                        | Supabase Postgres               | `supabase/`     |
+| **Dieter**        | Design system                                                   | Build artifacts in Tokyo        | `dieter/`       |
+| **Tokyo**         | Asset storage & CDN                                             | Cloudflare R2                   | `tokyo/`        |
+| **Tokyo Worker**  | Account-owned asset uploads + l10n publisher + render snapshots | Cloudflare Workers + R2         | `tokyo-worker/` |
+| **Atlas**         | Edge config cache (read-only)                                   | Cloudflare KV                   | —               |
 
 ---
 
 ## Glossary
 
-**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, and saves base config via Paris (writes to Michael). Bob does not own a published/unpublished toggle; its Publish affordance is embed-code only. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
+**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly before explicit Paris convergence. Bob does not own a published/unpublished toggle; its copy-code affordance is only for getting website embed snippets. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
 
-**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for Paris calls, and opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle). In current cloud-dev, this collapses to one effective account: admin. Roma no longer exposes browser-side account switching there.
+**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle), and reads core account instance state through same-origin routes backed by Tokyo saved authoring state. Explicit localization rehydrate remains Paris-backed in the current cutover. In current cloud-dev, this collapses to one effective account: admin. Roma no longer exposes browser-side account switching there.
 
 **Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — HTTP write boundary (Cloudflare Workers). Reads/writes Michael using service role for core account/instance data, owns the l10n write plane in R2/KV, and handles entitlements + orchestration. Stateless compute layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). Base-config writes are transactional for persistence and validation; mirror/l10n convergence is async (queue + l10n status), so save persistence is not blocked on pointer advancement. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
+**Paris** — HTTP control/orchestration boundary (Cloudflare Workers). Reads/writes Michael using service role where needed for account/instance workflows, owns the l10n write plane in R2/KV, and handles entitlements + orchestration. Stateless compute layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). In the current PRD 61 cutover state, Paris is no longer on the product-path core-open or product-path persistence hot path for account instances; it now owns explicit translation sync, explicit published-surface sync, localization snapshot/overlay operations, and public mirror convergence. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
@@ -176,6 +195,7 @@ curated_widget_instances.meta = {
 **Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves immutable account asset paths (`/assets/v/:assetRef`), writes published **instance** l10n artifacts into Tokyo/R2, and publishes Venice render snapshots.
 
 **Asset URL contract (pre-GA strict):**
+
 - Full canonical contract: [AssetManagement.md](./AssetManagement.md)
 - Persisted widget config stores account assets as immutable `asset.ref` refs; runtime materializes canonical root-relative paths: `/assets/v/:assetRef`.
 - Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and `/assets/v/*`-backed `logoFill` strings) are outside contract and rejected on write.
@@ -214,14 +234,14 @@ tokyo/widgets/{widgetType}/
 
 All widgets use shared modules from `tokyo/widgets/shared/`:
 
-| Module | Global | Purpose |
-|--------|--------|---------|
-| `fill.js` | `CKFill.toCssBackground(fill)` / `CKFill.toCssColor(fill)` | Resolve fill configs (color/gradient/image/video) to CSS |
-| `header.js` | `CKHeader.applyHeader(state, widgetRoot)` | Shared header (title/subtitle/CTA) behavior + CSS vars |
-| `surface.js` | `CKSurface.applyCardWrapper(cardwrapper, scopeEl)` | Shared card wrapper vars (border/shadow/radius + inside-shadow layer placement) |
-| `stagePod.js` | `CKStagePod.applyStagePod(stage, pod, scopeEl)` | Stage/pod layout (background, padding, radius, alignment) |
+| Module          | Global                                                                        | Purpose                                                                          |
+| --------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `fill.js`       | `CKFill.toCssBackground(fill)` / `CKFill.toCssColor(fill)`                    | Resolve fill configs (color/gradient/image/video) to CSS                         |
+| `header.js`     | `CKHeader.applyHeader(state, widgetRoot)`                                     | Shared header (title/subtitle/CTA) behavior + CSS vars                           |
+| `surface.js`    | `CKSurface.applyCardWrapper(cardwrapper, scopeEl)`                            | Shared card wrapper vars (border/shadow/radius + inside-shadow layer placement)  |
+| `stagePod.js`   | `CKStagePod.applyStagePod(stage, pod, scopeEl)`                               | Stage/pod layout (background, padding, radius, alignment)                        |
 | `typography.js` | `CKTypography.applyTypography(typography, root, roleConfig, runtimeContext?)` | Typography roles with dynamic Google Fonts + locale/script-aware fallback stacks |
-| `branding.js` | *(self-executing)* | Injects "Made with Clickeen" badge + reacts to state updates |
+| `branding.js`   | _(self-executing)_                                                            | Injects "Made with Clickeen" badge + reacts to state updates                     |
 
 ### Stage/Pod Architecture
 
@@ -235,11 +255,13 @@ All widgets use shared modules from `tokyo/widgets/shared/`:
 Bob's compiler (`bob/lib/compiler/`) auto-generates shared functionality:
 
 **Auto-generated from `defaults` declarations:**
+
 - **Typography Panel** — If `defaults.typography.roles` exists, generates font family, size preset, custom size, style, and weight controls per role
 - **Stage/Pod Layout Panel** — If `defaults.stage`/`defaults.pod` exists, injects pod width, alignment, padding, radius controls
 - **Panel Grouping** — Layout clusters are normalized to `Widget layout`, `Item layout`, `Pod layout`, and `Stage layout` (when applicable). Surface clusters in Appearance are split into `Stage appearance` and `Pod appearance` (instead of a mixed Stage/Pod block).
 
 **Curated Typography:**
+
 - 18 curated Google Fonts with weight/style specifications
 - Font picker grouped by family category (`Sans`, `Serif`, `Display`, `Script`, `Handwritten`) with usage badges (`Body-safe`, `Heading-only`)
 - Dynamic loading via `CKTypography.applyTypography()`
@@ -275,6 +297,7 @@ Locale is a runtime parameter and must not be encoded into instance identity (`p
 - Canonical overlay truth for instances lives in Paris-managed overlay storage (`OVERLAYS_R2` + `L10N_STATE_KV`). Manual overrides live in layer=user and are merged into published text packs at publish/sync time.
 
 Canonical reference:
+
 - `documentation/capabilities/localization.md`
 
 ---
@@ -283,23 +306,23 @@ Canonical reference:
 
 ### Systems
 
-| System | Status | Notes |
-|--------|--------|-------|
-| Bob | ✅ Active | Compiler, ToolDrawer, Account, Ops engine |
-| Roma | ✅ Active | Domain shell, account bootstrap, widgets/templates/builder orchestration |
-| Tokyo | ✅ Active | FAQ widget with shared modules |
-| Paris | ✅ Active | Instance API, tokens, entitlements, submissions |
-| Venice | ✅ Active | SSR embed runtime (published-only), loader, asset proxy (usage/submissions are stubbed in this repo snapshot) |
-| Dieter | ✅ Active | 16+ components, tokens, typography |
-| Michael | ✅ Active | Supabase Postgres with RLS |
+| System  | Status    | Notes                                                                                                         |
+| ------- | --------- | ------------------------------------------------------------------------------------------------------------- |
+| Bob     | ✅ Active | Compiler, ToolDrawer, Account, Ops engine                                                                     |
+| Roma    | ✅ Active | Domain shell, account bootstrap, widgets/templates/builder orchestration                                      |
+| Tokyo   | ✅ Active | FAQ widget with shared modules                                                                                |
+| Paris   | ✅ Active | Instance API, tokens, entitlements, submissions                                                               |
+| Venice  | ✅ Active | SSR embed runtime (published-only), loader, asset proxy (usage/submissions are stubbed in this repo snapshot) |
+| Dieter  | ✅ Active | 16+ components, tokens, typography                                                                            |
+| Michael | ✅ Active | Supabase Postgres with RLS                                                                                    |
 
 ### Widgets
 
-| Widget | Status | Components Used |
-|--------|--------|-----------------|
-| FAQ | ✅ Active | See `tokyo/widgets/faq/spec.json` (object-manager, repeater, dropdown-edit, toggle, textfield, dropdown-fill, dropdown-actions, choice-tiles) |
-| Countdown | ✅ Active | See `tokyo/widgets/countdown/spec.json` |
-| Logo Showcase | ✅ Active | See `tokyo/widgets/logoshowcase/spec.json` |
+| Widget        | Status    | Components Used                                                                                                                               |
+| ------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| FAQ           | ✅ Active | See `tokyo/widgets/faq/spec.json` (object-manager, repeater, dropdown-edit, toggle, textfield, dropdown-fill, dropdown-actions, choice-tiles) |
+| Countdown     | ✅ Active | See `tokyo/widgets/countdown/spec.json`                                                                                                       |
+| Logo Showcase | ✅ Active | See `tokyo/widgets/logoshowcase/spec.json`                                                                                                    |
 
 ### Dieter Components
 
@@ -310,18 +333,20 @@ Canonical reference:
 ## Working with Code
 
 **Before making changes:**
+
 - Read `documentation/strategy/WhyClickeen.md` (strategy/vision)
 - Read `documentation/architecture/Overview.md` (system boundaries)
 - Read the relevant system doc (`documentation/services/{system}.md` or `documentation/services/prague/*.md`; San Francisco: `documentation/ai/*.md`)
 
 **Build & Dev:**
+
 ```bash
 pnpm install                    # Install dependencies
 pnpm build:dieter               # Build Dieter assets first
 pnpm build                      # Build all packages
 
 # Development
-bash scripts/dev-up.sh          # Profile=product (default): local DevStudio shell + cloud-dev data plane (optional local Bob via CK_PRODUCT_LOCAL_BOB=1)
+bash scripts/dev-up.sh          # Profile=product (default): local DevStudio + local Bob over the cloud-dev data plane
 bash scripts/dev-up.sh --source # Profile=source: full local stack (Tokyo/Tokyo-worker/Berlin/Paris/Venice/Bob/DevStudio/Prague/Pitch, + SF if enabled)
 pnpm dev:bob                    # Bob only
 pnpm dev:paris                  # Paris only
@@ -338,12 +363,14 @@ node scripts/compile-all-widgets.mjs
 Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 **Local instance data (important):**
+
 - Instances are **not** created by scripts anymore.
 - Supported product/account instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
 - Local DevStudio is for widget authoring work, not for “local Roma” parity.
 - That local authoring scope currently centers on loading the instances on the admin account for config iteration and translation checks.
 
 **Source-profile auth target (important):**
+
 - `bash scripts/dev-up.sh --source` uses local Supabase by default and ignores remote Supabase values in `.env.local`.
 - To force local services to use remote Supabase, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`.
 - Berlin runs locally at `http://localhost:3005` for parity/unit work, but supported product auth happens in cloud Roma.
@@ -351,14 +378,14 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 ### Environments (Canonical)
 
-| Environment | Bob | Roma | Paris | Tokyo | San Francisco | DevStudio |
-|---|---|---|---|---|---|---|
-| **Local (product profile)** | optional `http://localhost:3000` | `https://roma.dev.clickeen.com` | `http://localhost:3001` (trusted local boundary) | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `http://localhost:5173` |
-| **Local (source profile)** | `http://localhost:3000` | (cloud-only) | `http://localhost:3001` | `http://localhost:4000` | (optional) `http://localhost:3002` | `http://localhost:5173` |
-| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://paris.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.dev.clickeen.com` |
-| **UAT** | `https://app.clickeen.com` | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
-| **Limited GA** | `https://app.clickeen.com` | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
-| **GA** | `https://app.clickeen.com` | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
+| Environment                 | Bob                              | Roma                            | Paris                                            | Tokyo                            | San Francisco                           | DevStudio                            |
+| --------------------------- | -------------------------------- | ------------------------------- | ------------------------------------------------ | -------------------------------- | --------------------------------------- | ------------------------------------ |
+| **Local (product profile)** | optional `http://localhost:3000` | `https://roma.dev.clickeen.com` | `http://localhost:3001` (trusted local boundary) | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `http://localhost:5173`              |
+| **Local (source profile)**  | `http://localhost:3000`          | (cloud-only)                    | `http://localhost:3001`                          | `http://localhost:4000`          | (optional) `http://localhost:3002`      | `http://localhost:5173`              |
+| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com`   | `https://roma.dev.clickeen.com` | `https://paris.dev.clickeen.com`                 | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.dev.clickeen.com` |
+| **UAT**                     | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://paris.clickeen.com`                     | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
+| **Limited GA**              | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://paris.clickeen.com`                     | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
+| **GA**                      | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://paris.clickeen.com`                     | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
 
 UAT / Limited GA / GA are **release stages** (account-level exposure controls), not separate infrastructure.
 
@@ -369,6 +396,7 @@ UAT / Limited GA / GA are **release stages** (account-level exposure controls), 
 - **Compile-all gate**: `node scripts/compile-all-widgets.mjs` must stay green.
 
 **Key Discipline:**
+
 - Runtime code + DB schema are truth. Update docs when behavior changes.
 - Preserve what works; no speculative refactors.
 - Ask questions rather than guess.

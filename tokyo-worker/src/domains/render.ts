@@ -1,4 +1,10 @@
-import { guessContentTypeFromExt, normalizeLocale, normalizeSha256Hex, prettyStableJson, sha256Hex } from '../index';
+import {
+  guessContentTypeFromExt,
+  normalizeLocale,
+  normalizeSha256Hex,
+  prettyStableJson,
+  sha256Hex,
+} from '../index';
 import type { Env } from '../index';
 
 const UTF8_ENCODER = new TextEncoder();
@@ -29,6 +35,18 @@ export type LiveRenderPointer = {
     metaLiveBase: string;
     metaPacksBase: string;
   };
+};
+
+export type SavedRenderPointer = {
+  v: 1;
+  publicId: string;
+  accountId: string;
+  widgetType: string;
+  displayName: string | null;
+  source: 'account' | 'curated';
+  meta?: Record<string, unknown> | null;
+  configFp: string;
+  updatedAt: string;
 };
 
 export type L10nLivePointer = {
@@ -111,7 +129,10 @@ function encodeStableJson(value: unknown): Uint8Array {
 
 function jsonSha256Hex(value: unknown): Promise<string> {
   const bytes = encodeStableJson(value);
-  const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  const arrayBuffer = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
   return sha256Hex(arrayBuffer);
 }
 
@@ -130,6 +151,14 @@ function renderLivePointerKey(publicId: string): string {
 
 function renderConfigPackKey(publicId: string, configFp: string): string {
   return `renders/instances/${publicId}/config/${configFp}/config.json`;
+}
+
+function renderSavedPointerKey(publicId: string): string {
+  return `renders/instances/${publicId}/saved/r.json`;
+}
+
+function renderSavedConfigPackKey(publicId: string, configFp: string): string {
+  return `renders/instances/${publicId}/saved/config/${configFp}.json`;
 }
 
 function renderMetaLivePointerKey(publicId: string, locale: string): string {
@@ -178,7 +207,9 @@ function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const payload = raw as Record<string, unknown>;
   const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
-  const availableLocalesRaw = Array.isArray(payload.availableLocales) ? payload.availableLocales : [];
+  const availableLocalesRaw = Array.isArray(payload.availableLocales)
+    ? payload.availableLocales
+    : [];
   const availableLocales = availableLocalesRaw
     .map((value) => normalizeLocale(value))
     .filter((value): value is string => Boolean(value));
@@ -188,15 +219,21 @@ function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
 
   // Back-compat while PRD54 is executing: accept legacy {mode:'ip'|'switcher', ip:{countryToLocale}} pointers.
   const legacyModeRaw = typeof payload.mode === 'string' ? payload.mode.trim().toLowerCase() : '';
-  const legacyMode = legacyModeRaw === 'ip' ? 'ip' : legacyModeRaw === 'switcher' ? 'switcher' : null;
+  const legacyMode =
+    legacyModeRaw === 'ip' ? 'ip' : legacyModeRaw === 'switcher' ? 'switcher' : null;
 
   let ipEnabled = false;
   let switcherEnabled = true;
   const ipRaw = payload.ip;
-  const ipRecord = ipRaw && typeof ipRaw === 'object' && !Array.isArray(ipRaw) ? (ipRaw as Record<string, unknown>) : null;
+  const ipRecord =
+    ipRaw && typeof ipRaw === 'object' && !Array.isArray(ipRaw)
+      ? (ipRaw as Record<string, unknown>)
+      : null;
   const switcherRaw = payload.switcher;
   const switcherRecord =
-    switcherRaw && typeof switcherRaw === 'object' && !Array.isArray(switcherRaw) ? (switcherRaw as Record<string, unknown>) : null;
+    switcherRaw && typeof switcherRaw === 'object' && !Array.isArray(switcherRaw)
+      ? (switcherRaw as Record<string, unknown>)
+      : null;
 
   if (legacyMode) {
     ipEnabled = legacyMode === 'ip';
@@ -208,7 +245,11 @@ function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
 
   const countryToLocaleRaw = ipRecord?.countryToLocale;
   const countryToLocale: Record<string, string> = {};
-  if (countryToLocaleRaw && typeof countryToLocaleRaw === 'object' && !Array.isArray(countryToLocaleRaw)) {
+  if (
+    countryToLocaleRaw &&
+    typeof countryToLocaleRaw === 'object' &&
+    !Array.isArray(countryToLocaleRaw)
+  ) {
     for (const [country, locale] of Object.entries(countryToLocaleRaw as Record<string, unknown>)) {
       if (!/^[A-Z]{2}$/.test(country)) continue;
       const normalized = normalizeLocale(locale);
@@ -237,11 +278,17 @@ function normalizeLiveRenderPointer(raw: unknown): LiveRenderPointer | null {
   if (!publicId || !widgetType || !configFp || !localePolicy) return null;
   const l10n = payload.l10n;
   const liveBase =
-    l10n && typeof l10n === 'object' && !Array.isArray(l10n) && typeof (l10n as any).liveBase === 'string'
+    l10n &&
+    typeof l10n === 'object' &&
+    !Array.isArray(l10n) &&
+    typeof (l10n as any).liveBase === 'string'
       ? String((l10n as any).liveBase).trim()
       : '';
   const packsBase =
-    l10n && typeof l10n === 'object' && !Array.isArray(l10n) && typeof (l10n as any).packsBase === 'string'
+    l10n &&
+    typeof l10n === 'object' &&
+    !Array.isArray(l10n) &&
+    typeof (l10n as any).packsBase === 'string'
       ? String((l10n as any).packsBase).trim()
       : '';
   if (!liveBase || !packsBase) return null;
@@ -265,6 +312,42 @@ function normalizeLiveRenderPointer(raw: unknown): LiveRenderPointer | null {
     localePolicy,
     l10n: { liveBase, packsBase },
     seoGeo: seoGeo?.metaLiveBase && seoGeo?.metaPacksBase ? seoGeo : undefined,
+  };
+}
+
+function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const payload = raw as Record<string, unknown>;
+  if (payload.v !== 1) return null;
+  const publicId = normalizePublicId(payload.publicId) ?? '';
+  const accountId = normalizePublicId(payload.accountId) ?? '';
+  const widgetType = typeof payload.widgetType === 'string' ? payload.widgetType.trim() : '';
+  const displayNameRaw = typeof payload.displayName === 'string' ? payload.displayName.trim() : '';
+  const source =
+    payload.source === 'curated'
+      ? 'curated'
+      : payload.source === 'account' || payload.source === undefined
+        ? 'account'
+        : null;
+  const meta =
+    payload.meta && typeof payload.meta === 'object' && !Array.isArray(payload.meta)
+      ? (payload.meta as Record<string, unknown>)
+      : payload.meta === null || payload.meta === undefined
+        ? null
+        : null;
+  const configFp = normalizeFingerprint(payload.configFp) ?? '';
+  const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
+  if (!publicId || !accountId || !widgetType || !source || !configFp || !updatedAt) return null;
+  return {
+    v: 1,
+    publicId,
+    accountId,
+    widgetType,
+    displayName: displayNameRaw || null,
+    source,
+    meta,
+    configFp,
+    updatedAt,
   };
 }
 
@@ -309,7 +392,11 @@ export function isTokyoMirrorJob(value: unknown): value is TokyoMirrorQueueJob {
   );
 }
 
-export async function handleGetR2Object(env: Env, key: string, cacheControl: string): Promise<Response> {
+export async function handleGetR2Object(
+  env: Env,
+  key: string,
+  cacheControl: string,
+): Promise<Response> {
   const obj = await env.TOKYO_R2.get(key);
   if (!obj) {
     return new Response('Not found', {
@@ -329,6 +416,124 @@ export async function handleGetR2Object(env: Env, key: string, cacheControl: str
   return new Response(obj.body, { status: 200, headers });
 }
 
+export async function writeSavedRenderConfig(args: {
+  env: Env;
+  publicId: string;
+  accountId: string;
+  widgetType: string;
+  config: Record<string, unknown>;
+  displayName?: string | null;
+  source?: 'account' | 'curated';
+  meta?: Record<string, unknown> | null;
+}): Promise<SavedRenderPointer> {
+  const publicId = normalizePublicId(args.publicId);
+  if (!publicId) throw new Error('[tokyo] write-saved-render invalid publicId');
+  const accountId = normalizePublicId(args.accountId);
+  if (!accountId) throw new Error('[tokyo] write-saved-render invalid accountId');
+  const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
+  if (!widgetType) throw new Error('[tokyo] write-saved-render missing widgetType');
+  if (!args.config || typeof args.config !== 'object' || Array.isArray(args.config)) {
+    throw new Error('[tokyo] write-saved-render config must be an object');
+  }
+
+  const configFp = await jsonSha256Hex(args.config);
+  const packKey = renderSavedConfigPackKey(publicId, configFp);
+  await putJson(args.env, packKey, args.config);
+
+  const existing = normalizeSavedRenderPointer(
+    await loadJson(args.env, renderSavedPointerKey(publicId)),
+  );
+  const displayName =
+    args.displayName !== undefined
+      ? (typeof args.displayName === 'string' ? args.displayName.trim() : '') || null
+      : (existing?.displayName ?? null);
+  const source = args.source ?? existing?.source ?? 'account';
+  const meta = args.meta !== undefined ? args.meta : (existing?.meta ?? null);
+
+  const pointer: SavedRenderPointer = {
+    v: 1,
+    publicId,
+    accountId,
+    widgetType,
+    displayName,
+    source,
+    meta,
+    configFp,
+    updatedAt: new Date().toISOString(),
+  };
+  await putJson(args.env, renderSavedPointerKey(publicId), pointer);
+  return pointer;
+}
+
+export async function readSavedRenderConfig(args: {
+  env: Env;
+  publicId: string;
+  accountId: string;
+}): Promise<{ pointer: SavedRenderPointer; config: Record<string, unknown> } | null> {
+  const publicId = normalizePublicId(args.publicId);
+  const accountId = normalizePublicId(args.accountId);
+  if (!publicId || !accountId) return null;
+
+  const pointer = normalizeSavedRenderPointer(
+    await loadJson(args.env, renderSavedPointerKey(publicId)),
+  );
+  if (!pointer || pointer.accountId !== accountId) return null;
+
+  const config =
+    (await loadJson<Record<string, unknown>>(
+      args.env,
+      renderSavedConfigPackKey(publicId, pointer.configFp),
+    )) ?? null;
+  if (!config || typeof config !== 'object' || Array.isArray(config)) return null;
+  return { pointer, config };
+}
+
+export async function deleteSavedRenderConfig(args: {
+  env: Env;
+  publicId: string;
+  accountId: string;
+}): Promise<void> {
+  const publicId = normalizePublicId(args.publicId);
+  const accountId = normalizePublicId(args.accountId);
+  if (!publicId || !accountId) return;
+
+  const saved = await readSavedRenderConfig({ env: args.env, publicId, accountId });
+  if (!saved) return;
+
+  await Promise.all([
+    args.env.TOKYO_R2.delete(renderSavedPointerKey(publicId)),
+    args.env.TOKYO_R2.delete(renderSavedConfigPackKey(publicId, saved.pointer.configFp)),
+  ]);
+}
+
+export async function updateSavedRenderPointerMetadata(args: {
+  env: Env;
+  publicId: string;
+  accountId: string;
+  displayName?: string | null;
+  source?: 'account' | 'curated';
+  meta?: Record<string, unknown> | null;
+}): Promise<SavedRenderPointer | null> {
+  const saved = await readSavedRenderConfig({
+    env: args.env,
+    publicId: args.publicId,
+    accountId: args.accountId,
+  });
+  if (!saved) return null;
+
+  const nextPointer: SavedRenderPointer = {
+    ...saved.pointer,
+    displayName:
+      args.displayName !== undefined
+        ? (typeof args.displayName === 'string' ? args.displayName.trim() : '') || null
+        : saved.pointer.displayName,
+    source: args.source ?? saved.pointer.source,
+    meta: args.meta !== undefined ? args.meta : (saved.pointer.meta ?? null),
+  };
+  await putJson(args.env, renderSavedPointerKey(saved.pointer.publicId), nextPointer);
+  return nextPointer;
+}
+
 export async function writeConfigPack(env: Env, job: WriteConfigPackJob): Promise<void> {
   const publicId = normalizePublicId(job.publicId);
   if (!publicId) throw new Error('[tokyo] write-config-pack missing publicId');
@@ -339,7 +544,9 @@ export async function writeConfigPack(env: Env, job: WriteConfigPackJob): Promis
 
   const fingerprint = await jsonSha256Hex(job.configPack);
   if (fingerprint !== configFp) {
-    throw new Error(`[tokyo] write-config-pack fingerprint mismatch expected=${configFp} got=${fingerprint}`);
+    throw new Error(
+      `[tokyo] write-config-pack fingerprint mismatch expected=${configFp} got=${fingerprint}`,
+    );
   }
 
   const bytes = encodeStableJson(job.configPack);
@@ -459,7 +666,11 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
   for (const locale of localePolicy.availableLocales) {
     await ensureR2KeyExists(env, l10nLivePointerKey(publicId, locale), `text pointer (${locale})`);
     if (job.seoGeo) {
-      await ensureR2KeyExists(env, renderMetaLivePointerKey(publicId, locale), `meta pointer (${locale})`);
+      await ensureR2KeyExists(
+        env,
+        renderMetaLivePointerKey(publicId, locale),
+        `meta pointer (${locale})`,
+      );
     }
   }
 
@@ -556,6 +767,8 @@ export {
   l10nTextPackKey,
   renderConfigPackKey,
   renderLivePointerKey,
+  renderSavedPointerKey,
+  renderSavedConfigPackKey,
   renderMetaLivePointerKey,
   renderMetaPackKey,
 };

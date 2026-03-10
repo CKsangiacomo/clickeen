@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AccountLocaleSettingsCard } from './account-locale-settings-card';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
@@ -26,16 +27,6 @@ type PlanChangeResponse =
     }
   | { ok?: false; error?: unknown };
 
-type InstancesUnpublishResponse =
-  | {
-      ok: true;
-      accountId: string;
-      kept: string[];
-      unpublished: string[];
-      tokyo?: { deleteEnqueued?: number; failed?: string[] };
-    }
-  | { ok?: false; error?: unknown };
-
 export function SettingsDomain() {
   const me = useRomaMe();
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
@@ -45,6 +36,10 @@ export function SettingsDomain() {
     () => (me.data?.accounts ?? []).find((entry) => entry.accountId === activeAccountId) ?? null,
     [me.data?.accounts, activeAccountId],
   );
+  const accountCapsule =
+    me.data?.authz?.accountCapsule && me.data.authz.accountCapsule.trim()
+      ? me.data.authz.accountCapsule.trim()
+      : '';
 
   const [nextTier, setNextTier] = useState<AccountTier>('free');
   useEffect(() => {
@@ -65,7 +60,10 @@ export function SettingsDomain() {
         `/api/accounts/${encodeURIComponent(activeAccountId)}/lifecycle/plan-change?confirm=1`,
         {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            ...(accountCapsule ? { 'x-ck-authz-capsule': accountCapsule } : {}),
+          },
           body: JSON.stringify({ nextTier }),
         },
       );
@@ -77,46 +75,29 @@ export function SettingsDomain() {
     } finally {
       setPlanChangeLoading(false);
     }
-  }, [activeAccountId, me, nextTier]);
+  }, [accountCapsule, activeAccountId, me, nextTier]);
 
-  const [unpublishLoading, setUnpublishLoading] = useState(false);
-  const [unpublishError, setUnpublishError] = useState<string | null>(null);
-  const [unpublishResult, setUnpublishResult] = useState<InstancesUnpublishResponse | null>(null);
-
-  const unpublishAllInstances = useCallback(async () => {
-    if (!activeAccountId) return;
-    setUnpublishLoading(true);
-    setUnpublishError(null);
-    setUnpublishResult(null);
-    try {
-      const payload = await fetchParisJson<InstancesUnpublishResponse>(
-        `/api/accounts/${encodeURIComponent(activeAccountId)}/instances/unpublish?confirm=1`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ keepLivePublicIds: [] }),
-        },
-      );
-      setUnpublishResult(payload);
-      await me.reload();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setUnpublishError(message);
-    } finally {
-      setUnpublishLoading(false);
-    }
-  }, [activeAccountId, me]);
-
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading account context...</section>;
+  if (me.loading)
+    return <section className="rd-canvas-module body-m">Loading account context...</section>;
   if (me.error || !me.data) {
-    return <section className="rd-canvas-module body-m">Failed to load account context: {me.error ?? 'unknown_error'}</section>;
+    return (
+      <section className="rd-canvas-module body-m">
+        Failed to load account context: {me.error ?? 'unknown_error'}
+      </section>
+    );
   }
 
   if (!activeAccountId || !activeAccount) {
     return (
       <section className="rd-canvas-module">
         <p className="body-m">No account context is available.</p>
-        <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void me.reload()}>
+        <button
+          className="diet-btn-txt"
+          data-size="md"
+          data-variant="primary"
+          type="button"
+          onClick={() => void me.reload()}
+        >
           <span className="diet-btn-txt__label body-m">Reload</span>
         </button>
       </section>
@@ -132,9 +113,12 @@ export function SettingsDomain() {
           Account: {activeAccount.name} ({activeAccount.slug})
         </p>
         <p className="body-s">
-          Account ID: {activeAccount.accountId} | Tier: {activeAccount.tier} | Role: {activeAccount.role}
+          Account ID: {activeAccount.accountId} | Tier: {activeAccount.tier} | Role:{' '}
+          {activeAccount.role}
         </p>
-        {activeAccount.websiteUrl ? <p className="body-s">Website: {activeAccount.websiteUrl}</p> : null}
+        {activeAccount.websiteUrl ? (
+          <p className="body-s">Website: {activeAccount.websiteUrl}</p>
+        ) : null}
         <div className="rd-canvas-module__actions">
           <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/widgets">
             <span className="diet-btn-txt__label body-m">Open widgets</span>
@@ -147,7 +131,9 @@ export function SettingsDomain() {
 
       <section className="rd-canvas-module">
         <h2 className="heading-6">Plan tier</h2>
-        <p className="body-m">Plan changes apply per account (brand/site/client = 1 payer account).</p>
+        <p className="body-m">
+          Plan changes apply per account (brand/site/client = 1 payer account).
+        </p>
         <div className="roma-toolbar">
           <select
             className="roma-select"
@@ -169,7 +155,9 @@ export function SettingsDomain() {
             onClick={() => void applyPlanChange()}
             disabled={!canManagePlan || planChangeLoading}
           >
-            <span className="diet-btn-txt__label body-m">{planChangeLoading ? 'Applying…' : 'Apply tier'}</span>
+            <span className="diet-btn-txt__label body-m">
+              {planChangeLoading ? 'Applying…' : 'Apply tier'}
+            </span>
           </button>
         </div>
         {!canManagePlan ? <p className="body-s">Only account owners can change tier.</p> : null}
@@ -182,28 +170,10 @@ export function SettingsDomain() {
         ) : null}
       </section>
 
-      <section className="rd-canvas-module">
-        <h2 className="heading-6">Danger zone: unpublish all</h2>
-        <p className="body-m">Turns off every live instance for this account and enqueues Tokyo cleanup.</p>
-        <button
-          className="diet-btn-txt"
-          data-size="md"
-          data-variant="secondary"
-          type="button"
-          onClick={() => void unpublishAllInstances()}
-          disabled={unpublishLoading || !canManagePlan}
-        >
-          <span className="diet-btn-txt__label body-m">{unpublishLoading ? 'Unpublishing…' : 'Unpublish all instances'}</span>
-        </button>
-        {!canManagePlan ? <p className="body-s">Only account owners can unpublish all instances.</p> : null}
-        {unpublishError ? <p className="body-m">Unpublish failed: {unpublishError}</p> : null}
-        {unpublishResult && (unpublishResult as any).ok ? (
-          <div className="roma-codeblock">
-            <strong className="overline-small">Unpublish result</strong>
-            <pre>{JSON.stringify(unpublishResult, null, 2)}</pre>
-          </div>
-        ) : null}
-      </section>
+      <AccountLocaleSettingsCard
+        accountId={activeAccountId}
+        canEdit={activeAccount.role !== 'viewer'}
+      />
     </>
   );
 }

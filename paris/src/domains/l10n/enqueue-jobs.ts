@@ -103,6 +103,7 @@ export async function enqueueL10nJobs(args: {
   instance: InstanceRow | CuratedInstanceRow;
   account: AccountRow;
   widgetType: string | null;
+  config?: Record<string, unknown>;
   baseUpdatedAt: string | null | undefined;
   policy: Policy;
   localesOverride?: string[];
@@ -139,7 +140,7 @@ export async function enqueueL10nJobs(args: {
   const planning = await resolveL10nPlanningSnapshot({
     env: args.env,
     widgetType: args.widgetType,
-    config: args.instance.config,
+    config: args.config ?? args.instance.config,
     baseUpdatedAt: args.baseUpdatedAt ?? null,
   });
   if (!planning.ok) {

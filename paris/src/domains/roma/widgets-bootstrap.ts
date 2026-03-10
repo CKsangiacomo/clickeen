@@ -11,12 +11,11 @@ import { resolveAdminAccountId } from '../../shared/admin';
 import { normalizeMemberRole, roleRank } from '../../shared/roles';
 import { supabaseFetch } from '../../shared/supabase';
 import { formatCuratedDisplayName, readCuratedMeta } from '../../shared/curated-meta';
-import { asTrimmedString, assertAccountId, assertConfig, isRecord } from '../../shared/validation';
-import { assertPublicId, assertWidgetType, isCuratedInstanceRow, isCuratedPublicId } from '../../shared/instances';
+import { asTrimmedString, assertAccountId } from '../../shared/validation';
+import { assertPublicId, isCuratedInstanceRow, isCuratedPublicId } from '../../shared/instances';
 import { syncAccountAssetUsageForInstanceStrict } from '../account-instances/helpers';
 import { enqueueTokyoMirrorJob } from '../account-instances/service';
-import { handleAccountCreateInstance } from '../account-instances/create-handler';
-import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
+import { loadInstanceByAccountAndPublicId } from '../instances';
 import { resolveIdentityMePayload } from '../identity';
 
 const ROMA_AUTHZ_CAPSULE_TTL_SEC = 15 * 60;
@@ -55,17 +54,6 @@ async function resolveAccountEntitlementsSnapshot(args: {
   };
 }
 
-function createUserInstancePublicId(widgetType: string): string {
-  const normalized = widgetType
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '');
-  const stem = normalized || 'instance';
-  const suffix = `${Date.now().toString(36)}${crypto.randomUUID().replace(/-/g, '').slice(0, 10)}`;
-  return `wgt_${stem}_u_${suffix}`;
-}
-
 type RomaWidgetsInstancePayload = {
   publicId: string;
   widgetType: string;
@@ -76,6 +64,8 @@ type RomaWidgetsInstancePayload = {
     edit: boolean;
     duplicate: boolean;
     delete: boolean;
+    publish: boolean;
+    unpublish: boolean;
   };
 };
 
@@ -88,10 +78,14 @@ async function resolveWidgetTypesById(env: Env, widgetIds: string[]): Promise<Ma
     id: `in.(${unique.join(',')})`,
     limit: String(unique.length),
   });
-  const widgetRes = await supabaseFetch(env, `/rest/v1/widgets?${widgetParams.toString()}`, { method: 'GET' });
+  const widgetRes = await supabaseFetch(env, `/rest/v1/widgets?${widgetParams.toString()}`, {
+    method: 'GET',
+  });
   if (!widgetRes.ok) {
     const details = await readJson(widgetRes);
-    throw new Error(`[ParisWorker] Failed to load widget rows (${widgetRes.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load widget rows (${widgetRes.status}): ${JSON.stringify(details)}`,
+    );
   }
   const widgetRows = ((await widgetRes.json()) as WidgetRow[] | null) ?? [];
   const map = new Map<string, string>();
@@ -103,28 +97,40 @@ async function resolveWidgetTypesById(env: Env, widgetIds: string[]): Promise<Ma
   return map;
 }
 
-async function loadAccountWidgetInstances(env: Env, accountId: string): Promise<RomaWidgetsInstancePayload[]> {
+async function loadAccountWidgetInstances(
+  env: Env,
+  accountId: string,
+): Promise<RomaWidgetsInstancePayload[]> {
   const params = new URLSearchParams({
     select: 'public_id,status,display_name,widget_id,created_at',
     account_id: `eq.${accountId}`,
     order: 'created_at.desc',
     limit: '500',
   });
-  const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, {
+    method: 'GET',
+  });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load account instances (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load account instances (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
-  const rows = ((await res.json()) as Array<Pick<InstanceRow, 'public_id' | 'status' | 'display_name' | 'widget_id'>> | null) ?? [];
+  const rows =
+    ((await res.json()) as Array<
+      Pick<InstanceRow, 'public_id' | 'status' | 'display_name' | 'widget_id'>
+    > | null) ?? [];
 
   const widgetIds = Array.from(
-    new Set(rows.map((row) => asTrimmedString(row.widget_id)).filter((id): id is string => Boolean(id))),
+    new Set(
+      rows.map((row) => asTrimmedString(row.widget_id)).filter((id): id is string => Boolean(id)),
+    ),
   );
   const widgetTypeById = await resolveWidgetTypesById(env, widgetIds);
 
   return rows.map((row) => {
     const widgetId = asTrimmedString(row.widget_id);
-    const widgetType = widgetId ? widgetTypeById.get(widgetId) ?? 'unknown' : 'unknown';
+    const widgetType = widgetId ? (widgetTypeById.get(widgetId) ?? 'unknown') : 'unknown';
     const status = row.status === 'published' ? 'published' : 'unpublished';
     return {
       publicId: row.public_id,
@@ -132,7 +138,14 @@ async function loadAccountWidgetInstances(env: Env, accountId: string): Promise<
       displayName: asTrimmedString(row.display_name) ?? 'Untitled widget',
       status,
       source: 'account',
-      actions: { edit: true, duplicate: true, delete: true },
+      actions: {
+        edit: true,
+        duplicate: true,
+        delete: true,
+        rename: true,
+        publish: true,
+        unpublish: true,
+      },
     };
   });
 }
@@ -145,17 +158,26 @@ type CuratedWidgetInstanceListRow = {
   owner_account_id?: string | null;
 };
 
-async function loadOwnedCuratedWidgetInstances(env: Env, ownerAccountId: string): Promise<RomaWidgetsInstancePayload[]> {
+async function loadOwnedCuratedWidgetInstances(
+  env: Env,
+  ownerAccountId: string,
+): Promise<RomaWidgetsInstancePayload[]> {
   const params = new URLSearchParams({
     select: 'public_id,widget_type,status,meta,owner_account_id',
     owner_account_id: `eq.${ownerAccountId}`,
     order: 'created_at.desc',
     limit: '500',
   });
-  const curatedRes = await supabaseFetch(env, `/rest/v1/curated_widget_instances?${params.toString()}`, { method: 'GET' });
+  const curatedRes = await supabaseFetch(
+    env,
+    `/rest/v1/curated_widget_instances?${params.toString()}`,
+    { method: 'GET' },
+  );
   if (!curatedRes.ok) {
     const details = await readJson(curatedRes);
-    throw new Error(`[ParisWorker] Failed to load curated instances (${curatedRes.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load curated instances (${curatedRes.status}): ${JSON.stringify(details)}`,
+    );
   }
   const rows = ((await curatedRes.json()) as CuratedWidgetInstanceListRow[] | null) ?? [];
   return rows.map((row) => {
@@ -167,7 +189,14 @@ async function loadOwnedCuratedWidgetInstances(env: Env, ownerAccountId: string)
       displayName: formatCuratedDisplayName(meta, publicId),
       status: row.status === 'unpublished' ? 'unpublished' : 'published',
       source: 'curated',
-      actions: { edit: true, duplicate: true, delete: true },
+      actions: {
+        edit: true,
+        duplicate: true,
+        delete: true,
+        rename: false,
+        publish: false,
+        unpublish: false,
+      },
     };
   });
 }
@@ -181,7 +210,9 @@ async function loadAllWidgetTypes(env: Env): Promise<string[]> {
   const res = await supabaseFetch(env, `/rest/v1/widgets?${params.toString()}`, { method: 'GET' });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load widget types (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load widget types (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
   const rows = ((await res.json()) as Array<{ type?: string | null }> | null) ?? [];
   return rows
@@ -264,7 +295,10 @@ export async function handleRomaBootstrap(req: Request, env: Env): Promise<Respo
     entitlements = entitlementsSnapshot;
   } catch (error) {
     const detail = errorDetail(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.auth.contextUnavailable', detail }, 500);
+    return ckError(
+      { kind: 'INTERNAL', reasonKey: 'coreui.errors.auth.contextUnavailable', detail },
+      500,
+    );
   }
 
   return json({
@@ -288,7 +322,9 @@ export async function handleRomaWidgets(req: Request, env: Env): Promise<Respons
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer', {
+    requireCapsule: true,
+  });
   if (!authorized.ok) return authorized.response;
 
   const policy = resolvePolicy({ profile: authorized.account.tier, role: authorized.role });
@@ -320,6 +356,8 @@ export async function handleRomaWidgets(req: Request, env: Env): Promise<Respons
         edit: true,
         duplicate: canMutate,
         delete: isCurated ? canMutateCurated : canMutate,
+        publish: !isCurated && canMutate,
+        unpublish: !isCurated && canMutate,
       },
     };
   });
@@ -348,7 +386,9 @@ export async function handleRomaTemplates(req: Request, env: Env): Promise<Respo
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer', {
+    requireCapsule: true,
+  });
   if (!authorized.ok) return authorized.response;
 
   const params = new URLSearchParams({
@@ -357,12 +397,28 @@ export async function handleRomaTemplates(req: Request, env: Env): Promise<Respo
     order: 'created_at.desc',
     limit: '500',
   });
-  const curatedRes = await supabaseFetch(env, `/rest/v1/curated_widget_instances?${params.toString()}`, { method: 'GET' });
+  const curatedRes = await supabaseFetch(
+    env,
+    `/rest/v1/curated_widget_instances?${params.toString()}`,
+    { method: 'GET' },
+  );
   if (!curatedRes.ok) {
     const details = await readJson(curatedRes);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.db.readFailed',
+        detail: JSON.stringify(details),
+      },
+      500,
+    );
   }
-  const rows = ((await curatedRes.json()) as Array<{ public_id?: string; widget_type?: string | null; meta?: unknown }> | null) ?? [];
+  const rows =
+    ((await curatedRes.json()) as Array<{
+      public_id?: string;
+      widget_type?: string | null;
+      meta?: unknown;
+    }> | null) ?? [];
 
   const instances = rows
     .map((row) => {
@@ -377,9 +433,9 @@ export async function handleRomaTemplates(req: Request, env: Env): Promise<Respo
     })
     .filter((row): row is NonNullable<typeof row> => Boolean(row));
 
-  const widgetTypes = Array.from(new Set(instances.map((instance) => instance.widgetType).filter((t) => t !== 'unknown'))).sort((a, b) =>
-    a.localeCompare(b),
-  );
+  const widgetTypes = Array.from(
+    new Set(instances.map((instance) => instance.widgetType).filter((t) => t !== 'unknown')),
+  ).sort((a, b) => a.localeCompare(b));
 
   return json({
     account: {
@@ -390,111 +446,11 @@ export async function handleRomaTemplates(req: Request, env: Env): Promise<Respo
   });
 }
 
-export async function handleRomaWidgetDuplicate(req: Request, env: Env): Promise<Response> {
-  let bodyRaw: unknown;
-  try {
-    bodyRaw = await req.json();
-  } catch {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' }, 422);
-  }
-  if (!isRecord(bodyRaw)) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
-  }
-
-  const accountIdResult = assertAccountId(bodyRaw.accountId);
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const sourcePublicIdResult = assertPublicId(bodyRaw.sourcePublicId);
-  if (!sourcePublicIdResult.ok) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);
-  }
-  const sourcePublicId = sourcePublicIdResult.value;
-
-  const authorized = await authorizeAccount(req, env, accountId, 'editor');
-  if (!authorized.ok) return authorized.response;
-
-  const sourceIsCurated = isCuratedPublicId(sourcePublicId);
-
-  let sourceInstance: Awaited<ReturnType<typeof loadInstanceByAccountAndPublicId>> = null;
-  try {
-    sourceInstance = await loadInstanceByAccountAndPublicId(env, accountId, sourcePublicId);
-  } catch (error) {
-    const detail = errorDetail(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-  if (!sourceInstance) {
-    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
-  }
-
-  let widgetType: string | null = null;
-  try {
-    widgetType = await resolveWidgetTypeForInstance(env, sourceInstance);
-  } catch (error) {
-    const detail = errorDetail(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-  if (!widgetType) {
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
-  }
-  const widgetTypeResult = assertWidgetType(widgetType);
-  if (!widgetTypeResult.ok) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
-  }
-
-  const configResult = assertConfig(sourceInstance.config);
-  if (!configResult.ok) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
-  }
-
-  const destinationPublicId = createUserInstancePublicId(widgetTypeResult.value);
-  const createUrl = new URL(req.url);
-  createUrl.pathname = `/api/accounts/${encodeURIComponent(accountId)}/instances`;
-  createUrl.search = '';
-  createUrl.searchParams.set('subject', 'account');
-
-  const createHeaders = new Headers();
-  const authorization = req.headers.get('authorization');
-  if (authorization) createHeaders.set('authorization', authorization);
-  const capsule = req.headers.get('x-ck-authz-capsule');
-  if (capsule) createHeaders.set('x-ck-authz-capsule', capsule);
-  createHeaders.set('content-type', 'application/json');
-
-  const createReq = new Request(createUrl.toString(), {
-    method: 'POST',
-    headers: createHeaders,
-    body: JSON.stringify({
-      publicId: destinationPublicId,
-      widgetType: widgetTypeResult.value,
-      status: 'unpublished',
-      config: configResult.value,
-    }),
-  });
-
-  const createResponse = await handleAccountCreateInstance(createReq, env, accountId);
-  if (!createResponse.ok) return createResponse;
-
-  const createdPayload = await readJson(createResponse);
-  const createdPublicIdRaw =
-    createdPayload && typeof createdPayload === 'object' && 'publicId' in createdPayload
-      ? asTrimmedString((createdPayload as { publicId?: unknown }).publicId)
-      : null;
-  const createdPublicId = createdPublicIdRaw || destinationPublicId;
-
-  return json(
-    {
-      accountId,
-      sourcePublicId,
-      publicId: createdPublicId,
-      widgetType: widgetTypeResult.value,
-      status: 'unpublished',
-      source: sourceIsCurated ? 'curated' : 'account',
-    },
-    { status: 201 },
-  );
-}
-
-export async function handleRomaWidgetDelete(req: Request, env: Env, publicIdRaw: string): Promise<Response> {
+export async function handleRomaWidgetDelete(
+  req: Request,
+  env: Env,
+  publicIdRaw: string,
+): Promise<Response> {
   const publicIdResult = assertPublicId(publicIdRaw);
   if (!publicIdResult.ok) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);
@@ -506,7 +462,9 @@ export async function handleRomaWidgetDelete(req: Request, env: Env, publicIdRaw
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const authorized = await authorizeAccount(req, env, accountId, 'editor');
+  const authorized = await authorizeAccount(req, env, accountId, 'editor', {
+    requireCapsule: true,
+  });
   if (!authorized.ok) return authorized.response;
 
   const adminAccountId = resolveAdminAccountId(env);
@@ -535,7 +493,11 @@ export async function handleRomaWidgetDelete(req: Request, env: Env, publicIdRaw
 
   let tokyoCleanupQueued = false;
   try {
-    const enqueue = await enqueueTokyoMirrorJob(env, { v: 1, kind: 'delete-instance-mirror', publicId });
+    const enqueue = await enqueueTokyoMirrorJob(env, {
+      v: 1,
+      kind: 'delete-instance-mirror',
+      publicId,
+    });
     tokyoCleanupQueued = enqueue.ok;
     if (!enqueue.ok) {
       console.error('[ParisWorker] tokyo delete-instance-mirror enqueue failed', enqueue.error);
@@ -548,10 +510,20 @@ export async function handleRomaWidgetDelete(req: Request, env: Env, publicIdRaw
   const deletePath = sourceIsCurated
     ? `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(publicId)}`
     : `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&account_id=eq.${encodeURIComponent(accountId)}`;
-  const deleteRes = await supabaseFetch(env, deletePath, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+  const deleteRes = await supabaseFetch(env, deletePath, {
+    method: 'DELETE',
+    headers: { Prefer: 'return=minimal' },
+  });
   if (!deleteRes.ok) {
     const details = await readJson(deleteRes);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.db.writeFailed',
+        detail: JSON.stringify(details),
+      },
+      500,
+    );
   }
 
   const usageSyncError = await syncAccountAssetUsageForInstanceStrict({
@@ -563,7 +535,13 @@ export async function handleRomaWidgetDelete(req: Request, env: Env, publicIdRaw
   if (usageSyncError) return usageSyncError;
 
   return json(
-    { accountId, publicId, source: sourceIsCurated ? 'curated' : 'account', deleted: true, tokyoCleanupQueued },
+    {
+      accountId,
+      publicId,
+      source: sourceIsCurated ? 'curated' : 'account',
+      deleted: true,
+      tokyoCleanupQueued,
+    },
     { status: 200 },
   );
 }

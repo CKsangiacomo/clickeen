@@ -92,8 +92,6 @@ export type UpdatePayload = {
   status?: 'published' | 'unpublished';
   displayName?: string | null;
   meta?: Record<string, unknown> | null;
-  localePolicy?: LocalePolicy;
-  seoGeo?: boolean;
 };
 
 export type CreateInstancePayload = {

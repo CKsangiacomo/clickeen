@@ -209,6 +209,8 @@ export async function proxyToParisRoute(
   if (contentType) headers.set('content-type', contentType);
   const accept = request.headers.get('accept');
   if (accept) headers.set('accept', accept);
+  const authzCapsule = request.headers.get('x-ck-authz-capsule');
+  if (authzCapsule) headers.set('x-ck-authz-capsule', authzCapsule);
   for (const headerName of options.forwardHeaders || []) {
     const value = request.headers.get(headerName);
     if (value) headers.set(headerName, value);

@@ -9,7 +9,6 @@ export {
   handleAccountInstanceLayersList,
 } from './layers-handlers';
 export {
-  handleAccountInstanceL10nEnqueueSelected,
   handleAccountInstanceL10nStatus,
   handleAccountLocalesPut,
 } from './account-handlers';

@@ -1,17 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isUuid } from '@clickeen/ck-contracts';
-import { proxyToParisRoute, resolveParisSession, withSessionAndCors } from '../../../../../lib/api/paris/proxy-helpers';
+import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../bob/lib/account-authz-capsule';
+import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
+import { proxyToParis } from '../../../../../lib/api/paris-proxy';
 import { getAccountLocalesRow } from '../../../../../lib/michael';
 
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ accountId: string }> };
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,PUT,OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id',
-} as const;
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+function withNoStore(response: NextResponse): NextResponse {
+  response.headers.set('cache-control', 'no-store');
+  response.headers.set('cdn-cache-control', 'no-store');
+  response.headers.set('cloudflare-cdn-cache-control', 'no-store');
+  return response;
+}
+
+function withSession(
+  request: NextRequest,
+  response: NextResponse,
+  setCookies?: SessionCookieSpec[],
+): NextResponse {
+  return withNoStore(applySessionCookies(response, request, setCookies));
+}
 
 function normalizeLocaleList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -25,34 +39,40 @@ function normalizeLocaleList(value: unknown): string[] {
   return Array.from(new Set(normalized));
 }
 
-export function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
-}
-
 export async function GET(request: NextRequest, context: RouteContext) {
-  const session = await resolveParisSession(request);
-  if (!session.ok) {
-    return withSessionAndCors(request, session.response, undefined, CORS_HEADERS);
-  }
+  const session = await resolveSessionBearer(request);
+  if (!session.ok) return withNoStore(session.response);
 
-  const params = await context.params;
-  const accountId = String(params.accountId || '').trim();
+  const { accountId: accountIdRaw } = await context.params;
+  const accountId = String(accountIdRaw || '').trim();
   if (!isUuid(accountId)) {
-    return withSessionAndCors(
+    return withSession(
       request,
       NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
         { status: 422 },
       ),
       session.setCookies,
-      CORS_HEADERS,
+    );
+  }
+
+  const authz = await authorizeRequestAccountRoleFromCapsule({
+    request,
+    accountId,
+    minRole: 'viewer',
+  });
+  if (!authz.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: authz.error }, { status: authz.status }),
+      session.setCookies,
     );
   }
 
   const rowResult = await getAccountLocalesRow(accountId, session.accessToken);
   if (!rowResult.ok) {
     const status = rowResult.status === 401 ? 401 : 502;
-    return withSessionAndCors(
+    return withSession(
       request,
       NextResponse.json(
         {
@@ -65,19 +85,17 @@ export async function GET(request: NextRequest, context: RouteContext) {
         { status },
       ),
       session.setCookies,
-      CORS_HEADERS,
     );
   }
 
   if (!rowResult.row) {
-    return withSessionAndCors(
+    return withSession(
       request,
       NextResponse.json(
         { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
         { status: 403 },
       ),
       session.setCookies,
-      CORS_HEADERS,
     );
   }
 
@@ -87,7 +105,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       ? rowResult.row.l10n_policy
       : null;
 
-  return withSessionAndCors(
+  return withSession(
     request,
     NextResponse.json({
       accountId,
@@ -95,28 +113,41 @@ export async function GET(request: NextRequest, context: RouteContext) {
       policy,
     }),
     session.setCookies,
-    CORS_HEADERS,
   );
 }
 
 export async function PUT(request: NextRequest, context: RouteContext) {
-  const params = await context.params;
-  const accountId = String(params.accountId || '').trim();
+  const session = await resolveSessionBearer(request);
+  if (!session.ok) return withNoStore(session.response);
+
+  const { accountId: accountIdRaw } = await context.params;
+  const accountId = String(accountIdRaw || '').trim();
   if (!isUuid(accountId)) {
-    return withSessionAndCors(
+    return withSession(
       request,
       NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
         { status: 422 },
       ),
-      undefined,
-      CORS_HEADERS,
+      session.setCookies,
     );
   }
 
-  return proxyToParisRoute(request, {
-    path: `/api/accounts/${encodeURIComponent(accountId)}/locales`,
+  const authz = await authorizeRequestAccountRoleFromCapsule({
+    request,
+    accountId,
+    minRole: 'editor',
+  });
+  if (!authz.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: authz.error }, { status: authz.status }),
+      session.setCookies,
+    );
+  }
+
+  return proxyToParis(request, {
     method: 'PUT',
-    corsHeaders: CORS_HEADERS,
+    path: `/api/accounts/${encodeURIComponent(accountId)}/locales`,
   });
 }

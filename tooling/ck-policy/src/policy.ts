@@ -7,6 +7,12 @@ type ResolvePolicyArgs = {
   role: Policy['role'];
 };
 
+export type PolicyEntitlementsSnapshot = {
+  flags?: Record<string, boolean> | null;
+  caps?: Record<string, number | null> | null;
+  budgets?: Record<string, { max: number | null; used: number } | null> | null;
+};
+
 function createTotalPolicyBase(args: ResolvePolicyArgs): Policy {
   const flags = Object.fromEntries(FLAG_KEYS.map((k) => [k, false])) as Policy['flags'];
   const caps = Object.fromEntries(CAP_KEYS.map((k) => [k, 0])) as Policy['caps'];
@@ -37,6 +43,41 @@ export function resolvePolicy(args: ResolvePolicyArgs): Policy {
       policy.caps[key] = value as number | null;
     } else {
       policy.budgets[key].max = value as number | null;
+    }
+  }
+
+  return policy;
+}
+
+export function resolvePolicyFromEntitlementsSnapshot(
+  args: ResolvePolicyArgs & { entitlements?: PolicyEntitlementsSnapshot | null }
+): Policy {
+  const policy = resolvePolicy(args);
+  const entitlements = args.entitlements;
+  if (!entitlements) return policy;
+
+  for (const key of FLAG_KEYS) {
+    const next = entitlements.flags?.[key];
+    if (typeof next === 'boolean') {
+      policy.flags[key] = next;
+    }
+  }
+
+  for (const key of CAP_KEYS) {
+    const next = entitlements.caps?.[key];
+    if (next === null || typeof next === 'number') {
+      policy.caps[key] = next;
+    }
+  }
+
+  for (const key of BUDGET_KEYS) {
+    const next = entitlements.budgets?.[key];
+    if (!next) continue;
+    if (next.max === null || typeof next.max === 'number') {
+      policy.budgets[key].max = next.max;
+    }
+    if (typeof next.used === 'number' && Number.isFinite(next.used)) {
+      policy.budgets[key].used = Math.max(0, Math.trunc(next.used));
     }
   }
 

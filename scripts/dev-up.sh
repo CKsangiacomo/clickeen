@@ -28,7 +28,6 @@ DEV_UP_RESET=0
 NEEDS_PRAGUE_L10N_TRANSLATE=0
 STARTED_PID=""
 DEV_PROFILE="${CK_DEV_PROFILE:-product}"
-CK_PRODUCT_LOCAL_BOB="${CK_PRODUCT_LOCAL_BOB:-0}"
 STACK_PORTS=(3000 3001 3002 3003 3005 4000 4321 5173 8790 8791)
 
 ensure_lock() {
@@ -394,7 +393,6 @@ for arg in "$@"; do
       echo ""
       echo "Env:"
       echo "  CK_DEV_PROFILE=product|source   Profile selector (default: product)"
-      echo "  CK_PRODUCT_LOCAL_BOB=1          Also start local Bob in product profile"
       exit 0
       ;;
     *)
@@ -431,7 +429,6 @@ fi
 
 if [ "$DEV_PROFILE" = "product" ]; then
   TOKYO_URL=${TOKYO_URL:-https://tokyo.dev.clickeen.com}
-  BOB_CLOUD_URL=${BOB_CLOUD_URL:-https://bob.dev.clickeen.com}
   BERLIN_URL=${BERLIN_URL:-https://berlin.dev.clickeen.com}
   SF_BASE_URL=${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}
   PARIS_BASE_URL=${PARIS_BASE_URL:-http://localhost:3001}
@@ -442,7 +439,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
   echo "[dev-up] Profile: product (default)"
   echo "[dev-up] Data plane: cloud-dev (Tokyo/Berlin) + local Paris trusted boundary"
   echo "[dev-up] Tokyo URL: $TOKYO_URL"
-  echo "[dev-up] Bob URL (default in DevStudio): $BOB_CLOUD_URL"
+  echo "[dev-up] Bob URL (default in DevStudio): http://localhost:3000"
   echo "[dev-up] SanFrancisco URL: $SF_BASE_URL"
 
   if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
@@ -478,19 +475,17 @@ if [ "$DEV_PROFILE" = "product" ]; then
   )
   wait_for_url "http://localhost:3001/api/healthz" "Paris" "$LOG_DIR/paris.dev.log"
 
-  if [ "$CK_PRODUCT_LOCAL_BOB" = "1" ] || [ "$CK_PRODUCT_LOCAL_BOB" = "true" ]; then
-    stop_port "3000"
-    echo "[dev-up] Starting local Bob (product profile optional mode)"
-    (
-      cd "$ROOT_DIR/bob"
-      start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=product CK_DEV_PROFILE=product PARIS_BASE_URL="$PARIS_BASE_URL" BERLIN_BASE_URL="$BERLIN_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" SANFRANCISCO_BASE_URL="${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}" pnpm dev
-      BOB_PID="$STARTED_PID"
-      echo "[dev-up] Bob PID: $BOB_PID"
-      register_pid "bob" "$BOB_PID" "3000" "$LOG_DIR/bob.dev.log"
-    )
-    wait_for_url "http://localhost:3000" "Bob" "$LOG_DIR/bob.dev.log"
-    prewarm_bob_routes
-  fi
+  stop_port "3000"
+  echo "[dev-up] Starting local Bob (product profile)"
+  (
+    cd "$ROOT_DIR/bob"
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=product PARIS_BASE_URL="$PARIS_BASE_URL" BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" SANFRANCISCO_BASE_URL="${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}" pnpm dev
+    BOB_PID="$STARTED_PID"
+    echo "[dev-up] Bob PID: $BOB_PID"
+    register_pid "bob" "$BOB_PID" "3000" "$LOG_DIR/bob.dev.log"
+  )
+  wait_for_url "http://localhost:3000" "Bob" "$LOG_DIR/bob.dev.log"
+  prewarm_bob_routes
 
   echo "[dev-up] Starting DevStudio (5173)"
   (
@@ -503,13 +498,8 @@ if [ "$DEV_PROFILE" = "product" ]; then
   wait_for_url "http://localhost:5173" "DevStudio" "$LOG_DIR/devstudio.dev.log"
 
   echo "[dev-up] URLs:"
-  if [ "$CK_PRODUCT_LOCAL_BOB" = "1" ] || [ "$CK_PRODUCT_LOCAL_BOB" = "true" ]; then
-    echo "  Bob local:  http://localhost:3000"
-    echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?profile=product&bob=http://localhost:3000"
-  else
-    echo "  Bob cloud:  $BOB_CLOUD_URL"
-    echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?profile=product"
-  fi
+  echo "  Bob local:  http://localhost:3000"
+  echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?profile=product&bob=http://localhost:3000"
   echo "  Tokyo URL:  $TOKYO_URL"
   echo "  Berlin URL: $BERLIN_URL"
   echo "  Paris URL:  $PARIS_BASE_URL"

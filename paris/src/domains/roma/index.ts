@@ -7,7 +7,6 @@ export {
 export {
   handleRomaBootstrap,
   handleRomaWidgetDelete,
-  handleRomaWidgetDuplicate,
   handleRomaWidgets,
 } from './widgets-bootstrap';
 

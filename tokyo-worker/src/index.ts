@@ -13,18 +13,25 @@ import {
   handleGetAccountAssetMirrorIntegrity,
   handleListAccountAssetMetadata,
   handleUploadAccountAsset,
+  loadAccountMembershipRole,
+  roleRank,
+  type MemberRole,
 } from './domains/assets';
 import { handleGetL10nAsset } from './domains/l10n-read';
 import {
   deleteInstanceMirror,
+  deleteSavedRenderConfig,
   enforceLiveSurface,
   handleGetR2Object,
   isTokyoMirrorJob,
+  readSavedRenderConfig,
   renderConfigPackKey,
   renderLivePointerKey,
   renderMetaLivePointerKey,
   renderMetaPackKey,
   syncLiveSurface,
+  updateSavedRenderPointerMetadata,
+  writeSavedRenderConfig,
   writeConfigPack,
   writeMetaPack,
   writeTextPack,
@@ -132,7 +139,8 @@ function claimAsNumber(value: unknown): number | null {
 
 function audienceMatches(claim: unknown, expected: string): boolean {
   if (typeof claim === 'string') return claim.trim() === expected;
-  if (Array.isArray(claim)) return claim.some((item) => typeof item === 'string' && item.trim() === expected);
+  if (Array.isArray(claim))
+    return claim.some((item) => typeof item === 'string' && item.trim() === expected);
   return false;
 }
 
@@ -142,18 +150,21 @@ function resolveBerlinBaseUrl(env: Env): string {
 }
 
 function resolveBerlinIssuer(env: Env): string {
-  const configured = (typeof env.BERLIN_ISSUER === 'string' ? env.BERLIN_ISSUER.trim() : '') || null;
+  const configured =
+    (typeof env.BERLIN_ISSUER === 'string' ? env.BERLIN_ISSUER.trim() : '') || null;
   if (configured) return configured.replace(/\/+$/, '');
   return resolveBerlinBaseUrl(env);
 }
 
 function resolveBerlinAudience(env: Env): string {
-  const configured = (typeof env.BERLIN_AUDIENCE === 'string' ? env.BERLIN_AUDIENCE.trim() : '') || null;
+  const configured =
+    (typeof env.BERLIN_AUDIENCE === 'string' ? env.BERLIN_AUDIENCE.trim() : '') || null;
   return configured || 'clickeen.product';
 }
 
 function resolveBerlinJwksUrl(env: Env): string {
-  const configured = (typeof env.BERLIN_JWKS_URL === 'string' ? env.BERLIN_JWKS_URL.trim() : '') || null;
+  const configured =
+    (typeof env.BERLIN_JWKS_URL === 'string' ? env.BERLIN_JWKS_URL.trim() : '') || null;
   if (configured) return configured;
   return `${resolveBerlinBaseUrl(env)}/.well-known/jwks.json`;
 }
@@ -190,7 +201,11 @@ function fromBase64Url(value: string): Uint8Array | null {
 }
 
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  if (bytes.buffer instanceof ArrayBuffer && bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength) {
+  if (
+    bytes.buffer instanceof ArrayBuffer &&
+    bytes.byteOffset === 0 &&
+    bytes.byteLength === bytes.buffer.byteLength
+  ) {
     return bytes.buffer;
   }
   const cloned = new Uint8Array(bytes.byteLength);
@@ -227,9 +242,13 @@ async function importBerlinJwk(key: JsonWebKey): Promise<CryptoKey | null> {
   if (!jwkKid(key)) return null;
   if (typeof key.n !== 'string' || typeof key.e !== 'string') return null;
   try {
-    return await crypto.subtle.importKey('jwk', key, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, [
-      'verify',
-    ]);
+    return await crypto.subtle.importKey(
+      'jwk',
+      key,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    );
   } catch {
     return null;
   }
@@ -331,7 +350,10 @@ async function verifyBerlinJwtSignature(
 export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAuthResult> {
   const token = asBearerToken(req.headers.get('authorization'));
   if (!token) {
-    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } }, { status: 401 }) };
+    return {
+      ok: false,
+      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } }, { status: 401 }),
+    };
   }
 
   const trustedToken = (env.TOKYO_DEV_JWT || '').trim();
@@ -348,7 +370,10 @@ export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAu
         {
           error: {
             kind: signature.reason === 'jwks_unavailable' ? 'INTERNAL' : 'DENY',
-            reasonKey: signature.reason === 'jwks_unavailable' ? 'AUTH_PROVIDER_UNAVAILABLE' : 'AUTH_INVALID',
+            reasonKey:
+              signature.reason === 'jwks_unavailable'
+                ? 'AUTH_PROVIDER_UNAVAILABLE'
+                : 'AUTH_INVALID',
             ...(signature.reason === 'jwks_unavailable'
               ? { detail: signature.detail || signature.reason }
               : {}),
@@ -365,23 +390,38 @@ export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAu
   const audience = resolveBerlinAudience(env);
   const iss = claimAsString(claims.iss);
   if (!iss || iss !== issuer) {
-    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+    return {
+      ok: false,
+      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }),
+    };
   }
   if (!audienceMatches(claims.aud, audience)) {
-    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+    return {
+      ok: false,
+      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }),
+    };
   }
   const exp = claimAsNumber(claims.exp);
   if (!exp || exp <= nowSec) {
-    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_EXPIRED' } }, { status: 401 }) };
+    return {
+      ok: false,
+      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_EXPIRED' } }, { status: 401 }),
+    };
   }
   const nbf = claimAsNumber(claims.nbf);
   if (nbf && nbf > nowSec) {
-    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+    return {
+      ok: false,
+      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }),
+    };
   }
 
   const userId = claimAsString(claims.sub);
   if (!userId || !isUuid(userId)) {
-    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
+    return {
+      ok: false,
+      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }),
+    };
   }
 
   return { ok: true, trusted: false, principal: { token, userId } };
@@ -390,12 +430,47 @@ export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAu
 export function requireDevAuth(req: Request, env: Env): Response | null {
   const expected = (env.TOKYO_DEV_JWT || '').trim();
   if (!expected) {
-    return json({ error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.misconfigured' } }, { status: 500 });
+    return json(
+      { error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.misconfigured' } },
+      { status: 500 },
+    );
   }
   const token = asBearerToken(req.headers.get('authorization'));
   if (!token) return json({ error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } }, { status: 401 });
-  if (token !== expected) return json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 });
+  if (token !== expected)
+    return json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 });
   return null;
+}
+
+async function authorizeAccountScopedRequest(args: {
+  req: Request;
+  env: Env;
+  accountId: string;
+  minRole: MemberRole;
+}): Promise<Response | null> {
+  const auth = await assertUploadAuth(args.req, args.env);
+  if (!auth.ok) return auth.response;
+  if (auth.trusted) return null;
+  try {
+    const membershipRole = await loadAccountMembershipRole(
+      args.env,
+      args.accountId,
+      auth.principal.userId,
+    );
+    if (!membershipRole || roleRank(membershipRole) < roleRank(args.minRole)) {
+      return json(
+        { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
+        { status: 403 },
+      );
+    }
+    return null;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return json(
+      { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } },
+      { status: 500 },
+    );
+  }
 }
 
 function requireSupabaseEnv(env: Env, key: 'SUPABASE_URL' | 'SUPABASE_SERVICE_ROLE_KEY'): string {
@@ -462,9 +537,14 @@ function normalizeMimeType(raw: string): string {
     .toLowerCase();
 }
 
-export function classifyAccountAssetType(contentType: string | null, ext: string | null): AccountAssetType {
+export function classifyAccountAssetType(
+  contentType: string | null,
+  ext: string | null,
+): AccountAssetType {
   const mime = normalizeMimeType(String(contentType || '').trim());
-  const normalizedExt = String(ext || '').trim().toLowerCase();
+  const normalizedExt = String(ext || '')
+    .trim()
+    .toLowerCase();
 
   if (mime === 'image/svg+xml' || normalizedExt === 'svg') return 'vector';
   if (mime.startsWith('image/')) return 'image';
@@ -483,15 +563,19 @@ export function pickExtension(filename: string | null, contentType: string | nul
   return 'bin';
 }
 
-export function validateUploadFilename(filename: string | null): { ok: true; filename: string } | { ok: false; detail: string } {
+export function validateUploadFilename(
+  filename: string | null,
+): { ok: true; filename: string } | { ok: false; detail: string } {
   const raw = String(filename || '').trim();
   if (!raw) return { ok: false, detail: 'filename required' };
   if (raw.length > 180) return { ok: false, detail: 'filename too long (max 180 chars)' };
   if (raw === '.' || raw === '..') return { ok: false, detail: 'filename reserved' };
-  if (raw.includes('/') || raw.includes('\\')) return { ok: false, detail: 'path separators are not allowed' };
+  if (raw.includes('/') || raw.includes('\\'))
+    return { ok: false, detail: 'path separators are not allowed' };
   if (/\s/.test(raw)) return { ok: false, detail: 'spaces are not allowed' };
   if (/[?#%]/.test(raw)) return { ok: false, detail: 'url-reserved characters are not allowed' };
-  if (!/^[A-Za-z0-9._-]+$/.test(raw)) return { ok: false, detail: 'unsupported characters in filename' };
+  if (!/^[A-Za-z0-9._-]+$/.test(raw))
+    return { ok: false, detail: 'unsupported characters in filename' };
   return { ok: true, filename: raw };
 }
 
@@ -607,7 +691,7 @@ async function handleGetTokyoFontAsset(env: Env, pathname: string): Promise<Resp
 function withCors(res: Response): Response {
   const headers = new Headers(res.headers);
   headers.set('access-control-allow-origin', '*');
-  headers.set('access-control-allow-methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  headers.set('access-control-allow-methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
   headers.set(
     'access-control-allow-headers',
     'authorization, content-type, x-account-id, x-filename, x-public-id, x-widget-type, x-source, idempotency-key, x-tokyo-l10n-bridge',
@@ -618,7 +702,9 @@ function withCors(res: Response): Response {
 export const normalizePublicId = normalizeWidgetPublicId;
 
 export function normalizeWidgetType(raw: string): string | null {
-  const value = String(raw || '').trim().toLowerCase();
+  const value = String(raw || '')
+    .trim()
+    .toLowerCase();
   if (!value) return null;
   if (!/^[a-z0-9][a-z0-9_-]*$/.test(value)) return null;
   return value;
@@ -632,7 +718,9 @@ export function normalizeLocale(raw: unknown): string | null {
 }
 
 export function normalizeSha256Hex(raw: unknown): string | null {
-  const value = String(raw || '').trim().toLowerCase();
+  const value = String(raw || '')
+    .trim()
+    .toLowerCase();
   if (!/^[a-f0-9]{64}$/.test(value)) return null;
   return value;
 }
@@ -642,7 +730,11 @@ function stableStringify(value: any): string {
   if (typeof value === 'function' || typeof value === 'symbol') return 'null';
   if (Array.isArray(value)) {
     return `[${value
-      .map((item) => (item === undefined || typeof item === 'function' || typeof item === 'symbol' ? 'null' : stableStringify(item)))
+      .map((item) =>
+        item === undefined || typeof item === 'function' || typeof item === 'symbol'
+          ? 'null'
+          : stableStringify(item),
+      )
       .join(',')}]`;
   }
   if (value && typeof value === 'object') {
@@ -685,55 +777,295 @@ export default {
         return withCors(json({ up: true }, { status: 200 }));
       }
 
-      const renderLivePointerMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/live\/r\.json$/);
+      const renderLivePointerMatch = pathname.match(
+        /^\/renders\/instances\/([^/]+)\/live\/r\.json$/,
+      );
       if (renderLivePointerMatch) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        if (req.method !== 'GET')
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         const publicId = normalizePublicId(decodeURIComponent(renderLivePointerMatch[1]));
         if (!publicId) {
-          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalidPublicId' } }, { status: 422 }));
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalidPublicId' } },
+              { status: 422 },
+            ),
+          );
         }
         return withCors(await handleGetR2Object(env, renderLivePointerKey(publicId), 'no-store'));
       }
 
-      const renderMetaLivePointerMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/live\/meta\/([^/]+)\.json$/);
+      const renderLiveSurfaceMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/live\.json$/);
+      if (renderLiveSurfaceMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(renderLiveSurfaceMatch[1]));
+        const accountId = String(
+          url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
+        ).trim();
+        if (!publicId || !isUuid(accountId)) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+
+        if (req.method === 'DELETE') {
+          const authErr = await authorizeAccountScopedRequest({
+            req,
+            env,
+            accountId,
+            minRole: 'editor',
+          });
+          if (authErr) return withCors(authErr);
+          await syncLiveSurface(env, { v: 1, kind: 'sync-live-surface', publicId, live: false });
+          return withCors(json({ ok: true, publicId, live: false }));
+        }
+
+        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+      }
+
+      const renderSavedMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/saved\.json$/);
+      if (renderSavedMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(renderSavedMatch[1]));
+        const accountId = String(
+          url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
+        ).trim();
+        if (!publicId || !isUuid(accountId)) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+
+        if (req.method === 'GET') {
+          const authErr = await authorizeAccountScopedRequest({
+            req,
+            env,
+            accountId,
+            minRole: 'viewer',
+          });
+          if (authErr) return withCors(authErr);
+          const saved = await readSavedRenderConfig({ env, publicId, accountId });
+          if (!saved) {
+            return withCors(
+              json(
+                { error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' } },
+                { status: 404 },
+              ),
+            );
+          }
+          return withCors(
+            json({
+              ...saved.pointer,
+              config: saved.config,
+            }),
+          );
+        }
+
+        if (req.method === 'PUT') {
+          const authErr = await authorizeAccountScopedRequest({
+            req,
+            env,
+            accountId,
+            minRole: 'editor',
+          });
+          if (authErr) return withCors(authErr);
+          const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+          const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
+          const displayName =
+            body?.displayName === undefined
+              ? undefined
+              : typeof body.displayName === 'string'
+                ? body.displayName.trim() || null
+                : null;
+          const source =
+            body?.source === 'curated'
+              ? 'curated'
+              : body?.source === 'account'
+                ? 'account'
+                : undefined;
+          const meta =
+            body?.meta === undefined
+              ? undefined
+              : body?.meta === null
+                ? null
+                : body.meta && typeof body.meta === 'object' && !Array.isArray(body.meta)
+                  ? (body.meta as Record<string, unknown>)
+                  : null;
+          const config =
+            body?.config && typeof body.config === 'object' && !Array.isArray(body.config)
+              ? (body.config as Record<string, unknown>)
+              : null;
+          if (!widgetType || !config) {
+            return withCors(
+              json(
+                { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+                { status: 422 },
+              ),
+            );
+          }
+          const pointer = await writeSavedRenderConfig({
+            env,
+            publicId,
+            accountId,
+            widgetType,
+            config,
+            displayName,
+            source,
+            meta,
+          });
+          return withCors(json({ ...pointer, config }));
+        }
+
+        if (req.method === 'PATCH') {
+          const authErr = await authorizeAccountScopedRequest({
+            req,
+            env,
+            accountId,
+            minRole: 'editor',
+          });
+          if (authErr) return withCors(authErr);
+          const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+          const displayName =
+            body?.displayName === undefined
+              ? undefined
+              : typeof body.displayName === 'string'
+                ? body.displayName.trim() || null
+                : null;
+          const source =
+            body?.source === 'curated'
+              ? 'curated'
+              : body?.source === 'account'
+                ? 'account'
+                : undefined;
+          const meta =
+            body?.meta === undefined
+              ? undefined
+              : body?.meta === null
+                ? null
+                : body.meta && typeof body.meta === 'object' && !Array.isArray(body.meta)
+                  ? (body.meta as Record<string, unknown>)
+                  : null;
+          if (displayName === undefined && source === undefined && meta === undefined) {
+            return withCors(
+              json(
+                { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+                { status: 422 },
+              ),
+            );
+          }
+          const pointer = await updateSavedRenderPointerMetadata({
+            env,
+            publicId,
+            accountId,
+            displayName,
+            source,
+            meta,
+          });
+          if (!pointer) {
+            return withCors(
+              json(
+                { error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' } },
+                { status: 404 },
+              ),
+            );
+          }
+          return withCors(json(pointer));
+        }
+
+        if (req.method === 'DELETE') {
+          const authErr = await authorizeAccountScopedRequest({
+            req,
+            env,
+            accountId,
+            minRole: 'editor',
+          });
+          if (authErr) return withCors(authErr);
+          await deleteSavedRenderConfig({ env, publicId, accountId });
+          return withCors(json({ ok: true, deleted: true }));
+        }
+
+        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+      }
+
+      const renderMetaLivePointerMatch = pathname.match(
+        /^\/renders\/instances\/([^/]+)\/live\/meta\/([^/]+)\.json$/,
+      );
       if (renderMetaLivePointerMatch) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        if (req.method !== 'GET')
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         const publicId = normalizePublicId(decodeURIComponent(renderMetaLivePointerMatch[1]));
         const locale = normalizeLocale(decodeURIComponent(renderMetaLivePointerMatch[2]));
         if (!publicId || !locale) {
-          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } }, { status: 422 }));
-        }
-        return withCors(await handleGetR2Object(env, renderMetaLivePointerKey(publicId, locale), 'no-store'));
-      }
-
-      const renderConfigPackMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/config\/([^/]+)\/config\.json$/);
-      if (renderConfigPackMatch) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const publicId = normalizePublicId(decodeURIComponent(renderConfigPackMatch[1]));
-        const configFp = normalizeSha256Hex(decodeURIComponent(renderConfigPackMatch[2]));
-        if (!publicId || !configFp) {
-          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } }, { status: 422 }));
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
         }
         return withCors(
-          await handleGetR2Object(env, renderConfigPackKey(publicId, configFp), 'public, max-age=31536000, immutable'),
+          await handleGetR2Object(env, renderMetaLivePointerKey(publicId, locale), 'no-store'),
         );
       }
 
-      const renderMetaPackMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/meta\/([^/]+)\/([^/]+)\.json$/);
+      const renderConfigPackMatch = pathname.match(
+        /^\/renders\/instances\/([^/]+)\/config\/([^/]+)\/config\.json$/,
+      );
+      if (renderConfigPackMatch) {
+        if (req.method !== 'GET')
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const publicId = normalizePublicId(decodeURIComponent(renderConfigPackMatch[1]));
+        const configFp = normalizeSha256Hex(decodeURIComponent(renderConfigPackMatch[2]));
+        if (!publicId || !configFp) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+        return withCors(
+          await handleGetR2Object(
+            env,
+            renderConfigPackKey(publicId, configFp),
+            'public, max-age=31536000, immutable',
+          ),
+        );
+      }
+
+      const renderMetaPackMatch = pathname.match(
+        /^\/renders\/instances\/([^/]+)\/meta\/([^/]+)\/([^/]+)\.json$/,
+      );
       if (renderMetaPackMatch) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        if (req.method !== 'GET')
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         const publicId = normalizePublicId(decodeURIComponent(renderMetaPackMatch[1]));
         const locale = normalizeLocale(decodeURIComponent(renderMetaPackMatch[2]));
         const metaFp = normalizeSha256Hex(decodeURIComponent(renderMetaPackMatch[3]));
         if (!publicId || !locale || !metaFp) {
-          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } }, { status: 422 }));
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
         }
         return withCors(
-          await handleGetR2Object(env, renderMetaPackKey(publicId, locale, metaFp), 'public, max-age=31536000, immutable'),
+          await handleGetR2Object(
+            env,
+            renderMetaPackKey(publicId, locale, metaFp),
+            'public, max-age=31536000, immutable',
+          ),
         );
       }
 
-      const legacyRenderSurfaceMatch = pathname.match(/^\/renders\/instances\/[^/]+\/(published|revisions|snapshot)(?:\/|$)/);
+      const legacyRenderSurfaceMatch = pathname.match(
+        /^\/renders\/instances\/[^/]+\/(published|revisions|snapshot)(?:\/|$)/,
+      );
       if (legacyRenderSurfaceMatch) {
         return withCors(
           json(
@@ -741,7 +1073,8 @@ export default {
               error: {
                 kind: 'VALIDATION',
                 reasonKey: 'tokyo.errors.render.legacyUnsupported',
-                detail: 'Legacy render snapshot endpoints are removed. Use /renders/instances/{publicId}/live/r.json + config/text packs.',
+                detail:
+                  'Legacy render snapshot endpoints are removed. Use /renders/instances/{publicId}/live/r.json + config/text packs.',
               },
             },
             { status: 410 },
@@ -750,7 +1083,8 @@ export default {
       }
 
       if (pathname === '/assets/upload') {
-        if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        if (req.method !== 'POST')
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         return withCors(await handleUploadAccountAsset(req, env));
       }
 
@@ -770,7 +1104,9 @@ export default {
         }
         const response = await handleGetAccountAsset(env, accountAssetVersion.versionKey);
         if (req.method === 'HEAD') {
-          return withCors(new Response(null, { status: response.status, headers: response.headers }));
+          return withCors(
+            new Response(null, { status: response.status, headers: response.headers }),
+          );
         }
         return withCors(response);
       }
@@ -794,31 +1130,38 @@ export default {
         return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
       }
 
-      const accountAssetIdentityIntegrityMatch = pathname.match(/^\/assets\/integrity\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i);
+      const accountAssetIdentityIntegrityMatch = pathname.match(
+        /^\/assets\/integrity\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i,
+      );
       if (accountAssetIdentityIntegrityMatch) {
         const accountId = decodeURIComponent(accountAssetIdentityIntegrityMatch[1] || '');
         const assetId = decodeURIComponent(accountAssetIdentityIntegrityMatch[2] || '');
         if (req.method === 'GET') {
-          return withCors(await handleGetAccountAssetIdentityIntegrity(req, env, accountId, assetId));
+          return withCors(
+            await handleGetAccountAssetIdentityIntegrity(req, env, accountId, assetId),
+          );
         }
         return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
       }
 
       if (pathname.startsWith('/fonts/')) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        if (req.method !== 'GET')
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         return withCors(await handleGetTokyoFontAsset(env, pathname));
       }
 
       const l10nVersionedMatch = pathname.match(/^\/l10n\/v\/[^/]+\/(.+)$/);
       if (l10nVersionedMatch) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        if (req.method !== 'GET')
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         const rest = l10nVersionedMatch[1];
         const key = `l10n/${rest}`;
         return withCors(await handleGetL10nAsset(env, key));
       }
 
       if (pathname.startsWith('/l10n/')) {
-        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        if (req.method !== 'GET')
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         const key = pathname.replace(/^\//, '');
         return withCors(await handleGetL10nAsset(env, key));
       }
@@ -826,7 +1169,12 @@ export default {
       return withCors(new Response('Not found', { status: 404 }));
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return withCors(json({ error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.internal', detail: message } }, { status: 500 }));
+      return withCors(
+        json(
+          { error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.internal', detail: message } },
+          { status: 500 },
+        ),
+      );
     }
   },
 
@@ -874,7 +1222,8 @@ export default {
         }
         msg.ack();
       } catch (error) {
-        const attempt = typeof msg.attempts === 'number' && Number.isFinite(msg.attempts) ? msg.attempts : 0;
+        const attempt =
+          typeof msg.attempts === 'number' && Number.isFinite(msg.attempts) ? msg.attempts : 0;
         const maxAttempts = 10;
         const message = error instanceof Error ? error.message : String(error);
 
@@ -887,7 +1236,13 @@ export default {
         const delaySeconds = shouldRetryMissingPrereqs(error)
           ? retryDelaySeconds(attempt, 2, 30)
           : retryDelaySeconds(attempt, 5, 60);
-        console.warn('[tokyo] queue job failed, retrying', body.kind, publicId, `attempt=${attempt}`, message);
+        console.warn(
+          '[tokyo] queue job failed, retrying',
+          body.kind,
+          publicId,
+          `attempt=${attempt}`,
+          message,
+        );
         msg.retry({ delaySeconds });
       }
     }

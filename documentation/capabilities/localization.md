@@ -35,7 +35,6 @@ Curated + user instances localize within the account’s **active locales** (EN 
 
 - **User instances** auto-enqueue l10n on publish/update (for the active locales set).
 - **Curated instances** also auto-enqueue l10n on save/update when status is published.
-- DevStudio can explicitly enqueue active locales via `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected?subject=account` (manual/no-diff backfill path).
 
 ### Entitlement + active locales model
 
@@ -50,8 +49,9 @@ Effective localization = **entitlements** ∩ **subject policy** ∩ **account a
   - Free: EN + 1 system-chosen locale (no picker)
   - Tier1: EN + 3 user-selected locales (total = 4)
   - Tier2+: unlimited locales
-  - DevStudio: uncapped
+- DevStudio: uncapped
 - Account active locales source: `accounts.l10n_locales` (JSON array of **non‑EN** locales; EN is implied)
+- Account locale policy/settings are managed in Roma Settings, not inside Bob.
 
 ## Localization systems (runtime)
 
@@ -90,7 +90,7 @@ Rules:
 Where the write plane fits (current repo snapshot):
 - Paris stores editable overlay rows in its own R2 bucket (`OVERLAYS_R2`) using keys like `overlays/<publicId>/<layer>/<layerKey>.json`.
   - `layer=locale` = generated/managed translation ops (agent/import/manual)
-  - `layer=user` = user overrides on top of the locale translation (delete this layer to “revert to auto-translate”)
+  - `layer=user` = user overrides on top of the locale translation (choosing auto-translate again clears this layer on the next Save)
 - Paris stores generation/status state in `L10N_STATE_KV`, and keeps base snapshots in overlay storage for diffing + status.
 - Every overlay row is keyed by `baseFingerprint` (sha256 of the current allowlist snapshot).
 - Stale writes are rejected when `baseFingerprint` does not match.

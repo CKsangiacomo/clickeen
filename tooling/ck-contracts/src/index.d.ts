@@ -48,3 +48,10 @@ export declare function parseCanonicalAssetRef(raw: unknown): AssetRef | null;
 export declare function isCanonicalAssetVersionRef(raw: unknown): boolean;
 export declare function isCanonicalAssetRef(raw: unknown): boolean;
 export declare function toCanonicalAssetVersionPath(versionKey: unknown): string | null;
+export declare function configAssetUrlContractIssues(
+  config: unknown,
+  expectedAccountId?: string | null,
+): Array<{ path: string; message: string }>;
+export declare function configNonPersistableUrlIssues(
+  config: unknown,
+): Array<{ path: string; message: string }>;

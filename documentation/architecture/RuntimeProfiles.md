@@ -4,15 +4,14 @@
 
 ## product (default)
 - Purpose: product parity workflows with one cloud-dev data plane.
-- Runs locally: DevStudio UI shell (`:5173`).
-- Optional local process: Bob (`CK_PRODUCT_LOCAL_BOB=1`).
+- Runs locally: DevStudio UI shell (`:5173`) and Bob (`:3000`).
 - Uses cloud-dev services by default:
-  - Bob: `https://bob.dev.clickeen.com` (default from DevStudio)
   - Tokyo: `https://tokyo.dev.clickeen.com`
   - Berlin: `https://berlin.dev.clickeen.com`
   - Paris: `https://paris.dev.clickeen.com`
 - Local Tokyo/Tokyo-worker are not part of this default workflow.
 - DevStudio still boots from the local widget catalog in this profile; instance rows come from the admin account through the trusted local route, which resolves through local Paris in product profile.
+- DevStudio product mode uses local Bob so the editor never crosses a cloud-iframe-to-localhost browser boundary.
 
 ## source
 - Purpose: low-level service development and local worker debugging.

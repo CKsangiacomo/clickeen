@@ -6,12 +6,12 @@ DevStudio is Clickeen’s internal admin surface for docs + tools. In this repo 
 
 - **DevStudio Local** (`http://localhost:5173`)
   - Superadmin shell for development.
-  - Default runtime profile is `product` (cloud Bob/Tokyo/Berlin data plane with a local Paris trusted boundary for admin instance routes).
+  - Default runtime profile is `product` (local Bob over the cloud Tokyo/Berlin data plane, with Paris limited to localization/orchestration rather than core instance open/save).
   - `source` profile is explicit and local-stack oriented (`?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`).
 - **DevStudio Cloudflare** (`https://devstudio.dev.clickeen.com`)
   - Fast “did the deploy work?” verification surface.
   - Treated as **read-only by default**.
-  - If the instances tool is opened there with `?bob=http://localhost:3000`, the page is only a remote shell attached to your local Bob toolchain. Any writes still go through that local Bob/Paris stack and its chosen Supabase target.
+  - If the instances tool is opened there with `?bob=http://localhost:3000`, the page is only a remote shell attached to your local Bob toolchain. Core create/open/save still go through that local Bob stack and its selected Tokyo/Michael target; Paris remains only for localization/orchestration.
 
 ## Admin Instances
 
@@ -19,11 +19,11 @@ Route: `/#/tools/dev-widget-workspace`
 
 What it does:
 - Embeds Bob in message-boot mode as a widget authoring shell.
-- Product profile default: cloud Bob + cloud Tokyo, with instance discovery/edit reads proxied through local Paris.
+- Product profile default: local Bob + cloud Tokyo.
 - Source profile override: local Bob + local Tokyo.
 - Marks iframe host intent as `surface=devstudio` (pairs with `surface=roma` in Roma Builder for explicit host behavior).
 - Widget type selection still comes from the local widget catalog (`/api/devstudio/widgets`).
-- Instance discovery now comes from the explicit local DevStudio route family (`/api/devstudio/instances*`), which proxies to the local Paris trusted boundary.
+- Instance discovery comes from the explicit local DevStudio route family (`/api/devstudio/instances*`).
 - DevStudio no longer uses `/api/roma/templates`. That route is Roma product starter discovery, not DevStudio authoring discovery.
 - Product profile shows the admin account’s instances directly.
 - Source profile keeps widget defaults available only when a widget has no saved instance yet.
@@ -32,9 +32,11 @@ What it does:
   - second dropdown = the admin instances for that widget
 - The widget catalog comes from `GET /api/devstudio/widgets`.
 - Instances come from `GET /api/devstudio/instances?accountId=<admin-account-id>`.
-- Opening the `wgt_main_*` instance or any other instance lazy-loads the full admin-account instance envelope through `GET /api/devstudio/instances/:publicId`, then message-boots Bob with real `{ accountId, publicId }` context.
-- Current authoring actions use the same local DevStudio route family:
-  - create/update instances
+- Opening the `wgt_main_*` instance or any other instance lazy-loads core instance state from Bob’s canonical same-origin route (`GET /api/accounts/:accountId/instance/:publicId?subject=account`) plus explicit localization rehydrate (`GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`), then message-boots Bob with real `{ accountId, publicId }` context.
+- Current authoring actions use:
+  - list through the local DevStudio route family
+  - create through Bob’s canonical same-origin route (`POST /api/accounts/:accountId/instances?subject=account`)
+  - save through Bob’s canonical same-origin route (`PUT /api/accounts/:accountId/instance/:publicId?subject=account`)
   - inspect translation status
   - enqueue translation work
 - Bob inside DevStudio receives explicit asset endpoints from the host page:
@@ -76,8 +78,8 @@ Current boundary:
 ## Troubleshooting
 
 If DevStudio local opens but instances are missing:
-- Check local `PARIS_DEV_JWT` / Paris connectivity for `/api/devstudio/instances`.
-- This is a local trusted-tool path, not a Roma product-auth path.
+- Check local `PARIS_DEV_JWT` for discovery/status routes and Bob local availability for `/api/accounts/...`.
+- DevStudio discovery remains a local trusted-tool path; core create/open/save now uses Bob’s canonical route instead of Paris.
 
 If the asset picker is empty in DevStudio but Roma shows assets:
 - DevStudio must read assets through `/api/devstudio/assets/:accountId`.
@@ -86,7 +88,7 @@ If the asset picker is empty in DevStudio but Roma shows assets:
 If the page fails before any widget opens:
 - Local DevStudio must be able to read `/api/devstudio/widgets`.
 - Product profile default checks:
-  - Bob cloud: `https://bob.dev.clickeen.com`
+  - Bob local: `http://localhost:3000`
 - Source profile checks:
   - Bob local: `http://localhost:3000`
   - If local workers are wedged, re-run `bash scripts/dev-up.sh --source --reset`.

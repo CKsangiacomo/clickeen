@@ -5,10 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
-import {
-  buildBuilderRoute,
-  DEFAULT_INSTANCE_DISPLAY_NAME,
-} from './use-roma-widgets';
+import { buildBuilderRoute, DEFAULT_INSTANCE_DISPLAY_NAME } from './use-roma-widgets';
 import { normalizeRomaTemplatesSnapshot, type TemplateInstance } from './use-roma-templates';
 
 export function TemplatesDomain() {
@@ -23,15 +20,28 @@ export function TemplatesDomain() {
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
   const activeAccountId = accountId;
+  const accountCapsule =
+    me.data?.authz?.accountCapsule && me.data.authz.accountCapsule.trim()
+      ? me.data.authz.accountCapsule.trim()
+      : '';
+
+  const accountRequestHeaders = useMemo(() => {
+    if (!accountCapsule) return undefined;
+    return { 'x-ck-authz-capsule': accountCapsule };
+  }, [accountCapsule]);
 
   const refreshTemplates = useCallback(async () => {
     if (!accountId) return;
     setDomainLoading(true);
     setDataError(null);
     try {
-      const payload = await fetchParisJson<unknown>(`/api/roma/templates?accountId=${encodeURIComponent(accountId)}`, {
-        method: 'GET',
-      });
+      const payload = await fetchParisJson<unknown>(
+        `/api/roma/templates?accountId=${encodeURIComponent(accountId)}`,
+        {
+          method: 'GET',
+          headers: accountRequestHeaders,
+        },
+      );
       const normalized = normalizeRomaTemplatesSnapshot(payload);
       if (!normalized || normalized.accountId !== accountId) {
         throw new Error('coreui.errors.payload.invalid');
@@ -45,7 +55,7 @@ export function TemplatesDomain() {
     } finally {
       setDomainLoading(false);
     }
-  }, [accountId]);
+  }, [accountId, accountRequestHeaders]);
 
   useEffect(() => {
     void refreshTemplates();
@@ -68,7 +78,9 @@ export function TemplatesDomain() {
   }, [templateInstances]);
 
   useEffect(() => {
-    const widgetTypes = groupedTemplates.map((group) => group.widgetType).filter((widgetType) => widgetType !== 'unknown');
+    const widgetTypes = groupedTemplates
+      .map((group) => group.widgetType)
+      .filter((widgetType) => widgetType !== 'unknown');
     widgetTypes.slice(0, 8).forEach((widgetType) => {
       void prefetchCompiledWidget(widgetType);
     });
@@ -85,6 +97,7 @@ export function TemplatesDomain() {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
+            ...(accountCapsule ? { 'x-ck-authz-capsule': accountCapsule } : {}),
           },
           body: JSON.stringify({
             accountId,
@@ -93,7 +106,9 @@ export function TemplatesDomain() {
         });
 
         const createdPublicId =
-          payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
+          payload && typeof payload.publicId === 'string' && payload.publicId.trim()
+            ? payload.publicId.trim()
+            : '';
         if (!createdPublicId) {
           throw new Error('Duplicate response missing publicId.');
         }
@@ -112,15 +127,24 @@ export function TemplatesDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountId, activeAccountId, router],
+    [accountCapsule, accountId, activeAccountId, router],
   );
 
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading account context...</section>;
+  if (me.loading)
+    return <section className="rd-canvas-module body-m">Loading account context...</section>;
   if (me.error || !me.data) {
-    return <section className="rd-canvas-module body-m">Failed to load account context: {me.error ?? 'unknown_error'}</section>;
+    return (
+      <section className="rd-canvas-module body-m">
+        Failed to load account context: {me.error ?? 'unknown_error'}
+      </section>
+    );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No account membership found for current user.</section>;
+    return (
+      <section className="rd-canvas-module body-m">
+        No account membership found for current user.
+      </section>
+    );
   }
 
   return (
@@ -145,7 +169,9 @@ export function TemplatesDomain() {
           </div>
         ) : null}
         {actionError ? <p className="body-m">Failed to use template: {actionError}</p> : null}
-        {groupedTemplates.length === 0 ? <p className="body-m">No curated templates available yet.</p> : null}
+        {groupedTemplates.length === 0 ? (
+          <p className="body-m">No curated templates available yet.</p>
+        ) : null}
       </section>
 
       {groupedTemplates.length > 0 ? (
@@ -156,7 +182,8 @@ export function TemplatesDomain() {
                 <div className="roma-toolbar">
                   <h2 className="heading-4">{group.widgetType}</h2>
                   <p className="body-s">
-                    {group.instances.length} {group.instances.length === 1 ? 'template' : 'templates'}
+                    {group.instances.length}{' '}
+                    {group.instances.length === 1 ? 'template' : 'templates'}
                   </p>
                 </div>
 
@@ -173,7 +200,9 @@ export function TemplatesDomain() {
                       const actionKey = `template:${instance.publicId}`;
                       return (
                         <tr key={instance.publicId}>
-                          <td className="body-s">{instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}</td>
+                          <td className="body-s">
+                            {instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}
+                          </td>
                           <td className="body-s">{instance.publicId}</td>
                           <td className="roma-cell-actions">
                             <button

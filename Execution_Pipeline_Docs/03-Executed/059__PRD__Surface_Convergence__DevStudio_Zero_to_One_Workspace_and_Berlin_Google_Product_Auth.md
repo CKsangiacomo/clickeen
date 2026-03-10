@@ -1,6 +1,8 @@
 # PRD 059 — Surface Convergence: DevStudio Zero-to-One Tool and Berlin/Google Product Auth
 
-Status: EXECUTING
+> Superseded by PRD 061. Where PRD 059 conflicts with PRD 061, follow PRD 061.
+
+Status: EXECUTED
 Date: 2026-03-06
 Owner: Product Dev Team
 Priority: P0 (product/runtime convergence)
@@ -320,6 +322,134 @@ DevStudio:
 2. Generic wildcard auth bypass for product routes.
 3. DevStudio Cloudflare write flows.
 4. Browser-visible product usage of `PARIS_DEV_JWT`.
+
+---
+
+## Runtime Truth Sheet (2026-03-09)
+
+This section is the execution ledger for PRD 59. It records what the running system actually does today. A phase is not done until runtime matches the intended boundary.
+
+### Flow 1 — DevStudio open instance
+
+Current runtime:
+1. DevStudio local opens `/#/tools/dev-widget-workspace`.
+2. DevStudio local fetches `/api/devstudio/instances`.
+3. `admin/vite.config.ts` proxies that to Paris using explicit local trusted headers.
+4. Bob runs locally and opens the selected instance through message boot.
+
+Current truth:
+- This flow is now on the correct local-tool boundary.
+- It does not depend on Roma starter discovery.
+- It does not require product login.
+
+Execution status:
+- `DONE` for PRD 59 scope.
+
+### Flow 2 — DevStudio asset list / upload
+
+Current runtime:
+1. DevStudio local hosts Bob locally.
+2. Bob/Dieter in DevStudio use `/api/devstudio/assets*`.
+3. `admin/vite.config.ts` proxies asset reads/writes to Tokyo with local trusted credentials.
+
+Current truth:
+- This flow must stay local-tool-only.
+- It must not call Bob product `/api/assets*`.
+- It must not rely on product session cookies.
+
+Execution status:
+- `DONE` for route ownership.
+- Data errors in a selected instance may still produce missing-preview `404`s if that instance points at a missing asset. That is data cleanup, not route-boundary failure.
+
+### Flow 3 — Roma asset list / upload
+
+Current runtime:
+1. Roma calls `/api/assets/:accountId` and `/api/assets/upload`.
+2. Roma product routes proxy to Tokyo through the normal Roma product session contract.
+
+Current truth:
+- Roma and DevStudio are reading/writing the same account assets in Tokyo.
+- The difference is access boundary, not data plane.
+
+Execution status:
+- `DONE` for PRD 59 scope.
+
+### Flow 4 — Draft save from the editor
+
+Current runtime:
+1. Bob editor calls `PUT /api/accounts/:accountId/instance/:publicId?subject=account`.
+2. Bob local/host route forwards to Paris.
+3. Paris handles the write in `paris/src/domains/account-instances/update-handler.ts`.
+4. That same update path still calls l10n planning / enqueue.
+5. That pulls in San Francisco network dependency.
+
+Current truth:
+- Draft save is still Paris-controlled.
+- Draft save is still coupled to translation planning.
+- If San Francisco is down or unreachable, a normal save can fail.
+
+Execution status:
+- `NOT DONE`.
+
+Required closure gate:
+- A normal draft save must succeed when San Francisco is unavailable.
+- Save must mean: validate, write, return.
+- Translation must remain explicit and separate.
+
+### Flow 5 — Translate
+
+Current runtime:
+1. The editor triggers explicit translation through `POST /api/accounts/:accountId/instances/:publicId/l10n/enqueue-selected?subject=account`.
+2. Paris owns enqueue and planning.
+3. Paris may call San Francisco for planning / execution.
+
+Current truth:
+- This is the correct place for the San Francisco dependency.
+- Translation is a separate user action and may fail independently.
+
+Execution status:
+- `PARTIAL`.
+- The route ownership is correct, but status/reporting still needs to degrade cleanly when dependencies are unavailable.
+
+### Flow 6 — Status change to published
+
+Current runtime:
+- Status changes are currently handled through the same Paris update path as draft save.
+- That means status change still inherits the same l10n/save coupling today.
+
+Current truth:
+- Product-wise, publish is a state change on the same instance.
+- Runtime-wise, a published state change may still justify side effects.
+- But those side effects must not keep draft save coupled to translation.
+
+Execution status:
+- `PARTIAL`.
+- The runtime path still needs to separate plain save from state-change side effects.
+
+### Flow 7 — Roma starter catalog
+
+Current runtime:
+1. Roma uses `/api/roma/templates`.
+2. Paris returns the published starter rows for the admin account’s starter instances.
+
+Current truth:
+- This is a Roma product view over the same instances DevStudio edits and Prague renders.
+- DevStudio must never depend on this route.
+
+Execution status:
+- `DONE` for boundary definition.
+
+### Runtime gap summary
+
+PRD 59 is not done until all of these are true:
+
+1. DevStudio instance open works without product auth.
+2. DevStudio asset read/write works without product auth.
+3. Roma product auth works through Berlin-owned access paths.
+4. Draft save works even when San Francisco is down.
+5. Translate can fail independently without blocking save.
+
+Today, item `4` is still false. That means the core “normal editor ops are not Paris-controlled” outcome is not yet achieved at runtime.
 
 ---
 

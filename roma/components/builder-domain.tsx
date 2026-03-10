@@ -7,12 +7,13 @@ import openEditorLifecycleContractJson from '../../tooling/contracts/open-editor
 import { getCompiledWidget, normalizeCompiledWidgetType } from './compiled-widget-cache';
 import {
   getAccountInstance,
+  getAccountInstanceLocalization,
   invalidateAccountInstanceCache,
   prefetchAccountInstance,
   primeAccountInstanceCache,
   type AccountInstancePayload,
 } from './account-instance-cache';
-import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { resolveAccountPolicyFromRomaAuthz, resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type BuilderDomainProps = {
   initialPublicId?: string;
@@ -75,8 +76,7 @@ type BobAssetEntitlementDeniedMessage = {
 type BobAccountCommand =
   | 'update-instance'
   | 'put-user-locale-layer'
-  | 'delete-user-locale-layer'
-  | 'enqueue-selected-translations';
+  | 'delete-user-locale-layer';
 
 type BobAccountCommandMessage = {
   type: 'bob:account-command';
@@ -110,6 +110,7 @@ type BobOpenEditorMessage = {
   publicId: string;
   accountId: string;
   ownerAccountId?: string;
+  accountCapsule?: string;
   label: string;
   widgetname: string;
   compiled: unknown;
@@ -185,13 +186,6 @@ function resolveBobAccountCommandRequest(args: {
         path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId,
         )}/layers/user/${encodeURIComponent(locale)}?subject=account`,
-      };
-    case 'enqueue-selected-translations':
-      return {
-        method: 'POST',
-        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
-          publicId,
-        )}/l10n/enqueue-selected?subject=account`,
       };
     default:
       return null;
@@ -272,8 +266,8 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
 
   useEffect(() => {
     if (!accountId || !activePublicId) return;
-    void prefetchAccountInstance(accountId, activePublicId);
-  }, [accountId, activePublicId]);
+    void prefetchAccountInstance(accountId, activePublicId, me.data?.authz?.accountCapsule ?? null);
+  }, [accountId, activePublicId, me.data?.authz?.accountCapsule]);
 
   const runBobAccountCommand = useCallback(
     async (args: {
@@ -320,10 +314,17 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
           method: route.method,
           cache: 'no-store',
         };
+        const headers = new Headers();
+        const accountCapsule =
+          typeof me.data?.authz?.accountCapsule === 'string' ? me.data.authz.accountCapsule.trim() : '';
+        if (accountCapsule) {
+          headers.set('x-ck-authz-capsule', accountCapsule);
+        }
         if (typeof args.body !== 'undefined') {
-          init.headers = { 'content-type': 'application/json' };
+          headers.set('content-type', 'application/json');
           init.body = JSON.stringify(args.body);
         }
+        if (Array.from(headers.keys()).length > 0) init.headers = headers;
 
         const response = await fetch(route.path, init);
         const payload = (await response.json().catch(() => null)) as unknown;
@@ -368,7 +369,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         });
       }
     },
-    [bobBaseUrl],
+    [bobBaseUrl, me.data?.authz?.accountCapsule],
   );
 
   const postOpenEditorAndWait = useCallback(
@@ -488,18 +489,33 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
   const openActiveInstanceInBob = useCallback(async () => {
     const targetWindow = iframeRef.current?.contentWindow;
     if (!targetWindow || !accountId || !activePublicId) return;
+    if (me.loading) return;
 
     const openSeq = ++openDispatchSeqRef.current;
     setOpenError(null);
 
     try {
+      const bootstrapPolicy = resolveAccountPolicyFromRomaAuthz(me.data, accountId);
+      if (!bootstrapPolicy) {
+        throw new Error(me.error || 'coreui.errors.auth.forbidden');
+      }
+
       const compileFetchStartedAt = performance.now();
       const hintedCompiledPromise = widgetTypeHint ? getCompiledWidget(widgetTypeHint) : null;
-      const instanceResult = await getAccountInstance({
-        accountId,
-        publicId: activePublicId,
-      });
+      const [instanceResult, localizationResult] = await Promise.all([
+        getAccountInstance({
+          accountId,
+          publicId: activePublicId,
+          authzCapsule: me.data?.authz?.accountCapsule ?? null,
+        }),
+        getAccountInstanceLocalization({
+          accountId,
+          publicId: activePublicId,
+          authzCapsule: me.data?.authz?.accountCapsule ?? null,
+        }),
+      ]);
       const instance = instanceResult.payload;
+      const localization = localizationResult.payload.localization;
 
       const widgetType = typeof instance.widgetType === 'string' ? instance.widgetType.trim() : '';
       if (!widgetType) throw new Error('coreui.errors.instance.widgetMissing');
@@ -534,13 +550,17 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         subjectMode: 'account',
         publicId: resolvedPublicId,
         accountId,
+        accountCapsule:
+          typeof me.data?.authz?.accountCapsule === 'string' && me.data.authz.accountCapsule.trim()
+            ? me.data.authz.accountCapsule.trim()
+            : undefined,
         ownerAccountId,
         label,
         widgetname: widgetType,
         compiled,
         instanceData: config,
-        localization: instance.localization,
-        policy: instance.policy,
+        localization,
+        policy: bootstrapPolicy,
         enforcement: instance.enforcement,
       };
       await postOpenEditorAndWait({
@@ -564,7 +584,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [accountId, activePublicId, postOpenEditorAndWait, widgetTypeHint]);
+  }, [accountId, activePublicId, me.data, me.error, me.loading, postOpenEditorAndWait, widgetTypeHint]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {

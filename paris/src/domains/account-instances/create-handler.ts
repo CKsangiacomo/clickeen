@@ -1,7 +1,7 @@
 import { can } from '@clickeen/ck-policy';
 import { buildL10nSnapshot, computeBaseFingerprint } from '@clickeen/l10n';
 import type { CuratedInstanceRow, Env, InstanceRow, WidgetRow } from '../../shared/types';
-import { readJson } from '../../shared/http';
+import { json, readJson } from '../../shared/http';
 import { ckError, errorDetail } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
 import { loadWidgetLocalizationAllowlist, resolveAccountL10nPolicy } from '../../shared/l10n';
@@ -36,16 +36,12 @@ import {
   inferInstanceKindFromPublicId,
   resolveCuratedRowKind,
   resolveInstanceKind,
-  resolveInstanceAccountId,
 } from '../../shared/instances';
 import { resolveAdminAccountId } from '../../shared/admin';
 import { loadInstanceByPublicId, loadWidgetByType } from '../instances';
 import { enqueueL10nJobs } from '../l10n';
 import { loadInstanceOverlays } from '../l10n/service';
-import {
-  enqueueTokyoMirrorJob,
-  resolveActivePublishLocales,
-} from './service';
+import { enqueueTokyoMirrorJob, resolveActivePublishLocales, writeSavedConfigToTokyo } from './service';
 import {
   DEFAULT_INSTANCE_DISPLAY_NAME,
   enforceLimits,
@@ -54,14 +50,13 @@ import {
   titleCase,
   validateAccountAssetUsageForInstanceStrict,
 } from './helpers';
-import { handleAccountGetInstance } from './read-handlers';
 
 export async function handleAccountCreateInstance(req: Request, env: Env, accountId: string) {
   const authorized = await authorizeAccount(req, env, accountId, 'editor');
   if (!authorized.ok) return authorized.response;
   const account = authorized.account;
 
-  const policyResult = resolveEditorPolicyFromRequest(req, account);
+  const policyResult = resolveEditorPolicyFromRequest(req, account, authorized.role);
   if (!policyResult.ok) return policyResult.response;
 
   const createGate = can(policyResult.policy, 'instance.create');
@@ -127,11 +122,7 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
 
   const existing = await loadInstanceByPublicId(env, publicId);
   if (existing) {
-    const existingAccountId = resolveInstanceAccountId(existing);
-    if (!isCurated && existingAccountId && existingAccountId !== accountId) {
-      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.conflict' }, 409);
-    }
-    return handleAccountGetInstance(req, env, accountId, publicId);
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.conflict' }, 409);
   }
 
   const issues = configNonPersistableUrlIssues(config);
@@ -396,7 +387,35 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
       return usageSyncError;
     }
 
-    if (createdInstance.status === 'published') {
+    if (createdKind !== 'curated') {
+      try {
+        await writeSavedConfigToTokyo({
+          env,
+          accountId: account.id,
+          publicId,
+          widgetType,
+          config: createdInstance.config,
+        });
+      } catch (error) {
+        await rollbackCreatedInstanceAfterPostCommitFailure({
+          env,
+          accountId: account.id,
+          publicId,
+          isCurated: false,
+        });
+        const detail = errorDetail(error);
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail: `[tokyo-saved-config] ${detail}`,
+          },
+          500,
+        );
+      }
+    }
+
+    if (createdKind !== 'curated') {
       const enqueueResult = await enqueueL10nJobs({
         env,
         instance: createdInstance,
@@ -408,7 +427,9 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
       if (!enqueueResult.ok) {
         console.error('[ParisWorker] l10n enqueue failed', enqueueResult.error);
       }
+    }
 
+    if (createdInstance.status === 'published') {
       const accountL10nPolicy = resolveAccountL10nPolicy(account.l10n_policy);
       const baseLocale = accountL10nPolicy.baseLocale;
       const publishLocales = resolveActivePublishLocales({
@@ -509,5 +530,13 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
     }
   }
 
-  return handleAccountGetInstance(req, env, accountId, publicId);
+  return json(
+    {
+      publicId,
+      widgetType,
+      status,
+      source: isCurated ? 'curated' : 'account',
+    },
+    { status: 201 },
+  );
 }

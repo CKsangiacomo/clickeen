@@ -34,7 +34,10 @@ function tierRank(tier: AccountTier): number {
   }
 }
 
-function summarizeTierDrop(fromTier: AccountTier, toTier: AccountTier): { title: string; lines: string[] } {
+function summarizeTierDrop(
+  fromTier: AccountTier,
+  toTier: AccountTier,
+): { title: string; lines: string[] } {
   return {
     title: 'Plan update',
     lines: [
@@ -51,14 +54,19 @@ export function RomaAccountNoticeModal() {
 
   const account =
     accountId && Array.isArray(me.data?.accounts)
-      ? me.data.accounts.find((entry) => entry?.accountId === accountId) ?? null
+      ? (me.data.accounts.find((entry) => entry?.accountId === accountId) ?? null)
       : null;
+  const accountCapsule =
+    me.data?.authz?.accountCapsule && me.data.authz.accountCapsule.trim()
+      ? me.data.authz.accountCapsule.trim()
+      : '';
   const lifecycle = account?.lifecycleNotice ?? null;
 
   const changedAt = typeof lifecycle?.tierChangedAt === 'string' ? lifecycle.tierChangedAt : null;
   const fromTier = normalizeTier(lifecycle?.tierChangedFrom);
   const toTier = normalizeTier(lifecycle?.tierChangedTo);
-  const dismissedAt = typeof lifecycle?.tierDropDismissedAt === 'string' ? lifecycle.tierDropDismissedAt : null;
+  const dismissedAt =
+    typeof lifecycle?.tierDropDismissedAt === 'string' ? lifecycle.tierDropDismissedAt : null;
   const isTierDrop = Boolean(fromTier && toTier && tierRank(toTier) < tierRank(fromTier));
   const noticeOpen = Boolean(changedAt && isTierDrop && !dismissedAt);
 
@@ -70,9 +78,13 @@ export function RomaAccountNoticeModal() {
     setDismissLoading(true);
     setDismissError(null);
     try {
-      await fetchParisJson(`/api/accounts/${encodeURIComponent(accountId)}/lifecycle/tier-drop/dismiss`, {
-        method: 'POST',
-      });
+      await fetchParisJson(
+        `/api/accounts/${encodeURIComponent(accountId)}/lifecycle/tier-drop/dismiss`,
+        {
+          method: 'POST',
+          headers: accountCapsule ? { 'x-ck-authz-capsule': accountCapsule } : undefined,
+        },
+      );
       await me.reload();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -89,7 +101,12 @@ export function RomaAccountNoticeModal() {
 
   return (
     <div className="roma-modal-backdrop" role="presentation">
-      <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-notice-title">
+      <div
+        className="roma-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="roma-notice-title"
+      >
         <h2 className="heading-5" id="roma-notice-title">
           {summary.title}
         </h2>
@@ -113,7 +130,9 @@ export function RomaAccountNoticeModal() {
             onClick={() => void dismiss()}
             disabled={dismissLoading}
           >
-            <span className="diet-btn-txt__label body-m">{dismissLoading ? 'Dismissing...' : 'Dismiss'}</span>
+            <span className="diet-btn-txt__label body-m">
+              {dismissLoading ? 'Dismissing...' : 'Dismiss'}
+            </span>
           </button>
         </div>
       </div>

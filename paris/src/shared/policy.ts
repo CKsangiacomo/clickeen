@@ -3,7 +3,11 @@ import type { Policy, PolicyProfile } from '@clickeen/ck-policy';
 import type { AccountRow } from './types';
 import { ckError } from './errors';
 
-export function resolveEditorPolicyFromRequest(req: Request, account: AccountRow) {
+export function resolveEditorPolicyFromRequest(
+  req: Request,
+  account: AccountRow,
+  accountRole?: Policy['role'],
+) {
   const url = new URL(req.url);
   const subject = (url.searchParams.get('subject') || '').trim().toLowerCase();
 
@@ -15,7 +19,7 @@ export function resolveEditorPolicyFromRequest(req: Request, account: AccountRow
     role = 'editor';
   } else if (subject === 'account') {
     profile = account.tier;
-    role = 'editor';
+    role = accountRole ?? 'editor';
   } else {
     return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.subject.invalid' }, 422) };
   }

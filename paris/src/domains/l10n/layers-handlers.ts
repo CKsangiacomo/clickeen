@@ -1,4 +1,5 @@
-import type { Env, InstanceOverlayRow } from '../../shared/types';
+import type { AccountRow, CuratedInstanceRow, Env, InstanceOverlayRow, InstanceRow } from '../../shared/types';
+import type { Policy } from '@clickeen/ck-policy';
 import { json } from '../../shared/http';
 import { apiError, ckError, errorDetail } from '../../shared/errors';
 import { asTrimmedString, isRecord } from '../../shared/validation';
@@ -35,7 +36,11 @@ import {
 } from './service';
 import { enforceLayerEntitlement } from './shared';
 import { resolveL10nPlanningSnapshot } from './planning';
-import { enqueueTokyoMirrorJob, resolveActivePublishLocales } from '../account-instances/service';
+import {
+  enqueueTokyoMirrorJob,
+  loadSavedConfigStateFromTokyo,
+  resolveActivePublishLocales,
+} from '../account-instances/service';
 import {
   buildLocaleTextPack,
   collectLocaleOverlayOps,
@@ -112,6 +117,31 @@ async function mirrorPublishedLayerLocale(args: {
   return null;
 }
 
+async function loadSavedAuthoringState(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  instance: InstanceRow | CuratedInstanceRow;
+}): Promise<
+  | { ok: true; config: Record<string, unknown>; updatedAt: string }
+  | { ok: false; response: Response }
+> {
+  const savedState = await loadSavedConfigStateFromTokyo({
+    env: args.env,
+    accountId: resolveInstanceAccountId(args.instance) ?? args.accountId,
+    publicId: args.publicId,
+  });
+  if (!savedState) {
+    return {
+      ok: false,
+      response: apiError('INTERNAL_ERROR', 'Saved Tokyo revision missing', 500, {
+        publicId: args.publicId,
+      }),
+    };
+  }
+  return { ok: true, config: savedState.config, updatedAt: savedState.updatedAt };
+}
+
 async function resolveLayerRequestContext(args: {
   req: Request;
   env: Env;
@@ -122,18 +152,20 @@ async function resolveLayerRequestContext(args: {
 }): Promise<
   | {
       ok: true;
-      account: Awaited<ReturnType<typeof authorizeAccount>> extends { ok: true; account: infer T } ? T : never;
-      policy: ReturnType<typeof resolveEditorPolicyFromRequest> extends { ok: true; policy: infer T } ? T : never;
+      account: AccountRow;
+      policy: Policy;
       publicId: string;
-      instance: NonNullable<Awaited<ReturnType<typeof loadInstanceByAccountAndPublicId>>>;
+      instance: InstanceRow | CuratedInstanceRow;
     }
   | { ok: false; response: Response }
 > {
-  const authorized = await authorizeAccount(args.req, args.env, args.accountId, args.minRole);
+  const authorized = await authorizeAccount(args.req, args.env, args.accountId, args.minRole, {
+    requireCapsule: true,
+  });
   if (!authorized.ok) return { ok: false, response: authorized.response };
   const account = authorized.account;
 
-  const policyResult = resolveEditorPolicyFromRequest(args.req, account);
+  const policyResult = resolveEditorPolicyFromRequest(args.req, account, authorized.role);
   if (!policyResult.ok) return { ok: false, response: policyResult.response };
 
   const publicIdResult = assertPublicId(args.publicId);
@@ -363,17 +395,25 @@ export async function handleAccountInstanceLayerUpsert(
     return apiError('INTERNAL_ERROR', 'widgetType required for allowlist', 500);
   }
 
+  const savedAuthoring = await loadSavedAuthoringState({
+    env,
+    accountId,
+    publicId: normalizedPublicId,
+    instance,
+  });
+  if (!savedAuthoring.ok) return savedAuthoring.response;
+
   const planning = await resolveL10nPlanningSnapshot({
     env,
     widgetType,
-    config: instance.config,
-    baseUpdatedAt: baseUpdatedAtRaw ?? instance.updated_at ?? null,
+    config: savedAuthoring.config,
+    baseUpdatedAt: baseUpdatedAtRaw ?? savedAuthoring.updatedAt,
   });
   if (!planning.ok) {
     return apiError('INTERNAL_ERROR', 'Failed to resolve l10n planning snapshot', 500, planning.error);
   }
   const computedFingerprint = planning.plan.baseFingerprint;
-  const resolvedBaseUpdatedAt = planning.plan.baseUpdatedAt ?? baseUpdatedAtRaw ?? instance.updated_at ?? null;
+  const resolvedBaseUpdatedAt = planning.plan.baseUpdatedAt ?? baseUpdatedAtRaw ?? savedAuthoring.updatedAt;
   if (!baseFingerprintRaw) {
     return apiError('FINGERPRINT_MISMATCH', 'baseFingerprint required', 409);
   }
@@ -530,7 +570,7 @@ export async function handleAccountInstanceLayerUpsert(
         baseLocale,
         baseFingerprint: computedFingerprint,
         baseTextPack: planning.plan.snapshot,
-        config: instance.config,
+        config: savedAuthoring.config,
         widgetType,
         policy: editorPolicy,
       });
@@ -579,11 +619,18 @@ export async function handleAccountInstanceLayerDelete(
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
   if (!widgetType) return apiError('INTERNAL_ERROR', 'widgetType required for allowlist', 500);
+  const savedAuthoring = await loadSavedAuthoringState({
+    env,
+    accountId,
+    publicId: normalizedPublicId,
+    instance,
+  });
+  if (!savedAuthoring.ok) return savedAuthoring.response;
   const planning = await resolveL10nPlanningSnapshot({
     env,
     widgetType,
-    config: instance.config,
-    baseUpdatedAt: instance.updated_at ?? null,
+    config: savedAuthoring.config,
+    baseUpdatedAt: savedAuthoring.updatedAt,
   });
   if (!planning.ok) {
     return apiError('INTERNAL_ERROR', 'Failed to resolve l10n planning snapshot', 500, planning.error);
@@ -635,7 +682,7 @@ export async function handleAccountInstanceLayerDelete(
         baseLocale,
         baseFingerprint: computedFingerprint,
         baseTextPack: planning.plan.snapshot,
-        config: instance.config,
+        config: savedAuthoring.config,
         widgetType,
         policy: editorPolicy,
       });

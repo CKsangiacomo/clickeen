@@ -490,17 +490,6 @@
           <button
             type="button"
             class="diet-btn-ictxt devstudio-instances__action"
-            id="translate-selected-locales"
-            data-size="md"
-            data-variant="secondary"
-            data-tone="brown.5"
-          >
-            <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="globe"></span>
-            <span class="diet-btn-ictxt__label body-s">Translate</span>
-          </button>
-          <button
-            type="button"
-            class="diet-btn-ictxt devstudio-instances__action"
             id="superadmin-update-theme"
             data-size="md"
             data-variant="secondary"
@@ -810,8 +799,7 @@
 
     function requireBobOrigin() {
       const params = new URLSearchParams(window.location.search);
-      const profile = PROFILE;
-      const defaultBob = profile === 'source' ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';
+      const defaultBob = 'http://localhost:3000';
       const raw = (params.get('bob') || defaultBob).trim();
       try {
         return new URL(raw).origin;
@@ -873,7 +861,6 @@
     const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
     const promoteCuratedCloudBtn = document.getElementById('promote-curated-cloud');
     const refreshPraguePreviewBtn = document.getElementById('refresh-prague-preview');
-    const translateSelectedLocalesBtn = document.getElementById('translate-selected-locales');
     const l10nStatus = document.getElementById('l10n-status');
     const l10nStatusValue = document.getElementById('l10n-status-value');
     const l10nStatusMeta = document.getElementById('l10n-status-meta');
@@ -1126,17 +1113,6 @@
           switchInstance(publicId);
           return;
         }
-        if (data && data.type === 'bob:instance-renamed') {
-          const publicId = typeof data.publicId === 'string' ? data.publicId.trim() : '';
-          const displayName = typeof data.displayName === 'string' ? data.displayName.trim() : '';
-          if (!publicId || !displayName) return;
-          const instance = instances.find((inst) => inst.publicId === publicId);
-          if (!instance) return;
-          instance.label = displayName;
-          updateCurrentLabel();
-          renderInstances();
-          return;
-        }
         if (data && data.type === 'bob:session-ready') {
           const sessionId = typeof data.sessionId === 'string' ? data.sessionId.trim() : '';
           if (!sessionId) {
@@ -1346,20 +1322,49 @@
       return promise;
     }
 
+    async function fetchInstanceCore(publicId, accountId = DEVSTUDIO_ACCOUNT_ID) {
+      const res = await fetchBob(
+        buildBobApiUrl(`/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}`, {
+          subject: 'account',
+          surface: 'devstudio',
+          _t: Date.now(),
+        }),
+      );
+      if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
+      return await res.json();
+    }
+
+    async function fetchInstanceLocalization(publicId, accountId = DEVSTUDIO_ACCOUNT_ID) {
+      const res = await fetchBob(
+        buildBobApiUrl(
+          `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/localization`,
+          {
+            subject: 'account',
+            surface: 'devstudio',
+            _t: Date.now(),
+          },
+        ),
+      );
+      if (!res.ok) {
+        throw new Error(`Failed to load localization ${publicId} (${res.status})`);
+      }
+      return await res.json();
+    }
+
     async function fetchInstanceEnvelope(publicId, accountId = DEVSTUDIO_ACCOUNT_ID) {
       const cacheKey = `${accountId}::${publicId}`;
       if (instanceEnvelopePromiseCache.has(cacheKey)) {
         return instanceEnvelopePromiseCache.get(cacheKey);
       }
       const promise = (async () => {
-        const res = await fetchDevStudio(
-          buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(publicId)}`, {
-            accountId,
-            _t: Date.now(),
-          }),
-        );
-        if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
-        return await res.json();
+        const [core, localizationResult] = await Promise.all([
+          fetchInstanceCore(publicId, accountId),
+          fetchInstanceLocalization(publicId, accountId).catch(() => null),
+        ]);
+        return {
+          ...core,
+          localization: localizationResult?.localization ?? core?.localization ?? null,
+        };
       })().finally(() => {
         instanceEnvelopePromiseCache.delete(cacheKey);
       });
@@ -1689,9 +1694,10 @@
     }
 
     async function createInstance({ widgetType, publicId, config, status, meta }) {
-      const res = await fetchDevStudio(
-        buildDevStudioApiUrl('/api/devstudio/instances', {
-          accountId: DEVSTUDIO_ACCOUNT_ID,
+      const res = await fetchBob(
+        buildBobApiUrl(`/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instances`, {
+          subject: 'account',
+          surface: 'devstudio',
           _t: Date.now(),
         }),
         {
@@ -1708,16 +1714,17 @@
       return text ? JSON.parse(text) : null;
     }
 
-    async function updateInstance({ publicId, config, status, meta }) {
-      const res = await fetchDevStudio(
-        buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(publicId)}`, {
-          accountId: DEVSTUDIO_ACCOUNT_ID,
+    async function updateInstance({ publicId, config }) {
+      const res = await fetchBob(
+        buildBobApiUrl(`/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instance/${encodeURIComponent(publicId)}`, {
+          subject: 'account',
+          surface: 'devstudio',
           _t: Date.now(),
         }),
         {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ config, status, meta }),
+          body: JSON.stringify({ config }),
         },
       );
       const text = await res.text().catch(() => '');
@@ -1729,9 +1736,10 @@
     }
 
     async function ensureInstance({ widgetType, publicId, config, status }) {
-      const res = await fetchDevStudio(
-        buildDevStudioApiUrl('/api/devstudio/instances', {
-          accountId: DEVSTUDIO_ACCOUNT_ID,
+      const res = await fetchBob(
+        buildBobApiUrl(`/api/accounts/${encodeURIComponent(DEVSTUDIO_ACCOUNT_ID)}/instances`, {
+          subject: 'account',
+          surface: 'devstudio',
           _t: Date.now(),
         }),
         {
@@ -1745,10 +1753,10 @@
         return text ? JSON.parse(text) : null;
       }
 
-      // If the instance already exists, update it to the desired config/status.
+      // If the instance already exists, update it to the desired saved config.
       const text = await res.text().catch(() => '');
       if (res.status === 409 || (text || '').toLowerCase().includes('duplicate')) {
-        await updateInstance({ publicId, config, status });
+        await updateInstance({ publicId, config });
         return { ok: true, existed: true };
       }
 
@@ -1903,7 +1911,6 @@
       await updateInstance({
         publicId,
         config,
-        status: 'published',
       });
       return { publicId, config };
     }
@@ -2163,7 +2170,6 @@
       await updateInstance({
         publicId,
         config,
-        status: 'published',
       });
       return { publicId, config };
     }
@@ -2198,8 +2204,6 @@
       await updateInstance({
         publicId,
         config,
-        status: 'published',
-        meta: instance.meta ?? undefined,
       });
 
       return { publicId, config };
@@ -2501,53 +2505,6 @@
         if (labelEl) labelEl.textContent = previousLabel;
       } finally {
         if (refreshPraguePreviewBtn) refreshPraguePreviewBtn.disabled = false;
-      }
-    });
-
-    translateSelectedLocalesBtn?.addEventListener('click', async () => {
-      try {
-        if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-        if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
-          throw new Error('[DevStudio] Select a curated instance first.');
-        }
-
-        const res = await fetchDevStudio(
-          buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(currentPublicId)}/l10n/enqueue-selected`, {
-            accountId: DEVSTUDIO_ACCOUNT_ID,
-            _t: Date.now(),
-          }),
-          {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: '{}',
-          },
-        );
-        const payloadText = await res.text().catch(() => '');
-        if (!res.ok)
-          throw new Error(
-            `[DevStudio] Translate failed (HTTP ${res.status})${payloadText ? `: ${payloadText}` : ''}`,
-          );
-        let payload = null;
-        try {
-          payload = payloadText ? JSON.parse(payloadText) : null;
-        } catch {}
-        const queued = payload?.queued ?? null;
-        const skipped = payload?.skipped ?? null;
-        if (typeof queued === 'number' && queued === 0) {
-          const applyStep = isCuratedPublicId(currentPublicId)
-            ? 'Update Curated'
-            : 'Update Config';
-          alert(
-            `[DevStudio] No locale jobs were queued for ${currentPublicId}. If you edited base content in Bob, click "${applyStep}" first, then click "Translate".${typeof skipped === 'number' ? ` (skipped: ${skipped})` : ''}`,
-          );
-        } else {
-          alert(
-            `[DevStudio] Queued ${typeof queued === 'number' ? queued : 'translation'} job(s) for ${currentPublicId}${typeof skipped === 'number' ? ` (skipped: ${skipped})` : ''}.`,
-          );
-        }
-        refreshL10nStatus(currentPublicId).catch(() => {});
-      } catch (err) {
-        alert(err instanceof Error ? err.message : String(err));
       }
     });
 

@@ -50,6 +50,8 @@ export async function proxyToParis(request: NextRequest, options: ParisProxyOpti
   if (contentType) headers.set('content-type', contentType);
   const accept = request.headers.get('accept');
   if (accept) headers.set('accept', accept);
+  const authzCapsule = request.headers.get('x-ck-authz-capsule');
+  if (authzCapsule) headers.set('x-ck-authz-capsule', authzCapsule);
 
   const requestInit: RequestInit = {
     method,

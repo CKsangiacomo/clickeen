@@ -109,13 +109,17 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
       options?.onThemeUpdate?.(payload);
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
-    if (url.includes('/api/devstudio/instances') && method === 'POST') {
+    if (/\/api\/accounts\/[^/]+\/instances(?:\?|$)/.test(url) && method === 'POST') {
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
-    if (/\/api\/devstudio\/instances\/[^/?:]+(?:\?|$)/.test(url) && !url.includes('/l10n/status') && !url.includes('/enqueue-selected')) {
-      const match = instances.find((instance) => url.includes(`/api/devstudio/instances/${instance.publicId}`));
+    if (
+      /\/api\/accounts\/[^/]+\/instance\/[^/?:]+/.test(url) &&
+      !url.includes('/l10n/status') &&
+      !url.includes('/enqueue-selected')
+    ) {
+      const match = instances.find((instance) => url.includes(`/instance/${instance.publicId}`));
       const publicId =
-        match?.publicId || decodeURIComponent((url.match(/\/api\/devstudio\/instances\/([^?]+)/)?.[1] || 'unknown'));
+        match?.publicId || decodeURIComponent((url.match(/\/instance\/([^?]+)/)?.[1] || 'unknown'));
       return new Response(
         JSON.stringify({
           publicId,
@@ -146,6 +150,19 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         { status: 200 },
       );
     }
+    if (url.includes('/api/accounts/') && url.includes('/instances/') && url.includes('/localization')) {
+      return new Response(
+        JSON.stringify({
+          localization: {
+            accountLocales: ['en', 'fr'],
+            invalidAccountLocales: [],
+            localeOverlays: [],
+            policy: { enabled: true, baseLocale: 'en' },
+          },
+        }),
+        { status: 200 },
+      );
+    }
     if (url.includes('/api/devstudio/instances/') && url.includes('/l10n/status')) {
       if (options?.devstudioL10nUnavailable) {
         return new Response(
@@ -163,9 +180,6 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         }),
         { status: 200 },
       );
-    }
-    if (url.includes('/api/devstudio/instances/') && url.includes('/l10n/enqueue-selected') && method === 'POST') {
-      return new Response(JSON.stringify({ ok: true, queued: 1, skipped: 0 }), { status: 200 });
     }
     return new Response('{}', { status: 404 });
   });
@@ -207,7 +221,7 @@ async function loadInstancesDom(
 
   const iframe = dom.window.document.getElementById('bob-iframe');
   let bobWindow: Window | null = null;
-  const bobOrigin = profile === 'source' ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';
+  const bobOrigin = 'http://localhost:3000';
   if (iframe) {
     bobWindow = {
       postMessage: vi.fn((payload: unknown, origin: string) => {
@@ -319,7 +333,7 @@ describe('DevStudio instances tool', () => {
     dom.window.close();
   });
 
-  it('loads instance envelopes through the DevStudio local route', async () => {
+  it('loads instance envelopes through the Bob canonical route plus explicit localization rehydrate', async () => {
     const instances = [
       {
         publicId: 'wgt_curated_faq_simple',
@@ -331,7 +345,8 @@ describe('DevStudio instances tool', () => {
       fetch: { localWidgets: ['faq'] },
     });
     const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
-    expect(urls.some((url) => url.includes('/api/devstudio/instances/wgt_curated_faq_simple'))).toBe(true);
+    expect(urls.some((url) => url.includes('/api/accounts/00000000-0000-0000-0000-000000000100/instance/wgt_curated_faq_simple'))).toBe(true);
+    expect(urls.some((url) => url.includes('/api/accounts/00000000-0000-0000-0000-000000000100/instances/wgt_curated_faq_simple/localization'))).toBe(true);
 
     dom.window.close();
   });
@@ -495,7 +510,7 @@ describe('DevStudio instances tool', () => {
 
     const createCall = fetchMock.mock.calls.find(([input, init]) => {
       const url = typeof input === 'string' ? input : input.toString();
-      return url.includes('/api/devstudio/instances') && (init?.method || 'GET') === 'POST';
+      return /\/api\/accounts\/[^/]+\/instances(?:\?|$)/.test(url) && (init?.method || 'GET') === 'POST';
     });
     expect(createCall).toBeTruthy();
     const createBody = createCall?.[1]?.body ? JSON.parse(String(createCall[1].body)) : null;

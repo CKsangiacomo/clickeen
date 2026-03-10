@@ -24,6 +24,10 @@ type AccountAuthResult =
       response: Response;
     };
 
+type AuthorizeAccountOptions = {
+  requireCapsule?: boolean;
+};
+
 // Membership lookups are direct and uncached to keep authz behavior deterministic.
 
 async function resolveAccountMembershipRole(env: Env, accountId: string, userId: string): Promise<MemberRole | null> {
@@ -48,7 +52,7 @@ function hydrateAccountFromCapsule(payload: RomaAccountAuthzCapsulePayload): Acc
     id: payload.accountId,
     status: payload.accountStatus,
     is_platform: null,
-    tier: payload.profile,
+    tier: payload.profile === 'minibob' ? 'free' : payload.profile,
     name: payload.accountName,
     slug: payload.accountSlug,
     website_url: payload.accountWebsiteUrl ?? null,
@@ -57,9 +61,35 @@ function hydrateAccountFromCapsule(payload: RomaAccountAuthzCapsulePayload): Acc
   };
 }
 
-export async function authorizeAccount(req: Request, env: Env, accountId: string, minRole: MemberRole): Promise<AccountAuthResult> {
+export async function authorizeAccount(
+  req: Request,
+  env: Env,
+  accountId: string,
+  minRole: MemberRole,
+  options: AuthorizeAccountOptions = {},
+): Promise<AccountAuthResult> {
   const auth = await assertDevAuth(req, env);
   if (!auth.ok) return { ok: false, response: auth.response };
+
+  const capsule = readRomaAuthzCapsuleHeader(req);
+  if (capsule) {
+    const verified = await verifyRomaAccountAuthzCapsule(env, capsule);
+    if (!verified.ok) {
+      return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
+    }
+    const payload = verified.payload;
+    if ((auth.principal && payload.userId !== auth.principal.userId) || payload.accountId !== accountId) {
+      return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
+    }
+    if (roleRank(payload.role) < roleRank(minRole)) {
+      return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
+    }
+    return {
+      ok: true,
+      account: hydrateAccountFromCapsule(payload),
+      role: payload.role,
+    };
+  }
 
   if (!auth.principal) {
     if (auth.source === 'dev') {
@@ -73,24 +103,8 @@ export async function authorizeAccount(req: Request, env: Env, accountId: string
     return { ok: false, response: ckError({ kind: 'AUTH', reasonKey: 'coreui.errors.auth.required' }, 401) };
   }
 
-  const capsule = readRomaAuthzCapsuleHeader(req);
-  if (capsule) {
-    const verified = await verifyRomaAccountAuthzCapsule(env, capsule);
-    if (!verified.ok) {
-      return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
-    }
-    const payload = verified.payload;
-    if (payload.userId !== auth.principal.userId || payload.accountId !== accountId) {
-      return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
-    }
-    if (roleRank(payload.role) < roleRank(minRole)) {
-      return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
-    }
-    return {
-      ok: true,
-      account: hydrateAccountFromCapsule(payload),
-      role: payload.role,
-    };
+  if (options.requireCapsule) {
+    return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
   }
 
   const accountResult = await requireAccount(env, accountId);

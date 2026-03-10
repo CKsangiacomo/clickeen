@@ -37,10 +37,26 @@ export function WidgetsDomain() {
   const [widgetTypes, setWidgetTypes] = useState<string[]>([]);
   const [domainLoading, setDomainLoading] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
+  const [renamingPublicId, setRenamingPublicId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState('');
+  const [renameError, setRenameError] = useState<string | null>(null);
 
   const accountId = context.accountId;
+  const accountCapsule =
+    me.data?.authz?.accountCapsule && me.data.authz.accountCapsule.trim() ? me.data.authz.accountCapsule.trim() : '';
   const searchIntent = useMemo(() => (searchParams.get('intent') || '').trim().toLowerCase(), [searchParams]);
   const searchWidgetType = useMemo(() => normalizeWidgetType(searchParams.get('widgetType')), [searchParams]);
+  const selectedPublicId = useMemo(() => (searchParams.get('selected') || '').trim(), [searchParams]);
+
+  const createRequestHeaders = useCallback(
+    (contentType?: string) => {
+      const headers = new Headers();
+      if (contentType) headers.set('content-type', contentType);
+      if (accountCapsule) headers.set('x-ck-authz-capsule', accountCapsule);
+      return headers;
+    },
+    [accountCapsule],
+  );
 
   const refreshWidgets = useCallback(async () => {
     if (!accountId) return;
@@ -49,6 +65,7 @@ export function WidgetsDomain() {
     try {
       const payload = await fetchParisJson<unknown>(`/api/roma/widgets?accountId=${encodeURIComponent(accountId)}`, {
         method: 'GET',
+        headers: createRequestHeaders(),
       });
       const normalized = normalizeRomaWidgetsResponse(payload);
       if (!normalized || normalized.accountId !== accountId) {
@@ -65,7 +82,7 @@ export function WidgetsDomain() {
     } finally {
       setDomainLoading(false);
     }
-  }, [accountId]);
+  }, [accountId, createRequestHeaders]);
 
   useEffect(() => {
     void refreshWidgets();
@@ -124,9 +141,7 @@ export function WidgetsDomain() {
           `/api/roma/widgets/duplicate`,
           {
             method: 'POST',
-            headers: {
-              'content-type': 'application/json',
-            },
+            headers: createRequestHeaders('application/json'),
             body: JSON.stringify({
               accountId,
               sourcePublicId,
@@ -158,7 +173,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountId, refreshWidgets, router],
+    [accountId, createRequestHeaders, refreshWidgets, router],
   );
 
   const handleDuplicateInstance = useCallback(
@@ -170,9 +185,7 @@ export function WidgetsDomain() {
       try {
         const payload = await fetchParisJson<{ publicId?: string; widgetType?: string }>(`/api/roma/widgets/duplicate`, {
           method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
+          headers: createRequestHeaders('application/json'),
           body: JSON.stringify({
             accountId,
             sourcePublicId: instance.publicId,
@@ -191,7 +204,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountId, refreshWidgets],
+    [accountId, createRequestHeaders, refreshWidgets],
   );
 
   const handleDeleteInstance = useCallback(
@@ -205,6 +218,7 @@ export function WidgetsDomain() {
           `/api/roma/instances/${encodeURIComponent(instance.publicId)}?accountId=${encodeURIComponent(accountId)}`,
           {
             method: 'DELETE',
+            headers: createRequestHeaders(),
           },
         );
         await refreshWidgets();
@@ -215,7 +229,91 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountId, refreshWidgets],
+    [accountId, createRequestHeaders, refreshWidgets],
+  );
+
+  const handleStatusChange = useCallback(
+    async (instance: WidgetInstance, nextStatus: 'published' | 'unpublished') => {
+      if (!accountId) return;
+      const actionKey = `${nextStatus}:${instance.publicId}`;
+      setActiveActionKey(actionKey);
+      setCreateError(null);
+      try {
+        await fetchParisJson<{ status?: 'published' | 'unpublished' }>(
+          `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(instance.publicId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}?subject=account`,
+          {
+            method: 'POST',
+            headers: createRequestHeaders(),
+          },
+        );
+        await refreshWidgets();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setCreateError(message);
+      } finally {
+        setActiveActionKey((current) => (current === actionKey ? null : current));
+      }
+    },
+    [accountId, createRequestHeaders, refreshWidgets],
+  );
+
+  const startRename = useCallback((instance: WidgetInstance) => {
+    if (!instance.actions.rename) return;
+    setCreateError(null);
+    setRenameError(null);
+    setRenamingPublicId(instance.publicId);
+    setRenameDraft(instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME);
+  }, []);
+
+  const cancelRename = useCallback(() => {
+    setRenamingPublicId(null);
+    setRenameDraft('');
+    setRenameError(null);
+  }, []);
+
+  const handleRenameInstance = useCallback(
+    async (instance: WidgetInstance) => {
+      if (!accountId || !instance.actions.rename) return;
+      const nextDisplayName = renameDraft.trim();
+      if (!nextDisplayName) {
+        setRenameError('Instance name cannot be empty.');
+        return;
+      }
+      if (nextDisplayName === instance.displayName.trim()) {
+        cancelRename();
+        return;
+      }
+      const actionKey = `rename:${instance.publicId}`;
+      setActiveActionKey(actionKey);
+      setCreateError(null);
+      setRenameError(null);
+      try {
+        const payload = await fetchParisJson<{ publicId?: string; displayName?: string }>(
+          `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(instance.publicId)}/rename`,
+          {
+            method: 'POST',
+            headers: createRequestHeaders('application/json'),
+            body: JSON.stringify({ displayName: nextDisplayName }),
+          },
+        );
+        const resolvedDisplayName =
+          typeof payload.displayName === 'string' && payload.displayName.trim()
+            ? payload.displayName.trim()
+            : nextDisplayName;
+        setWidgetInstances((prev) =>
+          prev.map((entry) =>
+            entry.publicId === instance.publicId ? { ...entry, displayName: resolvedDisplayName } : entry,
+          ),
+        );
+        cancelRename();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setRenameError(message);
+      } finally {
+        setActiveActionKey((current) => (current === actionKey ? null : current));
+      }
+    },
+    [accountId, cancelRename, createRequestHeaders, renameDraft],
   );
 
   useEffect(() => {
@@ -271,6 +369,7 @@ export function WidgetsDomain() {
             </div>
           ) : null}
           {createError ? <p className="body-m">Failed to update widgets: {createError}</p> : null}
+          {renameError ? <p className="body-m">Failed to rename widget: {renameError}</p> : null}
 
           {groupedInstances.length === 0 ? (
             <div className="rd-canvas-module__actions">
@@ -300,6 +399,7 @@ export function WidgetsDomain() {
                 <tr>
                   <th className="table-header label-s">Instance</th>
                   <th className="table-header label-s">Public ID</th>
+                  <th className="table-header label-s">Status</th>
                   <th className="table-header label-s">Actions</th>
                 </tr>
               </thead>
@@ -307,13 +407,74 @@ export function WidgetsDomain() {
                 {group.instances.map((instance) => {
                   const duplicateActionKey = `duplicate:${instance.publicId}`;
                   const deleteActionKey = `delete:${instance.publicId}`;
+                  const publishActionKey = `published:${instance.publicId}`;
+                  const unpublishActionKey = `unpublished:${instance.publicId}`;
                   const canEdit = instance.actions.edit;
                   const canDuplicate = instance.actions.duplicate;
                   const canDelete = instance.actions.delete;
+                  const canRename = instance.actions.rename;
+                  const canPublish = instance.actions.publish;
+                  const canUnpublish = instance.actions.unpublish;
+                  const isSelected = selectedPublicId === instance.publicId;
+                  const renameActionKey = `rename:${instance.publicId}`;
+                  const isRenaming = renamingPublicId === instance.publicId;
                   return (
-                    <tr key={instance.publicId}>
-                      <td className="body-s">{instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}</td>
+                    <tr key={instance.publicId} data-selected={isSelected ? 'true' : undefined}>
+                      <td className="body-s">
+                        {isRenaming ? (
+                          <div className="roma-instance-rename">
+                            <input
+                              className="roma-instance-rename__input body-s"
+                              type="text"
+                              value={renameDraft}
+                              maxLength={120}
+                              onChange={(event) => setRenameDraft(event.target.value)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter') {
+                                  event.preventDefault();
+                                  void handleRenameInstance(instance);
+                                }
+                                if (event.key === 'Escape') {
+                                  event.preventDefault();
+                                  cancelRename();
+                                }
+                              }}
+                              autoFocus
+                            />
+                            <div className="roma-instance-rename__actions">
+                              <button
+                                className="diet-btn-txt"
+                                data-size="md"
+                                data-variant="neutral"
+                                type="button"
+                                onClick={() => cancelRename()}
+                                disabled={Boolean(activeActionKey)}
+                              >
+                                <span className="diet-btn-txt__label body-m">Cancel</span>
+                              </button>
+                              <button
+                                className="diet-btn-txt"
+                                data-size="md"
+                                data-variant="primary"
+                                type="button"
+                                onClick={() => void handleRenameInstance(instance)}
+                                disabled={Boolean(activeActionKey)}
+                              >
+                                <span className="diet-btn-txt__label body-m">
+                                  {activeActionKey === renameActionKey ? 'Renaming...' : 'Rename'}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}
+                            {isSelected ? ' (selected)' : ''}
+                          </>
+                        )}
+                      </td>
                       <td className="body-s">{instance.publicId}</td>
+                      <td className="body-s">{instance.status === 'published' ? 'Published' : 'Unpublished'}</td>
                       <td className="roma-cell-actions">
                         {canEdit ? (
                           <Link
@@ -333,6 +494,46 @@ export function WidgetsDomain() {
                             <span className="diet-btn-txt__label body-m">Edit</span>
                           </button>
                         )}
+                        {instance.status === 'published' && canUnpublish ? (
+                          <button
+                            className="diet-btn-txt"
+                            data-size="md"
+                            data-variant="secondary"
+                            type="button"
+                            onClick={() => void handleStatusChange(instance, 'unpublished')}
+                            disabled={Boolean(activeActionKey) || !canUnpublish}
+                          >
+                            <span className="diet-btn-txt__label body-m">
+                              {activeActionKey === unpublishActionKey ? 'Unpublishing...' : 'Unpublish'}
+                            </span>
+                          </button>
+                        ) : null}
+                        {instance.status === 'unpublished' && canPublish ? (
+                          <button
+                            className="diet-btn-txt"
+                            data-size="md"
+                            data-variant="primary"
+                            type="button"
+                            onClick={() => void handleStatusChange(instance, 'published')}
+                            disabled={Boolean(activeActionKey) || !canPublish}
+                          >
+                            <span className="diet-btn-txt__label body-m">
+                              {activeActionKey === publishActionKey ? 'Publishing...' : 'Publish'}
+                            </span>
+                          </button>
+                        ) : null}
+                        {canRename ? (
+                          <button
+                            className="diet-btn-txt"
+                            data-size="md"
+                            data-variant="secondary"
+                            type="button"
+                            onClick={() => startRename(instance)}
+                            disabled={Boolean(activeActionKey) || isRenaming}
+                          >
+                            <span className="diet-btn-txt__label body-m">Rename</span>
+                          </button>
+                        ) : null}
                         <button
                           className="diet-btn-txt"
                           data-size="md"
@@ -363,7 +564,7 @@ export function WidgetsDomain() {
                 })}
                 {group.instances.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="body-s">
+                    <td colSpan={4} className="body-s">
                       No instances yet.
                     </td>
                   </tr>

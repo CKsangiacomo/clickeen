@@ -30,10 +30,14 @@ async function loadPagedRows<T>(args: {
       limit: String(pageSize),
       offset: String(offset),
     });
-    const res = await supabaseFetch(args.env, `/rest/v1/${args.table}?${params.toString()}`, { method: 'GET' });
+    const res = await supabaseFetch(args.env, `/rest/v1/${args.table}?${params.toString()}`, {
+      method: 'GET',
+    });
     if (!res.ok) {
       const details = await readJson(res);
-      throw new Error(`[ParisWorker] Failed to load ${args.table} rows (${res.status}): ${JSON.stringify(details)}`);
+      throw new Error(
+        `[ParisWorker] Failed to load ${args.table} rows (${res.status}): ${JSON.stringify(details)}`,
+      );
     }
     const rows = ((await res.json()) as T[]) ?? [];
     out.push(...rows);
@@ -63,7 +67,10 @@ type PublishedInstanceRow = {
   created_at?: string | null;
 };
 
-async function loadPublishedInstanceRowsForAccount(env: Env, accountId: string): Promise<Array<{ publicId: string; createdAt: string | null }>> {
+async function loadPublishedInstanceRowsForAccount(
+  env: Env,
+  accountId: string,
+): Promise<Array<{ publicId: string; createdAt: string | null }>> {
   const rows = await loadPagedRows<PublishedInstanceRow>({
     env,
     table: 'widget_instances',
@@ -123,22 +130,37 @@ async function unpublishAccountInstances(args: {
       public_id: `in.(${toUnpublish.join(',')})`,
       account_id: `eq.${args.accountId}`,
     });
-    const patchRes = await supabaseFetch(args.env, `/rest/v1/widget_instances?${patchParams.toString()}`, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ status: 'unpublished' }),
-    });
+    const patchRes = await supabaseFetch(
+      args.env,
+      `/rest/v1/widget_instances?${patchParams.toString()}`,
+      {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ status: 'unpublished' }),
+      },
+    );
     if (!patchRes.ok) {
       const details = await readJson(patchRes);
       return {
         ok: false,
-        response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
+        response: ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail: JSON.stringify(details),
+          },
+          500,
+        ),
       };
     }
 
     const failed: string[] = [];
     for (const publicId of toUnpublish) {
-      const enqueue = await enqueueTokyoMirrorJob(args.env, { v: 1, kind: 'delete-instance-mirror', publicId });
+      const enqueue = await enqueueTokyoMirrorJob(args.env, {
+        v: 1,
+        kind: 'delete-instance-mirror',
+        publicId,
+      });
       if (!enqueue.ok) {
         failed.push(publicId);
         console.error('[ParisWorker] tokyo delete-instance-mirror enqueue failed', enqueue.error);
@@ -155,7 +177,13 @@ async function unpublishAccountInstances(args: {
     };
   } catch (error) {
     const detail = errorDetail(error);
-    return { ok: false, response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500) };
+    return {
+      ok: false,
+      response: ckError(
+        { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail },
+        500,
+      ),
+    };
   }
 }
 
@@ -174,20 +202,30 @@ async function updateAccountTier(args: {
     const details = await readJson(res);
     return {
       ok: false,
-      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
+      response: ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: JSON.stringify(details),
+        },
+        500,
+      ),
     };
   }
   const rows = (await res.json().catch(() => null)) as Array<{ id?: string }> | null;
   if (!rows?.[0]?.id) {
-    return { ok: false, response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404) };
+    return {
+      ok: false,
+      response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404),
+    };
   }
   return { ok: true };
 }
 
-function buildTierDropLocalePolicy(args: {
-  account: AccountRow;
-  policy: Policy;
-}): { localePolicy: LocalePolicy; invalidAccountLocales: string | null } {
+function buildTierDropLocalePolicy(args: { account: AccountRow; policy: Policy }): {
+  localePolicy: LocalePolicy;
+  invalidAccountLocales: string | null;
+} {
   const accountL10nPolicy = resolveAccountL10nPolicy(args.account.l10n_policy);
   const baseLocale = accountL10nPolicy.baseLocale;
   const publishLocales = resolveActivePublishLocales({
@@ -198,7 +236,9 @@ function buildTierDropLocalePolicy(args: {
   const availableLocales = publishLocales.locales;
 
   const countryToLocale = Object.fromEntries(
-    Object.entries(accountL10nPolicy.ip.countryToLocale).filter(([, locale]) => availableLocales.includes(locale)),
+    Object.entries(accountL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
+      availableLocales.includes(locale),
+    ),
   );
 
   return {
@@ -227,7 +267,10 @@ async function loadKeepLiveInstances(args: {
   env: Env;
   accountId: string;
   keepLivePublicIds: string[];
-}): Promise<{ ok: true; rows: Array<{ publicId: string; config: Record<string, unknown> }> } | { ok: false; response: Response }> {
+}): Promise<
+  | { ok: true; rows: Array<{ publicId: string; config: Record<string, unknown> }> }
+  | { ok: false; response: Response }
+> {
   if (args.keepLivePublicIds.length === 0) return { ok: true, rows: [] };
 
   const params = new URLSearchParams({
@@ -236,12 +279,21 @@ async function loadKeepLiveInstances(args: {
     public_id: `in.(${args.keepLivePublicIds.join(',')})`,
     limit: '1000',
   });
-  const res = await supabaseFetch(args.env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(args.env, `/rest/v1/widget_instances?${params.toString()}`, {
+    method: 'GET',
+  });
   if (!res.ok) {
     const details = await readJson(res);
     return {
       ok: false,
-      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500),
+      response: ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.readFailed',
+          detail: JSON.stringify(details),
+        },
+        500,
+      ),
     };
   }
   const rows = ((await res.json().catch(() => null)) as KeepLiveInstanceRow[] | null) ?? [];
@@ -258,7 +310,11 @@ async function loadKeepLiveInstances(args: {
       return {
         ok: false,
         response: ckError(
-          { kind: 'INTERNAL', reasonKey: 'coreui.errors.config.invalid', detail: `keepLive instance config invalid (${publicId})` },
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.config.invalid',
+            detail: `keepLive instance config invalid (${publicId})`,
+          },
           500,
         ),
       };
@@ -289,15 +345,29 @@ async function enforceTierDropMirrorForKeptInstances(args: {
   account: AccountRow;
   policy: Policy;
   keepLivePublicIds: string[];
-}): Promise<{ ok: true; syncEnqueued: number; failed: string[]; failedDetails: Record<string, string> } | { ok: false; response: Response }> {
-  if (args.keepLivePublicIds.length === 0) return { ok: true, syncEnqueued: 0, failed: [], failedDetails: {} };
+}): Promise<
+  | { ok: true; syncEnqueued: number; failed: string[]; failedDetails: Record<string, string> }
+  | { ok: false; response: Response }
+> {
+  if (args.keepLivePublicIds.length === 0)
+    return { ok: true, syncEnqueued: 0, failed: [], failedDetails: {} };
 
-  const { localePolicy, invalidAccountLocales } = buildTierDropLocalePolicy({ account: args.account, policy: args.policy });
+  const { localePolicy, invalidAccountLocales } = buildTierDropLocalePolicy({
+    account: args.account,
+    policy: args.policy,
+  });
   if (invalidAccountLocales) {
-    console.warn('[ParisWorker] invalid account locales while enforcing plan change', { accountId: args.account.id, invalidAccountLocales });
+    console.warn('[ParisWorker] invalid account locales while enforcing plan change', {
+      accountId: args.account.id,
+      invalidAccountLocales,
+    });
   }
 
-  const keepRows = await loadKeepLiveInstances({ env: args.env, accountId: args.account.id, keepLivePublicIds: args.keepLivePublicIds });
+  const keepRows = await loadKeepLiveInstances({
+    env: args.env,
+    accountId: args.account.id,
+    keepLivePublicIds: args.keepLivePublicIds,
+  });
   if (!keepRows.ok) return keepRows;
 
   const failed: string[] = [];
@@ -320,7 +390,10 @@ async function enforceTierDropMirrorForKeptInstances(args: {
     if (!enqueue.ok) {
       failed.push(publicId);
       failedDetails[publicId] = enqueue.error;
-      console.error('[ParisWorker] tokyo enforce-live-surface enqueue failed (plan change)', { publicId, error: enqueue.error });
+      console.error('[ParisWorker] tokyo enforce-live-surface enqueue failed (plan change)', {
+        publicId,
+        error: enqueue.error,
+      });
     }
   }
 
@@ -356,12 +429,22 @@ async function recordTierDropLifecycleState(args: {
     const details = await readJson(res);
     return {
       ok: false,
-      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
+      response: ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: JSON.stringify(details),
+        },
+        500,
+      ),
     };
   }
   const rows = (await res.json().catch(() => null)) as Array<{ id?: string }> | null;
   if (!rows?.[0]?.id) {
-    return { ok: false, response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.payload.invalid' }, 404) };
+    return {
+      ok: false,
+      response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.payload.invalid' }, 404),
+    };
   }
   return { ok: true };
 }
@@ -380,18 +463,31 @@ async function dismissTierDropLifecycleState(args: {
     const details = await readJson(res);
     return {
       ok: false,
-      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
+      response: ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: JSON.stringify(details),
+        },
+        500,
+      ),
     };
   }
   return { ok: true };
 }
 
-export async function handleAccountInstancesUnpublish(req: Request, env: Env, accountIdRaw: string) {
+export async function handleAccountInstancesUnpublish(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+) {
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const authorized = await authorizeAccount(req, env, accountId, 'editor');
+  const authorized = await authorizeAccount(req, env, accountId, 'editor', {
+    requireCapsule: true,
+  });
   if (!authorized.ok) return authorized.response;
 
   if (!hasConfirmedQueryParam(req)) {
@@ -418,15 +514,27 @@ export async function handleAccountInstancesUnpublish(req: Request, env: Env, ac
   const keepLivePublicIds = normalizePublicIdList((payload as any).keepLivePublicIds);
   const result = await unpublishAccountInstances({ env, accountId, keepLivePublicIds });
   if (!result.ok) return result.response;
-  return json({ ok: true, accountId, kept: keepLivePublicIds, unpublished: result.unpublished, tokyo: result.tokyo });
+  return json({
+    ok: true,
+    accountId,
+    kept: keepLivePublicIds,
+    unpublished: result.unpublished,
+    tokyo: result.tokyo,
+  });
 }
 
-export async function handleAccountLifecycleTierDropDismiss(req: Request, env: Env, accountIdRaw: string) {
+export async function handleAccountLifecycleTierDropDismiss(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+) {
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer', {
+    requireCapsule: true,
+  });
   if (!authorized.ok) return authorized.response;
 
   const dismissed = await dismissTierDropLifecycleState({ env, accountId });
@@ -434,12 +542,18 @@ export async function handleAccountLifecycleTierDropDismiss(req: Request, env: E
   return json({ ok: true, accountId, kind: 'tier_drop' });
 }
 
-export async function handleAccountLifecyclePlanChange(req: Request, env: Env, accountIdRaw: string) {
+export async function handleAccountLifecyclePlanChange(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+) {
   const accountIdResult = assertAccountId(accountIdRaw);
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const authorized = await authorizeAccount(req, env, accountId, 'owner');
+  const authorized = await authorizeAccount(req, env, accountId, 'owner', {
+    requireCapsule: true,
+  });
   if (!authorized.ok) return authorized.response;
   const account = authorized.account;
 
@@ -470,7 +584,8 @@ export async function handleAccountLifecyclePlanChange(req: Request, env: Env, a
   }
 
   const keepLivePublicIdsRaw = (payload as any).keepLivePublicIds;
-  const keepLivePublicIdsInput = keepLivePublicIdsRaw === undefined ? null : normalizePublicIdList(keepLivePublicIdsRaw);
+  const keepLivePublicIdsInput =
+    keepLivePublicIdsRaw === undefined ? null : normalizePublicIdList(keepLivePublicIdsRaw);
 
   const prevTier = account.tier;
   const isTierDrop = tierRank(nextTier) < tierRank(prevTier);
@@ -498,7 +613,11 @@ export async function handleAccountLifecyclePlanChange(req: Request, env: Env, a
         : Number.NaN;
   if (maxPublishedRaw != null && !Number.isFinite(maxPublished)) {
     return ckError(
-      { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'instances.published.max invalid' },
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.db.writeFailed',
+        detail: 'instances.published.max invalid',
+      },
       500,
     );
   }
@@ -534,7 +653,11 @@ export async function handleAccountLifecyclePlanChange(req: Request, env: Env, a
     tokyo = unpublish.tokyo;
   }
 
-  let tokyoResync = { syncEnqueued: 0, failed: [] as string[], failedDetails: {} as Record<string, string> };
+  let tokyoResync = {
+    syncEnqueued: 0,
+    failed: [] as string[],
+    failedDetails: {} as Record<string, string>,
+  };
   if (keepLivePublicIds.length > 0) {
     const mirror = await enforceTierDropMirrorForKeptInstances({
       env,
@@ -543,7 +666,11 @@ export async function handleAccountLifecyclePlanChange(req: Request, env: Env, a
       keepLivePublicIds,
     });
     if (!mirror.ok) return mirror.response;
-    tokyoResync = { syncEnqueued: mirror.syncEnqueued, failed: mirror.failed, failedDetails: mirror.failedDetails };
+    tokyoResync = {
+      syncEnqueued: mirror.syncEnqueued,
+      failed: mirror.failed,
+      failedDetails: mirror.failedDetails,
+    };
   }
 
   const lifecycle = await recordTierDropLifecycleState({

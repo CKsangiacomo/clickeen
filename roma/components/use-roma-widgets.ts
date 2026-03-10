@@ -10,6 +10,9 @@ export type WidgetInstance = {
     edit: boolean;
     duplicate: boolean;
     delete: boolean;
+    rename: boolean;
+    publish: boolean;
+    unpublish: boolean;
   };
 };
 
@@ -23,6 +26,9 @@ type RawWidgetInstance = {
     edit?: boolean | null;
     duplicate?: boolean | null;
     delete?: boolean | null;
+    rename?: boolean | null;
+    publish?: boolean | null;
+    unpublish?: boolean | null;
   } | null;
 };
 
@@ -61,6 +67,9 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
       edit: actions?.edit !== false,
       duplicate: actions?.duplicate !== false,
       delete: actions?.delete !== false,
+      rename: actions?.rename !== false,
+      publish: actions?.publish === true,
+      unpublish: actions?.unpublish === true,
     },
   };
 }

@@ -1,26 +1,224 @@
-import { NextRequest } from 'next/server';
-import { proxyToParis } from '../../../../../../lib/api/paris-proxy';
+import { after, NextRequest, NextResponse } from 'next/server';
+import {
+  loadTokyoPreferredAccountInstance,
+  runParisSaveAftermath,
+  saveAccountInstanceDirect,
+  validatePersistableConfig,
+} from '../../../../../../../bob/lib/account-instance-direct';
+import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../bob/lib/account-authz-capsule';
+import {
+  applySessionCookies,
+  resolveSessionBearer,
+  type SessionCookieSpec,
+} from '../../../../../../lib/auth/session';
+import { resolveParisBaseUrl } from '../../../../../../lib/env/paris';
+import { resolveTokyoBaseUrl } from '../../../../../../lib/env/tokyo';
 
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ accountId: string; publicId: string }> };
 
+function withNoStore(response: NextResponse): NextResponse {
+  response.headers.set('cache-control', 'no-store');
+  response.headers.set('cdn-cache-control', 'no-store');
+  response.headers.set('cloudflare-cdn-cache-control', 'no-store');
+  return response;
+}
+
+function withSession(
+  request: NextRequest,
+  response: NextResponse,
+  setCookies?: SessionCookieSpec[],
+): NextResponse {
+  return withNoStore(applySessionCookies(response, request, setCookies));
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 export async function GET(request: NextRequest, context: RouteContext) {
-  const { accountId, publicId } = await context.params;
-  return proxyToParis(request, {
-    method: 'GET',
-    path: `/api/accounts/${encodeURIComponent(String(accountId || '').trim())}/instance/${encodeURIComponent(
-      String(publicId || '').trim(),
-    )}`,
+  const session = await resolveSessionBearer(request);
+  if (!session.ok) return withNoStore(session.response);
+
+  const { accountId: accountIdRaw, publicId: publicIdRaw } = await context.params;
+  const accountId = String(accountIdRaw || '').trim();
+  const publicId = String(publicIdRaw || '').trim();
+  if (!isUuid(accountId)) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
+        { status: 422 },
+      ),
+      session.setCookies,
+    );
+  }
+  if (!publicId) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.publicIdRequired' } },
+        { status: 422 },
+      ),
+      session.setCookies,
+    );
+  }
+
+  const authz = await authorizeRequestAccountRoleFromCapsule({
+    request,
+    accountId,
+    minRole: 'viewer',
   });
+  if (!authz.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: authz.error }, { status: authz.status }),
+      session.setCookies,
+    );
+  }
+
+  const result = await loadTokyoPreferredAccountInstance({
+    accountId,
+    publicId,
+    tokyoBaseUrl: resolveTokyoBaseUrl(),
+    tokyoAccessToken: session.accessToken,
+  });
+
+  if (!result.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: result.error }, { status: result.status }),
+      session.setCookies,
+    );
+  }
+
+  return withSession(
+    request,
+    NextResponse.json({
+      publicId: result.value.row.publicId,
+      displayName: result.value.row.displayName || 'Untitled widget',
+      ownerAccountId: result.value.row.accountId,
+      widgetType: result.value.row.widgetType,
+      status: result.value.row.status,
+      config: result.value.config,
+    }),
+    session.setCookies,
+  );
 }
 
 export async function PUT(request: NextRequest, context: RouteContext) {
-  const { accountId, publicId } = await context.params;
-  return proxyToParis(request, {
-    method: 'PUT',
-    path: `/api/accounts/${encodeURIComponent(String(accountId || '').trim())}/instance/${encodeURIComponent(
-      String(publicId || '').trim(),
-    )}`,
+  const session = await resolveSessionBearer(request);
+  if (!session.ok) return withNoStore(session.response);
+
+  const { accountId: accountIdRaw, publicId: publicIdRaw } = await context.params;
+  const accountId = String(accountIdRaw || '').trim();
+  const publicId = String(publicIdRaw || '').trim();
+  if (!isUuid(accountId)) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
+        { status: 422 },
+      ),
+      session.setCookies,
+    );
+  }
+  if (!publicId) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.publicIdRequired' } },
+        { status: 422 },
+      ),
+      session.setCookies,
+    );
+  }
+
+  const authz = await authorizeRequestAccountRoleFromCapsule({
+    request,
+    accountId,
+    minRole: 'editor',
   });
+  if (!authz.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: authz.error }, { status: authz.status }),
+      session.setCookies,
+    );
+  }
+
+  let body: { config?: unknown } | null = null;
+  try {
+    body = (await request.json()) as { config?: unknown } | null;
+  } catch {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } },
+        { status: 422 },
+      ),
+      session.setCookies,
+    );
+  }
+
+  const validatedConfig = validatePersistableConfig(body?.config, accountId);
+  if (!validatedConfig.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: validatedConfig.error }, { status: validatedConfig.status }),
+      session.setCookies,
+    );
+  }
+
+  const result = await saveAccountInstanceDirect({
+    accountId,
+    publicId,
+    config: validatedConfig.value.config,
+    tokyoBaseUrl: resolveTokyoBaseUrl(),
+    tokyoAccessToken: session.accessToken,
+  });
+
+  if (!result.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: result.error }, { status: result.status }),
+      session.setCookies,
+    );
+  }
+
+  if (result.value.changed) {
+    after(async () => {
+      try {
+        const warning = await runParisSaveAftermath({
+          parisBaseUrl: resolveParisBaseUrl(),
+          parisAccessToken: session.accessToken,
+          authzCapsule: request.headers.get('x-ck-authz-capsule'),
+          internalServiceName: 'roma.edge',
+          accountId,
+          publicId,
+          previousConfig: result.value.previousConfig,
+          instance: result.value.instance,
+          published: result.value.published,
+        });
+        if (warning && process.env.NODE_ENV === 'development') {
+          console.warn('[roma account instance route] save aftermath warning', {
+            publicId,
+            detail: warning.error.detail || warning.error.reasonKey,
+          });
+        }
+      } catch (error) {
+        console.error('[roma account instance route] save aftermath failed', {
+          publicId,
+          detail: error instanceof Error ? error.message : String(error),
+        });
+      }
+    });
+  }
+
+  return withSession(
+    request,
+    NextResponse.json({ config: result.value.config, aftermath: null }),
+    session.setCookies,
+  );
 }

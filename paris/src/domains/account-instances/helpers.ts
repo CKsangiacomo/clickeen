@@ -8,8 +8,7 @@ import type {
 import { ckError, errorDetail } from '../../shared/errors';
 import { readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
-import { formatCuratedDisplayName, readCuratedMeta } from '../../shared/curated-meta';
-import { asTrimmedString } from '../../shared/validation';
+import { readCuratedMeta } from '../../shared/curated-meta';
 import { loadWidgetLimits } from '../../shared/tokyo';
 import {
   AssetUsageValidationError,
@@ -18,10 +17,8 @@ import {
 } from '../../shared/assetUsage';
 import {
   inferInstanceKindFromPublicId,
-  isCuratedInstanceRow,
   resolveCuratedRowKind,
 } from '../../shared/instances';
-import type { AccountL10nPolicy } from '../../shared/l10n';
 export type AccountLocaleOverlayPayload = {
   locale: string;
   source: string | null;
@@ -31,48 +28,6 @@ export type AccountLocaleOverlayPayload = {
   baseOps: Array<{ op: 'set'; path: string; value: string }>;
   userOps: Array<{ op: 'set'; path: string; value: string }>;
 };
-
-export type AccountInstanceEnvelope = {
-  publicId: string;
-  displayName: string;
-  ownerAccountId: string;
-  status: 'published' | 'unpublished';
-  widgetType: string;
-  config: Record<string, unknown>;
-  meta: Record<string, unknown> | null;
-  updatedAt: string | null;
-  baseFingerprint: string;
-  policy: Policy;
-  account: {
-    id: string;
-    tier: string;
-    websiteUrl: string | null;
-  };
-  localization: {
-    accountLocales: string[];
-    invalidAccountLocales: string | null;
-    localeOverlays: AccountLocaleOverlayPayload[];
-    policy: AccountL10nPolicy;
-  };
-};
-
-export function validateAccountInstanceEnvelope(payload: AccountInstanceEnvelope): string | null {
-  if (!payload.publicId) return 'publicId missing';
-  if (!payload.displayName) return 'displayName missing';
-  if (!payload.ownerAccountId) return 'ownerAccountId missing';
-  if (payload.status !== 'published' && payload.status !== 'unpublished') return 'status invalid';
-  if (!payload.widgetType) return 'widgetType missing';
-  if (!payload.config || typeof payload.config !== 'object' || Array.isArray(payload.config)) return 'config invalid';
-  if (!/^[a-f0-9]{64}$/i.test(payload.baseFingerprint)) return 'baseFingerprint invalid';
-  if (!payload.policy || typeof payload.policy !== 'object') return 'policy missing';
-  if (!payload.account?.id) return 'account.id missing';
-  if (!payload.account?.tier) return 'account.tier missing';
-  if (!Array.isArray(payload.localization.accountLocales)) return 'localization.accountLocales invalid';
-  if (!Array.isArray(payload.localization.localeOverlays)) return 'localization.localeOverlays invalid';
-  if (!payload.localization.policy || typeof payload.localization.policy !== 'object') return 'localization.policy invalid';
-  if ((payload.localization.policy as any).v !== 1) return 'localization.policy.v invalid';
-  return null;
-}
 
 export const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 
@@ -230,13 +185,6 @@ export async function rollbackInstanceWriteAfterPostCommitFailure(args: {
       `[ParisWorker] Failed to restore asset usage references after rollback for ${args.publicId}: ${detail}`,
     );
   }
-}
-
-export function resolveAccountInstanceDisplayName(instance: InstanceRow | CuratedInstanceRow): string {
-  if (isCuratedInstanceRow(instance)) {
-    return formatCuratedDisplayName(readCuratedMeta(instance.meta), instance.public_id);
-  }
-  return asTrimmedString(instance.display_name) ?? DEFAULT_INSTANCE_DISPLAY_NAME;
 }
 
 export function resolveCuratedMetaUpdate(args: {

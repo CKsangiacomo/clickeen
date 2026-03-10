@@ -14,6 +14,7 @@ import {
   resolveInstanceKind,
   resolveInstanceAccountId,
 } from '../../shared/instances';
+import { loadSavedConfigStateFromTokyo } from '../account-instances/service';
 
 const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 
@@ -185,12 +186,22 @@ export async function handleGetInstance(_req: Request, env: Env, publicId: strin
     return json({ error: 'NOT_FOUND' }, { status: 404 });
   }
 
+  const ownerAccountId = resolveInstanceAccountId(instance);
+  if (!ownerAccountId) return json({ error: 'ACCOUNT_NOT_FOUND' }, { status: 500 });
+
+  const savedState = await loadSavedConfigStateFromTokyo({
+    env,
+    accountId: ownerAccountId,
+    publicId,
+  });
+  if (!savedState) return json({ error: 'CONFIG_NOT_FOUND' }, { status: 500 });
+
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
   if (!widgetType) return json({ error: 'WIDGET_NOT_FOUND' }, { status: 500 });
 
-  const baseFingerprint = await computeBaseFingerprint(instance.config);
+  const baseFingerprint = await computeBaseFingerprint(savedState.config);
   let policy: Policy | null = null;
-  const accountId = resolveInstanceAccountId(instance);
+  const accountId = ownerAccountId;
   if (accountId) {
     try {
       const account = await loadAccountById(env, accountId);
@@ -207,8 +218,8 @@ export async function handleGetInstance(_req: Request, env: Env, publicId: strin
     displayName: resolveInstanceDisplayName(instance),
     status: instance.status,
     widgetType,
-    config: instance.config,
-    updatedAt: instance.updated_at ?? null,
+    config: savedState.config,
+    updatedAt: savedState.updatedAt,
     baseFingerprint,
     policy,
   });

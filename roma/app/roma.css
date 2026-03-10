@@ -192,6 +192,27 @@ a {
   gap: var(--space-3);
 }
 
+.roma-instance-rename {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.roma-instance-rename__input {
+  width: min(100%, 360px);
+  min-height: var(--control-size-lg);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--color-system-gray-5);
+  border-radius: var(--control-radius-lg);
+  background: var(--color-system-white);
+  color: var(--color-system-black);
+}
+
+.roma-instance-rename__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .roma-inline-stack {
   display: grid;
   gap: var(--space-2);
@@ -254,6 +275,31 @@ a {
 
 .roma-toolbar-count {
   color: var(--color-system-gray);
+}
+
+.roma-locale-settings__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-2);
+}
+
+.roma-locale-settings__option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  border: 1px solid var(--color-system-gray-6);
+  border-radius: var(--control-radius-xl);
+  background: var(--color-system-white);
+  padding: var(--space-2) var(--space-3);
+}
+
+.roma-locale-settings__option input {
+  margin-top: 2px;
+}
+
+.roma-locale-settings__toggles {
+  display: grid;
+  gap: var(--space-2);
 }
 
 .roma-input {

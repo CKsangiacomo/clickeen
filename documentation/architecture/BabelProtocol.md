@@ -11,11 +11,13 @@
 The Babel Protocol is Clickeen's internal specification for **multi-dimensional content personalization via overlay composition**.
 
 **What it does:**
+
 - Enables rendering infinite content variants from a single base artifact
 - Provides deterministic, auditable personalization at request time
 - Maintains performance through content-addressed caching
 
 **What it is NOT:**
+
 - Not a replacement for experimentation platforms (Optimizely)
 - Not a replacement for identity resolution (CDPs)
 - Not a replacement for segmentation engines (Demandbase)
@@ -27,16 +29,19 @@ The Babel Protocol is Clickeen's internal specification for **multi-dimensional 
 ## Core Thesis
 
 **Traditional approach:**
+
 - Create N×M×P×G variants (languages × industries × experiments × geos)
 - Store millions of permutations
 - Cannot scale beyond 2-3 dimensions
 
 **Babel Protocol approach:**
+
 - Store 1 base artifact + dimensional overlays
 - Compose variants at request time via deterministic merge
 - Scale to unlimited dimensions with sub-linear storage growth
 
 **Example:**
+
 - Traditional: 14 languages × 50 industries × 100 ABM accounts × 5 A/B variants = 350,000 stored pages
 - Babel: 1 base + 14 language overlays + 50 industry overlays + 100 ABM overlays + 5 A/B overlays = **170 artifacts**
 
@@ -47,16 +52,19 @@ The Babel Protocol is Clickeen's internal specification for **multi-dimensional 
 ### 1. Content-Addressed Base Artifacts
 
 **Storage (base content):**
-```
-Michael (Supabase)
-├── widget_instances.config            # user instances
-└── curated_widget_instances.config    # curated/baseline instances
 
-Tokyo (repo/CDN)
-└── tokyo/widgets/{widget}/pages/*.json # Prague marketing base copy
+```
+Tokyo (repo/CDN/R2)
+├── renders/instances/{publicId}/saved.json   # saved authoring revision + editor metadata
+└── tokyo/widgets/{widget}/pages/*.json       # Prague marketing base copy
+
+Michael (Supabase)
+├── widget_instances                          # user-instance registry metadata
+└── curated_widget_instances                  # curated/baseline registry metadata
 ```
 
 **Widget software plane (separate, still content-addressed):**
+
 ```
 tokyo/widgets/{widget}/
 ├── spec.json
@@ -70,11 +78,13 @@ tokyo/widgets/{widget}/
 ```
 
 **Characteristics:**
+
 - Immutable via content-hashed overlay files
 - Base content stored once (instance config or Prague page JSON)
 - `baseFingerprint` is computed from base content + allowlist and stored on overlays
 
 **Base config example:**
+
 ```json
 {
   "id": "wgt_faq_default",
@@ -97,6 +107,7 @@ tokyo/widgets/{widget}/
 ### 2. Dimensional Overlays
 
 **Structure (deterministic paths):**
+
 ```
 tokyo/l10n/instances/<publicId>/
 ├── index.json
@@ -110,6 +121,7 @@ tokyo/l10n/instances/<publicId>/
 ```
 
 **Overlay format (ops-based):**
+
 ```json
 {
   "baseFingerprint": "758d73cba...",
@@ -131,6 +143,7 @@ tokyo/l10n/instances/<publicId>/
 ```
 
 **Key properties:**
+
 - `baseFingerprint`: The allowlist-scoped base fingerprint the overlay ops were generated from (sha256)
 - Fresh vs stale:
   - **fresh:** `overlay.baseFingerprint === computeL10nFingerprint(baseConfig, allowlist)`
@@ -148,22 +161,23 @@ tokyo/l10n/instances/<publicId>/
 **Output:** Context object
 
 **Context object structure:**
+
 ```typescript
 interface RequestContext {
   // Core dimensions
-  locale: string;              // BCP47-ish locale token ("fr", "fr-ca", "zh-hans") (resolved/effective)
-  geo: string;                 // "us", "eu", "apac" (from IP lookup)
-  device: string;              // "mobile", "desktop", "tablet" (from User-Agent)
+  locale: string; // BCP47-ish locale token ("fr", "fr-ca", "zh-hans") (resolved/effective)
+  geo: string; // "us", "eu", "apac" (from IP lookup)
+  device: string; // "mobile", "desktop", "tablet" (from User-Agent)
 
   // Optional dimensions (may be null)
-  industry?: string;           // "healthcare", "finance" (from enrichment DB or param)
-  account?: string;            // "salesforce", "google" (from IP → company lookup)
-  experiment?: Map<string, string>;  // { "exp_001": "variant_b" }
-  behavior?: string;           // "first_visit", "returning" (from cookie/session)
+  industry?: string; // "healthcare", "finance" (from enrichment DB or param)
+  account?: string; // "salesforce", "google" (from IP → company lookup)
+  experiment?: Map<string, string>; // { "exp_001": "variant_b" }
+  behavior?: string; // "first_visit", "returning" (from cookie/session)
 
   // Metadata
-  timestamp: number;           // Request time (for time-based overlays)
-  userId?: string;             // If authenticated
+  timestamp: number; // Request time (for time-based overlays)
+  userId?: string; // If authenticated
 }
 ```
 
@@ -175,14 +189,14 @@ async function resolveContext(request: Request): Promise<RequestContext> {
     locale: resolveLocale(request),
     geo: resolveGeo(request),
     device: resolveDevice(request),
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 
   // Optional enrichments (async, cached)
-  ctx.industry = await resolveIndustry(request);  // IP → company → industry
-  ctx.account = await resolveAccount(request);     // IP → company mapping
-  ctx.experiment = await resolveExperiments(request);  // Cookie-based assignment
-  ctx.behavior = await resolveBehavior(request);   // Session/cookie analysis
+  ctx.industry = await resolveIndustry(request); // IP → company → industry
+  ctx.account = await resolveAccount(request); // IP → company mapping
+  ctx.experiment = await resolveExperiments(request); // Cookie-based assignment
+  ctx.behavior = await resolveBehavior(request); // Session/cookie analysis
 
   return ctx;
 }
@@ -224,7 +238,7 @@ function resolveGeo(request: Request): string {
 
   if (euCountries.includes(cfCountry)) return 'eu';
   if (apacCountries.includes(cfCountry)) return 'apac';
-  return 'us';  // Default
+  return 'us'; // Default
 }
 
 async function resolveAccount(request: Request): Promise<string | undefined> {
@@ -234,8 +248,8 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
   const company = await lookupCompany(ip);
 
   // Check if we have an ABM overlay for this company
-  if (company && await hasABMOverlay(company.slug)) {
-    return company.slug;  // e.g., "salesforce", "google"
+  if (company && (await hasABMOverlay(company.slug))) {
+    return company.slug; // e.g., "salesforce", "google"
   }
 
   return undefined;
@@ -243,6 +257,7 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 ```
 
 **Caching strategy:**
+
 - Locale/geo/device: Computed per-request (fast, deterministic)
 - Industry/account: Cached in KV (1-hour TTL)
 - Experiments: Cached in cookie (session-scoped)
@@ -253,21 +268,24 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 ### 3.5 Layer Keys + Selection Contract
 
 **LayerKey rules (canonicalized):**
+
 - locale: BCP47-ish (en, fr-ca, zh-hans)
 - geo: ISO-3166 (US, DE) or explicit market groupings
 - industry: slug enum (dentist, restaurant)
-- experiment: exp_<id>:<variant>
+- experiment: exp\_<id>:<variant>
 - account: stable account token (not raw domain)
-- behavior: behavior_<id>
+- behavior: behavior\_<id>
 - user: locale key first, then optional global fallback
 
 **Selection rules:**
+
 - locale/geo/industry/account: select 0 or 1 key deterministically from request context
 - experiment: allow multiple keys; apply in deterministic order (sorted by expId)
 - behavior: allow multiple keys; apply in deterministic order
 - user: apply locale-specific user overlay first; if absent, apply global fallback
 
 **GeoTargets semantics:**
+
 - geoTargets (if present) only drive **same-language** locale variant selection (e.g. `fr` → `fr-ca`) when the request locale is ambiguous; they must never override an explicit locale or switch language families.
 - Geo-specific overrides live in the geo layer.
 
@@ -278,6 +296,7 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 **The critical problem:** Multiple overlays may set the same field. We need deterministic precedence.
 
 **Precedence order (last wins):**
+
 ```
 1. base config (immutable)
 2. locale overlay
@@ -290,17 +309,19 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 ```
 
 **Index semantics:**
+
 - `index.json` may include `lastPublishedFingerprint` to reduce 404 misses.
 - Runtime prefers **fresh** overlays whose `overlay.baseFingerprint` matches the current base fingerprint.
 - Runtime may apply a **stale** locale overlay selectively when safe (requires a published base snapshot for the stale fingerprint). Other layers skip stale overlays by default.
 
 **Composition algorithm:**
+
 ```typescript
 function composeVariant(
   baseConfig: object,
   context: RequestContext,
   overlays: OverlayRegistry,
-  allowlist: Allowlist
+  allowlist: Allowlist,
 ): object {
   let result = JSON.parse(JSON.stringify(baseConfig)); // Deep clone
   const baseFingerprint = computeL10nFingerprint(baseConfig, allowlist);
@@ -313,7 +334,7 @@ function composeVariant(
     ...resolveExperimentOverlays(context.experiments, overlays),
     overlays.account.get(context.account),
     ...resolveBehaviorOverlays(context.behaviors, overlays),
-    overlays.user.get(context.locale) ?? overlays.user.get('global')
+    overlays.user.get(context.locale) ?? overlays.user.get('global'),
   ];
 
   for (const overlay of layers) {
@@ -366,10 +387,12 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 **Solution:** Each widget declares allowed paths per layer.
 
 **Authoritative allowlists:**
+
 - Locale layer: `tokyo/widgets/{widget}/localization.json`
 - Non-locale layers: `tokyo/widgets/{widget}/layers/{layer}.allowlist.json`
 
 **Allowlist shape (example):**
+
 ```json
 {
   "v": 1,
@@ -381,6 +404,7 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 ```
 
 **Enforcement:**
+
 - Paris/San Francisco validate ops against the allowlist at publish/generation time.
 - Runtime enforces the staleness guard (fresh fingerprint match; plus safe stale apply where supported) and prohibited path segments.
 
@@ -414,12 +438,14 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 ```
 
 **Performance targets:**
+
 - Context resolution: <10ms
 - Overlay selection: <5ms (KV lookup)
 - Composition: <20ms (merge 5-10 overlays)
 - Total TTFB: <50ms (including rendering)
 
 **Caching layers:**
+
 1. **Overlay cache (R2 + KV):** Content-addressed overlays (immutable, cache forever)
 2. **Composed variant cache (CDN):** Pre-composed variants for common contexts (1-hour TTL)
 3. **Context enrichment cache (KV):** IP → company, IP → geo (1-hour TTL)
@@ -429,11 +455,13 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 ## Overlay Generation (AI Agent)
 
 **When overlays are generated:**
+
 - On publish: User publishes widget → trigger overlay generation
 - On base change: baseFingerprint changes → regenerate all overlays
 - On demand: Enterprise customer requests new ABM overlay → agent generates it
 
 **Agent workflow:**
+
 ```typescript
 async function generateLocaleOverlay(args: {
   publicId: string;
@@ -454,20 +482,20 @@ async function generateLocaleOverlay(args: {
   const ops = translations.map(({ path, value }) => ({
     op: 'set' as const,
     path,
-    value
+    value,
   }));
 
   const overlay: LocaleOverlay = {
     baseFingerprint,
     baseUpdatedAt: null,
     ops,
-    v: 1
+    v: 1,
   };
 
   // 4. Store in R2 (content-addressed)
   await storeOverlay(
     `l10n/instances/${publicId}/locale/${targetLocale}/${baseFingerprint}.ops.json`,
-    overlay
+    overlay,
   );
 
   return overlay;
@@ -475,6 +503,7 @@ async function generateLocaleOverlay(args: {
 ```
 
 **Cost model:**
+
 - Translation: $0.0006 per overlay (Deepseek)
 - Storage: $0.015/GB-month (R2)
 - Generation: Async, batched (not on request path)
@@ -485,22 +514,19 @@ async function generateLocaleOverlay(args: {
 
 **Overlay dimensions by tier:**
 
-| Tier | Locale | Geo | Industry | Experiment | Account (ABM) | Behavior |
-|------|--------|-----|----------|------------|---------------|----------|
-| **Free** | 3 languages | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Starter** | 14 languages | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Pro** | 14 languages | ✅ | ❌ | 3 experiments | ❌ | ❌ |
-| **Business** | 14 languages | ✅ | 10 industries | 10 experiments | ❌ | ✅ |
-| **Growth** | 14 languages | ✅ | Unlimited | Unlimited | 50 accounts | ✅ |
-| **Enterprise** | 100+ languages | ✅ | Unlimited | Unlimited | Unlimited | ✅ |
+| Tier           | Locale         | Geo | Industry      | Experiment     | Account (ABM) | Behavior |
+| -------------- | -------------- | --- | ------------- | -------------- | ------------- | -------- |
+| **Free**       | 3 languages    | ❌  | ❌            | ❌             | ❌            | ❌       |
+| **Starter**    | 14 languages   | ❌  | ❌            | ❌             | ❌            | ❌       |
+| **Pro**        | 14 languages   | ✅  | ❌            | 3 experiments  | ❌            | ❌       |
+| **Business**   | 14 languages   | ✅  | 10 industries | 10 experiments | ❌            | ✅       |
+| **Growth**     | 14 languages   | ✅  | Unlimited     | Unlimited      | 50 accounts   | ✅       |
+| **Enterprise** | 100+ languages | ✅  | Unlimited     | Unlimited      | Unlimited     | ✅       |
 
 **Enforcement:**
+
 ```typescript
-function checkEntitlement(
-  tier: Tier,
-  dimension: string,
-  count: number
-): boolean {
+function checkEntitlement(tier: Tier, dimension: string, count: number): boolean {
   const limits = TIER_LIMITS[tier];
 
   switch (dimension) {
@@ -513,7 +539,7 @@ function checkEntitlement(
     case 'account':
       return limits.accounts === 'unlimited' || count <= limits.accounts;
     default:
-      return limits[dimension] === true;  // geo, behavior (boolean)
+      return limits[dimension] === true; // geo, behavior (boolean)
   }
 }
 ```
@@ -523,12 +549,14 @@ function checkEntitlement(
 ## Implementation Phases
 
 ### Phase 0: Current State (Month 1-7)
+
 - ✅ Base artifacts (widgets, emails, ads, pages)
 - ✅ Locale overlays (14 languages)
 - ✅ Content-addressed storage (Tokyo)
 - ✅ Fingerprint-gated translation
 
 ### Phase 1: Foundation (Month 8-12)
+
 - [ ] Context resolver (locale, geo, device)
 - [ ] Overlay precedence engine
 - [ ] Path ownership contracts
@@ -538,6 +566,7 @@ function checkEntitlement(
 **Outcome:** Prove overlay composition works for 3 dimensions (locale, geo, experiment)
 
 ### Phase 2: Industry Personalization (Month 13-18)
+
 - [ ] Industry taxonomy (50 industries)
 - [ ] Industry overlay generation (AI-powered)
 - [ ] Industry resolution (IP → company → industry)
@@ -546,6 +575,7 @@ function checkEntitlement(
 **Outcome:** "Clickeen personalizes by industry" (4 dimensions proven)
 
 ### Phase 3: ABM (Month 19-24)
+
 - [ ] Account overlay generation (manual + AI-assisted)
 - [ ] Account resolution (IP → company slug)
 - [ ] ABM governance UI (Enterprise customers manage their overlays)
@@ -554,6 +584,7 @@ function checkEntitlement(
 **Outcome:** "Clickeen is an ABM platform" (5 dimensions proven)
 
 ### Phase 4: Behavior (Month 25-30)
+
 - [ ] Behavior taxonomy (first visit, returning, engaged, churned)
 - [ ] Behavior tracking (cookie + session)
 - [ ] Lifecycle overlays
@@ -566,6 +597,7 @@ function checkEntitlement(
 ## What This Is NOT (And Why That Matters)
 
 **Babel Protocol does NOT:**
+
 - ❌ Resolve user identity (that's Segment, mParticle, CDPs)
 - ❌ Assign experiment variants (we use simple hash-based assignment, not stats engines)
 - ❌ Provide segmentation/targeting rules (we assume context is resolved upstream)
@@ -573,6 +605,7 @@ function checkEntitlement(
 - ❌ Provide governance workflows (Enterprise customers manage overlays directly)
 
 **Babel Protocol DOES:**
+
 - ✅ Store base artifacts (content-addressed, immutable)
 - ✅ Generate dimensional overlays (AI-powered, async)
 - ✅ Compose variants at request time (deterministic, fast)
@@ -586,18 +619,21 @@ function checkEntitlement(
 ## Success Criteria
 
 **Technical:**
+
 - [ ] <50ms request-time composition (p95)
-- [ ] >99.9% overlay cache hit rate
+- [ ] > 99.9% overlay cache hit rate
 - [ ] Zero path ownership violations in production
 - [ ] <$0.001 per overlay generation (AI cost)
 
 **Product:**
+
 - [ ] Pro tier uses geo overlays (EUR vs USD) - 50% adoption
 - [ ] Business tier uses industry overlays - 30% adoption
 - [ ] Enterprise tier uses ABM overlays - 80% adoption
 - [ ] A/B tests run across multiple languages (10% of Pro users)
 
 **Business:**
+
 - [ ] Personalization features drive 30% higher ARPU (Business+ tiers)
 - [ ] Enterprise tier adoption increases 2× (ABM is the killer feature)
 - [ ] Churn decreases 40% for users using 3+ dimensions
@@ -636,4 +672,4 @@ function checkEntitlement(
 
 **END OF SPECIFICATION**
 
-*This is a living document. Update as implementation evolves.*
+_This is a living document. Update as implementation evolves._
