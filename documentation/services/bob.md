@@ -54,7 +54,7 @@ Bob compiles the spec into a deterministic contract:
 
 ### Entitlements + limits (v1)
 
-- Paris returns entitlements from the global matrix (`config/entitlements.matrix.json`).
+- Paris returns entitlements from the global matrix (`packages/ck-policy/entitlements.matrix.json`).
 - Widget-specific limits live in `tokyo/widgets/{widget}/limits.json` and are loaded with the compiled payload.
 - Bob enforces limits on ops and sanitizes blocked values on load (no widget-specific branches).
 
@@ -557,7 +557,7 @@ bash scripts/dev-up.sh
 It:
 
 - Builds Dieter into `tokyo/dieter`
-- Builds i18n bundles into `tokyo/i18n`
+- Builds i18n bundles from `tokyo/admin-owned/i18n` into `tokyo/i18n`
 - Verifies Prague l10n overlays (repo base + `tokyo/l10n/prague/**`); if stale and San Francisco is available, auto-runs translate + verify in background
 - Clears stale Next chunks (`bob/.next`)
 - Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)

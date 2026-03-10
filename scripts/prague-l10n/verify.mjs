@@ -17,7 +17,7 @@ const REPO_ROOT = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..
 const TOKYO_PRAGUE_ROOT = path.join(REPO_ROOT, 'tokyo', 'l10n', 'prague');
 const TOKYO_WIDGETS_ROOT = path.join(REPO_ROOT, 'tokyo', 'widgets');
 const CHROME_BASE_PATH = path.join(REPO_ROOT, 'prague', 'content', 'base', 'v1', 'chrome.json');
-const LOCALES_PATH = path.join(REPO_ROOT, 'config', 'locales.json');
+const LOCALES_PATH = path.join(REPO_ROOT, 'packages', 'l10n', 'locales.json');
 
 const cliArgs = new Set(process.argv.slice(2));
 const STRICT_LATEST = cliArgs.has('--strict-latest') || String(process.env.PRAGUE_L10N_VERIFY_STRICT || '').trim() === '1';

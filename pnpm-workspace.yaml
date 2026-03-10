@@ -10,10 +10,9 @@ packages:
   - sanfrancisco
   - tokyo-worker
   - venice
-  - tooling/ck-policy
-  - tooling/ck-contracts
-  - tooling/composition
-  - tooling/l10n
+  - packages/ck-policy
+  - packages/ck-contracts
+  - packages/l10n
   - tooling/sf-symbols
 
 onlyBuiltDependencies:

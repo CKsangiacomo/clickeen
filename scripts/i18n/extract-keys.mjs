@@ -99,7 +99,7 @@ function extractFromText(text) {
 }
 
 function main() {
-  const roots = ['bob', 'admin', 'tokyo', 'dieter', 'documentation', 'i18n'].map((p) => path.join(repoRoot, p));
+  const roots = ['bob', 'admin', 'tokyo', 'dieter', 'documentation'].map((p) => path.join(repoRoot, p));
   const files = [];
   roots.forEach((root) => {
     if (fs.existsSync(root)) walk(root, files);

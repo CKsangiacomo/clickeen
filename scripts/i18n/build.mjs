@@ -5,9 +5,9 @@ import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
-const srcRoot = path.join(repoRoot, 'i18n');
+const srcRoot = path.join(repoRoot, 'tokyo', 'admin-owned', 'i18n');
 const outRoot = path.join(repoRoot, 'tokyo', 'i18n');
-const canonicalLocalesPath = path.join(repoRoot, 'config', 'locales.json');
+const canonicalLocalesPath = path.join(repoRoot, 'packages', 'l10n', 'locales.json');
 
 function stableStringify(value) {
   if (value == null || typeof value !== 'object') return JSON.stringify(value);
@@ -36,7 +36,7 @@ function tryGetGitSha() {
   if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
 
   try {
-    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'i18n', 'config/locales.json', 'scripts/i18n/build.mjs'], {
+    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'tokyo/admin-owned/i18n', 'packages/l10n/locales.json', 'scripts/i18n/build.mjs'], {
       cwd: repoRoot,
       encoding: 'utf8',
     });

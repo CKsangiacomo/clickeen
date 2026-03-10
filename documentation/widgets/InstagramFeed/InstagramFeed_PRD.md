@@ -37,7 +37,7 @@ How it differs from other widgets:
 
 Notes:
 - This widget is not yet a Tokyo widget package in this repo; exact state paths are TBD until `tokyo/widgets/<widgetType>/spec.json` exists (`widgetType=instagramfeed` when this ships).
-- Tier values live in the global matrix: `config/entitlements.matrix.json`.
+- Tier values live in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
 - Widget enforcement lives in `tokyo/widgets/<widgetType>/limits.json` (create this when the widget ships).
 - The PRD lists entitlement keys and how they map to state paths; do not repeat per-tier matrices here.
 
@@ -53,7 +53,7 @@ Budgets are global usage counters (no per-widget matrices):
 - `budget.copilot.turns` (Copilot send)
 - `budget.uploads.count` (file uploads; if/when this widget adds uploads)
 
-If this widget needs caps (e.g., max posts or max hidden IDs), add new global cap keys in `config/entitlements.matrix.json` and map them in `limits.json` (no per-widget tier tables).
+If this widget needs caps (e.g., max posts or max hidden IDs), add new global cap keys in `packages/ck-policy/entitlements.matrix.json` and map them in `limits.json` (no per-widget tier tables).
 
 ---
 

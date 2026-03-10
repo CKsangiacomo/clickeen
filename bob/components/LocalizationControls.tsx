@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { normalizeLocaleToken } from '../lib/l10n/instance';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-import localesJson from '../../config/locales.json';
+import localesJson from '@clickeen/l10n/locales.json';
 import { normalizeCanonicalLocalesFile, resolveLocaleLabel } from '@clickeen/l10n';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);

@@ -22,7 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import crypto from 'node:crypto';
-import { normalizeWidgetPublicId, parseCanonicalAssetRef } from '../tooling/ck-contracts/src/index.js';
+import { normalizeWidgetPublicId, parseCanonicalAssetRef } from '../packages/ck-contracts/src/index.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;

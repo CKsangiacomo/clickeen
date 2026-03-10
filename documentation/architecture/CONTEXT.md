@@ -292,7 +292,9 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 Locale is a runtime parameter and must not be encoded into instance identity (`publicId`).
 
 - UI strings use Tokyo-hosted `i18n` catalogs (`tokyo/i18n/**`).
+- Repo-authored admin-owned i18n source catalogs live under `tokyo/admin-owned/i18n/**` and build into `tokyo/i18n/**`.
 - Instance/content translation uses Tokyo-hosted published `l10n` artifacts (`tokyo/l10n/**`) at runtime. Public embeds read locale text packs + live pointers; layer=user authoring state is resolved before publication.
+- Repo-authored admin-owned l10n source overlays live under `tokyo/admin-owned/l10n/**` and build into `tokyo/l10n/**`.
 - Prague marketing copy lives in `tokyo/widgets/*/pages/*.json` (single source) with layered ops overlays stored in Tokyo (`tokyo/l10n/prague/**`) and applied at runtime (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 - Canonical overlay truth for instances lives in Paris-managed overlay storage (`OVERLAYS_R2` + `L10N_STATE_KV`). Manual overrides live in layer=user and are merged into published text packs at publish/sync time.
 

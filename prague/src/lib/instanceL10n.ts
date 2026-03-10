@@ -1,5 +1,5 @@
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
-import localesJson from '../../../config/locales.json';
+import localesJson from '@clickeen/l10n/locales.json';
 import type { PragueMarket } from './markets';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);

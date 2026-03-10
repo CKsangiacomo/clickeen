@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '../..');
 
-const srcRoot = path.join(repoRoot, 'l10n');
+const srcRoot = path.join(repoRoot, 'tokyo', 'admin-owned', 'l10n');
 const outRoot = path.join(repoRoot, 'tokyo', 'l10n');
 const widgetsRoot = path.join(repoRoot, 'tokyo', 'widgets');
 const KNOWN_WIDGET_TYPES = fs
@@ -390,7 +390,7 @@ async function main() {
   ensureDir(path.join(outRoot, 'instances'));
 
   if (!fs.existsSync(instancesRoot)) {
-    console.log('[l10n] No sources found under l10n/instances; nothing to build');
+    console.log('[l10n] No sources found under tokyo/admin-owned/l10n/instances; nothing to build');
     return;
   }
 

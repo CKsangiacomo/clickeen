@@ -23,7 +23,7 @@ const ALLOWLIST_ROOT = path.join(REPO_ROOT, 'prague', 'content', 'allowlists', '
 const TOKYO_PRAGUE_ROOT = path.join(REPO_ROOT, 'tokyo', 'l10n', 'prague');
 const TOKYO_WIDGETS_ROOT = path.join(REPO_ROOT, 'tokyo', 'widgets');
 const CHROME_BASE_PATH = path.join(REPO_ROOT, 'prague', 'content', 'base', 'v1', 'chrome.json');
-const LOCALES_PATH = path.join(REPO_ROOT, 'config', 'locales.json');
+const LOCALES_PATH = path.join(REPO_ROOT, 'packages', 'l10n', 'locales.json');
 const DOTENV_LOCAL = path.join(REPO_ROOT, '.env.local');
 
 let cachedSfBaseUrl = null;

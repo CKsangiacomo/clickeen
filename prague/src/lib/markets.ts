@@ -1,7 +1,7 @@
-import marketsJson from '../../../config/markets.json';
+import marketsJson from '../markets/markets.json';
 import { PRAGUE_CANONICAL_LOCALES } from './locales';
 
-const MARKETS_FILE_LABEL = 'config/markets.json';
+const MARKETS_FILE_LABEL = 'prague/src/markets/markets.json';
 const MARKET_KEY_REGEX = /^[a-z][a-z0-9-]{0,31}$/;
 const COUNTRY_REGEX = /^[A-Z]{2}$/;
 
@@ -69,7 +69,7 @@ function normalizeMarketsConfig(raw: unknown): PragueMarketsConfig {
     }
     if (!PRAGUE_CANONICAL_LOCALES.includes(defaultLocale)) {
       throw new Error(
-        `[prague] Invalid markets[${index}].defaultLocale "${defaultLocale}" (not in config/locales.json): ${MARKETS_FILE_LABEL}`,
+        `[prague] Invalid markets[${index}].defaultLocale "${defaultLocale}" (not in packages/l10n/locales.json): ${MARKETS_FILE_LABEL}`,
       );
     }
 
@@ -86,7 +86,7 @@ function normalizeMarketsConfig(raw: unknown): PragueMarketsConfig {
     for (const l of locales) {
       if (!PRAGUE_CANONICAL_LOCALES.includes(l)) {
         throw new Error(
-          `[prague] Invalid markets[${index}].locales entry "${l}" (not in config/locales.json): ${MARKETS_FILE_LABEL}`,
+          `[prague] Invalid markets[${index}].locales entry "${l}" (not in packages/l10n/locales.json): ${MARKETS_FILE_LABEL}`,
         );
       }
     }
@@ -113,7 +113,7 @@ function normalizeMarketsConfig(raw: unknown): PragueMarketsConfig {
 
     const ensureMarketLocale = (value: string, path: string) => {
       if (!PRAGUE_CANONICAL_LOCALES.includes(value)) {
-        throw new Error(`[prague] Invalid ${path} "${value}" (not in config/locales.json): ${MARKETS_FILE_LABEL}`);
+        throw new Error(`[prague] Invalid ${path} "${value}" (not in packages/l10n/locales.json): ${MARKETS_FILE_LABEL}`);
       }
       if (!localesUnique.includes(value)) {
         throw new Error(`[prague] Invalid ${path} "${value}" (not in market locales): ${MARKETS_FILE_LABEL}`);

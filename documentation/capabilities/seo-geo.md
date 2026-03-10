@@ -39,7 +39,7 @@ This does **not** change UI mode. UI is always iframe.
 SEO/GEO embed is **tier-gated**.
 
 Source of truth:
-- Entitlement flag: `embed.seoGeo.enabled` in `config/entitlements.matrix.json`
+- Entitlement flag: `embed.seoGeo.enabled` in `packages/ck-policy/entitlements.matrix.json`
 - Live pointer contract: `renders/instances/<publicId>/live/r.json` includes `seoGeo` bases **only when entitled**
 
 Non-entitled tiers:

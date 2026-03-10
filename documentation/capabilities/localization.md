@@ -18,7 +18,7 @@ This prevents “fan-out” (e.g. `wgt_curated_... .fr/.de/.es`) and keeps cachi
 
 ## Canonical locale registry (shared)
 
-`config/locales.json` is the canonical registry of supported locale tokens **and** how to label them in different UI languages.
+`packages/l10n/locales.json` is the canonical registry of supported locale tokens **and** how to label them in different UI languages.
 
 - Use `code` as the locale token everywhere (lowercase BCP47-ish like `fr-ca`, `zh-hans`).
 - For locale pickers, always render locale names using `labels[uiLocale]` (not `nativeLabel`) so an English UI user does not see Chinese/Arabic script in the picker.
@@ -66,6 +66,7 @@ Use `i18n` when the surface is UI chrome / labels:
 
 - `tokyo/i18n/manifest.json`
 - `tokyo/i18n/{locale}/{bundle}.{hash}.json`
+- Admin-owned authored source: `tokyo/admin-owned/i18n/{locale}/{bundle}.json`
 
 Rule: catalogs are content-hashed and cacheable; the manifest is the indirection layer.
 
@@ -93,6 +94,7 @@ Where the write plane fits (current repo snapshot):
   - `layer=user` = user overrides on top of the locale translation (choosing auto-translate again clears this layer on the next Save)
 - Paris stores generation/status state in `L10N_STATE_KV`, and keeps base snapshots in overlay storage for diffing + status.
 - Every overlay row is keyed by `baseFingerprint` (sha256 of the current allowlist snapshot).
+- Repo-authored admin-owned l10n source overlays, when kept in-repo, live under `tokyo/admin-owned/l10n/**` and build into `tokyo/l10n/**`.
 - Stale writes are rejected when `baseFingerprint` does not match.
 - These authoring records are **never** served publicly.
 - When overlay/base state changes and the instance is live, Paris rebuilds the full text pack and enqueues Tokyo-worker to write it:
@@ -240,7 +242,7 @@ This keeps “locale overlays” deterministic across file-based content (Prague
 
 **Shared implementation requirement:**
 
-- `computeL10nFingerprint()` (and `buildL10nSnapshot()`) must be implemented once and imported from a shared module (recommended: `@clickeen/l10n` in `tooling/l10n`).
+- `computeL10nFingerprint()` (and `buildL10nSnapshot()`) must be implemented once and imported from a shared module (`@clickeen/l10n` in `packages/l10n`).
 
 ## Why overlays (vs full localized JSON per locale)
 

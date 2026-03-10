@@ -1,6 +1,6 @@
-import localesJson from '../../../config/locales.json';
+import localesJson from '@clickeen/l10n/locales.json';
 
-const LOCALES_FILE_LABEL = 'config/locales.json';
+const LOCALES_FILE_LABEL = 'packages/l10n/locales.json';
 
 function normalizeCanonicalLocales(raw: unknown): string[] {
   if (!Array.isArray(raw)) {

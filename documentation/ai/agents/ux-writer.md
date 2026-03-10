@@ -345,7 +345,7 @@ Orchestrator exposes `getStatus()`:
 │  1. Read report.md (summary, top issues, reasoning)             │
 │  2. Review diffs/*.diff (quick scan per locale)                 │
 │  3. Accept:                                                     │
-│     - Apply proposed changes to source catalogs in `i18n/{locale}/`│
+│     - Apply proposed changes to source catalogs in `tokyo/admin-owned/i18n/{locale}/`│
 │     - Run `pnpm build:i18n` to regenerate `tokyo/i18n/*` outputs │
 │     - OR cherry-pick specific changes                           │
 │  4. Commit to git                                               │

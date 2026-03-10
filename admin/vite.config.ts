@@ -6,11 +6,12 @@ import { spawn } from 'node:child_process';
 const OPEN_EDITOR_CONTRACT_SOURCE_PATH = path.resolve(
   __dirname,
   '..',
-  'tooling',
-  'contracts',
+  'packages',
+  'ck-contracts',
+  'editor',
   'open-editor-lifecycle.v1.json',
 );
-const OPEN_EDITOR_CONTRACT_ROUTE = '/tooling/contracts/open-editor-lifecycle.v1.json';
+const OPEN_EDITOR_CONTRACT_ROUTE = '/contracts/open-editor-lifecycle.v1.json';
 const CK_DEV_PROFILE = String(process.env.CK_DEV_PROFILE || 'product')
   .trim()
   .toLowerCase();
@@ -500,7 +501,7 @@ export default defineConfig({
         const raw = fs.readFileSync(OPEN_EDITOR_CONTRACT_SOURCE_PATH, 'utf8');
         this.emitFile({
           type: 'asset',
-          fileName: 'tooling/contracts/open-editor-lifecycle.v1.json',
+          fileName: 'contracts/open-editor-lifecycle.v1.json',
           source: raw,
         });
       },
@@ -520,7 +521,7 @@ export default defineConfig({
           res.setHeader('Content-Type', 'application/json');
           res.setHeader('Cache-Control', 'no-store');
 
-          const matrixPath = path.resolve(__dirname, '..', 'config', 'entitlements.matrix.json');
+          const matrixPath = path.resolve(__dirname, '..', 'packages', 'ck-policy', 'entitlements.matrix.json');
 
           const readMatrix = () => {
             if (!fs.existsSync(matrixPath)) {

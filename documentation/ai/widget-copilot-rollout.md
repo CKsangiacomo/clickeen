@@ -48,7 +48,7 @@ Post-deploy findings:
 ## Release package scope (CS routing + role-scoped policy split)
 
 Core runtime files:
-- `tooling/ck-policy/src/ai.ts`
+- `packages/ck-policy/src/ai.ts`
 - `paris/src/domains/ai/index.ts`
 - `sanfrancisco/src/index.ts`
 - `sanfrancisco/src/agents/sdrWidgetCopilot.ts`

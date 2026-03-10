@@ -44,7 +44,7 @@ importers:
     dependencies:
       '@clickeen/ck-policy':
         specifier: workspace:*
-        version: link:../tooling/ck-policy
+        version: link:../packages/ck-policy
       gsap:
         specifier: ^3.13.0
         version: 3.13.0
@@ -105,13 +105,13 @@ importers:
     dependencies:
       '@clickeen/ck-contracts':
         specifier: workspace:*
-        version: link:../tooling/ck-contracts
+        version: link:../packages/ck-contracts
       '@clickeen/ck-policy':
         specifier: workspace:*
-        version: link:../tooling/ck-policy
+        version: link:../packages/ck-policy
       '@clickeen/l10n':
         specifier: workspace:*
-        version: link:../tooling/l10n
+        version: link:../packages/l10n
       gsap:
         specifier: ^3.13.0
         version: 3.13.0
@@ -151,7 +151,7 @@ importers:
     dependencies:
       '@clickeen/ck-contracts':
         specifier: workspace:*
-        version: link:../tooling/ck-contracts
+        version: link:../packages/ck-contracts
       gsap:
         specifier: ^3.12.5
         version: 3.13.0
@@ -159,17 +159,23 @@ importers:
         specifier: ^6.1.86
         version: 6.1.86
 
+  packages/ck-contracts: {}
+
+  packages/ck-policy: {}
+
+  packages/l10n: {}
+
   paris:
     dependencies:
       '@clickeen/ck-contracts':
         specifier: workspace:*
-        version: link:../tooling/ck-contracts
+        version: link:../packages/ck-contracts
       '@clickeen/ck-policy':
         specifier: workspace:*
-        version: link:../tooling/ck-policy
+        version: link:../packages/ck-policy
       '@clickeen/l10n':
         specifier: workspace:*
-        version: link:../tooling/l10n
+        version: link:../packages/l10n
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0
@@ -197,13 +203,10 @@ importers:
         version: 12.6.12(@types/node@20.19.25)(astro@5.16.6(@types/node@20.19.25)(@vercel/blob@1.0.2)(rollup@4.53.2)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.2))(tsx@4.20.6)(yaml@2.8.2)
       '@clickeen/ck-contracts':
         specifier: workspace:*
-        version: link:../tooling/ck-contracts
-      '@clickeen/composition':
-        specifier: workspace:*
-        version: link:../tooling/composition
+        version: link:../packages/ck-contracts
       '@clickeen/l10n':
         specifier: workspace:*
-        version: link:../tooling/l10n
+        version: link:../packages/l10n
       astro:
         specifier: ^5.1.2
         version: 5.16.6(@types/node@20.19.25)(@vercel/blob@1.0.2)(rollup@4.53.2)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.2)
@@ -220,6 +223,9 @@ importers:
       '@clickeen/bob':
         specifier: workspace:*
         version: link:../bob
+      '@clickeen/l10n':
+        specifier: workspace:*
+        version: link:../packages/l10n
       next:
         specifier: 15.5.2
         version: 15.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -253,10 +259,10 @@ importers:
     dependencies:
       '@clickeen/ck-policy':
         specifier: workspace:*
-        version: link:../tooling/ck-policy
+        version: link:../packages/ck-policy
       '@clickeen/l10n':
         specifier: workspace:*
-        version: link:../tooling/l10n
+        version: link:../packages/l10n
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0
@@ -269,13 +275,13 @@ importers:
     dependencies:
       '@clickeen/ck-contracts':
         specifier: workspace:*
-        version: link:../tooling/ck-contracts
+        version: link:../packages/ck-contracts
       '@clickeen/ck-policy':
         specifier: workspace:*
-        version: link:../tooling/ck-policy
+        version: link:../packages/ck-policy
       '@clickeen/l10n':
         specifier: workspace:*
-        version: link:../tooling/l10n
+        version: link:../packages/l10n
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0
@@ -283,14 +289,6 @@ importers:
       wrangler:
         specifier: ^4.54.0
         version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
-
-  tooling/ck-contracts: {}
-
-  tooling/ck-policy: {}
-
-  tooling/composition: {}
-
-  tooling/l10n: {}
 
   tooling/sf-symbols:
     dependencies:
@@ -312,10 +310,10 @@ importers:
     dependencies:
       '@clickeen/ck-contracts':
         specifier: workspace:*
-        version: link:../tooling/ck-contracts
+        version: link:../packages/ck-contracts
       '@clickeen/l10n':
         specifier: workspace:*
-        version: link:../tooling/l10n
+        version: link:../packages/l10n
       next:
         specifier: 15.5.2
         version: 15.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

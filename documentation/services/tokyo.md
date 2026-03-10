@@ -33,6 +33,8 @@ Consumers should treat Tokyo as the **software plane**:
 - Widget definitions are fetched over HTTP using `NEXT_PUBLIC_TOKYO_URL` (cloud-dev Tokyo by default in local product flows)
 - Dieter build artifacts are served from Tokyo (`tokyo/dieter/**`)
 - i18n bundles are served from Tokyo (`tokyo/i18n/**`)
+- Admin-owned authored i18n source catalogs live under `tokyo/admin-owned/i18n/**` and are built into `tokyo/i18n/**`
+- Admin-owned authored l10n source overlays live under `tokyo/admin-owned/l10n/**` and are built into `tokyo/l10n/**`
 
 ## Dieter bundling manifest (executed)
 
@@ -60,6 +62,7 @@ Shape (as implemented today):
 Tokyo serves built localization catalogs for editor/runtime surfaces:
 - Build output path: `tokyo/i18n/{locale}/{bundle}.{hash}.json`
 - Manifest: `tokyo/i18n/manifest.json`
+- Admin-owned authored source path: `tokyo/admin-owned/i18n/{locale}/{bundle}.json`
 
 Rules:
 - Catalog filenames are content-hashed (safe for `Cache-Control: immutable` at the CDN).
@@ -96,6 +99,10 @@ Rules:
 - Public runtime reads packs + live pointers only.
 - Authoring overlay state is not stored in Tokyo; Paris keeps that in `OVERLAYS_R2` + `L10N_STATE_KV`.
 - Fingerprinted packs are immutable/cacheable; live pointers are tiny mutable `no-store` files.
+
+Admin-owned repo-local l10n source overlays live under:
+
+- `tokyo/admin-owned/l10n/instances/<publicId>/<layer>/<layerKey>.ops.json`
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:

@@ -81,8 +81,8 @@ Blocks without required keys in the registry have no enforced required keys yet;
 Only block types registered in `prague/src/lib/blockRegistry.ts` are supported at runtime. Other block folders that exist on disk but are not registered must not be referenced in page JSON.
 
 Shared block schema + AI contracts live in the composition package:
-- Block schemas: `tooling/composition/src/blockSchemas.ts`
-- AI contracts: `tooling/composition/src/contracts.ts` (`BLOCK_CONTRACTS`)
+- Block schemas: `prague/src/composition/blockSchemas.ts`
+- AI contracts: `prague/src/composition/contracts.ts` (`BLOCK_CONTRACTS`)
 
 ### Naming + taxonomy (non-negotiable)
 

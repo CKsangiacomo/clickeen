@@ -1,13 +1,13 @@
 # Clickeen-Owned Localization Overlays (L10N)
 
-This folder is the **source** for Clickeen-owned localization overlays.
+This folder is the admin-owned authored input for Clickeen-owned localization overlays.
 
 Output is built into `tokyo/l10n/**` so it can be cached on the Tokyo CDN (software plane).
 
 ## Instance overlays
 
 Source path:
-- `l10n/instances/<publicId>/<layer>/<layerKey>.ops.json`
+- `tokyo/admin-owned/l10n/instances/<publicId>/<layer>/<layerKey>.ops.json`
 
 Built output:
 - `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`

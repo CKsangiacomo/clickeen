@@ -32,7 +32,7 @@ Layout choices (inside the same Type):
 
 ## Subject Policy — Entitlements (v1)
 
-Tier values are defined globally in `config/entitlements.matrix.json`.
+Tier values are defined globally in `packages/ck-policy/entitlements.matrix.json`.
 
 Widget-specific enforcement lives in:
 - `tokyo/widgets/faq/limits.json`

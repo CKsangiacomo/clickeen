@@ -7,7 +7,7 @@ import {
   localeCandidates,
   normalizeLocaleToken,
 } from '@clickeen/l10n';
-import localesJson from '../../../config/locales.json';
+import localesJson from '@clickeen/l10n/locales.json';
 
 const BASE_LOADERS = import.meta.glob('../../content/base/v1/**/*.json', { import: 'default' });
 
@@ -90,7 +90,7 @@ let cachedLocales: string[] | null = null;
 async function loadLocales(): Promise<string[]> {
   if (cachedLocales) return cachedLocales;
   if (!Array.isArray(localesJson)) {
-    throw new Error('[prague] Invalid locales file: config/locales.json');
+    throw new Error('[prague] Invalid locales file: packages/l10n/locales.json');
   }
   const locales = localesJson
     .map((entry: any) => {

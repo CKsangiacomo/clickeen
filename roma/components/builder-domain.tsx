@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import openEditorLifecycleContractJson from '../../tooling/contracts/open-editor-lifecycle.v1.json';
+import openEditorLifecycleContractJson from '../../packages/ck-contracts/editor/open-editor-lifecycle.v1.json';
 import { getCompiledWidget, normalizeCompiledWidgetType } from './compiled-widget-cache';
 import {
   getAccountInstance,

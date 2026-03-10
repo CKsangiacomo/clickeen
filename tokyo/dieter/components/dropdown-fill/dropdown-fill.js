@@ -306,7 +306,7 @@ var Dieter = (() => {
     }
   };
 
-  // ../tooling/ck-contracts/src/index.js
+  // ../packages/ck-contracts/src/index.js
   var WIDGET_PUBLIC_ID_RE = /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
   var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   var ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;

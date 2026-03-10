@@ -1,7 +1,7 @@
 ### Entitlements Mapping — Widget Template
 
 Tier values live in **one global matrix**:
-- `config/entitlements.matrix.json`
+- `packages/ck-policy/entitlements.matrix.json`
 
 Each widget maps those keys to its state in:
 - `tokyo/widgets/{widget}/limits.json`

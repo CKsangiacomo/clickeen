@@ -1,5 +1,5 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
-import supportedLocalesRaw from '../../../config/locales.json';
+import supportedLocalesRaw from '@clickeen/l10n/locales.json';
 import type { Env, L10nAllowlistEntry, L10nAllowlistFile } from './types';
 import { requireTokyoBase } from './tokyo';
 
@@ -17,7 +17,7 @@ export function resolveUserOps(row: { user_ops?: Array<{ op: 'set'; path: string
 
 export function normalizeSupportedLocales(raw: unknown): string[] {
   if (!Array.isArray(raw)) {
-    throw new Error('[ParisWorker] config/locales.json must be an array of locale entries');
+    throw new Error('[ParisWorker] packages/l10n/locales.json must be an array of locale entries');
   }
   const locales = raw
     .map((entry) => {
@@ -30,7 +30,7 @@ export function normalizeSupportedLocales(raw: unknown): string[] {
     .filter((value): value is string => Boolean(value));
   const unique = Array.from(new Set(locales));
   if (unique.length === 0) {
-    throw new Error('[ParisWorker] config/locales.json must include at least one locale');
+    throw new Error('[ParisWorker] packages/l10n/locales.json must include at least one locale');
   }
   return unique;
 }

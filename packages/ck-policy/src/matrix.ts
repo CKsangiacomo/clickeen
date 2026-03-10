@@ -1,4 +1,4 @@
-import rawMatrix from '../../../config/entitlements.matrix.json';
+import rawMatrix from '../entitlements.matrix.json';
 import type { EntitlementKind, EntitlementsMatrix, PolicyProfile } from './types';
 
 const REQUIRED_TIERS: PolicyProfile[] = ['minibob', 'free', 'tier1', 'tier2', 'tier3'];

@@ -9,7 +9,7 @@ SCOPE
 INPUTS
 - `widgetType` (explicit)
 - PRD (required)
-- Entitlements matrix keys from `config/entitlements.matrix.json`
+- Entitlements matrix keys from `packages/ck-policy/entitlements.matrix.json`
 
 OUTPUTS
 - `spec.json`

@@ -154,7 +154,7 @@ Job kinds (v1):
 
 Paris resolves policy from:
 
-- `config/entitlements.matrix.json` via `@clickeen/ck-policy`
+- `packages/ck-policy/entitlements.matrix.json` via `@clickeen/ck-policy`
 
 PRD 54 requires:
 

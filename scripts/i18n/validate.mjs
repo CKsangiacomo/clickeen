@@ -4,8 +4,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
-const srcRoot = path.join(repoRoot, 'i18n');
-const canonicalLocalesPath = path.join(repoRoot, 'config', 'locales.json');
+const srcRoot = path.join(repoRoot, 'tokyo', 'admin-owned', 'i18n');
+const canonicalLocalesPath = path.join(repoRoot, 'packages', 'l10n', 'locales.json');
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -83,7 +83,7 @@ function main() {
         continue;
       }
 
-      // Non-coreui keys must exist in i18n/<locale>/<bundle>.json
+      // Non-coreui keys must exist in tokyo/admin-owned/i18n/<locale>/<bundle>.json
       if (!widgetCatalogs.has(prefix)) {
         const cat = loadCatalog(locale, prefix);
         widgetCatalogs.set(prefix, cat);

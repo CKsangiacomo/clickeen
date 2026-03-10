@@ -1,4 +1,4 @@
-import { assertSplitLayout } from '@clickeen/composition';
+import { assertSplitLayout } from '../composition/index';
 import Cta from '../blocks/cta/cta.astro';
 import BigBang from '../blocks/big-bang/big-bang.astro';
 import Hero from '../blocks/hero/hero.astro';

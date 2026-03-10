@@ -2,7 +2,7 @@ import { getEntitlementsMatrix } from './matrix';
 
 const matrix = getEntitlementsMatrix();
 
-// Keep in sync with config/entitlements.matrix.json (registry is the typed source of truth).
+// Keep in sync with packages/ck-policy/entitlements.matrix.json (registry is the typed source of truth).
 export const CAPABILITY_KEYS = [
   'l10n.locales.max',
   'l10n.locales.custom.max',

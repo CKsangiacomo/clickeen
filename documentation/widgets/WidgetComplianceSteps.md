@@ -12,7 +12,7 @@ Canonical contracts (must match runtime):
 INPUTS
 - `widgetType` (explicit)
 - PRD (required)
-- Entitlements keys from `config/entitlements.matrix.json`
+- Entitlements keys from `packages/ck-policy/entitlements.matrix.json`
 
 OUTPUTS
 - A compliant widget definition folder in `tokyo/widgets/{widgetType}/`.

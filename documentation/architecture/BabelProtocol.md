@@ -224,7 +224,7 @@ function resolveLocale(request: Request): string {
   return 'en';
 }
 
-// canonicalizeSupportedLocale: lowercases, normalizes separators, and validates against config/locales.json.
+// canonicalizeSupportedLocale: lowercases, normalizes separators, and validates against packages/l10n/locales.json.
 // tryResolveSupportedLocale: resolves an exact supported locale when possible, otherwise falls back within the same language
 // (and may use geoTargets for same-language variant selection). It must never switch language families.
 

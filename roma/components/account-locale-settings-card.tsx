@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '../../tooling/l10n/src/index';
-import localesJson from '../../config/locales.json';
+import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
+import localesJson from '@clickeen/l10n/locales.json';
 import { fetchParisJson } from './paris-http';
 
 type AccountLocalesPayload = {

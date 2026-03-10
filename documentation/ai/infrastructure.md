@@ -188,7 +188,7 @@ Agent executions are constrained by the grant:
 Paris is expected to cap these budgets server-side so the client can’t request arbitrarily large execution windows.
 
 Canonical runtime budget source:
-- `tooling/ck-policy/src/ai.ts` (`budgetsByProfile` per agent)
+- `packages/ck-policy/src/ai.ts` (`budgetsByProfile` per agent)
 - `paris/src/domains/ai/index.ts` (grant clamp caps + Minibob mint overrides)
 
 Budget matrix (`maxTokens / timeoutMs / maxRequests`):

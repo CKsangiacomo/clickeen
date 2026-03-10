@@ -13,7 +13,7 @@ Renders a configurable countdown / personal countdown / number counter with opti
 
 ## Entitlements + limits (v1)
 
-- Tier values live in the global matrix: `config/entitlements.matrix.json`.
+- Tier values live in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
 - Widget enforcement lives in `tokyo/widgets/countdown/limits.json`.
 - The PRD lists entitlement keys and how they map to state paths; do not repeat per-tier matrices here.
 
