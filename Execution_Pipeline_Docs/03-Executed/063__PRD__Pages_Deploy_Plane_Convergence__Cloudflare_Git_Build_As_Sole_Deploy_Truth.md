@@ -1,9 +1,20 @@
 # PRD 063 — Pages Deploy Plane Convergence: Cloudflare Git Build As Sole Deploy Truth
 
-Status: EXECUTING
+Status: EXECUTED
 Date: 2026-03-10
 Owner: Product Dev Team
 Priority: P0 (process + infrastructure convergence)
+
+Execution result:
+- Bob, Roma, Venice, and Prague now use Git-connected Cloudflare Pages build as their sole Pages deploy plane.
+- GitHub Actions no longer creates Pages projects, syncs Pages secrets, or deploys Pages artifacts.
+- Bob and Roma runtime base URLs are repo-owned in app-local `wrangler.toml`.
+- Venice and Prague runtime URLs remain dashboard-owned by design.
+- Canonical cloud-dev hosts were manually aligned and verified:
+  - `bob.dev.clickeen.com`
+  - `roma.dev.clickeen.com`
+  - `venice.dev.clickeen.com`
+  - `prague.dev.clickeen.com`
 
 > Core mandate: Cloudflare Pages apps must have exactly one deploy plane. Today the repo carries two: Cloudflare Git-connected build and GitHub Actions + `wrangler pages deploy`. That is architecture drift. This PRD hard-cuts Pages deploy to one boring model: Git remains the trigger, Cloudflare Pages Git build performs the deploy, and GitHub Actions stops acting as a second deploy orchestrator for Pages apps.
 

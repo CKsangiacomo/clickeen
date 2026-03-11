@@ -1,6 +1,6 @@
 # Cloudflare Pages Cloud-Dev Checklist
 
-Status: ACTIVE CHECKLIST  
+Status: FINAL STATE AFTER PRD 063  
 Owner: Human architect for dashboard alignment; repo/runtime owners for app-local build contracts
 
 This checklist is the canonical manual setup contract for Cloudflare Pages `cloud-dev`.
@@ -43,8 +43,7 @@ Env contract:
 
 Dashboard action:
 - Do not add these non-secret vars in the Cloudflare dashboard.
-- If old dashboard copies exist, remove them only after `bob-dev` has completed a successful Git-connected deploy using the app-local build contract above.
-- After that first successful Git-connected deploy, Bob must have one clear source of truth: `bob/wrangler.toml`.
+- Final settled state: Bob non-secret runtime vars live only in `bob/wrangler.toml`.
 
 ## Roma
 
@@ -76,8 +75,7 @@ Env contract:
 
 Dashboard action:
 - Do not add these non-secret vars in the Cloudflare dashboard.
-- If old dashboard copies exist, remove them only after `roma-dev` has completed a successful Git-connected deploy using the app-local build contract above.
-- After that first successful Git-connected deploy, Roma must have one clear source of truth: `roma/wrangler.toml`.
+- Final settled state: Roma non-secret runtime vars live only in `roma/wrangler.toml`.
 
 ## Venice
 
@@ -103,7 +101,7 @@ Env contract:
 | `TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | Cloudflare Pages dashboard |
 
 Dashboard action:
-- Add this runtime var in the Cloudflare Pages dashboard.
+- Keep this runtime var in the Cloudflare Pages dashboard.
 
 ## Prague
 
@@ -134,15 +132,19 @@ Env contract:
 | `PUBLIC_PRAGUE_BUILD_ID` | no | leave unset (Cloudflare provides `CF_PAGES_COMMIT_SHA`) | Cloudflare Pages runtime |
 
 Dashboard action:
-- Add the 5 public base URLs in the Cloudflare Pages dashboard.
+- Keep the 5 public base URLs in the Cloudflare Pages dashboard.
 - Leave `PUBLIC_PRAGUE_BUILD_ID` unset unless there is a deliberate override reason.
 
-## Hard-Cut Confirmation
+## PRD 63 Completion Proof
 
-Before declaring PRD 63 complete:
 - Bob, Roma, Venice, and Prague are Git-connected Pages projects.
 - Git build is the only active deploy behavior for each project.
 - Bob and Roma non-secret vars are present in `wrangler.toml`, not duplicated in the Cloudflare dashboard.
 - Venice and Prague runtime vars are present in the Cloudflare dashboard.
 - Bob and Roma custom-domain bindings are active on `*.dev.clickeen.com`.
 - No GitHub workflow still creates Pages projects, syncs Pages secrets, or deploys Pages artifacts.
+- Verified cloud-dev host behavior on 2026-03-10:
+  - `https://bob.dev.clickeen.com/bob` returns `200`
+  - `https://roma.dev.clickeen.com/home` redirects to login when unauthenticated
+  - `https://venice.dev.clickeen.com/embed/latest/loader.js` returns `200`
+  - `https://prague.dev.clickeen.com/us/en/` returns `200`
