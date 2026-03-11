@@ -85,7 +85,11 @@ function asParisReason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function AccountLocaleSettingsCard(args: { accountId: string; canEdit: boolean }) {
+export function AccountLocaleSettingsCard(args: {
+  accountId: string;
+  canEdit: boolean;
+  authzCapsule?: string | null;
+}) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +113,11 @@ export function AccountLocaleSettingsCard(args: { accountId: string; canEdit: bo
         } | null;
       }>(`/api/accounts/${encodeURIComponent(args.accountId)}/locales?_t=${Date.now()}`, {
         method: 'GET',
+        headers: args.authzCapsule
+          ? {
+              'x-ck-authz-capsule': args.authzCapsule,
+            }
+          : undefined,
       });
 
       const baseLocale = normalizeLocaleToken(payload.policy?.baseLocale) ?? 'en';
@@ -175,7 +184,14 @@ export function AccountLocaleSettingsCard(args: { accountId: string; canEdit: bo
     try {
       await fetchParisJson(`/api/accounts/${encodeURIComponent(args.accountId)}/locales?subject=account`, {
         method: 'PUT',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...(args.authzCapsule
+            ? {
+                'x-ck-authz-capsule': args.authzCapsule,
+              }
+            : {}),
+        },
         body: JSON.stringify(payload),
       });
       await loadSettings();
@@ -185,7 +201,15 @@ export function AccountLocaleSettingsCard(args: { accountId: string; canEdit: bo
     } finally {
       setSaving(false);
     }
-  }, [args.accountId, draftAdditionalLocales, draftBaseLocale, draftIpEnabled, draftSwitcherEnabled, loadSettings]);
+  }, [
+    args.accountId,
+    args.authzCapsule,
+    draftAdditionalLocales,
+    draftBaseLocale,
+    draftIpEnabled,
+    draftSwitcherEnabled,
+    loadSettings,
+  ]);
 
   return (
     <section className="rd-canvas-module">

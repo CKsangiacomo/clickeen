@@ -44,6 +44,7 @@ Env contract:
 Dashboard action:
 - Do not add these non-secret vars in the Cloudflare dashboard.
 - Final settled state: Bob non-secret runtime vars live only in `bob/wrangler.toml`.
+- Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`
 
 ## Roma
 
@@ -76,6 +77,7 @@ Env contract:
 Dashboard action:
 - Do not add these non-secret vars in the Cloudflare dashboard.
 - Final settled state: Roma non-secret runtime vars live only in `roma/wrangler.toml`.
+- Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`
 
 ## Venice
 

@@ -173,6 +173,7 @@ export function SettingsDomain() {
       <AccountLocaleSettingsCard
         accountId={activeAccountId}
         canEdit={activeAccount.role !== 'viewer'}
+        authzCapsule={accountCapsule}
       />
     </>
   );

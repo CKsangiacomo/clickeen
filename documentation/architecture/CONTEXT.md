@@ -165,6 +165,7 @@ curated_widget_instances.meta = {
 | **Prague**        | Marketing site + gallery                                        | Cloudflare Pages                | `prague/`       |
 | **Bob**           | Widget builder app                                              | Cloudflare Pages (Next.js)      | `bob/`          |
 | **Roma**          | Product shell (account domains + Builder host orchestration)    | Cloudflare Pages (Next.js)      | `roma/`         |
+| **DevStudio**     | Global Clickeen superadmin portal + platform/operator tooling   | Cloudflare Pages (Vite)         | `admin/`        |
 | **Venice**        | SSR embed runtime                                               | Cloudflare Pages (Next.js Edge) | `venice/`       |
 | **Paris**         | HTTP API gateway                                                | Cloudflare Workers              | `paris/`        |
 | **San Francisco** | AI Workforce OS (agents, learning)                              | Workers (D1/KV/R2/Queues)       | `sanfrancisco/` |
@@ -181,6 +182,8 @@ curated_widget_instances.meta = {
 **Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly before explicit Paris convergence. Bob does not own a published/unpublished toggle; its copy-code affordance is only for getting website embed snippets. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
 
 **Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle), and reads core account instance state through same-origin routes backed by Tokyo saved authoring state. Explicit localization rehydrate remains Paris-backed in the current cutover. In current cloud-dev, this collapses to one effective account: admin. Roma no longer exposes browser-side account switching there.
+
+**DevStudio** — Global Clickeen superadmin and operator portal. It is the platform-scoped surface a human uses to manage Clickeen itself across accounts, curated/platform-owned content, and explicit operator workflows. DevStudio can host Bob for curated/admin authoring work, but it must not invent a second account or provider truth model; it stays on top of the same canonical account/content contracts as the rest of the system.
 
 **Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
@@ -368,7 +371,7 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 - Instances are **not** created by scripts anymore.
 - Supported product/account instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
-- Local DevStudio is for widget authoring work, not for “local Roma” parity.
+- Local DevStudio is the local form of the platform-scoped superadmin shell, not “local Roma” parity.
 - That local authoring scope currently centers on loading the instances on the admin account for config iteration and translation checks.
 
 **Source-profile auth target (important):**

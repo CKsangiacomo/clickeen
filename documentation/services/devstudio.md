@@ -1,6 +1,11 @@
-# DevStudio — Internal Tools (Admin)
+# DevStudio — Global Superadmin Portal
 
-DevStudio is Clickeen’s internal admin surface for docs + tools. In this repo it lives in `admin/` (Vite).
+DevStudio is Clickeen’s platform-scoped superadmin and operator surface. It is how a human manages Clickeen itself across accounts, curated/platform-owned content, and explicit company/operator workflows. In this repo it lives in `admin/` (Vite).
+
+Hard boundary:
+- `Roma` is the account-scoped customer/member shell
+- `DevStudio` is the platform-scoped Clickeen superadmin shell
+- DevStudio may expose higher-privilege operator flows, but it must not invent a second account or provider truth model
 
 ## Environments
 
@@ -68,10 +73,10 @@ Important behavior:
 
 Current boundary:
 
-- The DevStudio tool is restored for widget authoring, not for full local product parity.
+- DevStudio is the platform superadmin surface, but the shipped toolset in this repo snapshot is still centered on curated/widget authoring and verification rather than a full global operator console.
 - That includes editing the admin account’s instances, running translation checks inside Bob, and applying local theme mutations in source profile.
-- The tool no longer pretends DevStudio is the operational owner for day-2 widget/account workflows.
-- Product/admin operational work still belongs in Roma cloud with a real admin account.
+- Customer account day-2 workflows still belong in Roma.
+- Platform-scoped superadmin/operator workflows belong in DevStudio as they are implemented.
 - The same instances are:
   - DevStudio authoring targets
   - Roma starter catalog entries

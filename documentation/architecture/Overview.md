@@ -79,7 +79,7 @@ Traditional systems treat objects as mutable: update in place, invalidate caches
 
 This is the same principle that underpins content-addressed storage, Git, and distributed ledgers: if data is immutable and addressed by content, you can distribute it globally and cache it indefinitely without coordination.
 
-Every service section below is an instance of this pattern. Tokyo stores immutable artifacts. Paris flips pointers. Venice reads pointers and serves cached artifacts. Bob creates new artifacts. Roma and DevStudio orchestrate the cycle.
+Every service section below is an instance of this pattern. Tokyo stores immutable artifacts. Paris flips pointers. Venice reads pointers and serves cached artifacts. Bob creates new artifacts. Roma and DevStudio orchestrate the cycle through different scopes: Roma is the account-scoped member shell, while DevStudio is the platform-scoped Clickeen superadmin shell.
 
 ---
 
@@ -90,6 +90,7 @@ Every service section below is an instance of this pattern. Tokyo stores immutab
 | **Prague**        | `prague/`       | Cloudflare Pages                     | Marketing + SEO surface                                                 | ✅ Active   |
 | **Bob**           | `bob/`          | Cloudflare Pages                     | Widget builder, compiler, ToolDrawer, preview                           | ✅ Active   |
 | **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
+| **DevStudio**     | `admin/`        | Cloudflare Pages                     | Global superadmin portal for Clickeen platform/company management       | ✅ Internal |
 | **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | SSR embed runtime, pixel, loader                                        | ✅ Active   |
 | **Paris**         | `paris/`        | Cloudflare Workers                   | HTTP API, instances, tokens, entitlements                               | ✅ Active   |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
@@ -132,7 +133,7 @@ Each release proceeds in 3 steps:
 | **Bob**           | `https://bob.dev.clickeen.com`               | `https://app.clickeen.com`          |
 | **Roma**          | `https://roma.dev.clickeen.com`              | `https://app.clickeen.com`          |
 | **Prague**        | `https://prague.dev.clickeen.com` (optional) | `https://clickeen.com`              |
-| **DevStudio**     | `https://devstudio.dev.clickeen.com`         | (internal-only)                     |
+| **DevStudio**     | `https://devstudio.dev.clickeen.com`         | (internal-only superadmin portal)   |
 | **Paris**         | `https://paris.dev.clickeen.com`             | `https://paris.clickeen.com`        |
 | **Venice**        | `https://venice.dev.clickeen.com`            | `https://embed.clickeen.com`        |
 | **Tokyo**         | `https://tokyo.dev.clickeen.com`             | `https://tokyo.clickeen.com`        |
@@ -190,6 +191,13 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
   - `x-ck-authz-capsule` for account-scoped calls
 - Roma also serves direct-Michael account member reads on same-origin routes (`GET /api/accounts/:accountId/members`).
 - Roma Builder embeds Bob with `boot=message` and sends explicit `ck:open-editor` payloads after `bob:session-ready`.
+
+#### DevStudio (Pages)
+
+- DevStudio is the global Clickeen superadmin/operator portal, not a second customer account shell.
+- It is the platform-scoped surface a human uses to manage Clickeen across accounts, curated/platform-owned content, and explicit operator workflows.
+- DevStudio can host Bob for curated/admin authoring work, but it must reuse the same canonical account and content truth instead of inventing a second runtime model.
+- In local product profile, DevStudio is the fast superadmin shell over local Bob plus the cloud-dev data plane; in cloud-dev it is the internal verification and operator surface.
 
 #### Paris (Workers)
 
