@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../bob/lib/account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
-import { proxyToParis } from '../../../../../lib/api/paris-proxy';
-import { getAccountLocalesRow } from '../../../../../lib/michael';
+import { resolveBerlinBaseUrl } from '../../../../../lib/env/berlin';
 
 export const runtime = 'edge';
+// Same-origin relay only: Roma browser/session cookies terminate on Next, so account UI calls Berlin through this thin host proxy.
 
 type RouteContext = { params: Promise<{ accountId: string }> };
 
@@ -56,64 +56,79 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const authz = await authorizeRequestAccountRoleFromCapsule({
-    request,
-    accountId,
-    minRole: 'viewer',
-  });
-  if (!authz.ok) {
+  try {
+    const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
+    const upstream = await fetch(`${berlinBase}/v1/accounts/${encodeURIComponent(accountId)}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${session.accessToken}`,
+        accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+    const payload = (await upstream.json().catch(() => null)) as
+      | {
+          account?: {
+            l10nLocales?: unknown;
+            l10nPolicy?: unknown;
+          } | null;
+          error?: unknown;
+        }
+      | null;
+
+    if (!upstream.ok) {
+      return withSession(
+        request,
+        NextResponse.json(
+          payload ?? {
+            error: {
+              kind: upstream.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+              reasonKey:
+                upstream.status === 401
+                  ? 'coreui.errors.auth.required'
+                  : 'coreui.errors.auth.contextUnavailable',
+            },
+          },
+          { status: upstream.status },
+        ),
+        session.setCookies,
+      );
+    }
+
+    const locales = normalizeLocaleList(payload?.account?.l10nLocales);
+    const policy =
+      payload?.account?.l10nPolicy &&
+      typeof payload.account.l10nPolicy === 'object' &&
+      !Array.isArray(payload.account.l10nPolicy)
+        ? payload.account.l10nPolicy
+        : null;
+
     return withSession(
       request,
-      NextResponse.json({ error: authz.error }, { status: authz.status }),
+      NextResponse.json({
+        accountId,
+        locales,
+        policy,
+      }),
       session.setCookies,
     );
-  }
-
-  const rowResult = await getAccountLocalesRow(accountId, session.accessToken);
-  if (!rowResult.ok) {
-    const status = rowResult.status === 401 ? 401 : 502;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
     return withSession(
       request,
       NextResponse.json(
         {
           error: {
-            kind: status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-            reasonKey: rowResult.reasonKey,
-            detail: rowResult.detail,
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.auth.contextUnavailable',
+            detail,
           },
         },
-        { status },
+        { status: 502 },
       ),
       session.setCookies,
     );
   }
-
-  if (!rowResult.row) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
-        { status: 403 },
-      ),
-      session.setCookies,
-    );
-  }
-
-  const locales = normalizeLocaleList(rowResult.row.l10n_locales);
-  const policy =
-    rowResult.row.l10n_policy && typeof rowResult.row.l10n_policy === 'object' && !Array.isArray(rowResult.row.l10n_policy)
-      ? rowResult.row.l10n_policy
-      : null;
-
-  return withSession(
-    request,
-    NextResponse.json({
-      accountId,
-      locales,
-      policy,
-    }),
-    session.setCookies,
-  );
 }
 
 export async function PUT(request: NextRequest, context: RouteContext) {
@@ -146,8 +161,46 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  return proxyToParis(request, {
-    method: 'PUT',
-    path: `/api/accounts/${encodeURIComponent(accountId)}/locales`,
-  });
+  const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
+  const contentType = request.headers.get('content-type');
+
+  try {
+    const upstream = await fetch(`${berlinBase}/v1/accounts/${encodeURIComponent(accountId)}/locales`, {
+      method: 'PUT',
+      headers: {
+        authorization: `Bearer ${session.accessToken}`,
+        ...(contentType ? { 'content-type': contentType } : {}),
+        accept: request.headers.get('accept') || 'application/json',
+      },
+      cache: 'no-store',
+      body: await request.text(),
+    });
+    const payload = (await upstream.text().catch(() => '')) || '';
+    return withSession(
+      request,
+      new NextResponse(payload, {
+        status: upstream.status,
+        headers: {
+          'content-type': upstream.headers.get('content-type') || 'application/json; charset=utf-8',
+        },
+      }),
+      session.setCookies,
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.auth.contextUnavailable',
+            detail,
+          },
+        },
+        { status: 502 },
+      ),
+      session.setCookies,
+    );
+  }
 }

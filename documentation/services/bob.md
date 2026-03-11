@@ -2,6 +2,8 @@
 
 Bob is Clickeen’s **editor**: it loads a widget definition (“Widget JSON”) and an instance (“state tree”), renders spec-driven controls, applies strict edits in memory, and streams state updates to a sandboxed preview.
 
+For the canonical account-management model Bob must consume rather than own, see `documentation/architecture/AccountManagement.md`.
+
 This document describes the **current** repo implementation.
 
 ---
@@ -527,11 +529,11 @@ Reference:
 
 - `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (used by the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
 
-### Paris proxy (current code)
+### Bootstrap route (current code)
 
-Bob keeps only one named Roma/Paris proxy route, with no wildcard proxy:
+Bob keeps only one named bootstrap proxy route, with no wildcard proxy:
 
-- `bob/app/api/roma/bootstrap/route.ts`
+- `bob/app/api/session/bootstrap/route.ts`
 
 Important boundary:
 

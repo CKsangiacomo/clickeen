@@ -3,12 +3,16 @@
 STATUS: REFERENCE — MUST MATCH RUNTIME  
 Runtime code + deploy config are truth. If this doc drifts from `roma/*` behavior, update it immediately.
 
+For the canonical account-management model Roma must converge to, see `documentation/architecture/AccountManagement.md`.
+
 ## Purpose
 
 Roma is the authenticated product shell for account users. It owns:
 
-- Domain navigation (`/home`, `/widgets`, `/templates`, `/builder`, etc.)
+- Domain navigation (`/home`, `/profile`, `/widgets`, `/templates`, `/builder`, etc.)
+- Person-scoped My Profile UI over Berlin-owned profile + linked-identity contracts
 - Active account context resolution
+- Account-scoped Team list and member-detail UI over Berlin-owned membership/profile contracts
 - Lightweight catalog/list APIs for product UX
 - Bob editor orchestration via explicit message boot
 
@@ -32,7 +36,7 @@ Roma is a host/orchestrator. Bob remains the editor kernel.
 ### App routes
 
 - `/` → redirects to `/home` when a session is present, otherwise `/login`
-- `/:domain` (`home|widgets|templates|assets|team|billing|usage|ai|settings`) via `roma/app/[domain]/page.tsx`
+- `/:domain` (`home|profile|widgets|templates|assets|team|billing|usage|ai|settings`) via `roma/app/[domain]/page.tsx`
 - `/builder` and `/builder/:publicId`
 - `/widgets/:publicId` (redirects back to `/widgets?selected=:publicId`; widgets list is the canonical status-owner surface)
 - `/assets/:assetId` (detail placeholder)
@@ -50,7 +54,7 @@ Roma bootstraps from:
 
 - `GET /api/bootstrap` (canonical)
 
-`/api/bootstrap` proxies to Paris `GET /api/roma/bootstrap` with the user bearer token.
+`/api/bootstrap` proxies to Berlin `GET /v1/session/bootstrap` with the user bearer token.
 When no valid session is present, it returns `401` with auth error payload (`coreui.errors.auth.required`).
 Roma does not auto-bootstrap tool sessions; supported Roma runtimes always require real Berlin session tokens.
 Roma does not bridge session tokens through browser JS. Builder relies on shared httpOnly cookies across Roma/Bob on a custom `*.clickeen.com` domain.
@@ -81,26 +85,27 @@ Client behavior (`use-roma-me.ts`):
 - Does not honor URL `accountId` overrides.
 - Guards and re-initializes global store shape if corrupted.
 - When bootstrap returns `coreui.errors.auth.required`, Roma redirects to `/login?next=...` for explicit sign-in.
+- Account switching is a Berlin-backed shell action, not a local cache trick. Roma posts to `/api/accounts/:accountId/switch` and then hard-reloads the current page so the full shell reboots against the new active bootstrap context.
 
 Current cloud-dev product rule:
 
-- Roma operates as a single-account shell there.
-- Bootstrap still returns `accounts[]` + `defaults.accountId`, but the product uses only the default account.
-- Settings does not expose account switching.
+- Cloud-dev still effectively behaves as one admin account today, so the switcher is normally hidden there because `accounts.length <= 1`.
+- Bootstrap still returns `accounts[]` + `defaults.accountId`, and Roma exposes switch-account automatically when the current user actually has more than one account membership.
 
-## Paris proxy model
+## Upstream proxy model
 
-Roma talks to Paris only through same-origin API routes:
+Roma talks to Berlin and Paris only through same-origin API routes:
 
-- Paris-backed routes are explicit handlers under `roma/app/api/**` using `roma/lib/api/paris-proxy.ts` (no generic wildcard proxy).
-- Non-Paris routes stay explicit as well (`/api/assets/*` -> Tokyo-worker, `/api/accounts/:accountId/members` -> Michael).
+- Berlin-backed bootstrap/auth/account routes stay explicit under `roma/app/api/**`.
+- Paris-backed routes are explicit handlers under `roma/app/api/**` using `roma/lib/api/paris-proxy.ts` (no generic wildcard proxy) only for remaining Paris-owned product domains.
+- Non-Paris routes stay explicit as well (`/api/assets/*` -> Tokyo-worker, account shell routes -> Berlin).
 
 Client fetch behavior:
 
 - Browser code calls same-origin Roma routes only.
 - `fetchParisJson` in the browser is just a no-store fetch + timeout/reason wrapper.
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
-- Post-bootstrap account shell actions carry `x-ck-authz-capsule` on the active Roma path (`/api/roma/widgets`, `/api/roma/templates`, widget delete, plan-change, tier-drop dismiss, builder/account routes).
+- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where downstream Paris/Tokyo authz still requires it (`/api/roma/widgets`, `/api/roma/templates`, widget delete, builder/account routes, localization/layer routes).
 
 ## Bob orchestration contract (Roma Builder)
 
@@ -119,7 +124,12 @@ Notes:
 - Bob URL-bootstrap (`boot=url`) still exists for explicit URL-mode surfaces, but Roma Builder uses message boot as canonical.
 - Roma marks Bob iframe host intent with `surface=roma` to keep host-specific auth behavior explicit.
 - In hosted account-editing flows, Bob sends save and account l10n mutation intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
-- Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/accounts/:accountId/locales` as the same-origin route for that account-level surface.
+- Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/accounts/:accountId/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Paris only for the internal aftermath orchestration Berlin triggers.
+- Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and canonical profile edits route through Roma same-origin APIs backed by Berlin (`/api/accounts/:accountId/members/:memberId` and `/api/accounts/:accountId/members/:memberId/profile`).
+- Roma now exposes a dedicated person-scoped Profile domain at `/profile`. It renders canonical profile data from bootstrap, writes self-profile updates through `/api/me` -> Berlin `PUT /v1/me`, and renders linked identity visibility through `/api/me/identities`.
+- Roma Team now also exposes Berlin-backed invitation issue/list/revoke flows through `/api/accounts/:accountId/invitations` and `/api/accounts/:accountId/invitations/:invitationId`. Until delivery infrastructure exists, Team surfaces the manual `/accept-invite/:token` path instead of pretending email delivery exists.
+- Roma exposes `/accept-invite/:token` as the explicit invitation-accept handoff. If the visitor is not signed in, the page routes them to `/login?next=...`; if signed in, it proxies acceptance to Berlin through `/api/invitations/:token/accept`.
+- Roma Settings now exposes owner-only final account-holder actions through Berlin-backed same-origin routes: `/api/accounts/:accountId/owner-transfer` and `DELETE /api/accounts/:accountId`. Tier, locales, ownership, and delete-account controls now sit on the same Berlin-owned account boundary.
 
 ## Widgets domain ownership
 

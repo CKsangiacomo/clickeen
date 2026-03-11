@@ -11,11 +11,22 @@ BERLIN_ISSUER = "https://berlin-dev.clickeen.workers.dev"
 BERLIN_AUDIENCE = "clickeen.product"
 BERLIN_LOGIN_CALLBACK_URL = "https://berlin-dev.clickeen.workers.dev/auth/login/provider/callback"
 BERLIN_FINISH_REDIRECT_URL = "https://roma.dev.clickeen.com/api/session/finish"
+PARIS_BASE_URL = "https://paris.dev.clickeen.com"
+ENV_STAGE = "cloud-dev"
 
 [[kv_namespaces]]
 binding = "BERLIN_SESSION_KV"
 id = "a9396f7fee7f47bc9b1be520c78a24c9"
 preview_id = "4d253b94b6b5434ab484cfe4a3a0fb9a"
+
+[[kv_namespaces]]
+binding = "USAGE_KV"
+id = "a9396f7fee7f47bc9b1be520c78a24c9"
+preview_id = "4d253b94b6b5434ab484cfe4a3a0fb9a"
+
+[[queues.producers]]
+binding = "RENDER_SNAPSHOT_QUEUE"
+queue = "instance-render-snapshot-cloud-dev"
 
 [[durable_objects.bindings]]
 name = "BERLIN_AUTH_TICKETS"
@@ -23,12 +34,21 @@ class_name = "BerlinAuthTicketDO"
 
 [env.local]
 name = "berlin-local"
-vars = { BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product", BERLIN_FINISH_REDIRECT_URL = "http://localhost:3000/api/session/finish" }
+vars = { BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product", BERLIN_FINISH_REDIRECT_URL = "http://localhost:3000/api/session/finish", PARIS_BASE_URL = "http://localhost:3001", ENV_STAGE = "local" }
 
 [[env.local.kv_namespaces]]
 binding = "BERLIN_SESSION_KV"
 id = "00000000000000000000000000000000"
 preview_id = "00000000000000000000000000000000"
+
+[[env.local.kv_namespaces]]
+binding = "USAGE_KV"
+id = "00000000000000000000000000000000"
+preview_id = "00000000000000000000000000000000"
+
+[[env.local.queues.producers]]
+binding = "RENDER_SNAPSHOT_QUEUE"
+queue = "instance-render-snapshot-local"
 
 [[migrations]]
 tag = "v1"

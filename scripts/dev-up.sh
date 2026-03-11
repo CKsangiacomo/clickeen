@@ -681,6 +681,8 @@ echo "[dev-up] Starting Berlin Worker (3005)"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_ANON_KEY:$SUPABASE_ANON_KEY_VALUE")
   VARS+=(--var "BERLIN_ISSUER:$BERLIN_ISSUER")
   VARS+=(--var "BERLIN_AUDIENCE:$BERLIN_AUDIENCE")
+  VARS+=(--var "PARIS_BASE_URL:$PARIS_BASE_URL")
+  VARS+=(--var "PARIS_DEV_JWT:$PARIS_DEV_JWT")
   start_detached "$LOG_DIR/berlin.dev.log" pnpm exec wrangler dev --local --env local --port 3005 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$BERLIN_INSPECTOR_PORT" \
     "${VARS[@]}"
   BERLIN_PID="$STARTED_PID"

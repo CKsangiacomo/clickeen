@@ -1,19 +1,6 @@
 import { resolveBerlinBaseUrl } from './env/berlin';
 import { classifyWidgetPublicId, isCuratedOrMainWidgetPublicId } from '@clickeen/ck-contracts';
 
-type MichaelAccountRow = {
-  id?: unknown;
-  l10n_locales?: unknown;
-  l10n_policy?: unknown;
-};
-
-type MichaelMemberRow = {
-  account_id?: unknown;
-  user_id?: unknown;
-  role?: unknown;
-  created_at?: unknown;
-};
-
 type MichaelWidgetInstanceRow = {
   public_id?: unknown;
   display_name?: unknown;
@@ -37,18 +24,6 @@ type MichaelCuratedInstanceRow = {
   meta?: unknown;
 };
 
-type MichaelAccountLocalesResult =
-  | {
-      ok: true;
-      row: MichaelAccountRow | null;
-    }
-  | {
-      ok: false;
-      status: number;
-      reasonKey: string;
-      detail?: string;
-    };
-
 type MichaelAccountInstanceResult =
   | {
       ok: true;
@@ -63,18 +38,6 @@ type MichaelAccountInstanceResult =
         meta: Record<string, unknown> | null;
         source: 'account' | 'curated';
       } | null;
-    }
-  | {
-      ok: false;
-      status: number;
-      reasonKey: string;
-      detail?: string;
-    };
-
-type MichaelMembersResult =
-  | {
-      ok: true;
-      rows: MichaelMemberRow[];
     }
   | {
       ok: false;
@@ -234,106 +197,6 @@ function asTrimmedString(value: unknown): string | null {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-export async function getAccountLocalesRow(accountId: string, berlinAccessToken: string): Promise<MichaelAccountLocalesResult> {
-  try {
-    const michaelHeaders = await resolveMichaelHeaders(berlinAccessToken);
-    if (!michaelHeaders.ok) {
-      return michaelHeaders;
-    }
-
-    const response = await fetch(
-      `${resolveMichaelBaseUrl()}/rest/v1/accounts?select=id,l10n_locales,l10n_policy&id=eq.${encodeFilterValue(accountId)}&limit=1`,
-      {
-        method: 'GET',
-        headers: michaelHeaders.headers,
-        cache: 'no-store',
-      },
-    );
-    const text = await response.text().catch(() => '');
-    const payload = text ? (JSON.parse(text) as unknown) : null;
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        status: response.status,
-        reasonKey: response.status === 401 ? 'coreui.errors.auth.required' : 'coreui.errors.db.readFailed',
-        detail: text || undefined,
-      };
-    }
-
-    const rows = Array.isArray(payload) ? (payload as MichaelAccountRow[]) : [];
-    return { ok: true, row: rows[0] || null };
-  } catch (error) {
-    return {
-      ok: false,
-      status: 502,
-      reasonKey: 'bob.errors.proxy.michael_unavailable',
-      detail: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
-export function readJwtSubject(accessToken: string): string | null {
-  const parts = accessToken.split('.');
-  if (parts.length !== 3) return null;
-  try {
-    const payloadPart = parts[1] || '';
-    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-    const decoded = atob(padded);
-    const parsed = JSON.parse(decoded) as unknown;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-    const sub = (parsed as { sub?: unknown }).sub;
-    if (typeof sub !== 'string') return null;
-    const normalizedSub = sub.trim();
-    return normalizedSub || null;
-  } catch {
-    return null;
-  }
-}
-
-export async function listAccountMembersForAccount(
-  accountId: string,
-  berlinAccessToken: string,
-): Promise<MichaelMembersResult> {
-  try {
-    const michaelHeaders = await resolveMichaelHeaders(berlinAccessToken);
-    if (!michaelHeaders.ok) {
-      return michaelHeaders;
-    }
-
-    const response = await fetch(
-      `${resolveMichaelBaseUrl()}/rest/v1/account_members?select=account_id,user_id,role,created_at&account_id=eq.${encodeFilterValue(accountId)}&order=created_at.asc&limit=500`,
-      {
-        method: 'GET',
-        headers: michaelHeaders.headers,
-        cache: 'no-store',
-      },
-    );
-    const text = await response.text().catch(() => '');
-    const payload = text ? (JSON.parse(text) as unknown) : null;
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        status: response.status,
-        reasonKey: response.status === 401 ? 'coreui.errors.auth.required' : 'coreui.errors.db.readFailed',
-        detail: text || undefined,
-      };
-    }
-
-    const rows = Array.isArray(payload) ? (payload as MichaelMemberRow[]) : [];
-    return { ok: true, rows };
-  } catch (error) {
-    return {
-      ok: false,
-      status: 502,
-      reasonKey: 'bob.errors.proxy.michael_unavailable',
-      detail: error instanceof Error ? error.message : String(error),
-    };
-  }
 }
 
 export async function getAccountInstanceCoreRow(

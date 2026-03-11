@@ -51,6 +51,16 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input.toString();
     const method = init?.method || (input instanceof Request ? input.method : 'GET');
+    if (url.includes('/api/devstudio/context') && method === 'GET') {
+      return new Response(
+        JSON.stringify({
+          accountId: '00000000-0000-0000-0000-000000000100',
+          scope: 'platform',
+          mode: 'berlin-session',
+        }),
+        { status: 200 },
+      );
+    }
     if (url.includes('/api/devstudio/widgets')) {
       const widgets = (
         options?.localWidgets ||

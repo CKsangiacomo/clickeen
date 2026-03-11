@@ -1,0 +1,321 @@
+# Account Management (Canonical)
+
+STATUS: EXECUTING TARGET — PRD 064
+
+This file is the canonical account-management model for Clickeen.
+
+It defines the target boundary that Berlin, Roma, DevStudio, Bob, Michael, and Paris must converge to during PRD 064 execution.
+
+For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./Overview.md).
+For the execution plan and dependency map, see [PRD 064](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/064__PRD__Berlin_Account_Management_Boundary__Single_Identity_And_Account_API.md).
+
+---
+
+## Hard invariants
+
+1. Berlin is the single identity and account-truth boundary.
+2. Michael stores account data; it is not the product-facing account API.
+3. The canonical model is:
+   - `User Profile` = the person
+   - `Account` = the workspace/business
+   - `Account Membership` = the person's role inside that account
+4. Every account has exactly one current `owner` at runtime.
+5. A person may belong to many accounts, but only one account context is active at a time.
+6. `owner / admin / editor / viewer` are boring account-role semantics; entitlements constrain them but do not replace them.
+7. Invitation is the canonical grant-access path for a person who is not already attached to the account.
+8. Social login is not only auth; it can begin a durable provider relationship Berlin later reuses or upgrades.
+9. Roma is the account-scoped customer/member shell. DevStudio is the platform-scoped Clickeen superadmin shell.
+10. Bob consumes Berlin account truth; it never owns account management.
+
+---
+
+## Canonical model
+
+### User Profile
+
+`User Profile` is the canonical product person.
+
+Base fields:
+- `userId`
+- `primaryEmail`
+- `emailVerified`
+- `displayName`
+- `givenName` nullable
+- `familyName` nullable
+- `preferredLanguage` nullable
+- `countryCode` nullable
+- `timezone` nullable
+
+Berlin owns the profile boundary even as richer profile context is added later.
+
+### Account
+
+`Account` is the workspace/business boundary.
+
+Account-scoped truth includes:
+- membership set
+- owner
+- tier
+- locale policy
+- entitlements snapshot inputs
+- account traits and connector context that belong to the account, not the person
+
+### Account Membership
+
+`Account Membership` is the person-in-account relationship.
+
+Membership carries:
+- `accountId`
+- `userId`
+- `role`
+- lifecycle/joined metadata as needed
+
+Membership is where normal account permissions come from.
+
+### Provider relationship model
+
+Berlin distinguishes three related concepts:
+- `Linked Identity` = user-level fact that this person is linked to a provider account
+- `Workspace Connection` = account-level reusable provider connection
+- `Capability / Scope State` = what the relationship is currently allowed to do
+
+These are required conceptual distinctions.
+They must be implemented using the simplest data shape needed for current runtime, not a speculative connector framework.
+
+---
+
+## Roles and entitlements
+
+| Role | Meaning |
+|---|---|
+| `viewer` | can view/comment; no create/edit/team/billing control |
+| `editor` | viewer + create/edit widgets/content |
+| `admin` | editor + manage normal team/account operations |
+| `owner` | admin + final accountable holder of the account |
+
+Owner-only powers:
+- transfer ownership
+- delete account
+- final account-holder authority
+
+Rule:
+- effective capability = `membership role x Berlin-resolved entitlements`
+
+Entitlements may constrain:
+- seat caps
+- plan/tier limits
+- packaging features
+
+Entitlements do not redefine role meaning.
+
+---
+
+## Product surfaces
+
+### My Profile
+
+Person-scoped surface for the currently signed-in human.
+
+Owns:
+- personal profile fields
+- linked identity visibility
+- person-level settings
+
+### Account Settings
+
+Account-scoped workspace/business surface.
+
+Owns:
+- account settings
+- tier/billing-facing settings
+- locale policy
+- account-level controls
+
+### Team
+
+Account-scoped membership-management surface.
+
+High-level shape:
+- Team root shows current members of the active account
+- pending invitations may appear in the same domain
+- authorized users may drill into a member detail page
+
+Member detail page separates:
+- membership/account data for this account
+- canonical Berlin-owned profile data for that person
+
+Rules:
+- owner/admin are the mutation-capable Team roles
+- editor/viewer do not mutate Team
+- canonical profile edits from Team must still go through Berlin's profile boundary
+- Team must not create account-local shadow profile data
+
+### Switch Account
+
+If a person belongs to more than one account, the product exposes an explicit account-switch capability.
+
+Rules:
+- Berlin owns active-account resolution
+- Berlin persists the active-account preference on the canonical user-profile boundary; it does not live in Roma/Bob cookies or client-side overrides
+- Roma exposes the normal product-shell switch UX
+- Bob never owns account-switch logic
+
+### Surface split
+
+- `Roma` = account-scoped customer/member shell
+- `DevStudio` = platform-scoped Clickeen superadmin/operator shell
+- `Bob` = editor kernel and consumer of account truth
+
+DevStudio may expose stronger operator powers, but it must not invent a second account or provider model.
+
+---
+
+## Core flows
+
+### Signup
+
+On first successful sign-in:
+1. create or resolve the `User Profile`
+2. create the first `Account`
+3. create the first `Account Membership` as `owner`
+4. resolve the active account context
+
+Forbidden half-states:
+- authenticated user with no profile
+- account with no owner
+- authenticated user with no active account context
+
+### Invitation
+
+Invitation is the canonical way to grant access to a person who is not yet an attached member.
+
+Berlin owns:
+- issuance
+- persistence
+- expiry/revocation
+- acceptance
+- dedupe against existing user profiles / linked identities
+- conversion into exactly one membership
+
+### Multi-account people
+
+One person may belong to many accounts.
+
+Example:
+- Mark is `editor` in Account A
+- Mark is invited to Account B
+- Berlin creates a second membership for the same person
+- Mark is still one `User Profile`, not two users
+
+### Person-level account creation
+
+Creating a new account is a person capability, not a privilege that depends on being owner of some other account.
+
+Example:
+- Mark is `editor` in Account A
+- Mark creates Account B
+- Mark becomes `owner` in Account B
+- Mark's rights in Account A do not change
+
+### Operational cross-account humans
+
+Internal admins and future support/operator humans use the same account-membership model:
+- one `User Profile`
+- many `Account Memberships`
+- one active account context at a time
+
+No second employee-only runtime access plane should exist for normal product access.
+
+---
+
+## Bootstrap and API contract
+
+Canonical bootstrap:
+- `GET /v1/session/bootstrap`
+
+Returns:
+- user
+- user profile
+- accessible accounts summary
+- active account
+- active membership role
+- tier
+- locale policy
+- entitlements snapshot
+- normalized bootstrap traits
+- signed account capsule
+
+Canonical account API:
+- `GET /v1/me`
+- `PUT /v1/me`
+- `GET /v1/me/identities`
+- `GET /v1/accounts`
+- `POST /v1/accounts`
+- `GET /v1/accounts/:id`
+- `DELETE /v1/accounts/:id`
+- `GET /v1/accounts/:id/members`
+- `GET /v1/accounts/:id/members/:memberId`
+- `GET /v1/accounts/:id/invitations`
+- `POST /v1/accounts/:id/invitations`
+- `DELETE /v1/accounts/:id/invitations/:invitationId`
+- `POST /v1/invitations/:token/accept`
+- `POST /v1/accounts/:id/members`
+- `PATCH /v1/accounts/:id/members/:memberId`
+- `PATCH /v1/accounts/:id/members/:memberId/profile`
+- `POST /v1/accounts/:id/owner-transfer`
+- `PUT /v1/accounts/:id/locales`
+- `PUT /v1/accounts/:id/tier`
+- `POST /v1/accounts/:id/switch`
+
+Rules:
+- `POST /v1/accounts/:id/invitations` is the canonical unknown-person grant-access path
+- `POST /v1/accounts/:id/members` is only for already-resolved user profiles or explicit Berlin-owned operator flows
+- `PATCH /v1/accounts/:id/members/:memberId/profile` mutates canonical profile data, not shadow account-local fields
+
+---
+
+## Ownership split
+
+| Concern | Owner |
+|---|---|
+| Identity/session | Berlin |
+| User profile | Berlin |
+| Memberships/invitations/active account | Berlin |
+| Linked identities/provider reuse | Berlin |
+| Persistence | Michael |
+| Account/member UX | Roma |
+| Global operator UX | DevStudio |
+| Editor account consumption | Bob |
+| Account management runtime | Paris: none |
+| Instance/l10n orchestration after account truth is resolved | Paris |
+
+Hard rule:
+- no product surface reads account-management truth directly from Michael
+- Paris must not remain on account-management runtime paths after PRD 064 cutover
+
+---
+
+## Provider and connector rules
+
+Social/provider login begins a durable provider relationship Berlin can reuse later.
+
+Examples:
+- Google login can later power Google-backed product capabilities
+- Meta/Facebook login can later power Instagram/Meta-backed capabilities
+
+Rules:
+- reuse the existing Berlin-owned provider relationship first
+- if broader scopes are needed, Berlin upgrades that same relationship
+- widgets and product surfaces do not store provider tokens or raw OAuth payloads
+- raw provider payloads do not become a product data model outside Berlin
+
+---
+
+## What this doc is not
+
+- This is not the billing architecture doc.
+- This is not the widget save/publish doc.
+- This is not the multitenancy packaging matrix.
+- This is not the execution plan.
+
+Those concerns compose with account management, but this file defines the canonical account-management model itself.

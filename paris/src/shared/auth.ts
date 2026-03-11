@@ -22,7 +22,13 @@ export type SupabaseAuthPrincipal = {
 };
 
 const INTERNAL_SERVICE_HEADER = 'x-ck-internal-service';
-const INTERNAL_SERVICE_ALLOWLIST = new Set(['sanfrancisco', 'sanfrancisco.l10n', 'bob.local', 'devstudio.local']);
+const INTERNAL_SERVICE_ALLOWLIST = new Set([
+  'sanfrancisco',
+  'sanfrancisco.l10n',
+  'bob.local',
+  'devstudio.local',
+  'berlin',
+]);
 
 const BERLIN_PRINCIPAL_CACHE_KEY = '__CK_PARIS_BERLIN_PRINCIPAL_CACHE_V1__';
 const BERLIN_PRINCIPAL_CACHE_TTL_MS = 5 * 60_000;

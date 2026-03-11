@@ -955,20 +955,18 @@ Target:
 - Bob no longer depends on `/api/roma/bootstrap`
 - Bob account membership/locales helpers are removed from `bob/lib/michael.ts`
 
-### Paris account/bootstrap residue to delete
+### Paris bootstrap/account-management residue to delete or clarify
 
 Current Paris account/bootstrap residue:
-- `paris/src/domains/roma/widgets-bootstrap.ts`
-- `paris/src/domains/roma/index.ts`
 - `paris/src/domains/identity/index.ts` account/member shaping used by bootstrap
 - `paris/src/domains/accounts/index.ts` -> account create / lifecycle account routes
-- `paris/src/domains/l10n/account-handlers.ts` -> account locales route implementation
-- `paris/src/domains/l10n/index.ts` -> exports account locales handler
-- `paris/src/index.ts` -> mounts bootstrap / account create / account locales / lifecycle routes
+- `paris/src/domains/l10n/account-handlers.ts` / `paris/src/domains/l10n/index.ts` -> old flat account-locales ownership is removed; internal aftermath + instance/l10n orchestration may remain
+- `paris/src/domains/roma/widgets-bootstrap.ts` / `paris/src/domains/roma/index.ts` -> delete bootstrap-only residue; keep active Roma widgets/templates/delete handlers if they remain legitimate non-account-management Paris runtime
+- `paris/src/index.ts` -> bootstrap / account create / lifecycle mounts removed; explicit instance/l10n orchestration mounts may remain when they no longer shape account/member/bootstrap truth
 
 Target:
 - Paris has zero ownership of account management or bootstrap runtime behavior
-- any surviving Paris route is limited to non-account domains only
+- Paris may retain explicit instance/l10n orchestration and internal aftermath routes only when account truth is already resolved in Berlin and Paris is not shaping account/member/bootstrap state
 
 ### Documentation residue to converge
 
@@ -1066,6 +1064,8 @@ Done when:
 - DevStudio global account-management/operator surfaces read/write through Berlin-owned truth and explicit superadmin/operator capabilities
 - DevStudio does not carry a second account/membership/provider architecture
 - any legacy DevStudio account path that bypassed Berlin truth is deleted or reduced to a documented thin proxy in the same phase
+- `GET /api/devstudio/context` fails visibly when a Berlin session exists but refresh/bootstrap/platform-membership resolution fails; trusted-local fallback is allowed only when no product session exists
+- `GET /api/devstudio/instances` and `GET /api/devstudio/instances/:publicId/l10n/status` enforce that same host-owned context decision before proxying upstream work
 - if additional DevStudio account residue is discovered during implementation, it is added to the concrete dependency map before the phase is considered complete
 
 ### Phase 6 — Move Bob/Builder account context to Berlin bootstrap only
@@ -1108,7 +1108,8 @@ Done when:
 - Michael is persistence only
 - Paris is absent from account-management runtime behavior
 - no touched workflow still relies on a back-compat path to the old account model
-- `paris/src/domains/roma/widgets-bootstrap.ts`, `paris/src/domains/roma/index.ts`, `paris/src/domains/accounts/index.ts`, `paris/src/domains/l10n/account-handlers.ts`, the related account/bootstrap mounts in `paris/src/index.ts`, and any equivalent legacy residue named in the dependency map are deleted or provably inactive for account runtime behavior
+- `paris/src/domains/accounts/index.ts`, `paris/src/domains/identity/index.ts`, any bootstrap-only residue inside `paris/src/domains/roma/widgets-bootstrap.ts` / `paris/src/domains/roma/index.ts`, the old account/bootstrap mounts in `paris/src/index.ts`, and any equivalent legacy residue named in the dependency map are deleted or provably inactive for account runtime behavior
+- any surviving `paris/src/domains/l10n/account-handlers.ts`, `paris/src/domains/l10n/index.ts`, or `paris/src/domains/account-instances/*` usage is limited to explicit instance/l10n orchestration after Berlin has already resolved account truth
 
 ### Phase 9 — Documentation closeout
 
@@ -1123,6 +1124,171 @@ Update:
 - `paris/README.md`
 
 Done when docs teach one truth, match runtime, and no active doc still teaches Paris/bootstrap/Michael ownership for account behavior.
+
+---
+
+## Execution checklist (operator reference)
+
+Use this checklist while executing PRD 064.
+Do not start or close a phase by intuition; walk the checklist and the dependency map.
+
+### Global execution checklist
+
+- [ ] Declare the active phase and exact workflow being touched before editing code.
+- [ ] Read the concrete dependency map for that workflow and add any newly discovered residue before implementation continues.
+- [ ] Implement the Berlin-owned contract/model first; do not start in Roma, DevStudio, Bob, or Paris.
+- [ ] Converge every touched dependent consumer in the same phase across Roma, DevStudio, Bob, Paris residue, docs, and any Michael access helper involved in that workflow.
+- [ ] Delete or reduce the old path to a documented thin Berlin proxy in the same phase; do not keep dual-read, dual-write, fallback, or back-compat shims.
+- [ ] Verify in `local` first using the canonical startup `bash scripts/dev-up.sh`.
+- [ ] If the workflow exists in shared runtime, apply the same cutover to `cloud-dev` after `local` is correct.
+- [ ] Update the dependency map and documentation whenever execution discovers a new live path or changes ownership.
+- [ ] Do not begin the next phase while the current phase still leaves live old-model residue for the touched workflows.
+
+### Execution-slice checklist
+
+Every execution slice for this PRD must explicitly record:
+- [ ] active phase
+- [ ] Berlin contracts/models added or changed
+- [ ] dependent files/routes/surfaces being converged
+- [ ] old files/routes being deleted or reduced to thin Berlin proxies
+- [ ] `local` verification performed
+- [ ] `cloud-dev` follow-through performed or intentionally deferred with reason
+
+### Phase 1 checklist — Docs freeze
+
+- [ ] `documentation/architecture/AccountManagement.md` exists and teaches the final model.
+- [ ] `documentation/services/berlin.md`, `documentation/services/roma.md`, `documentation/services/devstudio.md`, `documentation/services/bob.md`, `documentation/architecture/CONTEXT.md`, and `documentation/capabilities/multitenancy.md` align with the PRD.
+- [ ] the dependency map in this PRD is current enough to drive execution without hidden residue.
+
+### Phase 2 checklist — Berlin core account model
+
+- [ ] Berlin owns the canonical `User Profile`, `Account`, and `Account Membership` model.
+- [ ] the owner invariant is enforced and there is exactly one owner per account at runtime.
+- [ ] the baseline role model (`owner/admin/editor/viewer`) is implemented as Berlin-owned membership semantics.
+- [ ] signup creates user profile + first account + owner membership + active account state atomically enough to avoid half-created runtime states.
+- [ ] no other surface still infers or owns profile/owner/role semantics independently.
+
+### Phase 3 checklist — Canonical Berlin bootstrap
+
+- [ ] `GET /v1/session/bootstrap` is implemented in Berlin.
+- [ ] bootstrap returns accessible accounts summary, active account, role, tier, locale policy, entitlements snapshot, normalized bootstrap traits, and signed account capsule.
+- [ ] Roma bootstrap consumption is moved off Paris bootstrap shaping.
+- [ ] Bob bootstrap consumption is moved off Paris bootstrap shaping.
+- [ ] `paris/src/domains/roma/widgets-bootstrap.ts`, `paris/src/domains/roma/index.ts`, `paris/src/domains/identity/index.ts`, and the `/api/roma/bootstrap` mount in `paris/src/index.ts` are deleted or made provably inactive for runtime.
+- [ ] no runtime call still depends on Paris `/api/roma/bootstrap`.
+
+### Phase 4 checklist — Roma cutover
+
+- [ ] Roma account shell uses Berlin for accessible accounts, create account, invite, accept invite handoff, switch account, Team list, Team member detail, locales, tier, and account settings.
+- [ ] owner/admin/editor/viewer behavior in Roma resolves from Berlin role semantics x entitlements, not from Roma-local logic.
+- [ ] `roma/app/api/accounts/[accountId]/members/route.ts`, `roma/app/api/accounts/[accountId]/locales/route.ts`, `roma/app/api/accounts/[accountId]/lifecycle/plan-change/route.ts`, and `roma/app/api/accounts/[accountId]/lifecycle/tier-drop/dismiss/route.ts` are deleted or reduced to thin Berlin proxies only.
+- [ ] `roma/lib/michael.ts` no longer provides live account-members/locales behavior for Roma account workflows.
+- [ ] `roma/components/team-domain.tsx`, `roma/components/account-locale-settings-card.tsx`, `roma/components/settings-domain.tsx`, and `roma/components/roma-account-notice-modal.tsx` no longer depend on Michael-backed or Paris-backed account behavior.
+- [ ] Team member detail edits canonical profile data only through Berlin and does not create shadow profile fields.
+
+### Phase 5 checklist — DevStudio cutover
+
+- [ ] DevStudio global account/operator flows are inventoried before cutover, not discovered ad hoc during coding.
+- [ ] every DevStudio account/operator flow uses Berlin-owned truth or explicit Berlin-backed superadmin/operator contracts.
+- [ ] DevStudio does not introduce a second account, membership, or provider model.
+- [ ] any DevStudio residue discovered during implementation is added back into the dependency map before the phase is closed.
+
+### Phase 6 checklist — Bob cutover
+
+- [ ] Bob boot and gating resolve only from Berlin bootstrap + Berlin-signed account capsule.
+- [ ] `bob/app/api/roma/bootstrap/route.ts` is deleted or reduced to a Berlin-only proxy.
+- [ ] `bob/lib/session/useWidgetSession.tsx` no longer depends on `/api/roma/bootstrap`.
+- [ ] `bob/lib/michael.ts` no longer provides live account-members/locales helpers for Bob account behavior.
+- [ ] Bob does not reintroduce account shaping, fallback account logic, or scattered membership/locales reads.
+
+### Phase 7 checklist — Connector/provider convergence
+
+- [ ] provider reuse and incremental scope upgrade live in Berlin.
+- [ ] execution uses the simplest data shape that preserves `Linked Identity`, `Workspace Connection`, and `Capability / Scope State` distinctions needed now.
+- [ ] no widget, Roma flow, Bob flow, or leaf service starts a provider-specific auth mini-system.
+- [ ] raw provider payloads and provider tokens do not become product-surface data models.
+
+### Phase 8 checklist — Legacy destruction sweep
+
+- [ ] the dependency map is walked item-by-item.
+- [ ] Paris account/bootstrap/locales/lifecycle residue is deleted or proven inactive.
+- [ ] Roma/Bob/DevStudio old-model account residue is deleted or proven inactive.
+- [ ] direct product-surface Michael reads for account behavior are removed.
+- [ ] no fallback, dual-read, dual-write, or compatibility shim remains for the fragmented account model.
+
+### Phase 9 checklist — Documentation closeout
+
+- [ ] all docs named in this PRD are updated to match the final runtime shape.
+- [ ] `paris/README.md` no longer teaches Paris bootstrap/account ownership.
+- [ ] docs reflect the actual `local` execution state.
+- [ ] docs reflect the actual `cloud-dev` execution state after rollout.
+
+---
+
+## Final closeout punch list
+
+Use this as the single remaining signoff list after the main Berlin/Roma/Bob cutover is already in place.
+
+### 1. DevStudio operator truth enforcement
+
+- [ ] `GET /api/devstudio/context` fails visibly when Berlin session cookies exist but refresh/bootstrap/platform-membership resolution fails.
+- [ ] trusted-local fallback in DevStudio is used only when no product session exists in the local toolchain.
+- [ ] `GET /api/devstudio/instances` and `GET /api/devstudio/instances/:publicId/l10n/status` enforce the same host-owned context decision before any upstream proxy work.
+- [ ] DevStudio docs state the real behavior, not the desired behavior.
+
+### 2. Paris dead account residue destruction
+
+- [ ] delete dead Paris account-management/bootstrap residue that no longer has runtime ownership:
+  `paris/src/domains/accounts/index.ts`
+  `paris/src/domains/identity/index.ts`
+- [ ] remove any remaining bootstrap-only residue from `paris/src/domains/roma/widgets-bootstrap.ts` / `paris/src/domains/roma/index.ts` if execution finds historical bootstrap branches still present.
+- [ ] do **not** delete legitimate Paris instance/l10n orchestration just because the routes are account-scoped; only delete code that still owns account/member/bootstrap truth.
+
+### 3. Roma proxy intent annotation
+
+- [ ] thin same-origin Roma account routes carry one line explaining that they exist because browser/session cookies terminate on the Next host, not because Roma owns account logic.
+
+### 4. Local signoff verification
+
+- [ ] `pnpm exec tsc -p berlin/tsconfig.json`
+- [ ] `pnpm --filter @clickeen/roma exec tsc --noEmit`
+- [ ] `pnpm --filter @clickeen/roma lint`
+- [ ] `pnpm --filter @clickeen/bob lint`
+- [ ] `pnpm --filter @clickeen/devstudio test -- src/html/tools/dev-widget-workspace.test.ts`
+- [ ] targeted Paris verification for the surviving localization/orchestration routes after dead-account residue is removed
+
+### 5. Cloud-dev rollout and verification
+
+- [ ] apply the PRD 64 migrations in shared dev
+- [ ] deploy Berlin / Roma / Bob / Admin / Paris changes needed for this cutover
+- [ ] verify cloud-dev no longer depends on Paris bootstrap or direct Michael account reads for account management
+- [ ] verify the surviving Paris routes in cloud-dev are limited to explicit instance/l10n orchestration and internal aftermath
+
+### 6. Exact cloud-dev rollout order
+
+Execute in this order after `local` signoff is green:
+
+1. Apply migrations in shared dev:
+   - `20260311160000__prd64_user_profiles_and_owner_invariant.sql`
+   - `20260311193000__prd64_active_account_preference.sql`
+   - `20260311223000__prd64_account_invitations.sql`
+   - `20260311232000__prd64_transfer_account_owner_rpc.sql`
+2. Deploy Berlin first.
+   - Berlin must ship before any shell depends on `/v1/me`, `/v1/accounts*`, `/v1/session/bootstrap`, invitations, owner transfer, locales, or tier routes.
+3. Deploy Roma second.
+   - Roma same-origin account shell routes must now relay only to Berlin for account management.
+4. Deploy Bob third.
+   - Bob must consume `/api/session/bootstrap` and the Berlin-backed capsule path, with no `/api/roma/bootstrap` dependency left.
+5. Deploy DevStudio fourth.
+   - DevStudio host context must use the same Berlin-owned decision path before any local trusted-tool fallback.
+6. Deploy Paris last.
+   - Paris should retain only the legitimate orchestration/runtime routes that remain after account-management residue deletion.
+7. Verify shared dev runtime in this order:
+   - sign in and confirm first bootstrap resolves from Berlin
+   - verify Roma `My Profile`, `Team`, `Settings`, invitations, account switching, and owner-only actions
+   - verify Bob boot/gating on the new bootstrap path
+   - verify DevStudio context, instance discovery, and l10n status behavior
+   - verify Paris is absent from bootstrap/account-management runtime paths but still serves explicit instance/l10n orchestration
 
 ---
 

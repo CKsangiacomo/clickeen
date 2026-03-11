@@ -1,14 +1,100 @@
-import { NextRequest } from 'next/server';
-import { proxyToParis } from '../../../../../../lib/api/paris-proxy';
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  applySessionCookies,
+  resolveSessionBearer,
+  type SessionCookieSpec,
+} from '../../../../../../lib/auth/session';
+import { resolveBerlinBaseUrl } from '../../../../../../lib/env/berlin';
 
 export const runtime = 'edge';
+// Same-origin relay only: Roma browser/session cookies terminate on Next, so account UI calls Berlin through this thin host proxy.
 
 type RouteContext = { params: Promise<{ accountId: string }> };
 
+function withNoStore(response: NextResponse): NextResponse {
+  response.headers.set('cache-control', 'no-store');
+  response.headers.set('cdn-cache-control', 'no-store');
+  response.headers.set('cloudflare-cdn-cache-control', 'no-store');
+  return response;
+}
+
+function withSession(
+  request: NextRequest,
+  response: NextResponse,
+  setCookies?: SessionCookieSpec[],
+): NextResponse {
+  return withNoStore(applySessionCookies(response, request, setCookies));
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 export async function POST(request: NextRequest, context: RouteContext) {
-  const { accountId } = await context.params;
-  return proxyToParis(request, {
-    method: 'POST',
-    path: `/api/accounts/${encodeURIComponent(String(accountId || '').trim())}/lifecycle/plan-change`,
-  });
+  const session = await resolveSessionBearer(request);
+  if (!session.ok) return withNoStore(session.response);
+
+  const { accountId: accountIdRaw } = await context.params;
+  const accountId = String(accountIdRaw || '').trim();
+  if (!isUuid(accountId)) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
+        { status: 422 },
+      ),
+      session.setCookies,
+    );
+  }
+
+  try {
+    const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
+    const target = new URL(`${berlinBase}/v1/accounts/${encodeURIComponent(accountId)}/tier`);
+    request.nextUrl.searchParams.forEach((value, key) => {
+      target.searchParams.set(key, value);
+    });
+
+    const headers = new Headers({
+      authorization: `Bearer ${session.accessToken}`,
+      accept: 'application/json',
+    });
+    const contentType = request.headers.get('content-type');
+    if (contentType) headers.set('content-type', contentType);
+
+    const body = await request.text();
+    const upstream = await fetch(target.toString(), {
+      method: 'PUT',
+      headers,
+      cache: 'no-store',
+      redirect: 'manual',
+      ...(body ? { body } : {}),
+    });
+    const upstreamBody = await upstream.text().catch(() => '');
+    return withSession(
+      request,
+      new NextResponse(upstreamBody, {
+        status: upstream.status,
+        headers: {
+          'content-type': upstream.headers.get('content-type') || 'application/json; charset=utf-8',
+        },
+      }),
+      session.setCookies,
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.auth.contextUnavailable',
+            detail,
+          },
+        },
+        { status: 502 },
+      ),
+      session.setCookies,
+    );
+  }
 }

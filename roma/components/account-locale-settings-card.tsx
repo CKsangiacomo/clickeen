@@ -131,7 +131,7 @@ export function AccountLocaleSettingsCard(args: {
     } finally {
       setLoading(false);
     }
-  }, [args.accountId]);
+  }, [args.accountId, args.authzCapsule]);
 
   useEffect(() => {
     void loadSettings();

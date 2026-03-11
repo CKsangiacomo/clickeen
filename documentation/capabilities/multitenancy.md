@@ -1,5 +1,8 @@
 # Multi-Tenancy — The Figma Model
 
+Canonical account-management architecture now lives in `documentation/architecture/AccountManagement.md`.
+This file focuses on tenancy, collaboration, roles, and packaging semantics.
+
 ## Core Principle
 
 Clickeen is multi-tenant from day 1 with no artificial caps on collaboration. This is the Figma model: make it easy for teams to adopt, and stickiness compounds.

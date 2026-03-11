@@ -10,6 +10,6 @@ export {
 } from './layers-handlers';
 export {
   handleAccountInstanceL10nStatus,
-  handleAccountLocalesPut,
+  handleAccountLocalesAftermath,
 } from './account-handlers';
 export { enqueueL10nJobs } from './enqueue-jobs';

@@ -15,14 +15,8 @@ import {
   handleAccountSaveTranslationSync,
 } from './domains/account-instances';
 import {
-  handleAccountLifecyclePlanChange,
-  handleAccountLifecycleTierDropDismiss,
-} from './domains/accounts';
-import {
-  handleAccountCreate,
   handleMinibobHandoffStart,
   handleMinibobHandoffComplete,
-  handleRomaBootstrap,
   handleRomaTemplates,
   handleRomaWidgetDelete,
   handleRomaWidgets,
@@ -35,7 +29,7 @@ import {
   handleAccountInstanceLayerUpsert,
   handleAccountInstanceLayersList,
   handleAccountInstanceL10nStatus,
-  handleAccountLocalesPut,
+  handleAccountLocalesAftermath,
 } from './domains/l10n';
 
 export default {
@@ -46,11 +40,6 @@ export default {
 
       if (req.method === 'OPTIONS') return corsPreflight(req);
       if (pathname === '/api/healthz') return handleHealthz();
-
-      if (pathname === '/api/roma/bootstrap') {
-        if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-        return handleRomaBootstrap(req, env);
-      }
 
       const romaInstanceMatch = pathname.match(/^\/api\/roma\/instances\/([^/]+)$/);
       if (romaInstanceMatch) {
@@ -72,11 +61,6 @@ export default {
       if (pathname === '/api/l10n/jobs/report') {
         if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleL10nGenerateReport(req, env);
-      }
-
-      if (pathname === '/api/accounts') {
-        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-        return handleAccountCreate(req, env);
       }
 
       if (pathname === '/api/minibob/handoff/start') {
@@ -109,11 +93,13 @@ export default {
         return handleAiOutcome(req, env);
       }
 
-      const accountLocalesMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/locales$/);
-      if (accountLocalesMatch) {
-        const accountIdResult = assertAccountId(decodeURIComponent(accountLocalesMatch[1]));
+      const internalAccountLocalesAftermathMatch = pathname.match(
+        /^\/internal\/accounts\/([^/]+)\/locales\/aftermath$/,
+      );
+      if (internalAccountLocalesAftermathMatch) {
+        const accountIdResult = assertAccountId(decodeURIComponent(internalAccountLocalesAftermathMatch[1]));
         if (!accountIdResult.ok) return accountIdResult.response;
-        if (req.method === 'PUT') return handleAccountLocalesPut(req, env, accountIdResult.value);
+        if (req.method === 'POST') return handleAccountLocalesAftermath(req, env, accountIdResult.value);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
@@ -226,25 +212,6 @@ export default {
         if (req.method === 'POST') {
           return handleAccountSavePublishedSurfaceSync(req, env, accountIdResult.value, publicId);
         }
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const accountPlanChangeMatch = pathname.match(
-        /^\/api\/accounts\/([^/]+)\/lifecycle\/plan-change$/,
-      );
-      if (accountPlanChangeMatch) {
-        const accountId = decodeURIComponent(accountPlanChangeMatch[1]);
-        if (req.method === 'POST') return handleAccountLifecyclePlanChange(req, env, accountId);
-        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-      }
-
-      const accountTierDropDismissMatch = pathname.match(
-        /^\/api\/accounts\/([^/]+)\/lifecycle\/tier-drop\/dismiss$/,
-      );
-      if (accountTierDropDismissMatch) {
-        const accountId = decodeURIComponent(accountTierDropDismissMatch[1]);
-        if (req.method === 'POST')
-          return handleAccountLifecycleTierDropDismiss(req, env, accountId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

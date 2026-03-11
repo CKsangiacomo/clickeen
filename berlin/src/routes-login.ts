@@ -25,9 +25,48 @@ import {
   saveOauthTransaction,
 } from './auth-tickets';
 import { issueSession, resolveSupabaseAccessExp, resolveUserIdFromSupabaseResponse } from './auth-session';
-import { requestSupabaseOAuthUrl, requestSupabasePasswordGrant, requestSupabasePkceGrant } from './supabase-client';
-import { OAUTH_FINISH_TTL_SECONDS, OAUTH_STATE_TTL_SECONDS, type Env, type OAuthFinishTransaction, type OAuthTransaction } from './types';
+import { requestSupabaseOAuthUrl, requestSupabasePasswordGrant, requestSupabasePkceGrant, requestSupabaseUser } from './supabase-client';
+import { OAUTH_FINISH_TTL_SECONDS, OAUTH_STATE_TTL_SECONDS, type Env, type OAuthFinishTransaction, type OAuthTransaction, type SupabaseTokenResponse } from './types';
 import { loadSessionState } from './session-kv';
+import { ensureProductAccountState } from './account-reconcile';
+
+async function issueProductSessionFromGrant(
+  env: Env,
+  payload: SupabaseTokenResponse,
+  failureReasonKey: string,
+): Promise<{ ok: true; session: Awaited<ReturnType<typeof issueSession>>; userId: string } | { ok: false; response: Response }> {
+  try {
+    const nowSec = Math.floor(Date.now() / 1000);
+    const supabaseAccessToken = claimAsString(payload.access_token);
+    const supabaseRefreshToken = claimAsString(payload.refresh_token);
+    const userId = resolveUserIdFromSupabaseResponse(payload);
+    if (!supabaseAccessToken || !supabaseRefreshToken || !userId) {
+      return { ok: false, response: authError(failureReasonKey, 502, 'missing_supabase_grant_payload') };
+    }
+
+    const userRes = await requestSupabaseUser(env, supabaseAccessToken);
+    if (!userRes.ok) {
+      return { ok: false, response: authError(failureReasonKey, userRes.status, userRes.detail || 'supabase_user_unavailable') };
+    }
+
+    const reconciled = await ensureProductAccountState(env, userRes.user);
+    if (!reconciled.ok) {
+      return { ok: false, response: reconciled.response };
+    }
+
+    const session = await issueSession(env, {
+      userId,
+      supabaseRefreshToken,
+      supabaseAccessToken,
+      supabaseAccessExp: resolveSupabaseAccessExp(nowSec, payload),
+    });
+
+    return { ok: true, session, userId };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return { ok: false, response: authError(failureReasonKey, 500, detail || 'account_reconcile_failed') };
+  }
+}
 
 export async function handlePasswordLogin(request: Request, env: Env): Promise<Response> {
   const body = await readJsonBody(request);
@@ -39,21 +78,9 @@ export async function handlePasswordLogin(request: Request, env: Env): Promise<R
 
   const grant = await requestSupabasePasswordGrant(env, email, password);
   if (!grant.ok) return authError(grant.reason, grant.status, grant.detail);
-
-  const nowSec = Math.floor(Date.now() / 1000);
-  const supabaseAccessToken = claimAsString(grant.payload.access_token);
-  const supabaseRefreshToken = claimAsString(grant.payload.refresh_token);
-  const userId = resolveUserIdFromSupabaseResponse(grant.payload);
-  if (!supabaseAccessToken || !supabaseRefreshToken || !userId) {
-    return authError('coreui.errors.auth.login_failed', 502);
-  }
-
-  const session = await issueSession(env, {
-    userId,
-    supabaseRefreshToken,
-    supabaseAccessToken,
-    supabaseAccessExp: resolveSupabaseAccessExp(nowSec, grant.payload),
-  });
+  const issued = await issueProductSessionFromGrant(env, grant.payload, 'coreui.errors.auth.login_failed');
+  if (!issued.ok) return issued.response;
+  const { session, userId } = issued;
 
   return json({
     ok: true,
@@ -166,21 +193,10 @@ export async function handleProviderLoginCallback(request: Request, env: Env): P
 
   const grant = await requestSupabasePkceGrant(env, authCode, transaction.codeVerifier);
   if (!grant.ok) return authError(grant.reason, grant.status, grant.detail);
-
+  const issued = await issueProductSessionFromGrant(env, grant.payload, 'coreui.errors.auth.provider.exchangeFailed');
+  if (!issued.ok) return issued.response;
+  const { session, userId } = issued;
   const nowSec = Math.floor(Date.now() / 1000);
-  const supabaseAccessToken = claimAsString(grant.payload.access_token);
-  const supabaseRefreshToken = claimAsString(grant.payload.refresh_token);
-  const userId = resolveUserIdFromSupabaseResponse(grant.payload);
-  if (!supabaseAccessToken || !supabaseRefreshToken || !userId) {
-    return authError('coreui.errors.auth.provider.exchangeFailed', 502);
-  }
-
-  const session = await issueSession(env, {
-    userId,
-    supabaseRefreshToken,
-    supabaseAccessToken,
-    supabaseAccessExp: resolveSupabaseAccessExp(nowSec, grant.payload),
-  });
 
   const intent = transaction.intent || 'signin';
   const nextPath = transaction.next || '/home';

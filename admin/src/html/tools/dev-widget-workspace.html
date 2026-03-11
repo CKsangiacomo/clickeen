@@ -649,8 +649,6 @@
 
     const TOKYO_BASE = resolveTokyoBaseUrl();
     const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
-    const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
-    const DEVSTUDIO_ACCOUNT_ID = PLATFORM_ACCOUNT_ID;
     const LOCAL_DEFAULT_INSTANCE_PREFIX = 'devstudio_local_';
     let currentPublicId = null;
     let selectedWidgetSlug = null;
@@ -686,6 +684,7 @@
     const themeModalConfirm = document.getElementById('theme-modal-confirm');
     const themeModalSelect = document.getElementById('theme-modal-select');
     let l10nStatusTimer = null;
+    let devstudioContextPromise = null;
 
     const THEME_UPDATE_LAST_ID_STORAGE = 'ck.devstudio.theme.update.lastThemeId';
 
@@ -734,6 +733,35 @@
 
     function fetchDevStudio(url, init = {}) {
       return fetch(url, { cache: 'no-store', ...init });
+    }
+
+    async function loadDevStudioContext() {
+      if (devstudioContextPromise) return devstudioContextPromise;
+      devstudioContextPromise = (async () => {
+        const res = await fetchDevStudio(buildDevStudioApiUrl('/api/devstudio/context'));
+        const payload = await res.json().catch(() => null);
+        if (!res.ok) {
+          const reasonKey = payload?.error?.reasonKey || payload?.error || `HTTP_${res.status}`;
+          throw new Error(String(reasonKey));
+        }
+        const accountId =
+          typeof payload?.accountId === 'string' && payload.accountId.trim()
+            ? payload.accountId.trim()
+            : '';
+        if (!accountId) {
+          throw new Error('coreui.errors.auth.contextUnavailable');
+        }
+        return { accountId };
+      })().catch((error) => {
+        devstudioContextPromise = null;
+        throw error;
+      });
+      return devstudioContextPromise;
+    }
+
+    async function resolveDevStudioAccountId() {
+      const context = await loadDevStudioContext();
+      return context.accountId;
     }
 
     function setL10nStatusDisplay({ state, tone, value, meta }) {
@@ -839,7 +867,6 @@
           buildDevStudioApiUrl(
             `/api/devstudio/instances/${encodeURIComponent(publicId)}/l10n/status`,
             {
-              accountId: DEVSTUDIO_ACCOUNT_ID,
               _t: Date.now(),
             },
           ),
@@ -1141,7 +1168,10 @@
       return promise;
     }
 
-    async function fetchInstanceCore(publicId, accountId = DEVSTUDIO_ACCOUNT_ID) {
+    async function fetchInstanceCore(publicId, accountId = null) {
+      if (!accountId) {
+        accountId = await resolveDevStudioAccountId();
+      }
       const res = await fetchBob(
         buildBobApiUrl(
           `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}`,
@@ -1156,7 +1186,10 @@
       return await res.json();
     }
 
-    async function fetchInstanceLocalization(publicId, accountId = DEVSTUDIO_ACCOUNT_ID) {
+    async function fetchInstanceLocalization(publicId, accountId = null) {
+      if (!accountId) {
+        accountId = await resolveDevStudioAccountId();
+      }
       const res = await fetchBob(
         buildBobApiUrl(
           `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/localization`,
@@ -1173,7 +1206,10 @@
       return await res.json();
     }
 
-    async function fetchInstanceEnvelope(publicId, accountId = DEVSTUDIO_ACCOUNT_ID) {
+    async function fetchInstanceEnvelope(publicId, accountId = null) {
+      if (!accountId) {
+        accountId = await resolveDevStudioAccountId();
+      }
       const cacheKey = `${accountId}::${publicId}`;
       if (instanceEnvelopePromiseCache.has(cacheKey)) {
         return instanceEnvelopePromiseCache.get(cacheKey);
@@ -1227,12 +1263,7 @@
 
     async function fetchInstances() {
       console.log('[DevStudio] Fetching instances');
-      const res = await fetchDevStudio(
-        buildDevStudioApiUrl('/api/devstudio/instances', {
-          accountId: DEVSTUDIO_ACCOUNT_ID,
-          _t: Date.now(),
-        }),
-      );
+      const res = await fetchDevStudio(buildDevStudioApiUrl('/api/devstudio/instances', { _t: Date.now() }));
       if (!res.ok) {
         const text = await res.text().catch(() => '');
         let detail = text;
@@ -1773,6 +1804,7 @@
       }
 
       let compiled = compiledCache.get(slug);
+      const devstudioAccountId = await resolveDevStudioAccountId();
       const hasInlineConfig = Boolean(
         instance.config && typeof instance.config === 'object' && !Array.isArray(instance.config),
       );
@@ -1791,12 +1823,12 @@
               config: instance.config,
               localization: instance.localization ?? null,
               policy: instance.policy ?? null,
-              ownerAccountId: DEVSTUDIO_ACCOUNT_ID,
+              ownerAccountId: devstudioAccountId,
               status: instance.status ?? 'unpublished',
             },
             durationMs: performance.now() - envelopeStart,
           })
-        : fetchInstanceEnvelope(publicId).then((envelope) => ({
+        : fetchInstanceEnvelope(publicId, devstudioAccountId).then((envelope) => ({
             value: envelope,
             durationMs: performance.now() - envelopeStart,
           }));
@@ -1818,11 +1850,11 @@
         type: 'ck:open-editor',
         subjectMode: 'account',
         publicId,
-        accountId: DEVSTUDIO_ACCOUNT_ID,
+        accountId: devstudioAccountId,
         ownerAccountId:
           typeof envelope?.ownerAccountId === 'string' && envelope.ownerAccountId.trim()
             ? envelope.ownerAccountId.trim()
-            : DEVSTUDIO_ACCOUNT_ID,
+            : devstudioAccountId,
         label,
         widgetname: slug,
         compiled,

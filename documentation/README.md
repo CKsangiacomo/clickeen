@@ -16,6 +16,7 @@ documentation/
 │
 ├── architecture/             # HOW — Platform design, principles
 │   ├── CONTEXT.md           # Current state, glossary, what exists
+│   ├── AccountManagement.md # Canonical user/account/membership boundary
 │   ├── Tenets.md            # Architectural principles
 │   └── Overview.md          # Platform diagram, data flow
 │
@@ -117,7 +118,7 @@ Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
    - `admin/src/html/tools/dev-widget-workspace.html` defaults to local Bob + cloud Tokyo in product profile.
    - Source profile can explicitly target local Bob/Tokyo via `?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`.
 4. **Cloud-dev Roma** is the supported product/account host surface:
-   - `roma/app/api/bootstrap/route.ts` proxies to Paris `/api/roma/bootstrap`
+   - `roma/app/api/bootstrap/route.ts` proxies to Berlin `GET /v1/session/bootstrap`
    - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
    - local code changes only appear there after deploy
 5. **Local Prague** loads widget marketing JSON from the repo:
@@ -203,6 +204,6 @@ If you change runtime behavior, update docs in the same PR/commit:
 - Quick grep for removed/renamed surfaces:
   - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/ai/minibob/session|/api/ai/minibob/grant|/api/ai/grant|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
   - `rg -n "claims/minibob/complete|/api/assets/:accountId|GET /api/accounts/:accountId/instance/:publicId|PUT /api/accounts/:accountId/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`
-  - `rg -n "/api/roma/bootstrap|/api/roma/widgets|/api/minibob/handoff/start|/api/session/finish|/api/assets/:accountId" documentation --glob '*.md'`
+  - `rg -n "/api/bootstrap|/api/roma/widgets|/api/minibob/handoff/start|/api/session/finish|/api/assets/:accountId" documentation --glob '*.md'`
 
 When drift is found: update docs to match the shipped code/config immediately; treat mismatches as P0 doc bugs.

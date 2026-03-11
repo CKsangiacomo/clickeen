@@ -29,15 +29,19 @@ What it does:
 - Source profile override: local Bob + local Tokyo.
 - Marks iframe host intent as `surface=devstudio` (pairs with `surface=roma` in Roma Builder for explicit host behavior).
 - Widget type selection still comes from the local widget catalog (`/api/devstudio/widgets`).
+- DevStudio host-owned platform context comes from `GET /api/devstudio/context`; the browser tool does not carry its own hardcoded account truth.
+- That route prefers a real Berlin session/bootstrap when one is present, fails visibly if that Berlin session is invalid/broken, and only falls back to the current trusted-local platform-account context when no product session exists in the local toolchain.
 - Instance discovery comes from the explicit local DevStudio route family (`/api/devstudio/instances*`).
+- The instance discovery/status routes must honor that same host-owned context decision before proxying any upstream work.
 - DevStudio no longer uses `/api/roma/templates`. That route is Roma product starter discovery, not DevStudio authoring discovery.
 - Product profile shows the admin account’s instances directly.
+- DevStudio local instance discovery is explicitly platform-account scoped. It does not honor browser-side `accountId` overrides for this tool path.
 - Source profile keeps widget defaults available only when a widget has no saved instance yet.
 - Uses a 2-dropdown flow:
   - first dropdown = widget type
   - second dropdown = the admin instances for that widget
 - The widget catalog comes from `GET /api/devstudio/widgets`.
-- Instances come from `GET /api/devstudio/instances?accountId=<admin-account-id>`.
+- Instances come from `GET /api/devstudio/instances`.
 - Opening the `wgt_main_*` instance or any other instance lazy-loads core instance state from Bob’s canonical same-origin route (`GET /api/accounts/:accountId/instance/:publicId?subject=account`) plus explicit localization rehydrate (`GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`), then message-boots Bob with real `{ accountId, publicId }` context.
 - Local startup explicitly repairs missing Tokyo saved authoring snapshots for historical `wgt_main_*` / `wgt_curated_*` rows before DevStudio opens them. This is a startup repair step, not read-time healing in Bob/DevStudio.
 - Current authoring actions use:
@@ -86,9 +90,10 @@ Current boundary:
 
 If DevStudio local opens but instances are missing:
 
-- Check local `PARIS_DEV_JWT` for discovery/status routes and Bob local availability for `/api/accounts/...`.
+- Check DevStudio `GET /api/devstudio/context` first; a broken Berlin session now fails visibly instead of silently downgrading to trusted-local mode.
+- Check local `PARIS_DEV_JWT` for the remaining local internal discovery/status transport and Bob local availability for `/api/accounts/...`.
 - Check that `bash scripts/dev-up.sh --reset` completed the explicit curated/main Tokyo saved snapshot repair step.
-- DevStudio discovery remains a local trusted-tool path; core create/open/save now uses Bob’s canonical route instead of Paris.
+- DevStudio discovery/status remain local trusted-tool transport paths today, but they are host-gated by the same DevStudio context contract; core create/open/save now uses Bob’s canonical route instead of Paris.
 
 If the asset picker is empty in DevStudio but Roma shows assets:
 

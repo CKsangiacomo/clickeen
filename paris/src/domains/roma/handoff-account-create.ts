@@ -3,10 +3,7 @@ import { assertSupabaseAuth } from '../../shared/auth';
 import { authorizeAccount } from '../../shared/account-auth';
 import { ckError, errorDetail } from '../../shared/errors';
 import { json, readJson } from '../../shared/http';
-import { DEFAULT_ACCOUNT_L10N_POLICY } from '../../shared/l10n';
 import { resolveAdminAccountId } from '../../shared/admin';
-import { normalizeMemberRole, roleRank } from '../../shared/roles';
-import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString, assertAccountId, assertConfig, isRecord, isUuid } from '../../shared/validation';
 import { assertPublicId, assertWidgetType, isCuratedPublicId } from '../../shared/instances';
 import { handleAccountCreateInstance } from '../account-instances/create-handler';
@@ -40,30 +37,6 @@ type MinibobHandoffStateRecord = {
   consumedByUserId?: string;
   consumedAccountId?: string;
   resultPublicId?: string;
-};
-
-type AccountCreatePayload = {
-  accountId: string;
-  role: string;
-  slug: string;
-  name: string;
-};
-
-type AccountMembershipLookupRow = {
-  role?: unknown;
-  accounts?: {
-    id?: unknown;
-    status?: unknown;
-    slug?: unknown;
-    name?: unknown;
-  } | null;
-};
-
-type AccountRowShape = {
-  id: string;
-  status: string;
-  slug: string;
-  name: string;
 };
 
 function requireRomaKv(env: Env): { ok: true; kv: KVNamespace } | { ok: false; response: Response } {
@@ -130,163 +103,6 @@ async function storeIdempotencyRecord(kv: KVNamespace, key: string, status: numb
   await kvPutJson(kv, key, payload, ROMA_IDEMPOTENCY_TTL_SEC);
 }
 
-function resolveAccountSlug(accountId: string): string {
-  const suffix = accountId.replace(/-/g, '').slice(0, 12).toLowerCase();
-  return suffix ? `acct-${suffix}` : 'account';
-}
-
-async function createAccount(args: {
-  env: Env;
-  accountId: string;
-  name: string;
-}): Promise<{ ok: true; account: AccountRowShape; created: boolean } | { ok: false; response: Response }> {
-  const slug = resolveAccountSlug(args.accountId);
-  const insertRes = await supabaseFetch(args.env, '/rest/v1/accounts', {
-    method: 'POST',
-    headers: {
-      Prefer: 'return=representation',
-    },
-    body: JSON.stringify({
-      id: args.accountId,
-      status: 'active',
-      is_platform: false,
-      tier: 'free',
-      name: args.name,
-      slug,
-      website_url: null,
-      l10n_locales: [],
-      l10n_policy: DEFAULT_ACCOUNT_L10N_POLICY,
-    }),
-  });
-
-  if (insertRes.ok) {
-    const rows = (await insertRes.json().catch(() => null)) as unknown;
-    const created = Array.isArray(rows) ? toAccountRowShape(rows[0]) : null;
-    if (created) return { ok: true, account: created, created: true };
-    return {
-      ok: true,
-      account: { id: args.accountId, status: 'active', slug, name: args.name },
-      created: true,
-    };
-  }
-
-  if (insertRes.status !== 409) {
-    const details = await readJson(insertRes);
-    return {
-      ok: false,
-      response: ckError(
-        { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) },
-        500,
-      ),
-    };
-  }
-
-  const existing = await loadAccountById(args.env, args.accountId);
-  if (!existing) {
-    return {
-      ok: false,
-      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'account_unresolved_after_conflict' }, 500),
-    };
-  }
-  return { ok: true, account: existing, created: false };
-}
-
-function toAccountRowShape(value: unknown): AccountRowShape | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  const record = value as Record<string, unknown>;
-  const id = asTrimmedString(record.id);
-  const slug = asTrimmedString(record.slug);
-  const name = asTrimmedString(record.name);
-  const status = asTrimmedString(record.status) || 'active';
-  if (!id || !slug || !name) return null;
-  return { id, slug, name, status };
-}
-
-function toAccountCreatePayload(args: {
-  account: AccountRowShape;
-  role: string;
-}): AccountCreatePayload {
-  return {
-    accountId: args.account.id,
-    role: args.role,
-    slug: args.account.slug,
-    name: args.account.name,
-  };
-}
-
-async function loadAccountById(env: Env, accountId: string): Promise<AccountRowShape | null> {
-  const params = new URLSearchParams({
-    select: 'id,status,slug,name',
-    id: `eq.${accountId}`,
-    limit: '1',
-  });
-  const response = await supabaseFetch(env, `/rest/v1/accounts?${params.toString()}`, { method: 'GET' });
-  if (!response.ok) {
-    const details = await readJson(response);
-    throw new Error(`[ParisWorker] Failed to load account (${response.status}): ${JSON.stringify(details)}`);
-  }
-  const rows = (await response.json().catch(() => null)) as unknown;
-  if (!Array.isArray(rows)) return null;
-  return toAccountRowShape(rows[0]) || null;
-}
-
-async function loadExistingUserAccount(env: Env, userId: string): Promise<AccountCreatePayload | null> {
-  const params = new URLSearchParams({
-    select: 'account_id,role,accounts(id,status,slug,name)',
-    user_id: `eq.${userId}`,
-    order: 'created_at.asc',
-    limit: '1000',
-  });
-  const response = await supabaseFetch(env, `/rest/v1/account_members?${params.toString()}`, { method: 'GET' });
-  if (!response.ok) {
-    const details = await readJson(response);
-    throw new Error(`[ParisWorker] Failed to load account memberships (${response.status}): ${JSON.stringify(details)}`);
-  }
-  const rows = ((await response.json().catch(() => null)) as AccountMembershipLookupRow[] | null) || [];
-
-  const adminAccountId = resolveAdminAccountId(env);
-  let best: AccountCreatePayload | null = null;
-  for (const row of rows) {
-    const account = toAccountRowShape(row.accounts);
-    if (!account) continue;
-    const role = normalizeMemberRole(row.role) || 'viewer';
-    const candidate = toAccountCreatePayload({ account, role });
-    if (candidate.accountId === adminAccountId) return candidate;
-    if (!best || roleRank(candidate.role) > roleRank(best.role)) best = candidate;
-  }
-  return best;
-}
-
-async function ensureOwnerMembership(args: {
-  env: Env;
-  accountId: string;
-  userId: string;
-}): Promise<{ ok: true; role: string } | { ok: false; response: Response }> {
-  const response = await supabaseFetch(
-    args.env,
-    `/rest/v1/account_members?on_conflict=${encodeURIComponent('account_id,user_id')}`,
-    {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify({
-        account_id: args.accountId,
-        user_id: args.userId,
-        role: 'owner',
-      }),
-    },
-  );
-  if (!response.ok) {
-    const details = await readJson(response);
-    return {
-      ok: false,
-      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500),
-    };
-  }
-
-  const rows = (await response.json().catch(() => null)) as Array<{ role?: unknown }> | null;
-  const role = normalizeMemberRole(rows?.[0]?.role) || 'owner';
-  return { ok: true, role };
-}
 
 function resolveMinibobHandoffStateKey(handoffId: string): string {
   return `roma:minibob:handoff:state:${handoffId}`;
@@ -504,78 +320,6 @@ export async function handleMinibobHandoffStart(req: Request, env: Env): Promise
     },
     { status: 201 },
   );
-}
-
-export async function handleAccountCreate(req: Request, env: Env): Promise<Response> {
-  const auth = await assertSupabaseAuth(req, env);
-  if (!auth.ok) return auth.response;
-
-  const idempotencyResult = requireIdempotencyKey(req);
-  if (!idempotencyResult.ok) return idempotencyResult.response;
-  const idempotencyKey = idempotencyResult.value;
-
-  const kvResult = requireRomaKv(env);
-  if (!kvResult.ok) return kvResult.response;
-  const kv = kvResult.kv;
-
-  const replayKey = `roma:idem:accounts:create:${auth.principal.userId}:${idempotencyKey}`;
-  const existing = await loadIdempotencyRecord(kv, replayKey);
-  if (existing) return replayFromIdempotency(existing);
-
-  let existingAccount: AccountCreatePayload | null = null;
-  try {
-    existingAccount = await loadExistingUserAccount(env, auth.principal.userId);
-  } catch (error) {
-    const detail = errorDetail(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-  if (existingAccount) {
-    await storeIdempotencyRecord(kv, replayKey, 200, existingAccount).catch(() => undefined);
-    return json(existingAccount, { status: 200 });
-  }
-
-  if (!isLocalStage(env)) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.account.createFailed', detail: 'account_creation_frozen_to_admin_only' }, 403);
-  }
-
-  const accountId = auth.principal.userId;
-
-  let accountCreate:
-    | { ok: true; account: AccountRowShape; created: boolean }
-    | { ok: false; response: Response };
-  try {
-    accountCreate = await createAccount({
-      env,
-      accountId,
-      name: 'Personal',
-    });
-  } catch (error) {
-    const detail = errorDetail(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-  if (!accountCreate.ok) return accountCreate.response;
-  const createdAccount = accountCreate.created;
-  const account = accountCreate.account;
-
-  const membership = await ensureOwnerMembership({
-    env,
-    accountId,
-    userId: auth.principal.userId,
-  });
-  if (!membership.ok) {
-    if (createdAccount) {
-      await supabaseFetch(env, `/rest/v1/accounts?id=eq.${accountId}`, { method: 'DELETE' }).catch(() => undefined);
-    }
-    return membership.response;
-  }
-
-  const payload = toAccountCreatePayload({
-    account,
-    role: membership.role,
-  });
-  const status = createdAccount ? 201 : 200;
-  await storeIdempotencyRecord(kv, replayKey, status, payload).catch(() => undefined);
-  return json(payload, { status });
 }
 
 export async function handleMinibobHandoffComplete(req: Request, env: Env): Promise<Response> {

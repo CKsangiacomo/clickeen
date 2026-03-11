@@ -1,6 +1,9 @@
 export type Env = {
   SUPABASE_URL?: string;
   SUPABASE_ANON_KEY?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  CK_ADMIN_ACCOUNT_ID?: string;
+  ENV_STAGE?: string;
   BERLIN_ISSUER?: string;
   BERLIN_AUDIENCE?: string;
   BERLIN_REFRESH_SECRET?: string;
@@ -11,8 +14,14 @@ export type Env = {
   BERLIN_ACCESS_PUBLIC_KEY_PEM?: string;
   BERLIN_ACCESS_PREVIOUS_PUBLIC_KEY_PEM?: string;
   BERLIN_ACCESS_PREVIOUS_KID?: string;
+  PARIS_BASE_URL?: string;
+  PARIS_DEV_JWT?: string;
+  ROMA_AUTHZ_CAPSULE_SECRET?: string;
+  AI_GRANT_HMAC_SECRET?: string;
   BERLIN_SESSION_KV?: KVNamespace;
   BERLIN_AUTH_TICKETS?: DurableObjectNamespace;
+  USAGE_KV?: KVNamespace;
+  RENDER_SNAPSHOT_QUEUE?: Queue<unknown>;
 };
 
 export type JwtHeader = {
@@ -36,29 +45,29 @@ export type SupabaseIdentity = {
   id?: string;
   identity_id?: string;
   provider?: string;
-  identity_data?: {
+  identity_data?: Record<string, unknown> & {
     sub?: string;
   };
+};
+
+export type SupabaseUser = {
+  id?: string;
+  email?: string;
+  role?: string;
+  email_confirmed_at?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+  app_metadata?: Record<string, unknown> | null;
+  identities?: SupabaseIdentity[];
 };
 
 export type SupabaseTokenResponse = {
   access_token?: string;
   refresh_token?: string;
   expires_in?: number;
-  user?: {
-    id?: string;
-    email?: string;
-    role?: string;
-    identities?: SupabaseIdentity[];
-  };
+  user?: SupabaseUser;
 };
 
-export type SupabaseUserResponse = {
-  id?: string;
-  email?: string;
-  role?: string;
-  identities?: SupabaseIdentity[];
-};
+export type SupabaseUserResponse = SupabaseUser;
 
 export type RefreshPayloadV1 = {
   v: 1;

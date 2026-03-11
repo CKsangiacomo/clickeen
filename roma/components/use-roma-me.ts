@@ -8,6 +8,17 @@ export type RomaMeResponse = {
     email: string | null;
     role: string | null;
   };
+  profile?: {
+    userId: string;
+    primaryEmail: string;
+    emailVerified: boolean;
+    displayName: string;
+    givenName: string | null;
+    familyName: string | null;
+    preferredLanguage: string | null;
+    countryCode: string | null;
+    timezone: string | null;
+  } | null;
   accounts: Array<{
     accountId: string;
     role: string;

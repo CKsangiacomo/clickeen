@@ -1,14 +1,10 @@
-import { BUDGET_KEYS, resolvePolicy } from '@clickeen/ck-policy';
-import type { MemberRole } from '@clickeen/ck-policy';
-import type { AccountRow, Env, InstanceRow, WidgetRow } from '../../shared/types';
+import { resolvePolicy } from '@clickeen/ck-policy';
+import type { Env, InstanceRow, WidgetRow } from '../../shared/types';
 import { authorizeAccount } from '../../shared/account-auth';
-import { mintRomaAccountAuthzCapsule } from '../../shared/authz-capsule';
-import { readBudgetUsed } from '../../shared/budgets';
 import { ckError, errorDetail } from '../../shared/errors';
 import { json, readJson } from '../../shared/http';
-import { loadAccountById } from '../../shared/accounts';
 import { resolveAdminAccountId } from '../../shared/admin';
-import { normalizeMemberRole, roleRank } from '../../shared/roles';
+import { roleRank } from '../../shared/roles';
 import { supabaseFetch } from '../../shared/supabase';
 import { formatCuratedDisplayName, readCuratedMeta } from '../../shared/curated-meta';
 import { asTrimmedString, assertAccountId } from '../../shared/validation';
@@ -16,43 +12,6 @@ import { assertPublicId, isCuratedInstanceRow, isCuratedPublicId } from '../../s
 import { syncAccountAssetUsageForInstanceStrict } from '../account-instances/helpers';
 import { enqueueTokyoMirrorJob } from '../account-instances/service';
 import { loadInstanceByAccountAndPublicId } from '../instances';
-import { resolveIdentityMePayload } from '../identity';
-
-const ROMA_AUTHZ_CAPSULE_TTL_SEC = 15 * 60;
-
-type AccountEntitlementsSnapshot = {
-  flags: Record<string, boolean>;
-  caps: Record<string, number | null>;
-  budgets: Record<string, { max: number | null; used: number }>;
-};
-
-async function resolveAccountEntitlementsSnapshot(args: {
-  env: Env;
-  accountId: string;
-  profile: AccountRow['tier'];
-  role: MemberRole;
-}): Promise<AccountEntitlementsSnapshot> {
-  const policy = resolvePolicy({ profile: args.profile, role: args.role });
-  const budgets: Record<string, { max: number | null; used: number }> = {};
-
-  await Promise.all(
-    BUDGET_KEYS.map(async (budgetKey) => {
-      const used = await readBudgetUsed({
-        env: args.env,
-        scope: { kind: 'account', accountId: args.accountId },
-        budgetKey,
-      });
-      const max = policy.budgets[budgetKey]?.max ?? null;
-      budgets[budgetKey] = { max, used };
-    }),
-  );
-
-  return {
-    flags: policy.flags,
-    caps: policy.caps,
-    budgets,
-  };
-}
 
 type RomaWidgetsInstancePayload = {
   publicId: string;
@@ -220,100 +179,6 @@ async function loadAllWidgetTypes(env: Env): Promise<string[]> {
     .filter((type): type is string => Boolean(type))
     .map((type) => type.toLowerCase())
     .sort((a, b) => a.localeCompare(b));
-}
-
-export async function handleRomaBootstrap(req: Request, env: Env): Promise<Response> {
-  const resolved = await resolveIdentityMePayload(req, env);
-  if (!resolved.ok) return resolved.response;
-
-  const accountId = resolved.payload.defaults.accountId;
-  if (!accountId) {
-    return json({ ...resolved.payload, authz: null }, { status: 200 });
-  }
-
-  const accountIdResult = assertAccountId(accountId);
-  if (!accountIdResult.ok) return accountIdResult.response;
-
-  const principal = resolved.principal;
-
-  const membershipContext =
-    resolved.payload.accounts.find((entry) => entry.accountId === accountIdResult.value) ?? null;
-  if (!membershipContext) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
-  }
-
-  let account: AccountRow | null = null;
-  try {
-    account = await loadAccountById(env, accountIdResult.value);
-  } catch (error) {
-    const detail = errorDetail(error);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
-  }
-  if (!account) {
-    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
-  }
-
-  const role = normalizeMemberRole(membershipContext?.role) ?? 'viewer';
-  const profile = account.tier;
-  const authzVersion =
-    asTrimmedString(membershipContext?.membershipVersion) ||
-    `account:${account.id}:role:${role}:profile:${profile}`;
-
-  const nowSec = Math.floor(Date.now() / 1000);
-  const expiresSec = nowSec + ROMA_AUTHZ_CAPSULE_TTL_SEC;
-  const issuedAtIso = new Date(nowSec * 1000).toISOString();
-  const expiresAtIso = new Date(expiresSec * 1000).toISOString();
-
-  let accountCapsule: string;
-  let entitlements: AccountEntitlementsSnapshot;
-  try {
-    const [capsule, entitlementsSnapshot] = await Promise.all([
-      mintRomaAccountAuthzCapsule(env, {
-        sub: principal.userId,
-        userId: principal.userId,
-        accountId: account.id,
-        accountStatus: account.status ?? 'active',
-        accountName: account.name,
-        accountSlug: account.slug,
-        accountWebsiteUrl: account.website_url,
-        accountL10nLocales: account.l10n_locales,
-        accountL10nPolicy: account.l10n_policy,
-        role,
-        profile,
-        authzVersion,
-        iat: nowSec,
-        exp: expiresSec,
-      }),
-      resolveAccountEntitlementsSnapshot({
-        env,
-        accountId: account.id,
-        profile,
-        role,
-      }),
-    ]);
-    accountCapsule = capsule.token;
-    entitlements = entitlementsSnapshot;
-  } catch (error) {
-    const detail = errorDetail(error);
-    return ckError(
-      { kind: 'INTERNAL', reasonKey: 'coreui.errors.auth.contextUnavailable', detail },
-      500,
-    );
-  }
-
-  return json({
-    ...resolved.payload,
-    authz: {
-      accountCapsule,
-      accountId: account.id,
-      role,
-      profile,
-      authzVersion,
-      issuedAt: issuedAtIso,
-      expiresAt: expiresAtIso,
-      entitlements,
-    },
-  });
 }
 
 export async function handleRomaWidgets(req: Request, env: Env): Promise<Response> {

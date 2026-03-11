@@ -93,6 +93,13 @@ importers:
         version: 3.2.4(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@20.19.25)(@vitest/browser@3.2.4)(jsdom@26.1.0)(tsx@4.20.6)(yaml@2.8.2)
 
   berlin:
+    dependencies:
+      '@clickeen/ck-policy':
+        specifier: workspace:*
+        version: link:../packages/ck-policy
+      '@clickeen/l10n':
+        specifier: workspace:*
+        version: link:../packages/l10n
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0

@@ -1,4 +1,5 @@
-import type { Env, InstanceRow, L10nGenerateStateRow, L10nGenerateStatus } from '../../shared/types';
+import { resolvePolicy, type Policy } from '@clickeen/ck-policy';
+import type { AccountRow, Env, InstanceRow, L10nGenerateStateRow, L10nGenerateStatus } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { apiError, ckError, errorDetail } from '../../shared/errors';
 import { isRecord } from '../../shared/validation';
@@ -6,13 +7,14 @@ import { buildL10nSnapshot, computeBaseFingerprint } from '@clickeen/l10n';
 import {
   loadWidgetLocalizationAllowlist,
   normalizeLocaleList,
-  parseAccountL10nPolicy,
   resolveAccountL10nPolicy,
 } from '../../shared/l10n';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
+import { isTrustedInternalServiceRequest } from '../../shared/auth';
 import { authorizeAccount } from '../../shared/account-auth';
 import { resolveAdminAccountId } from '../../shared/admin';
 import { supabaseFetch } from '../../shared/supabase';
+import { requireAccount } from '../../shared/accounts';
 import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import { loadL10nGenerateStates, loadInstanceOverlays } from './service';
 import { resolveL10nPlanningSnapshot } from './planning';
@@ -141,81 +143,29 @@ export async function handleAccountInstanceL10nStatus(
   });
 }
 
-export async function handleAccountLocalesPut(req: Request, env: Env, accountId: string) {
-  const authorized = await authorizeAccount(req, env, accountId, 'editor', { requireCapsule: true });
-  if (!authorized.ok) return authorized.response;
-  const account = authorized.account;
-
-  const policyResult = resolveEditorPolicyFromRequest(req, account, authorized.role);
-  if (!policyResult.ok) return policyResult.response;
-
-  let payload: unknown;
-  try {
-    payload = await req.json();
-  } catch {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' }, 422);
-  }
-
-  if (!isRecord(payload)) {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
-  }
-
-  const localesResult = normalizeLocaleList((payload as any).locales, 'locales');
-  if (!localesResult.ok) {
-    return json(localesResult.issues, { status: 422 });
-  }
-
-  const locales = localesResult.locales;
-  const entitlementGate = enforceL10nSelection(policyResult.policy, locales);
-  if (entitlementGate) return entitlementGate;
-
-  let nextPolicy = account.l10n_policy;
-  if (Object.prototype.hasOwnProperty.call(payload, 'policy')) {
-    const policyRaw = (payload as any).policy;
-    if (policyRaw != null) {
-      const policyResult = parseAccountL10nPolicy(policyRaw);
-      if (!policyResult.ok) {
-        return json(policyResult.issues, { status: 422 });
-      }
-      nextPolicy = policyResult.policy;
-    } else {
-      nextPolicy = null;
-    }
-  }
-
-  const patchRes = await supabaseFetch(
-    env,
-    `/rest/v1/accounts?id=eq.${encodeURIComponent(accountId)}`,
-    {
-      method: 'PATCH',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ l10n_locales: locales, l10n_policy: nextPolicy }),
-    },
-  );
-  if (!patchRes.ok) {
-    const details = await readJson(patchRes);
-    return ckError(
-      {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.db.writeFailed',
-        detail: JSON.stringify(details),
-      },
-      500,
-    );
-  }
-
-  const prevPolicy = resolveAccountL10nPolicy(account.l10n_policy);
-  const nextPolicyResolved = resolveAccountL10nPolicy(nextPolicy);
+async function runAccountLocalesAftermath(args: {
+  env: Env;
+  accountId: string;
+  account: AccountRow;
+  policy: Policy;
+  previousLocales: string[];
+  previousPolicyRaw: unknown;
+  nextLocales: string[];
+  nextPolicyRaw: unknown;
+}): Promise<void> {
+  const { env, accountId, account, policy, previousLocales, previousPolicyRaw, nextLocales, nextPolicyRaw } = args;
+  const prevPolicy = resolveAccountL10nPolicy(previousPolicyRaw);
+  const nextPolicyResolved = resolveAccountL10nPolicy(nextPolicyRaw);
   const prevBaseLocale = prevPolicy.baseLocale;
   const nextBaseLocale = nextPolicyResolved.baseLocale;
   const prevAvailableLocales = resolveActivePublishLocales({
-    accountLocales: account.l10n_locales,
-    policy: policyResult.policy,
+    accountLocales: previousLocales,
+    policy,
     baseLocale: prevBaseLocale,
   }).locales;
   const nextAvailableLocales = resolveActivePublishLocales({
-    accountLocales: locales,
-    policy: policyResult.policy,
+    accountLocales: nextLocales,
+    policy,
     baseLocale: nextBaseLocale,
   }).locales;
 
@@ -295,9 +245,7 @@ export async function handleAccountLocalesPut(req: Request, env: Env, accountId:
     const allowlistCache = new Map<string, Array<{ path: string; type: 'string' | 'richtext' }>>();
     const localesToSeed = new Set<string>(addedLocales);
     if (baseLocaleChanged) localesToSeed.add(nextBaseLocale);
-    const previousAccountLocales = normalizeLocaleList(account.l10n_locales, 'l10n_locales');
-    const previousAdditionalLocales = previousAccountLocales.ok ? previousAccountLocales.locales : [];
-    const addedAdditionalLocales = locales.filter((locale) => !previousAdditionalLocales.includes(locale));
+    const addedAdditionalLocales = nextLocales.filter((locale) => !previousLocales.includes(locale));
 
     for (const instance of publishedInstances) {
       const publicId = String(instance.public_id || '').trim();
@@ -347,7 +295,7 @@ export async function handleAccountLocalesPut(req: Request, env: Env, accountId:
       });
 
       const seoGeoLive = isSeoGeoLive({
-        policy: policyResult.policy,
+        policy,
         config: baseConfig,
       });
 
@@ -407,7 +355,7 @@ export async function handleAccountLocalesPut(req: Request, env: Env, accountId:
           widgetType,
           config: baseConfig,
           baseUpdatedAt: savedState.updatedAt,
-          policy: policyResult.policy,
+          policy,
           localesOverride: addedAdditionalLocales,
           allowNoDiff: true,
         });
@@ -418,5 +366,54 @@ export async function handleAccountLocalesPut(req: Request, env: Env, accountId:
     }
   }
 
-  return json({ locales, policy: resolveAccountL10nPolicy(nextPolicy) });
+}
+
+export async function handleAccountLocalesAftermath(req: Request, env: Env, accountId: string) {
+  if (!isTrustedInternalServiceRequest(req, env)) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+  }
+
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' }, 422);
+  }
+  if (!isRecord(payload)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+
+  const previousLocalesResult = normalizeLocaleList((payload as any).previousLocales, 'previousLocales');
+  if (!previousLocalesResult.ok) {
+    return json(previousLocalesResult.issues, { status: 422 });
+  }
+
+  const nextLocalesResult = normalizeLocaleList((payload as any).nextLocales, 'nextLocales');
+  if (!nextLocalesResult.ok) {
+    return json(nextLocalesResult.issues, { status: 422 });
+  }
+
+  const accountResult = await requireAccount(env, accountId);
+  if (!accountResult.ok) return accountResult.response;
+
+  const policy = resolvePolicy({
+    profile: accountResult.account.tier,
+    role: 'editor',
+  });
+
+  await runAccountLocalesAftermath({
+    env,
+    accountId,
+    account: accountResult.account,
+    policy,
+    previousLocales: previousLocalesResult.locales,
+    previousPolicyRaw: (payload as any).previousPolicy ?? null,
+    nextLocales: nextLocalesResult.locales,
+    nextPolicyRaw: (payload as any).nextPolicy ?? null,
+  });
+
+  return json({
+    ok: true,
+    accountId,
+  });
 }

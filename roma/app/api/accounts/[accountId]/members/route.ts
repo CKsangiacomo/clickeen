@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
-import { listAccountMembersForAccount, readJwtSubject } from '../../../../../lib/michael';
+import { resolveBerlinBaseUrl } from '../../../../../lib/env/berlin';
 
 export const runtime = 'edge';
+// Same-origin relay only: Roma browser/session cookies terminate on Next, so account UI calls Berlin through this thin host proxy.
 
 type RouteContext = {
   params: Promise<{ accountId: string }>;
-};
-
-type MemberPayload = {
-  userId: string;
-  role: string;
-  createdAt: string | null;
-  updatedAt: null;
 };
 
 function withNoStore(response: NextResponse): NextResponse {
@@ -34,28 +28,6 @@ function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
-
-function normalizeMemberRows(rows: Array<{ user_id?: unknown; role?: unknown; created_at?: unknown }>): MemberPayload[] {
-  return rows
-    .map((row) => {
-      const userId = asTrimmedString(row.user_id);
-      const role = asTrimmedString(row.role);
-      if (!userId || !role) return null;
-      return {
-        userId,
-        role,
-        createdAt: asTrimmedString(row.created_at),
-        updatedAt: null,
-      } satisfies MemberPayload;
-    })
-    .filter((row): row is MemberPayload => row !== null);
-}
-
 export async function GET(request: NextRequest, context: RouteContext) {
   const session = await resolveSessionBearer(request);
   if (!session.ok) return withNoStore(session.response);
@@ -73,49 +45,42 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const members = await listAccountMembersForAccount(accountId, session.accessToken);
-  if (!members.ok) {
-    const status = members.status === 401 ? 401 : 502;
+  try {
+    const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
+    const upstream = await fetch(`${berlinBase}/v1/accounts/${encodeURIComponent(accountId)}/members`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${session.accessToken}`,
+        accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+    const body = await upstream.text().catch(() => '');
+    return withSession(
+      request,
+      new NextResponse(body, {
+        status: upstream.status,
+        headers: {
+          'content-type': upstream.headers.get('content-type') || 'application/json; charset=utf-8',
+        },
+      }),
+      session.setCookies,
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
     return withSession(
       request,
       NextResponse.json(
         {
           error: {
-            kind: status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-            reasonKey: members.reasonKey,
-            detail: members.detail,
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.auth.contextUnavailable',
+            detail,
           },
         },
-        { status },
+        { status: 502 },
       ),
       session.setCookies,
     );
   }
-
-  const normalizedMembers = normalizeMemberRows(members.rows);
-  const currentUserId = readJwtSubject(session.accessToken);
-  const currentMembership = currentUserId
-    ? normalizedMembers.find((member) => member.userId === currentUserId)
-    : null;
-
-  if (!currentMembership) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
-        { status: 403 },
-      ),
-      session.setCookies,
-    );
-  }
-
-  return withSession(
-    request,
-    NextResponse.json({
-      accountId,
-      role: currentMembership.role,
-      members: normalizedMembers,
-    }),
-    session.setCookies,
-  );
 }

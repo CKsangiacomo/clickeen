@@ -26,7 +26,7 @@ type BerlinFinishPayload = {
   error?: unknown;
 };
 
-type ParisBootstrapPayload = {
+type BootstrapPayload = {
   defaults?: {
     accountId?: unknown;
   };
@@ -111,8 +111,8 @@ function resolveAccountId(value: unknown): string | null {
   return normalized || null;
 }
 
-async function fetchBootstrap(parisBase: string, accessToken: string): Promise<{ ok: true; accountId: string | null } | { ok: false; reasonKey: string }> {
-  const response = await fetch(`${parisBase}/api/roma/bootstrap`, {
+async function fetchBootstrap(berlinBase: string, accessToken: string): Promise<{ ok: true; accountId: string | null } | { ok: false; reasonKey: string }> {
+  const response = await fetch(`${berlinBase}/v1/session/bootstrap`, {
     method: 'GET',
     headers: {
       authorization: `Bearer ${accessToken}`,
@@ -121,7 +121,7 @@ async function fetchBootstrap(parisBase: string, accessToken: string): Promise<{
     cache: 'no-store',
   });
 
-  const payload = (await response.json().catch(() => null)) as ParisBootstrapPayload | null;
+  const payload = (await response.json().catch(() => null)) as BootstrapPayload | null;
   if (!response.ok) {
     return {
       ok: false,
@@ -259,7 +259,7 @@ export async function GET(request: NextRequest) {
   };
 
   let accountId: string | null = null;
-  const bootstrap = await fetchBootstrap(parisBase, accessToken);
+  const bootstrap = await fetchBootstrap(berlinBase, accessToken);
   if (!bootstrap.ok) {
     return applySession(
       NextResponse.redirect(buildRecoveryUrl(request, bootstrap.reasonKey, continuation.handoffId), {

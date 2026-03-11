@@ -2337,7 +2337,7 @@ function useWidgetSessionInternal() {
       subject === 'minibob'
         ? `/api/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`
         : `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`;
-    const bootstrapRes = subject === 'account' ? await fetchApi('/api/roma/bootstrap', { cache: 'no-store' }) : null;
+    const bootstrapRes = subject === 'account' ? await fetchApi('/api/session/bootstrap', { cache: 'no-store' }) : null;
     let accountCapsule: string | null = null;
     let nextPolicy: Policy | undefined;
     if (subject === 'account') {
