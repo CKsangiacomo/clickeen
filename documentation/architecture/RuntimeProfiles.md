@@ -8,7 +8,7 @@
 - Runs locally: DevStudio UI shell (`:5173`) and Bob (`:3000`).
 - Uses cloud-dev services by default:
   - Tokyo: `https://tokyo.dev.clickeen.com`
-  - Berlin: `https://berlin.dev.clickeen.com`
+  - Berlin: `https://berlin-dev.clickeen.workers.dev`
   - Paris: `https://paris.dev.clickeen.com`
 - Local Tokyo/Tokyo-worker are not part of this default workflow.
 - DevStudio still boots from the local widget catalog in this profile; instance rows come from the admin account through the trusted local route, which resolves through local Paris in product profile.

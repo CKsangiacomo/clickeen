@@ -429,7 +429,7 @@ fi
 
 if [ "$DEV_PROFILE" = "product" ]; then
   TOKYO_URL=${TOKYO_URL:-https://tokyo.dev.clickeen.com}
-  BERLIN_URL=${BERLIN_URL:-https://berlin.dev.clickeen.com}
+  BERLIN_URL=${BERLIN_URL:-https://berlin-dev.clickeen.workers.dev}
   SF_BASE_URL=${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}
   PARIS_BASE_URL=${PARIS_BASE_URL:-http://localhost:3001}
   PRODUCT_BERLIN_ISSUER=${BERLIN_ISSUER:-$BERLIN_URL}

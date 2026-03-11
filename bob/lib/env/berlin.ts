@@ -18,10 +18,10 @@ export function resolveBerlinBaseUrl(): string {
         if (hostname === 'clickeen.com' || hostname === 'app.clickeen.com' || !hostname.includes('.dev.')) {
           return 'https://berlin.clickeen.com';
         }
-        return 'https://berlin.dev.clickeen.com';
+        return 'https://berlin-dev.clickeen.workers.dev';
       }
       if (hostname.endsWith('.pages.dev') || hostname.endsWith('.workers.dev')) {
-        return 'https://berlin.dev.clickeen.com';
+        return 'https://berlin-dev.clickeen.workers.dev';
       }
       return null;
     } catch {

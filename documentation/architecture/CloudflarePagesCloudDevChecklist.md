@@ -38,7 +38,7 @@ Env contract:
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `bob/wrangler.toml` |
 | `PARIS_BASE_URL` | yes | `https://paris.dev.clickeen.com` | `bob/wrangler.toml` |
-| `BERLIN_BASE_URL` | yes | `https://berlin.dev.clickeen.com` | `bob/wrangler.toml` |
+| `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `bob/wrangler.toml` |
 | `SANFRANCISCO_BASE_URL` | yes | `https://sanfrancisco.dev.clickeen.com` | `bob/wrangler.toml` |
 
 Dashboard action:
@@ -70,7 +70,7 @@ Env contract:
 | --- | --- | --- | --- |
 | `PARIS_BASE_URL` | yes | `https://paris.dev.clickeen.com` | `roma/wrangler.toml` |
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `roma/wrangler.toml` |
-| `BERLIN_BASE_URL` | yes | `https://berlin.dev.clickeen.com` | `roma/wrangler.toml` |
+| `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `roma/wrangler.toml` |
 | `NEXT_PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | `roma/wrangler.toml` |
 
 Dashboard action:
