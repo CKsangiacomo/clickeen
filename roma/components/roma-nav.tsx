@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ROMA_DOMAINS, type RomaDomainKey } from '../lib/domains';
+import { RomaSignOutButton } from './roma-sign-out-button';
 
 type RomaNavProps = {
   activeDomain: RomaDomainKey;
@@ -38,6 +39,9 @@ export function RomaNav({ activeDomain, compact = false }: RomaNavProps) {
           </Link>
         );
       })}
+      <div className="roma-nav__footer">
+        <RomaSignOutButton />
+      </div>
     </nav>
   );
 }

@@ -38,6 +38,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  min-height: 100%;
 }
 
 .roma-nav__brand {
@@ -76,6 +77,33 @@ a {
 .roma-nav__link--active {
   background: var(--color-system-gray-step4);
   border-color: var(--color-system-gray-5);
+}
+
+.roma-nav__footer {
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.roma-nav__signout {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  border-radius: var(--control-radius-xl);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-system-gray-5);
+  background: var(--color-system-white);
+  color: var(--color-system-black);
+  cursor: pointer;
+}
+
+.roma-nav__signout:hover:not(:disabled) {
+  background: var(--color-system-gray-step5);
+}
+
+.roma-nav__signout:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .roma-layout__main {

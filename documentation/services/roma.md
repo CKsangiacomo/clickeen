@@ -64,6 +64,7 @@ Roma exposes explicit session endpoints for product auth UX:
 - `POST /api/session/logout` (best-effort Berlin logout + clears auth cookies)
 - `GET /api/session/login/google` (starts Google auth via Berlin)
 - `GET /api/session/finish` (redeems Berlin `finishId`, sets shared httpOnly session cookies, then redirects into Roma)
+- Roma renders a visible shell-level `Sign out` action in the domain nav and mobile drawer, backed by `POST /api/session/logout`, then hard-redirects to `/login`.
 
 Non-local auth rule:
 
