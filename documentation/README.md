@@ -97,7 +97,7 @@ This repo is operated by **1 human architect + multiple AI dev teams**. The syst
 
 ---
 
-## End-to-End Journey (widget folder → Roma/DevStudio/Bob/Prague → cloud-dev)
+## End-to-End Journey (widget folder → Roma/DevStudio/Bob/Prague)
 
 Runtime profiles:
 
@@ -125,7 +125,7 @@ Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
    - `prague/src/lib/markdown.ts` bundles `tokyo/widgets/**/pages/*.json`.
    - `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com` is the default overlay/token base (override to local Tokyo only for explicit local-debug workflows).
 
-Result: product profile keeps DevStudio + Bob aligned with Roma on the same cloud Tokyo data plane by default, while preserving the surface split: Roma is the customer account shell, DevStudio is the internal toolbench. Local Tokyo is a source-profile path.
+Result: product profile keeps local DevStudio + Bob aligned with Roma on the same cloud Tokyo data plane by default, while preserving the surface split: Roma is the customer account shell, DevStudio is the internal toolbench. Local Tokyo is a source-profile path.
 
 ### A.1) Source-profile auth issuer alignment (critical)
 

@@ -90,7 +90,7 @@ Every service section below is an instance of this pattern. Tokyo stores immutab
 | **Prague**        | `prague/`       | Cloudflare Pages                     | Marketing + SEO surface                                                 | ✅ Active   |
 | **Bob**           | `bob/`          | Cloudflare Pages                     | Widget builder, compiler, ToolDrawer, preview                           | ✅ Active   |
 | **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
-| **DevStudio**     | `admin/`        | Cloudflare Pages                     | Internal toolbench for platform curation, authoring, and verification   | ✅ Internal |
+| **DevStudio**     | `admin/`        | Local Vite                           | Internal toolbench for platform curation, authoring, and verification   | ✅ Internal |
 | **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | SSR embed runtime, pixel, loader                                        | ✅ Active   |
 | **Paris**         | `paris/`        | Cloudflare Workers                   | HTTP API, instances, tokens, entitlements                               | ✅ Active   |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
@@ -133,7 +133,6 @@ Each release proceeds in 3 steps:
 | **Bob**           | `https://bob.dev.clickeen.com`               | `https://app.clickeen.com`          |
 | **Roma**          | `https://roma.dev.clickeen.com`              | `https://app.clickeen.com`          |
 | **Prague**        | `https://prague.dev.clickeen.com` (optional) | `https://clickeen.com`              |
-| **DevStudio**     | `https://devstudio.dev.clickeen.com`         | (internal-only toolbench)           |
 | **Paris**         | `https://paris.dev.clickeen.com`             | `https://paris.clickeen.com`        |
 | **Venice**        | `https://venice.dev.clickeen.com`            | `https://embed.clickeen.com`        |
 | **Tokyo**         | `https://tokyo.dev.clickeen.com`             | `https://tokyo.clickeen.com`        |
@@ -150,7 +149,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 | Primitive         | Used by                                                   | Why                                                      |
 | ----------------- | --------------------------------------------------------- | -------------------------------------------------------- |
-| **Pages**         | Prague, Bob, Roma, DevStudio                              | Static + Next.js-style app surfaces; simple deploy model |
+| **Pages**         | Prague, Bob, Roma                                          | Static + Next.js-style app surfaces; simple deploy model |
 | **Workers**       | Paris, Venice, San Francisco (and Tokyo assets worker)    | Edge HTTP services; consistent global runtime            |
 | **R2**            | Tokyo (assets), San Francisco (raw logs)                  | Cheap object storage, zero egress for CDN patterns       |
 | **KV**            | San Francisco (sessions), Atlas (read-only runtime cache) | Hot key/value state, TTLs                                |
@@ -193,12 +192,13 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - Roma serves Berlin-backed account member reads on same-origin routes (`GET /api/accounts/:accountId/members`).
 - Roma Builder embeds Bob with `boot=message` and sends explicit `ck:open-editor` payloads after `bob:session-ready`.
 
-#### DevStudio (Pages)
+#### DevStudio (Local toolbench)
 
 - DevStudio is the internal toolbench, not a second customer account shell.
 - It is the surface where Clickeen runs internal platform work such as curation, authoring, and verification.
 - DevStudio can host Bob for curated/admin authoring work, but it must reuse canonical account and content truth instead of inventing a second runtime model.
-- In local product profile, DevStudio uses local-only tool routes under `/api/devstudio/*` and resolves a seeded `local-tool` platform context. In cloud-dev it remains the shared internal verification surface and `GET /api/devstudio/context` stays Berlin-session-gated.
+- In local product profile, DevStudio uses local-only tool routes under `/api/devstudio/*` and resolves a seeded `local-tool` platform context.
+- There is no canonical Cloudflare DevStudio runtime. DevStudio is local-only.
 
 #### Paris (Workers)
 

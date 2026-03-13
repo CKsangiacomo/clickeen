@@ -5,7 +5,6 @@ on:
     workflows:
       - cloud-dev workers deploy
       - cloud-dev roma app verify
-      - cloud-dev devstudio app deploy
       - cloud-dev prague content release
     types: [completed]
   workflow_dispatch: {}
@@ -66,17 +65,6 @@ jobs:
           done
           echo "Bob custom domain did not become reachable in time." >&2
           exit 1
-
-      - name: Verify DevStudio context route contract
-        run: |
-          set -euo pipefail
-          status=$(curl -sS -o /tmp/devstudio-context.json -w '%{http_code}' "https://devstudio.dev.clickeen.com/api/devstudio/context")
-          if [[ "$status" != "401" ]]; then
-            echo "Expected unauthenticated DevStudio context route to return 401, got $status" >&2
-            cat /tmp/devstudio-context.json >&2 || true
-            exit 1
-          fi
-          node -e "const fs=require('fs');const payload=JSON.parse(fs.readFileSync('/tmp/devstudio-context.json','utf8'));const detail=payload?.error?.detail;const reasonKey=payload?.error?.reasonKey;if(detail!=='devstudio_berlin_session_required'||reasonKey!=='coreui.errors.auth.required'){console.error('Unexpected DevStudio context payload', payload);process.exit(1)}"
 
       - name: Verify Venice embed reachability
         run: |

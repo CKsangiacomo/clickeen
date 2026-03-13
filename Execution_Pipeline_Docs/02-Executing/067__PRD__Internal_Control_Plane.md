@@ -33,7 +33,6 @@ Current implementation status:
    - Bob host delegation now supports `devstudio-support` as an explicit host surface
 2. Explicitly pending:
    - outbound posting/integration containment beyond the current widget publish path
-   - shared-runtime company-plane access gate beyond the explicit `501` placeholder
 
 This PRD remains `EXECUTING` until the remaining targeted tools are built and verified.
 
@@ -160,7 +159,6 @@ Current first slice:
 - local only
 - targeted customer-owned widget only
 - base-config save path only
-- shared-runtime still fails closed with explicit `501`
 
 ### Use case 4 — Future internal company operations
 
@@ -177,7 +175,7 @@ These belong to the same company-plane authority family and must grow from the s
 
 1. A general-purpose employee directory, RBAC graph, or staff org chart.
 2. Multi-person approval workflow design.
-3. Cloudflare Access / IdP design beyond what is minimally needed for shared-runtime execution.
+3. Any future remote/internal access design beyond what is minimally needed after the local-first control plane is proven.
 4. A generic internal admin console with tables for every entity in the business.
 5. Reopening Berlin as the place where global company-plane human power lives.
 
@@ -193,8 +191,7 @@ These belong to the same company-plane authority family and must grow from the s
 2. `DevStudio same-origin control routes`
    - `GET/POST /api/devstudio/control/*`
    - stable UI-facing route family for internal tools
-   - local implementation via Vite middleware
-   - cloud-dev/shared implementation via Pages Functions
+   - local implementation via Vite middleware only
 
 3. `Paris internal control routes`
    - `GET/POST /internal/control/*`
@@ -265,16 +262,6 @@ Local company-plane routes must:
 - use explicit local internal-tool authority
 - never be interpreted as customer product login
 - never leak authority to product routes
-
-### Shared-runtime contract
-
-Cloud-dev/prod internal control routes must use a separate internal access gate.
-They must not rely on:
-- normal Roma customer login semantics
-- Berlin product memberships
-- hidden account-switch tricks
-
-This PRD may stage that implementation after local if needed, but the final runtime must remain separate from the product plane.
 
 ## Minimal action set for Phase 1
 
@@ -402,8 +389,7 @@ Current Phase 1 truth:
 3. Reversible account publishing containment is delivered locally and enforced on the current Roma publish path.
 4. Support target-open into Bob is delivered locally for targeted customer-owned widgets.
 5. Support save from Bob is delivered locally for base-config updates only.
-6. Shared runtime currently exposes explicit `501` placeholders for `/api/devstudio/control/*` routes that are not yet implemented there.
-7. Outbound posting/integration containment is still open.
+6. Outbound posting/integration containment is still open.
 
 ### Phase 2 — Support intervention open/edit path
 
@@ -412,11 +398,11 @@ Current Phase 1 truth:
 3. Keep the shape targeted to a customer/widget, not a generic account shell
 4. Do not introduce a generic browse-all-accounts shell while expanding support intervention
 
-### Phase 3 — Shared-runtime hardening
+### Phase 3 — Remote/internal access design
 
-1. Add the separate internal access gate for cloud-dev/prod company-plane routes
-2. Keep it separate from Berlin product memberships and Roma customer login semantics
-3. Verify the same tools work in shared runtime without reopening the bad DevStudio model
+1. Decide whether any non-local internal control runtime is needed at all.
+2. If needed later, keep that access plane separate from Berlin product memberships and Roma customer login semantics.
+3. Do not reintroduce a fake Cloudflare DevStudio runtime just to carry company-plane actions.
 
 ## Hard failures
 
@@ -469,9 +455,7 @@ PRD 067 fails if execution does any of the following:
 ### Cloud-dev
 
 1. Verify company-plane routes are not public product routes.
-2. Verify the shared-runtime access gate is separate from normal product login semantics.
-3. Verify the same minimal company-plane tools work in cloud-dev.
-4. Verify removed bad surfaces stay gone:
+2. Verify removed bad surfaces stay gone:
    - no generic account browser
    - no DevStudio account shell
    - no Berlin-owned global company-plane role behavior

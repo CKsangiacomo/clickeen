@@ -121,7 +121,6 @@ This is the **foundation**. It is mostly Cloudflare-console work (human steps) p
 
 **Pages (staging UIs)**
 - DevStudio on Pages (dev only), protected by Cloudflare Access:
-  - `devstudio.dev.clickeen.com`
 - (Later) marketing site + widget pages + dashboard.
 
 #### D) DNS records / subdomain bindings (Cloudflare DNS)

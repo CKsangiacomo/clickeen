@@ -12,15 +12,15 @@ Decision record:
 - `DevStudio` remains the internal toolbench, not a second customer shell and not a generic admin console.
 
 Environment contract:
-- Read truth: `local` + `cloud-dev`
-- Write order: `local` first, then `cloud-dev`
+- Read truth: `local`
+- Write order: `local` first
 - Canonical startup: `bash scripts/dev-up.sh`
 
 Execution record:
 - `local` runtime/docs cleaned and verified on 2026-03-13.
-- `cloud-dev` DevStudio deploy verified on 2026-03-13.
-- `/api/devstudio/accounts*` now fails closed with JSON `404`.
-- `GET /api/devstudio/context` remains Berlin-session-gated in `cloud-dev`.
+- fake DevStudio Cloudflare runtime removed from repo truth on 2026-03-13.
+- `/api/devstudio/accounts*` removed from runtime and documentation.
+- DevStudio is now defined as local-only internal toolbench.
 
 ---
 
@@ -96,7 +96,7 @@ The following points are no longer under debate in this PRD:
 6. We will not make an internal human a normal `owner/admin` member of every account.
 7. We will not teach `Berlin` that one everyday identity can broadly control all accounts.
 8. `DevStudio local` optimizes for internal tool usability, not customer auth realism.
-9. `DevStudio cloud-dev` can be stricter than `DevStudio local`.
+9. There is no canonical Cloudflare DevStudio runtime.
 10. Customer auth/session realism continues to live in `Roma`, not in `DevStudio`.
 
 ---
@@ -334,7 +334,7 @@ The concrete local mechanism is:
 5. Legitimate local DevStudio routes may consume that `local-tool` context only to resolve the platform-owned target account needed for internal authoring/verification.
 6. When those local DevStudio routes call downstream local services, they use the existing explicit internal-tool transport headers (`PARIS_DEV_JWT`, `TOKYO_DEV_JWT`, `x-ck-internal-service: devstudio.local`) on the DevStudio tool routes only.
 7. Those local internal-tool headers must never be forwarded or accepted as product identity on `Roma`, `Bob`, `Berlin`, or product/account routes in `Paris` or `Tokyo`.
-8. `cloud-dev` and later non-local DevStudio runtimes remain on the stricter Berlin-session path; this local contract exists only for the owner machine toolbench.
+8. This local contract exists only for the owner machine toolbench. There is no canonical Cloudflare DevStudio runtime.
 
 Allowed local-only routes under this contract:
 - `/api/devstudio/context`
@@ -463,7 +463,7 @@ Required changes:
 3. Remove `operator` as a conceptual product/internal role.
 4. Define DevStudio as the internal toolbench.
 5. State clearly that future company-plane actions belong to a separate internal control plane, not to Berlin-owned superadmin authority.
-6. Remove deploy/runtime checklist references that still document `/api/devstudio/accounts*` as part of the legitimate cloud-dev contract.
+6. Remove deploy/runtime checklist references that still document `/api/devstudio/accounts*` or a Cloudflare DevStudio runtime as part of the legitimate contract.
 
 ### Phase 4 — Open the follow-up implementation track
 
@@ -542,11 +542,11 @@ Local verification:
 7. Confirm the local DevStudio tool contract is accepted only on `/api/devstudio/*`.
 8. Confirm no customer/product route depends on or accepts the DevStudio local contract.
 
-Cloud-dev verification:
+Repository verification:
 1. Confirm the fake `account-operator` surface is absent.
 2. Confirm `/api/devstudio/accounts*` is absent.
-3. Confirm the deploy/runtime checklist no longer teaches those routes as canonical.
-4. Confirm the remaining legitimate DevStudio runtime still deploys and loads.
+3. Confirm the deploy/runtime checklist no longer teaches those routes or a Cloudflare DevStudio runtime as canonical.
+4. Confirm the remaining legitimate local DevStudio runtime still builds and loads.
 5. Confirm docs and runtime now teach the same DevStudio model.
 
 ---

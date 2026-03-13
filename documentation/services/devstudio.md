@@ -1,33 +1,34 @@
 # DevStudio — Internal Toolbench
 
-DevStudio is Clickeen's **internal toolbench**.
+DevStudio is Clickeen's **local internal toolbench**.
 
 It is where the internal human running Clickeen:
 - tests and verifies widgets
 - curates platform-owned content
 - hosts Bob for internal authoring flows
-- inspects runtime/deploy behavior
-- uses internal-only tooling that does not belong in Roma
+- inspects runtime and deploy behavior from the local machine
+- uses internal-only tools that do not belong in Roma
 
 DevStudio is **not**:
 - Roma 2
 - a customer account shell
 - a browse-all-accounts dashboard
 - a global superadmin portal
+- a canonical Cloudflare or `cloud-dev` runtime
 - the place to test customer auth/session realism by default
 
 ## Boundary
 
 - `Roma` = customer/member shell
-- `DevStudio` = internal toolbench
+- `DevStudio` = local internal toolbench
 - `Bob` = editor kernel
 - `Berlin` = canonical product identity/account boundary
 
 DevStudio may surface internal tools for Clickeen operations, but it must not invent a second account model or teach internal humans to act like privileged customers browsing accounts.
 
-Future company-plane actions such as moderation, commercial overrides, and support authority belong to a separate internal control plane, not to Berlin product roles and not to a fake DevStudio account shell.
+Future company-plane actions such as moderation, commercial overrides, and support authority belong to the separate internal control plane, not to Berlin product roles and not to a fake DevStudio account shell.
 
-## Environments
+## Environment
 
 ### Local
 
@@ -57,18 +58,7 @@ Local contract:
   - `POST /api/devstudio/control/support-open-target`
   - `POST /api/devstudio/control/support-update-instance`
 
-### Cloud-dev
-
-URL: `https://devstudio.dev.clickeen.com`
-
-Purpose:
-- internal runtime verification surface
-- shared HTTPS check that deployed DevStudio still works
-
-Cloud-dev contract:
-- `GET /api/devstudio/context` is still Berlin-session-gated
-- cloud-dev is stricter than local by design
-- DevStudio cloud-dev does not expose `/api/devstudio/accounts*`
+There is no canonical Cloudflare DevStudio runtime.
 
 ## Shipped tools
 
@@ -115,10 +105,9 @@ What it does:
 - open a targeted customer-owned widget in Bob for support intervention
 
 Current support-intervention limits:
-- local-only for now
+- local only
 - targeted customer-owned widget only
 - base-config save path only
-- shared-runtime still fails closed with explicit `501` until the company-plane gate is implemented
 
 ### Dieter / design-system pages
 
@@ -144,11 +133,6 @@ Check:
 - local `PARIS_DEV_JWT`
 - local `TOKYO_DEV_JWT`
 - the selected local runtime profile from `bash scripts/dev-up.sh`
-
-### Cloud-dev DevStudio returns `401`
-
-That is expected when there is no valid Berlin session for the deployed internal surface.
-Cloud-dev remains stricter than local.
 
 ### Widget editing works in Roma but not in DevStudio local
 

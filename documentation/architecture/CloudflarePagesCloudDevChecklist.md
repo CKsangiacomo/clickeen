@@ -7,13 +7,12 @@ This checklist is the canonical manual setup contract for Cloudflare Pages `clou
 
 Rules:
 - Cloudflare Pages Git build is the deploy plane for Bob, Roma, Venice, and Prague.
-- DevStudio cloud-dev is the explicit exception: it deploys through the repo-owned GitHub Actions workflow because its Pages Functions runtime and current Git-connected project root/build settings do not produce a trustworthy tool runtime by default.
 - GitHub Actions must not create Pages projects or sync Pages secrets.
-- GitHub Actions may deploy Pages artifacts only for the DevStudio cloud-dev exception described below.
 - Each app builds from its own root and writes only to its own output directory.
 - Bob and Roma must use custom `*.dev.clickeen.com` hosts for authenticated Builder flows. `*.pages.dev` is not a valid public runtime host for those apps.
 - Bob and Roma keep non-secret runtime vars in app-local `wrangler.toml`. Do not duplicate those vars in the Cloudflare dashboard.
 - Venice and Prague keep runtime vars in the Cloudflare Pages dashboard because they do not use app-local Wrangler config today.
+- DevStudio is local-only and is not part of the Cloudflare Pages `cloud-dev` contract.
 
 ## Bob
 
@@ -111,33 +110,6 @@ Env contract:
 Dashboard action:
 - Keep this runtime var in the Cloudflare Pages dashboard.
 
-## DevStudio
-
-Project:
-- `devstudio-dev`
-
-Deploy settings:
-- Repo: `CKsangiacomo/clickeen`
-- Canonical deploy path: GitHub Actions `cloud-dev devstudio app deploy`
-- Deploy command: `wrangler pages deploy` from `admin/`
-- Build command: `pnpm --filter @clickeen/devstudio build`
-- Output directory: `admin/dist`
-- Functions source-of-truth:
-  - `admin/functions/api/devstudio/*`
-
-Why this is the exception:
-- The current Git-connected Pages project for DevStudio builds from the repo root and publishes `admin/dist`.
-- That shape did not produce trustworthy tool/API runtime for `/api/devstudio/*`.
-- The repo-owned workflow is therefore the deterministic deploy plane until the Cloudflare Pages project settings are deliberately rebuilt.
-
-Public host:
-- Canonical host: `https://devstudio.dev.clickeen.com`
-- Required: yes
-
-Verification contract:
-- `GET /api/devstudio/context` with a valid internal session must return DevStudio context.
-- `/api/devstudio/accounts*` must not exist.
-
 ## Prague
 
 Project:
@@ -196,9 +168,7 @@ Rules:
 ## PRD 63 Completion Proof
 
 - Bob, Roma, Venice, and Prague are Git-connected Pages projects.
-- DevStudio cloud-dev is workflow-deployed because its Pages Functions runtime was not reliably represented by the current Git-connected project settings.
 - Git build is the active deploy behavior for Bob, Roma, Venice, and Prague.
-- DevStudio uses the explicit workflow deploy path described above.
 - Bob and Roma non-secret vars are present in `wrangler.toml`, not duplicated in the Cloudflare dashboard.
 - Venice and Prague runtime vars are present in the Cloudflare dashboard.
 - Bob and Roma custom-domain bindings are active on `*.dev.clickeen.com`.

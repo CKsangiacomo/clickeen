@@ -118,8 +118,8 @@ DevStudio’s widget sandbox tool supports overriding the embedded Bob origin wi
 
 - `?bob=http://localhost:3000` (example)
 
-This allows a fast loop where DevStudio runs from Cloudflare Pages while Bob runs locally.
-The write plane does **not** move to Cloudflare DevStudio in this setup; writes still go through the attached local Bob/Paris stack and its selected Supabase target.
+This allows a fast loop where DevStudio runs on the local toolbench while Bob runs locally.
+The write plane does **not** move to any separate DevStudio runtime in this setup; writes still go through the attached local Bob/Paris stack and its selected Supabase target.
 
 ### Runtime status (local authoring clarity)
 

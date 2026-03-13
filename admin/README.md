@@ -6,19 +6,20 @@
 
 ## What DevStudio is
 
-DevStudio is Clickeen's internal toolbench.
+DevStudio is Clickeen's local internal toolbench.
 
 It exists for:
 - widget curation and verification
 - Bob-hosted internal authoring flows
 - Dieter previews and internal fixtures
-- deploy/runtime verification tools
+- deploy/runtime verification from the owner machine
 - other narrowly scoped internal tools that do not belong in Roma
 
 It is not:
 - a customer shell
 - a generic superadmin dashboard
 - a global account browser
+- a Cloudflare-hosted shared runtime
 - the place to test product-auth realism by default
 
 ## Current tool surface
@@ -64,17 +65,7 @@ These are for local DevStudio tool routes only.
 Current support-intervention slice:
 - open a targeted customer-owned widget in Bob from `customer-recovery`
 - save base-config changes back through the explicit support path
-- local only for now
-- shared-runtime still fails closed until the company-plane access gate is built
-
-## Cloud-dev contract
-
-DevStudio cloud-dev is an internal verification surface.
-It is stricter than local.
-
-Current behavior:
-- `GET /api/devstudio/context` requires a real Berlin session in cloud-dev
-- cloud-dev DevStudio does not expose `/api/devstudio/accounts*`
+- local only
 
 ## Development
 
@@ -102,8 +93,8 @@ Key generators:
 ## Editing rules
 
 When changing DevStudio:
-1. keep it an internal toolbench
+1. keep it a local internal toolbench
 2. do not add Roma-style product IA
 3. do not invent new account/admin concepts in DevStudio
 4. keep local-only authority confined to `/api/devstudio/*`
-5. if a tool needs company-plane authority, that belongs in the future separate internal control plane, not in a fake product account shell
+5. if a tool needs company-plane authority, that belongs in the separate internal control plane, not in a fake product account shell
