@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
@@ -51,7 +52,7 @@ export function TemplatesDomain() {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setTemplateInstances([]);
-      setDataError(message);
+      setDataError(resolveAccountShellErrorCopy(message, 'Failed to load templates. Please try again.'));
     } finally {
       setDomainLoading(false);
     }
@@ -110,7 +111,7 @@ export function TemplatesDomain() {
             ? payload.publicId.trim()
             : '';
         if (!createdPublicId) {
-          throw new Error('Duplicate response missing publicId.');
+          throw new Error('coreui.errors.payload.invalid');
         }
 
         router.push(
@@ -122,7 +123,7 @@ export function TemplatesDomain() {
         );
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setActionError(message);
+        setActionError(resolveAccountShellErrorCopy(message, 'Using the template failed. Please try again.'));
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -135,14 +136,17 @@ export function TemplatesDomain() {
   if (me.error || !me.data) {
     return (
       <section className="rd-canvas-module body-m">
-        Failed to load account context: {me.error ?? 'unknown_error'}
+        {resolveAccountShellErrorCopy(
+          me.error ?? 'coreui.errors.auth.contextUnavailable',
+          'Templates are unavailable right now. Please try again.',
+        )}
       </section>
     );
   }
   if (!accountId) {
     return (
       <section className="rd-canvas-module body-m">
-        No account membership found for current user.
+        No workspace is available for templates right now.
       </section>
     );
   }
@@ -150,7 +154,8 @@ export function TemplatesDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountId}</p>
+        <p className="body-m">Workspace: {context.accountName || 'Current workspace'}</p>
+        {context.accountSlug ? <p className="body-s">Slug: {context.accountSlug}</p> : null}
         <p className="body-m">Showing all curated templates available.</p>
 
         {dataError ? (
@@ -168,7 +173,7 @@ export function TemplatesDomain() {
             </button>
           </div>
         ) : null}
-        {actionError ? <p className="body-m">Failed to use template: {actionError}</p> : null}
+        {actionError ? <p className="body-m">{actionError}</p> : null}
         {groupedTemplates.length === 0 ? (
           <p className="body-m">No curated templates available yet.</p>
         ) : null}

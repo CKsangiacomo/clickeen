@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
 import { fetchParisJson } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
@@ -78,7 +79,7 @@ export function WidgetsDomain() {
       const message = err instanceof Error ? err.message : String(err);
       setWidgetInstances([]);
       setWidgetTypes([]);
-      setDataError(message);
+      setDataError(resolveAccountShellErrorCopy(message, 'Failed to load widgets. Please try again.'));
     } finally {
       setDomainLoading(false);
     }
@@ -151,7 +152,7 @@ export function WidgetsDomain() {
         const createdPublicId =
           payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
         if (!createdPublicId) {
-          throw new Error(`Create from main failed: missing publicId for source ${sourcePublicId}.`);
+          throw new Error('coreui.errors.payload.invalid');
         }
         const createdType = normalizeWidgetType(
           payload && typeof payload.widgetType === 'string' ? payload.widgetType : normalizedWidgetType,
@@ -168,7 +169,7 @@ export function WidgetsDomain() {
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setCreateError(message);
+        setCreateError(resolveAccountShellErrorCopy(message, 'Creating the widget failed. Please try again.'));
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -199,7 +200,7 @@ export function WidgetsDomain() {
         await refreshWidgets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setCreateError(message);
+        setCreateError(resolveAccountShellErrorCopy(message, 'Duplicating the widget failed. Please try again.'));
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -224,7 +225,7 @@ export function WidgetsDomain() {
         await refreshWidgets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setCreateError(message);
+        setCreateError(resolveAccountShellErrorCopy(message, 'Deleting the widget failed. Please try again.'));
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -249,7 +250,9 @@ export function WidgetsDomain() {
         await refreshWidgets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setCreateError(message);
+        setCreateError(
+          resolveAccountShellErrorCopy(message, 'Updating widget status failed. Please try again.'),
+        );
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -308,7 +311,7 @@ export function WidgetsDomain() {
         cancelRename();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setRenameError(message);
+        setRenameError(resolveAccountShellErrorCopy(message, 'Renaming the widget failed. Please try again.'));
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -342,10 +345,17 @@ export function WidgetsDomain() {
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading account context...</section>;
   if (me.error || !me.data) {
-    return <section className="rd-canvas-module body-m">Failed to load account context: {me.error ?? 'unknown_error'}</section>;
+    return (
+      <section className="rd-canvas-module body-m">
+        {resolveAccountShellErrorCopy(
+          me.error ?? 'coreui.errors.auth.contextUnavailable',
+          'Widgets are unavailable right now. Please try again.',
+        )}
+      </section>
+    );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No account membership found for current user.</section>;
+    return <section className="rd-canvas-module body-m">No workspace is available for widgets right now.</section>;
   }
 
   return (
@@ -354,7 +364,6 @@ export function WidgetsDomain() {
         <section className="rd-canvas-module">
           {dataError ? (
             <div className="roma-inline-stack">
-              <p className="body-m">roma.errors.bootstrap.domain_unavailable</p>
               <p className="body-m">{dataError}</p>
               <button
                 className="diet-btn-txt"
@@ -368,8 +377,8 @@ export function WidgetsDomain() {
               </button>
             </div>
           ) : null}
-          {createError ? <p className="body-m">Failed to update widgets: {createError}</p> : null}
-          {renameError ? <p className="body-m">Failed to rename widget: {renameError}</p> : null}
+          {createError ? <p className="body-m">{createError}</p> : null}
+          {renameError ? <p className="body-m">{renameError}</p> : null}
 
           {groupedInstances.length === 0 ? (
             <div className="rd-canvas-module__actions">
