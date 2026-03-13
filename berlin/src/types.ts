@@ -17,7 +17,6 @@ export type Env = {
   PARIS_BASE_URL?: string;
   PARIS_DEV_JWT?: string;
   ROMA_AUTHZ_CAPSULE_SECRET?: string;
-  AI_GRANT_HMAC_SECRET?: string;
   BERLIN_SESSION_KV?: KVNamespace;
   BERLIN_AUTH_TICKETS?: DurableObjectNamespace;
   USAGE_KV?: KVNamespace;

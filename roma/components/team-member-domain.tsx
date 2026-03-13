@@ -2,17 +2,17 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { resolvePersonLabel } from '../lib/person-profile';
 import { resolveAccountPolicyFromRomaAuthz, resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type TeamMemberProfile = {
   userId: string;
   primaryEmail: string;
   emailVerified: boolean;
-  displayName: string;
   givenName: string | null;
   familyName: string | null;
-  preferredLanguage: string | null;
-  countryCode: string | null;
+  primaryLanguage: string | null;
+  country: string | null;
   timezone: string | null;
 };
 
@@ -31,24 +31,23 @@ type TeamMemberDomainProps = {
   memberId: string;
 };
 
-type ProfileDraft = {
-  displayName: string;
-  givenName: string;
-  familyName: string;
-  preferredLanguage: string;
-  countryCode: string;
-  timezone: string;
+const TEAM_MEMBER_REASON_COPY: Record<string, string> = {
+  'coreui.errors.account.memberNotFound': 'That team member could not be found.',
+  'coreui.errors.auth.required': 'You need to sign in again to manage team settings.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to manage this team member.',
+  'coreui.errors.db.readFailed': 'Failed to load this team member. Please try again.',
+  'coreui.errors.db.writeFailed': 'Saving the membership failed. Please try again.',
+  'coreui.errors.payload.invalid': 'The membership update was invalid. Please try again.',
+  'coreui.errors.network.timeout': 'The request timed out. Please try again.',
 };
 
-function toDraft(profile: TeamMemberProfile | null): ProfileDraft {
-  return {
-    displayName: profile?.displayName ?? '',
-    givenName: profile?.givenName ?? '',
-    familyName: profile?.familyName ?? '',
-    preferredLanguage: profile?.preferredLanguage ?? '',
-    countryCode: profile?.countryCode ?? '',
-    timezone: profile?.timezone ?? '',
-  };
+function resolveTeamMemberErrorCopy(reason: string, fallback: string): string {
+  const normalized = String(reason || '').trim();
+  if (!normalized) return fallback;
+  const mapped = TEAM_MEMBER_REASON_COPY[normalized];
+  if (mapped) return mapped;
+  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
+  return normalized;
 }
 
 function resolveErrorReason(payload: unknown, fallback: string): string {
@@ -56,6 +55,26 @@ function resolveErrorReason(payload: unknown, fallback: string): string {
   const error = (payload as { error?: unknown }).error;
   if (!error || typeof error !== 'object' || Array.isArray(error)) return fallback;
   return String((error as { reasonKey?: unknown }).reasonKey || fallback);
+}
+
+function resolveMemberDisplayName(profile: TeamMemberProfile | null, memberId: string): string {
+  return resolvePersonLabel(profile, memberId);
+}
+
+function formatNullableValue(value: string | null | undefined): string {
+  const normalized = String(value || '').trim();
+  return normalized || 'Not set';
+}
+
+function formatCountryValue(value: string | null | undefined): string {
+  const country = String(value || '').trim();
+  if (!country) return 'Not set';
+  try {
+    const displayNames = new Intl.DisplayNames(undefined, { type: 'region' });
+    return displayNames.of(country) || country;
+  } catch {
+    return country;
+  }
 }
 
 export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
@@ -70,10 +89,8 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   const [loading, setLoading] = useState(false);
   const [member, setMember] = useState<TeamMemberResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const [savingRole, setSavingRole] = useState(false);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [draft, setDraft] = useState<ProfileDraft>(toDraft(null));
   const [roleDraft, setRoleDraft] = useState('viewer');
 
   const accountId = context.accountId;
@@ -101,13 +118,12 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
         throw new Error('coreui.errors.payload.invalid');
       }
       setMember(parsed);
-      setDraft(toDraft(parsed.member.profile));
       setRoleDraft(parsed.member.role);
-      setSaveError(null);
+      setMutationError(null);
     } catch (nextError) {
-      const message = nextError instanceof Error ? nextError.message : String(nextError);
+      const reason = nextError instanceof Error ? nextError.message : String(nextError);
       setMember(null);
-      setError(message);
+      setError(resolveTeamMemberErrorCopy(reason, 'Failed to load this team member. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -117,40 +133,10 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     void refreshMember();
   }, [refreshMember]);
 
-  const saveProfile = useCallback(async () => {
-    if (!accountId || !canManage) return;
-    setSavingProfile(true);
-    setSaveError(null);
-    try {
-      const response = await fetch(
-        `/api/accounts/${encodeURIComponent(accountId)}/members/${encodeURIComponent(memberId)}/profile`,
-        {
-          method: 'PATCH',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(draft),
-        },
-      );
-      const payload = (await response.json().catch(() => null)) as TeamMemberResponse | { error?: unknown } | null;
-      if (!response.ok) {
-        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
-      }
-      const parsed = payload as TeamMemberResponse | null;
-      if (!parsed?.member) {
-        throw new Error('coreui.errors.payload.invalid');
-      }
-      setMember(parsed);
-      setDraft(toDraft(parsed.member.profile));
-    } catch (nextError) {
-      setSaveError(nextError instanceof Error ? nextError.message : String(nextError));
-    } finally {
-      setSavingProfile(false);
-    }
-  }, [accountId, canManage, draft, memberId]);
-
   const saveRole = useCallback(async () => {
     if (!accountId || !canManage) return;
     setSavingRole(true);
-    setSaveError(null);
+    setMutationError(null);
     try {
       const response = await fetch(`/api/accounts/${encodeURIComponent(accountId)}/members/${encodeURIComponent(memberId)}`, {
         method: 'PATCH',
@@ -168,7 +154,8 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       setMember(parsed);
       setRoleDraft(parsed.member.role);
     } catch (nextError) {
-      setSaveError(nextError instanceof Error ? nextError.message : String(nextError));
+      const reason = nextError instanceof Error ? nextError.message : String(nextError);
+      setMutationError(resolveTeamMemberErrorCopy(reason, 'Saving the membership failed. Please try again.'));
     } finally {
       setSavingRole(false);
     }
@@ -176,18 +163,22 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading team context...</section>;
   if (me.error || !me.data) {
-    return <section className="rd-canvas-module body-m">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
+    return (
+      <section className="rd-canvas-module body-m">
+        {resolveTeamMemberErrorCopy(me.error ?? 'coreui.errors.auth.contextUnavailable', 'Failed to load team context.')}
+      </section>
+    );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No account membership found for team controls.</section>;
+    return <section className="rd-canvas-module body-m">No workspace membership found for team controls.</section>;
   }
 
   return (
     <>
       <section className="rd-canvas-module roma-inline-stack" style={{ justifyContent: 'space-between', gap: '12px' }}>
         <div>
-          <p className="body-m">Account: {context.accountName || accountId}</p>
-          <p className="body-s">Member detail is Berlin-owned account context, not an account-local shadow profile.</p>
+          <p className="body-m">Workspace: {context.accountName || 'Current workspace'}</p>
+          <p className="body-s">Team manages memberships. Personal details stay with the member in User Settings.</p>
         </div>
         <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/team">
           <span className="diet-btn-txt__label body-m">Back to team</span>
@@ -215,9 +206,8 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
           <section className="rd-canvas-module">
             <div className="roma-inline-stack" style={{ justifyContent: 'space-between', gap: '12px' }}>
               <div>
-                <h2 className="heading-h3">{member.member.profile?.displayName ?? member.member.userId}</h2>
+                <h2 className="heading-h3">{resolveMemberDisplayName(member.member.profile, member.member.userId)}</h2>
                 <p className="body-s">{member.member.profile?.primaryEmail ?? 'No primary email recorded'}</p>
-                <p className="body-s">User ID: {member.member.userId}</p>
               </div>
               <div>
                 <p className="label-s">Role</p>
@@ -260,84 +250,45 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
           </section>
 
           <section className="rd-canvas-module">
-            <h3 className="heading-h4">Profile</h3>
+            <h3 className="heading-h4">Person</h3>
+            <p className="body-s">Personal details are read-only here. The member manages them in User Settings.</p>
             <div className="roma-form-grid">
-              <label className="roma-field">
-                <span className="label-s">Display name</span>
-                <input
-                  className="roma-input body-m"
-                  value={draft.displayName}
-                  onChange={(event) => setDraft((current) => ({ ...current, displayName: event.target.value }))}
-                  disabled={!canManage || savingProfile}
-                />
-              </label>
-              <label className="roma-field">
-                <span className="label-s">Preferred language</span>
-                <input
-                  className="roma-input body-m"
-                  value={draft.preferredLanguage}
-                  onChange={(event) => setDraft((current) => ({ ...current, preferredLanguage: event.target.value }))}
-                  disabled={!canManage || savingProfile}
-                />
-              </label>
-              <label className="roma-field">
-                <span className="label-s">Given name</span>
-                <input
-                  className="roma-input body-m"
-                  value={draft.givenName}
-                  onChange={(event) => setDraft((current) => ({ ...current, givenName: event.target.value }))}
-                  disabled={!canManage || savingProfile}
-                />
-              </label>
-              <label className="roma-field">
-                <span className="label-s">Family name</span>
-                <input
-                  className="roma-input body-m"
-                  value={draft.familyName}
-                  onChange={(event) => setDraft((current) => ({ ...current, familyName: event.target.value }))}
-                  disabled={!canManage || savingProfile}
-                />
-              </label>
-              <label className="roma-field">
-                <span className="label-s">Country code</span>
-                <input
-                  className="roma-input body-m"
-                  value={draft.countryCode}
-                  onChange={(event) => setDraft((current) => ({ ...current, countryCode: event.target.value }))}
-                  disabled={!canManage || savingProfile}
-                />
-              </label>
-              <label className="roma-field">
-                <span className="label-s">Timezone</span>
-                <input
-                  className="roma-input body-m"
-                  value={draft.timezone}
-                  onChange={(event) => setDraft((current) => ({ ...current, timezone: event.target.value }))}
-                  disabled={!canManage || savingProfile}
-                />
-              </label>
-            </div>
-            <div className="roma-inline-stack" style={{ justifyContent: 'space-between', gap: '12px', marginTop: '12px' }}>
-              <div>
-                <p className="body-s">Primary email: {member.member.profile?.primaryEmail ?? 'unknown'}</p>
-                <p className="body-s">Email verified: {member.member.profile?.emailVerified ? 'yes' : 'no'}</p>
+              <div className="roma-field">
+                <span className="label-s">First name</span>
+                <p className="body-m">{formatNullableValue(member.member.profile?.givenName)}</p>
               </div>
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="solid"
-                type="button"
-                onClick={() => void saveProfile()}
-                disabled={!canManage || savingProfile}
-              >
-                <span className="diet-btn-txt__label body-m">{savingProfile ? 'Saving...' : 'Save profile'}</span>
-              </button>
+              <div className="roma-field">
+                <span className="label-s">Last name</span>
+                <p className="body-m">{formatNullableValue(member.member.profile?.familyName)}</p>
+              </div>
+              <div className="roma-field">
+                <span className="label-s">Primary email</span>
+                <p className="body-m">{formatNullableValue(member.member.profile?.primaryEmail)}</p>
+              </div>
+              <div className="roma-field">
+                <span className="label-s">Email verified</span>
+                <p className="body-m">
+                  {member.member.profile ? (member.member.profile.emailVerified ? 'Yes' : 'No') : 'Not set'}
+                </p>
+              </div>
+              <div className="roma-field">
+                <span className="label-s">Primary Language</span>
+                <p className="body-m">{formatNullableValue(member.member.profile?.primaryLanguage)}</p>
+              </div>
+              <div className="roma-field">
+                <span className="label-s">Country</span>
+                <p className="body-m">{formatCountryValue(member.member.profile?.country)}</p>
+              </div>
+              <div className="roma-field">
+                <span className="label-s">Timezone</span>
+                <p className="body-m">{formatNullableValue(member.member.profile?.timezone)}</p>
+              </div>
             </div>
           </section>
 
-          {saveError ? (
+          {mutationError ? (
             <section className="rd-canvas-module">
-              <p className="body-m">{saveError}</p>
+              <p className="body-m">{mutationError}</p>
             </section>
           ) : null}
         </>

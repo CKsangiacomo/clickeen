@@ -12,12 +12,25 @@ export type RomaMeResponse = {
     userId: string;
     primaryEmail: string;
     emailVerified: boolean;
-    displayName: string;
     givenName: string | null;
     familyName: string | null;
-    preferredLanguage: string | null;
-    countryCode: string | null;
+    primaryLanguage: string | null;
+    country: string | null;
     timezone: string | null;
+    contactMethods?: {
+      phone: {
+        value: string | null;
+        verified: boolean;
+        pendingValue: string | null;
+        challengeExpiresAt: string | null;
+      };
+      whatsapp: {
+        value: string | null;
+        verified: boolean;
+        pendingValue: string | null;
+        challengeExpiresAt: string | null;
+      };
+    };
   } | null;
   accounts: Array<{
     accountId: string;

@@ -192,6 +192,54 @@ export async function requestSupabaseUser(
   return { ok: false, status: response.status || 502, reason: 'coreui.errors.auth.required', detail };
 }
 
+export async function requestSupabaseUpdateUserEmail(
+  env: Env,
+  accessToken: string,
+  email: string,
+): Promise<{ ok: true; user: SupabaseUserResponse } | { ok: false; status: number; reason: string; detail?: string }> {
+  const config = resolveSupabaseConfig(env);
+  if (!config) return { ok: false, status: 503, reason: 'berlin.errors.auth.config_missing' };
+
+  const response = await fetch(`${config.baseUrl}/auth/v1/user`, {
+    method: 'PUT',
+    headers: {
+      apikey: config.anonKey,
+      authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json',
+      accept: 'application/json',
+    },
+    cache: 'no-store',
+    body: JSON.stringify({ email }),
+  });
+  const payload = (await response.json().catch(() => null)) as SupabaseUserResponse | Record<string, unknown> | null;
+  if (response.ok && payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    return { ok: true, user: payload as SupabaseUserResponse };
+  }
+
+  const detail =
+    claimAsString((payload as Record<string, unknown> | null)?.error_description) ||
+    claimAsString((payload as Record<string, unknown> | null)?.msg) ||
+    claimAsString((payload as Record<string, unknown> | null)?.error) ||
+    undefined;
+
+  if (response.status === 401 || response.status === 403) {
+    return { ok: false, status: 401, reason: 'coreui.errors.auth.required', detail };
+  }
+  if (response.status === 409) {
+    return { ok: false, status: 409, reason: 'coreui.errors.user.email.conflict', detail };
+  }
+  if (response.status === 400 || response.status === 422) {
+    return { ok: false, status: 422, reason: 'coreui.errors.user.email.invalid', detail };
+  }
+
+  return {
+    ok: false,
+    status: response.status || 502,
+    reason: 'coreui.errors.user.email.changeFailed',
+    detail,
+  };
+}
+
 export async function requestSupabaseUnlinkIdentity(
   env: Env,
   accessToken: string,

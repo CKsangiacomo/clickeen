@@ -1,13 +1,17 @@
+import {
+  isUserSettingsTimezoneSupported,
+  normalizeUserSettingsCountry,
+  resolveUserSettingsTimezone,
+} from '@clickeen/ck-contracts';
 import { json, validationError } from './helpers';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env } from './types';
 
 export type UserProfilePatch = {
-  display_name?: string;
   given_name?: string | null;
   family_name?: string | null;
-  preferred_language?: string | null;
-  country_code?: string | null;
+  primary_language?: string | null;
+  country?: string | null;
   timezone?: string | null;
 };
 
@@ -25,17 +29,18 @@ function normalizeNullableField(value: unknown, maxLength: number): string | nul
   return normalized;
 }
 
-function normalizePreferredLanguage(value: unknown): string | null | undefined {
+function normalizePrimaryLanguage(value: unknown): string | null | undefined {
   const normalized = normalizeNullableField(value, 32);
   if (normalized == null || normalized === undefined) return normalized;
   return normalized.toLowerCase();
 }
 
-function normalizeCountryCode(value: unknown): string | null | undefined {
-  const normalized = normalizeNullableField(value, 2);
-  if (normalized == null || normalized === undefined) return normalized;
-  const upper = normalized.toUpperCase();
-  return /^[A-Z]{2}$/.test(upper) ? upper : undefined;
+function normalizeCountry(value: unknown): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value !== 'string') return undefined;
+  const normalized = normalizeUserSettingsCountry(value);
+  return normalized ?? undefined;
 }
 
 export function parseUserProfilePatchPayload(value: unknown): ParseUserProfilePatchResult {
@@ -45,32 +50,24 @@ export function parseUserProfilePatchPayload(value: unknown): ParseUserProfilePa
 
   const record = value as Record<string, unknown>;
 
-  const displayName = normalizeNullableField(record.displayName, 120);
   const givenName = normalizeNullableField(record.givenName, 120);
   const familyName = normalizeNullableField(record.familyName, 120);
-  const preferredLanguage = normalizePreferredLanguage(record.preferredLanguage);
-  const countryCode = normalizeCountryCode(record.countryCode);
+  const primaryLanguage = normalizePrimaryLanguage(record.primaryLanguage);
+  const country = normalizeCountry(record.country);
   const timezone = normalizeNullableField(record.timezone, 120);
 
-  if ([displayName, givenName, familyName, preferredLanguage, countryCode, timezone].every((entry) => entry === undefined)) {
+  if ([givenName, familyName, primaryLanguage, country, timezone].every((entry) => entry === undefined)) {
     return {
       ok: false,
       response: validationError('coreui.errors.payload.invalid', 'at least one profile field must be provided'),
     };
   }
 
-  if (Object.prototype.hasOwnProperty.call(record, 'displayName') && (displayName == null || displayName === undefined)) {
-    return {
-      ok: false,
-      response: validationError('coreui.errors.payload.invalid', 'displayName must be a non-empty string up to 120 chars'),
-    };
-  }
-
   if (
     (Object.prototype.hasOwnProperty.call(record, 'givenName') && givenName === undefined) ||
     (Object.prototype.hasOwnProperty.call(record, 'familyName') && familyName === undefined) ||
-    (Object.prototype.hasOwnProperty.call(record, 'preferredLanguage') && preferredLanguage === undefined) ||
-    (Object.prototype.hasOwnProperty.call(record, 'countryCode') && countryCode === undefined) ||
+    (Object.prototype.hasOwnProperty.call(record, 'primaryLanguage') && primaryLanguage === undefined) ||
+    (Object.prototype.hasOwnProperty.call(record, 'country') && country === undefined) ||
     (Object.prototype.hasOwnProperty.call(record, 'timezone') && timezone === undefined)
   ) {
     return {
@@ -82,14 +79,52 @@ export function parseUserProfilePatchPayload(value: unknown): ParseUserProfilePa
   return {
     ok: true,
     patch: {
-      ...(displayName !== undefined ? { display_name: displayName ?? undefined } : {}),
       ...(givenName !== undefined ? { given_name: givenName } : {}),
       ...(familyName !== undefined ? { family_name: familyName } : {}),
-      ...(preferredLanguage !== undefined ? { preferred_language: preferredLanguage } : {}),
-      ...(countryCode !== undefined ? { country_code: countryCode } : {}),
+      ...(primaryLanguage !== undefined ? { primary_language: primaryLanguage } : {}),
+      ...(country !== undefined ? { country } : {}),
       ...(timezone !== undefined ? { timezone } : {}),
     },
   };
+}
+
+async function loadCurrentUserProfileRow(args: {
+  env: Env;
+  userId: string;
+}): Promise<
+  | {
+      ok: true;
+      row: {
+        country?: unknown;
+        timezone?: unknown;
+      } | null;
+    }
+  | {
+      ok: false;
+      response: Response;
+    }
+> {
+  const params = new URLSearchParams({
+    select: 'country,timezone',
+    user_id: `eq.${args.userId}`,
+    limit: '1',
+  });
+  const response = await supabaseAdminFetch(args.env, `/rest/v1/user_profiles?${params.toString()}`, {
+    method: 'GET',
+  });
+  const payload = await readSupabaseAdminJson<
+    Array<{
+      country?: unknown;
+      timezone?: unknown;
+    }> | Record<string, unknown>
+  >(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
+    };
+  }
+  return { ok: true, row: Array.isArray(payload) ? payload[0] || null : null };
 }
 
 export async function patchUserProfile(args: {
@@ -97,13 +132,43 @@ export async function patchUserProfile(args: {
   userId: string;
   patch: UserProfilePatch;
 }): Promise<Response | null> {
+  const nextPatch: UserProfilePatch = { ...args.patch };
+
+  if (args.patch.country !== undefined || args.patch.timezone !== undefined) {
+    const current = await loadCurrentUserProfileRow(args);
+    if (!current.ok) return current.response;
+
+    const currentCountry = normalizeUserSettingsCountry(current.row?.country);
+    const currentTimezone = normalizeNullableField(current.row?.timezone, 120) ?? null;
+    const nextCountry = args.patch.country !== undefined ? args.patch.country : currentCountry;
+
+    if (!nextCountry) {
+      if (args.patch.timezone !== undefined && args.patch.timezone !== null) {
+        return validationError('coreui.errors.payload.invalid', 'timezone requires country');
+      }
+      nextPatch.country = null;
+      nextPatch.timezone = null;
+    } else {
+      const requestedTimezone = args.patch.timezone !== undefined ? args.patch.timezone : currentTimezone;
+      if (
+        requestedTimezone !== undefined &&
+        requestedTimezone !== null &&
+        !isUserSettingsTimezoneSupported(nextCountry, requestedTimezone)
+      ) {
+        return validationError('coreui.errors.payload.invalid', 'timezone must match country');
+      }
+      nextPatch.country = nextCountry;
+      nextPatch.timezone = resolveUserSettingsTimezone(nextCountry, requestedTimezone, currentTimezone);
+    }
+  }
+
   const params = new URLSearchParams({
     user_id: `eq.${args.userId}`,
   });
   const response = await supabaseAdminFetch(args.env, `/rest/v1/user_profiles?${params.toString()}`, {
     method: 'PATCH',
     headers: { Prefer: 'return=representation' },
-    body: JSON.stringify(args.patch),
+    body: JSON.stringify(nextPatch),
   });
   const payload = await readSupabaseAdminJson<Array<{ user_id?: unknown }> | Record<string, unknown>>(response);
   if (!response.ok) {

@@ -12,14 +12,15 @@ import {
   handleAccountLifecycleTierDropDismiss,
   handleAccountMemberById,
   handleAccountMemberPatch,
-  handleAccountMemberProfilePatch,
   handleAccountMembers,
   handleAccountOwnerTransfer,
   handleAccounts,
   handleAccountSwitch,
-  handleAccountTier,
   handleInvitationAccept,
   handleMe,
+  handleMeContactMethodStart,
+  handleMeContactMethodVerify,
+  handleMeEmailChange,
   handleMeUpdate,
   handleMeIdentities,
   handleSessionBootstrap,
@@ -75,6 +76,21 @@ export default {
         return methodNotAllowed();
       }
 
+      if (pathname === '/v1/me/email-change') {
+        if (request.method !== 'POST') return methodNotAllowed();
+        return await handleMeEmailChange(request, env);
+      }
+
+      const meContactMethodMatch = pathname.match(/^\/v1\/me\/contact-methods\/([^/]+)\/(start|verify)$/);
+      if (meContactMethodMatch) {
+        const channel = decodeURIComponent(meContactMethodMatch[1] || '');
+        const action = meContactMethodMatch[2] || '';
+        if (request.method !== 'POST') return methodNotAllowed();
+        if (action === 'start') return await handleMeContactMethodStart(request, env, channel);
+        if (action === 'verify') return await handleMeContactMethodVerify(request, env, channel);
+        return methodNotAllowed();
+      }
+
       if (pathname === '/v1/me/identities') {
         if (request.method !== 'GET') return methodNotAllowed();
         return await handleMeIdentities(request, env);
@@ -90,17 +106,6 @@ export default {
       if (invitationAcceptMatch) {
         if (request.method !== 'POST') return methodNotAllowed();
         return await handleInvitationAccept(request, env, decodeURIComponent(invitationAcceptMatch[1] || ''));
-      }
-
-      const accountMemberProfileMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/members\/([^/]+)\/profile$/);
-      if (accountMemberProfileMatch) {
-        if (request.method !== 'PATCH') return methodNotAllowed();
-        return await handleAccountMemberProfilePatch(
-          request,
-          env,
-          decodeURIComponent(accountMemberProfileMatch[1] || ''),
-          decodeURIComponent(accountMemberProfileMatch[2] || ''),
-        );
       }
 
       const accountMemberMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/members\/([^/]+)$/);
@@ -169,12 +174,6 @@ export default {
           env,
           decodeURIComponent(accountTierDropDismissMatch[1] || ''),
         );
-      }
-
-      const accountTierMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/tier$/);
-      if (accountTierMatch) {
-        if (request.method !== 'PUT') return methodNotAllowed();
-        return await handleAccountTier(request, env, decodeURIComponent(accountTierMatch[1] || ''));
       }
 
       const accountOwnerTransferMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/owner-transfer$/);

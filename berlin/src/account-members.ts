@@ -3,7 +3,7 @@ import { findAccountMember, listAccountMembers } from './account-state';
 import { json, validationError } from './helpers';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env } from './types';
-import { parseUserProfilePatchPayload, patchUserProfile, userProfileExists } from './user-profiles';
+import { userProfileExists } from './user-profiles';
 
 type Result =
   | { ok: true; member: BerlinAccountMember }
@@ -273,58 +273,6 @@ export async function handleAccountMemberUpdate(args: {
     accountId: args.accountId,
     memberId: args.memberId,
     role: parsed.role,
-  });
-  if (writeError) return writeError;
-
-  const refreshed = await loadAccountMember(args.env, args.accountId, args.memberId);
-  if (!refreshed.ok) return refreshed.response;
-
-  return json({
-    accountId: args.accountId,
-    role: args.account.role,
-    member: refreshed.member,
-  });
-}
-
-export async function handleAccountMemberProfileUpdate(args: {
-  request: Request;
-  env: Env;
-  account: BerlinAccountContext;
-  accountId: string;
-  memberId: string;
-}): Promise<Response> {
-  const denied = denyMemberMutation(args.account);
-  if (denied) return denied;
-
-  const current = await loadAccountMember(args.env, args.accountId, args.memberId);
-  if (!current.ok) return current.response;
-  if (!current.member.profile) {
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.auth.contextUnavailable',
-          detail: 'member profile missing',
-        },
-      },
-      { status: 500 },
-    );
-  }
-
-  let payload: unknown = null;
-  try {
-    payload = await args.request.json();
-  } catch {
-    payload = null;
-  }
-
-  const parsed = parseUserProfilePatchPayload(payload);
-  if (!parsed.ok) return parsed.response;
-
-  const writeError = await patchUserProfile({
-    env: args.env,
-    userId: args.memberId,
-    patch: parsed.patch,
   });
   if (writeError) return writeError;
 

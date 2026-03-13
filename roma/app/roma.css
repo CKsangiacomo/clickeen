@@ -344,6 +344,24 @@ a {
   outline-offset: 1px;
 }
 
+.roma-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.roma-field {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.roma-field .roma-input {
+  width: 100%;
+  min-width: 0;
+}
+
 .roma-table {
   width: 100%;
   border-collapse: collapse;

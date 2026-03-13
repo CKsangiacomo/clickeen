@@ -32,7 +32,6 @@ export type BerlinAccountInvitation = {
   revokedAt: string | null;
   createdAt: string;
   updatedAt: string;
-  acceptToken: string;
 };
 
 type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
@@ -117,7 +116,6 @@ function normalizeInvitationRow(row: InvitationRow): BerlinAccountInvitation | n
     revokedAt: asTrimmedString(row.revoked_at),
     createdAt,
     updatedAt,
-    acceptToken: invitationId,
   };
 }
 
@@ -331,6 +329,8 @@ export async function handleAccountInvitationsGet(args: {
   env: Env;
   account: BerlinAccountContext;
 }): Promise<Response> {
+  if (!canManageInvitations(args.account.role)) return denyResponse();
+
   const invitations = await listAccountInvitations(args.env, args.account.accountId);
   if (!invitations.ok) return invitations.response;
 

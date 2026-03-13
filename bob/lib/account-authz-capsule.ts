@@ -36,43 +36,14 @@ function roleRank(value: MemberRole): number {
 }
 
 function resolveRomaAuthzCapsuleSecret(): string {
-  const explicit = String(process.env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
-  if (explicit) return explicit;
-  const aiFallback = String(process.env.AI_GRANT_HMAC_SECRET || '').trim();
-  if (aiFallback) return aiFallback;
-  return String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  return String(process.env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
 }
 
 export async function authorizeRequestAccountRoleFromCapsule(args: {
   request: Request;
   accountId: string;
   minRole: MemberRole;
-  allowBypass?: () => boolean;
 }): Promise<AccountCapsuleAuthzResult> {
-  if (args.allowBypass?.()) {
-    return {
-      ok: true,
-      payload: {
-        v: 1,
-        typ: 'roma.account',
-        iss: 'paris',
-        aud: 'roma',
-        sub: 'local-dev-bypass',
-        userId: 'local-dev-bypass',
-        accountId: args.accountId,
-        accountStatus: 'active',
-        accountName: 'Local Dev',
-        accountSlug: 'local-dev',
-        accountWebsiteUrl: null,
-        profile: 'tier3',
-        role: 'owner',
-        authzVersion: 'local-dev-bypass',
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 60,
-      },
-    };
-  }
-
   const token = readRomaAuthzCapsuleHeader(args.request);
   if (!token) {
     return {

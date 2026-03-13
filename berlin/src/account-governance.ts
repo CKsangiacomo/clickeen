@@ -179,9 +179,6 @@ export async function handleAccountDelete(args: {
   account: BerlinAccountContext;
 }): Promise<Response> {
   if (args.account.role !== 'owner') return denyResponse();
-  if (args.env.CK_ADMIN_ACCOUNT_ID && args.account.accountId === args.env.CK_ADMIN_ACCOUNT_ID) {
-    return denyResponse();
-  }
 
   let payload: unknown = null;
   try {

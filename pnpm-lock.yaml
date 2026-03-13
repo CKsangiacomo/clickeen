@@ -94,6 +94,9 @@ importers:
 
   berlin:
     dependencies:
+      '@clickeen/ck-contracts':
+        specifier: workspace:*
+        version: link:../packages/ck-contracts
       '@clickeen/ck-policy':
         specifier: workspace:*
         version: link:../packages/ck-policy
@@ -230,6 +233,9 @@ importers:
       '@clickeen/bob':
         specifier: workspace:*
         version: link:../bob
+      '@clickeen/ck-contracts':
+        specifier: workspace:*
+        version: link:../packages/ck-contracts
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../packages/l10n

@@ -10,9 +10,9 @@ For the canonical account-management model Roma must converge to, see `documenta
 Roma is the authenticated product shell for account users. It owns:
 
 - Domain navigation (`/home`, `/profile`, `/widgets`, `/templates`, `/builder`, etc.)
-- Person-scoped My Profile UI over Berlin-owned profile + linked-identity contracts
+- Person-scoped User Settings UI over Berlin-owned profile contracts
 - Active account context resolution
-- Account-scoped Team list and member-detail UI over Berlin-owned membership/profile contracts
+- Account-scoped Team list and member-detail UI over Berlin-owned membership contracts
 - Lightweight catalog/list APIs for product UX
 - Bob editor orchestration via explicit message boot
 
@@ -126,8 +126,8 @@ Notes:
 - Roma marks Bob iframe host intent with `surface=roma` to keep host-specific auth behavior explicit.
 - In hosted account-editing flows, Bob sends save and account l10n mutation intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
 - Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/accounts/:accountId/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Paris only for the internal aftermath orchestration Berlin triggers.
-- Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and canonical profile edits route through Roma same-origin APIs backed by Berlin (`/api/accounts/:accountId/members/:memberId` and `/api/accounts/:accountId/members/:memberId/profile`).
-- Roma now exposes a dedicated person-scoped Profile domain at `/profile`. It renders canonical profile data from bootstrap, writes self-profile updates through `/api/me` -> Berlin `PUT /v1/me`, and renders linked identity visibility through `/api/me/identities`.
+- Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes route through Roma same-origin APIs backed by Berlin (`/api/accounts/:accountId/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
+- Roma now exposes a dedicated person-scoped User Settings domain at `/profile`. It renders canonical person data from bootstrap, writes self-profile updates through `/api/me` -> Berlin `PUT /v1/me`, initiates auth-owned email change through `/api/me/email-change` -> Berlin `POST /v1/me/email-change`, and runs phone/WhatsApp verification through same-origin relays to Berlin (`/api/me/contact-methods/:channel/start|verify`). Linked identities stay internal and are not part of the standard customer-facing surface.
 - Roma Team now also exposes Berlin-backed invitation issue/list/revoke flows through `/api/accounts/:accountId/invitations` and `/api/accounts/:accountId/invitations/:invitationId`. Until delivery infrastructure exists, Team surfaces the manual `/accept-invite/:token` path instead of pretending email delivery exists.
 - Roma exposes `/accept-invite/:token` as the explicit invitation-accept handoff. If the visitor is not signed in, the page routes them to `/login?next=...`; if signed in, it proxies acceptance to Berlin through `/api/invitations/:token/accept`.
 - Roma Settings now exposes owner-only final account-holder actions through Berlin-backed same-origin routes: `/api/accounts/:accountId/owner-transfer` and `DELETE /api/accounts/:accountId`. Tier, locales, ownership, and delete-account controls now sit on the same Berlin-owned account boundary.
@@ -153,9 +153,9 @@ Roma `widgets` is the only product surface that owns per-instance live status ch
 
 Usage, billing, and AI domain behavior:
 
-- `UsageDomain` is bootstrap-driven today. It does not expose live metering in current environments; detailed counters render as "not configured".
+- `UsageDomain` is bootstrap-driven today. It does not expose live metering in current environments; Roma renders product-facing storage/plan summaries rather than raw entitlement JSON.
 - `BillingDomain` is a placeholder surface today; billing is not configured in current environments.
-- `UsageDomain` and `AiDomain` read profile/role/entitlements from bootstrap authz context (no extra policy/entitlements fetches).
+- `AiDomain` remains bootstrap-driven and renders plan/profile summaries from bootstrap authz context (no extra policy/entitlements fetches).
 
 Assets domain behavior:
 

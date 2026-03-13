@@ -1,3 +1,4 @@
+import { isUserSettingsTimezoneSupported, normalizeUserSettingsCountry } from '@clickeen/ck-contracts';
 import { internalError } from './helpers';
 import { readSupabaseAdminJson, supabaseAdminFetch, supabaseAdminErrorResponse } from './supabase-admin';
 import { type Env, type SupabaseUserResponse } from './types';
@@ -6,11 +7,10 @@ type UserProfileSeed = {
   userId: string;
   primaryEmail: string;
   emailVerified: boolean;
-  displayName: string;
   givenName: string | null;
   familyName: string | null;
-  preferredLanguage: string | null;
-  countryCode: string | null;
+  primaryLanguage: string | null;
+  country: string | null;
   timezone: string | null;
 };
 
@@ -24,11 +24,10 @@ type UserProfileRow = {
   user_id?: unknown;
   primary_email?: unknown;
   email_verified?: unknown;
-  display_name?: unknown;
   given_name?: unknown;
   family_name?: unknown;
-  preferred_language?: unknown;
-  country_code?: unknown;
+  primary_language?: unknown;
+  country?: unknown;
   timezone?: unknown;
   active_account_id?: unknown;
 };
@@ -63,14 +62,14 @@ function normalizeEmail(value: unknown): string | null {
   return email ? email.toLowerCase() : null;
 }
 
-function normalizeCountryCode(value: unknown): string | null {
+function normalizeCountry(value: unknown): string | null {
   const country = asTrimmedString(value);
   if (!country) return null;
   const normalized = country.toUpperCase();
   return /^[A-Z]{2}$/.test(normalized) ? normalized : null;
 }
 
-function normalizePreferredLanguage(value: unknown): string | null {
+function normalizePrimaryLanguage(value: unknown): string | null {
   const locale = asTrimmedString(value);
   return locale ? locale.toLowerCase() : null;
 }
@@ -107,25 +106,18 @@ function roleRank(value: unknown): number {
   }
 }
 
-function deriveDisplayName(email: string, metadata: Record<string, unknown>): string {
-  const fullName =
-    asTrimmedString(metadata.full_name) || asTrimmedString(metadata.name) || asTrimmedString(metadata.display_name);
-  if (fullName) return fullName;
+function normalizeProfileLocation(rawCountry: unknown, rawTimezone: unknown): {
+  country: string | null;
+  timezone: string | null;
+} {
+  const country = normalizeUserSettingsCountry(rawCountry);
+  if (!country) return { country: null, timezone: null };
 
-  const givenName =
-    asTrimmedString(metadata.given_name) ||
-    asTrimmedString(metadata.first_name) ||
-    asTrimmedString(metadata.givenName);
-  const familyName =
-    asTrimmedString(metadata.family_name) ||
-    asTrimmedString(metadata.last_name) ||
-    asTrimmedString(metadata.familyName);
-  const combined = [givenName, familyName].filter(Boolean).join(' ').trim();
-  if (combined) return combined;
-
-  const localPart = email.split('@')[0]?.trim();
-  if (localPart) return localPart;
-  return 'User';
+  const timezone = normalizeTimezone(rawTimezone);
+  return {
+    country,
+    timezone: timezone && isUserSettingsTimezoneSupported(country, timezone) ? timezone : null,
+  };
 }
 
 function toUserProfileSeed(user: SupabaseUserResponse): UserProfileSeed | null {
@@ -147,18 +139,15 @@ function toUserProfileSeed(user: SupabaseUserResponse): UserProfileSeed | null {
     userId,
     primaryEmail,
     emailVerified: Boolean(asTrimmedString(user.email_confirmed_at)),
-    displayName: deriveDisplayName(primaryEmail, metadata),
     givenName,
     familyName,
-    preferredLanguage:
-      normalizePreferredLanguage(metadata.locale) ||
-      normalizePreferredLanguage(metadata.language) ||
-      normalizePreferredLanguage(metadata.preferred_language),
-    countryCode:
-      normalizeCountryCode(metadata.country_code) ||
-      normalizeCountryCode(metadata.country) ||
-      normalizeCountryCode(metadata.countryCode),
-    timezone: normalizeTimezone(metadata.timezone),
+    primaryLanguage:
+      normalizePrimaryLanguage(metadata.locale) ||
+      normalizePrimaryLanguage(metadata.language),
+    ...normalizeProfileLocation(
+      normalizeCountry(metadata.country),
+      metadata.timezone,
+    ),
   };
 }
 
@@ -170,6 +159,7 @@ function resolveAccountSlug(accountId: string): string {
 async function upsertUserProfile(env: Env, profile: UserProfileSeed): Promise<ReconcileResult> {
   const existingProfile = await loadExistingUserProfile(env, profile.userId);
   if (!existingProfile.ok) return existingProfile;
+  const existingLocation = normalizeProfileLocation(existingProfile.row?.country, existingProfile.row?.timezone);
 
   const response = await supabaseAdminFetch(
     env,
@@ -181,13 +171,12 @@ async function upsertUserProfile(env: Env, profile: UserProfileSeed): Promise<Re
         user_id: profile.userId,
         primary_email: profile.primaryEmail,
         email_verified: profile.emailVerified,
-        display_name: asTrimmedString(existingProfile.row?.display_name) || profile.displayName,
         given_name: asTrimmedString(existingProfile.row?.given_name) || profile.givenName,
         family_name: asTrimmedString(existingProfile.row?.family_name) || profile.familyName,
-        preferred_language:
-          normalizePreferredLanguage(existingProfile.row?.preferred_language) || profile.preferredLanguage,
-        country_code: normalizeCountryCode(existingProfile.row?.country_code) || profile.countryCode,
-        timezone: asTrimmedString(existingProfile.row?.timezone) || profile.timezone,
+        primary_language:
+          normalizePrimaryLanguage(existingProfile.row?.primary_language) || profile.primaryLanguage,
+        country: existingLocation.country || profile.country,
+        timezone: existingLocation.timezone || profile.timezone,
       }),
     },
   );
@@ -205,7 +194,7 @@ async function loadExistingUserProfile(
 ): Promise<{ ok: true; row: UserProfileRow | null } | { ok: false; response: Response }> {
   const params = new URLSearchParams({
     select:
-      'user_id,primary_email,email_verified,display_name,given_name,family_name,preferred_language,country_code,timezone,active_account_id',
+      'user_id,primary_email,email_verified,given_name,family_name,primary_language,country,timezone,active_account_id',
     user_id: `eq.${userId}`,
     limit: '1',
   });
@@ -409,7 +398,7 @@ export async function ensureProductAccountState(
   const provisioned = await provisionOwnedAccount({
     env,
     userId: profile.userId,
-    accountId: profile.userId,
+    accountId: crypto.randomUUID(),
     name: 'Personal',
     setActive: true,
   });

@@ -1,4 +1,4 @@
-import { claimAsString, json, validationError } from './helpers';
+import { claimAsString, internalError, json, validationError } from './helpers';
 import { handleAccountDelete as applyAccountDelete, handleOwnerTransfer as applyOwnerTransfer } from './account-governance';
 import {
   handleAccountInvitationDelete as applyAccountInvitationDelete,
@@ -8,15 +8,13 @@ import {
 } from './account-invitations';
 import {
   handleAccountMemberCreate,
-  handleAccountMemberProfileUpdate,
   handleAccountMemberUpdate,
 } from './account-members';
 import {
   handleAccountTierDropDismiss as applyAccountTierDropDismiss,
-  handleAccountTierUpdate,
 } from './account-lifecycle';
 import { handleAccountLocalesUpdate } from './account-locales';
-import { resolvePrincipalSession } from './auth-session';
+import { ensureSupabaseAccessToken, resolvePrincipalSession } from './auth-session';
 import {
   buildBootstrapPayload,
   findAccountContext,
@@ -27,6 +25,8 @@ import {
   persistActiveAccountPreference,
 } from './account-state';
 import { provisionOwnedAccount } from './account-reconcile';
+import { startUserContactVerification, verifyUserContactMethod, type UserContactChannel } from './contact-methods';
+import { requestSupabaseUpdateUserEmail } from './supabase-client';
 import { type Env } from './types';
 import { parseUserProfilePatchPayload, patchUserProfile } from './user-profiles';
 
@@ -50,6 +50,14 @@ function normalizeUuid(value: string): string | null {
   return normalized;
 }
 
+function normalizeEmail(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return null;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) return null;
+  return normalized;
+}
+
 function parseAccountName(value: unknown): string | null {
   if (value == null) return 'New account';
   if (typeof value !== 'string') return null;
@@ -57,6 +65,16 @@ function parseAccountName(value: unknown): string | null {
   if (!normalized) return null;
   if (normalized.length > 80) return null;
   return normalized;
+}
+
+function normalizeContactChannel(value: string): UserContactChannel | null {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (normalized === 'phone' || normalized === 'whatsapp') return normalized;
+  return null;
+}
+
+function canDismissTierDropNotice(role: string): boolean {
+  return role === 'owner' || role === 'admin';
 }
 
 async function resolvePrincipalState(request: Request, env: Env) {
@@ -116,6 +134,123 @@ export async function handleMeUpdate(request: Request, env: Env): Promise<Respon
   return json({
     user: refreshed.value.user,
     profile: refreshed.value.profile,
+  });
+}
+
+export async function handleMeEmailChange(request: Request, env: Env): Promise<Response> {
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
+
+  let payload: unknown = null;
+  try {
+    payload = await request.json();
+  } catch {
+    payload = null;
+  }
+
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return validationError('coreui.errors.payload.invalid');
+  }
+
+  const email = normalizeEmail((payload as { email?: unknown }).email);
+  if (!email) {
+    return validationError('coreui.errors.user.email.invalid', 'email must be a valid address');
+  }
+
+  if (email === resolved.state.profile.primaryEmail.trim().toLowerCase()) {
+    return validationError('coreui.errors.user.email.sameAsCurrent');
+  }
+
+  const ensured = await ensureSupabaseAccessToken(env, resolved.principal.session);
+  if (!ensured.ok) return ensured.response;
+
+  const changed = await requestSupabaseUpdateUserEmail(env, ensured.accessToken, email);
+  if (!changed.ok) {
+    const reasonKey =
+      changed.reason === 'berlin.errors.auth.config_missing'
+        ? 'coreui.errors.auth.contextUnavailable'
+        : changed.reason;
+    if (changed.status === 401) {
+      return json({ error: { kind: 'AUTH', reasonKey, ...(changed.detail ? { detail: changed.detail } : {}) } }, { status: 401 });
+    }
+    if (changed.status === 409) {
+      return json(
+        { error: { kind: 'CONFLICT', reasonKey, ...(changed.detail ? { detail: changed.detail } : {}) } },
+        { status: 409 },
+      );
+    }
+    if (changed.status === 422) {
+      return validationError(reasonKey, changed.detail);
+    }
+    return internalError(reasonKey, changed.detail);
+  }
+
+  return json(
+    {
+      ok: true,
+      currentEmail: resolved.state.profile.primaryEmail,
+      requestedEmail: email,
+      status: 'confirmation_required',
+    },
+    { status: 202 },
+  );
+}
+
+export async function handleMeContactMethodStart(
+  request: Request,
+  env: Env,
+  channelRaw: string,
+): Promise<Response> {
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
+
+  const channel = normalizeContactChannel(channelRaw);
+  if (!channel) return validationError('coreui.errors.payload.invalid', 'unsupported contact channel');
+
+  let payload: unknown = null;
+  try {
+    payload = await request.json();
+  } catch {
+    payload = null;
+  }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return validationError('coreui.errors.payload.invalid');
+  }
+
+  return startUserContactVerification({
+    env,
+    userId: resolved.principal.userId,
+    channel,
+    value: (payload as { value?: unknown }).value,
+  });
+}
+
+export async function handleMeContactMethodVerify(
+  request: Request,
+  env: Env,
+  channelRaw: string,
+): Promise<Response> {
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
+
+  const channel = normalizeContactChannel(channelRaw);
+  if (!channel) return validationError('coreui.errors.payload.invalid', 'unsupported contact channel');
+
+  let payload: unknown = null;
+  try {
+    payload = await request.json();
+  } catch {
+    payload = null;
+  }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return validationError('coreui.errors.payload.invalid');
+  }
+
+  return verifyUserContactMethod({
+    env,
+    userId: resolved.principal.userId,
+    channel,
+    code: (payload as { code?: unknown }).code,
   });
 }
 
@@ -427,33 +562,6 @@ export async function handleAccountMemberPatch(
   });
 }
 
-export async function handleAccountMemberProfilePatch(
-  request: Request,
-  env: Env,
-  accountIdRaw: string,
-  memberIdRaw: string,
-): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
-  if (!accountId) return validationError('coreui.errors.accountId.invalid');
-
-  const memberId = normalizeUuid(memberIdRaw);
-  if (!memberId) return denyResponse();
-
-  const resolved = await resolvePrincipalState(request, env);
-  if (!resolved.ok) return resolved.response;
-
-  const account = findAccountContext(resolved.state, accountId);
-  if (!account) return denyResponse();
-
-  return handleAccountMemberProfileUpdate({
-    request,
-    env,
-    account,
-    accountId,
-    memberId,
-  });
-}
-
 export async function handleAccountSwitch(
   request: Request,
   env: Env,
@@ -481,28 +589,6 @@ export async function handleAccountSwitch(
   });
 }
 
-export async function handleAccountTier(
-  request: Request,
-  env: Env,
-  accountIdRaw: string,
-): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
-  if (!accountId) return validationError('coreui.errors.accountId.invalid');
-
-  const resolved = await resolvePrincipalState(request, env);
-  if (!resolved.ok) return resolved.response;
-
-  const account = findAccountContext(resolved.state, accountId);
-  if (!account) return denyResponse();
-  if (account.role !== 'owner') return denyResponse();
-
-  return handleAccountTierUpdate({
-    request,
-    env,
-    account,
-  });
-}
-
 export async function handleAccountLifecycleTierDropDismiss(
   request: Request,
   env: Env,
@@ -516,6 +602,7 @@ export async function handleAccountLifecycleTierDropDismiss(
 
   const account = findAccountContext(resolved.state, accountId);
   if (!account) return denyResponse();
+  if (!canDismissTierDropNotice(account.role)) return denyResponse();
 
   return applyAccountTierDropDismiss({
     env,

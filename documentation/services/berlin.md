@@ -13,9 +13,13 @@ Responsibilities:
 - Accept user credentials for sign-in (`/auth/login/password` in v1).
 - Orchestrate provider login OAuth start+callback (`/auth/login/provider/*`).
 - Reconcile first successful sign-in into canonical product account state (`user_profiles`, first account, first owner membership, active account preference) during PRD 064 execution.
+- First successful sign-in provisions a distinct first account/workspace id; Berlin must never reuse `user_id` as `account_id`.
 - Own the first canonical account routes during PRD 064 execution:
   - `GET /v1/me`
   - `PUT /v1/me`
+  - `POST /v1/me/email-change`
+  - `POST /v1/me/contact-methods/:channel/start`
+  - `POST /v1/me/contact-methods/:channel/verify`
   - `GET /v1/me/identities`
   - `GET /v1/accounts`
   - `POST /v1/accounts`
@@ -28,14 +32,15 @@ Responsibilities:
   - `POST /v1/accounts/:id/invitations`
   - `DELETE /v1/accounts/:id/invitations/:invitationId`
   - `PATCH /v1/accounts/:id/members/:memberId`
-  - `PATCH /v1/accounts/:id/members/:memberId/profile`
   - `POST /v1/accounts/:id/owner-transfer`
   - `POST /v1/invitations/:token/accept`
   - `POST /v1/accounts/:id/switch`
-  - `PUT /v1/accounts/:id/tier`
   - `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
   - `GET /v1/session/bootstrap`
-- Resolve the active account, role, entitlement snapshot, and short-lived account authz capsule for bootstrap.
+- Resolve the active account, role, entitlement snapshot, and short-lived Berlin-issued account authz capsule for bootstrap.
+- Resolve the active account only from persisted active-account preference or deterministic real membership truth; Berlin must fail explicitly if no real user-associated account can be opened and must never open a privileged fallback account.
+- Invalid persisted profile/account locale-policy truth must fail explicitly in canonical product/account routes; Berlin logs the defect and does not silently default it away.
+- Berlin owns verified contact-method state and challenge lifecycle for `phone` and `whatsapp`; in `local` it uses a delivery-capture adapter, while `cloud-dev`/prod fail unavailable until a real delivery boundary exists.
 - Mint short-lived Berlin access tokens (`RS256`) with stable product claims (`sub`, `sid`, `ver`, `iat`, `exp`, `iss`, `aud`).
 - Rotate refresh tokens via `/auth/refresh`.
 - Revoke sessions via `/auth/logout`.
@@ -43,7 +48,9 @@ Responsibilities:
 
 Non-responsibilities:
 - No downstream product decisioning or widget business logic.
+- Customer-facing product shells do not directly mutate plan/tier truth through Berlin.
 - `POST /v1/accounts/:id/members` is an existing-user attach path only (`userId` + role for an already-resolved canonical profile). Unknown-person access must still go through invitation issuance + acceptance.
+- Invitation listing/issuance, account locale-policy mutation, and tier-drop notice dismissal are manager-scoped account operations (`owner|admin`), not viewer/editor operations.
 
 ## Runtime surface (v1)
 
@@ -55,6 +62,9 @@ Public:
 - `GET /auth/session` (identity/session status only)
 - `GET /v1/me`
 - `PUT /v1/me`
+- `POST /v1/me/email-change`
+- `POST /v1/me/contact-methods/:channel/start`
+- `POST /v1/me/contact-methods/:channel/verify`
 - `GET /v1/me/identities`
 - `GET /v1/accounts`
 - `POST /v1/accounts`
@@ -67,11 +77,9 @@ Public:
 - `POST /v1/accounts/:id/invitations`
 - `DELETE /v1/accounts/:id/invitations/:invitationId`
 - `PATCH /v1/accounts/:id/members/:memberId`
-- `PATCH /v1/accounts/:id/members/:memberId/profile`
 - `POST /v1/accounts/:id/owner-transfer`
 - `POST /v1/invitations/:token/accept`
 - `POST /v1/accounts/:id/switch`
-- `PUT /v1/accounts/:id/tier`
 - `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
 - `GET /v1/session/bootstrap`
 - `POST /auth/refresh`
@@ -115,6 +123,7 @@ Required:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `BERLIN_AUTH_TICKETS` (Wrangler Durable Object binding)
 - `BERLIN_SESSION_KV` (Wrangler binding)
+- `ROMA_AUTHZ_CAPSULE_SECRET` (dedicated account-authz capsule signing secret)
 
 Recommended:
 - `BERLIN_ISSUER`
@@ -127,9 +136,7 @@ Recommended:
 - `CK_ADMIN_ACCOUNT_ID`
 - `PARIS_BASE_URL` (required for locale-settings aftermath handoff to Paris orchestration)
 - `PARIS_DEV_JWT` (required for Berlin -> Paris internal aftermath auth)
-- `ROMA_AUTHZ_CAPSULE_SECRET` (falls back to `AI_GRANT_HMAC_SECRET`, then `SUPABASE_SERVICE_ROLE_KEY`)
 - `USAGE_KV` (required for non-local bootstrap budget usage reads)
-- `RENDER_SNAPSHOT_QUEUE` (required for tier-drop live-surface cleanup / mirror enforcement)
 
 Optional key override:
 - `BERLIN_ACCESS_PRIVATE_KEY_PEM`
@@ -143,3 +150,4 @@ If signing key PEMs are not provided, Berlin generates an in-memory RSA keypair 
 
 - Local URL: `http://localhost:3005`
 - Canonical startup: `bash scripts/dev-up.sh`
+- `dev-up` resolves one dedicated local `ROMA_AUTHZ_CAPSULE_SECRET` and passes it explicitly to Berlin/Paris/Bob. Berlin product auth must not borrow AI or service-role secrets.

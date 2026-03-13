@@ -55,3 +55,5 @@ export declare function configAssetUrlContractIssues(
 export declare function configNonPersistableUrlIssues(
   config: unknown,
 ): Array<{ path: string; message: string }>;
+
+export * from './user-settings-geo.js';

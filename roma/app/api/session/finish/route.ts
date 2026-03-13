@@ -30,6 +30,9 @@ type BootstrapPayload = {
   defaults?: {
     accountId?: unknown;
   };
+  authz?: {
+    accountCapsule?: unknown;
+  };
   error?: unknown;
 };
 
@@ -111,7 +114,10 @@ function resolveAccountId(value: unknown): string | null {
   return normalized || null;
 }
 
-async function fetchBootstrap(berlinBase: string, accessToken: string): Promise<{ ok: true; accountId: string | null } | { ok: false; reasonKey: string }> {
+async function fetchBootstrap(
+  berlinBase: string,
+  accessToken: string,
+): Promise<{ ok: true; accountId: string | null; accountCapsule: string | null } | { ok: false; reasonKey: string }> {
   const response = await fetch(`${berlinBase}/v1/session/bootstrap`, {
     method: 'GET',
     headers: {
@@ -132,6 +138,10 @@ async function fetchBootstrap(berlinBase: string, accessToken: string): Promise<
   return {
     ok: true,
     accountId: resolveAccountId(payload?.defaults?.accountId),
+    accountCapsule:
+      typeof payload?.authz?.accountCapsule === 'string' && payload.authz.accountCapsule.trim()
+        ? payload.authz.accountCapsule.trim()
+        : null,
   };
 }
 
@@ -140,7 +150,11 @@ async function completeHandoff(
   accessToken: string,
   handoffId: string,
   accountId: string,
+  accountCapsule: string | null,
 ): Promise<{ ok: true; builderRoute: string } | { ok: false; reasonKey: string }> {
+  if (!accountCapsule) {
+    return { ok: false, reasonKey: 'coreui.errors.auth.contextUnavailable' };
+  }
   const response = await fetch(`${parisBase}/api/minibob/handoff/complete`, {
     method: 'POST',
     headers: {
@@ -148,6 +162,7 @@ async function completeHandoff(
       'content-type': 'application/json',
       accept: 'application/json',
       'Idempotency-Key': nextIdempotencyKey(),
+      'x-ck-authz-capsule': accountCapsule,
     },
     cache: 'no-store',
     body: JSON.stringify({ handoffId, accountId }),
@@ -268,6 +283,7 @@ export async function GET(request: NextRequest) {
     );
   }
   accountId = bootstrap.accountId;
+  const accountCapsule = bootstrap.accountCapsule;
 
   if (!accountId) {
     return applySession(
@@ -280,7 +296,7 @@ export async function GET(request: NextRequest) {
   let destinationPath = continuation.next;
   if (continuation.handoffId) {
     if (accountId) {
-      const handoff = await completeHandoff(parisBase, accessToken, continuation.handoffId, accountId);
+      const handoff = await completeHandoff(parisBase, accessToken, continuation.handoffId, accountId, accountCapsule);
       if (handoff.ok) {
         destinationPath = handoff.builderRoute;
       } else {

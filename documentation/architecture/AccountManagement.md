@@ -39,12 +39,15 @@ Base fields:
 - `userId`
 - `primaryEmail`
 - `emailVerified`
-- `displayName`
 - `givenName` nullable
 - `familyName` nullable
-- `preferredLanguage` nullable
-- `countryCode` nullable
+- `primaryLanguage` nullable
+- `country` nullable
 - `timezone` nullable
+- `contactMethods.phone` with `value`, `verified`, `pendingValue`, `challengeExpiresAt`
+- `contactMethods.whatsapp` with `value`, `verified`, `pendingValue`, `challengeExpiresAt`
+
+Legacy compatibility residue such as `displayName` may remain in persistence during PRD 65 cutover, but it is not a customer-facing source-of-truth input.
 
 Berlin owns the profile boundary even as richer profile context is added later.
 
@@ -112,14 +115,32 @@ Entitlements do not redefine role meaning.
 
 ## Product surfaces
 
-### My Profile
+### User Settings
 
 Person-scoped surface for the currently signed-in human.
 
 Owns:
 - personal profile fields
-- linked identity visibility
+- primary email visibility
+- auth-owned email-change initiation
 - person-level settings
+
+Linked identities remain a Berlin-internal auth/account model, not a standard customer-facing User Settings surface.
+
+Rules:
+- canonical person details update through `PUT /v1/me`
+- canonical `User Settings` fields are `givenName`, `familyName`, `primaryLanguage`, `country`, `timezone`, `phone`, and `whatsapp`
+- Berlin persistence now uses the same canonical field names for person truth: `primary_language`, `country`, and `timezone`
+- `timezone` is derived from `country` and is directly selectable only when the selected country has more than one supported timezone
+- invalid persisted profile/account locale state must fail explicitly in canonical product/account flows; it is an operator defect, not something the runtime silently heals
+- `display_name` may still exist as inert storage residue during cutover, but product read/write contracts must not expose or depend on it
+- primary email change is not a generic profile patch; it is an auth-owned flow initiated through `POST /v1/me/email-change`
+- contact verification is Berlin-owned and channel-specific:
+  - `POST /v1/me/contact-methods/:channel/start`
+  - `POST /v1/me/contact-methods/:channel/verify`
+- `phone` and `whatsapp` become active only after Berlin verifies the code
+- local uses a delivery-capture adapter for verification preview; `cloud-dev`/prod must fail unavailable until a real delivery dependency exists
+- pending email change state is owned by the auth system; Berlin must not invent a second shadow email model in product persistence
 
 ### Account Settings
 
@@ -130,6 +151,10 @@ Owns:
 - tier/billing-facing settings
 - locale policy
 - account-level controls
+
+Rules:
+- product shells may surface current plan/tier state
+- customer-facing account settings do not directly mutate commercial plan/tier truth
 
 ### Team
 
@@ -142,12 +167,12 @@ High-level shape:
 
 Member detail page separates:
 - membership/account data for this account
-- canonical Berlin-owned profile data for that person
+- read-only person context for that person
 
 Rules:
 - owner/admin are the mutation-capable Team roles
 - editor/viewer do not mutate Team
-- canonical profile edits from Team must still go through Berlin's profile boundary
+- Team mutates membership only
 - Team must not create account-local shadow profile data
 
 ### Switch Account
@@ -248,6 +273,9 @@ Returns:
 Canonical account API:
 - `GET /v1/me`
 - `PUT /v1/me`
+- `POST /v1/me/email-change`
+- `POST /v1/me/contact-methods/:channel/start`
+- `POST /v1/me/contact-methods/:channel/verify`
 - `GET /v1/me/identities`
 - `GET /v1/accounts`
 - `POST /v1/accounts`
@@ -261,16 +289,14 @@ Canonical account API:
 - `POST /v1/invitations/:token/accept`
 - `POST /v1/accounts/:id/members`
 - `PATCH /v1/accounts/:id/members/:memberId`
-- `PATCH /v1/accounts/:id/members/:memberId/profile`
 - `POST /v1/accounts/:id/owner-transfer`
 - `PUT /v1/accounts/:id/locales`
-- `PUT /v1/accounts/:id/tier`
 - `POST /v1/accounts/:id/switch`
 
 Rules:
 - `POST /v1/accounts/:id/invitations` is the canonical unknown-person grant-access path
 - `POST /v1/accounts/:id/members` is only for already-resolved user profiles or explicit Berlin-owned operator flows
-- `PATCH /v1/accounts/:id/members/:memberId/profile` mutates canonical profile data, not shadow account-local fields
+- `PATCH /v1/accounts/:id/members/:memberId` mutates membership only
 
 ---
 

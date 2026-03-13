@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { resolvePersonLabel } from '../lib/person-profile';
+import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
 import { resolveAccountPolicyFromRomaAuthz, resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountMembersResponse = {
@@ -12,7 +14,8 @@ type AccountMembersResponse = {
     role: string;
     createdAt: string | null;
     profile: {
-      displayName: string;
+      givenName: string | null;
+      familyName: string | null;
       primaryEmail: string;
     } | null;
   }>;
@@ -26,15 +29,11 @@ type AccountInvitationsResponse = {
     email: string;
     role: string;
     expiresAt: string;
-    acceptToken: string;
   }>;
 };
 
-function resolveErrorReason(payload: unknown, fallback: string): string {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return fallback;
-  const error = (payload as { error?: unknown }).error;
-  if (!error || typeof error !== 'object' || Array.isArray(error)) return fallback;
-  return String((error as { reasonKey?: unknown }).reasonKey || fallback);
+function resolveMemberLabel(member: AccountMembersResponse['members'][number]): string {
+  return resolvePersonLabel(member.profile, 'Team member');
 }
 
 export function TeamDomain() {
@@ -70,7 +69,7 @@ export function TeamDomain() {
       });
       const payload = (await response.json().catch(() => null)) as AccountMembersResponse | { error?: unknown } | null;
       if (!response.ok) {
-        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
+        throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
       }
       const parsed = payload as AccountMembersResponse | null;
       if (!parsed || !Array.isArray(parsed.members)) {
@@ -81,7 +80,7 @@ export function TeamDomain() {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setMembers(null);
-      setError(message);
+      setError(resolveAccountShellErrorCopy(message, 'Failed to load team members. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -104,7 +103,7 @@ export function TeamDomain() {
         | { error?: unknown }
         | null;
       if (!response.ok) {
-        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
+        throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
       }
       const parsed = payload as AccountInvitationsResponse | null;
       if (!parsed || !Array.isArray(parsed.invitations)) {
@@ -115,7 +114,7 @@ export function TeamDomain() {
     } catch (nextError) {
       const message = nextError instanceof Error ? nextError.message : String(nextError);
       setInvitations(null);
-      setInviteError(message);
+      setInviteError(resolveAccountShellErrorCopy(message, 'Failed to load invitations. Please try again.'));
     }
   }, [accountId, canManage]);
 
@@ -139,13 +138,14 @@ export function TeamDomain() {
       });
       const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
       if (!response.ok) {
-        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
+        throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
       }
       setInviteEmail('');
       setInviteRole('viewer');
       await refreshInvitations();
     } catch (nextError) {
-      setInviteError(nextError instanceof Error ? nextError.message : String(nextError));
+      const reason = nextError instanceof Error ? nextError.message : String(nextError);
+      setInviteError(resolveAccountShellErrorCopy(reason, 'Creating the invitation failed. Please try again.'));
     } finally {
       setInviteLoading(false);
     }
@@ -165,11 +165,12 @@ export function TeamDomain() {
         );
         const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
         if (!response.ok) {
-          throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
+          throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
         }
         await refreshInvitations();
       } catch (nextError) {
-        setInviteError(nextError instanceof Error ? nextError.message : String(nextError));
+        const reason = nextError instanceof Error ? nextError.message : String(nextError);
+        setInviteError(resolveAccountShellErrorCopy(reason, 'Revoking the invitation failed. Please try again.'));
       } finally {
         setInviteLoading(false);
       }
@@ -179,16 +180,24 @@ export function TeamDomain() {
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading team context...</section>;
   if (me.error || !me.data) {
-    return <section className="rd-canvas-module body-m">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
+    return (
+      <section className="rd-canvas-module body-m">
+        {resolveAccountShellErrorCopy(
+          me.error ?? 'coreui.errors.auth.contextUnavailable',
+          'Team is unavailable right now. Please try again.',
+        )}
+      </section>
+    );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No account membership found for team controls.</section>;
+    return <section className="rd-canvas-module body-m">No workspace is available for team controls right now.</section>;
   }
 
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountId}</p>
+        <p className="body-m">Workspace: {context.accountName || 'Current workspace'}</p>
+        {context.accountSlug ? <p className="body-s">Slug: {context.accountSlug}</p> : null}
 
         {error ? (
           <div className="roma-inline-stack">
@@ -222,9 +231,9 @@ export function TeamDomain() {
                 <tr key={member.userId}>
                   <td className="body-s">
                     <Link href={`/team/${encodeURIComponent(member.userId)}`} className="diet-btn-txt" data-size="md" data-variant="line2">
-                      <span className="diet-btn-txt__label body-m">{member.profile?.displayName || member.userId}</span>
+                      <span className="diet-btn-txt__label body-m">{resolveMemberLabel(member)}</span>
                     </Link>
-                    <div className="body-s">{member.profile?.primaryEmail ?? member.userId}</div>
+                    <div className="body-s">{member.profile?.primaryEmail ?? 'No primary email recorded'}</div>
                   </td>
                   <td className="body-s">{member.role}</td>
                   <td className="body-s">{member.createdAt ?? 'unknown'}</td>
@@ -247,7 +256,7 @@ export function TeamDomain() {
           <section className="rd-canvas-module">
             <h2 className="heading-h4">Invite people</h2>
             <p className="body-s">
-              Invitations are Berlin-owned. Until delivery infrastructure exists, Team shows the manual accept path to share.
+              Invitations are Berlin-owned. Team shows pending invitations here until the Berlin acceptance flow is completed.
             </p>
             {inviteError ? <p className="body-m">{inviteError}</p> : null}
             <div className="roma-form-grid">
@@ -297,7 +306,6 @@ export function TeamDomain() {
                   <th className="table-header label-s">Email</th>
                   <th className="table-header label-s">Role</th>
                   <th className="table-header label-s">Expires</th>
-                  <th className="table-header label-s">Accept path</th>
                   <th className="table-header label-s">Action</th>
                 </tr>
               </thead>
@@ -307,9 +315,6 @@ export function TeamDomain() {
                     <td className="body-s">{invitation.email}</td>
                     <td className="body-s">{invitation.role}</td>
                     <td className="body-s">{invitation.expiresAt}</td>
-                    <td className="body-s">
-                      <code>/accept-invite/{invitation.acceptToken}</code>
-                    </td>
                     <td className="body-s">
                       <button
                         className="diet-btn-txt"
@@ -326,7 +331,7 @@ export function TeamDomain() {
                 ))}
                 {!invitations || invitations.invitations.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="body-s">
+                    <td colSpan={4} className="body-s">
                       No pending invitations.
                     </td>
                   </tr>

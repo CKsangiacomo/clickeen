@@ -31,6 +31,10 @@ const DEFAULT_ACCOUNT_L10N_POLICY: AccountL10nPolicy = {
   switcher: { enabled: true },
 };
 
+function canManageAccountLocales(role: BerlinAccountContext['role']): boolean {
+  return role === 'owner' || role === 'admin';
+}
+
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -308,7 +312,7 @@ export async function handleAccountLocalesUpdate(args: {
   env: Env;
   account: BerlinAccountContext;
 }): Promise<Response> {
-  if (args.account.role === 'viewer') {
+  if (!canManageAccountLocales(args.account.role)) {
     return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 });
   }
 

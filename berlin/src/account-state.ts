@@ -5,16 +5,22 @@ import {
   type MemberRole,
   type PolicyProfile,
 } from '@clickeen/ck-policy';
+import { isUserSettingsTimezoneSupported, normalizeUserSettingsCountry } from '@clickeen/ck-contracts';
+import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l10n';
+import localesJson from '@clickeen/l10n/locales.json';
 import { ensureProductAccountState } from './account-reconcile';
 import { ensureSupabaseAccessToken, toIdentityRecord } from './auth-session';
+import { loadUserContactMethods, type BerlinContactMethodsPayload } from './contact-methods';
 import { internalError, validationError } from './helpers';
 import { requestSupabaseUser } from './supabase-client';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env, type SessionState } from './types';
 
-const DEFAULT_ADMIN_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
 const ROMA_AUTHZ_CAPSULE_TTL_SEC = 15 * 60;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
+const ACCOUNT_STORAGE_USAGE_PREFIX = 'usage.storage.v1';
+const SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(localesJson).map((entry) => entry.code));
 
 type WorkspaceTier = Exclude<PolicyProfile, 'minibob'>;
 
@@ -22,11 +28,10 @@ type UserProfileRow = {
   user_id?: unknown;
   primary_email?: unknown;
   email_verified?: unknown;
-  display_name?: unknown;
   given_name?: unknown;
   family_name?: unknown;
-  preferred_language?: unknown;
-  country_code?: unknown;
+  primary_language?: unknown;
+  country?: unknown;
   timezone?: unknown;
   active_account_id?: unknown;
 };
@@ -64,11 +69,10 @@ type AccountMemberRow = {
 type UserProfileSummaryRow = {
   user_id?: unknown;
   primary_email?: unknown;
-  display_name?: unknown;
   given_name?: unknown;
   family_name?: unknown;
-  preferred_language?: unknown;
-  country_code?: unknown;
+  primary_language?: unknown;
+  country?: unknown;
   timezone?: unknown;
   email_verified?: unknown;
 };
@@ -91,12 +95,12 @@ export type BerlinUserProfilePayload = {
   userId: string;
   primaryEmail: string;
   emailVerified: boolean;
-  displayName: string;
   givenName: string | null;
   familyName: string | null;
-  preferredLanguage: string | null;
-  countryCode: string | null;
+  primaryLanguage: string | null;
+  country: string | null;
   timezone: string | null;
+  contactMethods?: BerlinContactMethodsPayload;
 };
 
 export type BerlinIdentityPayload = {
@@ -170,6 +174,10 @@ function asTrimmedString(value: unknown): string | null {
   return normalized || null;
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
 function normalizeBoolean(value: unknown): boolean {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'string') {
@@ -189,21 +197,6 @@ function normalizeRole(value: unknown): MemberRole | null {
       return asTrimmedString(value)?.toLowerCase() as MemberRole;
     default:
       return null;
-  }
-}
-
-function roleRank(value: unknown): number {
-  switch (normalizeRole(value)) {
-    case 'owner':
-      return 4;
-    case 'admin':
-      return 3;
-    case 'editor':
-      return 2;
-    case 'viewer':
-      return 1;
-    default:
-      return 0;
   }
 }
 
@@ -227,8 +220,105 @@ function encodeInFilter(values: string[]): string {
   return values.map((value) => encodeURIComponent(value)).join(',');
 }
 
-function resolveAdminAccountId(env: Env): string {
-  return asTrimmedString(env.CK_ADMIN_ACCOUNT_ID) ?? DEFAULT_ADMIN_ACCOUNT_ID;
+function normalizeSupportedLocaleToken(raw: unknown): string | null {
+  const normalized = normalizeLocaleToken(raw);
+  if (!normalized) return null;
+  return SUPPORTED_LOCALES.has(normalized) ? normalized : null;
+}
+
+function invalidPersistedStateResponse(detail: string): Response {
+  console.error('[Berlin] invalid persisted account/profile state', { detail });
+  return internalError('coreui.errors.auth.contextUnavailable', detail);
+}
+
+function validateProfileLocation(rawCountry: unknown, rawTimezone: unknown, path: string): string[] {
+  const country = asTrimmedString(rawCountry);
+  const timezone = asTrimmedString(rawTimezone);
+  const issues: string[] = [];
+
+  if (!country) {
+    if (timezone) issues.push(`${path}.timezone_requires_country`);
+    return issues;
+  }
+
+  const normalizedCountry = normalizeUserSettingsCountry(country);
+  if (!normalizedCountry) {
+    issues.push(`${path}.country_invalid`);
+    return issues;
+  }
+  if (timezone && !isUserSettingsTimezoneSupported(normalizedCountry, timezone)) {
+    issues.push(`${path}.timezone_invalid_for_country`);
+  }
+  return issues;
+}
+
+function validateAccountLocaleState(rawLocales: unknown, rawPolicy: unknown, path: string): string[] {
+  const issues: string[] = [];
+
+  if (rawLocales != null) {
+    if (!Array.isArray(rawLocales)) {
+      issues.push(`${path}.l10n_locales_invalid_shape`);
+    } else {
+      rawLocales.forEach((entry, index) => {
+        if (!normalizeSupportedLocaleToken(entry)) {
+          issues.push(`${path}.l10n_locales[${index}]_invalid`);
+        }
+      });
+    }
+  }
+
+  if (!isPlainRecord(rawPolicy)) {
+    issues.push(`${path}.l10n_policy_invalid_shape`);
+    return issues;
+  }
+  if (rawPolicy.v !== 1) issues.push(`${path}.l10n_policy.v_invalid`);
+
+  const baseLocale = normalizeSupportedLocaleToken(rawPolicy.baseLocale);
+  if (!baseLocale) issues.push(`${path}.l10n_policy.baseLocale_invalid`);
+
+  const ip = rawPolicy.ip;
+  if (!isPlainRecord(ip)) {
+    issues.push(`${path}.l10n_policy.ip_invalid_shape`);
+  } else {
+    if (typeof ip.enabled !== 'boolean') issues.push(`${path}.l10n_policy.ip.enabled_invalid`);
+    if (!isPlainRecord(ip.countryToLocale)) {
+      issues.push(`${path}.l10n_policy.ip.countryToLocale_invalid_shape`);
+    } else {
+      for (const [countryRaw, localeRaw] of Object.entries(ip.countryToLocale)) {
+        const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
+        if (!/^[A-Z]{2}$/.test(country)) {
+          issues.push(`${path}.l10n_policy.ip.countryToLocale.${countryRaw}_invalid_country`);
+          continue;
+        }
+        if (!normalizeSupportedLocaleToken(localeRaw)) {
+          issues.push(`${path}.l10n_policy.ip.countryToLocale.${country}_invalid_locale`);
+        }
+      }
+    }
+  }
+
+  const switcher = rawPolicy.switcher;
+  if (!isPlainRecord(switcher)) {
+    issues.push(`${path}.l10n_policy.switcher_invalid_shape`);
+  } else if (typeof switcher.enabled !== 'boolean') {
+    issues.push(`${path}.l10n_policy.switcher.enabled_invalid`);
+  }
+
+  return issues;
+}
+
+function normalizeProfileLocation(rawCountry: unknown, rawTimezone: unknown): {
+  country: string | null;
+  timezone: string | null;
+} {
+  const country = normalizeUserSettingsCountry(rawCountry);
+  if (!country) return { country: null, timezone: null };
+
+  const timezone = asTrimmedString(rawTimezone);
+  return {
+    country,
+    timezone: timezone && isUserSettingsTimezoneSupported(country, timezone) ? timezone : null,
+  };
 }
 
 function resolveStage(env: Env): string {
@@ -239,15 +329,15 @@ function resolveStage(env: Env): string {
 }
 
 function resolveRomaAuthzCapsuleSecret(env: Env): string {
-  const explicit = asTrimmedString(env.ROMA_AUTHZ_CAPSULE_SECRET);
-  if (explicit) return explicit;
-  const aiFallback = asTrimmedString(env.AI_GRANT_HMAC_SECRET);
-  if (aiFallback) return aiFallback;
-  return asTrimmedString(env.SUPABASE_SERVICE_ROLE_KEY) ?? '';
+  return asTrimmedString(env.ROMA_AUTHZ_CAPSULE_SECRET) ?? '';
 }
 
 function budgetCounterKey(accountId: string, budgetKey: string, periodKey: string): string {
   return `usage.budget.v1.${budgetKey}.${periodKey}.acct:${accountId}`;
+}
+
+function storageBudgetCounterKey(accountId: string, budgetKey: string): string {
+  return `${ACCOUNT_STORAGE_USAGE_PREFIX}.${budgetKey}.acct:${accountId}`;
 }
 
 function currentBudgetPeriodKey(now = new Date()): string {
@@ -258,18 +348,18 @@ function currentBudgetPeriodKey(now = new Date()): string {
 
 async function readBudgetUsed(env: Env, accountId: string, budgetKey: string): Promise<number> {
   const kv = env.USAGE_KV;
-  if (!kv) {
-    if (resolveStage(env) === 'local') return 0;
-    throw new Error('[Berlin] Missing USAGE_KV binding');
-  }
-  const raw = await kv.get(budgetCounterKey(accountId, budgetKey, currentBudgetPeriodKey()));
+  if (!kv) throw new Error('[Berlin] Missing USAGE_KV binding');
+  const counterKey =
+    budgetKey === STORAGE_BYTES_BUDGET_KEY
+      ? storageBudgetCounterKey(accountId, budgetKey)
+      : budgetCounterKey(accountId, budgetKey, currentBudgetPeriodKey());
+  const raw = await kv.get(counterKey);
   const parsed = raw ? Number(raw) : 0;
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 }
 
 function selectDefaultAccount(
   accounts: BerlinAccountContext[],
-  env: Env,
   activeAccountId: string | null,
 ): BerlinAccountContext | null {
   if (accounts.length === 0) return null;
@@ -277,17 +367,10 @@ function selectDefaultAccount(
   const preferred = activeAccountId ? accounts.find((entry) => entry.accountId === activeAccountId) ?? null : null;
   if (preferred) return preferred;
 
-  const adminAccountId = resolveAdminAccountId(env);
-  const adminAccount = accounts.find((entry) => entry.accountId === adminAccountId) ?? null;
-  if (adminAccount) return adminAccount;
-
-  let best: BerlinAccountContext | null = null;
-  for (const candidate of accounts) {
-    if (!best || roleRank(candidate.role) > roleRank(best.role)) {
-      best = candidate;
-    }
-  }
-  return best ?? accounts[0] ?? null;
+  // Membership rows are loaded in deterministic join order. If no persisted
+  // active account exists, bootstrap may only choose from the user's real
+  // memberships and must never guess a privileged account.
+  return accounts[0] ?? null;
 }
 
 async function loadUserProfileRow(
@@ -296,7 +379,7 @@ async function loadUserProfileRow(
 ): Promise<Result<UserProfileRow | null>> {
   const params = new URLSearchParams({
     select:
-      'user_id,primary_email,email_verified,display_name,given_name,family_name,preferred_language,country_code,timezone,active_account_id',
+      'user_id,primary_email,email_verified,given_name,family_name,primary_language,country,timezone,active_account_id',
     user_id: `eq.${userId}`,
     limit: '1',
   });
@@ -340,30 +423,36 @@ async function loadAccountMembershipRows(
 function normalizeUserProfile(
   userId: string,
   row: UserProfileRow | null,
-): NormalizedUserProfile | null {
+): Result<NormalizedUserProfile | null> {
   const primaryEmail = asTrimmedString(row?.primary_email);
-  const displayName = asTrimmedString(row?.display_name);
-  if (!primaryEmail || !displayName) return null;
+  if (!primaryEmail) return { ok: true, value: null };
+  const issues = validateProfileLocation(row?.country, row?.timezone, `user_profiles.${userId}`);
+  if (issues.length) {
+    return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
+  }
+  const location = normalizeProfileLocation(row?.country, row?.timezone);
 
   return {
-    profile: {
-      userId,
-      primaryEmail,
-      emailVerified: normalizeBoolean(row?.email_verified),
-      displayName,
-      givenName: asTrimmedString(row?.given_name),
-      familyName: asTrimmedString(row?.family_name),
-      preferredLanguage: asTrimmedString(row?.preferred_language),
-      countryCode: asTrimmedString(row?.country_code),
-      timezone: asTrimmedString(row?.timezone),
+    ok: true,
+    value: {
+      profile: {
+        userId,
+        primaryEmail,
+        emailVerified: normalizeBoolean(row?.email_verified),
+        givenName: asTrimmedString(row?.given_name),
+        familyName: asTrimmedString(row?.family_name),
+        primaryLanguage: asTrimmedString(row?.primary_language),
+        country: location.country,
+        timezone: location.timezone,
+      },
+      activeAccountId: isUuid(asTrimmedString(row?.active_account_id))
+        ? (asTrimmedString(row?.active_account_id) as string)
+        : null,
     },
-    activeAccountId: isUuid(asTrimmedString(row?.active_account_id))
-      ? (asTrimmedString(row?.active_account_id) as string)
-      : null,
   };
 }
 
-function normalizeAccounts(rows: AccountMembershipRow[]): BerlinAccountContext[] {
+function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountContext[]> {
   const out: BerlinAccountContext[] = [];
   for (const row of rows) {
     const account = row.accounts;
@@ -375,6 +464,10 @@ function normalizeAccounts(rows: AccountMembershipRow[]): BerlinAccountContext[]
     const name = asTrimmedString(account.name);
     const slug = asTrimmedString(account.slug);
     if (!accountId || !role || !tier || !name || !slug) continue;
+    const localeIssues = validateAccountLocaleState(account.l10n_locales, account.l10n_policy, `accounts.${accountId}`);
+    if (localeIssues.length) {
+      return { ok: false, response: invalidPersistedStateResponse(localeIssues.join('|')) };
+    }
 
     out.push({
       accountId,
@@ -396,7 +489,7 @@ function normalizeAccounts(rows: AccountMembershipRow[]): BerlinAccountContext[]
       l10nPolicy: account.l10n_policy ?? null,
     });
   }
-  return out;
+  return { ok: true, value: out };
 }
 
 async function ensureCanonicalState(
@@ -434,8 +527,12 @@ export async function loadPrincipalAccountState(args: {
   let accountsResult = await loadAccountMembershipRows(args.env, args.userId);
   if (!accountsResult.ok) return accountsResult;
 
-  let normalizedProfile = normalizeUserProfile(args.userId, profileResult.value);
-  let accounts = normalizeAccounts(accountsResult.value);
+  let normalizedProfileResult = normalizeUserProfile(args.userId, profileResult.value);
+  if (!normalizedProfileResult.ok) return normalizedProfileResult;
+  let normalizedProfile = normalizedProfileResult.value;
+  let normalizedAccountsResult = normalizeAccounts(accountsResult.value);
+  if (!normalizedAccountsResult.ok) return normalizedAccountsResult;
+  let accounts = normalizedAccountsResult.value;
 
   if (!normalizedProfile || accounts.length === 0) {
     const reconciled = await ensureCanonicalState(args.env, args.session);
@@ -447,8 +544,12 @@ export async function loadPrincipalAccountState(args: {
     accountsResult = await loadAccountMembershipRows(args.env, args.userId);
     if (!accountsResult.ok) return accountsResult;
 
-    normalizedProfile = normalizeUserProfile(args.userId, profileResult.value);
-    accounts = normalizeAccounts(accountsResult.value);
+    normalizedProfileResult = normalizeUserProfile(args.userId, profileResult.value);
+    if (!normalizedProfileResult.ok) return normalizedProfileResult;
+    normalizedProfile = normalizedProfileResult.value;
+    normalizedAccountsResult = normalizeAccounts(accountsResult.value);
+    if (!normalizedAccountsResult.ok) return normalizedAccountsResult;
+    accounts = normalizedAccountsResult.value;
   }
 
   if (!normalizedProfile) {
@@ -458,7 +559,24 @@ export async function loadPrincipalAccountState(args: {
     };
   }
 
-  const defaultAccount = selectDefaultAccount(accounts, args.env, normalizedProfile.activeAccountId);
+  const contactMethods = await loadUserContactMethods(args.env, args.userId);
+  if (!contactMethods.ok) return contactMethods;
+  normalizedProfile.profile.contactMethods = contactMethods.value;
+
+  if (accounts.length === 0) {
+    return {
+      ok: false,
+      response: internalError('coreui.errors.auth.contextUnavailable', 'account_missing_after_reconcile'),
+    };
+  }
+
+  const defaultAccount = selectDefaultAccount(accounts, normalizedProfile.activeAccountId);
+  if (!defaultAccount) {
+    return {
+      ok: false,
+      response: internalError('coreui.errors.auth.contextUnavailable', 'default_account_missing_after_reconcile'),
+    };
+  }
 
   return {
     ok: true,
@@ -520,14 +638,8 @@ export async function buildBootstrapPayload(args: {
   const activeAccount = args.state.defaultAccount;
   if (!activeAccount) {
     return {
-      ok: true,
-      value: {
-        user: args.state.user,
-        profile: args.state.profile,
-        accounts: args.state.accounts,
-        defaults: { accountId: null },
-        authz: null,
-      },
+      ok: false,
+      response: internalError('coreui.errors.auth.contextUnavailable', 'default_account_missing_for_bootstrap'),
     };
   }
 
@@ -607,7 +719,7 @@ async function loadUserProfilesByIds(
 
   const params = new URLSearchParams({
     select:
-      'user_id,primary_email,email_verified,display_name,given_name,family_name,preferred_language,country_code,timezone',
+      'user_id,primary_email,email_verified,given_name,family_name,primary_language,country,timezone',
     user_id: `in.(${encodeInFilter(uniqueUserIds)})`,
     limit: String(uniqueUserIds.length),
   });
@@ -626,18 +738,21 @@ async function loadUserProfilesByIds(
   for (const row of Array.isArray(payload) ? payload : []) {
     const userId = asTrimmedString(row.user_id);
     const primaryEmail = asTrimmedString(row.primary_email);
-    const displayName = asTrimmedString(row.display_name);
-    if (!userId || !primaryEmail || !displayName) continue;
+    if (!userId || !primaryEmail) continue;
+    const issues = validateProfileLocation(row.country, row.timezone, `user_profiles.${userId}`);
+    if (issues.length) {
+      return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
+    }
+    const location = normalizeProfileLocation(row.country, row.timezone);
     map.set(userId, {
       userId,
       primaryEmail,
       emailVerified: normalizeBoolean(row.email_verified),
-      displayName,
       givenName: asTrimmedString(row.given_name),
       familyName: asTrimmedString(row.family_name),
-      preferredLanguage: asTrimmedString(row.preferred_language),
-      countryCode: asTrimmedString(row.country_code),
-      timezone: asTrimmedString(row.timezone),
+      primaryLanguage: asTrimmedString(row.primary_language),
+      country: location.country,
+      timezone: location.timezone,
     });
   }
 
