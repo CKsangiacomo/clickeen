@@ -1,64 +1,66 @@
 'use client';
 
 import { useMemo } from 'react';
+import { formatBytes } from '../lib/format';
+import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 export function UsageDomain() {
   const me = useRomaMe();
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
-  const accountProfile = me.data?.authz?.profile ?? null;
-  const accountRole = me.data?.authz?.role ?? null;
+  const activeAccount = useMemo(
+    () => (accountId ? me.data?.accounts?.find((account) => account.accountId === accountId) ?? null : null),
+    [accountId, me.data?.accounts],
+  );
   const entitlements = me.data?.authz?.entitlements ?? null;
+
+  const storageBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
+  const storageLimitLabel =
+    typeof storageBudget?.max === 'number' && Number.isFinite(storageBudget.max) && storageBudget.max > 0
+      ? formatBytes(storageBudget.max)
+      : 'Unlimited';
+  const storageUsedLabel = formatBytes(storageBudget?.used ?? 0);
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading usage context...</section>;
   if (me.error || !me.data) {
-    return <section className="rd-canvas-module body-m">Failed to load identity context: {me.error ?? 'unknown_error'}</section>;
+    return (
+      <section className="rd-canvas-module body-m">
+        {resolveAccountShellErrorCopy(
+          me.error ?? 'coreui.errors.auth.contextUnavailable',
+          'Usage is unavailable right now. Please try again.',
+        )}
+      </section>
+    );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">Missing account context for usage diagnostics.</section>;
+    return <section className="rd-canvas-module body-m">No workspace is available for usage right now.</section>;
   }
-
-  const enabledFlags = entitlements ? Object.values(entitlements.flags || {}).filter(Boolean).length : 0;
-  const capCount = entitlements ? Object.keys(entitlements.caps || {}).length : 0;
-  const budgetCount = entitlements ? Object.keys(entitlements.budgets || {}).length : 0;
 
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountId}</p>
-        <p className="body-m">Detailed usage counters are not configured in this environment.</p>
+        <p className="body-m">Workspace: {context.accountName || 'Current workspace'}</p>
+        {context.accountSlug ? <p className="body-s">Slug: {context.accountSlug}</p> : null}
+        <p className="body-m">Detailed usage reporting is not available in Roma yet.</p>
       </section>
 
-      {accountProfile || accountRole ? (
-        <section className="rd-canvas-module">
-          <div className="roma-grid roma-grid--three">
-            <article className="roma-card">
-              <h2 className="heading-6">Policy Profile</h2>
-              <p className="body-s">{accountProfile ?? 'unknown'}</p>
-            </article>
-            <article className="roma-card">
-              <h2 className="heading-6">Role</h2>
-              <p className="body-s">{accountRole ?? 'unknown'}</p>
-            </article>
-            <article className="roma-card">
-              <h2 className="heading-6">Entitlements</h2>
-              <p className="body-s">
-                {enabledFlags} flags on / {capCount} caps / {budgetCount} budgets
-              </p>
-            </article>
-          </div>
-        </section>
-      ) : null}
-
-      {entitlements ? (
-        <section className="rd-canvas-module">
-          <div className="roma-codeblock">
-            <strong className="overline-small">Account Entitlements</strong>
-            <pre>{JSON.stringify(entitlements, null, 2)}</pre>
-          </div>
-        </section>
-      ) : null}
+      <section className="rd-canvas-module">
+        <div className="roma-grid roma-grid--three">
+          <article className="roma-card">
+            <h2 className="heading-6">Current plan</h2>
+            <p className="body-s">{activeAccount?.tier ?? 'unknown'}</p>
+          </article>
+          <article className="roma-card">
+            <h2 className="heading-6">Storage used</h2>
+            <p className="body-s">{storageUsedLabel}</p>
+          </article>
+          <article className="roma-card">
+            <h2 className="heading-6">Storage limit</h2>
+            <p className="body-s">{storageLimitLabel}</p>
+          </article>
+        </div>
+      </section>
     </>
   );
 }

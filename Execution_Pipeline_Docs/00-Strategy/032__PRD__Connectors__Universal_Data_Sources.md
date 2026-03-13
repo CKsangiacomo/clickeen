@@ -227,3 +227,71 @@ Total depends on how many connectors and which modes we attempt first. The “ha
 2) Which connector family do we ship first (Google Reviews vs Instagram Feed vs RSS)?
 3) For Free tier: do we allow OAuth/API at all, or only URL with higher caps?
 
+---
+
+## 10) Web Presence Connector — Cloudflare Browser Rendering crawl mode
+
+### What it is
+
+Cloudflare Browser Rendering added a `/crawl` endpoint (open beta, March 2026).
+
+Submit a starting URL → Cloudflare discovers, headless-renders, and returns all reachable pages as HTML, Markdown, or structured JSON. Async: submit → get job ID → poll results. Respects robots.txt. Available on Workers Free and Paid.
+
+Reference: https://developers.cloudflare.com/changelog/post/2026-03-10-br-crawl-endpoint/
+
+### How it fits the connector model
+
+This is a `url` connection mode for a new connector family: `web_presence`.
+
+- Connector family: `web_presence`
+- Connection mode: `url` (the account's own website URL — no OAuth, no API key)
+- Output: normalized `WebPresenceSnapshot` — structured facts extracted from the site
+
+The crawl runs inside a Worker, costs nothing beyond the Cloudflare plan, and produces structured JSON output via Workers AI extraction. It fits the existing connector architecture without adding any new infrastructure.
+
+### Normalized output contract (illustrative)
+
+```ts
+type WebPresenceSnapshot = {
+  primaryLanguage: string;        // e.g. 'en', 'it'
+  detectedCountry: string | null; // from content/currency/address signals
+  businessCategory: string | null;// e.g. 'restaurant', 'dentist', 'retail'
+  brandTone: string | null;       // e.g. 'formal', 'casual'
+  platformLinks: {                // social/platform links found on the site
+    provider: string;             // e.g. 'instagram', 'google', 'facebook'
+    url: string;
+  }[];
+  contentThemes: string[];        // top recurring topics/keywords
+  existingLanguages: string[];    // language variants detected on the site
+};
+```
+
+Widgets do not receive raw crawl HTML. They receive only the normalized snapshot.
+
+### Where this connects to the rest of the platform
+
+**Berlin (PRD 064 — account intelligence):**
+The normalized `WebPresenceSnapshot` is a Berlin-owned account trait. On first account creation, Berlin can trigger a web presence crawl of the account's website URL and store the normalized output as part of the account's trait set. This seeds the account intelligence plane without requiring the user to fill out a form.
+
+**Locale policy (Tokyo/l10n):**
+`primaryLanguage`, `detectedCountry`, and `existingLanguages` can pre-populate the account's locale policy defaults, removing the need for manual locale configuration on signup.
+
+**Widget recommendations (SanFrancisco):**
+`platformLinks` reveals which social platforms the account already uses, allowing AI agents to recommend the most relevant widget families first.
+
+**Widget pre-population (Bob):**
+`businessCategory` and `contentThemes` give the AI copilot enough context to generate brand-relevant default copy when a user creates their first widget.
+
+**Personalization layers (016 — Blueprint layers):**
+`detectedCountry` and `businessCategory` feed directly into the `geo` and `industry` layer keys, allowing the layering engine to apply the correct base overlays from first load.
+
+### Execution rule
+
+Do not build the full `WebPresenceSnapshot` extraction in this strategy doc. When this connector is prioritized for execution, create a dedicated connector PRD that covers:
+- the Worker implementation using Cloudflare Browser Rendering `/crawl`
+- the Workers AI structured extraction prompt
+- the normalized output schema
+- when the crawl is triggered (signup, manual reconnect, periodic refresh)
+- how the snapshot is stored as a Berlin-owned account trait
+- policy gating (which tiers get crawl, refresh frequency caps)
+

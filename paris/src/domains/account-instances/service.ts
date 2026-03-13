@@ -84,6 +84,7 @@ function resolveTokyoInternalHeaders(env: Env): Headers {
     throw new Error('TOKYO_DEV_JWT missing');
   }
   headers.set('authorization', `Bearer ${token}`);
+  headers.set('x-ck-internal-service', 'paris.local');
   return headers;
 }
 

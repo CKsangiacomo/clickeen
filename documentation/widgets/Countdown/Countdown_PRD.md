@@ -27,7 +27,7 @@ branding.remove     | flag | behavior.showBacklink          | boolean (deny fals
 
 Budgets are global usage counters (no per-widget matrices):
 - `budget.copilot.turns` (Copilot send)
-- `budget.uploads.count` (file uploads; enforced at upload boundary)
+- `budget.uploads.bytes` (total account storage for uploaded files; enforced at the upload boundary)
 
 If Countdown needs tier packaging beyond usage/caps, prefer caps/budgets first; only introduce new flags when the capability is truly binary and user-visible.
 

@@ -78,16 +78,6 @@
         "tier3": null
       }
     },
-    "budget.uploads.count": {
-      "kind": "budget",
-      "values": {
-        "minibob": 0,
-        "free": 3,
-        "tier1": 20,
-        "tier2": 200,
-        "tier3": null
-      }
-    },
     "budget.uploads.bytes": {
       "kind": "budget",
       "values": {

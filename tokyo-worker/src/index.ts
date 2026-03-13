@@ -86,9 +86,12 @@ type UploadPrincipal = {
   userId: string;
 };
 
+const INTERNAL_SERVICE_HEADER = 'x-ck-internal-service';
+export const TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL = 'devstudio.local';
+export const TOKYO_INTERNAL_SERVICE_PARIS_LOCAL = 'paris.local';
+
 type UploadAuthResult =
-  | { ok: true; trusted: true }
-  | { ok: true; trusted: false; principal: UploadPrincipal }
+  | { ok: true; principal: UploadPrincipal }
   | { ok: false; response: Response };
 
 type BerlinJwksCacheEntry = {
@@ -126,6 +129,12 @@ function claimAsString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed || null;
+}
+
+function normalizeInternalServiceId(value: string | null): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toLowerCase();
+  return normalized || null;
 }
 
 function claimAsNumber(value: unknown): number | null {
@@ -356,11 +365,6 @@ export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAu
     };
   }
 
-  const trustedToken = (env.TOKYO_DEV_JWT || '').trim();
-  if (trustedToken && token === trustedToken) {
-    return { ok: true, trusted: true };
-  }
-
   const signature = await verifyBerlinJwtSignature(token, env);
   if (!signature.ok) {
     const status = signature.reason === 'jwks_unavailable' ? 502 : 403;
@@ -423,11 +427,14 @@ export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAu
       response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }),
     };
   }
-
-  return { ok: true, trusted: false, principal: { token, userId } };
+  return { ok: true, principal: { token, userId } };
 }
 
-export function requireDevAuth(req: Request, env: Env): Response | null {
+export function requireDevAuth(
+  req: Request,
+  env: Env,
+  options?: { allowTrustedInternalServices?: readonly string[] },
+): Response | null {
   const expected = (env.TOKYO_DEV_JWT || '').trim();
   if (!expected) {
     return json(
@@ -437,8 +444,14 @@ export function requireDevAuth(req: Request, env: Env): Response | null {
   }
   const token = asBearerToken(req.headers.get('authorization'));
   if (!token) return json({ error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } }, { status: 401 });
-  if (token !== expected)
+  const internalServiceId = normalizeInternalServiceId(req.headers.get(INTERNAL_SERVICE_HEADER));
+  if (
+    token !== expected ||
+    !internalServiceId ||
+    !(options?.allowTrustedInternalServices ?? []).includes(internalServiceId)
+  ) {
     return json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 });
+  }
   return null;
 }
 
@@ -450,7 +463,6 @@ async function authorizeAccountScopedRequest(args: {
 }): Promise<Response | null> {
   const auth = await assertUploadAuth(args.req, args.env);
   if (!auth.ok) return auth.response;
-  if (auth.trusted) return null;
   try {
     const membershipRole = await loadAccountMembershipRole(
       args.env,
@@ -501,6 +513,9 @@ export function buildL10nBridgeHeaders(env: Env, init?: HeadersInit): Headers {
   const token = (env.TOKYO_DEV_JWT || '').trim();
   if (token && !headers.has('authorization')) {
     headers.set('authorization', `Bearer ${token}`);
+  }
+  if (!headers.has(INTERNAL_SERVICE_HEADER)) {
+    headers.set(INTERNAL_SERVICE_HEADER, TOKYO_INTERNAL_SERVICE_PARIS_LOCAL);
   }
   return headers;
 }
@@ -694,7 +709,7 @@ function withCors(res: Response): Response {
   headers.set('access-control-allow-methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
   headers.set(
     'access-control-allow-headers',
-    'authorization, content-type, x-account-id, x-filename, x-public-id, x-widget-type, x-source, idempotency-key, x-tokyo-l10n-bridge',
+    'authorization, content-type, x-account-id, x-filename, x-public-id, x-widget-type, x-source, idempotency-key, x-tokyo-l10n-bridge, x-ck-internal-service',
   );
   return new Response(res.body, { status: res.status, headers });
 }

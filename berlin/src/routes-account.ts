@@ -23,6 +23,7 @@ import {
   loadPrincipalAccountState,
   loadPrincipalIdentities,
   persistActiveAccountPreference,
+  summarizeConnectorState,
 } from './account-state';
 import { provisionOwnedAccount } from './account-reconcile';
 import { startUserContactVerification, verifyUserContactMethod, type UserContactChannel } from './contact-methods';
@@ -255,18 +256,22 @@ export async function handleMeContactMethodVerify(
 }
 
 export async function handleMeIdentities(request: Request, env: Env): Promise<Response> {
-  const principal = await resolvePrincipalSession(request, env);
-  if (!principal.ok) return principal.response;
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
 
   const identities = await loadPrincipalIdentities({
     env,
-    session: principal.session,
+    session: resolved.principal.session,
   });
   if (!identities.ok) return identities.response;
 
   return json({
-    userId: principal.userId,
+    userId: resolved.principal.userId,
     identities: identities.value,
+    connectors: summarizeConnectorState({
+      identities: identities.value,
+      activeAccountId: resolved.state.defaultAccount?.accountId ?? null,
+    }),
   });
 }
 
@@ -641,6 +646,7 @@ export async function handleSessionBootstrap(request: Request, env: Env): Promis
   const payload = await buildBootstrapPayload({
     env,
     state: resolved.state,
+    session: resolved.principal.session,
   });
   if (!payload.ok) return payload.response;
 

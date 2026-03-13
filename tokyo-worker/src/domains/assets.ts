@@ -11,58 +11,10 @@ import type { Env } from '../index';
 const L10N_VERSION_CAP_KEY = 'l10n.versions.max';
 const DEFAULT_L10N_VERSION_LIMIT = 1;
 export const UPLOAD_SIZE_CAP_KEY = 'uploads.size.max';
-export const UPLOADS_COUNT_BUDGET_KEY = 'budget.uploads.count';
 const DEFAULT_UPLOAD_SIZE_MAX_BYTES = 5 * 1024 * 1024;
-const DEFAULT_UPLOADS_COUNT_MAX = 5;
-export const UPLOADS_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
-const DEFAULT_UPLOADS_BYTES_MAX = DEFAULT_UPLOAD_SIZE_MAX_BYTES * DEFAULT_UPLOADS_COUNT_MAX;
-
-function getUtcPeriodKey(date: Date): string {
-  const y = date.getUTCFullYear();
-  const m = date.getUTCMonth() + 1;
-  return `${y}-${String(m).padStart(2, '0')}`;
-}
-
-async function readKvCounter(kv: KVNamespace, key: string): Promise<number> {
-  const raw = await kv.get(key);
-  const value = raw ? Number(raw) : 0;
-  return Number.isFinite(value) && value >= 0 ? value : 0;
-}
-
-export async function consumeAccountBudget(args: {
-  env: Env;
-  accountId: string;
-  budgetKey: string;
-  max: number | null;
-  amount?: number;
-}): Promise<
-  | { ok: true; used: number; nextUsed: number }
-  | { ok: false; used: number; max: number; reasonKey: 'coreui.upsell.reason.budgetExceeded'; detail: string }
-> {
-  const amount = typeof args.amount === 'number' ? args.amount : 1;
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error('[tokyo] consumeAccountBudget amount must be positive');
-  if (args.max == null) return { ok: true, used: 0, nextUsed: amount };
-  const max = Math.max(0, Math.floor(args.max));
-  const kv = args.env.USAGE_KV;
-  if (!kv) return { ok: true, used: 0, nextUsed: amount };
-
-  const periodKey = getUtcPeriodKey(new Date());
-  const counterKey = `usage.budget.v1.${args.budgetKey}.${periodKey}.acct:${args.accountId}`;
-  const used = await readKvCounter(kv, counterKey);
-  const nextUsed = used + amount;
-  if (nextUsed > max) {
-    return {
-      ok: false,
-      used,
-      max,
-      reasonKey: 'coreui.upsell.reason.budgetExceeded',
-      detail: `${args.budgetKey} budget exceeded (max=${max})`,
-    };
-  }
-
-  await kv.put(counterKey, String(nextUsed), { expirationTtl: 400 * 24 * 60 * 60 });
-  return { ok: true, used, nextUsed };
-}
+export const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
+const DEFAULT_ACCOUNT_STORAGE_MAX_BYTES = DEFAULT_UPLOAD_SIZE_MAX_BYTES * 5;
+const ACCOUNT_STORAGE_USAGE_PREFIX = 'usage.storage.v1';
 
 export function resolveL10nVersionLimit(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
@@ -92,32 +44,33 @@ export function resolveUploadSizeLimitBytes(tier: string | null): number | null 
   return Math.max(1, Math.floor(value));
 }
 
-export function resolveUploadsCountBudgetMax(tier: string | null): number | null {
+export function resolveStorageBytesBudgetMax(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
-  const entry = matrix.capabilities[UPLOADS_COUNT_BUDGET_KEY];
-  if (!entry || entry.kind !== 'budget') return DEFAULT_UPLOADS_COUNT_MAX;
+  const entry = matrix.capabilities[STORAGE_BYTES_BUDGET_KEY];
+  if (!entry || entry.kind !== 'budget') return DEFAULT_ACCOUNT_STORAGE_MAX_BYTES;
   const fallback = 'free' as keyof typeof entry.values;
   const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
     ? (tier as typeof matrix.tiers[number])
     : fallback) as keyof typeof entry.values;
   const value = entry.values[profile];
   if (value == null) return null;
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return DEFAULT_UPLOADS_COUNT_MAX;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return DEFAULT_ACCOUNT_STORAGE_MAX_BYTES;
   return Math.floor(value);
 }
 
-export function resolveUploadsBytesBudgetMax(tier: string | null): number | null {
-  const matrix = getEntitlementsMatrix();
-  const entry = matrix.capabilities[UPLOADS_BYTES_BUDGET_KEY];
-  if (!entry || entry.kind !== 'budget') return DEFAULT_UPLOADS_BYTES_MAX;
-  const fallback = 'free' as keyof typeof entry.values;
-  const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
-    ? (tier as typeof matrix.tiers[number])
-    : fallback) as keyof typeof entry.values;
-  const value = entry.values[profile];
-  if (value == null) return null;
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return DEFAULT_UPLOADS_BYTES_MAX;
-  return Math.floor(value);
+function normalizeNonNegativeInt(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.max(0, Math.floor(value));
+}
+
+function accountStorageUsageKey(accountId: string, budgetKey = STORAGE_BYTES_BUDGET_KEY): string {
+  return `${ACCOUNT_STORAGE_USAGE_PREFIX}.${budgetKey}.acct:${accountId}`;
+}
+
+async function writeAccountStoredBytesUsage(env: Env, accountId: string, totalBytes: number): Promise<void> {
+  const kv = env.USAGE_KV;
+  if (!kv) return;
+  await kv.put(accountStorageUsageKey(accountId), String(normalizeNonNegativeInt(totalBytes)));
 }
 
 export type MemberRole = 'viewer' | 'editor' | 'admin' | 'owner';
@@ -267,6 +220,10 @@ export type AccountAssetManifest = {
   key: string;
 };
 
+export function sumAccountAssetManifestSizeBytes(manifests: AccountAssetManifest[]): number {
+  return manifests.reduce((total, manifest) => total + normalizeNonNegativeInt(manifest.sizeBytes), 0);
+}
+
 const ACCOUNT_ASSET_META_PREFIX = 'assets/meta/accounts';
 
 function accountAssetManifestKey(accountId: string, assetId: string): string {
@@ -391,6 +348,21 @@ export async function listAccountAssetManifestsByAccount(
     cursor = listed.truncated ? listed.cursor : undefined;
   } while (cursor);
   return manifests;
+}
+
+export async function loadAccountStoredBytesUsage(env: Env, accountId: string): Promise<number> {
+  const manifests = await listAccountAssetManifestsByAccount(env, accountId);
+  return sumAccountAssetManifestSizeBytes(manifests);
+}
+
+export async function syncAccountStoredBytesUsage(
+  env: Env,
+  accountId: string,
+  manifests?: AccountAssetManifest[],
+): Promise<number> {
+  const totalBytes = manifests ? sumAccountAssetManifestSizeBytes(manifests) : await loadAccountStoredBytesUsage(env, accountId);
+  await writeAccountStoredBytesUsage(env, accountId, totalBytes);
+  return totalBytes;
 }
 
 export async function loadAccountAssetByIdentity(

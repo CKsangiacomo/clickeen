@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 export function HomeDomain() {
@@ -19,7 +20,12 @@ export function HomeDomain() {
   if (me.error || !me.data) {
     return (
       <section className="rd-canvas-module">
-        <p className="body-m">Failed to load Roma identity context: {me.error ?? 'unknown_error'}</p>
+        <p className="body-m">
+          {resolveAccountShellErrorCopy(
+            me.error ?? 'coreui.errors.auth.contextUnavailable',
+            'Home is unavailable right now. Please try again.',
+          )}
+        </p>
         <div className="rd-canvas-module__actions">
           <button className="diet-btn-txt" data-size="md" data-variant="primary" onClick={() => void me.reload()} type="button">
             <span className="diet-btn-txt__label body-m">Retry</span>
@@ -32,7 +38,7 @@ export function HomeDomain() {
   if (!hasAccountContext) {
     return (
       <section className="rd-canvas-module">
-        <p className="body-m">No account context is available for this user.</p>
+        <p className="body-m">No workspace is available for this user right now.</p>
         <div className="rd-canvas-module__actions">
           <Link href="/settings" className="diet-btn-txt" data-size="md" data-variant="primary">
             <span className="diet-btn-txt__label body-m">Open settings</span>
@@ -55,7 +61,7 @@ export function HomeDomain() {
         ) : null}
 
         <p className="body-m">
-          Account: {context.accountName || context.accountId}
+          Workspace: {context.accountName || 'Current workspace'}
           {context.accountSlug ? ` (${context.accountSlug})` : ''}
         </p>
       </section>

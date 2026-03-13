@@ -7,7 +7,7 @@ For the canonical target account-management boundary, see `documentation/archite
 
 ## Purpose
 
-Berlin is Clickeen's dedicated AuthN boundary and the executing account-truth boundary for PRD 65.
+Berlin is Clickeen's dedicated AuthN boundary and the canonical account-truth boundary after PRD 65 closure.
 
 Responsibilities:
 - Accept user credentials for sign-in (`/auth/login/password` in v1).
@@ -38,6 +38,11 @@ Responsibilities:
   - `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
   - `GET /v1/session/bootstrap`
 - Resolve the active account, role, entitlement snapshot, and short-lived Berlin-issued account authz capsule for bootstrap.
+- Normalize provider linkage into the minimal connector reuse summary Berlin exposes today:
+  - `linkedIdentities`
+  - `workspaceConnections`
+  - `capabilityStates`
+  - `traits.linkedProviders`
 - Resolve the active account only from persisted active-account preference or deterministic real membership truth; Berlin must fail explicitly if no real user-associated account can be opened and must never open a privileged fallback account.
 - Invalid persisted profile/account locale-policy truth must fail explicitly in canonical product/account routes; Berlin logs the defect and does not silently default it away.
 - Berlin owns verified contact-method state and challenge lifecycle for `phone` and `whatsapp`; in `local` it uses a delivery-capture adapter, while `cloud-dev`/prod fail unavailable until a real delivery boundary exists.
@@ -65,7 +70,7 @@ Public:
 - `POST /v1/me/email-change`
 - `POST /v1/me/contact-methods/:channel/start`
 - `POST /v1/me/contact-methods/:channel/verify`
-- `GET /v1/me/identities`
+- `GET /v1/me/identities` (linked identities + normalized connector summary)
 - `GET /v1/accounts`
 - `POST /v1/accounts`
 - `GET /v1/accounts/:id`
@@ -81,7 +86,7 @@ Public:
 - `POST /v1/invitations/:token/accept`
 - `POST /v1/accounts/:id/switch`
 - `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
-- `GET /v1/session/bootstrap`
+- `GET /v1/session/bootstrap` (account bootstrap + normalized connector summary for the active account context)
 - `POST /auth/refresh`
 - `POST /auth/logout`
 

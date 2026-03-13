@@ -63,6 +63,34 @@ What it does:
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
+## Account Operator
+
+Route: `/#/tools/account-operator`
+
+What it does:
+
+- Exposes the current Berlin session's accessible accounts directly in DevStudio.
+- Uses the same account/membership truth model as Roma; there is no DevStudio-only account architecture.
+- Supports:
+  - listing accessible accounts
+  - creating a new account
+  - inspecting canonical account detail
+  - inspecting current members for an account
+  - switching the active account preference
+- Uses explicit local DevStudio Berlin-backed routes:
+  - `GET /api/devstudio/accounts`
+  - `POST /api/devstudio/accounts`
+  - `GET /api/devstudio/accounts/:accountId`
+  - `GET /api/devstudio/accounts/:accountId/members`
+  - `POST /api/devstudio/accounts/:accountId/switch`
+- These routes require a real Berlin product session plus platform-account membership.
+- Unlike the instances tool, account-operator flows do **not** fall back to trusted-local platform data when no product session exists.
+
+Why:
+
+- PRD 064 requires DevStudio account/operator flows to sit on Berlin truth rather than inventing a second operator model.
+- Internal operator humans still use the same `User Profile + Account Memberships + one active account` model as product shells.
+
 ### Entitlements matrix (AI / LLM access)
 
 DevStudio has two separate gates for Copilot behavior:
@@ -78,8 +106,11 @@ Important behavior:
 
 Current boundary:
 
-- DevStudio is the platform superadmin surface, but the shipped toolset in this repo snapshot is still centered on curated/widget authoring and verification rather than a full global operator console.
-- That includes editing the platform-owned account’s instances, running translation checks inside Bob, and applying local theme mutations in source profile.
+- DevStudio is the platform superadmin surface.
+- The shipped toolset now includes:
+  - Berlin-backed account operator flows for accessible accounts
+  - platform-owned curated/widget authoring and verification flows
+  - source-profile local theme mutations
 - Customer account day-2 workflows still belong in Roma.
 - Platform-scoped superadmin/operator workflows belong in DevStudio as they are implemented.
 - The same instances are:
@@ -95,6 +126,12 @@ If DevStudio local opens but instances are missing:
 - Check local `PARIS_DEV_JWT` only for the remaining local internal discovery/status transport. Bob `/api/accounts/...` availability now depends on a real Berlin session plus the bootstrap account capsule.
 - Check that `bash scripts/dev-up.sh --reset` completed the explicit curated/main Tokyo saved snapshot repair step.
 - DevStudio discovery/status remain local trusted-tool transport paths today, but they are host-gated by the same DevStudio context contract; core create/open/save now uses Bob’s canonical route instead of Paris.
+
+If the Account Operator tool shows an auth or forbidden error:
+
+- DevStudio account-operator routes require a real Berlin session.
+- They also require membership in the platform-owned account.
+- No trusted-local fallback exists for operator account data, by design.
 
 If the asset picker is empty in DevStudio but Roma shows assets:
 

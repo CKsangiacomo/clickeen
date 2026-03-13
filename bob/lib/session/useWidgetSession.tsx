@@ -2359,12 +2359,12 @@ function useWidgetSessionInternal() {
       cache: 'no-store',
       ...(accountCapsule ? { headers: { 'x-ck-authz-capsule': accountCapsule } } : {}),
     });
-    if (!instanceRes.ok) {
-      throw new Error(`[useWidgetSession] Failed to load instance (HTTP ${instanceRes.status})`);
-    }
     const instanceJson = (await instanceRes.json().catch(() => null)) as any;
+    if (!instanceRes.ok) {
+      throw new Error(extractErrorReasonKey(instanceJson, `HTTP_${instanceRes.status}`));
+    }
     if (!instanceJson || typeof instanceJson !== 'object') {
-      throw new Error('[useWidgetSession] Instance route returned invalid JSON');
+      throw new Error('coreui.errors.payload.invalid');
     }
     if (instanceJson.error) {
       const reasonKey = instanceJson.error?.reasonKey ? String(instanceJson.error.reasonKey) : 'coreui.errors.unknown';
@@ -2372,7 +2372,7 @@ function useWidgetSessionInternal() {
     }
     const widgetType = typeof instanceJson.widgetType === 'string' ? instanceJson.widgetType : '';
     if (!widgetType) {
-      throw new Error('[useWidgetSession] Missing widgetType in instance payload');
+      throw new Error('coreui.errors.instance.widgetMissing');
     }
     let localizationPayload: unknown = instanceJson.localization;
     if (subject === 'account') {
@@ -2381,12 +2381,12 @@ function useWidgetSessionInternal() {
         cache: 'no-store',
         ...(accountCapsule ? { headers: { 'x-ck-authz-capsule': accountCapsule } } : {}),
       });
-      if (!localizationRes.ok) {
-        throw new Error(`[useWidgetSession] Failed to load localization (HTTP ${localizationRes.status})`);
-      }
       const localizationJson = (await localizationRes.json().catch(() => null)) as any;
+      if (!localizationRes.ok) {
+        throw new Error(extractErrorReasonKey(localizationJson, `HTTP_${localizationRes.status}`));
+      }
       if (!localizationJson || typeof localizationJson !== 'object') {
-        throw new Error('[useWidgetSession] Localization route returned invalid JSON');
+        throw new Error('coreui.errors.payload.invalid');
       }
       if (localizationJson.error) {
         const reasonKey = localizationJson.error?.reasonKey

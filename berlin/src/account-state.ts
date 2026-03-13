@@ -109,6 +109,30 @@ export type BerlinIdentityPayload = {
   providerSubject: string | null;
 };
 
+export type BerlinWorkspaceConnectionPayload = {
+  provider: string;
+  accountId: string;
+  status: 'seed_available';
+  linkedIdentityId: string;
+};
+
+export type BerlinProviderCapabilityStatePayload = {
+  provider: string;
+  capabilityKey: 'identity.login';
+  status: 'granted';
+  source: 'linked_identity';
+  linkedIdentityId: string;
+};
+
+export type BerlinConnectorSummaryPayload = {
+  linkedIdentities: BerlinIdentityPayload[];
+  workspaceConnections: BerlinWorkspaceConnectionPayload[];
+  capabilityStates: BerlinProviderCapabilityStatePayload[];
+  traits: {
+    linkedProviders: string[];
+  };
+};
+
 export type BerlinAccountContext = {
   accountId: string;
   role: MemberRole;
@@ -138,6 +162,7 @@ export type BerlinBootstrapPayload = {
   defaults: {
     accountId: string | null;
   };
+  connectors: BerlinConnectorSummaryPayload;
   authz: null | {
     accountCapsule: string;
     accountId: string;
@@ -626,6 +651,41 @@ export async function loadPrincipalIdentities(args: {
   return { ok: true, value: identities };
 }
 
+export function summarizeConnectorState(args: {
+  identities: BerlinIdentityPayload[];
+  activeAccountId: string | null;
+}): BerlinConnectorSummaryPayload {
+  const linkedIdentities = [...args.identities];
+  const linkedProviders = Array.from(new Set(linkedIdentities.map((entry) => entry.provider))).sort((a, b) =>
+    a.localeCompare(b),
+  );
+  const workspaceConnections =
+    args.activeAccountId == null
+      ? []
+      : linkedIdentities.map((entry) => ({
+          provider: entry.provider,
+          accountId: args.activeAccountId as string,
+          status: 'seed_available' as const,
+          linkedIdentityId: entry.identityId,
+        }));
+  const capabilityStates = linkedIdentities.map((entry) => ({
+    provider: entry.provider,
+    capabilityKey: 'identity.login' as const,
+    status: 'granted' as const,
+    source: 'linked_identity' as const,
+    linkedIdentityId: entry.identityId,
+  }));
+
+  return {
+    linkedIdentities,
+    workspaceConnections,
+    capabilityStates,
+    traits: {
+      linkedProviders,
+    },
+  };
+}
+
 export function findAccountContext(
   state: PrincipalAccountState,
   accountId: string,
@@ -636,6 +696,7 @@ export function findAccountContext(
 export async function buildBootstrapPayload(args: {
   env: Env;
   state: PrincipalAccountState;
+  session: SessionState;
 }): Promise<Result<BerlinBootstrapPayload>> {
   const activeAccount = args.state.defaultAccount;
   if (!activeAccount) {
@@ -646,6 +707,12 @@ export async function buildBootstrapPayload(args: {
   }
 
   try {
+    const identities = await loadPrincipalIdentities({
+      env: args.env,
+      session: args.session,
+    });
+    if (!identities.ok) return { ok: false, response: identities.response };
+
     const policy = resolvePolicy({ profile: activeAccount.tier, role: activeAccount.role });
     const budgets = Object.fromEntries(
       await Promise.all(
@@ -688,6 +755,10 @@ export async function buildBootstrapPayload(args: {
         profile: args.state.profile,
         accounts: args.state.accounts,
         defaults: { accountId: activeAccount.accountId },
+        connectors: summarizeConnectorState({
+          identities: identities.value,
+          activeAccountId: activeAccount.accountId,
+        }),
         authz: {
           accountCapsule: capsule.token,
           accountId: activeAccount.accountId,

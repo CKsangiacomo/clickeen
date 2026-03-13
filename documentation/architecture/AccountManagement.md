@@ -1,13 +1,14 @@
 # Account Management (Canonical)
 
-STATUS: EXECUTING TARGET — PRD 65
+STATUS: CANONICAL CURRENT MODEL
 
 This file is the canonical account-management model for Clickeen.
 
-It defines the target boundary that Berlin, Roma, DevStudio, Bob, Michael, and Paris must converge to during PRD 65 execution.
+It defines the runtime boundary that Berlin, Roma, DevStudio, Bob, Michael, and Paris must converge to. PRD 65 is executed; the remaining architecture closure work lives in PRD 064.
 
 For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./Overview.md).
-For the execution plan and dependency map, see [PRD 65](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/065__PRD__Berlin_Account_Management_Level_Up__Boundary_Closure_and_Commercial_Truth.md).
+For the executed account-boundary closure, see [PRD 65](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/065__PRD__Berlin_Account_Management_Level_Up__Boundary_Closure_and_Commercial_Truth.md).
+For the remaining Berlin/Roma/DevStudio architecture convergence, see [PRD 064](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/064__PRD__Berlin_Account_Management_Boundary__Single_Identity_And_Account_API.md).
 
 ---
 
@@ -267,7 +268,11 @@ Returns:
 - tier
 - locale policy
 - entitlements snapshot
-- normalized bootstrap traits
+- normalized bootstrap connector traits:
+  - `linkedIdentities`
+  - `workspaceConnections`
+  - `capabilityStates`
+  - `traits.linkedProviders`
 - signed account capsule
 
 Canonical account API:
@@ -297,6 +302,7 @@ Rules:
 - `POST /v1/accounts/:id/invitations` is the canonical unknown-person grant-access path
 - `POST /v1/accounts/:id/members` is only for already-resolved user profiles or explicit Berlin-owned operator flows
 - `PATCH /v1/accounts/:id/members/:memberId` mutates membership only
+- `GET /v1/me/identities` returns Berlin's normalized provider reuse summary; shells must not invent their own provider/account linkage model on top
 
 ---
 
@@ -334,6 +340,10 @@ Rules:
 - if broader scopes are needed, Berlin upgrades that same relationship
 - widgets and product surfaces do not store provider tokens or raw OAuth payloads
 - raw provider payloads do not become a product data model outside Berlin
+- current runtime exposes the minimal reusable summary only:
+  - `linkedIdentities` = person-level provider facts
+  - `workspaceConnections` = account-scoped connection seeds Berlin can later upgrade
+  - `capabilityStates` = current granted capability state per provider relationship
 
 ---
 

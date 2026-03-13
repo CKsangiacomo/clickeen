@@ -9,6 +9,70 @@ import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 import { SettingsPanel } from './SettingsPanel';
 import { LocalizationControls } from './LocalizationControls';
 
+const BUILDER_ERROR_COPY: Record<string, string> = {
+  'coreui.errors.auth.required': 'You need to sign in again to keep editing this widget.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to edit this widget.',
+  'coreui.errors.network.timeout': 'The request timed out. Please try again.',
+  'coreui.errors.db.readFailed': 'Builder could not load this widget right now. Please try again.',
+  'coreui.errors.db.writeFailed': 'Saving changes failed. Please try again.',
+  'coreui.errors.payload.invalid': 'Builder received an invalid response. Please try again.',
+  'coreui.errors.builder.command.hostUnavailable':
+    'Builder lost its connection to the workspace. Please reopen this widget.',
+  'coreui.errors.builder.command.timeout': 'Saving took too long. Please try again.',
+  'coreui.errors.builder.open.invalidRequest': 'Builder received an invalid open request.',
+  'coreui.errors.builder.open.sessionMismatch': 'Builder session expired. Please reopen this widget.',
+  'coreui.errors.builder.open.failed': 'Builder could not open this widget. Please try again.',
+  'coreui.errors.instance.notFound': 'This widget could not be found. It may have been deleted.',
+  'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot load right now.',
+  'coreui.errors.instance.config.invalid': 'This widget has invalid saved data and cannot load right now.',
+  'coreui.errors.accountId.invalid': 'This workspace context is invalid. Please reopen the widget.',
+  'coreui.errors.widgetType.invalid': 'This widget type is invalid and cannot be saved right now.',
+  'coreui.errors.config.invalid': 'Some widget settings are invalid. Review your changes and try again.',
+  'coreui.errors.publish.nonPersistableUrl':
+    'This widget contains content that cannot be saved yet. Remove the blocked URL and try again.',
+};
+
+function resolveBuilderErrorCopy(reason: string, fallback: string): string {
+  const normalized = String(reason || '').trim();
+  if (!normalized) return fallback;
+  const mapped = BUILDER_ERROR_COPY[normalized];
+  if (mapped) return mapped;
+  if (normalized.startsWith('coreui.') || normalized.startsWith('HTTP_') || normalized.startsWith('[useWidgetSession]')) {
+    return fallback;
+  }
+  return normalized;
+}
+
+function resolveSessionErrorTitle(error: NonNullable<ReturnType<typeof useWidgetSession>['error']>): string {
+  if (error.source === 'load') return 'Builder unavailable';
+  if (error.source === 'save') return error.committed ? 'Saved with warning' : 'Save failed';
+  return 'Edit blocked';
+}
+
+function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidgetSession>['error']>): string[] {
+  if (error.source === 'load') {
+    return [resolveBuilderErrorCopy(error.message, 'Builder could not load this widget. Please try again.')];
+  }
+
+  if (error.source === 'save') {
+    return [
+      resolveBuilderErrorCopy(
+        error.message,
+        error.committed
+          ? 'Saved, but some follow-up updates need attention.'
+          : 'Saving changes failed. Please try again.',
+      ),
+    ];
+  }
+
+  const deduped = new Set(
+    error.errors
+      .map((entry) => resolveBuilderErrorCopy(entry.message, 'Some widget edits are blocked by current limits or settings.'))
+      .filter(Boolean),
+  );
+  return deduped.size > 0 ? Array.from(deduped) : ['Some widget edits are blocked by current limits or settings.'];
+}
+
 export function ToolDrawer() {
   const session = useWidgetSession();
   const compiled = session.compiled;
@@ -97,6 +161,7 @@ export function ToolDrawer() {
     ? 'color-mix(in oklab, var(--color-system-yellow-5), transparent 82%)'
     : 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';
   const alertLabelColor = isCommittedSaveWarning ? 'var(--color-system-yellow)' : 'var(--color-system-red)';
+  const sessionErrorLines = sessionError ? resolveSessionErrorLines(sessionError) : [];
 
   return (
     <aside className="tooldrawer">
@@ -175,20 +240,10 @@ export function ToolDrawer() {
                 }}
               >
                 <div className="label-s" style={{ color: alertLabelColor }}>
-                  {sessionError.source === 'load'
-                    ? 'Instance load error'
-                    : sessionError.source === 'save'
-                      ? sessionError.committed
-                        ? 'Saved with warning'
-                        : 'Save rejected'
-                      : 'Edit rejected'}
+                  {resolveSessionErrorTitle(sessionError)}
                 </div>
                 <pre className="caption" style={{ whiteSpace: 'pre-wrap', margin: 'var(--space-1) 0 0 0' }}>
-                  {sessionError.source === 'load'
-                    ? sessionError.message
-                    : sessionError.source === 'save'
-                      ? [sessionError.message, ...(sessionError.paths || [])].filter(Boolean).join('\n')
-                      : sessionError.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n')}
+                  {sessionErrorLines.join('\n')}
                 </pre>
               </div>
             ) : null}

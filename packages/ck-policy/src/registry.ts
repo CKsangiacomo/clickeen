@@ -11,7 +11,6 @@ export const CAPABILITY_KEYS = [
   'branding.remove',
   'embed.seoGeo.enabled',
   'budget.copilot.turns',
-  'budget.uploads.count',
   'budget.uploads.bytes',
   'budget.personalization.runs',
   'budget.personalization.website.crawls',
@@ -50,7 +49,6 @@ export type CapKey = (typeof CAP_KEYS)[number];
 
 export const BUDGET_KEYS = [
   'budget.copilot.turns',
-  'budget.uploads.count',
   'budget.uploads.bytes',
   'budget.personalization.runs',
   'budget.personalization.website.crawls',
@@ -95,13 +93,9 @@ export const CAPABILITY_META: Record<CapabilityKey, CapabilityMeta> = {
     label: 'Copilot turns',
     description: 'Monthly AI copilot turns.',
   },
-  'budget.uploads.count': {
-    label: 'Uploads',
-    description: 'Monthly uploads budget (count).',
-  },
   'budget.uploads.bytes': {
-    label: 'Upload bytes',
-    description: 'Monthly uploads budget (bytes).',
+    label: 'Storage',
+    description: 'Total account storage available for uploaded assets (bytes).',
   },
   'budget.personalization.runs': {
     label: 'Personalization runs',

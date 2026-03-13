@@ -7,11 +7,7 @@ import {
 import type { AccountTier, Env } from './types';
 
 function resolveRomaAuthzCapsuleSecret(env: Env): string {
-  const explicit = (env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
-  if (explicit) return explicit;
-  const aiFallback = (env.AI_GRANT_HMAC_SECRET || '').trim();
-  if (aiFallback) return aiFallback;
-  return (env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  return (env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
 }
 
 export { readRomaAuthzCapsuleHeader, type RomaAccountAuthzCapsulePayload };

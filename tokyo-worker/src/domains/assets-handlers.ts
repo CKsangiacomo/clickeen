@@ -13,19 +13,18 @@ import {
   validateUploadFilename,
   sha256Hex,
   assertUploadAuth,
+  TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
 } from '../index';
 import type { Env } from '../index';
 import { isUuid } from '@clickeen/ck-contracts';
 import {
   UPLOAD_SIZE_CAP_KEY,
-  UPLOADS_BYTES_BUDGET_KEY,
-  UPLOADS_COUNT_BUDGET_KEY,
   type AccountAssetManifest,
   type MemberRole,
-  consumeAccountBudget,
   deleteAccountAssetByIdentity,
   deleteAccountAssetUsageByIdentity,
   loadAccountAssetByIdentity,
+  loadAccountStoredBytesUsage,
   loadAccountAssetUsagePublicIdsByIdentity,
   listAccountAssetManifestsByAccount,
   loadAccountAssetBlobIdentitiesByAccount,
@@ -35,9 +34,11 @@ import {
   normalizeAccountAssetSource,
   persistAccountAssetMetadata,
   resolveUploadSizeLimitBytes,
-  resolveUploadsBytesBudgetMax,
-  resolveUploadsCountBudgetMax,
+  resolveStorageBytesBudgetMax,
   roleRank,
+  STORAGE_BYTES_BUDGET_KEY,
+  sumAccountAssetManifestSizeBytes,
+  syncAccountStoredBytesUsage,
 } from './assets';
 
 const ACCOUNT_ASSET_NAMESPACE_PREFIX = 'assets/versions/';
@@ -53,7 +54,7 @@ type UploadTierResolutionResult =
   | { ok: true }
   | { ok: false; response: Response };
 
-type UploadBudgetResult =
+type UploadStorageResult =
   | { ok: true }
   | { ok: false; response: Response };
 
@@ -104,7 +105,6 @@ async function resolveUploadTierAndAuthorization(args: {
   minRole?: MemberRole;
 }): Promise<UploadTierResolutionResult> {
   const { env, auth, accountId, minRole = 'editor' } = args;
-  if (auth.trusted) return { ok: true };
   try {
     const membershipRole = await loadAccountMembershipRole(env, accountId, auth.principal.userId);
     if (!membershipRole || roleRank(membershipRole) < roleRank(minRole)) {
@@ -138,33 +138,44 @@ async function authorizeAccountAssetAccess(args: {
   return null;
 }
 
-async function enforceUploadBudgets(args: {
+async function enforceAccountStorageLimit(args: {
   env: Env;
   accountId: string;
-  uploadsBytesMax: number | null;
-  uploadsCountMax: number | null;
+  storageBytesMax: number | null;
   bodyBytes: number;
-}): Promise<UploadBudgetResult> {
-  const { env, accountId, uploadsBytesMax, uploadsCountMax, bodyBytes } = args;
-  const checks: Array<{ budgetKey: string; max: number | null; amount: number }> = [
-    { budgetKey: UPLOADS_BYTES_BUDGET_KEY, max: uploadsBytesMax, amount: bodyBytes },
-    { budgetKey: UPLOADS_COUNT_BUDGET_KEY, max: uploadsCountMax, amount: 1 },
-  ];
-  for (const check of checks) {
-    const budget = await consumeAccountBudget({
-      env,
-      accountId,
-      budgetKey: check.budgetKey,
-      max: check.max,
-      amount: check.amount,
-    });
-    if (budget.ok) continue;
+}): Promise<UploadStorageResult> {
+  const { env, accountId, storageBytesMax, bodyBytes } = args;
+  try {
+    const currentStoredBytes = await loadAccountStoredBytesUsage(env, accountId);
+    const nextStoredBytes = currentStoredBytes + bodyBytes;
+    if (storageBytesMax != null && nextStoredBytes > storageBytesMax) {
+      return {
+        ok: false,
+        response: denyEntitlement('coreui.upsell.reason.budgetExceeded', `${STORAGE_BYTES_BUDGET_KEY}=${storageBytesMax}`, 403),
+      };
+    }
+    return { ok: true };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
     return {
       ok: false,
-      response: denyEntitlement(budget.reasonKey, budget.detail, 403),
+      response: json({ error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } }, { status: 500 }),
     };
   }
-  return { ok: true };
+}
+
+async function mirrorAccountStorageUsage(
+  env: Env,
+  accountId: string,
+  manifests?: AccountAssetManifest[],
+): Promise<void> {
+  try {
+    await syncAccountStoredBytesUsage(env, accountId, manifests);
+  } catch {
+    // Asset manifests are the storage source of truth. This mirror keeps Berlin
+    // bootstrap counters warm, but upload/list/delete correctness does not
+    // depend on the KV write succeeding in the same request.
+  }
 }
 
 function resolveAccountAssetNamespacePrefix(accountId: string): string {
@@ -430,13 +441,11 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     return denyEntitlement('coreui.upsell.reason.capReached', `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}`, 413);
   }
 
-  const uploadsMax = resolveUploadsCountBudgetMax(tier);
-  const uploadsBytesMax = resolveUploadsBytesBudgetMax(tier);
-  const budgetResult = await enforceUploadBudgets({
+  const storageBytesMax = resolveStorageBytesBudgetMax(tier);
+  const budgetResult = await enforceAccountStorageLimit({
     env,
     accountId,
-    uploadsBytesMax,
-    uploadsCountMax: uploadsMax,
+    storageBytesMax,
     bodyBytes: body.byteLength,
   });
   if (!budgetResult.ok) return budgetResult.response;
@@ -469,6 +478,8 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       { status: 500 },
     );
   }
+
+  await mirrorAccountStorageUsage(env, accountId);
 
   const origin = new URL(req.url).origin;
   const url = `${origin}${buildAccountAssetVersionPath(key)}`;
@@ -522,13 +533,21 @@ async function handleListAccountAssetMetadata(
   if (!accountId || !isUuid(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
-  const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'viewer' });
+  const authErr = await authorizeAccountAssetAccess({
+    req,
+    env,
+    accountId,
+    minRole: 'viewer',
+  });
   if (authErr) return authErr;
   const origin = new URL(req.url).origin;
   const manifests = await listAccountAssetManifestsByAccount(env, accountId);
   manifests.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  const storageBytesUsed = sumAccountAssetManifestSizeBytes(manifests);
+  await mirrorAccountStorageUsage(env, accountId, manifests);
   return json({
     accountId,
+    storageBytesUsed,
     assets: manifests.map((manifest) => serializeAccountAssetManifest(manifest, origin)),
   });
 }
@@ -539,7 +558,9 @@ async function handleGetAccountAssetIdentityIntegrity(
   accountIdRaw: string,
   assetIdRaw: string,
 ): Promise<Response> {
-  const authErr = requireDevAuth(req, env);
+  const authErr = requireDevAuth(req, env, {
+    allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
+  });
   if (authErr) return authErr;
   const accountId = String(accountIdRaw || '').trim();
   if (!accountId || !isUuid(accountId)) {
@@ -571,7 +592,9 @@ async function handleGetAccountAssetMirrorIntegrity(
   env: Env,
   accountIdRaw: string,
 ): Promise<Response> {
-  const authErr = requireDevAuth(req, env);
+  const authErr = requireDevAuth(req, env, {
+    allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
+  });
   if (authErr) return authErr;
   const accountId = String(accountIdRaw || '').trim();
   if (!accountId || !isUuid(accountId)) {
@@ -610,7 +633,12 @@ async function handleDeleteAccountAsset(
   if (!accountId || !isUuid(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
-  const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'editor' });
+  const authErr = await authorizeAccountAssetAccess({
+    req,
+    env,
+    accountId,
+    minRole: 'editor',
+  });
   if (authErr) return authErr;
   const assetId = String(assetIdRaw || '').trim();
   if (!assetId || !isUuid(assetId)) {
@@ -716,6 +744,8 @@ async function handleDeleteAccountAsset(
       { status: 500 },
     );
   }
+
+  await mirrorAccountStorageUsage(env, accountId);
 
   return json(
     {

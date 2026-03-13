@@ -22,6 +22,8 @@ Guiding principles (from Blueprint + Vision)
 - Edge delivery: immutable overlays fetched by deterministic keys.
 - Governance: budgets, policy, playbook versions, audits.
 
+Note: account intelligence signals (business category, detected country, existing languages) normalized from a `web_presence` connector crawl are a candidate input source for `geo` and `industry` layer key resolution. See `032__PRD__Connectors__Universal_Data_Sources.md` section 10 for the web presence connector model. This is additive and does not change the layering contract below.
+
 Decision gates (locked for execution)
 1) Layer order (canonical, from BabelProtocol): base -> locale -> geo -> industry -> experiment -> account -> behavior -> user (user_ops last).
 2) LayerKey contract + canonicalization functions per layer (locale BCP47, geo ISO, etc).

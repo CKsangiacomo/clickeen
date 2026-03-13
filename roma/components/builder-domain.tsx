@@ -122,6 +122,38 @@ type BobOpenEditorMessage = {
 
 type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId' | 'sessionId'>;
 
+const BUILDER_REASON_COPY: Record<string, string> = {
+  'coreui.errors.auth.required': 'You need to sign in again to open Builder.',
+  'coreui.errors.auth.contextUnavailable': 'Builder is unavailable right now. Please try again.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to open this widget in Builder.',
+  'coreui.errors.network.timeout': 'Builder took too long to respond. Please try again.',
+  'coreui.errors.misconfigured': 'Builder is temporarily unavailable. Please try again.',
+  'roma.errors.proxy.paris_unavailable': 'Builder is temporarily unavailable. Please try again.',
+  'coreui.errors.payload.invalid': 'Builder received an invalid response. Please try again.',
+  'coreui.errors.instance.notFound': 'This widget could not be found. It may have been deleted.',
+  'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot open right now.',
+  'coreui.errors.instance.config.invalid': 'This widget has invalid saved data and cannot open right now.',
+  'coreui.errors.instance.ownerAccountMissing':
+    'This widget is missing required workspace data and cannot open right now.',
+  'coreui.errors.builder.open.sessionMissing': 'Builder did not start correctly. Please retry.',
+  'coreui.errors.builder.open.bootModeInvalid': 'Builder did not start correctly. Please retry.',
+  'coreui.errors.builder.open.stale': 'Builder refreshed while opening this widget. Please retry.',
+  'coreui.errors.builder.open.ackTimeout': 'Builder took too long to respond. Please retry.',
+  'coreui.errors.builder.open.timeout': 'Builder took too long to respond. Please retry.',
+  'coreui.errors.builder.open.failed': 'Builder could not open this widget. Please try again.',
+};
+
+function resolveBuilderErrorCopy(reason: string, fallback: string): string {
+  const normalized = String(reason || '').trim();
+  if (!normalized) return fallback;
+  const mapped = BUILDER_REASON_COPY[normalized];
+  if (mapped) return mapped;
+  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.') || normalized.startsWith('roma.')) {
+    return fallback;
+  }
+  return normalized;
+}
+
 function resolveBobBaseUrl(): string {
   const fromEnv = String(process.env.NEXT_PUBLIC_BOB_URL || '').trim();
   if (fromEnv) {
@@ -679,6 +711,13 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
 
   const hasAccountId = Boolean(accountId);
   const waitingForAccountContext = !hasAccountId && me.loading;
+  const builderContextErrorCopy = me.error
+    ? resolveBuilderErrorCopy(me.error, 'Builder is unavailable right now. Please try again.')
+    : null;
+  const builderOpenErrorCopy = resolveBuilderErrorCopy(
+    openError || '',
+    'Builder could not open this widget. Please try again.',
+  );
 
   if (!hasAccountId) {
     if (waitingForAccountContext) {
@@ -691,7 +730,9 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
 
     return (
       <div className="rd-canvas-module">
-        <p className="body-m">No account context found for Builder.</p>
+        <p className="body-m">
+          {builderContextErrorCopy || 'No workspace context is available for Builder right now.'}
+        </p>
         <div className="rd-canvas-module__actions">
           <Link className="diet-btn-txt" data-size="md" data-variant="primary" href="/settings">
             <span className="diet-btn-txt__label body-m">Open settings</span>
@@ -722,7 +763,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
     <>
       {openError ? (
         <div className="rd-canvas-module">
-          <p className="body-m">Failed to open instance: {openError}</p>
+          <p className="body-m">{builderOpenErrorCopy}</p>
           <div className="rd-canvas-module__actions">
             <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void openActiveInstanceInBob()}>
               <span className="diet-btn-txt__label body-m">Retry</span>

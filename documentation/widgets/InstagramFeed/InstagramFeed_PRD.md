@@ -51,7 +51,7 @@ branding.remove      | flag | behavior.showBacklink (TBD)       | boolean (deny 
 
 Budgets are global usage counters (no per-widget matrices):
 - `budget.copilot.turns` (Copilot send)
-- `budget.uploads.count` (file uploads; if/when this widget adds uploads)
+- `budget.uploads.bytes` (total account storage for uploaded files; if/when this widget adds uploads)
 
 If this widget needs caps (e.g., max posts or max hidden IDs), add new global cap keys in `packages/ck-policy/entitlements.matrix.json` and map them in `limits.json` (no per-widget tier tables).
 

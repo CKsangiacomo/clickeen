@@ -16,9 +16,8 @@ function getUtcPeriodKey(date: Date): string {
   return `${y}-${String(m).padStart(2, '0')}`;
 }
 
-function requireUsageKv(env: Env): KVNamespace | null {
+function requireUsageKv(env: Env): KVNamespace {
   if (env.USAGE_KV) return env.USAGE_KV;
-  if (resolveStage(env) === 'local') return null;
   throw new Error('[ParisWorker] Missing USAGE_KV binding');
 }
 
@@ -44,7 +43,6 @@ export function currentUtcBudgetPeriodKey(now = new Date()): string {
 
 export async function readBudgetUsed(args: { env: Env; scope: BudgetScope; budgetKey: BudgetKey; periodKey?: string }): Promise<number> {
   const kv = requireUsageKv(args.env);
-  if (!kv) return 0;
   const periodKey = args.periodKey ?? getUtcPeriodKey(new Date());
   const key = budgetCounterKey({ budgetKey: args.budgetKey, periodKey, scope: args.scope });
   return readCounter(kv, key);
@@ -69,7 +67,6 @@ export async function consumeBudget(args: {
 
   const max = Math.max(0, Math.floor(args.max));
   const kv = requireUsageKv(args.env);
-  if (!kv) return { ok: true, used: 0, nextUsed: amount };
 
   const periodKey = getUtcPeriodKey(new Date());
   const key = budgetCounterKey({ budgetKey: args.budgetKey, periodKey, scope: args.scope });

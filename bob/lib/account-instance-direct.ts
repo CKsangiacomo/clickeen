@@ -86,6 +86,25 @@ function normalizeAccountInstanceSource(value: unknown, publicId: string): 'acco
   return kind === 'user' ? 'account' : 'curated';
 }
 
+function createTokyoAccountHeaders(args: {
+  tokyoAccessToken: string;
+  accountId: string;
+  contentType?: string | null;
+  internalServiceName?: string | null;
+}): Headers {
+  const headers = new Headers();
+  headers.set('authorization', `Bearer ${args.tokyoAccessToken}`);
+  headers.set('x-account-id', args.accountId);
+  headers.set('accept', 'application/json');
+  if (args.contentType) {
+    headers.set('content-type', args.contentType);
+  }
+  if (args.internalServiceName) {
+    headers.set('x-ck-internal-service', args.internalServiceName);
+  }
+  return headers;
+}
+
 export function validatePersistableConfig(
   config: unknown,
   expectedAccountId: string,
@@ -138,11 +157,13 @@ async function loadSavedInstanceFromTokyo(args: {
   tokyoAccessToken: string;
   accountId: string;
   publicId: string;
+  internalServiceName?: string | null;
 }): Promise<{ row: AccountInstanceCoreRow; config: Record<string, unknown> } | null> {
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${args.tokyoAccessToken}`);
-  headers.set('x-account-id', args.accountId);
-  headers.set('accept', 'application/json');
+  const headers = createTokyoAccountHeaders({
+    tokyoAccessToken: args.tokyoAccessToken,
+    accountId: args.accountId,
+    internalServiceName: args.internalServiceName,
+  });
 
   const response = await fetch(
     `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
@@ -202,12 +223,14 @@ export async function writeSavedConfigToTokyo(args: {
   displayName?: string | null;
   source?: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
+  internalServiceName?: string | null;
 }): Promise<void> {
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${args.tokyoAccessToken}`);
-  headers.set('x-account-id', args.accountId);
-  headers.set('accept', 'application/json');
-  headers.set('content-type', 'application/json');
+  const headers = createTokyoAccountHeaders({
+    tokyoAccessToken: args.tokyoAccessToken,
+    accountId: args.accountId,
+    contentType: 'application/json',
+    internalServiceName: args.internalServiceName,
+  });
 
   const response = await fetch(
     `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
@@ -235,11 +258,13 @@ export async function deleteSavedConfigFromTokyo(args: {
   tokyoAccessToken: string;
   accountId: string;
   publicId: string;
+  internalServiceName?: string | null;
 }): Promise<void> {
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${args.tokyoAccessToken}`);
-  headers.set('x-account-id', args.accountId);
-  headers.set('accept', 'application/json');
+  const headers = createTokyoAccountHeaders({
+    tokyoAccessToken: args.tokyoAccessToken,
+    accountId: args.accountId,
+    internalServiceName: args.internalServiceName,
+  });
 
   const response = await fetch(
     `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
@@ -260,11 +285,13 @@ export async function deleteLiveSurfaceFromTokyo(args: {
   tokyoAccessToken: string;
   accountId: string;
   publicId: string;
+  internalServiceName?: string | null;
 }): Promise<void> {
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${args.tokyoAccessToken}`);
-  headers.set('x-account-id', args.accountId);
-  headers.set('accept', 'application/json');
+  const headers = createTokyoAccountHeaders({
+    tokyoAccessToken: args.tokyoAccessToken,
+    accountId: args.accountId,
+    internalServiceName: args.internalServiceName,
+  });
 
   const response = await fetch(
     `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/live.json?accountId=${encodeURIComponent(args.accountId)}`,
@@ -288,12 +315,14 @@ export async function updateSavedPointerMetadataInTokyo(args: {
   displayName?: string | null;
   source?: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
+  internalServiceName?: string | null;
 }): Promise<void> {
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${args.tokyoAccessToken}`);
-  headers.set('x-account-id', args.accountId);
-  headers.set('accept', 'application/json');
-  headers.set('content-type', 'application/json');
+  const headers = createTokyoAccountHeaders({
+    tokyoAccessToken: args.tokyoAccessToken,
+    accountId: args.accountId,
+    contentType: 'application/json',
+    internalServiceName: args.internalServiceName,
+  });
 
   const response = await fetch(
     `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
@@ -512,6 +541,7 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
   publicId: string;
   tokyoBaseUrl: string;
   tokyoAccessToken: string;
+  internalServiceName?: string | null;
 }): Promise<DirectRouteResult<{ row: TRow; config: Record<string, unknown> }>> {
   let saved: { row: AccountInstanceCoreRow; config: Record<string, unknown> } | null = null;
   try {
@@ -520,6 +550,7 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
       tokyoAccessToken: args.tokyoAccessToken,
       accountId: args.accountId,
       publicId: args.publicId,
+      internalServiceName: args.internalServiceName,
     });
   } catch (error) {
     return {
@@ -559,6 +590,7 @@ export async function saveAccountInstanceDirect(args: {
   config: Record<string, unknown>;
   tokyoBaseUrl: string;
   tokyoAccessToken: string;
+  internalServiceName?: string | null;
 }): Promise<
   DirectRouteResult<{
     config: Record<string, unknown>;
@@ -573,6 +605,7 @@ export async function saveAccountInstanceDirect(args: {
     publicId: args.publicId,
     tokyoBaseUrl: args.tokyoBaseUrl,
     tokyoAccessToken: args.tokyoAccessToken,
+    internalServiceName: args.internalServiceName,
   });
   if (current.ok === false) {
     return {
@@ -608,6 +641,7 @@ export async function saveAccountInstanceDirect(args: {
       publicId: args.publicId,
       widgetType: current.value.row.widgetType,
       config: args.config,
+      internalServiceName: args.internalServiceName,
     });
   } catch (error) {
     return {

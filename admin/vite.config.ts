@@ -203,18 +203,41 @@ type DevstudioBootstrapPayload = {
   profile?: {
     userId?: string | null;
     primaryEmail?: string | null;
-    displayName?: string | null;
+    givenName?: string | null;
+    familyName?: string | null;
+    primaryLanguage?: string | null;
+    country?: string | null;
+    timezone?: string | null;
   } | null;
   accounts?: Array<{
     accountId?: string | null;
     role?: string | null;
     name?: string | null;
     slug?: string | null;
+    status?: string | null;
+    tier?: string | null;
+    isPlatform?: boolean | null;
   }> | null;
   defaults?: {
     accountId?: string | null;
   } | null;
 };
+
+type DevstudioBerlinAccess =
+  | {
+      kind: 'ok';
+      accessToken: string;
+      setCookies?: DevstudioSessionCookieSpec[];
+    }
+  | {
+      kind: 'no-session';
+    }
+  | {
+      kind: 'error';
+      status: number;
+      body: Record<string, unknown>;
+      setCookies?: DevstudioSessionCookieSpec[];
+    };
 
 type DevstudioPlatformContext =
   | {
@@ -284,18 +307,7 @@ async function refreshDevstudioBerlinSession(
   };
 }
 
-async function resolveDevstudioBerlinBootstrap(req: any): Promise<{
-  kind: 'ok';
-  payload: DevstudioBootstrapPayload;
-  setCookies?: DevstudioSessionCookieSpec[];
-} | {
-  kind: 'no-session';
-} | {
-  kind: 'error';
-  status: number;
-  body: Record<string, unknown>;
-  setCookies?: DevstudioSessionCookieSpec[];
-}> {
+async function resolveDevstudioBerlinAccess(req: any): Promise<DevstudioBerlinAccess> {
   const cookies = parseCookieHeader(req.headers.cookie);
   let accessToken = String(cookies.get(DEVSTUDIO_ACCESS_COOKIE) || '').trim();
   const refreshToken = String(cookies.get(DEVSTUDIO_REFRESH_COOKIE) || '').trim();
@@ -324,10 +336,30 @@ async function resolveDevstudioBerlinBootstrap(req: any): Promise<{
 
   if (!accessToken) return { kind: 'no-session' };
 
+  return {
+    kind: 'ok',
+    accessToken,
+    ...(setCookies?.length ? { setCookies } : {}),
+  };
+}
+
+async function fetchDevstudioBerlinBootstrap(args: {
+  accessToken: string;
+}): Promise<
+  | {
+      ok: true;
+      payload: DevstudioBootstrapPayload;
+    }
+  | {
+      ok: false;
+      status: number;
+      body: Record<string, unknown>;
+    }
+> {
   const response = await fetch(`${resolveDevstudioBerlinBaseUrl()}/v1/session/bootstrap`, {
     method: 'GET',
     headers: {
-      authorization: `Bearer ${accessToken}`,
+      authorization: `Bearer ${args.accessToken}`,
       accept: 'application/json',
     },
     cache: 'no-store',
@@ -337,7 +369,7 @@ async function resolveDevstudioBerlinBootstrap(req: any): Promise<{
     | null;
   if (!response.ok || !payload) {
     return {
-      kind: 'error',
+      ok: false,
       status: response.status || 502,
       body:
         payload && typeof payload === 'object'
@@ -352,15 +384,55 @@ async function resolveDevstudioBerlinBootstrap(req: any): Promise<{
                 detail: 'devstudio_berlin_bootstrap_failed',
               },
             },
-      ...(setCookies?.length ? { setCookies } : {}),
+    };
+  }
+
+  return {
+    ok: true,
+    payload,
+  };
+}
+
+async function resolveDevstudioBerlinBootstrap(req: any): Promise<{
+  kind: 'ok';
+  payload: DevstudioBootstrapPayload;
+  setCookies?: DevstudioSessionCookieSpec[];
+} | {
+  kind: 'no-session';
+} | {
+  kind: 'error';
+  status: number;
+  body: Record<string, unknown>;
+  setCookies?: DevstudioSessionCookieSpec[];
+}> {
+  const access = await resolveDevstudioBerlinAccess(req);
+  if (access.kind !== 'ok') return access;
+
+  const bootstrap = await fetchDevstudioBerlinBootstrap({
+    accessToken: access.accessToken,
+  });
+  if (!bootstrap.ok) {
+    return {
+      kind: 'error',
+      status: bootstrap.status,
+      body: bootstrap.body,
+      ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
     };
   }
 
   return {
     kind: 'ok',
-    payload,
-    ...(setCookies?.length ? { setCookies } : {}),
+    payload: bootstrap.payload,
+    ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
   };
+}
+
+function findDevstudioPlatformAccount(
+  payload: DevstudioBootstrapPayload,
+  platformAccountId: string,
+) {
+  const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
+  return accounts.find((entry) => String(entry?.accountId || '').trim() === platformAccountId) || null;
 }
 
 function appendDevstudioSessionCookies(res: any, cookies?: DevstudioSessionCookieSpec[]) {
@@ -396,9 +468,7 @@ async function resolveDevstudioPlatformContext(req: any): Promise<DevstudioPlatf
     };
   }
 
-  const accounts = Array.isArray(bootstrap.payload.accounts) ? bootstrap.payload.accounts : [];
-  const platformAccount =
-    accounts.find((entry) => String(entry?.accountId || '').trim() === platformAccountId) || null;
+  const platformAccount = findDevstudioPlatformAccount(bootstrap.payload, platformAccountId);
   if (!platformAccount) {
     return {
       ok: false,
@@ -426,6 +496,82 @@ async function resolveDevstudioPlatformContext(req: any): Promise<DevstudioPlatf
   };
 }
 
+async function resolveDevstudioBerlinOperatorAccess(req: any): Promise<
+  | {
+      ok: true;
+      accessToken: string;
+      bootstrap: DevstudioBootstrapPayload;
+      setCookies?: DevstudioSessionCookieSpec[];
+    }
+  | {
+      ok: false;
+      status: number;
+      body: Record<string, unknown>;
+      setCookies?: DevstudioSessionCookieSpec[];
+    }
+> {
+  const access = await resolveDevstudioBerlinAccess(req);
+  if (access.kind === 'no-session') {
+    return {
+      ok: false,
+      status: 401,
+      body: {
+        error: {
+          kind: 'AUTH',
+          reasonKey: 'coreui.errors.auth.required',
+          detail: 'devstudio_berlin_session_required',
+        },
+      },
+    };
+  }
+  if (access.kind === 'error') {
+    return {
+      ok: false,
+      status: access.status,
+      body: access.body,
+      ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
+    };
+  }
+
+  const bootstrap = await fetchDevstudioBerlinBootstrap({
+    accessToken: access.accessToken,
+  });
+  if (!bootstrap.ok) {
+    return {
+      ok: false,
+      status: bootstrap.status,
+      body: bootstrap.body,
+      ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
+    };
+  }
+
+  const platformAccount = findDevstudioPlatformAccount(
+    bootstrap.payload,
+    resolveDevstudioPlatformAccountId(),
+  );
+  if (!platformAccount) {
+    return {
+      ok: false,
+      status: 403,
+      body: {
+        error: {
+          kind: 'DENY',
+          reasonKey: 'coreui.errors.auth.forbidden',
+          detail: 'platform_account_membership_required',
+        },
+      },
+      ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
+    };
+  }
+
+  return {
+    ok: true,
+    accessToken: access.accessToken,
+    bootstrap: bootstrap.payload,
+    ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
+  };
+}
+
 function createDevstudioParisHeaders(initHeaders?: HeadersInit): Headers {
   const token = resolveRootEnvValue('PARIS_DEV_JWT');
   if (!token) {
@@ -446,6 +592,7 @@ function createDevstudioTokyoHeaders(initHeaders?: HeadersInit): Headers {
 
   const headers = new Headers(initHeaders || {});
   headers.set('authorization', `Bearer ${token}`);
+  headers.set('x-ck-internal-service', DEVSTUDIO_INTERNAL_SERVICE_ID);
   return headers;
 }
 
@@ -460,6 +607,37 @@ async function proxyDevstudioParisJson(args: {
   const upstream = await fetch(`${resolveDevstudioParisBaseUrl()}${args.pathname}`, {
     method: args.method || args.req.method || 'GET',
     headers: createDevstudioParisHeaders(args.headers),
+    body: args.body,
+    cache: 'no-store',
+  });
+
+  const text = await upstream.text();
+  const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+  args.res.statusCode = upstream.status;
+  args.res.setHeader('Content-Type', contentType);
+  args.res.setHeader('Cache-Control', 'no-store');
+  args.res.end(text);
+}
+
+async function proxyDevstudioBerlinJson(args: {
+  req: any;
+  res: any;
+  accessToken: string;
+  pathname: string;
+  method?: string;
+  body?: string;
+  headers?: HeadersInit;
+}) {
+  const upstream = await fetch(`${resolveDevstudioBerlinBaseUrl()}${args.pathname}`, {
+    method: args.method || args.req.method || 'GET',
+    headers: {
+      authorization: `Bearer ${args.accessToken}`,
+      accept: 'application/json',
+      ...(args.method === 'POST' || args.method === 'PUT' || args.method === 'PATCH'
+        ? { 'content-type': 'application/json' }
+        : {}),
+      ...(args.headers || {}),
+    },
     body: args.body,
     cache: 'no-store',
   });
@@ -602,6 +780,117 @@ export default defineConfig({
               }),
             );
           }
+        });
+      },
+    },
+    {
+      name: 'devstudio-account-routes',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          const rawUrl = req.url || '';
+          const requestUrl = new URL(rawUrl || '/', 'http://localhost:5173');
+          const pathname = requestUrl.pathname || '';
+          const accountDetailMatch = pathname.match(/^\/api\/devstudio\/accounts\/([^/]+)$/);
+          const accountMembersMatch = pathname.match(/^\/api\/devstudio\/accounts\/([^/]+)\/members$/);
+          const accountSwitchMatch = pathname.match(/^\/api\/devstudio\/accounts\/([^/]+)\/switch$/);
+
+          const wantsList = pathname === '/api/devstudio/accounts' && req.method === 'GET';
+          const wantsCreate = pathname === '/api/devstudio/accounts' && req.method === 'POST';
+          const wantsDetail = Boolean(accountDetailMatch && req.method === 'GET');
+          const wantsMembers = Boolean(accountMembersMatch && req.method === 'GET');
+          const wantsSwitch = Boolean(accountSwitchMatch && req.method === 'POST');
+
+          if (!wantsList && !wantsCreate && !wantsDetail && !wantsMembers && !wantsSwitch) {
+            return next();
+          }
+
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-store');
+
+          try {
+            const operatorAccess = await resolveDevstudioBerlinOperatorAccess(req);
+            appendDevstudioSessionCookies(res, operatorAccess.ok ? operatorAccess.setCookies : operatorAccess.setCookies);
+            if (!operatorAccess.ok) {
+              res.statusCode = operatorAccess.status;
+              res.end(JSON.stringify(operatorAccess.body));
+              return;
+            }
+
+            if (wantsList) {
+              res.statusCode = 200;
+              res.end(
+                JSON.stringify({
+                  user: operatorAccess.bootstrap.user ?? null,
+                  profile: operatorAccess.bootstrap.profile ?? null,
+                  accounts: Array.isArray(operatorAccess.bootstrap.accounts)
+                    ? operatorAccess.bootstrap.accounts
+                    : [],
+                  defaults: operatorAccess.bootstrap.defaults ?? { accountId: null },
+                }),
+              );
+              return;
+            }
+
+            if (wantsCreate) {
+              const body = await readRequestBody(req);
+              return await proxyDevstudioBerlinJson({
+                req,
+                res,
+                accessToken: operatorAccess.accessToken,
+                pathname: '/v1/accounts',
+                method: 'POST',
+                body,
+              });
+            }
+
+            if (wantsDetail && accountDetailMatch) {
+              const accountId = encodeURIComponent(decodeURIComponent(accountDetailMatch[1] || ''));
+              return await proxyDevstudioBerlinJson({
+                req,
+                res,
+                accessToken: operatorAccess.accessToken,
+                pathname: `/v1/accounts/${accountId}`,
+                method: 'GET',
+              });
+            }
+
+            if (wantsMembers && accountMembersMatch) {
+              const accountId = encodeURIComponent(decodeURIComponent(accountMembersMatch[1] || ''));
+              return await proxyDevstudioBerlinJson({
+                req,
+                res,
+                accessToken: operatorAccess.accessToken,
+                pathname: `/v1/accounts/${accountId}/members`,
+                method: 'GET',
+              });
+            }
+
+            if (wantsSwitch && accountSwitchMatch) {
+              const accountId = encodeURIComponent(decodeURIComponent(accountSwitchMatch[1] || ''));
+              return await proxyDevstudioBerlinJson({
+                req,
+                res,
+                accessToken: operatorAccess.accessToken,
+                pathname: `/v1/accounts/${accountId}/switch`,
+                method: 'POST',
+                body: '{}',
+              });
+            }
+          } catch (error) {
+            res.statusCode = 500;
+            res.end(
+              JSON.stringify({
+                error: {
+                  kind: 'INTERNAL',
+                  reasonKey: 'coreui.errors.auth.contextUnavailable',
+                  detail: error instanceof Error ? error.message : String(error),
+                },
+              }),
+            );
+            return;
+          }
+
+          return next();
         });
       },
     },

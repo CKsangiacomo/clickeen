@@ -53,8 +53,8 @@ export function can(policy: Policy, actionKey: ActionKey, _payload?: unknown): G
       return { allow: true };
     }
     case 'platform.upload': {
-      const uploadBudget = policy.budgets['budget.uploads.count'];
-      if (uploadBudget && uploadBudget.max === 0) {
+      const storageBudget = policy.budgets['budget.uploads.bytes'];
+      if (storageBudget && storageBudget.max === 0) {
         return { allow: false, upsell: 'UP', reasonKey: 'coreui.upsell.reason.platform.uploads' };
       }
       return { allow: true };

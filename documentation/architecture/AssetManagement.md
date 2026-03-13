@@ -57,7 +57,7 @@ Roma control-plane routes proxy account-safe operations for product UI:
 ## Upload behavior (executed contract)
 
 1. Auth + account membership (`editor+`) enforced.
-2. Tier caps and budgets enforced before write.
+2. Per-file upload cap and total account storage limit are enforced before write.
 3. Filename rule is strict reject-only:
    - spaces are rejected
    - unsafe path/url chars are rejected
@@ -92,6 +92,7 @@ Roma control-plane routes proxy account-safe operations for product UI:
 
 - Upload writes exactly one immutable asset identity.
 - List shows `assetType`, `contentType`, and exact `sizeBytes`.
+- Assets surface shows current storage used against the account storage limit.
 - Runtime never rewrites/falls back to other assets.
 - Delete removes metadata + blobs and surfaces failures explicitly.
 

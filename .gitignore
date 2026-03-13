@@ -38,6 +38,7 @@ Thumbs.db
 # Execution pipeline docs are tracked by default. Keep only local secrets/temp artifacts out of git.
 Execution_Pipeline_Docs/NotPartOfCodebase_TempFiles/
 Execution_Pipeline_Docs/paris.dev.jwt
+Execution_Pipeline_Docs/roma.authz.capsule.secret
 Execution_Pipeline_Docs/ai.grant.hmac.secret
 Execution_Pipeline_Docs/usage.event.hmac.secret
 BACKUP/

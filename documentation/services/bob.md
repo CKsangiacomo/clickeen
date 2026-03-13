@@ -26,7 +26,7 @@ Bob intentionally separates:
 - **Saving config** (writes through Bob/Roma same-origin routes to Tokyo): appears as **Save / Discard** buttons whenever the current editor state is dirty, including base edits and locale override edits.
 - **Copy code in Bob** is only the embed-code affordance: the **Copy code** button opens a modal containing the snippets needed to place the widget on a website (safe iframe + gated iframe++ SEO/GEO).
 - **Bob has no live/unlive toggle** and does not manage published/unpublished state.
-- Active account routes authorize from the bootstrap account authz capsule carried by Roma/Bob. They do not re-read account membership on normal editor open/save paths.
+- Active account routes authorize from the Berlin-issued bootstrap account authz capsule carried by Roma/Bob. They do not re-read account membership on normal editor open/save paths.
 
 The Settings panel is widget-defined behavior controls; it must not contain embed code.
 
@@ -525,6 +525,7 @@ Reference:
 ### Required
 
 - `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local `product` profile defaults to `https://tokyo.dev.clickeen.com`, local `source` profile defaults to `http://localhost:4000`)
+- `ROMA_AUTHZ_CAPSULE_SECRET` (required for authenticated account-scoped editor routes; local `dev-up` resolves a dedicated value and passes it explicitly)
 
 ### Optional
 
@@ -581,6 +582,7 @@ It:
 - Uses **local Supabase by default**; to point the local stack at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`
 - Passes Bob the resolved Supabase target explicitly, so DevStudio and Bob locale reads use the same local-vs-remote Michael target as Berlin/Paris.
 - Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).
+- Resolves one dedicated local `ROMA_AUTHZ_CAPSULE_SECRET` and passes it explicitly to Berlin/Paris/Bob; account auth must not borrow AI or service-role secrets.
 
 ### Deterministic compilation gate (executed)
 

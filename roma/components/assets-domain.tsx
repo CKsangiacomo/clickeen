@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatBytes, formatNumber } from '../lib/format';
+import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { parseParisReason } from './paris-http';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
@@ -42,6 +43,7 @@ type DeleteRequestError = Error & {
 
 type AccountAssetsListResponse = {
   accountId: string;
+  storageBytesUsed?: number;
   assets: AssetRecord[];
 };
 
@@ -83,13 +85,34 @@ const DELETE_REASON_COPY: Record<string, string> = {
     'Delete blocked: asset integrity check is unavailable right now. Try again.',
 };
 
+const ASSET_REASON_COPY: Record<string, string> = {
+  'coreui.upsell.reason.budgetExceeded':
+    'This upload would exceed your workspace storage limit. Delete assets or upgrade storage, then try again.',
+  'coreui.upsell.reason.capReached': 'This file exceeds the per-file upload limit.',
+  'coreui.upsell.reason.platform.uploads': 'Uploads are not available for this workspace plan.',
+  'coreui.errors.assets.uploadFailed': 'Asset upload failed. Please try again.',
+  'coreui.errors.auth.required': 'You need to sign in again to manage assets.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to manage assets in this workspace.',
+  'coreui.errors.db.readFailed': 'Failed to load assets. Please try again.',
+  'coreui.errors.db.writeFailed': 'Asset update failed on the server. Please try again.',
+  'coreui.errors.network.timeout': 'The request timed out. Please try again.',
+};
+
+function resolveAssetErrorCopy(reason: string, fallback: string): string {
+  const normalized = String(reason || '').trim();
+  if (!normalized) return fallback;
+  const mapped = ASSET_REASON_COPY[normalized];
+  if (mapped) return mapped;
+  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
+  return normalized;
+}
+
 function resolveDeleteErrorCopy(reason: string): string {
   const normalized = String(reason || '').trim();
   if (!normalized) return 'Asset delete failed. Please try again.';
   const mapped = DELETE_REASON_COPY[normalized];
   if (mapped) return mapped;
-  if (normalized.startsWith('HTTP_')) return `Asset delete failed (${normalized}).`;
-  return normalized;
+  return resolveAssetErrorCopy(normalized, 'Asset delete failed. Please try again.');
 }
 
 function extractAssetIdFromRef(assetRefRaw: string): string | null {
@@ -187,10 +210,10 @@ export function AssetsDomain() {
     const raw = entitlements?.caps?.['uploads.size.max'];
     return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? Math.trunc(raw) : null;
   }, [entitlements?.caps]);
-  const uploadsCountBudget = entitlements?.budgets?.['budget.uploads.count'] ?? null;
-  const uploadsBytesBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
+  const storageBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
 
   const [assets, setAssets] = useState<AssetRecord[]>([]);
+  const [storageBytesUsed, setStorageBytesUsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
@@ -205,6 +228,7 @@ export function AssetsDomain() {
   const refreshAssets = useCallback(async () => {
     if (!accountId) {
       setAssets([]);
+      setStorageBytesUsed(0);
       setError(null);
       return;
     }
@@ -223,12 +247,18 @@ export function AssetsDomain() {
         payload && typeof payload === 'object' && Array.isArray((payload as AccountAssetsListResponse).assets)
           ? (payload as AccountAssetsListResponse).assets
           : [];
+      const storageUsed =
+        payload && typeof payload === 'object' && typeof (payload as AccountAssetsListResponse).storageBytesUsed === 'number'
+          ? Math.max(0, Math.trunc((payload as AccountAssetsListResponse).storageBytesUsed ?? 0))
+          : resolvedAssets.reduce((total, asset) => total + Math.max(0, Math.trunc(asset.sizeBytes)), 0);
       setAssets(resolvedAssets);
+      setStorageBytesUsed(storageUsed);
       setError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setAssets([]);
-      setError(message);
+      setStorageBytesUsed(0);
+      setError(resolveAssetErrorCopy(message, 'Failed to load assets. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -252,6 +282,7 @@ export function AssetsDomain() {
         await requestDeleteAsset(accountId, assetId, confirmInUse);
         setPendingDelete(null);
         setAssets((prev) => prev.filter((entry) => entry.assetRef !== asset.assetRef));
+        setStorageBytesUsed((prev) => Math.max(0, prev - Math.max(0, Math.trunc(asset.sizeBytes))));
       } catch (err) {
         const typed = err as DeleteRequestError;
         if (
@@ -306,10 +337,11 @@ export function AssetsDomain() {
       try {
         const uploaded = await requestUploadAsset(accountId, file, 'api');
         setAssets((prev) => upsertAsset(prev, uploaded));
+        setStorageBytesUsed((prev) => prev + Math.max(0, Math.trunc(uploaded.sizeBytes)));
         await reloadMe();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setSingleUploadError(message);
+        setSingleUploadError(resolveAssetErrorCopy(message, 'Asset upload failed. Please try again.'));
       } finally {
         setSingleUploadBusy(false);
       }
@@ -363,11 +395,15 @@ export function AssetsDomain() {
         try {
           const uploaded = await requestUploadAsset(accountId, file, 'api');
           setAssets((prev) => upsertAsset(prev, uploaded));
+          setStorageBytesUsed((prev) => prev + Math.max(0, Math.trunc(uploaded.sizeBytes)));
           updateBulkItem(item.id, { status: 'success', error: null });
           uploadedAny = true;
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
-          updateBulkItem(item.id, { status: 'failed', error: message });
+          updateBulkItem(item.id, {
+            status: 'failed',
+            error: resolveAssetErrorCopy(message, 'Asset upload failed. Please try again.'),
+          });
         }
       }
 
@@ -391,10 +427,17 @@ export function AssetsDomain() {
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading account context...</section>;
   if (me.error || !me.data) {
-    return <section className="rd-canvas-module body-m">Failed to load account context: {me.error ?? 'unknown_error'}</section>;
+    return (
+      <section className="rd-canvas-module body-m">
+        {resolveAccountShellErrorCopy(
+          me.error ?? 'coreui.errors.auth.contextUnavailable',
+          'Assets are unavailable right now. Please try again.',
+        )}
+      </section>
+    );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No account membership found for current user.</section>;
+    return <section className="rd-canvas-module body-m">No workspace is available for assets right now.</section>;
   }
 
   const successfulBulkCount = bulkItems.filter((item) => item.status === 'success').length;
@@ -403,7 +446,7 @@ export function AssetsDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountId}</p>
+        {context.accountName ? <p className="body-m">Workspace: {context.accountName}</p> : null}
 
         {error ? (
           <div className="roma-inline-stack">
@@ -421,22 +464,18 @@ export function AssetsDomain() {
           </div>
         ) : null}
         {redirectReasonKey ? (
-          <p className="body-m">Upload blocked by entitlement: {redirectReasonKey}. Manage assets here, then retry upload in Builder.</p>
+          <p className="body-m">
+            Builder upload is blocked.{' '}
+            {resolveAssetErrorCopy(redirectReasonKey, 'Manage storage here, then retry the upload in Builder.')}
+          </p>
         ) : null}
+        <p className="body-m">Stored assets: {formatNumber(assets.length)}</p>
+        <p className="body-m">
+          Storage used: {formatBytes(storageBytesUsed)} /{' '}
+          {storageBudget?.max == null ? 'unlimited' : formatBytes(storageBudget.max)}
+        </p>
         {uploadSizeCapBytes != null ? (
-          <p className="body-m">Upload size limit per file: {formatBytes(uploadSizeCapBytes)}</p>
-        ) : null}
-        {uploadsCountBudget ? (
-          <p className="body-m">
-            Monthly upload count budget: {formatNumber(uploadsCountBudget.used)} /{' '}
-            {uploadsCountBudget.max == null ? 'unlimited' : formatNumber(uploadsCountBudget.max)}
-          </p>
-        ) : null}
-        {uploadsBytesBudget ? (
-          <p className="body-m">
-            Monthly upload bytes budget: {formatBytes(uploadsBytesBudget.used)} /{' '}
-            {uploadsBytesBudget.max == null ? 'unlimited' : formatBytes(uploadsBytesBudget.max)}
-          </p>
+          <p className="body-m">Per-file upload limit: {formatBytes(uploadSizeCapBytes)}</p>
         ) : null}
 
         <div className="roma-toolbar">
