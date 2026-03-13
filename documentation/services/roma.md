@@ -10,7 +10,6 @@ For the canonical account-management model Roma must converge to, see `documenta
 Roma is the authenticated product shell for account users. It owns:
 
 - Domain navigation (`/home`, `/profile`, `/widgets`, `/templates`, `/builder`, etc.)
-- Account-shell workspace collection/create over Berlin-owned account contracts
 - Person-scoped User Settings UI over Berlin-owned profile contracts
 - Active account context resolution
 - Account-scoped Team list and member-detail UI over Berlin-owned membership contracts
@@ -39,7 +38,6 @@ Roma is a host/orchestrator. Bob remains the editor kernel.
 - `/` → redirects to `/home` when a session is present, otherwise `/login`
 - account-shell routes under `roma/app/(authed)/*`, including:
   - `/home`
-  - `/accounts`
   - `/profile`
   - `/widgets`
   - `/templates`
@@ -110,7 +108,6 @@ Current cloud-dev product rule:
 Roma talks to Berlin and Paris only through same-origin API routes:
 
 - Berlin-backed bootstrap/auth/account routes stay explicit under `roma/app/api/**`.
-- Account collection/create now also relays through the explicit same-origin `GET/POST /api/accounts` route family backed by Berlin.
 - Paris-backed routes are explicit handlers under `roma/app/api/**` using `roma/lib/api/paris-proxy.ts` (no generic wildcard proxy) only for remaining Paris-owned product domains.
 - Non-Paris routes stay explicit as well (`/api/assets/*` -> Tokyo-worker, account shell routes -> Berlin).
 
