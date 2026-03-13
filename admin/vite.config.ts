@@ -535,6 +535,29 @@ export default defineConfig({
       },
     },
     {
+      name: 'devstudio-route-fallback',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const url = req.url || '';
+          const pathname = url.split('?')[0] || '';
+          if (!pathname.startsWith('/api/devstudio/')) return next();
+
+          res.statusCode = 404;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-store');
+          res.end(
+            JSON.stringify({
+              error: {
+                kind: 'NOT_FOUND',
+                reasonKey: 'coreui.errors.route.notFound',
+                detail: pathname,
+              },
+            }),
+          );
+        });
+      },
+    },
+    {
       name: 'open-editor-lifecycle-contract',
       buildStart() {
         if (!fs.existsSync(OPEN_EDITOR_CONTRACT_SOURCE_PATH)) {
