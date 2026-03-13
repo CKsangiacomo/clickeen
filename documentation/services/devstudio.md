@@ -54,6 +54,8 @@ Local contract:
   - `POST /api/devstudio/control/account-member-removal`
   - `POST /api/devstudio/control/revoke-user-sessions`
   - `POST /api/devstudio/control/account-publish-containment`
+  - `POST /api/devstudio/control/support-open-target`
+  - `POST /api/devstudio/control/support-update-instance`
 
 ### Cloud-dev
 
@@ -110,6 +112,13 @@ What it does:
 - remove a non-owner member from an account
 - revoke a user's sessions
 - pause or resume publishing for the current account-owned widget publish path
+- open a targeted customer-owned widget in Bob for support intervention
+
+Current support-intervention limits:
+- local-only for now
+- targeted customer-owned widget only
+- base-config save path only
+- shared-runtime still fails closed with explicit `501` until the company-plane gate is implemented
 
 ### Dieter / design-system pages
 

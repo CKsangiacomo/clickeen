@@ -36,6 +36,8 @@ import { handleAccountMemberRemoval } from './domains/internal-control/account-m
 import { handleCustomerEmailRecovery } from './domains/internal-control/customer-email-recovery';
 import { handleSessionRevoke } from './domains/internal-control/session-revoke';
 import { handleSponsoredAccountCreate } from './domains/internal-control/sponsored-onboarding';
+import { handleSupportTargetOpen } from './domains/internal-control/support-target-open';
+import { handleSupportUpdateInstance } from './domains/internal-control/support-update-instance';
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -130,6 +132,16 @@ export default {
 
       if (pathname === '/internal/control/account-publish-containment') {
         if (req.method === 'POST') return handleAccountPublishContainment(req, env);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      if (pathname === '/internal/control/support-open-target') {
+        if (req.method === 'POST') return handleSupportTargetOpen(req, env);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      if (pathname === '/internal/control/support-update-instance') {
+        if (req.method === 'POST') return handleSupportUpdateInstance(req, env);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

@@ -25,9 +25,14 @@ Current implementation status:
    - same-origin `DevStudio` local route for pause/resume publishing containment
    - Roma publish hard-stop while account publishing containment is active
    - Paris widgets action-matrix suppression while account publishing containment is active
+   - `Paris` internal route for support target-open into Bob
+   - `Paris` internal route for support save back from Bob
+   - same-origin `DevStudio` local route for support target-open into Bob
+   - same-origin `DevStudio` local route for support save back from Bob
+   - DevStudio local customer-recovery tool can open a targeted customer widget in Bob
+   - Bob host delegation now supports `devstudio-support` as an explicit host surface
 2. Explicitly pending:
    - outbound posting/integration containment beyond the current widget publish path
-   - support target-open into `Bob`
    - shared-runtime company-plane access gate beyond the explicit `501` placeholder
 
 This PRD remains `EXECUTING` until the remaining targeted tools are built and verified.
@@ -150,6 +155,12 @@ Clickeen must be able to do all of this in DevStudio:
 2. open the target in Bob through DevStudio
 3. perform the edit
 4. save/publish through an explicit company-plane support path
+
+Current first slice:
+- local only
+- targeted customer-owned widget only
+- base-config save path only
+- shared-runtime still fails closed with explicit `501`
 
 ### Use case 4 — Future internal company operations
 
@@ -389,14 +400,17 @@ Current Phase 1 truth:
 1. Sponsored account onboarding is the first delivered slice.
 2. Customer email recovery, non-owner member removal, and user session revoke are also delivered locally.
 3. Reversible account publishing containment is delivered locally and enforced on the current Roma publish path.
-4. Shared runtime currently exposes explicit `501` placeholders for `/api/devstudio/control/*` routes that are not yet implemented there.
-5. Outbound posting/integration containment is still open.
+4. Support target-open into Bob is delivered locally for targeted customer-owned widgets.
+5. Support save from Bob is delivered locally for base-config updates only.
+6. Shared runtime currently exposes explicit `501` placeholders for `/api/devstudio/control/*` routes that are not yet implemented there.
+7. Outbound posting/integration containment is still open.
 
 ### Phase 2 — Support intervention open/edit path
 
-1. Add targeted support-open flow from DevStudio into Bob
-2. Make support intervention explicit and auditable
+1. Keep support intervention explicit and auditable
+2. Expand beyond the initial local base-config path only when needed
 3. Keep the shape targeted to a customer/widget, not a generic account shell
+4. Do not introduce a generic browse-all-accounts shell while expanding support intervention
 
 ### Phase 3 — Shared-runtime hardening
 
@@ -428,10 +442,10 @@ PRD 067 fails if execution does any of the following:
 8. The owner can apply a reversible account publishing pause from DevStudio.
 9. The owner can resume account publishing from DevStudio.
 10. Roma publish routes fail explicitly while account publishing containment is active.
-9. The owner can target a customer widget from DevStudio and open it in Bob for support intervention.
-10. Every action above writes an audit event.
-11. No new Berlin product role or global human flag is introduced.
-12. No DevStudio runtime surface teaches internal humans to browse accounts like privileged customers.
+11. The owner can target a customer widget from DevStudio and open it in Bob for support intervention.
+12. Every action above writes an audit event.
+13. No new Berlin product role or global human flag is introduced.
+14. No DevStudio runtime surface teaches internal humans to browse accounts like privileged customers.
 
 ## Verification
 
@@ -449,7 +463,8 @@ PRD 067 fails if execution does any of the following:
    - sessions revoked
 5. Run containment flow and confirm the account/widget path is paused.
 6. Open a customer widget from DevStudio into Bob using the support-intervention path.
-7. Confirm audit events exist for every action.
+7. Save a base-config change through the support path and confirm it persists.
+8. Confirm audit events exist for every action.
 
 ### Cloud-dev
 

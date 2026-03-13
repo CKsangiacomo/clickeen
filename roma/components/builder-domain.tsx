@@ -89,8 +89,8 @@ type BobAccountCommandMessage = {
   body?: unknown;
 };
 
-type RomaAccountCommandResultMessage = {
-  type: 'roma:account-command-result';
+type HostAccountCommandResultMessage = {
+  type: 'host:account-command-result';
   requestId: string;
   sessionId: string;
   command: BobAccountCommand;
@@ -319,9 +319,9 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         locale: args.locale,
       });
 
-      const reply = (payload: Omit<RomaAccountCommandResultMessage, 'type'>) => {
-        const message: RomaAccountCommandResultMessage = {
-          type: 'roma:account-command-result',
+      const reply = (payload: Omit<HostAccountCommandResultMessage, 'type'>) => {
+        const message: HostAccountCommandResultMessage = {
+          type: 'host:account-command-result',
           ...payload,
         };
         args.source.postMessage(message, bobBaseUrl);

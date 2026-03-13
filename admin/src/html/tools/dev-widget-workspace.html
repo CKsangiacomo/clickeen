@@ -617,6 +617,34 @@
       return raw === 'source' ? 'source' : 'product';
     })();
     const IS_SOURCE_PROFILE = PROFILE === 'source';
+    const SUPPORT_TARGET_STORAGE_KEY = 'ck.devstudio.supportTargetEnvelope.v1';
+
+    function resolveHashSearchParams() {
+      const hash = String(window.location.hash || '');
+      const queryIndex = hash.indexOf('?');
+      if (queryIndex === -1) return new URLSearchParams();
+      return new URLSearchParams(hash.slice(queryIndex + 1));
+    }
+
+    function readSupportTargetEnvelopeFromStorage() {
+      const raw = window.sessionStorage.getItem(SUPPORT_TARGET_STORAGE_KEY);
+      if (!raw) return null;
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+        return parsed;
+      } catch {
+        return null;
+      }
+    }
+
+    function writeSupportTargetEnvelopeToStorage(nextValue) {
+      if (!nextValue || typeof nextValue !== 'object' || Array.isArray(nextValue)) return;
+      window.sessionStorage.setItem(SUPPORT_TARGET_STORAGE_KEY, JSON.stringify(nextValue));
+    }
+
+    const HASH_PARAMS = resolveHashSearchParams();
+    const SUPPORT_MODE = HASH_PARAMS.get('support') === '1';
 
     function requireBobOrigin() {
       const params = new URLSearchParams(window.location.search);
@@ -650,6 +678,8 @@
     const TOKYO_BASE = resolveTokyoBaseUrl();
     const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
     const LOCAL_DEFAULT_INSTANCE_PREFIX = 'devstudio_local_';
+    const SUPPORT_STATUS_VALUE = 'Manual';
+    const SUPPORT_STATUS_META = 'Support path does not poll translation status.';
     let currentPublicId = null;
     let selectedWidgetSlug = null;
     let widgetTypes = [];
@@ -657,6 +687,7 @@
     let instances = [];
     let isOpen = false;
     let bobSessionId = '';
+    let supportTarget = SUPPORT_MODE ? readSupportTargetEnvelopeFromStorage() : null;
     const isLocalDevStudio =
       window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
@@ -693,7 +724,7 @@
     const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
     bobUrl.searchParams.set('boot', 'message');
     bobUrl.searchParams.set('subject', 'account');
-    bobUrl.searchParams.set('surface', 'devstudio');
+    bobUrl.searchParams.set('surface', SUPPORT_MODE ? 'devstudio-support' : 'devstudio');
     bobUrl.searchParams.set('assetApiBase', `${window.location.origin}/api/devstudio/assets`);
     bobUrl.searchParams.set(
       'assetUploadEndpoint',
@@ -760,8 +791,147 @@
     }
 
     async function resolveDevStudioAccountId() {
+      if (
+        SUPPORT_MODE &&
+        supportTarget &&
+        typeof supportTarget.accountId === 'string' &&
+        supportTarget.accountId.trim()
+      ) {
+        return supportTarget.accountId.trim();
+      }
       const context = await loadDevStudioContext();
       return context.accountId;
+    }
+
+    function buildSupportInstance(envelope) {
+      if (!envelope || typeof envelope !== 'object' || Array.isArray(envelope)) return null;
+      const publicId =
+        typeof envelope.publicId === 'string' && envelope.publicId.trim()
+          ? envelope.publicId.trim()
+          : null;
+      const widgetType =
+        typeof envelope.widgetType === 'string' && envelope.widgetType.trim()
+          ? envelope.widgetType.trim()
+          : null;
+      if (!publicId || !widgetType) return null;
+      const widgetSlug = normalizeWidgetname(widgetType);
+      if (!widgetSlug) return null;
+      const label =
+        typeof envelope.label === 'string' && envelope.label.trim()
+          ? envelope.label.trim()
+          : DEFAULT_INSTANCE_DISPLAY_NAME;
+      const status = envelope.status === 'published' ? 'published' : 'unpublished';
+      return {
+        publicId,
+        widgetname: widgetSlug,
+        widgetSlug,
+        label,
+        status,
+        source: 'support',
+        actions: null,
+        config: envelope.config && typeof envelope.config === 'object' ? envelope.config : null,
+        localization:
+          envelope.localization && typeof envelope.localization === 'object' ? envelope.localization : null,
+        policy: envelope.policy && typeof envelope.policy === 'object' ? envelope.policy : null,
+        meta: {
+          accountId:
+            typeof envelope.accountId === 'string' && envelope.accountId.trim() ? envelope.accountId.trim() : '',
+          ownerAccountId:
+            typeof envelope.ownerAccountId === 'string' && envelope.ownerAccountId.trim()
+              ? envelope.ownerAccountId.trim()
+              : '',
+          reason: typeof envelope.reason === 'string' ? envelope.reason.trim() : '',
+        },
+      };
+    }
+
+    async function runSupportAccountCommand({ source, requestId, sessionId, command, accountId, publicId, body }) {
+      const reply = ({ ok, status, payload = null, message = undefined }) => {
+        source.postMessage(
+          {
+            type: 'host:account-command-result',
+            requestId,
+            sessionId,
+            command,
+            accountId,
+            publicId,
+            ok,
+            status,
+            payload,
+            ...(message ? { message } : {}),
+          },
+          BOB_ORIGIN,
+        );
+      };
+
+      if (!supportTarget || publicId !== supportTarget.publicId || accountId !== supportTarget.accountId) {
+        reply({
+          ok: false,
+          status: 404,
+          message: 'coreui.errors.instance.notFound',
+        });
+        return;
+      }
+
+      if (command !== 'update-instance') {
+        reply({
+          ok: false,
+          status: 422,
+          message: 'coreui.errors.internalControl.supportCommandUnsupported',
+        });
+        return;
+      }
+
+      const config = body && typeof body === 'object' && !Array.isArray(body) ? body.config : null;
+      if (!config || typeof config !== 'object' || Array.isArray(config)) {
+        reply({
+          ok: false,
+          status: 422,
+          message: 'coreui.errors.payload.invalid',
+        });
+        return;
+      }
+
+      try {
+        const res = await fetchDevStudio(buildDevStudioApiUrl('/api/devstudio/control/support-update-instance'), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            accountId,
+            publicId,
+            reason:
+              typeof supportTarget.reason === 'string' && supportTarget.reason.trim()
+                ? supportTarget.reason.trim()
+                : 'customer_support',
+            config,
+          }),
+        });
+        const payload = await res.json().catch(() => null);
+        if (res.ok && payload && typeof payload === 'object' && payload.config && typeof payload.config === 'object') {
+          supportTarget = {
+            ...supportTarget,
+            config: payload.config,
+          };
+          writeSupportTargetEnvelopeToStorage(supportTarget);
+        }
+        reply({
+          ok: res.ok,
+          status: res.status,
+          payload,
+          message:
+            !res.ok && payload?.error?.reasonKey
+              ? String(payload.error.reasonKey)
+              : !res.ok
+                ? `HTTP_${res.status}`
+                : undefined,
+        });
+      } catch (error) {
+        reply({
+          ok: false,
+          status: 500,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
 
     function setL10nStatusDisplay({ state, tone, value, meta }) {
@@ -840,6 +1010,15 @@
     }
 
     async function refreshL10nStatus(publicId) {
+      if (SUPPORT_MODE) {
+        setL10nStatusDisplay({
+          state: 'ready',
+          tone: 'unavailable',
+          value: SUPPORT_STATUS_VALUE,
+          meta: SUPPORT_STATUS_META,
+        });
+        return;
+      }
       if (!publicId) {
         setL10nStatusDisplay({ state: 'hidden', tone: 'unavailable', value: '-', meta: '' });
         return;
@@ -951,6 +1130,26 @@
           if (!publicId) return;
           if (!findInstanceByPublicId(publicId)) return;
           switchInstance(publicId);
+          return;
+        }
+        if (data && data.type === 'bob:account-command') {
+          const requestId = typeof data.requestId === 'string' ? data.requestId.trim() : '';
+          const sessionId = typeof data.sessionId === 'string' ? data.sessionId.trim() : '';
+          const command = typeof data.command === 'string' ? data.command.trim() : '';
+          const accountId = typeof data.accountId === 'string' ? data.accountId.trim() : '';
+          const publicId = typeof data.publicId === 'string' ? data.publicId.trim() : '';
+          if (!SUPPORT_MODE || !requestId || !sessionId || sessionId !== bobSessionId || !command || !accountId || !publicId) {
+            return;
+          }
+          void runSupportAccountCommand({
+            source: event.source,
+            requestId,
+            sessionId,
+            command,
+            accountId,
+            publicId,
+            body: data.body,
+          });
           return;
         }
         if (data && data.type === 'bob:session-ready') {
@@ -1302,6 +1501,42 @@
     }
 
     async function loadInstances() {
+      if (SUPPORT_MODE) {
+        const supportInstance = buildSupportInstance(supportTarget);
+        if (!supportInstance) {
+          selectedWidgetSlug = null;
+          currentPublicId = null;
+          currentLabel.textContent = 'Support target unavailable';
+          valueField.value = '';
+          menu.innerHTML =
+            '<div class="devstudio-instances__empty-option body-s">Open a customer target from Customer Recovery first.</div>';
+          dropdown.style.display = 'none';
+          if (widgetSelector instanceof HTMLElement) widgetSelector.style.display = 'none';
+          setL10nStatusDisplay({
+            state: 'ready',
+            tone: 'unavailable',
+            value: 'Unavailable',
+            meta: 'Support target missing',
+          });
+          return;
+        }
+
+        storedInstances = [supportInstance];
+        instances = storedInstances.slice();
+        widgetTypes = [supportInstance.widgetSlug];
+        selectedWidgetSlug = supportInstance.widgetSlug;
+        currentPublicId = supportInstance.publicId;
+        dropdown.style.display = 'inline-block';
+        syncWidgetSelector();
+        updateCurrentLabel();
+        renderInstances();
+        await refreshL10nStatus(currentPublicId);
+        if (bobSessionId && currentPublicId) {
+          await sendInstanceToIframe(currentPublicId);
+        }
+        return;
+      }
+
       const localWidgetTypes = await fetchLocalWidgetCatalog();
       await fetchInstances();
       rebuildInstances();
@@ -1801,6 +2036,44 @@
           publicId,
           compileMs: Math.round(performance.now() - compiledStart),
           totalMs: Math.round(performance.now() - totalStart),
+        });
+        return;
+      }
+
+      if (SUPPORT_MODE) {
+        if (!supportTarget) {
+          throw new Error('[DevStudio] Missing support target envelope');
+        }
+        const compiled = await ensureCompiledWidget(instance.widgetname);
+        if (requestSeq !== sendInstanceSeq) return;
+        await postOpenEditorAndWait(target, {
+          type: 'ck:open-editor',
+          subjectMode: 'account',
+          publicId,
+          accountId:
+            typeof supportTarget.accountId === 'string' && supportTarget.accountId.trim()
+              ? supportTarget.accountId.trim()
+              : '',
+          ownerAccountId:
+            typeof supportTarget.ownerAccountId === 'string' && supportTarget.ownerAccountId.trim()
+              ? supportTarget.ownerAccountId.trim()
+              : typeof supportTarget.accountId === 'string' && supportTarget.accountId.trim()
+                ? supportTarget.accountId.trim()
+                : '',
+          label,
+          widgetname: slug,
+          compiled,
+          instanceData:
+            supportTarget.config && typeof supportTarget.config === 'object' && !Array.isArray(supportTarget.config)
+              ? supportTarget.config
+              : {},
+          status: supportTarget.status === 'published' ? 'published' : 'unpublished',
+          localization:
+            supportTarget.localization && typeof supportTarget.localization === 'object'
+              ? supportTarget.localization
+              : null,
+          policy:
+            supportTarget.policy && typeof supportTarget.policy === 'object' ? supportTarget.policy : null,
         });
         return;
       }

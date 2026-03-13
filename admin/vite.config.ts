@@ -486,6 +486,58 @@ export default defineConfig({
             }
           }
 
+          if (pathname === '/api/devstudio/control/support-open-target' && req.method === 'POST') {
+            try {
+              const body = await readRequestText(req);
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: '/internal/control/support-open-target',
+                method: 'POST',
+                body,
+                headers: { accept: 'application/json' },
+              });
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.internalControl.routeFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+              return;
+            }
+          }
+
+          if (pathname === '/api/devstudio/control/support-update-instance' && req.method === 'POST') {
+            try {
+              const body = await readRequestText(req);
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: '/internal/control/support-update-instance',
+                method: 'POST',
+                body,
+                headers: { accept: 'application/json' },
+              });
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.internalControl.routeFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+              return;
+            }
+          }
+
           res.statusCode = 501;
           res.end(
             JSON.stringify({

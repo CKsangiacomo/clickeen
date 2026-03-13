@@ -320,8 +320,8 @@ type BobAccountCommandMessage = {
   body?: unknown;
 };
 
-type RomaAccountCommandResultMessage = {
-  type: 'roma:account-command-result';
+type HostAccountCommandResultMessage = {
+  type: 'host:account-command-result';
   requestId: string;
   sessionId: string;
   command: BobAccountCommand;
@@ -708,10 +708,11 @@ function useWidgetSessionInternal() {
   }, []);
 
   const shouldDelegateAccountCommand = useCallback((subject: SubjectMode): boolean => {
-    return subject === 'account' && bootModeRef.current === 'message' && surfaceRef.current === 'roma';
+    if (subject !== 'account' || bootModeRef.current !== 'message') return false;
+    return surfaceRef.current === 'roma' || surfaceRef.current === 'devstudio-support';
   }, []);
 
-  const dispatchRomaAccountCommand = useCallback(
+  const dispatchHostAccountCommand = useCallback(
     (args: {
       command: BobAccountCommand;
       accountId: string;
@@ -748,8 +749,8 @@ function useWidgetSessionInternal() {
         const onMessage = (event: MessageEvent) => {
           if (event.origin !== targetOrigin) return;
           if (event.source !== window.parent) return;
-          const data = event.data as RomaAccountCommandResultMessage | null;
-          if (!data || typeof data !== 'object' || data.type !== 'roma:account-command-result') return;
+          const data = event.data as HostAccountCommandResultMessage | null;
+          if (!data || typeof data !== 'object' || data.type !== 'host:account-command-result') return;
           if (data.requestId !== requestId || data.sessionId !== sessionId) return;
           cleanup();
           resolve({
@@ -789,7 +790,7 @@ function useWidgetSessionInternal() {
       body?: unknown;
     }): Promise<{ ok: boolean; status: number; json: any }> => {
       if (shouldDelegateAccountCommand(args.subject)) {
-        const result = await dispatchRomaAccountCommand({
+        const result = await dispatchHostAccountCommand({
           command: args.command,
           accountId: args.accountId,
           publicId: args.publicId,
@@ -808,7 +809,7 @@ function useWidgetSessionInternal() {
       const json = (await response.json().catch(() => null)) as any;
       return { ok: response.ok, status: response.status, json };
     },
-    [dispatchRomaAccountCommand, fetchApi, shouldDelegateAccountCommand],
+    [dispatchHostAccountCommand, fetchApi, shouldDelegateAccountCommand],
   );
 
   useEffect(() => {

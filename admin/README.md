@@ -56,8 +56,16 @@ Current local company-plane routes:
 - `POST /api/devstudio/control/account-member-removal`
 - `POST /api/devstudio/control/revoke-user-sessions`
 - `POST /api/devstudio/control/account-publish-containment`
+- `POST /api/devstudio/control/support-open-target`
+- `POST /api/devstudio/control/support-update-instance`
 
 These are for local DevStudio tool routes only.
+
+Current support-intervention slice:
+- open a targeted customer-owned widget in Bob from `customer-recovery`
+- save base-config changes back through the explicit support path
+- local only for now
+- shared-runtime still fails closed until the company-plane access gate is built
 
 ## Cloud-dev contract
 

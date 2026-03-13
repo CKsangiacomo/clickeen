@@ -108,6 +108,34 @@
         <div class="customer-recovery-grid">
           <article class="customer-recovery-card">
             <div>
+              <h2 class="heading-2">Open customer widget in Bob</h2>
+              <p class="customer-recovery-note">
+                Validate a customer-owned widget target, then open that exact widget in Bob through DevStudio for support intervention. This path is intentionally narrow and scoped to a single account/widget pair.
+              </p>
+            </div>
+
+            <form id="support-open-form" class="customer-recovery-form">
+              <label>
+                Account ID
+                <input name="accountId" type="text" placeholder="target account UUID" required />
+              </label>
+              <label>
+                Widget public ID
+                <input name="publicId" type="text" placeholder="wgt_..." required />
+              </label>
+              <label>
+                Reason
+                <textarea name="reason" placeholder="Why support is opening this widget" required></textarea>
+              </label>
+              <button class="button-primary" type="submit">Open in Bob</button>
+            </form>
+
+            <p id="support-open-status" class="customer-recovery-status" aria-live="polite"></p>
+            <pre id="support-open-result" class="customer-recovery-result" hidden></pre>
+          </article>
+
+          <article class="customer-recovery-card">
+            <div>
               <h2 class="heading-2">Recover customer email</h2>
               <p class="customer-recovery-note">
                 Update auth plus canonical profile email after manual verification. The new address is left unverified.
@@ -229,6 +257,8 @@
     </main>
 
     <script type="module">
+      const SUPPORT_TARGET_STORAGE_KEY = 'ck.devstudio.supportTargetEnvelope.v1';
+
       async function wireAction({ formId, endpoint, statusId, resultId, successLabel, normalizePayload }) {
         const form = document.getElementById(formId);
         const statusEl = document.getElementById(statusId);
@@ -265,6 +295,60 @@
           } catch (error) {
             statusEl.textContent = error instanceof Error ? error.message : String(error);
             statusEl.dataset.tone = 'error';
+          }
+        });
+      }
+
+      const supportOpenForm = document.getElementById('support-open-form');
+      const supportOpenStatus = document.getElementById('support-open-status');
+      const supportOpenResult = document.getElementById('support-open-result');
+
+      if (
+        supportOpenForm instanceof HTMLFormElement &&
+        supportOpenStatus instanceof HTMLElement &&
+        supportOpenResult instanceof HTMLElement
+      ) {
+        supportOpenForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          supportOpenStatus.textContent = 'Validating target...';
+          supportOpenStatus.dataset.tone = '';
+          supportOpenResult.hidden = true;
+          supportOpenResult.textContent = '';
+
+          const formData = new FormData(supportOpenForm);
+          const payload = {
+            accountId: String(formData.get('accountId') || '').trim(),
+            publicId: String(formData.get('publicId') || '').trim(),
+            reason: String(formData.get('reason') || '').trim(),
+          };
+
+          try {
+            const response = await fetch('/api/devstudio/control/support-open-target', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            const body = await response.json().catch(() => null);
+            if (!response.ok) {
+              const detail = body?.error?.detail ? ` (${body.error.detail})` : '';
+              supportOpenStatus.textContent = `${body?.error?.reasonKey || 'Request failed'}${detail}`;
+              supportOpenStatus.dataset.tone = 'error';
+              return;
+            }
+
+            if (!body?.supportTarget || typeof body.supportTarget !== 'object') {
+              throw new Error('Support target response missing supportTarget');
+            }
+
+            sessionStorage.setItem(SUPPORT_TARGET_STORAGE_KEY, JSON.stringify(body.supportTarget));
+            supportOpenStatus.textContent = 'Opening support target in Bob...';
+            supportOpenStatus.dataset.tone = 'success';
+            supportOpenResult.hidden = false;
+            supportOpenResult.textContent = JSON.stringify(body, null, 2);
+            window.location.hash = '#/tools/dev-widget-workspace?support=1';
+          } catch (error) {
+            supportOpenStatus.textContent = error instanceof Error ? error.message : String(error);
+            supportOpenStatus.dataset.tone = 'error';
           }
         });
       }

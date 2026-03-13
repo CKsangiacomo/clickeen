@@ -32,7 +32,7 @@ type LocalizationPayload = {
   };
 };
 
-async function loadAccountLocalizationPayload(args: {
+export async function loadAccountLocalizationPayload(args: {
   env: Env;
   publicId: string;
   accountLocalesRaw: unknown;
