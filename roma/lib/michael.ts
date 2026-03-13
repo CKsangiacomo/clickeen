@@ -56,6 +56,26 @@ type MichaelRenameInstanceResult =
 
 type MichaelStatusInstanceResult = MichaelRenameInstanceResult;
 
+type MichaelAccountPublishContainmentRow = {
+  account_id?: unknown;
+  reason?: unknown;
+};
+
+type MichaelAccountPublishContainmentResult =
+  | {
+      ok: true;
+      containment: {
+        active: boolean;
+        reason: string | null;
+      };
+    }
+  | {
+      ok: false;
+      status: number;
+      reasonKey: string;
+      detail?: string;
+    };
+
 function resolveMichaelBaseUrl(): string {
   const value = (process.env.SUPABASE_URL || '').trim();
   if (!value) {
@@ -238,6 +258,66 @@ export async function getAccountInstanceCoreRow(
         widgetId,
         accountId: resolvedAccountId,
         widgetType,
+      },
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      status: 502,
+      reasonKey: 'roma.errors.proxy.michael_unavailable',
+      detail: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+export async function loadAccountPublishContainment(
+  accountId: string,
+  berlinAccessToken: string,
+): Promise<MichaelAccountPublishContainmentResult> {
+  try {
+    const michaelAccess = await resolveMichaelAccessToken(berlinAccessToken);
+    if (!michaelAccess.ok) {
+      return michaelAccess;
+    }
+
+    const headers = new Headers();
+    headers.set('apikey', resolveMichaelAnonKey());
+    headers.set('authorization', `Bearer ${michaelAccess.accessToken}`);
+    headers.set('accept', 'application/json');
+
+    const response = await fetch(
+      `${resolveMichaelBaseUrl()}/rest/v1/account_publish_containment?select=account_id,reason&account_id=eq.${encodeFilterValue(accountId)}&limit=1`,
+      {
+        method: 'GET',
+        headers,
+        cache: 'no-store',
+      },
+    );
+    const text = await response.text().catch(() => '');
+    const payload = text ? (JSON.parse(text) as unknown) : null;
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        reasonKey:
+          response.status === 401
+            ? 'coreui.errors.auth.required'
+            : response.status === 403
+              ? 'coreui.errors.auth.forbidden'
+              : 'coreui.errors.db.readFailed',
+        detail: text || undefined,
+      };
+    }
+
+    const rows = Array.isArray(payload) ? (payload as MichaelAccountPublishContainmentRow[]) : [];
+    const row = rows[0] ?? null;
+
+    return {
+      ok: true,
+      containment: {
+        active: Boolean(asTrimmedString(row?.account_id)),
+        reason: asTrimmedString(row?.reason),
       },
     };
   } catch (error) {

@@ -21,8 +21,12 @@ Current implementation status:
    - `Paris` internal route for user session revoke
    - same-origin `DevStudio` local routes for those recovery/removal actions
    - targeted `DevStudio` customer recovery tool
+   - `Paris` internal route for reversible account publishing containment
+   - same-origin `DevStudio` local route for pause/resume publishing containment
+   - Roma publish hard-stop while account publishing containment is active
+   - Paris widgets action-matrix suppression while account publishing containment is active
 2. Explicitly pending:
-   - publishing/posting containment
+   - outbound posting/integration containment beyond the current widget publish path
    - support target-open into `Bob`
    - shared-runtime company-plane access gate beyond the explicit `501` placeholder
 
@@ -125,6 +129,7 @@ Clickeen must be able to do all of this in DevStudio:
 3. change the real customer's email after internal verification
 4. remove the abusive member
 5. revoke that user's active sessions if needed
+6. pause account publishing immediately while the issue is being contained
 
 ### Use case 2 — Sponsored test accounts
 
@@ -292,11 +297,13 @@ Important:
 ### C. Publishing/posting containment
 
 DevStudio tool action:
-- pause account publishing/posting for trust/safety reasons
+- pause or resume account publishing for trust/safety reasons
 
 Important:
 - start with reversible containment
 - do not start with irreversible destructive delete flows
+- the first slice targets the current account-owned widget publish path
+- outbound posting/integration containment can follow later under the same control plane
 
 ### D. Support intervention target-open
 
@@ -374,15 +381,16 @@ Do not start with permanent destructive delete semantics.
    - sponsored account onboarding
    - recovery + member removal
    - revoke sessions
-   - reversible publishing/posting containment
+   - reversible account publishing containment
 5. Add targeted account/widget lookup only as needed for those tools
 
 Current Phase 1 truth:
 
 1. Sponsored account onboarding is the first delivered slice.
 2. Customer email recovery, non-owner member removal, and user session revoke are also delivered locally.
-3. Reversible containment is still open.
+3. Reversible account publishing containment is delivered locally and enforced on the current Roma publish path.
 4. Shared runtime currently exposes explicit `501` placeholders for `/api/devstudio/control/*` routes that are not yet implemented there.
+5. Outbound posting/integration containment is still open.
 
 ### Phase 2 — Support intervention open/edit path
 
@@ -417,7 +425,9 @@ PRD 067 fails if execution does any of the following:
 5. The owner can change a locked-out user's email from DevStudio.
 6. The owner can remove an abusive member from DevStudio.
 7. The owner can revoke a user's sessions from DevStudio.
-8. The owner can apply a reversible publishing/posting pause from DevStudio.
+8. The owner can apply a reversible account publishing pause from DevStudio.
+9. The owner can resume account publishing from DevStudio.
+10. Roma publish routes fail explicitly while account publishing containment is active.
 9. The owner can target a customer widget from DevStudio and open it in Bob for support intervention.
 10. Every action above writes an audit event.
 11. No new Berlin product role or global human flag is introduced.

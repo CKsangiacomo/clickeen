@@ -8,7 +8,7 @@ import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../../
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../../../lib/auth/session';
 import { resolveParisBaseUrl } from '../../../../../../../lib/env/paris';
 import { resolveTokyoBaseUrl } from '../../../../../../../lib/env/tokyo';
-import { updateAccountInstanceStatusRow } from '../../../../../../../lib/michael';
+import { loadAccountPublishContainment, updateAccountInstanceStatusRow } from '../../../../../../../lib/michael';
 
 export const runtime = 'edge';
 
@@ -70,6 +70,43 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return withSession(
       request,
       NextResponse.json({ error: authz.error }, { status: authz.status }),
+      session.setCookies,
+    );
+  }
+
+  const containment = await loadAccountPublishContainment(accountId, session.accessToken);
+  if (!containment.ok) {
+    const status = containment.status === 401 ? 401 : containment.status === 403 ? 403 : 502;
+    const kind =
+      status === 401 ? 'AUTH' : status === 403 ? 'DENY' : 'UPSTREAM_UNAVAILABLE';
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind,
+            reasonKey: containment.reasonKey,
+            detail: containment.detail,
+          },
+        },
+        { status },
+      ),
+      session.setCookies,
+    );
+  }
+  if (containment.containment.active) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'DENY',
+            reasonKey: 'coreui.errors.account.publishingPaused',
+            detail: containment.containment.reason ?? 'account_publish_containment_active',
+          },
+        },
+        { status: 403 },
+      ),
       session.setCookies,
     );
   }

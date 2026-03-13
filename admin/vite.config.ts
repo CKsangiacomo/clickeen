@@ -460,6 +460,32 @@ export default defineConfig({
             }
           }
 
+          if (pathname === '/api/devstudio/control/account-publish-containment' && req.method === 'POST') {
+            try {
+              const body = await readRequestText(req);
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: '/internal/control/account-publish-containment',
+                method: 'POST',
+                body,
+                headers: { accept: 'application/json' },
+              });
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.internalControl.routeFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+              return;
+            }
+          }
+
           res.statusCode = 501;
           res.end(
             JSON.stringify({

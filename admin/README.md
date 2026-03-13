@@ -25,6 +25,8 @@ It is not:
 
 Shipped tools today include:
 - `/#/tools/dev-widget-workspace`
+- `/#/tools/sponsored-account-onboarding`
+- `/#/tools/customer-recovery`
 - Dieter/foundations pages generated from source
 - other internal dev/verification pages under `src/html/tools/`
 
@@ -47,6 +49,13 @@ Internal transport used by local tool routes:
 - `PARIS_DEV_JWT`
 - `TOKYO_DEV_JWT`
 - `x-ck-internal-service: devstudio.local`
+
+Current local company-plane routes:
+- `POST /api/devstudio/control/sponsored-accounts`
+- `POST /api/devstudio/control/customer-email-recovery`
+- `POST /api/devstudio/control/account-member-removal`
+- `POST /api/devstudio/control/revoke-user-sessions`
+- `POST /api/devstudio/control/account-publish-containment`
 
 These are for local DevStudio tool routes only.
 

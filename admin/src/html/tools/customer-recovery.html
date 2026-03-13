@@ -45,6 +45,7 @@
       }
 
       .customer-recovery-form input,
+      .customer-recovery-form select,
       .customer-recovery-form textarea {
         width: 100%;
         border-radius: 14px;
@@ -95,7 +96,7 @@
         <div class="eyebrow">Internal control</div>
         <h1 class="page-title">Customer Recovery</h1>
         <p class="page-subtitle">
-          Targeted company-plane actions for locked-out customer recovery and abusive non-owner member removal.
+          Targeted company-plane actions for recovery, abusive-member removal, session revoke, and reversible account publishing containment.
         </p>
       </section>
 
@@ -192,6 +193,37 @@
             <p id="session-revoke-status" class="customer-recovery-status" aria-live="polite"></p>
             <pre id="session-revoke-result" class="customer-recovery-result" hidden></pre>
           </article>
+
+          <article class="customer-recovery-card">
+            <div>
+              <h2 class="heading-2">Pause or resume account publishing</h2>
+              <p class="customer-recovery-note">
+                Reversible trust-and-safety containment for the current account publishing path. This pauses publish actions for account-owned widgets while still allowing unpublish.
+              </p>
+            </div>
+
+            <form id="publish-containment-form" class="customer-recovery-form">
+              <label>
+                Account ID
+                <input name="accountId" type="text" placeholder="target account UUID" required />
+              </label>
+              <label>
+                Action
+                <select name="action" required>
+                  <option value="pause">Pause publishing</option>
+                  <option value="resume">Resume publishing</option>
+                </select>
+              </label>
+              <label>
+                Reason
+                <textarea name="reason" placeholder="Why publishing is being paused or resumed" required></textarea>
+              </label>
+              <button class="button-primary" type="submit">Update containment</button>
+            </form>
+
+            <p id="publish-containment-status" class="customer-recovery-status" aria-live="polite"></p>
+            <pre id="publish-containment-result" class="customer-recovery-result" hidden></pre>
+          </article>
         </div>
       </section>
     </main>
@@ -278,6 +310,21 @@
           return {
             accountId: String(formData.get('accountId') || '').trim(),
             userId: String(formData.get('userId') || '').trim(),
+            reason: String(formData.get('reason') || '').trim(),
+          };
+        },
+      });
+
+      wireAction({
+        formId: 'publish-containment-form',
+        endpoint: '/api/devstudio/control/account-publish-containment',
+        statusId: 'publish-containment-status',
+        resultId: 'publish-containment-result',
+        successLabel: 'Publishing containment updated.',
+        normalizePayload(formData) {
+          return {
+            accountId: String(formData.get('accountId') || '').trim(),
+            action: String(formData.get('action') || '').trim().toLowerCase(),
             reason: String(formData.get('reason') || '').trim(),
           };
         },

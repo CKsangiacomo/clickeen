@@ -27,6 +27,11 @@ type RomaWidgetsInstancePayload = {
   };
 };
 
+type AccountPublishContainmentRow = {
+  account_id?: unknown;
+  reason?: unknown;
+};
+
 async function resolveWidgetTypesById(env: Env, widgetIds: string[]): Promise<Map<string, string>> {
   if (widgetIds.length === 0) return new Map();
   const unique = Array.from(new Set(widgetIds.map((id) => id.trim()).filter(Boolean)));
@@ -180,6 +185,33 @@ async function loadAllWidgetTypes(env: Env): Promise<string[]> {
     .sort((a, b) => a.localeCompare(b));
 }
 
+async function loadAccountPublishContainment(
+  env: Env,
+  accountId: string,
+): Promise<{ active: boolean; reason: string | null }> {
+  const params = new URLSearchParams({
+    select: 'account_id,reason',
+    account_id: `eq.${accountId}`,
+    limit: '1',
+  });
+  const response = await supabaseFetch(env, `/rest/v1/account_publish_containment?${params.toString()}`, {
+    method: 'GET',
+  });
+  if (!response.ok) {
+    const details = await readJson(response);
+    throw new Error(
+      `[ParisWorker] Failed to load account publish containment (${response.status}): ${JSON.stringify(details)}`,
+    );
+  }
+
+  const rows = ((await response.json()) as AccountPublishContainmentRow[] | null) ?? [];
+  const row = rows[0] ?? null;
+  return {
+    active: Boolean(asTrimmedString(row?.account_id)),
+    reason: asTrimmedString(row?.reason),
+  };
+}
+
 export async function handleRomaWidgets(req: Request, env: Env): Promise<Response> {
   const url = new URL(req.url);
   const accountIdResult = assertAccountId(url.searchParams.get('accountId'));
@@ -194,14 +226,17 @@ export async function handleRomaWidgets(req: Request, env: Env): Promise<Respons
 
   let instances: RomaWidgetsInstancePayload[] = [];
   let allWidgetTypes: string[] = [];
+  let publishContainment: { active: boolean; reason: string | null } = { active: false, reason: null };
   try {
-    const [accountRows, ownedCuratedRows, widgetTypes] = await Promise.all([
+    const [accountRows, ownedCuratedRows, widgetTypes, containment] = await Promise.all([
       loadAccountWidgetInstances(env, accountId),
       loadOwnedCuratedWidgetInstances(env, accountId),
       loadAllWidgetTypes(env),
+      loadAccountPublishContainment(env, accountId),
     ]);
     instances = [...accountRows, ...ownedCuratedRows];
     allWidgetTypes = widgetTypes;
+    publishContainment = containment;
   } catch (error) {
     const detail = errorDetail(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
@@ -217,8 +252,8 @@ export async function handleRomaWidgets(req: Request, env: Env): Promise<Respons
         edit: true,
         duplicate: canMutate,
         delete: isCurated ? canMutateCurated : canMutate,
-        publish: !isCurated && canMutate,
-        unpublish: !isCurated && canMutate,
+        publish: !isCurated && canMutate && !publishContainment.active,
+        unpublish: !isCurated && canMutate && instance.status === 'published',
       },
     };
   });
@@ -235,6 +270,15 @@ export async function handleRomaWidgets(req: Request, env: Env): Promise<Respons
       name: authorized.account.name,
       slug: authorized.account.slug,
       role: authorized.role,
+      publishContainment: publishContainment.active
+        ? {
+            active: true,
+            reason: publishContainment.reason,
+          }
+        : {
+            active: false,
+            reason: null,
+          },
     },
     widgetTypes: Array.from(widgetTypeSet).sort((a, b) => a.localeCompare(b)),
     instances: actionAware,

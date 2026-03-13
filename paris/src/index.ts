@@ -8,6 +8,7 @@ import {
   handleAiMinibobSession,
   handleAiOutcome,
 } from './domains/ai';
+import { handleAccountPublishContainment } from './domains/internal-control/account-publish-containment';
 import { handleGetInstance } from './domains/instances';
 import {
   handleAccountGetLocalization,
@@ -124,6 +125,11 @@ export default {
 
       if (pathname === '/internal/control/revoke-user-sessions') {
         if (req.method === 'POST') return handleSessionRevoke(req, env);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      if (pathname === '/internal/control/account-publish-containment') {
+        if (req.method === 'POST') return handleAccountPublishContainment(req, env);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

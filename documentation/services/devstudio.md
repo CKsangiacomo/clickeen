@@ -48,6 +48,12 @@ Local contract:
 - local DevStudio does **not** require Roma-style login semantics by default
 - local DevStudio tool authority is confined to `/api/devstudio/*`
 - local DevStudio is never treated as a product user session or account-switch authority
+- local company-plane tools currently use:
+  - `POST /api/devstudio/control/sponsored-accounts`
+  - `POST /api/devstudio/control/customer-email-recovery`
+  - `POST /api/devstudio/control/account-member-removal`
+  - `POST /api/devstudio/control/revoke-user-sessions`
+  - `POST /api/devstudio/control/account-publish-containment`
 
 ### Cloud-dev
 
@@ -85,6 +91,25 @@ What it does not do:
 - browse customer accounts
 - switch customer account context
 - expose a generic internal account shell
+
+### Sponsored account onboarding
+
+Route: `/#/tools/sponsored-account-onboarding`
+
+What it does:
+- create tester accounts directly from DevStudio
+- apply complimentary `tier3`
+- issue owner invitations for the invited human
+
+### Customer recovery
+
+Route: `/#/tools/customer-recovery`
+
+What it does:
+- change a locked-out user's email
+- remove a non-owner member from an account
+- revoke a user's sessions
+- pause or resume publishing for the current account-owned widget publish path
 
 ### Dieter / design-system pages
 

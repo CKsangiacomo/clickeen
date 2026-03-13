@@ -8,6 +8,7 @@ const ACCOUNT_SHELL_REASON_COPY: Record<string, string> = {
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
   'coreui.errors.account.memberNotFound': 'That team member could not be found.',
   'coreui.errors.account.invitationNotFound': 'That invitation could not be found.',
+  'coreui.errors.account.publishingPaused': 'Publishing is paused for this account right now.',
 };
 
 export function resolveAccountShellReason(payload: unknown, fallback: string): string {
