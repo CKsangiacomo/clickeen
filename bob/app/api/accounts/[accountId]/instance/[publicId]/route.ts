@@ -14,22 +14,10 @@ import {
 } from '../../../../../../lib/api/paris/proxy-helpers';
 import { resolveParisBaseUrl } from '../../../../../../lib/env/paris';
 import { resolveTokyoBaseUrl } from '../../../../../../lib/env/tokyo';
-import { isTrustedLocalDevAccessToken } from '../../../../../../lib/michael';
 
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ accountId: string; publicId: string }> };
-
-function resolveTokyoAccessToken(accessToken: string): string {
-  if (isTrustedLocalDevAccessToken(accessToken)) {
-    const tokyoDevJwt = String(process.env.TOKYO_DEV_JWT || '').trim();
-    if (!tokyoDevJwt) {
-      throw new Error('tokyo_dev_jwt_missing');
-    }
-    return tokyoDevJwt;
-  }
-  return accessToken;
-}
 
 function validateParams(
   request: NextRequest,
@@ -60,24 +48,6 @@ function validateParams(
   return { ok: true, accountId, publicId };
 }
 
-function misconfiguredResponse(request: NextRequest, sessionSetCookies: unknown, detail: string) {
-  return withSessionAndCors(
-    request,
-    NextResponse.json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.misconfigured',
-          detail,
-        },
-      },
-      { status: 500, headers: resolveCorsHeaders(request, 'GET,PUT,OPTIONS') },
-    ),
-    sessionSetCookies as Parameters<typeof withSessionAndCors>[2],
-    resolveCorsHeaders(request, 'GET,PUT,OPTIONS'),
-  );
-}
-
 export function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 204,
@@ -104,7 +74,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
     request,
     accountId: validated.accountId,
     minRole: 'viewer',
-    allowBypass: () => isTrustedLocalDevAccessToken(session.accessToken),
   });
   if (!authz.ok) {
     return withSessionAndCors(
@@ -118,17 +87,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
 
-  let tokyoAccessToken = session.accessToken;
-  try {
-    tokyoAccessToken = resolveTokyoAccessToken(session.accessToken);
-  } catch (error) {
-    return misconfiguredResponse(
-      request,
-      session.setCookies,
-      error instanceof Error ? error.message : String(error),
-    );
-  }
-
+  const tokyoAccessToken = session.accessToken;
   const result = await loadTokyoPreferredAccountInstance({
     accountId: validated.accountId,
     publicId: validated.publicId,
@@ -188,7 +147,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     request,
     accountId: validated.accountId,
     minRole: 'editor',
-    allowBypass: () => isTrustedLocalDevAccessToken(session.accessToken),
   });
   if (!authz.ok) {
     return withSessionAndCors(
@@ -230,17 +188,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  let tokyoAccessToken = session.accessToken;
-  try {
-    tokyoAccessToken = resolveTokyoAccessToken(session.accessToken);
-  } catch (error) {
-    return misconfiguredResponse(
-      request,
-      session.setCookies,
-      error instanceof Error ? error.message : String(error),
-    );
-  }
-
+  const tokyoAccessToken = session.accessToken;
   const result = await saveAccountInstanceDirect({
     accountId: validated.accountId,
     publicId: validated.publicId,
@@ -268,9 +216,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           parisBaseUrl: resolveParisBaseUrl(),
           parisAccessToken: session.accessToken,
           authzCapsule: request.headers.get('x-ck-authz-capsule'),
-          internalServiceName: isTrustedLocalDevAccessToken(session.accessToken)
-            ? 'bob.local'
-            : null,
           accountId: validated.accountId,
           publicId: validated.publicId,
           previousConfig: result.value.previousConfig,

@@ -62,7 +62,7 @@ type MichaelHeadersResolution =
   | {
       ok: true;
       headers: Headers;
-      isTrustedLocalDev: boolean;
+      usedTrustedLocalDevContract: boolean;
     }
   | {
       ok: false;
@@ -85,24 +85,6 @@ function resolveMichaelAnonKey(): string {
     throw new Error('bob.errors.config.supabase_anon_key_missing');
   }
   return value;
-}
-
-function resolveMichaelServiceRoleKey(): string {
-  const value = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-  if (!value) {
-    throw new Error('bob.errors.config.supabase_service_role_missing');
-  }
-  return value;
-}
-
-export function isTrustedLocalDevAccessToken(accessToken: string): boolean {
-  const stage = String(process.env.ENV_STAGE || '').trim().toLowerCase();
-  if (stage !== 'local') return false;
-  const token = String(accessToken || '').trim();
-  if (!token) return false;
-  const trustedToken = String(process.env.PARIS_DEV_JWT || '').trim();
-  if (!trustedToken) return false;
-  return token === trustedToken;
 }
 
 async function resolveMichaelAccessToken(berlinAccessToken: string): Promise<MichaelAccessResolution> {
@@ -154,18 +136,11 @@ async function resolveMichaelAccessToken(berlinAccessToken: string): Promise<Mic
   }
 }
 
-async function resolveMichaelHeaders(berlinAccessToken: string): Promise<MichaelHeadersResolution> {
+async function resolveMichaelHeaders(args: {
+  berlinAccessToken: string;
+}): Promise<MichaelHeadersResolution> {
   try {
-    if (isTrustedLocalDevAccessToken(berlinAccessToken)) {
-      const serviceRole = resolveMichaelServiceRoleKey();
-      const headers = new Headers();
-      headers.set('apikey', serviceRole);
-      headers.set('authorization', `Bearer ${serviceRole}`);
-      headers.set('accept', 'application/json');
-      return { ok: true, headers, isTrustedLocalDev: true };
-    }
-
-    const michaelAccess = await resolveMichaelAccessToken(berlinAccessToken);
+    const michaelAccess = await resolveMichaelAccessToken(args.berlinAccessToken);
     if (!michaelAccess.ok) {
       return michaelAccess;
     }
@@ -174,7 +149,7 @@ async function resolveMichaelHeaders(berlinAccessToken: string): Promise<Michael
     headers.set('apikey', resolveMichaelAnonKey());
     headers.set('authorization', `Bearer ${michaelAccess.accessToken}`);
     headers.set('accept', 'application/json');
-    return { ok: true, headers, isTrustedLocalDev: false };
+    return { ok: true, headers, usedTrustedLocalDevContract: false };
   } catch (error) {
     return {
       ok: false,
@@ -205,7 +180,7 @@ export async function getAccountInstanceCoreRow(
   berlinAccessToken: string,
 ): Promise<MichaelAccountInstanceResult> {
   try {
-    const michaelHeaders = await resolveMichaelHeaders(berlinAccessToken);
+    const michaelHeaders = await resolveMichaelHeaders({ berlinAccessToken });
     if (!michaelHeaders.ok) {
       return michaelHeaders;
     }
@@ -379,7 +354,9 @@ export async function createAccountInstanceRow(args: {
   berlinAccessToken: string;
 }): Promise<MichaelAccountInstanceResult> {
   try {
-    const michaelHeaders = await resolveMichaelHeaders(args.berlinAccessToken);
+    const michaelHeaders = await resolveMichaelHeaders({
+      berlinAccessToken: args.berlinAccessToken,
+    });
     if (!michaelHeaders.ok) {
       return michaelHeaders;
     }
@@ -399,7 +376,7 @@ export async function createAccountInstanceRow(args: {
     }
 
     if (publicIdKind === 'main' || publicIdKind === 'curated') {
-      if (!michaelHeaders.isTrustedLocalDev) {
+      if (!michaelHeaders.usedTrustedLocalDevContract) {
         return {
           ok: false,
           status: 403,
@@ -582,7 +559,9 @@ export async function deleteAccountInstanceRow(
   berlinAccessToken: string,
 ): Promise<MichaelDeleteInstanceResult> {
   try {
-    const michaelHeaders = await resolveMichaelHeaders(berlinAccessToken);
+    const michaelHeaders = await resolveMichaelHeaders({
+      berlinAccessToken,
+    });
     if (!michaelHeaders.ok) {
       return michaelHeaders;
     }
@@ -602,7 +581,7 @@ export async function deleteAccountInstanceRow(
 
     let path = `/rest/v1/widget_instances?account_id=eq.${encodeFilterValue(accountId)}&public_id=eq.${encodeFilterValue(publicId)}`;
     if (publicIdKind === 'main' || publicIdKind === 'curated') {
-      if (!michaelHeaders.isTrustedLocalDev) {
+      if (!michaelHeaders.usedTrustedLocalDevContract) {
         return {
           ok: false,
           status: 403,
