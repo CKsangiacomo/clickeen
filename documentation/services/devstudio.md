@@ -16,6 +16,13 @@ Hard boundary:
 - **DevStudio Cloudflare** (`https://devstudio.dev.clickeen.com`)
   - Fast “did the deploy work?” verification surface.
   - Treated as **read-only by default**.
+  - Deployed account/operator APIs live on Cloudflare Pages Functions:
+    - `GET /api/devstudio/context`
+    - `GET /api/devstudio/accounts`
+    - `POST /api/devstudio/accounts`
+    - `GET /api/devstudio/accounts/:accountId`
+    - `GET /api/devstudio/accounts/:accountId/members`
+    - `POST /api/devstudio/accounts/:accountId/switch`
   - If the instances tool is opened there with `?bob=http://localhost:3000`, the page is only a remote shell attached to your local Bob toolchain. Core create/open/save still go through that local Bob stack and its selected Tokyo/Michael target; Paris remains only for localization/orchestration.
 
 ## Admin Instances
@@ -29,6 +36,7 @@ What it does:
 - Source profile override: local Bob + local Tokyo.
 - Marks iframe host intent as `surface=devstudio` (pairs with `surface=roma` in Roma Builder for explicit host behavior).
 - Widget type selection still comes from the local widget catalog (`/api/devstudio/widgets`).
+- In cloud-dev, account/operator APIs are deployed on DevStudio itself; widget catalog / instance discovery / asset proxy routes remain local tool routes.
 - DevStudio host-owned platform context comes from `GET /api/devstudio/context`; the browser tool does not carry its own hardcoded account truth.
 - That route requires a real Berlin session/bootstrap plus platform-account membership and fails visibly when that context is missing or broken.
 - Instance discovery comes from the explicit local DevStudio route family (`/api/devstudio/instances*`).
@@ -77,13 +85,13 @@ What it does:
   - inspecting canonical account detail
   - inspecting current members for an account
   - switching the active account preference
-- Uses explicit local DevStudio Berlin-backed routes:
+- Uses DevStudio Berlin-backed routes:
   - `GET /api/devstudio/accounts`
   - `POST /api/devstudio/accounts`
   - `GET /api/devstudio/accounts/:accountId`
   - `GET /api/devstudio/accounts/:accountId/members`
   - `POST /api/devstudio/accounts/:accountId/switch`
-- These routes require a real Berlin product session plus platform-account membership.
+- These routes require a real Berlin product session plus platform-account membership, both locally and in cloud-dev.
 - Like the instances tool, account-operator flows require a real Berlin session and platform-account membership; there is no trusted-local operator fallback.
 
 Why:

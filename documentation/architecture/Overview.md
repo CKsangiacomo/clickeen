@@ -198,7 +198,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - DevStudio is the global Clickeen superadmin/operator portal, not a second customer account shell.
 - It is the platform-scoped surface a human uses to manage Clickeen across accounts, curated/platform-owned content, and explicit operator workflows.
 - DevStudio can host Bob for curated/admin authoring work, but it must reuse the same canonical account and content truth instead of inventing a second runtime model.
-- In local product profile, DevStudio is the fast superadmin shell over local Bob plus the cloud-dev data plane; in cloud-dev it is the internal verification and operator surface.
+- In local product profile, DevStudio is the fast superadmin shell over local Bob plus the cloud-dev data plane; in cloud-dev it is the internal verification and operator surface, with deployed `/api/devstudio/context` and `/api/devstudio/accounts*` operator APIs on Pages Functions.
 
 #### Paris (Workers)
 
