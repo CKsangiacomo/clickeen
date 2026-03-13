@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customer Recovery</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      .customer-recovery-shell {
+        display: grid;
+        gap: 24px;
+      }
+
+      .customer-recovery-grid {
+        display: grid;
+        gap: 24px;
+      }
+
+      @media (min-width: 1080px) {
+        .customer-recovery-grid {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+      }
+
+      .customer-recovery-card {
+        display: grid;
+        gap: 16px;
+        padding: 24px;
+        border-radius: 24px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 16px 48px rgba(15, 23, 42, 0.08);
+      }
+
+      .customer-recovery-form {
+        display: grid;
+        gap: 12px;
+      }
+
+      .customer-recovery-form label {
+        display: grid;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .customer-recovery-form input,
+      .customer-recovery-form textarea {
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid rgba(15, 23, 42, 0.16);
+        background: #fff;
+        padding: 12px 14px;
+        font: inherit;
+        color: inherit;
+      }
+
+      .customer-recovery-form textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      .customer-recovery-note {
+        margin: 0;
+        color: rgba(15, 23, 42, 0.72);
+      }
+
+      .customer-recovery-status {
+        min-height: 24px;
+        margin: 0;
+        font-size: 14px;
+      }
+
+      .customer-recovery-status[data-tone='error'] {
+        color: #b91c1c;
+      }
+
+      .customer-recovery-status[data-tone='success'] {
+        color: #166534;
+      }
+
+      .customer-recovery-result {
+        margin: 0;
+        padding: 16px 18px;
+        border-radius: 16px;
+        background: rgba(15, 23, 42, 0.04);
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="page-header">
+        <div class="eyebrow">Internal control</div>
+        <h1 class="page-title">Customer Recovery</h1>
+        <p class="page-subtitle">
+          Targeted company-plane actions for locked-out customer recovery and abusive non-owner member removal.
+        </p>
+      </section>
+
+      <section class="customer-recovery-shell">
+        <div class="notice">
+          This tool is intentionally narrow. It does not browse accounts or switch DevStudio into a customer shell.
+        </div>
+
+        <div class="customer-recovery-grid">
+          <article class="customer-recovery-card">
+            <div>
+              <h2 class="heading-2">Recover customer email</h2>
+              <p class="customer-recovery-note">
+                Update auth plus canonical profile email after manual verification. The new address is left unverified.
+              </p>
+            </div>
+
+            <form id="email-recovery-form" class="customer-recovery-form">
+              <label>
+                Account ID
+                <input name="accountId" type="text" placeholder="00000000-0000-0000-0000-000000000100" required />
+              </label>
+              <label>
+                User ID
+                <input name="userId" type="text" placeholder="target customer UUID" required />
+              </label>
+              <label>
+                New email
+                <input name="email" type="email" placeholder="new-owner@example.com" required />
+              </label>
+              <label>
+                Reason
+                <textarea name="reason" placeholder="Why this recovery is being performed" required></textarea>
+              </label>
+              <button class="button-primary" type="submit">Change email</button>
+            </form>
+
+            <p id="email-recovery-status" class="customer-recovery-status" aria-live="polite"></p>
+            <pre id="email-recovery-result" class="customer-recovery-result" hidden></pre>
+          </article>
+
+          <article class="customer-recovery-card">
+            <div>
+              <h2 class="heading-2">Remove non-owner member</h2>
+              <p class="customer-recovery-note">
+                Remove a viewer, editor, or admin from the target account. Owner removal stays out of scope and must use the dedicated ownership path.
+              </p>
+            </div>
+
+            <form id="member-removal-form" class="customer-recovery-form">
+              <label>
+                Account ID
+                <input name="accountId" type="text" placeholder="target account UUID" required />
+              </label>
+              <label>
+                Member user ID
+                <input name="memberUserId" type="text" placeholder="abusive member UUID" required />
+              </label>
+              <label>
+                Reason
+                <textarea name="reason" placeholder="Why the member is being removed" required></textarea>
+              </label>
+              <button class="button-primary" type="submit">Remove member</button>
+            </form>
+
+            <p id="member-removal-status" class="customer-recovery-status" aria-live="polite"></p>
+            <pre id="member-removal-result" class="customer-recovery-result" hidden></pre>
+          </article>
+
+          <article class="customer-recovery-card">
+            <div>
+              <h2 class="heading-2">Revoke user sessions</h2>
+              <p class="customer-recovery-note">
+                Revoke all active Berlin sessions for the target user after recovery or abuse response. This is scoped to a concrete account/user pair and recorded in the audit log.
+              </p>
+            </div>
+
+            <form id="session-revoke-form" class="customer-recovery-form">
+              <label>
+                Account ID
+                <input name="accountId" type="text" placeholder="target account UUID" required />
+              </label>
+              <label>
+                User ID
+                <input name="userId" type="text" placeholder="target user UUID" required />
+              </label>
+              <label>
+                Reason
+                <textarea name="reason" placeholder="Why the sessions are being revoked" required></textarea>
+              </label>
+              <button class="button-primary" type="submit">Revoke sessions</button>
+            </form>
+
+            <p id="session-revoke-status" class="customer-recovery-status" aria-live="polite"></p>
+            <pre id="session-revoke-result" class="customer-recovery-result" hidden></pre>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      async function wireAction({ formId, endpoint, statusId, resultId, successLabel, normalizePayload }) {
+        const form = document.getElementById(formId);
+        const statusEl = document.getElementById(statusId);
+        const resultEl = document.getElementById(resultId);
+        if (!(form instanceof HTMLFormElement) || !(statusEl instanceof HTMLElement) || !(resultEl instanceof HTMLElement)) return;
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          statusEl.textContent = 'Working...';
+          statusEl.dataset.tone = '';
+          resultEl.hidden = true;
+          resultEl.textContent = '';
+
+          const payload = normalizePayload(new FormData(form));
+
+          try {
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            const body = await response.json().catch(() => null);
+            if (!response.ok) {
+              const detail = body?.error?.detail ? ` (${body.error.detail})` : '';
+              statusEl.textContent = `${body?.error?.reasonKey || 'Request failed'}${detail}`;
+              statusEl.dataset.tone = 'error';
+              return;
+            }
+
+            statusEl.textContent = successLabel;
+            statusEl.dataset.tone = 'success';
+            resultEl.hidden = false;
+            resultEl.textContent = JSON.stringify(body, null, 2);
+          } catch (error) {
+            statusEl.textContent = error instanceof Error ? error.message : String(error);
+            statusEl.dataset.tone = 'error';
+          }
+        });
+      }
+
+      wireAction({
+        formId: 'email-recovery-form',
+        endpoint: '/api/devstudio/control/customer-email-recovery',
+        statusId: 'email-recovery-status',
+        resultId: 'email-recovery-result',
+        successLabel: 'Customer email updated.',
+        normalizePayload(formData) {
+          return {
+            accountId: String(formData.get('accountId') || '').trim(),
+            userId: String(formData.get('userId') || '').trim(),
+            email: String(formData.get('email') || '').trim(),
+            reason: String(formData.get('reason') || '').trim(),
+          };
+        },
+      });
+
+      wireAction({
+        formId: 'member-removal-form',
+        endpoint: '/api/devstudio/control/account-member-removal',
+        statusId: 'member-removal-status',
+        resultId: 'member-removal-result',
+        successLabel: 'Member removed from account.',
+        normalizePayload(formData) {
+          return {
+            accountId: String(formData.get('accountId') || '').trim(),
+            memberUserId: String(formData.get('memberUserId') || '').trim(),
+            reason: String(formData.get('reason') || '').trim(),
+          };
+        },
+      });
+
+      wireAction({
+        formId: 'session-revoke-form',
+        endpoint: '/api/devstudio/control/revoke-user-sessions',
+        statusId: 'session-revoke-status',
+        resultId: 'session-revoke-result',
+        successLabel: 'User sessions revoked.',
+        normalizePayload(formData) {
+          return {
+            accountId: String(formData.get('accountId') || '').trim(),
+            userId: String(formData.get('userId') || '').trim(),
+            reason: String(formData.get('reason') || '').trim(),
+          };
+        },
+      });
+    </script>
+  </body>
+</html>

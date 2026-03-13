@@ -99,6 +99,10 @@ function readRequestBuffer(req: NodeJS.ReadableStream): Promise<Buffer> {
   });
 }
 
+async function readRequestText(req: NodeJS.ReadableStream): Promise<string> {
+  return (await readRequestBuffer(req)).toString('utf8');
+}
+
 function resolveDevstudioParisBaseUrl() {
   return DEFAULT_PARIS_BASE_URL;
 }
@@ -337,6 +341,135 @@ export default defineConfig({
               }),
             );
           }
+        });
+      },
+    },
+    {
+      name: 'devstudio-control-routes',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          const rawUrl = req.url || '';
+          const requestUrl = new URL(rawUrl || '/', 'http://localhost:5173');
+          const pathname = requestUrl.pathname || '';
+          if (!pathname.startsWith('/api/devstudio/control/')) return next();
+
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-store');
+
+          if (pathname === '/api/devstudio/control/sponsored-accounts' && req.method === 'POST') {
+            try {
+              const body = await readRequestText(req);
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: '/internal/control/sponsored-accounts',
+                method: 'POST',
+                body,
+                headers: { accept: 'application/json' },
+              });
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.internalControl.routeFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+              return;
+            }
+          }
+
+          if (pathname === '/api/devstudio/control/customer-email-recovery' && req.method === 'POST') {
+            try {
+              const body = await readRequestText(req);
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: '/internal/control/customer-email-recovery',
+                method: 'POST',
+                body,
+                headers: { accept: 'application/json' },
+              });
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.internalControl.routeFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+              return;
+            }
+          }
+
+          if (pathname === '/api/devstudio/control/account-member-removal' && req.method === 'POST') {
+            try {
+              const body = await readRequestText(req);
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: '/internal/control/account-member-removal',
+                method: 'POST',
+                body,
+                headers: { accept: 'application/json' },
+              });
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.internalControl.routeFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+              return;
+            }
+          }
+
+          if (pathname === '/api/devstudio/control/revoke-user-sessions' && req.method === 'POST') {
+            try {
+              const body = await readRequestText(req);
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: '/internal/control/revoke-user-sessions',
+                method: 'POST',
+                body,
+                headers: { accept: 'application/json' },
+              });
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.internalControl.routeFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+              return;
+            }
+          }
+
+          res.statusCode = 501;
+          res.end(
+            JSON.stringify({
+              error: {
+                kind: 'NOT_IMPLEMENTED',
+                reasonKey: 'coreui.errors.internalControl.notImplemented',
+                detail: pathname,
+              },
+            }),
+          );
         });
       },
     },

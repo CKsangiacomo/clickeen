@@ -31,6 +31,10 @@ import {
   handleAccountInstanceL10nStatus,
   handleAccountLocalesAftermath,
 } from './domains/l10n';
+import { handleAccountMemberRemoval } from './domains/internal-control/account-member-removal';
+import { handleCustomerEmailRecovery } from './domains/internal-control/customer-email-recovery';
+import { handleSessionRevoke } from './domains/internal-control/session-revoke';
+import { handleSponsoredAccountCreate } from './domains/internal-control/sponsored-onboarding';
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -100,6 +104,26 @@ export default {
         const accountIdResult = assertAccountId(decodeURIComponent(internalAccountLocalesAftermathMatch[1]));
         if (!accountIdResult.ok) return accountIdResult.response;
         if (req.method === 'POST') return handleAccountLocalesAftermath(req, env, accountIdResult.value);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      if (pathname === '/internal/control/sponsored-accounts') {
+        if (req.method === 'POST') return handleSponsoredAccountCreate(req, env);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      if (pathname === '/internal/control/customer-email-recovery') {
+        if (req.method === 'POST') return handleCustomerEmailRecovery(req, env);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      if (pathname === '/internal/control/account-member-removal') {
+        if (req.method === 'POST') return handleAccountMemberRemoval(req, env);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      if (pathname === '/internal/control/revoke-user-sessions') {
+        if (req.method === 'POST') return handleSessionRevoke(req, env);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

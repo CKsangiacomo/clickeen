@@ -25,7 +25,15 @@ import {
   handleMeIdentities,
   handleSessionBootstrap,
 } from './routes-account';
-import { handleHealthz, handleJwks, handleLogout, handleMichaelToken, handleRefresh, handleSession } from './routes-session';
+import {
+  handleHealthz,
+  handleInternalRevokeUserSessions,
+  handleJwks,
+  handleLogout,
+  handleMichaelToken,
+  handleRefresh,
+  handleSession,
+} from './routes-session';
 
 export { BerlinAuthTicketDO };
 
@@ -38,6 +46,16 @@ export default {
       if (pathname === '/internal/healthz') {
         if (request.method !== 'GET') return methodNotAllowed();
         return handleHealthz();
+      }
+
+      const internalRevokeSessionsMatch = pathname.match(/^\/internal\/control\/users\/([^/]+)\/revoke-sessions$/);
+      if (internalRevokeSessionsMatch) {
+        if (request.method !== 'POST') return methodNotAllowed();
+        return await handleInternalRevokeUserSessions(
+          request,
+          env,
+          decodeURIComponent(internalRevokeSessionsMatch[1] || ''),
+        );
       }
 
       if (pathname === '/.well-known/jwks.json') {
