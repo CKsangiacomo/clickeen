@@ -10,6 +10,23 @@ function resolveErrorReason(payload: unknown, fallback: string): string {
   return String((error as { reasonKey?: unknown }).reasonKey || fallback);
 }
 
+const ACCOUNT_SWITCH_REASON_COPY: Record<string, string> = {
+  'coreui.errors.auth.required': 'You need to sign in again to switch workspaces.',
+  'coreui.errors.auth.contextUnavailable': 'Workspace switching is unavailable right now. Please try again.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to switch to that workspace.',
+  'coreui.errors.account.notFound': 'That workspace could not be found.',
+  'coreui.errors.network.timeout': 'The request timed out. Please try again.',
+};
+
+function resolveAccountSwitchErrorCopy(reason: unknown, fallback: string): string {
+  const normalized = String(reason || '').trim();
+  if (!normalized) return fallback;
+  const mapped = ACCOUNT_SWITCH_REASON_COPY[normalized];
+  if (mapped) return mapped;
+  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
+  return normalized;
+}
+
 export function RomaAccountSwitcher() {
   const me = useRomaMe();
   const [loading, setLoading] = useState(false);
@@ -34,7 +51,12 @@ export function RomaAccountSwitcher() {
       }
       window.location.reload();
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : String(nextError));
+      setError(
+        resolveAccountSwitchErrorCopy(
+          nextError instanceof Error ? nextError.message : nextError,
+          'Switching workspaces failed. Please try again.',
+        ),
+      );
       setLoading(false);
     }
   };

@@ -11,9 +11,9 @@ This README is a quick operational guide. For the full endpoint and behavior con
 Core shipped endpoints in this repo snapshot include:
 
 - `GET /api/healthz`
-- `GET /api/roma/widgets?accountId=<uuid>` (Roma widgets domain list; includes account instances + curated owned by the admin account when authorized)
+- `GET /api/roma/widgets?accountId=<uuid>` (Roma widgets domain list; includes account instances plus curated content when the active account is platform-owned and row ownership permits it)
 - `GET /api/roma/templates?accountId=<uuid>` (Roma templates domain list; all published curated/main starters available to authenticated account members)
-- `DELETE /api/roma/instances/:publicId?accountId=<uuid>` (Roma widgets command; deletes account-owned instance when authorized; curated deletion is restricted to the admin account)
+- `DELETE /api/roma/instances/:publicId?accountId=<uuid>` (Roma widgets command; deletes account-owned instance when authorized; curated deletion is restricted to platform-owned account context plus row ownership)
 - `GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`
 - `POST /api/accounts/:accountId/instances/:publicId/sync-translations`
 - `POST /api/accounts/:accountId/instances/:publicId/sync-published-surface`

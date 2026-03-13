@@ -19,6 +19,25 @@ function resolveErrorReason(payload: unknown, fallback: string): string {
   return String((error as { reasonKey?: unknown }).reasonKey || fallback);
 }
 
+const ACCEPT_INVITE_REASON_COPY: Record<string, string> = {
+  'coreui.errors.auth.required': 'You need to sign in again before accepting this invitation.',
+  'coreui.errors.auth.contextUnavailable': 'Invitation acceptance is unavailable right now. Please try again.',
+  'coreui.errors.auth.forbidden': 'Sign in with the invited email address to accept this invitation.',
+  'coreui.errors.account.invitationNotFound': 'This invitation no longer exists.',
+  'coreui.errors.account.invitationInvalidOrExpired': 'This invitation is invalid or has expired.',
+  'coreui.errors.account.memberAlreadyExists': 'This account already has a member with that email address.',
+  'coreui.errors.network.timeout': 'The request timed out. Please try again.',
+};
+
+function resolveAcceptInviteErrorCopy(reason: unknown, fallback: string): string {
+  const normalized = String(reason || '').trim();
+  if (!normalized) return fallback;
+  const mapped = ACCEPT_INVITE_REASON_COPY[normalized];
+  if (mapped) return mapped;
+  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
+  return normalized;
+}
+
 export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
   const me = useRomaMe();
   const [loading, setLoading] = useState(false);
@@ -39,7 +58,12 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
       }
       window.location.assign('/home');
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : String(nextError));
+      setError(
+        resolveAcceptInviteErrorCopy(
+          nextError instanceof Error ? nextError.message : nextError,
+          'Accepting this invitation failed. Please try again.',
+        ),
+      );
     } finally {
       setLoading(false);
     }

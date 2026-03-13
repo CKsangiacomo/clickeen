@@ -81,8 +81,26 @@ function normalizeAdditionalLocales(value: unknown, baseLocale: string): string[
   return Array.from(new Set(normalized));
 }
 
-function asParisReason(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+const ACCOUNT_LOCALES_REASON_COPY: Record<string, string> = {
+  'coreui.errors.auth.required': 'You need to sign in again to manage workspace languages.',
+  'coreui.errors.auth.contextUnavailable': 'Workspace languages are unavailable right now. Please try again.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to manage workspace languages.',
+  'coreui.errors.db.readFailed': 'Failed to load workspace languages. Please try again.',
+  'coreui.errors.db.writeFailed': 'Saving workspace languages failed. Please try again.',
+  'coreui.errors.payload.invalid': 'The workspace language request was invalid. Please try again.',
+  'coreui.errors.payload.invalidJson': 'The workspace language request was invalid. Please try again.',
+  'coreui.errors.network.timeout': 'The request timed out. Please try again.',
+  'coreui.errors.account.locales.invalid': 'Workspace language settings are invalid. Please review the inputs and try again.',
+  'coreui.upsell.reason.capReached': 'Your current plan cannot enable more languages.',
+};
+
+function resolveAccountLocalesErrorCopy(reason: unknown, fallback: string): string {
+  const normalized = String(reason || '').trim();
+  if (!normalized) return fallback;
+  const mapped = ACCOUNT_LOCALES_REASON_COPY[normalized];
+  if (mapped) return mapped;
+  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
+  return normalized;
 }
 
 export function AccountLocaleSettingsCard(args: {
@@ -127,7 +145,7 @@ export function AccountLocaleSettingsCard(args: {
       setDraftSwitcherEnabled(payload.policy?.switcher?.enabled !== false);
       setSuccess(null);
     } catch (nextError) {
-      setError(asParisReason(nextError));
+      setError(resolveAccountLocalesErrorCopy(nextError instanceof Error ? nextError.message : nextError, 'Failed to load workspace languages. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -197,7 +215,12 @@ export function AccountLocaleSettingsCard(args: {
       await loadSettings();
       setSuccess('Saved languages.');
     } catch (nextError) {
-      setError(asParisReason(nextError));
+      setError(
+        resolveAccountLocalesErrorCopy(
+          nextError instanceof Error ? nextError.message : nextError,
+          'Saving workspace languages failed. Please try again.',
+        ),
+      );
     } finally {
       setSaving(false);
     }

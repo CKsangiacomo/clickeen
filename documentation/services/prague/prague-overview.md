@@ -183,7 +183,7 @@ MiniBob publish/signup handoff:
 - Handoff start accepts only curated/base MiniBob source ids (`wgt_main_*` or `wgt_curated_*`), never user instance ids.
 - No signed payload token is carried in URL; Paris stores snapshot state server-side and Roma consumes by opaque `handoffId`.
 - The handoff snapshot is the current MiniBob draft. If the draft includes context such as `context.websiteUrl`, that context travels with the claimed account instance.
-- Current cloud-dev rule: finish does not mint a new account. Handoff completion succeeds only if the signed-in user already lands in the admin account context.
+- Current cloud-dev rule: finish does not mint a new account. Handoff completion succeeds only if the signed-in user already lands in a platform-owned account context.
 
 ---
 

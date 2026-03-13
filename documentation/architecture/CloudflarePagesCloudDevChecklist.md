@@ -39,6 +39,8 @@ Env contract:
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `bob/wrangler.toml` |
 | `PARIS_BASE_URL` | yes | `https://paris.dev.clickeen.com` | `bob/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `bob/wrangler.toml` |
+| `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | `bob/wrangler.toml` |
+| `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | `bob/wrangler.toml` |
 | `SANFRANCISCO_BASE_URL` | yes | `https://sanfrancisco.dev.clickeen.com` | `bob/wrangler.toml` |
 
 Dashboard action:
@@ -73,6 +75,8 @@ Env contract:
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `roma/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `roma/wrangler.toml` |
 | `NEXT_PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | `roma/wrangler.toml` |
+| `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | `roma/wrangler.toml` |
+| `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | `roma/wrangler.toml` |
 
 Dashboard action:
 - Do not add these non-secret vars in the Cloudflare dashboard.
@@ -136,6 +140,29 @@ Env contract:
 Dashboard action:
 - Keep the 5 public base URLs in the Cloudflare Pages dashboard.
 - Leave `PUBLIC_PRAGUE_BUILD_ID` unset unless there is a deliberate override reason.
+
+## Live-Only Secrets And External State
+
+These values remain outside git by design. Keep the inventory true; do not store secret values in repo files.
+
+Pages secrets:
+- Bob: `ROMA_AUTHZ_CAPSULE_SECRET`
+
+Worker secrets:
+- Berlin: `SUPABASE_SERVICE_ROLE_KEY`, `PARIS_DEV_JWT`, `ROMA_AUTHZ_CAPSULE_SECRET`
+- Paris: `SUPABASE_SERVICE_ROLE_KEY`, `PARIS_DEV_JWT`, `TOKYO_DEV_JWT`, `ROMA_AUTHZ_CAPSULE_SECRET`
+
+CI secrets/vars:
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+- `SUPABASE_ACCESS_TOKEN`
+- `SUPABASE_DB_PASSWORD_CLOUD_DEV`
+- `SUPABASE_PROJECT_REF_CLOUD_DEV`
+
+Rules:
+- Bob and Roma non-secret runtime vars belong in app-local `wrangler.toml`.
+- Worker and Pages secrets stay live-only, but any new secret must be documented here with owning service and purpose.
+- If a Pages custom domain serves stale runtime after a Git-connected deploy, fix the underlying config or verification gap; do not normalize direct artifact deploys as the operating model.
 
 ## PRD 63 Completion Proof
 

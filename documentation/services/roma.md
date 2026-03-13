@@ -90,7 +90,7 @@ Client behavior (`use-roma-me.ts`):
 
 Current cloud-dev product rule:
 
-- Cloud-dev still effectively behaves as one admin account today, so the switcher is normally hidden there because `accounts.length <= 1`.
+- Cloud-dev still effectively behaves as one seeded platform-owned account today, so the switcher is normally hidden there because `accounts.length <= 1`.
 - Bootstrap still returns `accounts[]` + `defaults.accountId`, and Roma exposes switch-account automatically when the current user actually has more than one account membership.
 
 ## Upstream proxy model
@@ -128,7 +128,7 @@ Notes:
 - Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/accounts/:accountId/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Paris only for the internal aftermath orchestration Berlin triggers.
 - Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes route through Roma same-origin APIs backed by Berlin (`/api/accounts/:accountId/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
 - Roma now exposes a dedicated person-scoped User Settings domain at `/profile`. It renders canonical person data from bootstrap, writes self-profile updates through `/api/me` -> Berlin `PUT /v1/me`, initiates auth-owned email change through `/api/me/email-change` -> Berlin `POST /v1/me/email-change`, and runs phone/WhatsApp verification through same-origin relays to Berlin (`/api/me/contact-methods/:channel/start|verify`). Linked identities stay internal and are not part of the standard customer-facing surface.
-- Roma Team now also exposes Berlin-backed invitation issue/list/revoke flows through `/api/accounts/:accountId/invitations` and `/api/accounts/:accountId/invitations/:invitationId`. Until delivery infrastructure exists, Team surfaces the manual `/accept-invite/:token` path instead of pretending email delivery exists.
+- Roma Team now also exposes Berlin-backed invitation issue/list/revoke flows through `/api/accounts/:accountId/invitations` and `/api/accounts/:accountId/invitations/:invitationId`. Team does not expose raw accept tokens or shareable acceptance paths as normal invitation metadata.
 - Roma exposes `/accept-invite/:token` as the explicit invitation-accept handoff. If the visitor is not signed in, the page routes them to `/login?next=...`; if signed in, it proxies acceptance to Berlin through `/api/invitations/:token/accept`.
 - Roma Settings now exposes owner-only final account-holder actions through Berlin-backed same-origin routes: `/api/accounts/:accountId/owner-transfer` and `DELETE /api/accounts/:accountId`. Tier, locales, ownership, and delete-account controls now sit on the same Berlin-owned account boundary.
 
