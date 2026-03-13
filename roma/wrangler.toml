@@ -11,3 +11,9 @@ NEXT_PUBLIC_BOB_URL = "https://bob.dev.clickeen.com"
 
 [env.production]
 compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
+
+[env.production.vars]
+PARIS_BASE_URL = "https://paris.dev.clickeen.com"
+NEXT_PUBLIC_TOKYO_URL = "https://tokyo.dev.clickeen.com"
+BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
+NEXT_PUBLIC_BOB_URL = "https://bob.dev.clickeen.com"
