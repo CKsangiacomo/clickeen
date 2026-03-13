@@ -15,6 +15,8 @@ type FetchMockOptions = {
   themes?: Array<{ id: string; label?: string }>;
   onThemeUpdate?: (payload: { themeId?: string; values?: Record<string, unknown> }) => void;
   localWidgets?: string[];
+  contextStatus?: number;
+  contextPayload?: Record<string, unknown>;
   devstudioInstancesStatus?: number;
   devstudioL10nUnavailable?: boolean;
 };
@@ -52,6 +54,17 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
     const url = typeof input === 'string' ? input : input.toString();
     const method = init?.method || (input instanceof Request ? input.method : 'GET');
     if (url.includes('/api/devstudio/context') && method === 'GET') {
+      const status = options?.contextStatus ?? 200;
+      if (status !== 200) {
+        return new Response(
+          JSON.stringify(
+            options?.contextPayload || {
+              error: { reasonKey: 'coreui.errors.auth.required' },
+            },
+          ),
+          { status },
+        );
+      }
       return new Response(
         JSON.stringify({
           accountId: '00000000-0000-0000-0000-000000000100',
@@ -318,6 +331,34 @@ describe('DevStudio instances tool', () => {
     expect(label?.textContent).toBe('No instances yet');
     expect(dropdown?.getAttribute('style') || '').toContain('display: inline-block');
     expect(menu?.querySelectorAll('[data-public-id]').length).toBe(0);
+
+    dom.window.close();
+  });
+
+  it('requires a real Berlin session before opening a DevStudio instance', async () => {
+    const instances = [
+      {
+        publicId: 'wgt_curated_faq_simple',
+        widgetname: 'faq',
+        displayName: 'FAQ Simple',
+      },
+    ];
+    const { dom, fetchMock } = await loadInstancesDom(instances, {
+      fetch: {
+        localWidgets: ['faq'],
+        contextStatus: 401,
+        contextPayload: {
+          error: { reasonKey: 'coreui.errors.auth.required' },
+        },
+      },
+    });
+    const label = dom.window.document.getElementById('current-instance-label');
+    const urls = fetchMock.mock.calls.map(([input]) =>
+      typeof input === 'string' ? input : input.toString(),
+    );
+
+    expect(urls.some((url) => url.includes('/api/devstudio/context'))).toBe(true);
+    expect(label?.textContent).toBe('Error loading instances');
 
     dom.window.close();
   });

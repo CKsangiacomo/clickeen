@@ -30,7 +30,7 @@ What it does:
 - Marks iframe host intent as `surface=devstudio` (pairs with `surface=roma` in Roma Builder for explicit host behavior).
 - Widget type selection still comes from the local widget catalog (`/api/devstudio/widgets`).
 - DevStudio host-owned platform context comes from `GET /api/devstudio/context`; the browser tool does not carry its own hardcoded account truth.
-- That route prefers a real Berlin session/bootstrap when one is present, fails visibly if that Berlin session is invalid/broken, and only falls back to the current trusted-local platform-account context when no product session exists in the local toolchain.
+- That route requires a real Berlin session/bootstrap plus platform-account membership and fails visibly when that context is missing or broken.
 - Instance discovery comes from the explicit local DevStudio route family (`/api/devstudio/instances*`).
 - The instance discovery/status routes must honor that same host-owned context decision before proxying any upstream work.
 - DevStudio no longer uses `/api/roma/templates`. That route is Roma product starter discovery, not DevStudio authoring discovery.
@@ -84,7 +84,7 @@ What it does:
   - `GET /api/devstudio/accounts/:accountId/members`
   - `POST /api/devstudio/accounts/:accountId/switch`
 - These routes require a real Berlin product session plus platform-account membership.
-- Unlike the instances tool, account-operator flows do **not** fall back to trusted-local platform data when no product session exists.
+- Like the instances tool, account-operator flows require a real Berlin session and platform-account membership; there is no trusted-local operator fallback.
 
 Why:
 
@@ -122,7 +122,7 @@ Current boundary:
 
 If DevStudio local opens but instances are missing:
 
-- Check DevStudio `GET /api/devstudio/context` first; a broken Berlin session now fails visibly instead of silently downgrading to trusted-local mode.
+- Check DevStudio `GET /api/devstudio/context` first; the widget tool now requires a real Berlin session and fails visibly when that session is missing or broken.
 - Check local `PARIS_DEV_JWT` only for the remaining local internal discovery/status transport. Bob `/api/accounts/...` availability now depends on a real Berlin session plus the bootstrap account capsule.
 - Check that `bash scripts/dev-up.sh --reset` completed the explicit curated/main Tokyo saved snapshot repair step.
 - DevStudio discovery/status remain local trusted-tool transport paths today, but they are host-gated by the same DevStudio context contract; core create/open/save now uses Bob’s canonical route instead of Paris.

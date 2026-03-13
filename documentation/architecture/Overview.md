@@ -180,7 +180,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
 - Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/session/bootstrap`) backed by Tokyo for saved authoring truth, Berlin for bootstrap/account context, and Paris for localization/explicit aftermath orchestration.
-- DevStudio local does not use `/api/roma/templates`; it uses its own trusted local `/api/devstudio/instances*` path for instance discovery on the platform-owned account, while create/open/save run through Bob’s canonical `/api/accounts/*` routes.
+- DevStudio local does not use `/api/roma/templates`; it uses its own Berlin-session-gated `/api/devstudio/instances*` path for instance discovery on the platform-owned account, while create/open/save run through Bob’s canonical `/api/accounts/*` routes.
 
 #### Roma (Pages)
 

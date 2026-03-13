@@ -1336,6 +1336,7 @@
       if (bobSessionId && currentPublicId) {
         sendInstanceToIframe(currentPublicId).catch((error) => {
           console.error('[DevStudio] Failed to load initial instance into Bob', error);
+          currentLabel.textContent = 'Error loading instances';
         });
       }
       refreshL10nStatus(currentPublicId).catch(() => {});
@@ -1401,6 +1402,7 @@
       if (bobSessionId) {
         sendInstanceToIframe(publicId).catch((error) => {
           console.error('[DevStudio] Failed to send instance to Bob', error);
+          currentLabel.textContent = 'Error loading instances';
         });
       }
       refreshL10nStatus(publicId).catch(() => {});

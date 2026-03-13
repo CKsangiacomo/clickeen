@@ -244,12 +244,6 @@ type DevstudioPlatformContext =
       ok: true;
       accountId: string;
       scope: 'platform';
-      mode: 'trusted-local';
-    }
-  | {
-      ok: true;
-      accountId: string;
-      scope: 'platform';
       mode: 'berlin-session';
       user?: DevstudioBootstrapPayload['user'];
       profile?: DevstudioBootstrapPayload['profile'];
@@ -453,10 +447,15 @@ async function resolveDevstudioPlatformContext(req: any): Promise<DevstudioPlatf
   const bootstrap = await resolveDevstudioBerlinBootstrap(req);
   if (bootstrap.kind === 'no-session') {
     return {
-      ok: true,
-      accountId: platformAccountId,
-      scope: 'platform',
-      mode: 'trusted-local',
+      ok: false,
+      status: 401,
+      body: {
+        error: {
+          kind: 'AUTH',
+          reasonKey: 'coreui.errors.auth.required',
+          detail: 'devstudio_berlin_session_required',
+        },
+      },
     };
   }
   if (bootstrap.kind === 'error') {
