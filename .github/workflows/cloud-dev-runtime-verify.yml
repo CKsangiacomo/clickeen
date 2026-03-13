@@ -5,6 +5,7 @@ on:
     workflows:
       - cloud-dev workers deploy
       - cloud-dev roma app verify
+      - cloud-dev devstudio app deploy
       - cloud-dev prague content release
     types: [completed]
   workflow_dispatch: {}
