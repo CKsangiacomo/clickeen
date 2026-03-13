@@ -76,9 +76,7 @@ async function loadSaveAftermathContext(
   accountId: string,
   publicId: string,
 ): Promise<SaveAftermathContextResult> {
-  const authorized = await authorizeAccount(req, env, accountId, 'editor', {
-    requireCapsule: true,
-  });
+  const authorized = await authorizeAccount(req, env, accountId, 'editor');
   if (authorized.ok === false) return { ok: false, response: authorized.response };
   const account = authorized.account;
   const policy = resolvePolicy({ profile: account.tier, role: authorized.role });

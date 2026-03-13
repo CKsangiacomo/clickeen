@@ -65,7 +65,7 @@ Core columns:
 - `widget_type` (text) — denormalized widget type (validated against Tokyo registry at write time)
 - `kind` (text) — `baseline` | `curated`
 - `status` (text) — `published` | `unpublished`
-- `owner_account_id` (uuid) — FK to `accounts.id` (curated rows are owned by the single admin account, `ADMIN_ACCOUNT_ID`)
+- `owner_account_id` (uuid) — FK to `accounts.id` (curated rows are owned by a platform account; runtime policy keys off `accounts.is_platform` plus row ownership, not a hardcoded seed id)
 - `config` (jsonb) — required object, no longer used as active product config truth
 
 ### `accounts`
@@ -85,9 +85,10 @@ Core columns:
 - `l10n_policy` (jsonb, nullable) — account locale policy (baseLocale + ip/switcher)
 - `created_at`, `updated_at` (timestamptz)
 
-Seeded platform account:
+Current deterministic platform seed:
 
 - `ADMIN_ACCOUNT_ID = 00000000-0000-0000-0000-000000000100` (`is_platform=true`)
+- This id is an operational seed, not a normative product authorization rule.
 
 ### `account_members`
 
@@ -249,13 +250,13 @@ Local DB is Supabase CLI + Docker:
 
 Those concerns are intentionally outside Michael’s scope right now so the editor stays strict and the platform stays simple.
 
-## Deterministic admin account
+## Deterministic platform account
 
-Michael seeds one deterministic platform/admin account:
+Michael seeds one deterministic platform account:
 
 - `ADMIN_ACCOUNT_ID = 00000000-0000-0000-0000-000000000100`
 
-This account owns:
+Today this seeded platform account owns:
 
 - `curated_widget_instances` (baseline + curated starter designs)
 - DevStudio internal authoring flows

@@ -7,14 +7,14 @@ For the canonical target account-management boundary, see `documentation/archite
 
 ## Purpose
 
-Berlin is Clickeen's dedicated AuthN boundary and the executing account-truth boundary for PRD 064.
+Berlin is Clickeen's dedicated AuthN boundary and the executing account-truth boundary for PRD 65.
 
 Responsibilities:
 - Accept user credentials for sign-in (`/auth/login/password` in v1).
 - Orchestrate provider login OAuth start+callback (`/auth/login/provider/*`).
-- Reconcile first successful sign-in into canonical product account state (`user_profiles`, first account, first owner membership, active account preference) during PRD 064 execution.
+- Reconcile first successful sign-in into canonical product account state (`user_profiles`, first account, first owner membership, active account preference) during PRD 65 execution.
 - First successful sign-in provisions a distinct first account/workspace id; Berlin must never reuse `user_id` as `account_id`.
-- Own the first canonical account routes during PRD 064 execution:
+- Own the first canonical account routes during PRD 65 execution:
   - `GET /v1/me`
   - `PUT /v1/me`
   - `POST /v1/me/email-change`
@@ -133,7 +133,6 @@ Recommended:
 - `BERLIN_LOGIN_CALLBACK_URL` (OAuth provider callback URL; cloud-dev should point at Berlin `/auth/login/provider/callback`)
 - `BERLIN_FINISH_REDIRECT_URL` (post-callback browser redirect; cloud-dev should point at Roma `/api/session/finish`)
 - `ENV_STAGE`
-- `CK_ADMIN_ACCOUNT_ID`
 - `PARIS_BASE_URL` (required for locale-settings aftermath handoff to Paris orchestration)
 - `PARIS_DEV_JWT` (required for Berlin -> Paris internal aftermath auth)
 - `USAGE_KV` (required for non-local bootstrap budget usage reads)

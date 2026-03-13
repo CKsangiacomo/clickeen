@@ -18,13 +18,13 @@ import {
 import {
   assertPublicId,
   assertWidgetType,
+  isCuratedInstanceRow,
   resolveInstanceKind,
   resolveInstanceAccountId,
 } from '../../shared/instances';
 import { consumeBudget } from '../../shared/budgets';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { authorizeAccount } from '../../shared/account-auth';
-import { resolveAdminAccountId } from '../../shared/admin';
 import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import {
   deleteInstanceOverlay,
@@ -159,9 +159,7 @@ async function resolveLayerRequestContext(args: {
     }
   | { ok: false; response: Response }
 > {
-  const authorized = await authorizeAccount(args.req, args.env, args.accountId, args.minRole, {
-    requireCapsule: true,
-  });
+  const authorized = await authorizeAccount(args.req, args.env, args.accountId, args.minRole);
   if (!authorized.ok) return { ok: false, response: authorized.response };
   const account = authorized.account;
 
@@ -184,9 +182,13 @@ async function resolveLayerRequestContext(args: {
     };
   }
 
-  const adminAccountId = resolveAdminAccountId(args.env);
-  if (resolveInstanceKind(instance) === 'curated' && args.accountId !== adminAccountId) {
-    return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
+  if (resolveInstanceKind(instance) === 'curated') {
+    if (account.is_platform !== true) {
+      return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
+    }
+    if (isCuratedInstanceRow(instance) && asTrimmedString(instance.owner_account_id) !== args.accountId) {
+      return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
+    }
   }
 
   return {

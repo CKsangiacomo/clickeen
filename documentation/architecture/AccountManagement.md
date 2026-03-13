@@ -1,13 +1,13 @@
 # Account Management (Canonical)
 
-STATUS: EXECUTING TARGET — PRD 064
+STATUS: EXECUTING TARGET — PRD 65
 
 This file is the canonical account-management model for Clickeen.
 
-It defines the target boundary that Berlin, Roma, DevStudio, Bob, Michael, and Paris must converge to during PRD 064 execution.
+It defines the target boundary that Berlin, Roma, DevStudio, Bob, Michael, and Paris must converge to during PRD 65 execution.
 
 For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./Overview.md).
-For the execution plan and dependency map, see [PRD 064](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/064__PRD__Berlin_Account_Management_Boundary__Single_Identity_And_Account_API.md).
+For the execution plan and dependency map, see [PRD 65](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/065__PRD__Berlin_Account_Management_Level_Up__Boundary_Closure_and_Commercial_Truth.md).
 
 ---
 
@@ -317,7 +317,7 @@ Rules:
 
 Hard rule:
 - no product surface reads account-management truth directly from Michael
-- Paris must not remain on account-management runtime paths after PRD 064 cutover
+- Paris must not remain on account-management runtime paths after PRD 65 cutover
 
 ---
 

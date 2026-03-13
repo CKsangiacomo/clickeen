@@ -2,7 +2,6 @@ export type Env = {
   SUPABASE_URL?: string;
   SUPABASE_ANON_KEY?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
-  CK_ADMIN_ACCOUNT_ID?: string;
   ENV_STAGE?: string;
   BERLIN_ISSUER?: string;
   BERLIN_AUDIENCE?: string;

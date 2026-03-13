@@ -3,7 +3,6 @@ import { assertSupabaseAuth } from '../../shared/auth';
 import { authorizeAccount } from '../../shared/account-auth';
 import { ckError, errorDetail } from '../../shared/errors';
 import { json, readJson } from '../../shared/http';
-import { resolveAdminAccountId } from '../../shared/admin';
 import { asTrimmedString, assertAccountId, assertConfig, isRecord, isUuid } from '../../shared/validation';
 import { assertPublicId, assertWidgetType, isCuratedPublicId } from '../../shared/instances';
 import { handleAccountCreateInstance } from '../account-instances/create-handler';
@@ -348,10 +347,6 @@ export async function handleMinibobHandoffComplete(req: Request, env: Env): Prom
   const accountIdResult = assertAccountId(bodyRaw.accountId);
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
-  const adminAccountId = resolveAdminAccountId(env);
-  if (!isLocalStage(env) && accountId !== adminAccountId) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.minibobHandoff.unavailable', detail: 'minibob_handoff_admin_account_only' }, 403);
-  }
 
   const handoffIdResult = assertHandoffId(bodyRaw.handoffId);
   if (!handoffIdResult.ok) return handoffIdResult.response;
@@ -363,6 +358,16 @@ export async function handleMinibobHandoffComplete(req: Request, env: Env): Prom
 
   const accountAuth = await authorizeAccount(req, env, accountId, 'editor');
   if (!accountAuth.ok) return accountAuth.response;
+  if (!isLocalStage(env) && accountAuth.account.is_platform !== true) {
+    return ckError(
+      {
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.minibobHandoff.unavailable',
+        detail: 'minibob_handoff_platform_account_only',
+      },
+      403,
+    );
+  }
 
   const handoffStateKey = resolveMinibobHandoffStateKey(handoffId);
   const existingHandoff = await kvGetJson<MinibobHandoffStateRecord>(kv, handoffStateKey);

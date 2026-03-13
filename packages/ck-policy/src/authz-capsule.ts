@@ -14,6 +14,7 @@ export type RomaAccountAuthzCapsulePayload = {
   userId: string;
   accountId: string;
   accountStatus: string;
+  accountIsPlatform: boolean;
   accountName: string;
   accountSlug: string;
   accountWebsiteUrl: string | null;
@@ -128,6 +129,7 @@ function normalizeAccountPayload(
   const sub = typeof record.sub === 'string' ? record.sub.trim() : '';
   const accountId = typeof record.accountId === 'string' ? record.accountId.trim() : '';
   const accountStatus = typeof record.accountStatus === 'string' ? record.accountStatus.trim() : '';
+  const accountIsPlatform = typeof record.accountIsPlatform === 'boolean' ? record.accountIsPlatform : false;
   const accountName = typeof record.accountName === 'string' ? record.accountName.trim() : '';
   const accountSlug = typeof record.accountSlug === 'string' ? record.accountSlug.trim() : '';
   const accountWebsiteUrlRaw = typeof record.accountWebsiteUrl === 'string' ? record.accountWebsiteUrl.trim() : '';
@@ -155,6 +157,7 @@ function normalizeAccountPayload(
     userId,
     accountId,
     accountStatus,
+    accountIsPlatform,
     accountName,
     accountSlug,
     accountWebsiteUrl: accountWebsiteUrlRaw || null,

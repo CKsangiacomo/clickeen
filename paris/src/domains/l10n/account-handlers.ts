@@ -2,7 +2,7 @@ import { resolvePolicy, type Policy } from '@clickeen/ck-policy';
 import type { AccountRow, Env, InstanceRow, L10nGenerateStateRow, L10nGenerateStatus } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { apiError, ckError, errorDetail } from '../../shared/errors';
-import { isRecord } from '../../shared/validation';
+import { asTrimmedString, isRecord } from '../../shared/validation';
 import { buildL10nSnapshot, computeBaseFingerprint } from '@clickeen/l10n';
 import {
   loadWidgetLocalizationAllowlist,
@@ -12,7 +12,6 @@ import {
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { isTrustedInternalServiceRequest } from '../../shared/auth';
 import { authorizeAccount } from '../../shared/account-auth';
-import { resolveAdminAccountId } from '../../shared/admin';
 import { supabaseFetch } from '../../shared/supabase';
 import { requireAccount } from '../../shared/accounts';
 import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
@@ -37,7 +36,7 @@ import {
   loadSavedConfigStateFromTokyo,
   resolveActivePublishLocales,
 } from '../account-instances/service';
-import { resolveInstanceAccountId, resolveInstanceKind } from '../../shared/instances';
+import { isCuratedInstanceRow, resolveInstanceAccountId, resolveInstanceKind } from '../../shared/instances';
 
 export async function handleAccountInstanceL10nStatus(
   req: Request,
@@ -45,7 +44,7 @@ export async function handleAccountInstanceL10nStatus(
   accountId: string,
   publicId: string,
 ) {
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer', { requireCapsule: true });
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
   const account = authorized.account;
 
@@ -56,9 +55,13 @@ export async function handleAccountInstanceL10nStatus(
   if (!instance)
     return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
 
-  const adminAccountId = resolveAdminAccountId(env);
-  if (resolveInstanceKind(instance) === 'curated' && accountId !== adminAccountId) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+  if (resolveInstanceKind(instance) === 'curated') {
+    if (account.is_platform !== true) {
+      return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+    }
+    if (isCuratedInstanceRow(instance) && asTrimmedString(instance.owner_account_id) !== accountId) {
+      return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+    }
   }
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);

@@ -11,9 +11,11 @@ Paris is the **control/orchestration boundary** for product state:
 
 Active product-surface rule (PRD 61):
 
-- Paris accepts the Roma/Bob bootstrap authz capsule as the post-bootstrap account auth contract for active product routes (`localization`, `layers`, `l10n/status`, `sync-translations`, `sync-published-surface`, `roma/widgets`, `roma/templates`, `roma/instances/:publicId` delete).
+- Paris accepts the Berlin-issued Roma/Bob bootstrap authz capsule as the post-bootstrap account auth contract for active product routes (`localization`, `layers`, `l10n/status`, `sync-translations`, `sync-published-surface`, `roma/widgets`, `roma/templates`, `roma/instances/:publicId` delete).
 - Paris does not re-read `account_members` for those active product routes.
-- Local DevStudio remains the explicit local-only trusted-token exception (`PARIS_DEV_JWT` + internal service marker), not a second product auth model.
+- Paris account-capsule verification uses one dedicated `ROMA_AUTHZ_CAPSULE_SECRET`. Product auth must not fall back to `AI_GRANT_HMAC_SECRET` or `SUPABASE_SERVICE_ROLE_KEY`.
+- Local DevStudio/Bob tool flows remain explicit local-only trusted-token exceptions for internal tooling only. Normal product account routes still require the Berlin-issued bootstrap capsule and must not treat local trusted-dev access as sufficient authority.
+- Local Paris-to-Tokyo internal reads/writes use the same explicit pattern: `TOKYO_DEV_JWT` plus `x-ck-internal-service: paris.local`. Paris must not rely on a bare Tokyo dev token as universal saved-render authority.
 
 Non-negotiable (PRD 54):
 
@@ -49,7 +51,7 @@ Internal-only:
 ### Minibob + AI + reporting
 
 - `POST /api/minibob/handoff/start`
-- `POST /api/minibob/handoff/complete` (non-local stages accept admin account only)
+- `POST /api/minibob/handoff/complete` (non-local stages require a platform-owned account)
 - `POST /api/l10n/jobs/report`
 - `POST /api/ai/grant`
 - `POST /api/ai/minibob/session`
@@ -58,7 +60,7 @@ Internal-only:
 
 Current cloud-dev account rule:
 
-- Finish/handoff flows complete only against the surviving admin account.
+- Finish/handoff flows complete only against the surviving platform-owned account.
 
 ### Public read boundary
 

@@ -15,7 +15,7 @@ This doc mixes shipped behavior with target packaging. Shipped enforcement today
 - Global entitlements matrix: `packages/ck-policy/entitlements.matrix.json`
 - Per-widget limits mapping: `tokyo/widgets/{widget}/limits.json` (ops + publish reject; load sanitize for blocked flags)
 - Comments collaboration is target packaging only right now (comment APIs/UI are not shipped in this repo snapshot).
-- Cloud-dev is intentionally collapsed to the seeded admin account after PRD 60. The schema remains account-scoped, but Roma does not expose cross-account switching there.
+- Cloud-dev is intentionally collapsed to the seeded platform-owned account after PRD 60. The schema remains account-scoped, but Roma does not expose cross-account switching there.
 
 Anything else in this doc (seats, instance counts, widget type counts) is directional until implemented.
 
@@ -175,7 +175,7 @@ Key boundary rules:
 - Instances, assets, locales, and membership are all account-scoped.
 - Roma asset reads are account-canonical (`/api/assets/:accountId`).
 - Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped Paris calls.
-- Curated platform content is owned by a single admin account (`ADMIN_ACCOUNT_ID`) while remaining globally readable.
+- Curated platform content is owned by a platform account row and remains globally readable; runtime policy must use `accounts.is_platform` plus `owner_account_id`, not `ADMIN_ACCOUNT_ID`.
 
 ---
 
@@ -323,7 +323,7 @@ While we are building (before full auth/billing enforcement ships), we still nee
 **What Bob enforces today (example):**
 - `branding.remove` maps to `behavior.showBacklink` and is sanitized on load when blocked.
 - `minibob` cannot create/publish instances (action gates).
-- Uploads are bounded by caps/budgets (`uploads.size.max`, `budget.uploads.count`) and enforced server-side.
+- Uploads are bounded by a per-file cap (`uploads.size.max`) and total workspace storage (`budget.uploads.bytes`), enforced server-side.
 - Enforcement is centralized via `limits.json` + policy + server metering, so we do not scatter `if (minibob)` checks.
 
 **Why this scales:**

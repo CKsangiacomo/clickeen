@@ -34,12 +34,13 @@ What it does:
 - Instance discovery comes from the explicit local DevStudio route family (`/api/devstudio/instances*`).
 - The instance discovery/status routes must honor that same host-owned context decision before proxying any upstream work.
 - DevStudio no longer uses `/api/roma/templates`. That route is Roma product starter discovery, not DevStudio authoring discovery.
-- Product profile shows the admin account’s instances directly.
+- Product profile shows the current platform-owned account’s instances directly.
 - DevStudio local instance discovery is explicitly platform-account scoped. It does not honor browser-side `accountId` overrides for this tool path.
+- DevStudio local Tokyo asset routes are an explicit internal-tool path: they use `TOKYO_DEV_JWT` plus `x-ck-internal-service: devstudio.local`, not a generic trusted token bypass.
 - Source profile keeps widget defaults available only when a widget has no saved instance yet.
 - Uses a 2-dropdown flow:
   - first dropdown = widget type
-  - second dropdown = the admin instances for that widget
+  - second dropdown = the platform-owned instances for that widget
 - The widget catalog comes from `GET /api/devstudio/widgets`.
 - Instances come from `GET /api/devstudio/instances`.
 - Opening the `wgt_main_*` instance or any other instance lazy-loads core instance state from Bob’s canonical same-origin route (`GET /api/accounts/:accountId/instance/:publicId?subject=account`) plus explicit localization rehydrate (`GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`), then message-boots Bob with real `{ accountId, publicId }` context.
@@ -78,7 +79,7 @@ Important behavior:
 Current boundary:
 
 - DevStudio is the platform superadmin surface, but the shipped toolset in this repo snapshot is still centered on curated/widget authoring and verification rather than a full global operator console.
-- That includes editing the admin account’s instances, running translation checks inside Bob, and applying local theme mutations in source profile.
+- That includes editing the platform-owned account’s instances, running translation checks inside Bob, and applying local theme mutations in source profile.
 - Customer account day-2 workflows still belong in Roma.
 - Platform-scoped superadmin/operator workflows belong in DevStudio as they are implemented.
 - The same instances are:
@@ -98,7 +99,7 @@ If DevStudio local opens but instances are missing:
 If the asset picker is empty in DevStudio but Roma shows assets:
 
 - DevStudio must read assets through `/api/devstudio/assets/:accountId`.
-- This is a local trusted-tool path backed by `TOKYO_DEV_JWT`, not the product `/api/assets/*` route family.
+- This is a local trusted-tool path backed by `TOKYO_DEV_JWT` plus `x-ck-internal-service: devstudio.local`, not the product `/api/assets/*` route family.
 
 If the page fails before any widget opens:
 

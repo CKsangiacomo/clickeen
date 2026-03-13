@@ -6,7 +6,6 @@ export type Env = {
   SUPABASE_JWT_ISSUER?: string;
   SUPABASE_JWT_AUDIENCE?: string;
   PARIS_DEV_JWT: string;
-  CK_ADMIN_ACCOUNT_ID?: string;
   BERLIN_BASE_URL?: string;
   BERLIN_JWKS_URL?: string;
   BERLIN_ISSUER?: string;

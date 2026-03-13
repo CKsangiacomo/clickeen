@@ -37,7 +37,6 @@ import {
   resolveCuratedRowKind,
   resolveInstanceKind,
 } from '../../shared/instances';
-import { resolveAdminAccountId } from '../../shared/admin';
 import { loadInstanceByPublicId, loadWidgetByType } from '../instances';
 import { enqueueL10nJobs } from '../l10n';
 import { loadInstanceOverlays } from '../l10n/service';
@@ -109,8 +108,7 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
   const isCurated = kind === 'curated';
   const status = requestedStatus ?? 'unpublished';
 
-  const adminAccountId = resolveAdminAccountId(env);
-  if (isCurated && accountId !== adminAccountId) {
+  if (isCurated && account.is_platform !== true) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
   }
   if (!isCurated && (payload as any).meta !== undefined) {

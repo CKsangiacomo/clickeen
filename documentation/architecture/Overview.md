@@ -180,14 +180,14 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
 - Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/session/bootstrap`) backed by Tokyo for saved authoring truth, Berlin for bootstrap/account context, and Paris for localization/explicit aftermath orchestration.
-- DevStudio local does not use `/api/roma/templates`; it uses its own trusted local `/api/devstudio/instances*` path for instance discovery on the admin account, while create/open/save run through Bob’s canonical `/api/accounts/*` routes.
+- DevStudio local does not use `/api/roma/templates`; it uses its own trusted local `/api/devstudio/instances*` path for instance discovery on the platform-owned account, while create/open/save run through Bob’s canonical `/api/accounts/*` routes.
 
 #### Roma (Pages)
 
 - Roma is the domain shell (`/home`, `/profile`, `/widgets`, `/templates`, `/builder`, ...).
 - Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Berlin `GET /v1/session/bootstrap`), including an account authz capsule and an account entitlement snapshot.
-- Roma exposes person-scoped My Profile through `/profile`, using Berlin-owned `/api/me` and `/api/me/identities` same-origin routes.
-- In current cloud-dev, Roma usually resolves one effective account context only: the admin account. When the current user has more than one membership, Roma exposes Berlin-backed account switching and does not use browser-side account preference overrides.
+- Roma exposes person-scoped User Settings through `/profile`, using Berlin-owned `/api/me` same-origin routes.
+- In current cloud-dev, Roma usually resolves one effective account context only: the seeded platform-owned account. When the current user has more than one membership, Roma exposes Berlin-backed account switching and does not use browser-side account preference overrides.
 - Roma uses named same-origin routes for Paris orchestration endpoints and injects short-lived authz headers:
   - `x-ck-authz-capsule` for account-scoped calls
 - Roma serves Berlin-backed account member reads on same-origin routes (`GET /api/accounts/:accountId/members`).
@@ -215,7 +215,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
   - AI endpoints: `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`.
 - Current cloud-dev account rule:
   - Account creation is Berlin-owned; Paris no longer mounts account creation.
-  - `POST /api/minibob/handoff/complete` accepts only the admin account in non-local stages.
+  - `POST /api/minibob/handoff/complete` accepts only platform-owned accounts in non-local stages.
 - Layered l10n endpoints are canonical.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*` marks the instance shown first in MiniBob, `wgt_curated_*` marks other starter instances, `wgt_*_u_*` marks instances in user accounts.

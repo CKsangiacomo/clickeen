@@ -115,6 +115,7 @@ export type BerlinAccountContext = {
   name: string;
   slug: string;
   status: string;
+  isPlatform: boolean;
   tier: WorkspaceTier;
   websiteUrl: string | null;
   membershipVersion: string | null;
@@ -475,6 +476,7 @@ function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountCo
       name,
       slug,
       status: asTrimmedString(account.status) ?? 'active',
+      isPlatform: account.is_platform === true,
       tier,
       websiteUrl: asTrimmedString(account.website_url),
       membershipVersion: asTrimmedString(row.created_at),
@@ -666,6 +668,7 @@ export async function buildBootstrapPayload(args: {
       userId: args.state.user.id,
       accountId: activeAccount.accountId,
       accountStatus: activeAccount.status,
+      accountIsPlatform: activeAccount.isPlatform,
       accountName: activeAccount.name,
       accountSlug: activeAccount.slug,
       accountWebsiteUrl: activeAccount.websiteUrl,

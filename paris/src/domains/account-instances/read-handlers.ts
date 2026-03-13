@@ -2,10 +2,10 @@ import type { Policy } from '@clickeen/ck-policy';
 import type { Env } from '../../shared/types';
 import { json } from '../../shared/http';
 import { ckError, errorDetail } from '../../shared/errors';
+import { asTrimmedString } from '../../shared/validation';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { authorizeAccount } from '../../shared/account-auth';
-import { resolveInstanceKind } from '../../shared/instances';
-import { resolveAdminAccountId } from '../../shared/admin';
+import { isCuratedInstanceRow, resolveInstanceKind } from '../../shared/instances';
 import { normalizeSupportedLocaleToken, resolveAccountL10nPolicy } from '../../shared/l10n';
 import { loadInstanceByAccountAndPublicId } from '../instances';
 import { loadInstanceOverlays } from '../l10n/service';
@@ -113,7 +113,7 @@ export async function handleAccountGetLocalization(
   accountId: string,
   publicId: string,
 ) {
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer', { requireCapsule: true });
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
   const account = authorized.account;
 
@@ -127,8 +127,10 @@ export async function handleAccountGetLocalization(
 
   const instanceKind = resolveInstanceKind(instance);
   if (instanceKind === 'curated') {
-    const adminAccountId = resolveAdminAccountId(env);
-    if (accountId !== adminAccountId) {
+    if (account.is_platform !== true) {
+      return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
+    }
+    if (isCuratedInstanceRow(instance) && asTrimmedString(instance.owner_account_id) !== accountId) {
       return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
     }
   }

@@ -3,7 +3,6 @@ import type { Env, InstanceRow, WidgetRow } from '../../shared/types';
 import { authorizeAccount } from '../../shared/account-auth';
 import { ckError, errorDetail } from '../../shared/errors';
 import { json, readJson } from '../../shared/http';
-import { resolveAdminAccountId } from '../../shared/admin';
 import { roleRank } from '../../shared/roles';
 import { supabaseFetch } from '../../shared/supabase';
 import { formatCuratedDisplayName, readCuratedMeta } from '../../shared/curated-meta';
@@ -187,9 +186,7 @@ export async function handleRomaWidgets(req: Request, env: Env): Promise<Respons
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer', {
-    requireCapsule: true,
-  });
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
 
   const policy = resolvePolicy({ profile: authorized.account.tier, role: authorized.role });
@@ -210,8 +207,7 @@ export async function handleRomaWidgets(req: Request, env: Env): Promise<Respons
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
   }
 
-  const adminAccountId = resolveAdminAccountId(env);
-  const canMutateCurated = canMutate && accountId === adminAccountId;
+  const canMutateCurated = canMutate && authorized.account.is_platform === true;
 
   const actionAware = instances.map((instance) => {
     const isCurated = instance.source === 'curated';
@@ -251,9 +247,7 @@ export async function handleRomaTemplates(req: Request, env: Env): Promise<Respo
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer', {
-    requireCapsule: true,
-  });
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
 
   const params = new URLSearchParams({
@@ -327,14 +321,11 @@ export async function handleRomaWidgetDelete(
   if (!accountIdResult.ok) return accountIdResult.response;
   const accountId = accountIdResult.value;
 
-  const authorized = await authorizeAccount(req, env, accountId, 'editor', {
-    requireCapsule: true,
-  });
+  const authorized = await authorizeAccount(req, env, accountId, 'editor');
   if (!authorized.ok) return authorized.response;
 
-  const adminAccountId = resolveAdminAccountId(env);
   const sourceIsCurated = isCuratedPublicId(publicId);
-  if (sourceIsCurated && accountId !== adminAccountId) {
+  if (sourceIsCurated && authorized.account.is_platform !== true) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
   }
 
@@ -351,7 +342,7 @@ export async function handleRomaWidgetDelete(
 
   if (sourceIsCurated && isCuratedInstanceRow(existing)) {
     const ownerAccountId = asTrimmedString(existing.owner_account_id) || null;
-    if (ownerAccountId && ownerAccountId !== adminAccountId) {
+    if (ownerAccountId !== accountId) {
       return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
     }
   }

@@ -11,7 +11,7 @@
   - Berlin: `https://berlin-dev.clickeen.workers.dev`
   - Paris: `https://paris.dev.clickeen.com`
 - Local Tokyo/Tokyo-worker are not part of this default workflow.
-- DevStudio still boots from the local widget catalog in this profile; instance rows come from the admin account through the trusted local route, which resolves through local Paris in product profile.
+- DevStudio still boots from the local widget catalog in this profile; instance rows come from the platform-owned account through the trusted local route, which resolves through local Paris in product profile.
 - DevStudio product mode uses local Bob so the editor never crosses a cloud-iframe-to-localhost browser boundary.
 
 ## source
@@ -26,7 +26,7 @@
 
 ## Rules
 
-- Admin account in cloud-dev is `tier3` and is the unlimited profile for uploads/budgets.
+- The seeded platform-owned account in cloud-dev is `tier3` and is the unlimited profile for uploads/budgets.
 - Product paths should use normal auth + account ownership checks.
 - Any local trusted-token bypasses are source/internal tooling paths only, never browser product auth.
 - DevStudio local theme mutation tools (`/api/themes/*`) are source-profile only.
