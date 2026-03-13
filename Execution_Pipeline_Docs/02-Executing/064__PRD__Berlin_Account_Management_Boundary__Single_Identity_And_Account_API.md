@@ -47,13 +47,13 @@ Account management is therefore not admin plumbing. It is a core intelligence pl
 
 It is also core company infrastructure:
 - Roma is not enough, because Roma is an account-scoped member shell
-- Clickeen also needs a human-operated global management surface for the platform and company itself
-- DevStudio is that surface: the Superadmin / global operator portal for managing Clickeen across accounts, curated/platform content, and operational interventions
+- Clickeen also needs an internal toolbench for platform curation, internal authoring, and verification
+- DevStudio is that surface, but it is not a second customer shell and not a global superadmin portal
 
 So this PRD is not only about customer account settings.
 It is about establishing one canonical account truth that can safely power both:
 - Roma as the customer/account shell
-- DevStudio as the global Clickeen management portal
+- DevStudio as the internal toolbench that consumes product truth without inventing a second account model
 
 For Clickeen's PLG model, every truthful fact we know about the user and account can change product behavior:
 - onboarding
@@ -88,7 +88,7 @@ That scales because every future account feature has an obvious home:
 - identity/session/profile/account-control/connector-normalization -> Berlin
 - persistence -> Michael
 - account UI -> Roma
-- superadmin/global company management -> DevStudio
+- internal toolbench for curation/authoring/verification -> DevStudio
 - editor consumption -> Bob
 
 ### 2) Compliance to architecture and tenets
@@ -148,7 +148,7 @@ The final model is easy to explain:
 - Berlin exposes the account API.
 - Michael stores the account data.
 - Roma renders account management UI only.
-- DevStudio is the global Clickeen superadmin/operator portal on top of the same truth.
+- DevStudio is the internal toolbench on top of the same truth.
 - Bob consumes the Berlin bootstrap snapshot and never owns account management.
 
 That is the boring model this repo should have had from the start.
@@ -187,7 +187,7 @@ Berlin must **not** own:
 | Account management API | Berlin | Current account, switch, members, locales, tier |
 | Account persistence | Michael | `user_profiles`, `accounts`, `account_members`, locale policy, account tier metadata, persisted connector/account traits where needed |
 | Account UI | Roma | Customer/account-scoped member shell |
-| Superadmin / platform UI | DevStudio | Global Clickeen management portal for human superadmin/operator workflows |
+| Internal toolbench | DevStudio | Platform curation, internal authoring, and verification tooling |
 | Editor consumption | Bob | Consumes bootstrap/account snapshot only |
 | Widget/content plane | Tokyo | No account-control ownership |
 | Account management | Paris | Out of scope and out of ownership |
@@ -231,7 +231,7 @@ This PRD is a cross-system cutover, not an isolated Berlin service change.
 For every account workflow touched during execution, the team must explicitly capture the dependent surfaces and paths across:
 - Berlin contracts
 - Roma routes and UI
-- DevStudio routes and operator flows
+- DevStudio routes and internal tool flows
 - Bob bootstrap/gating consumers
 - Michael reads/writes
 - Paris residue
@@ -502,26 +502,16 @@ UX rule:
 - this capability may first appear in Settings or account shell UI during execution
 - but architecturally it is an account-shell capability, not a settings-only special case
 
-### Operational cross-account staff model (hard rule)
+### Future company-plane model (hard rule)
 
-The same account/membership model must support not only customer users, but also future cross-account operational humans.
-
-Examples:
-- a Clickeen admin user added to many or all accounts
-- a future human customer-support operator added to all accounts in one country
-- a future regional success/support user added to a subset of accounts by market, tier, or operational scope
-
-This is not a separate architecture.
-It is the same primitive:
-- one `User Profile`
-- many `Account Memberships`
-- one active account context at a time
+This PRD defines the boring customer/product account boundary.
+It does **not** define the future company-plane authority model for internal support, moderation, or commercial actions.
 
 Hard rules:
-- internal/admin/support humans must use the same Berlin-owned profile + membership model as customer humans
-- do not create a second employee-only account-access architecture
-- do not default to hidden impersonation/backdoor flows for normal support/admin product access
-- bulk assignment of an operational human to many accounts is a Berlin-owned membership-management operation, not a new runtime access plane
+- do not solve future internal/company authority by adding Clickeen humans to many or all customer accounts
+- do not collapse company-plane authority into Berlin-owned customer memberships + active-account switching
+- do not default to hidden impersonation/backdoor flows for internal company actions
+- if a future company-plane architecture is needed, define it separately instead of stretching the customer account model until it breaks
 - regional assignment (for example all accounts in Italy) must still result in ordinary per-account memberships that resolve through the same active-account bootstrap model
 - account access remains account-scoped and auditable: the system must always know which account context the human is acting inside
 
@@ -534,39 +524,38 @@ Why this rule exists:
 If a future support-specific role or operational role is needed, it must extend the Berlin-owned membership/policy model.
 It must not create a parallel access system outside the membership model.
 
-### DevStudio superadmin model (hard rule)
+### DevStudio toolbench model (hard rule)
 
 DevStudio is not a second customer account-management product.
-DevStudio is the **global Clickeen superadmin/operator portal**.
+DevStudio is the **internal toolbench**.
 
 That means DevStudio is how a human manages:
-- the Clickeen platform across accounts
 - curated/platform-owned content and instances
-- cross-account operational assignments
-- support/admin interventions
-- global company/product state that is not limited to one customer account
+- internal widget authoring and verification
+- platform/runtime inspection
+- explicit internal tooling that does not belong in Roma
 
 Surface split:
 - Roma = account-scoped member shell for normal account users
-- DevStudio = platform-scoped superadmin/operator shell for Clickeen itself
+- DevStudio = internal toolbench for Clickeen itself
 
 Hard rules:
-- DevStudio superadmin is a God-mode platform account for now; it does **not** need a customer-style `owner/admin/editor/viewer` capability matrix
-- DevStudio may expose more powerful global capabilities than Roma
 - DevStudio must still use Berlin as the canonical user/account/membership/provider truth boundary
 - DevStudio must not invent a second account model, second membership model, or second provider model
-- when DevStudio acts inside a specific customer account context, that access must still resolve through the same Berlin-owned membership + active-account model unless a superadmin-only global operation is explicitly required
-- global/superadmin powers must be explicit operator capabilities, not hidden bypasses that bypass canonical truth
+- DevStudio must not become a browse-all-accounts shell or fake customer-account browser
+- DevStudio local must use its explicit internal-tool contract only on `/api/devstudio/*`
+- DevStudio local authority must never be treated as product identity, account membership, or account-switch authority
+- company-plane actions such as support intervention, moderation, and commercial overrides are not solved here; they are handled separately by PRD 066 / PRD 067
 
 Current simplification:
-- one superadmin human in DevStudio can perform the documented global/operator actions across the platform
-- we do **not** need a separate DevStudio capability matrix unless and until Clickeen introduces non-God operator roles
-- if later support/regional/operator roles are needed, that is an additive future model, not a prerequisite for this PRD
+- one internal human uses DevStudio directly as the internal toolbench
+- we do **not** need a DevStudio capability matrix for PRD 064
+- we do **not** solve future company-plane authority by stuffing global admin power into Berlin in this PRD
 
 Why this matters:
-- a human must be able to manage the whole company, not only one account
-- that requires a global portal
-- but that portal must sit on top of the same canonical account architecture or it will recreate soup at the highest privilege level
+- DevStudio must stay useful for internal work without becoming Roma 2
+- Berlin must stay the boring product boundary
+- future internal control-plane work must stay separate from the product account model
 
 ### Google-seeded profile model (hard rule)
 
@@ -784,7 +773,7 @@ It is the canonical active-account switch boundary for any user who holds member
 Route authority rule:
 - `POST /v1/accounts/:id/invitations` is the canonical grant-access path for inviting a person into an account
 - `GET /v1/accounts/:id/members/:memberId` is the canonical Team member-detail boundary
-- `POST /v1/accounts/:id/members` is allowed only for attaching an already-resolved existing user profile or Berlin-owned operator flows
+- `POST /v1/accounts/:id/members` is allowed only for attaching an already-resolved existing user profile through canonical Berlin account flows
 - `POST /v1/accounts/:id/members` must not become a second invitation/onboarding path for unknown people
 - `PATCH /v1/accounts/:id/members/:memberId` mutates membership/account access state
 - `PATCH /v1/accounts/:id/members/:memberId/profile` is the authorized Team-domain path for editing Berlin-owned user profile fields from account context
@@ -799,7 +788,7 @@ It must be complete enough that Roma/Bob never need side routes for:
 - accepting an invitation
 - switching active account
 
-It must also be complete enough that DevStudio superadmin/operator flows do not invent a second account-truth model on top.
+It must also be complete enough that DevStudio internal tool flows do not invent a second account-truth model on top.
 
 Optional additive endpoints only if execution proves they are needed:
 - connector read/write endpoints
@@ -831,14 +820,14 @@ Roma does not become the global Clickeen management portal.
 ### DevStudio
 
 DevStudio:
-- is the global Clickeen superadmin/operator portal
-- renders platform-scoped management surfaces that are not limited to one customer account
-- may expose global search/inspect/manage workflows across many accounts
-- must still call Berlin-owned account contracts or Berlin-backed operator contracts for account truth
-- must not create a second account-management runtime model
+- is the internal toolbench for platform curation, internal authoring, and verification
+- renders internal tool surfaces that do not belong in Roma
+- may expose explicit internal tooling for Clickeen itself, but not a browse-all-accounts customer shell
+- must still call Berlin-owned account contracts where canonical product/account truth is required
+- must not create a second account-management runtime model or treat internal humans as privileged customer members
 
-If DevStudio needs privileged/global capabilities beyond Roma, those capabilities must be explicit and documented.
-They must still sit on top of Berlin truth rather than bypassing it with ad hoc runtime logic.
+If DevStudio needs internal capabilities beyond Roma, those capabilities must be explicit and documented.
+They must not be implemented as fake product memberships, fake account switching, or Berlin-owned universal superadmin authority.
 
 ### Bob
 
@@ -865,7 +854,7 @@ Paris:
 
 1. Converge account/session/profile/bootstrap/team/locales/tier/entitlements onto Berlin.
 2. Move Roma account settings/team/account-shell reads/writes to Berlin-owned contracts.
-3. Move DevStudio superadmin/operator account reads/writes to Berlin-owned truth or explicit Berlin-backed operator contracts.
+3. Remove fake DevStudio account-shell/account-browser shapes and keep only the legitimate internal toolbench routes on canonical product truth.
 4. Move Bob/Builder account bootstrap dependencies to the single Berlin bootstrap contract.
 5. Define and implement the user-profile and owner invariant model.
 6. Define the connector ownership/normalization model under Berlin.
@@ -1056,15 +1045,15 @@ Done when:
 - `roma/app/api/accounts/[accountId]/members/route.ts`, `roma/app/api/accounts/[accountId]/locales/route.ts`, `roma/app/api/accounts/[accountId]/lifecycle/plan-change/route.ts`, and `roma/app/api/accounts/[accountId]/lifecycle/tier-drop/dismiss/route.ts` are either deleted or reduced to thin Berlin proxies only
 - `roma/components/team-domain.tsx`, `roma/components/account-locale-settings-card.tsx`, `roma/components/settings-domain.tsx`, and `roma/components/roma-account-notice-modal.tsx` no longer depend on Michael-backed or Paris-backed account paths
 
-### Phase 5 — Converge DevStudio superadmin/operator account flows onto Berlin truth
+### Phase 5 — Converge DevStudio toolbench flows onto Berlin truth
 
-Converge DevStudio superadmin/operator account flows onto the same Berlin truth model.
+Converge legitimate DevStudio toolbench flows onto the same Berlin truth model while removing fake account-shell/operator shapes.
 
 Done when:
-- DevStudio global account-management/operator surfaces read/write through Berlin-owned truth and explicit superadmin/operator capabilities
 - DevStudio does not carry a second account/membership/provider architecture
-- any legacy DevStudio account path that bypassed Berlin truth is deleted or reduced to a documented thin proxy in the same phase
-- `GET /api/devstudio/context` fails visibly when a Berlin session exists but refresh/bootstrap/platform-membership resolution fails; trusted-local fallback is allowed only when no product session exists
+- fake DevStudio account-management/account-browser/operator surfaces are deleted
+- any surviving DevStudio path that needs product/account truth reads/writes through Berlin-owned truth or explicit internal tool contracts only
+- `GET /api/devstudio/context` uses the explicit host-owned DevStudio contract for the environment; it is never treated as customer product identity, account switch, or product membership authority
 - `GET /api/devstudio/instances` and `GET /api/devstudio/instances/:publicId/l10n/status` enforce that same host-owned context decision before proxying upstream work
 - if additional DevStudio account residue is discovered during implementation, it is added to the concrete dependency map before the phase is considered complete
 
@@ -1127,7 +1116,7 @@ Done when docs teach one truth, match runtime, and no active doc still teaches P
 
 ---
 
-## Execution checklist (operator reference)
+## Execution checklist (cross-surface reference)
 
 Use this checklist while executing PRD 064.
 Do not start or close a phase by intuition; walk the checklist and the dependency map.
@@ -1188,8 +1177,8 @@ Every execution slice for this PRD must explicitly record:
 
 ### Phase 5 checklist — DevStudio cutover
 
-- [ ] DevStudio global account/operator flows are inventoried before cutover, not discovered ad hoc during coding.
-- [ ] every DevStudio account/operator flow uses Berlin-owned truth or explicit Berlin-backed superadmin/operator contracts.
+- [ ] DevStudio internal tool/account-like flows are inventoried before cutover, not discovered ad hoc during coding.
+- [ ] every surviving DevStudio path that needs product/account truth reads/writes through Berlin-owned truth or explicit internal tool contracts only.
 - [ ] DevStudio does not introduce a second account, membership, or provider model.
 - [ ] any DevStudio residue discovered during implementation is added back into the dependency map before the phase is closed.
 
@@ -1229,10 +1218,10 @@ Every execution slice for this PRD must explicitly record:
 
 Use this as the single remaining signoff list after the main Berlin/Roma/Bob cutover is already in place.
 
-### 1. DevStudio operator truth enforcement
+### 1. DevStudio toolbench truth enforcement
 
-- [ ] `GET /api/devstudio/context` fails visibly when Berlin session cookies exist but refresh/bootstrap/platform-membership resolution fails.
-- [ ] trusted-local fallback in DevStudio is used only when no product session exists in the local toolchain.
+- [ ] `GET /api/devstudio/context` uses the explicit host-owned DevStudio contract for the environment and fails visibly when that contract cannot be resolved.
+- [ ] in `local`, DevStudio uses only its explicit `local-tool` contract on `/api/devstudio/*`; it is never treated as product session, account membership, or account-switch authority.
 - [ ] `GET /api/devstudio/instances` and `GET /api/devstudio/instances/:publicId/l10n/status` enforce the same host-owned context decision before any upstream proxy work.
 - [ ] DevStudio docs state the real behavior, not the desired behavior.
 
@@ -1280,7 +1269,7 @@ Execute in this order after `local` signoff is green:
 4. Deploy Bob third.
    - Bob must consume `/api/session/bootstrap` and the Berlin-backed capsule path, with no `/api/roma/bootstrap` dependency left.
 5. Deploy DevStudio fourth.
-   - DevStudio host context must use the same Berlin-owned decision path before any local trusted-tool fallback.
+   - DevStudio host context must use the explicit host-owned DevStudio contract for the environment; `local` uses the `local-tool` contract and shared runtime uses its real hosted contract.
 6. Deploy Paris last.
    - Paris should retain only the legitimate orchestration/runtime routes that remain after account-management residue deletion.
 7. Verify shared dev runtime in this order:
@@ -1321,13 +1310,13 @@ Execute in this order after `local` signoff is green:
 
 9. Listing accessible accounts, creating accounts, issuing invitations, accepting invitations, and switching accounts all resolve through canonical Berlin contracts with no side-route business logic in Roma/Bob.
 
-10. DevStudio acts as the global Clickeen superadmin/operator portal while still relying on Berlin-owned truth instead of a parallel account-management model.
+10. DevStudio acts as the internal toolbench while still relying on Berlin-owned truth where canonical product/account truth is required instead of a parallel account-management model.
 
 11. Roma/customer account behavior uses one boring baseline role model (`owner/admin/editor/viewer`), and those role meanings are not redefined per surface.
 
 12. Entitlements constrain account capabilities, but they do not replace account-role semantics; effective capability resolves as `role x entitlements`.
 
-13. DevStudio superadmin does not depend on a customer-style capability matrix to function; it remains the explicit God-mode platform surface unless later operator roles are intentionally introduced.
+13. DevStudio does not depend on a customer-style capability matrix to function; it remains the internal toolbench and does not become a fake customer-account shell.
 
 14. Signup produces:
 - a user profile
@@ -1391,13 +1380,13 @@ Stop execution if any of these appear:
 8. We attempt to document account management only by stretching `berlin.md` or `multitenancy.md`.
 9. Rich user/account context is treated as optional product garnish instead of Berlin-owned product intelligence.
 10. A widget/product surface starts its own provider-specific auth/connection path for a capability that should reuse or upgrade an existing Berlin-owned provider relationship.
-11. We introduce a separate employee/support/admin access plane instead of using Berlin-owned account memberships + active account switching for normal operational product access.
+11. We collapse internal DevStudio/company-plane authority into Berlin-owned account memberships + active account switching instead of keeping it distinct from the customer product shell.
 12. A core account workflow (list accounts, create account, invite, accept invite, switch) is missing from the Berlin contract and gets recreated as Roma/Bob glue or direct Michael access.
 13. Berlin starts making downstream product decisions instead of returning durable facts and normalized traits.
-14. DevStudio is treated as generic internal tooling or a second customer product instead of the explicit global superadmin/operator portal for Clickeen.
-15. DevStudio implements global/operator account behavior using a parallel truth model instead of Berlin-owned canonical contracts and documented operator capabilities.
+14. DevStudio is treated as a second customer product, a generic account browser, or a fake global superadmin shell instead of the explicit internal toolbench for Clickeen.
+15. DevStudio implements account-browser/operator behavior using a parallel truth model instead of Berlin-owned canonical contracts and explicit internal tool routes.
 16. `owner/admin/editor/viewer` semantics are left implicit or pushed entirely into entitlements instead of being defined as boring account-role meanings.
-17. We introduce a customer-style DevStudio capability matrix before there is a real non-God operator model that requires it.
+17. We introduce a customer-style DevStudio capability matrix before there is a real internal company-plane model that requires it.
 18. `admin` and `owner` are collapsed into the same role meaning, or account deletion/ownership transfer are left available to non-owners.
 19. `Linked Identity / Workspace Connection / Capability Scope State` are turned into a speculative multi-subsystem architecture instead of the simplest data shape that preserves the distinctions needed now.
 20. A Berlin-owned cutover ships while dependent Roma/DevStudio/Bob/Michael/Paris/docs paths remain on the old model.
