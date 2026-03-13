@@ -514,7 +514,7 @@ export async function deleteAccountInstanceRow(
       };
     }
 
-    let path = `/rest/v1/widget_instances?account_id=eq.${encodeFilterValue(accountId)}&public_id=eq.${encodeFilterValue(publicId)}`;
+    const path = `/rest/v1/widget_instances?account_id=eq.${encodeFilterValue(accountId)}&public_id=eq.${encodeFilterValue(publicId)}`;
     if (publicIdKind === 'main' || publicIdKind === 'curated') {
       return {
         ok: false,
