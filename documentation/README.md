@@ -24,7 +24,7 @@ documentation/
 │   ├── bob.md               # Editor
 │   ├── roma.md              # Product shell + Builder host
 │   ├── dieter.md            # Design system
-│   ├── devstudio.md         # Global superadmin portal + operator tooling
+│   ├── devstudio.md         # Internal toolbench
 │   ├── tokyo.md             # Asset CDN
 │   ├── tokyo-worker.md      # Asset uploads + l10n publisher
 │   ├── paris.md             # API/database
@@ -71,7 +71,7 @@ documentation/
 
 Surface split to keep straight when reading the repo:
 - `Roma` = account-scoped customer/member shell
-- `DevStudio` = platform-scoped Clickeen superadmin/operator shell
+- `DevStudio` = internal toolbench for platform curation, authoring, and verification
 
 ---
 
@@ -114,7 +114,7 @@ Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
    - Serves `/widgets/**` and `/dieter/**` directly from the repo.
 2. **Bob runtime** reads widget definitions/assets from Tokyo:
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
-3. **Local DevStudio** opens Bob in message boot from the platform superadmin shell:
+3. **Local DevStudio** opens Bob in message boot from the internal toolbench:
    - `admin/src/html/tools/dev-widget-workspace.html` defaults to local Bob + cloud Tokyo in product profile.
    - Source profile can explicitly target local Bob/Tokyo via `?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`.
 4. **Cloud-dev Roma** is the supported product/account host surface:
@@ -125,7 +125,7 @@ Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
    - `prague/src/lib/markdown.ts` bundles `tokyo/widgets/**/pages/*.json`.
    - `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com` is the default overlay/token base (override to local Tokyo only for explicit local-debug workflows).
 
-Result: product profile keeps DevStudio + Bob aligned with Roma on the same cloud Tokyo data plane by default, while preserving the surface split: Roma is the customer account shell, DevStudio is the Clickeen superadmin shell. Local Tokyo is a source-profile path.
+Result: product profile keeps DevStudio + Bob aligned with Roma on the same cloud Tokyo data plane by default, while preserving the surface split: Roma is the customer account shell, DevStudio is the internal toolbench. Local Tokyo is a source-profile path.
 
 ### A.1) Source-profile auth issuer alignment (critical)
 
@@ -146,7 +146,7 @@ Instances are data (not code) and live in Paris/Michael. Assets live in Tokyo.
 1. **Roma + Bob handle account user-instance flows**:
    - Roma Widgets/Templates create/duplicate/delete user instances through Roma same-origin routes.
    - Bob save writes base config via account `PUT`.
-2. **DevStudio Local handles curated/main authoring** (superadmin-only actions) via Paris + Tokyo from the platform-scoped operator surface.
+2. **DevStudio Local handles curated/main authoring** via Paris + Tokyo from the internal toolbench surface.
 3. **Assets** referenced in configs point at cloud Tokyo by default (`https://tokyo.dev.clickeen.com`).
 4. **Venice embeds** render curated/user instances from published Tokyo bytes only; local Paris is involved only earlier in the write/publish path.
 

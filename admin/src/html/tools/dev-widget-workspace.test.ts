@@ -69,7 +69,7 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         JSON.stringify({
           accountId: '00000000-0000-0000-0000-000000000100',
           scope: 'platform',
-          mode: 'berlin-session',
+          mode: 'local-tool',
         }),
         { status: 200 },
       );
@@ -296,13 +296,13 @@ async function loadInstancesDom(
 describe('DevStudio instances tool', () => {
   it('keeps only the theme action and hides the local toolbar in product profile', async () => {
     const { dom } = await loadInstancesDom([], { profile: 'product' });
-    const actions = dom.window.document.getElementById('superadmin-actions') as HTMLElement | null;
+    const actions = dom.window.document.getElementById('platform-actions') as HTMLElement | null;
     const updateThemeBtn = dom.window.document.getElementById(
-      'superadmin-update-theme',
+      'platform-update-theme',
     ) as HTMLButtonElement | null;
     const removedButtons = [
-      'superadmin-update-defaults',
-      'superadmin-reset-from-json',
+      'platform-update-defaults',
+      'platform-reset-from-json',
       'refresh-prague-preview',
       'create-curated-instance',
       'update-curated-instance',
@@ -335,7 +335,7 @@ describe('DevStudio instances tool', () => {
     dom.window.close();
   });
 
-  it('requires a real Berlin session before opening a DevStudio instance', async () => {
+  it('surfaces a context failure before opening a DevStudio instance', async () => {
     const instances = [
       {
         publicId: 'wgt_curated_faq_simple',
@@ -559,7 +559,7 @@ describe('DevStudio instances tool', () => {
       },
     });
 
-    const updateThemeBtn = dom.window.document.getElementById('superadmin-update-theme');
+    const updateThemeBtn = dom.window.document.getElementById('platform-update-theme');
     updateThemeBtn?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
     await flushDom(dom, 4);
 
@@ -645,7 +645,7 @@ describe('DevStudio instances tool', () => {
       },
     });
 
-    const updateThemeBtn = dom.window.document.getElementById('superadmin-update-theme');
+    const updateThemeBtn = dom.window.document.getElementById('platform-update-theme');
     updateThemeBtn?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
     await flushDom(dom, 3);
 

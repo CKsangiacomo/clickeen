@@ -50,39 +50,39 @@
       margin: 0;
     }
 
-    #superadmin-actions {
+    #platform-actions {
       display: none;
       align-items: center;
       gap: var(--space-2);
       flex-wrap: wrap;
     }
 
-    #superadmin-actions .diet-btn-txt {
+    #platform-actions .diet-btn-txt {
       box-shadow: var(--shadow-floating);
     }
 
-    #superadmin-actions .devstudio-instances__actions {
+    #platform-actions .devstudio-instances__actions {
       display: inline-flex;
       align-items: center;
       gap: var(--space-2);
       flex-wrap: wrap;
     }
 
-    #superadmin-actions .devstudio-instances__actions-group {
+    #platform-actions .devstudio-instances__actions-group {
       display: inline-flex;
       align-items: center;
       gap: var(--space-2);
       flex-wrap: wrap;
     }
 
-    #superadmin-actions .devstudio-instances__actions-divider {
+    #platform-actions .devstudio-instances__actions-divider {
       inline-size: 1px;
       block-size: 20px;
       background: color-mix(in oklab, var(--role-border), transparent 35%);
       border-radius: 999px;
     }
 
-    #superadmin-actions .devstudio-instances__action,
+    #platform-actions .devstudio-instances__action,
     .devstudio-instances__modal .devstudio-instances__action {
       --btn-border-width: 0px;
       --btn-border-color: transparent;
@@ -96,37 +96,37 @@
       box-shadow: var(--shadow-floating);
     }
 
-    #superadmin-actions .devstudio-instances__action[data-tone='green4'],
+    #platform-actions .devstudio-instances__action[data-tone='green4'],
     .devstudio-instances__modal .devstudio-instances__action[data-tone='green4'] {
       --action-bg: var(--color-system-green-4);
     }
 
-    #superadmin-actions .devstudio-instances__action[data-tone='purple4'],
+    #platform-actions .devstudio-instances__action[data-tone='purple4'],
     .devstudio-instances__modal .devstudio-instances__action[data-tone='purple4'] {
       --action-bg: var(--color-system-purple-4);
     }
 
-    #superadmin-actions .devstudio-instances__action[data-tone='pink4'],
+    #platform-actions .devstudio-instances__action[data-tone='pink4'],
     .devstudio-instances__modal .devstudio-instances__action[data-tone='pink4'] {
       --action-bg: var(--color-system-pink-4);
     }
 
-    #superadmin-actions .devstudio-instances__action[data-tone='indigo4'],
+    #platform-actions .devstudio-instances__action[data-tone='indigo4'],
     .devstudio-instances__modal .devstudio-instances__action[data-tone='indigo4'] {
       --action-bg: var(--color-system-indigo-4);
     }
 
-    #superadmin-actions .devstudio-instances__action[data-tone='brown.5'],
+    #platform-actions .devstudio-instances__action[data-tone='brown.5'],
     .devstudio-instances__modal .devstudio-instances__action[data-tone='brown.5'] {
       --action-bg: var(--color-system-brown-5);
     }
 
-    #superadmin-actions .devstudio-instances__action[data-tone='gray4.4'],
+    #platform-actions .devstudio-instances__action[data-tone='gray4.4'],
     .devstudio-instances__modal .devstudio-instances__action[data-tone='gray4.4'] {
       --action-bg: color-mix(in oklab, var(--color-system-gray-4), white 80%);
     }
 
-    #superadmin-actions .devstudio-instances__action[data-tone='teal.5'],
+    #platform-actions .devstudio-instances__action[data-tone='teal.5'],
     .devstudio-instances__modal .devstudio-instances__action[data-tone='teal.5'] {
       --action-bg: color-mix(in oklab, var(--color-system-teal), white 90%);
     }
@@ -439,13 +439,13 @@
 
   <header class="devstudio-page__header" style="flex-shrink: 0">
     <h1 class="heading-2" style="margin: 0">Admin Instances</h1>
-    <div id="superadmin-actions">
+    <div id="platform-actions">
       <div class="devstudio-instances__actions">
         <div class="devstudio-instances__actions-group" data-group="primary">
           <button
             type="button"
             class="diet-btn-ictxt devstudio-instances__action"
-            id="superadmin-update-theme"
+            id="platform-update-theme"
             data-size="md"
             data-variant="secondary"
             data-tone="brown.5"
@@ -672,8 +672,8 @@
     const compiledPromiseCache = new Map();
     const instanceEnvelopePromiseCache = new Map();
     let sendInstanceSeq = 0;
-    const superadminActions = document.getElementById('superadmin-actions');
-    const superadminUpdateTheme = document.getElementById('superadmin-update-theme');
+    const platformActions = document.getElementById('platform-actions');
+    const platformUpdateTheme = document.getElementById('platform-update-theme');
     const l10nStatus = document.getElementById('l10n-status');
     const l10nStatusValue = document.getElementById('l10n-status-value');
     const l10nStatusMeta = document.getElementById('l10n-status-meta');
@@ -1703,12 +1703,12 @@
       return { themeId, values: cleanedValues };
     }
 
-    if (superadminActions instanceof HTMLElement) {
+    if (platformActions instanceof HTMLElement) {
       const showThemeAction = isLocalDevStudio && IS_SOURCE_PROFILE;
-      superadminActions.style.display = showThemeAction ? 'inline-flex' : 'none';
+      platformActions.style.display = showThemeAction ? 'inline-flex' : 'none';
     }
 
-    superadminUpdateTheme?.addEventListener('click', async () => {
+    platformUpdateTheme?.addEventListener('click', async () => {
       try {
         await updateThemeFromEditor();
       } catch (err) {

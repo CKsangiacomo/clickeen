@@ -28,8 +28,6 @@ const DEFAULT_PARIS_BASE_URL = String(
   .replace(/\/+$/, '');
 const DEVSTUDIO_INTERNAL_SERVICE_ID = 'devstudio.local';
 const ROOT_ENV_LOCAL_PATH = path.resolve(__dirname, '..', '.env.local');
-const DEVSTUDIO_ACCESS_COOKIE = 'ck-access-token';
-const DEVSTUDIO_REFRESH_COOKIE = 'ck-refresh-token';
 
 let cachedRootEnvLocal: Map<string, string> | null = null;
 
@@ -121,453 +119,24 @@ function resolveDevstudioPlatformAccountId(): string {
   return PLATFORM_ACCOUNT_ID;
 }
 
-function resolveDevstudioBerlinBaseUrl(): string {
-  const raw = String(
-    process.env.BERLIN_BASE_URL || process.env.NEXT_PUBLIC_BERLIN_URL || process.env.BERLIN_URL || '',
-  )
-    .trim()
-    .replace(/\/+$/, '');
-  if (raw) return raw;
-  return 'http://localhost:3005';
-}
-
-function parseCookieHeader(header: string | string[] | undefined): Map<string, string> {
-  const values = new Map<string, string>();
-  const raw = Array.isArray(header) ? header.join('; ') : String(header || '');
-  if (!raw.trim()) return values;
-  raw.split(';').forEach((entry) => {
-    const [rawName, ...rest] = entry.trim().split('=');
-    if (!rawName) return;
-    const joined = rest.join('=').trim();
-    if (!joined) return;
-    try {
-      values.set(rawName, decodeURIComponent(joined));
-    } catch {
-      values.set(rawName, joined);
-    }
-  });
-  return values;
-}
-
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  const parts = token.split('.');
-  if (parts.length !== 3) return null;
-  try {
-    const payloadPart = parts[1] || '';
-    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-    const decoded = Buffer.from(padded, 'base64').toString('utf8');
-    const parsed = JSON.parse(decoded) as unknown;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-    return parsed as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-function tokenIsExpired(token: string, leewaySeconds = 30): boolean {
-  const payload = decodeJwtPayload(token);
-  const expClaim = payload?.exp;
-  const exp =
-    typeof expClaim === 'number'
-      ? expClaim
-      : typeof expClaim === 'string'
-        ? Number.parseInt(expClaim, 10)
-        : Number.NaN;
-  if (!Number.isFinite(exp)) return false;
-  const now = Math.floor(Date.now() / 1000);
-  return exp <= now + leewaySeconds;
-}
-
-function parsePositiveInt(value: unknown, fallback: number): number {
-  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.floor(value);
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10);
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
-  }
-  return fallback;
-}
-
-type DevstudioSessionCookieSpec = {
-  name: string;
-  value: string;
-  maxAge: number;
-};
-
-type DevstudioBootstrapPayload = {
-  user?: {
-    id?: string | null;
-    email?: string | null;
-    role?: string | null;
-  } | null;
-  profile?: {
-    userId?: string | null;
-    primaryEmail?: string | null;
-    givenName?: string | null;
-    familyName?: string | null;
-    primaryLanguage?: string | null;
-    country?: string | null;
-    timezone?: string | null;
-  } | null;
-  accounts?: Array<{
-    accountId?: string | null;
-    role?: string | null;
-    name?: string | null;
-    slug?: string | null;
-    status?: string | null;
-    tier?: string | null;
-    isPlatform?: boolean | null;
-  }> | null;
-  defaults?: {
-    accountId?: string | null;
-  } | null;
-};
-
-type DevstudioBerlinAccess =
-  | {
-      kind: 'ok';
-      accessToken: string;
-      setCookies?: DevstudioSessionCookieSpec[];
-    }
-  | {
-      kind: 'no-session';
-    }
-  | {
-      kind: 'error';
-      status: number;
-      body: Record<string, unknown>;
-      setCookies?: DevstudioSessionCookieSpec[];
-    };
-
 type DevstudioPlatformContext =
   | {
       ok: true;
       accountId: string;
       scope: 'platform';
-      mode: 'berlin-session';
-      user?: DevstudioBootstrapPayload['user'];
-      profile?: DevstudioBootstrapPayload['profile'];
-      defaults?: DevstudioBootstrapPayload['defaults'];
-      setCookies?: DevstudioSessionCookieSpec[];
+      mode: 'local-tool';
     }
   | {
       ok: false;
       status: number;
       body: Record<string, unknown>;
-      setCookies?: DevstudioSessionCookieSpec[];
     };
-
-async function refreshDevstudioBerlinSession(
-  refreshToken: string,
-): Promise<
-  | {
-      ok: true;
-      accessToken: string;
-      setCookies: DevstudioSessionCookieSpec[];
-    }
-  | { ok: false }
-> {
-  const response = await fetch(`${resolveDevstudioBerlinBaseUrl()}/auth/refresh`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    body: JSON.stringify({ refreshToken }),
-    cache: 'no-store',
-  });
-  const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!response.ok || !payload) return { ok: false };
-
-  const accessToken = typeof payload.accessToken === 'string' ? payload.accessToken.trim() : '';
-  const nextRefreshToken = typeof payload.refreshToken === 'string' ? payload.refreshToken.trim() : '';
-  if (!accessToken || !nextRefreshToken) return { ok: false };
-
+async function resolveDevstudioPlatformContext(_req: any): Promise<DevstudioPlatformContext> {
   return {
     ok: true,
-    accessToken,
-    setCookies: [
-      {
-        name: DEVSTUDIO_ACCESS_COOKIE,
-        value: accessToken,
-        maxAge: parsePositiveInt(payload.accessTokenMaxAge, 15 * 60),
-      },
-      {
-        name: DEVSTUDIO_REFRESH_COOKIE,
-        value: nextRefreshToken,
-        maxAge: parsePositiveInt(payload.refreshTokenMaxAge, 30 * 24 * 60 * 60),
-      },
-    ],
-  };
-}
-
-async function resolveDevstudioBerlinAccess(req: any): Promise<DevstudioBerlinAccess> {
-  const cookies = parseCookieHeader(req.headers.cookie);
-  let accessToken = String(cookies.get(DEVSTUDIO_ACCESS_COOKIE) || '').trim();
-  const refreshToken = String(cookies.get(DEVSTUDIO_REFRESH_COOKIE) || '').trim();
-  let setCookies: DevstudioSessionCookieSpec[] | undefined;
-
-  if (!accessToken && !refreshToken) return { kind: 'no-session' };
-
-  if ((!accessToken || tokenIsExpired(accessToken)) && refreshToken) {
-    const refreshed = await refreshDevstudioBerlinSession(refreshToken);
-    if (!refreshed.ok) {
-      return {
-        kind: 'error',
-        status: 401,
-        body: {
-          error: {
-            kind: 'AUTH',
-            reasonKey: 'coreui.errors.auth.required',
-            detail: 'devstudio_berlin_refresh_failed',
-          },
-        },
-      };
-    }
-    accessToken = refreshed.accessToken;
-    setCookies = refreshed.setCookies;
-  }
-
-  if (!accessToken) return { kind: 'no-session' };
-
-  return {
-    kind: 'ok',
-    accessToken,
-    ...(setCookies?.length ? { setCookies } : {}),
-  };
-}
-
-async function fetchDevstudioBerlinBootstrap(args: {
-  accessToken: string;
-}): Promise<
-  | {
-      ok: true;
-      payload: DevstudioBootstrapPayload;
-    }
-  | {
-      ok: false;
-      status: number;
-      body: Record<string, unknown>;
-    }
-> {
-  const response = await fetch(`${resolveDevstudioBerlinBaseUrl()}/v1/session/bootstrap`, {
-    method: 'GET',
-    headers: {
-      authorization: `Bearer ${args.accessToken}`,
-      accept: 'application/json',
-    },
-    cache: 'no-store',
-  });
-  const payload = (await response.json().catch(() => null)) as
-    | (DevstudioBootstrapPayload & { error?: unknown })
-    | null;
-  if (!response.ok || !payload) {
-    return {
-      ok: false,
-      status: response.status || 502,
-      body:
-        payload && typeof payload === 'object'
-          ? payload
-          : {
-              error: {
-                kind: response.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-                reasonKey:
-                  response.status === 401
-                    ? 'coreui.errors.auth.required'
-                    : 'coreui.errors.auth.contextUnavailable',
-                detail: 'devstudio_berlin_bootstrap_failed',
-              },
-            },
-    };
-  }
-
-  return {
-    ok: true,
-    payload,
-  };
-}
-
-async function resolveDevstudioBerlinBootstrap(req: any): Promise<{
-  kind: 'ok';
-  payload: DevstudioBootstrapPayload;
-  setCookies?: DevstudioSessionCookieSpec[];
-} | {
-  kind: 'no-session';
-} | {
-  kind: 'error';
-  status: number;
-  body: Record<string, unknown>;
-  setCookies?: DevstudioSessionCookieSpec[];
-}> {
-  const access = await resolveDevstudioBerlinAccess(req);
-  if (access.kind !== 'ok') return access;
-
-  const bootstrap = await fetchDevstudioBerlinBootstrap({
-    accessToken: access.accessToken,
-  });
-  if (!bootstrap.ok) {
-    return {
-      kind: 'error',
-      status: bootstrap.status,
-      body: bootstrap.body,
-      ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
-    };
-  }
-
-  return {
-    kind: 'ok',
-    payload: bootstrap.payload,
-    ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
-  };
-}
-
-function findDevstudioPlatformAccount(
-  payload: DevstudioBootstrapPayload,
-  platformAccountId: string,
-) {
-  const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
-  return accounts.find((entry) => String(entry?.accountId || '').trim() === platformAccountId) || null;
-}
-
-function appendDevstudioSessionCookies(res: any, cookies?: DevstudioSessionCookieSpec[]) {
-  if (!cookies?.length) return;
-  const serialized = cookies.map(
-    (cookie) =>
-      `${cookie.name}=${encodeURIComponent(cookie.value)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${cookie.maxAge}`,
-  );
-  res.setHeader('Set-Cookie', serialized);
-}
-
-function readDevstudioContextCookies(context: DevstudioPlatformContext): DevstudioSessionCookieSpec[] | undefined {
-  return 'setCookies' in context ? context.setCookies : undefined;
-}
-
-async function resolveDevstudioPlatformContext(req: any): Promise<DevstudioPlatformContext> {
-  const platformAccountId = resolveDevstudioPlatformAccountId();
-  const bootstrap = await resolveDevstudioBerlinBootstrap(req);
-  if (bootstrap.kind === 'no-session') {
-    return {
-      ok: false,
-      status: 401,
-      body: {
-        error: {
-          kind: 'AUTH',
-          reasonKey: 'coreui.errors.auth.required',
-          detail: 'devstudio_berlin_session_required',
-        },
-      },
-    };
-  }
-  if (bootstrap.kind === 'error') {
-    return {
-      ok: false,
-      status: bootstrap.status,
-      body: bootstrap.body,
-      ...(bootstrap.setCookies?.length ? { setCookies: bootstrap.setCookies } : {}),
-    };
-  }
-
-  const platformAccount = findDevstudioPlatformAccount(bootstrap.payload, platformAccountId);
-  if (!platformAccount) {
-    return {
-      ok: false,
-      status: 403,
-      body: {
-        error: {
-          kind: 'DENY',
-          reasonKey: 'coreui.errors.auth.forbidden',
-          detail: 'platform_account_membership_required',
-        },
-      },
-      ...(bootstrap.setCookies?.length ? { setCookies: bootstrap.setCookies } : {}),
-    };
-  }
-
-  return {
-    ok: true,
-    accountId: platformAccountId,
+    accountId: resolveDevstudioPlatformAccountId(),
     scope: 'platform',
-    mode: 'berlin-session',
-    user: bootstrap.payload.user ?? null,
-    profile: bootstrap.payload.profile ?? null,
-    defaults: bootstrap.payload.defaults ?? null,
-    ...(bootstrap.setCookies?.length ? { setCookies: bootstrap.setCookies } : {}),
-  };
-}
-
-async function resolveDevstudioBerlinOperatorAccess(req: any): Promise<
-  | {
-      ok: true;
-      accessToken: string;
-      bootstrap: DevstudioBootstrapPayload;
-      setCookies?: DevstudioSessionCookieSpec[];
-    }
-  | {
-      ok: false;
-      status: number;
-      body: Record<string, unknown>;
-      setCookies?: DevstudioSessionCookieSpec[];
-    }
-> {
-  const access = await resolveDevstudioBerlinAccess(req);
-  if (access.kind === 'no-session') {
-    return {
-      ok: false,
-      status: 401,
-      body: {
-        error: {
-          kind: 'AUTH',
-          reasonKey: 'coreui.errors.auth.required',
-          detail: 'devstudio_berlin_session_required',
-        },
-      },
-    };
-  }
-  if (access.kind === 'error') {
-    return {
-      ok: false,
-      status: access.status,
-      body: access.body,
-      ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
-    };
-  }
-
-  const bootstrap = await fetchDevstudioBerlinBootstrap({
-    accessToken: access.accessToken,
-  });
-  if (!bootstrap.ok) {
-    return {
-      ok: false,
-      status: bootstrap.status,
-      body: bootstrap.body,
-      ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
-    };
-  }
-
-  const platformAccount = findDevstudioPlatformAccount(
-    bootstrap.payload,
-    resolveDevstudioPlatformAccountId(),
-  );
-  if (!platformAccount) {
-    return {
-      ok: false,
-      status: 403,
-      body: {
-        error: {
-          kind: 'DENY',
-          reasonKey: 'coreui.errors.auth.forbidden',
-          detail: 'platform_account_membership_required',
-        },
-      },
-      ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
-    };
-  }
-
-  return {
-    ok: true,
-    accessToken: access.accessToken,
-    bootstrap: bootstrap.payload,
-    ...(access.setCookies?.length ? { setCookies: access.setCookies } : {}),
+    mode: 'local-tool',
   };
 }
 
@@ -606,37 +175,6 @@ async function proxyDevstudioParisJson(args: {
   const upstream = await fetch(`${resolveDevstudioParisBaseUrl()}${args.pathname}`, {
     method: args.method || args.req.method || 'GET',
     headers: createDevstudioParisHeaders(args.headers),
-    body: args.body,
-    cache: 'no-store',
-  });
-
-  const text = await upstream.text();
-  const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
-  args.res.statusCode = upstream.status;
-  args.res.setHeader('Content-Type', contentType);
-  args.res.setHeader('Cache-Control', 'no-store');
-  args.res.end(text);
-}
-
-async function proxyDevstudioBerlinJson(args: {
-  req: any;
-  res: any;
-  accessToken: string;
-  pathname: string;
-  method?: string;
-  body?: string;
-  headers?: HeadersInit;
-}) {
-  const upstream = await fetch(`${resolveDevstudioBerlinBaseUrl()}${args.pathname}`, {
-    method: args.method || args.req.method || 'GET',
-    headers: {
-      authorization: `Bearer ${args.accessToken}`,
-      accept: 'application/json',
-      ...(args.method === 'POST' || args.method === 'PUT' || args.method === 'PATCH'
-        ? { 'content-type': 'application/json' }
-        : {}),
-      ...(args.headers || {}),
-    },
     body: args.body,
     cache: 'no-store',
   });
@@ -745,7 +283,6 @@ export default defineConfig({
           res.setHeader('Cache-Control', 'no-store');
           try {
             const context = await resolveDevstudioPlatformContext(req);
-            appendDevstudioSessionCookies(res, readDevstudioContextCookies(context));
             if (!context.ok) {
               res.statusCode = context.status;
               res.end(JSON.stringify(context.body));
@@ -758,13 +295,6 @@ export default defineConfig({
                 accountId: context.accountId,
                 scope: context.scope,
                 mode: context.mode,
-                ...(context.mode === 'berlin-session'
-                  ? {
-                      user: context.user ?? null,
-                      profile: context.profile ?? null,
-                      defaults: context.defaults ?? null,
-                    }
-                  : {}),
               }),
             );
           } catch (error) {
@@ -779,117 +309,6 @@ export default defineConfig({
               }),
             );
           }
-        });
-      },
-    },
-    {
-      name: 'devstudio-account-routes',
-      configureServer(server) {
-        server.middlewares.use(async (req, res, next) => {
-          const rawUrl = req.url || '';
-          const requestUrl = new URL(rawUrl || '/', 'http://localhost:5173');
-          const pathname = requestUrl.pathname || '';
-          const accountDetailMatch = pathname.match(/^\/api\/devstudio\/accounts\/([^/]+)$/);
-          const accountMembersMatch = pathname.match(/^\/api\/devstudio\/accounts\/([^/]+)\/members$/);
-          const accountSwitchMatch = pathname.match(/^\/api\/devstudio\/accounts\/([^/]+)\/switch$/);
-
-          const wantsList = pathname === '/api/devstudio/accounts' && req.method === 'GET';
-          const wantsCreate = pathname === '/api/devstudio/accounts' && req.method === 'POST';
-          const wantsDetail = Boolean(accountDetailMatch && req.method === 'GET');
-          const wantsMembers = Boolean(accountMembersMatch && req.method === 'GET');
-          const wantsSwitch = Boolean(accountSwitchMatch && req.method === 'POST');
-
-          if (!wantsList && !wantsCreate && !wantsDetail && !wantsMembers && !wantsSwitch) {
-            return next();
-          }
-
-          res.setHeader('Content-Type', 'application/json; charset=utf-8');
-          res.setHeader('Cache-Control', 'no-store');
-
-          try {
-            const operatorAccess = await resolveDevstudioBerlinOperatorAccess(req);
-            appendDevstudioSessionCookies(res, operatorAccess.ok ? operatorAccess.setCookies : operatorAccess.setCookies);
-            if (!operatorAccess.ok) {
-              res.statusCode = operatorAccess.status;
-              res.end(JSON.stringify(operatorAccess.body));
-              return;
-            }
-
-            if (wantsList) {
-              res.statusCode = 200;
-              res.end(
-                JSON.stringify({
-                  user: operatorAccess.bootstrap.user ?? null,
-                  profile: operatorAccess.bootstrap.profile ?? null,
-                  accounts: Array.isArray(operatorAccess.bootstrap.accounts)
-                    ? operatorAccess.bootstrap.accounts
-                    : [],
-                  defaults: operatorAccess.bootstrap.defaults ?? { accountId: null },
-                }),
-              );
-              return;
-            }
-
-            if (wantsCreate) {
-              const body = await readRequestBody(req);
-              return await proxyDevstudioBerlinJson({
-                req,
-                res,
-                accessToken: operatorAccess.accessToken,
-                pathname: '/v1/accounts',
-                method: 'POST',
-                body,
-              });
-            }
-
-            if (wantsDetail && accountDetailMatch) {
-              const accountId = encodeURIComponent(decodeURIComponent(accountDetailMatch[1] || ''));
-              return await proxyDevstudioBerlinJson({
-                req,
-                res,
-                accessToken: operatorAccess.accessToken,
-                pathname: `/v1/accounts/${accountId}`,
-                method: 'GET',
-              });
-            }
-
-            if (wantsMembers && accountMembersMatch) {
-              const accountId = encodeURIComponent(decodeURIComponent(accountMembersMatch[1] || ''));
-              return await proxyDevstudioBerlinJson({
-                req,
-                res,
-                accessToken: operatorAccess.accessToken,
-                pathname: `/v1/accounts/${accountId}/members`,
-                method: 'GET',
-              });
-            }
-
-            if (wantsSwitch && accountSwitchMatch) {
-              const accountId = encodeURIComponent(decodeURIComponent(accountSwitchMatch[1] || ''));
-              return await proxyDevstudioBerlinJson({
-                req,
-                res,
-                accessToken: operatorAccess.accessToken,
-                pathname: `/v1/accounts/${accountId}/switch`,
-                method: 'POST',
-                body: '{}',
-              });
-            }
-          } catch (error) {
-            res.statusCode = 500;
-            res.end(
-              JSON.stringify({
-                error: {
-                  kind: 'INTERNAL',
-                  reasonKey: 'coreui.errors.auth.contextUnavailable',
-                  detail: error instanceof Error ? error.message : String(error),
-                },
-              }),
-            );
-            return;
-          }
-
-          return next();
         });
       },
     },
@@ -942,7 +361,6 @@ export default defineConfig({
 
           try {
             const context = await resolveDevstudioPlatformContext(req);
-            appendDevstudioSessionCookies(res, readDevstudioContextCookies(context));
             if (!context.ok) {
               res.statusCode = context.status;
               res.setHeader('Content-Type', 'application/json; charset=utf-8');

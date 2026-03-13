@@ -25,7 +25,7 @@ For the remaining Berlin/Roma/DevStudio architecture convergence, see [PRD 064](
 6. `owner / admin / editor / viewer` are boring account-role semantics; entitlements constrain them but do not replace them.
 7. Invitation is the canonical grant-access path for a person who is not already attached to the account.
 8. Social login is not only auth; it can begin a durable provider relationship Berlin later reuses or upgrades.
-9. Roma is the account-scoped customer/member shell. DevStudio is the platform-scoped Clickeen superadmin shell.
+9. Roma is the account-scoped customer/member shell. DevStudio is the internal toolbench for platform curation, verification, and internal operations.
 10. Bob consumes Berlin account truth; it never owns account management.
 
 ---
@@ -189,10 +189,10 @@ Rules:
 ### Surface split
 
 - `Roma` = account-scoped customer/member shell
-- `DevStudio` = platform-scoped Clickeen superadmin/operator shell
+- `DevStudio` = internal toolbench for platform curation, authoring, and verification
 - `Bob` = editor kernel and consumer of account truth
 
-DevStudio may expose stronger operator powers, but it must not invent a second account or provider model.
+DevStudio may host internal tools, but it must not invent a second account or provider model and it must not teach internal humans to act like privileged customers browsing accounts.
 
 ---
 
@@ -245,12 +245,9 @@ Example:
 
 ### Operational cross-account humans
 
-Internal admins and future support/operator humans use the same account-membership model:
-- one `User Profile`
-- many `Account Memberships`
-- one active account context at a time
+Normal product access still uses one `User Profile`, many `Account Memberships`, and one active account context at a time.
 
-No second employee-only runtime access plane should exist for normal product access.
+Internal company-plane authority is a separate concern. It must not be implemented by turning internal humans into normal `owner/admin` members of every customer account and it must not be collapsed into Berlin product roles.
 
 ---
 
@@ -300,7 +297,7 @@ Canonical account API:
 
 Rules:
 - `POST /v1/accounts/:id/invitations` is the canonical unknown-person grant-access path
-- `POST /v1/accounts/:id/members` is only for already-resolved user profiles or explicit Berlin-owned operator flows
+- `POST /v1/accounts/:id/members` is only for already-resolved user profiles
 - `PATCH /v1/accounts/:id/members/:memberId` mutates membership only
 - `GET /v1/me/identities` returns Berlin's normalized provider reuse summary; shells must not invent their own provider/account linkage model on top
 
@@ -316,7 +313,7 @@ Rules:
 | Linked identities/provider reuse | Berlin |
 | Persistence | Michael |
 | Account/member UX | Roma |
-| Global operator UX | DevStudio |
+| Internal toolbench (curation/authoring/verification) | DevStudio |
 | Editor account consumption | Bob |
 | Account management runtime | Paris: none |
 | Instance/l10n orchestration after account truth is resolved | Paris |

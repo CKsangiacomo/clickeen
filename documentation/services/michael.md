@@ -228,7 +228,7 @@ A “template” is just a curated `curated_widget_instances` row whose `public_
 Local DB is Supabase CLI + Docker:
 
 - `supabase db reset` applies `supabase/migrations/*` **and wipes local data** (destructive)
-- instances are created explicitly from DevStudio Local (superadmin), not by scripts
+- instances are created explicitly from DevStudio Local (internal toolbench), not by scripts
 
 **Data contract (don’t fight UUID churn):**
 
