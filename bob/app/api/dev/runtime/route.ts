@@ -45,7 +45,6 @@ export function GET() {
   const payload = {
     envStage,
     supabaseTarget: resolveSupabaseTarget(),
-    localToolAuthEnabled: envStage === 'local' && Boolean(String(process.env.PARIS_DEV_JWT || '').trim()),
   };
 
   const response = NextResponse.json(payload, { headers: CORS_HEADERS });

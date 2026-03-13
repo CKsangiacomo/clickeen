@@ -92,7 +92,7 @@ Current boundary:
 If DevStudio local opens but instances are missing:
 
 - Check DevStudio `GET /api/devstudio/context` first; a broken Berlin session now fails visibly instead of silently downgrading to trusted-local mode.
-- Check local `PARIS_DEV_JWT` for the remaining local internal discovery/status transport and Bob local availability for `/api/accounts/...`.
+- Check local `PARIS_DEV_JWT` only for the remaining local internal discovery/status transport. Bob `/api/accounts/...` availability now depends on a real Berlin session plus the bootstrap account capsule.
 - Check that `bash scripts/dev-up.sh --reset` completed the explicit curated/main Tokyo saved snapshot repair step.
 - DevStudio discovery/status remain local trusted-tool transport paths today, but they are host-gated by the same DevStudio context contract; core create/open/save now uses Bob’s canonical route instead of Paris.
 

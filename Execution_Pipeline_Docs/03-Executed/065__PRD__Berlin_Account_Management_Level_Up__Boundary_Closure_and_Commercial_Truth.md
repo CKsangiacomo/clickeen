@@ -797,6 +797,7 @@ Locked rule:
 - local may use an explicit local implementation
 - local may disable a dependent feature explicitly
 - local must not silently return zero usage or allow writes purely because a binding is missing
+- non-authoritative warm mirrors may remain best-effort only when their absence cannot change product write authorization, storage enforcement, or customer-visible account truth
 
 Why:
 - silent no-op enforcement creates fake confidence and invalidates product testing
@@ -1115,9 +1116,9 @@ The most important remaining drift is:
    - The system still serializes and renders a manual accept path as normal invitation metadata.
    - That violates the PRD rule that invitation credentials remain opaque acceptance artifacts, not standard account-management UI data.
 
-4. Missing usage/storage infrastructure still silently degrades to fake truth in `local`.
-   - Some account/storage/budget reads still return `0` or allow progress when `USAGE_KV` is missing.
-   - PRD 65 explicitly forbids silent "zero usage" or "allow write" behavior when enforcement infrastructure is missing.
+4. Missing authoritative usage/storage infrastructure must not silently degrade to fake truth.
+   - Product/account flows must not return synthetic `0 used` values or allow writes because required enforcement state is missing.
+   - Non-authoritative warm mirrors may remain best-effort only when their absence does not change storage enforcement or account-route write authorization.
 
 5. `cloud-dev` verification is behind implementation.
    - Multiple recent slices were verified in `local` only.
@@ -1479,7 +1480,7 @@ This PRD is complete only when all are true:
 39. No standard product route in Paris/Bob/Tokyo fabricates synthetic owner/admin account authority for local/dev access.
 40. Bob local product flows do not jump directly to Supabase service-role access for Michael from an end-user token.
 41. Tokyo account asset routes do not skip membership/account authorization because of trusted user-token shortcuts.
-42. Missing usage/storage infrastructure does not silently return zero usage or allow writes in product/account flows.
+42. Missing authoritative usage/storage infrastructure does not silently return zero usage or allow writes in product/account flows. Best-effort warm mirrors are allowed only when they cannot change enforcement or write authorization.
 43. Berlin bootstrap and member/account summaries no longer require `display_name` as canonical person truth.
 44. Legacy fields such as `display_name`, `preferred_language`, and `country_code` are not read as canonical runtime truth anywhere in product/account flows. If they still exist in persistence, they are inert storage residue only.
 45. Curated/platform product behavior is enforced by explicit source/platform ownership rules, not `accountId === adminAccountId` branching.

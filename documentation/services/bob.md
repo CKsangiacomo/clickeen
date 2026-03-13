@@ -101,7 +101,8 @@ Bob listens in `bob/lib/session/useWidgetSession.tsx` and:
 - Replies with `bob:open-editor-ack`, then terminal `bob:open-editor-applied` or `bob:open-editor-failed`.
 - Keeps request idempotency state per `requestId` so repeated host sends do not apply duplicate open operations.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
-- Local DevStudio/Bob are tool-trusted only for the explicit `surface=devstudio` toolchain: there is **no local browser login** and **no local session bootstrap** for that tool path. Bob uses the explicit local trusted-token path there (`PARIS_DEV_JWT` plus `x-ck-internal-service: bob.local`) instead of re-reading membership on each op. All other Bob requests resolve real Berlin-backed session auth plus the bootstrap account authz capsule.
+- Local DevStudio/Bob are tool-trusted only for explicit internal tool flows: there is **no local browser-login shortcut** and Bob account product routes still require the Berlin-issued bootstrap account capsule. Bob must not treat a trusted local token as sufficient on `/api/accounts/*`. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority. All Bob account product requests resolve real Berlin-backed session auth plus the bootstrap account authz capsule.
+- Bob must not auto-upgrade a trusted local end-user token into Michael service-role access inside shared helpers or normal product routes.
 
 ### URL bootstrap (deterministic, no auto-pick)
 
@@ -122,7 +123,7 @@ The write plane does **not** move to Cloudflare DevStudio in this setup; writes 
 
 ### Runtime status (local authoring clarity)
 
-- `GET /api/dev/runtime` returns Bob runtime hints for the DevStudio tool (`envStage`, `supabaseTarget`, `localToolAuthEnabled`).
+- `GET /api/dev/runtime` returns Bob runtime hints for the DevStudio tool (`envStage`, `supabaseTarget`).
 - DevStudio uses this to show whether the attached local Bob toolchain is pointed at `local` or `remote` Supabase.
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
@@ -559,7 +560,8 @@ Bob does not own account language policy/settings. Enabled languages, base local
 **Security rule (executed):**
 
 - Bob’s Paris and AI proxy routes forward Berlin session bearer tokens. Product auth does not use `PARIS_DEV_JWT` passthrough.
-- Local `PARIS_DEV_JWT` is supplied by `bash scripts/dev-up.sh` / `.env.local` for DevStudio-local tooling only. It must not be committed in Bob Pages config.
+- Bob `/api/accounts/*` and Paris proxy product routes always resolve a real Berlin-backed session plus the bootstrap account capsule, including `local`.
+- Local `PARIS_DEV_JWT` is supplied by `bash scripts/dev-up.sh` / `.env.local` only for explicit internal tooling outside Bob product-route authority. It must not be committed in Bob Pages config.
 
 ### Dev-up
 

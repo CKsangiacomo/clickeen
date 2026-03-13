@@ -62,7 +62,6 @@ type MichaelHeadersResolution =
   | {
       ok: true;
       headers: Headers;
-      usedTrustedLocalDevContract: boolean;
     }
   | {
       ok: false;
@@ -149,7 +148,7 @@ async function resolveMichaelHeaders(args: {
     headers.set('apikey', resolveMichaelAnonKey());
     headers.set('authorization', `Bearer ${michaelAccess.accessToken}`);
     headers.set('accept', 'application/json');
-    return { ok: true, headers, usedTrustedLocalDevContract: false };
+    return { ok: true, headers };
   } catch (error) {
     return {
       ok: false,
@@ -376,74 +375,10 @@ export async function createAccountInstanceRow(args: {
     }
 
     if (publicIdKind === 'main' || publicIdKind === 'curated') {
-      if (!michaelHeaders.usedTrustedLocalDevContract) {
-        return {
-          ok: false,
-          status: 403,
-          reasonKey: 'coreui.errors.auth.forbidden',
-        };
-      }
-
-      const instanceResponse = await fetch(`${resolveMichaelBaseUrl()}/rest/v1/curated_widget_instances`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          public_id: args.publicId,
-          widget_type: args.widgetType,
-          kind: publicIdKind === 'main' ? 'baseline' : 'curated',
-          owner_account_id: args.accountId,
-          status: 'published',
-          config: {},
-          meta: args.meta ?? null,
-        }),
-        cache: 'no-store',
-      });
-      const instanceText = await instanceResponse.text().catch(() => '');
-      const instancePayload = instanceText ? (JSON.parse(instanceText) as unknown) : null;
-
-      if (!instanceResponse.ok) {
-        return {
-          ok: false,
-          status: instanceResponse.status,
-          reasonKey:
-            instanceResponse.status === 401
-              ? 'coreui.errors.auth.required'
-              : instanceResponse.status === 409
-                ? 'coreui.errors.publicId.conflict'
-                : 'coreui.errors.db.writeFailed',
-          detail: instanceText || undefined,
-        };
-      }
-
-      const instanceRows = Array.isArray(instancePayload) ? (instancePayload as MichaelCuratedInstanceRow[]) : [];
-      const instanceRow = instanceRows[0] ?? null;
-      if (!instanceRow) {
-        return { ok: true, row: null };
-      }
-
-      const widgetType = asTrimmedString(instanceRow.widget_type);
-      if (!widgetType) {
-        return {
-          ok: false,
-          status: 502,
-          reasonKey: 'coreui.errors.instance.invalidPayload',
-          detail: 'invalid curated_widget_instances payload',
-        };
-      }
-
       return {
-        ok: true,
-        row: {
-          publicId: asTrimmedString(instanceRow.public_id) ?? args.publicId,
-          displayName: asTrimmedString(instanceRow.public_id) ?? args.publicId,
-          status: instanceRow.status === 'published' ? 'published' : 'unpublished',
-          updatedAt: asTrimmedString(instanceRow.updated_at),
-          widgetId: `curated:${widgetType}`,
-          accountId: asTrimmedString(instanceRow.owner_account_id) ?? args.accountId,
-          widgetType,
-          meta: isRecord(instanceRow.meta) ? (instanceRow.meta as Record<string, unknown>) : null,
-          source: 'curated',
-        },
+        ok: false,
+        status: 403,
+        reasonKey: 'coreui.errors.auth.forbidden',
       };
     }
 
@@ -581,14 +516,11 @@ export async function deleteAccountInstanceRow(
 
     let path = `/rest/v1/widget_instances?account_id=eq.${encodeFilterValue(accountId)}&public_id=eq.${encodeFilterValue(publicId)}`;
     if (publicIdKind === 'main' || publicIdKind === 'curated') {
-      if (!michaelHeaders.usedTrustedLocalDevContract) {
-        return {
-          ok: false,
-          status: 403,
-          reasonKey: 'coreui.errors.auth.forbidden',
-        };
-      }
-      path = `/rest/v1/curated_widget_instances?public_id=eq.${encodeFilterValue(publicId)}`;
+      return {
+        ok: false,
+        status: 403,
+        reasonKey: 'coreui.errors.auth.forbidden',
+      };
     }
 
     const response = await fetch(`${resolveMichaelBaseUrl()}${path}`, {

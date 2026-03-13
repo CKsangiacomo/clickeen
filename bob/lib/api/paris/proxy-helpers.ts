@@ -19,30 +19,6 @@ export type ParisProxyRouteOptions = {
   forwardHeaders?: string[];
 };
 
-function resolveRequestSurface(request: NextRequest): string | null {
-  const direct = String(request.headers.get('x-ck-surface') || '')
-    .trim()
-    .toLowerCase();
-  if (direct) return direct;
-
-  const querySurface = String(request.nextUrl.searchParams.get('surface') || '')
-    .trim()
-    .toLowerCase();
-  if (querySurface) return querySurface;
-
-  const referer = String(request.headers.get('referer') || '').trim();
-  if (!referer) return null;
-  try {
-    const url = new URL(referer);
-    const surface = String(url.searchParams.get('surface') || '')
-      .trim()
-      .toLowerCase();
-    return surface || null;
-  } catch {
-    return null;
-  }
-}
-
 function resolveParisBaseOrResponse(corsHeaders: HeadersInit) {
   try {
     return { ok: true as const, baseUrl: resolveParisBaseUrl() };
@@ -73,46 +49,17 @@ export async function resolveParisSession(request: NextRequest): Promise<
   | { ok: true; accessToken: string; setCookies?: SessionCookieSpec[] }
   | { ok: false; response: NextResponse }
 > {
-  const stage = (process.env.ENV_STAGE ?? '').trim().toLowerCase();
-  if (stage === 'local') {
-    if (resolveRequestSurface(request) === 'devstudio') {
-      const token = String(process.env.PARIS_DEV_JWT || '').trim();
-      if (!token) {
-        return {
-          ok: false as const,
-          response: NextResponse.json(
-            {
-              error: {
-                kind: 'INTERNAL',
-                reasonKey: 'coreui.errors.misconfigured',
-                detail: 'Missing PARIS_DEV_JWT for local DevStudio tool calls.',
-              },
-            },
-            { status: 500 },
-          ),
-        };
-      }
-
-      return { ok: true as const, accessToken: token };
-    }
-  }
-
   const resolved = await resolveSessionBearer(request);
   if (!resolved.ok) return resolved;
   return { ok: true as const, accessToken: resolved.accessToken, setCookies: resolved.setCookies };
 }
 
-export function withParisDevAuthorization(headers: Headers, accessToken: string): Headers {
-  // Keep legacy helper name to avoid broad route churn; auth bearer comes from Berlin session resolution.
+export function withParisAuthorization(headers: Headers, accessToken: string): Headers {
   headers.set('authorization', `Bearer ${accessToken}`);
-  if ((process.env.ENV_STAGE ?? '').trim().toLowerCase() === 'local') {
-    const localDevToken = String(process.env.PARIS_DEV_JWT || '').trim();
-    if (localDevToken && accessToken === localDevToken) {
-      headers.set('x-ck-internal-service', 'bob.local');
-    }
-  }
   return headers;
 }
+
+export const withParisDevAuthorization = withParisAuthorization;
 
 export function applySessionCookies(
   response: NextResponse,
@@ -203,7 +150,7 @@ export async function proxyToParisRoute(
   }
 
   const headers = accessToken
-    ? withParisDevAuthorization(new Headers(), accessToken)
+    ? withParisAuthorization(new Headers(), accessToken)
     : new Headers();
   const contentType = request.headers.get('content-type');
   if (contentType) headers.set('content-type', contentType);

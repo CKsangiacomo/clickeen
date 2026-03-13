@@ -10,11 +10,6 @@ export type BudgetConsumeResult =
   | { ok: true; used: number; nextUsed: number }
   | { ok: false; used: number; max: number; reasonKey: 'coreui.upsell.reason.budgetExceeded'; detail: string };
 
-function resolveStage(env: Env): string {
-  const raw = typeof env.ENV_STAGE === 'string' ? env.ENV_STAGE.trim().toLowerCase() : '';
-  return raw || 'cloud-dev';
-}
-
 function getUtcPeriodKey(date: Date): string {
   const y = date.getUTCFullYear();
   const m = date.getUTCMonth() + 1;
