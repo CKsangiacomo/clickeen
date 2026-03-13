@@ -1,6 +1,6 @@
 # PRD 066 — DevStudio Internal Control Plane — Option B Execution Plan
 
-Status: EXECUTING
+Status: EXECUTED
 Date: 2026-03-13
 Owner: Product Dev Team
 Priority: P0
@@ -15,6 +15,12 @@ Environment contract:
 - Read truth: `local` + `cloud-dev`
 - Write order: `local` first, then `cloud-dev`
 - Canonical startup: `bash scripts/dev-up.sh`
+
+Execution record:
+- `local` runtime/docs cleaned and verified on 2026-03-13.
+- `cloud-dev` DevStudio deploy verified on 2026-03-13.
+- `/api/devstudio/accounts*` now fails closed with JSON `404`.
+- `GET /api/devstudio/context` remains Berlin-session-gated in `cloud-dev`.
 
 ---
 

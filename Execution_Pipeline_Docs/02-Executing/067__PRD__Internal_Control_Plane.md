@@ -17,4 +17,4 @@ The future company-plane authority model must therefore be defined separately in
 
 ## References
 
-- [PRD 066](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/066__PRD__DevStudio_Internal_Control_Plane__Berlin_VS_Separate_Admin_Authority.md)
+- [PRD 066](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/066__PRD__DevStudio_Internal_Control_Plane__Berlin_VS_Separate_Admin_Authority.md)
