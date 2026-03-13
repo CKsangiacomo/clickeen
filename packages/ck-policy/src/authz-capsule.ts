@@ -8,7 +8,7 @@ const ROMA_AUTHZ_CAPSULE_MAX_SKEW_SEC = 60;
 export type RomaAccountAuthzCapsulePayload = {
   v: 1;
   typ: 'roma.account';
-  iss: 'paris';
+  iss: 'berlin';
   aud: 'roma';
   sub: string;
   userId: string;
@@ -121,7 +121,7 @@ function normalizeAccountPayload(
   const record = raw as Record<string, unknown>;
   if (record.v !== 1) return null;
   if (record.typ !== 'roma.account') return null;
-  if (record.iss !== 'paris') return null;
+  if (record.iss !== 'berlin') return null;
   if (record.aud !== 'roma') return null;
 
   const userId = typeof record.userId === 'string' ? record.userId.trim() : '';
@@ -149,7 +149,7 @@ function normalizeAccountPayload(
   return {
     v: 1,
     typ: 'roma.account',
-    iss: 'paris',
+    iss: 'berlin',
     aud: 'roma',
     sub,
     userId,
@@ -181,7 +181,7 @@ export async function mintRomaAccountAuthzCapsule(
     ...input,
     v: 1,
     typ: 'roma.account',
-    iss: 'paris',
+    iss: 'berlin',
     aud: 'roma',
   };
 
