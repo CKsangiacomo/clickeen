@@ -355,7 +355,7 @@ export function WidgetsDomain() {
     );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No workspace is available for widgets right now.</section>;
+    return <section className="rd-canvas-module body-m">No account is available for widgets right now.</section>;
   }
 
   return (

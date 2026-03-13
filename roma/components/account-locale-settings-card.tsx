@@ -82,15 +82,15 @@ function normalizeAdditionalLocales(value: unknown, baseLocale: string): string[
 }
 
 const ACCOUNT_LOCALES_REASON_COPY: Record<string, string> = {
-  'coreui.errors.auth.required': 'You need to sign in again to manage workspace languages.',
-  'coreui.errors.auth.contextUnavailable': 'Workspace languages are unavailable right now. Please try again.',
-  'coreui.errors.auth.forbidden': 'You do not have permission to manage workspace languages.',
-  'coreui.errors.db.readFailed': 'Failed to load workspace languages. Please try again.',
-  'coreui.errors.db.writeFailed': 'Saving workspace languages failed. Please try again.',
-  'coreui.errors.payload.invalid': 'The workspace language request was invalid. Please try again.',
-  'coreui.errors.payload.invalidJson': 'The workspace language request was invalid. Please try again.',
+  'coreui.errors.auth.required': 'You need to sign in again to manage account languages.',
+  'coreui.errors.auth.contextUnavailable': 'Account languages are unavailable right now. Please try again.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to manage account languages.',
+  'coreui.errors.db.readFailed': 'Failed to load account languages. Please try again.',
+  'coreui.errors.db.writeFailed': 'Saving account languages failed. Please try again.',
+  'coreui.errors.payload.invalid': 'The account language request was invalid. Please try again.',
+  'coreui.errors.payload.invalidJson': 'The account language request was invalid. Please try again.',
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
-  'coreui.errors.account.locales.invalid': 'Workspace language settings are invalid. Please review the inputs and try again.',
+  'coreui.errors.account.locales.invalid': 'Account language settings are invalid. Please review the inputs and try again.',
   'coreui.upsell.reason.capReached': 'Your current plan cannot enable more languages.',
 };
 
@@ -145,7 +145,7 @@ export function AccountLocaleSettingsCard(args: {
       setDraftSwitcherEnabled(payload.policy?.switcher?.enabled !== false);
       setSuccess(null);
     } catch (nextError) {
-      setError(resolveAccountLocalesErrorCopy(nextError instanceof Error ? nextError.message : nextError, 'Failed to load workspace languages. Please try again.'));
+      setError(resolveAccountLocalesErrorCopy(nextError instanceof Error ? nextError.message : nextError, 'Failed to load account languages. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -218,7 +218,7 @@ export function AccountLocaleSettingsCard(args: {
       setError(
         resolveAccountLocalesErrorCopy(
           nextError instanceof Error ? nextError.message : nextError,
-          'Saving workspace languages failed. Please try again.',
+          'Saving account languages failed. Please try again.',
         ),
       );
     } finally {

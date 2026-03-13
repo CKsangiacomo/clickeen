@@ -11,10 +11,10 @@ function resolveErrorReason(payload: unknown, fallback: string): string {
 }
 
 const ACCOUNT_SWITCH_REASON_COPY: Record<string, string> = {
-  'coreui.errors.auth.required': 'You need to sign in again to switch workspaces.',
-  'coreui.errors.auth.contextUnavailable': 'Workspace switching is unavailable right now. Please try again.',
-  'coreui.errors.auth.forbidden': 'You do not have permission to switch to that workspace.',
-  'coreui.errors.account.notFound': 'That workspace could not be found.',
+  'coreui.errors.auth.required': 'You need to sign in again to switch accounts.',
+  'coreui.errors.auth.contextUnavailable': 'Account switching is unavailable right now. Please try again.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to switch to that account.',
+  'coreui.errors.account.notFound': 'That account could not be found.',
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
 };
 
@@ -54,7 +54,7 @@ export function RomaAccountSwitcher() {
       setError(
         resolveAccountSwitchErrorCopy(
           nextError instanceof Error ? nextError.message : nextError,
-          'Switching workspaces failed. Please try again.',
+          'Switching accounts failed. Please try again.',
         ),
       );
       setLoading(false);

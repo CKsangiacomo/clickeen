@@ -374,7 +374,7 @@ export function ProfileDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">User settings are person-scoped. Changes here apply across every workspace you belong to.</p>
+        <p className="body-m">User settings are person-scoped. Changes here apply across every account you belong to.</p>
       </section>
 
       <section className="rd-canvas-module">

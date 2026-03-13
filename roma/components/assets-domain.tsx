@@ -87,12 +87,12 @@ const DELETE_REASON_COPY: Record<string, string> = {
 
 const ASSET_REASON_COPY: Record<string, string> = {
   'coreui.upsell.reason.budgetExceeded':
-    'This upload would exceed your workspace storage limit. Delete assets or upgrade storage, then try again.',
+    'This upload would exceed your account storage limit. Delete assets or upgrade storage, then try again.',
   'coreui.upsell.reason.capReached': 'This file exceeds the per-file upload limit.',
-  'coreui.upsell.reason.platform.uploads': 'Uploads are not available for this workspace plan.',
+  'coreui.upsell.reason.platform.uploads': 'Uploads are not available for this account plan.',
   'coreui.errors.assets.uploadFailed': 'Asset upload failed. Please try again.',
   'coreui.errors.auth.required': 'You need to sign in again to manage assets.',
-  'coreui.errors.auth.forbidden': 'You do not have permission to manage assets in this workspace.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to manage assets in this account.',
   'coreui.errors.db.readFailed': 'Failed to load assets. Please try again.',
   'coreui.errors.db.writeFailed': 'Asset update failed on the server. Please try again.',
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
@@ -437,7 +437,7 @@ export function AssetsDomain() {
     );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No workspace is available for assets right now.</section>;
+    return <section className="rd-canvas-module body-m">No account is available for assets right now.</section>;
   }
 
   const successfulBulkCount = bulkItems.filter((item) => item.status === 'success').length;
@@ -446,7 +446,7 @@ export function AssetsDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        {context.accountName ? <p className="body-m">Workspace: {context.accountName}</p> : null}
+        {context.accountName ? <p className="body-m">Account: {context.accountName}</p> : null}
 
         {error ? (
           <div className="roma-inline-stack">

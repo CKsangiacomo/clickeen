@@ -34,13 +34,13 @@ export function UsageDomain() {
     );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No workspace is available for usage right now.</section>;
+    return <section className="rd-canvas-module body-m">No account is available for usage right now.</section>;
   }
 
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Workspace: {context.accountName || 'Current workspace'}</p>
+        <p className="body-m">Account: {context.accountName || 'Current account'}</p>
         {context.accountSlug ? <p className="body-s">Slug: {context.accountSlug}</p> : null}
         <p className="body-m">Detailed usage reporting is not available in Roma yet.</p>
       </section>

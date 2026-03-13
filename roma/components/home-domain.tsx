@@ -38,7 +38,7 @@ export function HomeDomain() {
   if (!hasAccountContext) {
     return (
       <section className="rd-canvas-module">
-        <p className="body-m">No workspace is available for this user right now.</p>
+        <p className="body-m">No account is available for this user right now.</p>
         <div className="rd-canvas-module__actions">
           <Link href="/settings" className="diet-btn-txt" data-size="md" data-variant="primary">
             <span className="diet-btn-txt__label body-m">Open settings</span>
@@ -61,7 +61,7 @@ export function HomeDomain() {
         ) : null}
 
         <p className="body-m">
-          Workspace: {context.accountName || 'Current workspace'}
+          Account: {context.accountName || 'Current account'}
           {context.accountSlug ? ` (${context.accountSlug})` : ''}
         </p>
       </section>

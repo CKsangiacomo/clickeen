@@ -146,7 +146,7 @@ export function TemplatesDomain() {
   if (!accountId) {
     return (
       <section className="rd-canvas-module body-m">
-        No workspace is available for templates right now.
+        No account is available for templates right now.
       </section>
     );
   }
@@ -154,7 +154,7 @@ export function TemplatesDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Workspace: {context.accountName || 'Current workspace'}</p>
+        <p className="body-m">Account: {context.accountName || 'Current account'}</p>
         {context.accountSlug ? <p className="body-s">Slug: {context.accountSlug}</p> : null}
         <p className="body-m">Showing all curated templates available.</p>
 

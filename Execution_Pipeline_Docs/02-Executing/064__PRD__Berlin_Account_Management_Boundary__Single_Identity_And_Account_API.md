@@ -214,7 +214,6 @@ That means Berlin must own canonical contracts for the real workflows that would
 - manage memberships / transfer owner / delete account
 - account locales / tier / entitlements
 - provider relationship reuse / upgrade
-- operational/admin/support multi-account access
 
 If any of those workflows exists in product reality but does not have a canonical Berlin contract, runtime will deterministically be tempted back into soup:
 - Roma route glue
@@ -274,7 +273,7 @@ Account management starts with a first-class `User Profile`.
 
 The model is:
 - `User Profile` = the person
-- `Account` = the workspace/business
+- `Account` = the business/account boundary
 - `Account Membership` = person-in-account with a role
 
 Base persisted user profile fields:
@@ -372,7 +371,7 @@ Tier/entitlement implication:
 
 This must be reflected in both runtime and UX:
 - `My Profile` = the person
-- `Account Settings` = the workspace/business
+- `Account Settings` = the business/account surface
 - `Team` = the set of user profiles attached to the account through memberships
 
 Roma may render those screens, but Berlin owns the model and mutations.
@@ -782,11 +781,15 @@ Route authority rule:
 
 This surface is intentionally small, but it must also be complete.
 It must be complete enough that Roma/Bob never need side routes for:
-- listing accessible accounts
-- creating a new account
 - inviting a person
 - accepting an invitation
 - switching active account
+
+Berlin must expose `GET /v1/accounts` and `POST /v1/accounts`, but Roma does not need a dedicated account-browser or account-create domain to satisfy that contract.
+The normal product-shell shape is:
+- bootstrap returns the accessible accounts summary for shell context
+- the shell exposes account switching only when the user belongs to more than one account
+- if product creates a new account from Roma, it does so as a small shell action or onboarding flow, not as a standalone `/accounts` destination
 
 It must also be complete enough that DevStudio internal tool flows do not invent a second account-truth model on top.
 
@@ -1025,8 +1028,6 @@ Done when:
 ### Phase 4 — Move Roma account management to Berlin
 
 Converge Roma settings/team/account-shell routes onto Berlin, including:
-- accessible accounts list
-- create account
 - invitation flows
 - accept invitation handoff
 - account switching
@@ -1040,6 +1041,7 @@ Rules:
 Done when:
 - Roma Settings, Team, and account shell read/write through Berlin-owned account contracts only
 - Roma has no independent account-management logic
+- Roma does not introduce a standalone account-browser or account-create domain just to mirror Berlin capabilities
 - Team member detail mutations route through Berlin-owned membership/profile contracts only
 - `roma/lib/michael.ts` no longer carries live account-members/locales reads used by Roma account behavior
 - `roma/app/api/accounts/[accountId]/members/route.ts`, `roma/app/api/accounts/[accountId]/locales/route.ts`, `roma/app/api/accounts/[accountId]/lifecycle/plan-change/route.ts`, and `roma/app/api/accounts/[accountId]/lifecycle/tier-drop/dismiss/route.ts` are either deleted or reduced to thin Berlin proxies only
@@ -1168,7 +1170,8 @@ Every execution slice for this PRD must explicitly record:
 
 ### Phase 4 checklist — Roma cutover
 
-- [ ] Roma account shell uses Berlin for accessible accounts, create account, invite, accept invite handoff, switch account, Team list, Team member detail, locales, tier, and account settings.
+- [ ] Roma account shell uses Berlin for invite, accept invite handoff, switch account, Team list, Team member detail, locales, tier, and account settings.
+- [ ] if Roma exposes account creation, it is a minimal shell or onboarding action backed by Berlin, not a standalone account-browser or `/accounts` domain.
 - [ ] owner/admin/editor/viewer behavior in Roma resolves from Berlin role semantics x entitlements, not from Roma-local logic.
 - [ ] `roma/app/api/accounts/[accountId]/members/route.ts`, `roma/app/api/accounts/[accountId]/locales/route.ts`, `roma/app/api/accounts/[accountId]/lifecycle/plan-change/route.ts`, and `roma/app/api/accounts/[accountId]/lifecycle/tier-drop/dismiss/route.ts` are deleted or reduced to thin Berlin proxies only.
 - [ ] `roma/lib/michael.ts` no longer provides live account-members/locales behavior for Roma account workflows.
@@ -1302,13 +1305,13 @@ Execute in this order after `local` signoff is green:
 
 5. Switching from Account A to Account B changes the active Berlin bootstrap/account capsule context cleanly without duplicating user identity.
 
-6. A person who is non-owner in Account A can still create a brand new Account B and become its owner without altering their rights in Account A.
+6. Berlin supports a person-level create-account contract, and if/when Roma exposes it, using it does not alter that person's rights in their existing accounts.
 
-7. A Clickeen admin/support human added to many accounts is still resolved as one user profile plus many ordinary account memberships, not a second employee-only access model.
+7. Internal DevStudio/company-plane authority is not modeled as ordinary Berlin account memberships or account switching.
 
-8. Bulk or regional operational access (for example support users added to all accounts in one country) resolves through the same membership + switch-account architecture and remains auditable per active account.
+8. DevStudio remains the internal toolbench and does not reintroduce a generic account browser, operator shell, or privileged-customer model.
 
-9. Listing accessible accounts, creating accounts, issuing invitations, accepting invitations, and switching accounts all resolve through canonical Berlin contracts with no side-route business logic in Roma/Bob.
+9. Berlin owns the canonical contracts for listing accessible accounts, creating accounts, issuing invitations, accepting invitations, and switching accounts, and Roma/Bob do not recreate those workflows with side-route business logic or fake account-browser shells.
 
 10. DevStudio acts as the internal toolbench while still relying on Berlin-owned truth where canonical product/account truth is required instead of a parallel account-management model.
 
@@ -1404,7 +1407,7 @@ Stop execution if any of these appear:
 This PRD is done only when the account system can be explained in 5 lines:
 
 1. Berlin authenticates the user.
-2. Berlin owns the user profile, memberships, linked provider identities, and reusable provider/connector relationships for both customer and operational humans.
+2. Berlin owns the user profile, memberships, linked provider identities, and reusable provider/connector relationships for customer/product truth; internal DevStudio/company-plane authority remains separate.
 3. Berlin resolves the active account, locale policy, entitlement snapshot, and normalized provider/account traits for the current account context.
 4. Michael stores user/account/membership data only.
 5. Roma renders account UI by calling Berlin, and Bob consumes the Berlin bootstrap snapshot and signed account capsule.

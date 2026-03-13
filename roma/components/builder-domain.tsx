@@ -134,7 +134,7 @@ const BUILDER_REASON_COPY: Record<string, string> = {
   'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot open right now.',
   'coreui.errors.instance.config.invalid': 'This widget has invalid saved data and cannot open right now.',
   'coreui.errors.instance.ownerAccountMissing':
-    'This widget is missing required workspace data and cannot open right now.',
+    'This widget is missing required account data and cannot open right now.',
   'coreui.errors.builder.open.sessionMissing': 'Builder did not start correctly. Please retry.',
   'coreui.errors.builder.open.bootModeInvalid': 'Builder did not start correctly. Please retry.',
   'coreui.errors.builder.open.stale': 'Builder refreshed while opening this widget. Please retry.',
@@ -731,7 +731,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
     return (
       <div className="rd-canvas-module">
         <p className="body-m">
-          {builderContextErrorCopy || 'No workspace context is available for Builder right now.'}
+          {builderContextErrorCopy || 'No account context is available for Builder right now.'}
         </p>
         <div className="rd-canvas-module__actions">
           <Link className="diet-btn-txt" data-size="md" data-variant="primary" href="/settings">

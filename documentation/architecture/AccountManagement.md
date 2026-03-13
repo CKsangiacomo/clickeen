@@ -18,7 +18,7 @@ For the remaining Berlin/Roma/DevStudio architecture convergence, see [PRD 064](
 2. Michael stores account data; it is not the product-facing account API.
 3. The canonical model is:
    - `User Profile` = the person
-   - `Account` = the workspace/business
+   - `Account` = the business/account boundary
    - `Account Membership` = the person's role inside that account
 4. Every account has exactly one current `owner` at runtime.
 5. A person may belong to many accounts, but only one account context is active at a time.
@@ -54,7 +54,7 @@ Berlin owns the profile boundary even as richer profile context is added later.
 
 ### Account
 
-`Account` is the workspace/business boundary.
+`Account` is the business/account boundary.
 
 Account-scoped truth includes:
 - membership set
@@ -145,7 +145,7 @@ Rules:
 
 ### Account Settings
 
-Account-scoped workspace/business surface.
+Account-scoped business/account surface.
 
 Owns:
 - account settings

@@ -34,15 +34,15 @@ export function AiDomain() {
     );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No workspace is available for AI settings right now.</section>;
+    return <section className="rd-canvas-module body-m">No account is available for AI settings right now.</section>;
   }
 
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Workspace: {context.accountName || 'Current workspace'}</p>
+        <p className="body-m">Account: {context.accountName || 'Current account'}</p>
         {context.accountSlug ? <p className="body-s">Slug: {context.accountSlug}</p> : null}
-        <p className="body-m">AI access follows your current workspace plan.</p>
+        <p className="body-m">AI access follows your current account plan.</p>
       </section>
 
       <section className="rd-canvas-module">

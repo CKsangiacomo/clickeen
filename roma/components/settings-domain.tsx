@@ -19,9 +19,9 @@ type AccountMembersResponse = {
 };
 
 const SETTINGS_REASON_COPY: Record<string, string> = {
-  'coreui.errors.auth.required': 'You need to sign in again to manage this workspace.',
+  'coreui.errors.auth.required': 'You need to sign in again to manage this account.',
   'coreui.errors.auth.contextUnavailable': 'Account settings are unavailable right now. Please try again.',
-  'coreui.errors.auth.forbidden': 'You do not have permission to manage this workspace.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to manage this account.',
   'coreui.errors.db.readFailed': 'Failed to load account settings. Please try again.',
   'coreui.errors.db.writeFailed': 'Saving account settings failed. Please try again.',
   'coreui.errors.payload.invalid': 'The account settings request was invalid. Please try again.',
@@ -96,7 +96,7 @@ export function SettingsDomain() {
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       setMembers(null);
-      setMembersError(resolveSettingsErrorCopy(reason, 'Failed to load workspace members. Please try again.'));
+      setMembersError(resolveSettingsErrorCopy(reason, 'Failed to load account members. Please try again.'));
     } finally {
       setMembersLoading(false);
     }

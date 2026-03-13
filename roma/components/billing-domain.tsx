@@ -25,15 +25,15 @@ export function BillingDomain() {
     );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No workspace is available for billing controls right now.</section>;
+    return <section className="rd-canvas-module body-m">No account is available for billing controls right now.</section>;
   }
 
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Workspace: {context.accountName || 'Current workspace'}</p>
+        <p className="body-m">Account: {context.accountName || 'Current account'}</p>
         {context.accountSlug ? <p className="body-s">Slug: {context.accountSlug}</p> : null}
-        <p className="body-m">Billing is not configured for this workspace yet.</p>
+        <p className="body-m">Billing is not configured for this account yet.</p>
       </section>
 
       <section className="rd-canvas-module">
@@ -48,7 +48,7 @@ export function BillingDomain() {
           </article>
           <article className="roma-card">
             <h2 className="heading-6">What to do</h2>
-            <p className="body-s">Use Settings for workspace ownership changes and current plan visibility.</p>
+            <p className="body-s">Use Settings for account ownership changes and current plan visibility.</p>
           </article>
         </div>
       </section>

@@ -1,7 +1,7 @@
 const ACCOUNT_SHELL_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to continue.',
-  'coreui.errors.auth.contextUnavailable': 'This workspace is unavailable right now. Please try again.',
-  'coreui.errors.auth.forbidden': 'You do not have permission to view this workspace.',
+  'coreui.errors.auth.contextUnavailable': 'This account is unavailable right now. Please try again.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to view this account.',
   'coreui.errors.db.readFailed': 'Loading failed. Please try again.',
   'coreui.errors.db.writeFailed': 'Saving failed. Please try again.',
   'coreui.errors.payload.invalid': 'The server returned invalid data. Please try again.',

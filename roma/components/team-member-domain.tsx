@@ -170,14 +170,14 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     );
   }
   if (!accountId) {
-    return <section className="rd-canvas-module body-m">No workspace membership found for team controls.</section>;
+    return <section className="rd-canvas-module body-m">No account membership found for team controls.</section>;
   }
 
   return (
     <>
       <section className="rd-canvas-module roma-inline-stack" style={{ justifyContent: 'space-between', gap: '12px' }}>
         <div>
-          <p className="body-m">Workspace: {context.accountName || 'Current workspace'}</p>
+          <p className="body-m">Account: {context.accountName || 'Current account'}</p>
           <p className="body-s">Team manages memberships. Personal details stay with the member in User Settings.</p>
         </div>
         <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/team">
