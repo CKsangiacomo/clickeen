@@ -472,12 +472,8 @@ if [ "$DEV_PROFILE" = "product" ]; then
     exit 1
   fi
 
-  echo "[dev-up] Ensuring product-profile curated/main Tokyo saved snapshots"
-  if ! TOKYO_WORKER_BASE_URL="$TOKYO_URL" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" \
-    node "$ROOT_DIR/scripts/dev/ensure-curated-tokyo-saved.mjs"; then
-    echo "[dev-up] ERROR: product-profile curated/main Tokyo saved snapshot sync failed."
-    exit 1
-  fi
+  echo "[dev-up] Product profile uses cloud-dev Tokyo saved snapshots as-is"
+  echo "[dev-up] Skipping local repair of remote saved snapshots before boot"
 
   stop_port "3001"
   stop_port "5173"
