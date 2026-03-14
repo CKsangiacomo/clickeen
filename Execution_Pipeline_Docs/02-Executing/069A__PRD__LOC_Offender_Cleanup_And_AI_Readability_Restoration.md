@@ -42,13 +42,12 @@ Current program state:
    - Phase 3 slice 2: `dieter/components/textedit/textedit.ts` decomposition
    - Phase 3 slice 3: `dieter/components/dropdown-fill/dropdown-fill.ts` decomposition
 2. blocked:
-   - `admin/vite.config.ts`
-   - blocked on `PRD 069B` stabilizing the active route surface
+   - none
 3. deferred within this PRD:
    - deeper `account-state.ts` split unless a stronger responsibility boundary emerges
    - any further Dieter/showcase cleanup unless it becomes an active blocker
 4. single active next slice:
-   - none until `069B` unblocks `admin/vite.config.ts` or a new runtime-adjacent offender is explicitly promoted
+   - none until a new runtime-adjacent offender is explicitly promoted
 
 ## Current execution progress
 
@@ -166,7 +165,7 @@ Current program state:
    - existing outcome signature verification and D1 indexing behavior
    - existing personalization job queue/status behavior
 24. Remaining Phase 2 work:
-   - `admin/vite.config.ts`, only after `069B` stabilizes the active route surface
+   - none
 25. Phase 3 slice 1 is landed:
    - `berlin/src/account-state.ts` reduced from `918` LOC to `824` LOC
    - extracted shared public contract types to:
@@ -209,7 +208,7 @@ Current program state:
 32. Remaining Phase 3 work:
    - deeper `account-state.ts` split remains deferred unless a stronger boundary emerges
 33. Active runtime/tooling work remaining in this PRD:
-   - `admin/vite.config.ts`, still blocked on `069B`
+   - none
 
 ---
 
@@ -245,13 +244,16 @@ This PRD is the broad LOC-offender cleanup track.
 
 1. DevStudio widget-workspace route misuse
 2. Roma/Bob/Paris widget-instance open boundary cleanup
-3. the active split of:
+3. all active admin boundary/proxy surface cleanup, including:
+   - [admin/vite.config.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite.config.ts)
+4. the active split of:
    - [dev-widget-workspace.html](/Users/piero_macpro/code/VS/clickeen/admin/src/html/tools/dev-widget-workspace.html)
 
 Rule:
 
-1. `dev-widget-workspace.html` LOC cleanup is executed through `PRD 069B`
-2. `PRD 069A` still tracks it as part of the report, but does not duplicate the route-boundary work
+1. admin runtime/proxy surfaces belong to `PRD 069B`, not `PRD 069A`
+2. `dev-widget-workspace.html` LOC cleanup is executed through `PRD 069B`
+3. `PRD 069A` still tracks those report items for completeness, but does not own or execute them
 
 ---
 
@@ -280,8 +282,7 @@ Rule:
 1. `bob/components/TdMenuContent.tsx`
 2. `sanfrancisco/src/agents/l10nInstance.ts`
 3. `dieter/components/dropdown-fill/dropdown-fill.ts`
-4. `admin/vite.config.ts`
-5. `tokyo-worker/src/index.ts`
+4. `tokyo-worker/src/index.ts`
 
 ### Medium offenders
 
@@ -362,15 +363,12 @@ Goal:
 - reduce oversized middleware/router files that hide cross-service behavior
 
 Scope:
-1. split `admin/vite.config.ts`
-   - only after `PRD 069B` stabilizes the active DevStudio proxy routes
-2. split `tokyo-worker/src/index.ts`
-3. split `sanfrancisco/src/index.ts`
+1. split `tokyo-worker/src/index.ts`
+2. split `sanfrancisco/src/index.ts`
 
 Acceptance:
-1. Vite config becomes Vite wiring, not a proxy server blob
-2. Tokyo Worker entrypoint becomes route/auth wiring, not a monolith
-3. San Francisco entrypoint becomes route wiring, not a mixed auth/job/router blob
+1. Tokyo Worker entrypoint becomes route/auth wiring, not a monolith
+2. San Francisco entrypoint becomes route wiring, not a mixed auth/job/router blob
 
 ### Phase 3 — Route-adjacent and medium-risk source cleanup
 
@@ -418,14 +416,12 @@ Use the report’s order only where it matches engineering ROI and stable depend
 2. decompose `useWidgetSession.tsx`
 3. extract `TdMenuContent.tsx` modules
 4. split `l10nInstance.ts`
-5. complete the active `069B` route/boundary stabilization that touches `admin/vite.config.ts`
-6. extract `admin/vite.config.ts` proxy layer
-7. extract `tokyo-worker/src/index.ts` auth/router
-8. extract `sanfrancisco/src/index.ts` auth/jobs
-9. split `textedit.ts` if the boundary is real
-10. split `dropdown-fill.ts` if the boundary is real
-11. split `berlin/src/account-state.ts` only if justified by real responsibility separation
-12. defer `typography.js` and showcase/demo HTML cleanup unless they become active blockers
+5. extract `tokyo-worker/src/index.ts` auth/router
+6. extract `sanfrancisco/src/index.ts` auth/jobs
+7. split `textedit.ts` if the boundary is real
+8. split `dropdown-fill.ts` if the boundary is real
+9. split `berlin/src/account-state.ts` only if justified by real responsibility separation
+10. defer `typography.js` and showcase/demo HTML cleanup unless they become active blockers
 
 ---
 
@@ -470,15 +466,6 @@ Desired end state:
 3. prompt/response parsing extracted
 4. orchestrator remains readable
 
-### admin/vite.config.ts
-
-Desired end state:
-
-1. proxy logic extracted
-2. auth/env helpers extracted
-3. Vite config stays Vite config
-4. extraction happens after `069B` stabilizes the current route surface
-
 ### Worker/service entrypoints
 
 Desired end state:
@@ -496,8 +483,8 @@ PRD 069A is done only when all of these are true:
 1. the high-risk active runtime/tooling offenders targeted by this PRD are split by real responsibility boundaries
 2. copilot engine duplication is reduced without collapsing SDR and CS into one copilot
 3. `useWidgetSession.tsx` is decomposed into explicit modules/hooks/types
-4. `admin/vite.config.ts` is no longer a 1300-line proxy/server blob
-5. `tokyo-worker/src/index.ts` and `sanfrancisco/src/index.ts` are decomposed into entrypoint + extracted modules
+4. `tokyo-worker/src/index.ts` and `sanfrancisco/src/index.ts` are decomposed into entrypoint + extracted modules
+5. admin proxy/runtime cleanup is explicitly owned by `69B`, not split across PRDs
 6. `dev-widget-workspace.html` cleanup is tracked and executed through `69B`
 7. deferred showcase/demo cleanup is not confused with the main runtime cleanup track
 8. compiled output is treated and documented as derivative output, not as the primary cleanup target
@@ -516,7 +503,7 @@ Stop and reassess if execution starts doing any of these:
 5. duplicating the `69B` widget-workspace boundary work inside this PRD
 6. forcing SDR and CS into one shared copilot abstraction because the files look similar
 7. splitting Dieter, Berlin, or showcase files just to satisfy the 900 LOC threshold
-8. editing `admin/vite.config.ts` in parallel with unstable `069B` route work
+8. reclaiming admin proxy/runtime surfaces back into `69A` after assigning them to `69B`
 
 ---
 

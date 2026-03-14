@@ -35,6 +35,7 @@ It is one boundary problem plus one code-shape problem:
 
 1. wrong route family chosen for the host surface
 2. too much host transport, instance loading, Bob handoff, and UI state jammed into one file
+3. `admin/vite.config.ts` currently carries active DevStudio proxy/runtime boundary logic and therefore belongs to this PRD, not `69A`
 
 PRD 069B exists to fix both properly.
 
@@ -161,7 +162,27 @@ This split is not cosmetic.
 
 It is necessary to stop boundary mistakes from hiding inside one giant file.
 
-### Problem 4 — Bob host responsibilities must be made boring and explicit
+### Problem 4 — `admin/vite.config.ts` must be owned and cleaned up inside this PRD
+
+`admin/vite.config.ts` is not just a generic LOC offender.
+
+It is part of the active DevStudio runtime boundary because it currently owns:
+
+1. local-tool proxy routes
+2. DevStudio-to-Paris transport
+3. auth/env wiring for those routes
+
+That means it cannot be split in a different PRD from the boundary fixes it serves.
+
+Required correction:
+
+1. `069B` owns all `admin/vite.config.ts` cleanup
+2. `069A` must not execute or block on this file
+3. once the route surface is stabilized in `069B`, this PRD performs the extraction so:
+   - Vite config stays Vite config
+   - proxy/runtime helpers live in explicit local modules
+
+### Problem 5 — Bob host responsibilities must be made boring and explicit
 
 `Bob` must remain the editor kernel.
 
@@ -285,7 +306,22 @@ Acceptance:
 2. the extracted modules have single, explicit responsibilities
 3. route/boundary logic is no longer hidden in a monolithic file
 
-### Phase 5 — Bob host cleanup
+### Phase 5 — `admin/vite.config.ts` cleanup
+
+Goal:
+- keep all active admin boundary/proxy work inside this PRD and reduce `admin/vite.config.ts` to a clear host shell
+
+Scope:
+1. extract DevStudio proxy logic into explicit local modules
+2. extract auth/env helpers into explicit local modules
+3. leave `admin/vite.config.ts` as Vite wiring + route registration shell
+
+Acceptance:
+1. `admin/vite.config.ts` is no longer the place where the whole DevStudio proxy runtime hides
+2. extracted modules stay inside the existing Vite toolbench; no new build abstraction
+3. the file ownership remains singular: `069B` owns this surface end-to-end
+
+### Phase 6 — Bob host cleanup
 
 Goal:
 - make Bob host contracts boring and explicit for Roma and DevStudio
@@ -302,7 +338,7 @@ Acceptance:
 3. Bob no longer depends on the specific hidden host assumptions corrected by this PRD
 4. Bob changes remain minimal and directly justified by the failing flows
 
-### Phase 6 — Verification and docs
+### Phase 7 — Verification and docs
 
 Goal:
 - prove the corrected boundary works and update docs immediately
@@ -349,8 +385,9 @@ PRD 069B is done only when all of these are true:
 7. no new auth bypasses, fake sessions, or trusted-dev shortcuts were introduced
 8. the DevStudio internal read handlers reuse shared instance-loading logic and do not return a degraded/partial payload contract
 9. `dev-widget-workspace.html` is materially reduced and its responsibilities are split
-10. Bob host contract is explicit and documented
-11. docs match the corrected runtime
+10. `admin/vite.config.ts` is cleaned up inside this PRD, not split into another workstream
+11. Bob host contract is explicit and documented
+12. docs match the corrected runtime
 
 Execution order inside this PRD:
 1. DevStudio host boundary restoration first
@@ -358,7 +395,8 @@ Execution order inside this PRD:
 3. trace Roma `403`
 4. fix Roma product path
 5. split workspace
-6. do only the minimal Bob cleanup still required after the boundary fixes
+6. clean up `admin/vite.config.ts`
+7. do only the minimal Bob cleanup still required after the boundary fixes
 
 ---
 
