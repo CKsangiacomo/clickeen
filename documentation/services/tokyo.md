@@ -106,6 +106,8 @@ Admin-owned repo-local l10n source overlays live under:
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
+  - `GET /renders/instances/:publicId/saved.json` (requires `Authorization: Bearer <token>`; product paths use a Berlin session bearer, or local Paris internal reads use `TOKYO_DEV_JWT` plus `x-ck-internal-service: paris.local`; requires `x-account-id` or `?accountId=`.)
+  - `PUT /renders/instances/:publicId/saved.json` (requires `Authorization: Bearer <token>`; product paths use a Berlin session bearer, or local Paris internal writes use `TOKYO_DEV_JWT` plus `x-ck-internal-service: paris.local`; requires `x-account-id` or `?accountId=`.)
   - `POST /assets/upload` (requires `Authorization: Bearer <token>`; product paths use a Berlin session bearer. Local internal automation may use `TOKYO_DEV_JWT` only when it also declares an allowed `x-ck-internal-service`. Required header: `x-account-id`. Optional headers: `x-public-id`, `x-widget-type`, `x-source`.)
   - `GET /assets/account/:accountId` (requires `Authorization: Bearer <token>`; Berlin session bearer for product paths, or local internal `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; member-scoped list)
   - `DELETE /assets/:accountId/:assetId` (requires `Authorization: Bearer <token>`; Berlin session bearer for product paths, or local internal `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; editor+-scoped hard delete path)

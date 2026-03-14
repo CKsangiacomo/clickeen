@@ -34,6 +34,7 @@ import {
   assertUploadAuth,
   requireDevAuth,
   TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
+  TOKYO_INTERNAL_SERVICE_PARIS_LOCAL,
 } from './auth';
 import {
   guessContentTypeFromExt,
@@ -97,6 +98,26 @@ async function authorizeAccountScopedRequest(args: {
       { status: 500 },
     );
   }
+}
+
+function hasTrustedInternalService(req: Request, serviceId: string): boolean {
+  const raw = req.headers.get('x-ck-internal-service');
+  if (typeof raw !== 'string') return false;
+  return raw.trim().toLowerCase() === serviceId;
+}
+
+async function authorizeSavedRenderRequest(args: {
+  req: Request;
+  env: Env;
+  accountId: string;
+  minRole: MemberRole;
+}): Promise<Response | null> {
+  if (hasTrustedInternalService(args.req, TOKYO_INTERNAL_SERVICE_PARIS_LOCAL)) {
+    return requireDevAuth(args.req, args.env, {
+      allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_PARIS_LOCAL],
+    });
+  }
+  return authorizeAccountScopedRequest(args);
 }
 
 function withCors(res: Response): Response {
@@ -187,7 +208,7 @@ export default {
         }
 
         if (req.method === 'GET') {
-          const authErr = await authorizeAccountScopedRequest({
+          const authErr = await authorizeSavedRenderRequest({
             req,
             env,
             accountId,
@@ -212,7 +233,7 @@ export default {
         }
 
         if (req.method === 'PUT') {
-          const authErr = await authorizeAccountScopedRequest({
+          const authErr = await authorizeSavedRenderRequest({
             req,
             env,
             accountId,

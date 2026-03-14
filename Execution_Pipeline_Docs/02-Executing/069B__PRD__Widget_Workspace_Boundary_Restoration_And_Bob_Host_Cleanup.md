@@ -257,6 +257,7 @@ Scope:
 7. keep the response shape aligned with the existing Bob host expectations
 8. keep the route restricted to the platform account; customer-support target opens continue to use the dedicated support flow
 9. make Bob delegate DevStudio account mutations back to the host instead of assuming product-route access
+10. restore Tokyo saved-render auth parity so local Paris internal reads/writes use the documented `TOKYO_DEV_JWT` + `x-ck-internal-service: paris.local` contract instead of failing `AUTH_INVALID`
 
 Acceptance:
 1. local DevStudio can list instances
@@ -267,6 +268,7 @@ Acceptance:
 6. both account-owned and curated/platform-owned DevStudio instances can boot correctly
 7. the returned core/localization payload still matches the host contract Bob already expects
 8. Bob host delegation stays explicit for DevStudio instead of relying on hidden product-route assumptions
+9. local DevStudio boot/save/l10n-status no longer fail because Tokyo `saved.json` rejects the explicit `paris.local` internal contract
 
 ### Phase 3 — Roma builder/open correction
 
