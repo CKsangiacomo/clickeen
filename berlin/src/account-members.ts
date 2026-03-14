@@ -285,3 +285,66 @@ export async function handleAccountMemberUpdate(args: {
     member: refreshed.member,
   });
 }
+
+async function deleteAccountMember(args: {
+  env: Env;
+  accountId: string;
+  memberId: string;
+}): Promise<Response | null> {
+  const params = new URLSearchParams({
+    account_id: `eq.${args.accountId}`,
+    user_id: `eq.${args.memberId}`,
+  });
+  const response = await supabaseAdminFetch(args.env, `/rest/v1/account_members?${params.toString()}`, {
+    method: 'DELETE',
+    headers: { Prefer: 'return=representation' },
+  });
+  const payload = await readSupabaseAdminJson<Array<{ user_id?: unknown }> | Record<string, unknown>>(response);
+  if (!response.ok) {
+    return supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload);
+  }
+  const rows = Array.isArray(payload) ? payload : [];
+  if (!rows[0]?.user_id) {
+    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.memberNotFound' } }, { status: 404 });
+  }
+  return null;
+}
+
+export async function handleAccountMemberDelete(args: {
+  env: Env;
+  account: BerlinAccountContext;
+  accountId: string;
+  memberId: string;
+}): Promise<Response> {
+  const denied = denyMemberMutation(args.account);
+  if (denied) return denied;
+
+  const current = await loadAccountMember(args.env, args.accountId, args.memberId);
+  if (!current.ok) return current.response;
+  if (current.member.role === 'owner') {
+    return json(
+      {
+        error: {
+          kind: 'DENY',
+          reasonKey: 'coreui.errors.auth.forbidden',
+          detail: 'owner transfer uses a dedicated flow',
+        },
+      },
+      { status: 403 },
+    );
+  }
+
+  const writeError = await deleteAccountMember({
+    env: args.env,
+    accountId: args.accountId,
+    memberId: args.memberId,
+  });
+  if (writeError) return writeError;
+
+  return json({
+    ok: true,
+    accountId: args.accountId,
+    memberId: args.memberId,
+    removed: true,
+  });
+}

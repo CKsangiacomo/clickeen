@@ -137,7 +137,7 @@ Source profile app servers use the Supabase target chosen by `bash scripts/dev-u
 Invariant:
 
 - The Supabase JWT used against local Paris/Bob/Roma must be issued by the **same** Supabase project Paris is configured to use.
-- If you use a token from a different Supabase project, Paris returns `403 AUTH_INVALID issuer_mismatch` by design.
+- If you use a token from a different Supabase project, Paris returns `403 coreui.errors.auth.forbidden` with `issuer_mismatch` by design.
 
 ### B) Instance + asset path (local)
 

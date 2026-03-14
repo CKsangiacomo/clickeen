@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolvePolicy } from '@clickeen/ck-policy';
 import {
   loadTokyoPreferredAccountInstance,
   normalizeAftermathWarning,
@@ -8,7 +9,11 @@ import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../../
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../../../lib/auth/session';
 import { resolveParisBaseUrl } from '../../../../../../../lib/env/paris';
 import { resolveTokyoBaseUrl } from '../../../../../../../lib/env/tokyo';
-import { loadAccountPublishContainment, updateAccountInstanceStatusRow } from '../../../../../../../lib/michael';
+import {
+  countPublishedAccountInstances,
+  loadAccountPublishContainment,
+  updateAccountInstanceStatusRow,
+} from '../../../../../../../lib/michael';
 
 export const runtime = 'edge';
 
@@ -131,6 +136,69 @@ export async function POST(request: NextRequest, context: RouteContext) {
       NextResponse.json({ ok: true, publicId, status: 'published', changed: false }),
       session.setCookies,
     );
+  }
+
+  const policy = resolvePolicy({
+    profile: authz.payload.profile,
+    role: authz.payload.role,
+  });
+  const publishedCapRaw = policy.caps['instances.published.max'];
+  const publishedCap =
+    typeof publishedCapRaw === 'number' && Number.isFinite(publishedCapRaw)
+      ? Math.max(0, Math.floor(publishedCapRaw))
+      : null;
+  if (publishedCap != null) {
+    if (publishedCap === 0) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: 'DENY',
+              reasonKey: 'coreui.upsell.reason.capReached',
+              detail: `instances.published.max=${publishedCap}`,
+            },
+          },
+          { status: 403 },
+        ),
+        session.setCookies,
+      );
+    }
+    const publishedCount = await countPublishedAccountInstances(accountId, session.accessToken);
+    if (!publishedCount.ok) {
+      const status = publishedCount.status === 401 ? 401 : publishedCount.status === 403 ? 403 : 502;
+      const kind = status === 401 ? 'AUTH' : status === 403 ? 'DENY' : 'UPSTREAM_UNAVAILABLE';
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind,
+              reasonKey: publishedCount.reasonKey,
+              detail: publishedCount.detail,
+            },
+          },
+          { status },
+        ),
+        session.setCookies,
+      );
+    }
+    if (publishedCount.count >= publishedCap) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: 'DENY',
+              reasonKey: 'coreui.upsell.reason.capReached',
+              detail: `instances.published.max=${publishedCap}`,
+            },
+          },
+          { status: 403 },
+        ),
+        session.setCookies,
+      );
+    }
   }
 
   const publishWrite = await updateAccountInstanceStatusRow({

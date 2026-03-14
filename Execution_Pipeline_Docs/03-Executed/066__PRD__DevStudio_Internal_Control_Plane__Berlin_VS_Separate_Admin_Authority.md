@@ -5,6 +5,15 @@ Date: 2026-03-13
 Owner: Product Dev Team
 Priority: P0
 
+Snapshot notice:
+- This PRD is a historical snapshot of the codebase and architecture at the time it was executed.
+- It is superseded by PRD 068 and any later PRDs.
+- Do not use this PRD as forward-looking architecture guidance except as historical context.
+
+Execution closeout:
+- Closed as historical snapshot on 2026-03-13.
+- Any remaining corrections, hardening, or architecture work move forward through PRD 068 and later only.
+
 Decision record:
 - Option B is chosen.
 - `Berlin` remains the canonical product identity/account boundary only.
@@ -506,7 +515,7 @@ Documentation:
 - `admin/README.md`
 
 Follow-up PRD:
-- `Execution_Pipeline_Docs/02-Executing/067__PRD__Internal_Control_Plane.md`
+- `Execution_Pipeline_Docs/03-Executed/067__PRD__Internal_Control_Plane.md`
 
 ---
 

@@ -76,6 +76,18 @@ type MichaelAccountPublishContainmentResult =
       detail?: string;
     };
 
+type MichaelPublishedInstanceCountResult =
+  | {
+      ok: true;
+      count: number;
+    }
+  | {
+      ok: false;
+      status: number;
+      reasonKey: string;
+      detail?: string;
+    };
+
 function resolveMichaelBaseUrl(): string {
   const value = (process.env.SUPABASE_URL || '').trim();
   if (!value) {
@@ -320,6 +332,62 @@ export async function loadAccountPublishContainment(
         reason: asTrimmedString(row?.reason),
       },
     };
+  } catch (error) {
+    return {
+      ok: false,
+      status: 502,
+      reasonKey: 'roma.errors.proxy.michael_unavailable',
+      detail: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+export async function countPublishedAccountInstances(
+  accountId: string,
+  berlinAccessToken: string,
+): Promise<MichaelPublishedInstanceCountResult> {
+  try {
+    const michaelAccess = await resolveMichaelAccessToken(berlinAccessToken);
+    if (!michaelAccess.ok) {
+      return michaelAccess;
+    }
+
+    const headers = new Headers();
+    headers.set('apikey', resolveMichaelAnonKey());
+    headers.set('authorization', `Bearer ${michaelAccess.accessToken}`);
+    headers.set('accept', 'application/json');
+    headers.set('prefer', 'count=exact');
+
+    const response = await fetch(
+      `${resolveMichaelBaseUrl()}/rest/v1/widget_instances?select=public_id&account_id=eq.${encodeFilterValue(accountId)}&status=eq.published&limit=1`,
+      {
+        method: 'GET',
+        headers,
+        cache: 'no-store',
+      },
+    );
+    const text = await response.text().catch(() => '');
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        reasonKey:
+          response.status === 401
+            ? 'coreui.errors.auth.required'
+            : response.status === 403
+              ? 'coreui.errors.auth.forbidden'
+              : 'coreui.errors.db.readFailed',
+        detail: text || undefined,
+      };
+    }
+    const range = response.headers.get('content-range') || '';
+    const match = range.match(/\/(\d+)$/);
+    if (match) {
+      return { ok: true, count: Number.parseInt(match[1] || '0', 10) };
+    }
+    const payload = text ? (JSON.parse(text) as unknown) : null;
+    const rows = Array.isArray(payload) ? payload : [];
+    return { ok: true, count: rows.length };
   } catch (error) {
     return {
       ok: false,

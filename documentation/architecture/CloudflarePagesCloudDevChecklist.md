@@ -10,7 +10,7 @@ Rules:
 - GitHub Actions must not create Pages projects or sync Pages secrets.
 - Each app builds from its own root and writes only to its own output directory.
 - Bob and Roma must use custom `*.dev.clickeen.com` hosts for authenticated Builder flows. `*.pages.dev` is not a valid public runtime host for those apps.
-- Bob and Roma keep non-secret runtime vars in app-local `wrangler.toml`. Do not duplicate those vars in the Cloudflare dashboard.
+- Bob and Roma keep host/base-URL runtime vars in app-local `wrangler.toml`. Supabase project values are live environment config, not committed repo literals.
 - Venice and Prague keep runtime vars in the Cloudflare Pages dashboard because they do not use app-local Wrangler config today.
 - DevStudio is local-only and is not part of the Cloudflare Pages `cloud-dev` contract.
 
@@ -40,13 +40,13 @@ Env contract:
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `bob/wrangler.toml` |
 | `PARIS_BASE_URL` | yes | `https://paris.dev.clickeen.com` | `bob/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `bob/wrangler.toml` |
-| `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | `bob/wrangler.toml` |
-| `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | `bob/wrangler.toml` |
+| `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |
+| `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | Cloudflare Pages dashboard + GitHub Actions env |
 | `SANFRANCISCO_BASE_URL` | yes | `https://sanfrancisco.dev.clickeen.com` | `bob/wrangler.toml` |
 
 Dashboard action:
-- Do not add these non-secret vars in the Cloudflare dashboard.
-- Final settled state: Bob non-secret runtime vars live only in `bob/wrangler.toml`.
+- Keep `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the Cloudflare Pages dashboard for the live Bob app.
+- Keep the host/base-URL vars in `bob/wrangler.toml`.
 - Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`
 
 ## Roma
@@ -76,12 +76,12 @@ Env contract:
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `roma/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `roma/wrangler.toml` |
 | `NEXT_PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | `roma/wrangler.toml` |
-| `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | `roma/wrangler.toml` |
-| `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | `roma/wrangler.toml` |
+| `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |
+| `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | Cloudflare Pages dashboard + GitHub Actions env |
 
 Dashboard action:
-- Do not add these non-secret vars in the Cloudflare dashboard.
-- Final settled state: Roma non-secret runtime vars live only in `roma/wrangler.toml`.
+- Keep `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the Cloudflare Pages dashboard for the live Roma app.
+- Keep the host/base-URL vars in `roma/wrangler.toml`.
 - Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`
 
 ## Venice
@@ -161,7 +161,8 @@ CI secrets/vars:
 - `SUPABASE_PROJECT_REF_CLOUD_DEV`
 
 Rules:
-- Bob and Roma non-secret runtime vars belong in app-local `wrangler.toml`.
+- Bob and Roma host/base-URL vars belong in app-local `wrangler.toml`.
+- Bob and Roma Supabase project values belong in dashboard/runtime env and matching CI env, not committed repo literals.
 - Worker and Pages secrets stay live-only, but any new secret must be documented here with owning service and purpose.
 - If a Pages custom domain serves stale runtime after a Git-connected deploy, fix the underlying config or verification gap; do not normalize direct artifact deploys as the operating model.
 

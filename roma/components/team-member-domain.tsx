@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { resolveAccountPolicyFromRomaAuthz, resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
@@ -79,6 +80,7 @@ function formatCountryValue(value: string | null | undefined): string {
 
 export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   const me = useRomaMe();
+  const router = useRouter();
   const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
   const policy = useMemo(
     () => (context.accountId ? resolveAccountPolicyFromRomaAuthz(me.data, context.accountId) : null),
@@ -91,6 +93,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   const [error, setError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [savingRole, setSavingRole] = useState(false);
+  const [removingMember, setRemovingMember] = useState(false);
   const [roleDraft, setRoleDraft] = useState('viewer');
 
   const accountId = context.accountId;
@@ -160,6 +163,28 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       setSavingRole(false);
     }
   }, [accountId, canManage, memberId, roleDraft]);
+
+  const removeMember = useCallback(async () => {
+    if (!accountId || !canManage || !member || member.member.role === 'owner') return;
+    setRemovingMember(true);
+    setMutationError(null);
+    try {
+      const response = await fetch(`/api/accounts/${encodeURIComponent(accountId)}/members/${encodeURIComponent(memberId)}`, {
+        method: 'DELETE',
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
+      if (!response.ok) {
+        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
+      }
+      router.push('/team');
+      router.refresh();
+    } catch (nextError) {
+      const reason = nextError instanceof Error ? nextError.message : String(nextError);
+      setMutationError(resolveTeamMemberErrorCopy(reason, 'Removing the team member failed. Please try again.'));
+    } finally {
+      setRemovingMember(false);
+    }
+  }, [accountId, canManage, member, memberId, router]);
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading team context...</section>;
   if (me.error || !me.data) {
@@ -245,6 +270,16 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                 disabled={!canManage || member.member.role === 'owner' || savingRole || roleDraft === member.member.role}
               >
                 <span className="diet-btn-txt__label body-m">{savingRole ? 'Saving...' : 'Save role'}</span>
+              </button>
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="line2"
+                type="button"
+                onClick={() => void removeMember()}
+                disabled={!canManage || member.member.role === 'owner' || removingMember}
+              >
+                <span className="diet-btn-txt__label body-m">{removingMember ? 'Removing...' : 'Remove member'}</span>
               </button>
             </div>
           </section>

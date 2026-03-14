@@ -2,7 +2,6 @@ import {
   ACCESS_TOKEN_SKEW_SECONDS,
   DEFAULT_AUDIENCE,
   DEFAULT_ISSUER,
-  DEFAULT_REFRESH_SECRET,
   REFRESH_KEY_CACHE,
   REFRESH_RTI_GRACE_MS,
   REFRESH_TOKEN_PREFIX,
@@ -120,7 +119,10 @@ async function resolveRefreshHmacKey(env: Env): Promise<CryptoKey> {
   const scope = globalThis as Record<string, unknown>;
   const cached = scope[REFRESH_KEY_CACHE];
   if (cached instanceof CryptoKey) return cached;
-  const secret = claimAsString(env.BERLIN_REFRESH_SECRET) || DEFAULT_REFRESH_SECRET;
+  const secret = claimAsString(env.BERLIN_REFRESH_SECRET);
+  if (!secret) {
+    throw new Error('[berlin] Missing BERLIN_REFRESH_SECRET');
+  }
   const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, [
     'sign',
     'verify',

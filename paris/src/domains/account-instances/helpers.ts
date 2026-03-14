@@ -12,7 +12,6 @@ import { readCuratedMeta } from '../../shared/curated-meta';
 import { loadWidgetLimits } from '../../shared/tokyo';
 import {
   AssetUsageValidationError,
-  syncAccountAssetUsageForInstance,
   validateAccountAssetUsageForInstance,
 } from '../../shared/assetUsage';
 import {
@@ -63,33 +62,7 @@ export async function validateAccountAssetUsageForInstanceStrict(args: {
   }
 }
 
-export async function syncAccountAssetUsageForInstanceStrict(args: {
-  env: Env;
-  accountId: string;
-  publicId: string;
-  config: Record<string, unknown>;
-}): Promise<Response | null> {
-  try {
-    await syncAccountAssetUsageForInstance(args);
-    return null;
-  } catch (error) {
-    const detail = errorDetail(error);
-    if (error instanceof AssetUsageValidationError) {
-      return ckError(
-        {
-          kind: 'VALIDATION',
-          reasonKey: 'coreui.errors.payload.invalid',
-          detail,
-          paths: accountAssetValidationPaths(detail),
-        },
-        422,
-      );
-    }
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
-  }
-}
-
-export async function rollbackCreatedInstanceOnUsageSyncFailure(args: {
+export async function rollbackCreatedInstanceAfterPostCommitFailure(args: {
   env: Env;
   accountId: string;
   publicId: string;
@@ -105,84 +78,7 @@ export async function rollbackCreatedInstanceOnUsageSyncFailure(args: {
   if (!res.ok) {
     const details = await readJson(res);
     console.error(
-      `[ParisWorker] Failed to rollback created instance after usage sync error (${res.status}): ${JSON.stringify(details)}`,
-    );
-  }
-}
-
-export async function rollbackInstanceWriteOnUsageSyncFailure(args: {
-  env: Env;
-  accountId: string;
-  publicId: string;
-  before: InstanceRow | CuratedInstanceRow;
-  isCurated: boolean;
-}): Promise<void> {
-  const patchPath = args.isCurated
-    ? `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(args.publicId)}`
-    : `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(args.publicId)}&account_id=eq.${encodeURIComponent(args.accountId)}`;
-
-  let rollbackPayload: Record<string, unknown> = {
-    config: args.before.config,
-  };
-  if (args.isCurated) {
-    const beforeCurated = args.before as CuratedInstanceRow;
-    rollbackPayload = {
-      ...rollbackPayload,
-      status: beforeCurated.status,
-      kind: resolveCuratedRowKind(args.publicId),
-      meta: beforeCurated.meta ?? null,
-    };
-  } else {
-    const beforeUser = args.before as InstanceRow;
-    rollbackPayload = {
-      ...rollbackPayload,
-      status: beforeUser.status,
-      display_name: beforeUser.display_name ?? DEFAULT_INSTANCE_DISPLAY_NAME,
-      kind: beforeUser.kind ?? inferInstanceKindFromPublicId(args.publicId),
-    };
-  }
-
-  const rollbackRes = await supabaseFetch(args.env, patchPath, {
-    method: 'PATCH',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify(rollbackPayload),
-  });
-  if (!rollbackRes.ok) {
-    const details = await readJson(rollbackRes);
-    console.error(
-      `[ParisWorker] Failed to rollback instance write after usage sync error (${rollbackRes.status}): ${JSON.stringify(details)}`,
-    );
-  }
-}
-
-export async function rollbackCreatedInstanceAfterPostCommitFailure(args: {
-  env: Env;
-  accountId: string;
-  publicId: string;
-  isCurated: boolean;
-}): Promise<void> {
-  await rollbackCreatedInstanceOnUsageSyncFailure(args);
-}
-
-export async function rollbackInstanceWriteAfterPostCommitFailure(args: {
-  env: Env;
-  accountId: string;
-  publicId: string;
-  before: InstanceRow | CuratedInstanceRow;
-  isCurated: boolean;
-}): Promise<void> {
-  await rollbackInstanceWriteOnUsageSyncFailure(args);
-  try {
-    await syncAccountAssetUsageForInstance({
-      env: args.env,
-      accountId: args.accountId,
-      publicId: args.publicId,
-      config: args.before.config,
-    });
-  } catch (error) {
-    const detail = errorDetail(error);
-    console.error(
-      `[ParisWorker] Failed to restore asset usage references after rollback for ${args.publicId}: ${detail}`,
+      `[ParisWorker] Failed to rollback created instance after post-commit failure (${res.status}): ${JSON.stringify(details)}`,
     );
   }
 }

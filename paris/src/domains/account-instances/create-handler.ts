@@ -45,10 +45,28 @@ import {
   DEFAULT_INSTANCE_DISPLAY_NAME,
   enforceLimits,
   rollbackCreatedInstanceAfterPostCommitFailure,
-  syncAccountAssetUsageForInstanceStrict,
   titleCase,
   validateAccountAssetUsageForInstanceStrict,
 } from './helpers';
+
+async function countPublishedAccountInstances(env: Env, accountId: string): Promise<number | null> {
+  const params = new URLSearchParams({
+    select: 'public_id',
+    account_id: `eq.${accountId}`,
+    status: 'eq.published',
+    limit: '1',
+  });
+  const response = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, {
+    method: 'GET',
+    headers: { Prefer: 'count=exact' },
+  });
+  if (!response.ok) return null;
+  const range = response.headers.get('content-range') || '';
+  const match = range.match(/\/(\d+)$/);
+  if (match) return Number.parseInt(match[1] || '0', 10);
+  const rows = (await response.json().catch(() => null)) as Array<{ public_id?: string | null }> | null;
+  return Array.isArray(rows) ? rows.length : 0;
+}
 
 export async function handleAccountCreateInstance(req: Request, env: Env, accountId: string) {
   const authorized = await authorizeAccount(req, env, accountId, 'editor');
@@ -334,6 +352,47 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
       }
     }
 
+    const publishedInstancesCapRaw = policyResult.policy.caps['instances.published.max'];
+    const publishedInstancesCap =
+      typeof publishedInstancesCapRaw === 'number' && Number.isFinite(publishedInstancesCapRaw)
+        ? Math.max(0, Math.floor(publishedInstancesCapRaw))
+        : null;
+    if (status === 'published' && publishedInstancesCap != null) {
+      if (publishedInstancesCap === 0) {
+        return ckError(
+          {
+            kind: 'DENY',
+            reasonKey: 'coreui.upsell.reason.capReached',
+            upsell: 'UP',
+            detail: `instances.published.max=${publishedInstancesCap}`,
+          },
+          403,
+        );
+      }
+      const publishedCount = await countPublishedAccountInstances(env, account.id);
+      if (publishedCount == null) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.db.readFailed',
+            detail: 'failed_to_count_published_instances',
+          },
+          500,
+        );
+      }
+      if (publishedCount >= publishedInstancesCap) {
+        return ckError(
+          {
+            kind: 'DENY',
+            reasonKey: 'coreui.upsell.reason.capReached',
+            upsell: 'UP',
+            detail: `instances.published.max=${publishedInstancesCap}`,
+          },
+          403,
+        );
+      }
+    }
+
     const baseInsertPayload = {
       account_id: account.id,
       widget_id: widget.id,
@@ -368,22 +427,6 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
 
   if (createdInstance) {
     const createdKind = resolveInstanceKind(createdInstance);
-
-    const usageSyncError = await syncAccountAssetUsageForInstanceStrict({
-      env,
-      accountId: account.id,
-      publicId,
-      config: createdInstance.config,
-    });
-    if (usageSyncError) {
-      await rollbackCreatedInstanceAfterPostCommitFailure({
-        env,
-        accountId: account.id,
-        publicId,
-        isCurated: createdKind === 'curated',
-      });
-      return usageSyncError;
-    }
 
     if (createdKind !== 'curated') {
       try {

@@ -379,7 +379,7 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 - `bash scripts/dev-up.sh --source` uses local Supabase by default and ignores remote Supabase values in `.env.local`.
 - To force local services to use remote Supabase, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`.
 - Berlin runs locally at `http://localhost:3005` for parity/unit work, but supported product auth happens in cloud Roma.
-- Berlin session token issuer must match the Berlin issuer Paris is configured to trust; mismatched issuers are rejected (`AUTH_INVALID` issuer mismatch).
+- Berlin session token issuer must match the Berlin issuer Paris is configured to trust; mismatched issuers are rejected with `coreui.errors.auth.forbidden` and `issuer_mismatch`.
 
 ### Environments (Canonical)
 

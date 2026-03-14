@@ -236,6 +236,9 @@ importers:
       '@clickeen/ck-contracts':
         specifier: workspace:*
         version: link:../packages/ck-contracts
+      '@clickeen/ck-policy':
+        specifier: workspace:*
+        version: link:../packages/ck-policy
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../packages/l10n

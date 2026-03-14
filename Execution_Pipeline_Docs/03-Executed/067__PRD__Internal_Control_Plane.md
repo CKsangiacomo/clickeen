@@ -1,9 +1,18 @@
 # PRD 067 — Separate Internal Control Plane
 
-Status: EXECUTING
+Status: EXECUTED
 Date: 2026-03-13
 Owner: Product Dev Team
 Priority: P0
+
+Snapshot notice:
+- This PRD is a historical snapshot of the codebase and architecture at the time it was executed.
+- It is superseded by PRD 068 and any later PRDs.
+- Do not use this PRD as forward-looking architecture guidance except as historical context.
+
+Execution closeout:
+- Closed as historical snapshot on 2026-03-13.
+- Any remaining corrections, hardening, or architecture work move forward through PRD 068 and later only.
 
 ## Execution status
 
@@ -462,6 +471,6 @@ PRD 067 fails if execution does any of the following:
 
 ## References
 
-- [PRD 064](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/064__PRD__Berlin_Account_Management_Boundary__Single_Identity_And_Account_API.md)
+- [PRD 064](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/064__PRD__Berlin_Account_Management_Boundary__Single_Identity_And_Account_API.md)
 - [PRD 065](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/065__PRD__Berlin_Account_Management_Level_Up__Boundary_Closure_and_Commercial_Truth.md)
 - [PRD 066](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/066__PRD__DevStudio_Internal_Control_Plane__Berlin_VS_Separate_Admin_Authority.md)

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@clickeen/bob": "workspace:*",
+    "@clickeen/ck-policy": "workspace:*",
     "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/l10n": "workspace:*",
     "next": "15.5.2",

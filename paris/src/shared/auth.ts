@@ -21,6 +21,24 @@ export type SupabaseAuthPrincipal = {
   claims: JwtClaims;
 };
 
+function authErrorResponse(args: {
+  status: number;
+  kind: 'AUTH' | 'DENY' | 'UPSTREAM_UNAVAILABLE';
+  reasonKey: string;
+  detail?: string;
+}): Response {
+  return json(
+    {
+      error: {
+        kind: args.kind,
+        reasonKey: args.reasonKey,
+        ...(args.detail ? { detail: args.detail } : {}),
+      },
+    },
+    { status: args.status },
+  );
+}
+
 const INTERNAL_SERVICE_HEADER = 'x-ck-internal-service';
 const INTERNAL_SERVICE_ALLOWLIST = new Set([
   'sanfrancisco',
@@ -363,7 +381,14 @@ export async function assertSupabaseAuth(req: Request, env: Env): Promise<
 > {
   const token = asBearerToken(req.headers.get('Authorization'));
   if (!token) {
-    return { ok: false, response: json({ error: 'AUTH_REQUIRED' }, { status: 401 }) };
+    return {
+      ok: false,
+      response: authErrorResponse({
+        status: 401,
+        kind: 'AUTH',
+        reasonKey: 'coreui.errors.auth.required',
+      }),
+    };
   }
 
   const cachedPrincipal = readCachedBerlinPrincipal(token);
@@ -373,9 +398,23 @@ export async function assertSupabaseAuth(req: Request, env: Env): Promise<
 
   const signature = await verifyBerlinJwtSignature(token, env);
   if (!signature.ok) {
-    const status = signature.reason === 'jwks_unavailable' ? 502 : 403;
-    const error = signature.reason === 'jwks_unavailable' ? 'AUTH_PROVIDER_UNAVAILABLE' : 'AUTH_INVALID';
-    return { ok: false, response: json({ error, reason: signature.reason }, { status }) };
+    return {
+      ok: false,
+      response:
+        signature.reason === 'jwks_unavailable'
+          ? authErrorResponse({
+              status: 502,
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.auth.contextUnavailable',
+              detail: signature.reason,
+            })
+          : authErrorResponse({
+              status: 403,
+              kind: 'DENY',
+              reasonKey: 'coreui.errors.auth.forbidden',
+              detail: signature.reason,
+            }),
+    };
   }
 
   const claims = signature.claims;
@@ -385,24 +424,64 @@ export async function assertSupabaseAuth(req: Request, env: Env): Promise<
 
   const iss = claimAsString(claims.iss);
   if (!iss || iss !== issuer) {
-    return { ok: false, response: json({ error: 'AUTH_INVALID', reason: 'issuer_mismatch' }, { status: 403 }) };
+    return {
+      ok: false,
+      response: authErrorResponse({
+        status: 403,
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.auth.forbidden',
+        detail: 'issuer_mismatch',
+      }),
+    };
   }
   if (!audienceMatches(claims.aud, audience)) {
-    return { ok: false, response: json({ error: 'AUTH_INVALID', reason: 'audience_mismatch' }, { status: 403 }) };
+    return {
+      ok: false,
+      response: authErrorResponse({
+        status: 403,
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.auth.forbidden',
+        detail: 'audience_mismatch',
+      }),
+    };
   }
 
   const exp = claimAsNumber(claims.exp);
   if (!exp || exp <= nowSec) {
-    return { ok: false, response: json({ error: 'AUTH_EXPIRED' }, { status: 401 }) };
+    return {
+      ok: false,
+      response: authErrorResponse({
+        status: 401,
+        kind: 'AUTH',
+        reasonKey: 'coreui.errors.auth.required',
+        detail: 'token_expired',
+      }),
+    };
   }
   const nbf = claimAsNumber(claims.nbf);
   if (nbf && nbf > nowSec) {
-    return { ok: false, response: json({ error: 'AUTH_INVALID', reason: 'token_not_yet_valid' }, { status: 403 }) };
+    return {
+      ok: false,
+      response: authErrorResponse({
+        status: 403,
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.auth.forbidden',
+        detail: 'token_not_yet_valid',
+      }),
+    };
   }
 
   const sub = claimAsString(claims.sub);
   if (!sub || !isUuid(sub)) {
-    return { ok: false, response: json({ error: 'AUTH_INVALID', reason: 'subject_invalid' }, { status: 403 }) };
+    return {
+      ok: false,
+      response: authErrorResponse({
+        status: 403,
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.auth.forbidden',
+        detail: 'subject_invalid',
+      }),
+    };
   }
 
   const principal = writeCachedBerlinPrincipal(

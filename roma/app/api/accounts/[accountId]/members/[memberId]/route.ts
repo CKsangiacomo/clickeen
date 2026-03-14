@@ -156,3 +156,69 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const session = await resolveSessionBearer(request);
+  if (!session.ok) return withNoStore(session.response);
+
+  const { accountId: accountIdRaw, memberId: memberIdRaw } = await context.params;
+  const accountId = String(accountIdRaw || '').trim();
+  const memberId = String(memberIdRaw || '').trim();
+  if (!isUuid(accountId)) return invalidIdResponse(request, session.setCookies, 'coreui.errors.accountId.invalid');
+  if (!isUuid(memberId)) return invalidIdResponse(request, session.setCookies, 'coreui.errors.account.memberId.invalid');
+
+  const authz = await authorizeRequestAccountRoleFromCapsule({
+    request,
+    accountId,
+    minRole: 'admin',
+  });
+  if (!authz.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: authz.error }, { status: authz.status }),
+      session.setCookies,
+    );
+  }
+
+  try {
+    const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
+    const upstream = await fetch(
+      `${berlinBase}/v1/accounts/${encodeURIComponent(accountId)}/members/${encodeURIComponent(memberId)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          authorization: `Bearer ${session.accessToken}`,
+          accept: request.headers.get('accept') || 'application/json',
+        },
+        cache: 'no-store',
+      },
+    );
+    const body = await upstream.text().catch(() => '');
+    return withSession(
+      request,
+      new NextResponse(body, {
+        status: upstream.status,
+        headers: {
+          'content-type': upstream.headers.get('content-type') || 'application/json; charset=utf-8',
+        },
+      }),
+      session.setCookies,
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.auth.contextUnavailable',
+            detail,
+          },
+        },
+        { status: 502 },
+      ),
+      session.setCookies,
+    );
+  }
+}

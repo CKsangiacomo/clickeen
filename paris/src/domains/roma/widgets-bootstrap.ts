@@ -8,7 +8,6 @@ import { supabaseFetch } from '../../shared/supabase';
 import { formatCuratedDisplayName, readCuratedMeta } from '../../shared/curated-meta';
 import { asTrimmedString, assertAccountId } from '../../shared/validation';
 import { assertPublicId, isCuratedInstanceRow, isCuratedPublicId } from '../../shared/instances';
-import { syncAccountAssetUsageForInstanceStrict } from '../account-instances/helpers';
 import { enqueueTokyoMirrorJob } from '../account-instances/service';
 import { loadInstanceByAccountAndPublicId } from '../instances';
 
@@ -425,14 +424,6 @@ export async function handleRomaWidgetDelete(
       500,
     );
   }
-
-  const usageSyncError = await syncAccountAssetUsageForInstanceStrict({
-    env,
-    accountId,
-    publicId,
-    config: {},
-  });
-  if (usageSyncError) return usageSyncError;
 
   return json(
     {

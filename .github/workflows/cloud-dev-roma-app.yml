@@ -26,10 +26,13 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_CLOUD_DEV }}
       SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF_CLOUD_DEV }}
+      SUPABASE_URL: ${{ vars.SUPABASE_URL_CLOUD_DEV }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY_CLOUD_DEV }}
 
       PARIS_BASE_URL: https://paris.dev.clickeen.com
       NEXT_PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
       BERLIN_BASE_URL: https://berlin.dev.clickeen.com
+      SANFRANCISCO_BASE_URL: https://sanfrancisco.dev.clickeen.com
     steps:
       - uses: actions/checkout@v4
 
@@ -80,6 +83,25 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Compile widgets
+        run: |
+          set -euo pipefail
+          pnpm --filter @clickeen/bob dev > /tmp/clickeen-bob-dev.log 2>&1 &
+          BOB_PID=$!
+          cleanup() {
+            kill "$BOB_PID" >/dev/null 2>&1 || true
+            wait "$BOB_PID" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          for _ in {1..60}; do
+            if curl -fsS http://127.0.0.1:3000/bob >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:3000/bob >/dev/null
+          BOB_ORIGIN=http://127.0.0.1:3000 pnpm compile:widgets
 
       - name: Build Bob Pages contract
         run: pnpm -C bob build:cf

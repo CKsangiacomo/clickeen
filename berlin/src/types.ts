@@ -185,8 +185,6 @@ export const REFRESH_RTI_GRACE_MS = 30_000;
 export const REFRESH_TOKEN_PREFIX = 'ckr';
 export const DEFAULT_AUDIENCE = 'clickeen.product';
 export const DEFAULT_ISSUER = 'berlin.local';
-export const DEFAULT_REFRESH_SECRET = 'berlin-local-refresh-secret-change-me';
-
 export const SIGNING_CONTEXT_KEY = '__CK_BERLIN_SIGNING_CONTEXT_V2__';
 export const REFRESH_KEY_CACHE = '__CK_BERLIN_REFRESH_KEY_V2__';
 

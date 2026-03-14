@@ -11,6 +11,7 @@ import {
   handleAccountLocales,
   handleAccountLifecycleTierDropDismiss,
   handleAccountMemberById,
+  handleAccountMemberDeleteRoute,
   handleAccountMemberPatch,
   handleAccountMembers,
   handleAccountOwnerTransfer,
@@ -138,6 +139,14 @@ export default {
         }
         if (request.method === 'PATCH') {
           return await handleAccountMemberPatch(
+            request,
+            env,
+            decodeURIComponent(accountMemberMatch[1] || ''),
+            decodeURIComponent(accountMemberMatch[2] || ''),
+          );
+        }
+        if (request.method === 'DELETE') {
+          return await handleAccountMemberDeleteRoute(
             request,
             env,
             decodeURIComponent(accountMemberMatch[1] || ''),

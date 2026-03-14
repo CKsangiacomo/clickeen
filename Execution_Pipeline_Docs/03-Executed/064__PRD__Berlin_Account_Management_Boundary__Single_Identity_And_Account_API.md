@@ -1,9 +1,18 @@
 # PRD 064 — Berlin Account Management Boundary: Single Identity and Account API
 
-Status: EXECUTING  
+Status: EXECUTED
 Date: 2026-03-11  
 Owner: Product Dev Team  
 Priority: P0
+
+Snapshot notice:
+- This PRD is a historical snapshot of the codebase and architecture at the time it was executed.
+- It is superseded by PRD 068 and any later PRDs.
+- Do not use this PRD as forward-looking architecture guidance except as historical context.
+
+Execution closeout:
+- Closed as historical snapshot on 2026-03-13.
+- Any remaining corrections, hardening, or architecture work move forward through PRD 068 and later only.
 
 Environment contract:
 - Read truth: local + cloud-dev

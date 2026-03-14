@@ -59,15 +59,18 @@ function warningResponse(args: {
   textChanged?: boolean;
   detail: string;
 }) {
-  return Response.json({
-    ok: true,
-    changed: args.changed ?? false,
-    textChanged: args.textChanged ?? false,
-    published: args.published,
-    translation: args.translation ?? { status: 'skipped' },
-    publishedSurface: args.publishedSurface ?? { status: 'skipped' },
-    ...responseWarning(args.detail),
-  });
+  return Response.json(
+    {
+      ok: false,
+      changed: args.changed ?? false,
+      textChanged: args.textChanged ?? false,
+      published: args.published,
+      translation: args.translation ?? { status: 'skipped' },
+      publishedSurface: args.publishedSurface ?? { status: 'skipped' },
+      ...responseWarning(args.detail),
+    },
+    { status: 502 },
+  );
 }
 
 async function loadSaveAftermathContext(

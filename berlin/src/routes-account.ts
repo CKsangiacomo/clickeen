@@ -8,6 +8,7 @@ import {
 } from './account-invitations';
 import {
   handleAccountMemberCreate,
+  handleAccountMemberDelete,
   handleAccountMemberUpdate,
 } from './account-members';
 import {
@@ -560,6 +561,32 @@ export async function handleAccountMemberPatch(
 
   return handleAccountMemberUpdate({
     request,
+    env,
+    account,
+    accountId,
+    memberId,
+  });
+}
+
+export async function handleAccountMemberDeleteRoute(
+  request: Request,
+  env: Env,
+  accountIdRaw: string,
+  memberIdRaw: string,
+): Promise<Response> {
+  const accountId = normalizeUuid(accountIdRaw);
+  if (!accountId) return validationError('coreui.errors.accountId.invalid');
+
+  const memberId = normalizeUuid(memberIdRaw);
+  if (!memberId) return denyResponse();
+
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
+
+  const account = findAccountContext(resolved.state, accountId);
+  if (!account) return denyResponse();
+
+  return handleAccountMemberDelete({
     env,
     account,
     accountId,

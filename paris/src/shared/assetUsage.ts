@@ -137,14 +137,3 @@ export async function validateAccountAssetUsageForInstance(args: {
   const refs = await resolveValidatedAccountAssetUsageRefs(args);
   return { count: refs.length };
 }
-
-export async function syncAccountAssetUsageForInstance(args: {
-  env: Env;
-  accountId: string;
-  publicId: string;
-  config: Record<string, unknown>;
-}): Promise<{ count: number }> {
-  const refs = await resolveValidatedAccountAssetUsageRefs(args);
-  void args.env;
-  return { count: refs.length };
-}

@@ -4,11 +4,17 @@ STATUS: CANONICAL CURRENT MODEL
 
 This file is the canonical account-management model for Clickeen.
 
-It defines the runtime boundary that Berlin, Roma, DevStudio, Bob, Michael, and Paris must converge to. PRD 65 is executed; the remaining architecture closure work lives in PRD 064.
+It defines the runtime boundary that Berlin, Roma, DevStudio, Bob, Michael, and Paris must converge to. PRD 064/065/066/067 are historical snapshots only. Forward-looking correction and hardening work now starts from PRD 068.
 
 For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./Overview.md).
-For the executed account-boundary closure, see [PRD 65](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/065__PRD__Berlin_Account_Management_Level_Up__Boundary_Closure_and_Commercial_Truth.md).
-For the remaining Berlin/Roma/DevStudio architecture convergence, see [PRD 064](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/064__PRD__Berlin_Account_Management_Boundary__Single_Identity_And_Account_API.md).
+Forward correction track:
+- [PRD 068](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/068__PRD__Pre_GA_Architecture_Audit_Corrections.md)
+
+Historical snapshots:
+- [PRD 064](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/064__PRD__Berlin_Account_Management_Boundary__Single_Identity_And_Account_API.md)
+- [PRD 065](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/065__PRD__Berlin_Account_Management_Level_Up__Boundary_Closure_and_Commercial_Truth.md)
+- [PRD 066](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/066__PRD__DevStudio_Internal_Control_Plane__Berlin_VS_Separate_Admin_Authority.md)
+- [PRD 067](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/067__PRD__Internal_Control_Plane.md)
 
 ---
 
