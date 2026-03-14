@@ -1,11 +1,4 @@
-import { getEntitlementsMatrix } from '@clickeen/ck-policy';
-import {
-  isUuid,
-  normalizeWidgetPublicId,
-  parseCanonicalAssetRef,
-  toCanonicalAssetVersionPath,
-} from '@clickeen/ck-contracts';
-import { normalizeLocaleToken } from '@clickeen/l10n';
+import { isUuid, parseCanonicalAssetRef } from '@clickeen/ck-contracts';
 import {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
@@ -37,423 +30,51 @@ import {
   writeTextPack,
   type TokyoMirrorQueueJob,
 } from './domains/render';
+import {
+  assertUploadAuth,
+  requireDevAuth,
+  TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
+} from './auth';
+import {
+  guessContentTypeFromExt,
+  handleGetTokyoFontAsset,
+  normalizeLocale,
+  normalizePublicId,
+  normalizeSha256Hex,
+} from './asset-utils';
+import { json } from './http';
+import type { Env } from './types';
 
-export type Env = {
-  TOKYO_DEV_JWT: string;
-  TOKYO_R2: R2Bucket;
-  USAGE_KV?: KVNamespace;
-  RENDER_SNAPSHOT_QUEUE?: Queue<TokyoMirrorQueueJob>;
-  SUPABASE_URL?: string;
-  SUPABASE_SERVICE_ROLE_KEY?: string;
-  BERLIN_BASE_URL?: string;
-  BERLIN_JWKS_URL?: string;
-  BERLIN_ISSUER?: string;
-  BERLIN_AUDIENCE?: string;
-  TOKYO_L10N_HTTP_BASE?: string;
-  CLOUDFLARE_ZONE_ID?: string;
-  CLOUDFLARE_API_TOKEN?: string;
-};
-
-export function json(payload: unknown, init?: ResponseInit) {
-  return new Response(JSON.stringify(payload), {
-    ...init,
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store',
-      ...(init?.headers || {}),
-    },
-  });
-}
-
-function asBearerToken(header: string | null): string | null {
-  if (!header) return null;
-  const [scheme, token] = header.split(' ');
-  if (!scheme || scheme.toLowerCase() !== 'bearer') return null;
-  if (!token) return null;
-  return token.trim() || null;
-}
-
-type JwtClaims = Record<string, unknown> & {
-  sub?: string;
-  iss?: string;
-  aud?: string | string[];
-  exp?: number;
-  nbf?: number;
-};
-
-type UploadPrincipal = {
-  token: string;
-  userId: string;
-};
-
-const INTERNAL_SERVICE_HEADER = 'x-ck-internal-service';
-export const TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL = 'devstudio.local';
-export const TOKYO_INTERNAL_SERVICE_PARIS_LOCAL = 'paris.local';
-
-type UploadAuthResult =
-  | { ok: true; principal: UploadPrincipal }
-  | { ok: false; response: Response };
-
-type BerlinJwksCacheEntry = {
-  fetchedAt: number;
-  expiresAt: number;
-  keys: Record<string, CryptoKey>;
-};
-
-type BerlinJwksStore = {
-  cacheByUrl: Record<string, BerlinJwksCacheEntry | undefined>;
-};
-
-const BERLIN_JWKS_CACHE_KEY = '__CK_TOKYO_BERLIN_JWKS_CACHE_V1__';
-const BERLIN_JWKS_CACHE_TTL_MS = 5 * 60_000;
-const DEFAULT_BERLIN_BASE_URL = 'https://berlin-dev.clickeen.workers.dev';
-
-function decodeJwtPayload(token: string): JwtClaims | null {
-  const parts = token.split('.');
-  if (parts.length !== 3) return null;
-  const payloadPart = parts[1];
-  if (!payloadPart) return null;
-  try {
-    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-    const decoded = atob(padded);
-    const parsed = JSON.parse(decoded) as unknown;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-    return parsed as JwtClaims;
-  } catch {
-    return null;
-  }
-}
-
-function claimAsString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  return trimmed || null;
-}
-
-function normalizeInternalServiceId(value: string | null): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim().toLowerCase();
-  return normalized || null;
-}
-
-function claimAsNumber(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return null;
-}
-
-function audienceMatches(claim: unknown, expected: string): boolean {
-  if (typeof claim === 'string') return claim.trim() === expected;
-  if (Array.isArray(claim))
-    return claim.some((item) => typeof item === 'string' && item.trim() === expected);
-  return false;
-}
-
-function resolveBerlinBaseUrl(env: Env): string {
-  const configured = typeof env.BERLIN_BASE_URL === 'string' ? env.BERLIN_BASE_URL.trim() : '';
-  return (configured || DEFAULT_BERLIN_BASE_URL).replace(/\/+$/, '');
-}
-
-function resolveBerlinIssuer(env: Env): string {
-  const configured =
-    (typeof env.BERLIN_ISSUER === 'string' ? env.BERLIN_ISSUER.trim() : '') || null;
-  if (configured) return configured.replace(/\/+$/, '');
-  return resolveBerlinBaseUrl(env);
-}
-
-function resolveBerlinAudience(env: Env): string {
-  const configured =
-    (typeof env.BERLIN_AUDIENCE === 'string' ? env.BERLIN_AUDIENCE.trim() : '') || null;
-  return configured || 'clickeen.product';
-}
-
-function resolveBerlinJwksUrl(env: Env): string {
-  const configured =
-    (typeof env.BERLIN_JWKS_URL === 'string' ? env.BERLIN_JWKS_URL.trim() : '') || null;
-  if (configured) return configured;
-  return `${resolveBerlinBaseUrl(env)}/.well-known/jwks.json`;
-}
-
-function isBerlinJwksStore(value: unknown): value is BerlinJwksStore {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const record = value as Record<string, unknown>;
-  const cacheByUrl = record.cacheByUrl;
-  return Boolean(cacheByUrl && typeof cacheByUrl === 'object' && !Array.isArray(cacheByUrl));
-}
-
-function resolveBerlinJwksStore(): BerlinJwksStore {
-  const scope = globalThis as Record<string, unknown>;
-  const existing = scope[BERLIN_JWKS_CACHE_KEY];
-  if (isBerlinJwksStore(existing)) return existing;
-  const next: BerlinJwksStore = { cacheByUrl: {} };
-  scope[BERLIN_JWKS_CACHE_KEY] = next;
-  return next;
-}
-
-function fromBase64Url(value: string): Uint8Array | null {
-  try {
-    const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-    const binary = atob(padded);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i += 1) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes;
-  } catch {
-    return null;
-  }
-}
-
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  if (
-    bytes.buffer instanceof ArrayBuffer &&
-    bytes.byteOffset === 0 &&
-    bytes.byteLength === bytes.buffer.byteLength
-  ) {
-    return bytes.buffer;
-  }
-  const cloned = new Uint8Array(bytes.byteLength);
-  cloned.set(bytes);
-  return cloned.buffer;
-}
-
-function jwkKid(value: JsonWebKey): string | null {
-  const raw = (value as Record<string, unknown>).kid;
-  if (typeof raw !== 'string') return null;
-  const trimmed = raw.trim();
-  return trimmed || null;
-}
-
-function decodeJwtHeader(token: string): Record<string, unknown> | null {
-  const parts = token.split('.');
-  if (parts.length !== 3) return null;
-  const headerPart = parts[0];
-  if (!headerPart) return null;
-  try {
-    const normalized = headerPart.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-    const decoded = atob(padded);
-    const parsed = JSON.parse(decoded) as unknown;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-    return parsed as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-async function importBerlinJwk(key: JsonWebKey): Promise<CryptoKey | null> {
-  if (key.kty !== 'RSA') return null;
-  if (!jwkKid(key)) return null;
-  if (typeof key.n !== 'string' || typeof key.e !== 'string') return null;
-  try {
-    return await crypto.subtle.importKey(
-      'jwk',
-      key,
-      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-      false,
-      ['verify'],
-    );
-  } catch {
-    return null;
-  }
-}
-
-async function fetchBerlinJwks(url: string): Promise<BerlinJwksCacheEntry> {
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: { accept: 'application/json' },
-    cache: 'no-store',
-  });
-  if (!response.ok) {
-    const bodySnippet = (await response.text().catch(() => '')).slice(0, 160);
-    throw new Error(
-      `Berlin JWKS lookup failed (${response.status}) url=${url}${bodySnippet ? ` body=${bodySnippet}` : ''}`,
-    );
-  }
-
-  const parsed = (await response.json().catch(() => null)) as unknown;
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('Berlin JWKS response is malformed');
-  }
-  const keysRaw = (parsed as Record<string, unknown>).keys;
-  if (!Array.isArray(keysRaw)) throw new Error('Berlin JWKS keys missing');
-
-  const keys: Record<string, CryptoKey> = {};
-  for (const item of keysRaw) {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
-    const jwk = item as JsonWebKey;
-    const kid = jwkKid(jwk) || '';
-    if (!kid) continue;
-    const imported = await importBerlinJwk(jwk);
-    if (!imported) continue;
-    keys[kid] = imported;
-  }
-
-  const now = Date.now();
-  return {
-    fetchedAt: now,
-    expiresAt: now + BERLIN_JWKS_CACHE_TTL_MS,
-    keys,
-  };
-}
-
-async function resolveBerlinVerifyKey(env: Env, kid: string): Promise<CryptoKey | null> {
-  const url = resolveBerlinJwksUrl(env);
-  const store = resolveBerlinJwksStore();
-  const now = Date.now();
-  const cached = store.cacheByUrl[url];
-  if (cached && cached.expiresAt > now && cached.keys[kid]) {
-    return cached.keys[kid] || null;
-  }
-
-  const fresh = await fetchBerlinJwks(url);
-  store.cacheByUrl[url] = fresh;
-  return fresh.keys[kid] || null;
-}
-
-async function verifyBerlinJwtSignature(
-  token: string,
-  env: Env,
-): Promise<{ ok: true; claims: JwtClaims } | { ok: false; reason: string; detail?: string }> {
-  const parts = token.split('.');
-  if (parts.length !== 3) return { ok: false, reason: 'malformed_jwt' };
-
-  const header = decodeJwtHeader(token);
-  const claims = decodeJwtPayload(token);
-  if (!header || !claims) return { ok: false, reason: 'malformed_jwt' };
-
-  const alg = claimAsString(header.alg);
-  if (!alg || alg !== 'RS256') return { ok: false, reason: 'unsupported_alg' };
-
-  const kid = claimAsString(header.kid);
-  if (!kid) return { ok: false, reason: 'missing_kid' };
-
-  let key: CryptoKey | null = null;
-  try {
-    key = await resolveBerlinVerifyKey(env, kid);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return { ok: false, reason: 'jwks_unavailable', detail };
-  }
-  if (!key) return { ok: false, reason: 'unknown_kid' };
-
-  const signature = fromBase64Url(parts[2] || '');
-  if (!signature) return { ok: false, reason: 'malformed_signature' };
-
-  const verified = await crypto.subtle.verify(
-    { name: 'RSASSA-PKCS1-v1_5' },
-    key,
-    toArrayBuffer(signature),
-    new TextEncoder().encode(`${parts[0]}.${parts[1]}`),
-  );
-  if (!verified) return { ok: false, reason: 'invalid_signature' };
-
-  return { ok: true, claims };
-}
-
-export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAuthResult> {
-  const token = asBearerToken(req.headers.get('authorization'));
-  if (!token) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } }, { status: 401 }),
-    };
-  }
-
-  const signature = await verifyBerlinJwtSignature(token, env);
-  if (!signature.ok) {
-    const status = signature.reason === 'jwks_unavailable' ? 502 : 403;
-    return {
-      ok: false,
-      response: json(
-        {
-          error: {
-            kind: signature.reason === 'jwks_unavailable' ? 'INTERNAL' : 'DENY',
-            reasonKey:
-              signature.reason === 'jwks_unavailable'
-                ? 'AUTH_PROVIDER_UNAVAILABLE'
-                : 'AUTH_INVALID',
-            ...(signature.reason === 'jwks_unavailable'
-              ? { detail: signature.detail || signature.reason }
-              : {}),
-          },
-        },
-        { status },
-      ),
-    };
-  }
-  const claims = signature.claims;
-
-  const nowSec = Math.floor(Date.now() / 1000);
-  const issuer = resolveBerlinIssuer(env);
-  const audience = resolveBerlinAudience(env);
-  const iss = claimAsString(claims.iss);
-  if (!iss || iss !== issuer) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }),
-    };
-  }
-  if (!audienceMatches(claims.aud, audience)) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }),
-    };
-  }
-  const exp = claimAsNumber(claims.exp);
-  if (!exp || exp <= nowSec) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_EXPIRED' } }, { status: 401 }),
-    };
-  }
-  const nbf = claimAsNumber(claims.nbf);
-  if (nbf && nbf > nowSec) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }),
-    };
-  }
-
-  const userId = claimAsString(claims.sub);
-  if (!userId || !isUuid(userId)) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }),
-    };
-  }
-  return { ok: true, principal: { token, userId } };
-}
-
-export function requireDevAuth(
-  req: Request,
-  env: Env,
-  options?: { allowTrustedInternalServices?: readonly string[] },
-): Response | null {
-  const expected = (env.TOKYO_DEV_JWT || '').trim();
-  if (!expected) {
-    return json(
-      { error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.misconfigured' } },
-      { status: 500 },
-    );
-  }
-  const token = asBearerToken(req.headers.get('authorization'));
-  if (!token) return json({ error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } }, { status: 401 });
-  const internalServiceId = normalizeInternalServiceId(req.headers.get(INTERNAL_SERVICE_HEADER));
-  if (
-    token !== expected ||
-    !internalServiceId ||
-    !(options?.allowTrustedInternalServices ?? []).includes(internalServiceId)
-  ) {
-    return json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 });
-  }
-  return null;
-}
+export type { Env } from './types';
+export { json } from './http';
+export {
+  assertUploadAuth,
+  requireDevAuth,
+  TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
+  TOKYO_INTERNAL_SERVICE_PARIS_LOCAL,
+} from './auth';
+export {
+  resolveL10nHttpBase,
+  buildL10nBridgeHeaders,
+  supabaseFetch,
+} from './supabase';
+export {
+  classifyAccountAssetType,
+  type AccountAssetType,
+  pickExtension,
+  validateUploadFilename,
+  buildAccountAssetKey,
+  normalizeAccountAssetReadKey,
+  buildAccountAssetVersionPath,
+  parseAccountAssetIdentityFromKey,
+  guessContentTypeFromExt,
+  normalizePublicId,
+  normalizeWidgetType,
+  normalizeLocale,
+  normalizeSha256Hex,
+  prettyStableJson,
+  sha256Hex,
+} from './asset-utils';
 
 async function authorizeAccountScopedRequest(args: {
   req: Request;
@@ -464,16 +85,9 @@ async function authorizeAccountScopedRequest(args: {
   const auth = await assertUploadAuth(args.req, args.env);
   if (!auth.ok) return auth.response;
   try {
-    const membershipRole = await loadAccountMembershipRole(
-      args.env,
-      args.accountId,
-      auth.principal.userId,
-    );
+    const membershipRole = await loadAccountMembershipRole(args.env, args.accountId, auth.principal.userId);
     if (!membershipRole || roleRank(membershipRole) < roleRank(args.minRole)) {
-      return json(
-        { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
-        { status: 403 },
-      );
+      return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 });
     }
     return null;
   } catch (error) {
@@ -483,224 +97,6 @@ async function authorizeAccountScopedRequest(args: {
       { status: 500 },
     );
   }
-}
-
-function requireSupabaseEnv(env: Env, key: 'SUPABASE_URL' | 'SUPABASE_SERVICE_ROLE_KEY'): string {
-  const value = env[key];
-  if (!value || typeof value !== 'string' || !value.trim()) {
-    throw new Error(`[tokyo] Missing required env var: ${key}`);
-  }
-  return value.trim();
-}
-
-function requireEnvString(value: string | undefined, key: string): string {
-  const normalized = typeof value === 'string' ? value.trim() : '';
-  if (!normalized) throw new Error(`[tokyo] Missing required env var: ${key}`);
-  return normalized;
-}
-
-export function resolveL10nHttpBase(env: Env): string | null {
-  const raw = typeof env.TOKYO_L10N_HTTP_BASE === 'string' ? env.TOKYO_L10N_HTTP_BASE.trim() : '';
-  if (!raw) return null;
-  return raw.replace(/\/+$/, '');
-}
-
-const TOKYO_L10N_BRIDGE_HEADER = 'x-tokyo-l10n-bridge';
-
-export function buildL10nBridgeHeaders(env: Env, init?: HeadersInit): Headers {
-  const headers = new Headers(init);
-  headers.set(TOKYO_L10N_BRIDGE_HEADER, '1');
-  const token = (env.TOKYO_DEV_JWT || '').trim();
-  if (token && !headers.has('authorization')) {
-    headers.set('authorization', `Bearer ${token}`);
-  }
-  if (!headers.has(INTERNAL_SERVICE_HEADER)) {
-    headers.set(INTERNAL_SERVICE_HEADER, TOKYO_INTERNAL_SERVICE_PARIS_LOCAL);
-  }
-  return headers;
-}
-
-export async function supabaseFetch(env: Env, pathnameWithQuery: string, init?: RequestInit) {
-  const baseUrl = requireSupabaseEnv(env, 'SUPABASE_URL').replace(/\/+$/, '');
-  const key = requireSupabaseEnv(env, 'SUPABASE_SERVICE_ROLE_KEY');
-  const headers = new Headers(init?.headers);
-  headers.set('apikey', key);
-  headers.set('Authorization', `Bearer ${key}`);
-  if (!headers.has('Content-Type') && init?.body) headers.set('Content-Type', 'application/json');
-  return fetch(`${baseUrl}${pathnameWithQuery}`, { ...init, headers });
-}
-
-function extFromMime(mime: string): string | null {
-  const mt = String(mime || '').toLowerCase();
-  if (mt === 'image/png') return 'png';
-  if (mt === 'image/jpeg') return 'jpg';
-  if (mt === 'image/webp') return 'webp';
-  if (mt === 'image/gif') return 'gif';
-  if (mt === 'image/svg+xml') return 'svg';
-  if (mt === 'video/mp4') return 'mp4';
-  if (mt === 'video/webm') return 'webm';
-  if (mt === 'application/pdf') return 'pdf';
-  return null;
-}
-
-export type AccountAssetType = 'image' | 'vector' | 'video' | 'audio' | 'document' | 'other';
-
-function normalizeMimeType(raw: string): string {
-  return String(raw || '')
-    .split(';')[0]
-    .trim()
-    .toLowerCase();
-}
-
-export function classifyAccountAssetType(
-  contentType: string | null,
-  ext: string | null,
-): AccountAssetType {
-  const mime = normalizeMimeType(String(contentType || '').trim());
-  const normalizedExt = String(ext || '')
-    .trim()
-    .toLowerCase();
-
-  if (mime === 'image/svg+xml' || normalizedExt === 'svg') return 'vector';
-  if (mime.startsWith('image/')) return 'image';
-  if (mime.startsWith('video/')) return 'video';
-  if (mime.startsWith('audio/')) return 'audio';
-  if (mime === 'application/pdf') return 'document';
-  return 'other';
-}
-
-export function pickExtension(filename: string | null, contentType: string | null): string {
-  const rawName = String(filename || '').trim();
-  const fromName = rawName ? rawName.split('.').pop()?.toLowerCase() : '';
-  if (fromName && /^[a-z0-9]{1,8}$/.test(fromName)) return fromName;
-  const fromMime = extFromMime(String(contentType || '').trim());
-  if (fromMime) return fromMime;
-  return 'bin';
-}
-
-export function validateUploadFilename(
-  filename: string | null,
-): { ok: true; filename: string } | { ok: false; detail: string } {
-  const raw = String(filename || '').trim();
-  if (!raw) return { ok: false, detail: 'filename required' };
-  if (raw.length > 180) return { ok: false, detail: 'filename too long (max 180 chars)' };
-  if (raw === '.' || raw === '..') return { ok: false, detail: 'filename reserved' };
-  if (raw.includes('/') || raw.includes('\\'))
-    return { ok: false, detail: 'path separators are not allowed' };
-  if (/\s/.test(raw)) return { ok: false, detail: 'spaces are not allowed' };
-  if (/[?#%]/.test(raw)) return { ok: false, detail: 'url-reserved characters are not allowed' };
-  if (!/^[A-Za-z0-9._-]+$/.test(raw))
-    return { ok: false, detail: 'unsupported characters in filename' };
-  return { ok: true, filename: raw };
-}
-
-const ACCOUNT_ASSET_CANONICAL_PREFIX = 'assets/versions/';
-
-export function buildAccountAssetKey(accountId: string, assetId: string, filename: string): string {
-  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
-}
-
-function normalizeCanonicalAccountAssetSuffix(suffix: string): string | null {
-  const parts = String(suffix || '')
-    .split('/')
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-  if (parts.length !== 3) return null;
-  const [accountId, assetId, filename] = parts;
-  if (!accountId || !assetId || !filename) return null;
-  if (!isUuid(accountId) || !isUuid(assetId)) return null;
-  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
-}
-
-export function normalizeAccountAssetReadKey(pathname: string): string | null {
-  const key = String(pathname || '').replace(/^\/+/, '');
-  if (!key.startsWith(ACCOUNT_ASSET_CANONICAL_PREFIX)) return null;
-  return normalizeCanonicalAccountAssetSuffix(key.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length));
-}
-
-type AccountAssetIdentity = { accountId: string; assetId: string };
-
-export function buildAccountAssetVersionPath(versionKey: string): string {
-  const versionPath = toCanonicalAssetVersionPath(versionKey);
-  if (!versionPath) throw new Error('[tokyo] invalid account asset version key');
-  return versionPath;
-}
-
-export function parseAccountAssetIdentityFromKey(key: string): AccountAssetIdentity | null {
-  const normalized = normalizeAccountAssetReadKey(key.startsWith('/') ? key : `/${key}`);
-  if (!normalized) return null;
-  const suffix = normalized.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length);
-  const parts = suffix.split('/').filter(Boolean);
-  if (parts.length !== 3) return null;
-  const accountId = parts[0];
-  const assetId = parts[1];
-  if (!accountId || !assetId || !isUuid(accountId) || !isUuid(assetId)) return null;
-  return { accountId, assetId };
-}
-
-export function guessContentTypeFromExt(ext: string): string {
-  switch (ext.toLowerCase()) {
-    case 'css':
-      return 'text/css; charset=utf-8';
-    case 'js':
-      return 'text/javascript; charset=utf-8';
-    case 'html':
-      return 'text/html; charset=utf-8';
-    case 'json':
-      return 'application/json; charset=utf-8';
-    case 'svg':
-      return 'image/svg+xml; charset=utf-8';
-    case 'png':
-      return 'image/png';
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg';
-    case 'webp':
-      return 'image/webp';
-    case 'gif':
-      return 'image/gif';
-    case 'mp4':
-      return 'video/mp4';
-    case 'webm':
-      return 'video/webm';
-    case 'pdf':
-      return 'application/pdf';
-    case 'woff2':
-      return 'font/woff2';
-    case 'woff':
-      return 'font/woff';
-    case 'otf':
-      return 'font/otf';
-    case 'ttf':
-      return 'font/ttf';
-    default:
-      return 'application/octet-stream';
-  }
-}
-
-function normalizeTokyoFontKey(pathname: string): string | null {
-  const normalized = String(pathname || '').replace(/^\/+/, '');
-  if (!normalized.startsWith('fonts/')) return null;
-  const segments = normalized.split('/');
-  if (segments.length < 2) return null;
-  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return null;
-  return normalized;
-}
-
-async function handleGetTokyoFontAsset(env: Env, pathname: string): Promise<Response> {
-  const key = normalizeTokyoFontKey(pathname);
-  if (!key) return new Response('Not found', { status: 404 });
-  const obj = await env.TOKYO_R2.get(key);
-  if (!obj) return new Response('Not found', { status: 404 });
-
-  const ext = key.split('.').pop() || '';
-  const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
-  const headers = new Headers();
-  headers.set('content-type', contentType);
-  headers.set('cache-control', 'public, max-age=3600, stale-while-revalidate=86400');
-  headers.set('cdn-cache-control', 'public, max-age=3600, stale-while-revalidate=86400');
-  headers.set('cloudflare-cdn-cache-control', 'public, max-age=3600, stale-while-revalidate=86400');
-  return new Response(obj.body, { status: 200, headers });
 }
 
 function withCors(res: Response): Response {
@@ -713,71 +109,6 @@ function withCors(res: Response): Response {
   );
   return new Response(res.body, { status: res.status, headers });
 }
-
-export const normalizePublicId = normalizeWidgetPublicId;
-
-export function normalizeWidgetType(raw: string): string | null {
-  const value = String(raw || '')
-    .trim()
-    .toLowerCase();
-  if (!value) return null;
-  if (!/^[a-z0-9][a-z0-9_-]*$/.test(value)) return null;
-  return value;
-}
-
-export function normalizeLocale(raw: unknown): string | null {
-  if (typeof raw !== 'string') return null;
-  const value = normalizeLocaleToken(raw);
-  if (!value) return null;
-  return value;
-}
-
-export function normalizeSha256Hex(raw: unknown): string | null {
-  const value = String(raw || '')
-    .trim()
-    .toLowerCase();
-  if (!/^[a-f0-9]{64}$/.test(value)) return null;
-  return value;
-}
-
-function stableStringify(value: any): string {
-  if (value === undefined) return 'null';
-  if (typeof value === 'function' || typeof value === 'symbol') return 'null';
-  if (Array.isArray(value)) {
-    return `[${value
-      .map((item) =>
-        item === undefined || typeof item === 'function' || typeof item === 'symbol'
-          ? 'null'
-          : stableStringify(item),
-      )
-      .join(',')}]`;
-  }
-  if (value && typeof value === 'object') {
-    const parts: string[] = [];
-    for (const key of Object.keys(value).sort()) {
-      const next = value[key];
-      if (next === undefined) continue;
-      if (typeof next === 'function' || typeof next === 'symbol') continue;
-      parts.push(`${JSON.stringify(key)}:${stableStringify(next)}`);
-    }
-    return `{${parts.join(',')}}`;
-  }
-  return JSON.stringify(value);
-}
-
-export function prettyStableJson(value: any): string {
-  const normalized = stableStringify(value);
-  const parsed = JSON.parse(normalized);
-  return JSON.stringify(parsed, null, 2);
-}
-
-export async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
-  const hash = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {

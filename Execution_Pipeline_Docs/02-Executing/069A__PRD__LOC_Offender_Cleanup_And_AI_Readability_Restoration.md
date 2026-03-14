@@ -108,6 +108,34 @@ Reduce the report’s LOC offenders so active source files stay readable to huma
    - none
 19. Phase 1 status:
    - complete
+20. Phase 2 slice 1 is landed:
+   - `tokyo-worker/src/index.ts` reduced from `1265` LOC to `596` LOC
+   - extracted modules:
+     - `tokyo-worker/src/auth.ts`
+     - `tokyo-worker/src/supabase.ts`
+     - `tokyo-worker/src/asset-utils.ts`
+     - `tokyo-worker/src/http.ts`
+     - `tokyo-worker/src/types.ts`
+21. This slice preserves:
+   - existing Tokyo route surface
+   - existing Berlin/JWKS upload auth behavior
+   - existing l10n bridge header behavior
+   - existing asset key/path/hash normalization behavior
+22. Phase 2 slice 2 is landed:
+   - `sanfrancisco/src/index.ts` reduced from `1133` LOC to `245` LOC
+   - extracted modules:
+     - `sanfrancisco/src/internalAuth.ts`
+     - `sanfrancisco/src/concurrency.ts`
+     - `sanfrancisco/src/telemetry.ts`
+     - `sanfrancisco/src/l10n-routes.ts`
+     - `sanfrancisco/src/personalization-jobs.ts`
+23. This slice preserves:
+   - existing execute route capability enforcement
+   - existing l10n dispatch/plan/translate behavior
+   - existing outcome signature verification and D1 indexing behavior
+   - existing personalization job queue/status behavior
+24. Remaining Phase 2 work:
+   - `admin/vite.config.ts`, only after `069B` stabilizes the active route surface
 
 ---
 

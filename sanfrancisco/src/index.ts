@@ -1,3 +1,32 @@
+import { listAiAgents, resolveAiAgent } from '@clickeen/ck-policy';
+import { executeCsWidgetCopilot } from './agents/csWidgetCopilot';
+import { executeDebugGrantProbe } from './agents/debugGrantProbe';
+import { executeL10nJob, isL10nJob, type L10nJob } from './agents/l10nInstance';
+import { executeSdrCopilot } from './agents/sdrCopilot';
+import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
+import { withInflightLimit } from './concurrency';
+import { assertCap, verifyGrant } from './grants';
+import { HttpError, json, noStore, readJson, isRecord } from './http';
+import {
+  handleL10nDispatch,
+  handleL10nPlan,
+  handlePragueStringsTranslate,
+} from './l10n-routes';
+import {
+  handlePersonalizationOnboardingCreate,
+  handlePersonalizationOnboardingStatus,
+  handlePersonalizationPreviewCreate,
+  handlePersonalizationPreviewStatus,
+  handleQueuedSanfranciscoCommand,
+  isSanfranciscoCommandMessage,
+} from './personalization-jobs';
+import {
+  ensureD1Schema,
+  indexCopilotEvent,
+  isOutcomeAttachRequest,
+  persistOutcomeAttach,
+  verifyOutcomeSignature,
+} from './telemetry';
 import type {
   AIGrant,
   Env,
@@ -6,193 +35,23 @@ import type {
   InteractionEvent,
   OutcomeAttachRequest,
   SanfranciscoCommandMessage,
-  Usage,
 } from './types';
-import { listAiAgents, resolveAiAgent } from '@clickeen/ck-policy';
-import { HttpError, json, noStore, readJson, asString, isRecord } from './http';
-import { assertCap, verifyGrant } from './grants';
-import { executeSdrCopilot } from './agents/sdrCopilot';
-import { executeDebugGrantProbe } from './agents/debugGrantProbe';
-import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
-import { executeCsWidgetCopilot } from './agents/csWidgetCopilot';
-import {
-  executeL10nJob,
-  isL10nJob,
-  resolveL10nPlanningSnapshot,
-  type L10nJob,
-} from './agents/l10nInstance';
-import { executePragueStringsTranslate, isPragueStringsJob } from './agents/l10nPragueStrings';
-import { executePersonalizationPreview, type PersonalizationPreviewInput, type PersonalizationPreviewResult } from './agents/personalizationPreview';
-import { executePersonalizationOnboarding, type PersonalizationOnboardingInput, type PersonalizationOnboardingResult } from './agents/personalizationOnboarding';
 
-const MAX_INFLIGHT_PER_ISOLATE = 8;
-let inflight = 0;
-
-let d1SchemaReady = false;
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const s = value.trim();
-  return s ? s : null;
-}
-
-function previewJobKey(jobId: string): string {
-  return `personalization:preview:${jobId}`;
-}
-
-function onboardingJobKey(jobId: string): string {
-  return `personalization:onboarding:${jobId}`;
-}
-
-function normalizeOverrideKeys(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return PREVIEW_DEFAULT_OVERRIDES.slice();
-  const out: string[] = [];
-  const seen = new Set<string>();
-  for (const value of raw) {
-    if (typeof value !== 'string') continue;
-    const trimmed = value.trim();
-    if (!trimmed || !PREVIEW_OVERRIDE_KEY_RE.test(trimmed)) continue;
-    if (seen.has(trimmed)) continue;
-    seen.add(trimmed);
-    out.push(trimmed);
-    if (out.length >= 12) break;
-  }
-  return out.length ? out : PREVIEW_DEFAULT_OVERRIDES.slice();
-}
-
-async function loadPreviewJob(env: Env, jobId: string): Promise<PreviewJobRecord | null> {
-  const stored = await env.SF_KV.get(previewJobKey(jobId), 'json').catch(() => null);
-  if (!stored || !isRecord(stored)) return null;
-  if (stored.v !== 1) return null;
-  return stored as PreviewJobRecord;
-}
-
-async function savePreviewJob(env: Env, record: PreviewJobRecord): Promise<void> {
-  await env.SF_KV.put(previewJobKey(record.jobId), JSON.stringify(record), { expirationTtl: PREVIEW_JOB_TTL_SEC });
-}
-
-async function loadOnboardingJob(env: Env, jobId: string): Promise<OnboardingJobRecord | null> {
-  const stored = await env.SF_KV.get(onboardingJobKey(jobId), 'json').catch(() => null);
-  if (!stored || !isRecord(stored)) return null;
-  if (stored.v !== 1) return null;
-  return stored as OnboardingJobRecord;
-}
-
-async function saveOnboardingJob(env: Env, record: OnboardingJobRecord): Promise<void> {
-  await env.SF_KV.put(onboardingJobKey(record.jobId), JSON.stringify(record), { expirationTtl: ONBOARDING_JOB_TTL_SEC });
-}
-
-function assertInternalAuth(request: Request, env: Env): void {
-  const expected = asTrimmedString(env.PARIS_DEV_JWT);
-  if (!expected) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing PARIS_DEV_JWT' });
-  }
-  const auth = asTrimmedString(request.headers.get('Authorization'));
-  const [scheme, token] = auth ? auth.split(' ') : [];
-  if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) {
-    throw new HttpError(401, { code: 'CAPABILITY_DENIED', message: 'Missing auth token' });
-  }
-  if (token.trim() !== expected) {
-    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid auth token' });
-  }
-}
-
-function toIsoDay(ms: number): string {
-  try {
-    return new Date(ms).toISOString().slice(0, 10);
-  } catch {
-    return new Date().toISOString().slice(0, 10);
-  }
-}
-
-function promptHasUrl(input: unknown): boolean {
-  if (!isRecord(input)) return false;
-  const prompt = asTrimmedString(input.prompt);
-  if (!prompt) return false;
-  return /\bhttps?:\/\/[^\s<>"')]+/i.test(prompt) || /\b([a-z0-9-]+\.)+[a-z]{2,}(\/[^\s<>"')]+)?\b/i.test(prompt);
-}
-
-function inferScopeFromPath(controlPath: string): 'stage' | 'pod' | 'content' {
-  if (controlPath.startsWith('stage.')) return 'stage';
-  if (controlPath.startsWith('pod.')) return 'pod';
-  return 'content';
-}
-
-const OUTCOME_EVENTS = new Set([
-  'signup_started',
-  'signup_completed',
-  'upgrade_clicked',
-  'upgrade_completed',
-  'cta_clicked',
-  'ux_keep',
-  'ux_undo',
-]);
-
-type PreviewJobStatus = 'queued' | 'running' | 'completed' | 'failed';
-
-type PreviewJobRecord = {
-  v: 1;
-  jobId: string;
-  status: PreviewJobStatus;
-  createdAtMs: number;
-  updatedAtMs: number;
-  input: PersonalizationPreviewInput;
-  result?: PersonalizationPreviewResult;
-  usage?: Usage;
-  error?: { message: string };
-};
-
-const PREVIEW_JOB_TTL_SEC = 60 * 20;
-const PREVIEW_DEFAULT_OVERRIDES = ['heroTitle', 'heroSubtitle', 'sectionTitle', 'ctaText'];
-const PREVIEW_OVERRIDE_KEY_RE = /^[a-zA-Z0-9._-]{1,40}$/;
-
-type OnboardingJobStatus = 'queued' | 'running' | 'completed' | 'failed';
-
-type OnboardingJobRecord = {
-  v: 1;
-  jobId: string;
-  status: OnboardingJobStatus;
-  createdAtMs: number;
-  updatedAtMs: number;
-  input: PersonalizationOnboardingInput;
-  result?: PersonalizationOnboardingResult;
-  usage?: Usage;
-  error?: { message: string };
-};
-
-function isSanfranciscoCommandMessage(value: unknown): value is SanfranciscoCommandMessage {
+function isExecuteRequest(value: unknown): value is ExecuteRequest {
   if (!isRecord(value)) return false;
-  if ((value as any).v !== 1) return false;
-  if ((value as any).kind !== 'sf.command') return false;
-  const command = asTrimmedString((value as any).command);
-  if (
-    command !== 'personalization.preview.enqueue' &&
-    command !== 'personalization.onboarding.enqueue' &&
-    command !== 'ai.outcome.attach'
-  ) {
-    return false;
-  }
-  return isRecord((value as any).payload);
+  return typeof value.grant === 'string' && typeof value.agentId === 'string';
 }
 
-function unwrapCommandPayload(raw: unknown, expectedCommand: string): unknown {
-  if (!isSanfranciscoCommandMessage(raw)) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Expected sf.command envelope payload',
-    });
-  }
-  const command = raw.command;
-  if (command !== expectedCommand) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: `Unsupported command "${command}" (expected "${expectedCommand}")`,
-    });
-  }
-  return raw.payload;
+function okHealth(env: Env): Response {
+  return noStore(
+    json({
+      ok: true,
+      service: 'sanfrancisco',
+      env: env.ENVIRONMENT ?? 'unknown',
+      ts: Date.now(),
+    }),
+  );
 }
-
-const ONBOARDING_JOB_TTL_SEC = 60 * 30;
 
 type AgentExecutor = (args: { grant: AIGrant; input: unknown }, env: Env) => Promise<{ result: unknown; usage: any }>;
 
@@ -225,273 +84,8 @@ for (const agentId of Object.keys(AGENT_EXECUTORS)) {
   }
 }
 
-function isOutcomeAttachRequest(value: unknown): value is OutcomeAttachRequest {
-  if (!isRecord(value)) return false;
-  const requestId = asTrimmedString((value as any).requestId);
-  const sessionId = asTrimmedString((value as any).sessionId);
-  const event = asTrimmedString((value as any).event);
-  const occurredAtMs = (value as any).occurredAtMs;
-  const timeToDecisionMs = (value as any).timeToDecisionMs;
-  const accountIdHash = (value as any).accountIdHash;
-  const workspaceIdHash = (value as any).workspaceIdHash;
-
-  if (!requestId) return false;
-  if (!sessionId) return false;
-  if (!event || !OUTCOME_EVENTS.has(event)) return false;
-  if (typeof occurredAtMs !== 'number' || !Number.isFinite(occurredAtMs)) return false;
-
-  if (timeToDecisionMs !== undefined && (typeof timeToDecisionMs !== 'number' || !Number.isFinite(timeToDecisionMs) || timeToDecisionMs < 0)) {
-    return false;
-  }
-  if (accountIdHash !== undefined && (typeof accountIdHash !== 'string' || !accountIdHash.trim())) return false;
-  if (workspaceIdHash !== undefined && (typeof workspaceIdHash !== 'string' || !workspaceIdHash.trim())) return false;
-
-  return true;
-}
-
-function base64UrlEncodeBytes(bytes: Uint8Array): string {
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function timingSafeEqual(a: string, b: string): boolean {
-  const aBytes = new TextEncoder().encode(a);
-  const bBytes = new TextEncoder().encode(b);
-  if (aBytes.length !== bBytes.length) return false;
-  let out = 0;
-  for (let i = 0; i < aBytes.length; i++) out |= aBytes[i] ^ bBytes[i];
-  return out === 0;
-}
-
-async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return base64UrlEncodeBytes(new Uint8Array(sig));
-}
-
-async function verifyOutcomeSignature(args: { request: Request; env: Env; bodyText: string }): Promise<void> {
-  const provided = asTrimmedString(args.request.headers.get('x-paris-signature'));
-  if (!provided) {
-    throw new HttpError(401, { code: 'CAPABILITY_DENIED', message: 'Missing signature' });
-  }
-  const secret = asTrimmedString(args.env.AI_GRANT_HMAC_SECRET);
-  if (!secret) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing AI_GRANT_HMAC_SECRET' });
-  }
-  const expected = await hmacSha256Base64Url(secret, `outcome.v1.${args.bodyText}`);
-  if (!timingSafeEqual(provided, expected)) {
-    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid signature' });
-  }
-}
-
-async function ensureD1Schema(env: Env): Promise<void> {
-  if (d1SchemaReady) return;
-  try {
-    await env.SF_D1.prepare(
-      `CREATE TABLE IF NOT EXISTS copilot_events_v1 (
-        requestId TEXT PRIMARY KEY NOT NULL,
-        day TEXT NOT NULL,
-        occurredAtMs INTEGER NOT NULL,
-        runtimeEnv TEXT,
-        envStage TEXT,
-        sessionId TEXT,
-        instancePublicId TEXT,
-        agentId TEXT NOT NULL,
-        widgetType TEXT,
-        intent TEXT,
-        outcome TEXT,
-        hasUrl INTEGER,
-        controlCount INTEGER,
-        opsCount INTEGER,
-        uniquePathsTouched INTEGER,
-        scopesTouched TEXT,
-        ctaAction TEXT,
-        promptVersion TEXT,
-        policyVersion TEXT,
-        dictionaryHash TEXT,
-        aiProfile TEXT,
-        taskClass TEXT,
-        provider TEXT,
-        model TEXT,
-        latencyMs INTEGER
-      )`,
-    ).run();
-
-    const maybeAddColumn = async (sql: string) => {
-      try {
-        await env.SF_D1.prepare(sql).run();
-      } catch {
-        // best-effort migration; ignore if the column already exists
-      }
-    };
-    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN sessionId TEXT`);
-    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN instancePublicId TEXT`);
-    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN aiProfile TEXT`);
-    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN taskClass TEXT`);
-
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_agent ON copilot_events_v1(day, agentId)`).run();
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_stage ON copilot_events_v1(day, envStage)`).run();
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_widget ON copilot_events_v1(day, widgetType)`).run();
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_session ON copilot_events_v1(day, sessionId)`).run();
-    await env.SF_D1.prepare(
-      `CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_intent_outcome ON copilot_events_v1(day, intent, outcome)`,
-    ).run();
-
-    await env.SF_D1.prepare(
-      `CREATE TABLE IF NOT EXISTS copilot_outcomes_v1 (
-        requestId TEXT NOT NULL,
-        event TEXT NOT NULL,
-        day TEXT NOT NULL,
-        occurredAtMs INTEGER NOT NULL,
-        sessionId TEXT NOT NULL,
-        timeToDecisionMs INTEGER,
-        accountIdHash TEXT,
-        workspaceIdHash TEXT,
-        PRIMARY KEY (requestId, event)
-      )`,
-    ).run();
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_outcomes_v1_day_event ON copilot_outcomes_v1(day, event)`).run();
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_outcomes_v1_request ON copilot_outcomes_v1(requestId)`).run();
-    d1SchemaReady = true;
-  } catch (err) {
-    console.error('[sanfrancisco] ensureD1Schema failed', err);
-  }
-}
-
-async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<void> {
-  const runtimeEnv = asTrimmedString(env.ENVIRONMENT) ?? 'unknown';
-  const envStage = isRecord(e.trace) ? asTrimmedString((e.trace as any).envStage) : null;
-  const sessionId = isRecord(e.trace) ? asTrimmedString((e.trace as any).sessionId) : null;
-  const instancePublicId = isRecord(e.trace) ? asTrimmedString((e.trace as any).instancePublicId) : null;
-
-  const day = toIsoDay(e.occurredAtMs);
-  const agentId = e.agentId;
-
-  let widgetType: string | null = null;
-  let controlCount: number | null = null;
-  let hasUrl = 0;
-
-  if (isRecord(e.input)) {
-    widgetType = asTrimmedString((e.input as any).widgetType);
-    const controls = (e.input as any).controls;
-    controlCount = Array.isArray(controls) ? controls.length : null;
-    hasUrl = promptHasUrl(e.input) ? 1 : 0;
-  }
-
-  let intent: string | null = null;
-  let outcome: string | null = null;
-  let promptVersion: string | null = null;
-  let policyVersion: string | null = null;
-  let dictionaryHash: string | null = null;
-
-  let ctaAction: string | null = null;
-  let opsCount: number | null = null;
-  let uniquePathsTouched: number | null = null;
-  let scopesTouched: string | null = null;
-
-  if (isRecord(e.result)) {
-    const meta = isRecord((e.result as any).meta) ? ((e.result as any).meta as any) : null;
-    intent = meta ? asTrimmedString(meta.intent) : null;
-    outcome = meta ? asTrimmedString(meta.outcome) : null;
-    promptVersion = meta ? asTrimmedString(meta.promptVersion) : null;
-    policyVersion = meta ? asTrimmedString(meta.policyVersion) : null;
-    dictionaryHash = meta ? asTrimmedString(meta.dictionaryHash) : null;
-
-    const cta = isRecord((e.result as any).cta) ? ((e.result as any).cta as any) : null;
-    ctaAction = cta ? asTrimmedString(cta.action) : null;
-
-    const opsRaw = (e.result as any).ops;
-    if (Array.isArray(opsRaw)) {
-      const paths = new Set<string>();
-      const scopes = new Set<string>();
-      let count = 0;
-      for (const op of opsRaw) {
-        if (!isRecord(op)) continue;
-        const path = asTrimmedString((op as any).path);
-        if (!path) continue;
-        count += 1;
-        paths.add(path);
-        scopes.add(inferScopeFromPath(path));
-      }
-      opsCount = count;
-      uniquePathsTouched = paths.size;
-      scopesTouched = JSON.stringify(Array.from(scopes));
-      if (!outcome) outcome = count > 0 ? 'ops_applied' : 'no_ops';
-    } else if (!outcome) {
-      outcome = 'no_ops';
-    }
-  }
-
-  const provider = asTrimmedString(e.usage?.provider) ?? null;
-  const model = asTrimmedString(e.usage?.model) ?? null;
-  const latencyMs = typeof e.usage?.latencyMs === 'number' && Number.isFinite(e.usage.latencyMs) ? e.usage.latencyMs : null;
-  const aiProfile = asTrimmedString(e.ai?.profile) ?? null;
-  const taskClass = asTrimmedString(e.ai?.taskClass) ?? null;
-
-  try {
-    await env.SF_D1.prepare(
-      `INSERT OR REPLACE INTO copilot_events_v1
-      (requestId, day, occurredAtMs, runtimeEnv, envStage, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptVersion, policyVersion, dictionaryHash, aiProfile, taskClass, provider, model, latencyMs)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-      .bind(
-        e.requestId,
-        day,
-        e.occurredAtMs,
-        runtimeEnv,
-        envStage,
-        sessionId,
-        instancePublicId,
-        agentId,
-        widgetType,
-        intent,
-        outcome,
-        hasUrl,
-        controlCount,
-        opsCount,
-        uniquePathsTouched,
-        scopesTouched,
-        ctaAction,
-        promptVersion,
-        policyVersion,
-        dictionaryHash,
-        aiProfile,
-        taskClass,
-        provider,
-        model,
-        latencyMs,
-      )
-      .run();
-  } catch (err) {
-    console.error('[sanfrancisco] D1 index insert failed', err);
-  }
-}
-
-function isExecuteRequest(value: unknown): value is ExecuteRequest {
-  if (!isRecord(value)) return false;
-  return typeof value.grant === 'string' && typeof value.agentId === 'string';
-}
-
-function okHealth(env: Env): Response {
-  return noStore(
-    json({
-      ok: true,
-      service: 'sanfrancisco',
-      env: env.ENVIRONMENT ?? 'unknown',
-      ts: Date.now(),
-    }),
-  );
-}
-
 async function handleExecute(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  if (inflight >= MAX_INFLIGHT_PER_ISOLATE) {
-    throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Service concurrency limit reached' });
-  }
-
-  inflight++;
-  try {
+  return await withInflightLimit(async () => {
     const body = await readJson(request);
     if (!isExecuteRequest(body)) {
       throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid request', issues: [{ path: '', message: 'Expected { grant, agentId, input }' }] });
@@ -508,7 +102,7 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
     }
     assertCap(grant, `agent:${canonicalId}`);
 
-    const requestId = asString(body.trace?.requestId) ?? crypto.randomUUID();
+    const requestId = typeof body.trace?.requestId === 'string' ? body.trace.requestId : crypto.randomUUID();
     const occurredAtMs = Date.now();
 
     const executor = AGENT_EXECUTORS[canonicalId];
@@ -543,35 +137,7 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
 
     const response: ExecuteResponse = { requestId, agentId: canonicalId, result: executed.result, usage: executed.usage };
     return noStore(json(response));
-  } finally {
-    inflight--;
-  }
-}
-
-async function persistOutcomeAttach(env: Env, body: OutcomeAttachRequest): Promise<void> {
-  await ensureD1Schema(env);
-  const day = toIsoDay(body.occurredAtMs);
-  try {
-    await env.SF_D1.prepare(
-      `INSERT OR REPLACE INTO copilot_outcomes_v1
-      (requestId, event, day, occurredAtMs, sessionId, timeToDecisionMs, accountIdHash, workspaceIdHash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-      .bind(
-        body.requestId,
-        body.event,
-        day,
-        body.occurredAtMs,
-        body.sessionId,
-        body.timeToDecisionMs ?? null,
-        body.accountIdHash ?? null,
-        body.workspaceIdHash ?? null,
-      )
-      .run();
-  } catch (err) {
-    console.error('[sanfrancisco] outcome insert failed', err);
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Failed to persist outcome' });
-  }
+  });
 }
 
 async function handleOutcome(request: Request, env: Env): Promise<Response> {
@@ -585,8 +151,20 @@ async function handleOutcome(request: Request, env: Env): Promise<Response> {
     throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
   }
 
-  const body = unwrapCommandPayload(parsedBody, 'ai.outcome.attach');
+  if (!isSanfranciscoCommandMessage(parsedBody)) {
+    throw new HttpError(400, {
+      code: 'BAD_REQUEST',
+      message: 'Expected sf.command envelope payload',
+    });
+  }
+  if (parsedBody.command !== 'ai.outcome.attach') {
+    throw new HttpError(400, {
+      code: 'BAD_REQUEST',
+      message: `Unsupported command "${parsedBody.command}" (expected "ai.outcome.attach")`,
+    });
+  }
 
+  const body = parsedBody.payload;
   if (!isOutcomeAttachRequest(body)) {
     throw new HttpError(400, {
       code: 'BAD_REQUEST',
@@ -595,474 +173,8 @@ async function handleOutcome(request: Request, env: Env): Promise<Response> {
     });
   }
 
-  await persistOutcomeAttach(env, body);
-
+  await persistOutcomeAttach(env, body as OutcomeAttachRequest);
   return noStore(json({ ok: true }));
-}
-
-async function handleL10nDispatch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const environment = asTrimmedString(env.ENVIRONMENT);
-  if (environment !== 'local') {
-    throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
-  }
-
-  const expected = asTrimmedString(env.PARIS_DEV_JWT);
-  if (!expected) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing PARIS_DEV_JWT' });
-  }
-
-  const auth = asTrimmedString(request.headers.get('Authorization'));
-  const [scheme, token] = auth ? auth.split(' ') : [];
-  if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) {
-    throw new HttpError(401, { code: 'CAPABILITY_DENIED', message: 'Missing auth token' });
-  }
-  if (token.trim() !== expected) {
-    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid auth token' });
-  }
-
-  let payload: unknown;
-  try {
-    payload = await request.json();
-  } catch {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
-  }
-
-  let jobs: unknown[] = [];
-  if (Array.isArray(payload)) {
-    jobs = payload;
-  } else if (isRecord(payload)) {
-    if (Array.isArray(payload.jobs)) jobs = payload.jobs;
-    else if (payload.job) jobs = [payload.job];
-    else jobs = [payload];
-  }
-
-  if (!jobs.length) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'No jobs provided' });
-  }
-
-  const invalid = jobs
-    .map((job, index) => ({ job, index }))
-    .filter(({ job }) => !isL10nJob(job))
-    .map(({ index }) => ({ path: `jobs[${index}]`, message: 'invalid l10n job' }));
-  if (invalid.length) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid l10n jobs', issues: invalid });
-  }
-
-  const verified: Array<{ job: L10nJob; grant: AIGrant }> = [];
-  for (const job of jobs as L10nJob[]) {
-    const grant = await verifyGrant(job.grant, env.AI_GRANT_HMAC_SECRET);
-    assertCap(grant, `agent:${job.agentId}`);
-    verified.push({ job, grant });
-  }
-
-  for (const { job, grant } of verified) {
-    ctx.waitUntil(
-      executeL10nJob(job, env, grant).catch((err: unknown) => {
-        console.error('[sanfrancisco] l10n dispatch failed', err);
-      }),
-    );
-  }
-
-  return noStore(json({ ok: true, queued: jobs.length }));
-}
-
-async function handleL10nPlan(request: Request, env: Env): Promise<Response> {
-  assertInternalAuth(request, env);
-
-  const body = await readJson(request);
-  if (!isRecord(body)) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'body must be an object' });
-  }
-
-  const widgetType = asTrimmedString((body as any).widgetType);
-  const config = isRecord((body as any).config) ? ((body as any).config as Record<string, unknown>) : null;
-  const baseUpdatedAt = asTrimmedString((body as any).baseUpdatedAt) ?? null;
-  const publicId = asTrimmedString((body as any).publicId);
-  const accountId = asTrimmedString((body as any).accountId);
-
-  if (!widgetType) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Missing required field: widgetType',
-    });
-  }
-  if (!config && (!publicId || !accountId)) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Missing required fields: config OR (publicId + accountId)',
-    });
-  }
-
-  const plan = await resolveL10nPlanningSnapshot({
-    env,
-    widgetType,
-    config,
-    baseUpdatedAt,
-    publicId,
-    accountId,
-  });
-  return noStore(json(plan));
-}
-
-async function handlePragueStringsTranslate(request: Request, env: Env): Promise<Response> {
-  if (inflight >= MAX_INFLIGHT_PER_ISOLATE) {
-    throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Service concurrency limit reached' });
-  }
-
-  inflight++;
-  try {
-    const environment = asTrimmedString(env.ENVIRONMENT);
-    // Allow in local dev and cloud-dev (sanfrancisco-dev). Keep disabled in other environments.
-    if (environment !== 'local' && environment !== 'dev') {
-      throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
-    }
-
-    const expected = asTrimmedString(env.PARIS_DEV_JWT);
-    if (!expected) {
-      throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing PARIS_DEV_JWT' });
-    }
-
-    const auth = asTrimmedString(request.headers.get('Authorization'));
-    const [scheme, token] = auth ? auth.split(' ') : [];
-    if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) {
-      throw new HttpError(401, { code: 'CAPABILITY_DENIED', message: 'Missing auth token' });
-    }
-    if (token.trim() !== expected) {
-      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid auth token' });
-    }
-
-    const body = await readJson(request);
-    const payload = isRecord(body) && isRecord((body as any).job) ? (body as any).job : body;
-    if (!isPragueStringsJob(payload)) {
-      throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid l10n translate job' });
-    }
-
-    const result = await executePragueStringsTranslate(payload, env);
-    return noStore(json(result));
-  } finally {
-    inflight--;
-  }
-}
-
-async function runPersonalizationPreviewJob(args: { env: Env; jobId: string; grant: AIGrant; input: PersonalizationPreviewInput }): Promise<void> {
-  const existing = await loadPreviewJob(args.env, args.jobId);
-  const baseRecord: PreviewJobRecord =
-    existing ?? ({
-      v: 1,
-      jobId: args.jobId,
-      status: 'queued',
-      createdAtMs: Date.now(),
-      updatedAtMs: Date.now(),
-      input: args.input,
-    } as PreviewJobRecord);
-
-  const runningRecord: PreviewJobRecord = { ...baseRecord, status: 'running', updatedAtMs: Date.now() };
-  await savePreviewJob(args.env, runningRecord);
-
-  try {
-    const { result, usage } = await executePersonalizationPreview({ env: args.env, grant: args.grant, input: args.input });
-    const completed: PreviewJobRecord = {
-      ...runningRecord,
-      status: 'completed',
-      result,
-      usage,
-      error: undefined,
-      updatedAtMs: Date.now(),
-    };
-    await savePreviewJob(args.env, completed);
-  } catch (err) {
-    const message = err instanceof HttpError ? err.error?.message ?? err.message : err instanceof Error ? err.message : 'Unknown error';
-    const failed: PreviewJobRecord = {
-      ...runningRecord,
-      status: 'failed',
-      error: { message },
-      updatedAtMs: Date.now(),
-    };
-    await savePreviewJob(args.env, failed);
-  }
-}
-
-async function enqueuePersonalizationPreview(args: {
-  env: Env;
-  payload: Record<string, unknown>;
-  dispatchMode: 'background' | 'inline';
-  ctx?: ExecutionContext;
-}): Promise<{ jobId: string }> {
-  const { env, payload } = args;
-
-  const url = asTrimmedString((payload as any).url);
-  if (!url) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing url' });
-  }
-
-  const agentId = asTrimmedString((payload as any).agentId) ?? 'agent.personalization.preview.v1';
-  if (agentId !== 'agent.personalization.preview.v1') {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Unsupported agentId' });
-  }
-
-  const grantRaw = asTrimmedString((payload as any).grant);
-  if (!grantRaw) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing grant' });
-  }
-
-  const grant = await verifyGrant(grantRaw, env.AI_GRANT_HMAC_SECRET);
-  assertCap(grant, `agent:${agentId}`);
-
-  const locale = asTrimmedString((payload as any).locale);
-  const templateContext = isRecord((payload as any).templateContext) ? ((payload as any).templateContext as Record<string, unknown>) : undefined;
-  const allowedOverrides = normalizeOverrideKeys((payload as any).allowedOverrides);
-  const requestedJobId = asTrimmedString((payload as any).jobId);
-
-  const jobId = requestedJobId ?? crypto.randomUUID();
-  const existing = await loadPreviewJob(env, jobId);
-  if (existing && existing.status !== 'failed') {
-    return { jobId };
-  }
-
-  const now = Date.now();
-  const input: PersonalizationPreviewInput = {
-    url,
-    ...(locale ? { locale } : {}),
-    ...(templateContext ? { templateContext } : {}),
-    allowedOverrides,
-  };
-
-  const record: PreviewJobRecord = {
-    v: 1,
-    jobId,
-    status: 'queued',
-    createdAtMs: existing?.createdAtMs ?? now,
-    updatedAtMs: now,
-    input,
-  };
-  await savePreviewJob(env, existing ? { ...existing, ...record } : record);
-
-  if (args.dispatchMode === 'background') {
-    if (!args.ctx) {
-      throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing execution context' });
-    }
-    args.ctx.waitUntil(runPersonalizationPreviewJob({ env, jobId, grant, input }));
-    return { jobId };
-  }
-
-  await runPersonalizationPreviewJob({ env, jobId, grant, input });
-  return { jobId };
-}
-
-async function handlePersonalizationPreviewCreate(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  assertInternalAuth(request, env);
-
-  const payloadRaw = await readJson(request);
-  const payload = unwrapCommandPayload(payloadRaw, 'personalization.preview.enqueue');
-  if (!isRecord(payload)) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
-  }
-
-  const scheduled = await enqueuePersonalizationPreview({
-    env,
-    payload: payload as Record<string, unknown>,
-    dispatchMode: 'background',
-    ctx,
-  });
-  return noStore(json({ jobId: scheduled.jobId }));
-}
-
-async function handlePersonalizationPreviewStatus(request: Request, env: Env, jobId: string): Promise<Response> {
-  assertInternalAuth(request, env);
-  const record = await loadPreviewJob(env, jobId);
-  if (!record) {
-    throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Job not found' });
-  }
-
-  return noStore(
-    json({
-      jobId: record.jobId,
-      status: record.status,
-      ...(record.result ? { result: record.result } : {}),
-      ...(record.error ? { error: record.error } : {}),
-      updatedAtMs: record.updatedAtMs,
-    }),
-  );
-}
-
-async function runPersonalizationOnboardingJob(args: {
-  env: Env;
-  jobId: string;
-  grant: AIGrant;
-  input: PersonalizationOnboardingInput;
-}): Promise<void> {
-  const existing = await loadOnboardingJob(args.env, args.jobId);
-  const baseRecord: OnboardingJobRecord =
-    existing ?? ({
-      v: 1,
-      jobId: args.jobId,
-      status: 'queued',
-      createdAtMs: Date.now(),
-      updatedAtMs: Date.now(),
-      input: args.input,
-    } as OnboardingJobRecord);
-
-  const runningRecord: OnboardingJobRecord = { ...baseRecord, status: 'running', updatedAtMs: Date.now() };
-  await saveOnboardingJob(args.env, runningRecord);
-
-  try {
-    const { result, usage } = await executePersonalizationOnboarding({ env: args.env, grant: args.grant, input: args.input });
-
-    const completed: OnboardingJobRecord = {
-      ...runningRecord,
-      status: 'completed',
-      result,
-      usage,
-      updatedAtMs: Date.now(),
-    };
-    await saveOnboardingJob(args.env, completed);
-  } catch (err) {
-    const message = err instanceof HttpError ? err.error?.message ?? err.message : err instanceof Error ? err.message : 'Unknown error';
-    const failed: OnboardingJobRecord = {
-      ...runningRecord,
-      status: 'failed',
-      error: { message },
-      updatedAtMs: Date.now(),
-    };
-    await saveOnboardingJob(args.env, failed);
-  }
-}
-
-async function enqueuePersonalizationOnboarding(args: {
-  env: Env;
-  payload: Record<string, unknown>;
-  dispatchMode: 'background' | 'inline';
-  ctx?: ExecutionContext;
-}): Promise<{ jobId: string }> {
-  const { env, payload } = args;
-
-  const grantRaw = asTrimmedString((payload as any).grant);
-  if (!grantRaw) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing grant' });
-  }
-
-  const agentId = asTrimmedString((payload as any).agentId) ?? 'agent.personalization.onboarding.v1';
-  if (agentId !== 'agent.personalization.onboarding.v1') {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Unsupported agentId' });
-  }
-
-  const accountId = asTrimmedString((payload as any).accountId);
-  const url = asTrimmedString((payload as any).url);
-  if (!accountId || !url) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing accountId or url' });
-  }
-
-  const grant = await verifyGrant(grantRaw, env.AI_GRANT_HMAC_SECRET);
-  assertCap(grant, `agent:${agentId}`);
-
-  const input: PersonalizationOnboardingInput = {
-    accountId,
-    url,
-    ...(typeof (payload as any).locale === 'string' ? { locale: (payload as any).locale } : {}),
-    ...(typeof (payload as any).websiteDepth === 'number' ? { websiteDepth: (payload as any).websiteDepth } : {}),
-    ...(typeof (payload as any).gbpPlaceId === 'string' ? { gbpPlaceId: (payload as any).gbpPlaceId } : {}),
-    ...(typeof (payload as any).facebookPageId === 'string' ? { facebookPageId: (payload as any).facebookPageId } : {}),
-    ...(typeof (payload as any).instagramHandle === 'string' ? { instagramHandle: (payload as any).instagramHandle } : {}),
-  };
-
-  const requestedJobId = asTrimmedString((payload as any).jobId);
-  const jobId = requestedJobId ?? crypto.randomUUID();
-  const existing = await loadOnboardingJob(env, jobId);
-  if (existing && existing.status !== 'failed') {
-    return { jobId };
-  }
-
-  const now = Date.now();
-  const record: OnboardingJobRecord = {
-    v: 1,
-    jobId,
-    status: 'queued',
-    createdAtMs: existing?.createdAtMs ?? now,
-    updatedAtMs: now,
-    input,
-  };
-  await saveOnboardingJob(env, existing ? { ...existing, ...record } : record);
-
-  if (args.dispatchMode === 'background') {
-    if (!args.ctx) {
-      throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing execution context' });
-    }
-    args.ctx.waitUntil(runPersonalizationOnboardingJob({ env, jobId, grant, input }));
-    return { jobId };
-  }
-
-  await runPersonalizationOnboardingJob({ env, jobId, grant, input });
-  return { jobId };
-}
-
-async function handlePersonalizationOnboardingCreate(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  assertInternalAuth(request, env);
-
-  const payloadRaw = await readJson(request);
-  const payload = unwrapCommandPayload(payloadRaw, 'personalization.onboarding.enqueue');
-  if (!isRecord(payload)) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
-  }
-
-  const scheduled = await enqueuePersonalizationOnboarding({
-    env,
-    payload: payload as Record<string, unknown>,
-    dispatchMode: 'background',
-    ctx,
-  });
-  return noStore(json({ jobId: scheduled.jobId }));
-}
-
-async function handlePersonalizationOnboardingStatus(request: Request, env: Env, jobId: string): Promise<Response> {
-  assertInternalAuth(request, env);
-  const record = await loadOnboardingJob(env, jobId);
-  if (!record) {
-    throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Job not found' });
-  }
-
-  return noStore(
-    json({
-      jobId: record.jobId,
-      status: record.status,
-      ...(record.result ? { result: record.result } : {}),
-      ...(record.error ? { error: record.error } : {}),
-      updatedAtMs: record.updatedAtMs,
-    }),
-  );
-}
-
-async function handleQueuedSanfranciscoCommand(command: SanfranciscoCommandMessage, env: Env): Promise<void> {
-  if (command.command === 'personalization.preview.enqueue') {
-    await enqueuePersonalizationPreview({
-      env,
-      payload: command.payload,
-      dispatchMode: 'inline',
-    });
-    return;
-  }
-
-  if (command.command === 'personalization.onboarding.enqueue') {
-    await enqueuePersonalizationOnboarding({
-      env,
-      payload: command.payload,
-      dispatchMode: 'inline',
-    });
-    return;
-  }
-
-  if (command.command === 'ai.outcome.attach') {
-    if (!isOutcomeAttachRequest(command.payload)) {
-      throw new HttpError(400, {
-        code: 'BAD_REQUEST',
-        message: 'Invalid ai.outcome.attach payload',
-        issues: [{ path: 'payload', message: 'Expected { requestId, sessionId, event, occurredAtMs }' }],
-      });
-    }
-    await persistOutcomeAttach(env, command.payload);
-    return;
-  }
-
-  throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Unsupported command' });
 }
 
 export default {
