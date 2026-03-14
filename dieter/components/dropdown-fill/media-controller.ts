@@ -1,8 +1,8 @@
 import { uploadEditorAsset } from '../shared/assetUpload';
 import { fetchImageAssetChoices, fetchVideoAssetChoices, toAssetPickerOverlayItems } from './asset-picker-data';
 import { normalizeAssetReferenceUrl, sameAssetReferenceUrl } from './color-utils';
+import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fill-types';
 import { assetRefFromUrl } from './fill-parser';
-import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fill';
 import type { FillValue } from './fill-types';
 
 export type SetMediaSrcOptions = {

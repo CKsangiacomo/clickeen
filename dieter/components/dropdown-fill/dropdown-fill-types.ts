@@ -1,0 +1,90 @@
+import type { AssetPickerOverlay } from './asset-picker-overlay';
+import type { FillMode, FillValue } from './fill-types';
+
+export type GradientStopState = {
+  id: string;
+  color: string;
+  position: number;
+  hsv: { h: number; s: number; v: number; a: number };
+};
+
+export type DropdownFillState = {
+  root: HTMLElement;
+  input: HTMLInputElement;
+  headerValue: HTMLElement | null;
+  headerValueLabel: HTMLElement | null;
+  headerValueChip: HTMLElement | null;
+  headerLabel: HTMLElement | null;
+  preview: HTMLElement | null;
+  nativeColorInput: HTMLInputElement | null;
+  colorPreview: HTMLElement | null;
+  removeFillActions: HTMLButtonElement[];
+  removeFillLabels: Array<HTMLElement | null>;
+  hueInput: HTMLInputElement;
+  alphaInput: HTMLInputElement;
+  hexField: HTMLInputElement;
+  alphaField: HTMLInputElement;
+  svCanvas: HTMLElement;
+  svThumb: HTMLElement;
+  swatches: HTMLButtonElement[];
+  hsv: { h: number; s: number; v: number; a: number };
+  gradientPreview: HTMLElement | null;
+  gradientAngleInput: HTMLInputElement | null;
+  gradientEditor: HTMLElement | null;
+  gradientStopBar: HTMLElement | null;
+  gradientStopAdd: HTMLButtonElement | null;
+  gradientStopButtons: Map<string, HTMLButtonElement>;
+  gradientStopSv: HTMLElement | null;
+  gradientStopSvThumb: HTMLElement | null;
+  gradientStopHueInput: HTMLInputElement | null;
+  gradientStopAlphaInput: HTMLInputElement | null;
+  gradientStopHexInput: HTMLInputElement | null;
+  gradientStopAlphaField: HTMLInputElement | null;
+  gradientActiveStopId: string;
+  gradientStops: GradientStopState[];
+  gradient: { angle: number };
+  gradientCss: string | null;
+  gradientDrag?: { id: string; pointerId: number };
+  imagePanel: HTMLElement | null;
+  imagePreview: HTMLElement | null;
+  uploadButton: HTMLButtonElement | null;
+  chooseButton: HTMLButtonElement | null;
+  removeButton: HTMLButtonElement | null;
+  assetPickerOverlay: AssetPickerOverlay | null;
+  fileInput: HTMLInputElement | null;
+  imageSrc: string | null;
+  imageName: string | null;
+  imageObjectUrl: string | null;
+  imageUnavailable: boolean;
+  imageAvailabilityRequestId: number;
+  imageAssetPickerOpen: boolean;
+  imageAssetPickerLoading: boolean;
+  videoPanel: HTMLElement | null;
+  videoPreview: HTMLVideoElement | null;
+  videoUploadButton: HTMLButtonElement | null;
+  videoChooseButton: HTMLButtonElement | null;
+  videoRemoveButton: HTMLButtonElement | null;
+  videoFileInput: HTMLInputElement | null;
+  videoSrc: string | null;
+  videoName: string | null;
+  videoObjectUrl: string | null;
+  videoUnavailable: boolean;
+  assetPickerKind: 'image' | 'video';
+  allowedModes: FillMode[];
+  mode: FillMode;
+  nativeValue?: { get: () => string; set: (next: string) => void };
+  internalWrite: boolean;
+};
+
+export type DropdownFillHeaderUpdate = {
+  text: string;
+  muted: boolean;
+  chipColor: string | null;
+  noneChip?: boolean;
+};
+
+export type DropdownFillUiDeps = {
+  setInputValue: (state: DropdownFillState, value: FillValue, emit: boolean) => void;
+  updateHeader: (state: DropdownFillState, opts: DropdownFillHeaderUpdate) => void;
+  setRemoveFillState: (state: DropdownFillState, isEmpty: boolean) => void;
+};

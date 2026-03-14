@@ -40,13 +40,15 @@ Current program state:
    - Phase 2 worker-entrypoint cleanup
    - Phase 3 slice 1: `berlin/src/account-state.ts` public-type extraction
    - Phase 3 slice 2: `dieter/components/textedit/textedit.ts` decomposition
+   - Phase 3 slice 3: `dieter/components/dropdown-fill/dropdown-fill.ts` decomposition
 2. blocked:
    - `admin/vite.config.ts`
    - blocked on `PRD 069B` stabilizing the active route surface
 3. deferred within this PRD:
    - deeper `account-state.ts` split unless a stronger responsibility boundary emerges
+   - any further Dieter/showcase cleanup unless it becomes an active blocker
 4. single active next slice:
-   - inspect and, only if justified, decompose `dieter/components/dropdown-fill/dropdown-fill.ts`
+   - none until `069B` unblocks `admin/vite.config.ts` or a new runtime-adjacent offender is explicitly promoted
 
 ## Current execution progress
 
@@ -188,8 +190,26 @@ Current program state:
    - existing preview synchronization and inline sanitization behavior
    - existing Dieter build output contract
 29. Remaining Phase 3 work:
-   - `dropdown-fill.ts` only if the boundary is real
    - `berlin/src/account-state.ts` deeper split is intentionally deferred unless a stronger responsibility boundary emerges
+30. Phase 3 slice 3 is landed:
+   - `dieter/components/dropdown-fill/dropdown-fill.ts` reduced from `1343` LOC to `722` LOC
+   - extracted modules:
+     - `dieter/components/dropdown-fill/dropdown-fill-types.ts`
+     - `dieter/components/dropdown-fill/dropdown-fill-gradient.ts`
+   - rewired existing module:
+     - `dieter/components/dropdown-fill/media-controller.ts`
+   - rebuilt derivative output:
+     - `tokyo/dieter/components/dropdown-fill/dropdown-fill.js`
+     - `tokyo/dieter/manifest.json`
+31. This slice preserves:
+   - existing dropdown-fill hydrate/create-state behavior
+   - existing color-mode UI and media-controller behavior
+   - existing gradient stop editing and preview behavior
+   - existing Dieter build output contract
+32. Remaining Phase 3 work:
+   - deeper `account-state.ts` split remains deferred unless a stronger boundary emerges
+33. Active runtime/tooling work remaining in this PRD:
+   - `admin/vite.config.ts`, still blocked on `069B`
 
 ---
 

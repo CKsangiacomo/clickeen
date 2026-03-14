@@ -1088,6 +1088,516 @@ var Dieter = (() => {
     return assetRefToUrl(ref);
   }
 
+  // components/dropdown-fill/dropdown-fill-gradient.ts
+  var gradientStopIdCounter = 0;
+  function createGradientStopId() {
+    gradientStopIdCounter += 1;
+    return `gradient-stop-${gradientStopIdCounter}`;
+  }
+  function createGradientStopState(root, stop) {
+    const parsed = parseColor(stop.color, root);
+    const safeColor = parsed ? stop.color : DEFAULT_GRADIENT.stops[0].color;
+    const hsv = parsed || parseColor(safeColor, root) || { h: 0, s: 0, v: 0, a: 1 };
+    return {
+      id: createGradientStopId(),
+      color: safeColor,
+      position: clampNumber2(stop.position, 0, 100),
+      hsv
+    };
+  }
+  function createDefaultGradientStops(root) {
+    return DEFAULT_GRADIENT.stops.map((stop) => createGradientStopState(root, stop));
+  }
+  function installGradientHandlers(state, deps) {
+    if (state.gradientAngleInput) {
+      state.gradientAngleInput.addEventListener("input", () => {
+        const angle = clampNumber2(Number(state.gradientAngleInput?.value), 0, 360);
+        state.gradientCss = null;
+        state.gradient.angle = angle;
+        syncGradientUI(state, { commit: true }, deps);
+      });
+    }
+    installGradientStopBarHandlers(state, deps);
+    installGradientEditorHandlers(state, deps);
+  }
+  function applyGradientSwatch(state, parsed, deps) {
+    const stop = getActiveGradientStop(state);
+    stop.hsv.h = parsed.h;
+    stop.hsv.s = parsed.s;
+    stop.hsv.v = parsed.v;
+    stop.hsv.a = 1;
+    commitGradientStopFromHsv(state, deps);
+  }
+  function applyGradientFromFill(state, gradient) {
+    state.gradient = { angle: DEFAULT_GRADIENT.angle };
+    state.gradientStops = createDefaultGradientStops(state.root);
+    state.gradientActiveStopId = state.gradientStops[0]?.id ?? "";
+    state.gradientCss = null;
+    if (!gradient || typeof gradient !== "object" || Array.isArray(gradient)) return;
+    if ("css" in gradient) {
+      const css = typeof gradient.css === "string" ? gradient.css.trim() : "";
+      state.gradientCss = css || null;
+      return;
+    }
+    if (!("kind" in gradient)) return;
+    const angle = typeof gradient.angle === "number" ? gradient.angle : DEFAULT_GRADIENT.angle;
+    state.gradient.angle = clampNumber2(angle, 0, 360);
+    if (Array.isArray(gradient.stops) && gradient.stops.length >= 2) {
+      state.gradientStops = gradient.stops.map(
+        (stop) => createGradientStopState(state.root, {
+          color: typeof stop?.color === "string" ? stop.color : DEFAULT_GRADIENT.stops[0].color,
+          position: typeof stop?.position === "number" ? stop.position : 0
+        })
+      );
+      state.gradientActiveStopId = state.gradientStops[0]?.id ?? "";
+    }
+  }
+  function syncGradientUI(state, opts, deps) {
+    const shouldUpdateHeader = opts.updateHeader !== false;
+    const shouldUpdateRemove = opts.updateRemove !== false;
+    ensureGradientStops(state);
+    if (state.gradientAngleInput) {
+      state.gradientAngleInput.value = String(clampNumber2(state.gradient.angle, 0, 360));
+      state.gradientAngleInput.style.setProperty("--value", state.gradientAngleInput.value);
+      state.gradientAngleInput.style.setProperty("--min", "0");
+      state.gradientAngleInput.style.setProperty("--max", "360");
+    }
+    syncGradientStopButtons(state);
+    syncActiveGradientStopUI(state);
+    updateGradientAddButton(state);
+    updateGradientPreview(state, { commit: opts.commit, updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove }, deps);
+  }
+  function ensureGradientStops(state) {
+    if (state.gradientStops.length >= 2) return;
+    state.gradientStops = createDefaultGradientStops(state.root);
+    state.gradientActiveStopId = state.gradientStops[0]?.id ?? "";
+  }
+  function getSortedGradientStops(stops) {
+    return [...stops].sort((a, b) => a.position - b.position);
+  }
+  function getActiveGradientStop(state) {
+    let active = state.gradientStops.find((stop) => stop.id === state.gradientActiveStopId);
+    if (!active) {
+      ensureGradientStops(state);
+      active = state.gradientStops[0];
+      state.gradientActiveStopId = active?.id ?? "";
+    }
+    return active;
+  }
+  function getGradientStopMetrics(state) {
+    const bar = state.gradientStopBar;
+    if (!bar) return null;
+    const rect = bar.getBoundingClientRect();
+    if (!rect.width) return null;
+    const sampleButton = state.gradientStopButtons.values().next().value;
+    const sampleRect = sampleButton?.getBoundingClientRect();
+    const sizeFallback = parseFloat(getComputedStyle(bar).getPropertyValue("--control-size-md")) || 24;
+    const stopSize = sampleRect?.width || sizeFallback;
+    const half = stopSize / 2;
+    const minX = half;
+    const maxX = Math.max(half, rect.width - half);
+    return { rect, minX, maxX };
+  }
+  function gradientPercentToPx(state, position) {
+    const metrics = getGradientStopMetrics(state);
+    if (!metrics) return null;
+    const percent = clampNumber2(position, 0, 100);
+    const span = metrics.maxX - metrics.minX;
+    if (span <= 0) return metrics.minX;
+    return metrics.minX + span * percent / 100;
+  }
+  function gradientPxToPercent(state, clientX) {
+    const metrics = getGradientStopMetrics(state);
+    if (!metrics) return 0;
+    const x = clampNumber2(clientX - metrics.rect.left, metrics.minX, metrics.maxX);
+    const span = metrics.maxX - metrics.minX;
+    if (span <= 0) return 0;
+    return clampNumber2((x - metrics.minX) / span * 100, 0, 100);
+  }
+  function getActiveGradientStopIndex(state) {
+    const sorted = getSortedGradientStops(state.gradientStops);
+    const index = sorted.findIndex((stop) => stop.id === state.gradientActiveStopId);
+    return { sorted, index };
+  }
+  function updateGradientAddButton(state) {
+    const button = state.gradientStopAdd;
+    if (!button) return;
+    const { sorted, index } = getActiveGradientStopIndex(state);
+    const removable = index > 0 && index < sorted.length - 1;
+    button.textContent = removable ? "-" : "+";
+    button.classList.toggle("is-remove", removable);
+    button.setAttribute("aria-label", removable ? "Remove color stop" : "Add color stop");
+  }
+  function syncGradientStopButtons(state) {
+    const bar = state.gradientStopBar;
+    if (!bar) return;
+    const sorted = getSortedGradientStops(state.gradientStops);
+    const existing = state.gradientStopButtons;
+    const keep = new Set(sorted.map((stop) => stop.id));
+    Array.from(existing.entries()).forEach(([id, btn]) => {
+      if (!keep.has(id)) {
+        btn.remove();
+        existing.delete(id);
+      }
+    });
+    sorted.forEach((stop) => {
+      let btn = existing.get(stop.id);
+      if (!btn) {
+        btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "diet-dropdown-fill__gradient-stop-btn";
+        btn.dataset.stopId = stop.id;
+        btn.setAttribute("aria-label", "Edit gradient stop");
+        bindGradientStopButton(state, btn, stop.id);
+        existing.set(stop.id, btn);
+        bar.appendChild(btn);
+      }
+      const leftPx = gradientPercentToPx(state, stop.position);
+      btn.style.left = leftPx == null ? `${stop.position}%` : `${leftPx}px`;
+      btn.style.setProperty("--stop-color", stop.color);
+      const isActive = stop.id === state.gradientActiveStopId;
+      btn.classList.toggle("is-active", isActive);
+      btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+  }
+  function getSwatchTarget(swatch) {
+    const container = swatch.closest(".diet-dropdown-fill__swatches");
+    return container?.dataset.swatchTarget === "gradient" ? "gradient" : "color";
+  }
+  function syncActiveGradientStopUI(state) {
+    const stop = getActiveGradientStop(state);
+    const hsv = stop.hsv;
+    const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
+    const hex = formatHex({ h: hsv.h, s: hsv.s, v: hsv.v, a: 1 });
+    const alphaPercent = Math.round(hsv.a * 100);
+    if (state.gradientEditor) {
+      state.gradientEditor.style.setProperty("--picker-hue", hsv.h.toString());
+      state.gradientEditor.style.setProperty("--picker-rgb", `${rgb.r} ${rgb.g} ${rgb.b}`);
+    }
+    if (state.gradientStopHueInput) {
+      state.gradientStopHueInput.value = hsv.h.toString();
+      state.gradientStopHueInput.style.setProperty("--value", state.gradientStopHueInput.value);
+      state.gradientStopHueInput.style.setProperty("--min", "0");
+      state.gradientStopHueInput.style.setProperty("--max", "360");
+    }
+    if (state.gradientStopAlphaInput) {
+      state.gradientStopAlphaInput.value = alphaPercent.toString();
+      state.gradientStopAlphaInput.style.setProperty("--value", state.gradientStopAlphaInput.value);
+      state.gradientStopAlphaInput.style.setProperty("--min", "0");
+      state.gradientStopAlphaInput.style.setProperty("--max", "100");
+    }
+    if (state.gradientStopHexInput) {
+      state.gradientStopHexInput.value = hex;
+    }
+    if (state.gradientStopAlphaField) {
+      state.gradientStopAlphaField.value = `${alphaPercent}%`;
+    }
+    if (state.gradientStopSvThumb) {
+      const left = `${hsv.s * 100}%`;
+      const top = `${(1 - hsv.v) * 100}%`;
+      state.gradientStopSvThumb.style.left = left;
+      state.gradientStopSvThumb.style.top = top;
+    }
+    const normalizedCurrent = normalizeHex(hex);
+    state.swatches.forEach((swatch) => {
+      if (getSwatchTarget(swatch) !== "gradient") return;
+      const swatchHex = normalizeHex(swatch.dataset.color || "");
+      const match = Boolean(normalizedCurrent && swatchHex && swatchHex === normalizedCurrent);
+      swatch.classList.toggle("is-selected", match);
+      swatch.setAttribute("aria-pressed", match ? "true" : "false");
+    });
+  }
+  function setActiveGradientStop(state, stopId) {
+    state.gradientActiveStopId = stopId;
+    syncGradientStopButtons(state);
+    syncActiveGradientStopUI(state);
+    updateGradientAddButton(state);
+  }
+  function updateGradientPreview(state, opts, deps) {
+    const shouldUpdateHeader = opts.updateHeader !== false;
+    const shouldUpdateRemove = opts.updateRemove !== false;
+    const css = state.gradientCss || buildGradientCss(state);
+    if (state.gradientPreview) state.gradientPreview.style.backgroundImage = css;
+    if (opts.commit) {
+      deps.setInputValue(state, buildGradientFill(state), true);
+    }
+    if (shouldUpdateHeader) {
+      deps.updateHeader(state, { text: "", muted: false, chipColor: css });
+    }
+    if (shouldUpdateRemove) {
+      deps.setRemoveFillState(state, false);
+    }
+  }
+  function addGradientStop(state, deps) {
+    ensureGradientStops(state);
+    const sorted = getSortedGradientStops(state.gradientStops);
+    const active = getActiveGradientStop(state);
+    const activeIndex = sorted.findIndex((stop2) => stop2.id === active.id);
+    const right = sorted[activeIndex + 1] ?? null;
+    const left = sorted[activeIndex - 1] ?? null;
+    let position = 50;
+    if (right) position = (active.position + right.position) / 2;
+    else if (left) position = (left.position + active.position) / 2;
+    const stop = createGradientStopState(state.root, { color: active.color, position });
+    stop.hsv = { ...active.hsv };
+    state.gradientStops.push(stop);
+    state.gradientActiveStopId = stop.id;
+    state.gradientCss = null;
+    syncGradientUI(state, { commit: true }, deps);
+  }
+  function removeGradientStop(state, stopId, deps) {
+    if (state.gradientStops.length <= 2) return;
+    const idx = state.gradientStops.findIndex((stop) => stop.id === stopId);
+    if (idx === -1) return;
+    const removed = state.gradientStops[idx];
+    state.gradientStops.splice(idx, 1);
+    if (state.gradientActiveStopId === stopId) {
+      const sorted = getSortedGradientStops(state.gradientStops);
+      let nearest = sorted[0];
+      let dist = Math.abs((nearest?.position ?? 0) - removed.position);
+      sorted.forEach((stop) => {
+        const nextDist = Math.abs(stop.position - removed.position);
+        if (nextDist < dist) {
+          dist = nextDist;
+          nearest = stop;
+        }
+      });
+      state.gradientActiveStopId = nearest?.id ?? "";
+    }
+    state.gradientCss = null;
+    syncGradientUI(state, { commit: true }, deps);
+  }
+  function bindGradientStopButton(state, button, stopId) {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      setActiveGradientStop(state, stopId);
+    });
+  }
+  function commitGradientStopFromHsv(state, deps) {
+    const stop = getActiveGradientStop(state);
+    stop.color = colorStringFromHsv(stop.hsv);
+    state.gradientCss = null;
+    syncGradientUI(state, { commit: true }, deps);
+  }
+  function handleGradientStopHexInput(state, deps) {
+    if (!state.gradientStopHexInput) return;
+    const stop = getActiveGradientStop(state);
+    const hsv = stop.hsv;
+    const raw = state.gradientStopHexInput.value.trim();
+    if (!raw) {
+      state.gradientStopHexInput.value = formatHex(hsv);
+      return;
+    }
+    const normalized = raw.startsWith("#") ? raw : `#${raw}`;
+    const rgba = hexToRgba(normalized);
+    if (!rgba) {
+      state.gradientStopHexInput.value = formatHex(hsv);
+      return;
+    }
+    const next = rgbToHsv(rgba.r, rgba.g, rgba.b, 1);
+    hsv.h = next.h;
+    hsv.s = next.s;
+    hsv.v = next.v;
+    commitGradientStopFromHsv(state, deps);
+  }
+  function handleGradientStopAlphaField(state, deps) {
+    if (!state.gradientStopAlphaField) return;
+    const stop = getActiveGradientStop(state);
+    const hsv = stop.hsv;
+    const raw = state.gradientStopAlphaField.value.trim().replace("%", "");
+    if (!raw) {
+      state.gradientStopAlphaField.value = `${Math.round(hsv.a * 100)}%`;
+      return;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) {
+      state.gradientStopAlphaField.value = `${Math.round(hsv.a * 100)}%`;
+      return;
+    }
+    const percent = clampNumber2(parsed, 0, 100);
+    hsv.a = percent / 100;
+    commitGradientStopFromHsv(state, deps);
+  }
+  function installGradientStopBarHandlers(state, deps) {
+    if (state.gradientStopAdd) {
+      state.gradientStopAdd.addEventListener("click", (event) => {
+        event.preventDefault();
+        const { sorted, index } = getActiveGradientStopIndex(state);
+        const removable = index > 0 && index < sorted.length - 1;
+        if (removable) {
+          removeGradientStop(state, state.gradientActiveStopId, deps);
+          return;
+        }
+        addGradientStop(state, deps);
+      });
+    }
+    const bar = state.gradientStopBar;
+    if (!bar) return;
+    const getStopIdFromTarget = (target) => {
+      if (!(target instanceof HTMLElement)) return null;
+      const btn = target.closest(".diet-dropdown-fill__gradient-stop-btn");
+      return btn?.dataset.stopId ?? null;
+    };
+    const findNearestStopId = (clientX) => {
+      if (!state.gradientStops.length) return null;
+      const percent = gradientPxToPercent(state, clientX);
+      const sorted = getSortedGradientStops(state.gradientStops);
+      let nearest = sorted[0];
+      let dist = Math.abs(nearest.position - percent);
+      sorted.forEach((stop) => {
+        const nextDist = Math.abs(stop.position - percent);
+        if (nextDist < dist) {
+          dist = nextDist;
+          nearest = stop;
+        }
+      });
+      return nearest?.id ?? null;
+    };
+    const moveStop = (stopId, event) => {
+      const stop = state.gradientStops.find((entry) => entry.id === stopId);
+      if (!stop) return;
+      stop.position = gradientPxToPercent(state, event.clientX);
+      state.gradientCss = null;
+      syncGradientStopButtons(state);
+      updateGradientPreview(state, { commit: true, updateHeader: true, updateRemove: false }, deps);
+    };
+    const finishDrag = (stopId, event) => {
+      const rect = bar.getBoundingClientRect();
+      const outside = event.clientY < rect.top - 24 || event.clientY > rect.bottom + 24;
+      state.gradientDrag = void 0;
+      if (outside) {
+        removeGradientStop(state, stopId, deps);
+        return;
+      }
+      syncGradientStopButtons(state);
+      updateGradientPreview(state, { commit: true, updateHeader: true }, deps);
+    };
+    bar.addEventListener("pointerdown", (event) => {
+      const stopId = getStopIdFromTarget(event.target) || findNearestStopId(event.clientX);
+      if (!stopId) return;
+      event.preventDefault();
+      setActiveGradientStop(state, stopId);
+      state.gradientDrag = { id: stopId, pointerId: event.pointerId };
+      bar.setPointerCapture(event.pointerId);
+    });
+    bar.addEventListener("pointermove", (event) => {
+      if (!state.gradientDrag) return;
+      if (state.gradientDrag.pointerId !== event.pointerId) return;
+      if (event.pressure === 0 && event.buttons === 0) return;
+      moveStop(state.gradientDrag.id, event);
+    });
+    bar.addEventListener("pointerup", (event) => {
+      if (!state.gradientDrag) return;
+      if (state.gradientDrag.pointerId !== event.pointerId) return;
+      finishDrag(state.gradientDrag.id, event);
+    });
+    bar.addEventListener("pointercancel", (event) => {
+      if (!state.gradientDrag) return;
+      if (state.gradientDrag.pointerId !== event.pointerId) return;
+      finishDrag(state.gradientDrag.id, event);
+    });
+  }
+  function installGradientEditorHandlers(state, deps) {
+    if (state.gradientStopSv) {
+      const move = (event) => {
+        const rect = state.gradientStopSv?.getBoundingClientRect();
+        if (!rect) return;
+        const x = clampNumber2(event.clientX - rect.left, 0, rect.width);
+        const y = clampNumber2(event.clientY - rect.top, 0, rect.height);
+        const s = rect.width ? x / rect.width : 0;
+        const v = rect.height ? 1 - y / rect.height : 0;
+        const stop = getActiveGradientStop(state);
+        stop.hsv.s = clampNumber2(s, 0, 1);
+        stop.hsv.v = clampNumber2(v, 0, 1);
+        if (stop.hsv.a === 0) stop.hsv.a = 1;
+        commitGradientStopFromHsv(state, deps);
+      };
+      const handlePointerDown = (event) => {
+        event.preventDefault();
+        state.gradientStopSv?.setPointerCapture(event.pointerId);
+        move(event);
+      };
+      state.gradientStopSv.addEventListener("pointerdown", handlePointerDown);
+      state.gradientStopSv.addEventListener("pointermove", (event) => {
+        if (event.pressure === 0 && event.buttons === 0) return;
+        move(event);
+      });
+      state.gradientStopSv.addEventListener("click", (event) => {
+        move(event);
+      });
+    }
+    if (state.gradientStopHueInput) {
+      state.gradientStopHueInput.addEventListener("input", () => {
+        const hue = clampNumber2(Number(state.gradientStopHueInput?.value), 0, 360);
+        const stop = getActiveGradientStop(state);
+        stop.hsv.h = hue;
+        if (stop.hsv.a === 0) stop.hsv.a = 1;
+        commitGradientStopFromHsv(state, deps);
+      });
+    }
+    if (state.gradientStopAlphaInput) {
+      state.gradientStopAlphaInput.addEventListener("input", () => {
+        const alpha = clampNumber2(Number(state.gradientStopAlphaInput?.value) / 100, 0, 1);
+        const stop = getActiveGradientStop(state);
+        stop.hsv.a = alpha;
+        commitGradientStopFromHsv(state, deps);
+      });
+    }
+    if (state.gradientStopHexInput) {
+      const handler = () => handleGradientStopHexInput(state, deps);
+      state.gradientStopHexInput.addEventListener("change", handler);
+      state.gradientStopHexInput.addEventListener("blur", handler);
+    }
+    if (state.gradientStopAlphaField) {
+      const handler = () => handleGradientStopAlphaField(state, deps);
+      state.gradientStopAlphaField.addEventListener("change", handler);
+      state.gradientStopAlphaField.addEventListener("blur", handler);
+    }
+  }
+  function normalizeGradientColor(state, raw, fallback) {
+    let value = raw.trim();
+    if (!value) return fallback;
+    if (!value.startsWith("#") && /^[0-9a-f]{3,8}$/i.test(value)) {
+      value = `#${value}`;
+    }
+    const parsed = parseColor(value, state.root);
+    return parsed ? value : fallback;
+  }
+  function normalizeGradientStopsForOutput(state) {
+    const fallbackStops = DEFAULT_GRADIENT.stops;
+    const sourceStops = state.gradientStops.length >= 2 ? getSortedGradientStops(state.gradientStops) : null;
+    const stopsToUse = sourceStops ?? fallbackStops.map((stop) => ({ ...stop }));
+    return stopsToUse.map((stop, index) => {
+      const fallback = fallbackStops[Math.min(index, fallbackStops.length - 1)]?.color || fallbackStops[0].color;
+      return {
+        color: normalizeGradientColor(state, stop.color, fallback),
+        position: clampNumber2(stop.position, 0, 100)
+      };
+    });
+  }
+  function buildGradientFill(state) {
+    const angle = clampNumber2(state.gradient.angle, 0, 360);
+    const normalizedStops = normalizeGradientStopsForOutput(state);
+    return {
+      type: "gradient",
+      gradient: {
+        kind: "linear",
+        angle,
+        stops: normalizedStops
+      }
+    };
+  }
+  function buildGradientCss(state) {
+    const angle = clampNumber2(state.gradient.angle, 0, 360);
+    const normalizedStops = normalizeGradientStopsForOutput(state);
+    const stopList = normalizedStops.map((stop) => `${stop.color} ${clampNumber2(stop.position, 0, 100)}%`).join(", ");
+    return `linear-gradient(${angle}deg, ${stopList})`;
+  }
+  function colorStringFromHsv(hsv) {
+    const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
+    return hsv.a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(hsv.a, 2)})` : formatHex({ ...hsv, a: 1 });
+  }
+
   // components/shared/assetUpload.ts
   function isPublicId(value) {
     return isWidgetPublicId(value);
@@ -1745,25 +2255,6 @@ var Dieter = (() => {
     if (!allowImage) return ["color"];
     return ["color", "gradient", "image"];
   }
-  var gradientStopIdCounter = 0;
-  function createGradientStopId() {
-    gradientStopIdCounter += 1;
-    return `gradient-stop-${gradientStopIdCounter}`;
-  }
-  function createGradientStopState(root, stop) {
-    const parsed = parseColor(stop.color, root);
-    const safeColor = parsed ? stop.color : DEFAULT_GRADIENT.stops[0].color;
-    const hsv = parsed || parseColor(safeColor, root) || { h: 0, s: 0, v: 0, a: 1 };
-    return {
-      id: createGradientStopId(),
-      color: safeColor,
-      position: clampNumber2(stop.position, 0, 100),
-      hsv
-    };
-  }
-  function createDefaultGradientStops(root) {
-    return DEFAULT_GRADIENT.stops.map((stop) => createGradientStopState(root, stop));
-  }
   function createState(root) {
     const input = root.querySelector(".diet-dropdown-fill__value-field");
     const headerValue = root.querySelector(".diet-dropdown-header-value");
@@ -1956,7 +2447,7 @@ var Dieter = (() => {
     state.alphaField.addEventListener("blur", () => handleAlphaField(state));
     installSvCanvasHandlers(state);
     installSwatchHandlers(state);
-    installGradientHandlers(state);
+    installGradientHandlers(state, mediaDeps());
     installImageHandlers2(state);
     installVideoHandlers2(state);
     installNativeColorPicker(state);
@@ -1985,404 +2476,6 @@ var Dieter = (() => {
       state.hsv = { ...rgbToHsv(rgba.r, rgba.g, rgba.b, 1), a: state.hsv.a || 1 };
       syncColorUI(state, { commit: true });
     });
-  }
-  function installGradientHandlers(state) {
-    if (state.gradientAngleInput) {
-      state.gradientAngleInput.addEventListener("input", () => {
-        const angle = clampNumber2(Number(state.gradientAngleInput?.value), 0, 360);
-        state.gradientCss = null;
-        state.gradient.angle = angle;
-        syncGradientUI(state, { commit: true });
-      });
-    }
-    installGradientStopBarHandlers(state);
-    installGradientEditorHandlers(state);
-  }
-  function ensureGradientStops(state) {
-    if (state.gradientStops.length >= 2) return;
-    state.gradientStops = createDefaultGradientStops(state.root);
-    state.gradientActiveStopId = state.gradientStops[0]?.id ?? "";
-  }
-  function getSortedGradientStops(stops) {
-    return [...stops].sort((a, b) => a.position - b.position);
-  }
-  function getActiveGradientStop(state) {
-    let active = state.gradientStops.find((stop) => stop.id === state.gradientActiveStopId);
-    if (!active) {
-      ensureGradientStops(state);
-      active = state.gradientStops[0];
-      state.gradientActiveStopId = active?.id ?? "";
-    }
-    return active;
-  }
-  function getGradientStopMetrics(state) {
-    const bar = state.gradientStopBar;
-    if (!bar) return null;
-    const rect = bar.getBoundingClientRect();
-    if (!rect.width) return null;
-    const sampleButton = state.gradientStopButtons.values().next().value;
-    const sampleRect = sampleButton?.getBoundingClientRect();
-    const sizeFallback = parseFloat(getComputedStyle(bar).getPropertyValue("--control-size-md")) || 24;
-    const stopSize = sampleRect?.width || sizeFallback;
-    const half = stopSize / 2;
-    const minX = half;
-    const maxX = Math.max(half, rect.width - half);
-    return { rect, minX, maxX };
-  }
-  function gradientPercentToPx(state, position) {
-    const metrics = getGradientStopMetrics(state);
-    if (!metrics) return null;
-    const percent = clampNumber2(position, 0, 100);
-    const span = metrics.maxX - metrics.minX;
-    if (span <= 0) return metrics.minX;
-    return metrics.minX + span * percent / 100;
-  }
-  function gradientPxToPercent(state, clientX) {
-    const metrics = getGradientStopMetrics(state);
-    if (!metrics) return 0;
-    const x = clampNumber2(clientX - metrics.rect.left, metrics.minX, metrics.maxX);
-    const span = metrics.maxX - metrics.minX;
-    if (span <= 0) return 0;
-    return clampNumber2((x - metrics.minX) / span * 100, 0, 100);
-  }
-  function getActiveGradientStopIndex(state) {
-    const sorted = getSortedGradientStops(state.gradientStops);
-    const index = sorted.findIndex((stop) => stop.id === state.gradientActiveStopId);
-    return { sorted, index };
-  }
-  function updateGradientAddButton(state) {
-    const button = state.gradientStopAdd;
-    if (!button) return;
-    const { sorted, index } = getActiveGradientStopIndex(state);
-    const removable = index > 0 && index < sorted.length - 1;
-    button.textContent = removable ? "-" : "+";
-    button.classList.toggle("is-remove", removable);
-    button.setAttribute("aria-label", removable ? "Remove color stop" : "Add color stop");
-  }
-  function syncGradientStopButtons(state) {
-    const bar = state.gradientStopBar;
-    if (!bar) return;
-    const sorted = getSortedGradientStops(state.gradientStops);
-    const existing = state.gradientStopButtons;
-    const keep = new Set(sorted.map((stop) => stop.id));
-    Array.from(existing.entries()).forEach(([id, btn]) => {
-      if (!keep.has(id)) {
-        btn.remove();
-        existing.delete(id);
-      }
-    });
-    sorted.forEach((stop) => {
-      let btn = existing.get(stop.id);
-      if (!btn) {
-        btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "diet-dropdown-fill__gradient-stop-btn";
-        btn.dataset.stopId = stop.id;
-        btn.setAttribute("aria-label", "Edit gradient stop");
-        bindGradientStopButton(state, btn, stop.id);
-        existing.set(stop.id, btn);
-        bar.appendChild(btn);
-      }
-      const leftPx = gradientPercentToPx(state, stop.position);
-      btn.style.left = leftPx == null ? `${stop.position}%` : `${leftPx}px`;
-      btn.style.setProperty("--stop-color", stop.color);
-      const isActive = stop.id === state.gradientActiveStopId;
-      btn.classList.toggle("is-active", isActive);
-      btn.setAttribute("aria-pressed", isActive ? "true" : "false");
-    });
-  }
-  function syncActiveGradientStopUI(state) {
-    const stop = getActiveGradientStop(state);
-    const hsv = stop.hsv;
-    const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
-    const hex = formatHex({ h: hsv.h, s: hsv.s, v: hsv.v, a: 1 });
-    const alphaPercent = Math.round(hsv.a * 100);
-    if (state.gradientEditor) {
-      state.gradientEditor.style.setProperty("--picker-hue", hsv.h.toString());
-      state.gradientEditor.style.setProperty("--picker-rgb", `${rgb.r} ${rgb.g} ${rgb.b}`);
-    }
-    if (state.gradientStopHueInput) {
-      state.gradientStopHueInput.value = hsv.h.toString();
-      state.gradientStopHueInput.style.setProperty("--value", state.gradientStopHueInput.value);
-      state.gradientStopHueInput.style.setProperty("--min", "0");
-      state.gradientStopHueInput.style.setProperty("--max", "360");
-    }
-    if (state.gradientStopAlphaInput) {
-      state.gradientStopAlphaInput.value = alphaPercent.toString();
-      state.gradientStopAlphaInput.style.setProperty("--value", state.gradientStopAlphaInput.value);
-      state.gradientStopAlphaInput.style.setProperty("--min", "0");
-      state.gradientStopAlphaInput.style.setProperty("--max", "100");
-    }
-    if (state.gradientStopHexInput) {
-      state.gradientStopHexInput.value = hex;
-    }
-    if (state.gradientStopAlphaField) {
-      state.gradientStopAlphaField.value = `${alphaPercent}%`;
-    }
-    if (state.gradientStopSvThumb) {
-      const left = `${hsv.s * 100}%`;
-      const top = `${(1 - hsv.v) * 100}%`;
-      state.gradientStopSvThumb.style.left = left;
-      state.gradientStopSvThumb.style.top = top;
-    }
-    const normalizedCurrent = normalizeHex(hex);
-    state.swatches.forEach((swatch) => {
-      if (getSwatchTarget(swatch) !== "gradient") return;
-      const swatchHex = normalizeHex(swatch.dataset.color || "");
-      const match = Boolean(normalizedCurrent && swatchHex && swatchHex === normalizedCurrent);
-      swatch.classList.toggle("is-selected", match);
-      swatch.setAttribute("aria-pressed", match ? "true" : "false");
-    });
-  }
-  function setActiveGradientStop(state, stopId) {
-    state.gradientActiveStopId = stopId;
-    syncGradientStopButtons(state);
-    syncActiveGradientStopUI(state);
-    updateGradientAddButton(state);
-  }
-  function updateGradientPreview(state, opts) {
-    const shouldUpdateHeader = opts.updateHeader !== false;
-    const shouldUpdateRemove = opts.updateRemove !== false;
-    const css = state.gradientCss || buildGradientCss(state);
-    if (state.gradientPreview) state.gradientPreview.style.backgroundImage = css;
-    if (opts.commit) {
-      setInputValue(state, buildGradientFill(state), true);
-    }
-    if (shouldUpdateHeader) {
-      updateHeader(state, { text: "", muted: false, chipColor: css });
-    }
-    if (shouldUpdateRemove) {
-      setRemoveFillState(state, false);
-    }
-  }
-  function addGradientStop(state) {
-    ensureGradientStops(state);
-    const sorted = getSortedGradientStops(state.gradientStops);
-    const active = getActiveGradientStop(state);
-    const activeIndex = sorted.findIndex((stop2) => stop2.id === active.id);
-    const right = sorted[activeIndex + 1] ?? null;
-    const left = sorted[activeIndex - 1] ?? null;
-    let position = 50;
-    if (right) {
-      position = (active.position + right.position) / 2;
-    } else if (left) {
-      position = (left.position + active.position) / 2;
-    }
-    const stop = createGradientStopState(state.root, { color: active.color, position });
-    stop.hsv = { ...active.hsv };
-    state.gradientStops.push(stop);
-    state.gradientActiveStopId = stop.id;
-    state.gradientCss = null;
-    syncGradientUI(state, { commit: true });
-  }
-  function removeGradientStop(state, stopId) {
-    if (state.gradientStops.length <= 2) return;
-    const idx = state.gradientStops.findIndex((stop) => stop.id === stopId);
-    if (idx === -1) return;
-    const removed = state.gradientStops[idx];
-    state.gradientStops.splice(idx, 1);
-    if (state.gradientActiveStopId === stopId) {
-      const sorted = getSortedGradientStops(state.gradientStops);
-      let nearest = sorted[0];
-      let dist = Math.abs((nearest?.position ?? 0) - removed.position);
-      sorted.forEach((stop) => {
-        const nextDist = Math.abs(stop.position - removed.position);
-        if (nextDist < dist) {
-          dist = nextDist;
-          nearest = stop;
-        }
-      });
-      state.gradientActiveStopId = nearest?.id ?? "";
-    }
-    state.gradientCss = null;
-    syncGradientUI(state, { commit: true });
-  }
-  function bindGradientStopButton(state, button, stopId) {
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      setActiveGradientStop(state, stopId);
-    });
-  }
-  function commitGradientStopFromHsv(state) {
-    const stop = getActiveGradientStop(state);
-    stop.color = colorStringFromHsv(stop.hsv);
-    state.gradientCss = null;
-    syncGradientUI(state, { commit: true });
-  }
-  function handleGradientStopHexInput(state) {
-    if (!state.gradientStopHexInput) return;
-    const stop = getActiveGradientStop(state);
-    const hsv = stop.hsv;
-    const raw = state.gradientStopHexInput.value.trim();
-    if (!raw) {
-      state.gradientStopHexInput.value = formatHex(hsv);
-      return;
-    }
-    const normalized = raw.startsWith("#") ? raw : `#${raw}`;
-    const rgba = hexToRgba(normalized);
-    if (!rgba) {
-      state.gradientStopHexInput.value = formatHex(hsv);
-      return;
-    }
-    const next = rgbToHsv(rgba.r, rgba.g, rgba.b, 1);
-    hsv.h = next.h;
-    hsv.s = next.s;
-    hsv.v = next.v;
-    commitGradientStopFromHsv(state);
-  }
-  function handleGradientStopAlphaField(state) {
-    if (!state.gradientStopAlphaField) return;
-    const stop = getActiveGradientStop(state);
-    const hsv = stop.hsv;
-    const raw = state.gradientStopAlphaField.value.trim().replace("%", "");
-    if (!raw) {
-      state.gradientStopAlphaField.value = `${Math.round(hsv.a * 100)}%`;
-      return;
-    }
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) {
-      state.gradientStopAlphaField.value = `${Math.round(hsv.a * 100)}%`;
-      return;
-    }
-    const percent = clampNumber2(parsed, 0, 100);
-    hsv.a = percent / 100;
-    commitGradientStopFromHsv(state);
-  }
-  function installGradientStopBarHandlers(state) {
-    if (state.gradientStopAdd) {
-      state.gradientStopAdd.addEventListener("click", (event) => {
-        event.preventDefault();
-        const { sorted, index } = getActiveGradientStopIndex(state);
-        const removable = index > 0 && index < sorted.length - 1;
-        if (removable) {
-          removeGradientStop(state, state.gradientActiveStopId);
-          return;
-        }
-        addGradientStop(state);
-      });
-    }
-    const bar = state.gradientStopBar;
-    if (!bar) return;
-    const getStopIdFromTarget = (target) => {
-      if (!(target instanceof HTMLElement)) return null;
-      const btn = target.closest(".diet-dropdown-fill__gradient-stop-btn");
-      return btn?.dataset.stopId ?? null;
-    };
-    const findNearestStopId = (clientX) => {
-      if (!state.gradientStops.length) return null;
-      const percent = gradientPxToPercent(state, clientX);
-      const sorted = getSortedGradientStops(state.gradientStops);
-      let nearest = sorted[0];
-      let dist = Math.abs(nearest.position - percent);
-      sorted.forEach((stop) => {
-        const nextDist = Math.abs(stop.position - percent);
-        if (nextDist < dist) {
-          dist = nextDist;
-          nearest = stop;
-        }
-      });
-      return nearest?.id ?? null;
-    };
-    const moveStop = (stopId, event) => {
-      const stop = state.gradientStops.find((entry) => entry.id === stopId);
-      if (!stop) return;
-      stop.position = gradientPxToPercent(state, event.clientX);
-      state.gradientCss = null;
-      syncGradientStopButtons(state);
-      updateGradientPreview(state, { commit: true, updateHeader: true, updateRemove: false });
-    };
-    const finishDrag = (stopId, event) => {
-      const rect = bar.getBoundingClientRect();
-      const outside = event.clientY < rect.top - 24 || event.clientY > rect.bottom + 24;
-      state.gradientDrag = void 0;
-      if (outside) {
-        removeGradientStop(state, stopId);
-        return;
-      }
-      syncGradientStopButtons(state);
-      updateGradientPreview(state, { commit: true, updateHeader: true });
-    };
-    bar.addEventListener("pointerdown", (event) => {
-      const stopId = getStopIdFromTarget(event.target) || findNearestStopId(event.clientX);
-      if (!stopId) return;
-      event.preventDefault();
-      setActiveGradientStop(state, stopId);
-      state.gradientDrag = { id: stopId, pointerId: event.pointerId };
-      bar.setPointerCapture(event.pointerId);
-    });
-    bar.addEventListener("pointermove", (event) => {
-      if (!state.gradientDrag) return;
-      if (state.gradientDrag.pointerId !== event.pointerId) return;
-      if (event.pressure === 0 && event.buttons === 0) return;
-      moveStop(state.gradientDrag.id, event);
-    });
-    bar.addEventListener("pointerup", (event) => {
-      if (!state.gradientDrag) return;
-      if (state.gradientDrag.pointerId !== event.pointerId) return;
-      finishDrag(state.gradientDrag.id, event);
-    });
-    bar.addEventListener("pointercancel", (event) => {
-      if (!state.gradientDrag) return;
-      if (state.gradientDrag.pointerId !== event.pointerId) return;
-      finishDrag(state.gradientDrag.id, event);
-    });
-  }
-  function installGradientEditorHandlers(state) {
-    if (state.gradientStopSv) {
-      const move = (event) => {
-        const rect = state.gradientStopSv?.getBoundingClientRect();
-        if (!rect) return;
-        const x = clampNumber2(event.clientX - rect.left, 0, rect.width);
-        const y = clampNumber2(event.clientY - rect.top, 0, rect.height);
-        const s = rect.width ? x / rect.width : 0;
-        const v = rect.height ? 1 - y / rect.height : 0;
-        const stop = getActiveGradientStop(state);
-        stop.hsv.s = clampNumber2(s, 0, 1);
-        stop.hsv.v = clampNumber2(v, 0, 1);
-        if (stop.hsv.a === 0) stop.hsv.a = 1;
-        commitGradientStopFromHsv(state);
-      };
-      const handlePointerDown = (event) => {
-        event.preventDefault();
-        state.gradientStopSv?.setPointerCapture(event.pointerId);
-        move(event);
-      };
-      state.gradientStopSv.addEventListener("pointerdown", handlePointerDown);
-      state.gradientStopSv.addEventListener("pointermove", (event) => {
-        if (event.pressure === 0 && event.buttons === 0) return;
-        move(event);
-      });
-      state.gradientStopSv.addEventListener("click", (event) => {
-        move(event);
-      });
-    }
-    if (state.gradientStopHueInput) {
-      state.gradientStopHueInput.addEventListener("input", () => {
-        const hue = clampNumber2(Number(state.gradientStopHueInput?.value), 0, 360);
-        const stop = getActiveGradientStop(state);
-        stop.hsv.h = hue;
-        if (stop.hsv.a === 0) stop.hsv.a = 1;
-        commitGradientStopFromHsv(state);
-      });
-    }
-    if (state.gradientStopAlphaInput) {
-      state.gradientStopAlphaInput.addEventListener("input", () => {
-        const alpha = clampNumber2(Number(state.gradientStopAlphaInput?.value) / 100, 0, 1);
-        const stop = getActiveGradientStop(state);
-        stop.hsv.a = alpha;
-        commitGradientStopFromHsv(state);
-      });
-    }
-    if (state.gradientStopHexInput) {
-      const handler = () => handleGradientStopHexInput(state);
-      state.gradientStopHexInput.addEventListener("change", handler);
-      state.gradientStopHexInput.addEventListener("blur", handler);
-    }
-    if (state.gradientStopAlphaField) {
-      const handler = () => handleGradientStopAlphaField(state);
-      state.gradientStopAlphaField.addEventListener("change", handler);
-      state.gradientStopAlphaField.addEventListener("blur", handler);
-    }
   }
   function installSvCanvasHandlers(state) {
     const move = (event) => {
@@ -2439,10 +2532,6 @@ var Dieter = (() => {
     }
     state.internalWrite = false;
   }
-  function colorStringFromHsv(hsv) {
-    const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
-    return hsv.a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(hsv.a, 2)})` : formatHex({ ...hsv, a: 1 });
-  }
   function setRemoveFillState(state, isEmpty) {
     if (!state.removeFillActions.length) return;
     state.removeFillActions.forEach((action, index) => {
@@ -2453,7 +2542,7 @@ var Dieter = (() => {
       }
     });
   }
-  function getSwatchTarget(swatch) {
+  function getSwatchTarget2(swatch) {
     const container = swatch.closest(".diet-dropdown-fill__swatches");
     return container?.dataset.swatchTarget === "gradient" ? "gradient" : "color";
   }
@@ -2464,14 +2553,9 @@ var Dieter = (() => {
         const color = swatch.dataset.color || "";
         const parsed = parseColor(color, state.root);
         if (!parsed) return;
-        const target = getSwatchTarget(swatch);
+        const target = getSwatchTarget2(swatch);
         if (target === "gradient") {
-          const stop = getActiveGradientStop(state);
-          stop.hsv.h = parsed.h;
-          stop.hsv.s = parsed.s;
-          stop.hsv.v = parsed.v;
-          stop.hsv.a = 1;
-          commitGradientStopFromHsv(state);
+          applyGradientSwatch(state, parsed, mediaDeps());
           return;
         }
         state.hsv = { ...parsed, a: 1 };
@@ -2509,84 +2593,6 @@ var Dieter = (() => {
     state.hsv.a = percent / 100;
     syncColorUI(state, { commit: true });
   }
-  function normalizeGradientColor(state, raw, fallback) {
-    let value = raw.trim();
-    if (!value) return fallback;
-    if (!value.startsWith("#") && /^[0-9a-f]{3,8}$/i.test(value)) {
-      value = `#${value}`;
-    }
-    const parsed = parseColor(value, state.root);
-    return parsed ? value : fallback;
-  }
-  function normalizeGradientStopsForOutput(state) {
-    const fallbackStops = DEFAULT_GRADIENT.stops;
-    const sourceStops = state.gradientStops.length >= 2 ? getSortedGradientStops(state.gradientStops) : null;
-    const stopsToUse = sourceStops ?? fallbackStops.map((stop) => ({ ...stop }));
-    return stopsToUse.map((stop, index) => {
-      const fallback = fallbackStops[Math.min(index, fallbackStops.length - 1)]?.color || fallbackStops[0].color;
-      return {
-        color: normalizeGradientColor(state, stop.color, fallback),
-        position: clampNumber2(stop.position, 0, 100)
-      };
-    });
-  }
-  function buildGradientFill(state) {
-    const angle = clampNumber2(state.gradient.angle, 0, 360);
-    const normalizedStops = normalizeGradientStopsForOutput(state);
-    return {
-      type: "gradient",
-      gradient: {
-        kind: "linear",
-        angle,
-        stops: normalizedStops
-      }
-    };
-  }
-  function buildGradientCss(state) {
-    const angle = clampNumber2(state.gradient.angle, 0, 360);
-    const normalizedStops = normalizeGradientStopsForOutput(state);
-    const stopList = normalizedStops.map((stop) => `${stop.color} ${clampNumber2(stop.position, 0, 100)}%`).join(", ");
-    return `linear-gradient(${angle}deg, ${stopList})`;
-  }
-  function syncGradientUI(state, opts) {
-    const shouldUpdateHeader = opts.updateHeader !== false;
-    const shouldUpdateRemove = opts.updateRemove !== false;
-    ensureGradientStops(state);
-    if (state.gradientAngleInput) {
-      state.gradientAngleInput.value = String(clampNumber2(state.gradient.angle, 0, 360));
-      state.gradientAngleInput.style.setProperty("--value", state.gradientAngleInput.value);
-      state.gradientAngleInput.style.setProperty("--min", "0");
-      state.gradientAngleInput.style.setProperty("--max", "360");
-    }
-    syncGradientStopButtons(state);
-    syncActiveGradientStopUI(state);
-    updateGradientAddButton(state);
-    updateGradientPreview(state, { commit: opts.commit, updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove });
-  }
-  function applyGradientFromFill(state, gradient) {
-    state.gradient = { angle: DEFAULT_GRADIENT.angle };
-    state.gradientStops = createDefaultGradientStops(state.root);
-    state.gradientActiveStopId = state.gradientStops[0]?.id ?? "";
-    state.gradientCss = null;
-    if (!gradient || typeof gradient !== "object" || Array.isArray(gradient)) return;
-    if ("css" in gradient) {
-      const css = typeof gradient.css === "string" ? gradient.css.trim() : "";
-      state.gradientCss = css || null;
-      return;
-    }
-    if (!("kind" in gradient)) return;
-    const angle = typeof gradient.angle === "number" ? gradient.angle : DEFAULT_GRADIENT.angle;
-    state.gradient.angle = clampNumber2(angle, 0, 360);
-    if (Array.isArray(gradient.stops) && gradient.stops.length >= 2) {
-      state.gradientStops = gradient.stops.map(
-        (stop) => createGradientStopState(state.root, {
-          color: typeof stop?.color === "string" ? stop.color : DEFAULT_GRADIENT.stops[0].color,
-          position: typeof stop?.position === "number" ? stop.position : 0
-        })
-      );
-      state.gradientActiveStopId = state.gradientStops[0]?.id ?? "";
-    }
-  }
   function syncFromValue(state, raw) {
     const fill = parseFillValue(raw, state.root);
     if (!fill) {
@@ -2612,7 +2618,7 @@ var Dieter = (() => {
         state.gradientStops = createDefaultGradientStops(state.root);
         state.gradientActiveStopId = state.gradientStops[0]?.id ?? "";
         state.gradientCss = null;
-        syncGradientUI(state, { commit: false });
+        syncGradientUI(state, { commit: false }, mediaDeps());
         return;
       }
       state.hsv = { h: 0, s: 0, v: 0, a: 0 };
@@ -2633,7 +2639,7 @@ var Dieter = (() => {
     }
     if (fill.type === "gradient") {
       applyGradientFromFill(state, fill.gradient);
-      syncGradientUI(state, { commit: false });
+      syncGradientUI(state, { commit: false }, mediaDeps());
       return;
     }
     if (fill.type === "image") {
@@ -2695,7 +2701,7 @@ var Dieter = (() => {
     }
     const normalizedCurrent = normalizeHex(hex);
     state.swatches.forEach((swatch) => {
-      if (getSwatchTarget(swatch) !== "color") return;
+      if (getSwatchTarget2(swatch) !== "color") return;
       const swatchHex = normalizeHex(swatch.dataset.color || "");
       const match = Boolean(normalizedCurrent && swatchHex && swatchHex === normalizedCurrent);
       swatch.classList.toggle("is-selected", match);
@@ -2754,7 +2760,7 @@ var Dieter = (() => {
   }
   function syncModeUI(state, opts) {
     if (state.mode === "gradient") {
-      syncGradientUI(state, opts);
+      syncGradientUI(state, opts, mediaDeps());
       return;
     }
     if (state.mode === "image") {
