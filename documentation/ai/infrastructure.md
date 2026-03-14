@@ -1,7 +1,7 @@
 STATUS: REFERENCE — MUST MATCH RUNTIME
 This document is the operational spec for the San Francisco worker: bindings, deploy shape, endpoints, limits, and runbooks.
 Runtime code + deployed Cloudflare bindings are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
-Last synced to repository runtime: February 26, 2026.
+Last synced to repository runtime: March 14, 2026.
 
 # San Francisco — Infrastructure & Operations
 
@@ -16,7 +16,13 @@ This doc is meant to answer:
 ## 1) Deploy model (Cloudflare Worker)
 
 - Code: `sanfrancisco/`
-- Entrypoint: `sanfrancisco/src/index.ts`
+- Entrypoint shell: `sanfrancisco/src/index.ts`
+- Extracted runtime modules:
+  - `sanfrancisco/src/concurrency.ts`
+  - `sanfrancisco/src/internalAuth.ts`
+  - `sanfrancisco/src/telemetry.ts`
+  - `sanfrancisco/src/l10n-routes.ts`
+  - `sanfrancisco/src/personalization-jobs.ts`
 - Wrangler config: `sanfrancisco/wrangler.toml`
 - Deploy: Cloudflare “Workers → Deploy from Git” (root directory: `sanfrancisco`)
 
@@ -177,7 +183,7 @@ Note: schema creation is not meant to be a “migration system”; it’s a prag
 ## 5) Limits and budgets
 
 ### Concurrency
-San Francisco applies a per-isolate in-flight cap in `sanfrancisco/src/index.ts` (`MAX_INFLIGHT_PER_ISOLATE`) to fail fast under load.
+San Francisco applies a per-isolate in-flight cap through `sanfrancisco/src/concurrency.ts` (`MAX_INFLIGHT_PER_ISOLATE`) to fail fast under load.
 
 ### Grant budgets
 Agent executions are constrained by the grant:

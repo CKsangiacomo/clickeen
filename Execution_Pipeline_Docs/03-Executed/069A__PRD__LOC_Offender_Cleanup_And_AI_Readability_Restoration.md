@@ -1,7 +1,8 @@
 # PRD 069A — LOC Offender Cleanup And AI Readability Restoration
 
-Status: EXECUTING
+Status: EXECUTED
 Date: 2026-03-13
+Executed: 2026-03-14
 Owner: Product Dev Team
 Priority: P0
 
@@ -43,11 +44,13 @@ Current program state:
    - Phase 3 slice 3: `dieter/components/dropdown-fill/dropdown-fill.ts` decomposition
 2. blocked:
    - none
-3. deferred within this PRD:
+3. deferred out of this PRD and tracked in `EVERGREEN_BACKLOG.md`:
+   - widget copilot re-separation beyond the current shared core, including clearer SDR vs CS runtime differentiation, is deferred to future agent work and tracked in `EVERGREEN_BACKLOG.md`
+   - `tokyo/widgets/shared/typography.js` split remains deferred because a real split would currently require changing the widget shared-runtime loading contract
    - deeper `account-state.ts` split unless a stronger responsibility boundary emerges
    - any further Dieter/showcase cleanup unless it becomes an active blocker
 4. single active next slice:
-   - none until a new runtime-adjacent offender is explicitly promoted
+   - none
 
 ## Current execution progress
 
@@ -59,37 +62,40 @@ Current program state:
    - separate CS and SDR product entrypoints
    - separate session namespaces
    - CS-only control-dump guard behavior
-3. Phase 1 slice 2 is landed:
+3. Follow-up intentionally deferred out of this PRD:
+   - the current shared `widgetCopilotCore.ts` reduces duplicate LOC but does not fully differentiate SDR and CS runtime behavior
+   - that deeper agent-level differentiation belongs to future agent work, not this LOC-cleanup PRD, and is tracked in `EVERGREEN_BACKLOG.md`
+4. Phase 1 slice 2 is landed:
    - `bob/lib/session/sessionTypes.ts` extracted for session state, host-message, and default session contracts
    - `bob/lib/session/sessionPolicy.ts` extracted for pure bootstrap/policy helpers
    - `useWidgetSession.tsx` reduced from `2822` LOC to `2494` LOC without changing the React/runtime control flow
-4. This slice preserves:
+5. This slice preserves:
    - existing Bob host postMessage contract
    - existing URL/message boot behavior
    - existing policy/bootstrap resolution behavior
-5. Phase 1 slice 3 is landed:
+6. Phase 1 slice 3 is landed:
    - `bob/lib/session/sessionLocalization.ts` extracted for localization snapshot normalization, overlay lookup/upsert, and aftermath message resolution
    - `useWidgetSession.tsx` reduced further from `2494` LOC to `2360` LOC without changing save/localization/session behavior
-6. This slice preserves:
+7. This slice preserves:
    - existing localization snapshot contract for Bob open flows
    - existing locale overlay bookkeeping semantics
    - existing save-aftermath messaging behavior
-7. Phase 1 slice 4 is landed:
+8. Phase 1 slice 4 is landed:
    - `bob/lib/session/sessionNormalization.ts` extracted for widget normalization and typography role-scale defaults
    - `sessionLocalization.ts` now also owns the shared localized-overlay resolution logic used by the full locale snapshot flows
    - `useWidgetSession.tsx` reduced further from `2360` LOC to `2210` LOC without changing Bob URL/message boot or locale fetch/save behavior
-8. This slice preserves:
+9. This slice preserves:
    - existing widget normalization behavior
    - existing global typography role-scale enforcement
    - existing locale stale-state and localized-overlay resolution semantics
-9. Phase 1 slice 5 is landed:
+10. Phase 1 slice 5 is landed:
    - `sanfrancisco/src/agents/l10nTranslationCore.ts` extracted for prompt construction, batching, placeholder/richtext safety checks, result parsing, and richtext fallback translation
    - `l10nInstance.ts` reduced from `1522` LOC to `872` LOC and now reads as orchestration instead of mixed engine + orchestration
-10. This slice preserves:
+11. This slice preserves:
    - existing l10n job orchestration behavior
    - existing DeepSeek prompt/response contract
    - existing placeholder, richtext tag, and anchor safety enforcement
-11. Phase 1 slice 6 is landed:
+12. Phase 1 slice 6 is landed:
    - `useWidgetSession.tsx` is now a composition file at `326` LOC
    - extracted modules:
      - `sessionTypes.ts`
@@ -101,26 +107,26 @@ Current program state:
      - `useSessionLocalization.ts`
      - `useSessionEditing.ts`
      - `useSessionBoot.ts`
-12. This slice preserves:
+13. This slice preserves:
    - existing Bob URL boot behavior
    - existing host `postMessage` contract
    - existing account-command delegation behavior
    - existing locale fetch/save/sync behavior
    - existing in-memory editor ops, preview, undo, and budget behavior
-13. Phase 1 slice 7 is landed:
+14. Phase 1 slice 7 is landed:
    - `sessionTypes.ts` now owns `createInitialSessionState(...)`
    - `useSessionSaving.ts` extracted for account save orchestration, aftermath handling, and translation-monitor triggering
    - `useSessionCopilot.ts` extracted for copilot thread state updates
    - `useWidgetSession.tsx` reduced further from `326` LOC to `131` LOC and now only wires state, modules, memoized context value, and provider/context exports
-14. This slice preserves:
+15. This slice preserves:
    - existing save gating and upsell behavior
    - existing aftermath/degraded-save handling
    - existing post-save translation monitor behavior
    - existing copilot thread state semantics
-15. `useWidgetSession.tsx` posture after execution:
+16. `useWidgetSession.tsx` posture after execution:
    - before: `2822` LOC mixed controller
    - after: `131` LOC composition file
-16. Phase 1 slice 8 is landed:
+17. Phase 1 slice 8 is landed:
    - `bob/components/TdMenuContent.tsx` reduced from `1823` LOC to `151` LOC
    - extracted modules:
      - `bob/components/td-menu-content/showIf.ts`
@@ -129,16 +135,16 @@ Current program state:
      - `bob/components/td-menu-content/useTdMenuBindings.ts`
      - `bob/components/td-menu-content/linkedOps.ts`
      - `bob/components/td-menu-content/fieldValue.ts`
-17. This slice preserves:
+18. This slice preserves:
    - existing show-if parser and visibility semantics
    - existing Dieter asset load and hydration behavior
    - existing linked-op expansion and field-binding behavior
    - existing translate-mode and read-only DOM behavior
-18. Remaining Phase 1 work:
+19. Remaining Phase 1 work:
    - none
-19. Phase 1 status:
+20. Phase 1 status:
    - complete
-20. Phase 2 slice 1 is landed:
+21. Phase 2 slice 1 is landed:
    - `tokyo-worker/src/index.ts` reduced from `1265` LOC to `596` LOC
    - extracted modules:
      - `tokyo-worker/src/auth.ts`
@@ -146,12 +152,12 @@ Current program state:
      - `tokyo-worker/src/asset-utils.ts`
      - `tokyo-worker/src/http.ts`
      - `tokyo-worker/src/types.ts`
-21. This slice preserves:
+22. This slice preserves:
    - existing Tokyo route surface
    - existing Berlin/JWKS upload auth behavior
    - existing l10n bridge header behavior
    - existing asset key/path/hash normalization behavior
-22. Phase 2 slice 2 is landed:
+23. Phase 2 slice 2 is landed:
    - `sanfrancisco/src/index.ts` reduced from `1133` LOC to `245` LOC
    - extracted modules:
      - `sanfrancisco/src/internalAuth.ts`
@@ -159,22 +165,22 @@ Current program state:
      - `sanfrancisco/src/telemetry.ts`
      - `sanfrancisco/src/l10n-routes.ts`
      - `sanfrancisco/src/personalization-jobs.ts`
-23. This slice preserves:
+24. This slice preserves:
    - existing execute route capability enforcement
    - existing l10n dispatch/plan/translate behavior
    - existing outcome signature verification and D1 indexing behavior
    - existing personalization job queue/status behavior
-24. Remaining Phase 2 work:
+25. Remaining Phase 2 work:
    - none
-25. Phase 3 slice 1 is landed:
+26. Phase 3 slice 1 is landed:
    - `berlin/src/account-state.ts` reduced from `918` LOC to `824` LOC
    - extracted shared public contract types to:
      - `berlin/src/account-state.types.ts`
-26. This slice preserves:
+27. This slice preserves:
    - existing account-state query/normalize/bootstrap logic in one cohesive file
    - existing Berlin account-state route and helper behavior
    - existing cross-module account context/member/bootstrap type contracts
-27. Phase 3 slice 2 is landed:
+28. Phase 3 slice 2 is landed:
    - `dieter/components/textedit/textedit.ts` reduced from `935` LOC to `367` LOC
    - extracted modules:
      - `dieter/components/textedit/textedit-types.ts`
@@ -183,14 +189,14 @@ Current program state:
      - `dieter/components/textedit/textedit-links.ts`
    - rebuilt derivative output:
      - `tokyo/dieter/components/textedit/textedit.js`
-28. This slice preserves:
+29. This slice preserves:
    - existing textedit hydration and palette selection behavior
    - existing link validation/apply/remove behavior
    - existing preview synchronization and inline sanitization behavior
    - existing Dieter build output contract
-29. Remaining Phase 3 work:
+30. Remaining Phase 3 work:
    - `berlin/src/account-state.ts` deeper split is intentionally deferred unless a stronger responsibility boundary emerges
-30. Phase 3 slice 3 is landed:
+31. Phase 3 slice 3 is landed:
    - `dieter/components/dropdown-fill/dropdown-fill.ts` reduced from `1343` LOC to `722` LOC
    - extracted modules:
      - `dieter/components/dropdown-fill/dropdown-fill-types.ts`
@@ -200,14 +206,17 @@ Current program state:
    - rebuilt derivative output:
      - `tokyo/dieter/components/dropdown-fill/dropdown-fill.js`
      - `tokyo/dieter/manifest.json`
-31. This slice preserves:
+32. This slice preserves:
    - existing dropdown-fill hydrate/create-state behavior
    - existing color-mode UI and media-controller behavior
    - existing gradient stop editing and preview behavior
    - existing Dieter build output contract
-32. Remaining Phase 3 work:
+33. Remaining Phase 3 work:
    - deeper `account-state.ts` split remains deferred unless a stronger boundary emerges
-33. Active runtime/tooling work remaining in this PRD:
+34. Closure slice is landed:
+   - active documentation now matches the refactored Bob and San Francisco module layout
+   - typography runtime was reviewed and intentionally left in backlog because splitting it now would require changing the shared widget runtime loading contract
+35. Active runtime/tooling work remaining in this PRD:
    - none
 
 ---

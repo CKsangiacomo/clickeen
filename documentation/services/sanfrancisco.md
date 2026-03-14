@@ -39,9 +39,10 @@ Health contract:
   - SDR policy (`sdr.widget.copilot.v1`): FAQ-only sales workflow with two edit capabilities (rewrite existing Q&A, or personalize from one website URL with consent). Other requests return seller messaging + signup CTA.
   - CS policy (`cs.widget.copilot.v1`): full in-product editor assistant behavior (control-driven edits), no SDR website/sales clarification loop.
   - CS prompt payload expands tokenized content paths into concrete FAQ entries for rewrite intents and forbids requesting control/config dumps from users.
-- Runtime modules are split per agent:
-  - SDR executor: `sanfrancisco/src/agents/sdrWidgetCopilot.ts` (KV namespace `copilot:sdr:session:*`)
-  - CS executor: `sanfrancisco/src/agents/csWidgetCopilot.ts` (KV namespace `copilot:cs:session:*`)
+- Runtime modules are split between a shared core and thin per-agent wrappers:
+  - shared core: `sanfrancisco/src/agents/widgetCopilotCore.ts`
+  - SDR wrapper: `sanfrancisco/src/agents/sdrWidgetCopilot.ts` (KV namespace `copilot:sdr:session:*`)
+  - CS wrapper: `sanfrancisco/src/agents/csWidgetCopilot.ts` (KV namespace `copilot:cs:session:*`)
 - **Tiered Execution:** Enforces `ai.profile` from the grant.
   - `free_low`: `deepseek-chat` by default (agent-scoped alternatives may include Nova Lite).
   - `paid_standard`: `gpt-4o-mini` default, with provider/model choices constrained by policy + agent support (DeepSeek, OpenAI, Anthropic, Groq, Amazon Nova).
@@ -53,6 +54,15 @@ Health contract:
 - Endpoint: `POST /v1/personalization/preview` (internal, requires `PARIS_DEV_JWT`).
 - Status: `GET /v1/personalization/preview/:jobId` (internal).
 - Jobs are stored in KV with TTL; execution uses the `agent.personalization.preview.v1` policy grant.
+
+## Entrypoint posture
+- `sanfrancisco/src/index.ts` is now a thin route shell.
+- Extracted runtime modules own:
+  - internal auth helpers: `sanfrancisco/src/internalAuth.ts`
+  - concurrency limiting: `sanfrancisco/src/concurrency.ts`
+  - telemetry and outcome persistence: `sanfrancisco/src/telemetry.ts`
+  - l10n route handlers: `sanfrancisco/src/l10n-routes.ts`
+  - personalization job routes/queue handling: `sanfrancisco/src/personalization-jobs.ts`
 
 ## Account-context carry-forward (legacy route name: personalization/onboarding)
 - Endpoint: `POST /v1/personalization/onboarding` (internal, requires `PARIS_DEV_JWT`).

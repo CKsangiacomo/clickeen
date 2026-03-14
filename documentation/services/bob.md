@@ -92,7 +92,9 @@ Then they wait for Bob session readiness and post into Bob:
 }
 ```
 
-Bob listens in `bob/lib/session/useWidgetSession.tsx` and:
+Bob’s session runtime is now composed from explicit modules under `bob/lib/session/`.
+`useWidgetSession.tsx` is the composition shell; boot/open lives in `useSessionBoot.ts`, transport in `sessionTransport.ts`, editing in `useSessionEditing.ts`, localization in `useSessionLocalization.ts`, saving in `useSessionSaving.ts`, and copilot thread state in `useSessionCopilot.ts`.
+Together they:
 
 - Requires `compiled.controls[]` (must be present and non-empty)
 - Uses `compiled.defaults` when `instanceData` is null
@@ -282,11 +284,12 @@ This catches missing/unknown control kinds, invalid JSON in `options="..."`, and
 ### Key components
 
 - `bob/components/ToolDrawer.tsx`: panel selection + manual/copilot mode switch.
-- `bob/components/TdMenuContent.tsx`: injects compiled panel HTML and binds it to `instanceData`.
+- `bob/components/TdMenuContent.tsx`: render shell for ToolDrawer panel content.
+- `bob/components/td-menu-content/*`: show-if parsing, DOM hydration, field binding, linked-op expansion, and field-value helpers.
 
 ### Rendering + Dieter hydration
 
-`TdMenuContent`:
+`TdMenuContent` and `bob/components/td-menu-content/*` together:
 
 1. Injects `panelHtml` into `.tdmenucontent__fields`.
 2. Loads Dieter assets declared by `compiled.assets.dieter` (styles + scripts).
@@ -605,7 +608,18 @@ This compiles every widget under `tokyo/widgets/*` via Bob’s compile endpoint 
 
 Editor session + ops:
 
-- `bob/lib/session/useWidgetSession.tsx`
+- `bob/lib/session/useWidgetSession.tsx` (composition shell)
+- `bob/lib/session/useSessionBoot.ts`
+- `bob/lib/session/useSessionEditing.ts`
+- `bob/lib/session/useSessionLocalization.ts`
+- `bob/lib/session/useSessionSaving.ts`
+- `bob/lib/session/useSessionCopilot.ts`
+- `bob/lib/session/sessionTransport.ts`
+- `bob/lib/session/sessionPolicy.ts`
+- `bob/lib/session/sessionTypes.ts`
+- `bob/lib/session/sessionConfig.ts`
+- `bob/lib/session/sessionNormalization.ts`
+- `bob/lib/session/sessionLocalization.ts`
 - `bob/lib/ops.ts`
 - `bob/lib/edit/*`
 
@@ -619,6 +633,7 @@ ToolDrawer:
 
 - `bob/components/ToolDrawer.tsx`
 - `bob/components/TdMenuContent.tsx`
+- `bob/components/td-menu-content/*`
 
 Preview:
 
