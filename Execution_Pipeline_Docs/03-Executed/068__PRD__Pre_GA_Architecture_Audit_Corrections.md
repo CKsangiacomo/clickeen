@@ -12,8 +12,10 @@ Final closure correction record:
   - made Tokyo asset-usage mirror degradation explicit instead of silently returning
   - made widget compile a real PR gate against repo Tokyo sources
   - normalized Paris -> San Francisco helper failures onto the structured error contract
+  - normalized the remaining legacy Paris `apiError(...)` helper onto the structured error contract
   - made locale aftermath return explicit degraded status instead of `200 { ok: true }`
   - expanded cloud-dev runtime verification to corrected Roma auth routes
+  - expanded cloud-dev runtime verification to Paris structured-error routes
   - removed empty-string `ROMA_AUTHZ_CAPSULE_SECRET` fallbacks in Berlin/Paris
   - corrected local internal-control audit actor identity from fake `owner` to explicit `local-tool`
   - updated canonical Berlin/Roma account docs to include the shipped member-delete route
