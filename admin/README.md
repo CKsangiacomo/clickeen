@@ -67,6 +67,17 @@ Current support-intervention slice:
 - save base-config changes back through the explicit support path
 - local only
 
+## Runtime layout
+
+The DevStudio workspace/runtime split is now explicit:
+- [dev-widget-workspace.html](/Users/piero_macpro/code/VS/clickeen/admin/src/html/tools/dev-widget-workspace.html) is the thin page shell
+- [main.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/main.js) mounts the workspace and wires UI/controller state
+- [api.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/api.js) owns `/api/devstudio/*` transport and instance/l10n reads-writes
+- [bob-host.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/bob-host.js) owns Bob boot/handoff and compiled-widget fetch
+- [state.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/state.js) owns widget/publicId/local-instance helpers
+- [devstudio.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite/devstudio.ts) owns the DevStudio Vite middleware/proxy routes
+- [vite.config.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite.config.ts) is the Vite shell plus route registration
+
 ## Development
 
 ```bash

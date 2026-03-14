@@ -1,6 +1,6 @@
 # PRD 069B — Widget Workspace Boundary Restoration And Bob Host Cleanup
 
-Status: EXECUTING
+Status: EXECUTED
 Date: 2026-03-13
 Owner: Product Dev Team
 Priority: P0
@@ -9,6 +9,43 @@ Environment contract:
 - Read truth: local + cloud-dev
 - Write order: local first, then cloud-dev
 - Canonical startup: `bash scripts/dev-up.sh`
+
+---
+
+## Execution outcome
+
+1. Phase 2 completed.
+   - DevStudio instance list, core read/write, localization read/write, and l10n-status all run through explicit `/api/devstudio/*` local-tool routes.
+   - Bob product account routes were not reopened and no trusted-dev bypass was reintroduced.
+   - Tokyo saved-render auth now accepts the documented local internal contract for Paris local reads.
+
+2. Phase 3 completed as trace-and-verify, not as auth drift.
+   - the reported Roma `403` on widget open was traced against current cloud-dev with an authenticated product session
+   - the current Roma product read chain for platform/curated widget instances returned `200`
+   - no auth weakening or route-family flattening was needed or added
+
+3. Phase 4 completed.
+   - [dev-widget-workspace.html](/Users/piero_macpro/code/VS/clickeen/admin/src/html/tools/dev-widget-workspace.html) is now a thin shell
+   - workspace runtime moved into explicit modules:
+     - [main.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/main.js)
+     - [api.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/api.js)
+     - [bob-host.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/bob-host.js)
+     - [state.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/state.js)
+
+4. Phase 5 completed.
+   - DevStudio Vite middleware/proxy logic moved into:
+     - [devstudio.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite/devstudio.ts)
+   - [vite.config.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite.config.ts) is now Vite shell plus route registration, not the hidden DevStudio proxy runtime
+
+5. Phase 6 completed with minimal Bob change only.
+   - DevStudio account mutations are delegated back to the host explicitly instead of assuming Bob customer-route access
+   - no broader Bob refactor was introduced
+
+6. Verification completed.
+   - targeted DevStudio workspace test passes against the extracted runtime/module layout
+   - admin production build passes
+   - local DevStudio route family was previously verified end-to-end during Phase 2
+   - cloud-dev workers/runtime verify passed after the DevStudio/Tokyo internal contract fix
 
 ---
 

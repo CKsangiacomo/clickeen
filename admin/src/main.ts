@@ -42,6 +42,7 @@ import {
   getEntitlementsMatrix,
   type PolicyProfile,
 } from '@clickeen/ck-policy';
+import { mountDevWidgetWorkspace } from './tools/dev-widget-workspace/main.js';
 
 const entitlements = getEntitlementsMatrix();
 
@@ -544,6 +545,9 @@ function renderFromHash() {
   main.replaceChildren(wrapped);
   hydrateDieterComponents(main);
   hydrateTypographyPage(main);
+  if (page.slug === 'dev-widget-workspace') {
+    mountDevWidgetWorkspace();
+  }
 }
 
 window.addEventListener('hashchange', renderFromHash);

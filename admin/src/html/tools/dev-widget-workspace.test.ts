@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { describe, expect, it, vi } from 'vitest';
+import { mountDevWidgetWorkspace } from '../../tools/dev-widget-workspace/main.js';
 
 type InstancePayload = {
   publicId: string;
@@ -24,14 +25,6 @@ type FetchMockOptions = {
 const HTML_PATH = new URL('./dev-widget-workspace.html', import.meta.url);
 const HTML_SOURCE = readFileSync(HTML_PATH, 'utf8');
 
-function extractModuleScript(html: string): string {
-  const match = html.match(/<script\s+type="module">([\s\S]*?)<\/script>/);
-  if (!match) {
-    throw new Error('DevStudio instances tool script not found');
-  }
-  return match[1];
-}
-
 function ensureCrypto(win: Window & typeof globalThis) {
   const hasUuid = Boolean(win.crypto && typeof win.crypto.randomUUID === 'function');
   if (hasUuid) return;
@@ -49,11 +42,23 @@ function ensureAbortController(win: Window & typeof globalThis) {
   });
 }
 
+function defineGlobal<K extends keyof typeof globalThis>(key: K, value: (typeof globalThis)[K]) {
+  Object.defineProperty(globalThis, key, {
+    value,
+    configurable: true,
+    writable: true,
+  });
+}
+
 function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions) {
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input.toString();
     const method = init?.method || (input instanceof Request ? input.method : 'GET');
-    if (url.includes('/api/devstudio/context') && method === 'GET') {
+    const parsed = new URL(url, 'http://localhost:5173');
+    const pathname = parsed.pathname;
+    const publicIdParam = parsed.searchParams.get('publicId');
+
+    if (pathname === '/api/devstudio/context' && method === 'GET') {
       const status = options?.contextStatus ?? 200;
       if (status !== 200) {
         return new Response(
@@ -74,7 +79,7 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         { status: 200 },
       );
     }
-    if (url.includes('/api/devstudio/widgets')) {
+    if (pathname === '/api/devstudio/widgets') {
       const widgets = (
         options?.localWidgets ||
         Array.from(new Set(instances.map((instance) => instance.widgetname)))
@@ -88,7 +93,7 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         .map((widgetType) => ({ widgetType }));
       return new Response(JSON.stringify({ widgets }), { status: 200 });
     }
-    if (/\/api\/devstudio\/instances(?:\?|$)/.test(url) && method === 'GET') {
+    if (pathname === '/api/devstudio/instances' && method === 'GET') {
       const status = options?.devstudioInstancesStatus ?? 200;
       if (status !== 200) {
         return new Response(
@@ -112,13 +117,13 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         { status: 200 },
       );
     }
-    const compiledMatch = url.match(/\/api\/widgets\/([^/]+)\/compiled/);
+    const compiledMatch = pathname.match(/\/api\/widgets\/([^/]+)\/compiled/);
     if (compiledMatch) {
       const widget = decodeURIComponent(compiledMatch[1] || '');
       const compiled = options?.compiledByWidget?.[widget] || { defaults: {} };
       return new Response(JSON.stringify(compiled), { status: 200 });
     }
-    if (url.includes('/api/themes/list') && method === 'GET') {
+    if (pathname === '/api/themes/list' && method === 'GET') {
       return new Response(
         JSON.stringify({
           themes: (options?.themes || []).map((theme) => ({
@@ -129,7 +134,7 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         { status: 200 },
       );
     }
-    if (url.includes('/api/themes/update') && method === 'POST') {
+    if (pathname === '/api/themes/update' && method === 'POST') {
       let payload: { themeId?: string; values?: Record<string, unknown> } = {};
       try {
         payload = init?.body ? JSON.parse(String(init.body)) : {};
@@ -137,14 +142,9 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
       options?.onThemeUpdate?.(payload);
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
-    if (
-      /\/api\/accounts\/[^/]+\/instance\/[^/?:]+/.test(url) &&
-      !url.includes('/l10n/status') &&
-      !url.includes('/enqueue-selected')
-    ) {
-      const match = instances.find((instance) => url.includes(`/instance/${instance.publicId}`));
-      const publicId =
-        match?.publicId || decodeURIComponent(url.match(/\/instance\/([^?]+)/)?.[1] || 'unknown');
+    if (pathname === '/api/devstudio/instance' && method === 'GET') {
+      const match = instances.find((instance) => instance.publicId === publicIdParam);
+      const publicId = match?.publicId || publicIdParam || 'unknown';
       return new Response(
         JSON.stringify({
           publicId,
@@ -175,11 +175,7 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         { status: 200 },
       );
     }
-    if (
-      url.includes('/api/accounts/') &&
-      url.includes('/instances/') &&
-      url.includes('/localization')
-    ) {
+    if (pathname === '/api/devstudio/instance/localization' && method === 'GET') {
       return new Response(
         JSON.stringify({
           localization: {
@@ -192,7 +188,11 @@ function buildFetchMock(instances: InstancePayload[], options?: FetchMockOptions
         { status: 200 },
       );
     }
-    if (url.includes('/api/devstudio/instances/') && url.includes('/l10n/status')) {
+    if (
+      pathname.startsWith('/api/devstudio/instances/') &&
+      pathname.endsWith('/l10n/status') &&
+      method === 'GET'
+    ) {
       if (options?.devstudioL10nUnavailable) {
         return new Response(
           JSON.stringify({
@@ -259,6 +259,25 @@ async function loadInstancesDom(
 
   ensureCrypto(dom.window);
   ensureAbortController(dom.window);
+  defineGlobal('window', dom.window as never);
+  defineGlobal('document', dom.window.document as never);
+  defineGlobal('sessionStorage', dom.window.sessionStorage as never);
+  defineGlobal('location', dom.window.location as never);
+  defineGlobal('navigator', dom.window.navigator as never);
+  defineGlobal('fetch', fetchMock as never);
+  defineGlobal('Headers', Headers as never);
+  defineGlobal('Response', Response as never);
+  defineGlobal('Request', Request as never);
+  defineGlobal('crypto', dom.window.crypto as never);
+  defineGlobal('AbortController', dom.window.AbortController as never);
+  defineGlobal('HTMLElement', dom.window.HTMLElement as never);
+  defineGlobal('HTMLSelectElement', dom.window.HTMLSelectElement as never);
+  defineGlobal('HTMLInputElement', dom.window.HTMLInputElement as never);
+  defineGlobal('HTMLTextAreaElement', dom.window.HTMLTextAreaElement as never);
+  defineGlobal('CustomEvent', dom.window.CustomEvent as never);
+  defineGlobal('Event', dom.window.Event as never);
+  defineGlobal('MessageEvent', dom.window.MessageEvent as never);
+  defineGlobal('Node', dom.window.Node as never);
 
   const iframe = dom.window.document.getElementById('bob-iframe');
   let bobWindow: Window | null = null;
@@ -275,7 +294,7 @@ async function loadInstancesDom(
     });
   }
 
-  dom.window.eval(extractModuleScript(HTML_SOURCE));
+  mountDevWidgetWorkspace();
   if (bobWindow) {
     dom.window.dispatchEvent(
       new dom.window.MessageEvent('message', {
@@ -423,7 +442,7 @@ describe('DevStudio instances tool', () => {
     dom.window.close();
   });
 
-  it('loads instance envelopes through the Bob canonical route plus explicit localization rehydrate', async () => {
+  it('loads instance envelopes through explicit DevStudio instance routes', async () => {
     const instances = [
       {
         publicId: 'wgt_curated_faq_simple',
@@ -440,14 +459,14 @@ describe('DevStudio instances tool', () => {
     expect(
       urls.some((url) =>
         url.includes(
-          '/api/accounts/00000000-0000-0000-0000-000000000100/instance/wgt_curated_faq_simple',
+          '/api/devstudio/instance?accountId=00000000-0000-0000-0000-000000000100&publicId=wgt_curated_faq_simple',
         ),
       ),
     ).toBe(true);
     expect(
       urls.some((url) =>
         url.includes(
-          '/api/accounts/00000000-0000-0000-0000-000000000100/instances/wgt_curated_faq_simple/localization',
+          '/api/devstudio/instance/localization?accountId=00000000-0000-0000-0000-000000000100&publicId=wgt_curated_faq_simple',
         ),
       ),
     ).toBe(true);
@@ -661,7 +680,7 @@ describe('DevStudio instances tool', () => {
     if (!themeUpdatePayload) {
       throw new Error('Expected theme update payload to be captured');
     }
-    const payload = themeUpdatePayload;
+    const payload: { themeId?: string; values?: Record<string, unknown> } = themeUpdatePayload;
     expect(payload.themeId).toBe('dark');
     expect(payload.values?.['stage.alignment']).toBe('center');
     expect(payload.values?.['typography.globalFamily']).toBe('Inter');

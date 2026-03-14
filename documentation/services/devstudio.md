@@ -90,6 +90,15 @@ Implementation note:
 - those routes proxy to Paris internal-tool transport, not to Roma/Bob customer account routes
 - DevStudio local must not rely on Roma bootstrap capsules or customer auth semantics
 
+Current local implementation layout:
+- [dev-widget-workspace.html](/Users/piero_macpro/code/VS/clickeen/admin/src/html/tools/dev-widget-workspace.html) is now a thin shell for the tool page
+- [main.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/main.js) is the workspace composition/runtime shell
+- [api.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/api.js) owns local-tool transport and DevStudio instance/l10n reads-writes
+- [bob-host.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/bob-host.js) owns compiled-widget fetch, Bob open-editor handoff, and iframe boot
+- [state.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/state.js) owns widget/publicId/local-instance helper logic
+- [devstudio.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite/devstudio.ts) owns the DevStudio Vite middleware/proxy family
+- [vite.config.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite.config.ts) is now the Vite shell plus plugin registration, not the hidden DevStudio proxy runtime
+
 What it does not do:
 - browse customer accounts
 - switch customer account context
