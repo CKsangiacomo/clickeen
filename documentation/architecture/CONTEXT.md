@@ -88,9 +88,10 @@ Async l10n pipeline status is observed through:
 In the browser these flow through one of two host paths:
 
 - Bob URL boot path: Bob same-origin account route reads the saved authoring revision from Tokyo and separately rehydrates localization when needed.
-- Roma/DevStudio message boot path: host fetches the same core instance through its same-origin route, then sends Bob a `ck:open-editor` message. Save uses the same Tokyo-first direct route shape as Bob URL mode.
+- Roma message boot path: host fetches the same core instance through its same-origin route, then sends Bob a `ck:open-editor` message. Save delegates back to the Roma host and stays on the product same-origin route family.
+- DevStudio message boot path: host fetches the same core/localization envelope through explicit `/api/devstudio/instance*` local-tool routes, then sends Bob a `ck:open-editor` message. Bob account mutations delegate back to the DevStudio host and do not call Bob customer account routes directly.
 
-Localization is separate: Bob also calls explicit account/instance localization endpoints when rehydrating overlay state or applying overlay edits. Those reads/writes are intentional and do **not** save the base config.
+Localization is separate: Bob/Roma product flows call explicit account/instance localization endpoints when rehydrating overlay state or applying overlay edits; DevStudio local uses its explicit local-tool transport for the same envelope/write surface. Those reads/writes are intentional and do **not** save the base config.
 
 Between open and save:
 

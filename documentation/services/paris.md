@@ -34,6 +34,10 @@ Non-negotiable (PRD 54):
 - `GET /api/roma/templates` — Roma product starter catalog view over published starter instances (bootstrap capsule required on the active Roma shell path)
 - `DELETE /api/roma/instances/:publicId` (bootstrap capsule required on the active Roma shell path)
 - `GET /internal/devstudio/widgets?accountId=<uuid>` — explicit DevStudio local-tool instance list for the seeded platform account; trusted internal-service auth required, not Roma customer auth
+- `GET/PUT /internal/devstudio/instance?accountId=<uuid>&publicId=<publicId>` — explicit DevStudio local-tool instance core read/write for the seeded platform account
+- `GET /internal/devstudio/instance/localization?accountId=<uuid>&publicId=<publicId>` — explicit DevStudio local-tool localization snapshot for Bob message boot
+- `PUT/DELETE /internal/devstudio/instance/localization/user?accountId=<uuid>&publicId=<publicId>&locale=<locale>` — explicit DevStudio local-tool user locale-layer writes
+- `GET /internal/devstudio/instance/l10n-status?accountId=<uuid>&publicId=<publicId>` — explicit DevStudio local-tool translation status read
 
 ### Accounts + instance editing
 

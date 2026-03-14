@@ -179,7 +179,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
 - Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/session/bootstrap`) backed by Tokyo for saved authoring truth, Berlin for bootstrap/account context, and Paris for localization/explicit aftermath orchestration.
-- DevStudio local does not use `/api/roma/templates`; it uses its own explicit `/api/devstudio/instances*` tool path for instance discovery on the platform-owned account, while create/open/save run through Bob’s canonical `/api/accounts/*` routes.
+- DevStudio local does not use `/api/roma/templates`; it uses its own explicit `/api/devstudio/instances*` and `/api/devstudio/instance*` tool paths for instance discovery, boot, save, localization, and status on the platform-owned account.
 
 #### Roma (Pages)
 
@@ -659,12 +659,12 @@ All third-party embed traffic terminates at Venice:
 ### 1. Editing Flow
 
 ```
-User opens widget → Host (Roma/DevStudio message boot) or Bob (URL boot) GET /api/accounts/:accountId/instance/:publicId?subject=account
-                  → Bob/Roma same-origin route reads Tokyo saved revision
+User opens widget → Host (Roma/DevStudio message boot) or Bob (URL boot) GET instance core
+                  → Roma/Bob same-origin route or DevStudio internal-tool route reads Tokyo saved revision
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
                   → User clicks Save
-                  → Bob/Roma same-origin route writes Tokyo saved revision
+                  → Roma/Bob same-origin route or DevStudio internal-tool route writes Tokyo saved revision
                   → Paris runs explicit translation sync and explicit published-surface sync
                   → Paris/Tokyo-worker refresh Tokyo config/text/meta/live-pointer bytes when the instance is live
 ```

@@ -64,7 +64,11 @@ export function useSessionTransport(args: {
 
   const shouldDelegateAccountCommand = useCallback((subject: SubjectMode): boolean => {
     if (subject !== 'account' || bootModeRef.current !== 'message') return false;
-    return surfaceRef.current === 'roma' || surfaceRef.current === 'devstudio-support';
+    return (
+      surfaceRef.current === 'roma' ||
+      surfaceRef.current === 'devstudio' ||
+      surfaceRef.current === 'devstudio-support'
+    );
   }, []);
 
   const dispatchHostAccountCommand = useCallback(

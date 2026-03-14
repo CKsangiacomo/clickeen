@@ -279,7 +279,7 @@ export async function loadSavedConfigStateFromTokyo(args: {
   throw new Error('tokyo_saved_config_unavailable');
 }
 
-async function writeSavedConfigToTokyo(args: {
+export async function writeSavedConfigToTokyo(args: {
   env: Env;
   accountId: string;
   publicId: string;
@@ -516,5 +516,4 @@ export {
   resolveActivePublishLocales,
   resolveRenderSnapshotLocales,
   waitForEnSnapshotReady,
-  writeSavedConfigToTokyo,
 };

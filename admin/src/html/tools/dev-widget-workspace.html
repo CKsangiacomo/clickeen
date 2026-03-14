@@ -934,6 +934,142 @@
       }
     }
 
+    async function runDevstudioAccountCommand({ source, requestId, sessionId, command, accountId, publicId, locale, body }) {
+      const reply = ({ ok, status, payload = null, message = undefined }) => {
+        source.postMessage(
+          {
+            type: 'host:account-command-result',
+            requestId,
+            sessionId,
+            command,
+            accountId,
+            publicId,
+            ok,
+            status,
+            payload,
+            ...(message ? { message } : {}),
+          },
+          BOB_ORIGIN,
+        );
+      };
+
+      const devstudioAccountId = await resolveDevStudioAccountId().catch(() => '');
+      if (!devstudioAccountId || accountId !== devstudioAccountId || !findInstanceByPublicId(publicId)) {
+        reply({
+          ok: false,
+          status: 404,
+          message: 'coreui.errors.instance.notFound',
+        });
+        return;
+      }
+
+      try {
+        if (command === 'update-instance') {
+          const config = body && typeof body === 'object' && !Array.isArray(body) ? body.config : null;
+          if (!config || typeof config !== 'object' || Array.isArray(config)) {
+            reply({
+              ok: false,
+              status: 422,
+              message: 'coreui.errors.payload.invalid',
+            });
+            return;
+          }
+
+          const res = await fetchDevStudio(
+            buildDevStudioApiUrl('/api/devstudio/instance', { accountId, publicId }),
+            {
+              method: 'PUT',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ config }),
+            },
+          );
+          const payload = await res.json().catch(() => null);
+          if (res.ok && payload && typeof payload === 'object' && payload.config && typeof payload.config === 'object') {
+            const instance = findInstanceByPublicId(publicId);
+            if (instance) instance.config = payload.config;
+          }
+          reply({
+            ok: res.ok,
+            status: res.status,
+            payload,
+            message:
+              !res.ok && payload?.error?.reasonKey
+                ? String(payload.error.reasonKey)
+                : !res.ok
+                  ? `HTTP_${res.status}`
+                  : undefined,
+          });
+          return;
+        }
+
+        if (command === 'put-user-locale-layer') {
+          const res = await fetchDevStudio(
+            buildDevStudioApiUrl('/api/devstudio/instance/localization/user', {
+              accountId,
+              publicId,
+              locale,
+            }),
+            {
+              method: 'PUT',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify(body || {}),
+            },
+          );
+          const payload = await res.json().catch(() => null);
+          reply({
+            ok: res.ok,
+            status: res.status,
+            payload,
+            message:
+              !res.ok && payload?.error?.reasonKey
+                ? String(payload.error.reasonKey)
+                : !res.ok
+                  ? `HTTP_${res.status}`
+                  : undefined,
+          });
+          return;
+        }
+
+        if (command === 'delete-user-locale-layer') {
+          const res = await fetchDevStudio(
+            buildDevStudioApiUrl('/api/devstudio/instance/localization/user', {
+              accountId,
+              publicId,
+              locale,
+            }),
+            {
+              method: 'DELETE',
+            },
+          );
+          const payload = await res.json().catch(() => null);
+          reply({
+            ok: res.ok,
+            status: res.status,
+            payload,
+            message:
+              !res.ok && payload?.error?.reasonKey
+                ? String(payload.error.reasonKey)
+                : !res.ok
+                  ? `HTTP_${res.status}`
+                  : undefined,
+          });
+          return;
+        }
+
+        reply({
+          ok: false,
+          status: 422,
+          message: 'coreui.errors.builder.command.unsupported',
+        });
+      } catch (error) {
+        reply({
+          ok: false,
+          status: 500,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
     function setL10nStatusDisplay({ state, tone, value, meta }) {
       if (!(l10nStatus instanceof HTMLElement)) return;
       l10nStatus.dataset.state = state || 'idle';
@@ -1138,16 +1274,30 @@
           const command = typeof data.command === 'string' ? data.command.trim() : '';
           const accountId = typeof data.accountId === 'string' ? data.accountId.trim() : '';
           const publicId = typeof data.publicId === 'string' ? data.publicId.trim() : '';
-          if (!SUPPORT_MODE || !requestId || !sessionId || sessionId !== bobSessionId || !command || !accountId || !publicId) {
+          const locale = typeof data.locale === 'string' ? data.locale.trim() : '';
+          if (!requestId || !sessionId || sessionId !== bobSessionId || !command || !accountId || !publicId) {
             return;
           }
-          void runSupportAccountCommand({
+          if (SUPPORT_MODE) {
+            void runSupportAccountCommand({
+              source: event.source,
+              requestId,
+              sessionId,
+              command,
+              accountId,
+              publicId,
+              body: data.body,
+            });
+            return;
+          }
+          void runDevstudioAccountCommand({
             source: event.source,
             requestId,
             sessionId,
             command,
             accountId,
             publicId,
+            locale,
             body: data.body,
           });
           return;
@@ -1371,15 +1521,12 @@
       if (!accountId) {
         accountId = await resolveDevStudioAccountId();
       }
-      const res = await fetchBob(
-        buildBobApiUrl(
-          `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}`,
-          {
-            subject: 'account',
-            surface: 'devstudio',
-            _t: Date.now(),
-          },
-        ),
+      const res = await fetchDevStudio(
+        buildDevStudioApiUrl('/api/devstudio/instance', {
+          accountId,
+          publicId,
+          _t: Date.now(),
+        }),
       );
       if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
       return await res.json();
@@ -1389,15 +1536,12 @@
       if (!accountId) {
         accountId = await resolveDevStudioAccountId();
       }
-      const res = await fetchBob(
-        buildBobApiUrl(
-          `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/localization`,
-          {
-            subject: 'account',
-            surface: 'devstudio',
-            _t: Date.now(),
-          },
-        ),
+      const res = await fetchDevStudio(
+        buildDevStudioApiUrl('/api/devstudio/instance/localization', {
+          accountId,
+          publicId,
+          _t: Date.now(),
+        }),
       );
       if (!res.ok) {
         throw new Error(`Failed to load localization ${publicId} (${res.status})`);

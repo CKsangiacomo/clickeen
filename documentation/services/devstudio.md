@@ -76,12 +76,18 @@ Key routes used by this tool:
 - `GET /api/devstudio/context`
 - `GET /api/devstudio/widgets`
 - `GET /api/devstudio/instances`
+- `GET /api/devstudio/instance`
+- `PUT /api/devstudio/instance`
+- `GET /api/devstudio/instance/localization`
+- `PUT /api/devstudio/instance/localization/user`
+- `DELETE /api/devstudio/instance/localization/user`
 - `GET /api/devstudio/instances/:publicId/l10n/status`
 - `/api/devstudio/assets*`
 
 Implementation note:
 - local `GET /api/devstudio/instances` is an explicit DevStudio local-tool route
-- it must proxy to Paris internal-tool transport, not to Roma customer routes
+- instance boot, save, and user locale-layer writes also run through explicit `/api/devstudio/instance*` local-tool routes
+- those routes proxy to Paris internal-tool transport, not to Roma/Bob customer account routes
 - DevStudio local must not rely on Roma bootstrap capsules or customer auth semantics
 
 What it does not do:

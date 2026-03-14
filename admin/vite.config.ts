@@ -564,9 +564,15 @@ export default defineConfig({
             /^\/api\/devstudio\/instances\/([^/]+)\/l10n\/status$/,
           );
           const wantsList = pathname === '/api/devstudio/instances' && req.method === 'GET';
+          const wantsCore = pathname === '/api/devstudio/instance' && (req.method === 'GET' || req.method === 'PUT');
+          const wantsLocalization =
+            pathname === '/api/devstudio/instance/localization' && req.method === 'GET';
+          const wantsUserLayer =
+            pathname === '/api/devstudio/instance/localization/user' &&
+            (req.method === 'PUT' || req.method === 'DELETE');
           const wantsStatus = Boolean(statusMatch && req.method === 'GET');
 
-          if (!wantsList && !wantsStatus) {
+          if (!wantsList && !wantsCore && !wantsLocalization && !wantsUserLayer && !wantsStatus) {
             return next();
           }
 
@@ -590,46 +596,51 @@ export default defineConfig({
               });
             }
 
+            if (wantsCore) {
+              const publicId = String(requestUrl.searchParams.get('publicId') || '').trim();
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: `/internal/devstudio/instance?accountId=${encodeURIComponent(accountId)}&publicId=${encodeURIComponent(publicId)}`,
+                method: req.method || 'GET',
+                body: req.method === 'PUT' ? await readRequestText(req) : undefined,
+                headers: { accept: 'application/json' },
+              });
+            }
+
+            if (wantsLocalization) {
+              const publicId = String(requestUrl.searchParams.get('publicId') || '').trim();
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: `/internal/devstudio/instance/localization?accountId=${encodeURIComponent(accountId)}&publicId=${encodeURIComponent(publicId)}`,
+                method: 'GET',
+                headers: { accept: 'application/json' },
+              });
+            }
+
+            if (wantsUserLayer) {
+              const publicId = String(requestUrl.searchParams.get('publicId') || '').trim();
+              const locale = String(requestUrl.searchParams.get('locale') || '').trim();
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: `/internal/devstudio/instance/localization/user?accountId=${encodeURIComponent(accountId)}&publicId=${encodeURIComponent(publicId)}&locale=${encodeURIComponent(locale)}`,
+                method: req.method || 'PUT',
+                body: req.method === 'PUT' ? await readRequestText(req) : undefined,
+                headers: { accept: 'application/json' },
+              });
+            }
+
             if (wantsStatus && statusMatch) {
               const publicId = decodeURIComponent(statusMatch[1] || '');
-              try {
-                const upstream = await fetch(
-                  `${resolveDevstudioParisBaseUrl()}/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
-                    publicId,
-                  )}/l10n/status?subject=account`,
-                  {
-                    method: 'GET',
-                    headers: createDevstudioParisHeaders({ accept: 'application/json' }),
-                    cache: 'no-store',
-                  },
-                );
-                const text = await upstream.text();
-                if (upstream.ok) {
-                  const contentType =
-                    upstream.headers.get('content-type') || 'application/json; charset=utf-8';
-                  res.statusCode = upstream.status;
-                  res.setHeader('Content-Type', contentType);
-                  res.setHeader('Cache-Control', 'no-store');
-                  res.end(text);
-                  return;
-                }
-              } catch {}
-
-              res.statusCode = 200;
-              res.setHeader('Content-Type', 'application/json; charset=utf-8');
-              res.setHeader('Cache-Control', 'no-store');
-              res.end(
-                JSON.stringify({
-                  publicId,
-                  unavailable: true,
-                  locales: [],
-                  error: {
-                    reasonKey: 'coreui.errors.devstudio.l10nStatusUnavailable',
-                    detail: 'Translations status unavailable.',
-                  },
-                }),
-              );
-              return;
+              return await proxyDevstudioParisJson({
+                req,
+                res,
+                pathname: `/internal/devstudio/instance/l10n-status?accountId=${encodeURIComponent(accountId)}&publicId=${encodeURIComponent(publicId)}`,
+                method: 'GET',
+                headers: { accept: 'application/json' },
+              });
             }
           } catch (error) {
             res.statusCode = 500;

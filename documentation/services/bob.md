@@ -134,7 +134,7 @@ Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
 - Roma user flows can create/duplicate/delete account user instances through Roma same-origin routes plus canonical account instance routes.
 - When Bob is hosted by Roma (`surface=roma`, `boot=message`, `subject=account`), Bob does not own the account mutation transport. It emits explicit editor commands back to the Roma host, and Roma executes the named same-origin account routes (`/api/accounts/...`) on Bob's behalf.
-- DevStudio Local does not use Roma starter discovery. It discovers instances through the local DevStudio route family (`/api/devstudio/instances*`), but instance create/open/save now uses Bob’s canonical account-instance routes directly (`/api/accounts/...`).
+- DevStudio Local does not use Roma starter discovery. It discovers instances through the local DevStudio route family (`/api/devstudio/instances*`), boots Bob through explicit `/api/devstudio/instance*` host routes, and delegates Bob account mutations back to the DevStudio host instead of calling Bob customer account routes directly.
 - In DevStudio, Bob/Dieter asset controls also use the local DevStudio route family:
   - list/delete assets: `/api/devstudio/assets/:accountId`
   - upload assets: `/api/devstudio/assets/upload`

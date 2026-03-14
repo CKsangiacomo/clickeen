@@ -10,3 +10,9 @@ export {
 } from './widgets-bootstrap';
 
 export { handleRomaTemplates } from './widgets-bootstrap';
+export {
+  handleInternalDevstudioInstance,
+  handleInternalDevstudioInstanceLocalization,
+  handleInternalDevstudioInstanceL10nStatus,
+  handleInternalDevstudioUserLayer,
+} from './devstudio-instance';

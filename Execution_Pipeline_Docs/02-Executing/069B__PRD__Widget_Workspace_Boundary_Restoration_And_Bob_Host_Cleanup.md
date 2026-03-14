@@ -250,19 +250,23 @@ Goal:
 Scope:
 1. add the explicit internal route(s) needed for instance envelope/localization boot
 2. remove DevStudio dependence on Bob customer account routes for those reads
-3. keep Bob product auth untouched
-4. make the new internal read routes reuse shared instance-loading/domain logic
-5. make the new internal read routes support both account-owned and curated/platform-owned instance classes
-6. keep the response shape aligned with the existing Bob host expectations
-7. keep the route restricted to the platform account; customer-support target opens continue to use the dedicated support flow
+3. move normal DevStudio account writes and user locale-layer writes onto the same explicit local-tool route family instead of Bob customer account routes
+4. keep Bob product auth untouched
+5. make the new internal routes reuse shared instance-loading/domain logic
+6. make the new internal routes support both account-owned and curated/platform-owned instance classes
+7. keep the response shape aligned with the existing Bob host expectations
+8. keep the route restricted to the platform account; customer-support target opens continue to use the dedicated support flow
+9. make Bob delegate DevStudio account mutations back to the host instead of assuming product-route access
 
 Acceptance:
 1. local DevStudio can list instances
 2. local DevStudio can open an instance in Bob without calling Bob customer account routes
-3. no product-route auth bypass was added
-4. no Tokyo-only partial payload shortcut was introduced
-5. both account-owned and curated/platform-owned DevStudio instances can boot correctly
-6. the returned core/localization payload still matches the host contract Bob already expects
+3. local DevStudio account saves and user locale-layer writes no longer depend on Bob customer account routes
+4. no product-route auth bypass was added
+5. no Tokyo-only partial payload shortcut was introduced
+6. both account-owned and curated/platform-owned DevStudio instances can boot correctly
+7. the returned core/localization payload still matches the host contract Bob already expects
+8. Bob host delegation stays explicit for DevStudio instead of relying on hidden product-route assumptions
 
 ### Phase 3 — Roma builder/open correction
 

@@ -19,6 +19,10 @@ import {
 import {
   handleMinibobHandoffStart,
   handleMinibobHandoffComplete,
+  handleInternalDevstudioInstance,
+  handleInternalDevstudioInstanceLocalization,
+  handleInternalDevstudioInstanceL10nStatus,
+  handleInternalDevstudioUserLayer,
   handleInternalDevstudioWidgets,
   handleRomaTemplates,
   handleRomaWidgetDelete,
@@ -73,6 +77,26 @@ export default {
       if (pathname === '/internal/devstudio/widgets') {
         if (req.method !== 'GET') return methodNotAllowed();
         return handleInternalDevstudioWidgets(req, env);
+      }
+
+      if (pathname === '/internal/devstudio/instance') {
+        if (req.method !== 'GET' && req.method !== 'PUT') return methodNotAllowed();
+        return handleInternalDevstudioInstance(req, env);
+      }
+
+      if (pathname === '/internal/devstudio/instance/localization') {
+        if (req.method !== 'GET') return methodNotAllowed();
+        return handleInternalDevstudioInstanceLocalization(req, env);
+      }
+
+      if (pathname === '/internal/devstudio/instance/localization/user') {
+        if (req.method !== 'PUT' && req.method !== 'DELETE') return methodNotAllowed();
+        return handleInternalDevstudioUserLayer(req, env);
+      }
+
+      if (pathname === '/internal/devstudio/instance/l10n-status') {
+        if (req.method !== 'GET') return methodNotAllowed();
+        return handleInternalDevstudioInstanceL10nStatus(req, env);
       }
 
       if (pathname === '/api/roma/templates') {
