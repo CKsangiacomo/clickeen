@@ -19,6 +19,7 @@ import {
 import {
   handleMinibobHandoffStart,
   handleMinibobHandoffComplete,
+  handleInternalDevstudioWidgets,
   handleRomaTemplates,
   handleRomaWidgetDelete,
   handleRomaWidgets,
@@ -67,6 +68,11 @@ export default {
       if (pathname === '/api/roma/widgets') {
         if (req.method !== 'GET') return methodNotAllowed();
         return handleRomaWidgets(req, env);
+      }
+
+      if (pathname === '/internal/devstudio/widgets') {
+        if (req.method !== 'GET') return methodNotAllowed();
+        return handleInternalDevstudioWidgets(req, env);
       }
 
       if (pathname === '/api/roma/templates') {

@@ -15,6 +15,7 @@ Active product-surface rule (PRD 61):
 - Paris does not re-read `account_members` for those active product routes.
 - Paris account-capsule verification uses one dedicated `ROMA_AUTHZ_CAPSULE_SECRET`. Product auth must not fall back to `AI_GRANT_HMAC_SECRET` or `SUPABASE_SERVICE_ROLE_KEY`.
 - Local DevStudio/Bob tool flows remain explicit local-only trusted-token exceptions for internal tooling only. Normal product account routes still require the Berlin-issued bootstrap capsule and must not treat local trusted-dev access as sufficient authority.
+- Local DevStudio instance listing is a separate internal Paris route; it must not proxy through `/api/roma/widgets`.
 - Local Paris-to-Tokyo internal reads/writes use the same explicit pattern: `TOKYO_DEV_JWT` plus `x-ck-internal-service: paris.local`. Paris must not rely on a bare Tokyo dev token as universal saved-render authority.
 
 Non-negotiable (PRD 54):
@@ -32,6 +33,7 @@ Non-negotiable (PRD 54):
 - `GET /api/roma/widgets` — account-visible instance set (`wgt_main_*` + `wgt_curated_*`) for authenticated Roma/admin flows (bootstrap capsule required on the active Roma shell path)
 - `GET /api/roma/templates` — Roma product starter catalog view over published starter instances (bootstrap capsule required on the active Roma shell path)
 - `DELETE /api/roma/instances/:publicId` (bootstrap capsule required on the active Roma shell path)
+- `GET /internal/devstudio/widgets?accountId=<uuid>` — explicit DevStudio local-tool instance list for the seeded platform account; trusted internal-service auth required, not Roma customer auth
 
 ### Accounts + instance editing
 

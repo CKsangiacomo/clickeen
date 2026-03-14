@@ -79,6 +79,11 @@ Key routes used by this tool:
 - `GET /api/devstudio/instances/:publicId/l10n/status`
 - `/api/devstudio/assets*`
 
+Implementation note:
+- local `GET /api/devstudio/instances` is an explicit DevStudio local-tool route
+- it must proxy to Paris internal-tool transport, not to Roma customer routes
+- DevStudio local must not rely on Roma bootstrap capsules or customer auth semantics
+
 What it does not do:
 - browse customer accounts
 - switch customer account context

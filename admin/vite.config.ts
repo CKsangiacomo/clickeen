@@ -584,7 +584,7 @@ export default defineConfig({
               return await proxyDevstudioParisJson({
                 req,
                 res,
-                pathname: `/api/roma/widgets?accountId=${encodeURIComponent(accountId)}`,
+                pathname: `/internal/devstudio/widgets?accountId=${encodeURIComponent(accountId)}`,
                 method: 'GET',
                 headers: { accept: 'application/json' },
               });

@@ -4,6 +4,7 @@ export {
 } from './handoff-account-create';
 
 export {
+  handleInternalDevstudioWidgets,
   handleRomaWidgetDelete,
   handleRomaWidgets,
 } from './widgets-bootstrap';

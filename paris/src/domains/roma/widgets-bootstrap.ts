@@ -1,6 +1,8 @@
-import { resolvePolicy } from '@clickeen/ck-policy';
+import { resolvePolicy, type MemberRole } from '@clickeen/ck-policy';
 import type { Env, InstanceRow, WidgetRow } from '../../shared/types';
 import { authorizeAccount } from '../../shared/account-auth';
+import { isTrustedInternalServiceRequest } from '../../shared/auth';
+import { loadAccountById } from '../../shared/accounts';
 import { ckError, errorDetail } from '../../shared/errors';
 import { json, readJson } from '../../shared/http';
 import { roleRank } from '../../shared/roles';
@@ -211,37 +213,50 @@ async function loadAccountPublishContainment(
   };
 }
 
-export async function handleRomaWidgets(req: Request, env: Env): Promise<Response> {
-  const url = new URL(req.url);
-  const accountIdResult = assertAccountId(url.searchParams.get('accountId'));
-  if (!accountIdResult.ok) return accountIdResult.response;
-  const accountId = accountIdResult.value;
-
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
-  if (!authorized.ok) return authorized.response;
-
-  const policy = resolvePolicy({ profile: authorized.account.tier, role: authorized.role });
+async function buildRomaWidgetsPayload(args: {
+  env: Env;
+  account: {
+    id: string;
+    tier: 'free' | 'tier1' | 'tier2' | 'tier3';
+    name: string;
+    slug: string;
+    is_platform?: boolean | null;
+  };
+  role: MemberRole;
+}): Promise<Response> {
+  const { env, account, role } = args;
+  const accountId = account.id;
+  const policy = resolvePolicy({ profile: account.tier, role });
   const canMutate = policy.role !== 'viewer';
 
   let instances: RomaWidgetsInstancePayload[] = [];
   let allWidgetTypes: string[] = [];
   let publishContainment: { active: boolean; reason: string | null } = { active: false, reason: null };
   try {
-    const [accountRows, ownedCuratedRows, widgetTypes, containment] = await Promise.all([
+    const [accountRows, ownedCuratedRows, widgetTypes] = await Promise.all([
       loadAccountWidgetInstances(env, accountId),
       loadOwnedCuratedWidgetInstances(env, accountId),
       loadAllWidgetTypes(env),
-      loadAccountPublishContainment(env, accountId),
     ]);
     instances = [...accountRows, ...ownedCuratedRows];
     allWidgetTypes = widgetTypes;
-    publishContainment = containment;
   } catch (error) {
     const detail = errorDetail(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
   }
 
-  const canMutateCurated = canMutate && authorized.account.is_platform === true;
+  try {
+    publishContainment = await loadAccountPublishContainment(env, accountId);
+  } catch {
+    // Company-plane publish containment must not take down the customer widgets shell.
+    // If containment state is unavailable, fail closed on publish actions while still loading the list.
+    publishContainment = {
+      active: true,
+      reason: 'account_publish_containment_unavailable',
+    };
+  }
+
+  const canMutateCurated = canMutate && account.is_platform === true;
 
   const actionAware = instances.map((instance) => {
     const isCurated = instance.source === 'curated';
@@ -264,11 +279,11 @@ export async function handleRomaWidgets(req: Request, env: Env): Promise<Respons
 
   return json({
     account: {
-      accountId: authorized.account.id,
-      tier: authorized.account.tier,
-      name: authorized.account.name,
-      slug: authorized.account.slug,
-      role: authorized.role,
+      accountId: account.id,
+      tier: account.tier,
+      name: account.name,
+      slug: account.slug,
+      role,
       publishContainment: publishContainment.active
         ? {
             active: true,
@@ -281,6 +296,62 @@ export async function handleRomaWidgets(req: Request, env: Env): Promise<Respons
     },
     widgetTypes: Array.from(widgetTypeSet).sort((a, b) => a.localeCompare(b)),
     instances: actionAware,
+  });
+}
+
+export async function handleRomaWidgets(req: Request, env: Env): Promise<Response> {
+  const url = new URL(req.url);
+  const accountIdResult = assertAccountId(url.searchParams.get('accountId'));
+  if (!accountIdResult.ok) return accountIdResult.response;
+  const accountId = accountIdResult.value;
+
+  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
+  if (!authorized.ok) return authorized.response;
+
+  return buildRomaWidgetsPayload({
+    env,
+    account: authorized.account,
+    role: authorized.role,
+  });
+}
+
+export async function handleInternalDevstudioWidgets(req: Request, env: Env): Promise<Response> {
+  if (!isTrustedInternalServiceRequest(req, env)) {
+    return ckError(
+      { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden', detail: 'devstudio_internal_auth_required' },
+      403,
+    );
+  }
+
+  const url = new URL(req.url);
+  const accountIdResult = assertAccountId(url.searchParams.get('accountId'));
+  if (!accountIdResult.ok) return accountIdResult.response;
+  const accountId = accountIdResult.value;
+
+  let account = null;
+  try {
+    account = await loadAccountById(env, accountId);
+  } catch (error) {
+    return ckError(
+      { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: errorDetail(error) },
+      500,
+    );
+  }
+
+  if (!account) {
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
+  }
+  if (account.is_platform !== true) {
+    return ckError(
+      { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden', detail: 'devstudio_platform_account_required' },
+      403,
+    );
+  }
+
+  return buildRomaWidgetsPayload({
+    env,
+    account,
+    role: 'owner',
   });
 }
 
