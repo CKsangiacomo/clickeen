@@ -355,7 +355,11 @@ function resolveStage(env: Env): string {
 }
 
 function resolveRomaAuthzCapsuleSecret(env: Env): string {
-  return asTrimmedString(env.ROMA_AUTHZ_CAPSULE_SECRET) ?? '';
+  const secret = asTrimmedString(env.ROMA_AUTHZ_CAPSULE_SECRET);
+  if (!secret) {
+    throw new Error('[berlin] Missing ROMA_AUTHZ_CAPSULE_SECRET');
+  }
+  return secret;
 }
 
 function budgetCounterKey(accountId: string, budgetKey: string, periodKey: string): string {

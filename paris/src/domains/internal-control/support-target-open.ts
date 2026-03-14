@@ -24,7 +24,7 @@ const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 function localToolActor(): InternalControlActor {
   return {
     mode: 'local-tool',
-    subject: 'owner',
+    subject: 'local-tool',
     serviceId: 'devstudio.local',
   };
 }

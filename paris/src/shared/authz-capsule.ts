@@ -7,7 +7,11 @@ import {
 import type { AccountTier, Env } from './types';
 
 function resolveRomaAuthzCapsuleSecret(env: Env): string {
-  return (env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
+  const secret = (env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
+  if (!secret) {
+    throw new Error('[paris] Missing ROMA_AUTHZ_CAPSULE_SECRET');
+  }
+  return secret;
 }
 
 export { readRomaAuthzCapsuleHeader, type RomaAccountAuthzCapsulePayload };

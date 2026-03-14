@@ -54,6 +54,10 @@ const MINIBOB_HOUR_TTL_SEC = 2 * 60 * 60;
 
 type MinibobRateLimitMode = 'off' | 'log' | 'enforce';
 
+function aiMisconfiguredResponse(detail = 'missing_ai_grant_hmac_secret'): Response {
+  return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail }, 503);
+}
+
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
@@ -381,7 +385,7 @@ export async function issueAiGrant(args: {
 
   const secret = args.env.AI_GRANT_HMAC_SECRET?.trim();
   if (!secret) {
-    return { ok: false, response: json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 }) };
+    return { ok: false, response: aiMisconfiguredResponse() };
   }
 
   const grant = await mintGrant(grantPayload, secret);
@@ -450,7 +454,7 @@ export async function handleAiGrant(req: Request, env: Env) {
 export async function handleAiMinibobSession(_req: Request, env: Env) {
   const secret = env.AI_GRANT_HMAC_SECRET?.trim();
   if (!secret) {
-    return json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 });
+    return aiMisconfiguredResponse();
   }
 
   const issuedAtSec = Math.floor(Date.now() / 1000);
@@ -490,7 +494,7 @@ export async function handleAiMinibobGrant(req: Request, env: Env) {
 
   const secret = env.AI_GRANT_HMAC_SECRET?.trim();
   if (!secret) {
-    return json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 });
+    return aiMisconfiguredResponse();
   }
 
   const accountIdRaw = asTrimmedString((body as any).accountId);
@@ -633,7 +637,7 @@ export async function handleAiOutcome(req: Request, env: Env) {
 
   const secret = env.AI_GRANT_HMAC_SECRET?.trim();
   if (!secret) {
-    return json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 });
+    return aiMisconfiguredResponse();
   }
 
   const outcomeCommand = {

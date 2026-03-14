@@ -24,7 +24,7 @@ type SupportUpdatePayload = {
 function localToolActor(): InternalControlActor {
   return {
     mode: 'local-tool',
-    subject: 'owner',
+    subject: 'local-tool',
     serviceId: 'devstudio.local',
   };
 }

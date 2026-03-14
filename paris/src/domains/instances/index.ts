@@ -179,25 +179,37 @@ export async function handleGetInstance(_req: Request, env: Env, publicId: strin
   // but it must never leak drafts.
 
   const instance = await loadInstanceByPublicId(env, publicId);
-  if (!instance) return json({ error: 'NOT_FOUND' }, { status: 404 });
+  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
 
   if (instance.status !== 'published') {
     // Treat unpublished as not-found for public user-owned surfaces.
-    return json({ error: 'NOT_FOUND' }, { status: 404 });
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
   }
 
   const ownerAccountId = resolveInstanceAccountId(instance);
-  if (!ownerAccountId) return json({ error: 'ACCOUNT_NOT_FOUND' }, { status: 500 });
+  if (!ownerAccountId) {
+    return ckError(
+      { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: 'instance_account_missing' },
+      500,
+    );
+  }
 
   const savedState = await loadSavedConfigStateFromTokyo({
     env,
     accountId: ownerAccountId,
     publicId,
   });
-  if (!savedState) return json({ error: 'CONFIG_NOT_FOUND' }, { status: 500 });
+  if (!savedState) {
+    return ckError(
+      { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: 'saved_tokyo_revision_missing' },
+      500,
+    );
+  }
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
-  if (!widgetType) return json({ error: 'WIDGET_NOT_FOUND' }, { status: 500 });
+  if (!widgetType) {
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+  }
 
   const baseFingerprint = await computeBaseFingerprint(savedState.config);
   let policy: Policy | null = null;

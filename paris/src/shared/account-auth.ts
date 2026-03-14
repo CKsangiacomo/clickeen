@@ -41,7 +41,16 @@ export async function authorizeAccount(
 
   const capsule = readRomaAuthzCapsuleHeader(req);
   if (capsule) {
-    const verified = await verifyRomaAccountAuthzCapsule(env, capsule);
+    let verified;
+    try {
+      verified = await verifyRomaAccountAuthzCapsule(env, capsule);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      return {
+        ok: false,
+        response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail }, 500),
+      };
+    }
     if (!verified.ok) {
       return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
     }

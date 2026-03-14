@@ -14,6 +14,9 @@ Final closure correction record:
   - normalized Paris -> San Francisco helper failures onto the structured error contract
   - made locale aftermath return explicit degraded status instead of `200 { ok: true }`
   - expanded cloud-dev runtime verification to corrected Roma auth routes
+  - removed empty-string `ROMA_AUTHZ_CAPSULE_SECRET` fallbacks in Berlin/Paris
+  - corrected local internal-control audit actor identity from fake `owner` to explicit `local-tool`
+  - updated canonical Berlin/Roma account docs to include the shipped member-delete route
 
 Supersession rule:
 - PRD 068 supersedes PRD 064, PRD 065, PRD 066, and PRD 067 as the forward-looking execution track.
@@ -71,9 +74,7 @@ The following items are treated as real and in scope for execution:
 2. `Berlin` refresh-token signing still has a default secret fallback.
 3. `Bob` and `Roma` still commit live Supabase anon keys in `wrangler.toml`.
 4. `production` env blocks still point at dev hosts.
-5. Supabase local config still has:
-   - pooler disabled
-   - `max_rows = 1000`
+5. Supabase runtime posture still needed explicit verification and documentation; the audit's specific pooler/`max_rows` snapshot was not treated as automatically current truth.
 6. widget compile is still not a CI gate.
 7. published instance count cap is not clearly enforced.
 8. customer-facing member removal is still missing as a canonical product route.

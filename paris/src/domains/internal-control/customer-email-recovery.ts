@@ -24,7 +24,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 function localToolActor(): InternalControlActor {
   return {
     mode: 'local-tool',
-    subject: 'owner',
+    subject: 'local-tool',
     serviceId: 'devstudio.local',
   };
 }

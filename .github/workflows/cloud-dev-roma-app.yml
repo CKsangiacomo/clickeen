@@ -6,6 +6,7 @@ on:
     paths:
       - "roma/**"
       - "bob/**"
+      - "tokyo/dev-server.mjs"
       - "tokyo/widgets/**"
       - "dieter/**"
       - "packages/**"

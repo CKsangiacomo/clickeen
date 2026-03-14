@@ -28,10 +28,12 @@ Responsibilities:
   - `PUT /v1/accounts/:id/locales`
   - `GET /v1/accounts/:id/members`
   - `GET /v1/accounts/:id/members/:memberId`
+  - `DELETE /v1/accounts/:id/members/:memberId`
   - `GET /v1/accounts/:id/invitations`
   - `POST /v1/accounts/:id/invitations`
   - `DELETE /v1/accounts/:id/invitations/:invitationId`
   - `PATCH /v1/accounts/:id/members/:memberId`
+  - `DELETE /v1/accounts/:id/members/:memberId`
   - `POST /v1/accounts/:id/owner-transfer`
   - `POST /v1/invitations/:token/accept`
   - `POST /v1/accounts/:id/switch`
@@ -78,10 +80,12 @@ Public:
 - `PUT /v1/accounts/:id/locales`
 - `GET /v1/accounts/:id/members`
 - `GET /v1/accounts/:id/members/:memberId`
+- `DELETE /v1/accounts/:id/members/:memberId`
 - `GET /v1/accounts/:id/invitations`
 - `POST /v1/accounts/:id/invitations`
 - `DELETE /v1/accounts/:id/invitations/:invitationId`
 - `PATCH /v1/accounts/:id/members/:memberId`
+- `DELETE /v1/accounts/:id/members/:memberId`
 - `POST /v1/accounts/:id/owner-transfer`
 - `POST /v1/invitations/:token/accept`
 - `POST /v1/accounts/:id/switch`

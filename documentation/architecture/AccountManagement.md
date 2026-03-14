@@ -292,12 +292,14 @@ Canonical account API:
 - `DELETE /v1/accounts/:id`
 - `GET /v1/accounts/:id/members`
 - `GET /v1/accounts/:id/members/:memberId`
+- `DELETE /v1/accounts/:id/members/:memberId`
 - `GET /v1/accounts/:id/invitations`
 - `POST /v1/accounts/:id/invitations`
 - `DELETE /v1/accounts/:id/invitations/:invitationId`
 - `POST /v1/invitations/:token/accept`
 - `POST /v1/accounts/:id/members`
 - `PATCH /v1/accounts/:id/members/:memberId`
+- `DELETE /v1/accounts/:id/members/:memberId`
 - `POST /v1/accounts/:id/owner-transfer`
 - `PUT /v1/accounts/:id/locales`
 - `POST /v1/accounts/:id/switch`
@@ -306,6 +308,7 @@ Rules:
 - `POST /v1/accounts/:id/invitations` is the canonical unknown-person grant-access path
 - `POST /v1/accounts/:id/members` is only for already-resolved user profiles
 - `PATCH /v1/accounts/:id/members/:memberId` mutates membership only
+- `DELETE /v1/accounts/:id/members/:memberId` removes a non-owner member from the account
 - `GET /v1/me/identities` returns Berlin's normalized provider reuse summary; shells must not invent their own provider/account linkage model on top
 
 ---
