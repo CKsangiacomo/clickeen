@@ -50,7 +50,17 @@ jobs:
           set -euo pipefail
           BEFORE_SHA="${{ github.event.before }}"
           AFTER_SHA="${{ github.sha }}"
-          if [[ -n "${BEFORE_SHA:-}" && ! "${BEFORE_SHA:-}" =~ ^0+$ ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if git rev-parse HEAD^ >/dev/null 2>&1; then
+              if ! git diff --name-only HEAD^ HEAD | grep -qE '^supabase/migrations/'; then
+                echo "No supabase/migrations changes in current HEAD; skipping cloud-dev migration apply."
+                exit 0
+              fi
+            else
+              echo "No parent commit available for workflow_dispatch; skipping cloud-dev migration apply."
+              exit 0
+            fi
+          elif [[ -n "${BEFORE_SHA:-}" && ! "${BEFORE_SHA:-}" =~ ^0+$ ]]; then
             if ! git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -qE '^supabase/migrations/'; then
               echo "No supabase/migrations changes in this push; skipping cloud-dev migration apply."
               exit 0
