@@ -165,7 +165,7 @@ curated_widget_instances.meta = {
 | **Prague**        | Marketing site + gallery                                        | Cloudflare Pages                | `prague/`       |
 | **Bob**           | Widget builder app                                              | Cloudflare Pages (Next.js)      | `bob/`          |
 | **Roma**          | Product shell (account domains + Builder host orchestration)    | Cloudflare Pages (Next.js)      | `roma/`         |
-| **DevStudio**     | Internal toolbench for platform curation, authoring, and verification | Cloudflare Pages (Vite)         | `admin/`        |
+| **DevStudio**     | Internal toolbench for platform curation, authoring, and verification | Local Vite toolbench            | `admin/`        |
 | **Venice**        | SSR embed runtime                                               | Cloudflare Pages (Next.js Edge) | `venice/`       |
 | **Paris**         | HTTP API gateway                                                | Cloudflare Workers              | `paris/`        |
 | **San Francisco** | AI Workforce OS (agents, learning)                              | Workers (D1/KV/R2/Queues)       | `sanfrancisco/` |

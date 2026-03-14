@@ -171,10 +171,12 @@ async function mirrorAccountStorageUsage(
 ): Promise<void> {
   try {
     await syncAccountStoredBytesUsage(env, accountId, manifests);
-  } catch {
-    // Asset manifests are the storage source of truth. This mirror keeps Berlin
-    // bootstrap counters warm, but upload/list/delete correctness does not
-    // depend on the KV write succeeding in the same request.
+  } catch (error) {
+    // Asset manifests remain the source of truth, but the mirror failure must be explicit.
+    console.warn('[tokyo] account storage usage mirror degraded', {
+      accountId,
+      detail: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 

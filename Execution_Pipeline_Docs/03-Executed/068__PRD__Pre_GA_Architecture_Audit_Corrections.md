@@ -5,6 +5,16 @@ Date: 2026-03-13
 Owner: Product Dev Team
 Priority: P0
 
+Final closure correction record:
+- 2026-03-14 follow-up closed the residual post-execution drifts:
+  - removed the stale executing-path duplicate of PRD 068
+  - corrected active DevStudio docs back to local-only truth
+  - made Tokyo asset-usage mirror degradation explicit instead of silently returning
+  - made widget compile a real PR gate against repo Tokyo sources
+  - normalized Paris -> San Francisco helper failures onto the structured error contract
+  - made locale aftermath return explicit degraded status instead of `200 { ok: true }`
+  - expanded cloud-dev runtime verification to corrected Roma auth routes
+
 Supersession rule:
 - PRD 068 supersedes PRD 064, PRD 065, PRD 066, and PRD 067 as the forward-looking execution track.
 - PRD 064/065/066/067 remain historical snapshots only.

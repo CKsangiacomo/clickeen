@@ -7,6 +7,9 @@ on:
       - "paris/**"
       - "roma/**"
       - "bob/**"
+      - "tokyo/widgets/**"
+      - "dieter/**"
+      - "packages/**"
       - "scripts/**"
       - "tooling/**"
       - "package.json"
@@ -40,6 +43,35 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Compile widgets from repo Tokyo sources
+        env:
+          NEXT_PUBLIC_TOKYO_URL: http://127.0.0.1:4000
+          PARIS_BASE_URL: https://paris.dev.clickeen.com
+          BERLIN_BASE_URL: https://berlin.dev.clickeen.com
+          SANFRANCISCO_BASE_URL: https://sanfrancisco.dev.clickeen.com
+        run: |
+          set -euo pipefail
+          node tokyo/dev-server.mjs > /tmp/clickeen-tokyo-dev.log 2>&1 &
+          TOKYO_PID=$!
+          CK_DEV_PROFILE=source pnpm --filter @clickeen/bob dev > /tmp/clickeen-bob-dev.log 2>&1 &
+          BOB_PID=$!
+          cleanup() {
+            kill "$BOB_PID" >/dev/null 2>&1 || true
+            kill "$TOKYO_PID" >/dev/null 2>&1 || true
+            wait "$BOB_PID" >/dev/null 2>&1 || true
+            wait "$TOKYO_PID" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          for _ in {1..60}; do
+            if curl -fsS http://127.0.0.1:4000/healthz >/dev/null 2>&1 && curl -fsS http://127.0.0.1:3000/bob >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:4000/healthz >/dev/null
+          curl -fsS http://127.0.0.1:3000/bob >/dev/null
+          BOB_ORIGIN=http://127.0.0.1:3000 pnpm compile:widgets
 
       - name: Product Profile Smoke (static)
         run: |

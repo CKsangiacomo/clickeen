@@ -293,7 +293,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **DNS & custom domains**
 
-- `bob.dev`, `roma.dev`, `paris.dev`, `tokyo.dev`, `venice.dev`, `sanfrancisco.dev`, `devstudio.dev` point at the corresponding Pages/Workers deployments.
+- `bob.dev`, `roma.dev`, `paris.dev`, `tokyo.dev`, `venice.dev`, and `sanfrancisco.dev` point at the corresponding Pages/Workers deployments.
 - Production domains (`app`, `paris`, `tokyo`, `embed`, `sanfrancisco`) are configured similarly.
 
 **Pages build settings**
@@ -308,8 +308,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **Access control**
 
-- DevStudio behind Cloudflare Access (required).
-- Optional: protect `*.dev` surfaces behind Access during early phases.
+- Optional: protect shared `*.dev` surfaces behind Access during early phases.
 
 **Observability**
 
@@ -347,7 +346,7 @@ Non-negotiable:
 ### Security & config (Cloudflare-level defaults)
 
 - **HTTPS everywhere**: redirect HTTP → HTTPS; HSTS enabled on production domains.
-- **Dev surfaces protected**: DevStudio (and optionally `*.dev`) behind Cloudflare Access.
+- **Dev surfaces protected**: shared `*.dev` surfaces may be protected behind Cloudflare Access; DevStudio is local-only.
 - **Secrets isolation**:
   - Provider keys live only in San Francisco.
   - Supabase service role lives only in Paris.

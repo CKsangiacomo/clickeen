@@ -1,13 +1,21 @@
 import type { Env } from './types';
-import { json, readJson } from './http';
+import { readJson } from './http';
+import { ckError, errorDetail } from './errors';
 import { asTrimmedString } from './validation';
 
 type SanfranciscoAuthMode = 'paris-dev-bearer' | 'none';
 
+function internalResponse(reasonKey: string, detail: string, status = 502): { ok: false; response: Response } {
+  return {
+    ok: false,
+    response: ckError({ kind: 'INTERNAL', reasonKey, detail }, status),
+  };
+}
+
 function resolveSanfranciscoBaseUrl(env: Env): { ok: true; baseUrl: string } | { ok: false; response: Response } {
   const baseUrl = asTrimmedString(env.SANFRANCISCO_BASE_URL);
   if (!baseUrl) {
-    return { ok: false, response: json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 }) };
+    return internalResponse('coreui.errors.auth.contextUnavailable', 'missing_sanfrancisco_base_url', 503);
   }
   return { ok: true, baseUrl };
 }
@@ -15,7 +23,7 @@ function resolveSanfranciscoBaseUrl(env: Env): { ok: true; baseUrl: string } | {
 function resolveSanfranciscoDevBearer(env: Env): { ok: true; token: string } | { ok: false; response: Response } {
   const token = asTrimmedString(env.PARIS_DEV_JWT);
   if (!token) {
-    return { ok: false, response: json({ error: 'MISCONFIGURED', message: 'Missing PARIS_DEV_JWT' }, { status: 503 }) };
+    return internalResponse('coreui.errors.auth.contextUnavailable', 'missing_paris_dev_jwt', 503);
   }
   return { ok: true, token };
 }
@@ -52,17 +60,21 @@ export async function callSanfranciscoJson(args: {
     }
   }
 
-  const res = await fetch(new URL(args.path, base.baseUrl).toString(), {
-    method: args.method ?? 'GET',
-    headers,
-    body,
-  });
-  const payload = await readJson(res);
-  if (!res.ok) {
-    return {
-      ok: false,
-      response: json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details: payload }, { status: 502 }),
-    };
+  try {
+    const res = await fetch(new URL(args.path, base.baseUrl).toString(), {
+      method: args.method ?? 'GET',
+      headers,
+      body,
+    });
+    const payload = await readJson(res);
+    if (!res.ok) {
+      return internalResponse(
+        'coreui.errors.auth.contextUnavailable',
+        `sanfrancisco_http_${res.status}${payload != null ? `:${JSON.stringify(payload)}` : ''}`,
+      );
+    }
+    return { ok: true, payload };
+  } catch (error) {
+    return internalResponse('coreui.errors.auth.contextUnavailable', errorDetail(error));
   }
-  return { ok: true, payload };
 }

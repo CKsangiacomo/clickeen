@@ -155,8 +155,9 @@ async function runAccountLocalesAftermath(args: {
   previousPolicyRaw: unknown;
   nextLocales: string[];
   nextPolicyRaw: unknown;
-}): Promise<void> {
+}): Promise<string[]> {
   const { env, accountId, account, policy, previousLocales, previousPolicyRaw, nextLocales, nextPolicyRaw } = args;
+  const warnings: string[] = [];
   const prevPolicy = resolveAccountL10nPolicy(previousPolicyRaw);
   const nextPolicyResolved = resolveAccountL10nPolicy(nextPolicyRaw);
   const prevBaseLocale = prevPolicy.baseLocale;
@@ -210,6 +211,7 @@ async function runAccountLocalesAftermath(args: {
       if (!instancesRes.ok) {
         const details = await readJson(instancesRes).catch(() => null);
         console.error('[ParisWorker] Failed to load account instances for locale resync', details);
+        warnings.push(`load_published_instances_failed:${JSON.stringify(details)}`);
         break;
       }
       const rows = ((await instancesRes.json().catch(() => null)) as InstanceRow[] | null) ?? [];
@@ -242,6 +244,7 @@ async function runAccountLocalesAftermath(args: {
       } else {
         const details = await readJson(widgetRes).catch(() => null);
         console.warn('[ParisWorker] Failed to resolve widget types for locale resync', details);
+        warnings.push(`resolve_widget_types_failed:${JSON.stringify(details)}`);
       }
     }
 
@@ -256,6 +259,7 @@ async function runAccountLocalesAftermath(args: {
       const widgetType = instance.widget_id ? widgetTypeById.get(instance.widget_id) ?? null : null;
       if (!widgetType) {
         console.warn('[ParisWorker] locale resync skipped: widgetType missing', { publicId });
+        warnings.push(`widget_type_missing:${publicId}`);
         continue;
       }
 
@@ -267,6 +271,7 @@ async function runAccountLocalesAftermath(args: {
         } catch (error) {
           const detail = errorDetail(error);
           console.warn('[ParisWorker] locale resync skipped: allowlist missing', { publicId, widgetType, detail });
+          warnings.push(`allowlist_missing:${publicId}:${widgetType}:${detail}`);
           continue;
         }
       }
@@ -278,6 +283,7 @@ async function runAccountLocalesAftermath(args: {
       }).catch((error) => {
         const detail = errorDetail(error);
         console.warn('[ParisWorker] locale resync skipped: tokyo saved config unavailable', { publicId, detail });
+        warnings.push(`saved_config_unavailable:${publicId}:${detail}`);
         return null;
       });
       if (!savedState) continue;
@@ -320,6 +326,9 @@ async function runAccountLocalesAftermath(args: {
         failures: textFailures,
         context: 'account locales put',
       });
+      if (textFailures.length) {
+        warnings.push(`write_text_pack_failed:${publicId}:${textFailures.length}`);
+      }
 
       if (seoGeoLive) {
         const metaFailures = await enqueueLocaleMetaPacks({
@@ -334,6 +343,9 @@ async function runAccountLocalesAftermath(args: {
           failures: metaFailures,
           context: 'account locales put',
         });
+        if (metaFailures.length) {
+          warnings.push(`write_meta_pack_failed:${publicId}:${metaFailures.length}`);
+        }
       }
 
       const syncError = await enqueueLiveSurfaceSync({
@@ -349,6 +361,9 @@ async function runAccountLocalesAftermath(args: {
         error: syncError,
         context: 'account locales put',
       });
+      if (syncError) {
+        warnings.push(`sync_live_surface_failed:${publicId}:${syncError}`);
+      }
 
       if (addedAdditionalLocales.length > 0) {
         const enqueueResult = await enqueueL10nJobs({
@@ -364,11 +379,12 @@ async function runAccountLocalesAftermath(args: {
         });
         if (!enqueueResult.ok) {
           console.error('[ParisWorker] l10n enqueue failed (account locales put)', enqueueResult.error);
+          warnings.push(`enqueue_l10n_failed:${publicId}:${enqueueResult.error}`);
         }
       }
     }
   }
-
+  return warnings;
 }
 
 export async function handleAccountLocalesAftermath(req: Request, env: Env, accountId: string) {
@@ -404,7 +420,7 @@ export async function handleAccountLocalesAftermath(req: Request, env: Env, acco
     role: 'editor',
   });
 
-  await runAccountLocalesAftermath({
+  const warnings = await runAccountLocalesAftermath({
     env,
     accountId,
     account: accountResult.account,
@@ -414,6 +430,21 @@ export async function handleAccountLocalesAftermath(req: Request, env: Env, acco
     nextLocales: nextLocalesResult.locales,
     nextPolicyRaw: (payload as any).nextPolicy ?? null,
   });
+  if (warnings.length > 0) {
+    return json(
+      {
+        ok: false,
+        accountId,
+        warnings,
+        error: {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: 'locales_aftermath_degraded',
+        },
+      },
+      { status: 502 },
+    );
+  }
 
   return json({
     ok: true,

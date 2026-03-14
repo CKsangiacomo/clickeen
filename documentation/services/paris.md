@@ -1,7 +1,7 @@
 # System: Paris — Policy + L10n + Mirror Convergence (PRD 54 / PRD 61)
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
-Last updated: 2026-03-09 (PRD 61 async aftermath + Tokyo-only open/save)
+Last updated: 2026-03-13 (PRD 61 async aftermath + PRD 68 closure corrections)
 
 Paris is the **control/orchestration boundary** for product state:
 
@@ -110,6 +110,7 @@ Paris does one boring thing:
 - Paris product-path role is explicit save aftermath only: translation sync and published-surface sync after the Tokyo commit.
 - Bob/Roma now schedule save aftermath after the save response returns; Paris is no longer on the synchronous save-response path.
 - Paris aftermath is observable convergence, not part of a multi-service save transaction. If it warns or fails, the Tokyo save remains committed and the failure is observable through status/logging rather than by rejecting the save.
+- The internal account-locales aftermath route must also report degraded orchestration explicitly; it must not return `200 { ok: true }` when locale resync work failed or was skipped in a way that needs operator attention.
 - Save aftermath now authorizes from the bootstrap authz capsule and the caller-provided save context (`widgetType`, `status`, `source`, `previousConfig`); it does not re-load the product-path instance row from Michael before running account save aftermath.
 - If translatable base text changed: Paris enqueues l10n work regardless of `published` / `unpublished`.
 - Public mirror writes remain gated by live status.

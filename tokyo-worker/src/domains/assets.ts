@@ -69,7 +69,9 @@ function accountStorageUsageKey(accountId: string, budgetKey = STORAGE_BYTES_BUD
 
 async function writeAccountStoredBytesUsage(env: Env, accountId: string, totalBytes: number): Promise<void> {
   const kv = env.USAGE_KV;
-  if (!kv) return;
+  if (!kv) {
+    throw new Error('[tokyo] Missing USAGE_KV for account storage usage mirror');
+  }
   await kv.put(accountStorageUsageKey(accountId), String(normalizeNonNegativeInt(totalBytes)));
 }
 
