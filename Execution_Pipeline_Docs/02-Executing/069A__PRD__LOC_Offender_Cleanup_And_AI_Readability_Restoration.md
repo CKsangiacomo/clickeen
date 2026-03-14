@@ -136,6 +136,31 @@ Reduce the report’s LOC offenders so active source files stay readable to huma
    - existing personalization job queue/status behavior
 24. Remaining Phase 2 work:
    - `admin/vite.config.ts`, only after `069B` stabilizes the active route surface
+25. Phase 3 slice 1 is landed:
+   - `berlin/src/account-state.ts` reduced from `918` LOC to `824` LOC
+   - extracted shared public contract types to:
+     - `berlin/src/account-state.types.ts`
+26. This slice preserves:
+   - existing account-state query/normalize/bootstrap logic in one cohesive file
+   - existing Berlin account-state route and helper behavior
+   - existing cross-module account context/member/bootstrap type contracts
+27. Phase 3 slice 2 is landed:
+   - `dieter/components/textedit/textedit.ts` reduced from `935` LOC to `367` LOC
+   - extracted modules:
+     - `dieter/components/textedit/textedit-types.ts`
+     - `dieter/components/textedit/textedit-dom.ts`
+     - `dieter/components/textedit/textedit-content.ts`
+     - `dieter/components/textedit/textedit-links.ts`
+   - rebuilt derivative output:
+     - `tokyo/dieter/components/textedit/textedit.js`
+28. This slice preserves:
+   - existing textedit hydration and palette selection behavior
+   - existing link validation/apply/remove behavior
+   - existing preview synchronization and inline sanitization behavior
+   - existing Dieter build output contract
+29. Remaining Phase 3 work:
+   - `dropdown-fill.ts` only if the boundary is real
+   - `berlin/src/account-state.ts` deeper split is intentionally deferred unless a stronger responsibility boundary emerges
 
 ---
 

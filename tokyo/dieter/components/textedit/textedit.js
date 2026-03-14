@@ -25,6 +25,253 @@ var Dieter = (() => {
     hydrateTextedit: () => hydrateTextedit
   });
 
+  // components/textedit/textedit-content.ts
+  function updateClearButtons(state) {
+    const hasFormatting = Boolean(state.editor.querySelector("strong, b, em, i, u, s"));
+    const hasLinks = state.allowLinks ? Boolean(state.editor.querySelector("a")) : false;
+    state.clearFormatButton.classList.toggle("is-hidden", !hasFormatting);
+    state.clearLinksButton.classList.toggle("is-hidden", !hasLinks);
+    state.toolbarDivider.classList.toggle("is-hidden", !(hasFormatting || hasLinks));
+  }
+  function clearAllFormatting(state) {
+    const nodes = state.editor.querySelectorAll("strong, b, em, i, u, s");
+    nodes.forEach((el) => unwrapElement(el));
+    syncPreview(state);
+    updateClearButtons(state);
+  }
+  function clearAllLinks(state) {
+    const nodes = state.editor.querySelectorAll("a");
+    nodes.forEach((anchor) => {
+      anchor.classList.remove("diet-textedit-link");
+      unwrapElement(anchor);
+    });
+    syncPreview(state);
+    updateClearButtons(state);
+  }
+  function syncFromInstanceData(state) {
+    const value = state.hiddenInput.value || state.hiddenInput.getAttribute("value") || "";
+    const normalized = normalizeEditorValue(value, state.allowLinks);
+    state.editor.innerHTML = normalized || state.previewText.textContent || "";
+    syncPreview(state);
+    updateClearButtons(state);
+  }
+  function applyExternalValue(state, raw) {
+    const normalized = normalizeEditorValue(raw || "", state.allowLinks);
+    state.editor.innerHTML = normalized;
+    replacePreviewText(state, normalized);
+    state.hiddenInput.value = normalized;
+    updateClearButtons(state);
+  }
+  function syncPreview(state) {
+    const raw = state.editor.innerHTML.trim();
+    const normalized = normalizeEditorValue(raw, state.allowLinks);
+    replacePreviewText(state, normalized);
+    state.hiddenInput.value = normalized;
+    state.hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function replacePreviewText(state, normalized) {
+    const sanitized = sanitizeInline(normalized, state.allowLinks);
+    const span = document.createElement("span");
+    span.className = "diet-textedit__previewin";
+    if (sanitized) span.innerHTML = sanitized;
+    else span.textContent = state.editor.textContent ?? "";
+    state.previewText.replaceWith(span);
+    state.previewText = span;
+    highlightPreviewLinks(span);
+  }
+  function highlightPreviewLinks(span) {
+    span.querySelectorAll("a").forEach((anchor) => {
+      anchor.setAttribute("data-preview-link", "");
+    });
+  }
+  function normalizeEditorValue(html, allowLinks) {
+    if (allowLinks) return html;
+    return stripLinks(html);
+  }
+  function stripLinks(html) {
+    if (!html) return "";
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    wrapper.querySelectorAll("a").forEach((anchor) => {
+      const parent = anchor.parentNode;
+      if (!parent) return;
+      while (anchor.firstChild) parent.insertBefore(anchor.firstChild, anchor);
+      parent.removeChild(anchor);
+    });
+    return wrapper.innerHTML;
+  }
+  function sanitizeInline(html, allowLinks = true) {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    const allowed = /* @__PURE__ */ new Set(["STRONG", "B", "EM", "I", "U", "S"]);
+    if (allowLinks) allowed.add("A");
+    wrapper.querySelectorAll("*").forEach((node) => {
+      const el = node;
+      const tag = el.tagName;
+      if (!allowed.has(tag)) {
+        const parent = el.parentNode;
+        if (!parent) return;
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        parent.removeChild(el);
+        return;
+      }
+      if (tag === "A") {
+        const href = el.getAttribute("href") || "";
+        if (!/^https?:\/\//i.test(href)) {
+          el.removeAttribute("href");
+          el.removeAttribute("target");
+          el.removeAttribute("rel");
+        } else {
+          if (el.getAttribute("target") === "_blank") el.setAttribute("rel", "noopener");
+          else el.removeAttribute("rel");
+        }
+        Array.from(el.attributes).forEach((attr) => {
+          if (!["href", "target", "rel", "data-preview-link"].includes(attr.name)) {
+            el.removeAttribute(attr.name);
+          }
+        });
+        return;
+      }
+      Array.from(el.attributes).forEach((attr) => el.removeAttribute(attr.name));
+    });
+    return wrapper.innerHTML;
+  }
+  function unwrapElement(el) {
+    const parent = el.parentNode;
+    if (!parent) return;
+    while (el.firstChild) parent.insertBefore(el.firstChild, el);
+    parent.removeChild(el);
+  }
+
+  // components/textedit/textedit-dom.ts
+  function buttonHTML(command, icon) {
+    return `
+    <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-command="${command}">
+      <span class="diet-btn-ic__icon" data-icon="${icon}"></span>
+    </button>
+  `;
+  }
+  function createState(root) {
+    const allowLinksAttr = root.getAttribute("data-allow-links");
+    const allowLinks = allowLinksAttr == null ? true : !["false", "0", "no"].includes(allowLinksAttr.trim().toLowerCase());
+    const control = root.querySelector(".diet-textedit__control");
+    const popover = root.querySelector(".diet-popover");
+    const editor = root.querySelector(".diet-textedit__editor");
+    const preview = root.querySelector(".diet-textedit__preview");
+    const previewText = root.querySelector(".diet-textedit__previewin");
+    const hiddenInput = root.querySelector(".diet-textedit__field");
+    if (!control || !popover || !editor || !preview || !previewText || !hiddenInput) {
+      throw new Error("[textedit] missing DOM nodes");
+    }
+    const palette = document.createElement("div");
+    palette.className = "diet-textedit__palette is-hidden";
+    palette.innerHTML = `
+    <div class="diet-textedit__toolbarrow">
+      <div class="diet-textedit__group diet-textedit__group--format">
+        ${buttonHTML("bold" /* Bold */, "bold")}
+        ${buttonHTML("italic" /* Italic */, "italic")}
+        ${buttonHTML("underline" /* Underline */, "underline")}
+        ${buttonHTML("strike" /* Strike */, "strikethrough")}
+        ${buttonHTML("link" /* Link */, "link")}
+      </div>
+      <span class="diet-textedit__divider is-hidden"></span>
+      <div class="diet-textedit__group diet-textedit__group--clear">
+        ${buttonHTML("clear-format" /* ClearFormat */, "arrow.counterclockwise")}
+        ${buttonHTML("clear-links" /* ClearLinks */, "personalhotspot.slash")}
+      </div>
+    </div>
+    <div class="diet-textedit__linkform is-hidden" data-validity="empty">
+      <div class="diet-textedit__linkinner">
+        <div class="diet-textedit__linkheader">
+          <span class="diet-textedit__linktitle label">Link this text</span>
+          <button type="button" class="diet-btn-txt diet-textedit__linkapply" data-size="xs" data-variant="primary"><span class="diet-btn-txt__label">Apply link</span></button>
+        </div>
+        <div class="diet-textfield" data-size="md">
+          <label class="diet-textfield__control">
+            <input type="text" class="diet-textfield__field diet-textedit__linkinput" placeholder="link url" />
+          </label>
+        </div>
+        <div class="diet-textedit__linkoptions">
+          <label class="diet-toggle diet-toggle--split" data-size="sm">
+            <span class="diet-toggle__label label-small">Open link in a new tab</span>
+            <input class="diet-toggle__input sr-only diet-textedit__linknewtab" type="checkbox" />
+            <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
+          </label>
+          <label class="diet-toggle diet-toggle--split" data-size="sm">
+            <span class="diet-toggle__label label-small">Add "no follow" to link</span>
+            <input class="diet-toggle__input sr-only diet-textedit__linknofollow" type="checkbox" />
+            <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
+          </label>
+        </div>
+        <button type="button" class="diet-btn-txt diet-textedit__linkremove" data-size="xs" data-variant="secondary"><span class="diet-btn-txt__label">Remove link</span></button>
+      </div>
+    </div>
+  `;
+    popover.appendChild(palette);
+    const iconButton = root.querySelector(".diet-textedit__icon .diet-btn-ic");
+    if (iconButton) {
+      const iconSize = root.dataset.size === "lg" ? "sm" : "xs";
+      iconButton.setAttribute("data-size", iconSize);
+    }
+    const paletteButtons = /* @__PURE__ */ new Map();
+    palette.querySelectorAll("button[data-command]").forEach((btn) => {
+      paletteButtons.set(btn.dataset.command, btn);
+    });
+    const paletteLinkButton = paletteButtons.get("link" /* Link */) ?? null;
+    const clearFormatButton = paletteButtons.get("clear-format" /* ClearFormat */);
+    const clearLinksButton = paletteButtons.get("clear-links" /* ClearLinks */);
+    const toolbarDivider = palette.querySelector(".diet-textedit__divider");
+    if (!clearFormatButton || !clearLinksButton || !toolbarDivider) {
+      throw new Error("[textedit] missing clear buttons or divider");
+    }
+    const linkForm = palette.querySelector(".diet-textedit__linkform");
+    const linkTitle = palette.querySelector(".diet-textedit__linktitle");
+    const linkInput = palette.querySelector(".diet-textedit__linkinput");
+    const linkNewTab = palette.querySelector(".diet-textedit__linknewtab");
+    const linkNoFollow = palette.querySelector(".diet-textedit__linknofollow");
+    const linkApply = palette.querySelector(".diet-textedit__linkapply");
+    const linkRemove = palette.querySelector(".diet-textedit__linkremove");
+    linkApply.disabled = true;
+    linkRemove.style.display = "none";
+    if (!allowLinks) {
+      const linkButton = paletteButtons.get("link" /* Link */);
+      if (linkButton) linkButton.style.display = "none";
+      clearLinksButton.classList.add("is-hidden");
+      linkForm.classList.add("is-hidden");
+    }
+    return {
+      root,
+      control,
+      popover,
+      editor,
+      preview,
+      previewText,
+      hiddenInput,
+      allowLinks,
+      palette,
+      paletteButtons,
+      paletteLinkButton,
+      hasInteracted: false,
+      pointerDown: false,
+      linkForm,
+      linkTitle,
+      linkInput,
+      linkNewTab,
+      linkNoFollow,
+      linkApply,
+      linkRemove,
+      initialLink: null,
+      linkSnippet: "",
+      tempMarker: null,
+      linkValidity: "empty",
+      clearFormatButton,
+      clearLinksButton,
+      toolbarDivider,
+      selection: null,
+      activeAnchor: null
+    };
+  }
+
   // ../node_modules/.pnpm/tldts-core@6.1.86/node_modules/tldts-core/dist/es6/src/domain.js
   function shareSameDomainSuffix(hostname, vhost) {
     if (hostname.endsWith(vhost)) {
@@ -458,6 +705,223 @@ var Dieter = (() => {
     return parseImpl(url, 5, suffixLookup, options, getEmptyResult());
   }
 
+  // components/textedit/textedit-links.ts
+  function toggleLinkForm(state, runtime) {
+    if (state.linkForm.classList.contains("is-hidden")) {
+      openLinkForm(state, runtime);
+    } else {
+      closeLinkForm(state);
+    }
+  }
+  function closeLinkForm(state) {
+    if (state.linkForm.classList.contains("is-hidden")) return;
+    state.linkForm.classList.add("is-hidden");
+    state.palette.classList.remove("has-linkform");
+    state.paletteButtons.get("link" /* Link */)?.classList.remove("is-active");
+    state.linkForm.dataset.validity = "empty";
+    state.linkTitle.textContent = "Link this text";
+    state.linkTitle.classList.remove("is-error");
+    state.activeAnchor = null;
+    state.initialLink = null;
+    state.linkRemove.style.display = "none";
+    state.linkApply.disabled = true;
+    clearTempMarker(state);
+    state.linkSnippet = "";
+  }
+  function applyLink(state, runtime) {
+    if (!runtime.restoreSelection(state) || !state.selection) return;
+    const res = validateUrl(state.linkInput.value);
+    setLinkValidity(state, res.state);
+    if (res.state !== "valid") return;
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    const range = selection.getRangeAt(0);
+    let anchor = state.activeAnchor && isRangeInsideAnchor(range, state.activeAnchor) ? state.activeAnchor : document.createElement("a");
+    anchor.setAttribute("href", res.url);
+    if (state.linkNewTab.checked) anchor.setAttribute("target", "_blank");
+    else anchor.removeAttribute("target");
+    if (state.linkNoFollow.checked) anchor.setAttribute("rel", "nofollow noopener");
+    else anchor.removeAttribute("rel");
+    if (state.tempMarker && !state.activeAnchor) {
+      const marker = state.tempMarker;
+      const parent = marker.parentNode;
+      if (parent) {
+        const frag = document.createDocumentFragment();
+        while (marker.firstChild) frag.appendChild(marker.firstChild);
+        anchor.append(frag);
+        parent.replaceChild(anchor, marker);
+      }
+      state.tempMarker = null;
+    } else if (!anchor.parentNode || anchor === state.activeAnchor && anchor.contains(range.commonAncestorContainer)) {
+    } else {
+      try {
+        range.surroundContents(anchor);
+      } catch {
+        const frag = range.extractContents();
+        anchor.append(frag);
+        range.insertNode(anchor);
+      }
+    }
+    anchor.classList.add("diet-textedit-link");
+    const newRange = document.createRange();
+    newRange.selectNodeContents(anchor);
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+    state.selection = newRange.cloneRange();
+    closeLinkForm(state);
+    syncPreview(state);
+    updateClearButtons(state);
+    runtime.schedulePaletteUpdate(state, true);
+  }
+  function removeLink(state, runtime) {
+    if (!state.activeAnchor) {
+      closeLinkForm(state);
+      return;
+    }
+    const anchor = state.activeAnchor;
+    const parent = anchor.parentNode;
+    if (parent) {
+      anchor.classList.remove("diet-textedit-link");
+      while (anchor.firstChild) parent.insertBefore(anchor.firstChild, anchor);
+      parent.removeChild(anchor);
+    }
+    closeLinkForm(state);
+    syncPreview(state);
+    updateClearButtons(state);
+    runtime.schedulePaletteUpdate(state, true);
+  }
+  function openLinkForm(state, runtime) {
+    if (!runtime.restoreSelection(state) || !state.selection) {
+      closeLinkForm(state);
+      return;
+    }
+    const range = state.selection.cloneRange();
+    const anchor = findAnchor(range);
+    state.activeAnchor = anchor;
+    if (anchor) {
+      state.linkInput.value = anchor.getAttribute("href") || "";
+      state.linkNewTab.checked = anchor.getAttribute("target") === "_blank";
+      state.linkNoFollow.checked = (anchor.getAttribute("rel") || "").split(/\s+/).includes("nofollow");
+      anchor.classList.add("diet-textedit-link");
+      clearTempMarker(state);
+    } else {
+      state.linkInput.value = "";
+      state.linkNewTab.checked = false;
+      state.linkNoFollow.checked = false;
+      state.tempMarker = wrapTempMarker(range);
+      if (state.tempMarker) {
+        const markerRange = document.createRange();
+        markerRange.selectNodeContents(state.tempMarker);
+        state.selection = markerRange.cloneRange();
+      }
+    }
+    state.initialLink = {
+      url: state.linkInput.value.trim(),
+      newTab: state.linkNewTab.checked,
+      noFollow: state.linkNoFollow.checked
+    };
+    state.linkForm.classList.toggle("has-anchor", Boolean(anchor));
+    state.linkRemove.style.display = anchor ? "inline-flex" : "none";
+    state.linkSnippet = range.toString().trim();
+    state.linkTitle.textContent = "Link this text";
+    state.linkTitle.classList.remove("is-error");
+    const res = validateUrl(state.linkInput.value);
+    setLinkValidity(state, res.state);
+    state.linkForm.classList.remove("is-hidden");
+    state.palette.classList.add("has-linkform");
+    state.paletteButtons.get("link" /* Link */)?.classList.add("is-active");
+    runtime.updatePalettePosition(state, range);
+    state.linkInput.focus({ preventScroll: true });
+    state.linkInput.select();
+    updateLinkActionState(state);
+  }
+  function findAnchor(range) {
+    let node = range.commonAncestorContainer;
+    if (node instanceof HTMLAnchorElement) return node;
+    node = node.parentNode;
+    while (node) {
+      if (node instanceof HTMLAnchorElement) return node;
+      node = node.parentNode;
+    }
+    return null;
+  }
+  function isRangeInsideAnchor(range, anchor) {
+    return anchor.contains(range.startContainer) && anchor.contains(range.endContainer);
+  }
+  function validateUrl(raw) {
+    const value = (raw || "").trim();
+    if (!value) return { state: "empty", url: "" };
+    if (/(\s)/.test(value)) return { state: "invalid", url: "" };
+    const normalized = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+    try {
+      const url = new URL(normalized);
+      if (!(url.protocol === "http:" || url.protocol === "https:")) return { state: "invalid", url: "" };
+      const host = url.hostname;
+      if (host === "localhost") return { state: "valid", url: url.toString() };
+      const parsed = parse(host, { allowPrivateDomains: true });
+      if (parsed.isIp) return { state: "valid", url: url.toString() };
+      if (parsed.domain && (parsed.isIcann || parsed.isPrivate)) return { state: "valid", url: url.toString() };
+      return { state: "invalid", url: "" };
+    } catch {
+      return { state: "invalid", url: "" };
+    }
+  }
+  function setLinkValidity(state, validity) {
+    state.linkValidity = validity;
+    state.linkForm.dataset.validity = validity;
+    if (validity === "invalid") {
+      state.linkTitle.textContent = "Not a valid url";
+      state.linkTitle.classList.add("is-error");
+    } else {
+      state.linkTitle.textContent = "Link this text";
+      state.linkTitle.classList.remove("is-error");
+    }
+    updateLinkActionState(state);
+  }
+  function getCurrentLinkState(state) {
+    return {
+      url: state.linkInput.value.trim(),
+      newTab: state.linkNewTab.checked,
+      noFollow: state.linkNoFollow.checked
+    };
+  }
+  function updateLinkActionState(state) {
+    const current = getCurrentLinkState(state);
+    const initial = state.initialLink ?? { url: "", newTab: false, noFollow: false };
+    const hasChanges = current.url !== initial.url || current.newTab !== initial.newTab || current.noFollow !== initial.noFollow;
+    const canApply = state.linkValidity === "valid" && hasChanges;
+    state.linkApply.disabled = !canApply;
+    state.linkForm.classList.toggle("has-anchor", Boolean(state.activeAnchor));
+    state.linkRemove.style.display = state.activeAnchor ? "inline-flex" : "none";
+    const togglesEnabled = Boolean(state.activeAnchor) || state.linkValidity === "valid";
+    state.linkNewTab.disabled = !togglesEnabled;
+    state.linkNoFollow.disabled = !togglesEnabled;
+    state.linkNewTab.closest("label")?.classList.toggle("is-disabled", !togglesEnabled);
+    state.linkNoFollow.closest("label")?.classList.toggle("is-disabled", !togglesEnabled);
+    state.linkForm.classList.toggle("can-toggle", togglesEnabled);
+  }
+  function wrapTempMarker(range) {
+    if (range.collapsed) return null;
+    const marker = document.createElement("span");
+    marker.className = "diet-textedit-linktemp";
+    try {
+      range.surroundContents(marker);
+    } catch {
+      return null;
+    }
+    return marker;
+  }
+  function clearTempMarker(state) {
+    if (!state.tempMarker) return;
+    const marker = state.tempMarker;
+    const parent = marker.parentNode;
+    if (parent) {
+      while (marker.firstChild) parent.insertBefore(marker.firstChild, marker);
+      parent.removeChild(marker);
+    }
+    state.tempMarker = null;
+  }
+
   // components/textedit/textedit.ts
   var states = /* @__PURE__ */ new Map();
   var activeState = null;
@@ -485,135 +949,8 @@ var Dieter = (() => {
       window.addEventListener("scroll", handleViewportChange, { passive: true });
     }
   }
-  function createState(root) {
-    const allowLinksAttr = root.getAttribute("data-allow-links");
-    const allowLinks = allowLinksAttr == null ? true : !["false", "0", "no"].includes(allowLinksAttr.trim().toLowerCase());
-    const control = root.querySelector(".diet-textedit__control");
-    const popover = root.querySelector(".diet-popover");
-    const editor = root.querySelector(".diet-textedit__editor");
-    const preview = root.querySelector(".diet-textedit__preview");
-    const previewText = root.querySelector(".diet-textedit__previewin");
-    const hiddenInput = root.querySelector(".diet-textedit__field");
-    if (!control || !popover || !editor || !preview || !previewText || !hiddenInput) {
-      throw new Error("[textedit] missing DOM nodes");
-    }
-    const palette = document.createElement("div");
-    palette.className = "diet-textedit__palette is-hidden";
-    palette.innerHTML = `
-    <div class="diet-textedit__toolbarrow">
-      <div class="diet-textedit__group diet-textedit__group--format">
-        ${buttonHTML("bold" /* Bold */, "bold")}
-        ${buttonHTML("italic" /* Italic */, "italic")}
-        ${buttonHTML("underline" /* Underline */, "underline")}
-        ${buttonHTML("strike" /* Strike */, "strikethrough")}
-        ${buttonHTML("link" /* Link */, "link")}
-      </div>
-      <span class="diet-textedit__divider is-hidden"></span>
-      <div class="diet-textedit__group diet-textedit__group--clear">
-        ${buttonHTML("clear-format" /* ClearFormat */, "arrow.counterclockwise")}
-        ${buttonHTML("clear-links" /* ClearLinks */, "personalhotspot.slash")}
-      </div>
-    </div>
-    <div class="diet-textedit__linkform is-hidden" data-validity="empty">
-      <div class="diet-textedit__linkinner">
-        <div class="diet-textedit__linkheader">
-          <span class="diet-textedit__linktitle label">Link this text</span>
-          <button type="button" class="diet-btn-txt diet-textedit__linkapply" data-size="xs" data-variant="primary"><span class="diet-btn-txt__label">Apply link</span></button>
-        </div>
-        <div class="diet-textfield" data-size="md">
-          <label class="diet-textfield__control">
-            <input type="text" class="diet-textfield__field diet-textedit__linkinput" placeholder="link url" />
-          </label>
-        </div>
-        <div class="diet-textedit__linkoptions">
-          <label class="diet-toggle diet-toggle--split" data-size="sm">
-            <span class="diet-toggle__label label-small">Open link in a new tab</span>
-            <input class="diet-toggle__input sr-only diet-textedit__linknewtab" type="checkbox" />
-            <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
-          </label>
-          <label class="diet-toggle diet-toggle--split" data-size="sm">
-            <span class="diet-toggle__label label-small">Add "no follow" to link</span>
-            <input class="diet-toggle__input sr-only diet-textedit__linknofollow" type="checkbox" />
-            <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
-          </label>
-        </div>
-        <button type="button" class="diet-btn-txt diet-textedit__linkremove" data-size="xs" data-variant="secondary"><span class="diet-btn-txt__label">Remove link</span></button>
-      </div>
-    </div>
-  `;
-    popover.appendChild(palette);
-    const iconButton = root.querySelector(".diet-textedit__icon .diet-btn-ic");
-    if (iconButton) {
-      const iconSize = root.dataset.size === "lg" ? "sm" : "xs";
-      iconButton.setAttribute("data-size", iconSize);
-    }
-    const paletteButtons = /* @__PURE__ */ new Map();
-    palette.querySelectorAll("button[data-command]").forEach((btn) => {
-      paletteButtons.set(btn.dataset.command, btn);
-    });
-    const paletteLinkButton = paletteButtons.get("link" /* Link */) ?? null;
-    const clearFormatButton = paletteButtons.get("clear-format" /* ClearFormat */);
-    const clearLinksButton = paletteButtons.get("clear-links" /* ClearLinks */);
-    const toolbarDivider = palette.querySelector(".diet-textedit__divider");
-    if (!clearFormatButton || !clearLinksButton || !toolbarDivider) {
-      throw new Error("[textedit] missing clear buttons or divider");
-    }
-    const linkForm = palette.querySelector(".diet-textedit__linkform");
-    const linkTitle = palette.querySelector(".diet-textedit__linktitle");
-    const linkInput = palette.querySelector(".diet-textedit__linkinput");
-    const linkNewTab = palette.querySelector(".diet-textedit__linknewtab");
-    const linkNoFollow = palette.querySelector(".diet-textedit__linknofollow");
-    const linkApply = palette.querySelector(".diet-textedit__linkapply");
-    const linkRemove = palette.querySelector(".diet-textedit__linkremove");
-    linkApply.disabled = true;
-    linkRemove.style.display = "none";
-    if (!allowLinks) {
-      const linkButton = paletteButtons.get("link" /* Link */);
-      if (linkButton) linkButton.style.display = "none";
-      clearLinksButton.classList.add("is-hidden");
-      linkForm.classList.add("is-hidden");
-    }
-    return {
-      root,
-      control,
-      popover,
-      editor,
-      preview,
-      previewText,
-      hiddenInput,
-      allowLinks,
-      palette,
-      paletteButtons,
-      paletteLinkButton,
-      hasInteracted: false,
-      pointerDown: false,
-      linkForm,
-      linkTitle,
-      linkInput,
-      linkNewTab,
-      linkNoFollow,
-      linkApply,
-      linkRemove,
-      initialLink: null,
-      linkSnippet: "",
-      tempMarker: null,
-      linkValidity: "empty",
-      clearFormatButton,
-      clearLinksButton,
-      toolbarDivider,
-      selection: null,
-      activeAnchor: null
-    };
-  }
-  function buttonHTML(command, icon) {
-    return `
-    <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-command="${command}">
-      <span class="diet-btn-ic__icon" data-icon="${icon}"></span>
-    </button>
-  `;
-  }
   function installHandlers(state) {
-    const { control, editor, palette, paletteButtons, linkApply, linkRemove, clearFormatButton, clearLinksButton } = state;
+    const { control, editor, palette, linkApply, linkRemove, clearFormatButton, clearLinksButton } = state;
     control.addEventListener("click", (ev) => {
       ev.stopPropagation();
       togglePopover(state, true);
@@ -622,18 +959,25 @@ var Dieter = (() => {
     palette.addEventListener("click", (ev) => {
       const target = ev.target.closest("button[data-command]");
       if (!target) return;
-      const command = target.dataset.command;
-      handleCommand(state, command);
+      handleCommand(state, target.dataset.command);
     });
-    linkApply.addEventListener("click", () => applyLink(state));
-    linkRemove.addEventListener("click", () => removeLink(state));
+    linkApply.addEventListener(
+      "click",
+      () => applyLink(state, { restoreSelection, schedulePaletteUpdate, updatePalettePosition })
+    );
+    linkRemove.addEventListener(
+      "click",
+      () => removeLink(state, { restoreSelection, schedulePaletteUpdate, updatePalettePosition })
+    );
     clearFormatButton.addEventListener("click", (ev) => {
       ev.preventDefault();
       clearAllFormatting(state);
+      closeLinkForm(state);
     });
     clearLinksButton.addEventListener("click", (ev) => {
       ev.preventDefault();
       clearAllLinks(state);
+      closeLinkForm(state);
     });
     editor.addEventListener("input", () => {
       syncPreview(state);
@@ -664,16 +1008,10 @@ var Dieter = (() => {
       if (!state.linkForm.classList.contains("is-hidden")) return;
       state.selection = null;
     });
-    state.linkInput.addEventListener("input", () => {
-      const res = validateUrl(state.linkInput.value);
-      setLinkValidity(state, res.state);
-    });
-    state.linkNewTab.addEventListener("change", () => setLinkValidity(state, state.linkValidity));
-    state.linkNoFollow.addEventListener("change", () => setLinkValidity(state, state.linkValidity));
     state.linkInput.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
-        applyLink(state);
+        applyLink(state, { restoreSelection, schedulePaletteUpdate, updatePalettePosition });
       } else if (ev.key === "Escape") {
         ev.preventDefault();
         closeLinkForm(state);
@@ -721,12 +1059,12 @@ var Dieter = (() => {
       state.pointerDown = false;
       preselectInitialText(state);
       closePalette(state);
-    } else {
-      state.root.dataset.state = "closed";
-      state.control.setAttribute("aria-expanded", "false");
-      closePalette(state);
-      closeLinkForm(state);
+      return;
     }
+    state.root.dataset.state = "closed";
+    state.control.setAttribute("aria-expanded", "false");
+    closePalette(state);
+    closeLinkForm(state);
   }
   function closeAll() {
     states.forEach((state) => {
@@ -758,16 +1096,16 @@ var Dieter = (() => {
         surroundSelection(state, "s");
         break;
       case "link" /* Link */:
-        toggleLinkForm(state);
+        toggleLinkForm(state, { restoreSelection, schedulePaletteUpdate, updatePalettePosition });
         return;
       case "clear-format" /* ClearFormat */:
         clearAllFormatting(state);
+        closeLinkForm(state);
         return;
       case "clear-links" /* ClearLinks */:
         clearAllLinks(state);
+        closeLinkForm(state);
         return;
-      default:
-        break;
     }
     syncPreview(state);
     schedulePaletteUpdate(state, true);
@@ -816,11 +1154,10 @@ var Dieter = (() => {
   }
   function showPalette(state) {
     state.palette.classList.remove("is-hidden");
-    if (state.selection) {
-      requestAnimationFrame(() => {
-        if (state.selection) updatePalettePosition(state, state.selection);
-      });
-    }
+    if (!state.selection) return;
+    requestAnimationFrame(() => {
+      if (state.selection) updatePalettePosition(state, state.selection);
+    });
   }
   function closePalette(state) {
     state.palette.classList.add("is-hidden");
@@ -884,148 +1221,6 @@ var Dieter = (() => {
     selection.addRange(nextRange);
     state.selection = nextRange.cloneRange();
   }
-  function toggleLinkForm(state) {
-    if (state.linkForm.classList.contains("is-hidden")) {
-      openLinkForm(state);
-    } else {
-      closeLinkForm(state);
-    }
-  }
-  function openLinkForm(state) {
-    if (!restoreSelection(state) || !state.selection) {
-      closeLinkForm(state);
-      return;
-    }
-    const range = state.selection.cloneRange();
-    const anchor = findAnchor(range);
-    state.activeAnchor = anchor;
-    if (anchor) {
-      state.linkInput.value = anchor.getAttribute("href") || "";
-      state.linkNewTab.checked = anchor.getAttribute("target") === "_blank";
-      state.linkNoFollow.checked = (anchor.getAttribute("rel") || "").split(/\s+/).includes("nofollow");
-      anchor.classList.add("diet-textedit-link");
-      clearTempMarker(state);
-    } else {
-      state.linkInput.value = "";
-      state.linkNewTab.checked = false;
-      state.linkNoFollow.checked = false;
-      state.tempMarker = wrapTempMarker(range);
-      if (state.tempMarker) {
-        const markerRange = document.createRange();
-        markerRange.selectNodeContents(state.tempMarker);
-        state.selection = markerRange.cloneRange();
-      }
-    }
-    state.initialLink = {
-      url: state.linkInput.value.trim(),
-      newTab: state.linkNewTab.checked,
-      noFollow: state.linkNoFollow.checked
-    };
-    state.linkForm.classList.toggle("has-anchor", Boolean(anchor));
-    state.linkRemove.style.display = anchor ? "inline-flex" : "none";
-    state.linkSnippet = range.toString().trim();
-    state.linkTitle.textContent = "Link this text";
-    state.linkTitle.classList.remove("is-error");
-    const res = validateUrl(state.linkInput.value);
-    setLinkValidity(state, res.state);
-    state.linkForm.classList.remove("is-hidden");
-    state.palette.classList.add("has-linkform");
-    state.paletteButtons.get("link" /* Link */)?.classList.add("is-active");
-    updatePalettePosition(state, range);
-    state.linkInput.focus({ preventScroll: true });
-    state.linkInput.select();
-    updateLinkActionState(state);
-  }
-  function closeLinkForm(state) {
-    if (state.linkForm.classList.contains("is-hidden")) return;
-    state.linkForm.classList.add("is-hidden");
-    state.palette.classList.remove("has-linkform");
-    state.paletteButtons.get("link" /* Link */)?.classList.remove("is-active");
-    state.linkForm.dataset.validity = "empty";
-    state.linkTitle.textContent = "Link this text";
-    state.linkTitle.classList.remove("is-error");
-    state.activeAnchor = null;
-    state.initialLink = null;
-    state.linkRemove.style.display = "none";
-    state.linkApply.disabled = true;
-    clearTempMarker(state);
-    state.linkSnippet = "";
-  }
-  function applyLink(state) {
-    if (!restoreSelection(state) || !state.selection) return;
-    const res = validateUrl(state.linkInput.value);
-    setLinkValidity(state, res.state);
-    if (res.state !== "valid") return;
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    const range = selection.getRangeAt(0);
-    let anchor = state.activeAnchor && isRangeInsideAnchor(range, state.activeAnchor) ? state.activeAnchor : document.createElement("a");
-    anchor.setAttribute("href", res.url);
-    if (state.linkNewTab.checked) anchor.setAttribute("target", "_blank");
-    else anchor.removeAttribute("target");
-    if (state.linkNoFollow.checked) anchor.setAttribute("rel", "nofollow noopener");
-    else anchor.removeAttribute("rel");
-    if (state.tempMarker && !state.activeAnchor) {
-      const marker = state.tempMarker;
-      const parent = marker.parentNode;
-      if (parent) {
-        const frag = document.createDocumentFragment();
-        while (marker.firstChild) frag.appendChild(marker.firstChild);
-        anchor.append(frag);
-        parent.replaceChild(anchor, marker);
-      }
-      state.tempMarker = null;
-    } else if (!anchor.parentNode || anchor === state.activeAnchor && anchor.contains(range.commonAncestorContainer)) {
-    } else {
-      try {
-        range.surroundContents(anchor);
-      } catch {
-        const frag = range.extractContents();
-        anchor.append(frag);
-        range.insertNode(anchor);
-      }
-    }
-    anchor.classList.add("diet-textedit-link");
-    const newRange = document.createRange();
-    newRange.selectNodeContents(anchor);
-    selection.removeAllRanges();
-    selection.addRange(newRange);
-    state.selection = newRange.cloneRange();
-    closeLinkForm(state);
-    syncPreview(state);
-    updateClearButtons(state);
-    schedulePaletteUpdate(state, true);
-  }
-  function removeLink(state) {
-    if (!state.activeAnchor) {
-      closeLinkForm(state);
-      return;
-    }
-    const anchor = state.activeAnchor;
-    const parent = anchor.parentNode;
-    if (parent) {
-      anchor.classList.remove("diet-textedit-link");
-      while (anchor.firstChild) parent.insertBefore(anchor.firstChild, anchor);
-      parent.removeChild(anchor);
-    }
-    closeLinkForm(state);
-    syncPreview(state);
-    updateClearButtons(state);
-    schedulePaletteUpdate(state, true);
-  }
-  function findAnchor(range) {
-    let node = range.commonAncestorContainer;
-    if (node instanceof HTMLAnchorElement) return node;
-    node = node.parentNode;
-    while (node) {
-      if (node instanceof HTMLAnchorElement) return node;
-      node = node.parentNode;
-    }
-    return null;
-  }
-  function isRangeInsideAnchor(range, anchor) {
-    return anchor.contains(range.startContainer) && anchor.contains(range.endContainer);
-  }
   function handleDocumentPointer(ev) {
     if (!activeState) return;
     const target = ev.target;
@@ -1037,205 +1232,6 @@ var Dieter = (() => {
   function handleViewportChange() {
     if (!activeState || !activeState.selection) return;
     updatePalettePosition(activeState, activeState.selection);
-  }
-  function validateUrl(raw) {
-    const value = (raw || "").trim();
-    if (!value) return { state: "empty", url: "" };
-    if (/(\s)/.test(value)) return { state: "invalid", url: "" };
-    const normalized = /^https?:\/\//i.test(value) ? value : `https://${value}`;
-    try {
-      const url = new URL(normalized);
-      if (!(url.protocol === "http:" || url.protocol === "https:")) return { state: "invalid", url: "" };
-      const host = url.hostname;
-      if (host === "localhost") return { state: "valid", url: url.toString() };
-      const parsed = parse(host, { allowPrivateDomains: true });
-      if (parsed.isIp) return { state: "valid", url: url.toString() };
-      if (parsed.domain && (parsed.isIcann || parsed.isPrivate)) return { state: "valid", url: url.toString() };
-      return { state: "invalid", url: "" };
-    } catch {
-      return { state: "invalid", url: "" };
-    }
-  }
-  function setLinkValidity(state, validity) {
-    state.linkValidity = validity;
-    state.linkForm.dataset.validity = validity;
-    if (validity === "invalid") {
-      state.linkTitle.textContent = "Not a valid url";
-      state.linkTitle.classList.add("is-error");
-    } else {
-      state.linkTitle.textContent = "Link this text";
-      state.linkTitle.classList.remove("is-error");
-    }
-    updateLinkActionState(state);
-  }
-  function getCurrentLinkState(state) {
-    return {
-      url: state.linkInput.value.trim(),
-      newTab: state.linkNewTab.checked,
-      noFollow: state.linkNoFollow.checked
-    };
-  }
-  function updateLinkActionState(state) {
-    const current = getCurrentLinkState(state);
-    const initial = state.initialLink ?? { url: "", newTab: false, noFollow: false };
-    const hasChanges = current.url !== initial.url || current.newTab !== initial.newTab || current.noFollow !== initial.noFollow;
-    const canApply = state.linkValidity === "valid" && hasChanges;
-    state.linkApply.disabled = !canApply;
-    state.linkForm.classList.toggle("has-anchor", Boolean(state.activeAnchor));
-    state.linkRemove.style.display = state.activeAnchor ? "inline-flex" : "none";
-    const togglesEnabled = Boolean(state.activeAnchor) || state.linkValidity === "valid";
-    state.linkNewTab.disabled = !togglesEnabled;
-    state.linkNoFollow.disabled = !togglesEnabled;
-    state.linkNewTab.closest("label")?.classList.toggle("is-disabled", !togglesEnabled);
-    state.linkNoFollow.closest("label")?.classList.toggle("is-disabled", !togglesEnabled);
-    state.linkForm.classList.toggle("can-toggle", togglesEnabled);
-  }
-  function updateClearButtons(state) {
-    const hasFormatting = Boolean(state.editor.querySelector("strong, b, em, i, u, s"));
-    const hasLinks = state.allowLinks ? Boolean(state.editor.querySelector("a")) : false;
-    state.clearFormatButton?.classList.toggle("is-hidden", !hasFormatting);
-    state.clearLinksButton?.classList.toggle("is-hidden", !hasLinks);
-    const showDivider = (hasFormatting || hasLinks) && state.toolbarDivider;
-    if (state.toolbarDivider) {
-      state.toolbarDivider.classList.toggle("is-hidden", !showDivider);
-    }
-  }
-  function clearAllFormatting(state) {
-    const nodes = state.editor.querySelectorAll("strong, b, em, i, u, s");
-    nodes.forEach((el) => unwrapElement(el));
-    syncPreview(state);
-    updateClearButtons(state);
-    closeLinkForm(state);
-  }
-  function clearAllLinks(state) {
-    const nodes = state.editor.querySelectorAll("a");
-    nodes.forEach((anchor) => {
-      anchor.classList.remove("diet-textedit-link");
-      unwrapElement(anchor);
-    });
-    syncPreview(state);
-    updateClearButtons(state);
-    closeLinkForm(state);
-  }
-  function unwrapElement(el) {
-    const parent = el.parentNode;
-    if (!parent) return;
-    while (el.firstChild) parent.insertBefore(el.firstChild, el);
-    parent.removeChild(el);
-  }
-  function wrapTempMarker(range) {
-    if (range.collapsed) return null;
-    const marker = document.createElement("span");
-    marker.className = "diet-textedit-linktemp";
-    try {
-      range.surroundContents(marker);
-    } catch {
-      return null;
-    }
-    return marker;
-  }
-  function clearTempMarker(state) {
-    if (!state.tempMarker) return;
-    const marker = state.tempMarker;
-    const parent = marker.parentNode;
-    if (parent) {
-      while (marker.firstChild) parent.insertBefore(marker.firstChild, marker);
-      parent.removeChild(marker);
-    }
-    state.tempMarker = null;
-  }
-  function syncFromInstanceData(state) {
-    const value = state.hiddenInput.value || state.hiddenInput.getAttribute("value") || "";
-    const normalized = normalizeEditorValue(value, state.allowLinks);
-    state.editor.innerHTML = normalized || state.previewText.textContent || "";
-    syncPreview(state);
-    updateClearButtons(state);
-  }
-  function applyExternalValue(state, raw) {
-    const value = raw || "";
-    const normalized = normalizeEditorValue(value, state.allowLinks);
-    state.editor.innerHTML = normalized;
-    const sanitized = sanitizeInline(normalized, state.allowLinks);
-    const span = document.createElement("span");
-    span.className = "diet-textedit__previewin";
-    if (sanitized) span.innerHTML = sanitized;
-    else span.textContent = state.editor.textContent ?? "";
-    state.previewText.replaceWith(span);
-    state.previewText = span;
-    highlightPreviewLinks(span);
-    state.hiddenInput.value = normalized;
-    updateClearButtons(state);
-  }
-  function syncPreview(state) {
-    const raw = state.editor.innerHTML.trim();
-    const normalized = normalizeEditorValue(raw, state.allowLinks);
-    const sanitized = sanitizeInline(normalized, state.allowLinks);
-    const span = document.createElement("span");
-    span.className = "diet-textedit__previewin";
-    if (sanitized) span.innerHTML = sanitized;
-    else span.textContent = state.editor.textContent ?? "";
-    state.previewText.replaceWith(span);
-    state.previewText = span;
-    highlightPreviewLinks(span);
-    state.hiddenInput.value = normalized;
-    state.hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-  function highlightPreviewLinks(span) {
-    span.querySelectorAll("a").forEach((anchor) => {
-      anchor.setAttribute("data-preview-link", "");
-    });
-  }
-  function normalizeEditorValue(html, allowLinks) {
-    if (allowLinks) return html;
-    return stripLinks(html);
-  }
-  function stripLinks(html) {
-    if (!html) return "";
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = html;
-    wrapper.querySelectorAll("a").forEach((anchor) => {
-      const parent = anchor.parentNode;
-      if (!parent) return;
-      while (anchor.firstChild) parent.insertBefore(anchor.firstChild, anchor);
-      parent.removeChild(anchor);
-    });
-    return wrapper.innerHTML;
-  }
-  function sanitizeInline(html, allowLinks = true) {
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = html;
-    const allowed = /* @__PURE__ */ new Set(["STRONG", "B", "EM", "I", "U", "S"]);
-    if (allowLinks) allowed.add("A");
-    wrapper.querySelectorAll("*").forEach((node) => {
-      const el = node;
-      const tag = el.tagName;
-      if (!allowed.has(tag)) {
-        const parent = el.parentNode;
-        if (!parent) return;
-        while (el.firstChild) parent.insertBefore(el.firstChild, el);
-        parent.removeChild(el);
-        return;
-      }
-      if (tag === "A") {
-        const href = el.getAttribute("href") || "";
-        if (!/^https?:\/\//i.test(href)) {
-          el.removeAttribute("href");
-          el.removeAttribute("target");
-          el.removeAttribute("rel");
-        } else {
-          if (el.getAttribute("target") === "_blank") el.setAttribute("rel", "noopener");
-          else el.removeAttribute("rel");
-        }
-        Array.from(el.attributes).forEach((attr) => {
-          if (!["href", "target", "rel", "data-preview-link"].includes(attr.name)) {
-            el.removeAttribute(attr.name);
-          }
-        });
-      } else {
-        Array.from(el.attributes).forEach((attr) => el.removeAttribute(attr.name));
-      }
-    });
-    return wrapper.innerHTML;
   }
   return __toCommonJS(textedit_exports);
 })();

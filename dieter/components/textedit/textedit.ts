@@ -8,64 +8,21 @@
  *  - AI actions handled outside the palette (for whole-field rewrites).
  */
 
-import { parse as tldParse } from 'tldts';
+import {
+  applyExternalValue,
+  clearAllFormatting,
+  clearAllLinks,
+  syncFromInstanceData,
+  syncPreview,
+  updateClearButtons,
+} from './textedit-content';
+import { createState } from './textedit-dom';
+import { applyLink, closeLinkForm, removeLink, toggleLinkForm } from './textedit-links';
+import { Command, type TexteditState } from './textedit-types';
 
 const states = new Map<HTMLElement, TexteditState>();
 let activeState: TexteditState | null = null;
 let globalBindings = false;
-
-// Formatting commands supported by the palette.
-const enum Command {
-  Bold = 'bold',
-  Italic = 'italic',
-  Underline = 'underline',
-  Strike = 'strike',
-  Link = 'link',
-  ClearFormat = 'clear-format',
-  ClearLinks = 'clear-links',
-}
-
-type LinkValidity = 'empty' | 'valid' | 'invalid';
-
-interface TexteditState {
-  root: HTMLElement;
-  control: HTMLElement;
-  popover: HTMLElement;
-  editor: HTMLElement;
-  preview: HTMLElement;
-  previewText: HTMLElement;
-  hiddenInput: HTMLInputElement;
-  allowLinks: boolean;
-
-  palette: HTMLElement;
-  paletteButtons: Map<Command, HTMLButtonElement>;
-  paletteLinkButton: HTMLButtonElement | null;
-  hasInteracted: boolean;
-  pointerDown: boolean;
-  linkForm: HTMLElement;
-  linkTitle: HTMLElement;
-  linkInput: HTMLInputElement;
-  linkNewTab: HTMLInputElement;
-  linkNoFollow: HTMLInputElement;
-  linkApply: HTMLButtonElement;
-  linkRemove: HTMLButtonElement;
-  initialLink: LinkState | null;
-  linkSnippet: string;
-  linkValidity: LinkValidity;
-
-  selection: Range | null;
-  activeAnchor: HTMLAnchorElement | null;
-  tempMarker: HTMLElement | null;
-  clearFormatButton: HTMLButtonElement;
-  clearLinksButton: HTMLButtonElement;
-  toolbarDivider: HTMLElement;
-}
-
-interface LinkState {
-  url: string;
-  newTab: boolean;
-  noFollow: boolean;
-}
 
 export function hydrateTextedit(scope: Element | DocumentFragment): void {
   const roots = scope.querySelectorAll<HTMLElement>('.diet-textedit');
@@ -97,146 +54,8 @@ export function hydrateTextedit(scope: Element | DocumentFragment): void {
   }
 }
 
-function createState(root: HTMLElement): TexteditState {
-  const allowLinksAttr = root.getAttribute('data-allow-links');
-  const allowLinks =
-    allowLinksAttr == null
-      ? true
-      : !['false', '0', 'no'].includes(allowLinksAttr.trim().toLowerCase());
-  const control = root.querySelector<HTMLElement>('.diet-textedit__control');
-  const popover = root.querySelector<HTMLElement>('.diet-popover');
-  const editor = root.querySelector<HTMLElement>('.diet-textedit__editor');
-  const preview = root.querySelector<HTMLElement>('.diet-textedit__preview');
-  const previewText = root.querySelector<HTMLElement>('.diet-textedit__previewin');
-  const hiddenInput = root.querySelector<HTMLInputElement>('.diet-textedit__field');
-
-  if (!control || !popover || !editor || !preview || !previewText || !hiddenInput) {
-    throw new Error('[textedit] missing DOM nodes');
-  }
-
-  const palette = document.createElement('div');
-  palette.className = 'diet-textedit__palette is-hidden';
-  palette.innerHTML = `
-    <div class="diet-textedit__toolbarrow">
-      <div class="diet-textedit__group diet-textedit__group--format">
-        ${buttonHTML(Command.Bold, 'bold')}
-        ${buttonHTML(Command.Italic, 'italic')}
-        ${buttonHTML(Command.Underline, 'underline')}
-        ${buttonHTML(Command.Strike, 'strikethrough')}
-        ${buttonHTML(Command.Link, 'link')}
-      </div>
-      <span class="diet-textedit__divider is-hidden"></span>
-      <div class="diet-textedit__group diet-textedit__group--clear">
-        ${buttonHTML(Command.ClearFormat, 'arrow.counterclockwise')}
-        ${buttonHTML(Command.ClearLinks, 'personalhotspot.slash')}
-      </div>
-    </div>
-    <div class="diet-textedit__linkform is-hidden" data-validity="empty">
-      <div class="diet-textedit__linkinner">
-        <div class="diet-textedit__linkheader">
-          <span class="diet-textedit__linktitle label">Link this text</span>
-          <button type="button" class="diet-btn-txt diet-textedit__linkapply" data-size="xs" data-variant="primary"><span class="diet-btn-txt__label">Apply link</span></button>
-        </div>
-        <div class="diet-textfield" data-size="md">
-          <label class="diet-textfield__control">
-            <input type="text" class="diet-textfield__field diet-textedit__linkinput" placeholder="link url" />
-          </label>
-        </div>
-        <div class="diet-textedit__linkoptions">
-          <label class="diet-toggle diet-toggle--split" data-size="sm">
-            <span class="diet-toggle__label label-small">Open link in a new tab</span>
-            <input class="diet-toggle__input sr-only diet-textedit__linknewtab" type="checkbox" />
-            <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
-          </label>
-          <label class="diet-toggle diet-toggle--split" data-size="sm">
-            <span class="diet-toggle__label label-small">Add "no follow" to link</span>
-            <input class="diet-toggle__input sr-only diet-textedit__linknofollow" type="checkbox" />
-            <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
-          </label>
-        </div>
-        <button type="button" class="diet-btn-txt diet-textedit__linkremove" data-size="xs" data-variant="secondary"><span class="diet-btn-txt__label">Remove link</span></button>
-      </div>
-    </div>
-  `;
-  popover.appendChild(palette);
-
-  const iconButton = root.querySelector<HTMLSpanElement>('.diet-textedit__icon .diet-btn-ic');
-  if (iconButton) {
-    const iconSize = root.dataset.size === 'lg' ? 'sm' : 'xs';
-    iconButton.setAttribute('data-size', iconSize);
-  }
-
-  const paletteButtons = new Map<Command, HTMLButtonElement>();
-  palette.querySelectorAll<HTMLButtonElement>('button[data-command]').forEach((btn) => {
-    paletteButtons.set(btn.dataset.command as Command, btn);
-  });
-  const paletteLinkButton = paletteButtons.get(Command.Link) ?? null;
-  const clearFormatButton = paletteButtons.get(Command.ClearFormat);
-  const clearLinksButton = paletteButtons.get(Command.ClearLinks);
-  const toolbarDivider = palette.querySelector<HTMLElement>('.diet-textedit__divider');
-  if (!clearFormatButton || !clearLinksButton || !toolbarDivider) {
-    throw new Error('[textedit] missing clear buttons or divider');
-  }
-  const linkForm = palette.querySelector<HTMLElement>('.diet-textedit__linkform')!;
-  const linkTitle = palette.querySelector<HTMLElement>('.diet-textedit__linktitle')!;
-  const linkInput = palette.querySelector<HTMLInputElement>('.diet-textedit__linkinput')!;
-  const linkNewTab = palette.querySelector<HTMLInputElement>('.diet-textedit__linknewtab')!;
-  const linkNoFollow = palette.querySelector<HTMLInputElement>('.diet-textedit__linknofollow')!;
-  const linkApply = palette.querySelector<HTMLButtonElement>('.diet-textedit__linkapply')!;
-  const linkRemove = palette.querySelector<HTMLButtonElement>('.diet-textedit__linkremove')!;
-  linkApply.disabled = true;
-  linkRemove.style.display = 'none';
-
-  if (!allowLinks) {
-    const linkButton = paletteButtons.get(Command.Link);
-    if (linkButton) linkButton.style.display = 'none';
-    clearLinksButton.classList.add('is-hidden');
-    linkForm.classList.add('is-hidden');
-  }
-
-  return {
-    root,
-    control,
-    popover,
-    editor,
-    preview,
-    previewText,
-    hiddenInput,
-    allowLinks,
-    palette,
-    paletteButtons,
-    paletteLinkButton,
-    hasInteracted: false,
-    pointerDown: false,
-    linkForm,
-    linkTitle,
-    linkInput,
-    linkNewTab,
-    linkNoFollow,
-    linkApply,
-    linkRemove,
-    initialLink: null,
-    linkSnippet: '',
-    tempMarker: null,
-    linkValidity: 'empty',
-    clearFormatButton: clearFormatButton!,
-    clearLinksButton: clearLinksButton!,
-    toolbarDivider: toolbarDivider!,
-    selection: null,
-    activeAnchor: null,
-  };
-}
-
-function buttonHTML(command: Command, icon: string): string {
-  return `
-    <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-command="${command}">
-      <span class="diet-btn-ic__icon" data-icon="${icon}"></span>
-    </button>
-  `;
-}
-
 function installHandlers(state: TexteditState): void {
-  const { control, editor, palette, paletteButtons, linkApply, linkRemove, clearFormatButton, clearLinksButton } = state;
+  const { control, editor, palette, linkApply, linkRemove, clearFormatButton, clearLinksButton } = state;
 
   control.addEventListener('click', (ev) => {
     ev.stopPropagation();
@@ -247,19 +66,24 @@ function installHandlers(state: TexteditState): void {
   palette.addEventListener('click', (ev) => {
     const target = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-command]');
     if (!target) return;
-    const command = target.dataset.command as Command;
-    handleCommand(state, command);
+    handleCommand(state, target.dataset.command as Command);
   });
 
-  linkApply.addEventListener('click', () => applyLink(state));
-  linkRemove.addEventListener('click', () => removeLink(state));
+  linkApply.addEventListener('click', () =>
+    applyLink(state, { restoreSelection, schedulePaletteUpdate, updatePalettePosition }),
+  );
+  linkRemove.addEventListener('click', () =>
+    removeLink(state, { restoreSelection, schedulePaletteUpdate, updatePalettePosition }),
+  );
   clearFormatButton.addEventListener('click', (ev) => {
     ev.preventDefault();
     clearAllFormatting(state);
+    closeLinkForm(state);
   });
   clearLinksButton.addEventListener('click', (ev) => {
     ev.preventDefault();
     clearAllLinks(state);
+    closeLinkForm(state);
   });
 
   editor.addEventListener('input', () => {
@@ -288,21 +112,14 @@ function installHandlers(state: TexteditState): void {
     schedulePaletteUpdate(state);
   });
   editor.addEventListener('blur', () => {
-    // Don't clear selection if link form is open (user may return to apply link)
     if (!state.linkForm.classList.contains('is-hidden')) return;
     state.selection = null;
   });
 
-  state.linkInput.addEventListener('input', () => {
-    const res = validateUrl(state.linkInput.value);
-    setLinkValidity(state, res.state);
-  });
-  state.linkNewTab.addEventListener('change', () => setLinkValidity(state, state.linkValidity));
-  state.linkNoFollow.addEventListener('change', () => setLinkValidity(state, state.linkValidity));
   state.linkInput.addEventListener('keydown', (ev) => {
     if (ev.key === 'Enter') {
       ev.preventDefault();
-      applyLink(state);
+      applyLink(state, { restoreSelection, schedulePaletteUpdate, updatePalettePosition });
     } else if (ev.key === 'Escape') {
       ev.preventDefault();
       closeLinkForm(state);
@@ -310,7 +127,7 @@ function installHandlers(state: TexteditState): void {
   });
 }
 
-function preselectInitialText(state: TexteditState) {
+function preselectInitialText(state: TexteditState): void {
   const selection = window.getSelection();
   if (!selection) return;
   const text = state.editor.textContent ?? '';
@@ -321,7 +138,7 @@ function preselectInitialText(state: TexteditState) {
   const walker = document.createTreeWalker(state.editor, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       return node.textContent && node.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-    }
+    },
   });
   const first = walker.nextNode() as Text | null;
   if (!first) return;
@@ -340,7 +157,7 @@ function preselectInitialText(state: TexteditState) {
   showPalette(state);
 }
 
-function togglePopover(state: TexteditState, force?: boolean) {
+function togglePopover(state: TexteditState, force?: boolean): void {
   const shouldOpen = force ?? state.root.dataset.state !== 'open';
   if (shouldOpen) {
     closeAll();
@@ -352,15 +169,16 @@ function togglePopover(state: TexteditState, force?: boolean) {
     state.pointerDown = false;
     preselectInitialText(state);
     closePalette(state);
-  } else {
-    state.root.dataset.state = 'closed';
-    state.control.setAttribute('aria-expanded', 'false');
-    closePalette(state);
-    closeLinkForm(state);
+    return;
   }
+
+  state.root.dataset.state = 'closed';
+  state.control.setAttribute('aria-expanded', 'false');
+  closePalette(state);
+  closeLinkForm(state);
 }
 
-function closeAll() {
+function closeAll(): void {
   states.forEach((state) => {
     state.root.dataset.state = 'closed';
     state.control.setAttribute('aria-expanded', 'false');
@@ -369,7 +187,7 @@ function closeAll() {
   });
 }
 
-function handleCommand(state: TexteditState, command: Command) {
+function handleCommand(state: TexteditState, command: Command): void {
   if (!state.allowLinks && (command === Command.Link || command === Command.ClearLinks)) {
     return;
   }
@@ -392,27 +210,27 @@ function handleCommand(state: TexteditState, command: Command) {
       surroundSelection(state, 's');
       break;
     case Command.Link:
-      toggleLinkForm(state);
+      toggleLinkForm(state, { restoreSelection, schedulePaletteUpdate, updatePalettePosition });
       return;
     case Command.ClearFormat:
       clearAllFormatting(state);
+      closeLinkForm(state);
       return;
     case Command.ClearLinks:
       clearAllLinks(state);
+      closeLinkForm(state);
       return;
-    default:
-      break;
   }
 
   syncPreview(state);
   schedulePaletteUpdate(state, true);
 }
 
-function setActiveState(state: TexteditState) {
+function setActiveState(state: TexteditState): void {
   activeState = state;
 }
 
-function handleSelectionChange() {
+function handleSelectionChange(): void {
   if (!activeState) return;
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) {
@@ -446,7 +264,7 @@ function handleSelectionChange() {
   showPalette(activeState);
 }
 
-function schedulePaletteUpdate(state: TexteditState, immediate = false) {
+function schedulePaletteUpdate(state: TexteditState, immediate = false): void {
   if (immediate) {
     handleSelectionChange();
     return;
@@ -456,21 +274,20 @@ function schedulePaletteUpdate(state: TexteditState, immediate = false) {
   });
 }
 
-function showPalette(state: TexteditState) {
+function showPalette(state: TexteditState): void {
   state.palette.classList.remove('is-hidden');
-  if (state.selection) {
-    requestAnimationFrame(() => {
-      if (state.selection) updatePalettePosition(state, state.selection);
-    });
-  }
+  if (!state.selection) return;
+  requestAnimationFrame(() => {
+    if (state.selection) updatePalettePosition(state, state.selection);
+  });
 }
 
-function closePalette(state: TexteditState) {
+function closePalette(state: TexteditState): void {
   state.palette.classList.add('is-hidden');
   closeLinkForm(state);
 }
 
-function updatePalettePosition(state: TexteditState, range: Range) {
+function updatePalettePosition(state: TexteditState, range: Range): void {
   const rect = range.getBoundingClientRect();
   const hostRect = state.popover.getBoundingClientRect();
   const paletteRect = state.palette.getBoundingClientRect();
@@ -482,7 +299,7 @@ function updatePalettePosition(state: TexteditState, range: Range) {
   state.palette.style.transform = 'translate(0,0)';
 }
 
-function updatePaletteActiveStates(state: TexteditState) {
+function updatePaletteActiveStates(state: TexteditState): void {
   const tags = collectFormattingTags(state.selection);
   state.paletteButtons.forEach((btn, command) => {
     let tag: string | null = null;
@@ -513,7 +330,7 @@ function restoreSelection(state: TexteditState): boolean {
   return true;
 }
 
-function surroundSelection(state: TexteditState, tag: 'strong' | 'em' | 'u' | 's') {
+function surroundSelection(state: TexteditState, tag: 'strong' | 'em' | 'u' | 's'): void {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) return;
   const range = selection.getRangeAt(0);
@@ -535,171 +352,7 @@ function surroundSelection(state: TexteditState, tag: 'strong' | 'em' | 'u' | 's
   state.selection = nextRange.cloneRange();
 }
 
-function toggleLinkForm(state: TexteditState) {
-  if (state.linkForm.classList.contains('is-hidden')) {
-    openLinkForm(state);
-  } else {
-    closeLinkForm(state);
-  }
-}
-
-function openLinkForm(state: TexteditState) {
-  if (!restoreSelection(state) || !state.selection) {
-    closeLinkForm(state);
-    return;
-  }
-
-  const range = state.selection.cloneRange();
-  const anchor = findAnchor(range);
-  state.activeAnchor = anchor;
-
-  if (anchor) {
-    state.linkInput.value = anchor.getAttribute('href') || '';
-    state.linkNewTab.checked = anchor.getAttribute('target') === '_blank';
-    state.linkNoFollow.checked = (anchor.getAttribute('rel') || '').split(/\s+/).includes('nofollow');
-    anchor.classList.add('diet-textedit-link');
-    clearTempMarker(state);
-  } else {
-    state.linkInput.value = '';
-    state.linkNewTab.checked = false;
-    state.linkNoFollow.checked = false;
-    state.tempMarker = wrapTempMarker(range);
-    if (state.tempMarker) {
-      const markerRange = document.createRange();
-      markerRange.selectNodeContents(state.tempMarker);
-      state.selection = markerRange.cloneRange();
-    }
-  }
-
-  state.initialLink = {
-    url: state.linkInput.value.trim(),
-    newTab: state.linkNewTab.checked,
-    noFollow: state.linkNoFollow.checked,
-  };
-  state.linkForm.classList.toggle('has-anchor', Boolean(anchor));
-  state.linkRemove.style.display = anchor ? 'inline-flex' : 'none';
-  state.linkSnippet = range.toString().trim();
-  state.linkTitle.textContent = 'Link this text';
-  state.linkTitle.classList.remove('is-error');
-
-  const res = validateUrl(state.linkInput.value);
-  setLinkValidity(state, res.state);
-
-  state.linkForm.classList.remove('is-hidden');
-  state.palette.classList.add('has-linkform');
-  state.paletteButtons.get(Command.Link)?.classList.add('is-active');
-  updatePalettePosition(state, range);
-  state.linkInput.focus({ preventScroll: true });
-  state.linkInput.select();
-  updateLinkActionState(state);
-}
-
-function closeLinkForm(state: TexteditState) {
-  if (state.linkForm.classList.contains('is-hidden')) return;
-  state.linkForm.classList.add('is-hidden');
-  state.palette.classList.remove('has-linkform');
-  state.paletteButtons.get(Command.Link)?.classList.remove('is-active');
-  state.linkForm.dataset.validity = 'empty';
-  state.linkTitle.textContent = 'Link this text';
-  state.linkTitle.classList.remove('is-error');
-  state.activeAnchor = null;
-  state.initialLink = null;
-  state.linkRemove.style.display = 'none';
-  state.linkApply.disabled = true;
-  clearTempMarker(state);
-  state.linkSnippet = '';
-}
-
-function applyLink(state: TexteditState) {
-  if (!restoreSelection(state) || !state.selection) return;
-  const res = validateUrl(state.linkInput.value);
-  setLinkValidity(state, res.state);
-  if (res.state !== 'valid') return;
-
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return;
-  const range = selection.getRangeAt(0);
-
-  let anchor = state.activeAnchor && isRangeInsideAnchor(range, state.activeAnchor)
-    ? state.activeAnchor
-    : document.createElement('a');
-
-  anchor.setAttribute('href', res.url);
-  if (state.linkNewTab.checked) anchor.setAttribute('target', '_blank');
-  else anchor.removeAttribute('target');
-  if (state.linkNoFollow.checked) anchor.setAttribute('rel', 'nofollow noopener');
-  else anchor.removeAttribute('rel');
-
-  if (state.tempMarker && !state.activeAnchor) {
-    const marker = state.tempMarker;
-    const parent = marker.parentNode;
-    if (parent) {
-      const frag = document.createDocumentFragment();
-      while (marker.firstChild) frag.appendChild(marker.firstChild);
-      anchor.append(frag);
-      parent.replaceChild(anchor, marker);
-    }
-    state.tempMarker = null;
-  } else if (!anchor.parentNode || anchor === state.activeAnchor && anchor.contains(range.commonAncestorContainer)) {
-    // already wrapped
-  } else {
-    try {
-      range.surroundContents(anchor);
-    } catch {
-      const frag = range.extractContents();
-      anchor.append(frag);
-      range.insertNode(anchor);
-    }
-  }
-
-  anchor.classList.add('diet-textedit-link');
-
-  const newRange = document.createRange();
-  newRange.selectNodeContents(anchor);
-  selection.removeAllRanges();
-  selection.addRange(newRange);
-  state.selection = newRange.cloneRange();
-
-  closeLinkForm(state);
-  syncPreview(state);
-  updateClearButtons(state);
-  schedulePaletteUpdate(state, true);
-}
-
-function removeLink(state: TexteditState) {
-  if (!state.activeAnchor) {
-    closeLinkForm(state);
-    return;
-  }
-  const anchor = state.activeAnchor;
-  const parent = anchor.parentNode;
-  if (parent) {
-    anchor.classList.remove('diet-textedit-link');
-    while (anchor.firstChild) parent.insertBefore(anchor.firstChild, anchor);
-    parent.removeChild(anchor);
-  }
-  closeLinkForm(state);
-  syncPreview(state);
-  updateClearButtons(state);
-  schedulePaletteUpdate(state, true);
-}
-
-function findAnchor(range: Range): HTMLAnchorElement | null {
-  let node: Node | null = range.commonAncestorContainer;
-  if (node instanceof HTMLAnchorElement) return node;
-  node = node.parentNode;
-  while (node) {
-    if (node instanceof HTMLAnchorElement) return node;
-    node = node.parentNode;
-  }
-  return null;
-}
-
-function isRangeInsideAnchor(range: Range, anchor: HTMLAnchorElement): boolean {
-  return anchor.contains(range.startContainer) && anchor.contains(range.endContainer);
-}
-
-function handleDocumentPointer(ev: Event) {
+function handleDocumentPointer(ev: Event): void {
   if (!activeState) return;
   const target = ev.target as Node;
   if (!activeState.root.contains(target)) {
@@ -708,228 +361,7 @@ function handleDocumentPointer(ev: Event) {
   }
 }
 
-function handleViewportChange() {
+function handleViewportChange(): void {
   if (!activeState || !activeState.selection) return;
   updatePalettePosition(activeState, activeState.selection);
-}
-
-function validateUrl(raw?: string): { state: LinkValidity; url: string } {
-  const value = (raw || '').trim();
-  if (!value) return { state: 'empty', url: '' };
-  if (/(\s)/.test(value)) return { state: 'invalid', url: '' };
-  const normalized = /^https?:\/\//i.test(value) ? value : `https://${value}`;
-  try {
-    const url = new URL(normalized);
-    if (!(url.protocol === 'http:' || url.protocol === 'https:')) return { state: 'invalid', url: '' };
-    const host = url.hostname;
-    if (host === 'localhost') return { state: 'valid', url: url.toString() };
-    const parsed = tldParse(host, { allowPrivateDomains: true });
-    if (parsed.isIp) return { state: 'valid', url: url.toString() };
-    if (parsed.domain && (parsed.isIcann || parsed.isPrivate)) return { state: 'valid', url: url.toString() };
-    return { state: 'invalid', url: '' };
-  } catch {
-    return { state: 'invalid', url: '' };
-  }
-}
-
-function setLinkValidity(state: TexteditState, validity: LinkValidity) {
-  state.linkValidity = validity;
-  state.linkForm.dataset.validity = validity;
-  if (validity === 'invalid') {
-    state.linkTitle.textContent = 'Not a valid url';
-    state.linkTitle.classList.add('is-error');
-  } else {
-    state.linkTitle.textContent = 'Link this text';
-    state.linkTitle.classList.remove('is-error');
-  }
-  updateLinkActionState(state);
-}
-
-function getCurrentLinkState(state: TexteditState): LinkState {
-  return {
-    url: state.linkInput.value.trim(),
-    newTab: state.linkNewTab.checked,
-    noFollow: state.linkNoFollow.checked,
-  };
-}
-
-function updateLinkActionState(state: TexteditState): void {
-  const current = getCurrentLinkState(state);
-  const initial = state.initialLink ?? { url: '', newTab: false, noFollow: false };
-  const hasChanges =
-    current.url !== initial.url ||
-    current.newTab !== initial.newTab ||
-    current.noFollow !== initial.noFollow;
-  const canApply = state.linkValidity === 'valid' && hasChanges;
-  state.linkApply.disabled = !canApply;
-  state.linkForm.classList.toggle('has-anchor', Boolean(state.activeAnchor));
-  state.linkRemove.style.display = state.activeAnchor ? 'inline-flex' : 'none';
-
-  const togglesEnabled = Boolean(state.activeAnchor) || state.linkValidity === 'valid';
-  state.linkNewTab.disabled = !togglesEnabled;
-  state.linkNoFollow.disabled = !togglesEnabled;
-  state.linkNewTab.closest('label')?.classList.toggle('is-disabled', !togglesEnabled);
-  state.linkNoFollow.closest('label')?.classList.toggle('is-disabled', !togglesEnabled);
-  state.linkForm.classList.toggle('can-toggle', togglesEnabled);
-}
-
-function updateClearButtons(state: TexteditState): void {
-  const hasFormatting = Boolean(state.editor.querySelector('strong, b, em, i, u, s'));
-  const hasLinks = state.allowLinks ? Boolean(state.editor.querySelector('a')) : false;
-  state.clearFormatButton?.classList.toggle('is-hidden', !hasFormatting);
-  state.clearLinksButton?.classList.toggle('is-hidden', !hasLinks);
-  const showDivider = (hasFormatting || hasLinks) && state.toolbarDivider;
-  if (state.toolbarDivider) {
-    state.toolbarDivider.classList.toggle('is-hidden', !showDivider);
-  }
-}
-
-function clearAllFormatting(state: TexteditState): void {
-  const nodes = state.editor.querySelectorAll('strong, b, em, i, u, s');
-  nodes.forEach((el) => unwrapElement(el));
-  syncPreview(state);
-  updateClearButtons(state);
-  closeLinkForm(state);
-}
-
-function clearAllLinks(state: TexteditState): void {
-  const nodes = state.editor.querySelectorAll('a');
-  nodes.forEach((anchor) => {
-    anchor.classList.remove('diet-textedit-link');
-    unwrapElement(anchor);
-  });
-  syncPreview(state);
-  updateClearButtons(state);
-  closeLinkForm(state);
-}
-
-function unwrapElement(el: Element): void {
-  const parent = el.parentNode;
-  if (!parent) return;
-  while (el.firstChild) parent.insertBefore(el.firstChild, el);
-  parent.removeChild(el);
-}
-
-function wrapTempMarker(range: Range): HTMLElement | null {
-  if (range.collapsed) return null;
-  const marker = document.createElement('span');
-  marker.className = 'diet-textedit-linktemp';
-  try {
-    range.surroundContents(marker);
-  } catch {
-    return null;
-  }
-  return marker;
-}
-
-function clearTempMarker(state: TexteditState): void {
-  if (!state.tempMarker) return;
-  const marker = state.tempMarker;
-  const parent = marker.parentNode;
-  if (parent) {
-    while (marker.firstChild) parent.insertBefore(marker.firstChild, marker);
-    parent.removeChild(marker);
-  }
-  state.tempMarker = null;
-}
-
-function syncFromInstanceData(state: TexteditState) {
-  const value = state.hiddenInput.value || state.hiddenInput.getAttribute('value') || '';
-  const normalized = normalizeEditorValue(value, state.allowLinks);
-  state.editor.innerHTML = normalized || state.previewText.textContent || '';
-  syncPreview(state);
-  updateClearButtons(state);
-}
-
-function applyExternalValue(state: TexteditState, raw: string) {
-  const value = raw || '';
-  const normalized = normalizeEditorValue(value, state.allowLinks);
-  state.editor.innerHTML = normalized;
-  const sanitized = sanitizeInline(normalized, state.allowLinks);
-  const span = document.createElement('span');
-  span.className = 'diet-textedit__previewin';
-  if (sanitized) span.innerHTML = sanitized;
-  else span.textContent = state.editor.textContent ?? '';
-  state.previewText.replaceWith(span);
-  state.previewText = span;
-  highlightPreviewLinks(span);
-  state.hiddenInput.value = normalized;
-  updateClearButtons(state);
-}
-
-function syncPreview(state: TexteditState) {
-  const raw = state.editor.innerHTML.trim();
-  const normalized = normalizeEditorValue(raw, state.allowLinks);
-  const sanitized = sanitizeInline(normalized, state.allowLinks);
-  const span = document.createElement('span');
-  span.className = 'diet-textedit__previewin';
-  if (sanitized) span.innerHTML = sanitized;
-  else span.textContent = state.editor.textContent ?? '';
-  state.previewText.replaceWith(span);
-  state.previewText = span;
-  highlightPreviewLinks(span);
-
-  state.hiddenInput.value = normalized;
-  state.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
-function highlightPreviewLinks(span: HTMLElement) {
-  span.querySelectorAll('a').forEach((anchor) => {
-    anchor.setAttribute('data-preview-link', '');
-  });
-}
-
-function normalizeEditorValue(html: string, allowLinks: boolean): string {
-  if (allowLinks) return html;
-  return stripLinks(html);
-}
-
-function stripLinks(html: string): string {
-  if (!html) return '';
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = html;
-  wrapper.querySelectorAll('a').forEach((anchor) => {
-    const parent = anchor.parentNode;
-    if (!parent) return;
-    while (anchor.firstChild) parent.insertBefore(anchor.firstChild, anchor);
-    parent.removeChild(anchor);
-  });
-  return wrapper.innerHTML;
-}
-
-function sanitizeInline(html: string, allowLinks = true): string {
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = html;
-  const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S']);
-  if (allowLinks) allowed.add('A');
-  wrapper.querySelectorAll('*').forEach((node) => {
-    const el = node as HTMLElement;
-    const tag = el.tagName;
-    if (!allowed.has(tag)) {
-      const parent = el.parentNode;
-      if (!parent) return;
-      while (el.firstChild) parent.insertBefore(el.firstChild, el);
-      parent.removeChild(el);
-      return;
-    }
-    if (tag === 'A') {
-      const href = el.getAttribute('href') || '';
-      if (!/^https?:\/\//i.test(href)) {
-        el.removeAttribute('href');
-        el.removeAttribute('target');
-        el.removeAttribute('rel');
-      } else {
-        if (el.getAttribute('target') === '_blank') el.setAttribute('rel', 'noopener');
-        else el.removeAttribute('rel');
-      }
-      Array.from(el.attributes).forEach((attr) => {
-        if (!['href', 'target', 'rel', 'data-preview-link'].includes(attr.name)) {
-          el.removeAttribute(attr.name);
-        }
-      });
-    } else {
-      Array.from(el.attributes).forEach((attr) => el.removeAttribute(attr.name));
-    }
-  });
-  return wrapper.innerHTML;
 }

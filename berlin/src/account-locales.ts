@@ -1,7 +1,7 @@
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import { resolvePolicy, type Policy } from '@clickeen/ck-policy';
-import type { BerlinAccountContext } from './account-state';
+import type { BerlinAccountContext } from './account-state.types';
 import { json, validationError } from './helpers';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env } from './types';

@@ -1,4 +1,4 @@
-import type { BerlinAccountContext, BerlinAccountMember } from './account-state';
+import type { BerlinAccountContext, BerlinAccountMember } from './account-state.types';
 import { findAccountMember, listAccountMembers } from './account-state';
 import { json, validationError } from './helpers';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
