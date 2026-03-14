@@ -19,6 +19,35 @@ Environment contract:
 
 Reduce the report’s LOC offenders so active source files stay readable to humans and AI agents, without introducing behavior drift, fake abstractions, or new build-pipeline complexity.
 
+## Execution control
+
+This PRD executes one slice at a time.
+
+Rules:
+
+1. only one active next slice may be open at any given time
+2. blocked items stay blocked; they do not become parallel workstreams
+3. deferred items are recorded explicitly and do not stay half-active in this PRD
+4. each completed slice must end with:
+   - verification
+   - PRD update
+   - clean handoff to exactly one next slice
+
+Current program state:
+
+1. completed:
+   - Phase 1
+   - Phase 2 worker-entrypoint cleanup
+   - Phase 3 slice 1: `berlin/src/account-state.ts` public-type extraction
+   - Phase 3 slice 2: `dieter/components/textedit/textedit.ts` decomposition
+2. blocked:
+   - `admin/vite.config.ts`
+   - blocked on `PRD 069B` stabilizing the active route surface
+3. deferred within this PRD:
+   - deeper `account-state.ts` split unless a stronger responsibility boundary emerges
+4. single active next slice:
+   - inspect and, only if justified, decompose `dieter/components/dropdown-fill/dropdown-fill.ts`
+
 ## Current execution progress
 
 1. Phase 1 slice 1 is landed:
