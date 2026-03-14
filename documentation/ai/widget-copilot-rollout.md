@@ -51,6 +51,7 @@ Core runtime files:
 - `packages/ck-policy/src/ai.ts`
 - `paris/src/domains/ai/index.ts`
 - `sanfrancisco/src/index.ts`
+- `sanfrancisco/src/agents/widgetCopilotCore.ts`
 - `sanfrancisco/src/agents/sdrWidgetCopilot.ts`
 - `sanfrancisco/src/agents/csWidgetCopilot.ts`
 - `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`

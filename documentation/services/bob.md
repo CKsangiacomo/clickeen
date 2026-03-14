@@ -128,7 +128,10 @@ The write plane does **not** move to any separate DevStudio runtime in this setu
 - `GET /api/dev/runtime` returns Bob runtime hints for the DevStudio tool (`envStage`, `supabaseTarget`).
 - DevStudio uses this to show whether the attached local Bob toolchain is pointed at `local` or `remote` Supabase.
 
-Source: `admin/src/html/tools/dev-widget-workspace.html`.
+Source:
+- `admin/src/tools/dev-widget-workspace/main.js`
+- `admin/src/tools/dev-widget-workspace/api.js`
+- `admin/src/tools/dev-widget-workspace/bob-host.js`
 
 ### Instance write surfaces (current)
 
