@@ -1,9 +1,8 @@
-import type { Env, L10nGenerateStateRow, TokyoMirrorQueueJob } from '../../shared/types';
-import type { Policy } from '@clickeen/ck-policy';
+import type { Env, L10nGenerateStateRow, LocalePolicy, TokyoMirrorQueueJob } from '../../shared/types';
 import { errorDetail } from '../../shared/errors';
 import { asTrimmedString } from '../../shared/validation';
 import { requireTokyoBase } from '../../shared/tokyo';
-import { normalizeLocaleList } from '../../shared/l10n';
+import { normalizeLocaleList, type AccountL10nPolicy } from '../../shared/l10n';
 import { loadInstanceOverlays, loadL10nGenerateStates } from '../l10n/service';
 
 type TokyoMirrorEnqueueResult = { ok: true } | { ok: false; error: string };
@@ -30,15 +29,11 @@ export type TokyoSavedConfigState = {
 };
 
 type RenderIndexEntry = { e: string; r: string; meta: string };
-type RenderPublishedPointer = { revision: string; updatedAt: string | null };
 type RenderSnapshotState = {
   revision: string | null;
   pointerUpdatedAt: string | null;
   current: Record<string, RenderIndexEntry> | null;
 };
-type WaitForEnSnapshotReadyResult =
-  | { ok: true; state: RenderSnapshotState; waitedMs: number }
-  | { ok: false; error: string; state: RenderSnapshotState | null; waitedMs: number };
 
 function normalizeOptionalBaseUrl(value: string | null | undefined): string | null {
   const trimmed = asTrimmedString(value);
@@ -89,21 +84,14 @@ function resolveTokyoInternalHeaders(env: Env): Headers {
 }
 
 function resolveActivePublishLocales(
-  args: { accountLocales: unknown; policy: Policy; baseLocale: string },
+  args: { accountLocales: unknown; baseLocale: string },
 ): { locales: string[]; invalidAccountLocales: string | null } {
   const normalized = normalizeLocaleList(args.accountLocales, 'l10n_locales');
   const additionalLocales = normalized.ok ? normalized.locales : [];
-  const maxLocalesTotal = resolveLocaleEntitlementMax(args.policy);
   const baseLocale = typeof args.baseLocale === 'string' && args.baseLocale.trim() ? args.baseLocale.trim() : 'en';
   const deduped = Array.from(new Set([baseLocale, ...additionalLocales]));
-  const locales = maxLocalesTotal == null ? deduped : deduped.slice(0, maxLocalesTotal);
   const invalidAccountLocales = normalized.ok ? null : JSON.stringify(normalized.issues);
-  return { locales, invalidAccountLocales };
-}
-
-function resolveLocaleEntitlementMax(policy: Policy): number | null {
-  const maxLocalesTotalRaw = policy.caps['l10n.locales.max'];
-  return maxLocalesTotalRaw == null ? null : Math.max(1, Math.floor(maxLocalesTotalRaw));
+  return { locales: deduped, invalidAccountLocales };
 }
 
 async function loadPersistedLocaleOverlayKeys(
@@ -118,50 +106,6 @@ async function loadPersistedLocaleOverlayKeys(
   const normalized = normalizeLocaleList(layerKeys, 'overlay.layer_key');
   if (!normalized.ok) return [];
   return normalized.locales;
-}
-
-async function resolveRenderSnapshotLocales(args: {
-  env: Env;
-  publicId: string;
-  accountLocales: unknown;
-  policy: Policy;
-  baseLocale: string;
-}): Promise<{
-  locales: string[];
-  invalidAccountLocales: string | null;
-  hasOverlayLocaleFallback: boolean;
-}> {
-  const active = resolveActivePublishLocales({
-    accountLocales: args.accountLocales,
-    policy: args.policy,
-    baseLocale: args.baseLocale,
-  });
-  const maxLocalesTotal = resolveLocaleEntitlementMax(args.policy);
-  try {
-    const persistedLocaleKeys = await loadPersistedLocaleOverlayKeys(args.env, args.publicId);
-    if (persistedLocaleKeys.length === 0) {
-      return {
-        locales: active.locales,
-        invalidAccountLocales: active.invalidAccountLocales,
-        hasOverlayLocaleFallback: false,
-      };
-    }
-    const merged = Array.from(new Set([...active.locales, ...persistedLocaleKeys]));
-    const capped = maxLocalesTotal == null ? merged : merged.slice(0, maxLocalesTotal);
-    return {
-      locales: capped,
-      invalidAccountLocales: active.invalidAccountLocales,
-      hasOverlayLocaleFallback: capped.some((locale) => !active.locales.includes(locale)),
-    };
-  } catch (error) {
-    const detail = errorDetail(error);
-    console.warn('[ParisWorker] Failed to resolve persisted locale overlay keys for snapshot locales', detail);
-    return {
-      locales: active.locales,
-      invalidAccountLocales: active.invalidAccountLocales,
-      hasOverlayLocaleFallback: false,
-    };
-  }
 }
 
 async function enqueueTokyoMirrorJob(env: Env, job: TokyoMirrorQueueJob): Promise<TokyoMirrorEnqueueResult> {
@@ -244,15 +188,6 @@ async function requestTokyoSavedConfig(args: {
   return lastFailure ?? { ok: false, status: 502, error: 'tokyo_saved_config_unavailable' };
 }
 
-export async function loadSavedConfigFromTokyo(args: {
-  env: Env;
-  accountId: string;
-  publicId: string;
-}): Promise<Record<string, unknown> | null> {
-  const result = await loadSavedConfigStateFromTokyo(args);
-  return result?.config ?? null;
-}
-
 export async function loadSavedConfigStateFromTokyo(args: {
   env: Env;
   accountId: string;
@@ -325,6 +260,213 @@ async function loadLocaleOverlayMatchesForFingerprint(args: {
   return out;
 }
 
+async function resolveMaterializableLocalesForFingerprint(args: {
+  env: Env;
+  publicId: string;
+  desiredLocales: string[];
+  baseLocale: string;
+  baseFingerprint: string;
+}): Promise<string[]> {
+  const desiredLocales = Array.from(
+    new Set(
+      [args.baseLocale, ...args.desiredLocales]
+        .map((locale) => asTrimmedString(locale))
+        .filter((locale): locale is string => Boolean(locale)),
+    ),
+  );
+  if (desiredLocales.length === 0) return [args.baseLocale];
+
+  const [stateMap, overlayMatches] = await Promise.all([
+    loadL10nGenerateStatesForFingerprint({
+      env: args.env,
+      publicId: args.publicId,
+      baseFingerprint: args.baseFingerprint,
+    }),
+    loadLocaleOverlayMatchesForFingerprint({
+      env: args.env,
+      publicId: args.publicId,
+      baseFingerprint: args.baseFingerprint,
+    }),
+  ]);
+
+  const ready = new Set<string>([args.baseLocale]);
+  desiredLocales.forEach((locale) => {
+    if (locale === args.baseLocale) return;
+    if (overlayMatches.has(locale)) {
+      ready.add(locale);
+      return;
+    }
+    if (stateMap.get(locale)?.status === 'succeeded') {
+      ready.add(locale);
+    }
+  });
+
+  return desiredLocales.filter((locale) => ready.has(locale));
+}
+
+type TokyoTextPointerState = {
+  baseFingerprint: string | null;
+};
+
+function normalizeTokyoTextPointer(raw: unknown): TokyoTextPointerState | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const payload = raw as Record<string, unknown>;
+  const baseFingerprintRaw = asTrimmedString(payload.baseFingerprint);
+  return {
+    baseFingerprint:
+      baseFingerprintRaw && /^[a-f0-9]{64}$/i.test(baseFingerprintRaw)
+        ? baseFingerprintRaw.toLowerCase()
+        : null,
+  };
+}
+
+async function loadTokyoTextPointer(args: {
+  env: Env;
+  publicId: string;
+  locale: string;
+}): Promise<TokyoTextPointerState | null> {
+  const bases = resolveRenderIndexBases(args.env);
+  for (const base of bases) {
+    const url = `${base}/l10n/instances/${encodeURIComponent(args.publicId)}/live/${encodeURIComponent(args.locale)}.json`;
+    const response = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: { 'X-Request-ID': crypto.randomUUID() },
+    });
+    if (response.status === 404) continue;
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '');
+      throw new Error(
+        `[ParisWorker] Failed to load l10n live pointer from ${base} (${response.status}): ${detail}`.trim(),
+      );
+    }
+    return normalizeTokyoTextPointer(await response.json().catch(() => null));
+  }
+  return null;
+}
+
+async function resolveTokyoReadyLocalesForFingerprint(args: {
+  env: Env;
+  publicId: string;
+  desiredLocales: string[];
+  baseLocale: string;
+  baseFingerprint: string;
+}): Promise<string[]> {
+  const desiredLocales = Array.from(
+    new Set(
+      [args.baseLocale, ...args.desiredLocales]
+        .map((locale) => asTrimmedString(locale))
+        .filter((locale): locale is string => Boolean(locale)),
+    ),
+  );
+  if (desiredLocales.length === 0) return [args.baseLocale];
+
+  const ready = new Set<string>([args.baseLocale]);
+  const targetFingerprint = args.baseFingerprint.toLowerCase();
+  const nonBaseLocales = desiredLocales.filter((locale) => locale !== args.baseLocale);
+  const pointers = await Promise.all(
+    nonBaseLocales.map(async (locale) => ({
+      locale,
+      pointer: await loadTokyoTextPointer({
+        env: args.env,
+        publicId: args.publicId,
+        locale,
+      }),
+    })),
+  );
+
+  pointers.forEach(({ locale, pointer }) => {
+    if (!pointer?.baseFingerprint) return;
+    if (pointer.baseFingerprint !== targetFingerprint) return;
+    ready.add(locale);
+  });
+
+  return desiredLocales.filter((locale) => ready.has(locale));
+}
+
+async function waitForTokyoReadyLocalesForFingerprint(args: {
+  env: Env;
+  publicId: string;
+  desiredLocales: string[];
+  baseLocale: string;
+  baseFingerprint: string;
+  targetLocales?: string[];
+  timeoutMs?: number;
+  intervalMs?: number;
+}): Promise<string[]> {
+  const timeoutMs =
+    typeof args.timeoutMs === 'number' && Number.isFinite(args.timeoutMs) && args.timeoutMs >= 0
+      ? Math.floor(args.timeoutMs)
+      : 8_000;
+  const intervalMs =
+    typeof args.intervalMs === 'number' && Number.isFinite(args.intervalMs) && args.intervalMs > 0
+      ? Math.floor(args.intervalMs)
+      : 300;
+  const targetLocales = Array.from(
+    new Set(
+      [args.baseLocale, ...(Array.isArray(args.targetLocales) ? args.targetLocales : args.desiredLocales)]
+        .map((locale) => asTrimmedString(locale))
+        .filter((locale): locale is string => Boolean(locale)),
+    ),
+  );
+
+  let lastReadyLocales = await resolveTokyoReadyLocalesForFingerprint(args);
+  let readySet = new Set(lastReadyLocales);
+  if (targetLocales.every((locale) => readySet.has(locale))) return lastReadyLocales;
+
+  const startedAt = Date.now();
+  while (Date.now() - startedAt <= timeoutMs) {
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    lastReadyLocales = await resolveTokyoReadyLocalesForFingerprint(args);
+    readySet = new Set(lastReadyLocales);
+    if (targetLocales.every((locale) => readySet.has(locale))) return lastReadyLocales;
+  }
+
+  return lastReadyLocales;
+}
+
+function buildReadyLocalePolicy(args: {
+  accountL10nPolicy: AccountL10nPolicy;
+  readyLocales: string[];
+}): LocalePolicy {
+  const baseLocale = args.accountL10nPolicy.baseLocale;
+  const normalizedReadyLocales = Array.from(
+    new Set(
+      [baseLocale, ...args.readyLocales]
+        .map((locale) => asTrimmedString(locale))
+        .filter((locale): locale is string => Boolean(locale)),
+    ),
+  );
+  const readyLocales = [
+    baseLocale,
+    ...normalizedReadyLocales.filter((locale) => locale !== baseLocale),
+  ];
+  const readyLocaleSet = new Set(readyLocales);
+
+  return {
+    baseLocale,
+    readyLocales,
+    ip: {
+      enabled: args.accountL10nPolicy.ip.enabled,
+      countryToLocale: args.accountL10nPolicy.ip.enabled
+        ? Object.fromEntries(
+            Object.entries(args.accountL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
+              readyLocaleSet.has(locale),
+            ),
+          )
+        : {},
+    },
+    switcher: {
+      enabled: args.accountL10nPolicy.switcher.enabled,
+      ...(Array.isArray(args.accountL10nPolicy.switcher.locales)
+        ? {
+            locales: args.accountL10nPolicy.switcher.locales.filter((locale) => readyLocaleSet.has(locale)),
+          }
+        : {}),
+    },
+  };
+}
+
 function normalizeRenderIndexEntry(raw: unknown): RenderIndexEntry | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const entry = raw as Record<string, unknown>;
@@ -342,7 +484,9 @@ function normalizeRenderRevision(raw: unknown): string | null {
   return value;
 }
 
-function normalizeRenderPublishedPointer(raw: unknown): RenderPublishedPointer | null {
+function normalizeRenderPublishedPointer(
+  raw: unknown,
+): { revision: string; updatedAt: string | null } | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const payload = raw as Record<string, unknown>;
   const revision = normalizeRenderRevision(payload.revision);
@@ -367,14 +511,6 @@ function normalizeRenderIndexCurrent(raw: unknown): Record<string, RenderIndexEn
     out[locale] = normalized;
   });
   return out;
-}
-
-async function loadRenderIndexCurrent(args: {
-  env: Env;
-  publicId: string;
-}): Promise<Record<string, RenderIndexEntry> | null> {
-  const state = await loadRenderSnapshotState(args);
-  return state.current;
 }
 
 async function loadRenderSnapshotState(args: {
@@ -431,89 +567,17 @@ async function loadRenderSnapshotState(args: {
   };
 }
 
-function hasPointerAdvanced(args: {
-  state: RenderSnapshotState;
-  baselinePointerUpdatedAt: string | null;
-  baselineRevision: string | null;
-}): boolean {
-  const currentPointerUpdatedAt = asTrimmedString(args.state.pointerUpdatedAt);
-  const currentRevision = asTrimmedString(args.state.revision);
-  const baselinePointerUpdatedAt = asTrimmedString(args.baselinePointerUpdatedAt);
-  const baselineRevision = asTrimmedString(args.baselineRevision);
-
-  const hadBaseline = Boolean(baselinePointerUpdatedAt || baselineRevision);
-  if (!hadBaseline) return Boolean(currentPointerUpdatedAt || currentRevision);
-
-  if (baselinePointerUpdatedAt && currentPointerUpdatedAt && currentPointerUpdatedAt !== baselinePointerUpdatedAt) {
-    return true;
-  }
-  if (baselineRevision && currentRevision && currentRevision !== baselineRevision) {
-    return true;
-  }
-  return false;
-}
-
-async function waitForEnSnapshotReady(args: {
-  env: Env;
-  publicId: string;
-  baselinePointerUpdatedAt?: string | null;
-  baselineRevision?: string | null;
-  timeoutMs?: number;
-  intervalMs?: number;
-}): Promise<WaitForEnSnapshotReadyResult> {
-  const timeoutMs =
-    typeof args.timeoutMs === 'number' && Number.isFinite(args.timeoutMs) && args.timeoutMs > 0
-      ? Math.floor(args.timeoutMs)
-      : 12_000;
-  const intervalMs =
-    typeof args.intervalMs === 'number' && Number.isFinite(args.intervalMs) && args.intervalMs > 0
-      ? Math.floor(args.intervalMs)
-      : 300;
-  const startedAt = Date.now();
-  const baselinePointerUpdatedAt = asTrimmedString(args.baselinePointerUpdatedAt) ?? null;
-  const baselineRevision = asTrimmedString(args.baselineRevision) ?? null;
-  let lastState: RenderSnapshotState | null = null;
-  let lastError: string | null = null;
-
-  while (Date.now() - startedAt <= timeoutMs) {
-    try {
-      const state = await loadRenderSnapshotState({ env: args.env, publicId: args.publicId });
-      lastState = state;
-      const hasEnSnapshot = Boolean(state.current?.en);
-      const pointerAdvanced = hasPointerAdvanced({
-        state,
-        baselinePointerUpdatedAt,
-        baselineRevision,
-      });
-      if (hasEnSnapshot && pointerAdvanced) {
-        return { ok: true, state, waitedMs: Date.now() - startedAt };
-      }
-    } catch (error) {
-      lastError = errorDetail(error);
-    }
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-  }
-
-  return {
-    ok: false,
-    error:
-      lastError ??
-      `Timed out waiting for EN snapshot readiness (publicId=${args.publicId}, timeoutMs=${timeoutMs})`,
-    state: lastState,
-    waitedMs: Date.now() - startedAt,
-  };
-}
-
 export type { RenderIndexEntry, TokyoMirrorEnqueueResult };
 
 export {
+  buildReadyLocalePolicy,
   enqueueTokyoMirrorJob,
   loadL10nGenerateStatesForFingerprint,
   loadPersistedLocaleOverlayKeys,
   loadLocaleOverlayMatchesForFingerprint,
-  loadRenderIndexCurrent,
   loadRenderSnapshotState,
   resolveActivePublishLocales,
-  resolveRenderSnapshotLocales,
-  waitForEnSnapshotReady,
+  resolveMaterializableLocalesForFingerprint,
+  resolveTokyoReadyLocalesForFingerprint,
+  waitForTokyoReadyLocalesForFingerprint,
 };

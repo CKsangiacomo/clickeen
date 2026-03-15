@@ -119,7 +119,7 @@ Keeping Paris and San Francisco separate prevents:
 ## High‑Level Data Flow
 
 ### Editor agents (inside Clickeen app)
-1) Core instance state is loaded via same-origin app routes (`GET /api/accounts/:accountId/instance/:publicId?subject=account`) and localization is rehydrated separately (`GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`): host-performed in Roma/DevStudio message boot, Bob-performed in URL boot. Product core-open resolves Michael + Tokyo saved state directly; explicit localization rehydrate remains Paris-backed.
+1) Core instance state is loaded via same-origin app routes (`GET /api/accounts/:accountId/instance/:publicId?subject=account`) and localization is rehydrated separately (`GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`): host-performed in Roma/DevStudio message boot, Bob-performed in URL boot. Product core-open resolves Michael + Tokyo saved state directly; explicit localization rehydrate now comes from Roma same-origin routes backed by Berlin + Tokyo.
 2) Bob requests a short‑lived **AI Grant** from Paris (`POST /api/ai/grant`) for that editing session.
 3) Bob calls San Francisco with `{ grant, agentId, input, context }`.
 4) San Francisco returns `{ ops[], usage }`.

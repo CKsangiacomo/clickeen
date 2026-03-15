@@ -633,6 +633,11 @@ export async function buildBootstrapPayload(args: {
         }),
       ),
     );
+    const entitlements = {
+      flags: policy.flags,
+      caps: policy.caps,
+      budgets,
+    };
 
     const nowSec = Math.floor(Date.now() / 1000);
     const expiresSec = nowSec + ROMA_AUTHZ_CAPSULE_TTL_SEC;
@@ -651,6 +656,7 @@ export async function buildBootstrapPayload(args: {
       accountWebsiteUrl: activeAccount.websiteUrl,
       accountL10nLocales: activeAccount.l10nLocales,
       accountL10nPolicy: activeAccount.l10nPolicy,
+      entitlements,
       role: activeAccount.role,
       profile: activeAccount.tier,
       authzVersion,
@@ -677,11 +683,7 @@ export async function buildBootstrapPayload(args: {
           authzVersion,
           issuedAt: new Date(nowSec * 1000).toISOString(),
           expiresAt: new Date(expiresSec * 1000).toISOString(),
-          entitlements: {
-            flags: policy.flags,
-            caps: policy.caps,
-            budgets,
-          },
+          entitlements,
         },
       },
     };

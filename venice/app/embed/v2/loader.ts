@@ -89,8 +89,8 @@ function buildScript(): string {
 			        ? pointer.localePolicy
 			        : null;
 			    const baseLocale = normalizeLocaleToken(policy && policy.baseLocale) || 'en';
-			    const availableLocales = Array.isArray(policy && policy.availableLocales)
-			      ? Array.from(new Set(policy.availableLocales.map(normalizeLocaleToken).filter(Boolean)))
+			    const readyLocales = Array.isArray(policy && policy.readyLocales)
+			      ? Array.from(new Set(policy.readyLocales.map(normalizeLocaleToken).filter(Boolean)))
 			      : [baseLocale];
 			    const ipEnabled =
 			      policy && typeof policy === 'object' && policy.ip && typeof policy.ip === 'object' && policy.ip.enabled === true;
@@ -101,11 +101,11 @@ function buildScript(): string {
 
 			    let locale = baseLocale;
 			    const fixed = normalizeLocaleToken(fixedLocaleOverride);
-			    if (fixed && availableLocales.indexOf(fixed) >= 0) {
+			    if (fixed && readyLocales.indexOf(fixed) >= 0) {
 			      locale = fixed;
 			    } else if (ipEnabled) {
 			      const mapped = mapping && typeof mapping[geoCountry] === 'string' ? normalizeLocaleToken(mapping[geoCountry]) : '';
-			      if (mapped && availableLocales.indexOf(mapped) >= 0) locale = mapped;
+			      if (mapped && readyLocales.indexOf(mapped) >= 0) locale = mapped;
 			    }
 			    return locale;
 			  };

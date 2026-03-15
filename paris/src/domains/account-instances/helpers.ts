@@ -1,10 +1,6 @@
 import { evaluateLimits } from '@clickeen/ck-policy';
 import type { LimitsSpec, Policy } from '@clickeen/ck-policy';
-import type {
-  CuratedInstanceRow,
-  Env,
-  InstanceRow,
-} from '../../shared/types';
+import type { CuratedInstanceRow, Env, InstanceRow } from '../../shared/types';
 import { ckError, errorDetail } from '../../shared/errors';
 import { readJson } from '../../shared/http';
 import { supabaseFetch } from '../../shared/supabase';
@@ -18,16 +14,6 @@ import {
   inferInstanceKindFromPublicId,
   resolveCuratedRowKind,
 } from '../../shared/instances';
-export type AccountLocaleOverlayPayload = {
-  locale: string;
-  source: string | null;
-  baseFingerprint: string | null;
-  baseUpdatedAt: string | null;
-  hasUserOps: boolean;
-  baseOps: Array<{ op: 'set'; path: string; value: string }>;
-  userOps: Array<{ op: 'set'; path: string; value: string }>;
-};
-
 export const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 
 function accountAssetValidationPaths(detail: string): string[] | undefined {
@@ -103,21 +89,6 @@ export function resolveCuratedMetaUpdate(args: {
   return nextMeta;
 }
 
-export function normalizeLocalizationOpsForPayload(raw: unknown): Array<{ op: 'set'; path: string; value: string }> {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((entry) => {
-      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
-      const op = (entry as { op?: unknown }).op;
-      const path = (entry as { path?: unknown }).path;
-      const value = (entry as { value?: unknown }).value;
-      if (op !== 'set') return null;
-      if (typeof path !== 'string' || !path.trim()) return null;
-      if (typeof value !== 'string') return null;
-      return { op: 'set' as const, path: path.trim(), value };
-    })
-    .filter((entry): entry is { op: 'set'; path: string; value: string } => Boolean(entry));
-}
 export async function enforceLimits(
   env: Env,
   policy: Policy,

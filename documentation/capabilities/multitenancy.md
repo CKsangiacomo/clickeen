@@ -317,7 +317,7 @@ While we are building (before full auth/billing enforcement ships), we still nee
 
 **How the subject is set today (shipped in Bob):**
 - Bob accepts the subject via either:
-  - URL bootstrap mode: `?boot=url&subject=account|minibob` (used by URL-driven embeds like MiniBob)
+- URL bootstrap mode: `?boot=url&subject=minibob` (account mode is host-only and does not URL-bootstrap)
   - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'account'|'minibob', ... }` (used by Roma/DevStudio)
 
 **What Bob enforces today (example):**

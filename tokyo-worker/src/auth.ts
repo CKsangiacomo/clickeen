@@ -18,6 +18,8 @@ type UploadPrincipal = {
 export const INTERNAL_SERVICE_HEADER = 'x-ck-internal-service';
 export const TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL = 'devstudio.local';
 export const TOKYO_INTERNAL_SERVICE_PARIS_LOCAL = 'paris.local';
+export const TOKYO_INTERNAL_SERVICE_SANFRANCISCO_L10N = 'sanfrancisco.l10n';
+export const TOKYO_INTERNAL_SERVICE_ROMA_EDGE = 'roma.edge';
 
 type UploadAuthResult =
   | { ok: true; principal: UploadPrincipal }

@@ -1,3 +1,4 @@
+import type { PolicyEntitlementsSnapshot } from './policy';
 import type { MemberRole, PolicyProfile } from './types';
 
 export const ROMA_AUTHZ_CAPSULE_HEADER = 'x-ck-authz-capsule';
@@ -20,6 +21,7 @@ export type RomaAccountAuthzCapsulePayload = {
   accountWebsiteUrl: string | null;
   accountL10nLocales?: unknown;
   accountL10nPolicy?: unknown;
+  entitlements?: PolicyEntitlementsSnapshot | null;
   profile: PolicyProfile;
   role: MemberRole;
   authzVersion: string;
@@ -107,6 +109,46 @@ function normalizePolicyProfile(value: unknown): PolicyProfile | null {
   }
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeEntitlementsSnapshot(value: unknown): PolicyEntitlementsSnapshot | null {
+  if (!isPlainRecord(value)) return null;
+
+  const flags: Record<string, boolean> | null = isPlainRecord(value.flags)
+    ? Object.fromEntries(Object.entries(value.flags).filter(([, entry]) => typeof entry === 'boolean'))
+    : null;
+
+  const caps: Record<string, number | null> | null = isPlainRecord(value.caps)
+    ? Object.fromEntries(
+        Object.entries(value.caps).filter(
+          ([, entry]) => entry === null || (typeof entry === 'number' && Number.isFinite(entry)),
+        ),
+      )
+    : null;
+
+  const budgets: Record<string, { max: number | null; used: number }> | null = isPlainRecord(value.budgets)
+    ? Object.fromEntries(
+        Object.entries(value.budgets).flatMap(([key, entry]) => {
+          if (!isPlainRecord(entry)) return [];
+          const max = entry.max;
+          const used = entry.used;
+          if (
+            !(max === null || (typeof max === 'number' && Number.isFinite(max))) ||
+            !(typeof used === 'number' && Number.isFinite(used))
+          ) {
+            return [];
+          }
+          return [[key, { max, used: Math.max(0, Math.trunc(used)) }]];
+        }),
+      )
+    : null;
+
+  if (!flags && !caps && !budgets) return null;
+  return { ...(flags ? { flags } : {}), ...(caps ? { caps } : {}), ...(budgets ? { budgets } : {}) };
+}
+
 export function readRomaAuthzCapsuleHeader(req: Request): string | null {
   const value = req.headers.get(ROMA_AUTHZ_CAPSULE_HEADER);
   if (!value) return null;
@@ -135,6 +177,7 @@ function normalizeAccountPayload(
   const accountWebsiteUrlRaw = typeof record.accountWebsiteUrl === 'string' ? record.accountWebsiteUrl.trim() : '';
   const accountL10nLocales = record.accountL10nLocales;
   const accountL10nPolicy = record.accountL10nPolicy;
+  const entitlements = normalizeEntitlementsSnapshot(record.entitlements);
   const authzVersion = typeof record.authzVersion === 'string' ? record.authzVersion.trim() : '';
   const role = normalizeMemberRole(record.role);
   const profile = normalizePolicyProfile(record.profile);
@@ -163,6 +206,7 @@ function normalizeAccountPayload(
     accountWebsiteUrl: accountWebsiteUrlRaw || null,
     accountL10nLocales,
     accountL10nPolicy,
+    entitlements,
     profile,
     role,
     authzVersion,

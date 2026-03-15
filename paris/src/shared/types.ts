@@ -160,13 +160,14 @@ export type L10nJob = {
 
 export type LocalePolicy = {
   baseLocale: string;
-  availableLocales: string[];
+  readyLocales: string[];
   ip: {
     enabled: boolean;
     countryToLocale: Record<string, string>;
   };
   switcher: {
     enabled: boolean;
+    locales?: string[];
   };
 };
 
@@ -184,6 +185,7 @@ export type WriteTextPackJob = {
   kind: 'write-text-pack';
   publicId: string;
   locale: string;
+  baseFingerprint: string;
   textPack: Record<string, string>;
 };
 

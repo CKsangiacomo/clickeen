@@ -97,16 +97,18 @@ Notes:
 What it does (plain English):
 1. Load the live pointer (`/r/:publicId`).
 2. Decide the **effective locale**:
-   - If the iframe URL includes `?locale=...`, use that only if it is in `availableLocales`.
+   - If the iframe URL includes `?locale=...`, use that only if it is in `readyLocales`.
    - Otherwise follow the pointer’s `localePolicy`:
-     - If `localePolicy.ip.enabled=true`: map the viewer’s country to a locale (best-effort, no DB).
+     - If `localePolicy.ip.enabled=true`: map the viewer’s country to a locale only when that mapping resolves to a `readyLocale` (best-effort, no DB).
      - Otherwise start at `baseLocale`.
-     - If `localePolicy.switcher.enabled=true` and there is more than one `availableLocale`, show a language switcher UI.
+     - If `localePolicy.switcher.enabled=true` and there is more than one `readyLocale`, show a language switcher UI.
+     - If `localePolicy.switcher.locales` is present, Venice uses that ordered subset of `readyLocales` for the switcher.
 3. Fetch config pack + effective locale text pack from Tokyo.
 4. Fetch widget runtime HTML from Tokyo: `/widgets/<widgetType>/widget.html`.
 5. Bootstrap `window.CK_WIDGET` with the config + localized text.
 
 If any required Tokyo file is missing, Venice returns a clear error (no fallback).
+Non-ready allowed locales are never exposed to end users; they stay visible only in Roma/Bob as product-state truth.
 
 Headers:
 - `cache-control: public, max-age=60, s-maxage=86400`

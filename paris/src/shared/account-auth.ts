@@ -1,4 +1,10 @@
-import type { MemberRole } from '@clickeen/ck-policy';
+import {
+  resolvePolicyFromEntitlementsSnapshot,
+  type MemberRole,
+  type Policy,
+  type PolicyEntitlementsSnapshot,
+  type PolicyProfile,
+} from '@clickeen/ck-policy';
 import type { AccountRow, Env } from './types';
 import { assertDevAuth } from './auth';
 import { readRomaAuthzCapsuleHeader, verifyRomaAccountAuthzCapsule, type RomaAccountAuthzCapsulePayload } from './authz-capsule';
@@ -10,6 +16,9 @@ type AccountAuthResult =
       ok: true;
       account: AccountRow;
       role: MemberRole;
+      profile: PolicyProfile;
+      policy: Policy;
+      entitlements: PolicyEntitlementsSnapshot;
     }
   | {
       ok: false;
@@ -61,10 +70,23 @@ export async function authorizeAccount(
     if (roleRank(payload.role) < roleRank(minRole)) {
       return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };
     }
+    if (!payload.entitlements) {
+      return {
+        ok: false,
+        response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403),
+      };
+    }
     return {
       ok: true,
       account: hydrateAccountFromCapsule(payload),
       role: payload.role,
+      profile: payload.profile,
+      policy: resolvePolicyFromEntitlementsSnapshot({
+        profile: payload.profile,
+        role: payload.role,
+        entitlements: payload.entitlements,
+      }),
+      entitlements: payload.entitlements,
     };
   }
   return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403) };

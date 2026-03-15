@@ -4,19 +4,27 @@ import type { AccountRow, Env } from '../../shared/types';
 import { resolveAccountL10nPolicy } from '../../shared/l10n';
 import {
   buildLocaleTextPacks,
+  resolveLocaleOverlayOps,
+  stripTextFromConfig,
+} from '../../shared/text-packs';
+import {
   enqueueConfigPack,
   enqueueLiveSurfaceSync,
   enqueueLocaleMetaPacks,
   enqueueLocaleTextPacks,
   logMirrorEnqueueError,
   logMirrorEnqueueFailures,
-  resolveLocaleOverlayOps,
-  stripTextFromConfig,
-} from '../../shared/mirror-packs';
+} from '../../shared/tokyo-mirror-jobs';
 import { jsonSha256Hex } from '../../shared/stable-json';
 import { isSeoGeoLive } from '../../shared/seo-geo';
 import { loadInstanceOverlays } from '../l10n/service';
-import { enqueueTokyoMirrorJob, resolveActivePublishLocales } from './service';
+import {
+  buildReadyLocalePolicy,
+  enqueueTokyoMirrorJob,
+  resolveActivePublishLocales,
+  resolveMaterializableLocalesForFingerprint,
+  waitForTokyoReadyLocalesForFingerprint,
+} from './service';
 
 export async function convergePublishedInstanceSurface(args: {
   env: Env;
@@ -28,42 +36,37 @@ export async function convergePublishedInstanceSurface(args: {
   baseTextPack: Record<string, string>;
   writeTextPacks: boolean;
   writeConfigPack: boolean;
+  syncLiveSurface?: boolean;
   context: string;
 }): Promise<string | null> {
   const accountL10nPolicy = resolveAccountL10nPolicy(args.account.l10n_policy);
   const baseLocale = accountL10nPolicy.baseLocale;
   const publishLocales = resolveActivePublishLocales({
     accountLocales: args.account.l10n_locales,
-    policy: args.policy,
     baseLocale,
   });
-  const availableLocales = publishLocales.locales;
-  const countryToLocale = Object.fromEntries(
-    Object.entries(accountL10nPolicy.ip.countryToLocale).filter(([, locale]) => availableLocales.includes(locale)),
-  );
-  const liveLocalePolicy = {
+  const desiredLocales = publishLocales.locales;
+  const baseFingerprint = await computeBaseFingerprint(args.baseTextPack);
+  const materializableLocales = await resolveMaterializableLocalesForFingerprint({
+    env: args.env,
+    publicId: args.publicId,
+    desiredLocales,
     baseLocale,
-    availableLocales,
-    ip: {
-      enabled: accountL10nPolicy.ip.enabled,
-      countryToLocale: accountL10nPolicy.ip.enabled ? countryToLocale : {},
-    },
-    switcher: {
-      enabled: accountL10nPolicy.switcher.enabled,
-    },
-  };
+    baseFingerprint,
+  });
   const seoGeoLive = isSeoGeoLive({
     policy: args.policy,
     config: args.config,
   });
   const writeMetaPacks = seoGeoLive && (args.writeTextPacks || args.writeConfigPack);
+  const syncLiveSurface = args.syncLiveSurface ?? args.writeConfigPack;
+  let consumerCandidateLocales = materializableLocales.slice();
 
   let localeTextPacks: Array<{ locale: string; textPack: Record<string, string> }> | null = null;
   if (args.writeTextPacks || writeMetaPacks) {
-    const baseFingerprint = await computeBaseFingerprint(args.baseTextPack);
     const { localeOpsByLocale, userOpsByLocale } = await resolveLocaleOverlayOps({
       loadRows: () => loadInstanceOverlays(args.env, args.publicId),
-      locales: availableLocales,
+      locales: materializableLocales,
       baseFingerprint,
       warnMessage: '[ParisWorker] Failed to resolve locale overlays for published convergence',
       warnContext: {
@@ -73,7 +76,7 @@ export async function convergePublishedInstanceSurface(args: {
     });
 
     localeTextPacks = buildLocaleTextPacks({
-      locales: availableLocales,
+      locales: materializableLocales,
       baseLocale,
       basePack: args.baseTextPack,
       localeOpsByLocale,
@@ -84,6 +87,7 @@ export async function convergePublishedInstanceSurface(args: {
   if (args.writeTextPacks && localeTextPacks) {
     const failures = await enqueueLocaleTextPacks({
       publicId: args.publicId,
+      baseFingerprint,
       localeTextPacks,
       enqueue: (job) => enqueueTokyoMirrorJob(args.env, job),
     });
@@ -93,7 +97,11 @@ export async function convergePublishedInstanceSurface(args: {
       context: args.context,
     });
     if (failures.length) {
-      return `[${args.context}:text-pack] ${failures[0]?.error || 'enqueue failed'}`;
+      if (failures.some((failure) => failure.locale === baseLocale)) {
+        return `[${args.context}:text-pack] ${failures[0]?.error || 'enqueue failed'}`;
+      }
+      const failedLocales = new Set(failures.map((failure) => failure.locale));
+      consumerCandidateLocales = consumerCandidateLocales.filter((locale) => !failedLocales.has(locale));
     }
   }
 
@@ -101,11 +109,12 @@ export async function convergePublishedInstanceSurface(args: {
   const nextConfigFp = await jsonSha256Hex(nextConfigPack);
 
   if (writeMetaPacks && localeTextPacks) {
+    const candidateTextPacks = localeTextPacks.filter(({ locale }) => consumerCandidateLocales.includes(locale));
     const failures = await enqueueLocaleMetaPacks({
       publicId: args.publicId,
       widgetType: args.widgetType,
       configPack: nextConfigPack,
-      localeTextPacks,
+      localeTextPacks: candidateTextPacks,
       enqueue: (job) => enqueueTokyoMirrorJob(args.env, job),
     });
     logMirrorEnqueueFailures({
@@ -114,7 +123,11 @@ export async function convergePublishedInstanceSurface(args: {
       context: args.context,
     });
     if (failures.length) {
-      return `[${args.context}:meta-pack] ${failures[0]?.error || 'enqueue failed'}`;
+      if (failures.some((failure) => failure.locale === baseLocale)) {
+        return `[${args.context}:meta-pack] ${failures[0]?.error || 'enqueue failed'}`;
+      }
+      const failedLocales = new Set(failures.map((failure) => failure.locale));
+      consumerCandidateLocales = consumerCandidateLocales.filter((locale) => !failedLocales.has(locale));
     }
   }
 
@@ -135,6 +148,31 @@ export async function convergePublishedInstanceSurface(args: {
       return `[${args.context}:config-pack] ${configError}`;
     }
 
+  }
+
+  if (syncLiveSurface) {
+    const consumerReadyLocales =
+      args.writeTextPacks && consumerCandidateLocales.length > 0
+        ? await waitForTokyoReadyLocalesForFingerprint({
+            env: args.env,
+            publicId: args.publicId,
+            desiredLocales,
+            baseLocale,
+            baseFingerprint,
+            targetLocales: consumerCandidateLocales,
+          })
+        : await waitForTokyoReadyLocalesForFingerprint({
+            env: args.env,
+            publicId: args.publicId,
+            desiredLocales,
+            baseLocale,
+            baseFingerprint,
+            timeoutMs: 0,
+          });
+    const liveLocalePolicy = buildReadyLocalePolicy({
+      accountL10nPolicy,
+      readyLocales: consumerReadyLocales,
+    });
     const syncError = await enqueueLiveSurfaceSync({
       publicId: args.publicId,
       widgetType: args.widgetType,

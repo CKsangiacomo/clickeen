@@ -42,11 +42,11 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const isSyncFailed = locale.sync.stage === 'failed';
   const isSyncBusy = isSyncQueued || isSyncTranslating;
 
-  const availableLocales = useMemo(() => {
+  const allowedLocales = useMemo(() => {
     if (!showSelector) return [locale.baseLocale];
     const baseLocale = locale.baseLocale;
     if (minibobTranslationsLocked) return [baseLocale];
-    const normalized = locale.availableLocales
+    const normalized = locale.allowedLocales
       .map((value) => normalizeLocaleToken(value))
       .filter((value): value is string => Boolean(value));
     const set = new Set<string>(normalized);
@@ -54,55 +54,47 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
       .filter((code) => code !== baseLocale)
       .sort();
     return [baseLocale, ...rest];
-  }, [locale.availableLocales, locale.baseLocale, showSelector, minibobTranslationsLocked]);
+  }, [locale.allowedLocales, locale.baseLocale, showSelector, minibobTranslationsLocked]);
+  const readyLocales = useMemo(() => {
+    const baseLocale = locale.baseLocale;
+    const normalized = locale.readyLocales
+      .map((value) => normalizeLocaleToken(value))
+      .filter((value): value is string => Boolean(value));
+    const set = new Set<string>([baseLocale, ...normalized]);
+    const rest = Array.from(set)
+      .filter((code) => code !== baseLocale)
+      .sort();
+    return [baseLocale, ...rest];
+  }, [locale.readyLocales, locale.baseLocale]);
+  const readyLocaleSet = useMemo(() => new Set(readyLocales), [readyLocales]);
 
   const activeLocale = locale.activeLocale;
   const baseLocale = locale.baseLocale;
   const isLocaleMode = activeLocale !== baseLocale;
   const isStale = locale.stale;
   const activeLocaleToken = normalizeLocaleToken(activeLocale);
-  const materializedOverlayLocales = useMemo(() => {
-    const configured = new Set(
-      locale.availableLocales
-        .map((value) => normalizeLocaleToken(value))
-        .filter((value): value is string => Boolean(value)),
-    );
-    const normalized = instanceLocales
-      .filter((entry) => {
-        if (normalizeLocaleToken(entry.locale) === baseLocale) return false;
-        if (!entry.baseFingerprint || !/^[a-f0-9]{64}$/i.test(entry.baseFingerprint)) return false;
-        return entry.baseOps.length > 0 || entry.userOps.length > 0;
-      })
-      .map((entry) => normalizeLocaleToken(entry.locale))
-      .filter((value): value is string => value !== null && configured.has(value));
-    return Array.from(new Set(normalized)).sort();
-  }, [instanceLocales, baseLocale, locale.availableLocales]);
-  const overlayLocales = useMemo(() => {
-    return [baseLocale, ...materializedOverlayLocales];
-  }, [baseLocale, materializedOverlayLocales]);
-  const overlayLocaleSet = useMemo(() => new Set(overlayLocales), [overlayLocales]);
   const hasInstance = Boolean(publicId && widgetType);
   const selectionDisabled =
     minibobTranslationsLocked ||
     !hasInstance ||
     locale.loading ||
-    availableLocales.length <= 1;
+    allowedLocales.length <= 1;
   const showEmptyState =
     showSelector &&
     hasInstance &&
-    availableLocales.length > 1 &&
-    overlayLocales.length <= 1 &&
+    allowedLocales.length > 1 &&
+    readyLocales.length <= 1 &&
     !accountError &&
     !minibobTranslationsLocked;
 
   const selectLocales = useMemo(() => {
     if (!showSelector) return [baseLocale];
     if (minibobTranslationsLocked) return [baseLocale];
-    if (availableLocales.includes(activeLocale)) return availableLocales;
-    const deduped = Array.from(new Set([activeLocale, ...availableLocales]));
+    if (allowedLocales.includes(activeLocale)) return allowedLocales;
+    const deduped = Array.from(new Set([activeLocale, ...allowedLocales]));
     const rest = deduped.filter((code) => code !== baseLocale).sort();
     return [baseLocale, ...rest];
-  }, [availableLocales, activeLocale, baseLocale, showSelector, minibobTranslationsLocked]);
+  }, [allowedLocales, activeLocale, baseLocale, showSelector, minibobTranslationsLocked]);
 
   const localeOptions = useMemo(() => {
     const uiLocale = 'en';
@@ -110,11 +102,11 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
       const normalized = normalizeLocaleToken(code) ?? code;
       const languageLabel = resolveLocaleLabel({ locales: CANONICAL_LOCALES, uiLocale, targetLocale: normalized });
       const baseLabel = normalized === baseLocale ? `Base - ${languageLabel} (${normalized})` : `${languageLabel} (${normalized})`;
-      const pending = normalized !== baseLocale && !overlayLocaleSet.has(normalized);
-      const label = pending ? `${baseLabel} (Pending)` : baseLabel;
+      const pending = normalized !== baseLocale && !readyLocaleSet.has(normalized);
+      const label = pending ? `${baseLabel} (Not ready)` : baseLabel;
       return { value: normalized, label };
     });
-  }, [selectLocales, baseLocale, overlayLocaleSet]);
+  }, [selectLocales, baseLocale, readyLocaleSet]);
   const localeOptionsKey = useMemo(() => localeOptions.map((option) => option.value).join('|'), [localeOptions]);
 
   const translateNote = (() => {
@@ -138,17 +130,19 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     !locale.loading &&
     !accountError &&
     !minibobTranslationsLocked &&
-    !overlayLocaleSet.has(activeLocaleToken ?? '');
+    !readyLocaleSet.has(activeLocaleToken ?? '');
+  const activeLocaleHasOverlayContent =
+    Boolean(activeLocaleEntry?.baseOps.length) || Boolean(activeLocaleEntry?.userOps.length);
 
   const translationsStatus = useMemo(() => {
     if (minibobTranslationsLocked) {
       return { tone: 'unavailable', label: 'Upgrade required' };
     }
     if (isSyncQueued) {
-      return { tone: 'pending', label: 'Queuing' };
+      return { tone: 'pending', label: 'Updating...' };
     }
     if (isSyncTranslating) {
-      return { tone: 'pending', label: 'Translating' };
+      return { tone: 'pending', label: 'Updating...' };
     }
     if (isSyncFailed) {
       return { tone: 'unavailable', label: 'Failed' };
@@ -165,24 +159,26 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     if (isStale) {
       return { tone: 'pending', label: 'Needs save' };
     }
-    if (availableLocales.length <= 1) {
-      return { tone: 'unavailable', label: 'EN only' };
+    if (allowedLocales.length <= 1) {
+      return { tone: 'unavailable', label: 'Base only' };
     }
-    if (materializedOverlayLocales.length === 0) {
-      return { tone: 'pending', label: 'Configured' };
-    }
-    return { tone: 'ready', label: 'Ready' };
+    const readyCount = Math.max(0, readyLocales.length - 1);
+    const allowedCount = Math.max(0, allowedLocales.length - 1);
+    return {
+      tone: readyCount > 0 ? 'ready' : 'pending',
+      label: `${readyCount}/${allowedCount} ready`,
+    };
   }, [
-    availableLocales.length,
+    allowedLocales.length,
     hasInstance,
     isStale,
     locale.error,
     locale.loading,
+    readyLocales.length,
     isSyncFailed,
     isSyncQueued,
     isSyncTranslating,
     minibobTranslationsLocked,
-    materializedOverlayLocales.length,
     accountError,
   ]);
 
@@ -361,13 +357,13 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
               ) : null}
               {showEmptyState ? (
                 <div className="settings-panel__note">
-                  No generated translations yet for configured locales. Save the base locale and translations will update
-                  automatically.
+                  No translations are ready yet.
                 </div>
               ) : null}
               {activeLocaleMissingOverlay ? (
                 <div className="settings-panel__warning">
-                  No generated translation for {activeLocale} yet. Preview is currently showing base content.
+                  {activeLocale} is not ready yet.
+                  {!activeLocaleHasOverlayContent ? ' Preview is showing base content.' : ''}
                 </div>
               ) : null}
             </div>

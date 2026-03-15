@@ -71,7 +71,7 @@ export function useSessionSaving(args: {
     let textChanged = false;
     if (
       subject === 'account' &&
-      snapshot.locale.availableLocales.some((locale) => locale !== snapshot.locale.baseLocale)
+      snapshot.locale.allowedLocales.some((locale) => locale !== snapshot.locale.baseLocale)
     ) {
       try {
         const allowlist = snapshot.locale.allowlist.length

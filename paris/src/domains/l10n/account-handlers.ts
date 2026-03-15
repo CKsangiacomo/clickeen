@@ -1,4 +1,8 @@
-import { resolvePolicy, type Policy } from '@clickeen/ck-policy';
+import {
+  resolvePolicyFromEntitlementsSnapshot,
+  type Policy,
+  type PolicyEntitlementsSnapshot,
+} from '@clickeen/ck-policy';
 import type { AccountRow, Env, InstanceRow, L10nGenerateStateRow, L10nGenerateStatus } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { apiError, ckError, errorDetail } from '../../shared/errors';
@@ -9,7 +13,6 @@ import {
   normalizeLocaleList,
   resolveAccountL10nPolicy,
 } from '../../shared/l10n';
-import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { isTrustedInternalServiceRequest } from '../../shared/auth';
 import { authorizeAccount } from '../../shared/account-auth';
 import { supabaseFetch } from '../../shared/supabase';
@@ -17,26 +20,20 @@ import { requireAccount } from '../../shared/accounts';
 import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import { loadL10nGenerateStates, loadInstanceOverlays } from './service';
 import { resolveL10nPlanningSnapshot } from './planning';
-import { enforceL10nSelection, resolveAccountActiveLocales } from './shared';
+import { enforceL10nSelection, readAccountLocales } from './shared';
 import { enqueueL10nJobs } from './enqueue-jobs';
 import {
-  buildLocaleTextPacks,
-  enqueueLiveSurfaceSync,
-  enqueueLocaleMetaPacks,
-  enqueueLocaleTextPacks,
-  logMirrorEnqueueError,
-  logMirrorEnqueueFailures,
-  resolveLocaleOverlayOps,
-  stripTextFromConfig,
-} from '../../shared/mirror-packs';
-import { jsonSha256Hex } from '../../shared/stable-json';
-import { isSeoGeoLive } from '../../shared/seo-geo';
-import {
-  enqueueTokyoMirrorJob,
   loadSavedConfigStateFromTokyo,
   resolveActivePublishLocales,
+  resolveTokyoReadyLocalesForFingerprint,
 } from '../account-instances/service';
+import { convergePublishedInstanceSurface } from '../account-instances/published-convergence';
 import { isCuratedInstanceRow, resolveInstanceAccountId, resolveInstanceKind } from '../../shared/instances';
+
+function normalizeEntitlementsSnapshot(value: unknown): PolicyEntitlementsSnapshot | null {
+  if (!isRecord(value)) return null;
+  return value as PolicyEntitlementsSnapshot;
+}
 
 export async function handleAccountInstanceL10nStatus(
   req: Request,
@@ -47,9 +44,7 @@ export async function handleAccountInstanceL10nStatus(
   const authorized = await authorizeAccount(req, env, accountId, 'viewer');
   if (!authorized.ok) return authorized.response;
   const account = authorized.account;
-
-  const policyResult = resolveEditorPolicyFromRequest(req, account, authorized.role);
-  if (!policyResult.ok) return policyResult.response;
+  const editorPolicy = authorized.policy;
 
   const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicId);
   if (!instance)
@@ -96,32 +91,36 @@ export async function handleAccountInstanceL10nStatus(
   const baseFingerprint = planning.plan.baseFingerprint;
   const baseUpdatedAt = planning.plan.baseUpdatedAt;
 
-  const accountLocales = resolveAccountActiveLocales({ account });
+  const accountLocales = readAccountLocales(account);
   if (accountLocales instanceof Response) return accountLocales;
   const locales = accountLocales.locales;
-  const entitlementGate = enforceL10nSelection(policyResult.policy, locales);
+  const entitlementGate = enforceL10nSelection(editorPolicy, locales);
   if (entitlementGate) return entitlementGate;
+  const readyLocales = await resolveTokyoReadyLocalesForFingerprint({
+    env,
+    publicId,
+    desiredLocales: locales,
+    baseLocale: resolveAccountL10nPolicy(account.l10n_policy).baseLocale,
+    baseFingerprint,
+  });
+  const readyLocaleSet = new Set(readyLocales);
 
   const stateMap = locales.length
     ? await loadL10nGenerateStates(env, publicId, 'locale', baseFingerprint)
     : new Map<string, L10nGenerateStateRow>();
   const overlays = locales.length ? await loadInstanceOverlays(env, publicId) : [];
   const localeOverlays = overlays.filter((row) => row.layer === 'locale');
-  const overlayMatch = new Set<string>();
   const overlayStale = new Set<string>();
   localeOverlays.forEach((row) => {
     const key = row.layer_key;
     if (!key) return;
-    if (row.base_fingerprint && row.base_fingerprint === baseFingerprint) {
-      overlayMatch.add(key);
-      return;
-    }
+    if (row.base_fingerprint && row.base_fingerprint === baseFingerprint) return;
     overlayStale.add(key);
   });
 
   const localeStates = locales.map((locale) => {
     const row = stateMap.get(locale);
-    const hasMatch = overlayMatch.has(locale);
+    const hasMatch = readyLocaleSet.has(locale);
     const hasStale = overlayStale.has(locale);
     let status: L10nGenerateStatus = row?.status ?? 'dirty';
     if (hasMatch) status = 'succeeded';
@@ -164,12 +163,10 @@ async function runAccountLocalesAftermath(args: {
   const nextBaseLocale = nextPolicyResolved.baseLocale;
   const prevAvailableLocales = resolveActivePublishLocales({
     accountLocales: previousLocales,
-    policy,
     baseLocale: prevBaseLocale,
   }).locales;
   const nextAvailableLocales = resolveActivePublishLocales({
     accountLocales: nextLocales,
-    policy,
     baseLocale: nextBaseLocale,
   }).locales;
 
@@ -179,22 +176,8 @@ async function runAccountLocalesAftermath(args: {
   const policyChanged = JSON.stringify(prevPolicy) !== JSON.stringify(nextPolicyResolved);
 
   if (env.RENDER_SNAPSHOT_QUEUE && (baseLocaleChanged || policyChanged || addedLocales.length > 0 || removedLocales.length > 0)) {
-    const countryToLocale = Object.fromEntries(
-      Object.entries(nextPolicyResolved.ip.countryToLocale).filter(([, locale]) => nextAvailableLocales.includes(locale)),
-    );
-    const localePolicy = {
-      baseLocale: nextBaseLocale,
-      availableLocales: nextAvailableLocales,
-      ip: {
-        enabled: nextPolicyResolved.ip.enabled,
-        countryToLocale: nextPolicyResolved.ip.enabled ? countryToLocale : {},
-      },
-      switcher: {
-        enabled: nextPolicyResolved.switcher.enabled,
-      },
-    };
-
     const publishedInstances: InstanceRow[] = [];
+    const widgetTypeByPublicId = new Map<string, string>();
     const pageSize = 1000;
     let offset = 0;
     while (true) {
@@ -216,6 +199,59 @@ async function runAccountLocalesAftermath(args: {
       }
       const rows = ((await instancesRes.json().catch(() => null)) as InstanceRow[] | null) ?? [];
       publishedInstances.push(...rows);
+      if (rows.length < pageSize) break;
+      offset += rows.length;
+    }
+
+    offset = 0;
+    while (true) {
+      const params = new URLSearchParams({
+        select: 'public_id,status,created_at,updated_at,widget_type,owner_account_id,kind',
+        owner_account_id: `eq.${accountId}`,
+        status: 'eq.published',
+        limit: String(pageSize),
+        offset: String(offset),
+      });
+      const curatedRes = await supabaseFetch(
+        env,
+        `/rest/v1/curated_widget_instances?${params.toString()}`,
+        { method: 'GET' },
+      );
+      if (!curatedRes.ok) {
+        const details = await readJson(curatedRes).catch(() => null);
+        console.error('[ParisWorker] Failed to load curated account instances for locale resync', details);
+        warnings.push(`load_published_curated_instances_failed:${JSON.stringify(details)}`);
+        break;
+      }
+      const rows =
+        ((await curatedRes.json().catch(() => null)) as Array<{
+          public_id?: string;
+          status?: 'published' | 'unpublished';
+          created_at?: string;
+          updated_at?: string | null;
+          widget_type?: string | null;
+          kind?: string | null;
+        }> | null) ?? [];
+      const curatedInstances: InstanceRow[] = [];
+      rows.forEach((row) => {
+        const publicId = asTrimmedString(row?.public_id);
+        const widgetType = asTrimmedString(row?.widget_type);
+        const status = row?.status === 'published' ? row.status : null;
+        const createdAt = asTrimmedString(row?.created_at);
+        if (!publicId || !widgetType || !status || !createdAt) return;
+        widgetTypeByPublicId.set(publicId, widgetType);
+        curatedInstances.push({
+          public_id: publicId,
+          status,
+          created_at: createdAt,
+          updated_at: asTrimmedString(row?.updated_at) ?? null,
+          widget_id: null,
+          account_id: accountId,
+          kind: 'curated',
+          config: {},
+        });
+      });
+      publishedInstances.push(...curatedInstances);
       if (rows.length < pageSize) break;
       offset += rows.length;
     }
@@ -256,7 +292,9 @@ async function runAccountLocalesAftermath(args: {
     for (const instance of publishedInstances) {
       const publicId = String(instance.public_id || '').trim();
       if (!publicId) continue;
-      const widgetType = instance.widget_id ? widgetTypeById.get(instance.widget_id) ?? null : null;
+      const widgetType =
+        widgetTypeByPublicId.get(publicId) ??
+        (instance.widget_id ? widgetTypeById.get(instance.widget_id) ?? null : null);
       if (!widgetType) {
         console.warn('[ParisWorker] locale resync skipped: widgetType missing', { publicId });
         warnings.push(`widget_type_missing:${publicId}`);
@@ -290,79 +328,21 @@ async function runAccountLocalesAftermath(args: {
 
       const baseConfig = savedState.config;
       const baseTextPack = buildL10nSnapshot(baseConfig, allowlist);
-      const baseFingerprint = await computeBaseFingerprint(baseTextPack);
-      const configPack = stripTextFromConfig(baseConfig, Object.keys(baseTextPack));
-      const configFp = await jsonSha256Hex(configPack);
-
-      const overlayLocales = Array.from(localesToSeed).filter((locale) => locale && locale !== nextBaseLocale);
-      const { localeOpsByLocale, userOpsByLocale } = await resolveLocaleOverlayOps({
-        loadRows: () => loadInstanceOverlays(env, publicId),
-        locales: overlayLocales,
-        baseFingerprint,
-        warnMessage: '[ParisWorker] Failed to resolve overlays for locale resync',
-        warnContext: { publicId },
-      });
-
-      const seoGeoLive = isSeoGeoLive({
+      const convergenceError = await convergePublishedInstanceSurface({
+        env,
+        account,
         policy,
-        config: baseConfig,
-      });
-
-      const localeTextPacks = buildLocaleTextPacks({
-        locales: Array.from(localesToSeed).filter((locale) => nextAvailableLocales.includes(locale)),
-        baseLocale: nextBaseLocale,
-        basePack: baseTextPack,
-        localeOpsByLocale,
-        userOpsByLocale,
-      });
-
-      const textFailures = await enqueueLocaleTextPacks({
-        publicId,
-        localeTextPacks,
-        enqueue: (job) => enqueueTokyoMirrorJob(env, job),
-      });
-      logMirrorEnqueueFailures({
-        kind: 'write-text-pack',
-        failures: textFailures,
-        context: 'account locales put',
-      });
-      if (textFailures.length) {
-        warnings.push(`write_text_pack_failed:${publicId}:${textFailures.length}`);
-      }
-
-      if (seoGeoLive) {
-        const metaFailures = await enqueueLocaleMetaPacks({
-          publicId,
-          widgetType,
-          configPack,
-          localeTextPacks,
-          enqueue: (job) => enqueueTokyoMirrorJob(env, job),
-        });
-        logMirrorEnqueueFailures({
-          kind: 'write-meta-pack',
-          failures: metaFailures,
-          context: 'account locales put',
-        });
-        if (metaFailures.length) {
-          warnings.push(`write_meta_pack_failed:${publicId}:${metaFailures.length}`);
-        }
-      }
-
-      const syncError = await enqueueLiveSurfaceSync({
         publicId,
         widgetType,
-        configFp,
-        localePolicy,
-        seoGeo: seoGeoLive,
-        enqueue: (job) => enqueueTokyoMirrorJob(env, job),
-      });
-      logMirrorEnqueueError({
-        kind: 'sync-live-surface',
-        error: syncError,
+        config: baseConfig,
+        baseTextPack,
+        writeTextPacks: true,
+        writeConfigPack: false,
+        syncLiveSurface: true,
         context: 'account locales put',
       });
-      if (syncError) {
-        warnings.push(`sync_live_surface_failed:${publicId}:${syncError}`);
+      if (convergenceError) {
+        warnings.push(`published_convergence_failed:${publicId}:${convergenceError}`);
       }
 
       if (addedAdditionalLocales.length > 0) {
@@ -373,7 +353,6 @@ async function runAccountLocalesAftermath(args: {
           widgetType,
           config: baseConfig,
           baseUpdatedAt: savedState.updatedAt,
-          policy,
           localesOverride: addedAdditionalLocales,
           allowNoDiff: true,
         });
@@ -415,9 +394,14 @@ export async function handleAccountLocalesAftermath(req: Request, env: Env, acco
   const accountResult = await requireAccount(env, accountId);
   if (!accountResult.ok) return accountResult.response;
 
-  const policy = resolvePolicy({
+  const entitlements = normalizeEntitlementsSnapshot((payload as { entitlements?: unknown }).entitlements);
+  if (!entitlements) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+  const policy = resolvePolicyFromEntitlementsSnapshot({
     profile: accountResult.account.tier,
     role: 'editor',
+    entitlements,
   });
 
   const warnings = await runAccountLocalesAftermath({

@@ -25,14 +25,6 @@ export function readAccountLocales(account: AccountRow): Response | { locales: s
   return { locales: normalized.locales };
 }
 
-export function resolveAccountActiveLocales(args: {
-  account: AccountRow;
-}): Response | { locales: string[] } {
-  const configured = readAccountLocales(args.account);
-  if (configured instanceof Response) return configured;
-  return configured;
-}
-
 export function enforceL10nSelection(policy: Policy, locales: string[]) {
   const maxLocalesTotal = requirePolicyCap(policy, 'l10n.locales.max');
   const maxAdditional = maxLocalesTotal == null ? null : Math.max(0, maxLocalesTotal - 1);
@@ -64,9 +56,5 @@ export function enforceL10nSelection(policy: Policy, locales: string[]) {
       );
     }
   }
-  return null;
-}
-
-export function enforceLayerEntitlement(_policy: Policy, _layer: string): Response | null {
   return null;
 }

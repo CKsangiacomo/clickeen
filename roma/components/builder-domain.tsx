@@ -74,6 +74,8 @@ type BobAssetEntitlementDeniedMessage = {
 };
 
 type BobAccountCommand =
+  | 'get-localization-snapshot'
+  | 'get-l10n-status'
   | 'update-instance'
   | 'put-user-locale-layer'
   | 'delete-user-locale-layer';
@@ -191,13 +193,27 @@ function resolveBobAccountCommandRequest(args: {
   accountId: string;
   publicId: string;
   locale?: string;
-}): { method: 'PUT' | 'POST' | 'DELETE'; path: string } | null {
+}): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
   const accountId = String(args.accountId || '').trim();
   const publicId = String(args.publicId || '').trim();
   const locale = String(args.locale || '').trim();
   if (!accountId || !publicId) return null;
 
   switch (args.command) {
+    case 'get-localization-snapshot':
+      return {
+        method: 'GET',
+        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/localization?subject=account`,
+      };
+    case 'get-l10n-status':
+      return {
+        method: 'GET',
+        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/l10n/status?subject=account`,
+      };
     case 'update-instance':
       return {
         method: 'PUT',

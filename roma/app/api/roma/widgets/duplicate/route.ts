@@ -2,22 +2,21 @@ import { after, NextRequest, NextResponse } from 'next/server';
 import {
   deleteSavedConfigFromTokyo,
   loadTokyoPreferredAccountInstance,
-  runParisSaveAftermath,
   validatePersistableConfig,
   writeSavedConfigToTokyo,
-} from '../../../../../../bob/lib/account-instance-direct';
+} from '../../../../../lib/account-instance-direct';
 import {
   createAccountInstanceRow,
   deleteAccountInstanceRow,
   getAccountInstanceCoreRow,
-} from '../../../../../../bob/lib/michael';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../bob/lib/account-authz-capsule';
+} from '../../../../../lib/michael';
+import { authorizeRequestAccountRoleFromCapsule } from '../../../../../lib/account-authz-capsule';
+import { runAccountSaveAftermath } from '../../../../../lib/account-save-aftermath';
 import {
   applySessionCookies,
   resolveSessionBearer,
   type SessionCookieSpec,
 } from '../../../../../lib/auth/session';
-import { resolveParisBaseUrl } from '../../../../../lib/env/paris';
 import { resolveTokyoBaseUrl } from '../../../../../lib/env/tokyo';
 
 export const runtime = 'edge';
@@ -86,7 +85,11 @@ async function rollbackDuplicateCreate(args: {
   berlinAccessToken: string;
 }) {
   const [michaelRollback, tokyoRollback] = await Promise.allSettled([
-    deleteAccountInstanceRow(args.accountId, args.publicId, args.berlinAccessToken),
+    deleteAccountInstanceRow({
+      accountId: args.accountId,
+      publicId: args.publicId,
+      berlinAccessToken: args.berlinAccessToken,
+    }),
     deleteSavedConfigFromTokyo({
       tokyoBaseUrl: resolveTokyoBaseUrl(),
       tokyoAccessToken: args.tokyoAccessToken,
@@ -345,28 +348,12 @@ export async function POST(request: NextRequest) {
 
   after(async () => {
     try {
-      const warning = await runParisSaveAftermath({
-        parisBaseUrl: resolveParisBaseUrl(),
-        parisAccessToken: session.accessToken,
-        authzCapsule: request.headers.get('x-ck-authz-capsule'),
-        internalServiceName: 'roma.edge',
+      await runAccountSaveAftermath({
+        accessToken: session.accessToken,
         accountId,
         publicId,
-        previousConfig: {},
-        instance: {
-          widgetType: created.widgetType,
-          status: created.status,
-          source: created.source,
-        },
-        created: true,
-        published: false,
+        previousConfig: null,
       });
-      if (warning && process.env.NODE_ENV === 'development') {
-        console.warn('[roma widgets duplicate route] create aftermath warning', {
-          publicId,
-          detail: warning.error.detail || warning.error.reasonKey,
-        });
-      }
     } catch (error) {
       console.error('[roma widgets duplicate route] create aftermath failed', {
         publicId,

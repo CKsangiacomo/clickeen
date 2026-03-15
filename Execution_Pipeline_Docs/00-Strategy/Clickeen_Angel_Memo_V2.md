@@ -78,6 +78,13 @@ Three things converge in 2026 that won't stay true:
 - The substrate problem (safe automation) remains unsolved
 - First mover with credible primitives wins mindshare
 
+**4. Google's AI discovery layer now prefers structured on-site content (March 2026)**
+- Google Maps launched Ask Maps (March 12, 2026): Gemini answers questions about businesses directly in the Maps surface
+- Synthesis pipeline prefers `FAQPage` and `AggregateRating` JSON-LD from the business's own site over community signals
+- Widgets that emit structured schema become the mechanism by which a business controls what Google's AI says about them — before the customer arrives
+- Elfsight/Powr/EmbedSocial renderers produce HTML for humans only; they do not emit structured schema and cannot retrofit this without breaking deployed embeds
+- Clickeen's clean rendering contract makes schema emission a day-one output, not a retrofit
+
 **The window:** 18-24 months before incumbents rebuild foundations or new entrants copy the architecture.
 
 **Clickeen's position:** Substrate is done. Market entry is the next milestone. This raise funds execution during the open window.

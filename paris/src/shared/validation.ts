@@ -326,33 +326,33 @@ export function assertLocalePolicy(localePolicy: unknown) {
     issues.push({ path: 'localePolicy.baseLocale', message: 'baseLocale must be a supported locale token' });
   }
 
-  const availableLocalesRaw = (localePolicy as any).availableLocales;
-  if (!Array.isArray(availableLocalesRaw)) {
-    issues.push({ path: 'localePolicy.availableLocales', message: 'availableLocales must be an array' });
+  const readyLocalesRaw = (localePolicy as any).readyLocales;
+  if (!Array.isArray(readyLocalesRaw)) {
+    issues.push({ path: 'localePolicy.readyLocales', message: 'readyLocales must be an array' });
   }
-  const availableLocales: string[] = [];
+  const readyLocales: string[] = [];
   const seenLocales = new Set<string>();
-  if (Array.isArray(availableLocalesRaw)) {
-    availableLocalesRaw.forEach((entry, index) => {
+  if (Array.isArray(readyLocalesRaw)) {
+    readyLocalesRaw.forEach((entry, index) => {
       const normalized = normalizeSupportedLocaleToken(entry);
       if (!normalized) {
         issues.push({
-          path: `localePolicy.availableLocales[${index}]`,
+          path: `localePolicy.readyLocales[${index}]`,
           message: 'locale must be a supported locale token',
         });
         return;
       }
       if (!seenLocales.has(normalized)) {
         seenLocales.add(normalized);
-        availableLocales.push(normalized);
+        readyLocales.push(normalized);
       }
     });
   }
 
   if (baseLocale && !seenLocales.has(baseLocale)) {
     issues.push({
-      path: 'localePolicy.availableLocales',
-      message: 'availableLocales must include baseLocale',
+      path: 'localePolicy.readyLocales',
+      message: 'readyLocales must include baseLocale',
     });
   }
 
@@ -379,18 +379,48 @@ export function assertLocalePolicy(localePolicy: unknown) {
     ? ((localePolicy as any).switcher as Record<string, unknown>)
     : null;
   const switcherEnabled = typeof switcherRaw?.enabled === 'boolean' ? switcherRaw.enabled : false;
+  const switcherLocalesRaw = switcherRaw?.locales;
+  const switcherLocales: string[] = [];
+  const switcherSeen = new Set<string>();
+  if (switcherLocalesRaw !== undefined && !Array.isArray(switcherLocalesRaw)) {
+    issues.push({ path: 'localePolicy.switcher.locales', message: 'switcher.locales must be an array' });
+  }
+  if (Array.isArray(switcherLocalesRaw)) {
+    switcherLocalesRaw.forEach((entry, index) => {
+      const normalized = normalizeSupportedLocaleToken(entry);
+      if (!normalized) {
+        issues.push({
+          path: `localePolicy.switcher.locales[${index}]`,
+          message: 'locale must be a supported locale token',
+        });
+        return;
+      }
+      if (!seenLocales.has(normalized)) {
+        issues.push({
+          path: `localePolicy.switcher.locales[${index}]`,
+          message: 'switcher locale must exist in readyLocales',
+        });
+        return;
+      }
+      if (!switcherSeen.has(normalized)) {
+        switcherSeen.add(normalized);
+        switcherLocales.push(normalized);
+      }
+    });
+  }
 
   if (issues.length) return { ok: false as const, issues };
 
   const value: LocalePolicy = {
     baseLocale: baseLocale || 'en',
-    availableLocales,
+    readyLocales,
     ip: {
       enabled: ipEnabled,
       countryToLocale: ipEnabled ? countryToLocale : {},
     },
     switcher: {
       enabled: switcherEnabled,
+      ...(switcherLocales.length ? { locales: switcherLocales } : {}),
     },
   };
 

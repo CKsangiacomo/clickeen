@@ -39,7 +39,8 @@ export type LocaleState = {
   baseOps: LocalizationOp[];
   userOps: LocalizationOp[];
   allowlist: AllowlistEntry[];
-  availableLocales: string[];
+  allowedLocales: string[];
+  readyLocales: string[];
   overlayEntries: LocaleOverlayEntry[];
   accountLocalesInvalid: string | null;
   accountL10nPolicy: {
@@ -51,6 +52,7 @@ export type LocaleState = {
     };
     switcher: {
       enabled: boolean;
+      locales?: string[];
     };
   };
   source: string | null;
@@ -160,6 +162,8 @@ export type BobOpenEditorFailedMessage = {
 };
 
 export type BobAccountCommand =
+  | 'get-localization-snapshot'
+  | 'get-l10n-status'
   | 'update-instance'
   | 'put-user-locale-layer'
   | 'delete-user-locale-layer';
@@ -202,7 +206,8 @@ export const DEFAULT_LOCALE_STATE: LocaleState = {
   baseOps: [],
   userOps: [],
   allowlist: [],
-  availableLocales: [DEFAULT_LOCALE],
+  allowedLocales: [DEFAULT_LOCALE],
+  readyLocales: [DEFAULT_LOCALE],
   overlayEntries: [],
   accountLocalesInvalid: null,
   accountL10nPolicy: {

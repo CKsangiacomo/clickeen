@@ -36,8 +36,6 @@ type L10nJobV1 = {
   baseUpdatedAt: string;
   kind: 'curated' | 'user';
   accountId?: string | null;
-  // Legacy alias for accountId (pre account-only tenancy pivot).
-  workspaceId?: string | null;
   envStage?: string;
 };
 
@@ -54,8 +52,6 @@ type L10nJobV2 = {
   removedPaths?: string[];
   kind: 'curated' | 'user';
   accountId?: string | null;
-  // Legacy alias for accountId (pre account-only tenancy pivot).
-  workspaceId?: string | null;
   envStage?: string;
 };
 
@@ -107,8 +103,6 @@ export function isL10nJob(value: unknown): value is L10nJob {
 function resolveJobAccountId(job: L10nJob): string | null {
   const accountId = asString((job as any).accountId);
   if (accountId) return accountId;
-  const legacyWorkspaceId = asString((job as any).workspaceId);
-  if (legacyWorkspaceId) return legacyWorkspaceId;
   return null;
 }
 
@@ -221,8 +215,6 @@ export async function resolveL10nPlanningSnapshot(args: {
   config?: Record<string, unknown> | null;
   baseUpdatedAt?: string | null;
   accountId?: string | null;
-  // Legacy alias for accountId (pre account-only tenancy pivot).
-  workspaceId?: string | null;
   publicId?: string | null;
 }): Promise<L10nPlanningSnapshot> {
   const widgetTypeHint = asString(args.widgetType);
@@ -240,7 +232,7 @@ export async function resolveL10nPlanningSnapshot(args: {
   if (args.config && isRecord(args.config)) {
     config = args.config;
   } else {
-    const accountId = asString(args.accountId) || asString(args.workspaceId);
+    const accountId = asString(args.accountId);
     if (!accountId) {
       throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing accountId' });
     }
@@ -714,7 +706,11 @@ export async function executeL10nJob(job: L10nJob, env: Env, grant: AIGrant): Pr
     const richtextFallbackPaths: string[] = [];
     let usage: Usage | undefined;
     if (translateEntries.length > 0) {
-      const system = buildSystemPrompt(locale);
+      const system = buildSystemPrompt({
+        locale,
+        widgetType: job.widgetType,
+        items: translateEntries,
+      });
       const batches = chunkTranslationEntries(translateEntries);
       for (const batch of batches) {
         const user = buildUserPrompt(batch);
@@ -751,6 +747,7 @@ export async function executeL10nJob(job: L10nJob, env: Env, grant: AIGrant): Pr
               grant,
               agentId: job.agentId,
               locale,
+              widgetType: job.widgetType,
               expected,
             });
             if (fallback.usage) usage = mergeUsage(usage, fallback.usage);

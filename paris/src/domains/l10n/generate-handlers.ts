@@ -1,3 +1,5 @@
+import { buildL10nSnapshot, computeBaseFingerprint } from '@clickeen/l10n';
+import { resolvePolicy } from '@clickeen/ck-policy';
 import { asTrimmedString, isRecord, isUuid } from '../../shared/validation';
 import {
   normalizeLayer,
@@ -19,7 +21,11 @@ import type {
 import { json, readJson } from '../../shared/http';
 import { assertDevAuth } from '../../shared/auth';
 import { loadAccountById } from '../../shared/accounts';
+import { loadWidgetLocalizationAllowlist } from '../../shared/l10n';
 import { issueAiGrant } from '../ai';
+import { convergePublishedInstanceSurface } from '../account-instances/published-convergence';
+import { loadSavedConfigStateFromTokyo } from '../account-instances/service';
+import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import {
   L10N_GENERATE_MAX_ATTEMPTS,
   L10N_GENERATE_STALE_REQUEUE_MS,
@@ -32,7 +38,22 @@ import {
   updateL10nGenerateStatus,
   upsertL10nGenerateStates,
 } from './service';
-import { dispatchL10nGenerateJobs } from './dispatch-jobs';
+
+async function dispatchL10nGenerateJobs(
+  env: Env,
+  jobs: L10nJob[],
+): Promise<{ ok: true; transport: 'queue' } | { ok: false; error: string }> {
+  if (env.L10N_GENERATE_QUEUE) {
+    try {
+      await env.L10N_GENERATE_QUEUE.sendBatch(jobs.map((job) => ({ body: job })));
+      return { ok: true, transport: 'queue' };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  return { ok: false, error: 'L10N_GENERATE_QUEUE missing' };
+}
 
 async function applyL10nGenerateReport(args: { env: Env; report: L10nGenerateReportPayload }) {
   const { env, report } = args;
@@ -100,6 +121,65 @@ async function applyL10nGenerateReport(args: { env: Env; report: L10nGenerateRep
     changedPaths: existing?.changed_paths ?? null,
     removedPaths: existing?.removed_paths ?? null,
   });
+}
+
+async function maybeConvergePublishedInstanceSurface(args: {
+  env: Env;
+  report: L10nGenerateReportPayload;
+}): Promise<void> {
+  const { env, report } = args;
+  if (report.layer !== 'locale' || report.status !== 'succeeded') return;
+
+  const accountId = asTrimmedString(report.accountId);
+  if (!accountId) return;
+
+  const account = await loadAccountById(env, accountId).catch(() => null);
+  if (!account) return;
+
+  const instance = await loadInstanceByAccountAndPublicId(env, accountId, report.publicId).catch(() => null);
+  if (!instance || instance.status !== 'published') return;
+
+  const savedState = await loadSavedConfigStateFromTokyo({
+    env,
+    accountId,
+    publicId: report.publicId,
+  }).catch(() => null);
+  if (!savedState) return;
+
+  const widgetType =
+    (await resolveWidgetTypeForInstance(env, instance, savedState.widgetType).catch(() => null)) ??
+    savedState.widgetType;
+  if (!widgetType) return;
+
+  const allowlist = await loadWidgetLocalizationAllowlist(env, widgetType).catch(() => null);
+  if (!allowlist) return;
+
+  const baseTextPack = buildL10nSnapshot(savedState.config, allowlist);
+  const baseFingerprint = await computeBaseFingerprint(baseTextPack);
+  if (baseFingerprint !== report.baseFingerprint) return;
+
+  const policy = resolvePolicy({ profile: account.tier, role: 'editor' });
+  const convergenceError = await convergePublishedInstanceSurface({
+    env,
+    account,
+    policy,
+    publicId: report.publicId,
+    widgetType,
+    config: savedState.config,
+    baseTextPack,
+    writeTextPacks: true,
+    writeConfigPack: false,
+    syncLiveSurface: true,
+    context: 'l10n generate report',
+  });
+  if (convergenceError) {
+    console.error('[ParisWorker] published locale convergence failed after l10n success', {
+      publicId: report.publicId,
+      locale: report.layerKey,
+      baseFingerprint: report.baseFingerprint,
+      error: convergenceError,
+    });
+  }
 }
 
 export async function handleL10nGenerateReport(req: Request, env: Env): Promise<Response> {
@@ -181,6 +261,7 @@ export async function handleL10nGenerateReport(req: Request, env: Env): Promise<
   };
 
   await applyL10nGenerateReport({ env, report });
+  await maybeConvergePublishedInstanceSurface({ env, report });
 
   return json({ ok: true });
 }

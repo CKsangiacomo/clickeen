@@ -44,7 +44,8 @@ export function normalizeLocalizationOps(raw: unknown): LocalizationOp[] {
 
 export function normalizeLocalizationSnapshotForOpen(raw: unknown): {
   baseLocale: string;
-  availableLocales: string[];
+  allowedLocales: string[];
+  readyLocales: string[];
   overlayEntries: LocaleOverlayEntry[];
   accountLocalesInvalid: string | null;
   accountL10nPolicy: LocaleState['accountL10nPolicy'];
@@ -52,7 +53,8 @@ export function normalizeLocalizationSnapshotForOpen(raw: unknown): {
   if (!isRecord(raw)) {
     return {
       baseLocale: DEFAULT_LOCALE,
-      availableLocales: [DEFAULT_LOCALE],
+      allowedLocales: [DEFAULT_LOCALE],
+      readyLocales: [DEFAULT_LOCALE],
       overlayEntries: [],
       accountLocalesInvalid: null,
       accountL10nPolicy: structuredClone(DEFAULT_LOCALE_STATE.accountL10nPolicy),
@@ -79,15 +81,32 @@ export function normalizeLocalizationSnapshotForOpen(raw: unknown): {
     typeof switcherRaw?.enabled === 'boolean'
       ? switcherRaw.enabled
       : DEFAULT_LOCALE_STATE.accountL10nPolicy.switcher.enabled;
+  const switcherLocales = Array.isArray(switcherRaw?.locales)
+    ? Array.from(
+        new Set(
+          switcherRaw.locales
+            .map((entry) => normalizeLocaleToken(entry))
+            .filter((entry): entry is string => Boolean(entry)),
+        ),
+      )
+    : [];
   const accountL10nPolicy: LocaleState['accountL10nPolicy'] = {
     v: 1,
     baseLocale,
     ip: { enabled: ipEnabled, countryToLocale },
-    switcher: { enabled: switcherEnabled },
+    switcher: {
+      enabled: switcherEnabled,
+      ...(switcherLocales.length ? { locales: switcherLocales } : {}),
+    },
   };
 
   const accountLocales = Array.isArray((raw as any).accountLocales)
     ? ((raw as any).accountLocales as unknown[])
+        .map((entry: unknown) => normalizeLocaleToken(entry))
+        .filter((entry): entry is string => Boolean(entry))
+    : [];
+  const readyLocalesRaw = Array.isArray((raw as any).readyLocales)
+    ? ((raw as any).readyLocales as unknown[])
         .map((entry: unknown) => normalizeLocaleToken(entry))
         .filter((entry): entry is string => Boolean(entry))
     : [];
@@ -120,10 +139,13 @@ export function normalizeLocalizationSnapshotForOpen(raw: unknown): {
 
   const normalizedLocales = Array.from(new Set([baseLocale, ...accountLocales]));
   const baseFirst = [baseLocale, ...normalizedLocales.filter((locale) => locale !== baseLocale).sort()];
+  const normalizedReadyLocales = Array.from(new Set([baseLocale, ...readyLocalesRaw]));
+  const readyBaseFirst = [baseLocale, ...normalizedReadyLocales.filter((locale) => locale !== baseLocale).sort()];
 
   return {
     baseLocale,
-    availableLocales: baseFirst,
+    allowedLocales: baseFirst,
+    readyLocales: readyBaseFirst,
     overlayEntries: Array.from(overlayEntriesMap.values()).sort((a, b) => a.locale.localeCompare(b.locale)),
     accountLocalesInvalid:
       typeof (raw as any).invalidAccountLocales === 'string' && (raw as any).invalidAccountLocales.trim()

@@ -98,13 +98,38 @@ export function useSessionLocalization(args: {
       | { ok: false; message: string }
     > => {
       try {
-        const localizationUrl =
-          requestArgs.subject === 'minibob'
-            ? `/api/instance/${encodeURIComponent(requestArgs.publicId)}?subject=${encodeURIComponent(requestArgs.subject)}`
-            : `/api/accounts/${encodeURIComponent(requestArgs.accountId)}/instances/${encodeURIComponent(
-                requestArgs.publicId,
-              )}/localization?subject=${encodeURIComponent(requestArgs.subject)}`;
-        const res = await args.fetchApi(localizationUrl, { cache: 'no-store' });
+        if (requestArgs.subject === 'account') {
+          const { ok, status, json } = await args.executeAccountCommand({
+            subject: requestArgs.subject,
+            command: 'get-localization-snapshot',
+            method: 'GET',
+            url: `/api/accounts/${encodeURIComponent(requestArgs.accountId)}/instances/${encodeURIComponent(
+              requestArgs.publicId,
+            )}/localization?subject=${encodeURIComponent(requestArgs.subject)}`,
+            accountId: requestArgs.accountId,
+            publicId: requestArgs.publicId,
+          });
+          if (!ok) {
+            const message =
+              json?.error?.message ||
+              json?.error?.reasonKey ||
+              json?.error?.code ||
+              `Failed to load localization snapshot (HTTP ${status})`;
+            return { ok: false, message };
+          }
+          if (!json || typeof json !== 'object') {
+            return { ok: false, message: 'Failed to load localization snapshot' };
+          }
+          return {
+            ok: true,
+            snapshot: normalizeLocalizationSnapshotForOpen(json.localization),
+          };
+        }
+
+        const res = await args.fetchApi(
+          `/api/instance/${encodeURIComponent(requestArgs.publicId)}?subject=${encodeURIComponent(requestArgs.subject)}`,
+          { cache: 'no-store' },
+        );
         const json = (await res.json().catch(() => null)) as any;
         if (!res.ok) {
           const message =
@@ -126,7 +151,7 @@ export function useSessionLocalization(args: {
         return { ok: false, message };
       }
     },
-    [args.fetchApi],
+    [args.executeAccountCommand, args.fetchApi],
   );
 
   const setLocalePreview = useCallback(async (rawLocale: string) => {
@@ -183,7 +208,8 @@ export function useSessionLocalization(args: {
       if (localeRequestRef.current !== requestId) return;
       let localizationSnapshot = {
         baseLocale: snapshot.locale.baseLocale,
-        availableLocales: snapshot.locale.availableLocales,
+        allowedLocales: snapshot.locale.allowedLocales,
+        readyLocales: snapshot.locale.readyLocales,
         overlayEntries: snapshot.locale.overlayEntries,
         accountLocalesInvalid: snapshot.locale.accountLocalesInvalid,
         accountL10nPolicy: snapshot.locale.accountL10nPolicy,
@@ -218,14 +244,15 @@ export function useSessionLocalization(args: {
       if (localeRequestRef.current !== requestId) return;
 
       args.setState((prev) => ({
-        ...prev,
-        instanceData: localizedData,
-        locale: {
-          ...prev.locale,
-          availableLocales: localizationSnapshot.availableLocales,
-          overlayEntries: localizationSnapshot.overlayEntries,
-          accountLocalesInvalid: localizationSnapshot.accountLocalesInvalid,
-          accountL10nPolicy: localizationSnapshot.accountL10nPolicy,
+          ...prev,
+          instanceData: localizedData,
+          locale: {
+            ...prev.locale,
+            allowedLocales: localizationSnapshot.allowedLocales,
+            readyLocales: localizationSnapshot.readyLocales,
+            overlayEntries: localizationSnapshot.overlayEntries,
+            accountLocalesInvalid: localizationSnapshot.accountLocalesInvalid,
+            accountL10nPolicy: localizationSnapshot.accountL10nPolicy,
           activeLocale: normalized,
           baseOps,
           userOps,
@@ -348,7 +375,8 @@ export function useSessionLocalization(args: {
             userOps: shouldDeleteUserLayer ? [] : userOps,
             hasUserOps: shouldDeleteUserLayer ? false : userOps.length > 0,
           })),
-          availableLocales: prev.locale.availableLocales,
+          allowedLocales: prev.locale.allowedLocales,
+          readyLocales: prev.locale.readyLocales,
           userOps: shouldDeleteUserLayer ? [] : userOps,
           dirty: false,
           stale: false,
@@ -386,7 +414,7 @@ export function useSessionLocalization(args: {
         const widgetType = current.compiled?.widgetname ?? current.meta?.widgetname;
         const baseLocale = localizationSnapshot.baseLocale;
         const previousActiveLocale = normalizeLocaleToken(current.locale.activeLocale) ?? baseLocale;
-        const activeLocale = localizationSnapshot.availableLocales.includes(previousActiveLocale)
+        const activeLocale = localizationSnapshot.allowedLocales.includes(previousActiveLocale)
           ? previousActiveLocale
           : baseLocale;
         let allowlist = current.locale.allowlist;
@@ -421,7 +449,8 @@ export function useSessionLocalization(args: {
           locale: {
             ...prev.locale,
             baseLocale,
-            availableLocales: localizationSnapshot.availableLocales,
+            allowedLocales: localizationSnapshot.allowedLocales,
+            readyLocales: localizationSnapshot.readyLocales,
             overlayEntries: localizationSnapshot.overlayEntries,
             accountLocalesInvalid: localizationSnapshot.accountLocalesInvalid,
             accountL10nPolicy: localizationSnapshot.accountL10nPolicy,
@@ -479,19 +508,22 @@ export function useSessionLocalization(args: {
       | { stage: 'failed'; detail: string }
     > => {
       try {
-        const res = await args.fetchApi(
-          `/api/accounts/${encodeURIComponent(requestArgs.accountId)}/instances/${encodeURIComponent(
+        const { ok, status, json } = await args.executeAccountCommand({
+          subject: requestArgs.subject,
+          command: 'get-l10n-status',
+          method: 'GET',
+          url: `/api/accounts/${encodeURIComponent(requestArgs.accountId)}/instances/${encodeURIComponent(
             requestArgs.publicId,
           )}/l10n/status?subject=${encodeURIComponent(requestArgs.subject)}&_t=${Date.now()}`,
-          { cache: 'no-store' },
-        );
-        const json = (await res.json().catch(() => null)) as any;
-        if (!res.ok) {
+          accountId: requestArgs.accountId,
+          publicId: requestArgs.publicId,
+        });
+        if (!ok) {
           const detail =
             json?.error?.message ||
             json?.error?.reasonKey ||
             json?.error?.code ||
-            `Failed to load translation status (HTTP ${res.status})`;
+            `Failed to load translation status (HTTP ${status})`;
           return { stage: 'failed', detail };
         }
 
@@ -694,7 +726,7 @@ export function useSessionLocalization(args: {
 
     void pollUntilSynced({ runId, publicId, accountId, subject });
     return { ok: true as const };
-  }, [args.fetchApi, args.setState, args.stateRef, rehydrateLocalizationSnapshot]);
+  }, [args.executeAccountCommand, args.setState, args.stateRef, rehydrateLocalizationSnapshot]);
 
   const clearLocaleManualOverrides = useCallback(async () => {
     const snapshot = args.stateRef.current;

@@ -295,3 +295,48 @@ Do not build the full `WebPresenceSnapshot` extraction in this strategy doc. Whe
 - how the snapshot is stored as a Berlin-owned account trait
 - policy gating (which tiers get crawl, refresh frequency caps)
 
+---
+
+## 11) Structured Schema Emission — Google AI Discovery Signal (March 2026)
+
+### What happened
+
+Google launched **Ask Maps** on March 12, 2026 — a Gemini-powered natural language query layer inside Google Maps that answers questions about businesses directly in the Maps surface. Key behavior confirmed: Google's synthesis pipeline **prefers structured content from the business's own website** over community signals (reviews, Reddit, aggregators). If the business site emits clean structured schema, Google uses it as the authoritative answer. If not, Google reconstructs an answer from whatever community signals it can find.
+
+Reference: https://blog.google/products-and-platforms/products/maps/ask-maps-immersive-navigation/
+
+### Why this changes the widget renderer contract
+
+Clickeen widgets that emit `FAQPage` JSON-LD (FAQ widget) and `AggregateRating` / `Review` JSON-LD (Reviews widget) become Google's preferred input for answering questions about that business in Maps, Search, and AI Overviews — before the user even visits the site.
+
+This reframes what a widget is:
+
+- **Before:** a widget is a site UX component that improves the visitor experience
+- **After:** a widget is a Google presence tool that controls what AI tells people about the business before they arrive
+
+The FAQ widget is not just "a nice accordion on the site." It is the mechanism by which a business asserts authoritative answers that Google's AI will prefer over synthesized community noise.
+
+The Reviews widget is not just "social proof." It is the structured signal that feeds Google's rating synthesis for Ask Maps, Search snippets, and AI Overviews.
+
+### Connection to existing connector architecture
+
+This is not a connector concern — connectors acquire and normalize data. This is a **renderer concern**: the widget renderer layer must emit structured schema as a default output requirement, not an optional enhancement.
+
+The normalized dataset contract (section 4) already produces the fields needed:
+- Reviews connector output → maps directly to `AggregateRating` + `Review` JSON-LD
+- FAQ content → maps directly to `FAQPage` JSON-LD
+
+No new data is required. The schema emission is a rendering output contract.
+
+### Competitive moat
+
+Elfsight, Powr, and EmbedSocial widgets do not emit structured schema. Their renderers produce HTML for humans, not machine-readable signals for Google. Retrofitting this into their architectures without breaking 200M+ deployed embeds is non-trivial. Clickeen can ship this from day one because the rendering contract is clean and the output is deterministic.
+
+### Execution rule
+
+When the FAQ widget and Reviews widget are prioritized for execution, **structured schema emission is a P0 output requirement**, not a stretch goal:
+- FAQ widget: emit `FAQPage` JSON-LD as an inline `<script type="application/ld+json">` in the Venice embed output, built from the same normalized content that renders the visible widget
+- Reviews widget: emit `AggregateRating` JSON-LD (and optionally individual `Review` entries) from the normalized reviews dataset
+- Schema must reflect the actual rendered state, not stale or cached content
+- Schema emission must be covered in the widget's connector PRD and Venice rendering spec
+

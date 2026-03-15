@@ -208,9 +208,10 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
   - Public read: `GET /api/instance/:publicId` (user-owned rows are published-only).
   - Product editor persistence hot path is no longer exposed directly from Paris.
   - Core account instance open/save now lives only in Bob/Roma same-origin routes; Paris no longer exposes `GET/PUT /api/accounts/:accountId/instance/:publicId?subject=account`.
-  - Locale/editor endpoints: `GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`; account language settings are owned by Roma Settings through `/api/accounts/:accountId/locales`, with Berlin owning the account mutation and Paris owning the internal aftermath orchestration.
+  - Locale/editor endpoints: `GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`; account language settings are owned by Roma Settings through `/api/accounts/:accountId/locales`, with Berlin owning the account mutation and Paris limited to the internal locale aftermath orchestration path only.
   - L10n/layers: `GET /api/accounts/:accountId/instances/:publicId/l10n/status`, `GET /api/accounts/:accountId/instances/:publicId/layers`, `GET/PUT/DELETE /api/accounts/:accountId/instances/:publicId/layers/:layer/:layerKey`.
-  - Roma domain endpoints: `GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`, `POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`.
+  - Roma starter discovery is Roma-owned (`GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`); Paris no longer mounts those routes.
+  - Roma widget commands stay explicit (`POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`).
   - Signup/handoff endpoints: `POST /api/minibob/handoff/start`, `POST /api/minibob/handoff/complete`.
   - AI endpoints: `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`.
 - Current cloud-dev account rule:
@@ -469,16 +470,16 @@ Base config exists in EXACTLY 3 places during editing:
 **The Pattern:**
 
 ```
-1. Load:    GET /api/accounts/:accountId/instance/:publicId?subject=account  → host (message boot) or Bob (URL boot) gets saved config through same-origin routes
+1. Load:    GET /api/accounts/:accountId/instance/:publicId?subject=account  → host (message boot) gets saved config through Roma same-origin routes
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/accounts/:accountId/instance/:publicId?subject=account`  → Commits to Tokyo first, then triggers explicit Paris translation/published-surface aftermath without rolling back the saved revision
+4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/accounts/:accountId/instance/:publicId?subject=account`  → Commits to Tokyo first, then runs direct Roma-owned aftermath against Berlin/Tokyo/San Francisco/Tokyo-worker without rolling back the saved revision
 
 Snapshot/l10n convergence is observed via:
 - `GET /api/accounts/:accountId/instances/:publicId/l10n/status`
 ```
 
-In Roma/DevStudio message-boot flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. In Roma-hosted account flows, save/l10n mutations also return through the host boundary before hitting the account routes.
+In Roma/DevStudio message-boot account flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Save, localization rehydrate, and l10n status reads also return through the host boundary before hitting the Roma account routes.
 
 `subject` is required on editor endpoints (`account`, `minibob`) to resolve policy.
 
@@ -659,12 +660,12 @@ All third-party embed traffic terminates at Venice:
 ### 1. Editing Flow
 
 ```
-User opens widget → Host (Roma/DevStudio message boot) or Bob (URL boot) GET instance core
-                  → Roma/Bob same-origin route or DevStudio internal-tool route reads Tokyo saved revision
+User opens widget → Host (Roma/DevStudio message boot) GET instance core, or Bob URL boot for non-account surfaces only
+                  → Roma same-origin route or DevStudio internal-tool route reads Tokyo saved revision
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
                   → User clicks Save
-                  → Roma/Bob same-origin route or DevStudio internal-tool route writes Tokyo saved revision
+                  → Roma same-origin route or DevStudio internal-tool route writes Tokyo saved revision
                   → Paris runs explicit translation sync and explicit published-surface sync
                   → Paris/Tokyo-worker refresh Tokyo config/text/meta/live-pointer bytes when the instance is live
 ```

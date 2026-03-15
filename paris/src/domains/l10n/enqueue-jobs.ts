@@ -1,4 +1,3 @@
-import type { Policy } from '@clickeen/ck-policy';
 import type {
   AccountRow,
   CuratedInstanceRow,
@@ -22,9 +21,8 @@ import {
   upsertL10nGenerateStates,
   upsertL10nSnapshot,
 } from './service';
-import { enforceL10nSelection, readAccountLocales } from './shared';
+import { readAccountLocales } from './shared';
 import { resolveL10nPlanningSnapshot } from './planning';
-import { dispatchL10nGenerateJobs } from './dispatch-jobs';
 
 function normalizeSnapshotPayload(snapshot: unknown): Record<string, string> {
   if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return {};
@@ -98,6 +96,29 @@ function toFailedStateRows(args: {
   });
 }
 
+async function dispatchL10nGenerateJobs(
+  env: Env,
+  jobs: L10nJob[],
+): Promise<{ ok: true; transport: 'queue' } | { ok: false; error: string }> {
+  if (env.L10N_GENERATE_QUEUE) {
+    try {
+      await env.L10N_GENERATE_QUEUE.sendBatch(jobs.map((job) => ({ body: job })));
+      return { ok: true, transport: 'queue' };
+    } catch (error) {
+      return { ok: false, error: errorDetail(error) };
+    }
+  }
+
+  const stage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
+  if (stage === 'local') {
+    return {
+      ok: false,
+      error: 'Instance l10n generation is cloud-dev only (L10N_GENERATE_QUEUE missing in local).',
+    };
+  }
+  return { ok: false, error: 'L10N_GENERATE_QUEUE missing' };
+}
+
 export async function enqueueL10nJobs(args: {
   env: Env;
   instance: InstanceRow | CuratedInstanceRow;
@@ -105,9 +126,9 @@ export async function enqueueL10nJobs(args: {
   widgetType: string | null;
   config?: Record<string, unknown>;
   baseUpdatedAt: string | null | undefined;
-  policy: Policy;
   localesOverride?: string[];
   allowNoDiff?: boolean;
+  layer?: string;
 }) {
   if (!args.widgetType) {
     return {
@@ -129,10 +150,6 @@ export async function enqueueL10nJobs(args: {
     };
   }
   const locales = args.localesOverride ?? accountLocales.locales;
-  const entitlementGate = enforceL10nSelection(args.policy, locales);
-  if (entitlementGate) {
-    return { ok: true as const, queued: 0, skipped: locales.length };
-  }
 
   if (locales.length === 0) return { ok: true as const, queued: 0, skipped: 0 };
 
@@ -157,7 +174,7 @@ export async function enqueueL10nJobs(args: {
   const defaultRemovedPaths = snapshotDiff?.removedPaths ?? null;
 
   const envStage = asTrimmedString(args.env.ENV_STAGE) ?? 'cloud-dev';
-  const layer = 'locale';
+  const layer = asTrimmedString(args.layer) ?? 'locale';
   const publicId = args.instance.public_id;
 
   if (fingerprintChanged) {
@@ -232,7 +249,25 @@ export async function enqueueL10nJobs(args: {
 
   await upsertL10nGenerateStates(args.env, dirtyRows);
 
+  const markPendingLocalesFailed = async (message: string) => {
+    const failedRows = toFailedStateRows({
+      publicId,
+      layer,
+      pendingLocales,
+      existingStates,
+      baseFingerprint,
+      baseUpdatedAt,
+      widgetType,
+      accountId,
+      message,
+      defaultChangedPaths,
+      defaultRemovedPaths,
+    });
+    await upsertL10nGenerateStates(args.env, failedRows);
+  };
+
   if (!accountId) {
+    await markPendingLocalesFailed('missing_account_id');
     return {
       ok: false as const,
       queued: 0,
@@ -258,6 +293,7 @@ export async function enqueueL10nJobs(args: {
     if (!issued.ok) {
       const details = await readJson(issued.response).catch(() => null);
       const detail = details ? JSON.stringify(details) : `status ${issued.response.status}`;
+      await markPendingLocalesFailed(`ai_grant_failed:${detail}`);
       return {
         ok: false as const,
         queued: 0,

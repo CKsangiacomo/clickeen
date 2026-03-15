@@ -20,7 +20,7 @@ export type ExecuteAccountCommandArgs = {
   subject: SubjectMode;
   command: BobAccountCommand;
   url: string;
-  method: 'PUT' | 'POST' | 'DELETE';
+  method: 'GET' | 'PUT' | 'POST' | 'DELETE';
   accountId: string;
   publicId: string;
   locale?: string;

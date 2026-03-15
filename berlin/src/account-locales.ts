@@ -15,6 +15,7 @@ type AccountL10nPolicy = {
   };
   switcher: {
     enabled: boolean;
+    locales?: string[];
   };
 };
 
@@ -95,12 +96,17 @@ function resolveAccountL10nPolicy(raw: unknown): AccountL10nPolicy {
     typeof switcherRaw?.enabled === 'boolean'
       ? switcherRaw.enabled
       : DEFAULT_ACCOUNT_L10N_POLICY.switcher.enabled;
+  const switcherLocalesResult = switcherRaw ? normalizeLocaleList(switcherRaw.locales, 'policy.switcher.locales') : null;
+  const switcherLocales = switcherLocalesResult?.ok ? switcherLocalesResult.locales : [];
 
   return {
     v: 1,
     baseLocale,
     ip: { enabled: ipEnabled, countryToLocale },
-    switcher: { enabled: switcherEnabled },
+    switcher: {
+      enabled: switcherEnabled,
+      ...(switcherLocales.length ? { locales: switcherLocales } : {}),
+    },
   };
 }
 
@@ -155,6 +161,15 @@ function parseAccountL10nPolicy(
     typeof switcherRaw?.enabled === 'boolean'
       ? switcherRaw.enabled
       : DEFAULT_ACCOUNT_L10N_POLICY.switcher.enabled;
+  let switcherLocales: string[] = [];
+  if (switcherRaw && Object.prototype.hasOwnProperty.call(switcherRaw, 'locales')) {
+    const localesResult = normalizeLocaleList(switcherRaw.locales, 'policy.switcher.locales');
+    if (!localesResult.ok) {
+      issues.push(...localesResult.issues);
+    } else {
+      switcherLocales = localesResult.locales;
+    }
+  }
 
   if (issues.length) return { ok: false, issues };
 
@@ -164,7 +179,10 @@ function parseAccountL10nPolicy(
       v: 1,
       baseLocale: baseLocale!,
       ip: { enabled: ipEnabled, countryToLocale },
-      switcher: { enabled: switcherEnabled },
+      switcher: {
+        enabled: switcherEnabled,
+        ...(switcherLocales.length ? { locales: switcherLocales } : {}),
+      },
     },
   };
 }
@@ -216,15 +234,13 @@ function enforceL10nSelection(policy: Policy, locales: string[]): Response | nul
 
 function resolveActivePublishLocales(args: {
   accountLocales: unknown;
-  policy: Policy;
   baseLocale: string;
 }): string[] {
   const normalized = normalizeLocaleList(args.accountLocales, 'l10n_locales');
   const additionalLocales = normalized.ok ? normalized.locales : [];
   const baseLocale = normalizeSupportedLocaleToken(args.baseLocale) ?? 'en';
-  const maxLocalesTotal = resolveLocaleEntitlementMax(args.policy);
   const locales = Array.from(new Set([baseLocale, ...additionalLocales]));
-  return maxLocalesTotal == null ? locales : locales.slice(0, maxLocalesTotal);
+  return locales;
 }
 
 async function patchAccountLocales(args: {
@@ -272,6 +288,11 @@ async function triggerParisLocalesAftermath(args: {
   previousPolicy: AccountL10nPolicy;
   nextLocales: string[];
   nextPolicy: AccountL10nPolicy;
+  entitlements: {
+    flags: Record<string, boolean>;
+    caps: Record<string, number | null>;
+    budgets: Record<string, { max: number | null; used: number }>;
+  };
 }): Promise<string | null> {
   const parisBase = resolveParisBase(args.env);
   const token = typeof args.env.PARIS_DEV_JWT === 'string' ? args.env.PARIS_DEV_JWT.trim() : '';
@@ -296,6 +317,7 @@ async function triggerParisLocalesAftermath(args: {
           previousPolicy: args.previousPolicy,
           nextLocales: args.nextLocales,
           nextPolicy: args.nextPolicy,
+          entitlements: args.entitlements,
         }),
       },
     );
@@ -365,14 +387,25 @@ export async function handleAccountLocalesUpdate(args: {
   const nextPolicy = resolveAccountL10nPolicy(nextPolicyPersisted);
   const previousAvailable = resolveActivePublishLocales({
     accountLocales: previousLocales.locales,
-    policy,
     baseLocale: previousPolicy.baseLocale,
   });
   const nextAvailable = resolveActivePublishLocales({
     accountLocales: localesResult.locales,
-    policy,
     baseLocale: nextPolicy.baseLocale,
   });
+  const nextAvailableSet = new Set(nextAvailable);
+  const invalidSwitcherLocales = Array.isArray(nextPolicy.switcher.locales)
+    ? nextPolicy.switcher.locales.filter((locale) => !nextAvailableSet.has(locale))
+    : [];
+  if (invalidSwitcherLocales.length > 0) {
+    return json(
+      invalidSwitcherLocales.map((locale, index) => ({
+        path: `policy.switcher.locales[${index}]`,
+        message: `switcher locale must be enabled on the account: ${locale}`,
+      })),
+      { status: 422 },
+    );
+  }
   const shouldTriggerAftermath =
     JSON.stringify(previousPolicy) !== JSON.stringify(nextPolicy) ||
     JSON.stringify(previousAvailable) !== JSON.stringify(nextAvailable);
@@ -394,6 +427,11 @@ export async function handleAccountLocalesUpdate(args: {
       previousPolicy,
       nextLocales: localesResult.locales,
       nextPolicy,
+      entitlements: {
+        flags: policy.flags,
+        caps: policy.caps,
+        budgets: policy.budgets,
+      },
     });
     if (aftermathError) {
       console.error('[Berlin] account locales aftermath failed', {

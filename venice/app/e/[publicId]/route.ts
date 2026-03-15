@@ -136,9 +136,12 @@ const EMBED_SHELL_HTML = `<!doctype html>
         const injectLocaleSwitcher = (html, localePolicy) => {
           const enabled = localePolicy && localePolicy.switcher && localePolicy.switcher.enabled === true;
           if (!enabled) return html;
-          const locales = Array.isArray(localePolicy.availableLocales) ? localePolicy.availableLocales : [];
+          const readyLocales = Array.isArray(localePolicy.readyLocales) ? localePolicy.readyLocales : [];
+          const locales = Array.isArray(localePolicy.switcher && localePolicy.switcher.locales)
+            ? localePolicy.switcher.locales
+            : readyLocales;
           if (locales.length <= 1) return html;
-          const script = \`<script>(function(){try{var policy=window.CK_LOCALE_POLICY||null;var enabled=policy&&policy.switcher&&policy.switcher.enabled===true;if(!enabled)return;var locales=Array.isArray(policy.availableLocales)?policy.availableLocales:[];if(locales.length<=1)return;var current=(window.CK_WIDGET&&typeof window.CK_WIDGET.locale==='string')?window.CK_WIDGET.locale:'';var wrap=document.createElement('div');wrap.setAttribute('data-ck-locale-switcher','1');wrap.style.position='fixed';wrap.style.top='12px';wrap.style.right='12px';wrap.style.zIndex='2147483647';wrap.style.background='rgba(248,250,252,0.98)';wrap.style.border='1px solid rgba(148,163,184,0.6)';wrap.style.borderRadius='12px';wrap.style.padding='8px 10px';wrap.style.boxShadow='0 10px 30px rgba(15,23,42,0.12)';wrap.style.fontFamily='ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif';var label=document.createElement('div');label.textContent='Language';label.style.fontSize='12px';label.style.opacity='0.85';label.style.marginBottom='6px';var select=document.createElement('select');select.style.fontSize='13px';select.style.padding='6px 8px';select.style.borderRadius='10px';select.style.border='1px solid rgba(148,163,184,0.8)';select.style.background='white';locales.forEach(function(loc){var opt=document.createElement('option');opt.value=loc;opt.textContent=loc;select.appendChild(opt);});if(current&&locales.indexOf(current)>=0)select.value=current;select.addEventListener('change',function(){try{var url=new URL(window.location.href);url.searchParams.set('locale',select.value);window.location.href=url.toString();}catch(e){}});wrap.appendChild(label);wrap.appendChild(select);document.body.appendChild(wrap);}catch(e){}})();<\\/script>\`;
+          const script = \`<script>(function(){try{var policy=window.CK_LOCALE_POLICY||null;var enabled=policy&&policy.switcher&&policy.switcher.enabled===true;if(!enabled)return;var readyLocales=Array.isArray(policy.readyLocales)?policy.readyLocales:[];var locales=Array.isArray(policy.switcher&&policy.switcher.locales)?policy.switcher.locales:readyLocales;if(locales.length<=1)return;var current=(window.CK_WIDGET&&typeof window.CK_WIDGET.locale==='string')?window.CK_WIDGET.locale:'';var wrap=document.createElement('div');wrap.setAttribute('data-ck-locale-switcher','1');wrap.style.position='fixed';wrap.style.top='12px';wrap.style.right='12px';wrap.style.zIndex='2147483647';wrap.style.background='rgba(248,250,252,0.98)';wrap.style.border='1px solid rgba(148,163,184,0.6)';wrap.style.borderRadius='12px';wrap.style.padding='8px 10px';wrap.style.boxShadow='0 10px 30px rgba(15,23,42,0.12)';wrap.style.fontFamily='ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif';var label=document.createElement('div');label.textContent='Language';label.style.fontSize='12px';label.style.opacity='0.85';label.style.marginBottom='6px';var select=document.createElement('select');select.style.fontSize='13px';select.style.padding='6px 8px';select.style.borderRadius='10px';select.style.border='1px solid rgba(148,163,184,0.8)';select.style.background='white';locales.forEach(function(loc){var opt=document.createElement('option');opt.value=loc;opt.textContent=loc;select.appendChild(opt);});if(current&&locales.indexOf(current)>=0)select.value=current;select.addEventListener('change',function(){try{var url=new URL(window.location.href);url.searchParams.set('locale',select.value);window.location.href=url.toString();}catch(e){}});wrap.appendChild(label);wrap.appendChild(select);document.body.appendChild(wrap);}catch(e){}})();<\\/script>\`;
           return html.replace(/<\/body>/i, script + '</body>');
         };
 
@@ -172,8 +175,8 @@ const EMBED_SHELL_HTML = `<!doctype html>
           const configFp = typeof pointer.configFp === 'string' ? pointer.configFp.trim() : '';
           const policy = pointer.localePolicy || null;
           const baseLocale = normalizeLocaleToken(policy && policy.baseLocale) || 'en';
-          const availableLocales = Array.isArray(policy && policy.availableLocales)
-            ? Array.from(new Set(policy.availableLocales.map(normalizeLocaleToken).filter(Boolean)))
+          const readyLocales = Array.isArray(policy && policy.readyLocales)
+            ? Array.from(new Set(policy.readyLocales.map(normalizeLocaleToken).filter(Boolean)))
             : [baseLocale];
           const ipEnabled =
             policy &&
@@ -194,11 +197,11 @@ const EMBED_SHELL_HTML = `<!doctype html>
           const geoCountry = parseGeoCountry(pointerRes);
 
           let locale = baseLocale;
-          if (fixedLocale && availableLocales.indexOf(fixedLocale) >= 0) {
+          if (fixedLocale && readyLocales.indexOf(fixedLocale) >= 0) {
             locale = fixedLocale;
           } else if (ipEnabled) {
             const mapped = mapping && typeof mapping[geoCountry] === 'string' ? normalizeLocaleToken(mapping[geoCountry]) : '';
-            if (mapped && availableLocales.indexOf(mapped) >= 0) locale = mapped;
+            if (mapped && readyLocales.indexOf(mapped) >= 0) locale = mapped;
           }
 
           if (!widgetType || !configFp) {
@@ -270,13 +273,16 @@ const EMBED_SHELL_HTML = `<!doctype html>
           window.CK_WIDGET = { publicId, locale, state: baseState };
           window.CK_LOCALE_POLICY = {
             baseLocale,
-            availableLocales,
+            readyLocales,
             ip: {
               enabled: Boolean(ipEnabled),
               countryToLocale: mapping && typeof mapping === 'object' ? mapping : {},
             },
             switcher: {
               enabled: Boolean(switcherEnabled),
+              ...(Array.isArray(policy && policy.switcher && policy.switcher.locales)
+                ? { locales: policy.switcher.locales }
+                : {}),
             },
           };
 

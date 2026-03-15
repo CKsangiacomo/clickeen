@@ -11,13 +11,14 @@ const UTF8_ENCODER = new TextEncoder();
 
 export type LocalePolicy = {
   baseLocale: string;
-  availableLocales: string[];
+  readyLocales: string[];
   ip: {
     enabled: boolean;
     countryToLocale: Record<string, string>;
   };
   switcher: {
     enabled: boolean;
+    locales?: string[];
   };
 };
 
@@ -54,6 +55,7 @@ export type L10nLivePointer = {
   publicId: string;
   locale: string;
   textFp: string;
+  baseFingerprint: string | null;
   updatedAt: string;
 };
 
@@ -79,6 +81,7 @@ export type WriteTextPackJob = {
   kind: 'write-text-pack';
   publicId: string;
   locale: string;
+  baseFingerprint: string;
   textPack: Record<string, string>;
 };
 
@@ -207,23 +210,16 @@ function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const payload = raw as Record<string, unknown>;
   const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
-  const availableLocalesRaw = Array.isArray(payload.availableLocales)
-    ? payload.availableLocales
+  const readyLocalesRaw = Array.isArray(payload.readyLocales)
+    ? payload.readyLocales
     : [];
-  const availableLocales = availableLocalesRaw
+  const readyLocales = readyLocalesRaw
     .map((value) => normalizeLocale(value))
     .filter((value): value is string => Boolean(value));
-  if (!baseLocale || !availableLocales.length) return null;
-  if (!availableLocales.includes(baseLocale)) return null;
-  const outAvailableLocales = Array.from(new Set(availableLocales));
+  if (!baseLocale || !readyLocales.length) return null;
+  if (!readyLocales.includes(baseLocale)) return null;
+  const outReadyLocales = Array.from(new Set(readyLocales));
 
-  // Back-compat while PRD54 is executing: accept legacy {mode:'ip'|'switcher', ip:{countryToLocale}} pointers.
-  const legacyModeRaw = typeof payload.mode === 'string' ? payload.mode.trim().toLowerCase() : '';
-  const legacyMode =
-    legacyModeRaw === 'ip' ? 'ip' : legacyModeRaw === 'switcher' ? 'switcher' : null;
-
-  let ipEnabled = false;
-  let switcherEnabled = true;
   const ipRaw = payload.ip;
   const ipRecord =
     ipRaw && typeof ipRaw === 'object' && !Array.isArray(ipRaw)
@@ -234,14 +230,18 @@ function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
     switcherRaw && typeof switcherRaw === 'object' && !Array.isArray(switcherRaw)
       ? (switcherRaw as Record<string, unknown>)
       : null;
+  const ipEnabled = typeof ipRecord?.enabled === 'boolean' ? ipRecord.enabled : false;
+  const switcherEnabled = typeof switcherRecord?.enabled === 'boolean' ? switcherRecord.enabled : true;
 
-  if (legacyMode) {
-    ipEnabled = legacyMode === 'ip';
-    switcherEnabled = legacyMode === 'switcher';
-  } else {
-    ipEnabled = typeof ipRecord?.enabled === 'boolean' ? ipRecord.enabled : false;
-    switcherEnabled = typeof switcherRecord?.enabled === 'boolean' ? switcherRecord.enabled : true;
-  }
+  const switcherLocales = Array.isArray(switcherRecord?.locales)
+    ? Array.from(
+        new Set(
+          switcherRecord.locales
+            .map((value) => normalizeLocale(value))
+            .filter((value): value is string => typeof value === 'string' && outReadyLocales.includes(value)),
+        ),
+      )
+    : [];
 
   const countryToLocaleRaw = ipRecord?.countryToLocale;
   const countryToLocale: Record<string, string> = {};
@@ -254,16 +254,19 @@ function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
       if (!/^[A-Z]{2}$/.test(country)) continue;
       const normalized = normalizeLocale(locale);
       if (!normalized) continue;
-      if (!outAvailableLocales.includes(normalized)) continue;
+      if (!outReadyLocales.includes(normalized)) continue;
       countryToLocale[country] = normalized;
     }
   }
 
   return {
     baseLocale,
-    availableLocales: outAvailableLocales,
+    readyLocales: outReadyLocales,
     ip: { enabled: ipEnabled, countryToLocale },
-    switcher: { enabled: switcherEnabled },
+    switcher: {
+      enabled: switcherEnabled,
+      ...(switcherLocales.length ? { locales: switcherLocales } : {}),
+    },
   };
 }
 
@@ -358,9 +361,10 @@ function normalizeTextPointer(raw: unknown): L10nLivePointer | null {
   const publicId = normalizePublicId(payload.publicId) ?? '';
   const locale = normalizeLocale(payload.locale) ?? '';
   const textFp = normalizeFingerprint(payload.textFp) ?? '';
+  const baseFingerprint = normalizeFingerprint(payload.baseFingerprint);
   const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
   if (!publicId || !locale || !textFp || !updatedAt) return null;
-  return { v: 1, publicId, locale, textFp, updatedAt };
+  return { v: 1, publicId, locale, textFp, baseFingerprint, updatedAt };
 }
 
 function normalizeMetaPointer(raw: unknown): MetaLivePointer | null {
@@ -560,6 +564,8 @@ export async function writeTextPack(env: Env, job: WriteTextPackJob): Promise<vo
   if (!publicId) throw new Error('[tokyo] write-text-pack missing publicId');
   const locale = normalizeLocale(job.locale);
   if (!locale) throw new Error('[tokyo] write-text-pack invalid locale');
+  const baseFingerprint = normalizeFingerprint(job.baseFingerprint);
+  if (!baseFingerprint) throw new Error('[tokyo] write-text-pack invalid baseFingerprint');
   if (!job.textPack || typeof job.textPack !== 'object' || Array.isArray(job.textPack)) {
     throw new Error('[tokyo] write-text-pack textPack must be an object');
   }
@@ -580,6 +586,7 @@ export async function writeTextPack(env: Env, job: WriteTextPackJob): Promise<vo
     publicId,
     locale,
     textFp,
+    baseFingerprint,
     updatedAt: new Date().toISOString(),
   } satisfies L10nLivePointer);
 
@@ -663,7 +670,7 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
 
   // Refuse to move the live pointer if the referenced bytes aren't present yet.
   await ensureR2KeyExists(env, renderConfigPackKey(publicId, configFp), 'config pack');
-  for (const locale of localePolicy.availableLocales) {
+  for (const locale of localePolicy.readyLocales) {
     await ensureR2KeyExists(env, l10nLivePointerKey(publicId, locale), `text pointer (${locale})`);
     if (job.seoGeo) {
       await ensureR2KeyExists(
@@ -676,7 +683,7 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
 
   const previous = normalizeLiveRenderPointer(await loadJson(env, key));
   const previousConfigFp = previous?.configFp ?? null;
-  const previousLocales = previous?.localePolicy.availableLocales ?? [];
+  const previousLocales = previous?.localePolicy.readyLocales ?? [];
   const previousSeoGeoEnabled = Boolean(previous?.seoGeo);
 
   const next: LiveRenderPointer = {
@@ -703,7 +710,7 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
     await env.TOKYO_R2.delete(renderConfigPackKey(publicId, previousConfigFp));
   }
 
-  const nextLocales = new Set(localePolicy.availableLocales);
+  const nextLocales = new Set(localePolicy.readyLocales);
   const removedLocales = previousLocales.filter((locale) => !nextLocales.has(locale));
   for (const locale of removedLocales) {
     await deleteLocaleTextMirror(env, publicId, locale);

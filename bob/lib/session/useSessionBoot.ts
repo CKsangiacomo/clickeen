@@ -20,8 +20,6 @@ import {
   assertPolicy,
   enforceReadOnlyPolicy,
   extractErrorReasonKey,
-  resolveAccountCapsuleFromBootstrapPayload,
-  resolveAccountPolicyFromBootstrapPayload,
   resolveBootModeFromUrl,
   resolveDevPolicy,
   resolveSubjectModeFromUrl,
@@ -123,7 +121,8 @@ export function useSessionBoot(args: {
             ...DEFAULT_LOCALE_STATE,
             baseLocale: localizationSnapshot.baseLocale,
             activeLocale: localizationSnapshot.baseLocale,
-            availableLocales: localizationSnapshot.availableLocales,
+            allowedLocales: localizationSnapshot.allowedLocales,
+            readyLocales: localizationSnapshot.readyLocales,
             overlayEntries: localizationSnapshot.overlayEntries,
             accountLocalesInvalid: localizationSnapshot.accountLocalesInvalid,
             accountL10nPolicy: localizationSnapshot.accountL10nPolicy,
@@ -178,34 +177,16 @@ export function useSessionBoot(args: {
   const loadFromUrlParams = useCallback(async () => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
-    const accountId = (params.get('accountId') || '').trim();
     const publicId = (params.get('publicId') || '').trim();
     if (!publicId) return;
 
     const subject = resolveSubjectModeFromUrl();
-    if (!accountId && subject !== 'minibob') return;
-
-    const instanceUrl =
-      subject === 'minibob'
-        ? `/api/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`
-        : `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`;
-    const bootstrapRes = subject === 'account' ? await args.fetchApi('/api/session/bootstrap', { cache: 'no-store' }) : null;
-    let accountCapsule: string | null = null;
-    let nextPolicy: Policy | undefined;
     if (subject === 'account') {
-      if (!bootstrapRes) {
-        throw new Error('coreui.errors.auth.required');
-      }
-      const bootstrapJson = (await bootstrapRes.json().catch(() => null)) as unknown;
-      if (!bootstrapRes.ok) {
-        throw new Error(extractErrorReasonKey(bootstrapJson, `HTTP_${bootstrapRes.status}`));
-      }
-      nextPolicy = resolveAccountPolicyFromBootstrapPayload(bootstrapJson, accountId);
-      accountCapsule = resolveAccountCapsuleFromBootstrapPayload(bootstrapJson, accountId);
-      if (!accountCapsule) {
-        throw new Error('coreui.errors.auth.forbidden');
-      }
+      throw new Error('coreui.errors.builder.accountMode.hostRequired');
     }
+
+    const instanceUrl = `/api/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`;
+    const accountCapsule: string | null = null;
 
     const instanceRes = await args.fetchApi(instanceUrl, {
       cache: 'no-store',
@@ -226,28 +207,7 @@ export function useSessionBoot(args: {
     if (!widgetType) {
       throw new Error('coreui.errors.instance.widgetMissing');
     }
-    let localizationPayload: unknown = instanceJson.localization;
-    if (subject === 'account') {
-      const localizationUrl = `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/localization?subject=${encodeURIComponent(subject)}`;
-      const localizationRes = await args.fetchApi(localizationUrl, {
-        cache: 'no-store',
-        ...(accountCapsule ? { headers: { 'x-ck-authz-capsule': accountCapsule } } : {}),
-      });
-      const localizationJson = (await localizationRes.json().catch(() => null)) as any;
-      if (!localizationRes.ok) {
-        throw new Error(extractErrorReasonKey(localizationJson, `HTTP_${localizationRes.status}`));
-      }
-      if (!localizationJson || typeof localizationJson !== 'object') {
-        throw new Error('coreui.errors.payload.invalid');
-      }
-      if (localizationJson.error) {
-        const reasonKey = localizationJson.error?.reasonKey
-          ? String(localizationJson.error.reasonKey)
-          : 'coreui.errors.unknown';
-        throw new Error(reasonKey);
-      }
-      localizationPayload = localizationJson.localization;
-    }
+    const localizationPayload: unknown = instanceJson.localization;
     const displayName =
       typeof instanceJson.displayName === 'string' && instanceJson.displayName.trim()
         ? instanceJson.displayName.trim()
@@ -260,9 +220,7 @@ export function useSessionBoot(args: {
     const compiled = (await compiledRes.json().catch(() => null)) as CompiledWidget | null;
     if (!compiled) throw new Error('[useWidgetSession] Invalid compiled widget payload');
 
-    if (subject !== 'account') {
-      nextPolicy = instanceJson.policy;
-    }
+    const nextPolicy: Policy | undefined = instanceJson.policy;
 
     await loadInstance({
       type: 'ck:open-editor',

@@ -106,11 +106,16 @@ Where the write plane fits (current repo snapshot):
 - Paris diffs base snapshots to compute `changedPaths` + `removedPaths` and enqueues San Francisco jobs.
 - San Francisco translates only `changedPaths` and writes set-only ops back to Paris.
 - Paris persists those overlay rows in its overlay store (`OVERLAYS_R2`) and updates l10n generation state in `L10N_STATE_KV`.
+- Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane.
+- On save, the pipeline reconciles Tokyo against that desired set for the current `baseFingerprint`:
+  - if Tokyo already has the locale artifact for that exact fingerprint, skip
+  - if Tokyo does not have it, generate and write it
 - If the instance is live:
   - Paris enqueues `write-text-pack` for that locale (full pack = base snapshot + locale ops + user ops).
   - If SEO/GEO is entitled+enabled, Paris also enqueues `write-meta-pack` for that locale.
-- When an instance first goes live, Paris seeds **every entitled locale** with a text pack so the embed never requests a missing locale pointer.
-- When account locale/policy changes, Paris resyncs the Tokyo live pointers for all already-live instances (and seeds any newly added locales).
+- Consumer/embed policy is built only from Tokyo-ready locales for the current `baseFingerprint`, never from the full desired/allowed set.
+- When an instance first goes live, Paris starts reconciliation for the desired locale set and exposes only the Tokyo-ready subset to consumers.
+- When account locale/policy changes, Paris recomputes the desired locale set, reconciles Tokyo again, and rebuilds the consumer-ready set from Tokyo truth.
 - Unpublish (`status=unpublished`) deletes the full `l10n/instances/<publicId>/...` subtree from Tokyo (mirror rule).
 
 **Widget allowlist (authoritative)**

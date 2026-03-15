@@ -86,6 +86,7 @@ export type AccountL10nPolicy = {
   };
   switcher: {
     enabled: boolean;
+    locales?: string[];
   };
 };
 
@@ -122,12 +123,17 @@ export function resolveAccountL10nPolicy(raw: unknown): AccountL10nPolicy {
   const switcherRaw = isPlainRecord(raw.switcher) ? raw.switcher : null;
   const switcherEnabled =
     typeof switcherRaw?.enabled === 'boolean' ? switcherRaw.enabled : DEFAULT_ACCOUNT_L10N_POLICY.switcher.enabled;
+  const switcherLocalesResult = switcherRaw ? normalizeLocaleList(switcherRaw.locales, 'policy.switcher.locales') : null;
+  const switcherLocales = switcherLocalesResult?.ok ? switcherLocalesResult.locales : [];
 
   return {
     v: 1,
     baseLocale,
     ip: { enabled: ipEnabled, countryToLocale },
-    switcher: { enabled: switcherEnabled },
+    switcher: {
+      enabled: switcherEnabled,
+      ...(switcherLocales.length ? { locales: switcherLocales } : {}),
+    },
   };
 }
 
@@ -175,6 +181,15 @@ export function parseAccountL10nPolicy(raw: unknown): { ok: true; policy: Accoun
   const switcher = isPlainRecord(switcherRaw) ? switcherRaw : null;
   const switcherEnabled =
     switcher && typeof switcher.enabled === 'boolean' ? switcher.enabled : DEFAULT_ACCOUNT_L10N_POLICY.switcher.enabled;
+  let switcherLocales: string[] = [];
+  if (switcher && Object.prototype.hasOwnProperty.call(switcher, 'locales')) {
+    const localesResult = normalizeLocaleList(switcher.locales, 'policy.switcher.locales');
+    if (!localesResult.ok) {
+      issues.push(...localesResult.issues);
+    } else {
+      switcherLocales = localesResult.locales;
+    }
+  }
 
   if (issues.length) return { ok: false, issues };
 
@@ -184,7 +199,10 @@ export function parseAccountL10nPolicy(raw: unknown): { ok: true; policy: Accoun
       v: 1,
       baseLocale: baseLocale!,
       ip: { enabled: ipEnabled, countryToLocale },
-      switcher: { enabled: switcherEnabled },
+      switcher: {
+        enabled: switcherEnabled,
+        ...(switcherLocales.length ? { locales: switcherLocales } : {}),
+      },
     },
   };
 }

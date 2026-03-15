@@ -22,8 +22,6 @@ import {
   resolveInstanceKind,
   resolveInstanceAccountId,
 } from '../../shared/instances';
-import { consumeBudget } from '../../shared/budgets';
-import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { authorizeAccount } from '../../shared/account-auth';
 import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import {
@@ -34,7 +32,6 @@ import {
   upsertInstanceOverlay,
   updateL10nGenerateStatus,
 } from './service';
-import { enforceLayerEntitlement } from './shared';
 import { resolveL10nPlanningSnapshot } from './planning';
 import {
   enqueueTokyoMirrorJob,
@@ -44,10 +41,12 @@ import {
 import {
   buildLocaleTextPack,
   collectLocaleOverlayOps,
+  stripTextFromConfig,
+} from '../../shared/text-packs';
+import {
   enqueueLocaleMetaPacks,
   enqueueLocaleTextPacks,
-  stripTextFromConfig,
-} from '../../shared/mirror-packs';
+} from '../../shared/tokyo-mirror-jobs';
 import { isSeoGeoLive } from '../../shared/seo-geo';
 
 async function mirrorPublishedLayerLocale(args: {
@@ -59,7 +58,7 @@ async function mirrorPublishedLayerLocale(args: {
   baseTextPack: Record<string, string>;
   config: Record<string, unknown>;
   widgetType: string;
-  policy: unknown;
+  policy: Policy;
 }): Promise<Response | null> {
   let localeOps: Array<{ op: 'set'; path: string; value: unknown }> | null = null;
   let userOps: Array<{ op: 'set'; path: string; value: unknown }> | null = null;
@@ -90,6 +89,7 @@ async function mirrorPublishedLayerLocale(args: {
 
   const textFailures = await enqueueLocaleTextPacks({
     publicId: args.publicId,
+    baseFingerprint: args.baseFingerprint,
     localeTextPacks: [{ locale: args.layerKey, textPack }],
     enqueue: (job) => enqueueTokyoMirrorJob(args.env, job),
   });
@@ -163,9 +163,6 @@ async function resolveLayerRequestContext(args: {
   if (!authorized.ok) return { ok: false, response: authorized.response };
   const account = authorized.account;
 
-  const policyResult = resolveEditorPolicyFromRequest(args.req, account, authorized.role);
-  if (!policyResult.ok) return { ok: false, response: policyResult.response };
-
   const publicIdResult = assertPublicId(args.publicId);
   if (!publicIdResult.ok) {
     return {
@@ -194,7 +191,7 @@ async function resolveLayerRequestContext(args: {
   return {
     ok: true,
     account,
-    policy: policyResult.policy,
+    policy: authorized.policy,
     publicId: publicIdResult.value,
     instance,
   };
@@ -332,9 +329,6 @@ export async function handleAccountInstanceLayerUpsert(
     });
   }
 
-  const entitlementGate = enforceLayerEntitlement(editorPolicy, layer);
-  if (entitlementGate) return entitlementGate;
-
   let payload: unknown;
   try {
     payload = await req.json();
@@ -456,21 +450,6 @@ export async function handleAccountInstanceLayerUpsert(
     return apiError(userOpsResult.code, userOpsResult.message, 400, userOpsResult.detail);
   }
 
-  const maxPublishes = editorPolicy.budgets['budget.l10n.publishes']?.max ?? null;
-  const publish = await consumeBudget({
-    env,
-    scope: { kind: 'account', accountId },
-    budgetKey: 'budget.l10n.publishes',
-    max: maxPublishes,
-    amount: 1,
-  });
-  if (!publish.ok) {
-    return ckError(
-      { kind: 'DENY', reasonKey: publish.reasonKey, upsell: 'UP', detail: publish.detail },
-      403,
-    );
-  }
-
   let row: InstanceOverlayRow | null = null;
   if (hasOps) {
     const geoTargets = hasGeoTargets
@@ -560,7 +539,6 @@ export async function handleAccountInstanceLayerUpsert(
     const baseLocale = accountL10nPolicy.baseLocale;
     const activeLocales = resolveActivePublishLocales({
       accountLocales: account.l10n_locales,
-      policy: editorPolicy,
       baseLocale,
     }).locales;
 
@@ -650,21 +628,6 @@ export async function handleAccountInstanceLayerDelete(
     });
   }
 
-  const maxPublishes = editorPolicy.budgets['budget.l10n.publishes']?.max ?? null;
-  const publish = await consumeBudget({
-    env,
-    scope: { kind: 'account', accountId },
-    budgetKey: 'budget.l10n.publishes',
-    max: maxPublishes,
-    amount: 1,
-  });
-  if (!publish.ok) {
-    return ckError(
-      { kind: 'DENY', reasonKey: publish.reasonKey, upsell: 'UP', detail: publish.detail },
-      403,
-    );
-  }
-
   await deleteInstanceOverlay(env, normalizedPublicId, layer, layerKey);
 
   if ((layer === 'locale' || layer === 'user') && instance.status === 'published') {
@@ -672,7 +635,6 @@ export async function handleAccountInstanceLayerDelete(
     const baseLocale = accountL10nPolicy.baseLocale;
     const activeLocales = resolveActivePublishLocales({
       accountLocales: account.l10n_locales,
-      policy: editorPolicy,
       baseLocale,
     }).locales;
 

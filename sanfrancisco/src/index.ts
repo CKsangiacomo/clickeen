@@ -12,6 +12,7 @@ import {
   handleL10nPlan,
   handlePragueStringsTranslate,
 } from './l10n-routes';
+import { handleAccountL10nOpsGenerate } from './l10n-account-routes';
 import {
   handlePersonalizationOnboardingCreate,
   handlePersonalizationOnboardingStatus,
@@ -204,6 +205,9 @@ export default {
       if (request.method === 'POST' && url.pathname === '/v1/l10n/plan') return await handleL10nPlan(request, env);
       if (request.method === 'POST' && url.pathname === '/v1/l10n') return await handleL10nDispatch(request, env, ctx);
       if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') return await handlePragueStringsTranslate(request, env);
+      if (request.method === 'POST' && url.pathname === '/v1/l10n/account/ops/generate') {
+        return await handleAccountL10nOpsGenerate(request, env);
+      }
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     } catch (err: unknown) {

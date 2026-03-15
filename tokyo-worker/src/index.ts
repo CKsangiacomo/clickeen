@@ -12,6 +12,11 @@ import {
 } from './domains/assets';
 import { handleGetL10nAsset } from './domains/l10n-read';
 import {
+  handleDeleteL10nOverlay,
+  handleUpsertL10nOverlay,
+  handleWriteL10nBaseSnapshot,
+} from './domains/l10n-authoring';
+import {
   deleteInstanceMirror,
   deleteSavedRenderConfig,
   enforceLiveSurface,
@@ -35,6 +40,7 @@ import {
   requireDevAuth,
   TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
   TOKYO_INTERNAL_SERVICE_PARIS_LOCAL,
+  TOKYO_INTERNAL_SERVICE_SANFRANCISCO_L10N,
 } from './auth';
 import {
   guessContentTypeFromExt,
@@ -42,6 +48,8 @@ import {
   normalizeLocale,
   normalizePublicId,
   normalizeSha256Hex,
+  prettyStableJson,
+  sha256Hex,
 } from './asset-utils';
 import { json } from './http';
 import type { Env } from './types';
@@ -120,6 +128,24 @@ async function authorizeSavedRenderRequest(args: {
   return authorizeAccountScopedRequest(args);
 }
 
+async function authorizeL10nAuthoringRequest(args: {
+  req: Request;
+  env: Env;
+  accountId: string;
+}): Promise<Response | null> {
+  if (hasTrustedInternalService(args.req, TOKYO_INTERNAL_SERVICE_SANFRANCISCO_L10N)) {
+    return requireDevAuth(args.req, args.env, {
+      allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_SANFRANCISCO_L10N],
+    });
+  }
+  return authorizeAccountScopedRequest({
+    req: args.req,
+    env: args.env,
+    accountId: args.accountId,
+    minRole: 'editor',
+  });
+}
+
 function withCors(res: Response): Response {
   const headers = new Headers(res.headers);
   headers.set('access-control-allow-origin', '*');
@@ -129,6 +155,19 @@ function withCors(res: Response): Response {
     'authorization, content-type, x-account-id, x-filename, x-public-id, x-widget-type, x-source, idempotency-key, x-tokyo-l10n-bridge, x-ck-internal-service',
   );
   return new Response(res.body, { status: res.status, headers });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+async function sha256StableJson(value: unknown): Promise<string> {
+  const bytes = new TextEncoder().encode(prettyStableJson(value));
+  const arrayBuffer = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+  return await sha256Hex(arrayBuffer);
 }
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -148,8 +187,6 @@ export default {
         /^\/renders\/instances\/([^/]+)\/live\/r\.json$/,
       );
       if (renderLivePointerMatch) {
-        if (req.method !== 'GET')
-          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         const publicId = normalizePublicId(decodeURIComponent(renderLivePointerMatch[1]));
         if (!publicId) {
           return withCors(
@@ -159,7 +196,66 @@ export default {
             ),
           );
         }
-        return withCors(await handleGetR2Object(env, renderLivePointerKey(publicId), 'no-store'));
+
+        if (req.method === 'GET') {
+          return withCors(await handleGetR2Object(env, renderLivePointerKey(publicId), 'no-store'));
+        }
+
+        if (req.method === 'POST') {
+          const accountId = String(
+            url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
+          ).trim();
+          if (!isUuid(accountId)) {
+            return withCors(
+              json(
+                { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+                { status: 422 },
+              ),
+            );
+          }
+          const authErr = await authorizeAccountScopedRequest({
+            req,
+            env,
+            accountId,
+            minRole: 'editor',
+          });
+          if (authErr) return withCors(authErr);
+
+          const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+          const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
+          const configFp = normalizeSha256Hex(body?.configFp);
+          const localePolicy = body?.localePolicy;
+          if (!widgetType || !configFp || !isRecord(localePolicy)) {
+            return withCors(
+              json(
+                { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+                { status: 422 },
+              ),
+            );
+          }
+
+          await syncLiveSurface(env, {
+            v: 1,
+            kind: 'sync-live-surface',
+            publicId,
+            live: true,
+            widgetType,
+            configFp,
+            localePolicy: localePolicy as any,
+            seoGeo: body?.seoGeo === true,
+          });
+
+          return withCors(
+            json({
+              ok: true,
+              publicId,
+              live: true,
+              configFp,
+            }),
+          );
+        }
+
+        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
       }
 
       const renderLiveSurfaceMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/live\.json$/);
@@ -379,6 +475,67 @@ export default {
         );
       }
 
+      const renderConfigPackWriteMatch = pathname.match(
+        /^\/renders\/instances\/([^/]+)\/config-pack$/,
+      );
+      if (renderConfigPackWriteMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(renderConfigPackWriteMatch[1]));
+        const accountId = String(
+          url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
+        ).trim();
+        if (!publicId || !isUuid(accountId)) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+        if (req.method !== 'POST') {
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        }
+
+        const authErr = await authorizeAccountScopedRequest({
+          req,
+          env,
+          accountId,
+          minRole: 'editor',
+        });
+        if (authErr) return withCors(authErr);
+
+        const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+        const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
+        const configPack =
+          isRecord(body?.configPack) ? (body.configPack as Record<string, unknown>) : null;
+        if (!widgetType || !configPack) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+
+        const configFp = await sha256StableJson(configPack);
+        await writeConfigPack(env, {
+          v: 1,
+          kind: 'write-config-pack',
+          publicId,
+          widgetType,
+          configFp,
+          configPack,
+        });
+
+        return withCors(
+          json({
+            publicId,
+            widgetType,
+            configFp,
+            written: true,
+          }),
+        );
+      }
+
       const renderConfigPackMatch = pathname.match(
         /^\/renders\/instances\/([^/]+)\/config\/([^/]+)\/config\.json$/,
       );
@@ -524,6 +681,68 @@ export default {
         const rest = l10nVersionedMatch[1];
         const key = `l10n/${rest}`;
         return withCors(await handleGetL10nAsset(env, key));
+      }
+
+      const l10nBaseSnapshotMatch = pathname.match(
+        /^\/l10n\/instances\/([^/]+)\/bases\/([^/]+)$/,
+      );
+      if (l10nBaseSnapshotMatch) {
+        if (req.method !== 'POST')
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const publicId = normalizePublicId(decodeURIComponent(l10nBaseSnapshotMatch[1]));
+        const baseFingerprint = normalizeSha256Hex(
+          decodeURIComponent(l10nBaseSnapshotMatch[2]),
+        );
+        const accountId = String(
+          url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
+        ).trim();
+        if (!publicId || !isUuid(accountId) || !baseFingerprint) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+        const authErr = await authorizeL10nAuthoringRequest({ req, env, accountId });
+        if (authErr) return withCors(authErr);
+        return withCors(await handleWriteL10nBaseSnapshot(req, env, publicId, baseFingerprint));
+      }
+
+      const l10nOverlayMatch = pathname.match(
+        /^\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/,
+      );
+      if (l10nOverlayMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(l10nOverlayMatch[1]));
+        const layerRaw = decodeURIComponent(l10nOverlayMatch[2]);
+        const layer =
+          layerRaw === 'locale' || layerRaw === 'user' ? layerRaw : null;
+        const layerKeyRaw = decodeURIComponent(l10nOverlayMatch[3]);
+        const layerKey =
+          layer === 'locale'
+            ? normalizeLocale(layerKeyRaw)
+            : normalizeLocale(layerKeyRaw) || (layerKeyRaw === 'global' ? 'global' : null);
+        const accountId = String(
+          url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
+        ).trim();
+        if (!publicId || !isUuid(accountId) || !layer || !layerKey) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+        if (req.method === 'POST') {
+          const authErr = await authorizeL10nAuthoringRequest({ req, env, accountId });
+          if (authErr) return withCors(authErr);
+          return withCors(await handleUpsertL10nOverlay(req, env, publicId, layer, layerKey));
+        }
+        if (req.method === 'DELETE') {
+          const authErr = await authorizeL10nAuthoringRequest({ req, env, accountId });
+          if (authErr) return withCors(authErr);
+          return withCors(await handleDeleteL10nOverlay(req, env, publicId, layer, layerKey));
+        }
       }
 
       if (pathname.startsWith('/l10n/')) {

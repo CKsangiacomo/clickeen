@@ -8,7 +8,7 @@
 - `GET /healthz`
 - Queue consumers for agent jobs (e.g. instance localization).
 - HTTP endpoints for AI outcomes (called by Paris).
-- `POST /v1/l10n/plan` (internal auth; l10n planning snapshot for `{ widgetType, config }` or `{ widgetType, publicId, accountId }` (legacy `workspaceId` accepted as alias))
+- `POST /v1/l10n/plan` (internal auth; l10n planning snapshot for `{ widgetType, config }` or `{ widgetType, publicId, accountId }`)
 
 ## Dependencies
 - Paris (instance data + l10n overlay writes)

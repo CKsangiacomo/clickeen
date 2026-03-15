@@ -68,28 +68,29 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 ### Product-Path Account Editing (Current PRD 61 Cutover)
 
-Core account editing currently uses direct app-owned read/write paths plus an explicit Paris aftermath step:
+Core account editing currently uses direct app-owned read/write paths plus a direct Roma-owned aftermath step:
 
 1. **Open core instance**: `GET /api/accounts/:accountId/instance/:publicId?subject=account` once per instance open. Bob/Roma same-origin routes resolve the saved authoring revision from Tokyo only; live status is derived from Tokyo live pointers.
-2. **Save**: `PUT /api/accounts/:accountId/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, return success immediately, and schedule explicit Paris translation + published-surface aftermath after the response. The Tokyo commit is the save boundary.
-3. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership on each open/save/localization/status call.
-4. **After-save context**: the explicit Paris save-aftermath endpoints consume the bootstrap authz capsule plus caller-provided save context (`widgetType`, `status`, `source`, `previousConfig`) and the current Tokyo saved revision. They no longer need a second product-path instance-row lookup in Michael for normal account saves.
+2. **Save**: `PUT /api/accounts/:accountId/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, return success immediately, and schedule direct aftermath against Berlin/Tokyo/San Francisco/Tokyo-worker after the response. The Tokyo commit is the save boundary.
+3. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute entitlements/policy on each open/save/localization/status call; session entitlement truth comes from the capsule until a new session/capsule is minted.
+4. **After-save context**: Roma-owned aftermath reads the current Tokyo saved revision and account locale truth directly. Product-path save aftermath no longer mounts Paris endpoints.
 
 Explicit localization-only reads are separate from core open:
 
-- `GET /api/accounts/:accountId/instances/:publicId/localization?subject=account` — same-origin explicit localization snapshot rehydrate (currently Paris-backed)
+- `GET /api/accounts/:accountId/instances/:publicId/localization?subject=account` — same-origin explicit localization snapshot rehydrate (Roma route backed by Berlin + Tokyo)
 
 Async l10n pipeline status is observed through:
 
-- `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account`
+- `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account` — same-origin l10n status derived from Berlin + Tokyo
 
-`subject` is required on editor endpoints (`account`, `minibob`) to resolve editor policy.
+`subject` is required on editor endpoints (`account`, `minibob`) to select the editor mode. On `account` product routes, policy/entitlement truth comes from the bootstrap authz capsule, not a fresh Paris policy resolution.
 
 In the browser these flow through one of two host paths:
 
-- Bob URL boot path: Bob same-origin account route reads the saved authoring revision from Tokyo and separately rehydrates localization when needed.
 - Roma message boot path: host fetches the same core instance through its same-origin route, then sends Bob a `ck:open-editor` message. Save delegates back to the Roma host and stays on the product same-origin route family.
 - DevStudio message boot path: host fetches the same core/localization envelope through explicit `/api/devstudio/instance*` local-tool routes, then sends Bob a `ck:open-editor` message. Bob account mutations delegate back to the DevStudio host and do not call Bob customer account routes directly.
+
+Bob does not URL-bootstrap account mode. Account editing is host-only.
 
 Localization is separate: Bob/Roma product flows call explicit account/instance localization endpoints when rehydrating overlay state or applying overlay edits; DevStudio local uses its explicit local-tool transport for the same envelope/write surface. Those reads/writes are intentional and do **not** save the base config.
 
@@ -99,7 +100,7 @@ Between open and save:
 - Preview updates via postMessage (no Paris API calls for base config)
 - Core account instance open does not require Paris
 - Core account instance persistence does not proxy Paris
-- Localization overlay reads/writes still use Paris (Paris-managed R2/KV write plane)
+- Localization overlay reads/writes use Roma same-origin routes backed by Tokyo l10n artifacts
 - ZERO database writes for base config during normal product open/save
 - Base config is not required to be English; Minibob may author base config in the user’s ConversationLanguage.
 
@@ -180,15 +181,15 @@ curated_widget_instances.meta = {
 
 ## Glossary
 
-**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly before explicit Paris convergence. Bob does not own a published/unpublished toggle; its copy-code affordance is only for getting website embed snippets. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
+**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly before Roma-owned aftermath runs. Bob does not own a published/unpublished toggle; its copy-code affordance is only for getting website embed snippets. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
 
-**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle), and reads core account instance state through same-origin routes backed by Tokyo saved authoring state. Explicit localization rehydrate remains Paris-backed in the current cutover. In current cloud-dev, this collapses to one effective account: the seeded platform-owned account. Roma no longer exposes browser-side account switching there.
+**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and owns explicit localization rehydrate/save-aftermath account routes. In current cloud-dev, this collapses to one effective account: the seeded platform-owned account. Roma no longer exposes browser-side account switching there.
 
 **DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, internal authoring, and verification. DevStudio can host Bob for curated/admin authoring work, but it must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 
 **Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — HTTP control/orchestration boundary (Cloudflare Workers). Reads/writes Michael using service role where needed for account/instance workflows, owns the l10n write plane in R2/KV, and handles entitlements + orchestration. Stateless compute layer. Browsers never call Paris directly. Issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). In the current PRD 61 cutover state, Paris is no longer on the product-path core-open or product-path persistence hot path for account instances; it now owns explicit translation sync, explicit published-surface sync, localization snapshot/overlay operations, and public mirror convergence. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
+**Paris** — HTTP control/orchestration boundary (Cloudflare Workers). Reads/writes Michael using service role where needed for account/instance workflows, owns the l10n write plane in R2/KV, and handles orchestration. Stateless compute layer. Browsers never call Paris directly. For account product routes, Paris verifies the Berlin-issued bootstrap authz capsule and uses that session-minted entitlement/policy truth; it must not recompute entitlements on the hot path. Paris issues AI Grants to San Francisco. Widget-copilot alias routing is policy-driven (`widget.copilot.v1` -> SDR for `minibob|free`, CS for `tier1|tier2|tier3`). In the current PRD 61 cutover state, Paris is no longer on the product-path core-open or product-path persistence hot path for account instances; it now owns explicit translation sync, explicit published-surface sync, localization snapshot/overlay operations, and public mirror convergence. **Minibob public mint:** `POST /api/ai/minibob/session` (server‑signed session token) → `POST /api/ai/minibob/grant` (rate‑limited grant for `sdr.widget.copilot.v1`).
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 

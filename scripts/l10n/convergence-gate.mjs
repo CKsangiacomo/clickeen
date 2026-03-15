@@ -2,8 +2,9 @@
 /* eslint-disable no-console */
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
-const DEFAULT_ACCOUNT_ID = '00000000-0000-0000-0000-000000000001';
+const DEFAULT_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
 const DEFAULT_EXPECTED_INSTANCE_COUNT = 4;
 const DEFAULT_TIMEOUT_MS = 3 * 60_000;
 const DEFAULT_INTERVAL_MS = 5_000;
@@ -45,6 +46,17 @@ function readLocalEnvValue(key) {
   }
 }
 
+function readLocalFileValue(filePath) {
+  try {
+    const resolved = path.join(process.cwd(), filePath);
+    if (!fs.existsSync(resolved)) return null;
+    const raw = fs.readFileSync(resolved, 'utf8').trim();
+    return raw || null;
+  } catch {
+    return null;
+  }
+}
+
 function normalizeBaseUrl(value, fallback) {
   const candidate = typeof value === 'string' && value.trim() ? value.trim() : fallback;
   return candidate.replace(/\/+$/, '');
@@ -54,10 +66,7 @@ function parseArgs(argv) {
   const args = {
     accountId:
       process.env.L10N_GATE_ACCOUNT_ID ||
-      // Legacy aliases (pre account-only tenancy pivot).
-      process.env.L10N_GATE_WORKSPACE_ID ||
       process.env.DEV_ACCOUNT_ID ||
-      process.env.DEV_WORKSPACE_ID ||
       DEFAULT_ACCOUNT_ID,
     parisBaseUrl: normalizeBaseUrl(
       process.env.L10N_GATE_PARIS_BASE_URL ||
@@ -80,8 +89,6 @@ function parseArgs(argv) {
       'expectCount',
     ),
     publicIds: [],
-    triggerCuratedEnqueue:
-      String(process.env.L10N_GATE_TRIGGER_CURATED_ENQUEUE || '').trim() === '1',
     json: false,
   };
 
@@ -95,24 +102,11 @@ function parseArgs(argv) {
       args.json = true;
       continue;
     }
-    if (token === '--trigger-curated-enqueue') {
-      args.triggerCuratedEnqueue = true;
-      continue;
-    }
     if (token.startsWith('--account-id=')) {
       args.accountId = token.split('=').slice(1).join('=').trim();
       continue;
     }
     if (token === '--account-id') {
-      args.accountId = String(argv[i + 1] || '').trim();
-      i += 1;
-      continue;
-    }
-    if (token.startsWith('--workspace-id=')) {
-      args.accountId = token.split('=').slice(1).join('=').trim();
-      continue;
-    }
-    if (token === '--workspace-id') {
       args.accountId = String(argv[i + 1] || '').trim();
       i += 1;
       continue;
@@ -208,7 +202,6 @@ function printHelp() {
 
 Options:
   --account-id <uuid>             Account id (default: ${DEFAULT_ACCOUNT_ID})
-  --workspace-id <uuid>           Legacy alias for --account-id
   --paris-base-url <url>          Paris base URL (default: http://localhost:3001)
   --subject <name>                Subject query param (default: ${DEFAULT_SUBJECT})
   --public-id <id>                Explicit instance id (repeatable)
@@ -216,7 +209,6 @@ Options:
   --timeout-ms <n>                Max convergence wait (default: ${DEFAULT_TIMEOUT_MS})
   --interval-ms <n>               Poll interval (default: ${DEFAULT_INTERVAL_MS})
   --stall-ms <n>                  Max unchanged blocked window (default: ${DEFAULT_STALL_MS})
-  --trigger-curated-enqueue       Auto-trigger enqueue-selected for curated instances before polling
   --json                          Print JSON result only
   --help                          Show this help
   `);
@@ -242,14 +234,157 @@ function resolveEnvironmentLabel(parisBaseUrl) {
   return 'cloud-dev-or-remote';
 }
 
-function resolveAuthHeaders() {
-  const token = (process.env.PARIS_DEV_JWT || readLocalEnvValue('PARIS_DEV_JWT') || '').trim();
-  if (!token) {
-    throw new Error('[l10n-gate] Missing PARIS_DEV_JWT (set env var or .env.local)');
+function resolveParisDevJwt() {
+  return (
+    process.env.PARIS_DEV_JWT ||
+    readLocalFileValue('Execution_Pipeline_Docs/paris.dev.jwt') ||
+    readLocalEnvValue('PARIS_DEV_JWT') ||
+    ''
+  ).trim();
+}
+
+function resolveSupabaseConfig() {
+  const baseUrl = (
+    process.env.SUPABASE_URL ||
+    readLocalEnvValue('SUPABASE_URL') ||
+    ''
+  ).trim();
+  const serviceKey = (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    readLocalEnvValue('SUPABASE_SERVICE_ROLE_KEY') ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    readLocalEnvValue('SUPABASE_SERVICE_KEY') ||
+    ''
+  ).trim();
+  if (!baseUrl || !serviceKey) return null;
+  return { baseUrl: baseUrl.replace(/\/+$/, ''), serviceKey };
+}
+
+async function loadAccountRow(accountId) {
+  const supabase = resolveSupabaseConfig();
+  if (!supabase) return null;
+  const query = new URLSearchParams({
+    select: 'id,status,is_platform,tier,name,slug,website_url,l10n_locales,l10n_policy',
+    id: `eq.${accountId}`,
+    limit: '1',
+  });
+  const res = await fetch(`${supabase.baseUrl}/rest/v1/accounts?${query.toString()}`, {
+    headers: {
+      apikey: supabase.serviceKey,
+      Authorization: `Bearer ${supabase.serviceKey}`,
+      Accept: 'application/json',
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[l10n-gate] Failed to load account ${accountId} from Supabase (${res.status}): ${text}`);
   }
-  return {
+  const body = await res.json().catch(() => null);
+  return Array.isArray(body) ? body[0] || null : null;
+}
+
+function base64UrlJson(value) {
+  return Buffer.from(JSON.stringify(value))
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function base64UrlHmac(secret, payloadBase64) {
+  return crypto
+    .createHmac('sha256', secret)
+    .update(payloadBase64)
+    .digest('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function mintAccountCapsule(secret, account) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const payload = {
+    v: 1,
+    typ: 'roma.account',
+    iss: 'berlin',
+    aud: 'roma',
+    sub: 'devstudio.local',
+    userId: 'devstudio.local',
+    accountId: account.id,
+    accountStatus: account.status,
+    accountIsPlatform: account.is_platform === true,
+    accountName: account.name,
+    accountSlug: account.slug,
+    accountWebsiteUrl: account.website_url ?? null,
+    accountL10nLocales: account.l10n_locales,
+    accountL10nPolicy: account.l10n_policy,
+    profile: account.tier,
+    role: 'owner',
+    authzVersion: `devstudio.local:${account.id}:owner`,
+    iat: nowSec,
+    exp: nowSec + 15 * 60,
+  };
+  const payloadBase64 = base64UrlJson(payload);
+  const signature = base64UrlHmac(secret, payloadBase64);
+  return `ckac.v1.${payloadBase64}.${signature}`;
+}
+
+async function resolveAuthHeaders(accountId) {
+  const token = resolveParisDevJwt();
+  if (!token) {
+    throw new Error('[l10n-gate] Missing PARIS_DEV_JWT (set env var, .env.local, or Execution_Pipeline_Docs/paris.dev.jwt)');
+  }
+  const headers = {
     Authorization: `Bearer ${token}`,
     Accept: 'application/json',
+  };
+
+  if (accountId) {
+    const secret = (
+      process.env.ROMA_AUTHZ_CAPSULE_SECRET ||
+      readLocalFileValue('Execution_Pipeline_Docs/roma.authz.capsule.secret') ||
+      readLocalEnvValue('ROMA_AUTHZ_CAPSULE_SECRET') ||
+      ''
+    ).trim();
+    if (!secret) {
+      throw new Error('[l10n-gate] Missing ROMA_AUTHZ_CAPSULE_SECRET for account-scoped product routes');
+    }
+    const account = await loadAccountRow(accountId);
+    if (!account) {
+      throw new Error(`[l10n-gate] Account ${accountId} not found; cannot mint authz capsule`);
+    }
+    headers['x-ck-internal-service'] = 'devstudio.local';
+    headers['x-ck-authz-capsule'] = mintAccountCapsule(secret, account);
+  }
+
+  return headers;
+}
+
+function groupStatuses(rows) {
+  return rows.reduce(
+    (acc, row) => {
+      const normalized = normalizeL10nStatusClass(row?.status);
+      if (normalized === 'in_flight') acc.inFlight += 1;
+      else if (normalized === 'failed') acc.failedTerminal += 1;
+      else if (normalized === 'needs_enqueue') acc.needsEnqueue += 1;
+      else if (normalized === 'succeeded') acc.succeeded += 1;
+      return acc;
+    },
+    {
+      inFlight: 0,
+      failedTerminal: 0,
+      needsEnqueue: 0,
+      succeeded: 0,
+    },
+  );
+}
+
+function compareLocaleSets(expected, actual) {
+  const actualSet = new Set(actual);
+  const expectedSet = new Set(expected);
+  return {
+    missing: expected.filter((locale) => !actualSet.has(locale)),
+    unexpected: actual.filter((locale) => !expectedSet.has(locale)),
   };
 }
 
@@ -354,95 +489,89 @@ function evaluateSnapshot(entry) {
     };
   }
 
-  const publish = entry.publish;
+  const localization = entry.localization;
   const l10n = entry.l10n;
 
-  if (toStringOrNull(publish.publicId) !== entry.publicId) {
-    issues.push(`publish.status publicId mismatch (${toStringOrNull(publish.publicId) || 'null'})`);
-  }
   if (toStringOrNull(l10n.publicId) !== entry.publicId) {
     issues.push(`l10n.status publicId mismatch (${toStringOrNull(l10n.publicId) || 'null'})`);
   }
 
-  const publishFingerprint = toStringOrNull(publish?.revision?.l10nBaseFingerprint);
   const l10nFingerprint = toStringOrNull(l10n?.baseFingerprint);
-  if (!publishFingerprint) issues.push('publish.status revision.l10nBaseFingerprint missing');
   if (!l10nFingerprint) issues.push('l10n.status baseFingerprint missing');
-  if (publishFingerprint && l10nFingerprint && publishFingerprint !== l10nFingerprint) {
-    issues.push('baseFingerprint mismatch between publish.status and l10n.status');
+  const baseLocale = toStringOrNull(localization?.policy?.baseLocale) || 'en';
+  const allowedLocales = Array.isArray(localization?.accountLocales)
+    ? localization.accountLocales.map((locale) => toStringOrNull(locale)).filter(Boolean)
+    : [];
+  const readyLocales = Array.isArray(localization?.readyLocales)
+    ? localization.readyLocales.map((locale) => toStringOrNull(locale)).filter(Boolean)
+    : [];
+  const allowedNonBaseLocales = allowedLocales.filter((locale) => locale !== baseLocale);
+  const readyNonBaseLocales = readyLocales.filter((locale) => locale !== baseLocale);
+  const { missing: notReadyLocales, unexpected: unexpectedReadyLocales } = compareLocaleSets(
+    allowedNonBaseLocales,
+    readyNonBaseLocales,
+  );
+  if (unexpectedReadyLocales.length) {
+    issues.push(`ready locales not in allowed set: ${unexpectedReadyLocales.join(', ')}`);
   }
 
-  const publishLocales = toLocaleMap(publish?.locales, 'publish.status', issues);
-  const l10nLocales = toLocaleMap(l10n?.locales, 'l10n.status', issues);
-
-  const publishLocaleKeys = Array.from(publishLocales.keys()).sort();
-  const publishNonBaseLocaleKeys = publishLocaleKeys.filter((locale) => locale !== 'en');
-  const l10nLocaleKeys = Array.from(l10nLocales.keys()).sort();
-  const missingInL10n = diffList(publishNonBaseLocaleKeys, l10nLocaleKeys);
-  const missingInPublish = diffList(l10nLocaleKeys, publishNonBaseLocaleKeys);
-  if (missingInL10n.length)
-    issues.push(`locales missing in l10n.status: ${missingInL10n.join(', ')}`);
-  if (missingInPublish.length)
-    issues.push(`locales missing in publish.status: ${missingInPublish.join(', ')}`);
-
-  publishNonBaseLocaleKeys.forEach((locale) => {
-    const publishLocale = publishLocales.get(locale);
-    const l10nLocale = l10nLocales.get(locale);
-    if (!l10nLocale) return;
-    const publishState = toStringOrNull(publishLocale?.l10n?.status);
-    const l10nState = toStringOrNull(l10nLocale?.status);
-    const publishClass = normalizeL10nStatusClass(publishState);
-    const l10nClass = normalizeL10nStatusClass(l10nState);
-    if (publishState && l10nState && publishClass !== l10nClass) {
-      issues.push(`locale ${locale} status mismatch publish=${publishState} l10n=${l10nState}`);
-    }
+  const l10nLocaleRows = Array.isArray(l10n?.locales) ? l10n.locales : [];
+  const l10nLocaleMap = new Map();
+  l10nLocaleRows.forEach((row) => {
+    const locale = toStringOrNull(row?.locale);
+    if (!locale) return;
+    l10nLocaleMap.set(locale, row);
   });
+  const missingInL10n = diffList(allowedNonBaseLocales, Array.from(l10nLocaleMap.keys()).sort());
+  if (missingInL10n.length) {
+    issues.push(`locales missing in l10n.status: ${missingInL10n.join(', ')}`);
+  }
 
-  const summary = publish?.summary || {};
-  const l10nSummary = summary?.l10n || {};
-  const overall = toStringOrNull(publish?.pipeline?.overall) || 'unknown';
-  const nextAction = toStringOrNull(publish?.pipeline?.l10n?.nextAction?.key);
-  const stageReasons =
-    publish?.pipeline?.l10n?.stageReasons &&
-    typeof publish.pipeline.l10n.stageReasons === 'object' &&
-    !Array.isArray(publish.pipeline.l10n.stageReasons)
-      ? publish.pipeline.l10n.stageReasons
-      : {};
-  const instanceStatus = toStringOrNull(publish?.instanceStatus) || 'unknown';
+  const grouped = groupStatuses(l10nLocaleRows);
+  const overall =
+    grouped.failedTerminal > 0
+      ? 'failed'
+      : grouped.inFlight > 0
+        ? 'translating'
+        : notReadyLocales.length > 0 || grouped.needsEnqueue > 0
+          ? 'pending'
+          : 'ready';
+  const nextAction =
+    grouped.failedTerminal > 0
+      ? 'inspect-failures'
+      : grouped.inFlight > 0
+        ? 'wait'
+        : notReadyLocales.length > 0 || grouped.needsEnqueue > 0
+          ? 'save-or-reconcile'
+          : null;
+  const stageReasons = {
+    notReadyLocales,
+  };
 
   const metrics = {
-    instanceStatus,
+    baseLocale,
     overall,
-    pointerFlipped: toCount(summary.pointerFlipped),
-    total: toCount(summary.total),
-    awaitingL10n: toCount(summary.awaitingL10n),
-    awaitingSnapshot: toCount(summary.awaitingSnapshot),
-    inFlight: toCount(l10nSummary.inFlight),
-    retrying: toCount(l10nSummary.retrying),
-    failedTerminal: toCount(l10nSummary.failedTerminal),
-    needsEnqueue: toCount(l10nSummary.needsEnqueue),
+    total: allowedNonBaseLocales.length,
+    ready: readyNonBaseLocales.length,
+    notReady: notReadyLocales.length,
+    inFlight: grouped.inFlight,
+    retrying: 0,
+    failedTerminal: grouped.failedTerminal,
+    needsEnqueue: grouped.needsEnqueue,
     nextAction,
     stageReasons,
   };
 
-  if (metrics.instanceStatus !== 'published') {
-    issues.push(`instance status is ${metrics.instanceStatus}, expected published`);
-  }
-
   const terminalFailure =
-    metrics.failedTerminal > 0 || toCount(summary.failed) > 0 || metrics.overall === 'failed';
+    metrics.failedTerminal > 0 || metrics.overall === 'failed';
 
   const converged =
-    metrics.instanceStatus === 'published' &&
     metrics.overall === 'ready' &&
-    metrics.awaitingL10n === 0 &&
-    metrics.awaitingSnapshot === 0 &&
     metrics.inFlight === 0 &&
     metrics.retrying === 0 &&
     metrics.needsEnqueue === 0 &&
     metrics.failedTerminal === 0 &&
-    metrics.total > 0 &&
-    metrics.pointerFlipped === metrics.total;
+    metrics.notReady === 0;
 
   const blocked = !converged && !terminalFailure;
   if (blocked && !metrics.nextAction) {
@@ -455,9 +584,7 @@ function evaluateSnapshot(entry) {
     metrics.retrying,
     metrics.failedTerminal,
     metrics.needsEnqueue,
-    metrics.awaitingL10n,
-    metrics.awaitingSnapshot,
-    `${metrics.pointerFlipped}/${metrics.total}`,
+    `${metrics.ready}/${metrics.total}`,
     stableStringify(metrics.stageReasons),
   ].join('|');
 
@@ -474,18 +601,18 @@ function evaluateSnapshot(entry) {
 
 async function fetchInstanceSnapshot({ parisBaseUrl, accountId, subject, headers, publicId }) {
   const query = `subject=${encodeURIComponent(subject)}&_t=${Date.now()}`;
-  const publishUrl = `${parisBaseUrl}/api/accounts/${encodeURIComponent(
+  const localizationUrl = `${parisBaseUrl}/api/accounts/${encodeURIComponent(
     accountId,
-  )}/instances/${encodeURIComponent(publicId)}/publish/status?${query}`;
+  )}/instances/${encodeURIComponent(publicId)}/localization?${query}`;
   const l10nUrl = `${parisBaseUrl}/api/accounts/${encodeURIComponent(
     accountId,
   )}/instances/${encodeURIComponent(publicId)}/l10n/status?${query}`;
   try {
-    const [publish, l10n] = await Promise.all([
-      fetchJson(publishUrl, { headers }),
+    const [localizationPayload, l10n] = await Promise.all([
+      fetchJson(localizationUrl, { headers }),
       fetchJson(l10nUrl, { headers }),
     ]);
-    return { publicId, publish, l10n };
+    return { publicId, localization: localizationPayload.localization ?? null, l10n };
   } catch (error) {
     return {
       publicId,
@@ -507,34 +634,6 @@ function summarizeEvaluations(evaluations) {
   };
 }
 
-function isCuratedLikePublicId(publicId) {
-  return (
-    /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(publicId) ||
-    /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId)
-  );
-}
-
-async function triggerCuratedEnqueue({ evaluations, parisBaseUrl, accountId, subject, headers }) {
-  const triggered = [];
-  for (const row of evaluations) {
-    if (!isCuratedLikePublicId(row.publicId)) continue;
-    if ((row.metrics?.overall ?? '') === 'ready') continue;
-    const url = `${parisBaseUrl}/api/accounts/${encodeURIComponent(
-      accountId,
-    )}/instances/${encodeURIComponent(row.publicId)}/l10n/enqueue-selected?subject=${encodeURIComponent(
-      subject,
-    )}`;
-    const payload = await postJson(url, headers, {});
-    triggered.push({
-      publicId: row.publicId,
-      queued: toCount(payload?.queued),
-      skipped: toCount(payload?.skipped),
-      ok: Boolean(payload?.ok),
-    });
-  }
-  return triggered;
-}
-
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
@@ -543,7 +642,7 @@ async function main() {
   }
 
   const environment = resolveEnvironmentLabel(args.parisBaseUrl);
-  const headers = resolveAuthHeaders();
+  const headers = await resolveAuthHeaders(args.subject === 'account' ? args.accountId : null);
   const publicIds = resolveInstanceIds(args.publicIds);
 
   if (args.expectCount > 0 && publicIds.length !== args.expectCount) {
@@ -583,28 +682,6 @@ async function main() {
     const evaluations = snapshots.map(evaluateSnapshot);
     finalEvaluations = evaluations;
     const nowMs = Date.now();
-
-    if (poll === 1 && args.triggerCuratedEnqueue) {
-      const triggered = await triggerCuratedEnqueue({
-        evaluations,
-        parisBaseUrl: args.parisBaseUrl,
-        accountId: args.accountId,
-        subject: args.subject,
-        headers,
-      });
-      triggeredActions.push(...triggered);
-      if (!args.json && triggered.length > 0) {
-        console.log(
-          `[l10n-gate] triggered curated enqueue: ${triggered
-            .map((item) => `${item.publicId}(queued=${item.queued},skipped=${item.skipped})`)
-            .join(', ')}`,
-        );
-      }
-      if (triggered.length > 0) {
-        await sleep(Math.min(args.intervalMs, 2_000));
-        continue;
-      }
-    }
 
     let stalledAny = false;
     for (const evalRow of evaluations) {

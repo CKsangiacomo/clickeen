@@ -1,23 +1,10 @@
 import { can } from '@clickeen/ck-policy';
-import { buildL10nSnapshot, computeBaseFingerprint } from '@clickeen/l10n';
+import { buildL10nSnapshot } from '@clickeen/l10n';
 import type { CuratedInstanceRow, Env, InstanceRow, WidgetRow } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { ckError, errorDetail } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
-import { loadWidgetLocalizationAllowlist, resolveAccountL10nPolicy } from '../../shared/l10n';
-import {
-  buildLocaleTextPacks,
-  enqueueConfigPack,
-  enqueueLiveSurfaceSync,
-  enqueueLocaleMetaPacks,
-  enqueueLocaleTextPacks,
-  logMirrorEnqueueError,
-  logMirrorEnqueueFailures,
-  resolveLocaleOverlayOps,
-  stripTextFromConfig,
-} from '../../shared/mirror-packs';
-import { jsonSha256Hex } from '../../shared/stable-json';
-import { isSeoGeoLive } from '../../shared/seo-geo';
+import { loadWidgetLocalizationAllowlist } from '../../shared/l10n';
 import {
   assertConfig,
   assertDisplayName,
@@ -28,7 +15,6 @@ import {
   isRecord,
 } from '../../shared/validation';
 import { isKnownWidgetType } from '../../shared/tokyo';
-import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { authorizeAccount } from '../../shared/account-auth';
 import {
   assertPublicId,
@@ -38,9 +24,9 @@ import {
   resolveInstanceKind,
 } from '../../shared/instances';
 import { loadInstanceByPublicId, loadWidgetByType } from '../instances';
-import { enqueueL10nJobs } from '../l10n';
-import { loadInstanceOverlays } from '../l10n/service';
-import { enqueueTokyoMirrorJob, resolveActivePublishLocales, writeSavedConfigToTokyo } from './service';
+import { enqueueL10nJobs } from '../l10n/enqueue-jobs';
+import { writeSavedConfigToTokyo } from './service';
+import { convergePublishedInstanceSurface } from './published-convergence';
 import {
   DEFAULT_INSTANCE_DISPLAY_NAME,
   enforceLimits,
@@ -72,11 +58,9 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
   const authorized = await authorizeAccount(req, env, accountId, 'editor');
   if (!authorized.ok) return authorized.response;
   const account = authorized.account;
+  const editorPolicy = authorized.policy;
 
-  const policyResult = resolveEditorPolicyFromRequest(req, account, authorized.role);
-  if (!policyResult.ok) return policyResult.response;
-
-  const createGate = can(policyResult.policy, 'instance.create');
+  const createGate = can(editorPolicy, 'instance.create');
   if (!createGate.allow) {
     return ckError(
       { kind: 'DENY', reasonKey: createGate.reasonKey, upsell: 'UP', detail: createGate.detail },
@@ -167,7 +151,7 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
     );
   }
 
-  const denyByLimits = await enforceLimits(env, policyResult.policy, widgetType, config);
+  const denyByLimits = await enforceLimits(env, editorPolicy, widgetType, config);
   if (denyByLimits) return denyByLimits;
 
   const usageValidationError = await validateAccountAssetUsageForInstanceStrict({
@@ -212,7 +196,7 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
     const created = (await curatedInsert.json().catch(() => null)) as CuratedInstanceRow[] | null;
     createdInstance = created?.[0] ?? null;
   } else {
-    const widgetTypesCapRaw = policyResult.policy.caps['widgets.types.max'];
+    const widgetTypesCapRaw = editorPolicy.caps['widgets.types.max'];
     const widgetTypesCap =
       typeof widgetTypesCapRaw === 'number' && Number.isFinite(widgetTypesCapRaw)
         ? Math.max(0, Math.floor(widgetTypesCapRaw))
@@ -352,7 +336,7 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
       }
     }
 
-    const publishedInstancesCapRaw = policyResult.policy.caps['instances.published.max'];
+    const publishedInstancesCapRaw = editorPolicy.caps['instances.published.max'];
     const publishedInstancesCap =
       typeof publishedInstancesCapRaw === 'number' && Number.isFinite(publishedInstancesCapRaw)
         ? Math.max(0, Math.floor(publishedInstancesCapRaw))
@@ -428,142 +412,66 @@ export async function handleAccountCreateInstance(req: Request, env: Env, accoun
   if (createdInstance) {
     const createdKind = resolveInstanceKind(createdInstance);
 
-    if (createdKind !== 'curated') {
-      try {
-        await writeSavedConfigToTokyo({
-          env,
-          accountId: account.id,
-          publicId,
-          widgetType,
-          config: createdInstance.config,
-        });
-      } catch (error) {
-        await rollbackCreatedInstanceAfterPostCommitFailure({
-          env,
-          accountId: account.id,
-          publicId,
-          isCurated: false,
-        });
-        const detail = errorDetail(error);
-        return ckError(
-          {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail: `[tokyo-saved-config] ${detail}`,
-          },
-          500,
-        );
-      }
+    try {
+      await writeSavedConfigToTokyo({
+        env,
+        accountId: account.id,
+        publicId,
+        widgetType,
+        config: createdInstance.config,
+      });
+    } catch (error) {
+      await rollbackCreatedInstanceAfterPostCommitFailure({
+        env,
+        accountId: account.id,
+        publicId,
+        isCurated: createdKind === 'curated',
+      });
+      const detail = errorDetail(error);
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: `[tokyo-saved-config] ${detail}`,
+        },
+        500,
+      );
     }
 
-    if (createdKind !== 'curated') {
-      const enqueueResult = await enqueueL10nJobs({
-        env,
-        instance: createdInstance,
-        account,
-        widgetType,
-        baseUpdatedAt: createdInstance.updated_at ?? null,
-        policy: policyResult.policy,
-      });
-      if (!enqueueResult.ok) {
-        console.error('[ParisWorker] l10n enqueue failed', enqueueResult.error);
-      }
+    const enqueueResult = await enqueueL10nJobs({
+      env,
+      instance: createdInstance,
+      account,
+      widgetType,
+      baseUpdatedAt: createdInstance.updated_at ?? null,
+    });
+    if (!enqueueResult.ok) {
+      console.error('[ParisWorker] l10n enqueue failed', enqueueResult.error);
     }
 
     if (createdInstance.status === 'published') {
-      const accountL10nPolicy = resolveAccountL10nPolicy(account.l10n_policy);
-      const baseLocale = accountL10nPolicy.baseLocale;
-      const publishLocales = resolveActivePublishLocales({
-        accountLocales: account.l10n_locales,
-        policy: policyResult.policy,
-        baseLocale,
-      });
-      const availableLocales = publishLocales.locales;
-      const countryToLocale = Object.fromEntries(
-        Object.entries(accountL10nPolicy.ip.countryToLocale).filter(([, locale]) =>
-          availableLocales.includes(locale),
-        ),
-      );
-      const localePolicy = {
-        baseLocale,
-        availableLocales,
-        ip: {
-          enabled: accountL10nPolicy.ip.enabled,
-          countryToLocale: accountL10nPolicy.ip.enabled ? countryToLocale : {},
-        },
-        switcher: {
-          enabled: accountL10nPolicy.switcher.enabled,
-        },
-      };
-      const seoGeoLive = isSeoGeoLive({
-        policy: policyResult.policy,
-        config: createdInstance.config,
-      });
-
       try {
         const allowlist = await loadWidgetLocalizationAllowlist(env, widgetType);
         const baseTextPack = buildL10nSnapshot(createdInstance.config, allowlist);
-        const configPack = stripTextFromConfig(createdInstance.config, Object.keys(baseTextPack));
-        const configFp = await jsonSha256Hex(configPack);
-
-        const baseFingerprint = await computeBaseFingerprint(baseTextPack);
-        const { localeOpsByLocale, userOpsByLocale } = await resolveLocaleOverlayOps({
-          loadRows: () => loadInstanceOverlays(env, publicId),
-          locales: availableLocales,
-          baseFingerprint,
-          warnMessage: '[ParisWorker] Failed to resolve overlays for text packs',
-        });
-
-        const textPacksByLocale = new Map(
-          buildLocaleTextPacks({
-            locales: availableLocales,
-            baseLocale,
-            basePack: baseTextPack,
-            localeOpsByLocale,
-            userOpsByLocale,
-          }).map(({ locale, textPack }) => [locale, textPack] as const),
-        );
-
-        const localeTextPacks = availableLocales.map((locale) => ({
-          locale,
-          textPack: textPacksByLocale.get(locale) ?? baseTextPack,
-        }));
-        const textFailures = await enqueueLocaleTextPacks({
+        const convergenceError = await convergePublishedInstanceSurface({
+          env,
+          account,
+          policy: editorPolicy,
           publicId,
-          localeTextPacks,
-          enqueue: (job) => enqueueTokyoMirrorJob(env, job),
+          widgetType,
+          config: createdInstance.config,
+          baseTextPack,
+          writeTextPacks: true,
+          writeConfigPack: true,
+          syncLiveSurface: true,
+          context: 'account create instance',
         });
-        logMirrorEnqueueFailures({ kind: 'write-text-pack', failures: textFailures });
-
-        if (seoGeoLive) {
-          const metaFailures = await enqueueLocaleMetaPacks({
+        if (convergenceError) {
+          console.error('[ParisWorker] published convergence failed after create', {
             publicId,
-            widgetType,
-            configPack,
-            localeTextPacks,
-            enqueue: (job) => enqueueTokyoMirrorJob(env, job),
+            error: convergenceError,
           });
-          logMirrorEnqueueFailures({ kind: 'write-meta-pack', failures: metaFailures });
         }
-
-        const configError = await enqueueConfigPack({
-          publicId,
-          widgetType,
-          configFp,
-          configPack,
-          enqueue: (job) => enqueueTokyoMirrorJob(env, job),
-        });
-        logMirrorEnqueueError({ kind: 'write-config-pack', error: configError });
-
-        const syncError = await enqueueLiveSurfaceSync({
-          publicId,
-          widgetType,
-          configFp,
-          localePolicy,
-          seoGeo: seoGeoLive,
-          enqueue: (job) => enqueueTokyoMirrorJob(env, job),
-        });
-        logMirrorEnqueueError({ kind: 'sync-live-surface', error: syncError });
       } catch (error) {
         const detail = errorDetail(error);
         console.error('[ParisWorker] tokyo mirror job planning failed', detail);

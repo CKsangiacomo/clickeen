@@ -104,8 +104,13 @@ Safety gate (PRD 54):
 
 - `sync-live-surface` refuses to advance `renders/instances/<publicId>/live/r.json` unless:
   - the referenced config pack exists, and
-  - **every locale** in `localePolicy.availableLocales` has a live text pointer, and
-  - when `seoGeo=true`, every locale also has a live meta pointer.
+  - **every locale** in `localePolicy.readyLocales` has a live text pointer, and
+  - when `seoGeo=true`, every locale in that same ready set also has a live meta pointer.
+
+Rule:
+- Tokyo-worker validates the consumer-ready set it was given.
+- Tokyo-worker does not interpret plan allowances, account entitlements, or which locales "should" exist.
+- Paris/runtime policy decides the desired locale set; Tokyo-worker guarantees the referenced bytes exist and are cheap to serve.
 
 ---
 

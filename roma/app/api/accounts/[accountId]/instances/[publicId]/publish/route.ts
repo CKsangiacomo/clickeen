@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicy } from '@clickeen/ck-policy';
 import {
   loadTokyoPreferredAccountInstance,
-  normalizeAftermathWarning,
-  notifyParisPublishedSurfaceSync,
-} from '../../../../../../../../bob/lib/account-instance-direct';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../../bob/lib/account-authz-capsule';
+} from '../../../../../../../lib/account-instance-direct';
+import { runAccountSaveAftermath } from '../../../../../../../lib/account-save-aftermath';
+import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../lib/account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../../../lib/auth/session';
-import { resolveParisBaseUrl } from '../../../../../../../lib/env/paris';
 import { resolveTokyoBaseUrl } from '../../../../../../../lib/env/tokyo';
 import {
   countPublishedAccountInstances,
@@ -226,36 +224,32 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const aftermath = await notifyParisPublishedSurfaceSync({
-    parisBaseUrl: resolveParisBaseUrl(),
-    parisAccessToken: session.accessToken,
-    authzCapsule: request.headers.get('x-ck-authz-capsule'),
-    internalServiceName: 'roma.edge',
-    accountId,
-    publicId,
-    previousConfig: {},
-    instance: {
-      widgetType: current.value.row.widgetType,
-      status: 'published',
-      source: current.value.row.source,
-    },
-    created: true,
-  });
-
-  if (!aftermath.ok) {
+  try {
+    await runAccountSaveAftermath({
+      accessToken: session.accessToken,
+      accountId,
+      publicId,
+      previousConfig: current.value.config,
+    });
+  } catch (error) {
     await updateAccountInstanceStatusRow({
       accountId,
       publicId,
       status: 'unpublished',
       berlinAccessToken: session.accessToken,
     }).catch(() => undefined);
-    const normalized = normalizeAftermathWarning({
-      status: aftermath.status,
-      payload: aftermath.payload,
-    });
     return withSession(
       request,
-      NextResponse.json({ error: normalized.error }, { status: normalized.status }),
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail: error instanceof Error ? error.message : String(error),
+          },
+        },
+        { status: 502 },
+      ),
       session.setCookies,
     );
   }

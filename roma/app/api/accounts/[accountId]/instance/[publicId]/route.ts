@@ -1,17 +1,16 @@
 import { after, NextRequest, NextResponse } from 'next/server';
 import {
   loadTokyoPreferredAccountInstance,
-  runParisSaveAftermath,
   saveAccountInstanceDirect,
   validatePersistableConfig,
-} from '../../../../../../../bob/lib/account-instance-direct';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../bob/lib/account-authz-capsule';
+} from '../../../../../../lib/account-instance-direct';
+import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../lib/account-authz-capsule';
+import { runAccountSaveAftermath } from '../../../../../../lib/account-save-aftermath';
 import {
   applySessionCookies,
   resolveSessionBearer,
   type SessionCookieSpec,
 } from '../../../../../../lib/auth/session';
-import { resolveParisBaseUrl } from '../../../../../../lib/env/paris';
 import { resolveTokyoBaseUrl } from '../../../../../../lib/env/tokyo';
 
 export const runtime = 'edge';
@@ -190,23 +189,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   if (result.value.changed) {
     after(async () => {
       try {
-        const warning = await runParisSaveAftermath({
-          parisBaseUrl: resolveParisBaseUrl(),
-          parisAccessToken: session.accessToken,
-          authzCapsule: request.headers.get('x-ck-authz-capsule'),
-          internalServiceName: 'roma.edge',
+        await runAccountSaveAftermath({
+          accessToken: session.accessToken,
           accountId,
           publicId,
           previousConfig: result.value.previousConfig,
-          instance: result.value.instance,
-          published: result.value.published,
         });
-        if (warning && process.env.NODE_ENV === 'development') {
-          console.warn('[roma account instance route] save aftermath warning', {
-            publicId,
-            detail: warning.error.detail || warning.error.reasonKey,
-          });
-        }
       } catch (error) {
         console.error('[roma account instance route] save aftermath failed', {
           publicId,

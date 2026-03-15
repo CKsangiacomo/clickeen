@@ -69,7 +69,7 @@ Bob compiles the spec into a deterministic contract:
 Host surfaces (Roma/DevStudio) fetch:
 
 - `compiled` (via Bob compile API)
-- `instanceData` (via same-origin app routes; metadata comes from Michael, config comes from Tokyo, explicit localization rehydrate remains Paris-backed)
+- `instanceData` (via same-origin app routes; metadata comes from Michael, config comes from Tokyo, explicit localization rehydrate comes from Roma same-origin routes backed by Berlin + Tokyo)
 
 Then they wait for Bob session readiness and post into Bob:
 
@@ -103,15 +103,15 @@ Together they:
 - Replies with `bob:open-editor-ack`, then terminal `bob:open-editor-applied` or `bob:open-editor-failed`.
 - Keeps request idempotency state per `requestId` so repeated host sends do not apply duplicate open operations.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
-- Local DevStudio/Bob are tool-trusted only for explicit internal tool flows: there is **no local browser-login shortcut** and Bob account product routes still require the Berlin-issued bootstrap account capsule. Bob must not treat a trusted local token as sufficient on `/api/accounts/*`. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority. All Bob account product requests resolve real Berlin-backed session auth plus the bootstrap account authz capsule.
+- Local DevStudio/Bob are tool-trusted only for explicit internal tool flows: there is **no local browser-login shortcut** and hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma/DevStudio account routes. Bob must not treat a trusted local token as sufficient authority on account product paths. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
 - Bob must not auto-upgrade a trusted local end-user token into Michael service-role access inside shared helpers or normal product routes.
 
 ### URL bootstrap (deterministic, no auto-pick)
 
-Bob bootstraps from URL only when `?boot=url` and both `accountId` + `publicId` are present.
-If URL mode is selected and either is missing, Bob stays unmounted.
+Bob URL bootstrap is only for explicit non-account surfaces.
+If `?subject=account`, Bob requires `?boot=message` and host `ck:open-editor`.
+If URL mode is selected for account mode, Bob fails instead of acting like a second product client.
 In `?boot=message`, Bob ignores URL instance params and waits for host `ck:open-editor`.
-Current architecture direction: Roma/DevStudio use `boot=message`; URL mode remains for explicit URL-bootstrap surfaces.
 Host intent is explicit via `surface` query param on the Bob iframe (`surface=roma` or `surface=devstudio`).
 
 ### Hybrid dev (DevStudio in cloud, Bob local)
@@ -136,13 +136,13 @@ Source:
 ### Instance write surfaces (current)
 
 - Roma user flows can create/duplicate/delete account user instances through Roma same-origin routes plus canonical account instance routes.
-- When Bob is hosted by Roma (`surface=roma`, `boot=message`, `subject=account`), Bob does not own the account mutation transport. It emits explicit editor commands back to the Roma host, and Roma executes the named same-origin account routes (`/api/accounts/...`) on Bob's behalf.
+- When Bob is hosted by Roma (`surface=roma`, `boot=message`, `subject=account`), Bob does not own the account transport. It emits explicit editor read/write intents back to the Roma host, and Roma executes the named same-origin account routes (`/api/accounts/...`) on Bob's behalf.
 - DevStudio Local does not use Roma starter discovery. It discovers instances through the local DevStudio route family (`/api/devstudio/instances*`), boots Bob through explicit `/api/devstudio/instance*` host routes, and delegates Bob account mutations back to the DevStudio host instead of calling Bob customer account routes directly.
 - In DevStudio, Bob/Dieter asset controls also use the local DevStudio route family:
   - list/delete assets: `/api/devstudio/assets/:accountId`
   - upload assets: `/api/devstudio/assets/upload`
     This keeps DevStudio on the trusted local boundary instead of reusing product `/api/assets/*` routes.
-- MiniBob and explicit URL-bootstrap surfaces still use Bob’s own named routes directly when there is no Roma host boundary.
+- MiniBob and explicit non-account URL-bootstrap surfaces still use Bob’s own named routes directly when there is no Roma host boundary. Bob no longer exposes account product routes.
 
 ### Dev subjects and policy (durable)
 
@@ -165,9 +165,9 @@ Read-only mode (DevStudio cloud):
 
 Core base-config lifecycle per open session:
 
-1. One core instance load `GET /api/accounts/:accountId/instance/:publicId?subject=account` plus one explicit localization rehydrate `GET /api/accounts/:accountId/instances/:publicId/localization?subject=account` (performed by host in message boot or by Bob in URL boot).
+1. One core instance load plus one explicit localization rehydrate, both performed by the host in account message boot before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
-3. One save/write command on explicit Save. In Roma-hosted flows, the command is delegated to Roma and Roma calls its same-origin `PUT /api/accounts/:accountId/instance/:publicId?subject=account`; in URL/local flows Bob calls the same Bob route directly. These routes commit the saved revision through Tokyo first, return success immediately, and schedule explicit Paris translation sync and explicit published-surface sync after the response. Base persistence remains immediate; aftermath stays async, is observed via l10n status routes, and does not roll back the saved revision.
+3. One save/write command on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes its same-origin `PUT /api/accounts/:accountId/instance/:publicId?subject=account`; Bob does not call account product routes directly. These routes commit the saved revision through Tokyo first, return success immediately, and schedule direct Roma-owned aftermath after the response. Base persistence remains immediate; aftermath stays async, is observed via l10n status routes, and does not roll back the saved revision.
 
 Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
@@ -492,7 +492,7 @@ See also:
 
 Bob supports instance-content localization (not editor chrome):
 
-- Locale preview uses layered overlays via `/api/accounts/:accountId/instances/:publicId/layers/user/:locale?subject=account`.
+- Locale preview uses layered overlays through Roma-owned account routes in hosted account mode.
 - Manual overrides are stored in layer=user (`/layers/user/:locale` or `/layers/user/global`) and merged last at runtime.
 - In Translate mode, edits are saved as per-field overrides (layer=user) and never change structure.
 - Structural edits (add/remove items) happen only in the base locale (Edit mode), then publish to regenerate locale overlays.

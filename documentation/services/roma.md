@@ -116,7 +116,7 @@ Client fetch behavior:
 - Browser code calls same-origin Roma routes only.
 - `fetchParisJson` in the browser is just a no-store fetch + timeout/reason wrapper.
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
-- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where downstream Paris/Tokyo authz still requires it (`/api/roma/widgets`, `/api/roma/templates`, widget delete, builder/account routes, localization/layer routes).
+- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma/Paris still authorize against the bootstrap capsule (`/api/roma/widgets`, `/api/roma/templates`, widget delete, builder/account routes, localization/layer routes).
 
 ## Bob orchestration contract (Roma Builder)
 
@@ -132,9 +132,9 @@ Client fetch behavior:
 Notes:
 
 - Builder retries open while waiting for ack (bounded attempts + timeout).
-- Bob URL-bootstrap (`boot=url`) still exists for explicit URL-mode surfaces, but Roma Builder uses message boot as canonical.
+- Bob account mode is message-boot only. Explicit URL boot remains only for non-account surfaces.
 - Roma marks Bob iframe host intent with `surface=roma` to keep host-specific auth behavior explicit.
-- In hosted account-editing flows, Bob sends save and account l10n mutation intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
+- In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
 - Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/accounts/:accountId/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Paris only for the internal aftermath orchestration Berlin triggers.
 - Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and non-owner member removal route through Roma same-origin APIs backed by Berlin (`/api/accounts/:accountId/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
 - Roma now exposes a dedicated person-scoped User Settings domain at `/profile`. It renders canonical person data from bootstrap, writes self-profile updates through `/api/me` -> Berlin `PUT /v1/me`, initiates auth-owned email change through `/api/me/email-change` -> Berlin `POST /v1/me/email-change`, and runs phone/WhatsApp verification through same-origin relays to Berlin (`/api/me/contact-methods/:channel/start|verify`). Linked identities stay internal and are not part of the standard customer-facing surface.

@@ -4,7 +4,12 @@ import { HttpError, asString, isRecord } from '../http';
 import { callChatCompletion } from '../ai/chat';
 
 export type AllowlistEntry = { path: string; type: 'string' | 'richtext' };
-export type TranslationItem = { path: string; type: AllowlistEntry['type']; value: string };
+export type TranslationItem = {
+  path: string;
+  type: AllowlistEntry['type'];
+  value: string;
+  promptType?: AllowlistEntry['type'];
+};
 
 type RichtextTagPlaceholder = { placeholder: string; tag: string };
 export type RichtextMaskPlan = {
@@ -25,7 +30,7 @@ type RichtextAnchorSignature = {
   hasVisibleText: boolean;
 };
 
-export const PROMPT_VERSION = 'l10n.instance.v1@2026-02-13.2';
+export const PROMPT_VERSION = 'l10n.instance.v1@2026-03-14.1';
 export const POLICY_VERSION = 'l10n.ops.v1';
 
 const MAX_BATCH_ITEMS = 80;
@@ -40,6 +45,7 @@ const COLON_PLACEHOLDER_PATTERN = /(^|[^a-zA-Z0-9_])(:[a-zA-Z_][a-zA-Z0-9_]*)/g;
 const HTML_TAG_PATTERN = /<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?>/g;
 const URL_PATTERN = /^https?:\/\/\S+$/i;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const UNICODE_LETTER_PATTERN = /[\p{L}\p{M}]/u;
 
 export function collectTranslatableEntries(
   config: Record<string, unknown>,
@@ -49,13 +55,27 @@ export function collectTranslatableEntries(
   const entries = collectAllowlistedEntries(config, allowlist, { includeEmpty: true });
   return entries
     .filter((entry) => includeEmpty || entry.value.trim())
-    .map((entry) => ({ path: entry.path, type: entry.type, value: entry.value }));
+    .map((entry) => ({
+      path: entry.path,
+      type: entry.type,
+      promptType: entry.type,
+      value: entry.value,
+    }));
 }
 
-export function buildSystemPrompt(locale: string): string {
+export function buildSystemPrompt(args: {
+  locale: string;
+  widgetType?: string | null;
+  items: TranslationItem[];
+}): string {
+  const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
+  const promptTypes = new Set(args.items.map((item) => item.promptType ?? item.type));
+  const hasStringItems = promptTypes.has('string');
+  const hasRichtextItems = promptTypes.has('richtext');
   return [
     'You are a localization engine for Clickeen widgets.',
-    `Translate into locale: ${locale}.`,
+    `Translate into locale: ${args.locale}.`,
+    widgetType ? `Context: widgetType=${widgetType}.` : null,
     '',
     'Rules:',
     '- Return ONLY JSON. No markdown, no extra text.',
@@ -70,12 +90,23 @@ export function buildSystemPrompt(locale: string): string {
     '- Preserve acronym style from source; do not add parenthetical expansions that are not present in source text.',
     '- Especially for heading/title strings: keep standalone acronyms standalone (e.g. keep "B&B", do not expand to "B&B (...)").',
     '- Keep output length reasonably close to source unless natural phrasing requires otherwise.',
-    '- Silently self-check fluency before final output.',
-  ].join('\n');
+    hasStringItems
+      ? '- For string fields, write concise UI/product copy suitable for labels, headings, questions, and CTAs.'
+      : null,
+    hasRichtextItems
+      ? '- For richtext fields, write fluent longer-form copy while preserving the existing HTML structure.'
+      : null,
+  ]
+    .filter((line): line is string => Boolean(line))
+    .join('\n');
 }
 
 export function buildUserPrompt(items: TranslationItem[]): string {
-  const payload = items.map((item) => ({ path: item.path, type: item.type, value: item.value }));
+  const payload = items.map((item) => ({
+    path: item.path,
+    type: item.promptType ?? item.type,
+    value: item.value,
+  }));
   return [
     'Translate the following items.',
     'Return JSON array: [{"path":"...","value":"..."},...]',
@@ -234,7 +265,7 @@ export function isLikelyNonTranslatableLiteral(value: string): boolean {
   if (!trimmed) return true;
   if (URL_PATTERN.test(trimmed)) return true;
   if (EMAIL_PATTERN.test(trimmed)) return true;
-  if (!/[a-zA-Z]/.test(trimmed)) return true;
+  if (!UNICODE_LETTER_PATTERN.test(trimmed)) return true;
   return false;
 }
 
@@ -310,7 +341,7 @@ function buildRichtextSegmentPlan(entry: TranslationItem): RichtextSegmentPlan {
         const segmentPath = translatable ? `${entry.path}::__segment__:${segmentIndex}` : null;
         parts.push({ kind: 'text', value: text, segmentPath });
         if (segmentPath) {
-          segments.push({ path: segmentPath, type: 'string', value: text });
+          segments.push({ path: segmentPath, type: 'string', promptType: 'richtext', value: text });
           segmentIndex += 1;
         }
       }
@@ -325,7 +356,7 @@ function buildRichtextSegmentPlan(entry: TranslationItem): RichtextSegmentPlan {
     const segmentPath = translatable ? `${entry.path}::__segment__:${segmentIndex}` : null;
     parts.push({ kind: 'text', value: text, segmentPath });
     if (segmentPath) {
-      segments.push({ path: segmentPath, type: 'string', value: text });
+      segments.push({ path: segmentPath, type: 'string', promptType: 'richtext', value: text });
     }
   } else if (parts.length === 0) {
     const text = entry.value;
@@ -333,7 +364,7 @@ function buildRichtextSegmentPlan(entry: TranslationItem): RichtextSegmentPlan {
     const segmentPath = translatable ? `${entry.path}::__segment__:0` : null;
     parts.push({ kind: 'text', value: text, segmentPath });
     if (segmentPath) {
-      segments.push({ path: segmentPath, type: 'string', value: text });
+      segments.push({ path: segmentPath, type: 'string', promptType: 'richtext', value: text });
     }
   }
 
@@ -636,13 +667,14 @@ export async function translateRichtextWithSegmentFallback(args: {
   grant: AIGrant;
   agentId: string;
   locale: string;
+  widgetType?: string | null;
   expected: TranslationItem;
 }): Promise<{ value: string; usage?: Usage }> {
   const plan = buildRichtextSegmentPlan(args.expected);
   if (plan.segments.length === 0) {
     return { value: args.expected.value };
   }
-  const system = buildSystemPrompt(args.locale);
+  const system = buildSystemPrompt({ locale: args.locale, widgetType: args.widgetType, items: plan.segments });
   const batches = chunkTranslationEntries(plan.segments);
   const translatedSegments = new Map<string, string>();
   let usage: Usage | undefined;

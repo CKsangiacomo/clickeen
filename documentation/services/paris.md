@@ -1,21 +1,20 @@
 # System: Paris — Policy + L10n + Mirror Convergence (PRD 54 / PRD 61)
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
-Last updated: 2026-03-13 (PRD 61 async aftermath + PRD 68 closure corrections)
+Last updated: 2026-03-15 (PRD 070A/070B split)
 
-Paris is the **control/orchestration boundary** for product state:
+Paris is the **control/orchestration boundary** for residual worker-owned state:
 
-- Authz + policy (entitlements) for editor surfaces (Roma/Bob)
-- Paris-owned l10n overlay state in R2/KV
-- Enqueues Tokyo-worker jobs so Tokyo/R2 mirrors what is live
+- Authz verification for editor surfaces (Roma/Bob)
+- Residual l10n/layer routes still mounted in the Worker
+- Minibob handoff + AI grant/outcome endpoints
 
 Active product-surface rule (PRD 61):
 
-- Paris accepts the Berlin-issued Roma/Bob bootstrap authz capsule as the post-bootstrap account auth contract for active product routes (`localization`, `layers`, `l10n/status`, `sync-translations`, `sync-published-surface`, `roma/widgets`, `roma/templates`, `roma/instances/:publicId` delete).
+- Paris accepts the Berlin-issued Roma/Bob bootstrap authz capsule as the post-bootstrap account auth contract for the remaining Paris-mounted account routes (`layers`, `l10n/status`).
 - Paris does not re-read `account_members` for those active product routes.
+- Paris derives account-route policy/entitlement truth from the signed bootstrap capsule and must not recompute entitlements on those routes.
 - Paris account-capsule verification uses one dedicated `ROMA_AUTHZ_CAPSULE_SECRET`. Product auth must not fall back to `AI_GRANT_HMAC_SECRET` or `SUPABASE_SERVICE_ROLE_KEY`.
-- Local DevStudio/Bob tool flows remain explicit local-only trusted-token exceptions for internal tooling only. Normal product account routes still require the Berlin-issued bootstrap capsule and must not treat local trusted-dev access as sufficient authority.
-- Local DevStudio instance listing is a separate internal Paris route; it must not proxy through `/api/roma/widgets`.
 - Local Paris-to-Tokyo internal reads/writes use the same explicit pattern: `TOKYO_DEV_JWT` plus `x-ck-internal-service: paris.local`. Paris must not rely on a bare Tokyo dev token as universal saved-render authority.
 
 Non-negotiable (PRD 54):
@@ -27,26 +26,16 @@ Non-negotiable (PRD 54):
 
 ## Shipped endpoints (this repo snapshot)
 
-### Health + Roma domain
+### Health
 
 - `GET /api/healthz`
-- `GET /api/roma/widgets` — account-visible instance set (`wgt_main_*` + `wgt_curated_*`) for authenticated Roma/admin flows (bootstrap capsule required on the active Roma shell path)
-- `GET /api/roma/templates` — Roma product starter catalog view over published starter instances (bootstrap capsule required on the active Roma shell path)
-- `DELETE /api/roma/instances/:publicId` (bootstrap capsule required on the active Roma shell path)
-- `GET /internal/devstudio/widgets?accountId=<uuid>` — explicit DevStudio local-tool instance list for the seeded platform account; trusted internal-service auth required, not Roma customer auth
-- `GET/PUT /internal/devstudio/instance?accountId=<uuid>&publicId=<publicId>` — explicit DevStudio local-tool instance core read/write for the seeded platform account
-- `GET /internal/devstudio/instance/localization?accountId=<uuid>&publicId=<publicId>` — explicit DevStudio local-tool localization snapshot for Bob message boot
-- `PUT/DELETE /internal/devstudio/instance/localization/user?accountId=<uuid>&publicId=<publicId>&locale=<locale>` — explicit DevStudio local-tool user locale-layer writes
-- `GET /internal/devstudio/instance/l10n-status?accountId=<uuid>&publicId=<publicId>` — explicit DevStudio local-tool translation status read
 
 ### Accounts + instance editing
 
-- `POST /api/accounts/:accountId/instances/:publicId/sync-translations` — explicit translation aftermath from the saved revision
-- `POST /api/accounts/:accountId/instances/:publicId/sync-published-surface` — explicit published-surface aftermath from the saved revision
+- Product-path core instance open/save, localization snapshot rehydrate, and save aftermath are Roma-owned and are not mounted in Paris.
 
 ### Locale pipeline (editor surfaces)
 
-- `GET /api/accounts/:accountId/instances/:publicId/localization?subject=account` — explicit localization snapshot rehydrate for Bob/Roma product flows
 - `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account`
 - `GET /api/accounts/:accountId/instances/:publicId/layers?subject=account`
 - `GET/PUT/DELETE /api/accounts/:accountId/instances/:publicId/layers/:layer/:layerKey?subject=account`
@@ -77,10 +66,11 @@ Locale/account note:
 - Tier lifecycle settings actions are now Berlin-owned through Roma same-origin routes and are no longer mounted in Paris.
 - Account creation is Berlin-owned and is no longer mounted in Paris.
 - Flat locales reads and writes are served from Berlin-backed Roma same-origin routes.
+- Roma starter discovery (`/api/roma/widgets`, `/api/roma/templates`) is Roma-owned and no longer mounted in Paris.
 - Paris still owns the locale aftermath/orchestration work after Berlin commits account locale truth.
 - Members reads are served from Berlin-backed Roma same-origin routes (`/api/accounts/:accountId/members`), not Paris.
 - Product-path core account instance reads now come from Bob/Roma same-origin routes that resolve the saved authoring revision from Tokyo directly.
-- Explicit localization snapshot rehydrate remains Paris-backed through a narrow localization-only endpoint, not through a compatibility alias of the full-instance envelope.
+- Explicit localization snapshot rehydrate and account save aftermath are Roma-owned and no longer mounted in Paris.
 
 ### Assets boundary
 
@@ -107,19 +97,14 @@ Non-negotiable:
 Paris does one boring thing:
 
 1. Validate auth/ownership + payload shape
-2. Read the saved revision / overlay state it needs
-3. Drive only the explicit aftermath requested from that saved revision
+2. Read the overlay/runtime state it needs for the Worker-owned routes that remain
+3. Drive only the internal orchestration or worker-specific work that still lives there
 
 ### Product Save (current cutover)
 
 - Bob/Roma same-origin routes commit `config` directly to the Tokyo saved snapshot.
-- Paris product-path role is explicit save aftermath only: translation sync and published-surface sync after the Tokyo commit.
-- Bob/Roma now schedule save aftermath after the save response returns; Paris is no longer on the synchronous save-response path.
-- Paris aftermath is observable convergence, not part of a multi-service save transaction. If it warns or fails, the Tokyo save remains committed and the failure is observable through status/logging rather than by rejecting the save.
-- The internal account-locales aftermath route must also report degraded orchestration explicitly; it must not return `200 { ok: true }` when locale resync work failed or was skipped in a way that needs operator attention.
-- Save aftermath now authorizes from the bootstrap authz capsule and the caller-provided save context (`widgetType`, `status`, `source`, `previousConfig`); it does not re-load the product-path instance row from Michael before running account save aftermath.
-- If translatable base text changed: Paris enqueues l10n work regardless of `published` / `unpublished`.
-- Public mirror writes remain gated by live status.
+- Product-path save aftermath now runs from Roma against Berlin/Tokyo/San Francisco/Tokyo-worker; it is no longer mounted in Paris.
+- The internal account-locales aftermath route must still report degraded orchestration explicitly; it must not return `200 { ok: true }` when locale resync work failed or was skipped in a way that needs operator attention.
 
 ### After-Save Convergence (published instance)
 
@@ -129,14 +114,22 @@ If the instance is live (`status="published"`), Paris also enqueues Tokyo mirror
 - `write-config-pack` (when configFp changes)
 - `sync-live-surface` (moves `renders/instances/<publicId>/live/r.json` last)
 
+Current readiness contract:
+
+- Roma/account settings plus entitlements determine the desired locale set.
+- Paris translation aftermath reconciles Tokyo toward that desired set for the current `baseFingerprint`.
+- Paris may use generation/materialization state internally, but the consumer pointer it sends to Tokyo must contain only `readyLocales` confirmed in Tokyo for that exact fingerprint.
+- When a locale becomes ready for a published instance/current fingerprint, Paris reconverges the published surface on the write path; consumer/embed must not wait for another manual save.
+
 ### Explicit status change
 
 - `publish` / `unpublish` are Roma-owned widget status commands. Paris is no longer the transport boundary for those commands; it remains available for explicit published-surface convergence work.
 
 Source of truth:
 
-- `paris/src/domains/account-instances/save-aftermath-handlers.ts`
-- `paris/src/shared/mirror-packs.ts` (strip text from config packs so text edits don’t churn `configFp`)
+- `roma/lib/account-save-aftermath.ts`
+- `paris/src/shared/text-packs.ts` (strip text from config packs so text edits don’t churn `configFp`)
+- `paris/src/shared/tokyo-mirror-jobs.ts` (enqueue Tokyo text/meta/config/live-sync jobs)
 - `paris/src/shared/stable-json.ts` (stable JSON hashing; must match tokyo-worker)
 
 ---
@@ -163,9 +156,10 @@ Job kinds (v1):
 
 Paris resolves policy from:
 
-- `packages/ck-policy/entitlements.matrix.json` via `@clickeen/ck-policy`
+- bootstrap capsule entitlements on active account product routes
+- explicit control-plane resolution only at the minting/control boundary (for example Berlin bootstrap or Minibob/session grant flows)
 
 PRD 54 requires:
 
 - SEO/GEO embed to be tier-gated (`embed.seoGeo.enabled`)
-- Locale count to be capped (`l10n.locales.max`) **before** any generation/mirroring
+- Locale count to be capped (`l10n.locales.max`) at the control plane before the Roma locale set is saved; Paris translation/mirroring then consumes that saved locale set without reinterpreting the cap on the hot path
