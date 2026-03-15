@@ -190,8 +190,9 @@ CTAs are **never interruptive**. They appear as part of the natural conversation
 1) UI calls Bob (same-origin):
 - `POST /api/ai/widget-copilot`
 
-2) Bob requests a short-lived grant from Paris:
-- `POST {PARIS_BASE_URL}/api/ai/grant`
+2) The owning backend surface mints the short-lived grant:
+- account-mode Builder: Roma instance route
+- MiniBob/public: Bob same-origin route
 
 3) Bob executes on San Francisco:
 - `POST {SANFRANCISCO_BASE_URL}/v1/execute`
@@ -204,12 +205,12 @@ Prompt profiles (runtime persona pack):
 5) Bob applies ops, then waits for Keep/Undo.
 
 6) UI reports outcomes:
-- `POST /api/ai/outcome` → `POST {PARIS_BASE_URL}/api/ai/outcome` → `POST {SANFRANCISCO_BASE_URL}/v1/outcome`
+- `POST /api/ai/outcome` (Bob public flow) or Roma instance outcome route (account flow) → `POST {SANFRANCISCO_BASE_URL}/v1/outcome`
 
 ### 4.2 "Two-call model" clarification
-From Bob's perspective, a single Copilot request uses **two platform services**:
-- Bob → Paris (grant)
-- Bob → San Francisco (execute)
+From the product perspective, a single Copilot request uses **two backend steps**:
+- owning backend surface mints the grant
+- owning backend surface calls San Francisco to execute
 
 (San Francisco calls the provider/model resolved by grant policy; Minibob public mint currently defaults to Amazon Nova unless request overrides are accepted.)
 

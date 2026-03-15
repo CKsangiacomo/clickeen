@@ -375,8 +375,9 @@ Minibob keep gate (public UX):
 
 ### AI routes (current)
 
-- `/api/ai/widget-copilot`: Widget Copilot execution (Paris grant → San Francisco execute). Returns `422` for invalid payloads; returns `200 { message }` for upstream failures to avoid noisy “Failed to load resource” console errors.
-- `/api/ai/outcome`: Outcome attach proxy (Bob → Paris → San Francisco). Always returns `200` (best-effort).
+- `/api/ai/widget-copilot`: public MiniBob Copilot execution (Bob-minted MiniBob grant → San Francisco execute). Account-mode Builder requests no longer execute here; embedded Bob delegates those to Roma.
+- `/api/ai/outcome`: best-effort outcome attach to San Francisco for same-origin Bob flows.
+- `/api/ai/minibob/session`: Bob-owned MiniBob session mint. The browser no longer calls Paris directly for this.
 
 Deployment note (verified on February 11, 2026):
 
@@ -390,7 +391,7 @@ Deployment note (verified on February 11, 2026):
 
 ### Copilot env vars (local + Cloud-dev)
 
-- `PARIS_BASE_URL` is used by Bob’s AI routes to request grants and attach outcomes.
+- `AI_GRANT_HMAC_SECRET` is used by Bob’s public MiniBob AI routes to mint MiniBob session/grant tokens and sign outcomes.
 - `SANFRANCISCO_BASE_URL` should point at the San Francisco Worker. (`/api/ai/widget-copilot` also has local fallbacks + health probing.)
 
 ---
@@ -551,16 +552,17 @@ Important boundary:
 Bob editor routes are explicit and non-`/api/paris`:
 
 - `bob/app/api/instance/[publicId]/route.ts` (minibob read shortcut; `subject=minibob`)
-- `bob/app/api/accounts/[accountId]/instance/[publicId]/route.ts`
-- `bob/app/api/accounts/[accountId]/instances/[publicId]/layers/user/[locale]/route.ts`
-- `bob/app/api/accounts/[accountId]/instances/[publicId]/l10n/status/route.ts`
+- `bob/app/api/ai/widget-copilot/route.ts`
+- `bob/app/api/ai/widget-copilot/handler.ts`
+- `bob/app/api/ai/outcome/route.ts`
+- `bob/app/api/ai/minibob/session/route.ts`
 
 The proxy currently supports:
 
-- `PARIS_BASE_URL` (preferred)
+- `PARIS_BASE_URL` for the residual public/minibob Paris-owned paths
 - `NEXT_PUBLIC_PARIS_URL` / `http://localhost:3001` default (present in code today)
 
-Account-scoped proxy calls require `subject=account|minibob` to resolve policy.
+Account-mode Builder reads/writes do not proxy through Bob. They delegate to Roma same-origin routes through the Builder host message channel.
 
 Bob does not own account language policy/settings. Enabled languages, base locale, and locale policy are managed in Roma Settings.
 
@@ -648,5 +650,5 @@ Preview:
 
 - Backward compatibility / legacy instance migration.
 - Hardened embed runtime surface (Venice) as a product contract.
-- Copilot rollout/auth: Paris grant issuance is currently a dev-gated surface in this repo snapshot; production user/account auth + allowlists/flags evolve with the release model.
+- Copilot rollout/auth: account-mode Copilot now runs through Roma-owned backend routes, while public MiniBob grant/session minting lives on Bob. Production allowlists/flags still evolve with the release model.
 - Copilot policy hardening: post-model “light edits only” caps + scope confirmation + deeper grounding to per-widget `agent.md` contracts (in progress).

@@ -208,17 +208,14 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
   - Public read: `GET /api/instance/:publicId` (user-owned rows are published-only).
   - Product editor persistence hot path is no longer exposed directly from Paris.
   - Core account instance open/save now lives only in Bob/Roma same-origin routes; Paris no longer exposes `GET/PUT /api/accounts/:accountId/instance/:publicId?subject=account`.
-  - Locale/editor endpoints: `GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`; account language settings are owned by Roma Settings through `/api/accounts/:accountId/locales`, with Berlin owning the account mutation and Paris limited to the internal locale aftermath orchestration path only.
-  - L10n/layers: `GET /api/accounts/:accountId/instances/:publicId/l10n/status`, `GET /api/accounts/:accountId/instances/:publicId/layers`, `GET/PUT/DELETE /api/accounts/:accountId/instances/:publicId/layers/:layer/:layerKey`.
+  - Locale/editor endpoints are Roma-owned; Paris is limited to the internal locale aftermath orchestration path only.
   - Roma starter discovery is Roma-owned (`GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`); Paris no longer mounts those routes.
   - Roma widget commands stay explicit (`POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`).
-  - Signup/handoff endpoints: `POST /api/minibob/handoff/start`, `POST /api/minibob/handoff/complete`.
-  - AI endpoints: `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`.
+  - Public worker/reporting routes that still remain: `POST /api/l10n/jobs/report`, `POST /internal/accounts/:accountId/locales/aftermath`.
+  - Paris no longer mounts AI endpoints in the product path under 070A.
 - Current cloud-dev account rule:
   - Account creation is Berlin-owned; Paris no longer mounts account creation.
-  - `POST /api/minibob/handoff/complete` accepts only platform-owned accounts in non-local stages.
-- Layered l10n endpoints are canonical.
-  - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
+  - MiniBob handoff now starts in a Roma route and completes inside Roma session finish; non-local completion still targets platform-owned accounts only.
   - Instance routing uses `publicId` prefix: `wgt_main_*` marks the instance shown first in MiniBob, `wgt_curated_*` marks other starter instances, `wgt_*_u_*` marks instances in user accounts.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
 - Product-path base-config writes persist through Bob/Roma same-origin routes to Tokyo; Paris handles explicit translation and published-surface aftermath asynchronously after the save response returns.
@@ -418,35 +415,17 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           AI COPILOT FLOW                               │
 │                                                                         │
-│  ┌──────────────┐  POST /api/ai/widget-copilot ┌─────────┐             │
-│  │ Browser UI   │ ────────────────────────────►│   Bob   │             │
-│  │ (ToolDrawer) │                              │  (API)  │             │
-│  └──────┬───────┘                              └────┬────┘             │
-│         │                                            │                  │
-│         │                         POST /api/ai/grant │                  │
-│         │                         (AI Grant)         ▼                  │
-│         │                                       ┌─────────┐            │
-│         │                                       │  Paris  │            │
-│         │                                       │   API   │            │
-│         │                                       └────┬────┘            │
-│         │                                            │                  │
-│         │                     POST /v1/execute (grant│                  │
-│         │                     + agentId + input)     ▼                  │
-│         │                                       ┌──────────────┐        │
-│         │                                       │ SanFrancisco  │        │
-│         │                                       │  /v1/execute  │        │
-│         │                                       └──────┬───────┘        │
-│         │                                              │                │
-│         │                                              ▼                │
-│         │                       Provider selected by profile + grant    │
-│         │                    (DeepSeek / OpenAI / Anthropic / Groq / Amazon) │
-│         │                                                               │
-│         │  Response: { message, ops?, meta.requestId, usage }           │
-│         ▼                                                               │
-│  Bob applies ops strictly (controls allowlist) and requires Keep/Undo   │
+│  Account-mode Builder:                                                  │
+│    Browser UI (Bob iframe) → Roma instance-scoped copilot route         │
+│    → SanFrancisco /v1/execute                                            │
+│                                                                         │
+│  MiniBob/public:                                                        │
+│    Browser UI → Bob /api/ai/minibob/session                             │
+│    Browser UI → Bob /api/ai/widget-copilot                              │
+│    → SanFrancisco /v1/execute                                            │
 │                                                                         │
 │  Outcomes (keep/undo/CTA clicks):                                       │
-│    Browser → POST /api/ai/outcome (Bob) → POST /api/ai/outcome (Paris)  │
+│    Browser → Roma/Bob same-origin outcome route                         │
 │           → POST /v1/outcome (SanFrancisco, signed)                     │
 └─────────────────────────────────────────────────────────────────────────┘
 ```

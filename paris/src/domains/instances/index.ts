@@ -5,7 +5,6 @@ import type { CuratedInstanceRow, Env, InstanceRow, WidgetRow } from '../../shar
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
-import { formatCuratedDisplayName, readCuratedMeta } from '../../shared/curated-meta';
 import { asTrimmedString, assertConfig } from '../../shared/validation';
 import { loadAccountById } from '../../shared/accounts';
 import {
@@ -20,6 +19,17 @@ const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 
 const USER_INSTANCE_SELECT_WITH_DISPLAY_NAME =
   'public_id,display_name,status,config,created_at,updated_at,widget_id,account_id,kind';
+
+function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  return raw as Record<string, unknown>;
+}
+
+function formatCuratedDisplayName(meta: Record<string, unknown> | null, fallback: string): string {
+  if (!meta) return fallback;
+  const styleName = asTrimmedString(meta.styleName ?? meta.name ?? meta.title);
+  return styleName || fallback;
+}
 
 async function fetchUserInstanceRows(
   env: Env,

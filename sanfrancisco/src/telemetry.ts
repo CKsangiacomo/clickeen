@@ -82,7 +82,7 @@ async function hmacSha256Base64Url(secret: string, message: string): Promise<str
 }
 
 export async function verifyOutcomeSignature(args: { request: Request; env: Env; bodyText: string }): Promise<void> {
-  const provided = asTrimmedString(args.request.headers.get('x-paris-signature'));
+  const provided = asTrimmedString(args.request.headers.get('x-clickeen-signature'));
   if (!provided) {
     throw new HttpError(401, { code: 'CAPABILITY_DENIED', message: 'Missing signature' });
   }

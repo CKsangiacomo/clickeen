@@ -78,7 +78,9 @@ type BobAccountCommand =
   | 'get-l10n-status'
   | 'update-instance'
   | 'put-user-locale-layer'
-  | 'delete-user-locale-layer';
+  | 'delete-user-locale-layer'
+  | 'run-copilot'
+  | 'attach-ai-outcome';
 
 type BobAccountCommandMessage = {
   type: 'bob:account-command';
@@ -234,6 +236,20 @@ function resolveBobAccountCommandRequest(args: {
         path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
           publicId,
         )}/layers/user/${encodeURIComponent(locale)}?subject=account`,
+      };
+    case 'run-copilot':
+      return {
+        method: 'POST',
+        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/copilot`,
+      };
+    case 'attach-ai-outcome':
+      return {
+        method: 'POST',
+        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+          publicId,
+        )}/copilot/outcome`,
       };
     default:
       return null;

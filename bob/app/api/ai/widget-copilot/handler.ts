@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveParisBaseUrl } from '../../../../lib/env/paris';
 import { WIDGET_COPILOT_AGENT_ALIAS, WIDGET_COPILOT_AGENT_IDS } from '@clickeen/ck-policy';
-import { applySessionCookies, resolveParisSession, withParisDevAuthorization } from '../../../../lib/api/paris/proxy-helpers';
+import { issueMinibobCopilotGrant, verifyMinibobSessionToken } from '../../../../lib/ai/minibob';
 
 export const runtime = 'edge';
 
@@ -167,150 +166,6 @@ function checkRateLimit(req: Request) {
   return null;
 }
 
-async function getAiGrant(args: {
-  agentId: string;
-  accessToken: string;
-  mode: 'editor' | 'ops';
-  widgetType: string;
-  sessionId: string;
-  sessionToken?: string;
-  instancePublicId?: string;
-  accountId?: string;
-  subject?: AiGrantSubject;
-  provider?: string;
-  model?: string;
-  budgets?: { maxTokens?: number; timeoutMs?: number; maxRequests?: number };
-}) {
-  let parisBaseUrl = '';
-  try {
-    parisBaseUrl = resolveParisBaseUrl();
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { ok: false as const, error: 'AI_NOT_CONFIGURED', message };
-  }
-
-  const baseUrl = parisBaseUrl.replace(/\/$/, '');
-  const headers = withParisDevAuthorization(new Headers({ 'Content-Type': 'application/json' }), args.accessToken);
-
-  const useMinibobGrant = args.subject === 'minibob';
-
-  if (useMinibobGrant) {
-    const sessionToken = asTrimmedString(args.sessionToken);
-    if (!sessionToken) {
-      return {
-        ok: false as const,
-        error: 'AI_UPSTREAM_ERROR',
-        message: 'Missing sessionToken for Minibob request (client must mint /api/ai/minibob/session once per session).',
-      };
-    }
-
-    let grantRes: Response;
-    try {
-      grantRes = await fetch(`${baseUrl}/api/ai/minibob/grant`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          sessionToken,
-          sessionId: args.sessionId,
-          widgetType: args.widgetType,
-          ...(args.provider ? { provider: args.provider } : {}),
-          ...(args.model ? { model: args.model } : {}),
-        }),
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: `Minibob grant request failed: ${message}` };
-    }
-
-    const grantText = await grantRes.text().catch(() => '');
-    const grantPayload = safeJsonParse(grantText) as any;
-    if (!grantRes.ok) {
-      const denyReasonKey = asTrimmedString(grantPayload?.error?.reasonKey);
-      if (grantPayload?.error?.kind === 'DENY' && denyReasonKey) {
-        return {
-          ok: false as const,
-          error: 'AI_UPSELL' as const,
-          message: denyReasonKey,
-          detail: asTrimmedString(grantPayload?.error?.detail) || undefined,
-        };
-      }
-      let message =
-        typeof grantPayload?.message === 'string'
-          ? grantPayload.message
-          : looksLikeHtml(grantText)
-            ? `Paris returned an HTML error page (HTTP ${grantRes.status}). Check PARIS_BASE_URL (currently: ${baseUrl}).`
-            : grantText || `Grant request failed (${grantRes.status})`;
-      if (looksLikeHtml(message)) {
-        message = summarizeUpstreamError({ serviceName: 'Paris', baseUrl: parisBaseUrl, status: grantRes.status, bodyText: message });
-      }
-      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
-    }
-
-    const grant = asTrimmedString(grantPayload?.grant);
-    const issuedAgentId = asTrimmedString(grantPayload?.agentId) || WIDGET_COPILOT_AGENT_IDS.sdr;
-    if (!grant || !issuedAgentId || !isWidgetCopilotAgentId(issuedAgentId)) {
-      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: 'Grant service returned an invalid response' };
-    }
-    if (issuedAgentId !== WIDGET_COPILOT_AGENT_IDS.sdr) {
-      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: 'Minibob grant returned an invalid agentId' };
-    }
-    return { ok: true as const, value: { grant, agentId: issuedAgentId } };
-  }
-
-  const url = `${baseUrl}/api/ai/grant`;
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        agentId: args.agentId,
-        mode: args.mode,
-        trace: { sessionId: args.sessionId, ...(args.instancePublicId ? { instancePublicId: args.instancePublicId } : {}) },
-        ...(args.accountId ? { accountId: args.accountId } : {}),
-        ...(args.subject ? { subject: args.subject } : {}),
-        ...(args.provider ? { provider: args.provider } : {}),
-        ...(args.model ? { model: args.model } : {}),
-        budgets: args.budgets,
-      }),
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: `Grant request failed: ${message}` };
-  }
-
-  const text = await res.text().catch(() => '');
-  const payload = safeJsonParse(text) as any;
-  if (!res.ok) {
-    const denyReasonKey = asTrimmedString(payload?.error?.reasonKey);
-    if (payload?.error?.kind === 'DENY' && denyReasonKey) {
-      return {
-        ok: false as const,
-        error: 'AI_UPSELL' as const,
-        message: denyReasonKey,
-        detail: asTrimmedString(payload?.error?.detail) || undefined,
-      };
-    }
-    let message =
-      typeof payload?.message === 'string'
-        ? payload.message
-        : looksLikeHtml(text)
-          ? `Paris returned an HTML error page (HTTP ${res.status}). Check PARIS_BASE_URL (currently: ${baseUrl}).`
-          : text || `Grant request failed (${res.status})`;
-    if (looksLikeHtml(message)) {
-      message = summarizeUpstreamError({ serviceName: 'Paris', baseUrl: parisBaseUrl, status: res.status, bodyText: message });
-    }
-    return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
-  }
-
-  const grant = asTrimmedString(payload?.grant);
-  const issuedAgentId = asTrimmedString(payload?.agentId);
-  if (!grant || !issuedAgentId || !isWidgetCopilotAgentId(issuedAgentId)) {
-    return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: 'Grant service returned an invalid response' };
-  }
-  return { ok: true as const, value: { grant, agentId: issuedAgentId } };
-}
-
 async function executeOnSanFrancisco(args: { grant: string; agentId: string; input: unknown; traceClient?: string }) {
   const resolved = await resolveSanFranciscoBaseUrl();
   if (!resolved) return { ok: false as const, error: 'AI_NOT_CONFIGURED', message: 'SanFrancisco is not reachable' };
@@ -352,30 +207,20 @@ async function executeOnSanFrancisco(args: { grant: string; agentId: string; inp
 }
 
 export async function POST(req: NextRequest) {
-  const session = await resolveParisSession(req);
-  if (!session.ok) return session.response;
-  const withSession = (response: NextResponse) => applySessionCookies(response, req, session.setCookies);
-
   try {
     const resolved = await resolveSanFranciscoBaseUrl();
     if (!resolved) {
-      // Return 200 so the UI can display a friendly message without triggering noisy console "Failed to load resource" logs.
-      return withSession(
-        NextResponse.json(
-          { message: 'Copilot is temporarily unavailable (SanFrancisco is not reachable). Please try again in a moment.' },
-          { status: 200 },
-        ),
+      return NextResponse.json(
+        { message: 'Copilot is temporarily unavailable (SanFrancisco is not reachable). Please try again in a moment.' },
+        { status: 200 },
       );
     }
 
     const limited = checkRateLimit(req);
     if (limited) {
-      // Return 200 so the UI can show this inline (no red console errors).
-      return withSession(
-        NextResponse.json(
-          { message: 'Too many Copilot requests. Please wait a moment and try again.' },
-          { status: 200, headers: { 'x-retry-after-ms': String(limited.retryAfterMs) } },
-        ),
+      return NextResponse.json(
+        { message: 'Too many Copilot requests. Please wait a moment and try again.' },
+        { status: 200, headers: { 'x-retry-after-ms': String(limited.retryAfterMs) } },
       );
     }
 
@@ -384,9 +229,8 @@ export async function POST(req: NextRequest) {
     const widgetType = asTrimmedString(body?.widgetType);
     const sessionId = asTrimmedString(body?.sessionId);
     const sessionToken = asTrimmedString(body?.sessionToken);
-    const instancePublicId = asTrimmedString(body?.instancePublicId) || undefined;
-    const accountId = asTrimmedString(body?.accountId) || undefined;
     const rawSubject = asTrimmedString(body?.subject) || undefined;
+    const accountId = asTrimmedString(body?.accountId) || undefined;
     const subject = normalizeSubject({ rawSubject, accountId });
     const requestedAgentId = asTrimmedString(body?.agentId) || WIDGET_COPILOT_AGENT_ALIAS;
     const provider = asTrimmedString(body?.provider) || undefined;
@@ -394,75 +238,73 @@ export async function POST(req: NextRequest) {
     const currentConfig = body?.currentConfig;
     const controls = body?.controls;
 
-    const isMinibob = subject === 'minibob';
-
     const issues: Array<{ path: string; message: string }> = [];
     if (!prompt) issues.push({ path: 'prompt', message: 'prompt is required' });
     if (!widgetType) issues.push({ path: 'widgetType', message: 'widgetType is required' });
     if (!sessionId) issues.push({ path: 'sessionId', message: 'sessionId is required' });
     if (!isRecord(currentConfig)) issues.push({ path: 'currentConfig', message: 'currentConfig must be an object' });
     if (!Array.isArray(controls)) issues.push({ path: 'controls', message: 'controls must be an array' });
-    if (!subject) issues.push({ path: 'subject', message: 'subject must be account|minibob and account requires accountId' });
-    if (isMinibob && !sessionToken) issues.push({ path: 'sessionToken', message: 'sessionToken is required for Minibob requests' });
+    if (!subject) issues.push({ path: 'subject', message: 'subject must be minibob or account' });
     if (!ALLOWED_WIDGET_COPILOT_AGENT_IDS.has(requestedAgentId)) {
       issues.push({ path: 'agentId', message: 'agentId must be widget.copilot.v1, sdr.widget.copilot.v1, or cs.widget.copilot.v1' });
     }
-    if (issues.length) return withSession(NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 }));
+    if (issues.length) return NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 });
 
-    const grantRes = await getAiGrant({
-      agentId: requestedAgentId,
-      accessToken: session.accessToken,
-      mode: 'ops',
-      widgetType,
-      sessionId,
-      ...(isMinibob ? { sessionToken } : {}),
-      instancePublicId,
-      accountId,
-      subject: subject ?? undefined,
-      provider,
-      model,
-      // Website-based content edits may require a single-page fetch + an LLM call. Keep this generous in local dev.
-      budgets: { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 },
-    });
-    if (!grantRes.ok) {
-      if (grantRes.error === 'AI_UPSELL') {
-        const action = isMinibob ? ('signup' as const) : ('upgrade' as const);
-        const ctaText = isMinibob ? 'Create a free account to continue' : 'Upgrade to continue';
-        const message = isMinibob ? 'Copilot limit reached. Create a free account to continue.' : 'Copilot limit reached. Upgrade to continue.';
-        return withSession(
-          NextResponse.json(
-            { message, cta: { text: ctaText, action }, reasonKey: grantRes.message, detail: grantRes.detail },
-            { status: 200 },
-          ),
-        );
-      }
-      return withSession(
-        NextResponse.json(
-          { message: grantRes.message || 'Copilot is temporarily unavailable. Please try again.' },
-          { status: 200 },
-        ),
+    if (subject !== 'minibob') {
+      return NextResponse.json(
+        { message: 'Account-mode Copilot now runs through Roma. Reopen Builder from Roma and try again.' },
+        { status: 409 },
       );
     }
 
-    const traceClient = isMinibob ? 'minibob' : 'bob';
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'VALIDATION', issues: [{ path: 'sessionToken', message: 'sessionToken is required for Minibob requests' }] }, { status: 422 });
+    }
+
+    const verified = await verifyMinibobSessionToken(sessionToken);
+    if (!verified.ok) {
+      return NextResponse.json({ message: verified.message }, { status: verified.status });
+    }
+
+    const grantRes = await issueMinibobCopilotGrant({
+      agentId: requestedAgentId,
+      requestedProvider: provider,
+      requestedModel: model,
+      trace: { sessionId },
+      budgets: { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 },
+    });
+    if (!grantRes.ok) {
+      if (grantRes.status === 403) {
+        return NextResponse.json(
+          {
+            message: 'Copilot limit reached. Create a free account to continue.',
+            cta: { text: 'Create a free account to continue', action: 'signup' },
+            reasonKey: grantRes.reasonKey,
+            detail: grantRes.detail,
+          },
+          { status: 200 },
+        );
+      }
+      return NextResponse.json({ message: grantRes.reasonKey }, { status: grantRes.status });
+    }
+
     const executed = await executeOnSanFrancisco({
-      grant: grantRes.value.grant,
-      agentId: grantRes.value.agentId,
-      traceClient,
+      grant: grantRes.grant,
+      agentId: grantRes.agentId,
+      traceClient: 'minibob',
       input: {
         prompt,
         widgetType,
         currentConfig,
         controls,
         sessionId,
+        sessionKey: verified.sessionKey,
       },
     });
     if (!executed.ok) {
-      return withSession(
-        NextResponse.json(
-          { message: executed.message || 'Copilot is temporarily unavailable. Please try again.' },
-          { status: 200 },
-        ),
+      return NextResponse.json(
+        { message: executed.message || 'Copilot is temporarily unavailable. Please try again.' },
+        { status: 200 },
       );
     }
 
@@ -470,19 +312,15 @@ export async function POST(req: NextRequest) {
     const result = executed.value?.result ?? null;
     if (requestId && isRecord(result)) {
       const baseMeta = isRecord((result as any).meta) ? ((result as any).meta as Record<string, unknown>) : {};
-      const meta = { ...baseMeta, requestId };
-      return withSession(NextResponse.json({ ...(result as Record<string, unknown>), meta }));
+      return NextResponse.json({ ...(result as Record<string, unknown>), meta: { ...baseMeta, requestId } });
     }
 
-    return withSession(NextResponse.json(result));
+    return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    // Return 200 so UI can surface the message inline without a console error spam.
-    return withSession(
-      NextResponse.json(
-        { message: message || 'Copilot failed unexpectedly. Please try again.' },
-        { status: 200 },
-      ),
+    return NextResponse.json(
+      { message: message || 'Copilot failed unexpectedly. Please try again.' },
+      { status: 200 },
     );
   }
 }

@@ -166,7 +166,9 @@ export type BobAccountCommand =
   | 'get-l10n-status'
   | 'update-instance'
   | 'put-user-locale-layer'
-  | 'delete-user-locale-layer';
+  | 'delete-user-locale-layer'
+  | 'run-copilot'
+  | 'attach-ai-outcome';
 
 export type BobAccountCommandMessage = {
   type: 'bob:account-command';

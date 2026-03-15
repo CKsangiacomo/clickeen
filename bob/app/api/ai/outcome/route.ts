@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveParisBaseUrl } from '../../../../lib/env/paris';
-import { applySessionCookies, resolveParisSession, withParisDevAuthorization } from '../../../../lib/api/paris/proxy-helpers';
+import { signOutcomeBody } from '../../../../lib/ai/minibob';
 
 export const runtime = 'edge';
 
@@ -55,66 +54,51 @@ function isValidOutcomePayload(value: unknown): value is {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await resolveParisSession(req);
-  if (!session.ok) return session.response;
-
   try {
     const body = (await req.json().catch(() => null)) as unknown;
     if (!isValidOutcomePayload(body)) {
-      return applySessionCookies(
-        NextResponse.json({ ok: false, message: 'Invalid outcome payload' }, { status: 200, headers: { 'cache-control': 'no-store' } }),
-        req,
-        session.setCookies,
-      );
+      return NextResponse.json({ ok: false, message: 'Invalid outcome payload' }, { status: 200, headers: { 'cache-control': 'no-store' } });
     }
 
-    let parisBaseUrl = '';
-    try {
-      parisBaseUrl = resolveParisBaseUrl();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return applySessionCookies(
-        NextResponse.json({ ok: false, message }, { status: 200, headers: { 'cache-control': 'no-store' } }),
-        req,
-        session.setCookies,
-      );
+    const baseUrl =
+      process.env.SANFRANCISCO_BASE_URL ||
+      process.env.NEXT_PUBLIC_SANFRANCISCO_URL ||
+      '';
+    const normalizedBaseUrl = baseUrl.trim().replace(/\/+$/, '');
+    if (!normalizedBaseUrl) {
+      return NextResponse.json({ ok: false, message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 200, headers: { 'cache-control': 'no-store' } });
     }
 
-    const url = `${parisBaseUrl.replace(/\/$/, '')}/api/ai/outcome`;
-    const headers = withParisDevAuthorization(new Headers({ 'Content-Type': 'application/json' }), session.accessToken);
+    const outcomeCommand = {
+      command: 'ai.outcome.attach' as const,
+      payload: body,
+    };
+    const bodyText = JSON.stringify(outcomeCommand);
+    const signature = await signOutcomeBody(bodyText);
 
-    const res = await fetch(url, {
+    const res = await fetch(`${normalizedBaseUrl}/v1/outcome`, {
       method: 'POST',
-      headers,
-      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-clickeen-signature': signature,
+      },
+      body: bodyText,
     });
 
     const text = await res.text().catch(() => '');
     if (!res.ok) {
-      return applySessionCookies(
-        NextResponse.json(
-          { ok: false, message: text || `Outcome attach failed (${res.status})` },
-          { status: 200, headers: { 'cache-control': 'no-store' } },
-        ),
-        req,
-        session.setCookies,
+      return NextResponse.json(
+        { ok: false, message: text || `Outcome attach failed (${res.status})` },
+        { status: 200, headers: { 'cache-control': 'no-store' } },
       );
     }
 
-    return applySessionCookies(
-      NextResponse.json({ ok: true, data: safeJsonParse(text) }, { status: 200, headers: { 'cache-control': 'no-store' } }),
-      req,
-      session.setCookies,
-    );
+    return NextResponse.json({ ok: true, data: safeJsonParse(text) }, { status: 200, headers: { 'cache-control': 'no-store' } });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return applySessionCookies(
-      NextResponse.json(
-        { ok: false, message: message || 'Outcome attach failed' },
-        { status: 200, headers: { 'cache-control': 'no-store' } },
-      ),
-      req,
-      session.setCookies,
+    return NextResponse.json(
+      { ok: false, message: message || 'Outcome attach failed' },
+      { status: 200, headers: { 'cache-control': 'no-store' } },
     );
   }
 }

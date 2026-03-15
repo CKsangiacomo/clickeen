@@ -3,146 +3,23 @@ import {
   type Policy,
   type PolicyEntitlementsSnapshot,
 } from '@clickeen/ck-policy';
-import type { AccountRow, Env, InstanceRow, L10nGenerateStateRow, L10nGenerateStatus } from '../../shared/types';
+import type { AccountRow, Env, InstanceRow } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
-import { apiError, ckError, errorDetail } from '../../shared/errors';
+import { ckError, errorDetail } from '../../shared/errors';
 import { asTrimmedString, isRecord } from '../../shared/validation';
 import { buildL10nSnapshot, computeBaseFingerprint } from '@clickeen/l10n';
-import {
-  loadWidgetLocalizationAllowlist,
-  normalizeLocaleList,
-  resolveAccountL10nPolicy,
-} from '../../shared/l10n';
+import { loadWidgetLocalizationAllowlist, normalizeLocaleList, resolveAccountL10nPolicy } from '../../shared/l10n';
 import { isTrustedInternalServiceRequest } from '../../shared/auth';
-import { authorizeAccount } from '../../shared/account-auth';
 import { supabaseFetch } from '../../shared/supabase';
 import { requireAccount } from '../../shared/accounts';
-import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';
-import { loadL10nGenerateStates, loadInstanceOverlays } from './service';
-import { resolveL10nPlanningSnapshot } from './planning';
-import { enforceL10nSelection, readAccountLocales } from './shared';
 import { enqueueL10nJobs } from './enqueue-jobs';
-import {
-  loadSavedConfigStateFromTokyo,
-  resolveActivePublishLocales,
-  resolveTokyoReadyLocalesForFingerprint,
-} from '../account-instances/service';
+import { loadSavedConfigStateFromTokyo, resolveActivePublishLocales } from '../account-instances/service';
 import { convergePublishedInstanceSurface } from '../account-instances/published-convergence';
-import { isCuratedInstanceRow, resolveInstanceAccountId, resolveInstanceKind } from '../../shared/instances';
+import { resolveInstanceAccountId } from '../../shared/instances';
 
 function normalizeEntitlementsSnapshot(value: unknown): PolicyEntitlementsSnapshot | null {
   if (!isRecord(value)) return null;
   return value as PolicyEntitlementsSnapshot;
-}
-
-export async function handleAccountInstanceL10nStatus(
-  req: Request,
-  env: Env,
-  accountId: string,
-  publicId: string,
-) {
-  const authorized = await authorizeAccount(req, env, accountId, 'viewer');
-  if (!authorized.ok) return authorized.response;
-  const account = authorized.account;
-  const editorPolicy = authorized.policy;
-
-  const instance = await loadInstanceByAccountAndPublicId(env, accountId, publicId);
-  if (!instance)
-    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
-
-  if (resolveInstanceKind(instance) === 'curated') {
-    if (account.is_platform !== true) {
-      return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
-    }
-    if (isCuratedInstanceRow(instance) && asTrimmedString(instance.owner_account_id) !== accountId) {
-      return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' }, 403);
-    }
-  }
-
-  const widgetType = await resolveWidgetTypeForInstance(env, instance);
-  if (!widgetType)
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
-
-  const savedState = await loadSavedConfigStateFromTokyo({
-    env,
-    accountId: resolveInstanceAccountId(instance) ?? accountId,
-    publicId,
-  });
-  if (!savedState) {
-    return ckError(
-      {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.db.readFailed',
-        detail: 'saved Tokyo revision missing',
-      },
-      500,
-    );
-  }
-
-  const planning = await resolveL10nPlanningSnapshot({
-    env,
-    widgetType,
-    config: savedState.config,
-    baseUpdatedAt: savedState.updatedAt,
-  });
-  if (!planning.ok) {
-    return apiError('INTERNAL_ERROR', 'Failed to resolve l10n planning snapshot', 500, planning.error);
-  }
-  const baseFingerprint = planning.plan.baseFingerprint;
-  const baseUpdatedAt = planning.plan.baseUpdatedAt;
-
-  const accountLocales = readAccountLocales(account);
-  if (accountLocales instanceof Response) return accountLocales;
-  const locales = accountLocales.locales;
-  const entitlementGate = enforceL10nSelection(editorPolicy, locales);
-  if (entitlementGate) return entitlementGate;
-  const readyLocales = await resolveTokyoReadyLocalesForFingerprint({
-    env,
-    publicId,
-    desiredLocales: locales,
-    baseLocale: resolveAccountL10nPolicy(account.l10n_policy).baseLocale,
-    baseFingerprint,
-  });
-  const readyLocaleSet = new Set(readyLocales);
-
-  const stateMap = locales.length
-    ? await loadL10nGenerateStates(env, publicId, 'locale', baseFingerprint)
-    : new Map<string, L10nGenerateStateRow>();
-  const overlays = locales.length ? await loadInstanceOverlays(env, publicId) : [];
-  const localeOverlays = overlays.filter((row) => row.layer === 'locale');
-  const overlayStale = new Set<string>();
-  localeOverlays.forEach((row) => {
-    const key = row.layer_key;
-    if (!key) return;
-    if (row.base_fingerprint && row.base_fingerprint === baseFingerprint) return;
-    overlayStale.add(key);
-  });
-
-  const localeStates = locales.map((locale) => {
-    const row = stateMap.get(locale);
-    const hasMatch = readyLocaleSet.has(locale);
-    const hasStale = overlayStale.has(locale);
-    let status: L10nGenerateStatus = row?.status ?? 'dirty';
-    if (hasMatch) status = 'succeeded';
-    else if (!row?.status && hasStale) status = 'superseded';
-    const attempts = hasMatch ? Math.max(row?.attempts ?? 0, 1) : (row?.attempts ?? 0);
-    return {
-      locale,
-      status,
-      attempts,
-      nextAttemptAt: hasMatch ? null : (row?.next_attempt_at ?? null),
-      lastAttemptAt: row?.last_attempt_at ?? null,
-      lastError: hasMatch ? null : (row?.last_error ?? null),
-    };
-  });
-
-  return json({
-    publicId,
-    widgetType,
-    baseFingerprint,
-    baseUpdatedAt,
-    locales: localeStates,
-  });
 }
 
 async function runAccountLocalesAftermath(args: {

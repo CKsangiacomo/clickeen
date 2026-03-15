@@ -7,7 +7,7 @@ export type GrantSubject =
 
 export type AIGrant = {
   v: 1;
-  iss: 'paris';
+  iss: 'paris' | 'roma' | 'bob' | 'sanfrancisco';
   jti?: string;
   sub: GrantSubject;
   exp: number; // epoch seconds

@@ -50,8 +50,8 @@ Events currently supported:
 - `upgrade_clicked`, `upgrade_completed`
 
 Auth:
-- The caller must sign the JSON body with `AI_GRANT_HMAC_SECRET` and pass the signature as `x-paris-signature`.
-- Paris is the canonical “gateway” that forwards outcomes to San Francisco.
+- The caller must sign the JSON body with `AI_GRANT_HMAC_SECRET` and pass the signature as `x-clickeen-signature`.
+- Roma and Bob are the backend surfaces that forward outcomes to San Francisco for their respective flows.
 
 ## 2) Storage model (cheap raw + small indexes)
 

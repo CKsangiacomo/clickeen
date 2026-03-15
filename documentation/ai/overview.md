@@ -111,7 +111,7 @@ Keeping Paris and San Francisco separate prevents:
 
 ## Terms (Precise)
 - **Agent**: A named AI capability (e.g. `editor.faqAnswer`, `support.reply`, `ops.communityModeration`).
-- **AI Grant**: A signed authorization payload from Paris that defines what San Francisco is allowed to do for a subject (user/account) for a short time window.
+- **AI Grant**: A signed authorization payload from a Clickeen backend surface (Roma for account-mode product flows, Bob for MiniBob/public flows) that defines what San Francisco is allowed to do for a subject for a short time window.
 - **Execution Request**: The payload sent to San Francisco containing `agentId`, input, and the AI Grant.
 - **Result**: Structured output from San Francisco (`ops[]` for editor agents, or a typed payload for non-editor agents).
 - **Playbook**: A versioned runtime contract attached to an `agentId` via the registry (server-resolved, not client-selected).
@@ -120,7 +120,7 @@ Keeping Paris and San Francisco separate prevents:
 
 ### Editor agents (inside Clickeen app)
 1) Core instance state is loaded via same-origin app routes (`GET /api/accounts/:accountId/instance/:publicId?subject=account`) and localization is rehydrated separately (`GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`): host-performed in Roma/DevStudio message boot, Bob-performed in URL boot. Product core-open resolves Michael + Tokyo saved state directly; explicit localization rehydrate now comes from Roma same-origin routes backed by Berlin + Tokyo.
-2) Bob requests a short‑lived **AI Grant** from Paris (`POST /api/ai/grant`) for that editing session.
+2) Account-mode Builder requests execute through Roma instance routes; public MiniBob requests execute through Bob same-origin routes. The owning surface mints the short-lived AI Grant inline for that request.
 3) Bob calls San Francisco with `{ grant, agentId, input, context }`.
 4) San Francisco returns `{ ops[], usage }`.
 5) Bob applies `ops[]` locally as pure state transforms. If an op cannot be applied, Bob fails loudly (platform bug) and the developer fixes the widget/package or copilot output.
@@ -135,8 +135,8 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
 
 - Endpoints:
   - `GET /healthz`
-  - `POST /v1/execute` (requires a Paris-minted AI Grant)
-  - `POST /v1/outcome` (outcome attach, signed by Paris)
+- `POST /v1/execute` (requires a Clickeen-signed AI Grant)
+- `POST /v1/outcome` (outcome attach, signed by the calling Clickeen backend surface)
   - `POST /v1/personalization/preview` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
   - `GET /v1/personalization/preview/:jobId` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
   - `POST /v1/personalization/onboarding` (internal legacy route name for post-signup account-context carry-forward; `Authorization: Bearer ${PARIS_DEV_JWT}`)
@@ -243,23 +243,14 @@ type AIError =
 
 ## Public Interfaces
 
-### Paris (adds AI Grant issuance)
-Paris remains the public boundary.
-
-Shipped (dev/local in this repo):
-1) **Grant issuance**
-   - `POST /api/ai/grant`
-   - Returns `{ grant, exp, agentId }`
-   - Grant includes `trace.envStage` (ex: `local` or `cloud-dev`) so San Francisco can index learning data by exposure stage.
-   - This same endpoint can be used to refresh a grant (if a session is long-lived and the old grant expires).
-2) **Outcome forwarding**
-   - `POST /api/ai/outcome`
-   - Paris signs the payload with `AI_GRANT_HMAC_SECRET` and forwards to San Francisco `/v1/outcome` using `SANFRANCISCO_BASE_URL`.
-
-Possible future (product ergonomics):
-- Return a grant on same-origin instance load (`GET /api/accounts/:accountId/instance/:publicId?subject=account`) to reduce one extra round trip per chat session.
-
-Paris does NOT execute AI calls. It only issues grants and forwards outcomes.
+### Roma + Bob (current AI entry surfaces)
+Shipped in this repo:
+1) **Account-mode product AI**
+   - Roma owns authenticated Builder Copilot execution on instance-scoped account routes.
+   - Roma consumes Berlin-minted account truth, mints the request-scoped AI Grant, and calls San Francisco directly.
+2) **MiniBob/public AI**
+   - Bob owns `POST /api/ai/minibob/session`, `POST /api/ai/widget-copilot`, and `POST /api/ai/outcome` for public MiniBob flows.
+   - Bob mints the MiniBob session token, mints the request-scoped MiniBob AI Grant inline, and forwards outcomes directly to San Francisco.
 
 ### San Francisco (AI execution service endpoints)
 This is a separate deployable service (Cloudflare Workers) from day one.
@@ -270,7 +261,7 @@ Health check for deploys and local dev.
 Response: `{ ok: true, service: "sanfrancisco", env: "dev|prod|...", ts: <ms> }`
 
 #### `POST /v1/execute`
-Execute an agent under a Paris-issued grant.
+Execute an agent under a Clickeen-issued grant.
 
 Request:
 ```json
@@ -297,10 +288,10 @@ Behavior:
 Attach post-execution outcomes (UX decisions, conversions) that San Francisco cannot infer.
 
 - Request: `OutcomeAttachRequest` (see `sanfrancisco/src/types.ts`)
-- Auth: required header `x-paris-signature` = `base64url(hmacSha256("outcome.v1.<bodyJson>", AI_GRANT_HMAC_SECRET))`
+- Auth: required header `x-clickeen-signature` = `base64url(hmacSha256("outcome.v1.<bodyJson>", AI_GRANT_HMAC_SECRET))`
 - Writes: D1 rows in `copilot_outcomes_v1`
 
-Why it exists: San Francisco can’t infer conversions; Paris (and Bob) are the sources of truth for those moments.
+Why it exists: San Francisco can’t infer conversions; Roma/Bob are the sources of truth for those moments.
 
 ## Agent Orchestration (San Francisco Core)
 Orchestration is San Francisco’s “meat” and is built incrementally behind the same execution interface.
@@ -392,14 +383,14 @@ Definition of done:
 Status: shipped (dev grants; user/workspace grants evolve with auth)
 
 Definition of done:
-  - Paris can issue signed grants for:
-    - anon sessions (Minibob)
-    - user/workspace sessions (Clickeen app)
+  - Clickeen backend surfaces can issue signed grants for:
+    - anon sessions (MiniBob via Bob)
+    - account sessions (product app via Roma)
   - San Francisco verifies signature + expiry + capabilities
 
 **Minibob public mint (shipped):**
-- `POST /api/ai/minibob/session` → returns a server-signed `sessionToken` (prevents infinite client-generated sessionIds).
-- `POST /api/ai/minibob/grant` → returns a restricted grant for `sdr.widget.copilot.v1` (subject=minibob, mode=ops, strict budgets).
+- `POST /api/ai/minibob/session` on Bob → returns a server-signed `sessionToken` (prevents infinite client-generated sessionIds).
+- `POST /api/ai/widget-copilot` on Bob verifies that token and mints the restricted MiniBob grant inline before calling San Francisco.
 - Cloudflare edge rate limits + bot controls are required in non-local stages (manual ops).
 
 ### Milestone 4 — Bob uses San Francisco for AI
@@ -407,7 +398,8 @@ Status: shipped
 
 Definition of done:
 - Bob no longer calls provider APIs directly.
-- Bob calls San Francisco with the Paris-issued grant.
+- Account-mode Builder calls San Francisco through Roma-owned backend routes.
+- MiniBob/public calls San Francisco through Bob-owned same-origin routes.
 - Errors are explicit; no silent behavior changes.
 
 ### Milestone 5 — Remove Bob-local AI route
@@ -418,8 +410,7 @@ Definition of done:
 - `bob/app/api/ai/widget-copilot` is the only Copilot execution path.
 
 ## Open Questions (next)
-- Grant transport: return grant in same-origin `GET /api/accounts/:accountId/instance/:publicId?subject=account` vs separate `POST /api/ai/grant` (both work; choose based on desired session semantics).
-- Where AI usage is recorded for billing: Paris-only ledger via an internal San Francisco→Paris report, or a later aggregation pipeline.
+- Where AI usage is recorded for billing: backend-owned ledger in Roma/Berlin, or a later aggregation pipeline.
 
 ## Links
 - Paris system PRD: `documentation/services/paris.md`

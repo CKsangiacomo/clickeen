@@ -5,16 +5,11 @@ Last updated: 2026-03-15 (PRD 070A/070B split)
 
 Paris is the **control/orchestration boundary** for residual worker-owned state:
 
-- Authz verification for editor surfaces (Roma/Bob)
-- Residual l10n/layer routes still mounted in the Worker
-- Minibob handoff + AI grant/outcome endpoints
+- Internal locale aftermath and l10n worker reporting
+- Residual worker orchestration only
 
 Active product-surface rule (PRD 61):
 
-- Paris accepts the Berlin-issued Roma/Bob bootstrap authz capsule as the post-bootstrap account auth contract for the remaining Paris-mounted account routes (`layers`, `l10n/status`).
-- Paris does not re-read `account_members` for those active product routes.
-- Paris derives account-route policy/entitlement truth from the signed bootstrap capsule and must not recompute entitlements on those routes.
-- Paris account-capsule verification uses one dedicated `ROMA_AUTHZ_CAPSULE_SECRET`. Product auth must not fall back to `AI_GRANT_HMAC_SECRET` or `SUPABASE_SERVICE_ROLE_KEY`.
 - Local Paris-to-Tokyo internal reads/writes use the same explicit pattern: `TOKYO_DEV_JWT` plus `x-ck-internal-service: paris.local`. Paris must not rely on a bare Tokyo dev token as universal saved-render authority.
 
 Non-negotiable (PRD 54):
@@ -33,29 +28,16 @@ Non-negotiable (PRD 54):
 ### Accounts + instance editing
 
 - Product-path core instance open/save, localization snapshot rehydrate, and save aftermath are Roma-owned and are not mounted in Paris.
+- Product-path l10n status and user-layer overlay routes are Roma-owned and are not mounted in Paris.
 
-### Locale pipeline (editor surfaces)
-
-- `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account`
-- `GET /api/accounts/:accountId/instances/:publicId/layers?subject=account`
-- `GET/PUT/DELETE /api/accounts/:accountId/instances/:publicId/layers/:layer/:layerKey?subject=account`
+### Locale pipeline
 
 Internal-only:
 - `POST /internal/accounts/:accountId/locales/aftermath` — Berlin-triggered locale aftermath orchestration after the account mutation is already committed
 
-### Minibob + AI + reporting
+### Reporting
 
-- `POST /api/minibob/handoff/start`
-- `POST /api/minibob/handoff/complete` (non-local stages require a platform-owned account)
 - `POST /api/l10n/jobs/report`
-- `POST /api/ai/grant`
-- `POST /api/ai/minibob/session`
-- `POST /api/ai/minibob/grant`
-- `POST /api/ai/outcome`
-
-Current cloud-dev account rule:
-
-- Finish/handoff flows complete only against the surviving platform-owned account.
 
 ### Public read boundary
 

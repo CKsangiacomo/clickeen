@@ -1,6 +1,9 @@
 STATUS: EXECUTION RUNBOOK — WIDGET COPILOT (SDR + CS)
-Updated: February 26, 2026 (doc/runtime sync)
-Cloud-dev verification snapshot below remains from February 11, 2026.
+Updated: March 15, 2026 (070A AI ownership cut)
+This file keeps rollout history, but the current runtime owner shape is now:
+- account-mode Builder Copilot: Roma-owned backend routes
+- MiniBob/public Copilot: Bob-owned same-origin routes
+- Paris: no `/api/ai/*` ownership
 
 ## Purpose
 
@@ -12,7 +15,7 @@ This runbook captures the rollout status for widget copilot routing:
 ## Canonical routing contract
 
 - Request alias: `widget.copilot.v1`
-- Paris grant resolution:
+- Backend grant resolution:
   - `minibob|free` -> `sdr.widget.copilot.v1`
   - `tier1|tier2|tier3` -> `cs.widget.copilot.v1`
 - Minibob public grants are fixed server-side to SDR (`sdr.widget.copilot.v1`).
@@ -23,9 +26,7 @@ This runbook captures the rollout status for widget copilot routing:
 |---|---|---|
 | Local | `POST /api/ai/widget-copilot` | Active primary route |
 | Cloud-dev (`bob.dev`) | `POST /api/ai/widget-copilot` | Active primary route |
-| Cloud-dev (`paris.dev`) | `POST /api/ai/minibob/session` | `200`, returns session token |
-| Cloud-dev (`paris.dev`) | `POST /api/ai/minibob/grant` | `200`, canonical SDR grant |
-| Cloud-dev (`paris.dev`) | `POST /api/ai/minibob/grant` with `agentId=cs.widget.copilot.v1` | `403` (blocked by contract) |
+| Local / Cloud-dev (`bob.dev`) | `POST /api/ai/minibob/session` | MiniBob session mint lives on Bob |
 
 ## Cloud-dev verification findings (February 11, 2026)
 
@@ -34,13 +35,11 @@ Pre-deploy finding (earlier same day):
 
 Post-deploy findings:
 - Bob cloud-dev now serves `/api/ai/widget-copilot`.
-- Paris + San Francisco cloud-dev deploys resolve policy correctly through that route:
+- Roma/Bob + San Francisco cloud-dev resolve policy correctly through that route:
   - free workspace calls return `meta.promptRole = "sdr"`
   - tier3 workspace calls return `meta.promptRole = "cs"`
 - For paid tiers, forcing `agentId = sdr.widget.copilot.v1` is canonicalized back to CS (`meta.promptRole = "cs"`), matching the policy contract.
-- Minibob flow remains fixed to SDR:
-  - `POST /api/ai/minibob/session` + `POST /api/ai/minibob/grant` works
-  - forcing CS on minibob grant remains blocked with `403`.
+- Minibob flow remains fixed to SDR through Bob-owned same-origin routes.
 - Workspace coverage in shared cloud-dev DB at verification time:
   - present: `free`, `tier3`
   - missing: `tier1`, `tier2`
@@ -49,7 +48,8 @@ Post-deploy findings:
 
 Core runtime files:
 - `packages/ck-policy/src/ai.ts`
-- `paris/src/domains/ai/index.ts`
+- `roma/lib/ai/account-copilot.ts`
+- `bob/lib/ai/minibob.ts`
 - `sanfrancisco/src/index.ts`
 - `sanfrancisco/src/agents/widgetCopilotCore.ts`
 - `sanfrancisco/src/agents/sdrWidgetCopilot.ts`

@@ -10,7 +10,7 @@ import { errorDetail } from '../../shared/errors';
 import { readJson } from '../../shared/http';
 import { asTrimmedString } from '../../shared/validation';
 import { resolveInstanceAccountId, resolveInstanceKind } from '../../shared/instances';
-import { issueAiGrant } from '../ai';
+import { issueAiGrant } from '../ai/grants';
 import {
   canRetryL10nGenerate,
   isL10nGenerateInFlightStale,

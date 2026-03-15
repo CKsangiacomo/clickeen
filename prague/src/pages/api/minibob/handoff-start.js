@@ -3,7 +3,7 @@ import { isCuratedOrMainWidgetPublicId } from '@clickeen/ck-contracts';
 export const prerender = false;
 const WIDGET_TYPE_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 const MAX_DRAFT_CONFIG_BYTES = 7000;
-const PARIS_TIMEOUT_MS = 4000;
+const ROMA_TIMEOUT_MS = 4000;
 
 function json(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -46,12 +46,12 @@ function readRuntimeEnvValue(runtimeEnv, key) {
   return asTrimmedString(String(value));
 }
 
-function resolveParisBaseUrl(runtimeEnv) {
+function resolveRomaBaseUrl(runtimeEnv) {
   const raw =
-    readRuntimeEnvValue(runtimeEnv, 'PUBLIC_PARIS_URL') ||
-    readRuntimeEnvValue(runtimeEnv, 'PARIS_BASE_URL') ||
-    asTrimmedString(process.env.PUBLIC_PARIS_URL) ||
-    asTrimmedString(process.env.PARIS_BASE_URL);
+    readRuntimeEnvValue(runtimeEnv, 'PUBLIC_ROMA_URL') ||
+    readRuntimeEnvValue(runtimeEnv, 'ROMA_BASE_URL') ||
+    asTrimmedString(process.env.PUBLIC_ROMA_URL) ||
+    asTrimmedString(process.env.ROMA_BASE_URL);
   return raw.replace(/\/+$/, '');
 }
 
@@ -82,12 +82,12 @@ function upstreamErrorMessage(payload) {
 
 export async function POST({ request, locals }) {
   const runtimeEnv = locals?.runtime?.env;
-  const parisBase = resolveParisBaseUrl(runtimeEnv);
-  if (!parisBase) {
+  const romaBase = resolveRomaBaseUrl(runtimeEnv);
+  if (!romaBase) {
     return json(
       {
         error: 'HANDOFF_START_UNAVAILABLE',
-        message: 'PUBLIC_PARIS_URL (or PARIS_BASE_URL) is required for MiniBob handoff start.',
+        message: 'PUBLIC_ROMA_URL (or ROMA_BASE_URL) is required for MiniBob handoff start.',
       },
       503,
     );
@@ -146,7 +146,7 @@ export async function POST({ request, locals }) {
   let upstream;
   try {
     upstream = await fetchWithTimeout(
-      `${parisBase}/api/minibob/handoff/start`,
+      `${romaBase}/api/minibob/handoff/start`,
       {
         method: 'POST',
         headers: {
@@ -158,14 +158,14 @@ export async function POST({ request, locals }) {
           ...(draftConfig ? { draftConfig } : {}),
         }),
       },
-      PARIS_TIMEOUT_MS,
+      ROMA_TIMEOUT_MS,
     );
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return json(
       {
         error: 'HANDOFF_START_FAILED',
-        message: `Paris handoff start unavailable (${detail || 'unknown_error'}).`,
+        message: `Roma handoff start unavailable (${detail || 'unknown_error'}).`,
       },
       503,
     );
@@ -173,13 +173,13 @@ export async function POST({ request, locals }) {
 
   const upstreamPayload = await upstream.json().catch(() => null);
   if (!upstream.ok) {
-    const message = upstreamErrorMessage(upstreamPayload) || `Paris handoff start failed (${upstream.status})`;
+    const message = upstreamErrorMessage(upstreamPayload) || `Roma handoff start failed (${upstream.status})`;
     return json({ error: 'HANDOFF_START_REJECTED', message }, upstream.status);
   }
 
   const handoffId = asTrimmedString(upstreamPayload?.handoffId);
   if (!handoffId) {
-    return json({ error: 'HANDOFF_START_FAILED', message: 'Paris handoff start returned no handoffId.' }, 502);
+    return json({ error: 'HANDOFF_START_FAILED', message: 'Roma handoff start returned no handoffId.' }, 502);
   }
 
   return json(

@@ -22,7 +22,7 @@ import { json, readJson } from '../../shared/http';
 import { assertDevAuth } from '../../shared/auth';
 import { loadAccountById } from '../../shared/accounts';
 import { loadWidgetLocalizationAllowlist } from '../../shared/l10n';
-import { issueAiGrant } from '../ai';
+import { issueAiGrant } from '../ai/grants';
 import { convergePublishedInstanceSurface } from '../account-instances/published-convergence';
 import { loadSavedConfigStateFromTokyo } from '../account-instances/service';
 import { loadInstanceByAccountAndPublicId, resolveWidgetTypeForInstance } from '../instances';

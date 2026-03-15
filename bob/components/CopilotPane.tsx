@@ -11,7 +11,6 @@ import {
   WIDGET_COPILOT_AGENT_IDS,
 } from '@clickeen/ck-policy';
 import type { AiProvider } from '@clickeen/ck-policy';
-import { resolveParisBaseUrl } from '../lib/env/paris';
 
 function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
@@ -170,9 +169,7 @@ function isMinibobSessionFresh(session: StoredMinibobSession): boolean {
 }
 
 async function mintMinibobSessionToken(): Promise<StoredMinibobSession> {
-  const parisBaseUrl = resolveParisBaseUrl();
-  const url = `${parisBaseUrl.replace(/\/+$/, '')}/api/ai/minibob/session`;
-  const res = await fetch(url, { method: 'POST', headers: { accept: 'application/json' } });
+  const res = await fetch('/api/ai/minibob/session', { method: 'POST', headers: { accept: 'application/json' } });
   const text = await res.text().catch(() => '');
   if (looksLikeHtml(text)) {
     throw new Error(normalizeAssistantText(text));

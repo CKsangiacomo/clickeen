@@ -7,7 +7,7 @@ import {
   type SessionState,
   type SubjectMode,
 } from './sessionTypes';
-import { resolveBootModeFromUrl, resolveSurfaceFromUrl } from './sessionPolicy';
+import { resolveBootModeFromUrl, resolvePolicySubject, resolveSurfaceFromUrl } from './sessionPolicy';
 
 export type OpenRequestStatusEntry = {
   status: 'processing' | 'applied' | 'failed';
@@ -39,28 +39,6 @@ export function useSessionTransport(args: {
   const surfaceRef = useRef<string>(resolveSurfaceFromUrl());
   const hostOriginRef = useRef<string | null>(null);
   const openRequestStatusRef = useRef<Map<string, OpenRequestStatusEntry>>(new Map());
-
-  const fetchApi = useCallback((input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const capsule = args.stateRef.current.meta?.accountCapsule?.trim();
-    const inputUrl =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : input instanceof Request
-            ? input.url
-            : '';
-    if (!capsule || !inputUrl.startsWith('/api/accounts/')) {
-      return fetch(input, init);
-    }
-
-    const headers = new Headers(input instanceof Request ? input.headers : init?.headers);
-    headers.set('x-ck-authz-capsule', capsule);
-    return fetch(input, {
-      ...init,
-      headers,
-    });
-  }, [args.stateRef]);
 
   const shouldDelegateAccountCommand = useCallback((subject: SubjectMode): boolean => {
     if (subject !== 'account' || bootModeRef.current !== 'message') return false;
@@ -136,6 +114,70 @@ export function useSessionTransport(args: {
     },
     [],
   );
+
+  const dispatchAccountApiThroughHost = useCallback(
+    async (inputUrl: string, input: RequestInfo | URL, init?: RequestInit): Promise<Response | null> => {
+      const subject = resolvePolicySubject(args.stateRef.current.policy);
+      if (!shouldDelegateAccountCommand(subject)) return null;
+      if (inputUrl !== '/api/ai/widget-copilot' && inputUrl !== '/api/ai/outcome') return null;
+
+      const accountId = String(args.stateRef.current.meta?.accountId || '').trim();
+      const publicId = String(args.stateRef.current.meta?.publicId || '').trim();
+      if (!accountId || !publicId) {
+        return Response.json(
+          { message: 'Account context is missing. Reopen the instance from Roma and try again.' },
+          { status: 409 },
+        );
+      }
+
+      let body: unknown = undefined;
+      const rawBody = input instanceof Request ? undefined : init?.body;
+      if (typeof rawBody === 'string' && rawBody.trim()) {
+        try {
+          body = JSON.parse(rawBody) as unknown;
+        } catch {
+          body = rawBody;
+        }
+      }
+
+      const result = await dispatchHostAccountCommand({
+        command: inputUrl === '/api/ai/widget-copilot' ? 'run-copilot' : 'attach-ai-outcome',
+        accountId,
+        publicId,
+        ...(typeof body === 'undefined' ? {} : { body }),
+      });
+      return new Response(JSON.stringify(result.payload ?? null), {
+        status: result.status,
+        headers: { 'content-type': 'application/json; charset=utf-8' },
+      });
+    },
+    [args.stateRef, dispatchHostAccountCommand, shouldDelegateAccountCommand],
+  );
+
+  const fetchApi = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const capsule = args.stateRef.current.meta?.accountCapsule?.trim();
+    const inputUrl =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input instanceof Request
+            ? input.url
+            : '';
+
+    const delegated = await dispatchAccountApiThroughHost(inputUrl, input, init);
+    if (delegated) return delegated;
+    if (!capsule || !inputUrl.startsWith('/api/accounts/')) {
+      return fetch(input, init);
+    }
+
+    const headers = new Headers(input instanceof Request ? input.headers : init?.headers);
+    headers.set('x-ck-authz-capsule', capsule);
+    return fetch(input, {
+      ...init,
+      headers,
+    });
+  }, [args.stateRef, dispatchAccountApiThroughHost]);
 
   const executeAccountCommand: ExecuteAccountCommand = useCallback(
     async (commandArgs: ExecuteAccountCommandArgs) => {

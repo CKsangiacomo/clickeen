@@ -179,10 +179,9 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
       if (!publicId) throw new Error('missing publicId for handoff');
 
       const widgetType = asText(meta?.widgetname) || undefined;
-      const isDirty = payload?.isDirty === true;
-      const draftConfig = isDirty ? asRecord(payload?.instanceData) : undefined;
-      if (isDirty && !draftConfig) {
-        throw new Error('missing draft config for dirty minibob session');
+      const draftConfig = asRecord(payload?.instanceData);
+      if (!draftConfig) {
+        throw new Error('missing draft config for minibob handoff');
       }
 
       return {

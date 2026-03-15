@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
-import { resolveParisBaseUrl } from '../../../../lib/env/paris';
 import {
   applySessionCookies,
   resolveRequestOrigin,
   resolveSessionCookieNames,
 } from '../../../../lib/auth/session';
+import { completeMinibobHandoff } from '../../../../lib/minibob-handoff';
+import { runAccountSaveAftermath } from '../../../../lib/account-save-aftermath';
 
 export const runtime = 'edge';
 
@@ -33,11 +34,6 @@ type BootstrapPayload = {
   authz?: {
     accountCapsule?: unknown;
   };
-  error?: unknown;
-};
-
-type ParisHandoffPayload = {
-  builderRoute?: unknown;
   error?: unknown;
 };
 
@@ -101,13 +97,6 @@ function extractContinuation(payload: BerlinFinishPayload | null): { intent: Log
   };
 }
 
-function nextIdempotencyKey(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return `ck_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
-}
-
 function resolveAccountId(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
@@ -146,41 +135,34 @@ async function fetchBootstrap(
 }
 
 async function completeHandoff(
-  parisBase: string,
   accessToken: string,
   handoffId: string,
   accountId: string,
   accountCapsule: string | null,
-): Promise<{ ok: true; builderRoute: string } | { ok: false; reasonKey: string }> {
-  if (!accountCapsule) {
-    return { ok: false, reasonKey: 'coreui.errors.auth.contextUnavailable' };
-  }
-  const response = await fetch(`${parisBase}/api/minibob/handoff/complete`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      'content-type': 'application/json',
-      accept: 'application/json',
-      'Idempotency-Key': nextIdempotencyKey(),
-      'x-ck-authz-capsule': accountCapsule,
-    },
-    cache: 'no-store',
-    body: JSON.stringify({ handoffId, accountId }),
+) : Promise<
+  | { ok: true; builderRoute: string; publicId: string; replay: boolean }
+  | { ok: false; reasonKey: string }
+> {
+  const result = await completeMinibobHandoff({
+    accessToken,
+    handoffId,
+    accountId,
+    accountCapsule,
   });
-
-  const payload = (await response.json().catch(() => null)) as ParisHandoffPayload | null;
-  if (!response.ok) {
-    return {
-      ok: false,
-      reasonKey: extractReasonKey(payload as Record<string, unknown> | null, 'coreui.errors.minibobHandoff.unavailable'),
-    };
+  if (!result.ok) {
+    return { ok: false, reasonKey: result.error.reasonKey };
   }
-
-  const builderRoute = typeof payload?.builderRoute === 'string' ? payload.builderRoute.trim() : '';
-  if (!builderRoute) {
+  const builderRoute = typeof result.value.builderRoute === 'string' ? result.value.builderRoute.trim() : '';
+  const publicId = typeof result.value.publicId === 'string' ? result.value.publicId.trim() : '';
+  if (!builderRoute || !publicId) {
     return { ok: false, reasonKey: 'coreui.errors.minibobHandoff.unavailable' };
   }
-  return { ok: true, builderRoute };
+  return {
+    ok: true,
+    builderRoute,
+    publicId,
+    replay: result.value.replay === true,
+  };
 }
 
 function appendHandoffToPath(path: string, handoffId: string): string {
@@ -221,10 +203,8 @@ export async function GET(request: NextRequest) {
   }
 
   let berlinBase = '';
-  let parisBase = '';
   try {
     berlinBase = resolveBerlinBaseUrl();
-    parisBase = resolveParisBaseUrl();
   } catch {
     return NextResponse.redirect(resolveLoginUrl(request, { error: 'roma.errors.auth.config_missing' }), {
       headers: CACHE_HEADERS,
@@ -296,9 +276,26 @@ export async function GET(request: NextRequest) {
   let destinationPath = continuation.next;
   if (continuation.handoffId) {
     if (accountId) {
-      const handoff = await completeHandoff(parisBase, accessToken, continuation.handoffId, accountId, accountCapsule);
+      const handoff = await completeHandoff(accessToken, continuation.handoffId, accountId, accountCapsule);
       if (handoff.ok) {
         destinationPath = handoff.builderRoute;
+        if (!handoff.replay) {
+          after(async () => {
+            try {
+              await runAccountSaveAftermath({
+                accessToken,
+                accountId,
+                publicId: handoff.publicId,
+                previousConfig: null,
+              });
+            } catch (error) {
+              console.error('[roma session finish] handoff create aftermath failed', {
+                publicId: handoff.publicId,
+                detail: error instanceof Error ? error.message : String(error),
+              });
+            }
+          });
+        }
       } else {
         destinationPath = appendHandoffToPath('/home', continuation.handoffId);
       }

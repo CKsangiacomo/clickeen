@@ -87,7 +87,7 @@ Behavior (high level):
 Purpose: attach post-execution outcomes (conversion + UX decisions) to an execution `requestId`.
 
 Auth:
-- Header `x-paris-signature` must be present.
+- Header `x-clickeen-signature` must be present.
 - Signature: `base64url(hmacSha256("outcome.v1.<bodyJson>", AI_GRANT_HMAC_SECRET))`
 
 Storage:
@@ -191,11 +191,12 @@ Agent executions are constrained by the grant:
 - `budgets.timeoutMs` (default 20s if omitted)
 - `budgets.maxRequests` (optional, for session windows)
 
-Paris is expected to cap these budgets server-side so the client can’t request arbitrarily large execution windows.
+The owning backend surface is expected to cap these budgets server-side so the client can’t request arbitrarily large execution windows.
 
 Canonical runtime budget source:
 - `packages/ck-policy/src/ai.ts` (`budgetsByProfile` per agent)
-- `paris/src/domains/ai/index.ts` (grant clamp caps + Minibob mint overrides)
+- `roma/lib/ai/account-copilot.ts` (account-mode grant clamp caps)
+- `bob/lib/ai/minibob.ts` (MiniBob session/grant mint)
 
 Budget matrix (`maxTokens / timeoutMs / maxRequests`):
 
@@ -211,7 +212,7 @@ Budget matrix (`maxTokens / timeoutMs / maxRequests`):
 
 `agent.personalization.onboarding.v1` is the legacy grant identifier for the same post-signup account-context carry-forward path.
 
-Minibob public mint override (Paris endpoint `/api/ai/minibob/grant`):
+Minibob public mint override (Bob-owned MiniBob execution path):
 - `local` stage: `650 / 45s / 2`
 - non-local stages (including cloud-dev): `420 / 12s / 2`
 

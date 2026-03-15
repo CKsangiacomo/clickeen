@@ -9,3 +9,8 @@ NEXT_PUBLIC_TOKYO_URL = "https://tokyo.dev.clickeen.com"
 BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
 SANFRANCISCO_BASE_URL = "https://sanfrancisco.dev.clickeen.com"
 NEXT_PUBLIC_BOB_URL = "https://bob.dev.clickeen.com"
+
+[[kv_namespaces]]
+binding = "USAGE_KV"
+id = "eca50e55fa2a4f94a01fb81aeebf8377"
+preview_id = "b31d28eb386c4c068821e32d41fbc92a"
