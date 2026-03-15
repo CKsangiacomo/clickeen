@@ -142,13 +142,12 @@ async function requestTokyoSavedConfig(args: {
   let lastFailure: TokyoSavedConfigResult | null = null;
   for (const base of bases) {
     const url = `${base}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`;
-    try {
-      const response = await fetch(url, {
-        method: args.method,
-        headers,
-        cache: 'no-store',
-        ...(args.body ? { body: JSON.stringify(args.body) } : {}),
-      });
+      try {
+        const response = await fetch(url, {
+          method: args.method,
+          headers,
+          ...(args.body ? { body: JSON.stringify(args.body) } : {}),
+        });
       const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
       if (response.status === 404) {
         return { ok: false, status: 404, error: 'not_found' };
@@ -330,7 +329,6 @@ async function loadTokyoTextPointer(args: {
     const url = `${base}/l10n/instances/${encodeURIComponent(args.publicId)}/live/${encodeURIComponent(args.locale)}.json`;
     const response = await fetch(url, {
       method: 'GET',
-      cache: 'no-store',
       headers: { 'X-Request-ID': crypto.randomUUID() },
     });
     if (response.status === 404) continue;
@@ -521,7 +519,6 @@ async function loadRenderSnapshotState(args: {
   for (const base of bases) {
     const requestInit: RequestInit = {
       method: 'GET',
-      cache: 'no-store',
       headers: { 'X-Request-ID': crypto.randomUUID() },
     };
 

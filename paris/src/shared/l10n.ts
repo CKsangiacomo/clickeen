@@ -334,13 +334,15 @@ export function pathMatchesAllowlist(pathStr: string, allowPath: string): boolea
   return true;
 }
 
-export function normalizeAllowlistEntries(entries: L10nAllowlistEntry[]): Array<{ path: string; type: 'string' | 'richtext' }> {
+export function normalizeAllowlistEntries(
+  entries: L10nAllowlistEntry[],
+): Array<{ path: string; type: 'string' | 'richtext' }> {
   return entries
-    .map((entry) => ({
+    .map<{ path: string; type: 'string' | 'richtext' }>((entry) => ({
       path: typeof entry?.path === 'string' ? entry.path.trim() : '',
       type: entry?.type === 'richtext' ? 'richtext' : 'string',
     }))
-    .filter((entry) => entry.path);
+    .filter((entry) => entry.path.length > 0);
 }
 
 export async function loadWidgetLocalizationAllowlist(
@@ -349,7 +351,7 @@ export async function loadWidgetLocalizationAllowlist(
 ): Promise<Array<{ path: string; type: 'string' | 'richtext' }>> {
   const base = requireTokyoBase(env);
   const url = `${base}/widgets/${encodeURIComponent(widgetType)}/localization.json`;
-  const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+  const res = await fetch(url, { method: 'GET' });
   if (!res.ok) {
     const details = await res.text().catch(() => '');
     throw new Error(`[ParisWorker] Failed to load localization allowlist (${res.status}): ${details}`);
@@ -371,7 +373,7 @@ export async function loadWidgetLayerAllowlist(
   }
   const base = requireTokyoBase(env);
   const url = `${base}/widgets/${encodeURIComponent(widgetType)}/layers/${encodeURIComponent(layer)}.allowlist.json`;
-  const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+  const res = await fetch(url, { method: 'GET' });
   if (res.status === 404) {
     return [];
   }

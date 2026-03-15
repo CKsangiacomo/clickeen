@@ -117,15 +117,19 @@ function normalizeEntitlementsSnapshot(value: unknown): PolicyEntitlementsSnapsh
   if (!isPlainRecord(value)) return null;
 
   const flags: Record<string, boolean> | null = isPlainRecord(value.flags)
-    ? Object.fromEntries(Object.entries(value.flags).filter(([, entry]) => typeof entry === 'boolean'))
+    ? Object.entries(value.flags).reduce<Record<string, boolean>>((out, [key, entry]) => {
+        if (typeof entry === 'boolean') out[key] = entry;
+        return out;
+      }, {})
     : null;
 
   const caps: Record<string, number | null> | null = isPlainRecord(value.caps)
-    ? Object.fromEntries(
-        Object.entries(value.caps).filter(
-          ([, entry]) => entry === null || (typeof entry === 'number' && Number.isFinite(entry)),
-        ),
-      )
+    ? Object.entries(value.caps).reduce<Record<string, number | null>>((out, [key, entry]) => {
+        if (entry === null || (typeof entry === 'number' && Number.isFinite(entry))) {
+          out[key] = entry;
+        }
+        return out;
+      }, {})
     : null;
 
   const budgets: Record<string, { max: number | null; used: number }> | null = isPlainRecord(value.budgets)

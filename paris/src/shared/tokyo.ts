@@ -43,7 +43,7 @@ export async function isKnownWidgetType(env: Env, widgetType: string): Promise<b
 
   const base = requireTokyoBase(env);
   const url = `${base}/widgets/${encodeURIComponent(widgetType)}/spec.json`;
-  const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+  const res = await fetch(url, { method: 'GET' });
   if (res.status === 404) {
     widgetTypeExistenceCache.set(widgetType, false);
     return false;
@@ -59,7 +59,7 @@ export async function isKnownWidgetType(env: Env, widgetType: string): Promise<b
 export async function loadWidgetLimits(env: Env, widgetType: string): Promise<LimitsSpec | null> {
   const base = requireTokyoBase(env);
   const url = `${base}/widgets/${encodeURIComponent(widgetType)}/limits.json`;
-  const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+  const res = await fetch(url, { method: 'GET' });
   if (res.status === 404) return null;
   if (!res.ok) {
     const details = await res.text().catch(() => '');

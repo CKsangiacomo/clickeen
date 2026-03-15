@@ -72,6 +72,13 @@ type BerlinJwksStore = {
   cacheByUrl: Record<string, BerlinJwksCacheEntry | undefined>;
 };
 
+type BerlinJwk = JsonWebKey & {
+  kid?: string;
+  n?: string;
+  e?: string;
+  kty?: string;
+};
+
 function normalizeInternalServiceId(value: string | null): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim().toLowerCase();
@@ -270,7 +277,7 @@ function fromBase64Url(value: string): Uint8Array | null {
   }
 }
 
-async function importBerlinJwk(key: JsonWebKey): Promise<CryptoKey | null> {
+async function importBerlinJwk(key: BerlinJwk): Promise<CryptoKey | null> {
   if (key.kty !== 'RSA') return null;
   if (typeof key.kid !== 'string' || !key.kid.trim()) return null;
   if (typeof key.n !== 'string' || typeof key.e !== 'string') return null;
@@ -287,7 +294,6 @@ async function fetchBerlinJwks(url: string): Promise<BerlinJwksCacheEntry> {
   const response = await fetch(url, {
     method: 'GET',
     headers: { accept: 'application/json' },
-    cache: 'no-store',
   });
   if (!response.ok) {
     throw new Error(`Berlin JWKS lookup failed (${response.status})`);
@@ -301,7 +307,7 @@ async function fetchBerlinJwks(url: string): Promise<BerlinJwksCacheEntry> {
   const keys: Record<string, CryptoKey> = {};
   for (const item of parsed.keys) {
     if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
-    const jwk = item as JsonWebKey;
+    const jwk = item as BerlinJwk;
     const kid = typeof jwk.kid === 'string' ? jwk.kid.trim() : '';
     if (!kid) continue;
     const imported = await importBerlinJwk(jwk);
