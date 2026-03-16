@@ -21,6 +21,8 @@ async function main() {
   const nextOnPagesBin = path.join(bobRoot, 'node_modules', '.bin', 'next-on-pages');
   const vercelDir = path.join(repoRoot, '.vercel');
   const vercelProjectJsonPath = path.join(vercelDir, 'project.json');
+  const nextBuildDir = path.join(bobRoot, '.next');
+  const nextDevBuildDir = path.join(bobRoot, '.next-dev');
   const outdir = path.join(bobRoot, '.cloudflare', 'output', 'static');
   const vercelOutputDir = path.join(bobRoot, '.vercel', 'output');
   let previousProjectJson = null;
@@ -48,6 +50,8 @@ async function main() {
   );
 
   try {
+    await rm(nextBuildDir, { recursive: true, force: true });
+    await rm(nextDevBuildDir, { recursive: true, force: true });
     await rm(vercelOutputDir, { recursive: true, force: true });
     await rm(outdir, { recursive: true, force: true });
 

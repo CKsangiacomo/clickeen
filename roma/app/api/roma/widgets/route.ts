@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../bob/lib/account-authz-capsule';
-import { loadAccountWidgetCatalog } from '../../../../lib/michael';
-import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../lib/auth/session';
+import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
+import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '@roma/lib/auth/session';
+import { loadAccountWidgetCatalog } from '@roma/lib/michael';
 
 export const runtime = 'edge';
 

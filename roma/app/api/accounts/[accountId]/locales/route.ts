@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../bob/lib/account-authz-capsule';
-import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
-import { runAccountLocalesAftermath } from '../../../../../lib/account-locales-aftermath';
-import { resolveBerlinBaseUrl } from '../../../../../lib/env/berlin';
+import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
+import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '@roma/lib/auth/session';
+import { runAccountLocalesAftermath } from '@roma/lib/account-locales-aftermath';
+import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
 
 export const runtime = 'edge';
 // Same-origin relay only: Roma browser/session cookies terminate on Next, so account UI calls Berlin through this thin host proxy.

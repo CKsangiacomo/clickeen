@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WIDGET_COPILOT_AGENT_ALIAS, WIDGET_COPILOT_AGENT_IDS } from '@clickeen/ck-policy';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../lib/account-authz-capsule';
+import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
 import {
   applySessionCookies,
   resolveSessionBearer,
   type SessionCookieSpec,
-} from '../../../../../../../lib/auth/session';
+} from '@roma/lib/auth/session';
 import {
   executeCopilotOnSanFrancisco,
   issueAccountCopilotGrant,
-} from '../../../../../../../lib/ai/account-copilot';
+} from '@roma/lib/ai/account-copilot';
 
 export const runtime = 'edge';
 

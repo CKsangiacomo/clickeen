@@ -3,15 +3,15 @@ import {
   loadTokyoPreferredAccountInstance,
   saveAccountInstanceDirect,
   validatePersistableConfig,
-} from '../../../../../../lib/account-instance-direct';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../lib/account-authz-capsule';
-import { runAccountSaveAftermath } from '../../../../../../lib/account-save-aftermath';
+} from '@roma/lib/account-instance-direct';
+import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
+import { runAccountSaveAftermath } from '@roma/lib/account-save-aftermath';
 import {
   applySessionCookies,
   resolveSessionBearer,
   type SessionCookieSpec,
-} from '../../../../../../lib/auth/session';
-import { resolveTokyoBaseUrl } from '../../../../../../lib/env/tokyo';
+} from '@roma/lib/auth/session';
+import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 
 export const runtime = 'edge';
 

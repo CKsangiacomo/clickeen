@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../../lib/account-authz-capsule';
+import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
 import {
   applySessionCookies,
   resolveSessionBearer,
   type SessionCookieSpec,
-} from '../../../../../../../../lib/auth/session';
+} from '@roma/lib/auth/session';
 import {
   forwardCopilotOutcome,
   isValidCopilotOutcomePayload,
-} from '../../../../../../../../lib/ai/account-copilot';
+} from '@roma/lib/ai/account-copilot';
 
 export const runtime = 'edge';
 

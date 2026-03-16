@@ -256,6 +256,69 @@ export async function deleteSavedConfigFromTokyo(args: {
   }
 }
 
+export async function deleteLiveSurfaceFromTokyo(args: {
+  tokyoBaseUrl: string;
+  tokyoAccessToken: string;
+  accountId: string;
+  publicId: string;
+  internalServiceName?: string | null;
+}): Promise<void> {
+  const headers = createTokyoAccountHeaders({
+    tokyoAccessToken: args.tokyoAccessToken,
+    accountId: args.accountId,
+    internalServiceName: args.internalServiceName,
+  });
+
+  const response = await fetch(
+    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/live.json?accountId=${encodeURIComponent(args.accountId)}`,
+    {
+      method: 'DELETE',
+      headers,
+      cache: 'no-store',
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`tokyo_live_surface_delete_http_${response.status}`);
+  }
+}
+
+export async function updateSavedPointerMetadataInTokyo(args: {
+  tokyoBaseUrl: string;
+  tokyoAccessToken: string;
+  accountId: string;
+  publicId: string;
+  displayName?: string | null;
+  source?: 'account' | 'curated';
+  meta?: Record<string, unknown> | null;
+  internalServiceName?: string | null;
+}): Promise<void> {
+  const headers = createTokyoAccountHeaders({
+    tokyoAccessToken: args.tokyoAccessToken,
+    accountId: args.accountId,
+    contentType: 'application/json',
+    internalServiceName: args.internalServiceName,
+  });
+
+  const response = await fetch(
+    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
+    {
+      method: 'PATCH',
+      headers,
+      cache: 'no-store',
+      body: JSON.stringify({
+        ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
+        ...(args.source !== undefined ? { source: args.source } : {}),
+        ...(args.meta !== undefined ? { meta: args.meta } : {}),
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`tokyo_saved_pointer_patch_http_${response.status}`);
+  }
+}
+
 export async function loadTokyoPreferredAccountInstance<TRow extends AccountInstanceCoreRow>(args: {
   accountId: string;
   publicId: string;

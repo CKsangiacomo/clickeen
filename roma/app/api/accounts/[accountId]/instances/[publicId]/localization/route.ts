@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../lib/account-authz-capsule';
+import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
 import {
   applySessionCookies,
   resolveSessionBearer,
   type SessionCookieSpec,
-} from '../../../../../../../lib/auth/session';
-import { resolveBerlinBaseUrl } from '../../../../../../../lib/env/berlin';
-import { resolveTokyoBaseUrl } from '../../../../../../../lib/env/tokyo';
-import { loadAccountLocalizationSnapshot } from '../../../../../../../lib/account-l10n';
+} from '@roma/lib/auth/session';
+import { loadAccountLocalizationSnapshot } from '@roma/lib/account-l10n';
+import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
+import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 
 export const runtime = 'edge';
 

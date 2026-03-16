@@ -21,6 +21,8 @@ async function main() {
   const nextOnPagesBin = path.join(romaRoot, 'node_modules', '.bin', 'next-on-pages');
   const vercelDir = path.join(repoRoot, '.vercel');
   const vercelProjectJsonPath = path.join(vercelDir, 'project.json');
+  const nextBuildDir = path.join(romaRoot, '.next');
+  const nextDevBuildDir = path.join(romaRoot, '.next-dev');
   const vercelOutputDir = path.join(romaRoot, '.vercel', 'output');
   let previousProjectJson = null;
 
@@ -47,6 +49,8 @@ async function main() {
   );
 
   try {
+    await rm(nextBuildDir, { recursive: true, force: true });
+    await rm(nextDevBuildDir, { recursive: true, force: true });
     await rm(vercelOutputDir, { recursive: true, force: true });
 
     run(vercelBin, ['build', '--output', vercelOutputDir], { cwd: repoRoot });

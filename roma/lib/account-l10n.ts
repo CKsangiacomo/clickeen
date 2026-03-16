@@ -306,17 +306,16 @@ export async function loadTokyoAllowlist(args: {
   if (status !== 200 || !Array.isArray(json?.paths)) {
     throw new Error(`tokyo_allowlist_http_${status}`);
   }
-  return json.paths
-    .map((entry) => {
-      if (!isRecord(entry)) return null;
-      const path = asTrimmedString(entry.path);
-      if (!path) return null;
-      return {
-        path,
-        type: entry.type === 'richtext' ? 'richtext' : 'string',
-      } satisfies AllowlistEntry;
-    })
-    .filter((entry): entry is AllowlistEntry => Boolean(entry));
+  return json.paths.reduce<AllowlistEntry[]>((entries, entry) => {
+    if (!isRecord(entry)) return entries;
+    const path = asTrimmedString(entry.path);
+    if (!path) return entries;
+    entries.push({
+      path,
+      type: entry.type === 'richtext' ? 'richtext' : 'string',
+    });
+    return entries;
+  }, []);
 }
 
 async function loadTokyoIndex(args: {
@@ -518,11 +517,16 @@ export async function loadAccountL10nStatus(args: {
     const overlay =
       result.snapshot.localeOverlays.find((entry) => entry.locale === locale) ?? null;
     const hasCurrent =
-      Boolean(overlay) && (overlay.baseOps.length > 0 || overlay.userOps.length > 0);
+      overlay !== null && (overlay.baseOps.length > 0 || overlay.userOps.length > 0);
     const hasIndexed = index.localeKeys.has(locale) || index.userKeys.has(locale);
+    const status: 'dirty' | 'succeeded' | 'superseded' = hasCurrent
+      ? 'succeeded'
+      : hasIndexed
+        ? 'superseded'
+        : 'dirty';
     return {
       locale,
-      status: hasCurrent ? 'succeeded' : hasIndexed ? 'superseded' : 'dirty',
+      status,
       attempts: hasCurrent ? 1 : 0,
       nextAttemptAt: null,
       lastAttemptAt: overlay?.baseUpdatedAt ?? null,

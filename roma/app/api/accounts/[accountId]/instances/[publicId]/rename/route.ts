@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../../bob/lib/account-authz-capsule';
-import { updateSavedPointerMetadataInTokyo } from '../../../../../../../../bob/lib/account-instance-direct';
+import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
+import { updateSavedPointerMetadataInTokyo } from '@roma/lib/account-instance-direct';
 import {
   applySessionCookies,
   resolveSessionBearer,
   type SessionCookieSpec,
-} from '../../../../../../../lib/auth/session';
-import { resolveTokyoBaseUrl } from '../../../../../../../lib/env/tokyo';
+} from '@roma/lib/auth/session';
+import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import {
   getAccountInstanceCoreRow,
   renameAccountInstanceRow,
-} from '../../../../../../../lib/michael';
+} from '@roma/lib/michael';
 
 export const runtime = 'edge';
 

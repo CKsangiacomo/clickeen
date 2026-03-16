@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicy } from '@clickeen/ck-policy';
-import {
-  loadTokyoPreferredAccountInstance,
-} from '../../../../../../../lib/account-instance-direct';
-import { runAccountSaveAftermath } from '../../../../../../../lib/account-save-aftermath';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../lib/account-authz-capsule';
-import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../../../lib/auth/session';
-import { resolveTokyoBaseUrl } from '../../../../../../../lib/env/tokyo';
+import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
+import { loadTokyoPreferredAccountInstance } from '@roma/lib/account-instance-direct';
+import { runAccountSaveAftermath } from '@roma/lib/account-save-aftermath';
+import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '@roma/lib/auth/session';
+import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import {
   countPublishedAccountInstances,
   loadAccountPublishContainment,
   updateAccountInstanceStatusRow,
-} from '../../../../../../../lib/michael';
+} from '@roma/lib/michael';
 
 export const runtime = 'edge';
 

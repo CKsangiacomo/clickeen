@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteLiveSurfaceFromTokyo,
   loadTokyoPreferredAccountInstance,
-} from '../../../../../../../../bob/lib/account-instance-direct';
-import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../../../bob/lib/account-authz-capsule';
-import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../../../lib/auth/session';
-import { resolveTokyoBaseUrl } from '../../../../../../../lib/env/tokyo';
-import { updateAccountInstanceStatusRow } from '../../../../../../../lib/michael';
+} from '@roma/lib/account-instance-direct';
+import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
+import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '@roma/lib/auth/session';
+import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
+import { updateAccountInstanceStatusRow } from '@roma/lib/michael';
 
 export const runtime = 'edge';
 

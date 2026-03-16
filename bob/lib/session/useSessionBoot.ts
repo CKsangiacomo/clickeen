@@ -230,7 +230,7 @@ export function useSessionBoot(args: {
       localization: localizationPayload,
       policy: nextPolicy,
       publicId: instanceJson.publicId ?? publicId,
-      accountId,
+      accountId: typeof instanceJson.accountId === 'string' ? instanceJson.accountId : undefined,
       accountCapsule: accountCapsule ?? undefined,
       ownerAccountId:
         typeof instanceJson.ownerAccountId === 'string' ? instanceJson.ownerAccountId : undefined,
