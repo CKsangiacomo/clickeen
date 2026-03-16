@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeRequestAccountRoleFromCapsule } from '../../../../lib/account-authz-capsule';
 import { resolveSessionBearer, type SessionCookieSpec, applySessionCookies } from '../../../../lib/auth/session';
 import { resolveTokyoBaseUrl } from '../../../../lib/env/tokyo';
 
@@ -60,6 +61,14 @@ export async function POST(request: NextRequest) {
       session.setCookies,
     );
   }
+  const authz = await authorizeRequestAccountRoleFromCapsule({
+    request,
+    accountId,
+    minRole: 'editor',
+  });
+  if (!authz.ok) {
+    return withCorsAndSession(request, NextResponse.json({ error: authz.error }, { status: authz.status }), session.setCookies);
+  }
 
   const legacyVariant = (request.headers.get('x-variant') || '').trim();
   if (legacyVariant) {
@@ -108,6 +117,7 @@ export async function POST(request: NextRequest) {
   const headers = new Headers();
   headers.set('authorization', `Bearer ${session.accessToken}`);
   headers.set('x-account-id', accountId);
+  headers.set('x-ck-authz-capsule', authz.token);
 
   const publicId = (request.headers.get('x-public-id') || '').trim();
   if (publicId) {

@@ -32,7 +32,7 @@ Health contract:
 - Widget-copilot canonical IDs:
   - `sdr.widget.copilot.v1` (Minibob + free)
   - `cs.widget.copilot.v1` (paid tiers + DevStudio)
-- Paris resolves widget-copilot aliasing before SF execution (`widget.copilot.v1` and forced SDR/CS IDs are normalized by profile).
+- The grant issuer resolves widget-copilot aliasing before SF execution (`widget.copilot.v1` and forced SDR/CS IDs are normalized by profile).
 - Prompt persona pack lives in `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`.
 - Widget copilot now runs with shared execution plumbing + role-scoped policy behavior:
   - SDR policy (`sdr.widget.copilot.v1`): FAQ-only sales workflow with two edit capabilities (rewrite existing Q&A, or personalize from one website URL with consent). Other requests return seller messaging + signup CTA.
@@ -59,7 +59,7 @@ Health contract:
   - personalization job routes/queue handling: `sanfrancisco/src/personalization-jobs.ts`
 
 ## Account-context carry-forward (legacy route name: personalization/onboarding)
-- Endpoint: `POST /v1/personalization/onboarding` (internal, requires `PARIS_DEV_JWT`).
+- Endpoint: `POST /v1/personalization/onboarding` (internal, requires `CK_INTERNAL_SERVICE_JWT`).
 - Status: `GET /v1/personalization/onboarding/:jobId` (internal).
 - Jobs are stored in KV with TTL; execution uses the `agent.personalization.onboarding.v1` policy grant.
 - Despite the route name, this is not a separate user-facing onboarding product. It is an internal post-signup/account-context helper for users who started editing before they had an account.
@@ -76,7 +76,7 @@ Health contract:
 
 ## Prague localization translation (local + cloud-dev)
 - Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT` is `local` or `dev`; disabled elsewhere).
-- Auth: `Authorization: Bearer ${PARIS_DEV_JWT}`.
+- Auth: `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`.
 - Used by `scripts/prague-l10n/translate.mjs` to translate Prague base content.
 - Prague-string prompts preserve source acronym style and do not add parenthetical acronym expansions that are absent in source text.
 - Prague-string safety validation enforces placeholder parity, HTML tag parity, and anchor integrity for richtext items.

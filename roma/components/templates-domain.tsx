@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
-import { fetchParisJson } from './paris-http';
+import { fetchSameOriginJson } from './same-origin-json';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 import { buildBuilderRoute, DEFAULT_INSTANCE_DISPLAY_NAME } from './use-roma-widgets';
 import { normalizeRomaTemplatesSnapshot, type TemplateInstance } from './use-roma-templates';
@@ -36,7 +36,7 @@ export function TemplatesDomain() {
     setDomainLoading(true);
     setDataError(null);
     try {
-      const payload = await fetchParisJson<unknown>(
+      const payload = await fetchSameOriginJson<unknown>(
         `/api/roma/templates?accountId=${encodeURIComponent(accountId)}`,
         {
           method: 'GET',
@@ -94,7 +94,7 @@ export function TemplatesDomain() {
       setActiveActionKey(actionKey);
       setActionError(null);
       try {
-        const payload = await fetchParisJson<{ publicId?: string }>(`/api/roma/widgets/duplicate`, {
+        const payload = await fetchSameOriginJson<{ publicId?: string }>(`/api/roma/widgets/duplicate`, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',

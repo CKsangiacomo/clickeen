@@ -202,13 +202,17 @@ export function CopilotPane() {
   const widgetType = compiled?.widgetname ?? null;
   const instancePublicId = session.meta?.publicId ?? null;
   const accountId = session.meta?.accountId ?? null;
-  const policyProfile = session.policy?.profile ?? 'minibob';
-  const subject = policyProfile === 'minibob' ? 'minibob' : 'account';
+  const policyProfile = session.policy?.profile ?? null;
+  const subject = policyProfile === 'minibob' ? 'minibob' : policyProfile ? 'account' : null;
   const isMinibob = subject === 'minibob';
   const missingAccountForAccountSubject = subject === 'account' && !accountId;
-  const widgetCopilotAgentId = useMemo(() => resolveWidgetCopilotAgentId({ policyProfile }), [policyProfile]);
+  const widgetCopilotAgentId = useMemo(
+    () => (policyProfile ? resolveWidgetCopilotAgentId({ policyProfile }) : null),
+    [policyProfile],
+  );
 
   const aiPolicy = useMemo(() => {
+    if (!policyProfile || !widgetCopilotAgentId) return null;
     const resolved = resolveAiAgent(widgetCopilotAgentId);
     if (!resolved) return null;
     return resolveAiPolicyCapsule({ entry: resolved.entry, policyProfile });
@@ -216,7 +220,7 @@ export function CopilotPane() {
 
   const [aiSelection, setAiSelection] = useState<AiSelection | null>(null);
   useEffect(() => {
-    if (!aiPolicy) return;
+    if (!aiPolicy || !subject) return;
     const key = aiStorageKey({ accountId, subject });
     const stored = readStoredAiSelection(key);
     const next = clampAiSelection(stored, aiPolicy);
@@ -224,7 +228,7 @@ export function CopilotPane() {
   }, [aiPolicy, accountId, subject]);
 
   const showAiSettings = useMemo(() => {
-    if (widgetCopilotAgentId !== WIDGET_COPILOT_AGENT_IDS.cs) return false;
+    if (!widgetCopilotAgentId || widgetCopilotAgentId !== WIDGET_COPILOT_AGENT_IDS.cs) return false;
     if (!aiPolicy || isMinibob || !aiSelection) return false;
     if (aiPolicy.allowProviderChoice) return true;
     const allowedModels = aiPolicy.models?.[aiSelection.provider]?.allowed ?? [];
@@ -424,14 +428,21 @@ export function CopilotPane() {
         ],
       });
     }
-    if (!sessionId) {
+    if (!sessionId || !widgetCopilotAgentId) {
       pushMessage({ role: 'assistant', text: 'Copilot session not ready. Please try again in a moment.' });
+      return;
+    }
+    if (!session.policy || !subject) {
+      pushMessage({
+        role: 'assistant',
+        text: 'Editor context is not ready yet. Wait for Builder boot to complete and try again.',
+      });
       return;
     }
     if (missingAccountForAccountSubject) {
       pushMessage({
         role: 'assistant',
-        text: 'Account context is missing. Reopen the instance from Roma/DevStudio and try again.',
+        text: 'Account context is broken. Reopen the instance from Roma/DevStudio and try again.',
       });
       return;
     }
@@ -571,7 +582,7 @@ export function CopilotPane() {
                       const nextProvider = event.target.value;
                       const clamped = clampAiSelection({ provider: nextProvider, model: '' }, aiPolicy);
                       setAiSelection(clamped);
-                      writeStoredAiSelection(aiStorageKey({ accountId, subject }), clamped);
+                      if (subject) writeStoredAiSelection(aiStorageKey({ accountId, subject }), clamped);
                     }}
                   >
                     {aiPolicy.allowedProviders.map((provider) => (
@@ -602,7 +613,7 @@ export function CopilotPane() {
                       const next: AiSelection = { provider: aiSelection.provider, model: event.target.value };
                       const clamped = clampAiSelection(next, aiPolicy);
                       setAiSelection(clamped);
-                      writeStoredAiSelection(aiStorageKey({ accountId, subject }), clamped);
+                      if (subject) writeStoredAiSelection(aiStorageKey({ accountId, subject }), clamped);
                     }}
                   >
                     {(aiPolicy.models?.[aiSelection.provider]?.allowed ?? []).map((model) => (

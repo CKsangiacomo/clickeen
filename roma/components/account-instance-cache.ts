@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchParisJson } from './paris-http';
+import { fetchSameOriginJson } from './same-origin-json';
 
 const ACCOUNT_INSTANCE_CACHE_TTL_MS = 2 * 60_000;
 const ACCOUNT_INSTANCE_STORE_KEY = '__CK_ROMA_ACCOUNT_INSTANCE_STORE_V1__';
@@ -136,7 +136,7 @@ export async function getAccountInstance(args: {
     return { payload, source: 'network' };
   }
 
-  store.inFlight[key] = fetchParisJson<AccountInstancePayload>(
+  store.inFlight[key] = fetchSameOriginJson<AccountInstancePayload>(
     `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
     args.authzCapsule
       ? {
@@ -197,7 +197,7 @@ export async function getAccountInstanceLocalization(args: {
     return { payload, source: 'network' };
   }
 
-  store.localizationInFlight[key] = fetchParisJson<AccountInstanceLocalizationPayload>(
+  store.localizationInFlight[key] = fetchSameOriginJson<AccountInstanceLocalizationPayload>(
     `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/localization?subject=account`,
     args.authzCapsule
       ? {

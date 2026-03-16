@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
-import { fetchParisJson } from './paris-http';
+import { fetchSameOriginJson } from './same-origin-json';
 
 type AccountLocalesPayload = {
   locales: string[];
@@ -152,7 +152,7 @@ export function AccountLocaleSettingsCard(args: {
     setLoading(true);
     setError(null);
     try {
-      const payload = await fetchParisJson<{
+      const payload = await fetchSameOriginJson<{
         locales?: unknown;
         policy?: {
           baseLocale?: unknown;
@@ -260,7 +260,7 @@ export function AccountLocaleSettingsCard(args: {
     };
 
     try {
-      await fetchParisJson(`/api/accounts/${encodeURIComponent(args.accountId)}/locales?subject=account`, {
+      await fetchSameOriginJson(`/api/accounts/${encodeURIComponent(args.accountId)}/locales?subject=account`, {
         method: 'PUT',
         headers: {
           'content-type': 'application/json',

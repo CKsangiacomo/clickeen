@@ -80,7 +80,7 @@ export type SessionState = {
   previewOps: WidgetOp[] | null;
   isDirty: boolean;
   minibobPersonalizationUsed: boolean;
-  policy: Policy;
+  policy: Policy | null;
   upsell: { reasonKey: string; detail?: string; cta: 'signup' | 'upgrade' } | null;
   isSaving: boolean;
   preview: PreviewSettings;
@@ -231,7 +231,7 @@ export const DEFAULT_LOCALE_STATE: LocaleState = {
   },
 };
 
-export function createInitialSessionState(policy: Policy): SessionState {
+export function createInitialSessionState(policy: Policy | null = null): SessionState {
   return {
     compiled: null,
     instanceData: {},

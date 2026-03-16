@@ -410,6 +410,7 @@ export async function completeMinibobHandoff(args: {
     widgetType: existingHandoff.widgetType,
     config: existingHandoff.config,
     accessToken: args.accessToken,
+    accountCapsule: args.accountCapsule,
     authz: authz.value,
   });
   if (!created.ok) {

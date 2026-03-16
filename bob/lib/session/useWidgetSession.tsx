@@ -6,7 +6,7 @@ import {
   createInitialSessionState,
   type SessionState,
 } from './sessionTypes';
-import { resolveDevPolicy, resolveSubjectModeFromUrl } from './sessionPolicy';
+import { resolveMinibobUrlPolicy, resolveSubjectModeFromUrl } from './sessionPolicy';
 import { useSessionTransport } from './sessionTransport';
 import { useSessionLocalization } from './useSessionLocalization';
 import { useSessionEditing } from './useSessionEditing';
@@ -15,8 +15,9 @@ import { useSessionSaving } from './useSessionSaving';
 import { useSessionCopilot } from './useSessionCopilot';
 
 function useWidgetSessionInternal() {
+  const initialSubjectMode = resolveSubjectModeFromUrl();
   const [state, setState] = useState<SessionState>(() =>
-    createInitialSessionState(resolveDevPolicy(resolveSubjectModeFromUrl())),
+    createInitialSessionState(initialSubjectMode === 'minibob' ? resolveMinibobUrlPolicy() : null),
   );
 
   const stateRef = useRef(state);
@@ -67,7 +68,7 @@ function useWidgetSessionInternal() {
       isDirty: state.isDirty,
       hasUnsavedChanges: state.isDirty || state.locale.dirty,
       minibobPersonalizationUsed: state.minibobPersonalizationUsed,
-      isMinibob: state.policy.profile === 'minibob',
+      isMinibob: state.policy?.profile === 'minibob',
       policy: state.policy,
       upsell: state.upsell,
       isSaving: state.isSaving,

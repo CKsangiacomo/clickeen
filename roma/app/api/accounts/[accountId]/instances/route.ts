@@ -126,6 +126,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     widgetType,
     config: body.config,
     accessToken: session.accessToken,
+    accountCapsule: authz.token,
     authz: authz.payload,
   });
   if (!created.ok) {
@@ -142,6 +143,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         accessToken: session.accessToken,
         accountId,
         publicId: created.value.publicId,
+        accountCapsule: authz.token,
         previousConfig: null,
       });
     } catch (error) {

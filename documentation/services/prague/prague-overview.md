@@ -155,7 +155,7 @@ Localization is applied via page JSON + ops overlays:
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.
-- Curated embeds are validated against Paris; missing curated instances fail fast in dev/build.
+- Curated embeds are validated against the current public instance/runtime contract; missing curated instances fail fast in dev/build.
 
 ---
 

@@ -1,5 +1,4 @@
 import { getEntitlementsMatrix } from '@clickeen/ck-policy';
-import { isUuid } from '@clickeen/ck-contracts';
 import {
   classifyAccountAssetType,
   type AccountAssetType,
@@ -9,52 +8,58 @@ import {
 import type { Env } from '../index';
 
 const L10N_VERSION_CAP_KEY = 'l10n.versions.max';
-const DEFAULT_L10N_VERSION_LIMIT = 1;
 export const UPLOAD_SIZE_CAP_KEY = 'uploads.size.max';
-const DEFAULT_UPLOAD_SIZE_MAX_BYTES = 5 * 1024 * 1024;
 export const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
-const DEFAULT_ACCOUNT_STORAGE_MAX_BYTES = DEFAULT_UPLOAD_SIZE_MAX_BYTES * 5;
 const ACCOUNT_STORAGE_USAGE_PREFIX = 'usage.storage.v1';
+
+function resolveEntitlementTierOrThrow(tier: string | null): string {
+  const normalized = typeof tier === 'string' ? tier.trim() : '';
+  if (!normalized) {
+    throw new Error('[tokyo] Missing account tier for entitlement resolution');
+  }
+  const matrix = getEntitlementsMatrix();
+  if (!matrix.tiers.includes(normalized as typeof matrix.tiers[number])) {
+    throw new Error(`[tokyo] Invalid account tier for entitlement resolution: ${normalized}`);
+  }
+  return normalized;
+}
 
 export function resolveL10nVersionLimit(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
   const entry = matrix.capabilities[L10N_VERSION_CAP_KEY];
-  if (!entry || entry.kind !== 'cap') return DEFAULT_L10N_VERSION_LIMIT;
-  const fallback = 'free' as keyof typeof entry.values;
-  const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
-    ? (tier as typeof matrix.tiers[number])
-    : fallback) as keyof typeof entry.values;
+  if (!entry || entry.kind !== 'cap') throw new Error(`[tokyo] Missing entitlement cap: ${L10N_VERSION_CAP_KEY}`);
+  const profile = resolveEntitlementTierOrThrow(tier) as keyof typeof entry.values;
   const value = entry.values[profile];
   if (value == null) return null;
-  if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULT_L10N_VERSION_LIMIT;
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new Error(`[tokyo] Invalid entitlement cap value for ${L10N_VERSION_CAP_KEY}`);
+  }
   return Math.max(1, Math.floor(value));
 }
 
 export function resolveUploadSizeLimitBytes(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
   const entry = matrix.capabilities[UPLOAD_SIZE_CAP_KEY];
-  if (!entry || entry.kind !== 'cap') return DEFAULT_UPLOAD_SIZE_MAX_BYTES;
-  const fallback = 'free' as keyof typeof entry.values;
-  const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
-    ? (tier as typeof matrix.tiers[number])
-    : fallback) as keyof typeof entry.values;
+  if (!entry || entry.kind !== 'cap') throw new Error(`[tokyo] Missing entitlement cap: ${UPLOAD_SIZE_CAP_KEY}`);
+  const profile = resolveEntitlementTierOrThrow(tier) as keyof typeof entry.values;
   const value = entry.values[profile];
   if (value == null) return null;
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return DEFAULT_UPLOAD_SIZE_MAX_BYTES;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    throw new Error(`[tokyo] Invalid entitlement cap value for ${UPLOAD_SIZE_CAP_KEY}`);
+  }
   return Math.max(1, Math.floor(value));
 }
 
 export function resolveStorageBytesBudgetMax(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
   const entry = matrix.capabilities[STORAGE_BYTES_BUDGET_KEY];
-  if (!entry || entry.kind !== 'budget') return DEFAULT_ACCOUNT_STORAGE_MAX_BYTES;
-  const fallback = 'free' as keyof typeof entry.values;
-  const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
-    ? (tier as typeof matrix.tiers[number])
-    : fallback) as keyof typeof entry.values;
+  if (!entry || entry.kind !== 'budget') throw new Error(`[tokyo] Missing entitlement budget: ${STORAGE_BYTES_BUDGET_KEY}`);
+  const profile = resolveEntitlementTierOrThrow(tier) as keyof typeof entry.values;
   const value = entry.values[profile];
   if (value == null) return null;
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return DEFAULT_ACCOUNT_STORAGE_MAX_BYTES;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw new Error(`[tokyo] Invalid entitlement budget value for ${STORAGE_BYTES_BUDGET_KEY}`);
+  }
   return Math.floor(value);
 }
 
@@ -77,18 +82,6 @@ async function writeAccountStoredBytesUsage(env: Env, accountId: string, totalBy
 
 export type MemberRole = 'viewer' | 'editor' | 'admin' | 'owner';
 
-function normalizeMemberRole(value: unknown): MemberRole | null {
-  switch (value) {
-    case 'viewer':
-    case 'editor':
-    case 'admin':
-    case 'owner':
-      return value;
-    default:
-      return null;
-  }
-}
-
 export function roleRank(role: MemberRole): number {
   switch (role) {
     case 'owner':
@@ -104,27 +97,6 @@ export function roleRank(role: MemberRole): number {
   }
 }
 
-export async function loadAccountMembershipRole(env: Env, accountId: string, userId: string): Promise<MemberRole | null> {
-  if (!isUuid(accountId) || !isUuid(userId)) return null;
-
-  const params = new URLSearchParams({
-    select: 'role',
-    account_id: `eq.${accountId}`,
-    user_id: `eq.${userId}`,
-    limit: '1',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/account_members?${params.toString()}`, {
-    method: 'GET',
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account membership read failed (${res.status}) ${text}`.trim());
-  }
-
-  const rows = (await res.json().catch(() => [])) as Array<{ role?: unknown }>;
-  return normalizeMemberRole(rows?.[0]?.role);
-}
-
 type AccountAssetSource = 'bob.publish' | 'bob.export' | 'devstudio' | 'promotion' | 'api';
 
 export function normalizeAccountAssetSource(raw: string | null): AccountAssetSource | null {
@@ -136,31 +108,6 @@ export function normalizeAccountAssetSource(raw: string | null): AccountAssetSou
   return null;
 }
 
-type AccountUploadProfile = {
-  status: 'active' | 'disabled';
-  tier: string | null;
-};
-
-export async function loadAccountUploadProfile(env: Env, accountId: string): Promise<AccountUploadProfile | null> {
-  if (!isUuid(accountId)) return null;
-  const params = new URLSearchParams({
-    select: 'status,tier',
-    id: `eq.${accountId}`,
-    limit: '1',
-  });
-  const res = await supabaseFetch(env, `/rest/v1/accounts?${params.toString()}`, { method: 'GET' });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase account read failed (${res.status}) ${text}`.trim());
-  }
-  const rows = (await res.json().catch(() => [])) as Array<{ status?: unknown; tier?: unknown }>;
-  const row = rows?.[0];
-  if (!row) return null;
-  const status = row.status === 'disabled' ? 'disabled' : row.status === 'active' ? 'active' : null;
-  if (!status) return null;
-  const tier = typeof row.tier === 'string' ? row.tier : null;
-  return { status, tier };
-}
 
 export async function persistAccountAssetMetadata(args: {
   env: Env;

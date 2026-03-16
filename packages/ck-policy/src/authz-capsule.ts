@@ -1,4 +1,4 @@
-import type { PolicyEntitlementsSnapshot } from './policy';
+import { assertPolicyEntitlementsSnapshot, type PolicyEntitlementsSnapshot } from './policy';
 import type { MemberRole, PolicyProfile } from './types';
 
 export const ROMA_AUTHZ_CAPSULE_HEADER = 'x-ck-authz-capsule';
@@ -113,46 +113,6 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function normalizeEntitlementsSnapshot(value: unknown): PolicyEntitlementsSnapshot | null {
-  if (!isPlainRecord(value)) return null;
-
-  const flags: Record<string, boolean> | null = isPlainRecord(value.flags)
-    ? Object.entries(value.flags).reduce<Record<string, boolean>>((out, [key, entry]) => {
-        if (typeof entry === 'boolean') out[key] = entry;
-        return out;
-      }, {})
-    : null;
-
-  const caps: Record<string, number | null> | null = isPlainRecord(value.caps)
-    ? Object.entries(value.caps).reduce<Record<string, number | null>>((out, [key, entry]) => {
-        if (entry === null || (typeof entry === 'number' && Number.isFinite(entry))) {
-          out[key] = entry;
-        }
-        return out;
-      }, {})
-    : null;
-
-  const budgets: Record<string, { max: number | null; used: number }> | null = isPlainRecord(value.budgets)
-    ? Object.fromEntries(
-        Object.entries(value.budgets).flatMap(([key, entry]) => {
-          if (!isPlainRecord(entry)) return [];
-          const max = entry.max;
-          const used = entry.used;
-          if (
-            !(max === null || (typeof max === 'number' && Number.isFinite(max))) ||
-            !(typeof used === 'number' && Number.isFinite(used))
-          ) {
-            return [];
-          }
-          return [[key, { max, used: Math.max(0, Math.trunc(used)) }]];
-        }),
-      )
-    : null;
-
-  if (!flags && !caps && !budgets) return null;
-  return { ...(flags ? { flags } : {}), ...(caps ? { caps } : {}), ...(budgets ? { budgets } : {}) };
-}
-
 export function readRomaAuthzCapsuleHeader(req: Request): string | null {
   const value = req.headers.get(ROMA_AUTHZ_CAPSULE_HEADER);
   if (!value) return null;
@@ -181,7 +141,15 @@ function normalizeAccountPayload(
   const accountWebsiteUrlRaw = typeof record.accountWebsiteUrl === 'string' ? record.accountWebsiteUrl.trim() : '';
   const accountL10nLocales = record.accountL10nLocales;
   const accountL10nPolicy = record.accountL10nPolicy;
-  const entitlements = normalizeEntitlementsSnapshot(record.entitlements);
+  let entitlements: PolicyEntitlementsSnapshot | null | undefined;
+  try {
+    entitlements =
+      Object.prototype.hasOwnProperty.call(record, 'entitlements')
+        ? assertPolicyEntitlementsSnapshot(record.entitlements)
+        : undefined;
+  } catch {
+    return null;
+  }
   const authzVersion = typeof record.authzVersion === 'string' ? record.authzVersion.trim() : '';
   const role = normalizeMemberRole(record.role);
   const profile = normalizePolicyProfile(record.profile);
@@ -191,6 +159,7 @@ function normalizeAccountPayload(
   if (!userId || !sub || sub !== userId) return null;
   if (!accountId || !accountStatus || !accountName || !accountSlug || !authzVersion) return null;
   if (!role || !profile) return null;
+  if (typeof entitlements === 'undefined') return null;
   if (!Number.isFinite(iat) || !Number.isFinite(exp)) return null;
   if (exp <= nowSec) return null;
   if (iat > nowSec + ROMA_AUTHZ_CAPSULE_MAX_SKEW_SEC) return null;
@@ -210,7 +179,7 @@ function normalizeAccountPayload(
     accountWebsiteUrl: accountWebsiteUrlRaw || null,
     accountL10nLocales,
     accountL10nPolicy,
-    entitlements,
+    ...(typeof entitlements === 'undefined' ? {} : { entitlements }),
     profile,
     role,
     authzVersion,

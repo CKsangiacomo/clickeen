@@ -39,7 +39,9 @@ export function useSessionEditing(args: {
   const applyMinibobInjectedState = useCallback((nextState: Record<string, unknown>): boolean => {
     const snapshot = args.stateRef.current;
     const compiled = snapshot.compiled;
+    const policy = snapshot.policy;
     if (!compiled || compiled.controls.length === 0) return false;
+    if (!policy) return false;
     if (!compiled.defaults || typeof compiled.defaults !== 'object' || Array.isArray(compiled.defaults)) return false;
 
     const defaults = compiled.defaults as Record<string, unknown>;
@@ -49,7 +51,7 @@ export function useSessionEditing(args: {
     resolved = sanitizeConfig({
       config: resolved,
       limits: compiled.limits ?? null,
-      policy: snapshot.policy,
+      policy,
       context: 'load',
     });
     resolved = applyWidgetNormalizations(compiled.normalization, resolved);
@@ -90,7 +92,16 @@ export function useSessionEditing(args: {
         args.setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
         return result;
       }
-      if (args.state.policy.role === 'viewer') {
+      const policy = args.state.policy;
+      if (!policy) {
+        const result: ApplyWidgetOpsResult = {
+          ok: false,
+          errors: [{ opIndex: 0, message: 'Editor context is not ready.' }],
+        };
+        args.setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors }, upsell: null }));
+        return result;
+      }
+      if (policy.role === 'viewer') {
         const result: ApplyWidgetOpsResult = {
           ok: false,
           errors: [{ opIndex: 0, message: 'Read-only mode: editing is disabled.' }],
@@ -114,7 +125,7 @@ export function useSessionEditing(args: {
           upsell: {
             reasonKey: decision.reasonKey,
             detail: decision.detail,
-            cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+            cta: prev.policy?.profile === 'minibob' ? 'signup' : 'upgrade',
           },
         }));
         return result;
@@ -170,7 +181,7 @@ export function useSessionEditing(args: {
       const violations = evaluateLimits({
         config: normalizedData,
         limits: compiled.limits ?? null,
-        policy: args.state.policy,
+        policy,
         context: 'ops',
       });
       if (violations.length > 0) {
@@ -238,11 +249,15 @@ export function useSessionEditing(args: {
     }
 
     const compiled = snapshot.compiled;
+    const policy = snapshot.policy;
     if (!compiled || compiled.controls.length === 0) {
       return { ok: false, errors: [{ opIndex: 0, message: 'This widget did not compile with controls[]' }] };
     }
+    if (!policy) {
+      return { ok: false, errors: [{ opIndex: 0, message: 'Editor context is not ready.' }] };
+    }
 
-    if (snapshot.policy.role === 'viewer') {
+    if (policy.role === 'viewer') {
       return { ok: false, errors: [{ opIndex: 0, message: 'Read-only mode: editing is disabled.' }] };
     }
 
@@ -284,7 +299,7 @@ export function useSessionEditing(args: {
     const violations = evaluateLimits({
       config: normalizedData,
       limits: compiled.limits ?? null,
-      policy: snapshot.policy,
+      policy,
       context: 'ops',
     });
     if (violations.length > 0) {
@@ -347,7 +362,7 @@ export function useSessionEditing(args: {
       upsell: {
         reasonKey,
         detail,
-        cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+        cta: prev.policy?.profile === 'minibob' ? 'signup' : 'upgrade',
       },
     }));
   }, [args.setState]);
@@ -397,10 +412,14 @@ export function useSessionEditing(args: {
 
   const consumeBudget = useCallback(
     (key: BudgetKey, amount = 1): BudgetDecision => {
-      const budget = args.state.policy.budgets[key];
+      const policy = args.state.policy;
+      if (!policy) {
+        return { ok: false, upsell: 'UP', reasonKey: 'coreui.errors.auth.contextUnavailable' };
+      }
+      const budget = policy.budgets[key];
       if (!budget) return { ok: true, nextUsed: 0 };
 
-      const decision = canConsume(args.state.policy, key, amount);
+      const decision = canConsume(policy, key, amount);
       if (!decision.ok) {
         args.setState((prev) => ({
           ...prev,
@@ -408,7 +427,7 @@ export function useSessionEditing(args: {
           upsell: {
             reasonKey: decision.reasonKey,
             detail: decision.detail,
-            cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+            cta: prev.policy?.profile === 'minibob' ? 'signup' : 'upgrade',
           },
         }));
         return decision;
@@ -416,7 +435,7 @@ export function useSessionEditing(args: {
 
       args.setState((prev) => ({
         ...prev,
-        policy: consume(prev.policy, key, amount),
+        policy: prev.policy ? consume(prev.policy, key, amount) : prev.policy,
         upsell: null,
       }));
       return decision;

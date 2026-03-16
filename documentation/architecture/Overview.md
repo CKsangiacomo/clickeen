@@ -251,7 +251,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - End-to-end flow:
   1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional public/widget trace headers).
   2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable URL (`/assets/v/:assetRef`).
-  3. Paris validates asset refs from instance config writes in the same request path.
+  3. Roma validates account commands at the product boundary and Tokyo/Tokyo-worker enforce canonical asset/config contracts on write.
   4. Roma Assets reads/deletes via Roma asset routes (`/api/assets/:accountId*`) which forward to Tokyo-worker with Berlin session auth; Tokyo-worker enforces account membership role.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
@@ -265,7 +265,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 | --------------------------- | --------------------------- | --------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
 | **Bob (Pages)**             | `NEXT_PUBLIC_TOKYO_URL`     | `https://tokyo.dev.clickeen.com`        | `https://tokyo.clickeen.com`        | Compiler fetches widget specs over HTTP (even locally)                           |
 | **Bob (Pages)**             | `NEXT_PUBLIC_VENICE_URL`    | `https://venice.dev.clickeen.com`       | `https://embed.clickeen.com`        | Bob MiniBob public read shortcut + preview-shadow target                         |
-| **Bob (Pages)**             | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Base URL for Copilot execution (San Francisco); some routes have local fallbacks |
+| **Bob (Pages)**             | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Explicit base URL for Copilot execution (San Francisco); no fallback probing |
 | **Roma (Pages)**            | `NEXT_PUBLIC_BOB_URL`       | `https://bob.dev.clickeen.com`          | `https://app.clickeen.com`          | Builder iframe origin (no query override; configured per environment)            |
 | **Paris (Workers)**         | `ENV_STAGE`                 | `cloud-dev`                             | `ga`                                | Exposure stage stamped into grants for learning attribution                      |
 | **San Francisco (Workers)** | `AI_GRANT_HMAC_SECRET`      | dev secret                              | prod secret                         | Shared HMAC secret with Paris (grant + outcome signatures)                       |
@@ -273,7 +273,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **Hard security rule:**
 
-- `PARIS_DEV_JWT` is **local/dev-worker-only** and must never be set in Cloudflare Pages production env vars.
+- `CK_INTERNAL_SERVICE_JWT` is **local/dev-worker-only** and must never be set in Cloudflare Pages production env vars.
 
 **Local auth rule:**
 
@@ -339,8 +339,8 @@ Non-negotiable:
 - **Dev surfaces protected**: shared `*.dev` surfaces may be protected behind Cloudflare Access; DevStudio is local-only.
 - **Secrets isolation**:
   - Provider keys live only in San Francisco.
-  - Supabase service role lives only in Paris.
-  - `PARIS_DEV_JWT` is **local/dev-worker-only** and must never exist in Pages prod env vars.
+  - Supabase service role lives only in Berlin/Tokyo-worker where explicitly required.
+  - `CK_INTERNAL_SERVICE_JWT` is **local/dev-worker-only** and must never exist in Pages prod env vars.
 - **Caching**:
   - Tokyo assets are long-cacheable when versioned; avoid cache on `spec.json` when iterating in dev.
   - Venice serves short-cache shell HTML, `no-store` live pointers, and immutable fingerprinted packs/assets.

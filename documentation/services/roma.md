@@ -103,20 +103,22 @@ Current cloud-dev product rule:
 - Cloud-dev still effectively behaves as one seeded platform-owned account today, so the switcher is normally hidden there because `accounts.length <= 1`.
 - Bootstrap still returns `accounts[]` + `defaults.accountId`, and Roma exposes switch-account automatically when the current user actually has more than one account membership.
 
-## Upstream proxy model
+## Upstream route model
 
-Roma talks to Berlin and Paris only through same-origin API routes:
+Roma talks to upstream systems only through same-origin API routes:
 
-- Berlin-backed bootstrap/auth/account routes stay explicit under `roma/app/api/**`.
-- Paris-backed routes are explicit handlers under `roma/app/api/**` using `roma/lib/api/paris-proxy.ts` (no generic wildcard proxy) only for residual non-product/public Paris paths.
-- Non-Paris routes stay explicit as well (`/api/assets/*` -> Tokyo-worker, account shell routes -> Berlin).
+- Browser code stays on `roma/app/api/**`.
+- Product routes are explicit and owned in Roma (`/api/accounts/**`, `/api/roma/**`, `/api/session/**`).
+- Those routes call the real owners directly: Berlin for auth/account truth, Tokyo/Tokyo-worker for saved/artifact truth, and San Francisco for AI execution.
+- There is no generic Paris proxy in the active Roma product path.
 
 Client fetch behavior:
 
 - Browser code calls same-origin Roma routes only.
-- `fetchParisJson` in the browser is just a no-store fetch + timeout/reason wrapper.
+- `fetchSameOriginJson` in the browser is just a no-store fetch + timeout/reason wrapper.
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
 - Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/roma/widgets`, `/api/roma/templates`, widget delete, builder/account routes, localization/layer routes).
+- Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`; Roma does not infer or probe internal service hosts.
 
 ## Bob orchestration contract (Roma Builder)
 
@@ -135,7 +137,7 @@ Notes:
 - Bob account mode is message-boot only. Explicit URL boot remains only for non-account surfaces.
 - Roma marks Bob iframe host intent with `surface=roma` to keep host-specific auth behavior explicit.
 - In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
-- Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/accounts/:accountId/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Paris only for the internal aftermath orchestration Berlin triggers.
+- Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/accounts/:accountId/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Roma-owned aftermath for downstream locale work.
 - Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and non-owner member removal route through Roma same-origin APIs backed by Berlin (`/api/accounts/:accountId/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
 - Roma now exposes a dedicated person-scoped User Settings domain at `/profile`. It renders canonical person data from bootstrap, writes self-profile updates through `/api/me` -> Berlin `PUT /v1/me`, initiates auth-owned email change through `/api/me/email-change` -> Berlin `POST /v1/me/email-change`, and runs phone/WhatsApp verification through same-origin relays to Berlin (`/api/me/contact-methods/:channel/start|verify`). Linked identities stay internal and are not part of the standard customer-facing surface.
 - Roma Team now also exposes Berlin-backed invitation issue/list/revoke flows through `/api/accounts/:accountId/invitations` and `/api/accounts/:accountId/invitations/:invitationId`. Team does not expose raw accept tokens or shareable acceptance paths as normal invitation metadata.
@@ -179,12 +181,12 @@ Assets domain behavior:
 ### Cloud-dev
 
 - Roma runtime target: `https://roma.dev.clickeen.com` (Pages `*.pages.dev` deploys are not supported for authenticated Builder because cookies cannot be shared to Bob).
-- Uses cloud-dev Paris/Tokyo/Bob URLs from env/config.
+- Uses cloud-dev Berlin/Tokyo/Bob/San Francisco URLs from env/config.
 - Cloud product auth currently supports both Google and email/password through Berlin-owned session endpoints.
 - Cloud-dev currently runs as one effective product account: admin. Roma does not expose account switching there.
 
 ## Operational notes
 
 - Canonical startup script is `bash scripts/dev-up.sh`.
-- Roma is **cloud-only** for supported product behavior. Local is for building blocks only (Bob/Paris/Berlin/Tokyo/Venice/DevStudio).
+- Roma is **cloud-only** for supported product behavior. Local is for building blocks only (Bob/Berlin/Tokyo/Venice/DevStudio).
 - If services appear down after a successful start, verify the parent shell/session that launched `dev-up` is still alive.

@@ -66,14 +66,7 @@ function summarizeUpstreamError(args: { serviceName: string; baseUrl: string; st
   return args.bodyText || `${args.serviceName} error (${args.status})`;
 }
 
-type UrlResolution = { baseUrl: string; resolvedAtMs: number; source: 'env' | 'fallback' };
-
-const SANFRANCISCO_FALLBACKS =
-  process.env.NODE_ENV === 'development'
-    ? ['http://localhost:3002', 'http://localhost:8787', 'https://sanfrancisco.dev.clickeen.com']
-    : ['https://sanfrancisco.dev.clickeen.com'];
-
-let cachedSanFrancisco: UrlResolution | null = null;
+type UrlResolution = { baseUrl: string; resolvedAtMs: number; source: 'env' };
 
 const ALLOWED_WIDGET_COPILOT_AGENT_IDS = new Set<string>([
   WIDGET_COPILOT_AGENT_ALIAS,
@@ -99,43 +92,12 @@ function uniqStrings(values: Array<string | undefined | null>): string[] {
   return out;
 }
 
-async function probeHealthz(baseUrl: string, timeoutMs = 800): Promise<boolean> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(`${baseUrl.replace(/\/+$/, '')}/healthz`, {
-      method: 'GET',
-      signal: controller.signal,
-      headers: { accept: 'application/json, text/plain;q=0.9, */*;q=0.1' },
-    });
-    const text = await res.text().catch(() => '');
-    if (!res.ok) return false;
-    if (looksLikeHtml(text)) return false;
-    const parsed = safeJsonParse(text) as any;
-    if (parsed && typeof parsed === 'object' && parsed.ok === true) return true;
-    return true;
-  } catch {
-    return false;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 async function resolveSanFranciscoBaseUrl(): Promise<UrlResolution | null> {
-  const now = Date.now();
-  if (cachedSanFrancisco && now - cachedSanFrancisco.resolvedAtMs < 5 * 60_000) return cachedSanFrancisco;
-
   const envNormalized = (SANFRANCISCO_BASE_URL || '').trim().replace(/\/+$/, '');
-  const candidates = uniqStrings([SANFRANCISCO_BASE_URL, ...SANFRANCISCO_FALLBACKS]);
-
-  for (const baseUrl of candidates) {
-    if (await probeHealthz(baseUrl)) {
-      cachedSanFrancisco = { baseUrl, resolvedAtMs: now, source: baseUrl === envNormalized ? 'env' : 'fallback' };
-      return cachedSanFrancisco;
-    }
-  }
-
-  return null;
+  if (!envNormalized) return null;
+  const [baseUrl] = uniqStrings([envNormalized]);
+  if (!baseUrl) return null;
+  return { baseUrl, resolvedAtMs: Date.now(), source: 'env' };
 }
 
 function getClientKey(req: Request) {
@@ -211,8 +173,8 @@ export async function POST(req: NextRequest) {
     const resolved = await resolveSanFranciscoBaseUrl();
     if (!resolved) {
       return NextResponse.json(
-        { message: 'Copilot is temporarily unavailable (SanFrancisco is not reachable). Please try again in a moment.' },
-        { status: 200 },
+        { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail: 'sanfrancisco_base_url_missing' } },
+        { status: 500 },
       );
     }
 

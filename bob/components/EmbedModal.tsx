@@ -56,7 +56,7 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
-  const seoGeoEntitled = session.policy.flags['embed.seoGeo.enabled'] === true;
+  const seoGeoEntitled = session.policy?.flags['embed.seoGeo.enabled'] === true;
   const seoGeoEnabled = seoGeoEntitled;
 
   const embed = useMemo(() => {

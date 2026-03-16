@@ -151,7 +151,7 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 
 **Pipeline**
 
-- Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires `PARIS_DEV_JWT`).
+- Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires `CK_INTERNAL_SERVICE_JWT`).
 - Provider: OpenAI for Prague strings (system-owned); instance l10n agents follow the **Tiered AI Profile** (DeepSeek for Free, OpenAI/Anthropic for Paid).
 - `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/l10n/prague/**`.
 - `scripts/prague-l10n/verify.mjs` is a read-only artifact validator:
@@ -277,7 +277,7 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
 
 1. Author base copy in `tokyo/widgets/*/pages/*.json`.
 2. Update allowlists under `prague/content/allowlists/v1/**` when new copy paths are added.
-3. Generate overlays via `node scripts/prague-l10n/translate.mjs` (requires San Francisco; local uses `sanfrancisco-local`, cloud-dev uses `sanfrancisco-dev` with `SANFRANCISCO_BASE_URL` + `PARIS_DEV_JWT`).
+3. Generate overlays via `node scripts/prague-l10n/translate.mjs` (requires San Francisco; local uses `sanfrancisco-local`, cloud-dev uses `sanfrancisco-dev` with `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`).
 4. Verify overlays via `pnpm prague:l10n:verify`.
 5. Publish overlays to Tokyo/R2:
    - Cloud-dev/prod (remote R2): `node scripts/prague-sync.mjs --publish --remote`

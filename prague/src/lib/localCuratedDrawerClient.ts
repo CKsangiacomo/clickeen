@@ -196,7 +196,7 @@ function bindLocalCuratedRoot(root: HTMLElement) {
       const payload = (await res.json().catch(() => ({}))) as {
         instances?: Array<{ publicId?: unknown }>;
         localCount?: unknown;
-        parisCount?: unknown;
+        cloudCount?: unknown;
         warning?: unknown;
       };
       const instances = Array.isArray(payload.instances) ? payload.instances : [];
@@ -215,11 +215,12 @@ function bindLocalCuratedRoot(root: HTMLElement) {
       slotEls.forEach((slotEl) => setSelectOptions(slotEl, sortedValues));
 
       const localCount = Number.isInteger(payload.localCount) ? Number(payload.localCount) : 0;
-      const parisCount = Number.isInteger(payload.parisCount) ? Number(payload.parisCount) : 0;
+      const cloudCount = Number.isInteger(payload.cloudCount) ? Number(payload.cloudCount) : 0;
       const warning = typeof payload.warning === 'string' && payload.warning.trim() ? payload.warning.trim() : '';
 
       if (instances.length > 0) {
-        const sourceBreakdown = localCount > 0 || parisCount > 0 ? ` (${localCount} local, ${parisCount} Paris)` : '';
+        const sourceBreakdown =
+          localCount > 0 || cloudCount > 0 ? ` (${localCount} local, ${cloudCount} cloud)` : '';
         const baseMessage = `Found ${slotCount} editable slots across ${blockCount} blocks. Loaded ${instances.length} available instance IDs${sourceBreakdown}.`;
         setStatus(warning ? `${baseMessage} ${warning}` : baseMessage, warning ? 'warn' : 'ok');
       } else {

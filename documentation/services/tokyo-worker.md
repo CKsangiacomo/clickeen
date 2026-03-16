@@ -9,7 +9,7 @@ Tokyo-worker has two responsibilities:
 2. **Instance mirror** (PRD 54): write/delete the Tokyo files that Venice serves publicly (config/text/meta packs + live pointers).
 3. **Saved authoring snapshot** (PRD 61 cutover): store the latest saved user-instance config in Tokyo so product reads can treat Tokyo as the saved revision base.
 
-Tokyo-worker does not “decide what is live”. Bob/Roma decides; Paris commits DB writes; Tokyo-worker mirrors bytes.
+Tokyo-worker does not “decide what is live”. Roma/Bob decide; Tokyo-worker mirrors bytes from canonical saved/artifact truth.
 
 ---
 
@@ -28,7 +28,7 @@ Tokyo-worker does not “decide what is live”. Bob/Roma decides; Paris commits
 
 Current auth rule:
 
-- Product account routes use Berlin-backed bearer auth plus normal membership checks.
+- Product account routes execute from Roma-minted `x-ck-authz-capsule` truth. Tokyo-worker does not re-read membership/tier/account status on those paths.
 - Local internal tool routes may use `TOKYO_DEV_JWT` only when they also send an explicit allowed `x-ck-internal-service`.
 - There is no generic trusted-token bypass on account routes.
 
@@ -69,8 +69,8 @@ Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies
 
 Current runtime contract:
 
-- This surface is editor-only and requires account membership auth (`viewer+` for read, `editor+` for write).
-- Local internal Bob/Paris tool flows may use `TOKYO_DEV_JWT` only with an explicit allowed `x-ck-internal-service`; Tokyo does not accept a bare dev token as a universal saved-render bypass.
+- This surface is editor-only and requires a valid Roma account authz capsule (`viewer+` for read, `editor+` for write).
+- Local internal repair/tool flows may use `TOKYO_DEV_JWT` only with an explicit allowed `x-ck-internal-service`; Tokyo does not accept a bare dev token as a universal saved-render bypass.
 - It stores the latest saved **user-instance** config in Tokyo under:
   - pointer: `renders/instances/<publicId>/saved/r.json`
   - pack: `renders/instances/<publicId>/saved/config/<configFp>.json`

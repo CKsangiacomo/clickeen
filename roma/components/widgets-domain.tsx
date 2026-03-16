@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
-import { fetchParisJson } from './paris-http';
+import { fetchSameOriginJson } from './same-origin-json';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 import {
   buildBuilderRoute,
@@ -64,7 +64,7 @@ export function WidgetsDomain() {
     setDomainLoading(true);
     setDataError(null);
     try {
-      const payload = await fetchParisJson<unknown>(`/api/roma/widgets?accountId=${encodeURIComponent(accountId)}`, {
+      const payload = await fetchSameOriginJson<unknown>(`/api/roma/widgets?accountId=${encodeURIComponent(accountId)}`, {
         method: 'GET',
         headers: createRequestHeaders(),
       });
@@ -138,7 +138,7 @@ export function WidgetsDomain() {
       setCreateError(null);
       try {
         const sourcePublicId = buildMainPublicId(normalizedWidgetType);
-        const payload = await fetchParisJson<{ publicId?: string; widgetType?: string }>(
+        const payload = await fetchSameOriginJson<{ publicId?: string; widgetType?: string }>(
           `/api/roma/widgets/duplicate`,
           {
             method: 'POST',
@@ -184,7 +184,7 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        const payload = await fetchParisJson<{ publicId?: string; widgetType?: string }>(`/api/roma/widgets/duplicate`, {
+        const payload = await fetchSameOriginJson<{ publicId?: string; widgetType?: string }>(`/api/roma/widgets/duplicate`, {
           method: 'POST',
           headers: createRequestHeaders('application/json'),
           body: JSON.stringify({
@@ -215,7 +215,7 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        await fetchParisJson<{ deleted?: boolean }>(
+        await fetchSameOriginJson<{ deleted?: boolean }>(
           `/api/roma/instances/${encodeURIComponent(instance.publicId)}?accountId=${encodeURIComponent(accountId)}`,
           {
             method: 'DELETE',
@@ -240,7 +240,7 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        await fetchParisJson<{ status?: 'published' | 'unpublished' }>(
+        await fetchSameOriginJson<{ status?: 'published' | 'unpublished' }>(
           `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(instance.publicId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}?subject=account`,
           {
             method: 'POST',
@@ -291,7 +291,7 @@ export function WidgetsDomain() {
       setCreateError(null);
       setRenameError(null);
       try {
-        const payload = await fetchParisJson<{ publicId?: string; displayName?: string }>(
+        const payload = await fetchSameOriginJson<{ publicId?: string; displayName?: string }>(
           `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(instance.publicId)}/rename`,
           {
             method: 'POST',

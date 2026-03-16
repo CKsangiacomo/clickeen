@@ -122,6 +122,7 @@ function buildLiveLocalePolicy(args: {
 function buildTokyoAccountHeaders(args: {
   accessToken: string;
   accountId: string;
+  accountCapsule?: string | null;
   contentType?: string;
 }): Headers {
   const headers = new Headers({
@@ -129,6 +130,7 @@ function buildTokyoAccountHeaders(args: {
     authorization: `Bearer ${args.accessToken}`,
     'x-account-id': args.accountId,
   });
+  if (args.accountCapsule) headers.set('x-ck-authz-capsule', args.accountCapsule);
   if (args.contentType) headers.set('content-type', args.contentType);
   return headers;
 }
@@ -138,6 +140,7 @@ async function writeTokyoConfigPack(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  accountCapsule?: string | null;
   widgetType: string;
   configPack: Record<string, unknown>;
 }): Promise<string> {
@@ -150,6 +153,7 @@ async function writeTokyoConfigPack(args: {
       headers: buildTokyoAccountHeaders({
         accessToken: args.accessToken,
         accountId: args.accountId,
+        accountCapsule: args.accountCapsule,
         contentType: 'application/json',
       }),
       cache: 'no-store',
@@ -186,6 +190,7 @@ async function syncTokyoLivePointer(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  accountCapsule?: string | null;
   widgetType: string;
   configFp: string;
   localePolicy: LocalePolicy;
@@ -200,6 +205,7 @@ async function syncTokyoLivePointer(args: {
       headers: buildTokyoAccountHeaders({
         accessToken: args.accessToken,
         accountId: args.accountId,
+        accountCapsule: args.accountCapsule,
         contentType: 'application/json',
       }),
       cache: 'no-store',
@@ -298,6 +304,7 @@ export async function runAccountSaveAftermath(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  accountCapsule?: string | null;
   previousConfig?: Record<string, unknown> | null;
 }): Promise<void> {
   const tokyoBaseUrl = resolveTokyoBaseUrl();
@@ -307,6 +314,7 @@ export async function runAccountSaveAftermath(args: {
     accessToken: args.accessToken,
     accountId: args.accountId,
     publicId: args.publicId,
+    accountCapsule: args.accountCapsule,
   });
 
   const localizationAllowlist = await loadTokyoAllowlist({
@@ -321,6 +329,7 @@ export async function runAccountSaveAftermath(args: {
     accessToken: args.accessToken,
     accountId: args.accountId,
     publicId: args.publicId,
+    accountCapsule: args.accountCapsule,
     baseFingerprint: result.baseFingerprint,
     baseTextPack,
   });
@@ -396,6 +405,7 @@ export async function runAccountSaveAftermath(args: {
       accessToken: args.accessToken,
       accountId: args.accountId,
       publicId: args.publicId,
+      accountCapsule: args.accountCapsule,
       layer: 'locale',
       layerKey: locale,
       baseFingerprint: result.baseFingerprint,
@@ -416,6 +426,7 @@ export async function runAccountSaveAftermath(args: {
     accessToken: args.accessToken,
     accountId: args.accountId,
     publicId: args.publicId,
+    accountCapsule: args.accountCapsule,
     widgetType: result.widgetType,
     configPack: result.saved.config,
   });
@@ -431,6 +442,7 @@ export async function runAccountSaveAftermath(args: {
     accessToken: args.accessToken,
     accountId: args.accountId,
     publicId: args.publicId,
+    accountCapsule: args.accountCapsule,
     widgetType: result.widgetType,
     configFp,
     localePolicy,

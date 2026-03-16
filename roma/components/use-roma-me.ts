@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { assertPolicyEntitlementsSnapshot } from '@clickeen/ck-policy';
 
 export type RomaMeResponse = {
   user: {
@@ -127,31 +128,51 @@ export function resolveAccountPolicyFromRomaAuthz(data: RomaMeResponse | null, a
   const role = normalizeRole(authz.role);
   const profile = normalizeProfile(authz.profile);
   if (!role || !profile) return null;
-
-  const entitlements = isRecord(authz.entitlements) ? authz.entitlements : null;
-  const flags = isRecord(entitlements?.flags) ? (entitlements.flags as Record<string, boolean>) : {};
-  const caps = isRecord(entitlements?.caps) ? (entitlements.caps as Record<string, number | null>) : {};
-  const budgets = isRecord(entitlements?.budgets)
-    ? Object.fromEntries(
-        Object.entries(entitlements.budgets).flatMap(([key, value]) => {
-          if (!isRecord(value)) return [];
-          const max = value.max;
-          const used = value.used;
-          if (!(max === null || typeof max === 'number')) return [];
-          if (typeof used !== 'number' || !Number.isFinite(used)) return [];
-          return [[key, { max, used: Math.max(0, Math.trunc(used)) }]];
-        }),
-      )
-    : {};
+  let entitlements;
+  try {
+    if (!Object.prototype.hasOwnProperty.call(authz, 'entitlements')) return null;
+    entitlements = assertPolicyEntitlementsSnapshot(authz.entitlements);
+  } catch {
+    return null;
+  }
+  if (!entitlements) return null;
 
   return {
     v: 1,
     profile,
     role,
-    flags: { ...flags },
-    caps: { ...caps },
-    budgets,
+    flags: { ...(entitlements.flags ?? {}) },
+    caps: { ...(entitlements.caps ?? {}) },
+    budgets: Object.fromEntries(
+      Object.entries(entitlements.budgets ?? {}).filter((entry): entry is [string, { max: number | null; used: number }] => Boolean(entry[1])),
+    ),
   };
+}
+
+function assertRomaMeAuthzPayload(data: RomaMeResponse | null): void {
+  const authz = data?.authz;
+  if (!authz) return;
+
+  const accountId = normalizeAccountId(authz.accountId);
+  const role = normalizeRole(authz.role);
+  const profile = normalizeProfile(authz.profile);
+  const authzVersion = typeof authz.authzVersion === 'string' ? authz.authzVersion.trim() : '';
+  const issuedAt = typeof authz.issuedAt === 'string' ? authz.issuedAt.trim() : '';
+  const expiresAt = typeof authz.expiresAt === 'string' ? authz.expiresAt.trim() : '';
+  const accountCapsule = typeof authz.accountCapsule === 'string' ? authz.accountCapsule.trim() : '';
+
+  if (!accountId || !role || !profile || !authzVersion || !issuedAt || !expiresAt || !accountCapsule) {
+    throw new Error('coreui.errors.auth.contextUnavailable');
+  }
+  if (!Number.isFinite(Date.parse(issuedAt)) || !Number.isFinite(Date.parse(expiresAt))) {
+    throw new Error('coreui.errors.auth.contextUnavailable');
+  }
+  if (!Object.prototype.hasOwnProperty.call(authz, 'entitlements')) {
+    throw new Error('coreui.errors.auth.contextUnavailable');
+  }
+  if (!assertPolicyEntitlementsSnapshot(authz.entitlements)) {
+    throw new Error('coreui.errors.auth.contextUnavailable');
+  }
 }
 
 
@@ -250,6 +271,7 @@ async function fetchRomaMeState(): Promise<UseRomaMeState> {
       const reason = (payload as any)?.error?.reasonKey || (payload as any)?.error || `HTTP_${response.status}`;
       throw new Error(typeof reason === 'string' ? reason : 'coreui.errors.auth.required');
     }
+    assertRomaMeAuthzPayload(payload as RomaMeResponse | null);
 
     return {
       loading: false,

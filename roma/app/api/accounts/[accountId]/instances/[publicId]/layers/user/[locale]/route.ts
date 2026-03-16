@@ -90,6 +90,7 @@ async function resolveRouteContext(
   return {
     ok: true as const,
     session,
+    authz,
     accountId,
     publicId,
     locale,
@@ -122,6 +123,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       accountId: resolved.accountId,
       publicId: resolved.publicId,
       locale: resolved.locale,
+      accountCapsule: resolved.authz.token,
     });
 
     const validatedOps = validateUserOps(body?.ops, contextData.userAllowlist);
@@ -156,6 +158,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       accessToken: resolved.session.accessToken,
       accountId: resolved.accountId,
       publicId: resolved.publicId,
+      accountCapsule: resolved.authz.token,
       baseFingerprint: contextData.baseFingerprint,
       baseTextPack: contextData.baseTextPack,
     });
@@ -166,6 +169,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         accessToken: resolved.session.accessToken,
         accountId: resolved.accountId,
         publicId: resolved.publicId,
+        accountCapsule: resolved.authz.token,
         layer: 'user',
         layerKey: resolved.locale,
         baseFingerprint: contextData.baseFingerprint,
@@ -191,6 +195,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       accessToken: resolved.session.accessToken,
       accountId: resolved.accountId,
       publicId: resolved.publicId,
+      accountCapsule: resolved.authz.token,
       layer: 'user',
       layerKey: resolved.locale,
       baseFingerprint: contextData.baseFingerprint,
@@ -243,6 +248,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       accountId: resolved.accountId,
       publicId: resolved.publicId,
       locale: resolved.locale,
+      accountCapsule: resolved.authz.token,
     });
 
     const mirror =
@@ -264,6 +270,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       accessToken: resolved.session.accessToken,
       accountId: resolved.accountId,
       publicId: resolved.publicId,
+      accountCapsule: resolved.authz.token,
       layer: 'user',
       layerKey: resolved.locale,
       baseFingerprint: contextData.baseFingerprint,

@@ -80,6 +80,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       accessToken: session.accessToken,
       accountId,
       publicId,
+      accountCapsule: authz.token,
     });
 
     return withSession(

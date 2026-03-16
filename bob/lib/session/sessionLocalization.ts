@@ -42,6 +42,21 @@ export function normalizeLocalizationOps(raw: unknown): LocalizationOp[] {
     .filter((entry): entry is LocalizationOp => Boolean(entry));
 }
 
+function defaultOpenLocalizationSnapshot() {
+  return {
+    baseLocale: DEFAULT_LOCALE,
+    allowedLocales: [DEFAULT_LOCALE],
+    readyLocales: [DEFAULT_LOCALE],
+    overlayEntries: [],
+    accountLocalesInvalid: null,
+    accountL10nPolicy: structuredClone(DEFAULT_LOCALE_STATE.accountL10nPolicy),
+  };
+}
+
+function failLocalizationSnapshot(reason: string): never {
+  throw new Error(`[useWidgetSession] Invalid localization snapshot (${reason})`);
+}
+
 export function normalizeLocalizationSnapshotForOpen(raw: unknown): {
   baseLocale: string;
   allowedLocales: string[];
@@ -50,42 +65,65 @@ export function normalizeLocalizationSnapshotForOpen(raw: unknown): {
   accountLocalesInvalid: string | null;
   accountL10nPolicy: LocaleState['accountL10nPolicy'];
 } {
+  return normalizeLocalizationSnapshotForOpenMode(raw, { strict: false });
+}
+
+export function normalizeLocalizationSnapshotForOpenMode(
+  raw: unknown,
+  options: { strict: boolean },
+): {
+  baseLocale: string;
+  allowedLocales: string[];
+  readyLocales: string[];
+  overlayEntries: LocaleOverlayEntry[];
+  accountLocalesInvalid: string | null;
+  accountL10nPolicy: LocaleState['accountL10nPolicy'];
+} {
   if (!isRecord(raw)) {
-    return {
-      baseLocale: DEFAULT_LOCALE,
-      allowedLocales: [DEFAULT_LOCALE],
-      readyLocales: [DEFAULT_LOCALE],
-      overlayEntries: [],
-      accountLocalesInvalid: null,
-      accountL10nPolicy: structuredClone(DEFAULT_LOCALE_STATE.accountL10nPolicy),
-    };
+    if (options.strict) failLocalizationSnapshot('payload_missing');
+    return defaultOpenLocalizationSnapshot();
   }
 
   const policyRaw = isRecord((raw as any).policy) ? ((raw as any).policy as Record<string, unknown>) : null;
+  if (!policyRaw && options.strict) failLocalizationSnapshot('policy_missing');
   const baseLocale = normalizeLocaleToken(policyRaw?.baseLocale) ?? DEFAULT_LOCALE;
+  if (options.strict && !normalizeLocaleToken(policyRaw?.baseLocale)) {
+    failLocalizationSnapshot('base_locale_invalid');
+  }
   const ipRaw = policyRaw && isRecord(policyRaw.ip) ? (policyRaw.ip as Record<string, unknown>) : null;
   const ipEnabled = typeof ipRaw?.enabled === 'boolean' ? ipRaw.enabled : DEFAULT_LOCALE_STATE.accountL10nPolicy.ip.enabled;
   const countryToLocale: Record<string, string> = {};
   const mapRaw = ipRaw && isRecord(ipRaw.countryToLocale) ? (ipRaw.countryToLocale as Record<string, unknown>) : null;
+  if (options.strict && ipRaw && !isRecord(ipRaw.countryToLocale)) failLocalizationSnapshot('ip_policy_invalid');
   if (mapRaw) {
     for (const [countryRaw, localeRaw] of Object.entries(mapRaw)) {
       const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
       if (!/^[A-Z]{2}$/.test(country)) continue;
       const locale = normalizeLocaleToken(localeRaw);
-      if (!locale) continue;
+      if (!locale) {
+        if (options.strict) failLocalizationSnapshot('country_locale_invalid');
+        continue;
+      }
       countryToLocale[country] = locale;
     }
   }
   const switcherRaw = policyRaw && isRecord(policyRaw.switcher) ? (policyRaw.switcher as Record<string, unknown>) : null;
+  if (options.strict && policyRaw && !switcherRaw) failLocalizationSnapshot('switcher_policy_invalid');
   const switcherEnabled =
     typeof switcherRaw?.enabled === 'boolean'
       ? switcherRaw.enabled
       : DEFAULT_LOCALE_STATE.accountL10nPolicy.switcher.enabled;
-  const switcherLocales = Array.isArray(switcherRaw?.locales)
+  const switcherLocalesRaw = switcherRaw?.locales;
+  if (options.strict && !Array.isArray(switcherLocalesRaw)) failLocalizationSnapshot('switcher_locales_invalid');
+  const switcherLocales = Array.isArray(switcherLocalesRaw)
     ? Array.from(
         new Set(
-          switcherRaw.locales
-            .map((entry) => normalizeLocaleToken(entry))
+          switcherLocalesRaw
+            .map((entry) => {
+              const normalized = normalizeLocaleToken(entry);
+              if (!normalized && options.strict) failLocalizationSnapshot('switcher_locale_invalid');
+              return normalized;
+            })
             .filter((entry): entry is string => Boolean(entry)),
         ),
       )
@@ -100,31 +138,60 @@ export function normalizeLocalizationSnapshotForOpen(raw: unknown): {
     },
   };
 
-  const accountLocales = Array.isArray((raw as any).accountLocales)
-    ? ((raw as any).accountLocales as unknown[])
-        .map((entry: unknown) => normalizeLocaleToken(entry))
+  const accountLocalesRaw = (raw as any).accountLocales;
+  if (options.strict && !Array.isArray(accountLocalesRaw)) failLocalizationSnapshot('account_locales_invalid');
+  const accountLocales = Array.isArray(accountLocalesRaw)
+    ? accountLocalesRaw
+        .map((entry: unknown) => {
+          const normalized = normalizeLocaleToken(entry);
+          if (!normalized && options.strict) failLocalizationSnapshot('account_locale_invalid');
+          return normalized;
+        })
         .filter((entry): entry is string => Boolean(entry))
     : [];
-  const readyLocalesRaw = Array.isArray((raw as any).readyLocales)
-    ? ((raw as any).readyLocales as unknown[])
-        .map((entry: unknown) => normalizeLocaleToken(entry))
+  const readyLocalesSource = (raw as any).readyLocales;
+  if (options.strict && !Array.isArray(readyLocalesSource)) failLocalizationSnapshot('ready_locales_invalid');
+  const readyLocalesRaw = Array.isArray(readyLocalesSource)
+    ? readyLocalesSource
+        .map((entry: unknown) => {
+          const normalized = normalizeLocaleToken(entry);
+          if (!normalized && options.strict) failLocalizationSnapshot('ready_locale_invalid');
+          return normalized;
+        })
         .filter((entry): entry is string => Boolean(entry))
     : [];
 
   const overlayEntriesMap = new Map<string, LocaleOverlayEntry>();
   if (Array.isArray(raw.localeOverlays)) {
     raw.localeOverlays.forEach((entry) => {
-      if (!isRecord(entry)) return;
+      if (!isRecord(entry)) {
+        if (options.strict) failLocalizationSnapshot('overlay_entry_invalid');
+        return;
+      }
       const locale = normalizeLocaleToken(entry.locale);
-      if (!locale) return;
+      if (!locale) {
+        if (options.strict) failLocalizationSnapshot('overlay_locale_invalid');
+        return;
+      }
       const source = typeof entry.source === 'string' && entry.source.trim() ? entry.source.trim() : null;
       const baseFingerprint =
         typeof entry.baseFingerprint === 'string' && /^[a-f0-9]{64}$/i.test(entry.baseFingerprint.trim())
           ? entry.baseFingerprint.trim()
           : null;
+      if (options.strict && entry.baseFingerprint != null && !baseFingerprint) {
+        failLocalizationSnapshot('overlay_base_fingerprint_invalid');
+      }
       const baseUpdatedAt = typeof entry.baseUpdatedAt === 'string' ? entry.baseUpdatedAt : null;
       const baseOps = normalizeLocalizationOps(entry.baseOps);
       const userOps = normalizeLocalizationOps(entry.userOps);
+      if (options.strict) {
+        if (entry.baseOps != null && baseOps.length !== (Array.isArray(entry.baseOps) ? entry.baseOps.length : -1)) {
+          failLocalizationSnapshot('overlay_base_ops_invalid');
+        }
+        if (entry.userOps != null && userOps.length !== (Array.isArray(entry.userOps) ? entry.userOps.length : -1)) {
+          failLocalizationSnapshot('overlay_user_ops_invalid');
+        }
+      }
       overlayEntriesMap.set(locale, {
         locale,
         source,
@@ -135,6 +202,8 @@ export function normalizeLocalizationSnapshotForOpen(raw: unknown): {
         hasUserOps: typeof entry.hasUserOps === 'boolean' ? entry.hasUserOps : userOps.length > 0,
       });
     });
+  } else if (options.strict) {
+    failLocalizationSnapshot('overlay_entries_invalid');
   }
 
   const normalizedLocales = Array.from(new Set([baseLocale, ...accountLocales]));

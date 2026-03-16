@@ -427,18 +427,18 @@ if [ -f "$ROOT_DIR/.env.local" ]; then
   set +a
 fi
 
-PARIS_DEV_JWT_FILE="$ROOT_DIR/Execution_Pipeline_Docs/paris.dev.jwt"
-if [ -z "${PARIS_DEV_JWT:-}" ] && [ -f "$PARIS_DEV_JWT_FILE" ]; then
-  PARIS_DEV_JWT="$(cat "$PARIS_DEV_JWT_FILE")"
+CK_INTERNAL_SERVICE_JWT_FILE="$ROOT_DIR/Execution_Pipeline_Docs/internal.service.jwt"
+if [ -z "${CK_INTERNAL_SERVICE_JWT:-}" ] && [ -f "$CK_INTERNAL_SERVICE_JWT_FILE" ]; then
+  CK_INTERNAL_SERVICE_JWT="$(cat "$CK_INTERNAL_SERVICE_JWT_FILE")"
 fi
-if [ -z "${PARIS_DEV_JWT:-}" ]; then
-  echo "[dev-up] Missing PARIS_DEV_JWT."
-  echo "[dev-up] Set PARIS_DEV_JWT in $ROOT_DIR/.env.local (recommended) or create $PARIS_DEV_JWT_FILE."
+if [ -z "${CK_INTERNAL_SERVICE_JWT:-}" ]; then
+  echo "[dev-up] Missing CK_INTERNAL_SERVICE_JWT."
+  echo "[dev-up] Set CK_INTERNAL_SERVICE_JWT in $ROOT_DIR/.env.local (recommended) or create $CK_INTERNAL_SERVICE_JWT_FILE."
   exit 1
 fi
 
 if [ -z "${TOKYO_DEV_JWT:-}" ]; then
-  TOKYO_DEV_JWT="$PARIS_DEV_JWT"
+  TOKYO_DEV_JWT="$CK_INTERNAL_SERVICE_JWT"
 fi
 
 ROMA_AUTHZ_CAPSULE_SECRET_FILE="$ROOT_DIR/Execution_Pipeline_Docs/roma.authz.capsule.secret"
@@ -458,7 +458,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
   SF_BASE_URL=${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}
   PRODUCT_BERLIN_ISSUER=${BERLIN_ISSUER:-$BERLIN_URL}
   PRODUCT_BERLIN_AUDIENCE=${BERLIN_AUDIENCE:-clickeen.product}
-  PRODUCT_TOKYO_DEV_JWT=${TOKYO_DEV_JWT:-$PARIS_DEV_JWT}
+  PRODUCT_TOKYO_DEV_JWT=${TOKYO_DEV_JWT:-$CK_INTERNAL_SERVICE_JWT}
 
   echo "[dev-up] Profile: product (default)"
   echo "[dev-up] Data plane: cloud-dev (Tokyo/Berlin)"
@@ -474,7 +474,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
   echo "[dev-up] Starting local Bob (product profile)"
   (
     cd "$ROOT_DIR/bob"
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=product BERLIN_BASE_URL="$BERLIN_URL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" ROMA_AUTHZ_CAPSULE_SECRET="$ROMA_AUTHZ_CAPSULE_SECRET" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" SANFRANCISCO_BASE_URL="${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=product BERLIN_BASE_URL="$BERLIN_URL" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" ROMA_AUTHZ_CAPSULE_SECRET="$ROMA_AUTHZ_CAPSULE_SECRET" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" SANFRANCISCO_BASE_URL="${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}" pnpm dev
     BOB_PID="$STARTED_PID"
     echo "[dev-up] Bob PID: $BOB_PID"
     register_pid "bob" "$BOB_PID" "3000" "$LOG_DIR/bob.dev.log"
@@ -485,7 +485,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
   echo "[dev-up] Starting DevStudio (5173)"
   (
     cd "$ROOT_DIR/admin"
-    start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=product PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" pnpm dev
+    start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=product CK_INTERNAL_SERVICE_JWT="$CK_INTERNAL_SERVICE_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" pnpm dev
     DEVSTUDIO_PID="$STARTED_PID"
     echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
     register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"
@@ -655,7 +655,7 @@ echo "[dev-up] Starting Berlin Worker (3005)"
   VARS+=(--var "ROMA_AUTHZ_CAPSULE_SECRET:$ROMA_AUTHZ_CAPSULE_SECRET")
   VARS+=(--var "BERLIN_ISSUER:$BERLIN_ISSUER")
   VARS+=(--var "BERLIN_AUDIENCE:$BERLIN_AUDIENCE")
-  VARS+=(--var "PARIS_DEV_JWT:$PARIS_DEV_JWT")
+  VARS+=(--var "CK_INTERNAL_SERVICE_JWT:$CK_INTERNAL_SERVICE_JWT")
   start_detached "$LOG_DIR/berlin.dev.log" pnpm exec wrangler dev --local --env local --port 3005 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$BERLIN_INSPECTOR_PORT" \
     "${VARS[@]}"
   BERLIN_PID="$STARTED_PID"
@@ -683,7 +683,7 @@ fi
 echo "[dev-up] Starting Venice embed runtime (3003)"
 (
   cd "$ROOT_DIR/venice"
-  start_detached "$LOG_DIR/venice.dev.log" env PORT=3003 PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" USAGE_EVENT_HMAC_SECRET="${USAGE_EVENT_HMAC_SECRET:-}" pnpm dev
+  start_detached "$LOG_DIR/venice.dev.log" env PORT=3003 TOKYO_URL="$TOKYO_URL" USAGE_EVENT_HMAC_SECRET="${USAGE_EVENT_HMAC_SECRET:-}" pnpm dev
   VENICE_PID="$STARTED_PID"
   echo "[dev-up] Venice PID: $VENICE_PID"
   register_pid "venice" "$VENICE_PID" "3003" "$LOG_DIR/venice.dev.log"
@@ -713,7 +713,7 @@ if [ -n "$SF_BASE_URL" ]; then
     if [ -n "${NOVA_BASE_URL:-}" ]; then
       VARS+=(--var "NOVA_BASE_URL:$NOVA_BASE_URL")
     fi
-    VARS+=(--var "PARIS_DEV_JWT:$PARIS_DEV_JWT")
+    VARS+=(--var "CK_INTERNAL_SERVICE_JWT:$CK_INTERNAL_SERVICE_JWT")
     VARS+=(--var "TOKYO_BASE_URL:$TOKYO_URL")
     VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
     start_detached "$LOG_DIR/sanfrancisco.dev.log" pnpm exec wrangler dev --local --env local --port 3002 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$SANFRANCISCO_INSPECTOR_PORT" \
@@ -743,9 +743,9 @@ echo "[dev-up] Starting Bob (3000)"
 (
   cd "$ROOT_DIR/bob"
   if [ -n "$SF_BASE_URL" ]; then
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=source BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" ROMA_AUTHZ_CAPSULE_SECRET="$ROMA_AUTHZ_CAPSULE_SECRET" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=source BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" ROMA_AUTHZ_CAPSULE_SECRET="$ROMA_AUTHZ_CAPSULE_SECRET" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   else
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=source BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" ROMA_AUTHZ_CAPSULE_SECRET="$ROMA_AUTHZ_CAPSULE_SECRET" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=source BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" ROMA_AUTHZ_CAPSULE_SECRET="$ROMA_AUTHZ_CAPSULE_SECRET" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   fi
   BOB_PID="$STARTED_PID"
   echo "[dev-up] Bob PID: $BOB_PID"
@@ -757,7 +757,7 @@ prewarm_bob_routes
 echo "[dev-up] Starting DevStudio (5173)"
 (
   cd "$ROOT_DIR/admin"
-  start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=source PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" pnpm dev
+  start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=source CK_INTERNAL_SERVICE_JWT="$CK_INTERNAL_SERVICE_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" pnpm dev
   DEVSTUDIO_PID="$STARTED_PID"
   echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
   register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"

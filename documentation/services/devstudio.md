@@ -49,14 +49,10 @@ Local contract:
 - local DevStudio does **not** require Roma-style login semantics by default
 - local DevStudio tool authority is confined to `/api/devstudio/*`
 - local DevStudio is never treated as a product user session or account-switch authority
-- local company-plane tools currently use:
-  - `POST /api/devstudio/control/sponsored-accounts`
-  - `POST /api/devstudio/control/customer-email-recovery`
-  - `POST /api/devstudio/control/account-member-removal`
-  - `POST /api/devstudio/control/revoke-user-sessions`
-  - `POST /api/devstudio/control/account-publish-containment`
-  - `POST /api/devstudio/control/support-open-target`
-  - `POST /api/devstudio/control/support-update-instance`
+- local tool routes currently shipped in the Vite middleware are:
+  - `GET /api/devstudio/context`
+  - `GET /api/devstudio/widgets`
+  - `/api/devstudio/assets*`
 
 There is no canonical Cloudflare DevStudio runtime.
 
@@ -70,24 +66,16 @@ What it does:
 - embeds Bob for internal widget authoring/testing
 - lists platform-owned instances through local DevStudio routes
 - uses the local DevStudio context to resolve the platform account
-- proxies to the existing explicit local internal-tool routes for instances/assets/l10n status
+- proxies only the explicit local internal-tool routes that still exist
 
 Key routes used by this tool:
 - `GET /api/devstudio/context`
 - `GET /api/devstudio/widgets`
-- `GET /api/devstudio/instances`
-- `GET /api/devstudio/instance`
-- `PUT /api/devstudio/instance`
-- `GET /api/devstudio/instance/localization`
-- `PUT /api/devstudio/instance/localization/user`
-- `DELETE /api/devstudio/instance/localization/user`
-- `GET /api/devstudio/instances/:publicId/l10n/status`
 - `/api/devstudio/assets*`
 
 Implementation note:
-- local `GET /api/devstudio/instances` is an explicit DevStudio local-tool route
-- instance boot, save, and user locale-layer writes also run through explicit `/api/devstudio/instance*` local-tool routes
-- those routes proxy to Paris internal-tool transport, not to Roma/Bob customer account routes
+- the surviving DevStudio local-tool routes are explicit Vite middleware routes
+- current runtime does not ship a Paris-backed DevStudio proxy layer
 - DevStudio local must not rely on Roma bootstrap capsules or customer auth semantics
 
 Current local implementation layout:
@@ -137,7 +125,7 @@ That remains a valid internal-toolbench use case.
 ## Local internal transport
 
 The surviving local DevStudio tool routes use explicit internal-tool transport where needed:
-- `PARIS_DEV_JWT`
+- `CK_INTERNAL_SERVICE_JWT`
 - `TOKYO_DEV_JWT`
 - `x-ck-internal-service: devstudio.local`
 
@@ -150,7 +138,7 @@ They must not be treated as product identity or account membership on product/ac
 
 Check:
 - local `GET /api/devstudio/context`
-- local `PARIS_DEV_JWT`
+- local `CK_INTERNAL_SERVICE_JWT`
 - local `TOKYO_DEV_JWT`
 - the selected local runtime profile from `bash scripts/dev-up.sh`
 

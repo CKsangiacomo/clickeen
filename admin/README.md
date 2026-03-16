@@ -47,7 +47,7 @@ Rules:
 - local DevStudio authority must not leak onto product routes
 
 Internal transport used by local tool routes:
-- `PARIS_DEV_JWT`
+- `CK_INTERNAL_SERVICE_JWT`
 - `TOKYO_DEV_JWT`
 - `x-ck-internal-service: devstudio.local`
 

@@ -283,10 +283,10 @@ HTTP semantics:
 Current request alias:
 - `agentId: "widget.copilot.v1"`
 
-Paris resolves this alias by policy profile:
+The grant issuer resolves this alias by policy profile:
 - `minibob` + `free` -> `sdr.widget.copilot.v1`
 - `tier1`/`tier2`/`tier3` -> `cs.widget.copilot.v1`
-- If callers force `sdr.widget.copilot.v1` or `cs.widget.copilot.v1`, Paris still canonicalizes to the profile-resolved ID for widget-copilot requests.
+- If callers force `sdr.widget.copilot.v1` or `cs.widget.copilot.v1`, the grant issuer still canonicalizes to the profile-resolved ID for widget-copilot requests.
 
 The agent is expected to return:
 - `message` (always)

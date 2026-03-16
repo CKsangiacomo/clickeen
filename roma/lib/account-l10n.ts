@@ -76,49 +76,53 @@ function asTrimmedString(value: unknown): string | null {
   return normalized || null;
 }
 
-function normalizeLocaleList(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
+function failAccountL10nPayload(reason: string): never {
+  throw new Error(`berlin_account_l10n_invalid:${reason}`);
+}
+
+export function parseAccountLocaleListStrict(value: unknown): string[] {
+  if (!Array.isArray(value)) failAccountL10nPayload('locales_missing');
   return Array.from(
     new Set(
-      value
-        .map((entry) => normalizeLocaleToken(entry))
-        .filter((entry): entry is string => Boolean(entry)),
+      value.map((entry, index) => {
+        const normalized = normalizeLocaleToken(entry);
+        if (!normalized) failAccountL10nPayload(`locales_invalid_${index}`);
+        return normalized;
+      }),
     ),
   );
 }
 
-function resolveAccountL10nPolicy(raw: unknown): AccountL10nPolicy {
-  const defaultPolicy: AccountL10nPolicy = {
-    v: 1,
-    baseLocale: 'en',
-    ip: { enabled: false, countryToLocale: {} },
-    switcher: { enabled: true },
-  };
-  if (!isRecord(raw) || raw.v !== 1) return defaultPolicy;
-
-  const baseLocale = normalizeLocaleToken(raw.baseLocale) ?? defaultPolicy.baseLocale;
+export function parseAccountL10nPolicyStrict(raw: unknown): AccountL10nPolicy {
+  if (!isRecord(raw) || raw.v !== 1) failAccountL10nPayload('policy_missing');
+  const baseLocale = normalizeLocaleToken(raw.baseLocale);
+  if (!baseLocale) failAccountL10nPayload('policy_base_locale_invalid');
   const ipRaw = isRecord(raw.ip) ? raw.ip : null;
   const switcherRaw = isRecord(raw.switcher) ? raw.switcher : null;
+  if (!ipRaw) failAccountL10nPayload('policy_ip_invalid');
+  if (!switcherRaw) failAccountL10nPayload('policy_switcher_invalid');
+  if (typeof ipRaw.enabled !== 'boolean') failAccountL10nPayload('policy_ip_enabled_invalid');
+  if (typeof switcherRaw.enabled !== 'boolean') failAccountL10nPayload('policy_switcher_enabled_invalid');
   const countryToLocale: Record<string, string> = {};
-  if (ipRaw && isRecord(ipRaw.countryToLocale)) {
-    for (const [countryRaw, localeRaw] of Object.entries(ipRaw.countryToLocale)) {
-      const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
-      const locale = normalizeLocaleToken(localeRaw);
-      if (!/^[A-Z]{2}$/.test(country) || !locale) continue;
-      countryToLocale[country] = locale;
-    }
+  if (!isRecord(ipRaw.countryToLocale)) failAccountL10nPayload('policy_country_map_invalid');
+  for (const [countryRaw, localeRaw] of Object.entries(ipRaw.countryToLocale)) {
+    const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
+    const locale = normalizeLocaleToken(localeRaw);
+    if (!/^[A-Z]{2}$/.test(country) || !locale) failAccountL10nPayload(`policy_country_locale_invalid_${countryRaw}`);
+    countryToLocale[country] = locale;
   }
 
-  const switcherLocales = normalizeLocaleList(switcherRaw?.locales);
+  const switcherLocales =
+    switcherRaw.locales == null ? [] : parseAccountLocaleListStrict(switcherRaw.locales);
   return {
     v: 1,
     baseLocale,
     ip: {
-      enabled: ipRaw?.enabled === true,
+      enabled: ipRaw.enabled,
       countryToLocale,
     },
     switcher: {
-      enabled: switcherRaw?.enabled !== false,
+      enabled: switcherRaw.enabled,
       ...(switcherLocales.length ? { locales: switcherLocales } : {}),
     },
   };
@@ -190,6 +194,7 @@ function buildLocalizedTextPack(args: {
 function buildTokyoAccountHeaders(args: {
   accessToken: string;
   accountId: string;
+  accountCapsule?: string | null;
   contentType?: string;
 }): Headers {
   const headers = new Headers({
@@ -197,6 +202,7 @@ function buildTokyoAccountHeaders(args: {
     authorization: `Bearer ${args.accessToken}`,
     'x-account-id': args.accountId,
   });
+  if (args.accountCapsule) headers.set('x-ck-authz-capsule', args.accountCapsule);
   if (args.contentType) headers.set('content-type', args.contentType);
   return headers;
 }
@@ -227,8 +233,8 @@ export async function loadAccountLocalesFromBerlin(args: {
     throw new Error(`berlin_account_http_${status}`);
   }
   return {
-    accountLocales: normalizeLocaleList(json?.account?.l10nLocales),
-    policy: resolveAccountL10nPolicy(json?.account?.l10nPolicy),
+    accountLocales: parseAccountLocaleListStrict(json?.account?.l10nLocales),
+    policy: parseAccountL10nPolicyStrict(json?.account?.l10nPolicy),
   };
 }
 
@@ -237,6 +243,7 @@ export async function loadSavedAccountInstanceFromTokyo(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  accountCapsule?: string | null;
 }): Promise<{
   config: Record<string, unknown>;
   widgetType: string;
@@ -248,6 +255,7 @@ export async function loadSavedAccountInstanceFromTokyo(args: {
   const headers = buildTokyoAccountHeaders({
     accessToken: args.accessToken,
     accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
   });
   const savedResponse = await fetch(
     `${base}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(
@@ -386,6 +394,7 @@ export async function loadAccountLocalizationSnapshot(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  accountCapsule?: string | null;
 }): Promise<{
   snapshot: AccountLocalizationSnapshot;
   widgetType: string;
@@ -408,6 +417,7 @@ export async function loadAccountLocalizationSnapshot(args: {
       accessToken: args.accessToken,
       accountId: args.accountId,
       publicId: args.publicId,
+      accountCapsule: args.accountCapsule,
     }),
   ]);
 
@@ -494,6 +504,7 @@ export async function loadAccountL10nStatus(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  accountCapsule?: string | null;
 }): Promise<{
   publicId: string;
   widgetType: string;
@@ -550,6 +561,7 @@ export async function loadEffectiveUserLayerContext(args: {
   accountId: string;
   publicId: string;
   locale: string;
+  accountCapsule?: string | null;
 }): Promise<{
   widgetType: string;
   baseFingerprint: string;
@@ -607,6 +619,7 @@ export async function writeTokyoBaseSnapshot(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  accountCapsule?: string | null;
   baseFingerprint: string;
   baseTextPack: Record<string, string>;
 }): Promise<void> {
@@ -619,6 +632,7 @@ export async function writeTokyoBaseSnapshot(args: {
       headers: buildTokyoAccountHeaders({
         accessToken: args.accessToken,
         accountId: args.accountId,
+        accountCapsule: args.accountCapsule,
         contentType: 'application/json',
       }),
       cache: 'no-store',
@@ -640,6 +654,7 @@ export async function upsertTokyoOverlay(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  accountCapsule?: string | null;
   layer: 'locale' | 'user';
   layerKey: string;
   baseFingerprint: string;
@@ -657,6 +672,7 @@ export async function upsertTokyoOverlay(args: {
       headers: buildTokyoAccountHeaders({
         accessToken: args.accessToken,
         accountId: args.accountId,
+        accountCapsule: args.accountCapsule,
         contentType: 'application/json',
       }),
       cache: 'no-store',
@@ -680,6 +696,7 @@ export async function deleteTokyoOverlay(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  accountCapsule?: string | null;
   layer: 'locale' | 'user';
   layerKey: string;
   baseFingerprint?: string | null;
@@ -703,6 +720,7 @@ export async function deleteTokyoOverlay(args: {
       headers: buildTokyoAccountHeaders({
         accessToken: args.accessToken,
         accountId: args.accountId,
+        accountCapsule: args.accountCapsule,
         ...(body ? { contentType: 'application/json' } : {}),
       }),
       cache: 'no-store',

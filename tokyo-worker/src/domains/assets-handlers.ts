@@ -1,4 +1,8 @@
 import {
+  resolvePolicyFromEntitlementsSnapshot,
+  type RomaAccountAuthzCapsulePayload,
+} from '@clickeen/ck-policy';
+import {
   buildAccountAssetKey,
   buildAccountAssetVersionPath,
   classifyAccountAssetType,
@@ -29,8 +33,6 @@ import {
   listAccountAssetManifestsByAccount,
   loadAccountAssetBlobIdentitiesByAccount,
   loadAccountAssetBlobKeys,
-  loadAccountMembershipRole,
-  loadAccountUploadProfile,
   normalizeAccountAssetSource,
   persistAccountAssetMetadata,
   resolveUploadSizeLimitBytes,
@@ -51,7 +53,7 @@ const ASSET_INTEGRITY_REASON_ORPHAN_BLOB = 'coreui.errors.assets.integrity.orpha
 const ASSET_INTEGRITY_REASON_BLOB_MISSING_FOR_ASSET = 'coreui.errors.assets.integrity.blobMissingForAsset';
 
 type UploadTierResolutionResult =
-  | { ok: true }
+  | { ok: true; accountAuthz: RomaAccountAuthzCapsulePayload }
   | { ok: false; response: Response };
 
 type UploadStorageResult =
@@ -105,19 +107,26 @@ async function resolveUploadTierAndAuthorization(args: {
   minRole?: MemberRole;
 }): Promise<UploadTierResolutionResult> {
   const { env, auth, accountId, minRole = 'editor' } = args;
-  try {
-    const membershipRole = await loadAccountMembershipRole(env, accountId, auth.principal.userId);
-    if (!membershipRole || roleRank(membershipRole) < roleRank(minRole)) {
-      return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
-    }
-    return { ok: true };
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+  const capsule = auth.principal.accountAuthz;
+  if (!capsule) {
     return {
       ok: false,
-      response: json({ error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } }, { status: 500 }),
+      response: json(
+        {
+          error: {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.auth.contextUnavailable',
+            detail: 'account_authz_capsule_missing',
+          },
+        },
+        { status: 500 },
+      ),
     };
   }
+  if (capsule.accountId !== accountId || roleRank(capsule.role) < roleRank(minRole)) {
+    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
+  }
+  return { ok: true, accountAuthz: capsule };
 }
 
 async function authorizeAccountAssetAccess(args: {
@@ -382,14 +391,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.variantUnsupported' } }, { status: 422 });
   }
 
-  const account = await loadAccountUploadProfile(env, accountId);
-  if (!account) {
-    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' } }, { status: 404 });
-  }
-  if (account.status !== 'active') {
-    return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
-  }
-
   const source = normalizeAccountAssetSource(req.headers.get('x-source'));
   if (!source) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.source.invalid' } }, { status: 422 });
@@ -401,7 +402,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     accountId,
   });
   if (!tierResolution.ok) return tierResolution.response;
-  const tier = account.tier;
+  const accountAuthz = tierResolution.accountAuthz;
 
   const publicIdRaw = (req.headers.get('x-public-id') || '').trim();
   const publicId = publicIdRaw ? normalizePublicId(publicIdRaw) : null;
@@ -438,12 +439,28 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   if (!body || body.byteLength === 0) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
   }
-  const maxBytes = resolveUploadSizeLimitBytes(tier);
+  if (accountAuthz.accountStatus !== 'active') {
+    return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
+  }
+  const policy = resolvePolicyFromEntitlementsSnapshot({
+    profile: accountAuthz.profile,
+    role: accountAuthz.role,
+    entitlements: accountAuthz.entitlements ?? null,
+  });
+  const uploadSizeCap = policy.caps[UPLOAD_SIZE_CAP_KEY];
+  const maxBytes =
+    uploadSizeCap === null || (typeof uploadSizeCap === 'number' && Number.isFinite(uploadSizeCap) && uploadSizeCap > 0)
+      ? uploadSizeCap
+      : null;
+  const storageBudget = policy.budgets[STORAGE_BYTES_BUDGET_KEY]?.max ?? null;
+  const storageBytesMax =
+    storageBudget === null || (typeof storageBudget === 'number' && Number.isFinite(storageBudget) && storageBudget >= 0)
+      ? storageBudget
+      : null;
   if (maxBytes != null && body.byteLength > maxBytes) {
     return denyEntitlement('coreui.upsell.reason.capReached', `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}`, 413);
   }
 
-  const storageBytesMax = resolveStorageBytesBudgetMax(tier);
   const budgetResult = await enforceAccountStorageLimit({
     env,
     accountId,

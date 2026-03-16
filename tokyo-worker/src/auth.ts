@@ -1,3 +1,8 @@
+import {
+  readRomaAuthzCapsuleHeader,
+  verifyRomaAccountAuthzCapsule,
+  type RomaAccountAuthzCapsulePayload,
+} from '@clickeen/ck-policy';
 import { isUuid } from '@clickeen/ck-contracts';
 import { json } from './http';
 import type { Env } from './types';
@@ -13,11 +18,11 @@ type JwtClaims = Record<string, unknown> & {
 type UploadPrincipal = {
   token: string;
   userId: string;
+  accountAuthz: RomaAccountAuthzCapsulePayload | null;
 };
 
 export const INTERNAL_SERVICE_HEADER = 'x-ck-internal-service';
 export const TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL = 'devstudio.local';
-export const TOKYO_INTERNAL_SERVICE_PARIS_LOCAL = 'paris.local';
 export const TOKYO_INTERNAL_SERVICE_SANFRANCISCO_L10N = 'sanfrancisco.l10n';
 export const TOKYO_INTERNAL_SERVICE_ROMA_EDGE = 'roma.edge';
 
@@ -124,6 +129,10 @@ function resolveBerlinIssuer(env: Env): string {
 function resolveBerlinAudience(env: Env): string {
   const configured = (typeof env.BERLIN_AUDIENCE === 'string' ? env.BERLIN_AUDIENCE.trim() : '') || null;
   return configured || 'clickeen.product';
+}
+
+function resolveRomaAuthzCapsuleSecret(env: Env): string {
+  return String(env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
 }
 
 function resolveBerlinJwksUrl(env: Env): string {
@@ -293,7 +302,57 @@ async function verifyBerlinJwtSignature(
   return { ok: true, claims };
 }
 
+async function verifyRomaAccountCapsule(
+  req: Request,
+  env: Env,
+): Promise<
+  | { ok: true; payload: RomaAccountAuthzCapsulePayload }
+  | { ok: false; response: Response | null }
+> {
+  const token = readRomaAuthzCapsuleHeader(req);
+  if (!token) return { ok: false, response: null };
+
+  const secret = resolveRomaAuthzCapsuleSecret(env);
+  if (!secret) {
+    return {
+      ok: false,
+      response: json(
+        { error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.misconfigured', detail: 'roma_authz_capsule_secret_missing' } },
+        { status: 500 },
+      ),
+    };
+  }
+
+  const verified = await verifyRomaAccountAuthzCapsule(secret, token);
+  if (!verified.ok) {
+    return {
+      ok: false,
+      response: json(
+        { error: { kind: 'DENY', reasonKey: 'AUTH_INVALID', detail: verified.reason } },
+        { status: verified.reason === 'secret_missing' ? 500 : 403 },
+      ),
+    };
+  }
+
+  return { ok: true, payload: verified.payload };
+}
+
 export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAuthResult> {
+  const capsule = await verifyRomaAccountCapsule(req, env);
+  if (capsule.ok) {
+    return {
+      ok: true,
+      principal: {
+        token: '',
+        userId: capsule.payload.userId,
+        accountAuthz: capsule.payload,
+      },
+    };
+  }
+  if (capsule.response) {
+    return { ok: false, response: capsule.response };
+  }
+
   const token = asBearerToken(req.headers.get('authorization'));
   if (!token) {
     return {
@@ -344,7 +403,7 @@ export async function assertUploadAuth(req: Request, env: Env): Promise<UploadAu
   if (!userId || !isUuid(userId)) {
     return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }) };
   }
-  return { ok: true, principal: { token, userId } };
+  return { ok: true, principal: { token, userId, accountAuthz: null } };
 }
 
 export function requireDevAuth(

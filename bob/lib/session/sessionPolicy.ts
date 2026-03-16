@@ -1,5 +1,6 @@
 import type { Policy } from '@clickeen/ck-policy';
 import {
+  assertPolicyEntitlementsSnapshot,
   resolvePolicy as resolveCkPolicy,
   resolvePolicyFromEntitlementsSnapshot,
 } from '@clickeen/ck-policy';
@@ -87,17 +88,19 @@ export function resolveAccountPolicyFromBootstrapPayload(payload: unknown, accou
   if (!role || !profile) {
     throw new Error('coreui.errors.auth.required');
   }
+  if (!Object.prototype.hasOwnProperty.call(authz, 'entitlements')) {
+    throw new Error('coreui.errors.auth.contextUnavailable');
+  }
+
+  const entitlements = assertPolicyEntitlementsSnapshot(authz.entitlements);
+  if (!entitlements) {
+    throw new Error('coreui.errors.auth.contextUnavailable');
+  }
 
   return resolvePolicyFromEntitlementsSnapshot({
     profile,
     role,
-    entitlements: isRecord(authz.entitlements)
-      ? (authz.entitlements as {
-          flags?: Record<string, boolean> | null;
-          caps?: Record<string, number | null> | null;
-          budgets?: Record<string, { max: number | null; used: number } | null> | null;
-        })
-      : null,
+    entitlements,
   });
 }
 
@@ -137,14 +140,7 @@ export function resolveReadOnlyFromUrl(): boolean {
   return role === 'viewer' || role === 'readonly' || role === 'read-only';
 }
 
-export function resolveDevPolicy(profile: SubjectMode): Policy {
+export function resolveMinibobUrlPolicy(): Policy {
   const role: Policy['role'] = resolveReadOnlyFromUrl() ? 'viewer' : 'editor';
-  const fallbackProfile = profile === 'account' ? 'free' : profile;
-  return resolveCkPolicy({ profile: fallbackProfile, role });
-}
-
-export function enforceReadOnlyPolicy(policy: Policy): Policy {
-  if (!resolveReadOnlyFromUrl()) return policy;
-  if (policy.role === 'viewer') return policy;
-  return { ...policy, role: 'viewer' };
+  return resolveCkPolicy({ profile: 'minibob', role });
 }

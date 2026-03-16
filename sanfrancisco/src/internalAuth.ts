@@ -8,9 +8,13 @@ export function asTrimmedString(value: unknown): string | null {
 }
 
 export function assertInternalAuth(request: Request, env: Env): void {
-  const expected = asTrimmedString(env.PARIS_DEV_JWT);
+  const expected = asTrimmedString(env.CK_INTERNAL_SERVICE_JWT);
   if (!expected) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing PARIS_DEV_JWT' });
+    throw new HttpError(500, {
+      code: 'PROVIDER_ERROR',
+      provider: 'sanfrancisco',
+      message: 'Missing CK_INTERNAL_SERVICE_JWT',
+    });
   }
   const auth = asTrimmedString(request.headers.get('Authorization'));
   const [scheme, token] = auth ? auth.split(' ') : [];

@@ -82,6 +82,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     publicId,
     tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: session.accessToken,
+    accountCapsule: authz.token,
   });
 
   if (!result.ok) {
@@ -176,6 +177,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     config: validatedConfig.value.config,
     tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: session.accessToken,
+    accountCapsule: authz.token,
   });
 
   if (!result.ok) {
@@ -193,6 +195,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           accessToken: session.accessToken,
           accountId,
           publicId,
+          accountCapsule: authz.token,
           previousConfig: result.value.previousConfig,
         });
       } catch (error) {

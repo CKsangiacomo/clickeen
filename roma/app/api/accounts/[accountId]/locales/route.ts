@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '@roma/lib/auth/session';
+import { parseAccountL10nPolicyStrict, parseAccountLocaleListStrict } from '@roma/lib/account-l10n';
 import { runAccountLocalesAftermath } from '@roma/lib/account-locales-aftermath';
 import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
 
@@ -26,18 +27,6 @@ function withSession(
   setCookies?: SessionCookieSpec[],
 ): NextResponse {
   return withNoStore(applySessionCookies(response, request, setCookies));
-}
-
-function normalizeLocaleList(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  const normalized: string[] = [];
-  for (const entry of value) {
-    if (typeof entry !== 'string') continue;
-    const token = entry.trim();
-    if (!token) continue;
-    normalized.push(token);
-  }
-  return Array.from(new Set(normalized));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -111,13 +100,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const locales = normalizeLocaleList(payload?.account?.l10nLocales);
-    const policy =
-      payload?.account?.l10nPolicy &&
-      typeof payload.account.l10nPolicy === 'object' &&
-      !Array.isArray(payload.account.l10nPolicy)
-        ? payload.account.l10nPolicy
-        : null;
+    const locales = parseAccountLocaleListStrict(payload?.account?.l10nLocales);
+    const policy = parseAccountL10nPolicyStrict(payload?.account?.l10nPolicy);
 
     return withSession(
       request,
@@ -210,6 +194,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const aftermathWarnings = await runAccountLocalesAftermath({
       accountId,
       accessToken: session.accessToken,
+      accountCapsule: authz.token,
     });
     const mergedWarnings = Array.from(new Set([...warnings, ...aftermathWarnings]));
 

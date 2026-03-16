@@ -56,7 +56,7 @@ Bob compiles the spec into a deterministic contract:
 
 ### Entitlements + limits (v1)
 
-- Paris returns entitlements from the global matrix (`packages/ck-policy/entitlements.matrix.json`).
+- Product/backend grant issuers resolve entitlements from the global matrix (`packages/ck-policy/entitlements.matrix.json`).
 - Widget-specific limits live in `tokyo/widgets/{widget}/limits.json` and are loaded with the compiled payload.
 - Bob enforces limits on ops and sanitizes blocked values on load (no widget-specific branches).
 
@@ -327,8 +327,8 @@ Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file p
 
 - Product path: Roma asset routes (`/api/assets/*`) -> Tokyo-worker
 - DevStudio local: trusted local `/api/devstudio/assets*` endpoints injected into Bob via query params
-- The host forwards Berlin session bearer and account/public/widget trace headers.
-- Tokyo-worker validates auth + account membership, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
+- The host forwards the Berlin session bearer, Roma `x-ck-authz-capsule`, and account/public/widget trace headers.
+- Tokyo-worker executes from the capsule truth, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
 
 Asset-aware controls persist immutable refs (`asset.ref` / `poster.ref`) on canonical media fields; runtime URLs are derived from those refs (no publish-time crawl/rewrite step).
 
@@ -392,7 +392,7 @@ Deployment note (verified on February 11, 2026):
 ### Copilot env vars (local + Cloud-dev)
 
 - `AI_GRANT_HMAC_SECRET` is used by Bob’s public MiniBob AI routes to mint MiniBob session/grant tokens and sign outcomes.
-- `SANFRANCISCO_BASE_URL` should point at the San Francisco Worker. (`/api/ai/widget-copilot` also has local fallbacks + health probing.)
+- `SANFRANCISCO_BASE_URL` must point explicitly at the San Francisco Worker. Bob does not probe fallback hosts.
 
 ---
 
@@ -563,9 +563,9 @@ Bob does not own account language policy/settings. Enabled languages, base local
 
 **Security rule (executed):**
 
-- Bob’s Paris and AI proxy routes forward Berlin session bearer tokens. Product auth does not use `PARIS_DEV_JWT` passthrough.
+- Bob’s remaining AI/public helper routes use explicit backend calls; product auth does not use `CK_INTERNAL_SERVICE_JWT` passthrough.
 - Bob `/api/accounts/*` and residual Paris proxy routes always resolve a real Berlin-backed session plus the bootstrap account capsule, including `local`.
-- Local `PARIS_DEV_JWT` is supplied by `bash scripts/dev-up.sh` / `.env.local` only for explicit internal tooling outside Bob product-route authority. It must not be committed in Bob Pages config.
+- Local `CK_INTERNAL_SERVICE_JWT` is supplied by `bash scripts/dev-up.sh` / `.env.local` only for explicit internal tooling outside Bob product-route authority. It must not be committed in Bob Pages config.
 
 ### Dev-up
 

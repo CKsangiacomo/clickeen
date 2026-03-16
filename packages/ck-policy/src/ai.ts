@@ -383,7 +383,11 @@ export function resolveAiProfile(args: {
 }): AiProfile {
   if (args.isCurated) return 'curated_premium';
   if (CURATED_TASK_CLASSES.has(args.taskClass)) return 'curated_premium';
-  return PROFILE_BY_POLICY[args.policyProfile] ?? 'free_low';
+  const profile = PROFILE_BY_POLICY[args.policyProfile];
+  if (!profile) {
+    throw new Error(`[ck-policy] Missing AI profile mapping for policy profile: ${args.policyProfile}`);
+  }
+  return profile;
 }
 
 export function resolveAiAllowedProviders(
@@ -396,7 +400,11 @@ export function resolveAiAllowedProviders(
 }
 
 export function resolveAiBudgets(entry: AiRegistryEntry, profile: AiProfile): AiBudget {
-  return entry.budgetsByProfile[profile] ?? entry.budgetsByProfile.free_low;
+  const budget = entry.budgetsByProfile[profile];
+  if (!budget) {
+    throw new Error(`[ck-policy] Missing AI budget for ${entry.agentId} (${profile})`);
+  }
+  return budget;
 }
 
 export function resolveAiModels(

@@ -117,9 +117,16 @@ export function useSessionTransport(args: {
 
   const dispatchAccountApiThroughHost = useCallback(
     async (inputUrl: string, input: RequestInfo | URL, init?: RequestInit): Promise<Response | null> => {
-      const subject = resolvePolicySubject(args.stateRef.current.policy);
-      if (!shouldDelegateAccountCommand(subject)) return null;
       if (inputUrl !== '/api/ai/widget-copilot' && inputUrl !== '/api/ai/outcome') return null;
+      const policy = args.stateRef.current.policy;
+      if (!policy) {
+        return Response.json(
+          { message: 'Editor context is not ready. Wait for the host to finish booting and try again.' },
+          { status: 409 },
+        );
+      }
+      const subject = resolvePolicySubject(policy);
+      if (!shouldDelegateAccountCommand(subject)) return null;
 
       const accountId = String(args.stateRef.current.meta?.accountId || '').trim();
       const publicId = String(args.stateRef.current.meta?.publicId || '').trim();

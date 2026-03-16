@@ -30,7 +30,8 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const accountId = meta?.accountId ? String(meta.accountId) : '';
   const widgetType = compiled?.widgetname ?? '';
   const isTranslatePanel = mode === 'translate';
-  const minibobTranslationsLocked = policy.profile === 'minibob' && session.minibobPersonalizationUsed;
+  const policyProfile = policy?.profile ?? null;
+  const minibobTranslationsLocked = policyProfile === 'minibob' && session.minibobPersonalizationUsed;
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const showSelector = section !== 'footer';
@@ -110,7 +111,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const localeOptionsKey = useMemo(() => localeOptions.map((option) => option.value).join('|'), [localeOptions]);
 
   const translateNote = (() => {
-    if (policy.profile === 'minibob') return null;
+    if (policyProfile === 'minibob') return null;
     if (!isTranslatePanel) return null;
     if (!isLocaleMode) {
       return 'Base content is only editable in Content panel.';
@@ -352,7 +353,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
               {syncDetailMessage ? (
                 <div className={isSyncFailed ? 'settings-panel__error' : 'settings-panel__note'}>{syncDetailMessage}</div>
               ) : null}
-              {accountId && policy.profile !== 'minibob' ? (
+              {accountId && policyProfile !== 'minibob' ? (
                 <div className="settings-panel__note">Account languages are managed in Roma Settings.</div>
               ) : null}
               {showEmptyState ? (

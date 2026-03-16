@@ -159,7 +159,7 @@ export function SettingsPanel() {
   const [websiteOpen, setWebsiteOpen] = useState(false);
   const websiteValue = readString((session.instanceData as any)?.context?.websiteUrl);
   const websiteDisplay = useMemo(() => normalizeWebsiteDisplay(websiteValue), [websiteValue]);
-  const websiteEnabled = Boolean(policy.flags?.['context.website.enabled'] ?? true);
+  const websiteEnabled = Boolean(policy?.flags?.['context.website.enabled'] ?? true);
 
   const saveWebsite = useCallback(
     (next: string) => {

@@ -18,14 +18,13 @@ import {
 } from './sessionTypes';
 import {
   assertPolicy,
-  enforceReadOnlyPolicy,
   extractErrorReasonKey,
   resolveBootModeFromUrl,
-  resolveDevPolicy,
+  resolveMinibobUrlPolicy,
   resolveSubjectModeFromUrl,
   resolveSurfaceFromUrl,
 } from './sessionPolicy';
-import { normalizeLocalizationSnapshotForOpen } from './sessionLocalization';
+import { normalizeLocalizationSnapshotForOpenMode } from './sessionLocalization';
 import { applyDefaultsIntoConfig } from './sessionConfig';
 import { applyWidgetNormalizations } from './sessionNormalization';
 import type { OpenRequestStatusEntry } from './sessionTransport';
@@ -73,7 +72,7 @@ export function useSessionBoot(args: {
         const nextLocalizationSnapshotRaw: unknown = message.localization;
 
         const nextSubjectMode: SubjectMode = message.subjectMode ?? resolveSubjectModeFromUrl();
-        let nextPolicy: Policy = resolveDevPolicy(nextSubjectMode);
+        let nextPolicy: Policy | null = null;
 
         const incoming = message.instanceData as Record<string, unknown> | null | undefined;
         if (incoming != null && (!incoming || typeof incoming !== 'object' || Array.isArray(incoming))) {
@@ -82,19 +81,24 @@ export function useSessionBoot(args: {
 
         if (message.policy && typeof message.policy === 'object') {
           nextPolicy = assertPolicy(message.policy);
+        } else if (nextSubjectMode === 'minibob') {
+          nextPolicy = resolveMinibobUrlPolicy();
+        } else {
+          throw new Error('[useWidgetSession] Missing policy in account open-editor payload');
         }
 
         if (incoming == null && message.publicId && message.accountId) {
           throw new Error('[useWidgetSession] Missing instanceData in open-editor payload');
         }
         resolved = incoming == null ? structuredClone(defaults) : structuredClone(incoming);
-        if (!message.policy) nextPolicy = resolveDevPolicy(nextSubjectMode);
+        if (!nextPolicy) {
+          throw new Error('[useWidgetSession] Missing policy in open-editor payload');
+        }
 
         if (!nextLabel) {
           nextLabel = String(message.publicId || '').trim() || 'Untitled widget';
         }
 
-        nextPolicy = enforceReadOnlyPolicy(nextPolicy);
         resolved = applyDefaultsIntoConfig(compiled.normalization, defaults, resolved);
         resolved = sanitizeConfig({
           config: resolved,
@@ -103,7 +107,9 @@ export function useSessionBoot(args: {
           context: 'load',
         });
         resolved = applyWidgetNormalizations(compiled.normalization, resolved);
-        const localizationSnapshot = normalizeLocalizationSnapshotForOpen(nextLocalizationSnapshotRaw);
+        const localizationSnapshot = normalizeLocalizationSnapshotForOpenMode(nextLocalizationSnapshotRaw, {
+          strict: nextSubjectMode === 'account',
+        });
 
         args.setState((prev) => ({
           ...prev,
@@ -220,7 +226,12 @@ export function useSessionBoot(args: {
     const compiled = (await compiledRes.json().catch(() => null)) as CompiledWidget | null;
     if (!compiled) throw new Error('[useWidgetSession] Invalid compiled widget payload');
 
-    const nextPolicy: Policy | undefined = instanceJson.policy;
+    const nextPolicy: Policy | undefined =
+      instanceJson.policy && typeof instanceJson.policy === 'object'
+        ? assertPolicy(instanceJson.policy)
+        : subject === 'minibob'
+          ? resolveMinibobUrlPolicy()
+          : undefined;
 
     await loadInstance({
       type: 'ck:open-editor',

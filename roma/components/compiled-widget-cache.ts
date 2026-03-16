@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchParisJson } from './paris-http';
+import { fetchSameOriginJson } from './same-origin-json';
 
 const COMPILED_WIDGET_CACHE_TTL_MS = 5 * 60_000;
 const COMPILED_WIDGET_STORE_KEY = '__CK_ROMA_COMPILED_WIDGET_STORE_V1__';
@@ -66,7 +66,7 @@ export async function getCompiledWidget(widgetType: string): Promise<{ payload: 
     return { payload, source: 'network' };
   }
 
-  store.inFlight[normalizedWidgetType] = fetchParisJson<unknown>(
+  store.inFlight[normalizedWidgetType] = fetchSameOriginJson<unknown>(
     `/api/widgets/${encodeURIComponent(normalizedWidgetType)}/compiled`,
   )
     .then((payload) => {

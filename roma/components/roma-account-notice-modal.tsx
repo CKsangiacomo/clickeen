@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { fetchParisJson } from './paris-http';
+import { fetchSameOriginJson } from './same-origin-json';
 import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3';
@@ -78,7 +78,7 @@ export function RomaAccountNoticeModal() {
     setDismissLoading(true);
     setDismissError(null);
     try {
-      await fetchParisJson(
+      await fetchSameOriginJson(
         `/api/accounts/${encodeURIComponent(accountId)}/lifecycle/tier-drop/dismiss`,
         {
           method: 'POST',

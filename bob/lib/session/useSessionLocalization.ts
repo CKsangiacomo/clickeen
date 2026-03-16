@@ -16,7 +16,7 @@ import {
   type SessionState,
 } from './sessionTypes';
 import {
-  normalizeLocalizationSnapshotForOpen,
+  normalizeLocalizationSnapshotForOpenMode,
   resolveLocalizedOverlayState,
   resolveLocaleOverlayEntry,
   upsertLocaleOverlayEntry,
@@ -94,7 +94,7 @@ export function useSessionLocalization(args: {
       accountId: string;
       subject: 'minibob' | 'account';
     }): Promise<
-      | { ok: true; snapshot: ReturnType<typeof normalizeLocalizationSnapshotForOpen> }
+      | { ok: true; snapshot: ReturnType<typeof normalizeLocalizationSnapshotForOpenMode> }
       | { ok: false; message: string }
     > => {
       try {
@@ -122,7 +122,7 @@ export function useSessionLocalization(args: {
           }
           return {
             ok: true,
-            snapshot: normalizeLocalizationSnapshotForOpen(json.localization),
+            snapshot: normalizeLocalizationSnapshotForOpenMode(json.localization, { strict: true }),
           };
         }
 
@@ -144,7 +144,7 @@ export function useSessionLocalization(args: {
         }
         return {
           ok: true,
-          snapshot: normalizeLocalizationSnapshotForOpen(json.localization),
+          snapshot: normalizeLocalizationSnapshotForOpenMode(json.localization, { strict: false }),
         };
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -159,7 +159,21 @@ export function useSessionLocalization(args: {
     const snapshot = args.stateRef.current;
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
     const baseLocale = snapshot.locale.baseLocale;
-    const subject = resolvePolicySubject(snapshot.policy);
+    const policy = snapshot.policy;
+    if (!policy) {
+      args.setState((prev) => ({
+        ...prev,
+        locale: {
+          ...prev.locale,
+          activeLocale: normalized,
+          error: 'Editor context is not ready.',
+          loading: false,
+          stale: false,
+        },
+      }));
+      return;
+    }
+    const subject = resolvePolicySubject(policy);
     if (!widgetType) {
       args.setState((prev) => ({
         ...prev,
@@ -276,13 +290,21 @@ export function useSessionLocalization(args: {
 
   const persistLocaleEdits = useCallback(async () => {
     const snapshot = args.stateRef.current;
+    const policy = snapshot.policy;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
     const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
     const locale = snapshot.locale.activeLocale;
-    const subject = resolvePolicySubject(snapshot.policy);
+    if (!policy) {
+      args.setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: 'Editor context is not ready.' },
+      }));
+      return;
+    }
+    const subject = resolvePolicySubject(policy);
 
-    if (snapshot.policy.role === 'viewer') {
+    if (policy.role === 'viewer') {
       args.setState((prev) => ({
         ...prev,
         locale: { ...prev.locale, error: 'Read-only mode: localization edits are disabled.' },
@@ -480,9 +502,13 @@ export function useSessionLocalization(args: {
 
   const reloadLocalizationSnapshot = useCallback(async (): Promise<{ ok: true } | { ok: false; message: string }> => {
     const snapshot = args.stateRef.current;
+    const policy = snapshot.policy;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
     const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
-    const subject = resolvePolicySubject(snapshot.policy);
+    if (!policy) {
+      return { ok: false as const, message: 'Editor context is not ready.' };
+    }
+    const subject = resolvePolicySubject(policy);
 
     if (!publicId || (subject !== 'minibob' && !accountId)) {
       const message = 'Missing instance context';
@@ -685,9 +711,28 @@ export function useSessionLocalization(args: {
     };
 
     const snapshot = args.stateRef.current;
+    const policy = snapshot.policy;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
     const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
-    const subject = resolvePolicySubject(snapshot.policy);
+    if (!policy) {
+      const message = 'Editor context is not ready.';
+      args.setState((prev) => ({
+        ...prev,
+        locale: {
+          ...prev.locale,
+          error: message,
+          loading: false,
+          sync: {
+            stage: 'failed',
+            detail: message,
+            lastUpdatedAt: new Date().toISOString(),
+            lastError: message,
+          },
+        },
+      }));
+      return { ok: false as const, message };
+    }
+    const subject = resolvePolicySubject(policy);
 
     if (!publicId || !accountId || subject !== 'account') {
       const message = 'Missing instance context';
@@ -730,9 +775,17 @@ export function useSessionLocalization(args: {
 
   const clearLocaleManualOverrides = useCallback(async () => {
     const snapshot = args.stateRef.current;
+    const policy = snapshot.policy;
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
     const locale = snapshot.locale.activeLocale;
-    if (snapshot.policy.role === 'viewer') {
+    if (!policy) {
+      args.setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: 'Editor context is not ready.' },
+      }));
+      return;
+    }
+    if (policy.role === 'viewer') {
       args.setState((prev) => ({
         ...prev,
         locale: { ...prev.locale, error: 'Read-only mode: localization edits are disabled.' },

@@ -129,7 +129,8 @@ export function createDevstudioPlugins(options: DevstudioPluginOptions): Plugin[
   }
 
   function createDevstudioTokyoHeaders(initHeaders?: HeadersInit): Headers {
-    const token = resolveRootEnvValue('TOKYO_DEV_JWT') || resolveRootEnvValue('PARIS_DEV_JWT');
+    const token =
+      resolveRootEnvValue('TOKYO_DEV_JWT') || resolveRootEnvValue('CK_INTERNAL_SERVICE_JWT');
     if (!token) {
       throw new Error('Missing TOKYO_DEV_JWT for local DevStudio asset routes.');
     }

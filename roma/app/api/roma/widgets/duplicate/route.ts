@@ -117,6 +117,7 @@ async function loadDuplicateSource(args: {
   publicId: string;
   tokyoAccessToken: string;
   berlinAccessToken: string;
+  accountCapsule?: string | null;
 }): Promise<
   | { ok: true; value: DuplicateSource }
   | { ok: false; status: number; error: { kind: string; reasonKey: string; detail?: string } }
@@ -166,6 +167,7 @@ async function loadDuplicateSource(args: {
     publicId: args.publicId,
     tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: args.tokyoAccessToken,
+    accountCapsule: args.accountCapsule,
   });
   if (!source.ok) {
     return {
@@ -238,6 +240,7 @@ export async function POST(request: NextRequest) {
     publicId: sourcePublicId,
     tokyoAccessToken: session.accessToken,
     berlinAccessToken: session.accessToken,
+    accountCapsule: authz.token,
   });
   if (!source.ok) {
     return withSession(
@@ -317,6 +320,7 @@ export async function POST(request: NextRequest) {
       tokyoAccessToken: session.accessToken,
       accountId,
       publicId,
+      accountCapsule: authz.token,
       widgetType: created.widgetType,
       config: validatedConfig.value.config,
       displayName: created.displayName,
@@ -352,6 +356,7 @@ export async function POST(request: NextRequest) {
         accessToken: session.accessToken,
         accountId,
         publicId,
+        accountCapsule: authz.token,
         previousConfig: null,
       });
     } catch (error) {

@@ -20,10 +20,18 @@ export function useSessionSaving(args: {
 }) {
   const save = useCallback(async () => {
     const snapshot = args.stateRef.current;
+    const policy = snapshot.policy;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
     const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
-    const subject = resolvePolicySubject(snapshot.policy);
+    if (!policy) {
+      args.setState((prev) => ({
+        ...prev,
+        error: { source: 'save', message: 'Editor context is not ready.' },
+      }));
+      return;
+    }
+    const subject = resolvePolicySubject(policy);
 
     if (!publicId || !accountId) {
       args.setState((prev) => ({
@@ -39,7 +47,7 @@ export function useSessionSaving(args: {
       }));
       return;
     }
-    if (snapshot.policy.role === 'viewer') {
+    if (policy.role === 'viewer') {
       args.setState((prev) => ({
         ...prev,
         error: { source: 'save', message: 'Read-only mode: saving is disabled.' },
@@ -47,17 +55,17 @@ export function useSessionSaving(args: {
       return;
     }
 
-    const gate = can(snapshot.policy, 'instance.update');
+    const gate = can(policy, 'instance.update');
     if (!gate.allow) {
       args.setState((prev) => ({
         ...prev,
         error: null,
-        upsell: {
-          reasonKey: gate.reasonKey,
-          detail: gate.detail,
-          cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
-        },
-      }));
+          upsell: {
+            reasonKey: gate.reasonKey,
+            detail: gate.detail,
+            cta: prev.policy?.profile === 'minibob' ? 'signup' : 'upgrade',
+          },
+        }));
       return;
     }
 
@@ -109,7 +117,7 @@ export function useSessionSaving(args: {
             upsell: {
               reasonKey: err.reasonKey || 'coreui.errors.unknown',
               detail: err.detail,
-              cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+              cta: prev.policy?.profile === 'minibob' ? 'signup' : 'upgrade',
             },
           }));
           return;

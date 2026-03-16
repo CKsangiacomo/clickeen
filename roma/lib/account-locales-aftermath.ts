@@ -9,6 +9,7 @@ function formatWarning(prefix: string, detail?: string | null): string {
 export async function runAccountLocalesAftermath(args: {
   accountId: string;
   accessToken: string;
+  accountCapsule?: string | null;
 }): Promise<string[]> {
   const catalog = await loadAccountWidgetCatalog({
     accountId: args.accountId,
@@ -38,6 +39,7 @@ export async function runAccountLocalesAftermath(args: {
         accessToken: args.accessToken,
         accountId: args.accountId,
         publicId: instance.publicId,
+        accountCapsule: args.accountCapsule,
       });
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);

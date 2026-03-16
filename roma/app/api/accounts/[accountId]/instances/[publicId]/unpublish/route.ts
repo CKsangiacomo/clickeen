@@ -77,6 +77,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     publicId,
     tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: session.accessToken,
+    accountCapsule: authz.token,
   });
   if (!current.ok) {
     return withSession(
@@ -125,6 +126,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       tokyoAccessToken: session.accessToken,
       accountId,
       publicId,
+      accountCapsule: authz.token,
     });
   } catch (error) {
     await updateAccountInstanceStatusRow({

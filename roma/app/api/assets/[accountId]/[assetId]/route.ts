@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeRequestAccountRoleFromCapsule } from '../../../../../lib/account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
 import { resolveTokyoBaseUrl } from '../../../../../lib/env/tokyo';
 
@@ -58,6 +59,14 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       session.setCookies,
     );
   }
+  const authz = await authorizeRequestAccountRoleFromCapsule({
+    request,
+    accountId: normalizedAccountId,
+    minRole: 'editor',
+  });
+  if (!authz.ok) {
+    return withSession(request, NextResponse.json({ error: authz.error }, { status: authz.status }), session.setCookies);
+  }
 
   let tokyoBase = '';
   try {
@@ -85,6 +94,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       headers: {
         authorization: `Bearer ${session.accessToken}`,
         accept: 'application/json',
+        'x-ck-authz-capsule': authz.token,
       },
       cache: 'no-store',
     });

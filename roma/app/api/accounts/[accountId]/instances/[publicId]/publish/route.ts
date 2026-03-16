@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolvePolicy } from '@clickeen/ck-policy';
+import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
 import { loadTokyoPreferredAccountInstance } from '@roma/lib/account-instance-direct';
 import { runAccountSaveAftermath } from '@roma/lib/account-save-aftermath';
@@ -117,6 +117,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     publicId,
     tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: session.accessToken,
+    accountCapsule: authz.token,
   });
   if (!current.ok) {
     return withSession(
@@ -134,9 +135,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const policy = resolvePolicy({
+  const policy = resolvePolicyFromEntitlementsSnapshot({
     profile: authz.payload.profile,
     role: authz.payload.role,
+    entitlements: authz.payload.entitlements ?? null,
   });
   const publishedCapRaw = policy.caps['instances.published.max'];
   const publishedCap =
@@ -227,6 +229,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       accessToken: session.accessToken,
       accountId,
       publicId,
+      accountCapsule: authz.token,
       previousConfig: current.value.config,
     });
   } catch (error) {

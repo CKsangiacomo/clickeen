@@ -127,19 +127,20 @@ export async function handleLogout(request: Request, env: Env): Promise<Response
   return json({ ok: true, revokedScope: 'sid', sid: verified.payload.sid });
 }
 
-function isTrustedParisInternalRequest(request: Request, env: Env): boolean {
-  const expected = typeof env.PARIS_DEV_JWT === 'string' ? env.PARIS_DEV_JWT.trim() : '';
+function isTrustedInternalControlRequest(request: Request, env: Env): boolean {
+  const expected =
+    typeof env.CK_INTERNAL_SERVICE_JWT === 'string' ? env.CK_INTERNAL_SERVICE_JWT.trim() : '';
   if (!expected) return false;
   const marker = String(request.headers.get('x-ck-internal-service') || '')
     .trim()
     .toLowerCase();
-  if (marker !== 'paris') return false;
+  if (marker !== 'devstudio.local') return false;
   const token = asBearerToken(request.headers.get('authorization'));
   return token === expected;
 }
 
 export async function handleInternalRevokeUserSessions(request: Request, env: Env, userId: string): Promise<Response> {
-  if (!isTrustedParisInternalRequest(request, env)) {
+  if (!isTrustedInternalControlRequest(request, env)) {
     return authError('coreui.errors.auth.forbidden', 403, 'internal_control_auth_required');
   }
 

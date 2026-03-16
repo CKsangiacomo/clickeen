@@ -41,7 +41,7 @@ Bindings (Cloudflare primitives):
 Worker vars/secrets:
 - `ENVIRONMENT`: loose environment label used in logs and the `/healthz` response (`dev`, `prod`, etc)
 - `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret for Clickeen grant verification + outcome signatures
-- `PARIS_DEV_JWT` (secret): internal bearer token for San Francisco internal endpoints (`/v1/l10n*`, `/v1/personalization/*`)
+- `CK_INTERNAL_SERVICE_JWT` (secret): internal bearer token for San Francisco internal endpoints (`/v1/l10n*`, `/v1/personalization/*`)
 - `DEEPSEEK_API_KEY` (secret, optional): required only when an execution reaches the model provider
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
@@ -96,25 +96,25 @@ Storage:
 Purpose: enqueue post-signup account-context carry-forward job (`/personalization/onboarding` is the current internal legacy route name).
 
 Auth:
-- `Authorization: Bearer ${PARIS_DEV_JWT}`
+- `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
 
 ### `GET /v1/personalization/onboarding/:jobId`
 Purpose: poll post-signup account-context carry-forward job status.
 
 Auth:
-- `Authorization: Bearer ${PARIS_DEV_JWT}`
+- `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
 
 ### `POST /v1/l10n/account/ops/generate`
 Purpose: generate account-mode locale ops for Roma save/publish/locale aftermath.
 
 Auth:
-- `Authorization: Bearer ${PARIS_DEV_JWT}`
+- `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
 
 ### `POST /v1/l10n/translate` (local + cloud-dev)
 Purpose: translate Prague system-owned base content (prague-l10n pipeline).
 
 Auth:
-- `Authorization: Bearer ${PARIS_DEV_JWT}`
+- `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
 - Available only when `ENVIRONMENT` is `local` or `dev`
 
 Provider:
@@ -229,12 +229,12 @@ Actions:
 - If you get HTML from `/healthz`, you’re not talking to San Francisco.
 
 ### “SanFrancisco not reachable”
-Meaning: Bob can’t probe `/healthz` on any configured/fallback SF base URL.
+Meaning: the caller cannot reach the explicitly configured San Francisco base URL.
 
 Actions:
 - Ensure the worker is deployed and the route is correct.
 - Ensure `SANFRANCISCO_BASE_URL` is set where the caller runs (Bob, and any Roma server route that calls SF directly).
-- In local dev, `bash scripts/dev-up.sh` runs SF on `http://localhost:3002` **when** `AI_GRANT_HMAC_SECRET` is set.
+- In local dev, set `SANFRANCISCO_BASE_URL=http://localhost:3002` explicitly if you are running San Francisco locally.
 
 ### “Missing AI_GRANT_HMAC_SECRET”
 Meaning: the worker cannot verify grants or outcome signatures.
@@ -263,4 +263,4 @@ Full stack (recommended):
 Useful checks:
 - `curl http://localhost:3002/healthz`
 - `curl http://localhost:3001/api/healthz`
-- For Prague strings translation, `PARIS_DEV_JWT` + `OPENAI_API_KEY` must be set locally.
+- For Prague strings translation, `CK_INTERNAL_SERVICE_JWT` + `OPENAI_API_KEY` must be set locally.

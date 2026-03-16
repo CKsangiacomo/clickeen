@@ -1,4 +1,4 @@
-import { INTERNAL_SERVICE_HEADER, TOKYO_INTERNAL_SERVICE_PARIS_LOCAL } from './auth';
+import { INTERNAL_SERVICE_HEADER, TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL } from './auth';
 import type { Env } from './types';
 
 function requireSupabaseEnv(env: Env, key: 'SUPABASE_URL' | 'SUPABASE_SERVICE_ROLE_KEY'): string {
@@ -25,7 +25,7 @@ export function buildL10nBridgeHeaders(env: Env, init?: HeadersInit): Headers {
     headers.set('authorization', `Bearer ${token}`);
   }
   if (!headers.has(INTERNAL_SERVICE_HEADER)) {
-    headers.set(INTERNAL_SERVICE_HEADER, TOKYO_INTERNAL_SERVICE_PARIS_LOCAL);
+    headers.set(INTERNAL_SERVICE_HEADER, TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL);
   }
   return headers;
 }

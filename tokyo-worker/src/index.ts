@@ -6,7 +6,6 @@ import {
   handleGetAccountAssetMirrorIntegrity,
   handleListAccountAssetMetadata,
   handleUploadAccountAsset,
-  loadAccountMembershipRole,
   roleRank,
   type MemberRole,
 } from './domains/assets';
@@ -39,7 +38,6 @@ import {
   assertUploadAuth,
   requireDevAuth,
   TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
-  TOKYO_INTERNAL_SERVICE_PARIS_LOCAL,
   TOKYO_INTERNAL_SERVICE_SANFRANCISCO_L10N,
 } from './auth';
 import {
@@ -60,7 +58,6 @@ export {
   assertUploadAuth,
   requireDevAuth,
   TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
-  TOKYO_INTERNAL_SERVICE_PARIS_LOCAL,
 } from './auth';
 export {
   resolveL10nHttpBase,
@@ -93,19 +90,26 @@ async function authorizeAccountScopedRequest(args: {
 }): Promise<Response | null> {
   const auth = await assertUploadAuth(args.req, args.env);
   if (!auth.ok) return auth.response;
-  try {
-    const membershipRole = await loadAccountMembershipRole(args.env, args.accountId, auth.principal.userId);
-    if (!membershipRole || roleRank(membershipRole) < roleRank(args.minRole)) {
-      return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 });
-    }
-    return null;
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+  const capsule = auth.principal.accountAuthz;
+  if (!capsule) {
     return json(
-      { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } },
+      {
+        error: {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.auth.contextUnavailable',
+          detail: 'account_authz_capsule_missing',
+        },
+      },
       { status: 500 },
     );
   }
+  if (capsule.accountId !== args.accountId) {
+    return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 });
+  }
+  if (roleRank(capsule.role) < roleRank(args.minRole)) {
+    return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 });
+  }
+  return null;
 }
 
 function hasTrustedInternalService(req: Request, serviceId: string): boolean {
@@ -120,9 +124,9 @@ async function authorizeSavedRenderRequest(args: {
   accountId: string;
   minRole: MemberRole;
 }): Promise<Response | null> {
-  if (hasTrustedInternalService(args.req, TOKYO_INTERNAL_SERVICE_PARIS_LOCAL)) {
+  if (hasTrustedInternalService(args.req, TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL)) {
     return requireDevAuth(args.req, args.env, {
-      allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_PARIS_LOCAL],
+      allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
     });
   }
   return authorizeAccountScopedRequest(args);

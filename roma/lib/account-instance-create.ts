@@ -36,6 +36,7 @@ async function rollbackCreate(args: {
   accountId: string;
   publicId: string;
   accessToken: string;
+  accountCapsule?: string | null;
 }) {
   const [michaelRollback, tokyoRollback] = await Promise.allSettled([
     deleteAccountInstanceRow({
@@ -47,6 +48,7 @@ async function rollbackCreate(args: {
       accountId: args.accountId,
       publicId: args.publicId,
       accessToken: args.accessToken,
+      accountCapsule: args.accountCapsule,
     }),
   ]);
 
@@ -62,6 +64,7 @@ async function writeSavedConfigRollback(args: {
   accountId: string;
   publicId: string;
   accessToken: string;
+  accountCapsule?: string | null;
 }) {
   const tokyoBaseUrl = resolveTokyoBaseUrl();
   const response = await fetch(
@@ -74,6 +77,7 @@ async function writeSavedConfigRollback(args: {
         accept: 'application/json',
         authorization: `Bearer ${args.accessToken}`,
         'x-account-id': args.accountId,
+        ...(args.accountCapsule ? { 'x-ck-authz-capsule': args.accountCapsule } : {}),
       },
       cache: 'no-store',
     },
@@ -89,6 +93,7 @@ export async function createAccountInstance(args: {
   widgetType: string;
   config: unknown;
   accessToken: string;
+  accountCapsule?: string | null;
   authz: RomaAccountAuthzCapsulePayload;
 }): Promise<AccountInstanceCreateResult> {
   if (args.authz.accountId !== args.accountId) {
@@ -175,6 +180,7 @@ export async function createAccountInstance(args: {
       tokyoAccessToken: args.accessToken,
       accountId: args.accountId,
       publicId: args.publicId,
+      accountCapsule: args.accountCapsule,
       widgetType: createdRow.row.widgetType,
       config: validatedConfig.value.config,
       displayName: createdRow.row.displayName,
@@ -186,6 +192,7 @@ export async function createAccountInstance(args: {
       accountId: args.accountId,
       publicId: args.publicId,
       accessToken: args.accessToken,
+      accountCapsule: args.accountCapsule,
     });
     return {
       ok: false,

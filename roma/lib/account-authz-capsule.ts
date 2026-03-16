@@ -14,6 +14,7 @@ export type AccountCapsuleAuthzError = {
 export type AccountCapsuleAuthzResult =
   | {
       ok: true;
+      token: string;
       payload: RomaAccountAuthzCapsulePayload;
     }
   | {
@@ -107,5 +108,5 @@ export async function authorizeRequestAccountRoleFromCapsule(args: {
     };
   }
 
-  return { ok: true, payload: verified.payload };
+  return { ok: true, token, payload: verified.payload };
 }

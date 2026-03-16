@@ -286,6 +286,7 @@ export async function GET(request: NextRequest) {
                 accessToken,
                 accountId,
                 publicId: handoff.publicId,
+                accountCapsule,
                 previousConfig: null,
               });
             } catch (error) {

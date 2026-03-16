@@ -2,6 +2,7 @@ import type { TokyoMirrorQueueJob } from './domains/render';
 
 export type Env = {
   TOKYO_DEV_JWT: string;
+  ROMA_AUTHZ_CAPSULE_SECRET?: string;
   TOKYO_R2: R2Bucket;
   USAGE_KV?: KVNamespace;
   RENDER_SNAPSHOT_QUEUE?: Queue<TokyoMirrorQueueJob>;

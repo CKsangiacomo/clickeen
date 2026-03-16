@@ -102,7 +102,7 @@ function getSfBaseUrl() {
 }
 
 function getSfAuth() {
-  return String(process.env.PARIS_DEV_JWT || '').trim();
+  return String(process.env.CK_INTERNAL_SERVICE_JWT || '').trim();
 }
 
 async function loadDotenvIfPresent() {
@@ -324,7 +324,7 @@ function splitTranslateBatches(items) {
 async function translateWithSanFrancisco({ job, items }) {
   const auth = getSfAuth();
   if (!auth) {
-    throw new Error('[prague-l10n] Missing PARIS_DEV_JWT for San Francisco auth');
+    throw new Error('[prague-l10n] Missing CK_INTERNAL_SERVICE_JWT for San Francisco auth');
   }
   const baseUrl = getSfBaseUrl();
   const url = `${baseUrl}/v1/l10n/translate`;

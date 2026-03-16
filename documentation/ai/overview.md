@@ -1,5 +1,5 @@
 STATUS: REFERENCE — MUST MATCH RUNTIME
-This document describes the intended boundary between Paris and San Francisco.
+This document describes the current boundary between product/backend grant issuers and San Francisco.
 Runtime code + `supabase/migrations/` + deployed Cloudflare config are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
 
 # System: San Francisco — AI Workforce Operating System
@@ -35,18 +35,18 @@ See also:
 San Francisco is Clickeen's **AI execution service**: it runs copilots and operational agents at scale, calling LLM providers and returning strictly-structured outputs.
 
 At GA scale (100s of widgets, millions of installs), San Francisco must be **isolated** from:
-- Paris’s DB authority and product entitlements logic
+- product/auth/persistence authority in Roma/Berlin/Tokyo
 - The editor’s real-time in-memory edit loop
 
 ## The Core Boundary (Non‑Negotiable)
 
-### Paris (Policy + Persistence)
-Paris is the **product authority** and **DB gateway**.
-- Auth, workspace membership, paid/free entitlements
-- View/install limits, widget count limits, publish permissions
-- Instance read/write (Michael via Supabase service role)
-- Audit/billing-oriented usage records
-- Issues **AI Grants** (described below)
+### Product Backend Surfaces (Policy + Persistence)
+Roma/Bob are the trusted backend surfaces that issue short-lived grants for their own product paths.
+- Berlin mints auth/session/account truth
+- Roma owns authenticated product-path grant issuance
+- Bob owns public MiniBob grant issuance
+- Tokyo/Tokyo-worker own saved/artifact truth
+- Audit/billing-oriented usage records stay outside San Francisco
 
 Boundary (explicit ownership):
 - LLM provider keys and model execution live in San Francisco.
@@ -61,11 +61,11 @@ San Francisco is the **AI runtime**.
 - Returns **structured results + usage metadata**
 
 Boundary (explicit ownership):
-- Policy, entitlements, and persistence live in Paris.
+- Policy, entitlements, and persistence live outside San Francisco in the trusted product/account owners.
 - San Francisco executes based on the AI Grant + request payload and returns structured results.
 
 ## Tiered Access Control (The "AI Profile")
-As of PRD 041, LLM access is strictly tiered. Paris resolves a workspace's entitlement to an **AI Profile** during grant issuance:
+As of PRD 041, LLM access is strictly tiered. The grant issuer resolves the caller's entitlement to an **AI Profile** during grant issuance:
 
 | AI Profile | Target User | Default Access | Performance |
 |------------|-------------|----------------|-------------|
@@ -82,7 +82,7 @@ San Francisco enforces this profile by:
 Widget copilot routing (shipped):
 - `minibob` + `free` resolve to `sdr.widget.copilot.v1`
 - `tier1`/`tier2`/`tier3` resolve to `cs.widget.copilot.v1`
-- Callers may request the alias `widget.copilot.v1`; Paris resolves it by profile.
+- Callers may request the alias `widget.copilot.v1`; the grant issuer resolves it by profile.
 - DevStudio Entitlements now exposes both profile-level model access and per-agent runtime access so provider/model differences are explicit.
 - Runtime behavior is policy-scoped by agent role (shared infra, separate behavior packs):
   - `sdr.widget.copilot.v1`: FAQ-only SDR workflow (rewrite existing Q&A or personalize from one website URL with consent). Non-supported requests return seller guidance + signup CTA.
@@ -94,14 +94,14 @@ Deployment status (code-synced on February 26, 2026; last cloud-dev smoke notes 
 - Verified post-deploy routing on cloud-dev:
   - free workspace -> `meta.promptRole = "sdr"`
   - tier3 workspace -> `meta.promptRole = "cs"`
-  - forcing `agentId = "sdr.widget.copilot.v1"` on paid tiers is canonicalized back to CS by Paris.
+  - forcing `agentId = "sdr.widget.copilot.v1"` on paid tiers is canonicalized back to CS by the grant issuer.
 
 ## Why This Separation Exists (GA Reality)
 At scale, AI workloads are bursty, slow, and failure-prone; instance APIs must remain boring and stable.
-Keeping Paris and San Francisco separate prevents:
+Keeping product/persistence owners and San Francisco separate prevents:
 - AI incidents from degrading instance CRUD/publish
 - Frequent AI changes from forcing risky deploys of core DB logic
-- Agent-security concerns (prompt injection, tool permissions) from expanding Paris’s attack surface
+- Agent-security concerns (prompt injection, tool permissions) from expanding product/backend attack surface
 
 ## Key Product Invariants
 - **Editor is strict**: invalid edits are rejected immediately and surfaced.
@@ -137,10 +137,10 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `GET /healthz`
 - `POST /v1/execute` (requires a Clickeen-signed AI Grant)
 - `POST /v1/outcome` (outcome attach, signed by the calling Clickeen backend surface)
-  - `POST /v1/personalization/onboarding` (internal legacy route name for post-signup account-context carry-forward; `Authorization: Bearer ${PARIS_DEV_JWT}`)
-  - `GET /v1/personalization/onboarding/:jobId` (internal legacy route name; polls the same post-signup account-context carry-forward job; `Authorization: Bearer ${PARIS_DEV_JWT}`)
-  - `POST /v1/l10n/account/ops/generate` (internal Roma aftermath path; `Authorization: Bearer ${PARIS_DEV_JWT}`)
-  - `POST /v1/l10n/translate` (local + cloud-dev only; `Authorization: Bearer ${PARIS_DEV_JWT}`; `ENVIRONMENT in {local,dev}`)
+  - `POST /v1/personalization/onboarding` (internal legacy route name for post-signup account-context carry-forward; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`)
+  - `GET /v1/personalization/onboarding/:jobId` (internal legacy route name; polls the same post-signup account-context carry-forward job; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`)
+  - `POST /v1/l10n/account/ops/generate` (internal Roma aftermath path; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`)
+  - `POST /v1/l10n/translate` (local + cloud-dev only; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`; `ENVIRONMENT in {local,dev}`)
 - Cloudflare bindings:
   - `SF_KV` (sessions + job records)
   - `SF_EVENTS` (queue for async event ingestion)
@@ -172,7 +172,7 @@ Shape (conceptual):
 ```ts
 type AIGrant = {
   v: 1;
-  iss: 'paris';
+  iss: 'clickeen';
   jti?: string; // unique grant id (used for per-grant budget tracking)
   sub:
     | { kind: 'anon'; sessionId: string } // Minibob / public experiences

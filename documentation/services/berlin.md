@@ -142,7 +142,7 @@ Recommended:
 - `BERLIN_LOGIN_CALLBACK_URL` (OAuth provider callback URL; cloud-dev should point at Berlin `/auth/login/provider/callback`)
 - `BERLIN_FINISH_REDIRECT_URL` (post-callback browser redirect; cloud-dev should point at Roma `/api/session/finish`)
 - `ENV_STAGE`
-- `PARIS_DEV_JWT` (required for residual internal service auth on non-product paths)
+- `CK_INTERNAL_SERVICE_JWT` (required for residual internal service auth on non-product paths)
 - `USAGE_KV` (required for non-local bootstrap budget usage reads)
 
 Optional key override:
