@@ -63,7 +63,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Stored in Michael:
   - Clickeen-authored baseline + curated: `curated_widget_instances` with `widget_type`
   - User/account instances: `widget_instances` with `widget_id` (FK to `widgets`)
-- Product-path account open resolves the saved authoring revision from Tokyo; Michael remains the registry/shell metadata plane and localization-overlay state remains Paris-owned
+- Product-path account open resolves the saved authoring revision from Tokyo; Michael remains the registry/shell metadata plane and localization-overlay state is owned in the Tokyo/Tokyo-worker plane
 - Bob holds working copy in memory as `instanceData` during editing
 
 ### Product-Path Account Editing (Current PRD 61 Cutover)
@@ -189,7 +189,7 @@ curated_widget_instances.meta = {
 
 **Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — HTTP control/orchestration boundary (Cloudflare Workers). Reads/writes Michael using service role where needed for account/instance workflows, owns the l10n write plane in R2/KV, and handles orchestration. Stateless compute layer. Browsers never call Paris directly. For account product routes, Paris verifies the Berlin-issued bootstrap authz capsule and uses that session-minted entitlement/policy truth; it must not recompute entitlements on the hot path. In the current PRD 61/070A cutover state, Paris is no longer on the product-path core-open, product-path persistence, or product-path AI hot path for account instances; it now owns explicit translation sync, explicit published-surface sync, localization snapshot/overlay operations, public mirror convergence, and Minibob handoff completion.
+**Paris** — Residual Cloudflare Worker boundary. Today it is mostly a public published-instance read surface plus other residual non-product paths. It is not on the account-mode product l10n path, not an auth/session authority, and not the owner of account localization state or account save/publish aftermath.
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
@@ -301,7 +301,7 @@ Locale is a runtime parameter and must not be encoded into instance identity (`p
 - Instance/content translation uses Tokyo-hosted published `l10n` artifacts (`tokyo/l10n/**`) at runtime. Public embeds read locale text packs + live pointers; layer=user authoring state is resolved before publication.
 - Repo-authored admin-owned l10n source overlays live under `tokyo/admin-owned/l10n/**` and build into `tokyo/l10n/**`.
 - Prague marketing copy lives in `tokyo/widgets/*/pages/*.json` (single source) with layered ops overlays stored in Tokyo (`tokyo/l10n/prague/**`) and applied at runtime (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
-- Canonical overlay truth for instances lives in Paris-managed overlay storage (`OVERLAYS_R2` + `L10N_STATE_KV`). Manual overrides live in layer=user and are merged into published text packs at publish/sync time.
+- Canonical overlay truth for instances lives in Tokyo/Tokyo-worker. Manual overrides live in layer=user and are merged into published text packs at publish/sync time.
 
 Canonical reference:
 

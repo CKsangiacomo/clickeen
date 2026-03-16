@@ -9,7 +9,7 @@
 - Serves widget definitions/assets (core runtime + contract files):
   - `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
   - `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
-- Serves published localization artifacts for instances (`tokyo/l10n/**`) written by Paris/Tokyo-worker
+- Serves published localization artifacts for instances (`tokyo/l10n/**`) written by Roma/Tokyo-worker
 - Serves published render snapshots for Venice (`tokyo/renders/instances/**`) materialized by `tokyo-worker` (PRD 38)
 - Prague website base copy is repo-local in `tokyo/widgets/*/pages/*.json`; localized overlays are stored under `tokyo/l10n/prague/**` and fetched by Prague from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/**` (Chrome UI strings remain in `prague/content/base/v1/chrome.json`; build token defaults to `CF_PAGES_COMMIT_SHA`, with `PUBLIC_PRAGUE_BUILD_ID` as optional override).
 
@@ -84,7 +84,7 @@ Local dev:
   - `GET /assets/integrity/:accountId` (account mirror integrity snapshot)
   - `GET /assets/integrity/:accountId/:assetId` (per-asset integrity snapshot)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
-- `scripts/dev-up.sh --source` starts the local Tokyo dev server + Tokyo-worker, builds Dieter + i18n, and runs Prague l10n verify on startup. If overlays are stale and San Francisco is reachable, it auto-runs translate + verify in the background. Instance l10n publish is driven by the Paris -> Tokyo-worker pipeline.
+- `scripts/dev-up.sh --source` starts the local Tokyo dev server + Tokyo-worker, builds Dieter + i18n, and runs Prague l10n verify on startup. If overlays are stale and San Francisco is reachable, it auto-runs translate + verify in the background. Instance l10n publish is driven by Roma/Tokyo-worker.
 
 ## l10n published artifacts (executed)
 
@@ -97,7 +97,7 @@ Tokyo serves **published instance localization artifacts**:
 Rules:
 - Instance identity is locale-free (`publicId` never contains locale).
 - Public runtime reads packs + live pointers only.
-- Authoring overlay state is not stored in Tokyo; Paris keeps that in `OVERLAYS_R2` + `L10N_STATE_KV`.
+- Authoring overlay state is stored in Tokyo/Tokyo-worker under the canonical `l10n/instances/**` plane.
 - Fingerprinted packs are immutable/cacheable; live pointers are tiny mutable `no-store` files.
 
 Admin-owned repo-local l10n source overlays live under:

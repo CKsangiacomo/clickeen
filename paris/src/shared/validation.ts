@@ -1,6 +1,6 @@
 import { ckError } from './errors';
 import { isUuid as isContractUuid, parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
-import { normalizeSupportedLocaleToken } from './l10n';
+import { normalizeLocaleToken } from '@clickeen/l10n';
 import type { LocalePolicy } from './types';
 
 export function asTrimmedString(value: unknown): string | null {
@@ -321,7 +321,7 @@ export function assertLocalePolicy(localePolicy: unknown) {
   }
 
   const issues: Array<{ path: string; message: string }> = [];
-  const baseLocale = normalizeSupportedLocaleToken((localePolicy as any).baseLocale);
+  const baseLocale = normalizeLocaleToken((localePolicy as any).baseLocale);
   if (!baseLocale) {
     issues.push({ path: 'localePolicy.baseLocale', message: 'baseLocale must be a supported locale token' });
   }
@@ -334,7 +334,7 @@ export function assertLocalePolicy(localePolicy: unknown) {
   const seenLocales = new Set<string>();
   if (Array.isArray(readyLocalesRaw)) {
     readyLocalesRaw.forEach((entry, index) => {
-      const normalized = normalizeSupportedLocaleToken(entry);
+      const normalized = normalizeLocaleToken(entry);
       if (!normalized) {
         issues.push({
           path: `localePolicy.readyLocales[${index}]`,
@@ -367,7 +367,7 @@ export function assertLocalePolicy(localePolicy: unknown) {
       for (const [countryRaw, localeRaw] of Object.entries(mapRaw)) {
         const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
         if (!/^[A-Z]{2}$/.test(country)) continue;
-        const normalized = normalizeSupportedLocaleToken(localeRaw);
+        const normalized = normalizeLocaleToken(localeRaw);
         if (!normalized) continue;
         if (!seenLocales.has(normalized)) continue;
         countryToLocale[country] = normalized;
@@ -387,7 +387,7 @@ export function assertLocalePolicy(localePolicy: unknown) {
   }
   if (Array.isArray(switcherLocalesRaw)) {
     switcherLocalesRaw.forEach((entry, index) => {
-      const normalized = normalizeSupportedLocaleToken(entry);
+      const normalized = normalizeLocaleToken(entry);
       if (!normalized) {
         issues.push({
           path: `localePolicy.switcher.locales[${index}]`,

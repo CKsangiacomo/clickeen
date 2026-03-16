@@ -121,7 +121,7 @@ DevStudio’s widget sandbox tool supports overriding the embedded Bob origin wi
 - `?bob=http://localhost:3000` (example)
 
 This allows a fast loop where DevStudio runs on the local toolbench while Bob runs locally.
-The write plane does **not** move to any separate DevStudio runtime in this setup; writes still go through the attached local Bob/Paris stack and its selected Supabase target.
+The write plane does **not** move to any separate DevStudio runtime in this setup; writes still go through the attached local Bob/Roma/Tokyo stack and its selected Supabase target.
 
 ### Runtime status (local authoring clarity)
 
@@ -505,7 +505,7 @@ Bob supports instance-content localization (not editor chrome):
   - `Stale` = overlay fingerprint mismatch with base
 - If a locale is selected but no usable overlay exists, Bob must show explicit "not generated yet" state (no silent fallback-as-ready).
 
-Note: localization writes are separate from the base-config two-call pattern; overlays persist through Paris's l10n storage layer (`OVERLAYS_R2` + `L10N_STATE_KV`) without publishing the base config.
+Note: localization writes are separate from the base-config two-call pattern; overlays persist through Roma/Tokyo authoring routes without publishing the base config.
 In Roma-hosted account flows, those localization writes also traverse the Roma host command boundary instead of Bob writing straight through itself.
 
 Reference:
@@ -569,7 +569,7 @@ Bob does not own account language policy/settings. Enabled languages, base local
 **Security rule (executed):**
 
 - Bob’s Paris and AI proxy routes forward Berlin session bearer tokens. Product auth does not use `PARIS_DEV_JWT` passthrough.
-- Bob `/api/accounts/*` and Paris proxy product routes always resolve a real Berlin-backed session plus the bootstrap account capsule, including `local`.
+- Bob `/api/accounts/*` and residual Paris proxy routes always resolve a real Berlin-backed session plus the bootstrap account capsule, including `local`.
 - Local `PARIS_DEV_JWT` is supplied by `bash scripts/dev-up.sh` / `.env.local` only for explicit internal tooling outside Bob product-route authority. It must not be committed in Bob Pages config.
 
 ### Dev-up

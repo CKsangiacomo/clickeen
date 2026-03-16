@@ -275,60 +275,6 @@ async function patchAccountLocales(args: {
   return { ok: true, warnings: [] };
 }
 
-function resolveParisBase(env: Env): string | null {
-  const value = typeof env.PARIS_BASE_URL === 'string' ? env.PARIS_BASE_URL.trim() : '';
-  if (!value) return null;
-  return value.replace(/\/+$/, '');
-}
-
-async function triggerParisLocalesAftermath(args: {
-  env: Env;
-  accountId: string;
-  previousLocales: string[];
-  previousPolicy: AccountL10nPolicy;
-  nextLocales: string[];
-  nextPolicy: AccountL10nPolicy;
-  entitlements: {
-    flags: Record<string, boolean>;
-    caps: Record<string, number | null>;
-    budgets: Record<string, { max: number | null; used: number }>;
-  };
-}): Promise<string | null> {
-  const parisBase = resolveParisBase(args.env);
-  const token = typeof args.env.PARIS_DEV_JWT === 'string' ? args.env.PARIS_DEV_JWT.trim() : '';
-  if (!parisBase || !token) {
-    return 'paris_aftermath_not_configured';
-  }
-
-  try {
-    const response = await fetch(
-      `${parisBase}/internal/accounts/${encodeURIComponent(args.accountId)}/locales/aftermath`,
-      {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${token}`,
-          'x-ck-internal-service': 'berlin',
-          'content-type': 'application/json',
-          accept: 'application/json',
-        },
-        cache: 'no-store',
-        body: JSON.stringify({
-          previousLocales: args.previousLocales,
-          previousPolicy: args.previousPolicy,
-          nextLocales: args.nextLocales,
-          nextPolicy: args.nextPolicy,
-          entitlements: args.entitlements,
-        }),
-      },
-    );
-    if (response.ok) return null;
-    const detail = await response.text().catch(() => '');
-    return `paris_aftermath_http_${response.status}${detail ? `:${detail}` : ''}`;
-  } catch (error) {
-    return error instanceof Error ? error.message : String(error);
-  }
-}
-
 export async function handleAccountLocalesUpdate(args: {
   request: Request;
   env: Env;
@@ -383,12 +329,7 @@ export async function handleAccountLocalesUpdate(args: {
     );
   }
 
-  const previousPolicy = resolveAccountL10nPolicy(args.account.l10nPolicy);
   const nextPolicy = resolveAccountL10nPolicy(nextPolicyPersisted);
-  const previousAvailable = resolveActivePublishLocales({
-    accountLocales: previousLocales.locales,
-    baseLocale: previousPolicy.baseLocale,
-  });
   const nextAvailable = resolveActivePublishLocales({
     accountLocales: localesResult.locales,
     baseLocale: nextPolicy.baseLocale,
@@ -406,10 +347,6 @@ export async function handleAccountLocalesUpdate(args: {
       { status: 422 },
     );
   }
-  const shouldTriggerAftermath =
-    JSON.stringify(previousPolicy) !== JSON.stringify(nextPolicy) ||
-    JSON.stringify(previousAvailable) !== JSON.stringify(nextAvailable);
-
   const patched = await patchAccountLocales({
     env: args.env,
     accountId: args.account.accountId,
@@ -419,28 +356,6 @@ export async function handleAccountLocalesUpdate(args: {
   if (!patched.ok) return patched.response;
 
   const warnings = [...patched.warnings];
-  if (shouldTriggerAftermath) {
-    const aftermathError = await triggerParisLocalesAftermath({
-      env: args.env,
-      accountId: args.account.accountId,
-      previousLocales: previousLocales.locales,
-      previousPolicy,
-      nextLocales: localesResult.locales,
-      nextPolicy,
-      entitlements: {
-        flags: policy.flags,
-        caps: policy.caps,
-        budgets: policy.budgets,
-      },
-    });
-    if (aftermathError) {
-      console.error('[Berlin] account locales aftermath failed', {
-        accountId: args.account.accountId,
-        error: aftermathError,
-      });
-      warnings.push('paris_aftermath_failed');
-    }
-  }
 
   return json({
     accountId: args.account.accountId,

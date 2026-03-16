@@ -1,12 +1,9 @@
 import { computeBaseFingerprint } from '@clickeen/l10n';
-import { resolvePolicy } from '@clickeen/ck-policy';
-import type { Policy } from '@clickeen/ck-policy';
 import type { CuratedInstanceRow, Env, InstanceRow, WidgetRow } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString, assertConfig } from '../../shared/validation';
-import { loadAccountById } from '../../shared/accounts';
 import {
   isCuratedInstanceRow,
   isCuratedPublicId,
@@ -222,19 +219,6 @@ export async function handleGetInstance(_req: Request, env: Env, publicId: strin
   }
 
   const baseFingerprint = await computeBaseFingerprint(savedState.config);
-  let policy: Policy | null = null;
-  const accountId = ownerAccountId;
-  if (accountId) {
-    try {
-      const account = await loadAccountById(env, accountId);
-      if (account) {
-        policy = resolvePolicy({ profile: account.tier, role: 'editor' });
-      }
-    } catch {
-      policy = null;
-    }
-  }
-
   return json({
     publicId: instance.public_id,
     displayName: resolveInstanceDisplayName(instance),
@@ -243,6 +227,5 @@ export async function handleGetInstance(_req: Request, env: Env, publicId: strin
     config: savedState.config,
     updatedAt: savedState.updatedAt,
     baseFingerprint,
-    policy,
   });
 }

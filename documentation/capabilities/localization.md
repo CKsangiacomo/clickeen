@@ -33,8 +33,8 @@ This prevents “fan-out” (e.g. `wgt_curated_... .fr/.de/.es`) and keeps cachi
 
 Curated + user instances localize within the account’s **active locales** (EN implied), bounded by tier entitlements and subject policy.
 
-- **User instances** auto-enqueue l10n on publish/update (for the active locales set).
-- **Curated instances** also auto-enqueue l10n on save/update when status is published.
+- **User instances** automatically run l10n aftermath on publish/update (for the active locales set).
+- **Curated instances** also rerun l10n aftermath on save/update when status is published.
 
 ### Entitlement + active locales model
 
@@ -89,33 +89,33 @@ Rules:
 - Text packs are **full packs** (not diffs). They contain only allowlisted keys.
 
 Where the write plane fits (current repo snapshot):
-- Paris stores editable overlay rows in its own R2 bucket (`OVERLAYS_R2`) using keys like `overlays/<publicId>/<layer>/<layerKey>.json`.
-  - `layer=locale` = generated/managed translation ops (agent/import/manual)
+- Tokyo/Tokyo-worker store editable overlay rows and base snapshots under `tokyo/l10n/instances/<publicId>/...`.
+  - `layer=locale` = generated/managed translation ops
   - `layer=user` = user overrides on top of the locale translation (choosing auto-translate again clears this layer on the next Save)
-- Paris stores generation/status state in `L10N_STATE_KV`, and keeps base snapshots in overlay storage for diffing + status.
+- Roma derives account-mode localization status from canonical Tokyo overlay/artifact state.
 - Every overlay row is keyed by `baseFingerprint` (sha256 of the current allowlist snapshot).
 - Repo-authored admin-owned l10n source overlays, when kept in-repo, live under `tokyo/admin-owned/l10n/**` and build into `tokyo/l10n/**`.
 - Stale writes are rejected when `baseFingerprint` does not match.
 - These authoring records are **never** served publicly.
-- When overlay/base state changes and the instance is live, Paris rebuilds the full text pack and enqueues Tokyo-worker to write it:
+- When overlay/base state changes and the instance is live, Roma/Tokyo-worker rebuild the full text pack and publish it:
   - `fullPack = baseSnapshot + localeOps + userOps` (user ops win per key)
 
 **Generation + mirroring (current after PRD 54)**
 
-- Paris extracts the base text snapshot from the widget allowlist (`tokyo/widgets/<widgetType>/localization.json`).
-- Paris diffs base snapshots to compute `changedPaths` + `removedPaths` and enqueues San Francisco jobs.
-- San Francisco translates only `changedPaths` and writes set-only ops back to Paris.
-- Paris persists those overlay rows in its overlay store (`OVERLAYS_R2`) and updates l10n generation state in `L10N_STATE_KV`.
+- Roma extracts the base text snapshot from the widget allowlist (`tokyo/widgets/<widgetType>/localization.json`).
+- Roma diffs base snapshots to compute `changedPaths` + `removedPaths` and calls San Francisco when generation is needed.
+- San Francisco returns set-only locale ops.
+- Roma/Tokyo persist those overlay rows in the canonical Tokyo l10n plane.
 - Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane.
 - On save, the pipeline reconciles Tokyo against that desired set for the current `baseFingerprint`:
   - if Tokyo already has the locale artifact for that exact fingerprint, skip
   - if Tokyo does not have it, generate and write it
 - If the instance is live:
-  - Paris enqueues `write-text-pack` for that locale (full pack = base snapshot + locale ops + user ops).
-  - If SEO/GEO is entitled+enabled, Paris also enqueues `write-meta-pack` for that locale.
+  - Roma/Tokyo-worker write the locale text pack (full pack = base snapshot + locale ops + user ops).
+  - If SEO/GEO is entitled+enabled, Roma/Tokyo-worker also write the locale meta pack.
 - Consumer/embed policy is built only from Tokyo-ready locales for the current `baseFingerprint`, never from the full desired/allowed set.
-- When an instance first goes live, Paris starts reconciliation for the desired locale set and exposes only the Tokyo-ready subset to consumers.
-- When account locale/policy changes, Paris recomputes the desired locale set, reconciles Tokyo again, and rebuilds the consumer-ready set from Tokyo truth.
+- When an instance first goes live, Roma starts reconciliation for the desired locale set and exposes only the Tokyo-ready subset to consumers.
+- When account locale/policy changes, Roma recomputes the desired locale set, reconciles Tokyo again, and rebuilds the consumer-ready set from Tokyo truth.
 - Unpublish (`status=unpublished`) deletes the full `l10n/instances/<publicId>/...` subtree from Tokyo (mirror rule).
 
 **Widget allowlist (authoritative)**
@@ -124,12 +124,12 @@ Where the write plane fits (current repo snapshot):
 - Non-locale layer allowlists: `tokyo/widgets/{widgetType}/layers/{layer}.allowlist.json` (404 = no allowed paths)
 - Agents must not mutate paths outside the relevant allowlist.
 
-**Canonical write-plane store (Paris runtime)**
+**Canonical write-plane store (Tokyo/Tokyo-worker runtime)**
 
-- `OVERLAYS_R2` stores per-instance overlay rows for authoring/generation (write plane only).
+- Tokyo stores per-instance overlay rows for authoring/generation (write plane only).
   - Locale translations: `layer='locale'`, `layer_key=<locale>`, set-only ops, `base_fingerprint=<hash of base snapshot>`.
   - User overrides: `layer='user'`, `layer_key=<locale>`, set-only ops, `base_fingerprint=<hash of base snapshot>`.
-- `L10N_STATE_KV` stores per-fingerprint generation state used by status/retry orchestration.
+- Roma derives status from canonical Tokyo overlay/artifact state.
 - These authoring records are never served publicly.
 - Public embeds read only Tokyo packs + live pointers (`l10n/instances/.../live/*.json` and `l10n/instances/.../packs/...`).
 - `widget_instance_overlays` is not part of the active Michael schema in this repo snapshot.
@@ -198,10 +198,10 @@ There is exactly **one** instance row per curated embed in Michael. Locale selec
 
 ## Overlay format (set-only authoring state)
 
-Paris write-plane storage:
+Tokyo write-plane storage:
 
-- Overlay row: `overlays/<publicId>/<layer>/<layerKey>.json` in `OVERLAYS_R2`
-- Base snapshots: `l10n/snapshots/<publicId>/<baseFingerprint>.json` plus `l10n/snapshots/<publicId>/latest.json`
+- Overlay row: `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`
+- Base snapshots: `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`
 
 Public Tokyo output:
 
@@ -304,15 +304,15 @@ Apply:
 
 ### 2) Generate overlays (current)
 
-1. Paris enqueues an l10n job on publish/update.
-2. San Francisco runs the localization agent (allowlist + budgets).
-3. Paris writes overlay rows to its own overlay store (`OVERLAYS_R2`) and updates generation state in `L10N_STATE_KV`.
-4. If the instance is live, Paris enqueues Tokyo-worker to publish text packs + live pointers to Tokyo/R2.
+1. Roma triggers localization aftermath on save/publish/locale-settings changes.
+2. San Francisco generates locale ops when needed.
+3. Roma writes overlay rows and base snapshots to Tokyo.
+4. If the instance is live, Roma/Tokyo-worker publish text packs + live pointers to Tokyo/R2.
 
 User overrides (interactive):
 
-- Saved via Bob through Paris into the overlay store as layer=user rows (`layerKey=<locale>`; optional `global` when supported by the endpoint).
-- Never written directly to public `tokyo/l10n/**`; Tokyo-worker publishes live text artifacts from Paris-managed state.
+- Saved via Bob through Roma into the Tokyo-backed overlay store as layer=user rows (`layerKey=<locale>`; optional `global` when supported by the endpoint).
+- Never written directly from Bob to public `tokyo/l10n/**`; Roma/Tokyo-worker publish live text artifacts from canonical Tokyo-managed state.
 
 ### 3) Consume overlays
 

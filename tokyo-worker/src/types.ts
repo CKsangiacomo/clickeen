@@ -14,8 +14,4 @@ export type Env = {
   TOKYO_L10N_HTTP_BASE?: string;
   CLOUDFLARE_ZONE_ID?: string;
   CLOUDFLARE_API_TOKEN?: string;
-  L10N_STATE_KV?: KVNamespace;
-  L10N_GENERATE_QUEUE?: Queue;
-  AI_GRANT_HMAC_SECRET?: string;
-  SANFRANCISCO_BASE_URL?: string;
 };

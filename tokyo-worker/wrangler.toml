@@ -14,16 +14,11 @@ routes = [
 BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
 BERLIN_ISSUER = "https://berlin-dev.clickeen.workers.dev"
 BERLIN_AUDIENCE = "clickeen.product"
-SANFRANCISCO_BASE_URL = "https://sanfrancisco.dev.clickeen.com"
 
 [[kv_namespaces]]
 binding = "USAGE_KV"
 id = "eca50e55fa2a4f94a01fb81aeebf8377"
 preview_id = "b31d28eb386c4c068821e32d41fbc92a"
-
-[[kv_namespaces]]
-binding = "L10N_STATE_KV"
-id = "517ad6ecfa2f470f945c115aefcd17bf"
 
 [[r2_buckets]]
 binding = "TOKYO_R2"
@@ -33,25 +28,17 @@ bucket_name = "tokyo-assets-dev"
 binding = "RENDER_SNAPSHOT_QUEUE"
 queue = "instance-render-snapshot-cloud-dev"
 
-[[queues.producers]]
-binding = "L10N_GENERATE_QUEUE"
-queue = "instance-l10n-generate-cloud-dev"
-
 [[queues.consumers]]
 queue = "instance-render-snapshot-cloud-dev"
 
 [env.local]
 name = "tokyo-assets-local"
-vars = { BERLIN_BASE_URL = "http://localhost:3005", BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product", SANFRANCISCO_BASE_URL = "http://localhost:3002" }
+vars = { BERLIN_BASE_URL = "http://localhost:3005", BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product" }
 
 [[env.local.kv_namespaces]]
 binding = "USAGE_KV"
 id = "00000000000000000000000000000000"
 preview_id = "00000000000000000000000000000000"
-
-[[env.local.kv_namespaces]]
-binding = "L10N_STATE_KV"
-id = "00000000000000000000000000000000"
 
 [[env.local.r2_buckets]]
 binding = "TOKYO_R2"

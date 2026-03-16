@@ -118,7 +118,7 @@ Removed from the active schema by PRD 55 cutover:
 Current ownership boundaries:
 
 - Account-owned asset bytes + manifest metadata live in Tokyo R2 and are managed by Tokyo-worker.
-- Instance overlay authoring state lives in Paris-managed storage (`OVERLAYS_R2` + `L10N_STATE_KV`).
+- Instance overlay authoring state lives in Tokyo/Tokyo-worker-managed storage.
 - Michael remains the source of truth for accounts, memberships, and widget instance rows.
 
 ### `comments` (provisioned)

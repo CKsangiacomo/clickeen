@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeRequestAccountRoleFromCapsule } from '../../../../../../bob/lib/account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
+import { runAccountLocalesAftermath } from '../../../../../lib/account-locales-aftermath';
 import { resolveBerlinBaseUrl } from '../../../../../lib/env/berlin';
 
 export const runtime = 'edge';
@@ -37,6 +38,21 @@ function normalizeLocaleList(value: unknown): string[] {
     normalized.push(token);
   }
   return Array.from(new Set(normalized));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeWarnings(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(
+    new Set(
+      value
+        .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
+        .filter((entry): entry is string => Boolean(entry)),
+    ),
+  );
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -175,15 +191,41 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       cache: 'no-store',
       body: await request.text(),
     });
-    const payload = (await upstream.text().catch(() => '')) || '';
+    const payloadText = (await upstream.text().catch(() => '')) || '';
+    if (!upstream.ok) {
+      return withSession(
+        request,
+        new NextResponse(payloadText, {
+          status: upstream.status,
+          headers: {
+            'content-type': upstream.headers.get('content-type') || 'application/json; charset=utf-8',
+          },
+        }),
+        session.setCookies,
+      );
+    }
+
+    const upstreamPayload = payloadText ? (JSON.parse(payloadText) as unknown) : null;
+    const warnings = isRecord(upstreamPayload) ? normalizeWarnings(upstreamPayload.warnings) : [];
+    const aftermathWarnings = await runAccountLocalesAftermath({
+      accountId,
+      accessToken: session.accessToken,
+    });
+    const mergedWarnings = Array.from(new Set([...warnings, ...aftermathWarnings]));
+
+    const responsePayload = isRecord(upstreamPayload)
+      ? {
+          ...upstreamPayload,
+          ...(mergedWarnings.length ? { warnings: mergedWarnings } : {}),
+        }
+      : {
+          accountId,
+          ...(mergedWarnings.length ? { warnings: mergedWarnings } : {}),
+        };
+
     return withSession(
       request,
-      new NextResponse(payload, {
-        status: upstream.status,
-        headers: {
-          'content-type': upstream.headers.get('content-type') || 'application/json; charset=utf-8',
-        },
-      }),
+      NextResponse.json(responsePayload, { status: upstream.status }),
       session.setCookies,
     );
   } catch (error) {

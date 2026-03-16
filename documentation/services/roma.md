@@ -108,7 +108,7 @@ Current cloud-dev product rule:
 Roma talks to Berlin and Paris only through same-origin API routes:
 
 - Berlin-backed bootstrap/auth/account routes stay explicit under `roma/app/api/**`.
-- Paris-backed routes are explicit handlers under `roma/app/api/**` using `roma/lib/api/paris-proxy.ts` (no generic wildcard proxy) only for remaining Paris-owned product domains.
+- Paris-backed routes are explicit handlers under `roma/app/api/**` using `roma/lib/api/paris-proxy.ts` (no generic wildcard proxy) only for residual non-product/public Paris paths.
 - Non-Paris routes stay explicit as well (`/api/assets/*` -> Tokyo-worker, account shell routes -> Berlin).
 
 Client fetch behavior:
@@ -116,7 +116,7 @@ Client fetch behavior:
 - Browser code calls same-origin Roma routes only.
 - `fetchParisJson` in the browser is just a no-store fetch + timeout/reason wrapper.
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
-- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma/Paris still authorize against the bootstrap capsule (`/api/roma/widgets`, `/api/roma/templates`, widget delete, builder/account routes, localization/layer routes).
+- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/roma/widgets`, `/api/roma/templates`, widget delete, builder/account routes, localization/layer routes).
 
 ## Bob orchestration contract (Roma Builder)
 

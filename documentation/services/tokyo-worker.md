@@ -78,7 +78,7 @@ Current runtime contract:
 - The saved pointer also carries editor-facing metadata needed on the normal open path (`widgetType`, `displayName`, `source`, `accountId`, `updatedAt`).
 - Bob/Roma product-path save writes this snapshot synchronously before returning success.
 - Bob/Roma product-path account reads use this Tokyo saved snapshot as the active open/save truth.
-- Localization overlay authoring/readback is not part of this surface; explicit localization rehydrate still comes from Paris-managed storage in the current cutover.
+- Localization overlay authoring/readback is part of the Tokyo/Tokyo-worker l10n plane; explicit localization rehydrate now reads canonical Tokyo state.
 
 ---
 
@@ -110,15 +110,15 @@ Safety gate (PRD 54):
 Rule:
 - Tokyo-worker validates the consumer-ready set it was given.
 - Tokyo-worker does not interpret plan allowances, account entitlements, or which locales "should" exist.
-- Paris/runtime policy decides the desired locale set; Tokyo-worker guarantees the referenced bytes exist and are cheap to serve.
+- Roma/runtime policy decides the desired locale set; Tokyo-worker guarantees the referenced bytes exist and are cheap to serve.
 
 ---
 
 ## Queue jobs (this repo snapshot)
 
-Queue binding (historical name, repurposed for PRD 54):
+Queue binding:
 
-- Paris enqueues mirror jobs onto `instance-render-snapshot-{env}` via `RENDER_SNAPSHOT_QUEUE`.
+- Roma/Tokyo-worker publish mirror jobs onto `instance-render-snapshot-{env}` via `RENDER_SNAPSHOT_QUEUE`.
 
 Job kinds (v1):
 
@@ -131,7 +131,7 @@ Job kinds (v1):
 Non-negotiable:
 
 - Mirror jobs are **DB-free**. Tokyo-worker must not read Supabase to “discover state”.
-- For l10n, Tokyo-worker writes public packs/live pointers from self-contained Paris jobs; authoring overlays remain in Paris-managed storage.
+- For l10n, Tokyo-worker writes public packs/live pointers from Roma-owned aftermath plus canonical Tokyo overlay state.
 
 Source of truth:
 

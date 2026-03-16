@@ -16,7 +16,7 @@ Core shipped endpoints in this repo snapshot include:
 Asset route note:
 
 - Asset upload/list/delete are now served via Tokyo-facing routes in Roma/Bob; Paris no longer exposes account asset CRUD endpoints.
-- Account locale writes plus account-mode l10n reads are Roma/Berlin/Tokyo-owned; Paris only exposes the internal locale aftermath endpoint for Berlin-triggered orchestration.
+- Account locale writes, localization reads, l10n status, and save/publish aftermath are Roma/Berlin/Tokyo-owned; Paris is no longer on that path.
 
 ## Curated vs user instances
 
@@ -30,21 +30,14 @@ Public in this repo snapshot:
 - `GET /api/healthz`
 - `GET /api/instance/:publicId` (published-only for user-owned instances)
 
-Non-public product endpoints require:
-
-- `Authorization: Bearer <Berlin access token>`
-
-Machine/internal endpoints can also use signature-based verification (for example metering and l10n job reporting).
+Paris no longer exposes non-public account-mode product endpoints.
 
 ## Required secrets/env
 
 - `SUPABASE_URL` (env var)
 - `SUPABASE_SERVICE_ROLE_KEY` (secret)
-- `BERLIN_BASE_URL` (env var)
-- `BERLIN_ISSUER` (env var; must match Berlin-issued token `iss`)
-- `BERLIN_AUDIENCE` (env var; must match Berlin-issued token `aud`)
-- `AI_GRANT_HMAC_SECRET` (secret, AI grants/outcomes)
-- `PARIS_DEV_JWT` (secret, internal service-to-service paths only; not accepted for product auth)
+- `TOKYO_BASE_URL` (env var)
+- `TOKYO_DEV_JWT` (secret)
 
 ## Local dev
 

@@ -6,14 +6,14 @@
 
 ## Interfaces
 - `GET /healthz`
-- Queue consumers for agent jobs (e.g. instance localization).
-- HTTP endpoints for AI outcomes (called by Paris).
+- Queue consumers for agent jobs.
+- HTTP endpoints for AI outcomes.
 - `POST /v1/l10n/plan` (internal auth; l10n planning snapshot for `{ widgetType, config }` or `{ widgetType, publicId, accountId }`)
+- `POST /v1/l10n/account/ops/generate` (internal auth; account-mode locale ops generation for Roma aftermath)
 
 ## Dependencies
-- Paris (instance data + l10n overlay writes)
+- Roma (account-mode l10n aftermath caller)
 - Tokyo (widget localization allowlists)
-- Michael (indirectly via Paris)
 - Cloudflare KV/R2/Queues (state, logs, scheduling)
 
 ## Deployment
@@ -71,19 +71,13 @@ Health contract:
 - Despite the route name, this is not a separate user-facing onboarding product. It is an internal post-signup/account-context helper for users who started editing before they had an account.
 - MiniBob remains one journey: edit a draft, click Publish, create an account, then continue in Roma. Draft context such as a captured website can travel with the claimed instance.
 
-## l10n Agent Flow (executed)
-- Triggered by `instance-l10n-generate-{env}` jobs.
-- Fetches instance config from Paris.
+## Account-mode l10n flow (active)
+- Triggered by Roma account save/publish/locale-settings aftermath.
 - Loads widget allowlist from Tokyo (`/widgets/{widgetType}/localization.json`).
-- Translates only `changedPaths`, removes `removedPaths`, and writes set-only ops to Paris (layer=locale).
+- Translates only `changedPaths`, removes `removedPaths`, and returns set-only locale ops to Roma.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext safety validation enforces placeholder parity, HTML tag parity, and anchor integrity (text-bearing link + href parity); failed richtext parity falls back to segment translation.
-- Paris preserves user overrides in layer=user and enqueues publish to Tokyo-worker.
-- Job schema v2 includes `agentId`, `grant`, `baseFingerprint`, `changedPaths`, `removedPaths`, and optional `baseUpdatedAt` metadata.
-- SF verifies the Paris-minted grant and `agent:*` cap before executing l10n jobs.
 - l10n translation calls go through the shared policy router via `callChatCompletion` (same budget enforcement + provider allowlist).
-- Reports job status back to Paris via `POST /api/l10n/jobs/report` (`running | succeeded | failed | superseded`).
-- Local dev: `POST /v1/l10n` accepts job batches (Authorization: `Bearer ${PARIS_DEV_JWT}`) to bypass queues; jobs must still include a valid grant.
 - Cost budgets (`maxCostUsd`) use the `AI_PRICE_TABLE_JSON` env var; a default deepseek price table is provided when unset.
 
 ## Prague localization translation (local + cloud-dev)

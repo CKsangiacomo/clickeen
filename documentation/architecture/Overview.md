@@ -178,7 +178,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 #### Bob (Pages)
 
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
-- Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/session/bootstrap`) backed by Tokyo for saved authoring truth, Berlin for bootstrap/account context, and Paris for localization/explicit aftermath orchestration.
+- Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/session/bootstrap`) backed by Tokyo for saved authoring truth, Berlin for bootstrap/account context, and Roma/Tokyo for localization and aftermath.
 - DevStudio local does not use `/api/roma/templates`; it uses its own explicit `/api/devstudio/instances*` and `/api/devstudio/instance*` tool paths for instance discovery, boot, save, localization, and status on the platform-owned account.
 
 #### Roma (Pages)
@@ -187,7 +187,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Berlin `GET /v1/session/bootstrap`), including an account authz capsule and an account entitlement snapshot.
 - Roma exposes person-scoped User Settings through `/profile`, using Berlin-owned `/api/me` same-origin routes.
 - In current cloud-dev, Roma usually resolves one effective account context only: the seeded platform-owned account. When the current user has more than one membership, Roma exposes Berlin-backed account switching and does not use browser-side account preference overrides.
-- Roma uses named same-origin routes for Paris orchestration endpoints and injects short-lived authz headers:
+- Roma uses named same-origin account routes and injects short-lived authz headers:
   - `x-ck-authz-capsule` for account-scoped calls
 - Roma serves Berlin-backed account member reads on same-origin routes (`GET /api/accounts/:accountId/members`).
 - Roma Builder embeds Bob with `boot=message` and sends explicit `ck:open-editor` payloads after `bob:session-ready`.
@@ -202,23 +202,22 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 #### Paris (Workers)
 
-- Stateless control/orchestration boundary plus Paris-owned l10n write-plane storage.
+- Residual public/non-product Worker boundary.
 - Public endpoints are under `/api/*`.
 - Shipped in this repo snapshot:
   - Public read: `GET /api/instance/:publicId` (user-owned rows are published-only).
   - Product editor persistence hot path is no longer exposed directly from Paris.
   - Core account instance open/save now lives only in Bob/Roma same-origin routes; Paris no longer exposes `GET/PUT /api/accounts/:accountId/instance/:publicId?subject=account`.
-  - Locale/editor endpoints are Roma-owned; Paris is limited to the internal locale aftermath orchestration path only.
+  - Locale/editor endpoints are Roma-owned and are not mounted in Paris.
   - Roma starter discovery is Roma-owned (`GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`); Paris no longer mounts those routes.
   - Roma widget commands stay explicit (`POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`).
-  - Public worker/reporting routes that still remain: `POST /api/l10n/jobs/report`, `POST /internal/accounts/:accountId/locales/aftermath`.
   - Paris no longer mounts AI endpoints in the product path under 070A.
 - Current cloud-dev account rule:
   - Account creation is Berlin-owned; Paris no longer mounts account creation.
   - MiniBob handoff now starts in a Roma route and completes inside Roma session finish; non-local completion still targets platform-owned accounts only.
   - Instance routing uses `publicId` prefix: `wgt_main_*` marks the instance shown first in MiniBob, `wgt_curated_*` marks other starter instances, `wgt_*_u_*` marks instances in user accounts.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
-- Product-path base-config writes persist through Bob/Roma same-origin routes to Tokyo; Paris handles explicit translation and published-surface aftermath asynchronously after the save response returns.
+- Product-path base-config writes persist through Bob/Roma same-origin routes to Tokyo; Roma handles translation and published-surface aftermath directly after the save response returns.
 
 #### Venice (Workers)
 
@@ -233,7 +232,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
 - **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
-- Serves published instance l10n artifacts (`/l10n/**`) written by Paris/Tokyo-worker, including text packs, live pointers, and per-fingerprint base snapshots for diagnostics/non-public tooling.
+- Serves published instance l10n artifacts (`/l10n/**`) written by Roma/Tokyo-worker, including text packs, live pointers, and per-fingerprint base snapshots for diagnostics/non-public tooling.
 - Prague website base copy lives in `tokyo/widgets/*/pages/*.json` (single source per page), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 #### Tokyo Worker (Workers + Queues)
@@ -244,7 +243,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - Serves immutable account asset reads (`GET /assets/v/:assetRef`); legacy `/arsenale/*` paths are hard-failed.
 - Asset delete is synchronous hard delete (`metadata + blob delete`) with no snapshot rebuild enqueue or runtime healing.
 - Tokyo-worker exposes integrity endpoints for managed surfaces (`GET /assets/integrity/:accountId`, `GET /assets/integrity/:accountId/:assetId`).
-- Writes l10n text/meta/config packs and live pointers to Tokyo/R2 from self-contained Paris jobs; Tokyo-worker does not read Michael/Supabase to discover overlay state.
+- Writes l10n text/meta/config packs and live pointers to Tokyo/R2 from Roma-owned aftermath plus Tokyo-worker execution; Tokyo-worker does not read Michael/Supabase to discover overlay state.
 - Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path using revisioned indices + atomic published pointer flip.
 
 #### Asset ownership model (canonical)
@@ -462,7 +461,7 @@ In Roma/DevStudio message-boot account flows, the host performs the initial load
 
 `subject` is required on editor endpoints (`account`, `minibob`) to resolve policy.
 
-Localization is separate: overlay edits write through Paris into its l10n overlay store (R2/KV-backed) and do not touch the base config.
+Localization is separate: overlay edits write through Roma into Tokyo/Tokyo-worker and do not touch the base config.
 
 **Between load and save:** Zero base-config writes. 10,000 users editing = 10,000 in-memory states, no server load for base config.
 

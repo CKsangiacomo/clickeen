@@ -1,5 +1,12 @@
 import type { Env } from './types';
-import { requireEnv } from './auth';
+
+function requireEnv(env: Env, key: keyof Env) {
+  const value = env[key];
+  if (!value || typeof value !== 'string' || !value.trim()) {
+    throw new Error(`[ParisWorker] Missing required env var: ${key}`);
+  }
+  return value.trim();
+}
 
 export async function supabaseFetch(env: Env, pathnameWithQuery: string, init?: RequestInit) {
   const baseUrl = requireEnv(env, 'SUPABASE_URL').replace(/\/+$/, '');
