@@ -526,6 +526,17 @@ SUPABASE_URL=${API_URL:-${SUPABASE_URL:-}}
 SUPABASE_SERVICE_ROLE_KEY=${SECRET_KEY:-${SUPABASE_SERVICE_ROLE_KEY:-}}
 SUPABASE_ANON_KEY_VALUE="${ANON_KEY:-${SUPABASE_ANON_KEY:-${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}}}"
 
+# Older/newer Supabase CLI builds may emit an https API_URL for the local stack
+# even when Kong is listening in plain http on loopback. Normalize that here so
+# local helper scripts do not fail TLS handshakes against the local gateway.
+if [ "${REMOTE_SUPABASE_MODE:-0}" != "1" ] && [ -n "${SUPABASE_URL:-}" ]; then
+  case "$SUPABASE_URL" in
+    https://127.0.0.1:*|https://localhost:*)
+      SUPABASE_URL="http://${SUPABASE_URL#https://}"
+      ;;
+  esac
+fi
+
 if [ -n "$ORIG_SUPABASE_URL" ] || [ -n "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ]; then
   if [ "$REMOTE_SUPABASE_MODE" = "1" ]; then
     if [ -z "$ORIG_SUPABASE_URL" ] || [ -z "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ] || [ -z "$ORIG_SUPABASE_ANON_KEY" ]; then

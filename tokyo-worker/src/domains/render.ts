@@ -4,8 +4,8 @@ import {
   normalizeSha256Hex,
   prettyStableJson,
   sha256Hex,
-} from '../index';
-import type { Env } from '../index';
+} from '../asset-utils';
+import type { Env } from '../types';
 
 const UTF8_ENCODER = new TextEncoder();
 

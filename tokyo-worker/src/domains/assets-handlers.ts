@@ -7,19 +7,21 @@ import {
   buildAccountAssetVersionPath,
   classifyAccountAssetType,
   guessContentTypeFromExt,
-  json,
   normalizeAccountAssetReadKey,
   normalizePublicId,
   normalizeWidgetType,
   parseAccountAssetIdentityFromKey,
   pickExtension,
-  requireDevAuth,
   validateUploadFilename,
   sha256Hex,
+} from '../asset-utils';
+import { json } from '../http';
+import {
   assertUploadAuth,
+  requireDevAuth,
   TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
-} from '../index';
-import type { Env } from '../index';
+} from '../auth';
+import type { Env } from '../types';
 import { isUuid } from '@clickeen/ck-contracts';
 import {
   UPLOAD_SIZE_CAP_KEY,

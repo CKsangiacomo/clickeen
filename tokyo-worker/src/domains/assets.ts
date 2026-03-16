@@ -3,9 +3,9 @@ import {
   classifyAccountAssetType,
   type AccountAssetType,
   normalizeAccountAssetReadKey,
-  supabaseFetch,
-} from '../index';
-import type { Env } from '../index';
+} from '../asset-utils';
+import { supabaseFetch } from '../supabase';
+import type { Env } from '../types';
 
 const L10N_VERSION_CAP_KEY = 'l10n.versions.max';
 export const UPLOAD_SIZE_CAP_KEY = 'uploads.size.max';

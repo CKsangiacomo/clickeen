@@ -10,6 +10,7 @@ const TOKYO_WORKER_BASE_URL = String(
   .trim()
   .replace(/\/+$/, '');
 const TOKYO_DEV_JWT = String(process.env.TOKYO_DEV_JWT || '').trim();
+const TOKYO_INTERNAL_SERVICE_ID = 'devstudio.local';
 
 function fail(message) {
   console.error(`[ensure-curated-tokyo-saved] ${message}`);
@@ -38,6 +39,7 @@ function createTokyoHeaders(accountId) {
   const headers = new Headers();
   headers.set('authorization', `Bearer ${TOKYO_DEV_JWT}`);
   headers.set('x-account-id', accountId);
+  headers.set('x-ck-internal-service', TOKYO_INTERNAL_SERVICE_ID);
   headers.set('accept', 'application/json');
   return headers;
 }
