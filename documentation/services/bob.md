@@ -536,7 +536,7 @@ Reference:
 
 ### Optional
 
-- `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (used by the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
+- `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (required for the public/minibob `/api/instance/:publicId` read shortcut and the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
 
 ### Bootstrap route (current code)
 
@@ -551,16 +551,11 @@ Important boundary:
 
 Bob editor routes are explicit and non-`/api/paris`:
 
-- `bob/app/api/instance/[publicId]/route.ts` (minibob read shortcut; `subject=minibob`)
+- `bob/app/api/instance/[publicId]/route.ts` (minibob read shortcut; `subject=minibob`, backed by Venice public instance payload)
 - `bob/app/api/ai/widget-copilot/route.ts`
 - `bob/app/api/ai/widget-copilot/handler.ts`
 - `bob/app/api/ai/outcome/route.ts`
 - `bob/app/api/ai/minibob/session/route.ts`
-
-The proxy currently supports:
-
-- `PARIS_BASE_URL` for the residual public/minibob Paris-owned paths
-- `NEXT_PUBLIC_PARIS_URL` / `http://localhost:3001` default (present in code today)
 
 Account-mode Builder reads/writes do not proxy through Bob. They delegate to Roma same-origin routes through the Builder host message channel.
 

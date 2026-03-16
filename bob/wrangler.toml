@@ -5,6 +5,6 @@ compatibility_flags = [ "nodejs_compat_populate_process_env", "nodejs_compat" ]
 
 [vars]
 NEXT_PUBLIC_TOKYO_URL = "https://tokyo.dev.clickeen.com"
-PARIS_BASE_URL = "https://paris.dev.clickeen.com"
+NEXT_PUBLIC_VENICE_URL = "https://venice.dev.clickeen.com"
 BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
 SANFRANCISCO_BASE_URL = "https://sanfrancisco.dev.clickeen.com"

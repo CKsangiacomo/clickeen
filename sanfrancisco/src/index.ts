@@ -1,23 +1,18 @@
 import { listAiAgents, resolveAiAgent } from '@clickeen/ck-policy';
 import { executeCsWidgetCopilot } from './agents/csWidgetCopilot';
 import { executeDebugGrantProbe } from './agents/debugGrantProbe';
-import { executeL10nJob, isL10nJob, type L10nJob } from './agents/l10nInstance';
 import { executeSdrCopilot } from './agents/sdrCopilot';
 import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
 import { withInflightLimit } from './concurrency';
 import { assertCap, verifyGrant } from './grants';
 import { HttpError, json, noStore, readJson, isRecord } from './http';
 import {
-  handleL10nDispatch,
-  handleL10nPlan,
   handlePragueStringsTranslate,
 } from './l10n-routes';
 import { handleAccountL10nOpsGenerate } from './l10n-account-routes';
 import {
   handlePersonalizationOnboardingCreate,
   handlePersonalizationOnboardingStatus,
-  handlePersonalizationPreviewCreate,
-  handlePersonalizationPreviewStatus,
   handleQueuedSanfranciscoCommand,
   isSanfranciscoCommandMessage,
 } from './personalization-jobs';
@@ -186,14 +181,6 @@ export default {
       if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') return okHealth(env);
       if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, env, ctx);
       if (request.method === 'POST' && url.pathname === '/v1/outcome') return await handleOutcome(request, env);
-      if (request.method === 'POST' && url.pathname === '/v1/personalization/preview') {
-        return await handlePersonalizationPreviewCreate(request, env, ctx);
-      }
-      const previewStatusMatch = url.pathname.match(/^\/v1\/personalization\/preview\/([^/]+)$/);
-      if (previewStatusMatch && request.method === 'GET') {
-        const jobId = decodeURIComponent(previewStatusMatch[1]);
-        return await handlePersonalizationPreviewStatus(request, env, jobId);
-      }
       if (request.method === 'POST' && url.pathname === '/v1/personalization/onboarding') {
         return await handlePersonalizationOnboardingCreate(request, env, ctx);
       }
@@ -202,8 +189,6 @@ export default {
         const jobId = decodeURIComponent(onboardingStatusMatch[1]);
         return await handlePersonalizationOnboardingStatus(request, env, jobId);
       }
-      if (request.method === 'POST' && url.pathname === '/v1/l10n/plan') return await handleL10nPlan(request, env);
-      if (request.method === 'POST' && url.pathname === '/v1/l10n') return await handleL10nDispatch(request, env, ctx);
       if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') return await handlePragueStringsTranslate(request, env);
       if (request.method === 'POST' && url.pathname === '/v1/l10n/account/ops/generate') {
         return await handleAccountL10nOpsGenerate(request, env);
@@ -217,7 +202,7 @@ export default {
     }
   },
 
-  async queue(batch: MessageBatch<InteractionEvent | L10nJob | SanfranciscoCommandMessage>, env: Env): Promise<void> {
+  async queue(batch: MessageBatch<InteractionEvent | SanfranciscoCommandMessage>, env: Env): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
     await ensureD1Schema(env);
     for (const msg of batch.messages) {
@@ -227,16 +212,6 @@ export default {
           await handleQueuedSanfranciscoCommand(body, env);
         } catch (err) {
           console.error('[sanfrancisco] command message failed', err);
-        }
-        continue;
-      }
-      if (isL10nJob(body)) {
-        try {
-          const grant = await verifyGrant(body.grant, env.AI_GRANT_HMAC_SECRET);
-          assertCap(grant, `agent:${body.agentId}`);
-          await executeL10nJob(body, env, grant);
-        } catch (err) {
-          console.error('[sanfrancisco] l10n job failed', err);
         }
         continue;
       }

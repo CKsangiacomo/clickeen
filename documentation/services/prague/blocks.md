@@ -151,10 +151,6 @@ Copy contract:
 - default (omitted): iframe embed
 - `indexable`: iframe++ SEO/GEO optimized embed (uses Venice loader + host metadata injection; UI stays iframe)
 
-Acquisition preview hook:
-- Hero headline and subheadline expose `data-ck-copy="heroTitle|heroSubtitle"` for personalization preview.
-- The primary CTA label uses `data-ck-copy="ctaText"` for preview overrides.
-
 ### 2.3 Big bang
 
 `blocks/big-bang/big-bang`
@@ -184,9 +180,6 @@ Embed rules:
 Copy contract:
 - `title` (required by registry, used as section heading)
 - `items[]` (mapped to `steps[]`)
-
-Acquisition preview hook:
-- Steps header exposes `data-ck-copy="sectionTitle"` for personalization preview.
 
 ### 2.6 Split Carousel (Templates)
 
@@ -246,9 +239,6 @@ Copy contract:
 `ActionGroup` supports CTA layouts beyond primary/secondary:
 - Shape: `{ layout: 'row' | 'column' | 'grid', columns?: number, actions: [{ type: 'link' | 'button' | 'modal', variant: 'primary' | 'secondary' | 'ghost', label: string, href?: string, onClick?: string }] }`
 - Legacy CTA props (`primaryCta`, `secondaryCta`) are still supported and map to an `ActionGroup` internally.
-
-Acquisition preview hook:
-- CTA primary button uses `data-ck-copy="ctaText"` for personalization preview.
 
 ### 2.12 Locale showcase (Global proof)
 

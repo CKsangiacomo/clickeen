@@ -48,7 +48,6 @@ jobs:
       - name: Compile widgets from repo Tokyo sources
         env:
           NEXT_PUBLIC_TOKYO_URL: http://127.0.0.1:4000
-          PARIS_BASE_URL: https://paris.dev.clickeen.com
           BERLIN_BASE_URL: https://berlin.dev.clickeen.com
           SANFRANCISCO_BASE_URL: https://sanfrancisco.dev.clickeen.com
         run: |

@@ -178,7 +178,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 #### Bob (Pages)
 
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
-- Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/session/bootstrap`) backed by Tokyo for saved authoring truth, Berlin for bootstrap/account context, and Roma/Tokyo for localization and aftermath.
+- Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/session/bootstrap`) backed by Tokyo/Venice for public/minibob reads, Berlin for bootstrap/account context, and Roma/Tokyo for localization and aftermath.
 - DevStudio local does not use `/api/roma/templates`; it uses its own explicit `/api/devstudio/instances*` and `/api/devstudio/instance*` tool paths for instance discovery, boot, save, localization, and status on the platform-owned account.
 
 #### Roma (Pages)
@@ -202,21 +202,20 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 #### Paris (Workers)
 
-- Residual public/non-product Worker boundary.
+- Residual health-only Worker stub.
 - Public endpoints are under `/api/*`.
 - Shipped in this repo snapshot:
-  - Public read: `GET /api/instance/:publicId` (user-owned rows are published-only).
-  - Product editor persistence hot path is no longer exposed directly from Paris.
+  - Health only: `GET /api/healthz`
   - Core account instance open/save now lives only in Bob/Roma same-origin routes; Paris no longer exposes `GET/PUT /api/accounts/:accountId/instance/:publicId?subject=account`.
   - Locale/editor endpoints are Roma-owned and are not mounted in Paris.
   - Roma starter discovery is Roma-owned (`GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`); Paris no longer mounts those routes.
   - Roma widget commands stay explicit (`POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`).
   - Paris no longer mounts AI endpoints in the product path under 070A.
+  - Venice now owns the public instance payload route (`GET /api/instance/:publicId`) on top of Tokyo live/config artifacts.
 - Current cloud-dev account rule:
   - Account creation is Berlin-owned; Paris no longer mounts account creation.
   - MiniBob handoff now starts in a Roma route and completes inside Roma session finish; non-local completion still targets platform-owned accounts only.
   - Instance routing uses `publicId` prefix: `wgt_main_*` marks the instance shown first in MiniBob, `wgt_curated_*` marks other starter instances, `wgt_*_u_*` marks instances in user accounts.
-  - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
 - Product-path base-config writes persist through Bob/Roma same-origin routes to Tokyo; Roma handles translation and published-surface aftermath directly after the save response returns.
 
 #### Venice (Workers)
@@ -265,15 +264,9 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 | Surface                     | Variable                    | Dev                                     | Prod                                | Notes                                                                            |
 | --------------------------- | --------------------------- | --------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
 | **Bob (Pages)**             | `NEXT_PUBLIC_TOKYO_URL`     | `https://tokyo.dev.clickeen.com`        | `https://tokyo.clickeen.com`        | Compiler fetches widget specs over HTTP (even locally)                           |
-| **Bob (Pages)**             | `PARIS_BASE_URL`            | `https://paris.dev.clickeen.com`        | `https://paris.clickeen.com`        | Bob’s same-origin proxy to Paris                                                 |
+| **Bob (Pages)**             | `NEXT_PUBLIC_VENICE_URL`    | `https://venice.dev.clickeen.com`       | `https://embed.clickeen.com`        | Bob MiniBob public read shortcut + preview-shadow target                         |
 | **Bob (Pages)**             | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Base URL for Copilot execution (San Francisco); some routes have local fallbacks |
-| **Roma (Pages)**            | `PARIS_BASE_URL`            | `https://paris.dev.clickeen.com`        | `https://paris.clickeen.com`        | Roma’s same-origin proxy to Paris                                                |
 | **Roma (Pages)**            | `NEXT_PUBLIC_BOB_URL`       | `https://bob.dev.clickeen.com`          | `https://app.clickeen.com`          | Builder iframe origin (no query override; configured per environment)            |
-| **Paris (Workers)**         | `SUPABASE_URL`              | dev project                             | prod project                        | Service role access                                                              |
-| **Paris (Workers)**         | `SUPABASE_SERVICE_ROLE_KEY` | dev key                                 | prod key                            | Never exposed to browsers                                                        |
-| **Paris (Workers)**         | `TOKYO_BASE_URL`            | `https://tokyo.dev.clickeen.com`        | `https://tokyo.clickeen.com`        | Widget type validation + limits lookup                                           |
-| **Paris (Workers)**         | `AI_GRANT_HMAC_SECRET`      | dev secret                              | prod secret                         | Shared HMAC secret with San Francisco (grant + outcome signatures)               |
-| **Paris (Workers)**         | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Used to forward outcomes to `/v1/outcome`                                        |
 | **Paris (Workers)**         | `ENV_STAGE`                 | `cloud-dev`                             | `ga`                                | Exposure stage stamped into grants for learning attribution                      |
 | **San Francisco (Workers)** | `AI_GRANT_HMAC_SECRET`      | dev secret                              | prod secret                         | Shared HMAC secret with Paris (grant + outcome signatures)                       |
 | **San Francisco (Workers)** | `DEEPSEEK_API_KEY`          | dev key                                 | prod key                            | Provider key lives only in San Francisco                                         |

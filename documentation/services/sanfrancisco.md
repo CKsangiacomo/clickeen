@@ -8,7 +8,6 @@
 - `GET /healthz`
 - Queue consumers for agent jobs.
 - HTTP endpoints for AI outcomes.
-- `POST /v1/l10n/plan` (internal auth; l10n planning snapshot for `{ widgetType, config }` or `{ widgetType, publicId, accountId }`)
 - `POST /v1/l10n/account/ops/generate` (internal auth; account-mode locale ops generation for Roma aftermath)
 
 ## Dependencies
@@ -25,7 +24,7 @@ Health contract:
 
 ## Copilot execution (shipped)
 - Endpoint: `POST /v1/execute`.
-- Requires a Paris-minted grant; enforces `agent:*` caps and `ai` policy capsule.
+- Requires a Clickeen-signed grant; enforces `agent:*` caps and `ai` policy capsule.
 - Agent routing uses the registry canonical IDs (aliases accepted).
 - Budget enforcement is centralized in `callChatCompletion` (`maxTokens`, `timeoutMs`, `maxRequests`, and `maxCostUsd` when present).
 - Provider execution retries transient upstream failures once, then falls back across eligible model candidates (and across providers when the grant does not pin `selectedProvider`).
@@ -49,11 +48,6 @@ Health contract:
   - `paid_premium`: `gpt-4o` default, with higher-capability choices constrained by policy + agent support.
   - `curated_premium`: OpenAI curated set (`gpt-5.2` default).
 - Budget tracking persists to `SF_KV` per grant (requests + cost) with TTL aligned to grant expiry.
-
-## Personalization Preview (acquisition)
-- Endpoint: `POST /v1/personalization/preview` (internal, requires `PARIS_DEV_JWT`).
-- Status: `GET /v1/personalization/preview/:jobId` (internal).
-- Jobs are stored in KV with TTL; execution uses the `agent.personalization.preview.v1` policy grant.
 
 ## Entrypoint posture
 - `sanfrancisco/src/index.ts` is now a thin route shell.
@@ -90,8 +84,8 @@ Health contract:
 - Provider: OpenAI via shared policy router (curated profile default: `gpt-5.2`; env overrides still apply).
 
 ## Rules
-- Do not write directly to Tokyo for l10n (Paris is canonical).
-- Reject invalid allowlist paths; stale fingerprints should be reported as `superseded` and retried, not hard failures.
+- Reject invalid allowlist paths.
+- Active account-mode l10n returns set-only locale ops to Roma; San Francisco does not own Tokyo overlay writes.
 - Agent writes must not touch layer=user; overrides remain in layer=user and are merged at publish time.
 
 ## Links

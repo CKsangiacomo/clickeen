@@ -1,43 +1,31 @@
-import type { Env } from './shared/types';
-import { corsPreflight } from './shared/http';
-import { handleHealthz } from './shared/handlers';
-import { ckError, errorDetail } from './shared/errors';
-import { handleGetInstance } from './domains/instances';
-
-function methodNotAllowed(): Response {
-  return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.method.notAllowed' }, 405);
-}
-
-function routeNotFound(): Response {
-  return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.route.notFound' }, 404);
-}
-
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
-    try {
-      const url = new URL(req.url);
-      const pathname = url.pathname.replace(/\/+$/, '') || '/';
+  async fetch(req: Request): Promise<Response> {
+    const headers = new Headers({
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json; charset=utf-8',
+    });
 
-      if (req.method === 'OPTIONS') return corsPreflight(req);
-      if (pathname === '/api/healthz') return handleHealthz();
-
-      const instanceMatch = pathname.match(/^\/api\/instance\/([^/]+)$/);
-      if (instanceMatch) {
-        const publicId = decodeURIComponent(instanceMatch[1]);
-        if (req.method === 'GET') return handleGetInstance(req, env, publicId);
-        return methodNotAllowed();
-      }
-
-      return routeNotFound();
-    } catch (err) {
-      return ckError(
-        {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.internal.serverError',
-          detail: errorDetail(err),
-        },
-        500,
-      );
+    if (req.method === 'OPTIONS') {
+      headers.set('Access-Control-Allow-Methods', 'GET,OPTIONS');
+      headers.set('Access-Control-Allow-Headers', 'content-type');
+      headers.delete('Content-Type');
+      return new Response(null, { status: 204, headers });
     }
+
+    const pathname = new URL(req.url).pathname.replace(/\/+$/, '') || '/';
+    if (pathname === '/api/healthz') {
+      if (req.method !== 'GET') {
+        return new Response(
+          JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.method.notAllowed' } }),
+          { status: 405, headers },
+        );
+      }
+      return new Response(JSON.stringify({ up: true }), { status: 200, headers });
+    }
+
+    return new Response(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.route.notFound' } }), {
+      status: 404,
+      headers,
+    });
   },
 };

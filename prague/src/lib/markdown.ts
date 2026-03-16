@@ -29,18 +29,18 @@ function buildPageBase(args: { pageId: string; pagePath: string; blocks: unknown
   return { v: 1, pageId: args.pageId, blocks: baseBlocks };
 }
 
-function resolveParisBaseUrl(): string | null {
-  const raw = String(process.env.PUBLIC_PARIS_URL || process.env.PARIS_BASE_URL || '').trim();
+function resolveVeniceBaseUrl(): string | null {
+  const raw = String(process.env.PUBLIC_VENICE_URL || '').trim();
   if (raw) return raw.replace(/\/+$/, '');
-  if (process.env.NODE_ENV !== 'production') return 'http://localhost:3001';
+  if (process.env.NODE_ENV !== 'production') return 'http://localhost:3003';
   return null;
 }
 
 async function assertCuratedInstanceExists(args: { publicId: string; pagePath: string }): Promise<void> {
   if (!CURATED_VALIDATE) return;
-  const baseUrl = resolveParisBaseUrl();
+  const baseUrl = resolveVeniceBaseUrl();
   if (!baseUrl) {
-    throw new Error('[prague] Curated validation requires PUBLIC_PARIS_URL (or PARIS_BASE_URL).');
+    throw new Error('[prague] Curated validation requires PUBLIC_VENICE_URL.');
   }
 
   const publicId = args.publicId;
@@ -61,7 +61,7 @@ async function assertCuratedInstanceExists(args: { publicId: string; pagePath: s
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       const detail = message ? ` (${message})` : '';
-      const warning = `[prague] ${args.pagePath}: curated validation skipped (Paris unreachable) for ${publicId}${detail}`;
+      const warning = `[prague] ${args.pagePath}: curated validation skipped (Venice unreachable) for ${publicId}${detail}`;
       if (CURATED_VALIDATE_STRICT) throw new Error(warning);
       console.warn(warning);
       return;
@@ -69,32 +69,6 @@ async function assertCuratedInstanceExists(args: { publicId: string; pagePath: s
     if (res.ok) return;
     if (res.status !== 404) {
       throw new Error(`[prague] Curated validation failed for ${publicId} (${res.status})`);
-    }
-
-    const devToken = String(process.env.PARIS_DEV_JWT || '').trim();
-    if (devToken) {
-      let devRes: Response | null = null;
-      try {
-        devRes = await fetch(url, { method: 'GET', headers: { Authorization: `Bearer ${devToken}` } });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        const detail = message ? ` (${message})` : '';
-        const warning = `[prague] ${args.pagePath}: curated validation skipped (Paris unreachable) for ${publicId}${detail}`;
-        if (CURATED_VALIDATE_STRICT) throw new Error(warning);
-        console.warn(warning);
-        return;
-      }
-      if (devRes.ok) {
-        const payload = await devRes.json().catch(() => null);
-        const status = payload && typeof payload.status === 'string' ? payload.status : 'unpublished';
-        const message = `[prague] ${args.pagePath}: curated instance ${publicId} is ${status}; publish it before embedding.`;
-        if (CURATED_VALIDATE_STRICT) throw new Error(message);
-        console.warn(message);
-        return;
-      }
-      if (devRes.status !== 404) {
-        throw new Error(`[prague] Curated validation failed for ${publicId} (${devRes.status})`);
-      }
     }
 
     const message = `[prague] ${args.pagePath}: curated instance ${publicId} not found (seed curated_widget_instances or apply migrations).`;

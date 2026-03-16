@@ -25,7 +25,6 @@ const DEVSTUDIO_ASSET_ALLOW_HEADERS = [
 
 type DevstudioPluginOptions = {
   rootDir: string;
-  defaultParisBaseUrl: string;
   internalServiceId: string;
   platformAccountId: string;
 };
@@ -129,18 +128,6 @@ export function createDevstudioPlugins(options: DevstudioPluginOptions): Plugin[
     };
   }
 
-  function createDevstudioParisHeaders(initHeaders?: HeadersInit): Headers {
-    const token = resolveRootEnvValue('PARIS_DEV_JWT');
-    if (!token) {
-      throw new Error('Missing PARIS_DEV_JWT for local DevStudio instance routes.');
-    }
-
-    const headers = new Headers(initHeaders || {});
-    headers.set('authorization', `Bearer ${token}`);
-    headers.set('x-ck-internal-service', options.internalServiceId);
-    return headers;
-  }
-
   function createDevstudioTokyoHeaders(initHeaders?: HeadersInit): Headers {
     const token = resolveRootEnvValue('TOKYO_DEV_JWT') || resolveRootEnvValue('PARIS_DEV_JWT');
     if (!token) {
@@ -151,29 +138,6 @@ export function createDevstudioPlugins(options: DevstudioPluginOptions): Plugin[
     headers.set('authorization', `Bearer ${token}`);
     headers.set('x-ck-internal-service', options.internalServiceId);
     return headers;
-  }
-
-  async function proxyDevstudioParisJson(args: {
-    req: any;
-    res: any;
-    pathname: string;
-    method?: string;
-    body?: string;
-    headers?: HeadersInit;
-  }) {
-    const upstream = await fetch(`${options.defaultParisBaseUrl}${args.pathname}`, {
-      method: args.method || args.req.method || 'GET',
-      headers: createDevstudioParisHeaders(args.headers),
-      body: args.body,
-      cache: 'no-store',
-    });
-
-    const text = await upstream.text();
-    const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
-    args.res.statusCode = upstream.status;
-    args.res.setHeader('Content-Type', contentType);
-    args.res.setHeader('Cache-Control', 'no-store');
-    args.res.end(text);
   }
 
   async function proxyDevstudioTokyo(args: {

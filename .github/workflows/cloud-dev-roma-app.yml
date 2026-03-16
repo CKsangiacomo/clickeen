@@ -34,7 +34,6 @@ jobs:
       SUPABASE_URL: ${{ vars.SUPABASE_URL_CLOUD_DEV }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY_CLOUD_DEV }}
 
-      PARIS_BASE_URL: https://paris.dev.clickeen.com
       NEXT_PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
       BERLIN_BASE_URL: https://berlin.dev.clickeen.com
       SANFRANCISCO_BASE_URL: https://sanfrancisco.dev.clickeen.com

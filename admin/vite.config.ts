@@ -23,11 +23,6 @@ const PLATFORM_ACCOUNT_ID = String(
 )
   .trim()
   .toLowerCase();
-const DEFAULT_PARIS_BASE_URL = String(
-  process.env.PARIS_BASE_URL || 'https://paris.dev.clickeen.com',
-)
-  .trim()
-  .replace(/\/+$/, '');
 const DEVSTUDIO_INTERNAL_SERVICE_ID = 'devstudio.local';
 
 export default defineConfig({
@@ -56,7 +51,6 @@ export default defineConfig({
   plugins: [
     ...createDevstudioPlugins({
       rootDir: ROOT_DIR,
-      defaultParisBaseUrl: DEFAULT_PARIS_BASE_URL,
       internalServiceId: DEVSTUDIO_INTERNAL_SERVICE_ID,
       platformAccountId: PLATFORM_ACCOUNT_ID,
     }),

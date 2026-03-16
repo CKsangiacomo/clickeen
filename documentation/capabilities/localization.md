@@ -103,7 +103,7 @@ Where the write plane fits (current repo snapshot):
 **Generation + mirroring (current after PRD 54)**
 
 - Roma extracts the base text snapshot from the widget allowlist (`tokyo/widgets/<widgetType>/localization.json`).
-- Roma diffs base snapshots to compute `changedPaths` + `removedPaths` and calls San Francisco when generation is needed.
+- Roma diffs base snapshots to compute `changedPaths` + `removedPaths` and calls San Francisco `POST /v1/l10n/account/ops/generate` when generation is needed.
 - San Francisco returns set-only locale ops.
 - Roma/Tokyo persist those overlay rows in the canonical Tokyo l10n plane.
 - Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane.

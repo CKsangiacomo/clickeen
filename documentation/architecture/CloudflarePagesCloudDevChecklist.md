@@ -38,7 +38,7 @@ Env contract:
 | Variable | Required | Cloud-dev value | Source-of-truth owner |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `bob/wrangler.toml` |
-| `PARIS_BASE_URL` | yes | `https://paris.dev.clickeen.com` | `bob/wrangler.toml` |
+| `NEXT_PUBLIC_VENICE_URL` | yes | `https://venice.dev.clickeen.com` | `bob/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `bob/wrangler.toml` |
 | `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |
 | `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | Cloudflare Pages dashboard + GitHub Actions env |
@@ -72,7 +72,6 @@ Env contract:
 
 | Variable | Required | Cloud-dev value | Source-of-truth owner |
 | --- | --- | --- | --- |
-| `PARIS_BASE_URL` | yes | `https://paris.dev.clickeen.com` | `roma/wrangler.toml` |
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `roma/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `roma/wrangler.toml` |
 | `NEXT_PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | `roma/wrangler.toml` |
@@ -134,12 +133,11 @@ Env contract:
 | `PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | Cloudflare Pages dashboard |
 | `PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | Cloudflare Pages dashboard |
 | `PUBLIC_VENICE_URL` | yes | `https://venice.dev.clickeen.com` | Cloudflare Pages dashboard |
-| `PUBLIC_PARIS_URL` | yes | `https://paris.dev.clickeen.com` | Cloudflare Pages dashboard |
 | `PUBLIC_ROMA_URL` | yes | `https://roma.dev.clickeen.com` | Cloudflare Pages dashboard |
 | `PUBLIC_PRAGUE_BUILD_ID` | no | leave unset (Cloudflare provides `CF_PAGES_COMMIT_SHA`) | Cloudflare Pages runtime |
 
 Dashboard action:
-- Keep the 5 public base URLs in the Cloudflare Pages dashboard.
+- Keep the 4 public base URLs in the Cloudflare Pages dashboard.
 - Leave `PUBLIC_PRAGUE_BUILD_ID` unset unless there is a deliberate override reason.
 
 ## Live-Only Secrets And External State

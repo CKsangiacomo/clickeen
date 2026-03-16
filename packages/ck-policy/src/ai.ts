@@ -106,15 +106,6 @@ const L10N_PRAGUE_BUDGETS: Record<AiProfile, AiBudget> = {
   curated_premium: { maxTokens: 2200, timeoutMs: 60_000, maxRequests: 1 },
 };
 
-const PERSONALIZATION_PREVIEW_BUDGETS: Record<AiProfile, AiBudget> = {
-  // This runs inside a `waitUntil(...)` job (San Francisco). Keep budgets reasonably
-  // short, but long enough to avoid spurious provider timeouts in local/cloud-dev.
-  free_low: { maxTokens: 400, timeoutMs: 25_000, maxRequests: 1 },
-  paid_standard: { maxTokens: 500, timeoutMs: 30_000, maxRequests: 1 },
-  paid_premium: { maxTokens: 650, timeoutMs: 30_000, maxRequests: 1 },
-  curated_premium: { maxTokens: 800, timeoutMs: 30_000, maxRequests: 1 },
-};
-
 const PERSONALIZATION_ONBOARDING_BUDGETS: Record<AiProfile, AiBudget> = {
   free_low: { maxTokens: 900, timeoutMs: 30_000, maxRequests: 2 },
   paid_standard: { maxTokens: 1200, timeoutMs: 45_000, maxRequests: 2 },
@@ -168,7 +159,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     description: 'Instance localization pipeline.',
     supportedProviders: ['deepseek', 'openai', 'anthropic'],
     defaultProvider: 'deepseek',
-    executionSurface: 'queue',
+    executionSurface: 'endpoint',
     allowProviderChoice: false,
     allowModelChoice: false,
     budgetsByProfile: L10N_INSTANCE_BUDGETS,
@@ -184,20 +175,6 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     allowProviderChoice: false,
     allowModelChoice: false,
     budgetsByProfile: L10N_PRAGUE_BUDGETS,
-  },
-  {
-    agentId: 'agent.personalization.preview.v1',
-    category: 'agent',
-    taskClass: 'personalization.acquisitionPreview',
-    description: 'Acquisition preview personalization (copy overrides only).',
-    supportedProviders: ['deepseek'],
-    defaultProvider: 'deepseek',
-    executionSurface: 'endpoint',
-    allowProviderChoice: false,
-    allowModelChoice: false,
-    budgetsByProfile: PERSONALIZATION_PREVIEW_BUDGETS,
-    requiredEntitlements: ['budget.personalization.runs'],
-    toolCaps: ['tool:fetchHeadMeta', 'tool:fetchHomepageSnippet'],
   },
   {
     agentId: 'agent.personalization.onboarding.v1',

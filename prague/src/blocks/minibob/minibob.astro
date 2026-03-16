@@ -1,8 +1,6 @@
 ---
 import { assertPrimitives } from '../../composition/index';
 import PrimitiveRenderer from '../../composition/renderers/astro/PrimitiveRenderer.astro';
-import { loadWidgetLocalizationAllowlistPaths } from '../../lib/widgetLocalizationAllowlist';
-import PersonalizationPreview from '../../components/PersonalizationPreview.astro';
 
 type Props = {
   widget: string;
@@ -12,7 +10,7 @@ type Props = {
   subhead: string;
 };
 
-const { widget, locale, page, heading, subhead } = Astro.props;
+const { widget, locale, heading, subhead } = Astro.props;
 
 const headerPrimitives = assertPrimitives(
   [
@@ -57,9 +55,6 @@ const bobOrigin = (() => {
     return '';
   }
 })();
-
-// Load allowlist for this widget type so PersonalizationPreview knows what AI can touch
-const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ?? undefined;
 ---
 
 <section
@@ -71,17 +66,6 @@ const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ??
 >
   <div class="ck-minibobStage ck-stack ck-gap-tight">
     <PrimitiveRenderer primitives={headerPrimitives} />
-    <div class="ck-minibobStage__personalize">
-      <PersonalizationPreview
-        locale={locale}
-        widget={widget}
-        page={page}
-        variant="embed"
-        publicId={publicId}
-        targetIframeId={iframeId}
-        allowedOverrides={allowedOverrides}
-      />
-    </div>
   </div>
 
   <div class="ck-inline">

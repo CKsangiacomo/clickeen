@@ -28,6 +28,7 @@ This doc describes the **current Venice runtime** after the PRD 54 pivot:
 - `GET /e/:publicId` and `GET /r/:publicId` do **0** calls to Paris/Supabase.
 - They serve **only** what is present in Tokyo/R2.
 - They do **no** request-time healing, fallback, or “deciding what should exist”.
+- `GET /api/instance/:publicId` is also Tokyo-only and public-live only.
 
 **Venice reads these Tokyo files (v1):**
 - Live pointer: `renders/instances/<publicId>/live/r.json` (mutable, `no-store`)
@@ -41,6 +42,7 @@ This doc describes the **current Venice runtime** after the PRD 54 pivot:
 - `GET /e/:publicId` — iframe UI shell + bootstrap (Tokyo-only)
 - `GET /r/:publicId` — live pointer proxy (Tokyo-only, `no-store`)
 - `GET /r/:publicId?meta=1&locale=...` — meta pointer proxy (Tokyo-only, `no-store`)
+- `GET /api/instance/:publicId` — public instance payload for Bob MiniBob and Prague validation/preview bootstrap (Tokyo-only, live config pack only)
 - `GET /widgets/*` — Tokyo widget runtime proxy
 - `GET /dieter/*` — Tokyo Dieter assets proxy
 - `GET /renders/*` — Tokyo `renders/` proxy
@@ -91,6 +93,18 @@ Returns the bytes of the meta pointer file:
 Notes:
 - If the account/tier is not entitled, meta pointers do not exist in Tokyo, so this returns `404`.
 - The loader then fetches the meta pack referenced by `metaFp`.
+
+### `GET /api/instance/:publicId` (public instance payload; always DB-free)
+
+What it does:
+1. Load the live pointer from Tokyo (`/renders/instances/:publicId/live/r.json`).
+2. Load the referenced immutable config pack from Tokyo.
+3. Return a small JSON payload with `publicId`, `widgetType`, `config`, `baseFingerprint`, and `status: "published"`.
+
+Rules:
+- It never reads saved/draft config.
+- If the live pointer is missing, it returns `404`.
+- If the live pointer exists but the referenced config pack is broken or missing, that is an internal bug, not a fallback case.
 
 ### `GET /e/:publicId` (iframe UI; always DB-free)
 

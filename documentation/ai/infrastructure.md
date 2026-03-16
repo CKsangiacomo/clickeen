@@ -40,9 +40,8 @@ Bindings (Cloudflare primitives):
 
 Worker vars/secrets:
 - `ENVIRONMENT`: loose environment label used in logs and the `/healthz` response (`dev`, `prod`, etc)
-- `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret with Paris (grant verification + outcome signatures)
-- `PARIS_DEV_JWT` (secret): internal bearer token for San Francisco internal endpoints (`/v1/l10n*`, `/v1/personalization/*`) and Paris writeback calls
-- `PARIS_BASE_URL` (var): required for internal post-signup account-context writeback when San Francisco sends data back to Paris
+- `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret for Clickeen grant verification + outcome signatures
+- `PARIS_DEV_JWT` (secret): internal bearer token for San Francisco internal endpoints (`/v1/l10n*`, `/v1/personalization/*`)
 - `DEEPSEEK_API_KEY` (secret, optional): required only when an execution reaches the model provider
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
@@ -73,7 +72,7 @@ Response:
 ```
 
 ### `POST /v1/execute`
-Purpose: execute a named agent under a Paris-issued grant.
+Purpose: execute a named agent under a Clickeen-signed grant.
 
 Behavior (high level):
 - Parse `{grant, agentId, input, trace?}`
@@ -93,18 +92,6 @@ Auth:
 Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
 
-### `POST /v1/personalization/preview`
-Purpose: enqueue acquisition preview personalization job.
-
-Auth:
-- `Authorization: Bearer ${PARIS_DEV_JWT}`
-
-### `GET /v1/personalization/preview/:jobId`
-Purpose: poll preview personalization job status.
-
-Auth:
-- `Authorization: Bearer ${PARIS_DEV_JWT}`
-
 ### `POST /v1/personalization/onboarding`
 Purpose: enqueue post-signup account-context carry-forward job (`/personalization/onboarding` is the current internal legacy route name).
 
@@ -117,18 +104,11 @@ Purpose: poll post-signup account-context carry-forward job status.
 Auth:
 - `Authorization: Bearer ${PARIS_DEV_JWT}`
 
-### `POST /v1/l10n/plan`
-Purpose: generate localization plan snapshot for a widget instance or config payload.
+### `POST /v1/l10n/account/ops/generate`
+Purpose: generate account-mode locale ops for Roma save/publish/locale aftermath.
 
 Auth:
 - `Authorization: Bearer ${PARIS_DEV_JWT}`
-
-### `POST /v1/l10n` (local only)
-Purpose: queue instance localization jobs.
-
-Auth:
-- `Authorization: Bearer ${PARIS_DEV_JWT}`
-- Available only when `ENVIRONMENT` is `local`
 
 ### `POST /v1/l10n/translate` (local + cloud-dev)
 Purpose: translate Prague system-owned base content (prague-l10n pipeline).
@@ -207,7 +187,6 @@ Budget matrix (`maxTokens / timeoutMs / maxRequests`):
 | `sdr.copilot` | `280 / 15s / 1` | `600 / 25s / 2` | `900 / 35s / 2` | `1200 / 45s / 2` |
 | `l10n.instance.v1` | `900 / 20s / 1` | `1200 / 30s / 1` | `1800 / 45s / 1` | `2200 / 60s / 1` |
 | `l10n.prague.strings.v1` | `1500 / 60s / 1` | `1500 / 60s / 1` | `2000 / 60s / 1` | `2200 / 60s / 1` |
-| `agent.personalization.preview.v1` | `400 / 25s / 1` | `500 / 30s / 1` | `650 / 30s / 1` | `800 / 30s / 1` |
 | `agent.personalization.onboarding.v1` | `900 / 30s / 2` | `1200 / 45s / 2` | `1800 / 60s / 3` | `2200 / 60s / 3` |
 
 `agent.personalization.onboarding.v1` is the legacy grant identifier for the same post-signup account-context carry-forward path.
@@ -254,7 +233,7 @@ Meaning: Bob can’t probe `/healthz` on any configured/fallback SF base URL.
 
 Actions:
 - Ensure the worker is deployed and the route is correct.
-- Ensure `SANFRANCISCO_BASE_URL` is set where the caller runs (Bob/Paris).
+- Ensure `SANFRANCISCO_BASE_URL` is set where the caller runs (Bob, and any Roma server route that calls SF directly).
 - In local dev, `bash scripts/dev-up.sh` runs SF on `http://localhost:3002` **when** `AI_GRANT_HMAC_SECRET` is set.
 
 ### “Missing AI_GRANT_HMAC_SECRET”

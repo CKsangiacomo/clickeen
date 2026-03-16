@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveSessionBearer } from '../../../../lib/auth/session';
+import { withSessionAndCors } from '../../../../lib/auth/session-cors';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
-import { withSessionAndCors } from '../../../../lib/api/paris/proxy-helpers';
 
 export const runtime = 'edge';
 

@@ -65,7 +65,6 @@ export type OutcomeAttachRequest = {
 };
 
 export type SanfranciscoCommandName =
-  | 'personalization.preview.enqueue'
   | 'personalization.onboarding.enqueue'
   | 'ai.outcome.attach';
 
@@ -116,10 +115,8 @@ export type Env = {
   DEEPSEEK_API_KEY?: string;
   DEEPSEEK_BASE_URL?: string;
   DEEPSEEK_MODEL?: string;
-  PARIS_BASE_URL?: string;
   PARIS_DEV_JWT?: string;
   TOKYO_BASE_URL?: string;
-  TOKYO_L10N_BASE_URL?: string;
   TOKYO_DEV_JWT?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;

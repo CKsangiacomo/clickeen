@@ -126,7 +126,7 @@ Keeping Paris and San Francisco separate prevents:
 5) Bob applies `ops[]` locally as pure state transforms. If an op cannot be applied, Bob fails loudly (platform bug) and the developer fixes the widget/package or copilot output.
 
 ### Operational agents (Clickeen’s internal workforce)
-- A worker (or scheduled job) triggers an execution request to San Francisco using a **service grant** issued by Paris (or by an internal service issuer with Paris-level authority).
+- A worker (or scheduled job) triggers an execution request to San Francisco using a **service grant** issued by a trusted Clickeen backend surface.
 - Result is used to create tickets, draft responses, or propose actions (depending on the agent’s permissions/tools).
 
 ## Runtime Reality (what’s actually shipped)
@@ -137,12 +137,9 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `GET /healthz`
 - `POST /v1/execute` (requires a Clickeen-signed AI Grant)
 - `POST /v1/outcome` (outcome attach, signed by the calling Clickeen backend surface)
-  - `POST /v1/personalization/preview` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
-  - `GET /v1/personalization/preview/:jobId` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
   - `POST /v1/personalization/onboarding` (internal legacy route name for post-signup account-context carry-forward; `Authorization: Bearer ${PARIS_DEV_JWT}`)
   - `GET /v1/personalization/onboarding/:jobId` (internal legacy route name; polls the same post-signup account-context carry-forward job; `Authorization: Bearer ${PARIS_DEV_JWT}`)
-  - `POST /v1/l10n/plan` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
-  - `POST /v1/l10n` (internal/local tooling only; `Authorization: Bearer ${PARIS_DEV_JWT}`; `ENVIRONMENT=local` only)
+  - `POST /v1/l10n/account/ops/generate` (internal Roma aftermath path; `Authorization: Bearer ${PARIS_DEV_JWT}`)
   - `POST /v1/l10n/translate` (local + cloud-dev only; `Authorization: Bearer ${PARIS_DEV_JWT}`; `ENVIRONMENT in {local,dev}`)
 - Cloudflare bindings:
   - `SF_KV` (sessions + job records)
@@ -155,7 +152,6 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `cs.widget.copilot.v1`
   - `l10n.instance.v1`
   - `l10n.prague.strings.v1`
-  - `agent.personalization.preview.v1`
   - `agent.personalization.onboarding.v1`
   - `debug.grantProbe` (dev only)
   - `POST /v1/execute` currently wires executors for: `sdr.copilot`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`, `debug.grantProbe`.
@@ -164,8 +160,8 @@ This matters because the “learning loop” is not theoretical: every `/v1/exec
 
 ## Contracts
 
-### AI Grant (issued by Paris)
-Paris computes grants from paid/free entitlements and returns a **signed** token to the caller.
+### AI Grant
+A trusted Clickeen backend surface computes grants from paid/free entitlements and returns a **signed** token to the caller.
 
 Requirements:
 - San Francisco MUST verify the signature and expiry.
@@ -205,7 +201,7 @@ type AIGrant = {
 
 #### Grant format (shipped)
 
-San Francisco verifies grants using an HMAC signature shared with Paris (`AI_GRANT_HMAC_SECRET`).
+San Francisco verifies grants using an HMAC signature shared across trusted Clickeen grant issuers (`AI_GRANT_HMAC_SECRET`).
 
 Format:
 `v1.<base64url(payloadJson)>.<base64url(hmacSha256("v1.<payloadB64>", AI_GRANT_HMAC_SECRET))>`

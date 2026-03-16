@@ -187,21 +187,6 @@ MiniBob publish/signup handoff:
 
 ---
 
-## 3.1) Acquisition personalization preview (dormant in current runtime)
-
-Prague still contains the UI component for a lightweight “Make this widget yours” preview:
-- UI: modal in the hero block (`prague/src/components/PersonalizationPreview.astro`)
-- The component currently attempts:
-  - `POST {PUBLIC_PARIS_URL}/api/personalization/preview`
-  - `GET {PUBLIC_PARIS_URL}/api/personalization/preview/:jobId`
-
-Current runtime status:
-- Paris does not ship `/api/personalization/preview*` in this repo snapshot.
-- Treat this feature as dormant until the backend contract is reintroduced and documented.
-- Durable keep/claim remains the MiniBob handoff flow above.
-
----
-
 ## 4) Determinism rules (why this is strict)
 
 - Widget marketing pages are JSON-only in this repo snapshot: no markdown crawling, no build-time parsing heuristics.
@@ -216,6 +201,7 @@ Current runtime status:
 The following ideas are intentionally not implemented here and must not be treated as executed behavior:
 - long-tail hubs/spokes/comparisons pages
 - any markdown-driven widget page pipeline under `tokyo/widgets/*/pages/**/*.md`
+- acquisition personalization preview / “Make this widget yours”
 
 If/when long-tail SEO is reintroduced, it should ship behind a PRD with a deterministic contract (and this doc should be updated at the same time).
 
