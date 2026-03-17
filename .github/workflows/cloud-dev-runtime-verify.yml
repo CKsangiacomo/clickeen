@@ -160,7 +160,7 @@ jobs:
             -H "x-ck-authz-capsule: ${ACCOUNT_CAPSULE}" \
             -H 'content-type: text/plain' \
             -H 'x-filename: smoke-asset.txt' \
-            -H 'x-source: smoke' \
+            -H 'x-source: api' \
             --data-binary @"$tmp_asset")"
           if [[ "$upload_status" != "200" ]]; then
             echo "Asset upload failed with status $upload_status" >&2
