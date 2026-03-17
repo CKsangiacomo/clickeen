@@ -132,7 +132,7 @@ jobs:
             exit 1
           fi
 
-          ACCOUNT_ID="$(node -e "const fs=require('fs');const payload=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const id=payload?.activeAccount?.id;if(!id){console.error('Missing activeAccount.id');process.exit(1)}process.stdout.write(String(id));" "$bootstrap_body")"
+          ACCOUNT_ID="$(node -e "const fs=require('fs');const payload=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const id=payload?.activeAccount?.accountId;if(!id){console.error('Missing activeAccount.accountId');process.exit(1)}process.stdout.write(String(id));" "$bootstrap_body")"
           ACCOUNT_CAPSULE="$(node -e "const fs=require('fs');const payload=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const token=payload?.authz?.accountCapsule;if(!token){console.error('Missing authz.accountCapsule');process.exit(1)}process.stdout.write(String(token));" "$bootstrap_body")"
 
           list_status="$(curl -sS -b "$cookie_jar" -o "$list_body" -w '%{http_code}' \
