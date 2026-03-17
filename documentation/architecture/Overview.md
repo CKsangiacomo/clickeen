@@ -58,7 +58,7 @@ Mutable pointer  (tiny, always fetched fresh)
 | Domain       | Mutable pointer                                                        | Immutable artifact                                                                    |
 | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | **Publish**  | `published.json` (`no-store`)                                          | Render artifacts at `/renders/instances/{publicId}/{fingerprint}/...` (cache forever) |
-| **Assets**   | _(runtime serves `/assets/v/:assetRef`; fill/media authoring is migrating to logical `assetId`)_ | Asset bytes at `/assets/v/:assetRef`                                                  |
+| **Assets**   | _(authoring stores logical `assetId`; runtime serves `/assets/v/:assetRef`)_ | Asset bytes at `/assets/v/:assetRef`                                                  |
 | **Auth**     | JWT (short-lived, refreshable)                                         | userId claim (stable identity)                                                        |
 | **Authz**    | HMAC-signed capsule (expires)                                          | Role/account snapshot at issuance                                                     |
 | **Overlays** | Layer pointer in DB                                                    | Materialized overlay file on R2 (fingerprinted)                                       |

@@ -9,6 +9,8 @@ const DEFAULT_PLATFORM_ACCOUNT_ID =
   process.env.CK_PLATFORM_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100';
 const DEFAULT_LOCAL_TOKYO_BASE = process.env.TOKYO_LOCAL_BASE_URL || 'http://localhost:4000';
 const DEFAULT_TOKYO_WORKER_BASE = process.env.TOKYO_WORKER_BASE_URL || 'http://localhost:8791';
+const DEFAULT_DEVSTUDIO_BASE = process.env.DEVSTUDIO_BASE_URL || 'http://localhost:5173';
+const DEFAULT_BOB_BASE = process.env.BOB_BASE_URL || 'http://localhost:3000';
 const DEFAULT_INTERNAL_SERVICE = 'devstudio.local';
 const DEFAULT_PAGE_SIZE = 500;
 
@@ -19,6 +21,7 @@ Verifies DevStudio-visible platform state explicitly:
 - local Tokyo saved snapshots exist
 - local canonical /assets/v/* reads work
 - no zero-id or invalid asset refs are present in DevStudio-visible rows
+- DevStudio host routes and Bob local asset/compile surfaces respond on localhost
 `);
 }
 
@@ -216,6 +219,115 @@ async function hasLocalAssetAtPath(pathname) {
   return res.status === 200;
 }
 
+function appendIssue(issues, failuresRef, message) {
+  failuresRef.count += 1;
+  issues.push(message);
+}
+
+async function verifyHostEditorLane({ rows, platformAccountId, issues, failuresRef }) {
+  const devstudioBase = String(DEFAULT_DEVSTUDIO_BASE).replace(/\/+$/, '');
+  const bobBase = String(DEFAULT_BOB_BASE).replace(/\/+$/, '');
+
+  const instancesResponse = requestLoopbackJson(`${devstudioBase}/api/devstudio/instances`, {
+    method: 'GET',
+  });
+  if (!instancesResponse.ok || !Array.isArray(instancesResponse.json?.instances)) {
+    appendIssue(
+      issues,
+      failuresRef,
+      `devstudio instances route unavailable (${instancesResponse.status})`,
+    );
+    return;
+  }
+
+  const accountRow = rows.find((row) => row.source === 'account');
+  if (!accountRow) {
+    appendIssue(issues, failuresRef, 'no DevStudio-visible account row found for host-lane verification');
+    return;
+  }
+
+  const listedInstance = instancesResponse.json.instances.find(
+    (entry) =>
+      typeof entry?.publicId === 'string' &&
+      entry.publicId === accountRow.publicId &&
+      typeof entry?.widgetType === 'string' &&
+      entry.widgetType === accountRow.widgetType,
+  );
+  if (!listedInstance) {
+    appendIssue(
+      issues,
+      failuresRef,
+      `devstudio instances route did not include ${accountRow.publicId}`,
+    );
+  }
+
+  const query = new URLSearchParams({
+    publicId: accountRow.publicId,
+    widgetname: accountRow.widgetType,
+    profile: 'source',
+    accountId: platformAccountId,
+  });
+
+  const instanceResponse = requestLoopbackJson(
+    `${devstudioBase}/api/devstudio/instance?${query.toString()}`,
+    { method: 'GET' },
+  );
+  if (!instanceResponse.ok) {
+    appendIssue(
+      issues,
+      failuresRef,
+      `devstudio instance route failed for ${accountRow.publicId} (${instanceResponse.status})`,
+    );
+  }
+
+  const localizationResponse = requestLoopbackJson(
+    `${devstudioBase}/api/devstudio/instance/localization?${query.toString()}`,
+    { method: 'GET' },
+  );
+  if (!localizationResponse.ok || !localizationResponse.json?.localization) {
+    appendIssue(
+      issues,
+      failuresRef,
+      `devstudio localization route failed for ${accountRow.publicId} (${localizationResponse.status})`,
+    );
+  }
+
+  const statusResponse = requestLoopbackJson(
+    `${devstudioBase}/api/devstudio/instances/${encodeURIComponent(accountRow.publicId)}/l10n/status?widgetname=${encodeURIComponent(accountRow.widgetType)}&profile=source&accountId=${encodeURIComponent(platformAccountId)}`,
+    { method: 'GET' },
+  );
+  if (!statusResponse.ok || !Array.isArray(statusResponse.json?.locales)) {
+    appendIssue(
+      issues,
+      failuresRef,
+      `devstudio l10n status route failed for ${accountRow.publicId} (${statusResponse.status})`,
+    );
+  }
+
+  const bobTokensResponse = requestLoopback(`${bobBase}/dieter/tokens/tokens.css`, {
+    method: 'HEAD',
+    discardBody: true,
+  });
+  if (!bobTokensResponse.ok) {
+    appendIssue(issues, failuresRef, `bob dieter tokens route failed (${bobTokensResponse.status})`);
+  }
+
+  const bobCompiledResponse = requestLoopback(
+    `${bobBase}/api/widgets/${encodeURIComponent(accountRow.widgetType)}/compiled`,
+    {
+      method: 'GET',
+      discardBody: true,
+    },
+  );
+  if (!bobCompiledResponse.ok) {
+    appendIssue(
+      issues,
+      failuresRef,
+      `bob compiled widget route failed for ${accountRow.widgetType} (${bobCompiledResponse.status})`,
+    );
+  }
+}
+
 async function main() {
   const client = createSupabaseClient({ preferLocal: true });
   const platformAccountId = String(DEFAULT_PLATFORM_ACCOUNT_ID).trim().toLowerCase();
@@ -245,13 +357,12 @@ async function main() {
     );
   }
 
-  let failures = 0;
+  const failuresRef = { count: 0 };
   const issues = [];
 
   for (const row of rows) {
     if (!(await hasSavedSnapshot(row))) {
-      failures += 1;
-      issues.push(`missing saved snapshot for ${row.publicId}`);
+      appendIssue(issues, failuresRef, `missing saved snapshot for ${row.publicId}`);
     }
   }
 
@@ -263,13 +374,16 @@ async function main() {
 
   for (const assetId of missingAssetIds) {
     const references = logicalAssetIds.get(assetId) || [];
-    failures += Math.max(1, references.length);
     if (!references.length) {
-      issues.push(`missing local asset for logical asset ${assetId}`);
+      appendIssue(issues, failuresRef, `missing local asset for logical asset ${assetId}`);
       continue;
     }
     for (const reference of references) {
-      issues.push(`missing local asset for ${reference.publicId}:${reference.path} (${assetId})`);
+      appendIssue(
+        issues,
+        failuresRef,
+        `missing local asset for ${reference.publicId}:${reference.path} (${assetId})`,
+      );
     }
   }
 
@@ -278,16 +392,22 @@ async function main() {
     const resolved = assetsById.get(assetId);
     const url = typeof resolved?.url === 'string' ? resolved.url.trim() : '';
     if (!url) {
-      failures += references.length || 1;
       for (const reference of references) {
-        issues.push(`resolved asset missing url for ${reference.publicId}:${reference.path} (${assetId})`);
+        appendIssue(
+          issues,
+          failuresRef,
+          `resolved asset missing url for ${reference.publicId}:${reference.path} (${assetId})`,
+        );
       }
       continue;
     }
     if (!(await hasLocalAssetAtPath(url))) {
-      failures += references.length || 1;
       for (const reference of references) {
-        issues.push(`missing local asset blob for ${reference.publicId}:${reference.path} (${assetId})`);
+        appendIssue(
+          issues,
+          failuresRef,
+          `missing local asset blob for ${reference.publicId}:${reference.path} (${assetId})`,
+        );
       }
     }
   }
@@ -295,26 +415,38 @@ async function main() {
   for (const entry of legacyAssetRefs) {
     const parsed = extractCanonicalAssetRef(entry.raw);
     if (!parsed) {
-      failures += 1;
-      issues.push(`invalid asset ref in ${entry.publicId}:${entry.path} (${entry.raw})`);
+      appendIssue(issues, failuresRef, `invalid asset ref in ${entry.publicId}:${entry.path} (${entry.raw})`);
       continue;
     }
     if (/^00000000-0000-0000-0000-000000000000$/i.test(parsed.assetId)) {
-      failures += 1;
-      issues.push(`zero asset id in ${entry.publicId}:${entry.path} (${parsed.versionKey})`);
+      appendIssue(
+        issues,
+        failuresRef,
+        `zero asset id in ${entry.publicId}:${entry.path} (${parsed.versionKey})`,
+      );
       continue;
     }
     if (!(await hasLocalAssetAtPath(toCanonicalAssetVersionPath(parsed.versionKey)))) {
-      failures += 1;
-      issues.push(`missing local asset for ${entry.publicId}:${entry.path} (${parsed.versionKey})`);
+      appendIssue(
+        issues,
+        failuresRef,
+        `missing local asset for ${entry.publicId}:${entry.path} (${parsed.versionKey})`,
+      );
     }
   }
+
+  await verifyHostEditorLane({
+    rows,
+    platformAccountId,
+    issues,
+    failuresRef,
+  });
 
   console.log('[verify-local-platform-state] done');
   console.log(`  rows=${rows.length}`);
   console.log(`  logical_asset_ids=${logicalAssetIdList.length}`);
   console.log(`  legacy_asset_refs=${legacyAssetRefs.length}`);
-  console.log(`  failures=${failures}`);
+  console.log(`  failures=${failuresRef.count}`);
   for (const issue of issues.slice(0, 30)) {
     console.log(`  issue: ${issue}`);
   }
@@ -322,7 +454,7 @@ async function main() {
     console.log(`  issue: ... (${issues.length - 30} more)`);
   }
 
-  process.exit(failures > 0 ? 1 : 0);
+  process.exit(failuresRef.count > 0 ? 1 : 0);
 }
 
 main().catch((error) => {

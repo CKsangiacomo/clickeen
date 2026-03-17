@@ -475,7 +475,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
   echo "[dev-up] Starting DevStudio (5173)"
   (
     cd "$ROOT_DIR/admin"
-    start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=product CK_INTERNAL_SERVICE_JWT="$CK_INTERNAL_SERVICE_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" pnpm dev
+    start_detached "$LOG_DIR/devstudio.dev.log" env CI=1 PORT=5173 CK_DEV_PROFILE=product CK_INTERNAL_SERVICE_JWT="$CK_INTERNAL_SERVICE_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" pnpm dev
     DEVSTUDIO_PID="$STARTED_PID"
     echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
     register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"

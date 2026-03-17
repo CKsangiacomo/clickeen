@@ -143,10 +143,9 @@ These are valid only for explicit DevStudio local tool routes.
 They must not be treated as product identity or account membership on product/account paths.
 
 Source-profile lane note:
-- `bash scripts/dev-up.sh --source` is boot-only
-- use `pnpm dev:seed:platform` to seed local DevStudio-visible platform state explicitly
-- use `pnpm dev:verify:platform` to verify the DevStudio/Bob platform lane explicitly
-- do not hide local product-state repair inside boot
+- `bash scripts/dev-up.sh --source` starts the full local stack, seeds required DevStudio-visible platform state, and verifies the DevStudio/Bob localhost route lane before finishing
+- use `pnpm dev:seed:platform` and `pnpm dev:verify:platform` only when you want to rerun those steps explicitly
+- do not reintroduce cloud-derived or blob-only repair logic into boot
 
 ## Troubleshooting
 

@@ -85,8 +85,8 @@ Local dev:
   - `GET /assets/integrity/:accountId` (account mirror integrity snapshot)
   - `GET /assets/integrity/:accountId/:assetId` (per-asset integrity snapshot)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
-- `scripts/dev-up.sh --source` starts the local Tokyo dev server + Tokyo-worker, builds Dieter + i18n, and runs Prague l10n verify on startup. It does not repair local product state.
-- Explicit local platform-state commands:
+- `scripts/dev-up.sh --source` starts the local Tokyo dev server + Tokyo-worker, builds Dieter + i18n, seeds required local platform state through the canonical seed scripts, and verifies the DevStudio/Bob localhost lane before completion.
+- Explicit rerun commands:
   - `pnpm dev:seed:platform`
   - `pnpm dev:verify:platform`
 - Account asset state is manifest-backed product truth. It must not be “repaired” by boot scripts with blob-only sync logic.

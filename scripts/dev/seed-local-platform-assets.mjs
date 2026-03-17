@@ -25,7 +25,7 @@ function printUsage() {
   console.log(`Usage: node scripts/dev/seed-local-platform-assets.mjs [options]
 
 Seeds local Tokyo asset state for DevStudio-visible platform rows.
-This is explicit local data seeding. It is not part of dev-up.
+This command can be run explicitly, and source-profile dev-up also invokes it.
 
 Options:
   --local-base <url>      Local Tokyo base URL (default: ${DEFAULT_LOCAL_BASE})

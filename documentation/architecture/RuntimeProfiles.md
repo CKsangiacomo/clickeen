@@ -21,11 +21,14 @@
 - Uses local Tokyo default: `http://localhost:4000`.
 - DevStudio should be opened with source params:
   - `/#/tools/dev-widget-workspace?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`
-- `bash scripts/dev-up.sh --source` is boot-only. It does not seed or repair local product state.
-- Explicit local platform-state commands:
+- `bash scripts/dev-up.sh --source` is one-command local boot:
+  - starts the full stack
+  - seeds required DevStudio-visible local platform state
+  - verifies the DevStudio/Bob localhost route lane before finishing
+- Explicit rerun commands remain available:
   - `pnpm dev:seed:platform`
   - `pnpm dev:verify:platform`
-- If the local host lane needs DevStudio-visible snapshots or asset manifests/blobs, seed them explicitly. Do not hide product-state mutation inside boot.
+- Source boot may seed deterministic local platform state, but it must do so through the canonical local seed scripts. Do not reintroduce ad hoc repair/sync logic into boot.
 - Source-profile-only file mutation remains explicit:
   - `Update Theme` writes `tokyo/configs/themes.json`
 
