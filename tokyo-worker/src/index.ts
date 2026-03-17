@@ -5,6 +5,7 @@ import {
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
   handleListAccountAssetMetadata,
+  handleResolveAccountAssetMetadata,
   handleUploadAccountAsset,
   roleRank,
   type MemberRole,
@@ -583,6 +584,15 @@ export default {
         return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
       }
 
+      const accountAssetsResolveMatch = pathname.match(/^\/assets\/account\/([0-9a-f-]{36})\/resolve$/i);
+      if (accountAssetsResolveMatch) {
+        const accountId = decodeURIComponent(accountAssetsResolveMatch[1] || '');
+        if (req.method === 'POST') {
+          return withCors(await handleResolveAccountAssetMetadata(req, env, accountId));
+        }
+        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+      }
+
       const accountAssetVersion = parseCanonicalAssetRef(pathname);
       if (accountAssetVersion) {
         if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -674,7 +684,7 @@ export default {
       const l10nOverlayMatch = pathname.match(
         /^\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/,
       );
-      if (l10nOverlayMatch) {
+      if (l10nOverlayMatch && (req.method === 'POST' || req.method === 'DELETE')) {
         const publicId = normalizePublicId(decodeURIComponent(l10nOverlayMatch[1]));
         const layerRaw = decodeURIComponent(l10nOverlayMatch[2]);
         const layer =
@@ -700,11 +710,9 @@ export default {
           if (authErr) return withCors(authErr);
           return withCors(await handleUpsertL10nOverlay(req, env, publicId, layer, layerKey));
         }
-        if (req.method === 'DELETE') {
-          const authErr = await authorizeL10nAuthoringRequest({ req, env, accountId });
-          if (authErr) return withCors(authErr);
-          return withCors(await handleDeleteL10nOverlay(req, env, publicId, layer, layerKey));
-        }
+        const authErr = await authorizeL10nAuthoringRequest({ req, env, accountId });
+        if (authErr) return withCors(authErr);
+        return withCors(await handleDeleteL10nOverlay(req, env, publicId, layer, layerKey));
       }
 
       if (pathname.startsWith('/l10n/')) {

@@ -9,6 +9,7 @@ import {
   writeTokyoBaseSnapshot,
   type LocalizationOp,
 } from './account-l10n';
+import { materializeRuntimeConfigMedia } from './account-asset-runtime';
 import { resolveBerlinBaseUrl } from './env/berlin';
 import {
   resolveSanfranciscoBaseUrl,
@@ -430,6 +431,12 @@ export async function runAccountSaveAftermath(args: {
     locales: desiredLocales,
     baseFingerprint: result.baseFingerprint,
   });
+  const runtimeConfigPack = await materializeRuntimeConfigMedia({
+    tokyoBaseUrl,
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    config: result.saved.config,
+  });
   const configFp = await writeTokyoConfigPack({
     tokyoBaseUrl,
     accessToken: args.accessToken,
@@ -437,7 +444,7 @@ export async function runAccountSaveAftermath(args: {
     publicId: args.publicId,
     accountCapsule: args.accountCapsule,
     widgetType: result.widgetType,
-    configPack: result.saved.config,
+    configPack: runtimeConfigPack,
   });
 
   const localePolicy = buildLiveLocalePolicy({

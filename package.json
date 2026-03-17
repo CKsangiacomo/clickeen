@@ -45,7 +45,10 @@
     "prague:l10n:verify": "node scripts/prague-l10n/verify.mjs",
     "build:prague:global": "pnpm prague:l10n:translate && pnpm prague:l10n:verify && pnpm build:prague",
     "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs",
-    "prague:sync": "node scripts/prague-sync.mjs --publish --local"
+    "prague:sync": "node scripts/prague-sync.mjs --publish --local",
+    "dev:seed:platform": "node scripts/dev/seed-local-platform-state.mjs",
+    "dev:seed:platform:assets": "node scripts/dev/seed-local-platform-assets.mjs",
+    "dev:verify:platform": "node scripts/dev/verify-local-platform-state.mjs"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

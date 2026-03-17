@@ -146,6 +146,148 @@ export function toCanonicalAssetVersionPath(versionKey) {
   return `/assets/v/${encodeURIComponent(key)}`;
 }
 
+function isRecord(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeResolvedAssetSource(entry) {
+  if (!isRecord(entry)) return null;
+  const directUrl = typeof entry.url === 'string' ? entry.url.trim() : '';
+  if (directUrl) {
+    const parsed = parseCanonicalAssetRef(directUrl);
+    if (parsed && parsed.kind === 'version') {
+      return {
+        assetId: parsed.assetId,
+        assetRef: parsed.versionKey,
+        url: parsed.pathname,
+      };
+    }
+  }
+
+  const assetRef = typeof entry.assetRef === 'string' ? entry.assetRef.trim() : '';
+  const canonicalPath = assetRef ? toCanonicalAssetVersionPath(assetRef) : null;
+  const parsed = canonicalPath ? parseCanonicalAssetRef(canonicalPath) : null;
+  if (!parsed || parsed.kind !== 'version') return null;
+  return {
+    assetId: parsed.assetId,
+    assetRef: parsed.versionKey,
+    url: directUrl || parsed.pathname,
+  };
+}
+
+function readResolvedAssetById(resolvedAssets, assetIdRaw) {
+  const assetId = typeof assetIdRaw === 'string' ? assetIdRaw.trim() : '';
+  if (!assetId || !isUuid(assetId)) return null;
+  if (resolvedAssets instanceof Map) {
+    return normalizeResolvedAssetSource(resolvedAssets.get(assetId));
+  }
+  if (isRecord(resolvedAssets)) {
+    return normalizeResolvedAssetSource(resolvedAssets[assetId]);
+  }
+  return null;
+}
+
+function collectMaterializedFillAssetIds(node, out) {
+  if (!isRecord(node)) return;
+  const type = typeof node.type === 'string' ? node.type.trim().toLowerCase() : '';
+
+  if (type === 'image' && isRecord(node.image)) {
+    const assetId = typeof node.image.assetId === 'string' ? node.image.assetId.trim() : '';
+    if (isUuid(assetId)) out.add(assetId);
+  }
+
+  if (type === 'video' && isRecord(node.video)) {
+    const assetId = typeof node.video.assetId === 'string' ? node.video.assetId.trim() : '';
+    const posterAssetId =
+      typeof node.video.posterAssetId === 'string' ? node.video.posterAssetId.trim() : '';
+    if (isUuid(assetId)) out.add(assetId);
+    if (isUuid(posterAssetId)) out.add(posterAssetId);
+  }
+}
+
+function collectMaterializedLogoAssetIds(node, out) {
+  if (!isRecord(node)) return;
+  if (!Object.prototype.hasOwnProperty.call(node, 'logoFill')) return;
+  if (!isRecord(node.asset)) return;
+  const assetId = typeof node.asset.assetId === 'string' ? node.asset.assetId.trim() : '';
+  if (isUuid(assetId)) out.add(assetId);
+}
+
+export function collectConfigMediaAssetIds(config) {
+  const assetIds = new Set();
+
+  const visit = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+      return;
+    }
+
+    collectMaterializedFillAssetIds(node, assetIds);
+    collectMaterializedLogoAssetIds(node, assetIds);
+    for (const value of Object.values(node)) {
+      visit(value);
+    }
+  };
+
+  visit(config);
+  return Array.from(assetIds);
+}
+
+function materializeImageFill(fill, resolvedAssets) {
+  if (!isRecord(fill.image)) return fill;
+  const nextImage = { ...fill.image };
+  const resolvedById = readResolvedAssetById(resolvedAssets, nextImage.assetId);
+  if (resolvedById?.url) nextImage.src = resolvedById.url;
+  return { ...fill, image: nextImage };
+}
+
+function materializeVideoFill(fill, resolvedAssets) {
+  if (!isRecord(fill.video)) return fill;
+  const nextVideo = { ...fill.video };
+  const resolvedById = readResolvedAssetById(resolvedAssets, nextVideo.assetId);
+  const resolvedPosterById = readResolvedAssetById(resolvedAssets, nextVideo.posterAssetId);
+  if (resolvedById?.url) nextVideo.src = resolvedById.url;
+  if (resolvedPosterById?.url) nextVideo.poster = resolvedPosterById.url;
+  return { ...fill, video: nextVideo };
+}
+
+function materializeLogoAssetNode(node, resolvedAssets) {
+  if (!isRecord(node.asset)) return node;
+  const resolvedById = readResolvedAssetById(resolvedAssets, node.asset.assetId);
+  if (!resolvedById?.url) return node;
+  const safeUrl = String(resolvedById.url).replace(/"/g, '%22');
+  return {
+    ...node,
+    logoFill: `url("${safeUrl}") center / contain no-repeat`,
+  };
+}
+
+export function materializeConfigMedia(config, resolvedAssets) {
+  const visit = (node) => {
+    if (!node || typeof node !== 'object') return node;
+    if (Array.isArray(node)) return node.map(visit);
+    const next = {};
+    for (const [key, value] of Object.entries(node)) {
+      next[key] = visit(value);
+    }
+
+    const type = typeof next.type === 'string' ? next.type.trim().toLowerCase() : '';
+    if (type === 'image') {
+      return materializeImageFill(next, resolvedAssets);
+    }
+    if (type === 'video') {
+      return materializeVideoFill(next, resolvedAssets);
+    }
+    if (Object.prototype.hasOwnProperty.call(next, 'logoFill')) {
+      return materializeLogoAssetNode(next, resolvedAssets);
+    }
+    return next;
+  };
+
+  return visit(config);
+}
+
 function containsNonPersistableUrl(value) {
   return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
 }
@@ -229,7 +371,7 @@ export function configAssetUrlContractIssues(config, expectedAccountId) {
     if (pathname.startsWith('/arsenale/')) {
       issues.push({
         path,
-        message: `Legacy asset URL path is not supported: ${candidate}. Use asset.ref only.`,
+        message: `Legacy asset URL path is not supported: ${candidate}. Use assetId in authoring config.`,
       });
       return;
     }
@@ -238,13 +380,13 @@ export function configAssetUrlContractIssues(config, expectedAccountId) {
       if (isLogoFillFieldPath(path)) {
         issues.push({
           path,
-          message: `Persisted logoFill asset URL is not supported at ${path}. Use asset.ref only.`,
+          message: `Persisted logoFill asset URL is not supported at ${path}. Use assetId in authoring config.`,
         });
         return;
       }
       issues.push({
         path,
-        message: `Persisted asset URL path is not supported at ${path}. Use asset.ref only.`,
+        message: `Persisted asset URL path is not supported at ${path}. Use assetId in authoring config.`,
       });
       return;
     }
@@ -306,7 +448,7 @@ export function configAssetUrlContractIssues(config, expectedAccountId) {
       if (isPersistedMediaUrlFieldPath(path)) {
         issues.push({
           path,
-          message: `Persisted media URL fields are not supported at ${path}. Use asset.ref only.`,
+          message: `Persisted media URL fields are not supported at ${path}. Use assetId in authoring config.`,
         });
         return;
       }

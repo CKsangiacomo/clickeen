@@ -83,6 +83,14 @@ export function ToolDrawer() {
   const ownerAccountId = session.meta?.ownerAccountId ? String(session.meta.ownerAccountId) : '';
   const publicId = session.meta?.publicId ? String(session.meta.publicId) : '';
   const widgetType = session.meta?.widgetname ? String(session.meta.widgetname) : '';
+  const assetApiBaseFromMeta =
+    session.meta?.assetApiBase && String(session.meta.assetApiBase).trim()
+      ? String(session.meta.assetApiBase).trim()
+      : '';
+  const assetUploadEndpointFromMeta =
+    session.meta?.assetUploadEndpoint && String(session.meta.assetUploadEndpoint).trim()
+      ? String(session.meta.assetUploadEndpoint).trim()
+      : '';
 
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
@@ -115,8 +123,8 @@ export function ToolDrawer() {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
     const dataset = root.dataset as any;
-    const assetApiBase = readQueryParam('assetApiBase');
-    const assetUploadEndpoint = readQueryParam('assetUploadEndpoint');
+    const assetApiBase = assetApiBaseFromMeta || readQueryParam('assetApiBase');
+    const assetUploadEndpoint = assetUploadEndpointFromMeta || readQueryParam('assetUploadEndpoint');
     if (accountId) dataset.ckAccountId = accountId;
     else delete dataset.ckAccountId;
     if (ownerAccountId) dataset.ckOwnerAccountId = ownerAccountId;
@@ -129,7 +137,7 @@ export function ToolDrawer() {
     else delete dataset.ckAssetApiBase;
     if (assetUploadEndpoint) dataset.ckAssetUploadEndpoint = assetUploadEndpoint;
     else delete dataset.ckAssetUploadEndpoint;
-  }, [accountId, ownerAccountId, publicId, widgetType]);
+  }, [accountId, ownerAccountId, publicId, widgetType, assetApiBaseFromMeta, assetUploadEndpointFromMeta]);
 
   const panelsById = useMemo(() => {
     const map: Record<string, CompiledPanel> = {};

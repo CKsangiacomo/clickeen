@@ -646,6 +646,154 @@ var Dieter = (() => {
     return `/assets/v/${encodeURIComponent(key)}`;
   }
 
+  // components/shared/assetResolve.ts
+  function readDocumentDatasetValue(key) {
+    if (typeof document === "undefined") return "";
+    const value = document.documentElement.dataset[key];
+    return typeof value === "string" ? value.trim() : "";
+  }
+  function resolveAssetApiBase() {
+    return readDocumentDatasetValue("ckAssetApiBase").replace(/\/+$/, "");
+  }
+  function resolveEditorAssetAccountId() {
+    const accountId = readDocumentDatasetValue("ckOwnerAccountId");
+    return isUuid(accountId) ? accountId : null;
+  }
+  function normalizeResolvedEditorAssetChoice(raw) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const asset = raw;
+    const assetId = String(asset.assetId || "").trim();
+    const assetRef = String(asset.assetRef || "").trim();
+    const url = String(asset.url || "").trim();
+    if (!isUuid(assetId) || !assetRef || !url) return null;
+    return { assetId, assetRef, url };
+  }
+  async function resolveEditorAssetChoices(assetIdsRaw) {
+    const accountId = resolveEditorAssetAccountId();
+    if (!accountId) {
+      throw new Error("No account context available.");
+    }
+    const seen = /* @__PURE__ */ new Set();
+    const assetIds = assetIdsRaw.map((entry) => String(entry || "").trim()).filter((assetId) => {
+      if (!isUuid(assetId) || seen.has(assetId)) return false;
+      seen.add(assetId);
+      return true;
+    });
+    if (!assetIds.length) return /* @__PURE__ */ new Map();
+    const assetApiBase = resolveAssetApiBase();
+    const endpoint = assetApiBase ? `${assetApiBase}/${encodeURIComponent(accountId)}/resolve` : `/api/assets/${encodeURIComponent(accountId)}/resolve`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({ assetIds })
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const reasonKey = String(payload?.error?.reasonKey || "").trim();
+      throw new Error(reasonKey || `HTTP_${response.status}`);
+    }
+    const assets = Array.isArray(payload?.assets) ? payload.assets : [];
+    const resolved = /* @__PURE__ */ new Map();
+    for (const asset of assets) {
+      const normalized = normalizeResolvedEditorAssetChoice(asset);
+      if (!normalized) continue;
+      resolved.set(normalized.assetId, normalized);
+    }
+    return resolved;
+  }
+
+  // components/dropdown-fill/asset-picker-data.ts
+  function readFillDocumentDatasetValue(key) {
+    if (typeof document === "undefined") return "";
+    const value = document.documentElement.dataset[key];
+    return typeof value === "string" ? value.trim() : "";
+  }
+  function resolveAssetApiBase2() {
+    return readFillDocumentDatasetValue("ckAssetApiBase").replace(/\/+$/, "");
+  }
+  function resolveImageAssetPickerContext() {
+    const accountId = readFillDocumentDatasetValue("ckOwnerAccountId");
+    if (!isUuid(accountId)) return null;
+    return {
+      accountId
+    };
+  }
+  function formatAssetSizeLabel(sizeBytes) {
+    const safe = Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0;
+    if (safe < 1024) return `${safe} B`;
+    if (safe < 1024 * 1024) return `${Math.round(safe / 1024)} KB`;
+    return `${(safe / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  function normalizeMediaAssetChoice(asset, kind) {
+    const assetId = String(asset.assetId || "").trim();
+    if (!isUuid(assetId)) return null;
+    const assetRef = String(asset.assetRef || "").trim();
+    if (!assetRef.startsWith("assets/versions/")) return null;
+    const assetType = String(asset.assetType || "").trim().toLowerCase();
+    if (kind === "image") {
+      if (assetType !== "image" && assetType !== "vector") return null;
+    } else if (kind === "video" && assetType !== "video") {
+      return null;
+    }
+    const contentType = String(asset.contentType || "").trim().toLowerCase();
+    const filename = String(asset.filename || "").trim();
+    const sizeBytes = Number(asset.sizeBytes);
+    const url = String(asset.url || "").trim();
+    if (!url || !url.startsWith("/") && !/^https?:\/\//i.test(url)) return null;
+    return {
+      assetId,
+      assetRef,
+      filename,
+      assetType,
+      contentType,
+      sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
+      url
+    };
+  }
+  async function fetchMediaAssetChoices(kind) {
+    const context = resolveImageAssetPickerContext();
+    if (!context) {
+      throw new Error("No account context available.");
+    }
+    const params = new URLSearchParams({
+      view: "all",
+      limit: "200"
+    });
+    const assetApiBase = resolveAssetApiBase2();
+    const endpoint = assetApiBase ? `${assetApiBase}/${encodeURIComponent(context.accountId)}?${params.toString()}` : `/api/assets/${encodeURIComponent(context.accountId)}?${params.toString()}`;
+    const response = await fetch(endpoint, {
+      cache: "no-store"
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const reasonKey = String(payload?.error?.reasonKey || "").trim();
+      throw new Error(reasonKey || `HTTP_${response.status}`);
+    }
+    const assets = Array.isArray(payload?.assets) ? payload?.assets : [];
+    return assets.map((asset) => normalizeMediaAssetChoice(asset, kind)).filter((asset) => Boolean(asset));
+  }
+  function fetchImageAssetChoices() {
+    return fetchMediaAssetChoices("image");
+  }
+  function fetchVideoAssetChoices() {
+    return fetchMediaAssetChoices("video");
+  }
+  async function resolveMediaAssetChoices(assetIdsRaw) {
+    return resolveEditorAssetChoices(assetIdsRaw);
+  }
+  function toAssetPickerOverlayItems(assets) {
+    return assets.map((asset) => ({
+      assetId: asset.assetId,
+      normalizedFilename: asset.filename,
+      contentType: asset.assetType || asset.contentType,
+      sizeLabel: formatAssetSizeLabel(asset.sizeBytes),
+      url: asset.url
+    }));
+  }
+
   // components/dropdown-fill/fill-types.ts
   var MODE_ORDER = ["color", "gradient", "image", "video"];
   var DEFAULT_GRADIENT = {
@@ -921,44 +1069,22 @@ var Dieter = (() => {
   }
 
   // components/dropdown-fill/fill-parser.ts
-  function resolveAssetBaseHref() {
-    if (typeof window === "undefined") return "http://localhost/";
-    return window.location.href || "http://localhost/";
-  }
-  function assetRefToPath(refRaw) {
-    const ref = String(refRaw || "").trim();
-    const canonical = toCanonicalAssetVersionPath(ref);
-    return canonical || null;
-  }
-  function assetRefToUrl(refRaw) {
-    const path = assetRefToPath(refRaw);
-    if (!path) return null;
-    try {
-      return new URL(path, resolveAssetBaseHref()).toString();
-    } catch {
-      return path;
-    }
-  }
-  function assetRefFromUrl(raw) {
-    const parsed = parseCanonicalAssetRef(raw);
-    if (!parsed || parsed.kind !== "version") return null;
-    return parsed.versionKey;
+  function normalizeAssetId(raw) {
+    const value = typeof raw === "string" ? raw.trim() : "";
+    return isUuid(value) ? value : "";
   }
   function normalizeImageValue(raw) {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
       return { fit: "cover", position: "center", repeat: "no-repeat" };
     }
     const value = raw;
-    const assetRefDirect = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.ref || "").trim() : "";
-    const assetRefFromCanonicalUrl = assetRefFromUrl(assetRefDirect) ?? "";
-    const assetRefCandidate = assetRefToPath(assetRefDirect) ? assetRefDirect : assetRefFromCanonicalUrl;
-    const assetRef = assetRefToPath(assetRefCandidate) ? assetRefCandidate : "";
+    const assetId = normalizeAssetId(value.assetId);
     const name = typeof value.name === "string" ? value.name.trim() : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
     const repeat = typeof value.repeat === "string" && value.repeat.trim() ? value.repeat.trim() : "no-repeat";
     return {
-      ...assetRef ? { asset: { ref: assetRef } } : {},
+      ...assetId ? { assetId } : {},
       ...name ? { name } : {},
       fit,
       position,
@@ -970,14 +1096,8 @@ var Dieter = (() => {
       return { fit: "cover", position: "center", loop: true, muted: true, autoplay: true };
     }
     const value = raw;
-    const assetRefDirect = value.asset && typeof value.asset === "object" && !Array.isArray(value.asset) ? String(value.asset.ref || "").trim() : "";
-    const posterRefDirect = value.poster && typeof value.poster === "object" && !Array.isArray(value.poster) ? String(value.poster.ref || "").trim() : "";
-    const assetRefFromCanonicalUrl = assetRefFromUrl(assetRefDirect || "") ?? "";
-    const posterRefFromCanonicalUrl = assetRefFromUrl(posterRefDirect || "") ?? "";
-    const assetRefCandidate = assetRefToPath(assetRefDirect) ? assetRefDirect : assetRefFromCanonicalUrl;
-    const posterRefCandidate = assetRefToPath(posterRefDirect) ? posterRefDirect : posterRefFromCanonicalUrl;
-    const assetRef = assetRefToPath(assetRefCandidate) ? assetRefCandidate : "";
-    const posterRef = assetRefToPath(posterRefCandidate) ? posterRefCandidate : "";
+    const assetId = normalizeAssetId(value.assetId);
+    const posterAssetId = normalizeAssetId(value.posterAssetId);
     const name = typeof value.name === "string" ? value.name.trim() : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
@@ -985,9 +1105,9 @@ var Dieter = (() => {
     const muted = typeof value.muted === "boolean" ? value.muted : true;
     const autoplay = typeof value.autoplay === "boolean" ? value.autoplay : true;
     return {
-      ...assetRef ? { asset: { ref: assetRef } } : {},
+      ...assetId ? { assetId } : {},
+      ...posterAssetId ? { posterAssetId } : {},
       ...name ? { name } : {},
-      ...posterRef ? { poster: { ref: posterRef } } : {},
       fit,
       position,
       loop,
@@ -1077,15 +1197,17 @@ var Dieter = (() => {
   function readVideoName(fill) {
     return typeof fill.video?.name === "string" && fill.video.name.trim() ? fill.video.name.trim() : null;
   }
-  function readImageSrc(fill) {
-    const ref = String(fill.image?.asset?.ref || "").trim();
-    if (!ref) return null;
-    return assetRefToUrl(ref);
+  function readImageAssetId(fill) {
+    const assetId = typeof fill.image?.assetId === "string" ? fill.image.assetId.trim() : "";
+    return isUuid(assetId) ? assetId : null;
   }
-  function readVideoSrc(fill) {
-    const ref = String(fill.video?.asset?.ref || "").trim();
-    if (!ref) return null;
-    return assetRefToUrl(ref);
+  function readVideoAssetId(fill) {
+    const assetId = typeof fill.video?.assetId === "string" ? fill.video.assetId.trim() : "";
+    return isUuid(assetId) ? assetId : null;
+  }
+  function readVideoPosterAssetId(fill) {
+    const assetId = typeof fill.video?.posterAssetId === "string" ? fill.video.posterAssetId.trim() : "";
+    return isUuid(assetId) ? assetId : null;
   }
 
   // components/dropdown-fill/dropdown-fill-gradient.ts
@@ -1700,7 +1822,11 @@ var Dieter = (() => {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
     const payloadRecord = payload;
+    const assetId = typeof payloadRecord.assetId === "string" ? payloadRecord.assetId.trim() : "";
     const assetRef = normalizeAssetRef(payloadRecord);
+    if (!assetId) {
+      throw new Error("coreui.errors.assets.uploadFailed");
+    }
     if (!assetRef) {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
@@ -1712,6 +1838,7 @@ var Dieter = (() => {
     const filename = typeof payloadRecord.filename === "string" ? payloadRecord.filename.trim() : "";
     const createdAt = typeof payloadRecord.createdAt === "string" ? payloadRecord.createdAt.trim() : "";
     return {
+      assetId,
       assetRef,
       url,
       assetType: assetType || "other",
@@ -1720,89 +1847,6 @@ var Dieter = (() => {
       filename: filename || file.name || "upload.bin",
       createdAt: createdAt || (/* @__PURE__ */ new Date()).toISOString()
     };
-  }
-
-  // components/dropdown-fill/asset-picker-data.ts
-  function readFillDocumentDatasetValue(key) {
-    if (typeof document === "undefined") return "";
-    const value = document.documentElement.dataset[key];
-    return typeof value === "string" ? value.trim() : "";
-  }
-  function resolveAssetApiBase() {
-    return readFillDocumentDatasetValue("ckAssetApiBase").replace(/\/+$/, "");
-  }
-  function resolveImageAssetPickerContext() {
-    const accountId = readFillDocumentDatasetValue("ckOwnerAccountId");
-    if (!isUuid(accountId)) return null;
-    return {
-      accountId
-    };
-  }
-  function formatAssetSizeLabel(sizeBytes) {
-    const safe = Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0;
-    if (safe < 1024) return `${safe} B`;
-    if (safe < 1024 * 1024) return `${Math.round(safe / 1024)} KB`;
-    return `${(safe / (1024 * 1024)).toFixed(1)} MB`;
-  }
-  async function fetchMediaAssetChoices(kind) {
-    const context = resolveImageAssetPickerContext();
-    if (!context) {
-      throw new Error("No account context available.");
-    }
-    const params = new URLSearchParams({
-      view: "all",
-      limit: "200"
-    });
-    const assetApiBase = resolveAssetApiBase();
-    const endpoint = assetApiBase ? `${assetApiBase}/${encodeURIComponent(context.accountId)}?${params.toString()}` : `/api/assets/${encodeURIComponent(context.accountId)}?${params.toString()}`;
-    const response = await fetch(endpoint, {
-      cache: "no-store"
-    });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) {
-      const reasonKey = String(payload?.error?.reasonKey || "").trim();
-      throw new Error(reasonKey || `HTTP_${response.status}`);
-    }
-    const assets = Array.isArray(payload?.assets) ? payload?.assets : [];
-    return assets.map((asset) => {
-      const assetRef = String(asset.assetRef || "").trim();
-      if (!assetRef.startsWith("assets/versions/")) return null;
-      const assetType = String(asset.assetType || "").trim().toLowerCase();
-      if (kind === "image") {
-        if (assetType !== "image" && assetType !== "vector") return null;
-      } else if (assetType !== "video") {
-        return null;
-      }
-      const contentType = String(asset.contentType || "").trim().toLowerCase();
-      const filename = String(asset.filename || "").trim();
-      if (!filename) return null;
-      const sizeBytes = Number(asset.sizeBytes);
-      const url = String(asset.url || "").trim();
-      if (!url || !url.startsWith("/") && !/^https?:\/\//i.test(url)) return null;
-      return {
-        assetRef,
-        filename,
-        assetType,
-        contentType,
-        sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
-        url
-      };
-    }).filter((asset) => Boolean(asset));
-  }
-  function fetchImageAssetChoices() {
-    return fetchMediaAssetChoices("image");
-  }
-  function fetchVideoAssetChoices() {
-    return fetchMediaAssetChoices("video");
-  }
-  function toAssetPickerOverlayItems(assets) {
-    return assets.map((asset) => ({
-      assetId: asset.assetRef,
-      normalizedFilename: asset.filename,
-      contentType: asset.assetType || asset.contentType,
-      sizeLabel: formatAssetSizeLabel(asset.sizeBytes),
-      url: asset.url
-    }));
   }
 
   // components/dropdown-fill/media-controller.ts
@@ -1824,10 +1868,6 @@ var Dieter = (() => {
     if (typeof window === "undefined") return;
     if (!window.parent || window.parent === window) return;
     window.parent.postMessage({ type: "bob:asset-entitlement-denied", reasonKey }, "*");
-  }
-  function resolveAssetRef(src) {
-    if (!src) return null;
-    return assetRefFromUrl(src);
   }
   function setFillUploadingState(state, uploading) {
     state.root.dataset.uploading = uploading ? "true" : "false";
@@ -1964,18 +2004,17 @@ var Dieter = (() => {
     }
     state.imageSrc = src;
     if (!src) {
-      state.imageName = null;
       state.imageUnavailable = false;
       state.imageAvailabilityRequestId += 1;
     } else if (!sameAssetReferenceUrl(src, previousSrc ?? "")) {
       state.imageUnavailable = false;
     }
     if (opts.commit) {
-      const ref = resolveAssetRef(src);
-      const fill = ref ? {
+      const assetId = String(state.imageAssetId || "").trim();
+      const fill = assetId ? {
         type: "image",
         image: {
-          asset: { ref },
+          assetId,
           ...state.imageName ? { name: state.imageName } : {},
           fit: "cover",
           position: "center",
@@ -1999,18 +2038,18 @@ var Dieter = (() => {
     }
     state.videoSrc = src;
     if (!src) {
-      state.videoName = null;
       state.videoUnavailable = false;
     } else if (!sameAssetReferenceUrl(src, previousSrc ?? "")) {
       state.videoUnavailable = false;
     }
     if (opts.commit) {
-      const ref = resolveAssetRef(src);
-      const fill = ref ? {
+      const assetId = String(state.videoAssetId || "").trim();
+      const fill = assetId ? {
         type: "video",
         video: {
-          asset: { ref },
+          assetId,
           ...state.videoName ? { name: state.videoName } : {},
+          ...state.videoPosterAssetId ? { posterAssetId: state.videoPosterAssetId } : {},
           fit: "cover",
           position: "center",
           loop: true,
@@ -2054,6 +2093,8 @@ var Dieter = (() => {
           state.imageObjectUrl = null;
         }
         state.assetPickerOverlay?.close();
+        state.imageAssetId = null;
+        state.imageName = null;
         setImageSrc(state, null, { commit: true }, deps);
       });
     }
@@ -2062,6 +2103,7 @@ var Dieter = (() => {
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
         const previousSrc = state.imageSrc;
+        const previousAssetId = state.imageAssetId;
         const previousName = state.imageName;
         state.imageName = file.name || null;
         setFillUploadingState(state, true);
@@ -2075,26 +2117,14 @@ var Dieter = (() => {
             file,
             source: "api"
           });
-          setImageSrc(state, uploaded.url, { commit: false }, deps);
-          deps.setInputValue(
-            state,
-            {
-              type: "image",
-              image: {
-                asset: { ref: uploaded.assetRef },
-                ...state.imageName ? { name: state.imageName } : {},
-                fit: "cover",
-                position: "center",
-                repeat: "no-repeat"
-              }
-            },
-            true
-          );
+          state.imageAssetId = uploaded.assetId;
+          setImageSrc(state, uploaded.url, { commit: true }, deps);
         } catch (error) {
           const message = error instanceof Error ? error.message : "";
           if (isAssetEntitlementReasonKey(message)) {
             dispatchAssetEntitlementGate(state.root, message);
           }
+          state.imageAssetId = previousAssetId;
           state.imageName = previousName;
           setImageSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
           if (!previousSrc) {
@@ -2151,6 +2181,9 @@ var Dieter = (() => {
           state.videoObjectUrl = null;
         }
         state.assetPickerOverlay?.close();
+        state.videoAssetId = null;
+        state.videoPosterAssetId = null;
+        state.videoName = null;
         setVideoSrc(state, null, { commit: true }, deps);
       });
     }
@@ -2159,6 +2192,8 @@ var Dieter = (() => {
         const file = videoFileInput.files && videoFileInput.files[0];
         if (!file) return;
         const previousSrc = state.videoSrc;
+        const previousAssetId = state.videoAssetId;
+        const previousPosterAssetId = state.videoPosterAssetId;
         const previousName = state.videoName;
         state.videoName = file.name || null;
         setFillUploadingState(state, true);
@@ -2172,28 +2207,16 @@ var Dieter = (() => {
             file,
             source: "api"
           });
-          setVideoSrc(state, uploaded.url, { commit: false }, deps);
-          deps.setInputValue(
-            state,
-            {
-              type: "video",
-              video: {
-                asset: { ref: uploaded.assetRef },
-                ...state.videoName ? { name: state.videoName } : {},
-                fit: "cover",
-                position: "center",
-                loop: true,
-                muted: true,
-                autoplay: true
-              }
-            },
-            true
-          );
+          state.videoAssetId = uploaded.assetId;
+          state.videoPosterAssetId = null;
+          setVideoSrc(state, uploaded.url, { commit: true }, deps);
         } catch (error) {
           const message = error instanceof Error ? error.message : "";
           if (isAssetEntitlementReasonKey(message)) {
             dispatchAssetEntitlementGate(state.root, message);
           }
+          state.videoAssetId = previousAssetId;
+          state.videoPosterAssetId = previousPosterAssetId;
           state.videoName = previousName;
           setVideoSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
           if (!previousSrc) {
@@ -2308,10 +2331,13 @@ var Dieter = (() => {
         const current = states.get(root);
         if (!current) return;
         if (current.assetPickerKind === "video") {
+          current.videoAssetId = item.assetId;
+          current.videoPosterAssetId = null;
           current.videoName = item.normalizedFilename;
           setVideoSrc2(current, item.url, { commit: true });
           return;
         }
+        current.imageAssetId = item.assetId;
         current.imageName = item.normalizedFilename;
         setImageSrc2(current, item.url, { commit: true });
       },
@@ -2390,10 +2416,12 @@ var Dieter = (() => {
       assetPickerOverlay,
       fileInput,
       imageSrc: null,
+      imageAssetId: null,
       imageName: null,
       imageObjectUrl: null,
       imageUnavailable: false,
       imageAvailabilityRequestId: 0,
+      imageResolveRequestId: 0,
       imageAssetPickerOpen: false,
       imageAssetPickerLoading: false,
       videoPanel,
@@ -2403,9 +2431,12 @@ var Dieter = (() => {
       videoRemoveButton,
       videoFileInput,
       videoSrc: null,
+      videoAssetId: null,
+      videoPosterAssetId: null,
       videoName: null,
       videoObjectUrl: null,
       videoUnavailable: false,
+      videoResolveRequestId: 0,
       assetPickerKind: "image",
       allowedModes,
       mode,
@@ -2522,6 +2553,32 @@ var Dieter = (() => {
   function setVideoSrc2(state, src, opts) {
     setVideoSrc(state, src, opts, mediaDeps());
   }
+  async function resolveImagePreviewFromAssetId(state, assetId) {
+    state.imageResolveRequestId += 1;
+    const requestId = state.imageResolveRequestId;
+    try {
+      const resolved = await resolveMediaAssetChoices([assetId]);
+      if (state.imageResolveRequestId !== requestId) return;
+      if (state.imageAssetId !== assetId) return;
+      const entry = resolved.get(assetId);
+      if (!entry?.url) return;
+      setImageSrc2(state, entry.url, { commit: false });
+    } catch {
+    }
+  }
+  async function resolveVideoPreviewFromAssetId(state, assetId) {
+    state.videoResolveRequestId += 1;
+    const requestId = state.videoResolveRequestId;
+    try {
+      const resolved = await resolveMediaAssetChoices([assetId]);
+      if (state.videoResolveRequestId !== requestId) return;
+      if (state.videoAssetId !== assetId) return;
+      const entry = resolved.get(assetId);
+      if (!entry?.url) return;
+      setVideoSrc2(state, entry.url, { commit: false });
+    } catch {
+    }
+  }
   function setInputValue(state, value, emit) {
     const json = JSON.stringify(value);
     state.internalWrite = true;
@@ -2606,10 +2663,17 @@ var Dieter = (() => {
     setMode(state, nextMode);
     if (fill.type === "none") {
       if (nextMode === "image") {
+        state.imageResolveRequestId += 1;
+        state.imageAssetId = null;
+        state.imageName = null;
         setImageSrc2(state, null, { commit: false });
         return;
       }
       if (nextMode === "video") {
+        state.videoResolveRequestId += 1;
+        state.videoAssetId = null;
+        state.videoPosterAssetId = null;
+        state.videoName = null;
         setVideoSrc2(state, null, { commit: false });
         return;
       }
@@ -2643,13 +2707,24 @@ var Dieter = (() => {
       return;
     }
     if (fill.type === "image") {
+      state.imageResolveRequestId += 1;
+      state.imageAssetId = readImageAssetId(fill);
       state.imageName = readImageName(fill);
-      setImageSrc2(state, readImageSrc(fill), { commit: false });
+      setImageSrc2(state, null, { commit: false });
+      if (state.imageAssetId) {
+        void resolveImagePreviewFromAssetId(state, state.imageAssetId);
+      }
       return;
     }
     if (fill.type === "video") {
+      state.videoResolveRequestId += 1;
+      state.videoAssetId = readVideoAssetId(fill);
+      state.videoPosterAssetId = readVideoPosterAssetId(fill);
       state.videoName = readVideoName(fill);
-      setVideoSrc2(state, readVideoSrc(fill), { commit: false });
+      setVideoSrc2(state, null, { commit: false });
+      if (state.videoAssetId) {
+        void resolveVideoPreviewFromAssetId(state, state.videoAssetId);
+      }
       return;
     }
   }

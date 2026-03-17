@@ -1,7 +1,12 @@
 import { isUuid } from '@clickeen/ck-contracts';
 import { type AssetPickerOverlayItem } from './asset-picker-overlay';
+import {
+  resolveEditorAssetChoices,
+  type ResolvedEditorAssetChoice,
+} from '../shared/assetResolve';
 
 export type MediaAssetChoice = {
+  assetId: string;
   assetRef: string;
   filename: string;
   assetType: string;
@@ -11,6 +16,8 @@ export type MediaAssetChoice = {
 };
 
 export type AssetPickerMediaKind = 'image' | 'video';
+
+export type ResolvedMediaAssetChoice = ResolvedEditorAssetChoice;
 
 function readFillDocumentDatasetValue(key: string): string {
   if (typeof document === 'undefined') return '';
@@ -35,6 +42,33 @@ export function formatAssetSizeLabel(sizeBytes: number): string {
   if (safe < 1024) return `${safe} B`;
   if (safe < 1024 * 1024) return `${Math.round(safe / 1024)} KB`;
   return `${(safe / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function normalizeMediaAssetChoice(asset: Record<string, unknown>, kind?: AssetPickerMediaKind): MediaAssetChoice | null {
+  const assetId = String(asset.assetId || '').trim();
+  if (!isUuid(assetId)) return null;
+  const assetRef = String(asset.assetRef || '').trim();
+  if (!assetRef.startsWith('assets/versions/')) return null;
+  const assetType = String(asset.assetType || '').trim().toLowerCase();
+  if (kind === 'image') {
+    if (assetType !== 'image' && assetType !== 'vector') return null;
+  } else if (kind === 'video' && assetType !== 'video') {
+    return null;
+  }
+  const contentType = String(asset.contentType || '').trim().toLowerCase();
+  const filename = String(asset.filename || '').trim();
+  const sizeBytes = Number(asset.sizeBytes);
+  const url = String(asset.url || '').trim();
+  if (!url || (!url.startsWith('/') && !/^https?:\/\//i.test(url))) return null;
+  return {
+    assetId,
+    assetRef,
+    filename,
+    assetType,
+    contentType,
+    sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
+    url,
+  } satisfies MediaAssetChoice;
 }
 
 async function fetchMediaAssetChoices(kind: AssetPickerMediaKind): Promise<MediaAssetChoice[]> {
@@ -63,30 +97,7 @@ async function fetchMediaAssetChoices(kind: AssetPickerMediaKind): Promise<Media
 
   const assets = Array.isArray(payload?.assets) ? (payload?.assets as Array<Record<string, unknown>>) : [];
   return assets
-    .map((asset) => {
-      const assetRef = String(asset.assetRef || '').trim();
-      if (!assetRef.startsWith('assets/versions/')) return null;
-      const assetType = String(asset.assetType || '').trim().toLowerCase();
-      if (kind === 'image') {
-        if (assetType !== 'image' && assetType !== 'vector') return null;
-      } else if (assetType !== 'video') {
-        return null;
-      }
-      const contentType = String(asset.contentType || '').trim().toLowerCase();
-      const filename = String(asset.filename || '').trim();
-      if (!filename) return null;
-      const sizeBytes = Number(asset.sizeBytes);
-      const url = String(asset.url || '').trim();
-      if (!url || (!url.startsWith('/') && !/^https?:\/\//i.test(url))) return null;
-      return {
-        assetRef,
-        filename,
-        assetType,
-        contentType,
-        sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
-        url,
-      } satisfies MediaAssetChoice;
-    })
+    .map((asset) => normalizeMediaAssetChoice(asset, kind))
     .filter((asset): asset is MediaAssetChoice => Boolean(asset));
 }
 
@@ -98,9 +109,15 @@ export function fetchVideoAssetChoices(): Promise<MediaAssetChoice[]> {
   return fetchMediaAssetChoices('video');
 }
 
+export async function resolveMediaAssetChoices(
+  assetIdsRaw: string[],
+): Promise<Map<string, ResolvedMediaAssetChoice>> {
+  return resolveEditorAssetChoices(assetIdsRaw);
+}
+
 export function toAssetPickerOverlayItems(assets: MediaAssetChoice[]): AssetPickerOverlayItem[] {
   return assets.map((asset) => ({
-    assetId: asset.assetRef,
+    assetId: asset.assetId,
     normalizedFilename: asset.filename,
     contentType: asset.assetType || asset.contentType,
     sizeLabel: formatAssetSizeLabel(asset.sizeBytes),

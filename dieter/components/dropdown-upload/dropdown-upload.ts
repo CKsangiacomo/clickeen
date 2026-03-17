@@ -1,12 +1,14 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 import { uploadEditorAsset } from '../shared/assetUpload';
-import { toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
+import { isUuid } from '@clickeen/ck-contracts';
+import { resolveEditorAssetChoices } from '../shared/assetResolve';
 
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
 type UploadMeta = {
   name?: string;
-  ref?: string;
+  assetId?: string;
+  source?: string;
 };
 
 type DropdownUploadState = {
@@ -238,7 +240,7 @@ function installHandlers(state: DropdownUploadState) {
       state.localObjectUrl = null;
     }
     setMetaValue(state, null, true);
-    setFileKey(state, '', true);
+    setFileKey(state, 'transparent', true);
   });
 
   state.fileInput.addEventListener('change', async () => {
@@ -262,8 +264,12 @@ function installHandlers(state: DropdownUploadState) {
       const nextMeta: UploadMeta = {
         ...(existingMeta || {}),
         name: file.name,
+        assetId: uploaded.assetId,
+        source:
+          typeof existingMeta?.source === 'string' && existingMeta.source.trim()
+            ? existingMeta.source.trim()
+            : 'user',
       };
-      nextMeta.ref = uploaded.assetRef;
       const { kind, ext } = classifyByNameAndType(file.name, file.type);
       state.root.dataset.localName = file.name;
       setMetaValue(state, nextMeta, true);
@@ -368,6 +374,18 @@ function extractPrimaryUrl(raw: string): string | null {
   return null;
 }
 
+function readMetaAssetId(meta: UploadMeta | null): string {
+  const assetId = typeof meta?.assetId === 'string' ? meta.assetId.trim() : '';
+  return isUuid(assetId) ? assetId : '';
+}
+
+function readCurrentAssetId(state: DropdownUploadState): string {
+  const metaAssetId = readMetaAssetId(readMeta(state));
+  if (metaAssetId) return metaAssetId;
+  const rawValue = String(state.input.value || '').trim();
+  return isUuid(rawValue) ? rawValue : '';
+}
+
 function sameAssetUrl(leftRaw: string, rightRaw: string): boolean {
   const left = normalizeUrlForCompare(leftRaw);
   const right = normalizeUrlForCompare(rightRaw);
@@ -386,11 +404,36 @@ function normalizeUrlForCompare(raw: string): string {
   }
 }
 
-function assetUrlFromMeta(meta: UploadMeta | null): string {
-  const ref = typeof meta?.ref === 'string' ? meta.ref.trim() : '';
-  if (!ref) return '';
-  const path = toCanonicalAssetVersionPath(ref);
-  return path || '';
+async function resolvePreviewFromAssetId(
+  state: DropdownUploadState,
+  assetId: string,
+  displayName: string,
+  kindName: string,
+) {
+  try {
+    const resolved = await resolveEditorAssetChoices([assetId]);
+    if (readCurrentAssetId(state) !== assetId) return;
+    const entry = resolved.get(assetId);
+    if (!entry?.url) {
+      setHeaderWithFile(state, displayName, true);
+      setError(state, ASSET_UNAVAILABLE_MESSAGE);
+      return;
+    }
+    const resolvedName = displayName || guessNameFromUrl(entry.url) || 'Uploaded file';
+    const { kind, ext } = classifyByNameAndType(kindName || resolvedName, '');
+    setPreview(state, {
+      kind,
+      previewUrl: entry.url,
+      name: resolvedName,
+      ext,
+      hasFile: true,
+    });
+    clearError(state);
+  } catch (_error) {
+    if (readCurrentAssetId(state) !== assetId) return;
+    setHeaderWithFile(state, displayName, true);
+    setError(state, ASSET_UNAVAILABLE_MESSAGE);
+  }
 }
 
 function previewFromUrl(state: DropdownUploadState, raw: string, name: string, kindName: string) {
@@ -407,16 +450,18 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   const placeholder = state.headerValue?.dataset.placeholder ?? '';
   const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
   const expectsMeta = state.metaHasPath;
-  const metaUrl = assetUrlFromMeta(meta);
-  const rawUrl = metaUrl || extractPrimaryUrl(key) || '';
+  const assetId = readMetaAssetId(meta);
+  const rawAssetId = isUuid(key) ? key : '';
+  const rawUrl = extractPrimaryUrl(key) || '';
   const kindName = metaName || guessNameFromUrl(rawUrl) || '';
   const guessedUrlName = guessNameFromUrl(rawUrl);
   const fallbackName = expectsMeta
     ? ''
     : state.root.dataset.localName || guessedUrlName || (rawUrl ? 'Uploaded file' : key || 'Uploaded file');
   const displayName = metaName || fallbackName || (expectsMeta ? 'Unnamed file' : 'Uploaded file');
+  const currentAssetId = assetId || rawAssetId;
 
-  if (!key && !rawUrl) {
+  if (!key && !rawUrl && !currentAssetId) {
     clearError(state);
     setHeaderEmpty(state, placeholder);
     state.root.dataset.hasFile = 'false';
@@ -426,13 +471,25 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   }
 
   state.root.dataset.hasFile = 'true';
-  const hasMetaError = expectsMeta && !metaName && !rawUrl;
+  const hasMetaError = expectsMeta && !metaName && !rawUrl && !currentAssetId;
   if (hasMetaError) {
     setError(state, 'Missing file metadata.');
   } else {
     clearError(state);
   }
-  // Persisted state stores canonical URLs; render directly.
+  if (currentAssetId) {
+    setHeaderWithFile(state, displayName, false);
+    setPreview(state, {
+      kind: 'unknown',
+      previewUrl: undefined,
+      name: displayName,
+      ext: guessExtFromName(kindName || displayName).toLowerCase(),
+      hasFile: true,
+    });
+    void resolvePreviewFromAssetId(state, currentAssetId, displayName, kindName || displayName);
+    return;
+  }
+
   if (rawUrl) {
     setHeaderWithFile(state, displayName, false);
     previewFromUrl(state, rawUrl, displayName, kindName || displayName);

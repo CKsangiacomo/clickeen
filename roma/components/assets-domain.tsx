@@ -9,6 +9,7 @@ import { parseApiErrorReason } from './same-origin-json';
 import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 type AssetRecord = {
+  assetId: string;
   assetRef: string;
   assetType: string;
   filename: string;
@@ -49,6 +50,7 @@ type AccountAssetsListResponse = {
 };
 
 type AssetUploadResponse = {
+  assetId?: string;
   assetRef?: string;
   assetType?: string;
   filename?: string;
@@ -116,32 +118,6 @@ function resolveDeleteErrorCopy(reason: string): string {
   return resolveAssetErrorCopy(normalized, 'Asset delete failed. Please try again.');
 }
 
-function extractAssetIdFromRef(assetRefRaw: string): string | null {
-  const raw = String(assetRefRaw || '').trim();
-  if (!raw) return null;
-  let key = raw;
-  if (/^https?:\/\//i.test(key)) {
-    try {
-      const parsedUrl = new URL(key);
-      key = parsedUrl.pathname;
-    } catch {
-      return null;
-    }
-  }
-  if (key.startsWith('/assets/v/')) {
-    key = key.slice('/assets/v/'.length);
-    try {
-      key = decodeURIComponent(key);
-    } catch {
-      return null;
-    }
-  }
-  key = key.replace(/^\/+/, '');
-  const match = key.match(/^assets\/versions\/[0-9a-f-]{36}\/([0-9a-f-]{36})\/.+$/i);
-  if (!match) return null;
-  return match[1] || null;
-}
-
 async function requestDeleteAsset(
   accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
   accountId: string,
@@ -186,9 +162,12 @@ async function requestUploadAsset(
   if (!response.ok) {
     throw new Error(parseApiErrorReason(payload, response.status));
   }
+  const assetId = typeof payload?.assetId === 'string' ? payload.assetId.trim() : '';
   const assetRef = typeof payload?.assetRef === 'string' ? payload.assetRef.trim() : '';
+  if (!assetId) throw new Error('coreui.errors.assets.uploadFailed');
   if (!assetRef) throw new Error('coreui.errors.assets.uploadFailed');
   return {
+    assetId,
     assetRef,
     assetType: typeof payload?.assetType === 'string' ? payload.assetType : 'other',
     filename: typeof payload?.filename === 'string' ? payload.filename : file.name || 'upload.bin',
@@ -280,15 +259,14 @@ export function AssetsDomain() {
   const deleteAsset = useCallback(
     async (asset: AssetRecord, confirmInUse: boolean) => {
       if (!accountId) return;
-      const assetId = extractAssetIdFromRef(asset.assetRef);
-      if (!assetId) {
-        setDeleteError('Asset delete failed. Invalid assetRef.');
+      if (!asset.assetId) {
+        setDeleteError('Asset delete failed. Invalid assetId.');
         return;
       }
-      setDeletingAssetId(assetId);
+      setDeletingAssetId(asset.assetId);
       setDeleteError(null);
       try {
-        await requestDeleteAsset(accountApi, accountId, assetId, confirmInUse);
+        await requestDeleteAsset(accountApi, accountId, asset.assetId, confirmInUse);
         setPendingDelete(null);
         setAssets((prev) => prev.filter((entry) => entry.assetRef !== asset.assetRef));
         setStorageBytesUsed((prev) => Math.max(0, prev - Math.max(0, Math.trunc(asset.sizeBytes))));
@@ -565,10 +543,10 @@ export function AssetsDomain() {
                     data-variant="secondary"
                     type="button"
                     onClick={() => handleDeleteAsset(asset)}
-                    disabled={deletingAssetId === extractAssetIdFromRef(asset.assetRef)}
+                    disabled={deletingAssetId === asset.assetId}
                   >
                     <span className="diet-btn-txt__label body-m">
-                      {deletingAssetId === extractAssetIdFromRef(asset.assetRef) ? 'Deleting...' : 'Delete'}
+                      {deletingAssetId === asset.assetId ? 'Deleting...' : 'Delete'}
                     </span>
                   </button>
                 </td>

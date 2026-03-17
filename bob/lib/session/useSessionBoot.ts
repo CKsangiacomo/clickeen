@@ -67,6 +67,14 @@ export function useSessionBoot(args: {
         const nextOwnerAccountId = message.ownerAccountId;
         let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
         const nextLocalizationSnapshotRaw: unknown = message.localization;
+        const nextAssetApiBase =
+          typeof message.assetApiBase === 'string' && message.assetApiBase.trim()
+            ? message.assetApiBase.trim()
+            : undefined;
+        const nextAssetUploadEndpoint =
+          typeof message.assetUploadEndpoint === 'string' && message.assetUploadEndpoint.trim()
+            ? message.assetUploadEndpoint.trim()
+            : undefined;
 
         const nextSubjectMode: SubjectMode = message.subjectMode ?? resolveSubjectModeFromUrl();
         let nextPolicy: Policy | null = null;
@@ -142,6 +150,8 @@ export function useSessionBoot(args: {
               typeof message.accountCapsule === 'string' && message.accountCapsule.trim()
                 ? message.accountCapsule.trim()
                 : undefined,
+            assetApiBase: nextAssetApiBase,
+            assetUploadEndpoint: nextAssetUploadEndpoint,
             widgetname: compiled.widgetname,
             label: nextLabel,
           },

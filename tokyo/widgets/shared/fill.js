@@ -14,8 +14,6 @@
     radial: true,
     conic: true,
   };
-  var ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
-  var ASSET_VERSION_PATH_RE = /^\/assets\/v\/(.+)$/;
 
   function isRecord(value) {
     return Boolean(value && typeof value === 'object' && !Array.isArray(value));
@@ -26,73 +24,10 @@
     return Math.min(Math.max(value, min), max);
   }
 
-  function isCanonicalAssetVersionKey(raw) {
-    var versionId = String(raw || '').trim();
-    if (!versionId || versionId.indexOf('/') === 0 || versionId.indexOf('..') !== -1) return false;
-    return ASSET_VERSION_KEY_RE.test(versionId);
-  }
-
-  function decodeAssetVersionPathToken(raw) {
-    var token = String(raw || '').trim();
-    if (!token) return '';
-    var decoded = '';
-    try {
-      decoded = decodeURIComponent(token);
-    } catch (_err) {
-      return '';
-    }
-    return isCanonicalAssetVersionKey(decoded) ? decoded : '';
-  }
-
-  function parseAssetVersionFromPathname(pathname) {
-    var path = String(pathname || '').trim();
-    if (!path) return '';
-    var match = path.match(ASSET_VERSION_PATH_RE);
-    if (!match || !match[1]) return '';
-    return decodeAssetVersionPathToken(match[1]);
-  }
-
-  function coerceAssetVersionKey(raw) {
-    var candidate = String(raw || '').trim();
-    if (!candidate) return '';
-    if (isCanonicalAssetVersionKey(candidate)) return candidate;
-
-    if (/^https?:\/\//i.test(candidate)) {
-      try {
-        var fromUrl = new URL(candidate);
-        return parseAssetVersionFromPathname(fromUrl.pathname);
-      } catch (_err) {
-        return '';
-      }
-    }
-
-    if (candidate.indexOf('/assets/v/') === 0) {
-      return parseAssetVersionFromPathname(candidate);
-    }
-
-    return '';
-  }
-
-  function assetVersionIdToPath(raw) {
-    var versionId = coerceAssetVersionKey(raw);
-    if (!versionId) return '';
-    return '/assets/v/' + encodeURIComponent(versionId);
-  }
-
-  function readAssetVersionId(raw) {
-    if (typeof raw === 'string') return coerceAssetVersionKey(raw);
-    if (!isRecord(raw)) return '';
-    var ref = typeof raw.ref === 'string' ? raw.ref.trim() : '';
-    var versionId = typeof raw.versionId === 'string' ? raw.versionId.trim() : '';
-    return coerceAssetVersionKey(ref || versionId);
-  }
-
   function readAssetSrc(raw) {
     if (!isRecord(raw)) return '';
     var direct = typeof raw.src === 'string' ? raw.src.trim() : '';
     if (!direct) return '';
-    var fromPath = assetVersionIdToPath(direct);
-    if (fromPath) return fromPath;
     return /^https?:\/\//i.test(direct) || direct.indexOf('/') === 0 ? direct : '';
   }
 
@@ -170,28 +105,23 @@
 
   function normalizeImage(raw) {
     if (!isRecord(raw)) return { src: '', fit: 'cover', position: 'center', repeat: 'no-repeat' };
-    var assetVersionId = readAssetVersionId(raw.asset);
-    var src = assetVersionIdToPath(assetVersionId) || readAssetSrc(raw);
+    var src = readAssetSrc(raw);
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var repeat = typeof raw.repeat === 'string' && raw.repeat.trim() ? raw.repeat.trim() : 'no-repeat';
-    var out = { src: src, fit: fit, position: position, repeat: repeat };
-    if (assetVersionId) out.asset = { ref: assetVersionId };
-    return out;
+    return { src: src, fit: fit, position: position, repeat: repeat };
   }
 
   function normalizeVideo(raw) {
     if (!isRecord(raw)) return { src: '', poster: '', fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true };
-    var assetVersionId = readAssetVersionId(raw.asset);
-    var posterVersionId = readAssetVersionId(raw.poster);
-    var src = assetVersionIdToPath(assetVersionId) || readAssetSrc(raw);
-    var poster = assetVersionIdToPath(posterVersionId);
+    var src = readAssetSrc(raw);
+    var poster = typeof raw.poster === 'string' && raw.poster.trim() ? raw.poster.trim() : '';
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var loop = typeof raw.loop === 'boolean' ? raw.loop : true;
     var muted = typeof raw.muted === 'boolean' ? raw.muted : true;
     var autoplay = typeof raw.autoplay === 'boolean' ? raw.autoplay : true;
-    var out = {
+    return {
       src: src,
       poster: poster,
       fit: fit,
@@ -200,9 +130,6 @@
       muted: muted,
       autoplay: autoplay,
     };
-    if (assetVersionId) out.asset = { ref: assetVersionId };
-    if (posterVersionId) out.posterAsset = { ref: posterVersionId };
-    return out;
   }
 
   function buildGradientCss(gradient) {

@@ -18,6 +18,7 @@ import {
 import { json } from '../http';
 import {
   assertProductAccountAuth,
+  INTERNAL_SERVICE_HEADER,
   requireDevAuth,
   TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
 } from '../auth';
@@ -30,6 +31,7 @@ import {
   deleteAccountAssetByIdentity,
   deleteAccountAssetUsageByIdentity,
   loadAccountAssetByIdentity,
+  loadAccountAssetManifestByIdentity,
   loadAccountStoredBytesUsage,
   loadAccountAssetUsagePublicIdsByIdentity,
   listAccountAssetManifestsByAccount,
@@ -122,6 +124,14 @@ async function authorizeAccountAssetAccess(args: {
   accountId: string;
   minRole: MemberRole;
 }): Promise<Response | null> {
+  const internalServiceId = String(args.req.headers.get(INTERNAL_SERVICE_HEADER) || '')
+    .trim()
+    .toLowerCase();
+  if (internalServiceId === TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL) {
+    return requireDevAuth(args.req, args.env, {
+      allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
+    });
+  }
   const auth = await assertProductAccountAuth(args.req, args.env);
   if (!auth.ok) return auth.response;
   const authorized = await resolveUploadTierAndAuthorization({
@@ -190,6 +200,7 @@ function serializeAccountAssetManifest(
 ): Record<string, unknown> {
   const assetRef = String(manifest.key || '').trim();
   return {
+    assetId: manifest.assetId,
     assetRef,
     assetType: manifest.assetType,
     contentType: manifest.contentType,
@@ -365,13 +376,19 @@ async function buildAccountAssetMirrorIntegrity(env: Env, accountId: string): Pr
 }
 
 async function handleUploadAccountAsset(req: Request, env: Env): Promise<Response> {
-  const auth = await assertProductAccountAuth(req, env);
-  if (!auth.ok) return auth.response;
-
   const accountId = (req.headers.get('x-account-id') || '').trim();
   if (!accountId || !isUuid(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
+  const authErr = await authorizeAccountAssetAccess({
+    req,
+    env,
+    accountId,
+    minRole: 'editor',
+  });
+  if (authErr) return authErr;
+
+  const auth = await assertProductAccountAuth(req, env);
 
   const legacyVariant = (req.headers.get('x-variant') || '').trim();
   if (legacyVariant) {
@@ -383,13 +400,16 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.source.invalid' } }, { status: 422 });
   }
 
-  const tierResolution = await resolveUploadTierAndAuthorization({
-    env,
-    auth,
-    accountId,
-  });
-  if (!tierResolution.ok) return tierResolution.response;
-  const accountAuthz = tierResolution.accountAuthz;
+  let accountAuthz: RomaAccountAuthzCapsulePayload | null = null;
+  if (auth.ok) {
+    const tierResolution = await resolveUploadTierAndAuthorization({
+      env,
+      auth,
+      accountId,
+    });
+    if (!tierResolution.ok) return tierResolution.response;
+    accountAuthz = tierResolution.accountAuthz;
+  }
 
   const publicIdRaw = (req.headers.get('x-public-id') || '').trim();
   const publicId = publicIdRaw ? normalizePublicId(publicIdRaw) : null;
@@ -426,20 +446,22 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   if (!body || body.byteLength === 0) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
   }
-  if (accountAuthz.accountStatus !== 'active') {
+  if (accountAuthz && accountAuthz.accountStatus !== 'active') {
     return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
   }
-  const policy = resolvePolicyFromEntitlementsSnapshot({
-    profile: accountAuthz.profile,
-    role: accountAuthz.role,
-    entitlements: accountAuthz.entitlements ?? null,
-  });
-  const uploadSizeCap = policy.caps[UPLOAD_SIZE_CAP_KEY];
+  const policy = accountAuthz
+    ? resolvePolicyFromEntitlementsSnapshot({
+        profile: accountAuthz.profile,
+        role: accountAuthz.role,
+        entitlements: accountAuthz.entitlements ?? null,
+      })
+    : null;
+  const uploadSizeCap = policy ? policy.caps[UPLOAD_SIZE_CAP_KEY] : null;
   const maxBytes =
     uploadSizeCap === null || (typeof uploadSizeCap === 'number' && Number.isFinite(uploadSizeCap) && uploadSizeCap > 0)
       ? uploadSizeCap
       : null;
-  const storageBudget = policy.budgets[STORAGE_BYTES_BUDGET_KEY]?.max ?? null;
+  const storageBudget = policy ? policy.budgets[STORAGE_BYTES_BUDGET_KEY]?.max ?? null : null;
   const storageBytesMax =
     storageBudget === null || (typeof storageBudget === 'number' && Number.isFinite(storageBudget) && storageBudget >= 0)
       ? storageBudget
@@ -491,6 +513,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   const url = `${origin}${buildAccountAssetVersionPath(key)}`;
   return json(
     {
+      assetId,
       assetRef: key,
       filename,
       assetType,
@@ -555,6 +578,74 @@ async function handleListAccountAssetMetadata(
     accountId,
     storageBytesUsed,
     assets: manifests.map((manifest) => serializeAccountAssetManifest(manifest, origin)),
+  });
+}
+
+async function handleResolveAccountAssetMetadata(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+): Promise<Response> {
+  const accountId = String(accountIdRaw || '').trim();
+  if (!accountId || !isUuid(accountId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
+  }
+  const authErr = await authorizeAccountAssetAccess({
+    req,
+    env,
+    accountId,
+    minRole: 'viewer',
+  });
+  if (authErr) return authErr;
+
+  const body = (await req.json().catch(() => null)) as { assetIds?: unknown } | null;
+  const rawAssetIds = Array.isArray(body?.assetIds) ? body.assetIds : null;
+  if (!rawAssetIds) {
+    return json(
+      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidPayload' } },
+      { status: 422 },
+    );
+  }
+
+  const seen = new Set<string>();
+  const assetIds = rawAssetIds
+    .map((entry) => String(entry || '').trim())
+    .filter((assetId) => {
+      if (!assetId || !isUuid(assetId) || seen.has(assetId)) return false;
+      seen.add(assetId);
+      return true;
+    });
+
+  if (assetIds.length !== rawAssetIds.length) {
+    return json(
+      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidAssetIds' } },
+      { status: 422 },
+    );
+  }
+
+  const origin = new URL(req.url).origin;
+  const resolvedEntries = await Promise.all(
+    assetIds.map(async (assetId) => ({
+      assetId,
+      manifest: await loadAccountAssetManifestByIdentity(env, accountId, assetId),
+    })),
+  );
+
+  const assets: Record<string, unknown>[] = [];
+  const missingAssetIds: string[] = [];
+
+  for (const entry of resolvedEntries) {
+    if (!entry.manifest) {
+      missingAssetIds.push(entry.assetId);
+      continue;
+    }
+    assets.push(serializeAccountAssetManifest(entry.manifest, origin));
+  }
+
+  return json({
+    accountId,
+    assets,
+    missingAssetIds,
   });
 }
 
@@ -769,6 +860,7 @@ export {
   handleGetAccountAsset,
   handleGetAccountAssetIdentityIntegrity,
   handleListAccountAssetMetadata,
+  handleResolveAccountAssetMetadata,
   handleGetAccountAssetMirrorIntegrity,
   handleUploadAccountAsset,
 };

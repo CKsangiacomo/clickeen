@@ -45,9 +45,6 @@
     return candidate || '';
   })();
   if (resolvedPublicId) widgetRoot.setAttribute('data-ck-public-id', resolvedPublicId);
-  const ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/(?:[^/]+\/)?[^/]+$/;
-  const ASSET_VERSION_PATH_RE = /^\/assets\/v\/(.+)$/;
-
   function assertBoolean(value, path) {
     if (typeof value !== 'boolean') throw new Error(`[LogoShowcase] ${path} must be a boolean`);
   }
@@ -80,51 +77,6 @@
 
   function assertArray(value, path) {
     if (!Array.isArray(value)) throw new Error(`[LogoShowcase] ${path} must be an array`);
-  }
-
-  function decodeAssetVersionPathToken(raw) {
-    const token = String(raw || '').trim();
-    if (!token) return '';
-    let decoded = '';
-    try {
-      decoded = decodeURIComponent(token);
-    } catch (_err) {
-      return '';
-    }
-    return ASSET_VERSION_KEY_RE.test(decoded) ? decoded : '';
-  }
-
-  function parseAssetVersionFromPathname(pathname) {
-    const path = String(pathname || '').trim();
-    if (!path) return '';
-    const match = path.match(ASSET_VERSION_PATH_RE);
-    if (!match || !match[1]) return '';
-    return decodeAssetVersionPathToken(match[1]);
-  }
-
-  function coerceAssetVersionKey(raw) {
-    const candidate = String(raw || '').trim();
-    if (!candidate) return '';
-    if (ASSET_VERSION_KEY_RE.test(candidate)) return candidate;
-    if (/^https?:\/\//i.test(candidate)) {
-      try {
-        const fromUrl = new URL(candidate);
-        return parseAssetVersionFromPathname(fromUrl.pathname);
-      } catch (_err) {
-        return '';
-      }
-    }
-    if (candidate.indexOf('/assets/v/') === 0) {
-      return parseAssetVersionFromPathname(candidate);
-    }
-    return '';
-  }
-
-  function readAssetVersionKey(asset) {
-    if (!asset || typeof asset !== 'object' || Array.isArray(asset)) return '';
-    const ref = typeof asset.ref === 'string' ? asset.ref.trim() : '';
-    const versionId = typeof asset.versionId === 'string' ? asset.versionId.trim() : '';
-    return coerceAssetVersionKey(ref || versionId);
   }
 
   function assertBorderConfig(value, path) {
@@ -174,14 +126,12 @@
         assertString(logo.logoFill, `state.strips[${stripIdx}].logos[${logoIdx}].logoFill`);
         if (logo.asset != null) {
           assertObject(logo.asset, `state.strips[${stripIdx}].logos[${logoIdx}].asset`);
-          const versionKey = readAssetVersionKey(logo.asset);
-          const hasInputRef =
-            (typeof logo.asset.ref === 'string' && logo.asset.ref.trim()) ||
-            (typeof logo.asset.versionId === 'string' && logo.asset.versionId.trim());
-          if (hasInputRef && !versionKey) {
-            throw new Error(
-              `[LogoShowcase] state.strips[${stripIdx}].logos[${logoIdx}].asset.ref invalid`,
-            );
+          if (
+            logo.asset.assetId != null &&
+            (typeof logo.asset.assetId !== 'string' ||
+              !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(logo.asset.assetId.trim()))
+          ) {
+            throw new Error(`[LogoShowcase] state.strips[${stripIdx}].logos[${logoIdx}].asset.assetId invalid`);
           }
         }
         assertString(logo.href, `state.strips[${stripIdx}].logos[${logoIdx}].href`);
@@ -307,15 +257,6 @@
     return v;
   }
 
-  function resolveLogoAssetVersionUrl(logo) {
-    if (!logo || typeof logo !== 'object' || Array.isArray(logo)) return null;
-    const asset = logo.asset;
-    if (!asset || typeof asset !== 'object' || Array.isArray(asset)) return null;
-    const versionKey = readAssetVersionKey(asset);
-    if (!versionKey) return null;
-    return `/assets/v/${encodeURIComponent(versionKey)}`;
-  }
-
   function fnv1a32(str) {
     let hash = 0x811c9dc5;
     for (let i = 0; i < str.length; i += 1) {
@@ -407,12 +348,11 @@
     visualEl.setAttribute('role', 'img');
     if (aria) visualEl.setAttribute('aria-label', aria);
 
-    const primaryUrl = resolveLogoAssetVersionUrl(logo);
-    if (primaryUrl) {
-      const safeUrl = primaryUrl.replace(/"/g, '%22');
-      visualEl.style.backgroundImage = `url("${safeUrl}")`;
+    const logoFill = String(logo.logoFill || '').trim();
+    if (logoFill) {
+      visualEl.style.background = logoFill;
     } else {
-      visualEl.style.removeProperty('background-image');
+      visualEl.style.background = 'transparent';
     }
 
     const captionEl = document.createElement('div');

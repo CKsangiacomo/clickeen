@@ -132,7 +132,7 @@ Client fetch behavior:
 2. Load instance payload from Roma same-origin (`/api/accounts/:accountId/instance/:publicId?subject=account`), which resolves the saved authoring revision from Tokyo directly.
 3. Load compiled payload (`/api/widgets/:widgetname/compiled`).
 4. Wait for Bob `bob:session-ready` (`boot=message`).
-5. Send `ck:open-editor` with `requestId + sessionId` (no bearer handoff; Bob relies on shared cookies).
+5. Send `ck:open-editor` with `requestId + sessionId` plus host asset endpoints for preview/upload materialization (no bearer handoff; Bob relies on shared cookies).
 6. Require ack/applied lifecycle (`bob:open-editor-ack` → `bob:open-editor-applied` or `bob:open-editor-failed`).
 
 Notes:
@@ -175,7 +175,9 @@ Usage, billing, and AI domain behavior:
 Assets domain behavior:
 
 - `AssetsDomain` reads account inventory from `/api/assets/:accountId` and performs per-asset delete via `/api/assets/:accountId/:assetId`.
-- Roma exposes account-level asset routes (`/api/assets/:accountId`, `/api/assets/:accountId/:assetId`, `/api/assets/upload`) and forwards them directly to Tokyo-worker with the user session bearer.
+- Roma exposes account-level asset routes (`/api/assets/:accountId`, `/api/assets/:accountId/resolve`, `/api/assets/:accountId/:assetId`, `/api/assets/upload`) and forwards them directly to Tokyo-worker with the user session bearer.
+- Asset inventory/upload payloads expose both `assetId` and canonical `assetRef`; Roma delete uses `assetId` directly instead of reverse-parsing it from the ref.
+- Published/runtime config packs are materialized through Tokyo asset resolution before Roma writes them to Tokyo live/runtime surfaces; saved authoring config remains logical authoring truth.
 - Assets supports single upload, bulk upload (multi-file queue), list, and per-asset delete only.
 - Account is the ownership boundary.
 

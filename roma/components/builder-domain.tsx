@@ -602,6 +602,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
       if (!ownerAccountId) {
         throw new Error('coreui.errors.instance.ownerAccountMissing');
       }
+      const hostOrigin = typeof window !== 'undefined' ? window.location.origin.replace(/\/+$/, '') : '';
 
       const message: BobOpenEditorPayload = {
         type: OPEN_EDITOR_LIFECYCLE.events.openEditor,
@@ -609,6 +610,12 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         publicId: resolvedPublicId,
         accountId,
         ...(accountApi.accountCapsule ? { accountCapsule: accountApi.accountCapsule } : {}),
+        ...(hostOrigin
+          ? {
+              assetApiBase: `${hostOrigin}/api/assets`,
+              assetUploadEndpoint: `${hostOrigin}/api/assets/upload`,
+            }
+          : {}),
         ownerAccountId,
         label,
         widgetname: widgetType,

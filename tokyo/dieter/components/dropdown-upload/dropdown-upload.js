@@ -538,7 +538,11 @@ var Dieter = (() => {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
     const payloadRecord = payload;
+    const assetId = typeof payloadRecord.assetId === "string" ? payloadRecord.assetId.trim() : "";
     const assetRef = normalizeAssetRef(payloadRecord);
+    if (!assetId) {
+      throw new Error("coreui.errors.assets.uploadFailed");
+    }
     if (!assetRef) {
       throw new Error("coreui.errors.assets.uploadFailed");
     }
@@ -550,6 +554,7 @@ var Dieter = (() => {
     const filename = typeof payloadRecord.filename === "string" ? payloadRecord.filename.trim() : "";
     const createdAt = typeof payloadRecord.createdAt === "string" ? payloadRecord.createdAt.trim() : "";
     return {
+      assetId,
       assetRef,
       url,
       assetType: assetType || "other",
@@ -558,6 +563,65 @@ var Dieter = (() => {
       filename: filename || file.name || "upload.bin",
       createdAt: createdAt || (/* @__PURE__ */ new Date()).toISOString()
     };
+  }
+
+  // components/shared/assetResolve.ts
+  function readDocumentDatasetValue(key) {
+    if (typeof document === "undefined") return "";
+    const value = document.documentElement.dataset[key];
+    return typeof value === "string" ? value.trim() : "";
+  }
+  function resolveAssetApiBase() {
+    return readDocumentDatasetValue("ckAssetApiBase").replace(/\/+$/, "");
+  }
+  function resolveEditorAssetAccountId() {
+    const accountId = readDocumentDatasetValue("ckOwnerAccountId");
+    return isUuid(accountId) ? accountId : null;
+  }
+  function normalizeResolvedEditorAssetChoice(raw) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const asset = raw;
+    const assetId = String(asset.assetId || "").trim();
+    const assetRef = String(asset.assetRef || "").trim();
+    const url = String(asset.url || "").trim();
+    if (!isUuid(assetId) || !assetRef || !url) return null;
+    return { assetId, assetRef, url };
+  }
+  async function resolveEditorAssetChoices(assetIdsRaw) {
+    const accountId = resolveEditorAssetAccountId();
+    if (!accountId) {
+      throw new Error("No account context available.");
+    }
+    const seen = /* @__PURE__ */ new Set();
+    const assetIds = assetIdsRaw.map((entry) => String(entry || "").trim()).filter((assetId) => {
+      if (!isUuid(assetId) || seen.has(assetId)) return false;
+      seen.add(assetId);
+      return true;
+    });
+    if (!assetIds.length) return /* @__PURE__ */ new Map();
+    const assetApiBase = resolveAssetApiBase();
+    const endpoint = assetApiBase ? `${assetApiBase}/${encodeURIComponent(accountId)}/resolve` : `/api/assets/${encodeURIComponent(accountId)}/resolve`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({ assetIds })
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const reasonKey = String(payload?.error?.reasonKey || "").trim();
+      throw new Error(reasonKey || `HTTP_${response.status}`);
+    }
+    const assets = Array.isArray(payload?.assets) ? payload.assets : [];
+    const resolved = /* @__PURE__ */ new Map();
+    for (const asset of assets) {
+      const normalized = normalizeResolvedEditorAssetChoice(asset);
+      if (!normalized) continue;
+      resolved.set(normalized.assetId, normalized);
+    }
+    return resolved;
   }
 
   // components/dropdown-upload/dropdown-upload.ts
@@ -729,7 +793,7 @@ var Dieter = (() => {
         state.localObjectUrl = null;
       }
       setMetaValue(state, null, true);
-      setFileKey(state, "", true);
+      setFileKey(state, "transparent", true);
     });
     state.fileInput.addEventListener("change", async () => {
       const file = state.fileInput.files && state.fileInput.files[0];
@@ -749,9 +813,10 @@ var Dieter = (() => {
         const existingMeta = readMeta(state);
         const nextMeta = {
           ...existingMeta || {},
-          name: file.name
+          name: file.name,
+          assetId: uploaded.assetId,
+          source: typeof existingMeta?.source === "string" && existingMeta.source.trim() ? existingMeta.source.trim() : "user"
         };
-        nextMeta.ref = uploaded.assetRef;
         const { kind, ext } = classifyByNameAndType(file.name, file.type);
         state.root.dataset.localName = file.name;
         setMetaValue(state, nextMeta, true);
@@ -838,6 +903,16 @@ var Dieter = (() => {
     }
     return null;
   }
+  function readMetaAssetId(meta) {
+    const assetId = typeof meta?.assetId === "string" ? meta.assetId.trim() : "";
+    return isUuid(assetId) ? assetId : "";
+  }
+  function readCurrentAssetId(state) {
+    const metaAssetId = readMetaAssetId(readMeta(state));
+    if (metaAssetId) return metaAssetId;
+    const rawValue = String(state.input.value || "").trim();
+    return isUuid(rawValue) ? rawValue : "";
+  }
   function sameAssetUrl(leftRaw, rightRaw) {
     const left = normalizeUrlForCompare(leftRaw);
     const right = normalizeUrlForCompare(rightRaw);
@@ -854,11 +929,31 @@ var Dieter = (() => {
       return value;
     }
   }
-  function assetUrlFromMeta(meta) {
-    const ref = typeof meta?.ref === "string" ? meta.ref.trim() : "";
-    if (!ref) return "";
-    const path = toCanonicalAssetVersionPath(ref);
-    return path || "";
+  async function resolvePreviewFromAssetId(state, assetId, displayName, kindName) {
+    try {
+      const resolved = await resolveEditorAssetChoices([assetId]);
+      if (readCurrentAssetId(state) !== assetId) return;
+      const entry = resolved.get(assetId);
+      if (!entry?.url) {
+        setHeaderWithFile(state, displayName, true);
+        setError(state, ASSET_UNAVAILABLE_MESSAGE);
+        return;
+      }
+      const resolvedName = displayName || guessNameFromUrl(entry.url) || "Uploaded file";
+      const { kind, ext } = classifyByNameAndType(kindName || resolvedName, "");
+      setPreview(state, {
+        kind,
+        previewUrl: entry.url,
+        name: resolvedName,
+        ext,
+        hasFile: true
+      });
+      clearError(state);
+    } catch (_error) {
+      if (readCurrentAssetId(state) !== assetId) return;
+      setHeaderWithFile(state, displayName, true);
+      setError(state, ASSET_UNAVAILABLE_MESSAGE);
+    }
   }
   function previewFromUrl(state, raw, name, kindName) {
     const url = extractPrimaryUrl(raw);
@@ -873,13 +968,15 @@ var Dieter = (() => {
     const placeholder = state.headerValue?.dataset.placeholder ?? "";
     const metaName = typeof meta?.name === "string" ? meta.name.trim() : "";
     const expectsMeta = state.metaHasPath;
-    const metaUrl = assetUrlFromMeta(meta);
-    const rawUrl = metaUrl || extractPrimaryUrl(key) || "";
+    const assetId = readMetaAssetId(meta);
+    const rawAssetId = isUuid(key) ? key : "";
+    const rawUrl = extractPrimaryUrl(key) || "";
     const kindName = metaName || guessNameFromUrl(rawUrl) || "";
     const guessedUrlName = guessNameFromUrl(rawUrl);
     const fallbackName = expectsMeta ? "" : state.root.dataset.localName || guessedUrlName || (rawUrl ? "Uploaded file" : key || "Uploaded file");
     const displayName = metaName || fallbackName || (expectsMeta ? "Unnamed file" : "Uploaded file");
-    if (!key && !rawUrl) {
+    const currentAssetId = assetId || rawAssetId;
+    if (!key && !rawUrl && !currentAssetId) {
       clearError(state);
       setHeaderEmpty(state, placeholder);
       state.root.dataset.hasFile = "false";
@@ -888,11 +985,23 @@ var Dieter = (() => {
       return;
     }
     state.root.dataset.hasFile = "true";
-    const hasMetaError = expectsMeta && !metaName && !rawUrl;
+    const hasMetaError = expectsMeta && !metaName && !rawUrl && !currentAssetId;
     if (hasMetaError) {
       setError(state, "Missing file metadata.");
     } else {
       clearError(state);
+    }
+    if (currentAssetId) {
+      setHeaderWithFile(state, displayName, false);
+      setPreview(state, {
+        kind: "unknown",
+        previewUrl: void 0,
+        name: displayName,
+        ext: guessExtFromName(kindName || displayName).toLowerCase(),
+        hasFile: true
+      });
+      void resolvePreviewFromAssetId(state, currentAssetId, displayName, kindName || displayName);
+      return;
     }
     if (rawUrl) {
       setHeaderWithFile(state, displayName, false);

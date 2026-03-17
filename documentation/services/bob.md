@@ -92,6 +92,8 @@ Then they wait for Bob session readiness and post into Bob:
   policy,
   accountId,
   publicId,
+  assetApiBase, // optional host asset list/resolve base for preview + picker
+  assetUploadEndpoint, // optional host upload endpoint for editor media controls
   label
 }
 ```
@@ -106,6 +108,7 @@ Together they:
 - Never auto-picks a different instance when `publicId` is missing.
 - Replies with `bob:open-editor-ack`, then terminal `bob:open-editor-applied` or `bob:open-editor-failed`.
 - Keeps request idempotency state per `requestId` so repeated host sends do not apply duplicate open operations.
+- Treats host asset endpoints as part of the hosted-editor contract when present; preview runtime may materialize logical media through the host’s asset resolve route instead of assuming authoring config already contains runtime URLs.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
 - Local DevStudio/Bob are tool-trusted only for explicit internal tool flows: there is **no local browser-login shortcut** and hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma/DevStudio account routes. Bob must not treat a trusted local token as sufficient authority on account product paths. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
 - Bob must not auto-upgrade a trusted local end-user token into Michael service-role access inside shared helpers or normal product routes.
@@ -341,7 +344,7 @@ Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file p
 - The host forwards the Berlin session bearer, Roma `x-ck-authz-capsule`, and account/public/widget trace headers.
 - Tokyo-worker executes from the capsule truth, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
 
-Asset-aware controls persist immutable refs (`asset.ref` / `poster.ref`) on canonical media fields; runtime URLs are derived from those refs (no publish-time crawl/rewrite step).
+Migrated asset-aware controls such as `dropdown-fill` and `dropdown-upload` now persist logical media identity (`assetId` / optional `posterAssetId`) on canonical media fields. Bob preview and published/runtime config packs materialize runtime URLs through the host/Tokyo resolve surface; authoring config does not persist runtime URLs.
 
 Contracts:
 

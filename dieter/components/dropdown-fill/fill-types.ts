@@ -1,7 +1,6 @@
 export type FillMode = 'color' | 'gradient' | 'image' | 'video';
 
 export type GradientStop = { color: string; position: number };
-export type AssetRefValue = { ref: string };
 
 export type GradientValue = {
   kind: 'linear' | 'radial' | 'conic';
@@ -10,7 +9,7 @@ export type GradientValue = {
 };
 
 export type ImageValue = {
-  asset?: AssetRefValue;
+  assetId?: string;
   name?: string;
   fit?: 'cover' | 'contain';
   position?: string;
@@ -18,9 +17,9 @@ export type ImageValue = {
 };
 
 export type VideoValue = {
-  asset?: AssetRefValue;
+  assetId?: string;
   name?: string;
-  poster?: AssetRefValue;
+  posterAssetId?: string;
   fit?: 'cover' | 'contain';
   position?: string;
   loop?: boolean;

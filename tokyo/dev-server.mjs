@@ -375,6 +375,9 @@ function isTokyoWorkerBridgeRequest(req) {
 
 function shouldProxyMutableToWorker(req, pathname) {
   if (isTokyoWorkerBridgeRequest(req)) return false;
+  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/l10n/instances/')) {
+    return true;
+  }
   if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/fonts/')) {
     return true;
   }
@@ -546,7 +549,10 @@ const server = http.createServer((req, res) => {
 
   if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/renders/')) {
     (async () => {
-      const upstream = await fetch(`${tokyoWorkerBase}${req.url}`, { method: req.method });
+      const upstream = await fetch(`${tokyoWorkerBase}${req.url}`, {
+        method: req.method,
+        headers: buildWorkerProxyHeaders(req),
+      });
       res.statusCode = upstream.status;
       const contentType = upstream.headers.get('content-type');
       if (contentType) res.setHeader('Content-Type', contentType);

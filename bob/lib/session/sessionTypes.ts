@@ -95,6 +95,8 @@ export type SessionState = {
     accountId?: string;
     ownerAccountId?: string;
     accountCapsule?: string;
+    assetApiBase?: string;
+    assetUploadEndpoint?: string;
     widgetname?: string;
     label?: string;
   } | null;
@@ -113,6 +115,8 @@ export type EditorOpenMessage = {
   accountId?: string;
   ownerAccountId?: string;
   accountCapsule?: string;
+  assetApiBase?: string;
+  assetUploadEndpoint?: string;
   label?: string;
   subjectMode?: SubjectMode;
 };

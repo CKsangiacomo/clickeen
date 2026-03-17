@@ -2,7 +2,6 @@ import { uploadEditorAsset } from '../shared/assetUpload';
 import { fetchImageAssetChoices, fetchVideoAssetChoices, toAssetPickerOverlayItems } from './asset-picker-data';
 import { normalizeAssetReferenceUrl, sameAssetReferenceUrl } from './color-utils';
 import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fill-types';
-import { assetRefFromUrl } from './fill-parser';
 import type { FillValue } from './fill-types';
 
 export type SetMediaSrcOptions = {
@@ -37,11 +36,6 @@ function dispatchAssetEntitlementGate(root: HTMLElement, reasonKey: string): voi
   if (typeof window === 'undefined') return;
   if (!window.parent || window.parent === window) return;
   window.parent.postMessage({ type: 'bob:asset-entitlement-denied', reasonKey }, '*');
-}
-
-function resolveAssetRef(src: string | null): string | null {
-  if (!src) return null;
-  return assetRefFromUrl(src);
 }
 
 function setFillUploadingState(state: DropdownFillState, uploading: boolean): void {
@@ -204,19 +198,18 @@ export function setImageSrc(
   }
   state.imageSrc = src;
   if (!src) {
-    state.imageName = null;
     state.imageUnavailable = false;
     state.imageAvailabilityRequestId += 1;
   } else if (!sameAssetReferenceUrl(src, previousSrc ?? '')) {
     state.imageUnavailable = false;
   }
   if (opts.commit) {
-    const ref = resolveAssetRef(src);
-    const fill: FillValue = ref
+    const assetId = String(state.imageAssetId || '').trim();
+    const fill: FillValue = assetId
       ? {
           type: 'image',
           image: {
-            asset: { ref },
+            assetId,
             ...(state.imageName ? { name: state.imageName } : {}),
             fit: 'cover',
             position: 'center',
@@ -247,19 +240,19 @@ export function setVideoSrc(
   }
   state.videoSrc = src;
   if (!src) {
-    state.videoName = null;
     state.videoUnavailable = false;
   } else if (!sameAssetReferenceUrl(src, previousSrc ?? '')) {
     state.videoUnavailable = false;
   }
   if (opts.commit) {
-    const ref = resolveAssetRef(src);
-    const fill: FillValue = ref
+    const assetId = String(state.videoAssetId || '').trim();
+    const fill: FillValue = assetId
       ? {
           type: 'video',
           video: {
-            asset: { ref },
+            assetId,
             ...(state.videoName ? { name: state.videoName } : {}),
+            ...(state.videoPosterAssetId ? { posterAssetId: state.videoPosterAssetId } : {}),
             fit: 'cover',
             position: 'center',
             loop: true,
@@ -305,6 +298,8 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
         state.imageObjectUrl = null;
       }
       state.assetPickerOverlay?.close();
+      state.imageAssetId = null;
+      state.imageName = null;
       setImageSrc(state, null, { commit: true }, deps);
     });
   }
@@ -313,6 +308,7 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
       const file = fileInput.files && fileInput.files[0];
       if (!file) return;
       const previousSrc = state.imageSrc;
+      const previousAssetId = state.imageAssetId;
       const previousName = state.imageName;
       state.imageName = file.name || null;
       setFillUploadingState(state, true);
@@ -326,26 +322,14 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
           file,
           source: 'api',
         });
-        setImageSrc(state, uploaded.url, { commit: false }, deps);
-        deps.setInputValue(
-          state,
-          {
-            type: 'image',
-            image: {
-              asset: { ref: uploaded.assetRef },
-              ...(state.imageName ? { name: state.imageName } : {}),
-              fit: 'cover',
-              position: 'center',
-              repeat: 'no-repeat',
-            },
-          },
-          true,
-        );
+        state.imageAssetId = uploaded.assetId;
+        setImageSrc(state, uploaded.url, { commit: true }, deps);
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
         if (isAssetEntitlementReasonKey(message)) {
           dispatchAssetEntitlementGate(state.root, message);
         }
+        state.imageAssetId = previousAssetId;
         state.imageName = previousName;
         setImageSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
         if (!previousSrc) {
@@ -403,6 +387,9 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
         state.videoObjectUrl = null;
       }
       state.assetPickerOverlay?.close();
+      state.videoAssetId = null;
+      state.videoPosterAssetId = null;
+      state.videoName = null;
       setVideoSrc(state, null, { commit: true }, deps);
     });
   }
@@ -411,6 +398,8 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
       const file = videoFileInput.files && videoFileInput.files[0];
       if (!file) return;
       const previousSrc = state.videoSrc;
+      const previousAssetId = state.videoAssetId;
+      const previousPosterAssetId = state.videoPosterAssetId;
       const previousName = state.videoName;
       state.videoName = file.name || null;
       setFillUploadingState(state, true);
@@ -424,28 +413,16 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
           file,
           source: 'api',
         });
-        setVideoSrc(state, uploaded.url, { commit: false }, deps);
-        deps.setInputValue(
-          state,
-          {
-            type: 'video',
-            video: {
-              asset: { ref: uploaded.assetRef },
-              ...(state.videoName ? { name: state.videoName } : {}),
-              fit: 'cover',
-              position: 'center',
-              loop: true,
-              muted: true,
-              autoplay: true,
-            },
-          },
-          true,
-        );
+        state.videoAssetId = uploaded.assetId;
+        state.videoPosterAssetId = null;
+        setVideoSrc(state, uploaded.url, { commit: true }, deps);
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
         if (isAssetEntitlementReasonKey(message)) {
           dispatchAssetEntitlementGate(state.root, message);
         }
+        state.videoAssetId = previousAssetId;
+        state.videoPosterAssetId = previousPosterAssetId;
         state.videoName = previousName;
         setVideoSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
         if (!previousSrc) {

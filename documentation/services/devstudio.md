@@ -86,12 +86,13 @@ Implementation note:
 - the surviving DevStudio local-tool routes are explicit Vite middleware routes
 - current runtime does not ship a Paris-backed DevStudio proxy layer
 - DevStudio local must not rely on Roma bootstrap capsules or customer auth semantics
+- in source profile, DevStudio expects explicit local platform-state seeding when local Tokyo saved snapshots or account asset manifests/blobs are missing
 
 Current local implementation layout:
 - [dev-widget-workspace.html](/Users/piero_macpro/code/VS/clickeen/admin/src/html/tools/dev-widget-workspace.html) is now a thin shell for the tool page
 - [main.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/main.js) is the workspace composition/runtime shell
 - [api.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/api.js) owns local-tool transport and DevStudio instance/l10n reads-writes
-- [bob-host.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/bob-host.js) owns compiled-widget fetch, full Bob open-editor envelope assembly, and iframe boot
+- [bob-host.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/bob-host.js) owns compiled-widget fetch, full Bob open-editor envelope assembly, host asset endpoint wiring, and iframe boot
 - [state.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/state.js) owns widget/publicId/local-instance helper logic
 - [devstudio.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite/devstudio.ts) owns the DevStudio Vite middleware/proxy family
 - [vite.config.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite.config.ts) is now the Vite shell plus plugin registration, not the hidden DevStudio proxy runtime
@@ -140,6 +141,12 @@ The surviving local DevStudio tool routes use explicit internal-tool transport w
 
 These are valid only for explicit DevStudio local tool routes.
 They must not be treated as product identity or account membership on product/account paths.
+
+Source-profile lane note:
+- `bash scripts/dev-up.sh --source` is boot-only
+- use `pnpm dev:seed:platform` to seed local DevStudio-visible platform state explicitly
+- use `pnpm dev:verify:platform` to verify the DevStudio/Bob platform lane explicitly
+- do not hide local product-state repair inside boot
 
 ## Troubleshooting
 

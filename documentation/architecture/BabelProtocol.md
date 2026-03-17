@@ -8,12 +8,13 @@
 
 ## What This Is
 
-The Babel Protocol is Clickeen's internal specification for **multi-dimensional content personalization via overlay composition**.
+The Babel Protocol is Clickeen's internal specification for **multi-dimensional content variants via parent-defined overlays**.
 
 **What it does:**
 
-- Enables rendering infinite content variants from a single base artifact
-- Provides deterministic, auditable personalization at request time
+- Lets a parent artifact define which overlay kinds and keys are allowed
+- Stores overlay-backed variants as immutable, content-addressed artifacts
+- Lets runtime deterministically resolve which artifact/hash to serve for a given context
 - Maintains performance through content-addressed caching
 
 **What it is NOT:**
@@ -36,8 +37,9 @@ The Babel Protocol is Clickeen's internal specification for **multi-dimensional 
 
 **Babel Protocol approach:**
 
-- Store 1 base artifact + dimensional overlays
-- Compose variants at request time via deterministic merge
+- Store 1 canonical base artifact + parent-defined overlay tokens
+- Materialize/store derived variant artifacts behind immutable hashes
+- Resolve or compose the correct variant deterministically depending on the surface
 - Scale to unlimited dimensions with sub-linear storage growth
 
 **Example:**
@@ -104,7 +106,17 @@ tokyo/widgets/{widget}/
 
 ---
 
-### 2. Dimensional Overlays
+### 2. Parent-Defined Overlay Tokens
+
+An overlay is not an open-ended runtime idea.
+
+- The **parent** defines which overlay families are legal (`locale`, `account`, `industry`, etc.)
+- The **parent** defines which paths are legal to vary
+- An overlay token identifies a controlled variant slot such as `locale=fr` or `account=salesforce`
+- The token is not the bytes themselves; it resolves to an immutable artifact or overlay file stored in Tokyo/R2
+- Runtime does not invent overlays. It decides whether to serve artifact/hash `A` or `B`
+
+Request-time composition is one valid execution model, but it is not the definition of Babel. Some surfaces can serve a prebuilt hashed artifact directly; others can compose from stored layers before publish/serve.
 
 **Structure (deterministic paths):**
 
@@ -120,7 +132,7 @@ tokyo/l10n/instances/<publicId>/
 └── behavior/<behaviorKey>/<baseFingerprint>.ops.json
 ```
 
-**Overlay format (ops-based):**
+**One valid overlay artifact shape (ops-based authoring layer):**
 
 ```json
 {
@@ -608,7 +620,8 @@ function checkEntitlement(tier: Tier, dimension: string, count: number): boolean
 
 - ✅ Store base artifacts (content-addressed, immutable)
 - ✅ Generate dimensional overlays (AI-powered, async)
-- ✅ Compose variants at request time (deterministic, fast)
+- ✅ Resolve and serve the correct variant artifact deterministically
+- ✅ Compose from stored layers where a surface requires it
 - ✅ Enforce path ownership (contract-based safety)
 - ✅ Cache aggressively (content-addressed, CDN-friendly)
 

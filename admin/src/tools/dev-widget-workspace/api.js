@@ -276,6 +276,7 @@ export function createWorkspaceApi(deps) {
       if (command === 'get-l10n-status') {
         const res = await fetchDevStudio(
           buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(publicId)}/l10n/status`, {
+            accountId,
             _t: Date.now(),
           }),
         );
@@ -409,8 +410,10 @@ export function createWorkspaceApi(deps) {
     setL10nStatusDisplay({ state: 'loading', tone: 'pending', value: 'Loading...', meta: '' });
 
     try {
+      const accountId = await resolveDevStudioAccountId();
       const res = await fetchDevStudio(
         buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(publicId)}/l10n/status`, {
+          accountId,
           _t: Date.now(),
         }),
       );

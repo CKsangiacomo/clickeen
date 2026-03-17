@@ -1,4 +1,4 @@
-# The Babel Protocol: Infinite Personalized Variants at Request Time
+# The Babel Protocol: Infinite Personalized Variants from Content-Addressed Overlays
 
 **Vision Document**
 **Version:** 4.0 (The Personalization Revelation)
@@ -12,7 +12,7 @@
 - **v4.0:** THE BIG REVEAL - Not just localization, but universal personalization (language + industry + ABM + A/B + geo + device + time + behavior)
 
 **Critical expansion from v3.0:**
-1. **Product definition:** Not "multi-language platform" but "universal personalization engine"
+1. **Product definition:** Not "multi-language platform" but "content-addressed variant infrastructure for personalization"
 2. **Competitive set:** Not just HubSpot/Sprout ($4K-10K/year) but entire enterprise personalization stack ($200K-500K/year)
 3. **TAM expansion:** From $587B to $603.5B (added A/B testing, personalization, ABM, CMS markets)
 4. **Core insight:** Language overlays were just the first use case - same architecture powers infinite personalization dimensions
@@ -22,8 +22,8 @@
 ## TL;DR - The v4.0 Bottom Line (With Personalization)
 
 **What Clickeen Is:**
-- The Babel Protocol: Dynamic personalization as infrastructure
-- Renders infinite variants of content based on ANY context (language, industry, account, A/B test, geo, device, behavior)
+- The Babel Protocol: content-addressed personalization as infrastructure
+- Resolves and serves the right stored content variant based on ANY context (language, industry, account, A/B test, geo, device, behavior)
 - Not a widget company, not a translation company - we're building a new layer of the internet stack
 - **Replaces $200K-500K/year enterprise personalization stack for $5,988-11,988/year**
 
@@ -71,7 +71,7 @@
 
 Clickeen is not building a widget company or a translation platform. We are building **the Babel Protocol** - a fundamental new layer of the internet stack that enables dynamic personalization at scale.
 
-**The Babel Protocol renders infinite variants of content based on ANY context:**
+**The Babel Protocol supports infinite variants of content based on ANY context:**
 - 🌍 Language (14+ languages)
 - 🏢 Industry (Healthcare, Finance, E-commerce, etc.)
 - 🎯 ABM (account-specific messaging for Salesforce, Google, etc.)
@@ -96,9 +96,9 @@ Clickeen is not building a widget company or a translation platform. We are buil
 - **Result: Companies only do 1-2 languages, zero personalization, limited A/B testing**
 
 **Clickeen's Internet Architecture:**
-- Every company maintains N base artifacts + contextual overlays
+- Every company maintains N base artifacts + contextual overlay tokens
 - N = number of creative assets (content-addressed, version controlled)
-- Overlays = infinite variants rendered dynamically at request time
+- Overlays = parent-defined variant tokens backed by stored artifacts
   - 🌍 **Language overlays** (French, Spanish, Japanese, etc.)
   - 🏢 **Industry overlays** (Healthcare, Finance, E-commerce, etc.)
   - 🎯 **ABM overlays** (account-specific messaging for Salesforce, Google, etc.)
@@ -107,15 +107,15 @@ Clickeen is not building a widget company or a translation platform. We are buil
   - 📱 **Device overlays** (mobile, desktop, tablet)
   - 🕐 **Time overlays** (seasonal campaigns, flash sales)
   - 👤 **Behavior overlays** (first-time visitor, returning customer, churned user)
-- Reality: **Every company renders infinite personalized variants based on ANY context**
+- Reality: **Every company can serve infinite personalized variants based on ANY context without storing full copies**
 
 **This is not about translation. This is about dynamic content rendering at scale.**
 
 **Example:**
 - Base config: 1 landing page
 - Possible variants: 14 languages × 50 industries × 100 ABM accounts × 5 A/B variants × 10 geos = **350 MILLION variants**
-- Storage required: **1 base + ~200 overlay files** (not 350M pages)
-- Render time: <50ms (merge overlays at request time)
+- Storage required: **1 base + ~200 overlay files/artifacts** (not 350M pages)
+- Serve time: selector resolves the correct artifact/hash; some surfaces may also compose deterministically when needed
 
 This is not incremental innovation. This is a **fundamental architectural shift in how personalized content works on the web.**
 
@@ -126,16 +126,16 @@ This is not incremental innovation. This is a **fundamental architectural shift 
 - "Make your website speak every language"
 
 **What we actually built:**
-- **Universal content personalization engine**
-- "Render infinite variants of your content based on ANY context"
+- **Content-addressed variant infrastructure for personalization**
+- "Define allowed variants once, store them immutably, and serve the right one for the context"
 
 **The architecture breakthrough:**
 
 ```typescript
-// Current implementation (language only)
+// One implementation shape (language only)
 const config = applyOps(baseConfig, languageOverlay.ops);
 
-// Actual capability (multi-dimensional personalization)
+// Another implementation shape (multi-dimensional personalization)
 const config = applyOps(
   baseConfig,
   languageOverlay.ops,      // 🌍 French

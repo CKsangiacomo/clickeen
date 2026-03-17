@@ -2,10 +2,11 @@
 set -euo pipefail
 
 # Canonical local startup script.
-# Starts local services only and keeps startup concerns boring:
+# Keeps local bring-up boring:
 # - load env
 # - start services
 # - health checks
+# - source-profile local platform-state seed + verification
 
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT_DIR"
@@ -184,7 +185,7 @@ ensure_stack_ports_healthy() {
   local attempts="${1:-8}"
   local interval_seconds="${2:-1}"
   local include_sf="${3:-0}"
-  local ports=(3000 3001 3003 3005 4000 4321 5173 8790 8791)
+  local ports=(3000 3003 3005 4000 4321 5173 8790 8791)
   if [ "$include_sf" = "1" ]; then
     ports+=(3002)
   fi
@@ -411,7 +412,7 @@ fi
 if [ "$DEV_PROFILE" = "product" ]; then
   STACK_PORTS=(3000 5173)
 else
-  STACK_PORTS=(3000 3001 3002 3003 3005 4000 4321 5173 8790 8791)
+  STACK_PORTS=(3000 3002 3003 3005 4000 4321 5173 8790 8791)
 fi
 
 ensure_lock
@@ -487,6 +488,7 @@ if [ "$DEV_PROFILE" = "product" ]; then
   echo "  Tokyo URL:  $TOKYO_URL"
   echo "  Berlin URL: $BERLIN_URL"
   echo "  DevStudio:  http://localhost:5173"
+  echo "[dev-up] Run 'pnpm dev:verify:platform' for an explicit DevStudio/Bob platform-lane check."
   echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
   print_stack_port_status
   exit 0
@@ -667,17 +669,6 @@ if ! node "$ROOT_DIR/scripts/tokyo-fonts-sync.mjs" --local --persist-to "$WRANGL
   echo "[dev-up] WARNING: Tokyo font sync failed; special fonts may not load until sync succeeds."
 fi
 
-echo "[dev-up] Syncing missing Tokyo account assets to local R2"
-if ! node "$ROOT_DIR/scripts/tokyo-assets-sync.mjs" --persist-to "$WRANGLER_PERSIST_DIR"; then
-  echo "[dev-up] WARNING: Tokyo asset sync failed; some local /assets/v/* refs may return unavailable."
-fi
-
-echo "[dev-up] Ensuring local curated/main Tokyo saved snapshots"
-if ! TOKYO_WORKER_BASE_URL="http://localhost:8791" node "$ROOT_DIR/scripts/dev/ensure-curated-tokyo-saved.mjs"; then
-  echo "[dev-up] ERROR: local curated/main Tokyo saved snapshot sync failed."
-  exit 1
-fi
-
 echo "[dev-up] Starting Venice embed runtime (3003)"
 (
   cd "$ROOT_DIR/venice"
@@ -755,7 +746,7 @@ prewarm_bob_routes
 echo "[dev-up] Starting DevStudio (5173)"
 (
   cd "$ROOT_DIR/admin"
-  start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 CK_DEV_PROFILE=source CK_INTERNAL_SERVICE_JWT="$CK_INTERNAL_SERVICE_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" pnpm dev
+  start_detached "$LOG_DIR/devstudio.dev.log" env CI=1 PORT=5173 CK_DEV_PROFILE=source CK_INTERNAL_SERVICE_JWT="$CK_INTERNAL_SERVICE_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" pnpm dev
   DEVSTUDIO_PID="$STARTED_PID"
   echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
   register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"
@@ -786,7 +777,6 @@ echo "[dev-up] URLs:"
 echo "  Tokyo URL: $TOKYO_URL"
 echo "  Tokyo local stub: http://localhost:4000/healthz"
 echo "  Berlin:    http://localhost:3005/internal/healthz"
-echo "  Paris:     http://localhost:3001"
 if [ -n "$SF_BASE_URL" ]; then
   echo "  SF:        http://localhost:3002/healthz"
 fi
@@ -795,6 +785,9 @@ echo "  DevStudio: http://localhost:5173"
 echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000 ($SUPABASE_TARGET_LABEL Supabase)"
 echo "  Pitch:     http://localhost:8790/healthz"
 echo "  Prague:    http://localhost:4321/us/en/widgets/faq"
+if [ "$DEV_PROFILE" = "source" ]; then
+  echo "[dev-up] Source profile will seed + verify local platform state before completion."
+fi
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
 print_stack_port_status
 
@@ -810,4 +803,26 @@ if ! ensure_stack_ports_healthy "$DEV_UP_HEALTH_ATTEMPTS" "$DEV_UP_HEALTH_INTERV
     stop_port "$p"
   done
   exit 1
+fi
+
+if [ "$DEV_PROFILE" = "source" ]; then
+  echo "[dev-up] Seeding local platform state"
+  if ! node "$ROOT_DIR/scripts/dev/seed-local-platform-state.mjs" --persist-to "$WRANGLER_PERSIST_DIR"; then
+    echo "[dev-up] Source-profile platform seeding failed. Cleaning listeners."
+    stop_repo_wrangler_processes
+    for p in "${STACK_PORTS[@]}"; do
+      stop_port "$p"
+    done
+    exit 1
+  fi
+
+  echo "[dev-up] Verifying local platform state"
+  if ! node "$ROOT_DIR/scripts/dev/verify-local-platform-state.mjs"; then
+    echo "[dev-up] Source-profile platform verification failed. Cleaning listeners."
+    stop_repo_wrangler_processes
+    for p in "${STACK_PORTS[@]}"; do
+      stop_port "$p"
+    done
+    exit 1
+  fi
 fi

@@ -1,11 +1,13 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 import { AssetPickerOverlay } from './asset-picker-overlay';
+import { resolveMediaAssetChoices } from './asset-picker-data';
 import {
   parseFillValue,
+  readImageAssetId,
   readImageName,
-  readImageSrc,
+  readVideoAssetId,
   readVideoName,
-  readVideoSrc,
+  readVideoPosterAssetId,
   resolveModeFromFill,
 } from './fill-parser';
 import { DEFAULT_GRADIENT, MODE_ORDER, type FillMode, type FillValue } from './fill-types';
@@ -155,10 +157,13 @@ function createState(root: HTMLElement): DropdownFillState | null {
           const current = states.get(root);
           if (!current) return;
           if (current.assetPickerKind === 'video') {
+            current.videoAssetId = item.assetId;
+            current.videoPosterAssetId = null;
             current.videoName = item.normalizedFilename;
             setVideoSrc(current, item.url, { commit: true });
             return;
           }
+          current.imageAssetId = item.assetId;
           current.imageName = item.normalizedFilename;
           setImageSrc(current, item.url, { commit: true });
         },
@@ -240,10 +245,12 @@ function createState(root: HTMLElement): DropdownFillState | null {
     assetPickerOverlay,
     fileInput,
     imageSrc: null,
+    imageAssetId: null,
     imageName: null,
     imageObjectUrl: null,
     imageUnavailable: false,
     imageAvailabilityRequestId: 0,
+    imageResolveRequestId: 0,
     imageAssetPickerOpen: false,
     imageAssetPickerLoading: false,
     videoPanel,
@@ -253,9 +260,12 @@ function createState(root: HTMLElement): DropdownFillState | null {
     videoRemoveButton,
     videoFileInput,
     videoSrc: null,
+    videoAssetId: null,
+    videoPosterAssetId: null,
     videoName: null,
     videoObjectUrl: null,
     videoUnavailable: false,
+    videoResolveRequestId: 0,
     assetPickerKind: 'image',
     allowedModes,
     mode,
@@ -394,6 +404,36 @@ function setVideoSrc(state: DropdownFillState, src: string | null, opts: SetMedi
   setVideoSrcCore(state, src, opts, mediaDeps());
 }
 
+async function resolveImagePreviewFromAssetId(state: DropdownFillState, assetId: string): Promise<void> {
+  state.imageResolveRequestId += 1;
+  const requestId = state.imageResolveRequestId;
+  try {
+    const resolved = await resolveMediaAssetChoices([assetId]);
+    if (state.imageResolveRequestId !== requestId) return;
+    if (state.imageAssetId !== assetId) return;
+    const entry = resolved.get(assetId);
+    if (!entry?.url) return;
+    setImageSrc(state, entry.url, { commit: false });
+  } catch {
+    // Keep the authoring state intact even if preview hydration cannot resolve this asset.
+  }
+}
+
+async function resolveVideoPreviewFromAssetId(state: DropdownFillState, assetId: string): Promise<void> {
+  state.videoResolveRequestId += 1;
+  const requestId = state.videoResolveRequestId;
+  try {
+    const resolved = await resolveMediaAssetChoices([assetId]);
+    if (state.videoResolveRequestId !== requestId) return;
+    if (state.videoAssetId !== assetId) return;
+    const entry = resolved.get(assetId);
+    if (!entry?.url) return;
+    setVideoSrc(state, entry.url, { commit: false });
+  } catch {
+    // Keep the authoring state intact even if preview hydration cannot resolve this asset.
+  }
+}
+
 function setInputValue(state: DropdownFillState, value: FillValue, emit: boolean) {
   const json = JSON.stringify(value);
   state.internalWrite = true;
@@ -487,10 +527,17 @@ function syncFromValue(state: DropdownFillState, raw: string) {
 
   if (fill.type === 'none') {
     if (nextMode === 'image') {
+      state.imageResolveRequestId += 1;
+      state.imageAssetId = null;
+      state.imageName = null;
       setImageSrc(state, null, { commit: false });
       return;
     }
     if (nextMode === 'video') {
+      state.videoResolveRequestId += 1;
+      state.videoAssetId = null;
+      state.videoPosterAssetId = null;
+      state.videoName = null;
       setVideoSrc(state, null, { commit: false });
       return;
     }
@@ -527,14 +574,25 @@ function syncFromValue(state: DropdownFillState, raw: string) {
   }
 
   if (fill.type === 'image') {
+    state.imageResolveRequestId += 1;
+    state.imageAssetId = readImageAssetId(fill);
     state.imageName = readImageName(fill);
-    setImageSrc(state, readImageSrc(fill), { commit: false });
+    setImageSrc(state, null, { commit: false });
+    if (state.imageAssetId) {
+      void resolveImagePreviewFromAssetId(state, state.imageAssetId);
+    }
     return;
   }
 
   if (fill.type === 'video') {
+    state.videoResolveRequestId += 1;
+    state.videoAssetId = readVideoAssetId(fill);
+    state.videoPosterAssetId = readVideoPosterAssetId(fill);
     state.videoName = readVideoName(fill);
-    setVideoSrc(state, readVideoSrc(fill), { commit: false });
+    setVideoSrc(state, null, { commit: false });
+    if (state.videoAssetId) {
+      void resolveVideoPreviewFromAssetId(state, state.videoAssetId);
+    }
     return;
   }
 }

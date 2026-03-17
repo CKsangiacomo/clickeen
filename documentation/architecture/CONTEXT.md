@@ -202,7 +202,8 @@ curated_widget_instances.meta = {
 **Asset URL contract (pre-GA strict):**
 
 - Full canonical contract: [AssetManagement.md](./AssetManagement.md)
-- Persisted widget config stores account assets as immutable `asset.ref` refs; runtime materializes canonical root-relative paths: `/assets/v/:assetRef`.
+- Fill/media authoring config now stores logical asset identity (`assetId`, optional `posterAssetId`) while runtime/materialized config packs resolve those ids to canonical root-relative paths: `/assets/v/:assetRef`.
+- Logo/media authoring surfaces use the same split: uploaded logos persist `asset.assetId` plus editor metadata, while runtime consumes only the materialized `logoFill`.
 - Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and `/assets/v/*`-backed `logoFill` strings) are outside contract and rejected on write.
 - Legacy `/arsenale/a/**` and `/arsenale/o/**` paths are outside the runtime contract and are rejected on new writes.
 - `DELETE` on an account asset is synchronous in the delete path (metadata + blob) with no snapshot rebuild/healing side effects; subsequent `/assets/v/**` reads return unavailable.

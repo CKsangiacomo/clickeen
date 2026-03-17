@@ -6,6 +6,7 @@ import {
 } from '@clickeen/l10n';
 import { applyTextPackToConfig } from './text-packs';
 import { generateMetaPack } from './seo-geo';
+import { buildTokyoScopedHeaders } from './tokyo-product-auth';
 
 export type AccountL10nPolicy = {
   v: 1;
@@ -224,17 +225,17 @@ function buildLocalizedTextPack(args: {
 function buildTokyoAccountHeaders(args: {
   accessToken: string;
   accountId: string;
+  internalServiceName?: string | null;
   accountCapsule?: string | null;
   contentType?: string;
 }): Headers {
-  const headers = new Headers({
-    accept: 'application/json',
-    authorization: `Bearer ${args.accessToken}`,
-    'x-account-id': args.accountId,
+  return buildTokyoScopedHeaders({
+    accountId: args.accountId,
+    accessToken: args.accessToken,
+    internalServiceName: args.internalServiceName,
+    accountCapsule: args.accountCapsule,
+    contentType: args.contentType,
   });
-  if (args.accountCapsule) headers.set('x-ck-authz-capsule', args.accountCapsule);
-  if (args.contentType) headers.set('content-type', args.contentType);
-  return headers;
 }
 
 async function loadJson<T>(url: string, init?: RequestInit): Promise<{ status: number; json: T | null }> {
@@ -273,6 +274,7 @@ export async function loadSavedAccountInstanceFromTokyo(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  internalServiceName?: string | null;
   accountCapsule?: string | null;
 }): Promise<{
   config: Record<string, unknown>;
@@ -285,6 +287,7 @@ export async function loadSavedAccountInstanceFromTokyo(args: {
   const headers = buildTokyoAccountHeaders({
     accessToken: args.accessToken,
     accountId: args.accountId,
+    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
   });
   const savedResponse = await fetch(
@@ -766,6 +769,7 @@ export async function writeTokyoBaseSnapshot(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  internalServiceName?: string | null;
   accountCapsule?: string | null;
   baseFingerprint: string;
   baseTextPack: Record<string, string>;
@@ -779,6 +783,7 @@ export async function writeTokyoBaseSnapshot(args: {
       headers: buildTokyoAccountHeaders({
         accessToken: args.accessToken,
         accountId: args.accountId,
+        internalServiceName: args.internalServiceName,
         accountCapsule: args.accountCapsule,
         contentType: 'application/json',
       }),
@@ -801,6 +806,7 @@ export async function upsertTokyoOverlay(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  internalServiceName?: string | null;
   accountCapsule?: string | null;
   layer: 'locale' | 'user';
   layerKey: string;
@@ -819,6 +825,7 @@ export async function upsertTokyoOverlay(args: {
       headers: buildTokyoAccountHeaders({
         accessToken: args.accessToken,
         accountId: args.accountId,
+        internalServiceName: args.internalServiceName,
         accountCapsule: args.accountCapsule,
         contentType: 'application/json',
       }),
@@ -843,6 +850,7 @@ export async function deleteTokyoOverlay(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  internalServiceName?: string | null;
   accountCapsule?: string | null;
   layer: 'locale' | 'user';
   layerKey: string;
@@ -867,6 +875,7 @@ export async function deleteTokyoOverlay(args: {
       headers: buildTokyoAccountHeaders({
         accessToken: args.accessToken,
         accountId: args.accountId,
+        internalServiceName: args.internalServiceName,
         accountCapsule: args.accountCapsule,
         ...(body ? { contentType: 'application/json' } : {}),
       }),

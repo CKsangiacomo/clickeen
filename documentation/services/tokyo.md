@@ -76,7 +76,8 @@ Local dev:
 - `tokyo/dev-server.mjs` proxies canonical account asset reads (`/assets/v/*`) directly to `tokyo-worker` (no local mirror mode).
 - `tokyo/dev-server.mjs` proxies `POST /assets/upload` directly to `tokyo-worker` (same authority path as cloud-dev/prod).
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
-- `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` (so Venice can fetch published render snapshots from the same Tokyo origin).
+- `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` with forwarded auth headers (so DevStudio/Venice can read the same saved/live render surfaces from the same Tokyo origin).
+- `tokyo/dev-server.mjs` proxies instance-backed `GET /l10n/instances/*` reads to `tokyo-worker`; repo-local Prague/admin-owned l10n content still serves directly from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
 - `tokyo/dev-server.mjs` supports local upload endpoints:
   - `POST /assets/upload` (account-owned uploads; required header: `x-account-id`; optional trace headers: `x-public-id`, `x-widget-type`, `x-source`)
@@ -84,7 +85,11 @@ Local dev:
   - `GET /assets/integrity/:accountId` (account mirror integrity snapshot)
   - `GET /assets/integrity/:accountId/:assetId` (per-asset integrity snapshot)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
-- `scripts/dev-up.sh --source` starts the local Tokyo dev server + Tokyo-worker, builds Dieter + i18n, and runs Prague l10n verify on startup. If overlays are stale and San Francisco is reachable, it auto-runs translate + verify in the background. Instance l10n publish is driven by Roma/Tokyo-worker.
+- `scripts/dev-up.sh --source` starts the local Tokyo dev server + Tokyo-worker, builds Dieter + i18n, and runs Prague l10n verify on startup. It does not repair local product state.
+- Explicit local platform-state commands:
+  - `pnpm dev:seed:platform`
+  - `pnpm dev:verify:platform`
+- Account asset state is manifest-backed product truth. It must not be “repaired” by boot scripts with blob-only sync logic.
 
 ## l10n published artifacts (executed)
 
@@ -110,6 +115,7 @@ Cloud-dev:
   - `PUT /renders/instances/:publicId/saved.json` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`; local internal tool writes may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; requires `x-account-id` or `?accountId=`.)
   - `POST /assets/upload` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`. Local internal automation may use `TOKYO_DEV_JWT` only when it also declares an allowed `x-ck-internal-service`. Required header: `x-account-id`. Optional headers: `x-public-id`, `x-widget-type`, `x-source`.)
   - `GET /assets/account/:accountId` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`; local internal tool reads may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; member-scoped list)
+  - `POST /assets/account/:accountId/resolve` (product/internal path; resolves logical `assetId` values to canonical immutable asset reads for runtime materialization)
   - `DELETE /assets/:accountId/:assetId` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`; local internal tool reads may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; editor+-scoped hard delete path)
   - `GET /assets/integrity/:accountId` (local internal only: `Authorization: Bearer ${TOKYO_DEV_JWT}` + allowed `x-ck-internal-service`)
   - `GET /assets/integrity/:accountId/:assetId` (local internal only: `Authorization: Bearer ${TOKYO_DEV_JWT}` + allowed `x-ck-internal-service`)
@@ -124,6 +130,8 @@ Security rule (executed):
 
 Asset-domain note:
 - Tokyo upload metadata is ownership/file-centric and stored as per-asset manifest JSON in Tokyo R2.
+- Upload/list payloads expose both logical identity (`assetId`) and canonical storage identity (`assetRef`).
+- Tokyo runtime materialization resolves logical `assetId` values into canonical `/assets/v/...` reads before config packs are written.
 - The current repo snapshot does not persist a canonical "where used" index in Michael/Supabase.
 
 ## Links

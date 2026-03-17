@@ -19,6 +19,12 @@ export type AssetRef = {
   versionKey: string;
 };
 
+export type ResolvedAssetMaterialization = {
+  assetId: string;
+  assetRef: string;
+  url: string;
+};
+
 export declare const CK_ERROR_CODE: Readonly<{
   VALIDATION: 'VALIDATION';
   NOT_FOUND: 'NOT_FOUND';
@@ -48,6 +54,15 @@ export declare function parseCanonicalAssetRef(raw: unknown): AssetRef | null;
 export declare function isCanonicalAssetVersionRef(raw: unknown): boolean;
 export declare function isCanonicalAssetRef(raw: unknown): boolean;
 export declare function toCanonicalAssetVersionPath(versionKey: unknown): string | null;
+export declare function collectConfigMediaAssetIds(config: unknown): string[];
+export declare function materializeConfigMedia(
+  config: unknown,
+  resolvedAssets:
+    | Map<string, { assetId?: unknown; assetRef?: unknown; url?: unknown }>
+    | Record<string, { assetId?: unknown; assetRef?: unknown; url?: unknown } | undefined>
+    | null
+    | undefined,
+): unknown;
 export declare function configAssetUrlContractIssues(
   config: unknown,
   expectedAccountId?: string | null,

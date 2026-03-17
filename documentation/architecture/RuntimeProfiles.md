@@ -11,7 +11,7 @@
   - Berlin: `https://berlin-dev.clickeen.workers.dev`
   - Paris: `https://paris.dev.clickeen.com`
 - Local Tokyo/Tokyo-worker are not part of this default workflow.
-- DevStudio still boots from the local widget catalog in this profile; platform-owned instance discovery, boot, save, and localization all flow through the explicit local DevStudio route family, which resolves through Paris internal-tool routes in product profile.
+- DevStudio still boots from the local widget catalog in this profile; platform-owned instance discovery, boot, save, and localization all flow through the explicit local DevStudio route family against the cloud-dev Tokyo/Berlin plane.
 - DevStudio product mode uses local Bob so the editor never crosses a cloud-iframe-to-localhost browser boundary.
 
 ## source
@@ -21,6 +21,11 @@
 - Uses local Tokyo default: `http://localhost:4000`.
 - DevStudio should be opened with source params:
   - `/#/tools/dev-widget-workspace?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`
+- `bash scripts/dev-up.sh --source` is boot-only. It does not seed or repair local product state.
+- Explicit local platform-state commands:
+  - `pnpm dev:seed:platform`
+  - `pnpm dev:verify:platform`
+- If the local host lane needs DevStudio-visible snapshots or asset manifests/blobs, seed them explicitly. Do not hide product-state mutation inside boot.
 - Source-profile-only file mutation remains explicit:
   - `Update Theme` writes `tokyo/configs/themes.json`
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { materializeRuntimeConfigForPreview } from '../lib/session/runtimeConfigMaterializer';
 
 export function Workspace() {
   const session = useWidgetSession();
@@ -11,6 +12,8 @@ export function Workspace() {
   const host = preview.host;
   const hasWidget = Boolean(compiled);
   const runtimeData = previewData ?? instanceData;
+  const [materializedRuntimeData, setMaterializedRuntimeData] = useState<Record<string, unknown>>(runtimeData);
+  const [runtimeMaterializationError, setRuntimeMaterializationError] = useState<string | null>(null);
   const stageMode = String((runtimeData as any)?.stage?.canvas?.mode || 'viewport');
   const stageFixedWidth = Number((runtimeData as any)?.stage?.canvas?.width || 0);
   const stageFixedHeight = Number((runtimeData as any)?.stage?.canvas?.height || 0);
@@ -19,10 +22,36 @@ export function Workspace() {
   const [iframeHasState, setIframeHasState] = useState(false);
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
-  const latestRef = useRef({ compiled, instanceData: runtimeData, device, theme, locale });
+  const latestRef = useRef({ compiled, instanceData: materializedRuntimeData, device, theme, locale });
   useEffect(() => {
-    latestRef.current = { compiled, instanceData: runtimeData, device, theme, locale };
-  }, [compiled, runtimeData, device, theme, locale]);
+    latestRef.current = { compiled, instanceData: materializedRuntimeData, device, theme, locale };
+  }, [compiled, materializedRuntimeData, device, theme, locale]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const next = await materializeRuntimeConfigForPreview({
+          config: runtimeData,
+          accountId: meta?.accountId,
+          assetApiBase: meta?.assetApiBase,
+        });
+        if (cancelled) return;
+        setMaterializedRuntimeData(next);
+        setRuntimeMaterializationError(null);
+      } catch (error) {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : String(error);
+        setMaterializedRuntimeData(runtimeData);
+        setRuntimeMaterializationError(message);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [runtimeData, meta?.accountId, meta?.assetApiBase]);
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';
@@ -30,7 +59,7 @@ export function Workspace() {
   }, [hasWidget, compiled]);
 
   const iframeBackdrop = (() => {
-    const raw = (runtimeData as any)?.stage?.background;
+    const raw = (materializedRuntimeData as any)?.stage?.background;
     if (typeof raw !== 'string') return undefined;
     const value = raw.trim();
     if (!value) return undefined;
@@ -122,7 +151,7 @@ export function Workspace() {
     };
 
     iframeWindow.postMessage(message, '*');
-  }, [hasWidget, compiled, runtimeData, locale, device, theme, iframeLoaded]);
+  }, [hasWidget, compiled, materializedRuntimeData, locale, device, theme, iframeLoaded]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -195,9 +224,9 @@ export function Workspace() {
           <span className="label-s">Loading preview...</span>
         </div>
       ) : null}
-      {hasWidget && iframeLoadError ? (
+      {hasWidget && (iframeLoadError || runtimeMaterializationError) ? (
         <div className="workspace-status-overlay workspace-status-overlay--error" role="alert">
-          <span className="label-s">{iframeLoadError}</span>
+          <span className="label-s">{iframeLoadError || runtimeMaterializationError}</span>
         </div>
       ) : null}
 

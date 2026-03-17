@@ -4,7 +4,7 @@ import {
   configNonPersistableUrlIssues,
 } from '@clickeen/ck-contracts';
 import { stableStringify } from '@clickeen/l10n';
-import { buildTokyoProductHeaders } from './tokyo-product-auth';
+import { buildTokyoScopedHeaders } from './tokyo-product-auth';
 
 export type DirectRouteError = {
   kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
@@ -65,11 +65,15 @@ function normalizeAccountInstanceSource(value: unknown, publicId: string): 'acco
 
 function createTokyoAccountHeaders(args: {
   accountId: string;
+  accessToken?: string | null;
+  internalServiceName?: string | null;
   accountCapsule?: string | null;
   contentType?: string | null;
 }): Headers {
-  return buildTokyoProductHeaders({
+  return buildTokyoScopedHeaders({
     accountId: args.accountId,
+    accessToken: args.accessToken,
+    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
     contentType: args.contentType,
   });
@@ -132,6 +136,8 @@ async function loadSavedInstanceFromTokyo(args: {
 }): Promise<{ row: AccountInstanceCoreRow; config: Record<string, unknown> } | null> {
   const headers = createTokyoAccountHeaders({
     accountId: args.accountId,
+    accessToken: args.tokyoAccessToken,
+    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
   });
 
@@ -198,6 +204,8 @@ export async function writeSavedConfigToTokyo(args: {
 }): Promise<void> {
   const headers = createTokyoAccountHeaders({
     accountId: args.accountId,
+    accessToken: args.tokyoAccessToken,
+    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
     contentType: 'application/json',
   });
@@ -233,6 +241,8 @@ export async function deleteSavedConfigFromTokyo(args: {
 }): Promise<void> {
   const headers = createTokyoAccountHeaders({
     accountId: args.accountId,
+    accessToken: args.tokyoAccessToken,
+    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
   });
 
@@ -290,6 +300,8 @@ export async function updateSavedPointerMetadataInTokyo(args: {
 }): Promise<void> {
   const headers = createTokyoAccountHeaders({
     accountId: args.accountId,
+    accessToken: args.tokyoAccessToken,
+    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
     contentType: 'application/json',
   });
@@ -325,8 +337,10 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
   try {
     saved = await loadSavedInstanceFromTokyo({
       tokyoBaseUrl: args.tokyoBaseUrl,
+      tokyoAccessToken: args.tokyoAccessToken,
       accountId: args.accountId,
       publicId: args.publicId,
+      internalServiceName: args.internalServiceName,
       accountCapsule: args.accountCapsule,
     });
   } catch (error) {
@@ -417,8 +431,10 @@ export async function saveAccountInstanceDirect(args: {
   try {
     await writeSavedConfigToTokyo({
       tokyoBaseUrl: args.tokyoBaseUrl,
+      tokyoAccessToken: args.tokyoAccessToken,
       accountId: args.accountId,
       publicId: args.publicId,
+      internalServiceName: args.internalServiceName,
       accountCapsule: args.accountCapsule,
       widgetType: current.value.row.widgetType,
       config: args.config,

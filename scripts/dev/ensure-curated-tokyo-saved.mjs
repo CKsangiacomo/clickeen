@@ -1,15 +1,23 @@
 #!/usr/bin/env node
 
-const SUPABASE_URL = String(process.env.SUPABASE_URL || '')
-  .trim()
-  .replace(/\/+$/, '');
-const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+import {
+  createSupabaseClient,
+  createSupabaseHeaders as createSupabaseHeadersFromClient,
+} from './local-supabase.mjs';
+import { requestLoopback } from './local-loopback-http.mjs';
+import { resolveFirstRootEnvValue } from './local-root-env.mjs';
+
 const TOKYO_WORKER_BASE_URL = String(
   process.env.TOKYO_WORKER_BASE_URL || 'http://localhost:8791',
 )
   .trim()
   .replace(/\/+$/, '');
-const TOKYO_DEV_JWT = String(process.env.TOKYO_DEV_JWT || '').trim();
+const TOKYO_DEV_JWT = resolveFirstRootEnvValue(['TOKYO_DEV_JWT', 'CK_INTERNAL_SERVICE_JWT']);
+const PLATFORM_ACCOUNT_ID = String(
+  process.env.CK_PLATFORM_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100',
+)
+  .trim()
+  .toLowerCase();
 const TOKYO_INTERNAL_SERVICE_ID = 'devstudio.local';
 
 function fail(message) {
@@ -28,12 +36,11 @@ function asTrimmedString(value) {
 }
 
 function createSupabaseHeaders() {
-  const headers = new Headers();
-  headers.set('apikey', SUPABASE_SERVICE_ROLE_KEY);
-  headers.set('authorization', `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`);
-  headers.set('accept', 'application/json');
-  return headers;
+  return createSupabaseHeadersFromClient(SUPABASE_CLIENT);
 }
+
+const SUPABASE_CLIENT = createSupabaseClient({ preferLocal: true });
+const SUPABASE_URL = SUPABASE_CLIENT.base;
 
 function createTokyoHeaders(accountId) {
   const headers = new Headers();
@@ -65,21 +72,77 @@ async function loadCuratedRows() {
   return payload;
 }
 
+async function loadPlatformAccountRows() {
+  const headers = createSupabaseHeaders();
+  const [widgetsResponse, instancesResponse] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/widgets?select=id,type&limit=500`, {
+      method: 'GET',
+      headers,
+      cache: 'no-store',
+    }),
+    fetch(
+      `${SUPABASE_URL}/rest/v1/widget_instances?select=public_id,display_name,status,widget_id,account_id,config&account_id=eq.${encodeURIComponent(PLATFORM_ACCOUNT_ID)}&order=created_at.asc&limit=500`,
+      {
+        method: 'GET',
+        headers,
+        cache: 'no-store',
+      },
+    ),
+  ]);
+
+  const widgetsText = await widgetsResponse.text().catch(() => '');
+  const instancesText = await instancesResponse.text().catch(() => '');
+  const widgetsPayload = widgetsText ? JSON.parse(widgetsText) : null;
+  const instancesPayload = instancesText ? JSON.parse(instancesText) : null;
+
+  if (!widgetsResponse.ok) {
+    fail(`failed to load widget types (${widgetsResponse.status})${widgetsText ? ` ${widgetsText}` : ''}`);
+  }
+  if (!instancesResponse.ok) {
+    fail(
+      `failed to load platform account widget rows (${instancesResponse.status})${
+        instancesText ? ` ${instancesText}` : ''
+      }`,
+    );
+  }
+  if (!Array.isArray(widgetsPayload)) {
+    fail('widgets payload is invalid while syncing DevStudio Tokyo saved snapshots');
+  }
+  if (!Array.isArray(instancesPayload)) {
+    fail('platform account widget payload is invalid while syncing DevStudio Tokyo saved snapshots');
+  }
+
+  const widgetTypeById = new Map();
+  for (const row of widgetsPayload) {
+    const id = asTrimmedString(row?.id);
+    const type = asTrimmedString(row?.type);
+    if (!id || !type) continue;
+    widgetTypeById.set(id, type);
+  }
+
+  return instancesPayload.map((row) => ({
+    public_id: row?.public_id,
+    display_name: row?.display_name,
+    status: row?.status,
+    account_id: row?.account_id,
+    config: row?.config,
+    widget_type: widgetTypeById.get(asTrimmedString(row?.widget_id) || '') || null,
+  }));
+}
+
 async function hasSavedSnapshot(publicId, accountId) {
-  const response = await fetch(
+  const response = requestLoopback(
     `${TOKYO_WORKER_BASE_URL}/renders/instances/${encodeURIComponent(publicId)}/saved.json?accountId=${encodeURIComponent(accountId)}`,
     {
       method: 'GET',
       headers: createTokyoHeaders(accountId),
-      cache: 'no-store',
     },
   );
   if (response.status === 404) return false;
   if (!response.ok) {
-    const text = await response.text().catch(() => '');
     fail(
       `failed to read Tokyo saved snapshot for ${publicId} (${response.status})${
-        text ? ` ${text}` : ''
+        response.text ? ` ${response.text}` : ''
       }`,
     );
   }
@@ -97,7 +160,7 @@ async function writeSavedSnapshot(row) {
     fail(`invalid curated row while syncing Tokyo saved snapshots (${JSON.stringify(row)})`);
   }
 
-  const response = await fetch(
+  const response = requestLoopback(
     `${TOKYO_WORKER_BASE_URL}/renders/instances/${encodeURIComponent(publicId)}/saved.json?accountId=${encodeURIComponent(accountId)}`,
     {
       method: 'PUT',
@@ -106,7 +169,6 @@ async function writeSavedSnapshot(row) {
         headers.set('content-type', 'application/json');
         return headers;
       })(),
-      cache: 'no-store',
       body: JSON.stringify({
         widgetType,
         config,
@@ -117,10 +179,49 @@ async function writeSavedSnapshot(row) {
     },
   );
   if (!response.ok) {
-    const text = await response.text().catch(() => '');
     fail(
       `failed to write Tokyo saved snapshot for ${publicId} (${response.status})${
-        text ? ` ${text}` : ''
+        response.text ? ` ${response.text}` : ''
+      }`,
+    );
+  }
+}
+
+async function writePlatformAccountSavedSnapshot(row) {
+  const publicId = asTrimmedString(row?.public_id);
+  const widgetType = asTrimmedString(row?.widget_type);
+  const accountId = asTrimmedString(row?.account_id);
+  const config = isRecord(row?.config) ? row.config : null;
+  const displayName = asTrimmedString(row?.display_name);
+
+  if (!publicId || !widgetType || !accountId || !config) {
+    fail(
+      `invalid platform account row while syncing Tokyo saved snapshots (${JSON.stringify(row)})`,
+    );
+  }
+
+  const response = requestLoopback(
+    `${TOKYO_WORKER_BASE_URL}/renders/instances/${encodeURIComponent(publicId)}/saved.json?accountId=${encodeURIComponent(accountId)}`,
+    {
+      method: 'PUT',
+      headers: (() => {
+        const headers = createTokyoHeaders(accountId);
+        headers.set('content-type', 'application/json');
+        return headers;
+      })(),
+      body: JSON.stringify({
+        widgetType,
+        config,
+        displayName: displayName || publicId,
+        source: 'account',
+        meta: null,
+      }),
+    },
+  );
+  if (!response.ok) {
+    fail(
+      `failed to write Tokyo saved snapshot for platform account instance ${publicId} (${response.status})${
+        response.text ? ` ${response.text}` : ''
       }`,
     );
   }
@@ -128,14 +229,16 @@ async function writeSavedSnapshot(row) {
 
 async function main() {
   if (!SUPABASE_URL) fail('SUPABASE_URL is required');
-  if (!SUPABASE_SERVICE_ROLE_KEY) fail('SUPABASE_SERVICE_ROLE_KEY is required');
   if (!TOKYO_DEV_JWT) fail('TOKYO_DEV_JWT is required');
   if (!TOKYO_WORKER_BASE_URL) fail('TOKYO_WORKER_BASE_URL is required');
 
-  const rows = await loadCuratedRows();
+  const [curatedRows, platformRows] = await Promise.all([
+    loadCuratedRows(),
+    loadPlatformAccountRows(),
+  ]);
   let repaired = 0;
 
-  for (const row of rows) {
+  for (const row of curatedRows) {
     const publicId = asTrimmedString(row?.public_id);
     const accountId = asTrimmedString(row?.owner_account_id);
     if (!publicId || !accountId) {
@@ -147,8 +250,20 @@ async function main() {
     repaired += 1;
   }
 
+  for (const row of platformRows) {
+    const publicId = asTrimmedString(row?.public_id);
+    const accountId = asTrimmedString(row?.account_id);
+    if (!publicId || !accountId) {
+      fail(`platform account row missing public_id or account_id (${JSON.stringify(row)})`);
+    }
+    const exists = await hasSavedSnapshot(publicId, accountId);
+    if (exists) continue;
+    await writePlatformAccountSavedSnapshot(row);
+    repaired += 1;
+  }
+
   console.log(
-    `[ensure-curated-tokyo-saved] verified ${rows.length} curated/main rows; repaired ${repaired} missing Tokyo saved snapshots`,
+    `[ensure-curated-tokyo-saved] verified ${curatedRows.length} curated/main rows and ${platformRows.length} platform account rows; repaired ${repaired} missing Tokyo saved snapshots`,
   );
 }
 

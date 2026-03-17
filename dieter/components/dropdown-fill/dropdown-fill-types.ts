@@ -53,10 +53,12 @@ export type DropdownFillState = {
   assetPickerOverlay: AssetPickerOverlay | null;
   fileInput: HTMLInputElement | null;
   imageSrc: string | null;
+  imageAssetId: string | null;
   imageName: string | null;
   imageObjectUrl: string | null;
   imageUnavailable: boolean;
   imageAvailabilityRequestId: number;
+  imageResolveRequestId: number;
   imageAssetPickerOpen: boolean;
   imageAssetPickerLoading: boolean;
   videoPanel: HTMLElement | null;
@@ -66,9 +68,12 @@ export type DropdownFillState = {
   videoRemoveButton: HTMLButtonElement | null;
   videoFileInput: HTMLInputElement | null;
   videoSrc: string | null;
+  videoAssetId: string | null;
+  videoPosterAssetId: string | null;
   videoName: string | null;
   videoObjectUrl: string | null;
   videoUnavailable: boolean;
+  videoResolveRequestId: number;
   assetPickerKind: 'image' | 'video';
   allowedModes: FillMode[];
   mode: FillMode;

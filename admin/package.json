@@ -7,10 +7,10 @@
   "scripts": {
     "predev": "node scripts/generate-typography-json.cjs && node scripts/generate-icons-showcase.local.cjs && tsx scripts/generate-component-pages.ts",
     "prebuild": "node scripts/generate-typography-json.cjs && node scripts/generate-icons-showcase.local.cjs && tsx scripts/generate-component-pages.ts",
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest"
+    "dev": "node --import tsx ./node_modules/vite/bin/vite.js",
+    "build": "node --import tsx ./node_modules/vite/bin/vite.js build",
+    "preview": "node --import tsx ./node_modules/vite/bin/vite.js preview",
+    "test": "node --import tsx ./node_modules/vitest/vitest.mjs"
   },
   "keywords": [],
   "author": "Codex AI",
@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@clickeen/ck-policy": "workspace:*",
+    "@clickeen/l10n": "workspace:*",
     "gsap": "^3.13.0"
   }
 }

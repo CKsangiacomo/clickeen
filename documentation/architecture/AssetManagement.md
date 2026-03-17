@@ -23,7 +23,9 @@ For platform context see [Overview.md](./Overview.md), [CONTEXT.md](./CONTEXT.md
 - Blob bytes: `assets/versions/{accountId}/{assetId}/{filename}` in Tokyo R2.
 - Manifest metadata: `assets/meta/accounts/{accountId}/assets/{assetId}.json` in Tokyo R2.
 - Canonical immutable read path: `/assets/v/:assetRef` (derived from stored key).
-- Config references immutable asset refs only (no persisted runtime URLs).
+- Authoring media surfaces reference logical asset identity (`assetId`, optional `posterAssetId`).
+- Logo/media authoring controls persist `asset.assetId` plus editor metadata where needed; they do not persist Tokyo storage refs.
+- Runtime/materialized config packs resolve those logical ids to immutable `/assets/v/:assetRef` paths.
 
 Manifest must carry:
 - `assetId` (immutable identity)
@@ -63,7 +65,8 @@ Roma control-plane routes proxy account-safe operations for product UI:
    - unsafe path/url chars are rejected
    - no rename/rewrite policy is applied server-side
 4. Blob is written once; manifest is written once.
-5. Upload response returns immutable asset identity (`assetRef`), exact size (`sizeBytes`), MIME (`contentType`), and `assetType`.
+5. Upload response returns immutable asset identity (`assetId` + canonical `assetRef`), exact size (`sizeBytes`), MIME (`contentType`), and `assetType`.
+6. Tokyo owns runtime asset resolution (`assetId -> assetRef -> /assets/v/...`) for materialized config packs and other runtime artifacts.
 
 ---
 
@@ -106,6 +109,7 @@ Roma control-plane routes proxy account-safe operations for product UI:
 4. Upload path is original-only, rejects `x-variant`, classifies/stores `assetType`, and stores exact `sizeBytes`.
 5. Read path resolves canonical immutable `assetRef` only.
 6. List path returns only:
+   - `assetId`
    - `assetRef`
    - `assetType`
    - `contentType`
@@ -114,8 +118,8 @@ Roma control-plane routes proxy account-safe operations for product UI:
    - `createdAt`
    - `url`
 7. Delete path uses `accountId + assetId` identity and hard-deletes blob + metadata.
-8. Paris config validation rejects legacy media URL persistence and enforces `asset.ref`.
-9. Bob write path persists immutable refs (`asset.ref` / `poster.ref`) only.
+8. Persisted authoring config rejects legacy media URL persistence and treats storage refs as runtime-only details for migrated media surfaces.
+9. Migrated Bob media controls persist logical media identity (`assetId`, optional `posterAssetId`) only.
 10. Roma assets domain uses strict upload/list/bulk-upload/delete contract only.
 11. Migration utility is retired after hard-cut completion (no persistent migration script in the repo).
 12. Delete obsolete legacy asset migration scripts and helpers.

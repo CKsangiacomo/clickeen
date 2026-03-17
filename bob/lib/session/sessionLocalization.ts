@@ -103,7 +103,11 @@ export function normalizeLocalizationSnapshotForOpenMode(
       ? switcherRaw.enabled
       : DEFAULT_LOCALE_STATE.accountL10nPolicy.switcher.enabled;
   const switcherLocalesRaw = switcherRaw?.locales;
-  if (options.strict && !Array.isArray(switcherLocalesRaw)) failLocalizationSnapshot('switcher_locales_invalid');
+  const switcherLocalesDeclared =
+    Boolean(switcherRaw) && Object.prototype.hasOwnProperty.call(switcherRaw, 'locales');
+  if (options.strict && switcherLocalesDeclared && !Array.isArray(switcherLocalesRaw)) {
+    failLocalizationSnapshot('switcher_locales_invalid');
+  }
   const switcherLocales = Array.isArray(switcherLocalesRaw)
     ? Array.from(
         new Set(

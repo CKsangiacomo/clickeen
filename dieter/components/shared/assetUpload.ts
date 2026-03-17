@@ -21,6 +21,7 @@ export type EditorAssetIdentity = {
 };
 
 export type EditorAssetUploadResult = {
+  assetId: string;
   assetRef: string;
   url: string;
   assetType: string;
@@ -157,7 +158,11 @@ export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<Ed
     throw new Error('coreui.errors.assets.uploadFailed');
   }
   const payloadRecord = payload as Record<string, unknown>;
+  const assetId = typeof payloadRecord.assetId === 'string' ? payloadRecord.assetId.trim() : '';
   const assetRef = normalizeAssetRef(payloadRecord);
+  if (!assetId) {
+    throw new Error('coreui.errors.assets.uploadFailed');
+  }
   if (!assetRef) {
     throw new Error('coreui.errors.assets.uploadFailed');
   }
@@ -171,6 +176,7 @@ export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<Ed
   const createdAt = typeof payloadRecord.createdAt === 'string' ? payloadRecord.createdAt.trim() : '';
 
   return {
+    assetId,
     assetRef,
     url,
     assetType: assetType || 'other',

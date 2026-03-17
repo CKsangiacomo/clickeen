@@ -1,4 +1,4 @@
-import { parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
+import { isUuid } from '@clickeen/ck-contracts';
 import {
   DEFAULT_GRADIENT,
   MODE_ORDER,
@@ -11,31 +11,9 @@ import {
 } from './fill-types';
 import { clampNumber, parseColor } from './color-utils';
 
-function resolveAssetBaseHref(): string {
-  if (typeof window === 'undefined') return 'http://localhost/';
-  return window.location.href || 'http://localhost/';
-}
-
-export function assetRefToPath(refRaw: string): string | null {
-  const ref = String(refRaw || '').trim();
-  const canonical = toCanonicalAssetVersionPath(ref);
-  return canonical || null;
-}
-
-export function assetRefToUrl(refRaw: string): string | null {
-  const path = assetRefToPath(refRaw);
-  if (!path) return null;
-  try {
-    return new URL(path, resolveAssetBaseHref()).toString();
-  } catch {
-    return path;
-  }
-}
-
-export function assetRefFromUrl(raw: string): string | null {
-  const parsed = parseCanonicalAssetRef(raw);
-  if (!parsed || parsed.kind !== 'version') return null;
-  return parsed.versionKey;
+function normalizeAssetId(raw: unknown): string {
+  const value = typeof raw === 'string' ? raw.trim() : '';
+  return isUuid(value) ? value : '';
 }
 
 function normalizeImageValue(raw: unknown): ImageValue {
@@ -43,19 +21,13 @@ function normalizeImageValue(raw: unknown): ImageValue {
     return { fit: 'cover', position: 'center', repeat: 'no-repeat' };
   }
   const value = raw as Record<string, unknown>;
-  const assetRefDirect =
-    value.asset && typeof value.asset === 'object' && !Array.isArray(value.asset)
-      ? String((value.asset as Record<string, unknown>).ref || '').trim()
-      : '';
-  const assetRefFromCanonicalUrl = assetRefFromUrl(assetRefDirect) ?? '';
-  const assetRefCandidate = assetRefToPath(assetRefDirect) ? assetRefDirect : assetRefFromCanonicalUrl;
-  const assetRef = assetRefToPath(assetRefCandidate) ? assetRefCandidate : '';
+  const assetId = normalizeAssetId(value.assetId);
   const name = typeof value.name === 'string' ? value.name.trim() : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
   const repeat = typeof value.repeat === 'string' && value.repeat.trim() ? value.repeat.trim() : 'no-repeat';
   return {
-    ...(assetRef ? { asset: { ref: assetRef } } : {}),
+    ...(assetId ? { assetId } : {}),
     ...(name ? { name } : {}),
     fit,
     position,
@@ -68,20 +40,8 @@ function normalizeVideoValue(raw: unknown): VideoValue {
     return { fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true };
   }
   const value = raw as Record<string, unknown>;
-  const assetRefDirect =
-    value.asset && typeof value.asset === 'object' && !Array.isArray(value.asset)
-      ? String((value.asset as Record<string, unknown>).ref || '').trim()
-      : '';
-  const posterRefDirect =
-    value.poster && typeof value.poster === 'object' && !Array.isArray(value.poster)
-      ? String((value.poster as Record<string, unknown>).ref || '').trim()
-      : '';
-  const assetRefFromCanonicalUrl = assetRefFromUrl(assetRefDirect || '') ?? '';
-  const posterRefFromCanonicalUrl = assetRefFromUrl(posterRefDirect || '') ?? '';
-  const assetRefCandidate = assetRefToPath(assetRefDirect) ? assetRefDirect : assetRefFromCanonicalUrl;
-  const posterRefCandidate = assetRefToPath(posterRefDirect) ? posterRefDirect : posterRefFromCanonicalUrl;
-  const assetRef = assetRefToPath(assetRefCandidate) ? assetRefCandidate : '';
-  const posterRef = assetRefToPath(posterRefCandidate) ? posterRefCandidate : '';
+  const assetId = normalizeAssetId(value.assetId);
+  const posterAssetId = normalizeAssetId(value.posterAssetId);
   const name = typeof value.name === 'string' ? value.name.trim() : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
@@ -89,9 +49,9 @@ function normalizeVideoValue(raw: unknown): VideoValue {
   const muted = typeof value.muted === 'boolean' ? value.muted : true;
   const autoplay = typeof value.autoplay === 'boolean' ? value.autoplay : true;
   return {
-    ...(assetRef ? { asset: { ref: assetRef } } : {}),
+    ...(assetId ? { assetId } : {}),
+    ...(posterAssetId ? { posterAssetId } : {}),
     ...(name ? { name } : {}),
-    ...(posterRef ? { poster: { ref: posterRef } } : {}),
     fit,
     position,
     loop,
@@ -196,16 +156,19 @@ export function readVideoName(fill: FillValue): string | null {
   return typeof fill.video?.name === 'string' && fill.video.name.trim() ? fill.video.name.trim() : null;
 }
 
-export function readImageSrc(fill: FillValue): string | null {
-  const ref = String(fill.image?.asset?.ref || '').trim();
-  if (!ref) return null;
-  return assetRefToUrl(ref);
+export function readImageAssetId(fill: FillValue): string | null {
+  const assetId = typeof fill.image?.assetId === 'string' ? fill.image.assetId.trim() : '';
+  return isUuid(assetId) ? assetId : null;
 }
 
-export function readVideoSrc(fill: FillValue): string | null {
-  const ref = String(fill.video?.asset?.ref || '').trim();
-  if (!ref) return null;
-  return assetRefToUrl(ref);
+export function readVideoAssetId(fill: FillValue): string | null {
+  const assetId = typeof fill.video?.assetId === 'string' ? fill.video.assetId.trim() : '';
+  return isUuid(assetId) ? assetId : null;
+}
+
+export function readVideoPosterAssetId(fill: FillValue): string | null {
+  const assetId = typeof fill.video?.posterAssetId === 'string' ? fill.video.posterAssetId.trim() : '';
+  return isUuid(assetId) ? assetId : null;
 }
 
 export function defaultGradientAngle(): number {

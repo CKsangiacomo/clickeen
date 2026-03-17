@@ -234,6 +234,9 @@ export function createBobHost(deps) {
     }
     const requestSeq = ++sendInstanceSeq;
     const totalStart = performanceRef.now();
+    const hostOrigin = window.location.origin.replace(/\/+$/, '');
+    const assetApiBase = `${hostOrigin}/api/devstudio/assets`;
+    const assetUploadEndpoint = `${hostOrigin}/api/devstudio/assets/upload`;
 
     const target = iframe.contentWindow;
     if (!target) {
@@ -270,6 +273,8 @@ export function createBobHost(deps) {
         publicId,
         accountId: devstudioAccountId,
         ownerAccountId: devstudioAccountId,
+        assetApiBase,
+        assetUploadEndpoint,
         label,
         widgetname: slug,
         compiled,
@@ -306,6 +311,8 @@ export function createBobHost(deps) {
             : typeof supportTarget.accountId === 'string' && supportTarget.accountId.trim()
               ? supportTarget.accountId.trim()
               : '',
+        assetApiBase,
+        assetUploadEndpoint,
         label,
         widgetname: slug,
         compiled,
@@ -361,7 +368,8 @@ export function createBobHost(deps) {
     const config = envelope?.config ?? null;
     instance.config = config;
     instance.localization = envelope?.localization ?? null;
-    instance.policy = envelope?.policy ?? null;
+    instance.policy =
+      envelope?.policy && typeof envelope.policy === 'object' ? envelope.policy : DEVSTUDIO_LOCAL_POLICY;
     instance.status = envelope?.status === 'published' ? 'published' : 'unpublished';
     console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
     await postOpenEditorAndWait(target, {
@@ -373,6 +381,8 @@ export function createBobHost(deps) {
         typeof envelope?.ownerAccountId === 'string' && envelope.ownerAccountId.trim()
           ? envelope.ownerAccountId.trim()
           : devstudioAccountId,
+      assetApiBase,
+      assetUploadEndpoint,
       label,
       widgetname: slug,
       compiled,
