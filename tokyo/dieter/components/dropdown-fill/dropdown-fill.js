@@ -681,7 +681,7 @@ var Dieter = (() => {
     });
     if (!assetIds.length) return /* @__PURE__ */ new Map();
     const assetApiBase = resolveAssetApiBase();
-    const endpoint = assetApiBase ? `${assetApiBase}/resolve` : `/api/accounts/${encodeURIComponent(accountId)}/assets/resolve`;
+    const endpoint = assetApiBase ? `${assetApiBase}/resolve` : `/api/account/assets/resolve`;
     const response = await fetch(endpoint, {
       method: "POST",
       cache: "no-store",
@@ -763,7 +763,7 @@ var Dieter = (() => {
       limit: "200"
     });
     const assetApiBase = resolveAssetApiBase2();
-    const endpoint = assetApiBase ? `${assetApiBase}?${params.toString()}` : `/api/accounts/${encodeURIComponent(context.accountId)}/assets?${params.toString()}`;
+    const endpoint = assetApiBase ? `${assetApiBase}?${params.toString()}` : `/api/account/assets?${params.toString()}`;
     const response = await fetch(endpoint, {
       cache: "no-store"
     });
@@ -1736,7 +1736,7 @@ var Dieter = (() => {
     return readDatasetValue("ckAssetUploadEndpoint").trim();
   }
   function isAccountScopedRomaUploadEndpoint(value) {
-    return /\/api\/accounts\/[0-9a-f-]{36}\/assets\/upload(?:\?|$)/i.test(value);
+    return /\/api\/account\/assets\/upload(?:\?|$)/i.test(value) || /\/api\/accounts\/[0-9a-f-]{36}\/assets\/upload(?:\?|$)/i.test(value);
   }
   function isDevStudioUploadEndpoint(value) {
     return /\/api\/devstudio\/assets\/upload(?:\?|$)/i.test(value);
@@ -1802,7 +1802,7 @@ var Dieter = (() => {
     }
     const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? {});
     const source = args.source || "api";
-    const endpoint = (args.endpoint || resolveAssetUploadEndpoint() || `/api/accounts/${encodeURIComponent(context.accountId)}/assets/upload`).trim();
+    const endpoint = (args.endpoint || resolveAssetUploadEndpoint() || `/api/account/assets/upload`).trim();
     if (!isAccountScopedRomaUploadEndpoint(endpoint) && !isDevStudioUploadEndpoint(endpoint)) {
       throw new Error("coreui.errors.assets.uploadEndpoint.invalid");
     }

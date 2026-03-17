@@ -68,6 +68,9 @@ type BobAssetEntitlementDeniedMessage = {
 type BobAccountCommand =
   | 'get-localization-snapshot'
   | 'get-l10n-status'
+  | 'list-assets'
+  | 'resolve-assets'
+  | 'upload-asset'
   | 'update-instance'
   | 'put-user-locale-layer'
   | 'delete-user-locale-layer'
@@ -81,6 +84,7 @@ type BobAccountCommandMessage = {
   command?: BobAccountCommand | null;
   publicId?: string | null;
   locale?: string | null;
+  headers?: Record<string, string> | null;
   body?: unknown;
 };
 
@@ -208,6 +212,21 @@ function resolveBobAccountCommandRequest(args: {
         method: 'PUT',
         path: `/api/account/instance/${encodeURIComponent(publicId)}?subject=account`,
       };
+    case 'list-assets':
+      return {
+        method: 'GET',
+        path: `/api/account/assets?view=all&limit=200`,
+      };
+    case 'resolve-assets':
+      return {
+        method: 'POST',
+        path: `/api/account/assets/resolve`,
+      };
+    case 'upload-asset':
+      return {
+        method: 'POST',
+        path: `/api/account/assets/upload`,
+      };
     case 'put-user-locale-layer':
       if (!locale) return null;
       return {
@@ -309,6 +328,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       command: BobAccountCommand;
       publicId: string;
       locale?: string;
+      headers?: Record<string, string>;
       body?: unknown;
     }) => {
       const route = resolveBobAccountCommandRequest({
@@ -356,12 +376,26 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         const init: RequestInit = {
           method: route.method,
         };
-        if (typeof args.body !== 'undefined') {
-          init.headers = accountApi.buildHeaders({ contentType: 'application/json' });
-          init.body = JSON.stringify(args.body);
-        } else {
-          init.headers = accountApi.buildHeaders();
+        const headers = new Headers(accountApi.buildHeaders());
+        if (args.headers && typeof args.headers === 'object') {
+          for (const [key, value] of Object.entries(args.headers)) {
+            const normalizedKey = String(key || '').trim();
+            const normalizedValue = String(value || '').trim();
+            if (!normalizedKey || !normalizedValue) continue;
+            headers.set(normalizedKey, normalizedValue);
+          }
         }
+        if (typeof args.body !== 'undefined') {
+          if (args.command === 'upload-asset') {
+            init.body = args.body as BodyInit;
+          } else {
+            if (!headers.has('content-type')) {
+              headers.set('content-type', 'application/json');
+            }
+            init.body = JSON.stringify(args.body);
+          }
+        }
+        init.headers = headers;
 
         const response = await accountApi.fetchRaw(route.path, init);
         const payload = (await response.json().catch(() => null)) as unknown;
@@ -579,8 +613,8 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         ...(accountApi.accountCapsule ? { accountCapsule: accountApi.accountCapsule } : {}),
         ...(hostOrigin
           ? {
-              assetApiBase: `${hostOrigin}/api/account/assets`,
-              assetUploadEndpoint: `${hostOrigin}/api/account/assets/upload`,
+              assetApiBase: '/api/account/assets',
+              assetUploadEndpoint: '/api/account/assets/upload',
             }
           : {}),
         ownerAccountId,
@@ -659,6 +693,8 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         const command = message.command ?? null;
         const publicId = typeof message.publicId === 'string' ? message.publicId.trim() : '';
         const locale = typeof message.locale === 'string' ? message.locale.trim() : '';
+        const headers =
+          message.headers && typeof message.headers === 'object' ? message.headers : undefined;
         if (!requestId || !sessionId || !command || !publicId) return;
         if (sessionId !== bobSessionIdRef.current.trim()) return;
         void runBobAccountCommand({
@@ -668,6 +704,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
           command,
           publicId,
           ...(locale ? { locale } : {}),
+          ...(headers ? { headers } : {}),
           ...(typeof message.body === 'undefined' ? {} : { body: message.body }),
         });
         return;

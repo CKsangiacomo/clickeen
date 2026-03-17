@@ -50,7 +50,10 @@ function resolveAssetUploadEndpoint(): string {
 }
 
 function isAccountScopedRomaUploadEndpoint(value: string): boolean {
-  return /\/api\/accounts\/[0-9a-f-]{36}\/assets\/upload(?:\?|$)/i.test(value);
+  return (
+    /\/api\/account\/assets\/upload(?:\?|$)/i.test(value) ||
+    /\/api\/accounts\/[0-9a-f-]{36}\/assets\/upload(?:\?|$)/i.test(value)
+  );
 }
 
 function isDevStudioUploadEndpoint(value: string): boolean {
@@ -136,7 +139,7 @@ export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<Ed
   const endpoint = (
     args.endpoint ||
     resolveAssetUploadEndpoint() ||
-    `/api/accounts/${encodeURIComponent(context.accountId)}/assets/upload`
+    `/api/account/assets/upload`
   ).trim();
   if (!isAccountScopedRomaUploadEndpoint(endpoint) && !isDevStudioUploadEndpoint(endpoint)) {
     throw new Error('coreui.errors.assets.uploadEndpoint.invalid');

@@ -168,6 +168,9 @@ export type BobOpenEditorFailedMessage = {
 export type BobAccountCommand =
   | 'get-localization-snapshot'
   | 'get-l10n-status'
+  | 'list-assets'
+  | 'resolve-assets'
+  | 'upload-asset'
   | 'update-instance'
   | 'put-user-locale-layer'
   | 'delete-user-locale-layer'
@@ -181,6 +184,7 @@ export type BobAccountCommandMessage = {
   command: BobAccountCommand;
   publicId: string;
   locale?: string;
+  headers?: Record<string, string>;
   body?: unknown;
 };
 
