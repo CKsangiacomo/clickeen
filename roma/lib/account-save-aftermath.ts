@@ -432,7 +432,6 @@ export async function runAccountSaveAftermath(args: {
     baseFingerprint: result.baseFingerprint,
   });
   const runtimeConfigPack = await materializeRuntimeConfigMedia({
-    tokyoBaseUrl,
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     config: result.saved.config,

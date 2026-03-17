@@ -9,6 +9,10 @@ BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
 SANFRANCISCO_BASE_URL = "https://sanfrancisco.dev.clickeen.com"
 NEXT_PUBLIC_BOB_URL = "https://bob.dev.clickeen.com"
 
+[[services]]
+binding = "TOKYO_ASSET_CONTROL"
+service = "tokyo-assets-dev"
+
 [[kv_namespaces]]
 binding = "USAGE_KV"
 id = "eca50e55fa2a4f94a01fb81aeebf8377"

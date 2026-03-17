@@ -197,7 +197,7 @@ curated_widget_instances.meta = {
 
 **Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and account-owned upload blobs.
 
-**Tokyo Worker** — Cloudflare Worker that handles account-owned uploads (`/assets/upload`), serves immutable account asset paths (`/assets/v/:assetRef`), writes published **instance** l10n artifacts into Tokyo/R2, and publishes Venice render snapshots.
+**Tokyo Worker** — Cloudflare Worker that serves immutable account asset paths (`/assets/v/:assetRef`), exposes private Roma-bound asset authority routes over a Cloudflare service binding, writes published **instance** l10n artifacts into Tokyo/R2, and publishes Venice render snapshots.
 
 **Asset URL contract (pre-GA strict):**
 

@@ -155,7 +155,7 @@ Source:
 - In DevStudio, Bob/Dieter asset controls also use the local DevStudio route family:
   - list/delete assets: `/api/devstudio/assets/:accountId`
   - upload assets: `/api/devstudio/assets/upload`
-    This keeps DevStudio on the trusted local boundary instead of reusing product `/api/assets/*` routes.
+    This keeps DevStudio on the trusted local boundary instead of reusing product `/api/accounts/:accountId/assets*` routes.
 - MiniBob keeps a Bob-owned public helper route (`/api/instance/:publicId?subject=minibob`) for Prague host boot, but Bob still opens the editor only from the host `ck:open-editor` envelope. Bob no longer exposes account product routes.
 
 ### Dev subjects and policy (durable)
@@ -339,7 +339,7 @@ ToolDrawer has a single, global vertical rhythm. **Only clusters and groups defi
 
 Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file pick through the host-owned asset surface:
 
-- Product path: Roma asset routes (`/api/assets/*`) -> Tokyo-worker
+- Product path: Roma asset routes (`/api/accounts/:accountId/assets*`) -> Tokyo-worker
 - DevStudio local: trusted local `/api/devstudio/assets*` endpoints injected into Bob via query params
 - The host forwards the Berlin session bearer, Roma `x-ck-authz-capsule`, and account/public/widget trace headers.
 - Tokyo-worker executes from the capsule truth, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.

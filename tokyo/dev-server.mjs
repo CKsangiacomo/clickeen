@@ -11,7 +11,6 @@
  *   - GET /themes/**      → static files from tokyo/themes/**
  *   - GET /widgets/**     → static files from tokyo/widgets/**
  *   - GET /assets/v/**    → proxy to tokyo-worker canonical account assets
- *   - POST /assets/upload → proxy to tokyo-worker upload authority
  *
  * This lets Bob and other surfaces talk to a CDN-style base URL
  * (http://localhost:4000) in dev, mirroring the GA architecture.
@@ -379,9 +378,6 @@ function shouldProxyMutableToWorker(req, pathname) {
     return true;
   }
   if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/fonts/')) {
-    return true;
-  }
-  if (req.method === 'POST' && pathname === '/assets/upload') {
     return true;
   }
   if (

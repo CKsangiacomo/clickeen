@@ -194,7 +194,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 - Compiler determinism: `node scripts/compile-all-widgets.mjs`
 - Quick grep for removed/renamed surfaces:
   - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/ai/minibob/session|/api/accounts/.*/copilot|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
-  - `rg -n "claims/minibob/complete|/api/assets/:accountId|GET /api/accounts/:accountId/instance/:publicId|PUT /api/accounts/:accountId/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`
-  - `rg -n "/api/bootstrap|/api/roma/widgets|/api/minibob/handoff/start|/api/session/finish|/api/assets/:accountId" documentation --glob '*.md'`
+  - `rg -n "claims/minibob/complete|/api/accounts/:accountId/assets|GET /api/accounts/:accountId/instance/:publicId|PUT /api/accounts/:accountId/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`
+  - `rg -n "/api/bootstrap|/api/roma/widgets|/api/minibob/handoff/start|/api/session/finish|/api/accounts/:accountId/assets" documentation --glob '*.md'`
 
 When drift is found: update docs to match the shipped code/config immediately; treat mismatches as P0 doc bugs.

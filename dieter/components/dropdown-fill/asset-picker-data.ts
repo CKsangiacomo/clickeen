@@ -83,8 +83,8 @@ async function fetchMediaAssetChoices(kind: AssetPickerMediaKind): Promise<Media
   });
   const assetApiBase = resolveAssetApiBase();
   const endpoint = assetApiBase
-    ? `${assetApiBase}/${encodeURIComponent(context.accountId)}?${params.toString()}`
-    : `/api/assets/${encodeURIComponent(context.accountId)}?${params.toString()}`;
+    ? `${assetApiBase}?${params.toString()}`
+    : `/api/accounts/${encodeURIComponent(context.accountId)}/assets?${params.toString()}`;
 
   const response = await fetch(endpoint, {
     cache: 'no-store',

@@ -1,5 +1,5 @@
 import { collectConfigMediaAssetIds, materializeConfigMedia } from '@clickeen/ck-contracts';
-import { buildTokyoProductHeaders } from './tokyo-product-auth';
+import { buildTokyoAssetControlHeaders, fetchTokyoAssetControl } from './tokyo-asset-control';
 
 type ResolvedAccountAssetEntry = {
   assetId: string;
@@ -21,7 +21,6 @@ function normalizeResolvedAccountAssetEntry(raw: unknown): ResolvedAccountAssetE
 }
 
 async function resolveTokyoAccountAssetsById(args: {
-  tokyoBaseUrl: string;
   accountId: string;
   accountCapsule?: string | null;
   assetIds: string[];
@@ -33,19 +32,16 @@ async function resolveTokyoAccountAssetsById(args: {
     return { assetsById: new Map(), missingAssetIds: [] };
   }
 
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/assets/account/${encodeURIComponent(args.accountId)}/resolve`,
-    {
-      method: 'POST',
-      headers: buildTokyoProductHeaders({
-        accountId: args.accountId,
-        accountCapsule: args.accountCapsule,
-        contentType: 'application/json',
-      }),
-      cache: 'no-store',
-      body: JSON.stringify({ assetIds: args.assetIds }),
-    },
-  );
+  const response = await fetchTokyoAssetControl({
+    path: `/__internal/assets/account/${encodeURIComponent(args.accountId)}/resolve`,
+    method: 'POST',
+    headers: buildTokyoAssetControlHeaders({
+      accountId: args.accountId,
+      accountCapsule: args.accountCapsule,
+      contentType: 'application/json',
+    }),
+    body: JSON.stringify({ assetIds: args.assetIds }),
+  });
 
   const payload = (await response.json().catch(() => null)) as
     | {
@@ -83,7 +79,6 @@ async function resolveTokyoAccountAssetsById(args: {
 }
 
 export async function materializeRuntimeConfigMedia(args: {
-  tokyoBaseUrl: string;
   accountId: string;
   accountCapsule?: string | null;
   config: Record<string, unknown>;
@@ -94,7 +89,6 @@ export async function materializeRuntimeConfigMedia(args: {
   }
 
   const { assetsById, missingAssetIds } = await resolveTokyoAccountAssetsById({
-    tokyoBaseUrl: args.tokyoBaseUrl,
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     assetIds,

@@ -160,7 +160,7 @@ Account
 
 Accounts are the primary tenant boundary:
 - Collaboration boundary (roles, comments, instance ownership)
-- Ownership/metering boundary for uploads (`/assets/upload` → `account_id` required)
+- Ownership/metering boundary for uploads (Tokyo asset authority always requires `account_id`; browser path is Roma account routes only)
 - Policy/entitlement context for editor surfaces (Roma/Bob)
 
 ```
@@ -173,7 +173,7 @@ account
 
 Key boundary rules:
 - Instances, assets, locales, and membership are all account-scoped.
-- Roma asset reads are account-canonical (`/api/assets/:accountId`).
+- Roma asset reads are account-canonical (`/api/accounts/:accountId/assets`).
 - Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped Paris calls.
 - Curated platform content is owned by a platform account row and remains globally readable; runtime policy must use `accounts.is_platform` plus `owner_account_id`, not `ADMIN_ACCOUNT_ID`.
 

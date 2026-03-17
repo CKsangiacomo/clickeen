@@ -237,7 +237,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 #### Tokyo Worker (Workers + Queues)
 
 - Canonical asset management contract (cross-surface behavior): [AssetManagement.md](./AssetManagement.md)
-- Handles canonical account-owned uploads (`POST /assets/upload`) and stores asset bytes + manifest metadata in Tokyo R2.
+- Handles private Roma-bound account asset authority routes and stores asset bytes + manifest metadata in Tokyo R2.
 - Paris validates account-owned asset refs on instance writes, but this repo snapshot does not persist a canonical "where used" table in Michael.
 - Serves immutable account asset reads (`GET /assets/v/:assetRef`); legacy `/arsenale/*` paths are hard-failed.
 - Asset delete is synchronous hard delete (`metadata + blob delete`) with no snapshot rebuild enqueue or runtime healing.
@@ -249,10 +249,10 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - Ownership boundary is account (`account_id`).
 - End-to-end flow:
-  1. Bob uploads to Tokyo-worker (`POST /assets/upload`) with `x-account-id` (+ optional public/widget trace headers).
+  1. Bob uploads through Roma (`POST /api/accounts/:accountId/assets/upload`), and Roma forwards to Tokyo-worker over the `TOKYO_ASSET_CONTROL` Cloudflare service binding with optional public/widget trace headers.
   2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable URL (`/assets/v/:assetRef`).
   3. Roma validates account commands at the product boundary and Tokyo/Tokyo-worker enforce canonical asset/config contracts on write.
-  4. Roma Assets reads/deletes via Roma asset routes (`/api/assets/:accountId*`) which forward to Tokyo-worker with Berlin session auth; Tokyo-worker enforces account membership role.
+  4. Roma Assets reads/deletes via Roma asset routes (`/api/accounts/:accountId/assets*`) which forward to Tokyo-worker through the private service binding plus the Roma account capsule; Tokyo-worker enforces account membership role.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
 
@@ -273,7 +273,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **Hard security rule:**
 
-- `CK_INTERNAL_SERVICE_JWT` is a server-only internal bearer. It must never be exposed client-side, but it is required on server-side Roma -> Tokyo/Tokyo-worker and Roma -> San Francisco calls.
+- `CK_INTERNAL_SERVICE_JWT` is a server-only internal bearer for residual non-asset Roma -> Tokyo/Tokyo-worker paths and Roma -> San Francisco calls. The account asset lane uses a private Cloudflare service binding instead.
 
 **Local auth rule:**
 
@@ -322,7 +322,7 @@ Canonical machine-health endpoints:
 | ------------- | ---------------------------------------------------------- | -------------------------------------------------------------------- | ------------- |
 | Paris         | `https://paris.dev.clickeen.com/api/healthz`               | `{ "up": true }`                                                     | Paris         |
 | Berlin        | `https://berlin-dev.clickeen.workers.dev/internal/healthz` | `{ "ok": true, "service": "berlin" }`                                | Berlin        |
-| Tokyo-worker  | `https://tokyo-assets-dev.clickeen.workers.dev/healthz`    | `{ "up": true }`                                                     | Tokyo-worker  |
+| Tokyo-worker  | `https://tokyo.dev.clickeen.com/healthz`                   | `{ "up": true }`                                                     | Tokyo-worker  |
 | San Francisco | `https://sanfrancisco.dev.clickeen.com/healthz`            | `{ "ok": true, "service": "sanfrancisco", "env": "...", "ts": ... }` | San Francisco |
 
 Pages surfaces do not currently publish dedicated machine-health JSON endpoints. Their Git-connected Cloudflare Pages projects own deployment; GitHub workflows may only verify build contracts, and any runtime reachability smoke must not assume GitHub just performed the deploy.
@@ -340,7 +340,7 @@ Non-negotiable:
 - **Secrets isolation**:
   - Provider keys live only in San Francisco.
   - Supabase service role lives only in Berlin/Tokyo-worker where explicitly required.
-  - `CK_INTERNAL_SERVICE_JWT` stays server-only and must never be exposed client-side, but it is part of the live Roma/Tokyo-worker/San Francisco internal contract.
+  - `CK_INTERNAL_SERVICE_JWT` stays server-only and must never be exposed client-side, but the asset lane is now private service-binding traffic rather than shared-secret HTTP.
 - **Caching**:
   - Tokyo assets are long-cacheable when versioned; avoid cache on `spec.json` when iterating in dev.
   - Venice serves short-cache shell HTML, `no-store` live pointers, and immutable fingerprinted packs/assets.

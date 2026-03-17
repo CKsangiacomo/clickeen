@@ -17,18 +17,20 @@ Tokyo-worker does not “decide what is live”. Roma/Bob decide; Tokyo-worker m
 
 ### Assets
 
-- `POST /assets/upload` (auth required)
-- `GET /assets/account/:accountId` (auth required; member-scoped asset manifest list)
+- `POST /__internal/assets/upload` (private Roma service-binding path)
+- `GET /__internal/assets/account/:accountId` (private Roma service-binding path; member-scoped asset manifest list)
+- `POST /__internal/assets/account/:accountId/resolve` (private Roma service-binding path; runtime materialization helper)
 - `GET /assets/v/:assetRef` (public; immutable)
-- `DELETE /assets/:accountId/:assetId` (auth required; editor+ hard delete metadata + blobs)
-- `GET /healthz` (worker health; workers.dev only)
+- `DELETE /__internal/assets/:accountId/:assetId` (private Roma service-binding path; editor+ hard delete metadata + blobs)
+- `GET /healthz` (public worker health on `tokyo.dev.clickeen.com/healthz`)
 - Integrity tools (dev/internal):
   - `GET /assets/integrity/:accountId`
   - `GET /assets/integrity/:accountId/:assetId`
 
 Current auth rule:
 
-- Product account routes execute from Roma server-to-server auth: `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma-minted `x-ck-authz-capsule`. Tokyo-worker does not re-read membership/tier/account status on those paths.
+- Product asset control routes execute from Roma through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. Tokyo-worker does not re-read membership/tier/account status on those paths.
+- Shared-secret `CK_INTERNAL_SERVICE_JWT` is not part of the asset lane.
 - Local internal tool routes may use `TOKYO_DEV_JWT` only when they also send an explicit allowed `x-ck-internal-service`.
 - There is no generic trusted-token bypass on account routes.
 
@@ -43,8 +45,8 @@ Asset metadata model (current repo snapshot):
 
 Health contract:
 
-- Worker health URL: `https://tokyo-assets-dev.clickeen.workers.dev/healthz` -> `{ "up": true }`
-- `https://tokyo.dev.clickeen.com` intentionally exposes only `/assets/*`, `/fonts/*`, `/l10n/*`, and `/renders/*`; `/healthz` is not routed there.
+- Worker health URL: `https://tokyo.dev.clickeen.com/healthz` -> `{ "up": true }`
+- `https://tokyo.dev.clickeen.com` intentionally exposes only `/healthz`, `/assets/v/*`, `/fonts/*`, `/l10n/*`, and `/renders/*`. Asset control-plane paths are not publicly routed.
 
 Storage usage truth:
 

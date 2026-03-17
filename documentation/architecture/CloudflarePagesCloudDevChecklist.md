@@ -81,6 +81,7 @@ Env contract:
 Dashboard action:
 - Keep `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the Cloudflare Pages dashboard for the live Roma app.
 - Keep the host/base-URL vars in `roma/wrangler.toml`.
+- Configure the `TOKYO_ASSET_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
 - Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`
 
 ## Venice
@@ -158,10 +159,13 @@ CI secrets/vars:
 - `SUPABASE_ACCESS_TOKEN`
 - `SUPABASE_DB_PASSWORD_CLOUD_DEV`
 - `SUPABASE_PROJECT_REF_CLOUD_DEV`
+- `CLOUD_DEV_SMOKE_EMAIL`
+- `CLOUD_DEV_SMOKE_PASSWORD`
 
 Rules:
 - Bob and Roma host/base-URL vars belong in app-local `wrangler.toml`.
 - Bob and Roma Supabase project values belong in dashboard/runtime env and matching CI env, not committed repo literals.
+- Roma asset control requires the `TOKYO_ASSET_CONTROL` service binding to target `tokyo-assets-dev`; the asset lane no longer depends on Roma/Tokyo-worker shared-secret parity.
 - Worker and Pages secrets stay live-only, but any new secret must be documented here with owning service and purpose.
 - If a Pages custom domain serves stale runtime after a Git-connected deploy, fix the underlying config or verification gap; do not normalize direct artifact deploys as the operating model.
 

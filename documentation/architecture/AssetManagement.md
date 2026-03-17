@@ -42,17 +42,19 @@ Manifest must carry:
 ## API contract
 
 Tokyo-worker authoritative endpoints:
-- `POST /assets/upload`
+- `POST /__internal/assets/upload` (private Roma service-binding path)
 - `GET /assets/v/:assetRef`
-- `GET /assets/account/:accountId`
-- `DELETE /assets/:accountId/:assetId`
+- `GET /__internal/assets/account/:accountId` (private Roma service-binding path)
+- `POST /__internal/assets/account/:accountId/resolve` (private Roma service-binding path)
+- `DELETE /__internal/assets/:accountId/:assetId` (private Roma service-binding path)
 - `GET /assets/integrity/:accountId` (dev/internal)
 - `GET /assets/integrity/:accountId/:assetId` (dev/internal)
 
 Roma control-plane routes proxy account-safe operations for product UI:
-- `POST /api/assets/upload`
-- `GET /api/assets/:accountId`
-- `DELETE /api/assets/:accountId/:assetId`
+- `GET /api/accounts/:accountId/assets`
+- `POST /api/accounts/:accountId/assets/upload`
+- `POST /api/accounts/:accountId/assets/resolve`
+- `DELETE /api/accounts/:accountId/assets/:assetId`
 
 ---
 

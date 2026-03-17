@@ -121,7 +121,7 @@ Client fetch behavior:
 - `fetchSameOriginJson` in the browser is just a no-store fetch + timeout/reason wrapper.
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
 - Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/roma/widgets`, `/api/roma/templates`, widget delete, builder/account routes, localization/layer routes).
-- Roma -> Tokyo/Tokyo-worker product calls require explicit `CK_INTERNAL_SERVICE_JWT` plus `x-ck-internal-service: roma.edge`; Roma does not pass end-user Berlin bearer tokens through those product routes.
+- Roma -> Tokyo/Tokyo-worker non-asset product calls still require explicit `CK_INTERNAL_SERVICE_JWT` plus `x-ck-internal-service: roma.edge`; Roma does not pass end-user Berlin bearer tokens through those product routes.
 - Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`; Roma does not infer or probe internal service hosts.
 
 ## Bob orchestration contract (Roma Builder)
@@ -174,8 +174,8 @@ Usage, billing, and AI domain behavior:
 
 Assets domain behavior:
 
-- `AssetsDomain` reads account inventory from `/api/assets/:accountId` and performs per-asset delete via `/api/assets/:accountId/:assetId`.
-- Roma exposes account-level asset routes (`/api/assets/:accountId`, `/api/assets/:accountId/resolve`, `/api/assets/:accountId/:assetId`, `/api/assets/upload`) and forwards them directly to Tokyo-worker with the user session bearer.
+- `AssetsDomain` reads account inventory from `/api/accounts/:accountId/assets` and performs per-asset delete via `/api/accounts/:accountId/assets/:assetId`.
+- Roma exposes account-level asset routes (`/api/accounts/:accountId/assets`, `/api/accounts/:accountId/assets/resolve`, `/api/accounts/:accountId/assets/:assetId`, `/api/accounts/:accountId/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
 - Asset inventory/upload payloads expose both `assetId` and canonical `assetRef`; Roma delete uses `assetId` directly instead of reverse-parsing it from the ref.
 - Published/runtime config packs are materialized through Tokyo asset resolution before Roma writes them to Tokyo live/runtime surfaces; saved authoring config remains logical authoring truth.
 - Assets supports single upload, bulk upload (multi-file queue), list, and per-asset delete only.

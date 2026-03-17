@@ -34,7 +34,7 @@ export function UsageDomain() {
         return;
       }
       try {
-        const response = await accountApi.fetchRaw(`/api/assets/${encodeURIComponent(accountId)}?limit=1`, {
+        const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(accountId)}/assets?limit=1`, {
           method: 'GET',
         });
         const payload = (await response.json().catch(() => null)) as UsageStorageResponse | { error?: unknown } | null;

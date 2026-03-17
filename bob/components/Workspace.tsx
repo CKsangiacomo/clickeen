@@ -34,7 +34,7 @@ export function Workspace() {
       try {
         const next = await materializeRuntimeConfigForPreview({
           config: runtimeData,
-          accountId: meta?.accountId,
+          accountId: meta?.ownerAccountId ?? meta?.accountId,
           assetApiBase: meta?.assetApiBase,
         });
         if (cancelled) return;
@@ -51,7 +51,7 @@ export function Workspace() {
     return () => {
       cancelled = true;
     };
-  }, [runtimeData, meta?.accountId, meta?.assetApiBase]);
+  }, [runtimeData, meta?.accountId, meta?.ownerAccountId, meta?.assetApiBase]);
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';

@@ -49,6 +49,14 @@ function resolveAssetUploadEndpoint(): string {
   return readDatasetValue('ckAssetUploadEndpoint').trim();
 }
 
+function isAccountScopedRomaUploadEndpoint(value: string): boolean {
+  return /\/api\/accounts\/[0-9a-f-]{36}\/assets\/upload(?:\?|$)/i.test(value);
+}
+
+function isDevStudioUploadEndpoint(value: string): boolean {
+  return /\/api\/devstudio\/assets\/upload(?:\?|$)/i.test(value);
+}
+
 function resolveContextFromDocument(): EditorAssetUploadContext | null {
   const accountId = readDatasetValue('ckOwnerAccountId');
   const publicId = readDatasetValue('ckPublicId');
@@ -125,14 +133,23 @@ export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<Ed
 
   const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? ({} as EditorAssetUploadContext));
   const source = args.source || 'api';
-  const endpoint = (args.endpoint || resolveAssetUploadEndpoint() || '/api/assets/upload').trim();
+  const endpoint = (
+    args.endpoint ||
+    resolveAssetUploadEndpoint() ||
+    `/api/accounts/${encodeURIComponent(context.accountId)}/assets/upload`
+  ).trim();
+  if (!isAccountScopedRomaUploadEndpoint(endpoint) && !isDevStudioUploadEndpoint(endpoint)) {
+    throw new Error('coreui.errors.assets.uploadEndpoint.invalid');
+  }
 
   const headers = new Headers();
   headers.set('content-type', file.type || 'application/octet-stream');
-  headers.set('x-account-id', context.accountId);
+  if (isDevStudioUploadEndpoint(endpoint)) {
+    headers.set('x-account-id', context.accountId);
+  }
   headers.set('x-filename', file.name || 'upload.bin');
   headers.set('x-source', source);
-  headers.set('x-clickeen-surface', endpoint.includes('/api/devstudio/assets/upload') ? 'devstudio' : 'roma-assets');
+  headers.set('x-clickeen-surface', isDevStudioUploadEndpoint(endpoint) ? 'devstudio' : 'roma-assets');
   if (context.publicId) headers.set('x-public-id', context.publicId);
   if (context.widgetType) headers.set('x-widget-type', context.widgetType);
 

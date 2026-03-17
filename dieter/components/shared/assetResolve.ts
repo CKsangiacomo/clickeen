@@ -52,8 +52,8 @@ export async function resolveEditorAssetChoices(
 
   const assetApiBase = resolveAssetApiBase();
   const endpoint = assetApiBase
-    ? `${assetApiBase}/${encodeURIComponent(accountId)}/resolve`
-    : `/api/assets/${encodeURIComponent(accountId)}/resolve`;
+    ? `${assetApiBase}/resolve`
+    : `/api/accounts/${encodeURIComponent(accountId)}/assets/resolve`;
 
   const response = await fetch(endpoint, {
     method: 'POST',

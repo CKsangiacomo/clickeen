@@ -612,8 +612,8 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         ...(accountApi.accountCapsule ? { accountCapsule: accountApi.accountCapsule } : {}),
         ...(hostOrigin
           ? {
-              assetApiBase: `${hostOrigin}/api/assets`,
-              assetUploadEndpoint: `${hostOrigin}/api/assets/upload`,
+              assetApiBase: `${hostOrigin}/api/accounts/${encodeURIComponent(ownerAccountId)}/assets`,
+              assetUploadEndpoint: `${hostOrigin}/api/accounts/${encodeURIComponent(ownerAccountId)}/assets/upload`,
             }
           : {}),
         ownerAccountId,

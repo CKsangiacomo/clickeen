@@ -126,7 +126,7 @@ async function requestDeleteAsset(
 ): Promise<DeleteAssetPayload> {
   const search = confirmInUse ? '?confirmInUse=1' : '';
   const response = await accountApi.fetchRaw(
-    `/api/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}${search}`,
+    `/api/accounts/${encodeURIComponent(accountId)}/assets/${encodeURIComponent(assetId)}${search}`,
     {
       method: 'DELETE',
     },
@@ -148,11 +148,10 @@ async function requestUploadAsset(
   file: File,
   source: string,
 ): Promise<AssetRecord> {
-  const response = await accountApi.fetchRaw('/api/assets/upload', {
+  const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(accountId)}/assets/upload`, {
     method: 'POST',
     headers: {
       'content-type': file.type || 'application/octet-stream',
-      'x-account-id': accountId,
       'x-filename': file.name || 'upload.bin',
       'x-source': source,
     },
@@ -224,7 +223,7 @@ export function AssetsDomain() {
     setLoading(true);
     setError(null);
     try {
-      const response = await accountApi.fetchRaw(`/api/assets/${encodeURIComponent(accountId)}?limit=500`, {
+      const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(accountId)}/assets?limit=500`, {
         method: 'GET',
       });
       const payload = (await response.json().catch(() => null)) as AccountAssetsListResponse | { error?: unknown } | null;

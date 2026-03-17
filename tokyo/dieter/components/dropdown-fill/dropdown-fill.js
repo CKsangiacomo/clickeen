@@ -681,7 +681,7 @@ var Dieter = (() => {
     });
     if (!assetIds.length) return /* @__PURE__ */ new Map();
     const assetApiBase = resolveAssetApiBase();
-    const endpoint = assetApiBase ? `${assetApiBase}/${encodeURIComponent(accountId)}/resolve` : `/api/assets/${encodeURIComponent(accountId)}/resolve`;
+    const endpoint = assetApiBase ? `${assetApiBase}/resolve` : `/api/accounts/${encodeURIComponent(accountId)}/assets/resolve`;
     const response = await fetch(endpoint, {
       method: "POST",
       cache: "no-store",
@@ -763,7 +763,7 @@ var Dieter = (() => {
       limit: "200"
     });
     const assetApiBase = resolveAssetApiBase2();
-    const endpoint = assetApiBase ? `${assetApiBase}/${encodeURIComponent(context.accountId)}?${params.toString()}` : `/api/assets/${encodeURIComponent(context.accountId)}?${params.toString()}`;
+    const endpoint = assetApiBase ? `${assetApiBase}?${params.toString()}` : `/api/accounts/${encodeURIComponent(context.accountId)}/assets?${params.toString()}`;
     const response = await fetch(endpoint, {
       cache: "no-store"
     });
@@ -1735,6 +1735,12 @@ var Dieter = (() => {
   function resolveAssetUploadEndpoint() {
     return readDatasetValue("ckAssetUploadEndpoint").trim();
   }
+  function isAccountScopedRomaUploadEndpoint(value) {
+    return /\/api\/accounts\/[0-9a-f-]{36}\/assets\/upload(?:\?|$)/i.test(value);
+  }
+  function isDevStudioUploadEndpoint(value) {
+    return /\/api\/devstudio\/assets\/upload(?:\?|$)/i.test(value);
+  }
   function resolveContextFromDocument() {
     const accountId = readDatasetValue("ckOwnerAccountId");
     const publicId = readDatasetValue("ckPublicId");
@@ -1796,13 +1802,18 @@ var Dieter = (() => {
     }
     const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? {});
     const source = args.source || "api";
-    const endpoint = (args.endpoint || resolveAssetUploadEndpoint() || "/api/assets/upload").trim();
+    const endpoint = (args.endpoint || resolveAssetUploadEndpoint() || `/api/accounts/${encodeURIComponent(context.accountId)}/assets/upload`).trim();
+    if (!isAccountScopedRomaUploadEndpoint(endpoint) && !isDevStudioUploadEndpoint(endpoint)) {
+      throw new Error("coreui.errors.assets.uploadEndpoint.invalid");
+    }
     const headers = new Headers();
     headers.set("content-type", file.type || "application/octet-stream");
-    headers.set("x-account-id", context.accountId);
+    if (isDevStudioUploadEndpoint(endpoint)) {
+      headers.set("x-account-id", context.accountId);
+    }
     headers.set("x-filename", file.name || "upload.bin");
     headers.set("x-source", source);
-    headers.set("x-clickeen-surface", endpoint.includes("/api/devstudio/assets/upload") ? "devstudio" : "roma-assets");
+    headers.set("x-clickeen-surface", isDevStudioUploadEndpoint(endpoint) ? "devstudio" : "roma-assets");
     if (context.publicId) headers.set("x-public-id", context.publicId);
     if (context.widgetType) headers.set("x-widget-type", context.widgetType);
     const response = await fetch(`${endpoint.replace(/\/$/, "")}?_t=${Date.now()}`, {

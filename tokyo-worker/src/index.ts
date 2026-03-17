@@ -569,13 +569,13 @@ export default {
         );
       }
 
-      if (pathname === '/assets/upload') {
+      if (pathname === '/__internal/assets/upload') {
         if (req.method !== 'POST')
           return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         return withCors(await handleUploadAccountAsset(req, env));
       }
 
-      const accountAssetsListMatch = pathname.match(/^\/assets\/account\/([0-9a-f-]{36})$/i);
+      const accountAssetsListMatch = pathname.match(/^\/__internal\/assets\/account\/([0-9a-f-]{36})$/i);
       if (accountAssetsListMatch) {
         const accountId = decodeURIComponent(accountAssetsListMatch[1] || '');
         if (req.method === 'GET') {
@@ -584,7 +584,7 @@ export default {
         return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
       }
 
-      const accountAssetsResolveMatch = pathname.match(/^\/assets\/account\/([0-9a-f-]{36})\/resolve$/i);
+      const accountAssetsResolveMatch = pathname.match(/^\/__internal\/assets\/account\/([0-9a-f-]{36})\/resolve$/i);
       if (accountAssetsResolveMatch) {
         const accountId = decodeURIComponent(accountAssetsResolveMatch[1] || '');
         if (req.method === 'POST') {
@@ -607,7 +607,7 @@ export default {
         return withCors(response);
       }
 
-      const accountAssetMatch = pathname.match(/^\/assets\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i);
+      const accountAssetMatch = pathname.match(/^\/__internal\/assets\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i);
       if (accountAssetMatch) {
         const accountId = decodeURIComponent(accountAssetMatch[1] || '');
         const assetId = decodeURIComponent(accountAssetMatch[2] || '');

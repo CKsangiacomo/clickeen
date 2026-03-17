@@ -366,7 +366,7 @@ If any item below is undecided, the implementer must stop and ask; do not guess.
 We intentionally ship **no custom tint** in v1. `appearance.logoLook` is limited to `original | grayscale` (no `customColor` mode).
 
 ### Asset handling (implemented contract)
-- **Upload path**: `dropdown-upload` uploads immediately through Bob -> Tokyo-worker (`POST /assets/upload`).
+- **Upload path**: `dropdown-upload` uploads immediately through the Roma account asset gateway (`POST /api/accounts/:accountId/assets/upload`), which forwards to Tokyo-worker over the private asset-control binding.
 - **Persistence**: canonical uploaded-logo identity is stored as `strips[i].logos[j].asset.assetId`.
 - **Runtime**: widget consumes materialized `logoFill` only. If the asset cannot be materialized, the logo is missing (no fallback/healing).
 - **No replace flow**: changing a logo file creates a new immutable asset ref.

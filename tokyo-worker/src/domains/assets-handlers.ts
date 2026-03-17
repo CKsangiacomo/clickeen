@@ -17,10 +17,12 @@ import {
 } from '../asset-utils';
 import { json } from '../http';
 import {
+  assertRomaAccountCapsuleAuth,
   assertProductAccountAuth,
   INTERNAL_SERVICE_HEADER,
   requireDevAuth,
   TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
+  TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
 } from '../auth';
 import type { Env } from '../types';
 import { isUuid } from '@clickeen/ck-contracts';
@@ -62,6 +64,10 @@ type UploadTierResolutionResult =
 
 type UploadStorageResult =
   | { ok: true }
+  | { ok: false; response: Response };
+
+type AccountAssetAuthorizationResult =
+  | { ok: true; accountAuthz: RomaAccountAuthzCapsulePayload | null }
   | { ok: false; response: Response };
 
 type AssetMirrorIntegritySampleRef = {
@@ -106,7 +112,7 @@ function denyEntitlement(reasonKey: string, detail: string, status: number): Res
 
 async function resolveUploadTierAndAuthorization(args: {
   env: Env;
-  auth: Exclude<Awaited<ReturnType<typeof assertProductAccountAuth>>, { ok: false }>;
+  auth: { ok: true; principal: { accountAuthz: RomaAccountAuthzCapsulePayload } };
   accountId: string;
   minRole?: MemberRole;
 }): Promise<UploadTierResolutionResult> {
@@ -118,30 +124,61 @@ async function resolveUploadTierAndAuthorization(args: {
   return { ok: true, accountAuthz: capsule };
 }
 
-async function authorizeAccountAssetAccess(args: {
+function isInternalAccountAssetControlPath(req: Request): boolean {
+  const pathname = new URL(req.url).pathname.replace(/\/+$/, '') || '/';
+  return pathname === '/__internal/assets/upload' || pathname.startsWith('/__internal/assets/');
+}
+
+function resolveTokyoAssetPublicBaseUrl(env: Env, req: Request): string {
+  const configured =
+    typeof env.TOKYO_PUBLIC_BASE_URL === 'string' ? env.TOKYO_PUBLIC_BASE_URL.trim() : '';
+  if (configured) {
+    return configured.replace(/\/+$/, '');
+  }
+  return new URL(req.url).origin.replace(/\/+$/, '');
+}
+
+async function resolveAccountAssetAuthorization(args: {
   req: Request;
   env: Env;
   accountId: string;
   minRole: MemberRole;
-}): Promise<Response | null> {
+}): Promise<AccountAssetAuthorizationResult> {
   const internalServiceId = String(args.req.headers.get(INTERNAL_SERVICE_HEADER) || '')
     .trim()
     .toLowerCase();
   if (internalServiceId === TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL) {
-    return requireDevAuth(args.req, args.env, {
+    const authErr = requireDevAuth(args.req, args.env, {
       allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
     });
+    return authErr ? { ok: false, response: authErr } : { ok: true, accountAuthz: null };
   }
-  const auth = await assertProductAccountAuth(args.req, args.env);
-  if (!auth.ok) return auth.response;
+
+  const auth = isInternalAccountAssetControlPath(args.req)
+    ? await assertRomaAccountCapsuleAuth(args.req, args.env, {
+        requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
+      })
+    : await assertProductAccountAuth(args.req, args.env);
+  if (!auth.ok) return { ok: false, response: auth.response };
+
   const authorized = await resolveUploadTierAndAuthorization({
     env: args.env,
     auth,
     accountId: args.accountId,
     minRole: args.minRole,
   });
-  if (!authorized.ok) return authorized.response;
-  return null;
+  if (!authorized.ok) return authorized;
+  return { ok: true, accountAuthz: authorized.accountAuthz };
+}
+
+async function authorizeAccountAssetAccess(args: {
+  req: Request;
+  env: Env;
+  accountId: string;
+  minRole: MemberRole;
+}): Promise<Response | null> {
+  const authorized = await resolveAccountAssetAuthorization(args);
+  return authorized.ok ? null : authorized.response;
 }
 
 async function enforceAccountStorageLimit(args: {
@@ -380,16 +417,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   if (!accountId || !isUuid(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
-  const authErr = await authorizeAccountAssetAccess({
-    req,
-    env,
-    accountId,
-    minRole: 'editor',
-  });
-  if (authErr) return authErr;
-
-  const auth = await assertProductAccountAuth(req, env);
-
   const legacyVariant = (req.headers.get('x-variant') || '').trim();
   if (legacyVariant) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.variantUnsupported' } }, { status: 422 });
@@ -400,16 +427,14 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.source.invalid' } }, { status: 422 });
   }
 
-  let accountAuthz: RomaAccountAuthzCapsulePayload | null = null;
-  if (auth.ok) {
-    const tierResolution = await resolveUploadTierAndAuthorization({
-      env,
-      auth,
-      accountId,
-    });
-    if (!tierResolution.ok) return tierResolution.response;
-    accountAuthz = tierResolution.accountAuthz;
-  }
+  const authorized = await resolveAccountAssetAuthorization({
+    req,
+    env,
+    accountId,
+    minRole: 'editor',
+  });
+  if (!authorized.ok) return authorized.response;
+  const accountAuthz = authorized.accountAuthz;
 
   const publicIdRaw = (req.headers.get('x-public-id') || '').trim();
   const publicId = publicIdRaw ? normalizePublicId(publicIdRaw) : null;
@@ -509,8 +534,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
 
   await mirrorAccountStorageUsage(env, accountId);
 
-  const origin = new URL(req.url).origin;
-  const url = `${origin}${buildAccountAssetVersionPath(key)}`;
+  const url = `${resolveTokyoAssetPublicBaseUrl(env, req)}${buildAccountAssetVersionPath(key)}`;
   return json(
     {
       assetId,
@@ -569,7 +593,7 @@ async function handleListAccountAssetMetadata(
     minRole: 'viewer',
   });
   if (authErr) return authErr;
-  const origin = new URL(req.url).origin;
+  const publicBaseUrl = resolveTokyoAssetPublicBaseUrl(env, req);
   const manifests = await listAccountAssetManifestsByAccount(env, accountId);
   manifests.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   const storageBytesUsed = sumAccountAssetManifestSizeBytes(manifests);
@@ -577,7 +601,7 @@ async function handleListAccountAssetMetadata(
   return json({
     accountId,
     storageBytesUsed,
-    assets: manifests.map((manifest) => serializeAccountAssetManifest(manifest, origin)),
+    assets: manifests.map((manifest) => serializeAccountAssetManifest(manifest, publicBaseUrl)),
   });
 }
 
@@ -623,7 +647,7 @@ async function handleResolveAccountAssetMetadata(
     );
   }
 
-  const origin = new URL(req.url).origin;
+  const publicBaseUrl = resolveTokyoAssetPublicBaseUrl(env, req);
   const resolvedEntries = await Promise.all(
     assetIds.map(async (assetId) => ({
       assetId,
@@ -639,7 +663,7 @@ async function handleResolveAccountAssetMetadata(
       missingAssetIds.push(entry.assetId);
       continue;
     }
-    assets.push(serializeAccountAssetManifest(entry.manifest, origin));
+    assets.push(serializeAccountAssetManifest(entry.manifest, publicBaseUrl));
   }
 
   return json({

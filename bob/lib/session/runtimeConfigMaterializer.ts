@@ -44,7 +44,7 @@ export async function materializeRuntimeConfigForPreview(args: {
   }
 
   const response = await fetch(
-    `${assetApiBase}/${encodeURIComponent(accountId)}/resolve`,
+    `${assetApiBase}/resolve`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },

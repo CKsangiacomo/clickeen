@@ -85,6 +85,47 @@ async function verifyRomaAccountCapsule(
   return { ok: true, payload: verified.payload };
 }
 
+export async function assertRomaAccountCapsuleAuth(
+  req: Request,
+  env: Env,
+  options?: { requiredInternalServiceId?: string | null },
+): Promise<ProductAccountAuthResult> {
+  const requiredInternalServiceId = normalizeInternalServiceId(
+    options?.requiredInternalServiceId ?? null,
+  );
+  if (requiredInternalServiceId) {
+    const internalServiceId = normalizeInternalServiceId(req.headers.get(INTERNAL_SERVICE_HEADER));
+    if (internalServiceId !== requiredInternalServiceId) {
+      return {
+        ok: false,
+        response: json(
+          { error: { kind: 'DENY', reasonKey: 'AUTH_INVALID', detail: 'internal_service_invalid' } },
+          { status: 403 },
+        ),
+      };
+    }
+  }
+
+  const capsule = await verifyRomaAccountCapsule(req, env);
+  if (!capsule.ok) {
+    if (capsule.response) return { ok: false, response: capsule.response };
+    return {
+      ok: false,
+      response: json(
+        { error: { kind: 'DENY', reasonKey: 'AUTH_INVALID', detail: 'account_authz_capsule_missing' } },
+        { status: 403 },
+      ),
+    };
+  }
+
+  return {
+    ok: true,
+    principal: {
+      accountAuthz: capsule.payload,
+    },
+  };
+}
+
 export async function assertProductAccountAuth(req: Request, env: Env): Promise<ProductAccountAuthResult> {
   const expected = (env.CK_INTERNAL_SERVICE_JWT || '').trim();
   if (!expected) {
@@ -116,21 +157,9 @@ export async function assertProductAccountAuth(req: Request, env: Env): Promise<
     };
   }
 
-  const capsule = await verifyRomaAccountCapsule(req, env);
-  if (!capsule.ok) {
-    if (capsule.response) return { ok: false, response: capsule.response };
-    return {
-      ok: false,
-      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID', detail: 'account_authz_capsule_missing' } }, { status: 403 }),
-    };
-  }
-
-  return {
-    ok: true,
-    principal: {
-      accountAuthz: capsule.payload,
-    },
-  };
+  return assertRomaAccountCapsuleAuth(req, env, {
+    requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
+  });
 }
 
 export function requireDevAuth(
