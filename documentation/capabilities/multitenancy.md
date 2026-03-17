@@ -317,8 +317,9 @@ While we are building (before full auth/billing enforcement ships), we still nee
 
 **How the subject is set today (shipped in Bob):**
 - Bob accepts the subject via either:
-- URL bootstrap mode: `?boot=url&subject=minibob` (account mode is host-only and does not URL-bootstrap)
-  - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'account'|'minibob', ... }` (used by Roma/DevStudio)
+  - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'account'|'minibob', ... }` (used by Roma/DevStudio/Prague MiniBob)
+- Bob account mode does not URL-bootstrap.
+- The shipped Prague MiniBob path is also host-booted now; Bob does not self-discover MiniBob instance truth from URL parameters.
 
 **What Bob enforces today (example):**
 - `branding.remove` maps to `behavior.showBacklink` and is sanitized on load when blocked.

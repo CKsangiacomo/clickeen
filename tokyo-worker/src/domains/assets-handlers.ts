@@ -17,7 +17,7 @@ import {
 } from '../asset-utils';
 import { json } from '../http';
 import {
-  assertUploadAuth,
+  assertProductAccountAuth,
   requireDevAuth,
   TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
 } from '../auth';
@@ -104,27 +104,12 @@ function denyEntitlement(reasonKey: string, detail: string, status: number): Res
 
 async function resolveUploadTierAndAuthorization(args: {
   env: Env;
-  auth: Exclude<Awaited<ReturnType<typeof assertUploadAuth>>, { ok: false }>;
+  auth: Exclude<Awaited<ReturnType<typeof assertProductAccountAuth>>, { ok: false }>;
   accountId: string;
   minRole?: MemberRole;
 }): Promise<UploadTierResolutionResult> {
   const { env, auth, accountId, minRole = 'editor' } = args;
   const capsule = auth.principal.accountAuthz;
-  if (!capsule) {
-    return {
-      ok: false,
-      response: json(
-        {
-          error: {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.auth.contextUnavailable',
-            detail: 'account_authz_capsule_missing',
-          },
-        },
-        { status: 500 },
-      ),
-    };
-  }
   if (capsule.accountId !== accountId || roleRank(capsule.role) < roleRank(minRole)) {
     return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
   }
@@ -137,7 +122,7 @@ async function authorizeAccountAssetAccess(args: {
   accountId: string;
   minRole: MemberRole;
 }): Promise<Response | null> {
-  const auth = await assertUploadAuth(args.req, args.env);
+  const auth = await assertProductAccountAuth(args.req, args.env);
   if (!auth.ok) return auth.response;
   const authorized = await resolveUploadTierAndAuthorization({
     env: args.env,
@@ -380,7 +365,7 @@ async function buildAccountAssetMirrorIntegrity(env: Env, accountId: string): Pr
 }
 
 async function handleUploadAccountAsset(req: Request, env: Env): Promise<Response> {
-  const auth = await assertUploadAuth(req, env);
+  const auth = await assertProductAccountAuth(req, env);
   if (!auth.ok) return auth.response;
 
   const accountId = (req.headers.get('x-account-id') || '').trim();

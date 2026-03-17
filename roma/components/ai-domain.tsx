@@ -2,16 +2,13 @@
 
 import { useMemo } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
-import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { resolveActiveRomaAccount, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 export function AiDomain() {
   const me = useRomaMe();
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
-  const activeAccount = useMemo(
-    () => (accountId ? me.data?.accounts?.find((account) => account.accountId === accountId) ?? null : null),
-    [accountId, me.data?.accounts],
-  );
+  const activeAccount = useMemo(() => resolveActiveRomaAccount(me.data), [me.data]);
 
   const authz = me.data?.authz ?? null;
   const profile = authz?.profile ?? null;

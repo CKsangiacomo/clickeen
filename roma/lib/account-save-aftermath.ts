@@ -1,7 +1,9 @@
 import { buildL10nSnapshot } from '@clickeen/l10n';
+import type { PolicyProfile } from '@clickeen/ck-policy';
 import {
   buildLocaleMirrorPayload,
   loadAccountLocalizationSnapshot,
+  loadTokyoCurrentArtifactReadyLocales,
   loadTokyoAllowlist,
   upsertTokyoOverlay,
   writeTokyoBaseSnapshot,
@@ -233,6 +235,7 @@ async function syncTokyoLivePointer(args: {
 }
 
 async function generateLocaleOpsWithSanfrancisco(args: {
+  policyProfile: PolicyProfile;
   widgetType: string;
   config: Record<string, unknown>;
   allowlist: Array<{ path: string; type: 'string' | 'richtext' }>;
@@ -256,6 +259,7 @@ async function generateLocaleOpsWithSanfrancisco(args: {
       },
       cache: 'no-store',
       body: JSON.stringify({
+        policyProfile: args.policyProfile,
         widgetType: args.widgetType,
         config: args.config,
         allowlist: args.allowlist,
@@ -304,6 +308,7 @@ export async function runAccountSaveAftermath(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
+  policyProfile: PolicyProfile;
   accountCapsule?: string | null;
   previousConfig?: Record<string, unknown> | null;
 }): Promise<void> {
@@ -364,6 +369,7 @@ export async function runAccountSaveAftermath(args: {
     ) as Record<string, LocalizationOp[]>;
 
     generatedBaseOpsByLocale = await generateLocaleOpsWithSanfrancisco({
+      policyProfile: args.policyProfile,
       widgetType: result.widgetType,
       config: result.saved.config,
       allowlist: localizationAllowlist.map((entry) => ({
@@ -378,8 +384,6 @@ export async function runAccountSaveAftermath(args: {
     });
   }
 
-  const readyLocaleSet = new Set<string>([baseLocale]);
-
   for (const locale of desiredLocales) {
     const overlay = localeOverlays.get(locale);
     const baseOps =
@@ -387,7 +391,6 @@ export async function runAccountSaveAftermath(args: {
         ? []
         : generatedBaseOpsByLocale.get(locale) ?? overlay?.baseOps ?? [];
     const userOps = locale === baseLocale ? [] : (overlay?.userOps ?? []);
-    if (baseOps.length > 0 || userOps.length > 0) readyLocaleSet.add(locale);
 
     const mirror = buildLocaleMirrorPayload({
       widgetType: result.widgetType,
@@ -420,7 +423,13 @@ export async function runAccountSaveAftermath(args: {
     return;
   }
 
-  const readyLocales = desiredLocales.filter((locale) => readyLocaleSet.has(locale));
+  const readyLocales = await loadTokyoCurrentArtifactReadyLocales({
+    tokyoBaseUrl,
+    publicId: args.publicId,
+    baseLocale,
+    locales: desiredLocales,
+    baseFingerprint: result.baseFingerprint,
+  });
   const configFp = await writeTokyoConfigPack({
     tokyoBaseUrl,
     accessToken: args.accessToken,

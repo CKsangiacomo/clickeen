@@ -305,7 +305,6 @@ var Dieter = (() => {
     const { h, s, v } = state.hsv;
     const rgb = hsvToRgb(h, s, v);
     const hex = formatHex({ h, s, v });
-    const placeholder = state.headerValue?.dataset.placeholder ?? "";
     state.root.style.setProperty("--picker-hue", h.toString());
     state.root.style.setProperty("--picker-rgb", `${rgb.r} ${rgb.g} ${rgb.b}`);
     state.hueInput.value = h.toString();

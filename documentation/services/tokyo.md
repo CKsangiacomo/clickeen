@@ -106,11 +106,11 @@ Admin-owned repo-local l10n source overlays live under:
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
-  - `GET /renders/instances/:publicId/saved.json` (requires `Authorization: Bearer <token>` + Roma `x-ck-authz-capsule` on product paths; local internal tool reads may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; requires `x-account-id` or `?accountId=`.)
-  - `PUT /renders/instances/:publicId/saved.json` (requires `Authorization: Bearer <token>` + Roma `x-ck-authz-capsule` on product paths; local internal tool writes may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; requires `x-account-id` or `?accountId=`.)
-  - `POST /assets/upload` (requires `Authorization: Bearer <token>` + Roma `x-ck-authz-capsule` on product paths. Local internal automation may use `TOKYO_DEV_JWT` only when it also declares an allowed `x-ck-internal-service`. Required header: `x-account-id`. Optional headers: `x-public-id`, `x-widget-type`, `x-source`.)
-  - `GET /assets/account/:accountId` (requires `Authorization: Bearer <token>` + Roma `x-ck-authz-capsule` on product paths, or local internal `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; member-scoped list)
-  - `DELETE /assets/:accountId/:assetId` (requires `Authorization: Bearer <token>` + Roma `x-ck-authz-capsule` on product paths, or local internal `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; editor+-scoped hard delete path)
+  - `GET /renders/instances/:publicId/saved.json` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`; local internal tool reads may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; requires `x-account-id` or `?accountId=`.)
+  - `PUT /renders/instances/:publicId/saved.json` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`; local internal tool writes may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; requires `x-account-id` or `?accountId=`.)
+  - `POST /assets/upload` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`. Local internal automation may use `TOKYO_DEV_JWT` only when it also declares an allowed `x-ck-internal-service`. Required header: `x-account-id`. Optional headers: `x-public-id`, `x-widget-type`, `x-source`.)
+  - `GET /assets/account/:accountId` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`; local internal tool reads may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; member-scoped list)
+  - `DELETE /assets/:accountId/:assetId` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`; local internal tool reads may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; editor+-scoped hard delete path)
   - `GET /assets/integrity/:accountId` (local internal only: `Authorization: Bearer ${TOKYO_DEV_JWT}` + allowed `x-ck-internal-service`)
   - `GET /assets/integrity/:accountId/:assetId` (local internal only: `Authorization: Bearer ${TOKYO_DEV_JWT}` + allowed `x-ck-internal-service`)
   - `GET /assets/v/:assetRef` (public, immutable, cacheable; canonical account-owned asset reads)
@@ -119,7 +119,7 @@ Cloud-dev:
 
 Security rule (executed):
 - `TOKYO_DEV_JWT` must never be used from a browser. Browser product uploads go through same-origin Roma routes using Berlin session auth plus Roma `x-ck-authz-capsule`.
-- Product routes must also carry Roma-minted `x-ck-authz-capsule`; Tokyo/Tokyo-worker do not rediscover account truth from Supabase on those paths.
+- Product routes must execute as `roma.edge` and carry both `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` and Roma-minted `x-ck-authz-capsule`; Tokyo/Tokyo-worker do not rediscover account truth from Supabase or end-user JWTs on those paths.
 - `TOKYO_DEV_JWT` is not a universal bypass. Local internal callers must identify themselves explicitly with `x-ck-internal-service`, and Tokyo only honors the specific service ids wired into the route.
 
 Asset-domain note:

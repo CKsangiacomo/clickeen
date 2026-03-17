@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { fetchSameOriginJson } from './same-origin-json';
-import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { useRomaAccountApi } from './account-api';
+import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3';
 
@@ -49,17 +49,14 @@ function summarizeTierDrop(
 
 export function RomaAccountNoticeModal() {
   const me = useRomaMe();
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const accountApi = useRomaAccountApi(me.data);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
 
   const account =
     accountId && Array.isArray(me.data?.accounts)
       ? (me.data.accounts.find((entry) => entry?.accountId === accountId) ?? null)
       : null;
-  const accountCapsule =
-    me.data?.authz?.accountCapsule && me.data.authz.accountCapsule.trim()
-      ? me.data.authz.accountCapsule.trim()
-      : '';
   const lifecycle = account?.lifecycleNotice ?? null;
 
   const changedAt = typeof lifecycle?.tierChangedAt === 'string' ? lifecycle.tierChangedAt : null;
@@ -78,11 +75,10 @@ export function RomaAccountNoticeModal() {
     setDismissLoading(true);
     setDismissError(null);
     try {
-      await fetchSameOriginJson(
+      await accountApi.fetchJson(
         `/api/accounts/${encodeURIComponent(accountId)}/lifecycle/tier-drop/dismiss`,
         {
           method: 'POST',
-          headers: accountCapsule ? { 'x-ck-authz-capsule': accountCapsule } : undefined,
         },
       );
       await me.reload();

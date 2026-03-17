@@ -1,12 +1,12 @@
 # PRD 070B — Tiered Translation Truth and Runtime Closure
 
-Status: BLOCKED BY PRD 070A
+Status: READY TO EXECUTE AFTER PRD 070A BOUNDARY CLOSURE
 Date: 2026-03-15
 Owner: Product Dev Team
 Priority: P0 (product truth + commercial truth)
 
 Execution dependency:
-- PRD 070B must not execute until PRD 070A has closed the product boundary.
+- PRD 070B required PRD 070A to close the product boundary first.
 - Translation truth needs one product owner, one backend boundary, one save path, and one consumer contract.
 - The current split-brain architecture keeps reintroducing drift, so PRD 070B is sequenced after PRD 070A on purpose.
 
@@ -34,6 +34,90 @@ Make translations a single honest system across all tiers:
 - one instance lifecycle model
 - one readiness model
 - no confusion between what is `allowed` and what is actually `ready` in Tokyo
+
+Operational framing:
+- PRD 070 executes locale as the first real overlay proof in the product
+- the forward architecture is not "a translation system"
+- the forward architecture is "Roma owns overlay intent, generators produce overlays when Roma says so, Tokyo owns overlay-ready truth"
+
+---
+
+## Core truth model
+
+PRD 070 is not a "make the current twists work" project.
+
+It exists because the current system still takes too many turns to answer simple questions like:
+- what locales does this instance want?
+- what locales are actually ready right now?
+- what locales should Bob or Venice show?
+
+If the system needs multiple reinterpretation steps, overlay inference, or product/commercial guesswork to answer those questions, the architecture is wrong.
+
+PRD 070 must therefore be executed as a truth-refactor, not as a patch/tweak pass.
+
+### Three questions, three owners
+
+There are only three product-truth questions in this PRD:
+
+1. What locales does this instance want?
+   - Owner: Roma product settings + persisted account locale state
+   - Contract:
+     - Roma materializes the deterministic desired locale set once.
+     - That saved Roma locale list is the only desired-locale source.
+     - No downstream system may choose, infer, expand, or reinterpret it.
+
+2. What locales are actually ready for the current fingerprint?
+   - Owner: Tokyo/Tokyo-worker artifact truth
+   - Contract:
+     - `ready` means Tokyo has the exact current-fingerprint artifact.
+     - Overlay presence, queued jobs, prior-fingerprint artifacts, and account settings do not count as `ready`.
+     - No upstream or downstream surface may manufacture a second readiness definition.
+
+3. What locales should consumers and editors show?
+   - Owner:
+     - account/editor host surfaces consume Roma desired truth + Tokyo ready truth
+     - public consumer surfaces consume Tokyo/Venice ready truth only
+   - Contract:
+     - Bob and Venice are consumers of truth, not locale-policy interpreters.
+     - Account-mode Bob may show `desired` and `ready`.
+     - MiniBob/public Bob may show `ready` only.
+     - Action gating comes from policy; locale visibility comes from truth.
+
+### Consequence
+
+The intended architecture is simple and boring:
+- Roma owns one desired locale set
+- San Francisco translates only the locales Roma tells it to
+- Tokyo owns one ready-locale truth for the current fingerprint
+- Bob and Venice display that truth
+
+Everything in PRD 070 must make the system closer to that model.
+Anything that preserves or adds extra turns is architectural drift, even if it "fixes" a local symptom.
+
+### Locale is the first overlay proof
+
+PRD 070 must be read as locale executed through the general overlay architecture.
+
+The target overlay architecture is:
+1. Roma decides what overlays are available to the user and records what overlays the user wants.
+2. Generator services produce overlays only because Roma told them to.
+3. Tokyo stores those overlays/artifacts and is the canonical owner of whether they are actually ready.
+4. Consumers/editors read that actual ready truth; they do not infer it.
+
+For locale, that means:
+- Roma decides and persists the desired locale overlay set.
+- San Francisco generates locale overlays only for the locales Roma requests.
+- Tokyo/Tokyo-worker own whether the locale overlay/artifact exists for the current fingerprint.
+- Bob/Venice consume that ready truth.
+
+This is intentionally the same architecture Clickeen should later use for:
+- multilingual email overlays
+- A/B email overlays
+- instance copy experiments
+- personalization overlays
+- any future Babel overlay dimension
+
+Therefore PRD 070 must not introduce locale-only ownership rules that would fail for other overlay types.
 
 ---
 
@@ -68,6 +152,13 @@ These tenets are the architectural memory for PRD 070.
    - Embed/runtime concern: choose among artifacts that already exist in Tokyo.
    - Consumer behavior must not redefine translation truth.
 
+5A. Locale follows the general overlay architecture
+   - Roma owns overlay availability, overlay selection, and generation intent.
+   - Generator services execute only from Roma-owned intent.
+   - Tokyo/Tokyo-worker own stored-overlay/artifact truth and ready truth.
+   - Consumers/editors read actual overlay truth; they do not invent it.
+   - Locale is the first implemented overlay proof of this model, not a special architecture.
+
 6. Consumer locale policy must be built from `ready`, not `allowed`
    - plan allowance is commercial truth.
    - `allowed` is the saved Roma locale set within that allowance.
@@ -99,8 +190,8 @@ These tenets are the architectural memory for PRD 070.
 
 11. Session-minted entitlement truth only
    - The account bootstrap authz capsule is the product-path entitlement/policy truth for the session.
-   - Paris may verify that capsule on account product routes.
-   - Paris must not recompute or reinterpret entitlements on save, localization, l10n status, layer edits, or published-surface convergence.
+   - Roma terminates the browser session and passes that truth downstream on product routes.
+   - Downstream product-path services may verify that capsule, but they must not recompute or reinterpret entitlements on save, localization, l10n status, layer edits, or published-surface convergence.
    - If entitlement truth changes, the system must mint a new session/capsule instead of re-resolving policy mid-session.
 
 ---
@@ -112,6 +203,7 @@ In PRD 070:
 - `allowed` means the saved Roma locale set that is permitted by entitlements and selected by the user
 - `ready` means Tokyo has the artifact for the exact current base fingerprint
 - `consumer pointer` means the ready-only locale policy used by embed/runtime consumers
+- `overlay` means any generated/stored variant layer whose desired state is Roma-owned and whose actual ready state is Tokyo-owned
 
 If wording elsewhere drifts, this section plus the top-level tenets win.
 
@@ -189,99 +281,142 @@ If any one of those three stays broken, the product cannot honestly claim multil
 
 ---
 
-## Current confirmed failures
+## Execution-start confirmed failures
 
-These are not speculative. They are confirmed in current repo/runtime truth.
+These are not speculative. They were confirmed in repo/runtime truth at execution start.
+The original Paris-era trigger failures that motivated PRD 070A have already been removed and are not the current failure set.
 
 ### A. Current confirmed product/runtime failures
 
-1. Curated save aftermath explicitly skips translation scheduling.
-   - `paris/src/domains/account-instances/save-aftermath-handlers.ts`
-   - Current branch: `if (!textDiff.textChanged || context.source === 'curated')`
-   - Result: the curated FAQ lane can save base content without ever enqueuing locale generation.
+1. Account-mode `ready` truth is still derived from overlay presence instead of explicit Tokyo artifact truth.
+   - `roma/lib/account-l10n.ts`
+   - Current account snapshot computes `readyLocales` from overlay rows for the current base fingerprint rather than from the consumer artifact/pointer plane in Tokyo.
+   - Result: Bob/Roma account surfaces can still treat authoring-state presence as readiness even though customer truth is supposed to mean "Tokyo has the current artifact."
 
-2. Account locale aftermath ignores curated published instances.
-   - `paris/src/domains/l10n/account-handlers.ts`
-   - Current aftermath scan walks `widget_instances` only, not `curated_widget_instances`.
-   - Result: enabling account languages in Roma does not seed the one curated FAQ lane that matters.
+2. MiniBob still boots through Bob URL discovery instead of the same host-owned editor envelope used by Roma and DevStudio.
+   - `prague/src/blocks/minibob/minibob.astro`
+   - `bob/lib/session/useSessionBoot.ts`
+   - Result: Bob still owns one public boot path where it discovers instance/runtime truth itself instead of simply editing from host-provided truth.
 
-3. Builder status lies about readiness.
+3. MiniBob locale visibility is still incorrectly entangled with MiniBob action gating.
    - `bob/components/LocalizationControls.tsx`
-   - Current rule: if locales are allowed but no materialized locale overlays exist, status label becomes `Configured`.
-   - Result: the UI represents entitlement/configuration as if it were successful translation output.
+   - Current `minibobTranslationsLocked` behavior collapses visible locales back to the base locale after personalization use.
+   - Result: the product cannot express the intended contract of "view all ready locales, limited actions."
 
-4. Runtime truth is split across three different concepts with no single honest surface:
-   - account locales allowed
-   - internal generation/materialization state
-   - actual ready/not-ready truth in Tokyo for the current base content
+4. The public MiniBob boot/runtime contract is still under-specified for Bob.
+   - `venice/app/api/instance/[publicId]/route.ts`
+   - Current public instance payload exposes config plus consumer locale policy, but not a canonical Bob-ready localization snapshot contract for host boot.
+   - Result: MiniBob host boot has to invent a bridge unless PRD 070 defines the public truth shape explicitly.
 
-5. Instance translation policy is materially under-specified.
+5. Runtime truth is still split across three concepts with no single explicit surface:
+   - saved Roma desired locale set
+   - Tokyo artifact/pointer truth
+   - consumer ready-only locale policy
+   - Result: the architecture is much closer to correct than the old Paris history, but the remaining truth seams are still the real product problem.
+
+6. Bob translation truth and commercial upsell are still mixed in one surface.
+   - `bob/components/LocalizationControls.tsx`
+   - The translation panel still contains MiniBob upsell behavior and copy.
+   - Result: product truth and commercial gating remain coupled in a surface that should primarily communicate translation state.
+
+7. Phase-2 prompt-policy closure is only partially a live problem now.
    - `sanfrancisco/src/agents/l10nTranslationCore.ts`
-   - Current instance l10n prompt is generic: locale + JSON/safety rules + generic fluency instruction.
-   - Provider/model routing is tier/grant-aware, but the translation policy is still effectively one generic prompt reused across providers.
-   - Missing today:
-     - widget-type-aware instructions
-     - text-type awareness (`string` vs `richtext`)
-     - at least the same level of context already used by Prague-string translation
-   - Result: the system is good at producing structurally safe translations, not necessarily high-quality localized product copy.
-
-6. Current heuristics contain Latin-script assumptions.
-   - `sanfrancisco/src/agents/l10nTranslationCore.ts`
-   - `isLikelyNonTranslatableLiteral()` currently treats strings with no `[a-zA-Z]` characters as non-translatable literals.
-   - Result: base content authored in non-Latin scripts can be incorrectly skipped or misclassified by the translation path.
-
-7. The repo already demonstrates richer translation context elsewhere, but not for instance l10n.
-   - `sanfrancisco/src/agents/l10nPragueStrings.ts`
-   - Prague strings translation already passes explicit context like `chunkKey` and `blockKind`, while instance l10n does not pass equivalent widget/field context.
-   - Result: system-owned Prague translation is more context-aware than the actual product widget translation path.
-
-8. The current generic prompt contains instructions that sound responsible but do not constitute translation policy.
-   - `sanfrancisco/src/agents/l10nTranslationCore.ts`
-   - Example: `Silently self-check fluency before final output.`
-   - Result: the prompt looks safer than it is. The output policy is still generic and under-specified.
+   - Current code already carries `widgetType`, `string` vs `richtext`, and Unicode-aware literal detection.
+   - Result: PRD 070 Phase 2 should be treated as verification/tightening of the current lane, not as invention of a new prompt-policy subsystem.
 
 ### B. Current architecture risks and scope boundaries
 
-10. Generation orchestration is still locale-hardcoded even though the layer model is already broader.
-    - `packages/l10n/src/index.ts`
-    - Shared contracts already define a broader layer model (`locale`, `geo`, `industry`, `experiment`, `account`, `behavior`, `user`).
-    - `paris/src/domains/l10n/enqueue-jobs.ts`
-    - Current orchestration still hardcodes `const layer = 'locale'`.
-    - Result: the scheduler seam is at risk of becoming future rewrite debt even though the surrounding state model is already generic.
+8. The touched generation seam must remain generic without turning into a framework project.
+   - `roma/lib/account-save-aftermath.ts`
+   - The live implementation still writes `layer: 'locale'` directly at the persistence boundary.
+   - Result: PRD 070 should preserve a layer-capable seam where touched, but must not respond by building a generalized orchestration subsystem.
 
-11. Venice runtime code is still locale-specific, and PRD 070 must not widen that into a generic runtime-composition project.
-    - `venice/app/e/[publicId]/route.ts`
-    - Current runtime fetches one locale pointer and one locale pack directly.
-    - Result: PRD 070 must keep runtime work limited to the ready-only consumer contract and avoid premature multi-layer composition work.
+9. Venice runtime code is still locale-specific, and PRD 070 must not widen that into a generic runtime-composition project.
+   - `venice/app/e/[publicId]/route.ts`
+   - Current runtime fetches one locale pointer and one locale pack directly.
+   - Result: PRD 070 must keep runtime work limited to the ready-only consumer contract and avoid premature multi-layer composition work.
 
-12. The scheduler seam issue is narrower than a full Babel rewrite.
-    - `paris/src/domains/l10n/enqueue-jobs.ts`
-    - `enqueueL10nJobs()` is fundamentally a locale scheduling function today and should stay simple.
-    - The core issue is not that the whole function is "Babel soup"; it is that one hardcoded layer constant creates a dead end for future dimensions.
-    - Result: PRD 070 should fix the seam precisely, not turn the scheduler into a six-dimension architecture project.
-
-13. Consumer locale policy is still too entitlements-shaped.
-    - `paris/src/domains/account-instances/published-convergence.ts`
-    - `paris/src/domains/account-instances/create-handler.ts`
+10. The consumer-pointer slice is narrower than the old history.
     - `tokyo-worker/src/domains/render.ts`
-    - Current flow derives `availableLocales` from account/policy selection and then asks Tokyo to validate that entire set before moving the live pointer.
-    - Result: if a higher-tier customer is allowed more locales, they can end up with a larger all-or-nothing failure surface even when many locale artifacts are already ready.
-
-14. Current live-surface sync is too globally coupled for Babel.
-    - `tokyo-worker/src/domains/render.ts`
-    - Current rule: for every locale in the consumer locale policy, Tokyo requires a live text pointer before advancing the live pointer.
-    - Result: one missing locale can block the whole consumer surface if the consumer locale set is not strictly the already-ready set.
-    - This is the wrong blast radius for a premium multilingual product.
+    - Current live-surface sync already validates only `readyLocales` before moving the live pointer.
+    - Result: PRD 070 should focus on making the ready set honest and convergent, not on rewriting the Tokyo live-pointer model from scratch.
 
 ---
 
 ## Execution diagnosis
 
 The execution problem is simpler than the history:
-- the trigger does not reliably fire on the only real lane
-- translation context is too generic
-- UI truth is misleading
-- consumer locale policy is derived from `allowed` instead of `ready`
+- account-mode `ready` truth is still weaker than Tokyo artifact truth
+- MiniBob boot and locale visibility are not yet aligned with the host-backed editor model
+- UI truth still mixes translation truth and commercial gating in some surfaces
+- the remaining work is mostly truth closure, not new architecture
+
+The practical diagnosis is:
+- the system still takes too many turns to answer simple locale questions
+- therefore the remaining work must remove turns, not patch around them
+- the right fixes are owner/truth refactors, not compatibility shims
+
+PRD 070 must be read as:
+- collapse to one desired-locale source
+- collapse to one ready-locale source
+- make Bob/Venice consume those truths without reinterpretation
+
+It must not be read as:
+- keep the current inference chain but make it pass more cases
+- add more labels, guards, or fallback derivations so the current twists become less painful
+
+### Current branch closure notes
+
+As of the current executing branch/worktree:
+- account-mode `readyLocales` now read from explicit Tokyo current-fingerprint artifact truth
+- MiniBob is host-booted and may view all ready locales while remaining action-limited by policy
+- the Bob translation panel no longer carries MiniBob upsell copy inside translation truth
+- host/public localization payloads are system-owned truth; Bob must fail on malformed MiniBob/account localization snapshots instead of normalizing them
+- Roma now passes minted `policyProfile` into the account-l10n generation request
+- San Francisco now derives `l10n.instance.v1` profile/provider policy from `@clickeen/ck-policy` plus env-configured providers
+- Roma l10n status now uses a lighter shared base-context path instead of piggybacking on the full overlay snapshot load
+
+---
+
+## Pre-execution readiness
+
+There are no architectural blockers left from PRD 070A.
+
+The current live boundary is sufficient for execution:
+- Roma owns the product save/locale aftermath path
+- San Francisco owns translation generation
+- Tokyo/Tokyo-worker own artifact and live-pointer truth
+- Venice owns public consumer/runtime reads
+- Bob remains the editor consumer of that truth
+
+Former concerns that are already closed and are not PRD 070 blockers:
+- Berlin bootstrap no longer repairs account state on the hot path
+- the signed account capsule no longer carries locale-settings truth
+- bootstrap no longer fans out live budget usage for capsule minting
+
+### Required pre-execution decisions
+
+1. Convergence trigger owner is already the Roma write path for the active proof lane.
+   - The current real lane is:
+     - Roma save/locales aftermath
+     - synchronous call to San Francisco account l10n generation
+     - Tokyo overlay/config writes
+     - Tokyo live-pointer sync
+   - PRD 070 must preserve and tighten this lane first.
+   - Do not invent a new queue/callback orchestration model just to close consumer-pointer convergence for the proof lane.
+
+2. Free-tier system locale must be materialized by the Roma locale-settings command before persistence.
+   - Roma is the product control plane and must decide the one system-chosen additional locale.
+   - Berlin persists the resulting saved locale list exactly as decided.
+   - Downstream systems consume that saved locale list only; they do not independently choose the free-tier locale.
+   - Current deterministic rule for this repo/runtime:
+     - if `baseLocale !== 'en'`, materialize `en`
+     - else materialize `es`
+
+3. Status-path optimization is not a precondition for PRD 070 closure.
+   - The current account l10n status path is heavier than ideal.
+   - That is a valid follow-up if the touched fix is tiny.
+   - It must not delay the truth-closure slices unless it is directly required by one of them.
 
 ---
 
@@ -454,6 +589,10 @@ Rule:
 - do not build Babel Phase 2 here
 - do not turn `enqueueL10nJobs()` into a broad Babel abstraction exercise
 
+Additional architectural rule:
+- locale must be implemented as an overlay type using the same owner model we want for all overlays
+- do not create locale-specific ownership that Roma, Tokyo, or future generators would have to undo later
+
 ### 11. Translation generation and locale consumption are separate systems
 
 Translation generation is a supply-side system.
@@ -479,6 +618,12 @@ Its job is:
 PRD 070 must keep this boundary explicit:
 - translation-system truth ends at `artifact exists in Tokyo for the current base fingerprint`
 - consumer truth begins at `which ready artifact do we expose/use`
+
+Overlay generalization of that same rule:
+- Roma owns "should this overlay exist?"
+- the generator owns "produce it now"
+- Tokyo owns "it exists and is ready"
+- the consumer owns "select among ready overlays"
 
 ### 12. Tokyo/Tokyo-worker are delivery systems, not product-policy systems
 
@@ -525,6 +670,25 @@ Required:
 - the consumer locale set must contain only locales that are ready in Tokyo
 - non-ready allowed locales stay visible in Bob/Roma as `Not ready`
 - non-ready allowed locales must not poison already-ready consumer locales
+
+### 13A. MiniBob may view ready locales but must not gain locale governance
+
+MiniBob is a public consumer/editor trial, not an account locale-control plane.
+
+Rule:
+- MiniBob may display every locale already present in the instance consumer pointer
+- this visibility comes from consumer `ready` truth, not from MiniBob account/governance entitlements
+- MiniBob does not gain the ability to:
+  - add/remove locales
+  - save locale settings
+  - trigger translation generation
+  - publish
+  - perform account-governed locale writes
+
+In short:
+- MiniBob action limits remain policy-driven
+- MiniBob locale visibility remains consumer-truth-driven
+- do not collapse visible locales to the base locale merely because MiniBob cannot govern them
 
 ### 14. Consumer pointer contract
 
@@ -590,16 +754,20 @@ This section records only the tier behavior PRD 070 execution depends on.
 
 ### Minibob
 
-- Total locales: base locale only
+- Account-governance additional locales: 0
 - User-selectable additional locales: 0
-- Async translation pipeline: disabled
+- Async translation pipeline: disabled as a MiniBob-triggered action
 - AI profile: `free_low`
+- Public consumer visibility: MiniBob may view every locale already present in the instance consumer pointer; this is not a MiniBob governance entitlement increase
 
 ### Free
 
 - Total locales max: 2
 - User-selectable additional locales: 0
-- Additional locale source: system-chosen only, when allowed by product policy
+- Additional locale source: system-chosen only, but that choice must be materialized once into the saved Roma locale list; downstream systems must not choose it independently
+- Current deterministic rule:
+  - if `baseLocale !== 'en'`, materialize `en`
+  - else materialize `es`
 - Async translation pipeline: enabled only for the single additional system locale
 - AI profile: `free_low`
 
@@ -753,6 +921,23 @@ This section is a guardrail, not additional scope.
 - keep the existing generic `(publicId, layer, layerKey, baseFingerprint)` state/storage shape
 - do not introduce runtime composition work or new overlay strategies here
 
+This matters because PRD 070 is not building a translation-only subsystem.
+It is proving the general overlay architecture on the locale lane first.
+
+The forward overlay rule is:
+- Roma decides the desired overlay state
+- the generator reconciles desired state into artifacts
+- Tokyo stores and exposes actual-ready overlay truth
+
+So the seam must stay generic enough for:
+- locale overlays
+- email-language overlays
+- A/B overlays
+- personalization overlays
+- future Babel overlay types
+
+But PRD 070 still implements locale only.
+
 ---
 
 ## Trigger rules
@@ -780,6 +965,9 @@ For PRD 070, the customer-facing/system-facing story is:
 - pipeline reconciles Tokyo to that desired locale set
 - Bob shows `allowed` and `ready`
 - embed/runtime later chooses only among the locales that are already `Ready`
+
+If any implementation path requires more turns than that story, the implementation is wrong for PRD 070.
+The response is to simplify the owner/truth path, not to add another inferred state.
 
 ### A. Base save with text change
 
@@ -890,8 +1078,8 @@ Goal:
 - make the real translation triggers work for the only real proof lane
 
 Scope:
-- remove curated save skip from save aftermath
-- include curated published instances in account locale aftermath
+- verify and preserve the Roma save-aftermath trigger for curated and user lanes
+- verify and preserve curated published instances in account-locale aftermath
 - fix the scheduler dead-end by removing hardcoded locale-only seam assumptions where touched
 - allow `enqueueL10nJobs()` to carry a defaulted `layer` seam cleanly without changing its core job as a scheduler
 - make the pipeline reconcile the canonical saved locale set against Tokyo current-fingerprint artifacts deterministically
@@ -909,16 +1097,15 @@ Additional constraint:
 ### Phase 2 — Minimal prompt-policy closure
 
 Goal:
-- add the minimum missing translation context without building a quality platform
+- verify and tighten the minimum prompt-policy contract without building a quality platform
 
 Scope:
-- pass `widgetType` into the instance-l10n prompt policy
-- pass text type (`string` vs `richtext`) into the instance-l10n prompt policy
-- reach Prague-string prompt-context quality as a minimum bar
-- remove Latin-script assumptions from translation heuristics
+- confirm `widgetType` and text type (`string` vs `richtext`) are present end-to-end on the instance l10n lane
+- close any remaining gap vs Prague-string prompt context where it still exists
+- preserve Unicode/non-Latin handling and fix only any remaining heuristic misclassifications
 
 Acceptance:
-- instance translation no longer runs on one generic prompt with only locale context
+- instance translation is provably widgetType-aware and text-type-aware on the active lane
 - non-Latin base content is handled as real source content, not misclassified literal content
 
 ### Phase 3 — Truth-model closure
@@ -953,6 +1140,10 @@ Goal:
 
 Scope:
 - keep AI profile selection tier-bound and explicit
+- verify the active lower/paid profile mapping on the touched lane
+
+Rule:
+- treat this as acceptance closure, not as a separate architecture/build stream
 
 Acceptance:
 - lower/paid tier differences are visible as caps/quality, not as broken state machines
@@ -1000,6 +1191,13 @@ Every change must satisfy all four:
 
 If a change fails any of those four, it is out of scope for PRD 070.
 
+Additional hard rule:
+- if a fix makes the system take more turns to answer:
+  - what is desired?
+  - what is ready?
+  - what should be shown?
+  then it is not an acceptable PRD 070 fix
+
 ### Smallest-diff rule
 
 Execution should prefer:
@@ -1009,25 +1207,35 @@ Execution should prefer:
 - one contract rename over dual-contract drift
 - one honest label over a derived status taxonomy
 
+PRD 070 is allowed to refactor when the refactor removes turns.
+It is not allowed to preserve a twisty truth path just because a smaller patch can make that path limp along.
+
 ### Execution slices
 
 To keep blast radius controlled, execution proceeds in these slices:
 
-1. Trigger slice
-   - curated save aftermath
-   - curated account-locale aftermath
-2. Deterministic-locale-set slice
-   - scheduler/input path uses the saved Roma locale set as the only desired set
+1. Desired-locale-truth slice
+   - Roma saved locale settings remain the only desired-locale source
+   - no downstream path chooses locales independently
+   - free/system-chosen locale behavior is materialized once at the Roma boundary and then treated as ordinary saved truth
+2. Account-ready-truth slice
+   - Roma account-mode status reads `ready` from explicit Tokyo artifact truth
+   - account surfaces stop treating overlay presence as customer-ready truth
 3. Consumer-pointer slice
    - consumer policy uses ready locales only
    - switcher/IP contract follows the ready set only
-4. Prompt-policy slice
-   - `widgetType`
-   - text type
-   - remove Latin-script assumption
-5. UI-truth slice
+   - newly-ready locales converge into the consumer pointer without another manual save
+4. MiniBob-contract slice
+   - public runtime exposes a Bob-ready localization snapshot for host boot
+   - MiniBob may view all ready locales while remaining action-limited by policy
+5. Prompt-policy slice
+   - verify `widgetType`
+   - verify text type
+   - verify Unicode/non-Latin handling and fix only remaining gaps
+6. UI-truth slice
    - Bob/Roma labels and counts
-6. Proof slice
+   - translation truth stays separate from commercial upsell
+7. Proof slice
    - verify the real `cloud-dev` lane
 
 Each slice should land cleanly before widening the touch set.
@@ -1036,6 +1244,8 @@ Each slice should land cleanly before widening the touch set.
 
 Stop and re-evaluate if execution starts to require:
 - a second desired-locale source besides saved Roma settings
+- a second readiness definition besides Tokyo current-fingerprint artifact truth
+- Bob or Venice deriving locale truth instead of consuming it
 - consumer/runtime dependence on non-ready locales
 - Tokyo/Tokyo-worker making entitlement decisions
 - generalized multi-layer runtime composition
@@ -1047,29 +1257,28 @@ Stop and re-evaluate if execution starts to require:
 
 Do the work in this order:
 
-1. Remove curated save skip.
-2. Include curated published instances in account locale aftermath.
-3. Fix the scheduler seam so touched orchestration is not dead-ended on `layer = 'locale'`, without turning `enqueueL10nJobs()` into Babel soup.
-4. Separate consumer locale policy from commercial locale policy so embed/runtime uses only `ready` locales.
-5. Add write-path reconciliation so newly-ready locales converge into the consumer pointer without another manual save.
-6. Add minimal prompt context: `widgetType` + text type.
-7. Remove the Latin-script assumption in current heuristics.
-8. Replace misleading UI labels with honest counts.
-9. Verify the real FAQ `cloud-dev` lane.
+1. Close account-mode `ready` truth on explicit Tokyo artifact truth instead of overlay presence.
+2. Separate consumer locale policy from commercial locale policy so embed/runtime uses only `ready` locales.
+3. Add write-path reconciliation so newly-ready locales converge into the consumer pointer without another manual save, reusing the existing Roma aftermath -> San Francisco -> Tokyo/Tokyo-worker lane.
+4. Define and ship the public MiniBob host-boot contract so Prague/Venice can open Bob with a full localization snapshot while keeping MiniBob action-limited by policy.
+5. Fix the touched generation seam so orchestration is not dead-ended on `layer = 'locale'`, without turning it into Babel soup or rebuilding the active proof lane.
+6. Verify the live prompt-policy contract: `widgetType`, text type, and Unicode/non-Latin handling; fix only real remaining gaps.
+7. Replace misleading UI labels and remove translation/commercial truth mixing.
+8. Verify the real FAQ `cloud-dev` lane.
 
 Hard rule:
-- do not delay steps 1 and 2 with glossary, scoring, or telemetry work.
+- do not delay steps 1 through 4 with glossary, scoring, or telemetry work.
 - do not use Babel scale concerns as an excuse to build geo/industry/ABM runtime features in this PRD.
 - do not build translation-quality infrastructure before the first real non-base FAQ output exists.
 
 This is the boring product-critical sequence:
-- fix the trigger
-- generalize the seam
-- fix deterministic locale-set reconciliation
+- make `ready` honest
 - fix the consumer-ready contract
 - bound consumer-pointer lag
-- fix the context
-- fix the truth
+- close MiniBob on the same truth
+- preserve one deterministic locale-set rule
+- verify the active context lane
+- fix the UI truth
 - then prove the lane
 
 ---
@@ -1104,8 +1313,8 @@ Required proof:
 ### Local tier-contract acceptance
 
 Because `cloud-dev` does not currently provide real lower-tier accounts, the following must be proven in `local`:
-- Minibob base-only behavior
-- Free system-locale-only behavior
+- MiniBob view-all-ready / limited-actions behavior
+- Free single-system-materialized-locale behavior
 - Tier1 locale-cap behavior
 - Tier2/Tier3 unlimited-cap behavior
 - AI profile selection by tier
@@ -1149,10 +1358,11 @@ Execution starts with these confirmed answers:
 
 When this ships, update:
 - `documentation/capabilities/localization.md`
-- `documentation/services/paris.md`
 - `documentation/services/roma.md`
 - `documentation/services/bob.md`
 - `documentation/services/sanfrancisco.md`
+- `documentation/services/venice.md`
+- `documentation/services/tokyo-worker.md`
 - `documentation/architecture/CONTEXT.md`
 
 Do not move PRD 070 to `03-Executed` until those canonical docs match the shipped runtime.

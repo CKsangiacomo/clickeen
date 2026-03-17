@@ -143,6 +143,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         accessToken: session.accessToken,
         accountId,
         publicId: created.value.publicId,
+        policyProfile: authz.payload.profile,
         accountCapsule: authz.token,
         previousConfig: null,
       });

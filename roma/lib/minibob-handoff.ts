@@ -1,6 +1,7 @@
 import { isCuratedOrMainWidgetPublicId } from '@clickeen/ck-contracts';
-import { verifyRomaAccountAuthzCapsule, type RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
+import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { authorizeAccountRoleFromCapsuleToken } from './account-authz-capsule';
 import { createAccountInstance } from './account-instance-create';
 
 type RomaKv = {
@@ -52,10 +53,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
-function resolveRomaAuthzCapsuleSecret(): string {
-  return String(process.env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
 }
 
 function requireUsageKv(): MinibobHandoffResult<RomaKv> {
@@ -142,43 +139,26 @@ async function verifyAccountCapsule(args: {
   accountCapsule: string;
   accountId: string;
 }): Promise<MinibobHandoffResult<RomaAccountAuthzCapsulePayload>> {
-  const secret = resolveRomaAuthzCapsuleSecret();
-  if (!secret) {
-    return {
-      ok: false,
-      status: 500,
-      error: {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.misconfigured',
-        detail: 'roma_authz_capsule_secret_missing',
-      },
-    };
-  }
-
-  const verified = await verifyRomaAccountAuthzCapsule(secret, args.accountCapsule);
+  const verified = await authorizeAccountRoleFromCapsuleToken({
+    token: args.accountCapsule,
+    accountId: args.accountId,
+    minRole: 'editor',
+  });
   if (!verified.ok) {
     return {
       ok: false,
-      status: 403,
       error: {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.auth.forbidden',
-        detail: verified.reason,
+        kind: verified.error.kind,
+        reasonKey: verified.error.reasonKey,
+        detail: verified.error.detail,
       },
+      status: verified.status,
     };
   }
-  if (verified.payload.accountId !== args.accountId) {
-    return {
-      ok: false,
-      status: 403,
-      error: {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.auth.forbidden',
-        detail: 'account_mismatch',
-      },
-    };
-  }
-  return { ok: true, value: verified.payload };
+  return {
+    ok: true,
+    value: verified.payload,
+  };
 }
 
 export async function startMinibobHandoff(args: {

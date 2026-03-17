@@ -12,8 +12,6 @@ routes = [
 
 [vars]
 BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
-BERLIN_ISSUER = "https://berlin-dev.clickeen.workers.dev"
-BERLIN_AUDIENCE = "clickeen.product"
 
 [[kv_namespaces]]
 binding = "USAGE_KV"
@@ -33,7 +31,7 @@ queue = "instance-render-snapshot-cloud-dev"
 
 [env.local]
 name = "tokyo-assets-local"
-vars = { BERLIN_BASE_URL = "http://localhost:3005", BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product" }
+vars = { BERLIN_BASE_URL = "http://localhost:3005" }
 
 [[env.local.kv_namespaces]]
 binding = "USAGE_KV"

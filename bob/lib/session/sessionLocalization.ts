@@ -57,17 +57,6 @@ function failLocalizationSnapshot(reason: string): never {
   throw new Error(`[useWidgetSession] Invalid localization snapshot (${reason})`);
 }
 
-export function normalizeLocalizationSnapshotForOpen(raw: unknown): {
-  baseLocale: string;
-  allowedLocales: string[];
-  readyLocales: string[];
-  overlayEntries: LocaleOverlayEntry[];
-  accountLocalesInvalid: string | null;
-  accountL10nPolicy: LocaleState['accountL10nPolicy'];
-} {
-  return normalizeLocalizationSnapshotForOpenMode(raw, { strict: false });
-}
-
 export function normalizeLocalizationSnapshotForOpenMode(
   raw: unknown,
   options: { strict: boolean },

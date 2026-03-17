@@ -1,3 +1,19 @@
+import { resolvePolicy } from '@clickeen/ck-policy';
+
+const DEVSTUDIO_LOCAL_POLICY = resolvePolicy({ profile: 'tier3', role: 'owner' });
+
+const DEVSTUDIO_LOCALIZATION_SNAPSHOT = {
+  accountLocales: ['en'],
+  invalidAccountLocales: null,
+  readyLocales: ['en'],
+  localeOverlays: [],
+  policy: {
+    baseLocale: 'en',
+    ip: { enabled: false, countryToLocale: {} },
+    switcher: { enabled: true },
+  },
+};
+
 export function createBobHost(deps) {
   const compiledCache = new Map();
   const compiledPromiseCache = new Map();
@@ -117,7 +133,7 @@ export function createBobHost(deps) {
       windowRef.addEventListener('message', onMessage);
       target.postMessage(
         {
-          type: 'devstudio:export-instance-data',
+          type: 'host:export-instance-data',
           requestId,
           exportMode,
         },
@@ -239,6 +255,7 @@ export function createBobHost(deps) {
     }
 
     if (instance.source === 'local' || isLocalDefaultPublicId(publicId)) {
+      const devstudioAccountId = await resolveDevStudioAccountId();
       const compiledStart = performanceRef.now();
       const compiled = await ensureCompiledWidget(instance.widgetname);
       if (requestSeq !== sendInstanceSeq) return;
@@ -251,10 +268,14 @@ export function createBobHost(deps) {
         type: 'ck:open-editor',
         subjectMode: 'account',
         publicId,
+        accountId: devstudioAccountId,
+        ownerAccountId: devstudioAccountId,
         label,
         widgetname: slug,
         compiled,
         instanceData: defaults,
+        localization: DEVSTUDIO_LOCALIZATION_SNAPSHOT,
+        policy: DEVSTUDIO_LOCAL_POLICY,
       });
       console.log('[DevStudio] Main instance load timings', {
         publicId,

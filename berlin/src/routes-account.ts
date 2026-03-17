@@ -86,7 +86,6 @@ async function resolvePrincipalState(request: Request, env: Env) {
   const state = await loadPrincipalAccountState({
     env,
     userId: principal.userId,
-    session: principal.session,
     sessionRole: claimAsString(principal.claims.role),
   });
   if (!state.ok) return { ok: false as const, response: state.response };
@@ -128,7 +127,6 @@ export async function handleMeUpdate(request: Request, env: Env): Promise<Respon
   const refreshed = await loadPrincipalAccountState({
     env,
     userId: resolved.principal.userId,
-    session: resolved.principal.session,
     sessionRole: claimAsString(resolved.principal.claims.role),
   });
   if (!refreshed.ok) return refreshed.response;
@@ -321,7 +319,6 @@ export async function handleAccountCreate(request: Request, env: Env): Promise<R
   const state = await loadPrincipalAccountState({
     env,
     userId: resolved.principal.userId,
-    session: resolved.principal.session,
     sessionRole: claimAsString(resolved.principal.claims.role),
   });
   if (!state.ok) return state.response;
@@ -661,7 +658,6 @@ export async function handleAccountOwnerTransfer(
     env,
     account,
     currentOwnerUserId: resolved.principal.userId,
-    session: resolved.principal.session,
     sessionRole: claimAsString(resolved.principal.claims.role),
   });
 }
@@ -698,7 +694,6 @@ export async function handleInvitationAccept(
     invitationId,
     principalUserId: resolved.principal.userId,
     principalEmail: resolved.state.profile.primaryEmail,
-    session: resolved.principal.session,
     sessionRole: claimAsString(resolved.principal.claims.role),
   });
 }

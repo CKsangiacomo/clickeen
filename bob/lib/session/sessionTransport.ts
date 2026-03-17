@@ -7,7 +7,7 @@ import {
   type SessionState,
   type SubjectMode,
 } from './sessionTypes';
-import { resolveBootModeFromUrl, resolvePolicySubject, resolveSurfaceFromUrl } from './sessionPolicy';
+import { resolveBootModeFromUrl, resolvePolicySubject } from './sessionPolicy';
 
 export type OpenRequestStatusEntry = {
   status: 'processing' | 'applied' | 'failed';
@@ -36,17 +36,11 @@ export function useSessionTransport(args: {
 }) {
   const sessionIdRef = useRef<string>(crypto.randomUUID());
   const bootModeRef = useRef<BootMode>(resolveBootModeFromUrl());
-  const surfaceRef = useRef<string>(resolveSurfaceFromUrl());
   const hostOriginRef = useRef<string | null>(null);
   const openRequestStatusRef = useRef<Map<string, OpenRequestStatusEntry>>(new Map());
 
-  const shouldDelegateAccountCommand = useCallback((subject: SubjectMode): boolean => {
-    if (subject !== 'account' || bootModeRef.current !== 'message') return false;
-    return (
-      surfaceRef.current === 'roma' ||
-      surfaceRef.current === 'devstudio' ||
-      surfaceRef.current === 'devstudio-support'
-    );
+  const isHostedAccountMode = useCallback((subject: SubjectMode): boolean => {
+    return subject === 'account' && bootModeRef.current === 'message';
   }, []);
 
   const dispatchHostAccountCommand = useCallback(
@@ -126,7 +120,7 @@ export function useSessionTransport(args: {
         );
       }
       const subject = resolvePolicySubject(policy);
-      if (!shouldDelegateAccountCommand(subject)) return null;
+      if (!isHostedAccountMode(subject)) return null;
 
       const accountId = String(args.stateRef.current.meta?.accountId || '').trim();
       const publicId = String(args.stateRef.current.meta?.publicId || '').trim();
@@ -158,11 +152,10 @@ export function useSessionTransport(args: {
         headers: { 'content-type': 'application/json; charset=utf-8' },
       });
     },
-    [args.stateRef, dispatchHostAccountCommand, shouldDelegateAccountCommand],
+    [args.stateRef, dispatchHostAccountCommand, isHostedAccountMode],
   );
 
   const fetchApi = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const capsule = args.stateRef.current.meta?.accountCapsule?.trim();
     const inputUrl =
       typeof input === 'string'
         ? input
@@ -174,21 +167,25 @@ export function useSessionTransport(args: {
 
     const delegated = await dispatchAccountApiThroughHost(inputUrl, input, init);
     if (delegated) return delegated;
-    if (!capsule || !inputUrl.startsWith('/api/accounts/')) {
-      return fetch(input, init);
+    const policy = args.stateRef.current.policy;
+    const subject = policy ? resolvePolicySubject(policy) : null;
+    if (inputUrl.startsWith('/api/accounts/') && subject && isHostedAccountMode(subject)) {
+      return Response.json(
+        {
+          error: {
+            reasonKey: 'coreui.errors.builder.command.hostOnly',
+            message: 'Hosted account mode must delegate account routes through the parent host.',
+          },
+        },
+        { status: 409 },
+      );
     }
-
-    const headers = new Headers(input instanceof Request ? input.headers : init?.headers);
-    headers.set('x-ck-authz-capsule', capsule);
-    return fetch(input, {
-      ...init,
-      headers,
-    });
-  }, [args.stateRef, dispatchAccountApiThroughHost]);
+    return fetch(input, init);
+  }, [args.stateRef, dispatchAccountApiThroughHost, isHostedAccountMode]);
 
   const executeAccountCommand: ExecuteAccountCommand = useCallback(
     async (commandArgs: ExecuteAccountCommandArgs) => {
-      if (shouldDelegateAccountCommand(commandArgs.subject)) {
+      if (isHostedAccountMode(commandArgs.subject)) {
         const result = await dispatchHostAccountCommand({
           command: commandArgs.command,
           accountId: commandArgs.accountId,
@@ -208,12 +205,11 @@ export function useSessionTransport(args: {
       const json = (await response.json().catch(() => null)) as any;
       return { ok: response.ok, status: response.status, json };
     },
-    [dispatchHostAccountCommand, fetchApi, shouldDelegateAccountCommand],
+    [dispatchHostAccountCommand, fetchApi, isHostedAccountMode],
   );
 
   return {
     bootModeRef,
-    surfaceRef,
     hostOriginRef,
     sessionIdRef,
     openRequestStatusRef,

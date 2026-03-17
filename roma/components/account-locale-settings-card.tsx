@@ -3,7 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
-import { fetchSameOriginJson } from './same-origin-json';
+import type { PolicyProfile } from '@clickeen/ck-policy';
+import { useRomaAccountApi } from './account-api';
+import { useRomaMe } from './use-roma-me';
+import {
+  materializeAccountAdditionalLocales,
+  normalizeAdditionalAccountLocales,
+  resolveSystemChosenAdditionalLocale,
+  usesSystemChosenAdditionalLocale,
+} from '@roma/lib/account-locales';
 
 type AccountLocalesPayload = {
   locales: string[];
@@ -73,14 +81,6 @@ function buildDefaultCountryToLocale(args: { enabledLocales: string[]; baseLocal
   return mapping;
 }
 
-function normalizeAdditionalLocales(value: unknown, baseLocale: string): string[] {
-  if (!Array.isArray(value)) return [];
-  const normalized = value
-    .map((entry) => normalizeLocaleToken(entry))
-    .filter((entry): entry is string => Boolean(entry) && entry !== baseLocale);
-  return Array.from(new Set(normalized));
-}
-
 function normalizeSwitcherLocales(value: unknown, enabledLocales: string[]): string[] {
   if (!Array.isArray(value)) return enabledLocales;
   const enabledSet = new Set(enabledLocales);
@@ -135,8 +135,10 @@ function resolveAccountLocalesErrorCopy(reason: unknown, fallback: string): stri
 export function AccountLocaleSettingsCard(args: {
   accountId: string;
   canEdit: boolean;
-  authzCapsule?: string | null;
+  onSaved?: (() => Promise<void> | void) | undefined;
 }) {
+  const me = useRomaMe();
+  const accountApi = useRomaAccountApi(me.data);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -146,30 +148,37 @@ export function AccountLocaleSettingsCard(args: {
   const [draftIpEnabled, setDraftIpEnabled] = useState(false);
   const [draftSwitcherEnabled, setDraftSwitcherEnabled] = useState(true);
   const [draftSwitcherLocales, setDraftSwitcherLocales] = useState<string[]>([]);
+  const policyProfile = useMemo(() => {
+    const raw = typeof me.data?.authz?.profile === 'string' ? me.data.authz.profile.trim() : '';
+    switch (raw) {
+      case 'minibob':
+      case 'free':
+      case 'tier1':
+      case 'tier2':
+      case 'tier3':
+        return raw as PolicyProfile;
+      default:
+        return null;
+    }
+  }, [me.data]);
+  const usesSystemLocale = usesSystemChosenAdditionalLocale(policyProfile);
 
   const loadSettings = useCallback(async () => {
     if (!args.accountId) return;
     setLoading(true);
     setError(null);
     try {
-      const payload = await fetchSameOriginJson<{
+      const payload = await accountApi.fetchJson<{
         locales?: unknown;
         policy?: {
           baseLocale?: unknown;
           ip?: { enabled?: unknown; countryToLocale?: unknown };
           switcher?: { enabled?: unknown; locales?: unknown };
         } | null;
-      }>(`/api/accounts/${encodeURIComponent(args.accountId)}/locales?_t=${Date.now()}`, {
-        method: 'GET',
-        headers: args.authzCapsule
-          ? {
-              'x-ck-authz-capsule': args.authzCapsule,
-            }
-          : undefined,
-      });
+      }>(`/api/accounts/${encodeURIComponent(args.accountId)}/locales?_t=${Date.now()}`, { method: 'GET' });
 
       const baseLocale = normalizeLocaleToken(payload.policy?.baseLocale) ?? 'en';
-      const additionalLocales = normalizeAdditionalLocales(payload.locales, baseLocale);
+      const additionalLocales = normalizeAdditionalAccountLocales(payload.locales, baseLocale);
       const enabledLocales = [baseLocale, ...additionalLocales];
       setDraftBaseLocale(baseLocale);
       setDraftAdditionalLocales(additionalLocales);
@@ -182,28 +191,41 @@ export function AccountLocaleSettingsCard(args: {
     } finally {
       setLoading(false);
     }
-  }, [args.accountId, args.authzCapsule]);
+  }, [accountApi, args.accountId]);
 
   useEffect(() => {
     void loadSettings();
   }, [loadSettings]);
 
   const baseLocale = normalizeLocaleToken(draftBaseLocale) ?? 'en';
+  const effectiveAdditionalLocales = useMemo(
+    () =>
+      materializeAccountAdditionalLocales({
+        profile: policyProfile,
+        baseLocale,
+        requestedLocales: draftAdditionalLocales,
+      }),
+    [baseLocale, draftAdditionalLocales, policyProfile],
+  );
   const enabledLocales = useMemo(
-    () => [baseLocale, ...draftAdditionalLocales.filter((entry) => entry !== baseLocale)],
-    [baseLocale, draftAdditionalLocales],
+    () => [baseLocale, ...effectiveAdditionalLocales.filter((entry) => entry !== baseLocale)],
+    [baseLocale, effectiveAdditionalLocales],
   );
   useEffect(() => {
     setDraftSwitcherLocales((current) => enabledLocales.filter((locale) => current.includes(locale)));
   }, [enabledLocales]);
+  const systemChosenLocale = useMemo(
+    () => (usesSystemLocale ? resolveSystemChosenAdditionalLocale({ baseLocale }) : null),
+    [baseLocale, usesSystemLocale],
+  );
   const localeOptions = useMemo(
     () =>
       CANONICAL_LOCALES.filter((entry) => entry.code !== baseLocale).map((entry) => ({
         code: entry.code,
         label: resolveLocaleUiLabel(entry.code),
-        enabled: draftAdditionalLocales.includes(entry.code),
+        enabled: effectiveAdditionalLocales.includes(entry.code),
       })),
-    [baseLocale, draftAdditionalLocales],
+    [baseLocale, effectiveAdditionalLocales],
   );
   const switcherOptions = useMemo(
     () =>
@@ -222,13 +244,11 @@ export function AccountLocaleSettingsCard(args: {
     setSuccess(null);
 
     const normalizedBase = normalizeLocaleToken(draftBaseLocale) ?? 'en';
-    const additionalLocales = Array.from(
-      new Set(
-        draftAdditionalLocales
-          .map((entry) => normalizeLocaleToken(entry))
-          .filter((entry): entry is string => Boolean(entry) && entry !== normalizedBase),
-      ),
-    );
+    const additionalLocales = materializeAccountAdditionalLocales({
+      profile: policyProfile,
+      baseLocale: normalizedBase,
+      requestedLocales: draftAdditionalLocales,
+    });
 
     const enabledLocales = [normalizedBase, ...additionalLocales];
     const switcherLocales = draftSwitcherEnabled
@@ -260,19 +280,13 @@ export function AccountLocaleSettingsCard(args: {
     };
 
     try {
-      await fetchSameOriginJson(`/api/accounts/${encodeURIComponent(args.accountId)}/locales?subject=account`, {
+      await accountApi.fetchJson(`/api/accounts/${encodeURIComponent(args.accountId)}/locales?subject=account`, {
         method: 'PUT',
-        headers: {
-          'content-type': 'application/json',
-          ...(args.authzCapsule
-            ? {
-                'x-ck-authz-capsule': args.authzCapsule,
-              }
-            : {}),
-        },
+        headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify(payload),
       });
       await loadSettings();
+      await args.onSaved?.();
       setSuccess('Saved languages.');
     } catch (nextError) {
       setError(
@@ -286,13 +300,15 @@ export function AccountLocaleSettingsCard(args: {
     }
   }, [
     args.accountId,
-    args.authzCapsule,
+    args.onSaved,
+    accountApi,
     draftAdditionalLocales,
     draftBaseLocale,
     draftIpEnabled,
     draftSwitcherEnabled,
     draftSwitcherLocales,
     loadSettings,
+    policyProfile,
   ]);
 
   return (
@@ -327,14 +343,18 @@ export function AccountLocaleSettingsCard(args: {
 
         <div className="roma-inline-stack">
           <div className="label-s">Enabled languages</div>
-          <p className="body-s">Base language is always enabled. Add the other languages that should update automatically after Save.</p>
+          <p className="body-s">
+            {usesSystemLocale
+              ? `Base language is always enabled. Free includes one system-selected additional language${systemChosenLocale ? `: ${resolveLocaleUiLabel(systemChosenLocale)}` : ''}.`
+              : 'Base language is always enabled. Add the other languages that should update automatically after Save.'}
+          </p>
           <div className="roma-locale-settings__list">
             {localeOptions.map((entry) => (
               <label key={entry.code} className="roma-locale-settings__option">
                 <input
                   type="checkbox"
                   checked={entry.enabled}
-                  disabled={loading || saving || !args.canEdit}
+                  disabled={loading || saving || !args.canEdit || usesSystemLocale}
                   onChange={(event) => {
                     const nextChecked = event.target.checked;
                     setDraftAdditionalLocales((current) => {

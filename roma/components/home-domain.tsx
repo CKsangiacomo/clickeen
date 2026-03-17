@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
-import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 export function HomeDomain() {
   const me = useRomaMe();
   const searchParams = useSearchParams();
   const handoffId = useMemo(() => (searchParams.get('handoffId') || '').trim(), [searchParams]);
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const hasAccountContext = Boolean(context.accountId);
 
   if (me.loading) {

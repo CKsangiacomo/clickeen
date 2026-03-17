@@ -1,5 +1,4 @@
 import {
-  BUDGET_KEYS,
   mintRomaAccountAuthzCapsule,
   resolvePolicy,
   type MemberRole,
@@ -7,7 +6,6 @@ import {
 import { isUserSettingsTimezoneSupported, normalizeUserSettingsCountry } from '@clickeen/ck-contracts';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
-import { ensureProductAccountState } from './account-reconcile';
 import type {
   BerlinAccountContext,
   BerlinAccountMember,
@@ -21,14 +19,13 @@ import type {
 import { ensureSupabaseAccessToken, toIdentityRecord } from './auth-session';
 import { loadUserContactMethods } from './contact-methods';
 import { internalError, validationError } from './helpers';
+import { resolveSigningContext } from './jwt-crypto';
 import { requestSupabaseUser } from './supabase-client';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env, type SessionState } from './types';
 
 const ROMA_AUTHZ_CAPSULE_TTL_SEC = 15 * 60;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
-const ACCOUNT_STORAGE_USAGE_PREFIX = 'usage.storage.v1';
 const SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(localesJson).map((entry) => entry.code));
 
 type UserProfileRow = {
@@ -260,40 +257,6 @@ function resolveStage(env: Env): string {
   return issuer.includes('localhost') ? 'local' : 'cloud-dev';
 }
 
-function resolveRomaAuthzCapsuleSecret(env: Env): string {
-  const secret = asTrimmedString(env.ROMA_AUTHZ_CAPSULE_SECRET);
-  if (!secret) {
-    throw new Error('[berlin] Missing ROMA_AUTHZ_CAPSULE_SECRET');
-  }
-  return secret;
-}
-
-function budgetCounterKey(accountId: string, budgetKey: string, periodKey: string): string {
-  return `usage.budget.v1.${budgetKey}.${periodKey}.acct:${accountId}`;
-}
-
-function storageBudgetCounterKey(accountId: string, budgetKey: string): string {
-  return `${ACCOUNT_STORAGE_USAGE_PREFIX}.${budgetKey}.acct:${accountId}`;
-}
-
-function currentBudgetPeriodKey(now = new Date()): string {
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth() + 1;
-  return `${year}-${String(month).padStart(2, '0')}`;
-}
-
-async function readBudgetUsed(env: Env, accountId: string, budgetKey: string): Promise<number> {
-  const kv = env.USAGE_KV;
-  if (!kv) throw new Error('[Berlin] Missing USAGE_KV binding');
-  const counterKey =
-    budgetKey === STORAGE_BYTES_BUDGET_KEY
-      ? storageBudgetCounterKey(accountId, budgetKey)
-      : budgetCounterKey(accountId, budgetKey, currentBudgetPeriodKey());
-  const raw = await kv.get(counterKey);
-  const parsed = raw ? Number(raw) : 0;
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-}
-
 function selectDefaultAccount(
   accounts: BerlinAccountContext[],
   activeAccountId: string | null,
@@ -429,33 +392,9 @@ function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountCo
   return { ok: true, value: out };
 }
 
-async function ensureCanonicalState(
-  env: Env,
-  session: SessionState,
-): Promise<Result<void>> {
-  const ensured = await ensureSupabaseAccessToken(env, session);
-  if (!ensured.ok) return { ok: false, response: ensured.response };
-
-  const userResponse = await requestSupabaseUser(env, ensured.accessToken);
-  if (!userResponse.ok) {
-    return {
-      ok: false,
-      response: internalError(
-        'coreui.errors.auth.contextUnavailable',
-        userResponse.detail || `supabase_user_status_${userResponse.status}`,
-      ),
-    };
-  }
-
-  const reconciled = await ensureProductAccountState(env, userResponse.user);
-  if (!reconciled.ok) return { ok: false, response: reconciled.response };
-  return { ok: true, value: undefined };
-}
-
 export async function loadPrincipalAccountState(args: {
   env: Env;
   userId: string;
-  session: SessionState;
   sessionRole: string | null;
 }): Promise<Result<PrincipalAccountState>> {
   let profileResult = await loadUserProfileRow(args.env, args.userId);
@@ -471,28 +410,10 @@ export async function loadPrincipalAccountState(args: {
   if (!normalizedAccountsResult.ok) return normalizedAccountsResult;
   let accounts = normalizedAccountsResult.value;
 
-  if (!normalizedProfile || accounts.length === 0) {
-    const reconciled = await ensureCanonicalState(args.env, args.session);
-    if (!reconciled.ok) return reconciled;
-
-    profileResult = await loadUserProfileRow(args.env, args.userId);
-    if (!profileResult.ok) return profileResult;
-
-    accountsResult = await loadAccountMembershipRows(args.env, args.userId);
-    if (!accountsResult.ok) return accountsResult;
-
-    normalizedProfileResult = normalizeUserProfile(args.userId, profileResult.value);
-    if (!normalizedProfileResult.ok) return normalizedProfileResult;
-    normalizedProfile = normalizedProfileResult.value;
-    normalizedAccountsResult = normalizeAccounts(accountsResult.value);
-    if (!normalizedAccountsResult.ok) return normalizedAccountsResult;
-    accounts = normalizedAccountsResult.value;
-  }
-
   if (!normalizedProfile) {
     return {
       ok: false,
-      response: internalError('coreui.errors.auth.contextUnavailable', 'profile_missing_after_reconcile'),
+      response: internalError('coreui.errors.auth.contextUnavailable', 'profile_missing_for_principal_state'),
     };
   }
 
@@ -503,7 +424,7 @@ export async function loadPrincipalAccountState(args: {
   if (accounts.length === 0) {
     return {
       ok: false,
-      response: internalError('coreui.errors.auth.contextUnavailable', 'account_missing_after_reconcile'),
+      response: internalError('coreui.errors.auth.contextUnavailable', 'account_missing_for_principal_state'),
     };
   }
 
@@ -511,7 +432,7 @@ export async function loadPrincipalAccountState(args: {
   if (!defaultAccount) {
     return {
       ok: false,
-      response: internalError('coreui.errors.auth.contextUnavailable', 'default_account_missing_after_reconcile'),
+      response: internalError('coreui.errors.auth.contextUnavailable', 'default_account_missing_for_principal_state'),
     };
   }
 
@@ -624,19 +545,17 @@ export async function buildBootstrapPayload(args: {
     if (!identities.ok) return { ok: false, response: identities.response };
 
     const policy = resolvePolicy({ profile: activeAccount.tier, role: activeAccount.role });
-    const budgets = Object.fromEntries(
-      await Promise.all(
-        BUDGET_KEYS.map(async (budgetKey: string) => {
-          const used = await readBudgetUsed(args.env, activeAccount.accountId, budgetKey);
-          const max = policy.budgets[budgetKey]?.max ?? null;
-          return [budgetKey, { max, used }];
-        }),
-      ),
-    );
-    const entitlements = {
+    const bootstrapEntitlements = {
       flags: policy.flags,
       caps: policy.caps,
-      budgets,
+      budgets: policy.budgets,
+    };
+    const signedEntitlements = {
+      flags: policy.flags,
+      caps: policy.caps,
+      budgets: Object.fromEntries(
+        Object.entries(policy.budgets).map(([budgetKey, entry]) => [budgetKey, { max: entry.max }]),
+      ),
     };
 
     const nowSec = Math.floor(Date.now() / 1000);
@@ -644,8 +563,14 @@ export async function buildBootstrapPayload(args: {
     const authzVersion =
       activeAccount.membershipVersion ||
       `account:${activeAccount.accountId}:role:${activeAccount.role}:profile:${activeAccount.tier}`;
+    const signingContext = await resolveSigningContext(args.env);
 
-    const capsule = await mintRomaAccountAuthzCapsule(resolveRomaAuthzCapsuleSecret(args.env), {
+    const capsule = await mintRomaAccountAuthzCapsule(
+      {
+        kid: signingContext.kid,
+        privateKey: signingContext.privateKey,
+      },
+      {
       sub: args.state.user.id,
       userId: args.state.user.id,
       accountId: activeAccount.accountId,
@@ -654,21 +579,21 @@ export async function buildBootstrapPayload(args: {
       accountName: activeAccount.name,
       accountSlug: activeAccount.slug,
       accountWebsiteUrl: activeAccount.websiteUrl,
-      accountL10nLocales: activeAccount.l10nLocales,
-      accountL10nPolicy: activeAccount.l10nPolicy,
-      entitlements,
+      entitlements: signedEntitlements,
       role: activeAccount.role,
       profile: activeAccount.tier,
       authzVersion,
       iat: nowSec,
       exp: expiresSec,
-    });
+      },
+    );
 
     return {
       ok: true,
       value: {
         user: args.state.user,
         profile: args.state.profile,
+        activeAccount,
         accounts: args.state.accounts,
         defaults: { accountId: activeAccount.accountId },
         connectors: summarizeConnectorState({
@@ -683,7 +608,7 @@ export async function buildBootstrapPayload(args: {
           authzVersion,
           issuedAt: new Date(nowSec * 1000).toISOString(),
           expiresAt: new Date(expiresSec * 1000).toISOString(),
-          entitlements,
+          entitlements: bootstrapEntitlements,
         },
       },
     };

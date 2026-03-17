@@ -22,15 +22,17 @@ const hydrateHost = createDropdownHydrator({
 });
 
 // Formatting commands supported by the palette.
-const enum Command {
-  Bold = 'bold',
-  Italic = 'italic',
-  Underline = 'underline',
-  Strike = 'strike',
-  Link = 'link',
-  ClearFormat = 'clear-format',
-  ClearLinks = 'clear-links',
-}
+const Command = {
+  Bold: 'bold',
+  Italic: 'italic',
+  Underline: 'underline',
+  Strike: 'strike',
+  Link: 'link',
+  ClearFormat: 'clear-format',
+  ClearLinks: 'clear-links',
+} as const;
+
+type Command = (typeof Command)[keyof typeof Command];
 
 interface DropdownEditState {
   root: HTMLElement;
@@ -155,7 +157,7 @@ function createState(root: HTMLElement): DropdownEditState {
 }
 
 function installHandlers(state: DropdownEditState): void {
-  const { editor, palette, paletteButtons, clearFormatButton, clearLinksButton, linkPopover, root } = state;
+  const { editor, palette, clearFormatButton, clearLinksButton, linkPopover, root } = state;
 
   palette.addEventListener('click', (ev) => {
     const target = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-command]');
@@ -436,21 +438,6 @@ function closeInternalLinkSheet(state: DropdownEditState) {
   root.classList.remove('has-linksheet');
   linkSheet.setAttribute('aria-hidden', 'true');
   clearTempMarker(state);
-}
-
-function removeLinkAtSelection(state: DropdownEditState) {
-  if (!state.selection) return;
-  const range = state.selection.cloneRange();
-  const anchor = findAnchor(range);
-  if (!anchor) return;
-  const parent = anchor.parentNode;
-  if (!parent) return;
-  anchor.classList.remove('diet-dropdown-edit-link');
-  while (anchor.firstChild) parent.insertBefore(anchor.firstChild, anchor);
-  parent.removeChild(anchor);
-  syncPreview(state);
-  updateClearButtons(state);
-  updatePaletteActiveStates(state);
 }
 
 function findAnchor(range: Range): HTMLAnchorElement | null {

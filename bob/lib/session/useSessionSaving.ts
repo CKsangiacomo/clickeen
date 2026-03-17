@@ -4,7 +4,7 @@ import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction 
 import { can } from '@clickeen/ck-policy';
 import { applyLocalizationOps, computeL10nFingerprint, type AllowlistEntry } from '../l10n/instance';
 import { resolveAftermathSaveMessage } from './sessionLocalization';
-import { resolvePolicySubject, resolveSurfaceFromUrl } from './sessionPolicy';
+import { resolvePolicySubject } from './sessionPolicy';
 import type { SessionState } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
 
@@ -177,8 +177,7 @@ export function useSessionSaving(args: {
         !aftermathMessage &&
         subject === 'account' &&
         textChanged &&
-        !current.locale.dirty &&
-        resolveSurfaceFromUrl() !== 'devstudio'
+        !current.locale.dirty
       ) {
         window.setTimeout(() => {
           void args.monitorLocaleTranslationsAfterSave('Translations are updating.');

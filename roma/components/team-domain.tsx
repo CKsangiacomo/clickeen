@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
-import { resolveAccountPolicyFromRomaAuthz, resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { resolveAccountPolicyFromRomaAuthz, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountMembersResponse = {
   accountId: string;
@@ -38,7 +38,7 @@ function resolveMemberLabel(member: AccountMembersResponse['members'][number]): 
 
 export function TeamDomain() {
   const me = useRomaMe();
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const policy = useMemo(
     () => (context.accountId ? resolveAccountPolicyFromRomaAuthz(me.data, context.accountId) : null),
     [context.accountId, me.data],

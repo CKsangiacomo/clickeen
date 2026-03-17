@@ -1,5 +1,4 @@
 import {
-  canConsume,
   isPolicyEntitled,
   resolveAiAgent,
   resolveAiBudgets,
@@ -9,6 +8,7 @@ import {
   type BudgetKey,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
+import { readAccountBudgetUsed } from '../account-budget-usage';
 import { resolveSanfranciscoBaseUrl } from '../env/sanfrancisco';
 
 type AIGrant = {
@@ -131,13 +131,24 @@ export async function issueAccountCopilotGrant(args: {
         };
       }
       if (isBudgetEntitlementKey(policy, key)) {
-        const decision = canConsume(policy, key, 1);
-        if (!decision.ok) {
+        let used: number;
+        try {
+          used = await readAccountBudgetUsed(args.authz.accountId, key);
+        } catch (error) {
+          return {
+            ok: false,
+            status: 503,
+            reasonKey: 'coreui.errors.auth.contextUnavailable',
+            detail: error instanceof Error ? error.message : String(error),
+          };
+        }
+        const budget = policy.budgets[key];
+        if (budget.max != null && used + 1 > budget.max) {
           return {
             ok: false,
             status: 403,
-            reasonKey: decision.reasonKey,
-            detail: decision.detail,
+            reasonKey: 'coreui.upsell.reason.budgetExceeded',
+            detail: `${String(key)} budget exceeded (max=${budget.max}).`,
           };
         }
       }

@@ -6,3 +6,4 @@ export * from './gate';
 export * from './limits';
 export * from './ai';
 export * from './authz-capsule';
+export * from './jwks';

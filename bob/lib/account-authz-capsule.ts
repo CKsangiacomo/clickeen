@@ -1,9 +1,11 @@
 import {
   readRomaAuthzCapsuleHeader,
+  resolveCachedJwksVerifyKey,
   verifyRomaAccountAuthzCapsule,
   type MemberRole,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
+import { resolveBerlinBaseUrl } from './env/berlin';
 
 export type AccountCapsuleAuthzError = {
   kind: 'AUTH' | 'DENY' | 'INTERNAL';
@@ -22,6 +24,8 @@ export type AccountCapsuleAuthzResult =
       error: AccountCapsuleAuthzError;
     };
 
+const BERLIN_ACCOUNT_CAPSULE_JWKS_CACHE_KEY = '__CK_BOB_ACCOUNT_CAPSULE_JWKS_V1__';
+
 function roleRank(value: MemberRole): number {
   switch (value) {
     case 'owner':
@@ -35,8 +39,16 @@ function roleRank(value: MemberRole): number {
   }
 }
 
-function resolveRomaAuthzCapsuleSecret(): string {
-  return String(process.env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
+function resolveBerlinJwksUrl(): string {
+  return `${resolveBerlinBaseUrl()}/.well-known/jwks.json`;
+}
+
+async function resolveBerlinAccountCapsuleVerifyKey(kid: string): Promise<CryptoKey | null> {
+  return resolveCachedJwksVerifyKey({
+    cacheKey: BERLIN_ACCOUNT_CAPSULE_JWKS_CACHE_KEY,
+    jwksUrl: resolveBerlinJwksUrl(),
+    kid,
+  });
 }
 
 export async function authorizeRequestAccountRoleFromCapsule(args: {
@@ -57,20 +69,24 @@ export async function authorizeRequestAccountRoleFromCapsule(args: {
     };
   }
 
-  const secret = resolveRomaAuthzCapsuleSecret();
-  if (!secret) {
+  try {
+    resolveBerlinJwksUrl();
+  } catch (error) {
     return {
       ok: false,
       status: 500,
       error: {
         kind: 'INTERNAL',
         reasonKey: 'coreui.errors.misconfigured',
-        detail: 'roma_authz_capsule_secret_missing',
+        detail: error instanceof Error ? error.message : String(error),
       },
     };
   }
 
-  const verified = await verifyRomaAccountAuthzCapsule(secret, token);
+  const verified = await verifyRomaAccountAuthzCapsule({
+    token,
+    resolveVerifyKey: resolveBerlinAccountCapsuleVerifyKey,
+  });
   if (!verified.ok) {
     return {
       ok: false,

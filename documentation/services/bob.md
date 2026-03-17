@@ -66,10 +66,12 @@ Bob compiles the spec into a deterministic contract:
 
 ### Host bootstrap contract (current repo behavior)
 
-Host surfaces (Roma/DevStudio) fetch:
+Host surfaces (Roma/DevStudio/Prague MiniBob) fetch:
 
 - `compiled` (via Bob compile API)
-- `instanceData` (via same-origin app routes; metadata comes from Michael, config comes from Tokyo, explicit localization rehydrate comes from Roma same-origin routes backed by Berlin + Tokyo)
+- `instanceData` (via host-owned routes; account mode uses Roma/DevStudio same-origin routes, MiniBob uses the Venice-backed public instance payload through Bob’s public helper route)
+- `localization`
+- `policy`
 
 Then they wait for Bob session readiness and post into Bob:
 
@@ -86,6 +88,8 @@ Then they wait for Bob session readiness and post into Bob:
   widgetname,
   compiled,
   instanceData,
+  localization,
+  policy,
   accountId,
   publicId,
   label
@@ -108,11 +112,16 @@ Together they:
 
 ### URL bootstrap (deterministic, no auto-pick)
 
-Bob URL bootstrap is only for explicit non-account surfaces.
+Bob URL bootstrap is only for explicit non-hosted surfaces.
 If `?subject=account`, Bob requires `?boot=message` and host `ck:open-editor`.
+The shipped Prague MiniBob path also uses `?boot=message` plus host `ck:open-editor`.
 If URL mode is selected for account mode, Bob fails instead of acting like a second product client.
 In `?boot=message`, Bob ignores URL instance params and waits for host `ck:open-editor`.
-Host intent is explicit via `surface` query param on the Bob iframe (`surface=roma` or `surface=devstudio`).
+Hosted behavior is generic:
+- if `boot=message` and `subject=account`, Bob is a host-backed editor session
+- if `boot=message` and `subject=minibob`, Bob is also a host-backed editor session
+- Bob does not directly call customer `/api/accounts/*` routes in that mode
+- all account reads/writes/l10n-status/copilot actions must go through the parent host bridge
 
 ### Hybrid dev (DevStudio in cloud, Bob local)
 
@@ -136,13 +145,15 @@ Source:
 ### Instance write surfaces (current)
 
 - Roma user flows can create/duplicate/delete account user instances through Roma same-origin routes plus canonical account instance routes.
-- When Bob is hosted by Roma (`surface=roma`, `boot=message`, `subject=account`), Bob does not own the account transport. It emits explicit editor read/write intents back to the Roma host, and Roma executes the named same-origin account routes (`/api/accounts/...`) on Bob's behalf.
-- DevStudio Local does not use Roma starter discovery. It discovers instances through the local DevStudio route family (`/api/devstudio/instances*`), boots Bob through explicit `/api/devstudio/instance*` host routes, and delegates Bob account mutations back to the DevStudio host instead of calling Bob customer account routes directly.
+- In hosted account mode (`boot=message`, `subject=account`), Bob does not own account transport. It emits explicit editor read/write intents back to the parent host, and the host executes the named account/tool routes on Bob's behalf.
+- Roma hosts customer account sessions through Roma same-origin account routes (`/api/accounts/...`).
+- DevStudio Local discovers platform-owned instances through the local DevStudio route family (`/api/devstudio/instances*`), boots Bob through explicit `/api/devstudio/instance*` host routes, and delegates Bob account mutations back to the DevStudio host instead of calling Bob customer account routes directly.
+- In that hosted DevStudio flow, Bob also reloads localization snapshots and l10n status through the same host command bridge instead of branching around DevStudio after save.
 - In DevStudio, Bob/Dieter asset controls also use the local DevStudio route family:
   - list/delete assets: `/api/devstudio/assets/:accountId`
   - upload assets: `/api/devstudio/assets/upload`
     This keeps DevStudio on the trusted local boundary instead of reusing product `/api/assets/*` routes.
-- MiniBob and explicit non-account URL-bootstrap surfaces still use Bob’s own named routes directly when there is no Roma host boundary. Bob no longer exposes account product routes.
+- MiniBob keeps a Bob-owned public helper route (`/api/instance/:publicId?subject=minibob`) for Prague host boot, but Bob still opens the editor only from the host `ck:open-editor` envelope. Bob no longer exposes account product routes.
 
 ### Dev subjects and policy (durable)
 
@@ -494,16 +505,22 @@ See also:
 Bob supports instance-content localization (not editor chrome):
 
 - Locale preview uses layered overlays through Roma-owned account routes in hosted account mode.
+- MiniBob locale preview uses a host-provided public localization snapshot built from Venice/Tokyo `ready` truth.
 - Manual overrides are stored in layer=user (`/layers/user/:locale` or `/layers/user/global`) and merged last at runtime.
 - In Translate mode, edits are saved as per-field overrides (layer=user) and never change structure.
 - Structural edits (add/remove items) happen only in the base locale (Edit mode), then publish to regenerate locale overlays.
 - "Use auto-translate instead" is a local editor change; Bob clears the active locale's manual overrides in memory, and the actual `layer=user` delete happens only when the user clicks **Save**.
-- Localization status is derived from **materialized overlays**, not configured locale count:
-  - `EN only` = base locale only
-  - `Configured` = locales configured but no usable non-base overlays yet
-  - `Ready` = at least one usable non-base overlay exists
-  - `Stale` = overlay fingerprint mismatch with base
+- Localization status is derived from the current localization snapshot:
+  - `Base only` when no non-base locales are available
+  - `x/y ready` from `readyLocales` vs `allowedLocales`
+  - `Needs save` when the current snapshot is stale against the base
 - If a locale is selected but no usable overlay exists, Bob must show explicit "not generated yet" state (no silent fallback-as-ready).
+
+MiniBob contract:
+- MiniBob can view all locales that are already `ready` in the public localization snapshot.
+- MiniBob action limits still come from `policy` and upsell handling.
+- Bob must not collapse visible locales to the base locale just because the subject is `minibob`.
+- Host-backed localization is a strict contract for both `account` and `minibob`: if the host/public payload is malformed, Bob must fail the open/load instead of normalizing it.
 
 Note: localization writes are separate from the base-config two-call pattern; overlays persist through Roma/Tokyo authoring routes without publishing the base config.
 In Roma-hosted account flows, those localization writes also traverse the Roma host command boundary instead of Bob writing straight through itself.
@@ -532,17 +549,11 @@ Reference:
 ### Required
 
 - `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local `product` profile defaults to `https://tokyo.dev.clickeen.com`, local `source` profile defaults to `http://localhost:4000`)
-- `ROMA_AUTHZ_CAPSULE_SECRET` (required for authenticated account-scoped editor routes; local `dev-up` resolves a dedicated value and passes it explicitly)
+- `BERLIN_BASE_URL` (required for authenticated account-scoped editor routes so Bob can verify Roma account capsules against Berlin JWKS)
 
 ### Optional
 
 - `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (required for the public/minibob `/api/instance/:publicId` read shortcut and the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
-
-### Bootstrap route (current code)
-
-Bob keeps only one named bootstrap proxy route, with no wildcard proxy:
-
-- `bob/app/api/session/bootstrap/route.ts`
 
 Important boundary:
 
@@ -557,7 +568,7 @@ Bob editor routes are explicit and non-`/api/paris`:
 - `bob/app/api/ai/outcome/route.ts`
 - `bob/app/api/ai/minibob/session/route.ts`
 
-Account-mode Builder reads/writes do not proxy through Bob. They delegate to Roma same-origin routes through the Builder host message channel.
+Account-mode Builder reads/writes do not proxy through Bob. They delegate to Roma same-origin routes through the Builder host message channel, and account-mode bootstrap truth comes from the Roma host open-editor payload rather than any Bob bootstrap route.
 
 Bob does not own account language policy/settings. Enabled languages, base locale, and locale policy are managed in Roma Settings.
 
@@ -581,11 +592,11 @@ It:
 - Builds i18n bundles from `tokyo/admin-owned/i18n` into `tokyo/i18n`
 - Verifies Prague l10n overlays (repo base + `tokyo/l10n/prague/**`); if stale and San Francisco is available, auto-runs translate + verify in background
 - Clears stale Next chunks (`bob/.next`)
-- Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)
+- Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)
 - Uses **local Supabase by default**; to point the local stack at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`
-- Passes Bob the resolved Supabase target explicitly, so DevStudio and Bob locale reads use the same local-vs-remote Michael target as Berlin/Paris.
+- Passes Bob the resolved Supabase target explicitly, so DevStudio and Bob locale reads use the same local-vs-remote Michael target as the rest of the product stack.
 - Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).
-- Resolves one dedicated local `ROMA_AUTHZ_CAPSULE_SECRET` and passes it explicitly to Berlin/Paris/Bob; account auth must not borrow AI or service-role secrets.
+- Verifies Roma account capsules against Berlin JWKS; there is no separate account-capsule secret in local dev.
 
 ### Deterministic compilation gate (executed)
 

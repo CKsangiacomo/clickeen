@@ -42,7 +42,7 @@ This doc describes the **current Venice runtime** after the PRD 54 pivot:
 - `GET /e/:publicId` — iframe UI shell + bootstrap (Tokyo-only)
 - `GET /r/:publicId` — live pointer proxy (Tokyo-only, `no-store`)
 - `GET /r/:publicId?meta=1&locale=...` — meta pointer proxy (Tokyo-only, `no-store`)
-- `GET /api/instance/:publicId` — public instance payload for Bob MiniBob and Prague validation/preview bootstrap (Tokyo-only, live config pack only)
+- `GET /api/instance/:publicId` — public instance payload for Bob MiniBob host boot (Tokyo-only, live config pack + Bob-ready localization snapshot + MiniBob policy)
 - `GET /widgets/*` — Tokyo widget runtime proxy
 - `GET /dieter/*` — Tokyo Dieter assets proxy
 - `GET /renders/*` — Tokyo `renders/` proxy
@@ -99,12 +99,19 @@ Notes:
 What it does:
 1. Load the live pointer from Tokyo (`/renders/instances/:publicId/live/r.json`).
 2. Load the referenced immutable config pack from Tokyo.
-3. Return a small JSON payload with `publicId`, `widgetType`, `config`, `baseFingerprint`, and `status: "published"`.
+3. Build a Bob-ready public localization snapshot from Tokyo truth:
+   - `baseLocale`
+   - `readyLocales`
+   - `accountLocales` (all non-base ready locales)
+   - `localeOverlays` rebuilt from Tokyo live locale pointers + text packs
+   - `policy`/`localePolicy` derived from the public ready-only consumer pointer
+4. Return the public MiniBob boot payload with `publicId`, `widgetType`, `config`, `baseFingerprint`, `localization`, `policy`, and `status: "published"`.
 
 Rules:
 - It never reads saved/draft config.
 - If the live pointer is missing, it returns `404`.
 - If the live pointer exists but the referenced config pack is broken or missing, that is an internal bug, not a fallback case.
+- Locale visibility comes from public `readyLocales` only. Venice does not expose merely allowed/non-ready locales to MiniBob.
 
 ### `GET /e/:publicId` (iframe UI; always DB-free)
 

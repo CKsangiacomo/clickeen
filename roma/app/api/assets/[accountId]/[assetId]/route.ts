@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authorizeRequestAccountRoleFromCapsule } from '../../../../../lib/account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
 import { resolveTokyoBaseUrl } from '../../../../../lib/env/tokyo';
+import { buildTokyoProductHeaders } from '../../../../../lib/tokyo-product-auth';
 
 export const runtime = 'edge';
 
@@ -91,11 +92,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const upstream = await fetch(target.toString(), {
       method: 'DELETE',
-      headers: {
-        authorization: `Bearer ${session.accessToken}`,
-        accept: 'application/json',
-        'x-ck-authz-capsule': authz.token,
-      },
+      headers: buildTokyoProductHeaders({
+        accountId: normalizedAccountId,
+        accountCapsule: authz.token,
+      }),
       cache: 'no-store',
     });
     const text = await upstream.text().catch(() => '');

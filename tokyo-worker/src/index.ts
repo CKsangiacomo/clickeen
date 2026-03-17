@@ -35,7 +35,7 @@ import {
   type TokyoMirrorQueueJob,
 } from './domains/render';
 import {
-  assertUploadAuth,
+  assertProductAccountAuth,
   requireDevAuth,
   TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
   TOKYO_INTERNAL_SERVICE_SANFRANCISCO_L10N,
@@ -58,21 +58,9 @@ async function authorizeAccountScopedRequest(args: {
   accountId: string;
   minRole: MemberRole;
 }): Promise<Response | null> {
-  const auth = await assertUploadAuth(args.req, args.env);
+  const auth = await assertProductAccountAuth(args.req, args.env);
   if (!auth.ok) return auth.response;
   const capsule = auth.principal.accountAuthz;
-  if (!capsule) {
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.auth.contextUnavailable',
-          detail: 'account_authz_capsule_missing',
-        },
-      },
-      { status: 500 },
-    );
-  }
   if (capsule.accountId !== args.accountId) {
     return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 });
   }

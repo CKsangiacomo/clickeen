@@ -178,7 +178,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 #### Bob (Pages)
 
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
-- Bob uses named same-origin routes (`/api/accounts/*`, `/api/instance/:publicId`, `/api/session/bootstrap`) backed by Tokyo/Venice for public/minibob reads, Berlin for bootstrap/account context, and Roma/Tokyo for localization and aftermath.
+- Bob uses named same-origin routes (`/api/instance/:publicId`, `/api/ai/*`) for public/minibob surfaces only. Account-mode bootstrap/authz come from Roma host messaging and same-origin Roma account routes.
 - DevStudio local does not use `/api/roma/templates`; it uses its own explicit `/api/devstudio/instances*` and `/api/devstudio/instance*` tool paths for instance discovery, boot, save, localization, and status on the platform-owned account.
 
 #### Roma (Pages)
@@ -273,7 +273,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **Hard security rule:**
 
-- `CK_INTERNAL_SERVICE_JWT` is **local/dev-worker-only** and must never be set in Cloudflare Pages production env vars.
+- `CK_INTERNAL_SERVICE_JWT` is a server-only internal bearer. It must never be exposed client-side, but it is required on server-side Roma -> Tokyo/Tokyo-worker and Roma -> San Francisco calls.
 
 **Local auth rule:**
 
@@ -340,7 +340,7 @@ Non-negotiable:
 - **Secrets isolation**:
   - Provider keys live only in San Francisco.
   - Supabase service role lives only in Berlin/Tokyo-worker where explicitly required.
-  - `CK_INTERNAL_SERVICE_JWT` is **local/dev-worker-only** and must never exist in Pages prod env vars.
+  - `CK_INTERNAL_SERVICE_JWT` stays server-only and must never be exposed client-side, but it is part of the live Roma/Tokyo-worker/San Francisco internal contract.
 - **Caching**:
   - Tokyo assets are long-cacheable when versioned; avoid cache on `spec.json` when iterating in dev.
   - Venice serves short-cache shell HTML, `no-store` live pointers, and immutable fingerprinted packs/assets.

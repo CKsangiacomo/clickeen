@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { normalizeLocaleToken } from '@clickeen/l10n';
 import { authorizeRequestAccountRoleFromCapsule } from '@roma/lib/account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '@roma/lib/auth/session';
+import { materializeAccountAdditionalLocales } from '@roma/lib/account-locales';
 import { parseAccountL10nPolicyStrict, parseAccountLocaleListStrict } from '@roma/lib/account-l10n';
 import { runAccountLocalesAftermath } from '@roma/lib/account-locales-aftermath';
 import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
@@ -43,6 +45,11 @@ function normalizeWarnings(value: unknown): string[] {
     ),
   );
 }
+
+type AccountLocalesWritePayload = {
+  locales?: unknown;
+  policy?: unknown;
+};
 
 export async function GET(request: NextRequest, context: RouteContext) {
   const session = await resolveSessionBearer(request);
@@ -162,9 +169,55 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
 
   const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
-  const contentType = request.headers.get('content-type');
+  const contentType = request.headers.get('content-type') || 'application/json';
 
   try {
+    let body: AccountLocalesWritePayload | null = null;
+    try {
+      body = (await request.json()) as AccountLocalesWritePayload | null;
+    } catch {
+      return withSession(
+        request,
+        NextResponse.json(
+          { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } },
+          { status: 422 },
+        ),
+        session.setCookies,
+      );
+    }
+
+    if (!isRecord(body)) {
+      return withSession(
+        request,
+        NextResponse.json(
+          { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+          { status: 422 },
+        ),
+        session.setCookies,
+      );
+    }
+
+    const baseLocale = normalizeLocaleToken((body.policy as Record<string, unknown> | null | undefined)?.baseLocale);
+    if (!baseLocale) {
+      return withSession(
+        request,
+        NextResponse.json(
+          { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+          { status: 422 },
+        ),
+        session.setCookies,
+      );
+    }
+
+    const nextPayload: AccountLocalesWritePayload = {
+      ...body,
+      locales: materializeAccountAdditionalLocales({
+        profile: authz.payload.profile,
+        baseLocale,
+        requestedLocales: body.locales,
+      }),
+    };
+
     const upstream = await fetch(`${berlinBase}/v1/accounts/${encodeURIComponent(accountId)}/locales`, {
       method: 'PUT',
       headers: {
@@ -173,7 +226,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         accept: request.headers.get('accept') || 'application/json',
       },
       cache: 'no-store',
-      body: await request.text(),
+      body: JSON.stringify(nextPayload),
     });
     const payloadText = (await upstream.text().catch(() => '')) || '';
     if (!upstream.ok) {
@@ -194,6 +247,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const aftermathWarnings = await runAccountLocalesAftermath({
       accountId,
       accessToken: session.accessToken,
+      policyProfile: authz.payload.profile,
       accountCapsule: authz.token,
     });
     const mergedWarnings = Array.from(new Set([...warnings, ...aftermathWarnings]));

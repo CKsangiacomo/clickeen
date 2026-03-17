@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { resolvePersonLabel } from '../lib/person-profile';
+import { useRomaAccountApi } from './account-api';
 import { AccountLocaleSettingsCard } from './account-locale-settings-card';
-import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { resolveActiveRomaAccount, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountMembersResponse = {
   members: Array<{
@@ -46,17 +47,10 @@ function resolveSettingsErrorCopy(reason: string, fallback: string): string {
 
 export function SettingsDomain() {
   const me = useRomaMe();
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const accountApi = useRomaAccountApi(me.data);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const activeAccountId = context.accountId;
-
-  const activeAccount = useMemo(
-    () => (me.data?.accounts ?? []).find((entry) => entry.accountId === activeAccountId) ?? null,
-    [me.data?.accounts, activeAccountId],
-  );
-  const accountCapsule =
-    me.data?.authz?.accountCapsule && me.data.authz.accountCapsule.trim()
-      ? me.data.authz.accountCapsule.trim()
-      : '';
+  const activeAccount = useMemo(() => resolveActiveRomaAccount(me.data), [me.data]);
 
   const [members, setMembers] = useState<AccountMembersResponse | null>(null);
   const [membersError, setMembersError] = useState<string | null>(null);
@@ -79,9 +73,8 @@ export function SettingsDomain() {
     setMembersLoading(true);
     setMembersError(null);
     try {
-      const response = await fetch(`/api/accounts/${encodeURIComponent(activeAccountId)}/members`, {
+      const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(activeAccountId)}/members`, {
         method: 'GET',
-        cache: 'no-store',
       });
       const payload = (await response.json().catch(() => null)) as AccountMembersResponse | { error?: unknown } | null;
       if (!response.ok) {
@@ -100,7 +93,7 @@ export function SettingsDomain() {
     } finally {
       setMembersLoading(false);
     }
-  }, [activeAccountId]);
+  }, [accountApi, activeAccountId]);
 
   useEffect(() => {
     if (activeAccount?.role === 'owner') {
@@ -113,12 +106,9 @@ export function SettingsDomain() {
     setOwnerTransferLoading(true);
     setOwnerTransferError(null);
     try {
-      const response = await fetch(`/api/accounts/${encodeURIComponent(activeAccountId)}/owner-transfer`, {
+      const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(activeAccountId)}/owner-transfer`, {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          ...(accountCapsule ? { 'x-ck-authz-capsule': accountCapsule } : {}),
-        },
+        headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ nextOwnerUserId }),
       });
       const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
@@ -132,19 +122,16 @@ export function SettingsDomain() {
     } finally {
       setOwnerTransferLoading(false);
     }
-  }, [accountCapsule, activeAccountId, nextOwnerUserId]);
+  }, [accountApi, activeAccountId, nextOwnerUserId]);
 
   const deleteAccount = useCallback(async () => {
     if (!activeAccountId) return;
     setDeleteLoading(true);
     setDeleteError(null);
     try {
-      const response = await fetch(`/api/accounts/${encodeURIComponent(activeAccountId)}`, {
+      const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(activeAccountId)}`, {
         method: 'DELETE',
-        headers: {
-          'content-type': 'application/json',
-          ...(accountCapsule ? { 'x-ck-authz-capsule': accountCapsule } : {}),
-        },
+        headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ confirmAccountId: activeAccountId }),
       });
       const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
@@ -158,7 +145,7 @@ export function SettingsDomain() {
     } finally {
       setDeleteLoading(false);
     }
-  }, [accountCapsule, activeAccountId]);
+  }, [accountApi, activeAccountId]);
 
   if (me.loading) {
     return <section className="rd-canvas-module body-m">Loading account context...</section>;
@@ -229,7 +216,11 @@ export function SettingsDomain() {
         </p>
       </section>
 
-      <AccountLocaleSettingsCard accountId={activeAccountId} canEdit={canEditLocales} authzCapsule={accountCapsule} />
+      <AccountLocaleSettingsCard
+        accountId={activeAccountId}
+        canEdit={canEditLocales}
+        onSaved={() => me.reload()}
+      />
 
       <section className="rd-canvas-module">
         <h2 className="heading-6">Ownership</h2>

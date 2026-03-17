@@ -2,7 +2,7 @@ import type { BerlinAccountContext } from './account-state.types';
 import { findAccountContext, loadPrincipalAccountState } from './account-state';
 import { json, validationError } from './helpers';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
-import { type Env, type SessionState } from './types';
+import { type Env } from './types';
 
 type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
 
@@ -117,7 +117,6 @@ export async function handleOwnerTransfer(args: {
   env: Env;
   account: BerlinAccountContext;
   currentOwnerUserId: string;
-  session: SessionState;
   sessionRole: string | null;
 }): Promise<Response> {
   if (args.account.role !== 'owner') return denyResponse();
@@ -145,7 +144,6 @@ export async function handleOwnerTransfer(args: {
   const state = await loadPrincipalAccountState({
     env: args.env,
     userId: args.currentOwnerUserId,
-    session: args.session,
     sessionRole: args.sessionRole,
   });
   if (!state.ok) return state.response;

@@ -115,7 +115,7 @@ export function buildUserPrompt(items: TranslationItem[]): string {
   ].join('\n');
 }
 
-export async function deepseekTranslate(args: {
+export async function executeTranslationModel(args: {
   env: Env;
   grant: AIGrant;
   agentId: string;
@@ -681,7 +681,7 @@ export async function translateRichtextWithSegmentFallback(args: {
 
   for (const batch of batches) {
     const user = buildUserPrompt(batch);
-    const result = await deepseekTranslate({
+    const result = await executeTranslationModel({
       env: args.env,
       grant: args.grant,
       agentId: args.agentId,

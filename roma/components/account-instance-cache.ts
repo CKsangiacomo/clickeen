@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchSameOriginJson } from './same-origin-json';
+import { fetchRomaAccountJson } from './account-api';
 
 const ACCOUNT_INSTANCE_CACHE_TTL_MS = 2 * 60_000;
 const ACCOUNT_INSTANCE_STORE_KEY = '__CK_ROMA_ACCOUNT_INSTANCE_STORE_V1__';
@@ -95,6 +95,18 @@ export function invalidateAccountInstanceCache(accountId: string, publicId: stri
   delete store.localizationInFlight[key];
 }
 
+export function reconcileAccountInstanceCacheAfterMutation(args: {
+  accountId: string;
+  publicId: string;
+  payload: unknown;
+}): void {
+  if (isAccountInstancePayload(args.payload)) {
+    primeAccountInstanceCache(args.accountId, args.publicId, args.payload);
+    return;
+  }
+  invalidateAccountInstanceCache(args.accountId, args.publicId);
+}
+
 function isAccountInstancePayload(value: unknown): value is AccountInstancePayload {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -136,15 +148,9 @@ export async function getAccountInstance(args: {
     return { payload, source: 'network' };
   }
 
-  store.inFlight[key] = fetchSameOriginJson<AccountInstancePayload>(
+  store.inFlight[key] = fetchRomaAccountJson<AccountInstancePayload>(
     `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
-    args.authzCapsule
-      ? {
-          headers: {
-            'x-ck-authz-capsule': args.authzCapsule,
-          },
-        }
-      : undefined,
+    { accountCapsule: args.authzCapsule },
   )
     .then((payload) => {
       if (!isAccountInstancePayload(payload)) {
@@ -197,15 +203,9 @@ export async function getAccountInstanceLocalization(args: {
     return { payload, source: 'network' };
   }
 
-  store.localizationInFlight[key] = fetchSameOriginJson<AccountInstanceLocalizationPayload>(
+  store.localizationInFlight[key] = fetchRomaAccountJson<AccountInstanceLocalizationPayload>(
     `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/localization?subject=account`,
-    args.authzCapsule
-      ? {
-          headers: {
-            'x-ck-authz-capsule': args.authzCapsule,
-          },
-        }
-      : undefined,
+    { accountCapsule: args.authzCapsule },
   )
     .then((payload) => {
       if (!isAccountInstanceLocalizationPayload(payload)) {

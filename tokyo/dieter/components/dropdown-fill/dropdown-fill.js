@@ -2661,7 +2661,6 @@ var Dieter = (() => {
     const hex = formatHex({ h, s, v, a: 1 });
     const alphaPercent = Math.round(a * 100);
     const colorString = a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(a, 2)})` : hex;
-    const placeholder = state.headerValue?.dataset.placeholder ?? "";
     state.root.style.setProperty("--picker-hue", h.toString());
     state.root.style.setProperty("--picker-rgb", `${rgb.r} ${rgb.g} ${rgb.b}`);
     state.hueInput.value = h.toString();

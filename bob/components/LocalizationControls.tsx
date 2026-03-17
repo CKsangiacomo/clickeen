@@ -8,7 +8,6 @@ import localesJson from '@clickeen/l10n/locales.json';
 import { normalizeCanonicalLocalesFile, resolveLocaleLabel } from '@clickeen/l10n';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
-const MINIBOB_TRANSLATIONS_UPSELL_MESSAGE = 'Create a free account to see your FAQs widget in all languages.';
 
 type LocalizationControlsProps = {
   mode?: 'translate' | 'settings';
@@ -31,7 +30,6 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const widgetType = compiled?.widgetname ?? '';
   const isTranslatePanel = mode === 'translate';
   const policyProfile = policy?.profile ?? null;
-  const minibobTranslationsLocked = policyProfile === 'minibob' && session.minibobPersonalizationUsed;
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const showSelector = section !== 'footer';
@@ -46,7 +44,6 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const allowedLocales = useMemo(() => {
     if (!showSelector) return [locale.baseLocale];
     const baseLocale = locale.baseLocale;
-    if (minibobTranslationsLocked) return [baseLocale];
     const normalized = locale.allowedLocales
       .map((value) => normalizeLocaleToken(value))
       .filter((value): value is string => Boolean(value));
@@ -55,7 +52,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
       .filter((code) => code !== baseLocale)
       .sort();
     return [baseLocale, ...rest];
-  }, [locale.allowedLocales, locale.baseLocale, showSelector, minibobTranslationsLocked]);
+  }, [locale.allowedLocales, locale.baseLocale, showSelector]);
   const readyLocales = useMemo(() => {
     const baseLocale = locale.baseLocale;
     const normalized = locale.readyLocales
@@ -76,7 +73,6 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const activeLocaleToken = normalizeLocaleToken(activeLocale);
   const hasInstance = Boolean(publicId && widgetType);
   const selectionDisabled =
-    minibobTranslationsLocked ||
     !hasInstance ||
     locale.loading ||
     allowedLocales.length <= 1;
@@ -85,17 +81,15 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     hasInstance &&
     allowedLocales.length > 1 &&
     readyLocales.length <= 1 &&
-    !accountError &&
-    !minibobTranslationsLocked;
+    !accountError;
 
   const selectLocales = useMemo(() => {
     if (!showSelector) return [baseLocale];
-    if (minibobTranslationsLocked) return [baseLocale];
     if (allowedLocales.includes(activeLocale)) return allowedLocales;
     const deduped = Array.from(new Set([activeLocale, ...allowedLocales]));
     const rest = deduped.filter((code) => code !== baseLocale).sort();
     return [baseLocale, ...rest];
-  }, [allowedLocales, activeLocale, baseLocale, showSelector, minibobTranslationsLocked]);
+  }, [allowedLocales, activeLocale, baseLocale, showSelector]);
 
   const localeOptions = useMemo(() => {
     const uiLocale = 'en';
@@ -130,15 +124,11 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     isLocaleMode &&
     !locale.loading &&
     !accountError &&
-    !minibobTranslationsLocked &&
     !readyLocaleSet.has(activeLocaleToken ?? '');
   const activeLocaleHasOverlayContent =
     Boolean(activeLocaleEntry?.baseOps.length) || Boolean(activeLocaleEntry?.userOps.length);
 
   const translationsStatus = useMemo(() => {
-    if (minibobTranslationsLocked) {
-      return { tone: 'unavailable', label: 'Upgrade required' };
-    }
     if (isSyncQueued) {
       return { tone: 'pending', label: 'Updating...' };
     }
@@ -179,7 +169,6 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     isSyncFailed,
     isSyncQueued,
     isSyncTranslating,
-    minibobTranslationsLocked,
     accountError,
   ]);
 
@@ -196,12 +185,6 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     if (!syncUpdatedAtLabel) return detail;
     return `${detail} Last sync: ${syncUpdatedAtLabel}.`;
   }, [locale.sync.detail, syncUpdatedAtLabel]);
-
-  useEffect(() => {
-    if (!minibobTranslationsLocked) return;
-    if (locale.activeLocale === locale.baseLocale) return;
-    setLocalePreview(locale.baseLocale);
-  }, [minibobTranslationsLocked, locale.activeLocale, locale.baseLocale, setLocalePreview]);
 
   useEffect(() => {
     if (!showSelector) return;
@@ -248,30 +231,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
             </div>
           ) : null}
           {showSelector ? (
-            <div
-              role={minibobTranslationsLocked ? 'button' : undefined}
-              tabIndex={minibobTranslationsLocked ? 0 : undefined}
-              aria-label={minibobTranslationsLocked ? MINIBOB_TRANSLATIONS_UPSELL_MESSAGE : undefined}
-              onClick={
-                minibobTranslationsLocked
-                  ? (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      session.requestUpsell(MINIBOB_TRANSLATIONS_UPSELL_MESSAGE);
-                    }
-                  : undefined
-              }
-              onKeyDown={
-                minibobTranslationsLocked
-                  ? (event) => {
-                      if (event.key !== 'Enter' && event.key !== ' ') return;
-                      event.preventDefault();
-                      event.stopPropagation();
-                      session.requestUpsell(MINIBOB_TRANSLATIONS_UPSELL_MESSAGE);
-                    }
-                  : undefined
-              }
-            >
+            <div>
               <div
                 key={localeOptionsKey}
                 ref={dropdownRef}
@@ -413,19 +373,6 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                 <div className="settings-panel__success">
                   Manual edits saved for {activeLocale}. Auto-translation won&apos;t replace those fields. Click &quot;Use
                   auto-translate instead&quot; and then &quot;Save&quot; to remove overrides.
-                </div>
-              ) : null}
-              {minibobTranslationsLocked ? (
-                <div
-                  className="settings-panel__note settings-panel__note--upsell"
-                  onClick={() => session.requestUpsell(MINIBOB_TRANSLATIONS_UPSELL_MESSAGE)}
-                >
-                  <div className="label-s">{MINIBOB_TRANSLATIONS_UPSELL_MESSAGE}</div>
-                  <div className="settings-panel__fullwidth">
-                    <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button">
-                      <span className="diet-btn-txt__label">Create free account</span>
-                    </button>
-                  </div>
                 </div>
               ) : null}
               {locale.error ? <div className="settings-panel__error">{locale.error}</div> : null}

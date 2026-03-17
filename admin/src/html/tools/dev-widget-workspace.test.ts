@@ -431,7 +431,7 @@ describe('DevStudio instances tool', () => {
     const src = iframe?.getAttribute('src') || '';
     const parsed = new URL(src);
 
-    expect(parsed.searchParams.get('surface')).toBe('devstudio');
+    expect(parsed.searchParams.has('surface')).toBe(false);
     expect(parsed.searchParams.get('assetApiBase')).toBe(
       'http://localhost:5173/api/devstudio/assets',
     );
@@ -561,7 +561,7 @@ describe('DevStudio instances tool', () => {
       onBobPostMessage: (payload, origin, { dom: innerDom, bobWindow }) => {
         if (!payload || typeof payload !== 'object') return;
         const data = payload as { type?: string; requestId?: string };
-        if (data.type !== 'devstudio:export-instance-data') return;
+        if (data.type !== 'host:export-instance-data') return;
         innerDom.window.dispatchEvent(
           new innerDom.window.MessageEvent('message', {
             data: {
@@ -632,7 +632,7 @@ describe('DevStudio instances tool', () => {
       onBobPostMessage: (payload, origin, { dom: innerDom, bobWindow }) => {
         if (!payload || typeof payload !== 'object') return;
         const data = payload as { type?: string; requestId?: string };
-        if (data.type !== 'devstudio:export-instance-data') return;
+        if (data.type !== 'host:export-instance-data') return;
         innerDom.window.dispatchEvent(
           new innerDom.window.MessageEvent('message', {
             data: {

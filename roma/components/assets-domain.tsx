@@ -4,8 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } f
 import { useSearchParams } from 'next/navigation';
 import { formatBytes, formatNumber } from '../lib/format';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
+import { useRomaAccountApi, type RomaAccountApi } from './account-api';
 import { parseApiErrorReason } from './same-origin-json';
-import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 type AssetRecord = {
   assetRef: string;
@@ -142,18 +143,16 @@ function extractAssetIdFromRef(assetRefRaw: string): string | null {
 }
 
 async function requestDeleteAsset(
+  accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
   accountId: string,
   assetId: string,
   confirmInUse: boolean,
-  authzCapsule?: string | null,
 ): Promise<DeleteAssetPayload> {
   const search = confirmInUse ? '?confirmInUse=1' : '';
-  const response = await fetch(
+  const response = await accountApi.fetchRaw(
     `/api/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}${search}`,
     {
       method: 'DELETE',
-      cache: 'no-store',
-      headers: authzCapsule ? { 'x-ck-authz-capsule': authzCapsule } : undefined,
     },
   );
   const payload = (await response.json().catch(() => null)) as DeleteAssetPayload | DeletePreconditionPayload | null;
@@ -168,20 +167,18 @@ async function requestDeleteAsset(
 }
 
 async function requestUploadAsset(
+  accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
   accountId: string,
   file: File,
   source: string,
-  authzCapsule?: string | null,
 ): Promise<AssetRecord> {
-  const response = await fetch('/api/assets/upload', {
+  const response = await accountApi.fetchRaw('/api/assets/upload', {
     method: 'POST',
-    cache: 'no-store',
     headers: {
       'content-type': file.type || 'application/octet-stream',
       'x-account-id': accountId,
       'x-filename': file.name || 'upload.bin',
       'x-source': source,
-      ...(authzCapsule ? { 'x-ck-authz-capsule': authzCapsule } : {}),
     },
     body: file,
   });
@@ -209,17 +206,14 @@ function upsertAsset(existing: AssetRecord[], next: AssetRecord): AssetRecord[] 
 
 export function AssetsDomain() {
   const me = useRomaMe();
+  const accountApi = useRomaAccountApi(me.data);
   const reloadMe = me.reload;
   const searchParams = useSearchParams();
   const singleUploadInputRef = useRef<HTMLInputElement | null>(null);
   const bulkUploadInputRef = useRef<HTMLInputElement | null>(null);
 
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
-  const accountCapsule =
-    typeof me.data?.authz?.accountCapsule === 'string' && me.data.authz.accountCapsule.trim()
-      ? me.data.authz.accountCapsule.trim()
-      : null;
   const redirectReasonKey = useMemo(() => String(searchParams.get('reasonKey') || '').trim(), [searchParams]);
   const entitlements = me.data?.authz?.entitlements ?? null;
   const uploadSizeCapBytes = useMemo(() => {
@@ -251,10 +245,8 @@ export function AssetsDomain() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/assets/${encodeURIComponent(accountId)}?limit=500`, {
+      const response = await accountApi.fetchRaw(`/api/assets/${encodeURIComponent(accountId)}?limit=500`, {
         method: 'GET',
-        cache: 'no-store',
-        headers: accountCapsule ? { 'x-ck-authz-capsule': accountCapsule } : undefined,
       });
       const payload = (await response.json().catch(() => null)) as AccountAssetsListResponse | { error?: unknown } | null;
       if (!response.ok) {
@@ -279,7 +271,7 @@ export function AssetsDomain() {
     } finally {
       setLoading(false);
     }
-  }, [accountCapsule, accountId]);
+  }, [accountApi, accountId]);
 
   useEffect(() => {
     void refreshAssets();
@@ -296,7 +288,7 @@ export function AssetsDomain() {
       setDeletingAssetId(assetId);
       setDeleteError(null);
       try {
-        await requestDeleteAsset(accountId, assetId, confirmInUse, accountCapsule);
+        await requestDeleteAsset(accountApi, accountId, assetId, confirmInUse);
         setPendingDelete(null);
         setAssets((prev) => prev.filter((entry) => entry.assetRef !== asset.assetRef));
         setStorageBytesUsed((prev) => Math.max(0, prev - Math.max(0, Math.trunc(asset.sizeBytes))));
@@ -324,7 +316,7 @@ export function AssetsDomain() {
         setDeletingAssetId(null);
       }
     },
-    [accountCapsule, accountId],
+    [accountApi, accountId],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -352,7 +344,7 @@ export function AssetsDomain() {
       setSingleUploadBusy(true);
       setSingleUploadError(null);
       try {
-        const uploaded = await requestUploadAsset(accountId, file, 'api', accountCapsule);
+        const uploaded = await requestUploadAsset(accountApi, accountId, file, 'api');
         setAssets((prev) => upsertAsset(prev, uploaded));
         setStorageBytesUsed((prev) => prev + Math.max(0, Math.trunc(uploaded.sizeBytes)));
         await reloadMe();
@@ -363,7 +355,7 @@ export function AssetsDomain() {
         setSingleUploadBusy(false);
       }
     },
-    [accountCapsule, accountId, reloadMe, uploadSizeCapBytes],
+    [accountApi, accountId, reloadMe, uploadSizeCapBytes],
   );
 
   const handleSingleFileChange = useCallback(
@@ -410,7 +402,7 @@ export function AssetsDomain() {
 
         updateBulkItem(item.id, { status: 'uploading', error: null });
         try {
-          const uploaded = await requestUploadAsset(accountId, file, 'api', accountCapsule);
+          const uploaded = await requestUploadAsset(accountApi, accountId, file, 'api');
           setAssets((prev) => upsertAsset(prev, uploaded));
           setStorageBytesUsed((prev) => prev + Math.max(0, Math.trunc(uploaded.sizeBytes)));
           updateBulkItem(item.id, { status: 'success', error: null });
@@ -429,7 +421,7 @@ export function AssetsDomain() {
         await reloadMe();
       }
     },
-    [accountCapsule, accountId, reloadMe, updateBulkItem, uploadSizeCapBytes],
+    [accountApi, accountId, reloadMe, updateBulkItem, uploadSizeCapBytes],
   );
 
   const handleBulkFileChange = useCallback(

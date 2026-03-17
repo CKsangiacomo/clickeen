@@ -1,26 +1,58 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { formatBytes } from '../lib/format';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
-import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { useRomaAccountApi } from './account-api';
+import { resolveActiveRomaAccount, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
+
+type UsageStorageResponse = {
+  storageBytesUsed?: number;
+};
 
 export function UsageDomain() {
   const me = useRomaMe();
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const accountApi = useRomaAccountApi(me.data);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
-  const activeAccount = useMemo(
-    () => (accountId ? me.data?.accounts?.find((account) => account.accountId === accountId) ?? null : null),
-    [accountId, me.data?.accounts],
-  );
+  const activeAccount = useMemo(() => resolveActiveRomaAccount(me.data), [me.data]);
   const entitlements = me.data?.authz?.entitlements ?? null;
+  const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
 
   const storageBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
   const storageLimitLabel =
     typeof storageBudget?.max === 'number' && Number.isFinite(storageBudget.max) && storageBudget.max > 0
       ? formatBytes(storageBudget.max)
       : 'Unlimited';
-  const storageUsedLabel = formatBytes(storageBudget?.used ?? 0);
+  const storageUsedLabel = storageBytesUsed == null ? 'Unavailable' : formatBytes(storageBytesUsed);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadStorageUsage() {
+      if (!accountId) {
+        if (!cancelled) setStorageBytesUsed(null);
+        return;
+      }
+      try {
+        const response = await accountApi.fetchRaw(`/api/assets/${encodeURIComponent(accountId)}?limit=1`, {
+          method: 'GET',
+        });
+        const payload = (await response.json().catch(() => null)) as UsageStorageResponse | { error?: unknown } | null;
+        if (!response.ok) throw new Error(`HTTP_${response.status}`);
+        const next =
+          payload && typeof payload === 'object' && 'storageBytesUsed' in payload && typeof payload.storageBytesUsed === 'number'
+            ? Math.max(0, Math.trunc(payload.storageBytesUsed))
+            : null;
+        if (!cancelled) setStorageBytesUsed(next);
+      } catch {
+        if (!cancelled) setStorageBytesUsed(null);
+      }
+    }
+    void loadStorageUsage();
+    return () => {
+      cancelled = true;
+    };
+  }, [accountApi, accountId]);
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading usage context...</section>;
   if (me.error || !me.data) {

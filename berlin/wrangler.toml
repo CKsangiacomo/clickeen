@@ -18,11 +18,6 @@ binding = "BERLIN_SESSION_KV"
 id = "a9396f7fee7f47bc9b1be520c78a24c9"
 preview_id = "4d253b94b6b5434ab484cfe4a3a0fb9a"
 
-[[kv_namespaces]]
-binding = "USAGE_KV"
-id = "eca50e55fa2a4f94a01fb81aeebf8377"
-preview_id = "b31d28eb386c4c068821e32d41fbc92a"
-
 [[queues.producers]]
 binding = "RENDER_SNAPSHOT_QUEUE"
 queue = "instance-render-snapshot-cloud-dev"
@@ -39,11 +34,6 @@ vars = { BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.pr
 binding = "BERLIN_SESSION_KV"
 id = "00000000000000000000000000000000"
 preview_id = "00000000000000000000000000000000"
-
-[[env.local.kv_namespaces]]
-binding = "USAGE_KV"
-id = "11111111111111111111111111111111"
-preview_id = "11111111111111111111111111111111"
 
 [[env.local.queues.producers]]
 binding = "RENDER_SNAPSHOT_QUEUE"

@@ -26,7 +26,6 @@ import {
   installVideoHandlers as installVideoHandlersCore,
   setImageSrc as setImageSrcCore,
   setVideoSrc as setVideoSrcCore,
-  type MediaControllerDeps,
   type SetMediaSrcOptions,
 } from './media-controller';
 import {
@@ -406,11 +405,6 @@ function setInputValue(state: DropdownFillState, value: FillValue, emit: boolean
   state.internalWrite = false;
 }
 
-function colorStringFromHsv(hsv: { h: number; s: number; v: number; a: number }): string {
-  const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
-  return hsv.a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(hsv.a, 2)})` : formatHex({ ...hsv, a: 1 });
-}
-
 function setRemoveFillState(state: DropdownFillState, isEmpty: boolean) {
   if (!state.removeFillActions.length) return;
   state.removeFillActions.forEach((action, index) => {
@@ -553,7 +547,6 @@ function syncColorUI(state: DropdownFillState, opts: { commit: boolean; updateHe
   const hex = formatHex({ h, s, v, a: 1 });
   const alphaPercent = Math.round(a * 100);
   const colorString = a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(a, 2)})` : hex;
-  const placeholder = state.headerValue?.dataset.placeholder ?? '';
 
   state.root.style.setProperty('--picker-hue', h.toString());
   state.root.style.setProperty('--picker-rgb', `${rgb.r} ${rgb.g} ${rgb.b}`);

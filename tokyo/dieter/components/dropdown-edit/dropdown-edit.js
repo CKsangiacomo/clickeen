@@ -202,6 +202,15 @@ var Dieter = (() => {
       closeInternalLinkSheet(state);
     }
   });
+  var Command = {
+    Bold: "bold",
+    Italic: "italic",
+    Underline: "underline",
+    Strike: "strike",
+    Link: "link",
+    ClearFormat: "clear-format",
+    ClearLinks: "clear-links"
+  };
   function hydrateDropdownEdit(scope) {
     const roots = scope.querySelectorAll(".diet-dropdown-edit");
     if (!roots.length) return;
@@ -246,9 +255,9 @@ var Dieter = (() => {
     palette.querySelectorAll("button[data-command]").forEach((btn) => {
       paletteButtons.set(btn.dataset.command, btn);
     });
-    const paletteLinkButton = paletteButtons.get("link" /* Link */) ?? null;
-    const clearFormatButton = paletteButtons.get("clear-format" /* ClearFormat */);
-    const clearLinksButton = paletteButtons.get("clear-links" /* ClearLinks */);
+    const paletteLinkButton = paletteButtons.get(Command.Link) ?? null;
+    const clearFormatButton = paletteButtons.get(Command.ClearFormat);
+    const clearLinksButton = paletteButtons.get(Command.ClearLinks);
     const toolbarDivider = palette.querySelector(".diet-dropdown-edit__divider");
     if (!clearFormatButton || !clearLinksButton || !toolbarDivider) {
       throw new Error("[textedit] missing clear buttons or divider");
@@ -284,7 +293,7 @@ var Dieter = (() => {
     };
   }
   function installHandlers(state) {
-    const { editor, palette, paletteButtons, clearFormatButton, clearLinksButton, linkPopover, root } = state;
+    const { editor, palette, clearFormatButton, clearLinksButton, linkPopover, root } = state;
     palette.addEventListener("click", (ev) => {
       const target = ev.target.closest("button[data-command]");
       if (!target) return;
@@ -371,14 +380,14 @@ var Dieter = (() => {
     updatePaletteActiveStates(state);
   }
   function handleCommand(state, command) {
-    if (!state.allowLinks && (command === "link" /* Link */ || command === "clear-links" /* ClearLinks */)) {
+    if (!state.allowLinks && (command === Command.Link || command === Command.ClearLinks)) {
       return;
     }
     switch (command) {
-      case "bold" /* Bold */:
-      case "italic" /* Italic */:
-      case "underline" /* Underline */:
-      case "strike" /* Strike */: {
+      case Command.Bold:
+      case Command.Italic:
+      case Command.Underline:
+      case Command.Strike: {
         const selection = window.getSelection();
         const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
         if (range && state.editor.contains(range.commonAncestorContainer) && !range.collapsed) {
@@ -390,28 +399,28 @@ var Dieter = (() => {
         break;
     }
     switch (command) {
-      case "bold" /* Bold */:
+      case Command.Bold:
         surroundSelection(state, "strong");
         break;
-      case "italic" /* Italic */:
+      case Command.Italic:
         surroundSelection(state, "em");
         break;
-      case "underline" /* Underline */:
+      case Command.Underline:
         surroundSelection(state, "u");
         break;
-      case "strike" /* Strike */:
+      case Command.Strike:
         surroundSelection(state, "s");
         break;
-      case "link" /* Link */:
+      case Command.Link:
         if (!state.selection) {
           updateSelectionFromEditor(state);
         }
         openInternalLinkSheet(state);
         return;
-      case "clear-format" /* ClearFormat */:
+      case Command.ClearFormat:
         clearAllFormatting(state);
         return;
-      case "clear-links" /* ClearLinks */:
+      case Command.ClearLinks:
         clearAllLinks(state);
         return;
       default:
@@ -424,10 +433,10 @@ var Dieter = (() => {
     const tags = collectFormattingTags(state.selection);
     state.paletteButtons.forEach((btn, command) => {
       let tag = null;
-      if (command === "bold" /* Bold */) tag = "STRONG";
-      if (command === "italic" /* Italic */) tag = "EM";
-      if (command === "underline" /* Underline */) tag = "U";
-      if (command === "strike" /* Strike */) tag = "S";
+      if (command === Command.Bold) tag = "STRONG";
+      if (command === Command.Italic) tag = "EM";
+      if (command === Command.Underline) tag = "U";
+      if (command === Command.Strike) tag = "S";
       if (!tag) return;
       btn.classList.toggle("is-active", tags.has(tag));
     });

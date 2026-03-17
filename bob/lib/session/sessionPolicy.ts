@@ -1,9 +1,4 @@
 import type { Policy } from '@clickeen/ck-policy';
-import {
-  assertPolicyEntitlementsSnapshot,
-  resolvePolicy as resolveCkPolicy,
-  resolvePolicyFromEntitlementsSnapshot,
-} from '@clickeen/ck-policy';
 import type { BootMode, SubjectMode } from './sessionTypes';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -21,31 +16,6 @@ export function assertPolicy(value: unknown): Policy {
   return value as Policy;
 }
 
-function normalizePolicyRole(value: unknown): Policy['role'] | null {
-  switch (value) {
-    case 'viewer':
-    case 'editor':
-    case 'admin':
-    case 'owner':
-      return value;
-    default:
-      return null;
-  }
-}
-
-function normalizePolicyProfile(value: unknown): Policy['profile'] | null {
-  switch (value) {
-    case 'minibob':
-    case 'free':
-    case 'tier1':
-    case 'tier2':
-    case 'tier3':
-      return value;
-    default:
-      return null;
-  }
-}
-
 export function extractErrorReasonKey(value: unknown, fallback: string): string {
   if (typeof value === 'string' && value.trim()) return value.trim();
   if (!isRecord(value)) return fallback;
@@ -54,54 +24,6 @@ export function extractErrorReasonKey(value: unknown, fallback: string): string 
   if (typeof error?.message === 'string' && error.message.trim()) return error.message.trim();
   if (typeof value.reasonKey === 'string' && value.reasonKey.trim()) return value.reasonKey.trim();
   return fallback;
-}
-
-export function resolveAccountCapsuleFromBootstrapPayload(payload: unknown, accountId: string): string | null {
-  if (!isRecord(payload)) return null;
-  const authz = isRecord(payload.authz) ? payload.authz : null;
-  if (!authz) return null;
-
-  const bootstrapAccountId = typeof authz.accountId === 'string' ? authz.accountId.trim() : '';
-  if (!bootstrapAccountId || bootstrapAccountId !== accountId) return null;
-
-  const accountCapsule = typeof authz.accountCapsule === 'string' ? authz.accountCapsule.trim() : '';
-  return accountCapsule || null;
-}
-
-export function resolveAccountPolicyFromBootstrapPayload(payload: unknown, accountId: string): Policy {
-  if (!isRecord(payload)) {
-    throw new Error('[useWidgetSession] bootstrap payload must be an object');
-  }
-
-  const authz = isRecord(payload.authz) ? payload.authz : null;
-  if (!authz) {
-    throw new Error(extractErrorReasonKey(payload, 'coreui.errors.auth.required'));
-  }
-
-  const bootstrapAccountId = typeof authz.accountId === 'string' ? authz.accountId.trim() : '';
-  if (!bootstrapAccountId || bootstrapAccountId !== accountId) {
-    throw new Error('coreui.errors.auth.forbidden');
-  }
-
-  const role = normalizePolicyRole(authz.role);
-  const profile = normalizePolicyProfile(authz.profile);
-  if (!role || !profile) {
-    throw new Error('coreui.errors.auth.required');
-  }
-  if (!Object.prototype.hasOwnProperty.call(authz, 'entitlements')) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-
-  const entitlements = assertPolicyEntitlementsSnapshot(authz.entitlements);
-  if (!entitlements) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-
-  return resolvePolicyFromEntitlementsSnapshot({
-    profile,
-    role,
-    entitlements,
-  });
 }
 
 export function resolveSubjectModeFromUrl(): SubjectMode {
@@ -120,27 +42,7 @@ export function resolveBootModeFromUrl(): BootMode {
   return boot === 'url' ? 'url' : 'message';
 }
 
-export function resolveSurfaceFromUrl(): string {
-  if (typeof window === 'undefined') return '';
-  const params = new URLSearchParams(window.location.search);
-  return (params.get('surface') || '').trim().toLowerCase();
-}
-
 export function resolvePolicySubject(policy: Policy): 'minibob' | 'account' {
   if (policy.profile === 'minibob') return 'minibob';
   return 'account';
-}
-
-export function resolveReadOnlyFromUrl(): boolean {
-  if (typeof window === 'undefined') return false;
-  const params = new URLSearchParams(window.location.search);
-  const readonlyFlag = (params.get('readonly') || params.get('readOnly') || '').trim().toLowerCase();
-  if (readonlyFlag === '1' || readonlyFlag === 'true' || readonlyFlag === 'yes') return true;
-  const role = (params.get('role') || params.get('mode') || '').trim().toLowerCase();
-  return role === 'viewer' || role === 'readonly' || role === 'read-only';
-}
-
-export function resolveMinibobUrlPolicy(): Policy {
-  const role: Policy['role'] = resolveReadOnlyFromUrl() ? 'viewer' : 'editor';
-  return resolveCkPolicy({ profile: 'minibob', role });
 }

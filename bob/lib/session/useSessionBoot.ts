@@ -7,11 +7,11 @@ import { sanitizeConfig } from '@clickeen/ck-policy';
 import {
   DEFAULT_LOCALE_STATE,
   type BobExportInstanceDataResponseMessage,
+  type HostExportInstanceDataMessage,
   type BobOpenEditorAckMessage,
   type BobOpenEditorAppliedMessage,
   type BobOpenEditorFailedMessage,
   type BobSessionReadyMessage,
-  type DevstudioExportInstanceDataMessage,
   type EditorOpenMessage,
   type SessionState,
   type SubjectMode,
@@ -20,9 +20,7 @@ import {
   assertPolicy,
   extractErrorReasonKey,
   resolveBootModeFromUrl,
-  resolveMinibobUrlPolicy,
   resolveSubjectModeFromUrl,
-  resolveSurfaceFromUrl,
 } from './sessionPolicy';
 import { normalizeLocalizationSnapshotForOpenMode } from './sessionLocalization';
 import { applyDefaultsIntoConfig } from './sessionConfig';
@@ -39,7 +37,6 @@ export function useSessionBoot(args: {
   setState: Dispatch<SetStateAction<SessionState>>;
   fetchApi: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
   bootModeRef: MutableRefObject<'message' | 'url'>;
-  surfaceRef: MutableRefObject<string>;
   hostOriginRef: MutableRefObject<string | null>;
   sessionIdRef: MutableRefObject<string>;
   openRequestStatusRef: MutableRefObject<Map<string, OpenRequestStatusEntry>>;
@@ -81,10 +78,8 @@ export function useSessionBoot(args: {
 
         if (message.policy && typeof message.policy === 'object') {
           nextPolicy = assertPolicy(message.policy);
-        } else if (nextSubjectMode === 'minibob') {
-          nextPolicy = resolveMinibobUrlPolicy();
         } else {
-          throw new Error('[useWidgetSession] Missing policy in account open-editor payload');
+          throw new Error('[useWidgetSession] Missing policy in open-editor payload');
         }
 
         if (incoming == null && message.publicId && message.accountId) {
@@ -108,7 +103,7 @@ export function useSessionBoot(args: {
         });
         resolved = applyWidgetNormalizations(compiled.normalization, resolved);
         const localizationSnapshot = normalizeLocalizationSnapshotForOpenMode(nextLocalizationSnapshotRaw, {
-          strict: nextSubjectMode === 'account',
+          strict: args.bootModeRef.current === 'message',
         });
 
         args.setState((prev) => ({
@@ -192,12 +187,7 @@ export function useSessionBoot(args: {
     }
 
     const instanceUrl = `/api/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`;
-    const accountCapsule: string | null = null;
-
-    const instanceRes = await args.fetchApi(instanceUrl, {
-      cache: 'no-store',
-      ...(accountCapsule ? { headers: { 'x-ck-authz-capsule': accountCapsule } } : {}),
-    });
+    const instanceRes = await args.fetchApi(instanceUrl, { cache: 'no-store' });
     const instanceJson = (await instanceRes.json().catch(() => null)) as any;
     if (!instanceRes.ok) {
       throw new Error(extractErrorReasonKey(instanceJson, `HTTP_${instanceRes.status}`));
@@ -229,9 +219,7 @@ export function useSessionBoot(args: {
     const nextPolicy: Policy | undefined =
       instanceJson.policy && typeof instanceJson.policy === 'object'
         ? assertPolicy(instanceJson.policy)
-        : subject === 'minibob'
-          ? resolveMinibobUrlPolicy()
-          : undefined;
+        : undefined;
 
     await loadInstance({
       type: 'ck:open-editor',
@@ -242,7 +230,6 @@ export function useSessionBoot(args: {
       policy: nextPolicy,
       publicId: instanceJson.publicId ?? publicId,
       accountId: typeof instanceJson.accountId === 'string' ? instanceJson.accountId : undefined,
-      accountCapsule: accountCapsule ?? undefined,
       ownerAccountId:
         typeof instanceJson.ownerAccountId === 'string' ? instanceJson.ownerAccountId : undefined,
       label: displayName,
@@ -317,7 +304,6 @@ export function useSessionBoot(args: {
   useEffect(() => {
     const bootMode = resolveBootModeFromUrl();
     args.bootModeRef.current = bootMode;
-    args.surfaceRef.current = resolveSurfaceFromUrl();
     const postToParent = (
       payload:
         | BobSessionReadyMessage
@@ -333,7 +319,7 @@ export function useSessionBoot(args: {
     };
 
     function handleMessage(event: MessageEvent) {
-      const data = event.data as (EditorOpenMessage | DevstudioExportInstanceDataMessage) | undefined;
+      const data = event.data as (EditorOpenMessage | HostExportInstanceDataMessage) | undefined;
       if (!data || typeof data !== 'object') return;
 
       if (data.type === 'ck:open-editor') {
@@ -471,11 +457,11 @@ export function useSessionBoot(args: {
         return;
       }
 
-      if (data.type === 'devstudio:export-instance-data') {
+      if (data.type === 'host:export-instance-data') {
         const requestId = typeof data.requestId === 'string' ? data.requestId : '';
         if (!requestId) return;
         const snapshot = args.stateRef.current;
-        const exportMode = (data as DevstudioExportInstanceDataMessage).exportMode === 'current' ? 'current' : 'base';
+        const exportMode = data.exportMode === 'current' ? 'current' : 'base';
 
         (async () => {
           try {
@@ -546,7 +532,6 @@ export function useSessionBoot(args: {
     args.sessionIdRef,
     args.setState,
     args.stateRef,
-    args.surfaceRef,
     loadFromUrlParams,
     loadInstance,
   ]);

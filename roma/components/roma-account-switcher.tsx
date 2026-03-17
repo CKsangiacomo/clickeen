@@ -33,7 +33,7 @@ export function RomaAccountSwitcher() {
   const [error, setError] = useState<string | null>(null);
 
   const accounts = me.data?.accounts ?? [];
-  const activeAccountId = me.data?.defaults?.accountId ?? '';
+  const activeAccountId = me.data?.activeAccount?.accountId ?? '';
 
   if (me.loading || !me.data || accounts.length <= 1) return null;
 
@@ -49,6 +49,7 @@ export function RomaAccountSwitcher() {
       if (!response.ok) {
         throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
       }
+      await me.reload();
       window.location.reload();
     } catch (nextError) {
       setError(

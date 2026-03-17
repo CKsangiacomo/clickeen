@@ -162,28 +162,42 @@ Validation:
 ## 3) Minibob embed (shipped)
 
 Prague embeds Bob in **minibob** mode as the only JS island.
+MiniBob is now a host-backed Bob session, not a Bob URL-discovery flow.
 
 Implementation:
 - `prague/src/blocks/minibob/minibob.astro`
 - iframe URL includes:
-  - `subject=minibob` (policy gating)
-  - `workspaceId` + `publicId` (instance identity)
-  - `locale` (runtime parameter)
+  - `boot=message`
+  - `subject=minibob`
+  - `publicId`
+- On `bob:session-ready`, Prague fetches:
+  - Bob public instance payload (`/api/instance/:publicId?subject=minibob`), which is backed by Venice public Tokyo truth
+  - Bob compiled widget payload (`/api/widgets/:widget/compiled`)
+- Prague then sends Bob a normal `ck:open-editor` envelope with:
+  - `compiled`
+  - `instanceData`
+  - `localization`
+  - `policy`
+  - `publicId`
+  - `label`
+  - `widgetname`
 
 Defaults (local/dev):
-- workspaceId defaults to `ck-dev` (`00000000-0000-0000-0000-000000000001`)
 - publicId is derived from the widget slug as `wgt_main_{widget}` (no override)
-- workspaceId override via env:
-  - `PUBLIC_MINIBOB_WORKSPACE_ID` / `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>`
 
 MiniBob publish/signup handoff:
-- Prague requests current draft context from Bob iframe via postMessage (`devstudio:export-instance-data`).
+- Prague requests current draft context from Bob iframe via postMessage (`host:export-instance-data`).
 - Prague starts a server-side handoff via `POST /api/minibob/handoff-start`.
 - Prague redirects to the create/signup URL with `handoffId` + `publicId` query params.
 - Handoff start accepts only curated/base MiniBob source ids (`wgt_main_*` or `wgt_curated_*`), never user instance ids.
 - No signed payload token is carried in URL; Roma stores snapshot state server-side and consumes it by opaque `handoffId`.
 - The handoff snapshot is the current MiniBob draft. If the draft includes context such as `context.websiteUrl`, that context travels with the claimed account instance.
 - Current cloud-dev rule: finish does not mint a new account. Handoff completion succeeds only if the signed-in user already lands in a platform-owned account context.
+
+MiniBob locale visibility contract:
+- MiniBob can view all locales that are already `ready` in public Tokyo truth for the current live fingerprint.
+- MiniBob does not gain locale governance, translation generation, publish, or account writes from that visibility.
+- Prague/Bob must not collapse locale visibility back to the base locale just because the current subject is `minibob`.
 
 ---
 

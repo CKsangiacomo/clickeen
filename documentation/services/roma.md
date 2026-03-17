@@ -84,24 +84,27 @@ Non-local auth rule:
 Bootstrap payload includes:
 
 - User + account membership graph
-- Default account (`defaults.accountId`)
+- Active account (`activeAccount`)
 - Signed account authz capsule (`authz.accountCapsule`, expiry metadata)
-- Account entitlement snapshot (`authz.entitlements`) resolved once at bootstrap (`flags`, `caps`, `budgets{max,used}`)
+- Account entitlement snapshot (`authz.entitlements`) resolved once at bootstrap (`flags`, `caps`, `budgets{max}`)
+- The signed capsule itself carries only stable authz truth. Mutable locale settings and live `used` counters are not part of the signed capsule.
 
 Client behavior (`use-roma-me.ts`):
 
-- Resolves account context from `defaults.accountId` only.
+- Resolves account context from `activeAccount`.
 - Caches a single bootstrap payload in a process-global in-memory store with TTL aligned to the authz capsule expiry (`authz.expiresAt`, with min floor + fallback TTL).
+- Refreshes bootstrap/authz in the background before capsule expiry so the first user action after idle does not discover an expired account capsule.
 - Does not store account preference in localStorage.
 - Does not honor URL `accountId` overrides.
 - Guards and re-initializes global store shape if corrupted.
 - When bootstrap returns `coreui.errors.auth.required`, Roma redirects to `/login?next=...` for explicit sign-in.
+- Account-affecting mutations explicitly refresh in-memory bootstrap state after success instead of waiting for passive expiry.
 - Account switching is a Berlin-backed shell action, not a local cache trick. Roma posts to `/api/accounts/:accountId/switch` and then hard-reloads the current page so the full shell reboots against the new active bootstrap context.
 
 Current cloud-dev product rule:
 
 - Cloud-dev still effectively behaves as one seeded platform-owned account today, so the switcher is normally hidden there because `accounts.length <= 1`.
-- Bootstrap still returns `accounts[]` + `defaults.accountId`, and Roma exposes switch-account automatically when the current user actually has more than one account membership.
+- Bootstrap exposes `activeAccount` plus `accounts[]`, and Roma exposes switch-account automatically when the current user actually has more than one account membership.
 
 ## Upstream route model
 
@@ -118,6 +121,7 @@ Client fetch behavior:
 - `fetchSameOriginJson` in the browser is just a no-store fetch + timeout/reason wrapper.
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
 - Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/roma/widgets`, `/api/roma/templates`, widget delete, builder/account routes, localization/layer routes).
+- Roma -> Tokyo/Tokyo-worker product calls require explicit `CK_INTERNAL_SERVICE_JWT` plus `x-ck-internal-service: roma.edge`; Roma does not pass end-user Berlin bearer tokens through those product routes.
 - Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`; Roma does not infer or probe internal service hosts.
 
 ## Bob orchestration contract (Roma Builder)
@@ -135,7 +139,6 @@ Notes:
 
 - Builder retries open while waiting for ack (bounded attempts + timeout).
 - Bob account mode is message-boot only. Explicit URL boot remains only for non-account surfaces.
-- Roma marks Bob iframe host intent with `surface=roma` to keep host-specific auth behavior explicit.
 - In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
 - Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/accounts/:accountId/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Roma-owned aftermath for downstream locale work.
 - Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and non-owner member removal route through Roma same-origin APIs backed by Berlin (`/api/accounts/:accountId/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
@@ -165,7 +168,7 @@ Roma `widgets` is the only product surface that owns per-instance live status ch
 
 Usage, billing, and AI domain behavior:
 
-- `UsageDomain` is bootstrap-driven today. It does not expose live metering in current environments; Roma renders product-facing storage/plan summaries rather than raw entitlement JSON.
+- `UsageDomain` reads live storage usage through Roma same-origin account asset routes; bootstrap provides only plan/maxima context.
 - `BillingDomain` is a placeholder surface today; billing is not configured in current environments.
 - `AiDomain` remains bootstrap-driven and renders plan/profile summaries from bootstrap authz context (no extra policy/entitlements fetches).
 

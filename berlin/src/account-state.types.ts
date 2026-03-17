@@ -84,6 +84,7 @@ export type BerlinAccountMember = {
 export type BerlinBootstrapPayload = {
   user: BerlinUserPayload;
   profile: BerlinUserProfilePayload;
+  activeAccount: BerlinAccountContext;
   accounts: BerlinAccountContext[];
   defaults: {
     accountId: string | null;
@@ -100,7 +101,7 @@ export type BerlinBootstrapPayload = {
     entitlements: {
       flags: Record<string, boolean>;
       caps: Record<string, number | null>;
-      budgets: Record<string, { max: number | null; used: number }>;
+      budgets: Record<string, { max: number | null; used?: number | null }>;
     };
   };
 };

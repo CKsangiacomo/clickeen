@@ -1,3 +1,4 @@
+import type { PolicyProfile } from '@clickeen/ck-policy';
 import { runAccountSaveAftermath } from './account-save-aftermath';
 import { loadAccountWidgetCatalog } from './michael';
 
@@ -9,6 +10,7 @@ function formatWarning(prefix: string, detail?: string | null): string {
 export async function runAccountLocalesAftermath(args: {
   accountId: string;
   accessToken: string;
+  policyProfile: PolicyProfile;
   accountCapsule?: string | null;
 }): Promise<string[]> {
   const catalog = await loadAccountWidgetCatalog({
@@ -39,6 +41,7 @@ export async function runAccountLocalesAftermath(args: {
         accessToken: args.accessToken,
         accountId: args.accountId,
         publicId: instance.publicId,
+        policyProfile: args.policyProfile,
         accountCapsule: args.accountCapsule,
       });
     } catch (error) {

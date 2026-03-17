@@ -18,6 +18,8 @@ const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.payload.invalid': 'Builder received an invalid response. Please try again.',
   'coreui.errors.builder.command.hostUnavailable':
     'Builder lost its connection to the workspace. Please reopen this widget.',
+  'coreui.errors.builder.command.hostOnly':
+    'Builder account editing must run through the workspace host. Please reopen this widget.',
   'coreui.errors.builder.command.timeout': 'Saving took too long. Please try again.',
   'coreui.errors.builder.open.invalidRequest': 'Builder received an invalid open request.',
   'coreui.errors.builder.open.sessionMismatch': 'Builder session expired. Please reopen this widget.',

@@ -117,8 +117,8 @@ export type EditorOpenMessage = {
   subjectMode?: SubjectMode;
 };
 
-export type DevstudioExportInstanceDataMessage = {
-  type: 'devstudio:export-instance-data';
+export type HostExportInstanceDataMessage = {
+  type: 'host:export-instance-data';
   requestId: string;
   exportMode?: 'current' | 'base';
 };

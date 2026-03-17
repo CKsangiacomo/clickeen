@@ -72,7 +72,7 @@ Core account editing currently uses direct app-owned read/write paths plus a dir
 
 1. **Open core instance**: `GET /api/accounts/:accountId/instance/:publicId?subject=account` once per instance open. Bob/Roma same-origin routes resolve the saved authoring revision from Tokyo only; live status is derived from Tokyo live pointers.
 2. **Save**: `PUT /api/accounts/:accountId/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, return success immediately, and schedule direct aftermath against Berlin/Tokyo/San Francisco/Tokyo-worker after the response. The Tokyo commit is the save boundary.
-3. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute entitlements/policy on each open/save/localization/status call; session entitlement truth comes from the capsule until a new session/capsule is minted.
+3. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute policy on each open/save/localization/status call; the signed capsule carries stable authz truth, while live mutable counters are enforced at the canonical owner when needed.
 4. **After-save context**: Roma-owned aftermath reads the current Tokyo saved revision and account locale truth directly. Product-path save aftermath no longer mounts Paris endpoints.
 
 Explicit localization-only reads are separate from core open:
@@ -354,7 +354,7 @@ pnpm build                      # Build all packages
 
 # Development
 bash scripts/dev-up.sh          # Profile=product (default): local DevStudio + local Bob over the cloud-dev data plane
-bash scripts/dev-up.sh --source # Profile=source: full local stack (Tokyo/Tokyo-worker/Berlin/Paris/Venice/Bob/DevStudio/Prague/Pitch, + SF if enabled)
+bash scripts/dev-up.sh --source # Profile=source: full local stack (Tokyo/Tokyo-worker/Berlin/Venice/Bob/DevStudio/Prague/Pitch, + SF if enabled)
 pnpm dev:bob                    # Bob only
 pnpm dev:paris                  # Paris only
 pnpm dev:admin                  # DevStudio only

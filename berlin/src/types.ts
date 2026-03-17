@@ -14,10 +14,8 @@ export type Env = {
   BERLIN_ACCESS_PREVIOUS_PUBLIC_KEY_PEM?: string;
   BERLIN_ACCESS_PREVIOUS_KID?: string;
   CK_INTERNAL_SERVICE_JWT?: string;
-  ROMA_AUTHZ_CAPSULE_SECRET?: string;
   BERLIN_SESSION_KV?: KVNamespace;
   BERLIN_AUTH_TICKETS?: DurableObjectNamespace;
-  USAGE_KV?: KVNamespace;
   RENDER_SNAPSHOT_QUEUE?: Queue<unknown>;
 };
 

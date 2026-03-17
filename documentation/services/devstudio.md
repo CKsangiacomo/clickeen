@@ -52,6 +52,10 @@ Local contract:
 - local tool routes currently shipped in the Vite middleware are:
   - `GET /api/devstudio/context`
   - `GET /api/devstudio/widgets`
+  - `GET|PUT /api/devstudio/instance`
+  - `GET /api/devstudio/instance/localization`
+  - `PUT|DELETE /api/devstudio/instance/localization/user`
+  - `GET /api/devstudio/instances/:publicId/l10n/status`
   - `/api/devstudio/assets*`
 
 There is no canonical Cloudflare DevStudio runtime.
@@ -66,11 +70,16 @@ What it does:
 - embeds Bob for internal widget authoring/testing
 - lists platform-owned instances through local DevStudio routes
 - uses the local DevStudio context to resolve the platform account
-- proxies only the explicit local internal-tool routes that still exist
+- sends Bob a complete host-owned editor envelope (`compiled`, `config`, localization snapshot, policy, instance meta)
+- delegates Bob account mutations plus localization snapshot/status reads back through explicit local DevStudio tool routes instead of letting Bob call customer account routes directly
 
 Key routes used by this tool:
 - `GET /api/devstudio/context`
 - `GET /api/devstudio/widgets`
+- `GET|PUT /api/devstudio/instance`
+- `GET /api/devstudio/instance/localization`
+- `PUT|DELETE /api/devstudio/instance/localization/user`
+- `GET /api/devstudio/instances/:publicId/l10n/status`
 - `/api/devstudio/assets*`
 
 Implementation note:
@@ -82,7 +91,7 @@ Current local implementation layout:
 - [dev-widget-workspace.html](/Users/piero_macpro/code/VS/clickeen/admin/src/html/tools/dev-widget-workspace.html) is now a thin shell for the tool page
 - [main.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/main.js) is the workspace composition/runtime shell
 - [api.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/api.js) owns local-tool transport and DevStudio instance/l10n reads-writes
-- [bob-host.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/bob-host.js) owns compiled-widget fetch, Bob open-editor handoff, and iframe boot
+- [bob-host.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/bob-host.js) owns compiled-widget fetch, full Bob open-editor envelope assembly, and iframe boot
 - [state.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/state.js) owns widget/publicId/local-instance helper logic
 - [devstudio.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite/devstudio.ts) owns the DevStudio Vite middleware/proxy family
 - [vite.config.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite.config.ts) is now the Vite shell plus plugin registration, not the hidden DevStudio proxy runtime
@@ -148,6 +157,7 @@ Check the explicit local DevStudio tool routes:
 - `/api/devstudio/context`
 - `/api/devstudio/widgets`
 - `/api/devstudio/instances*`
+- `/api/devstudio/instance*`
 - `/api/devstudio/assets*`
 
 If those fail, fix DevStudio local.

@@ -195,6 +195,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           accessToken: session.accessToken,
           accountId,
           publicId,
+          policyProfile: authz.payload.profile,
           accountCapsule: authz.token,
           previousConfig: result.value.previousConfig,
         });

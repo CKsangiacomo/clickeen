@@ -144,7 +144,7 @@ export function useSessionLocalization(args: {
         }
         return {
           ok: true,
-          snapshot: normalizeLocalizationSnapshotForOpenMode(json.localization, { strict: false }),
+          snapshot: normalizeLocalizationSnapshotForOpenMode(json.localization, { strict: true }),
         };
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

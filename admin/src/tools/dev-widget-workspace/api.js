@@ -263,6 +263,37 @@ export function createWorkspaceApi(deps) {
         return;
       }
 
+      if (command === 'get-localization-snapshot') {
+        const payload = await fetchInstanceLocalization(publicId, accountId);
+        reply({
+          ok: true,
+          status: 200,
+          payload,
+        });
+        return;
+      }
+
+      if (command === 'get-l10n-status') {
+        const res = await fetchDevStudio(
+          buildDevStudioApiUrl(`/api/devstudio/instances/${encodeURIComponent(publicId)}/l10n/status`, {
+            _t: Date.now(),
+          }),
+        );
+        const payload = await res.json().catch(() => null);
+        reply({
+          ok: res.ok,
+          status: res.status,
+          payload,
+          message:
+            !res.ok && payload?.error?.reasonKey
+              ? String(payload.error.reasonKey)
+              : !res.ok
+                ? `HTTP_${res.status}`
+                : undefined,
+        });
+        return;
+      }
+
       if (command === 'delete-user-locale-layer') {
         const res = await fetchDevStudio(
           buildDevStudioApiUrl('/api/devstudio/instance/localization/user', { accountId, publicId, locale }),

@@ -10,7 +10,7 @@ type ResolvePolicyArgs = {
 export type PolicyEntitlementsSnapshot = {
   flags?: Record<string, boolean> | null;
   caps?: Record<string, number | null> | null;
-  budgets?: Record<string, { max: number | null; used: number } | null> | null;
+  budgets?: Record<string, { max: number | null; used?: number | null } | null> | null;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -152,10 +152,13 @@ export function assertPolicyEntitlementsSnapshot(
                 entry.max === null || typeof entry.max === 'undefined'
                   ? entry.max ?? null
                   : assertFiniteNumber(entry.max, `entitlements.budgets.${key}.max`);
-              const used = assertNonNegativeInteger(entry.used, `entitlements.budgets.${key}.used`);
-              return [key, { max, used }];
+              const used =
+                typeof entry.used === 'undefined' || entry.used === null
+                  ? undefined
+                  : assertNonNegativeInteger(entry.used, `entitlements.budgets.${key}.used`);
+              return [key, typeof used === 'undefined' ? { max } : { max, used }];
             }),
-          ) as Record<string, { max: number | null; used: number }>;
+          ) as Record<string, { max: number | null; used?: number | null }>;
         })();
 
   return {

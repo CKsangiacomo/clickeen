@@ -38,20 +38,35 @@ Curated + user instances localize within the account’s **active locales** (EN 
 
 ### Entitlement + active locales model
 
-Effective localization = **entitlements** ∩ **subject policy** ∩ **account active locales**.
+Account-mode effective localization = **entitlements** ∩ **subject policy** ∩ **account active locales**.
 
 - Entitlement keys:
   - `l10n.locales.max` (cap; total locales including EN)
   - `l10n.locales.custom.max` (cap; how many non‑EN locales the user can choose)
   - `l10n.versions.max` (cap; retained overlay versions)
 - Tier rules (v1; executed):
-  - Minibob: EN only (0 additional locales)
   - Free: EN + 1 system-chosen locale (no picker)
   - Tier1: EN + 3 user-selected locales (total = 4)
   - Tier2+: unlimited locales
 - DevStudio: uncapped
 - Account active locales source: `accounts.l10n_locales` (JSON array of **non‑EN** locales; EN is implied)
 - Account locale policy/settings are managed in Roma Settings, not inside Bob.
+
+Current free-tier materialization rule:
+- Roma materializes the single additional locale before persistence.
+- If the base locale is not `en`, the additional locale is `en`.
+- If the base locale is `en`, the additional locale is `es`.
+- Berlin persists the resulting saved locale list exactly as decided; downstream systems do not choose again.
+
+### MiniBob public contract
+
+MiniBob is not an account-governance surface, so its locale visibility is different:
+
+- MiniBob can view all locales that are already `ready` in the public Venice/Tokyo consumer truth for the current live fingerprint.
+- MiniBob does not gain locale governance, translation generation, publish, or account writes from that visibility.
+- MiniBob action limits come from subject policy; locale visibility comes from public `readyLocales`.
+- Bob translation UI should communicate locale truth only; commercial upsell/gating copy must not live inside the translation-status surface.
+- Bob must treat host/public localization payloads as strict system-owned truth. Malformed MiniBob/account localization snapshots are producer bugs, not inputs to normalize.
 
 ## Localization systems (runtime)
 
@@ -104,6 +119,7 @@ Where the write plane fits (current repo snapshot):
 
 - Roma extracts the base text snapshot from the widget allowlist (`tokyo/widgets/<widgetType>/localization.json`).
 - Roma diffs base snapshots to compute `changedPaths` + `removedPaths` and calls San Francisco `POST /v1/l10n/account/ops/generate` when generation is needed.
+- Roma sends the already-minted account `policyProfile` with that request; San Francisco derives the `l10n.instance.v1` AI profile/provider lane from `@clickeen/ck-policy` rather than defaulting to a generic paid path.
 - San Francisco returns set-only locale ops.
 - Roma/Tokyo persist those overlay rows in the canonical Tokyo l10n plane.
 - Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane.

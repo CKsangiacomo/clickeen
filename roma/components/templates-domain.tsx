@@ -3,45 +3,34 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
+import { useRomaAccountApi } from './account-api';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
-import { fetchSameOriginJson } from './same-origin-json';
-import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 import { buildBuilderRoute, DEFAULT_INSTANCE_DISPLAY_NAME } from './use-roma-widgets';
 import { normalizeRomaTemplatesSnapshot, type TemplateInstance } from './use-roma-templates';
 
 export function TemplatesDomain() {
   const router = useRouter();
   const me = useRomaMe();
+  const accountApi = useRomaAccountApi(me.data);
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [templateInstances, setTemplateInstances] = useState<TemplateInstance[]>([]);
   const [domainLoading, setDomainLoading] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
   const activeAccountId = accountId;
-  const accountCapsule =
-    me.data?.authz?.accountCapsule && me.data.authz.accountCapsule.trim()
-      ? me.data.authz.accountCapsule.trim()
-      : '';
-
-  const accountRequestHeaders = useMemo(() => {
-    if (!accountCapsule) return undefined;
-    return { 'x-ck-authz-capsule': accountCapsule };
-  }, [accountCapsule]);
 
   const refreshTemplates = useCallback(async () => {
     if (!accountId) return;
     setDomainLoading(true);
     setDataError(null);
     try {
-      const payload = await fetchSameOriginJson<unknown>(
+      const payload = await accountApi.fetchJson<unknown>(
         `/api/roma/templates?accountId=${encodeURIComponent(accountId)}`,
-        {
-          method: 'GET',
-          headers: accountRequestHeaders,
-        },
+        { method: 'GET' },
       );
       const normalized = normalizeRomaTemplatesSnapshot(payload);
       if (!normalized || normalized.accountId !== accountId) {
@@ -56,7 +45,7 @@ export function TemplatesDomain() {
     } finally {
       setDomainLoading(false);
     }
-  }, [accountId, accountRequestHeaders]);
+  }, [accountApi, accountId]);
 
   useEffect(() => {
     void refreshTemplates();
@@ -94,12 +83,9 @@ export function TemplatesDomain() {
       setActiveActionKey(actionKey);
       setActionError(null);
       try {
-        const payload = await fetchSameOriginJson<{ publicId?: string }>(`/api/roma/widgets/duplicate`, {
+        const payload = await accountApi.fetchJson<{ publicId?: string }>(`/api/roma/widgets/duplicate`, {
           method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            ...(accountCapsule ? { 'x-ck-authz-capsule': accountCapsule } : {}),
-          },
+          headers: accountApi.buildHeaders({ contentType: 'application/json' }),
           body: JSON.stringify({
             accountId,
             sourcePublicId: instance.publicId,
@@ -128,7 +114,7 @@ export function TemplatesDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountCapsule, accountId, activeAccountId, router],
+    [accountApi, accountId, activeAccountId, router],
   );
 
   if (me.loading)

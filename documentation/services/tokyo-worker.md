@@ -28,7 +28,7 @@ Tokyo-worker does not “decide what is live”. Roma/Bob decide; Tokyo-worker m
 
 Current auth rule:
 
-- Product account routes execute from Roma-minted `x-ck-authz-capsule` truth. Tokyo-worker does not re-read membership/tier/account status on those paths.
+- Product account routes execute from Roma server-to-server auth: `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma-minted `x-ck-authz-capsule`. Tokyo-worker does not re-read membership/tier/account status on those paths.
 - Local internal tool routes may use `TOKYO_DEV_JWT` only when they also send an explicit allowed `x-ck-internal-service`.
 - There is no generic trusted-token bypass on account routes.
 
@@ -49,7 +49,7 @@ Health contract:
 Storage usage truth:
 
 - Upload enforcement uses the authoritative current stored-bytes view derived from Tokyo asset manifests.
-- `USAGE_KV` is a warm mirror for downstream bootstrap/account usage reads; it is not the source of truth for write authorization or storage-limit enforcement.
+- `USAGE_KV` is a warm mirror for downstream account usage reads; it is not the source of truth for write authorization or storage-limit enforcement.
 - If the `USAGE_KV` mirror is unavailable, product storage enforcement still uses manifest-backed truth and must not silently allow over-limit writes.
 
 ### Public reads (R2 backed)
@@ -69,7 +69,7 @@ Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies
 
 Current runtime contract:
 
-- This surface is editor-only and requires a valid Roma account authz capsule (`viewer+` for read, `editor+` for write).
+- This surface is editor-only and requires Roma internal service auth plus a valid Roma account authz capsule (`viewer+` for read, `editor+` for write).
 - Local internal repair/tool flows may use `TOKYO_DEV_JWT` only with an explicit allowed `x-ck-internal-service`; Tokyo does not accept a bare dev token as a universal saved-render bypass.
 - It stores the latest saved **user-instance** config in Tokyo under:
   - pointer: `renders/instances/<publicId>/saved/r.json`

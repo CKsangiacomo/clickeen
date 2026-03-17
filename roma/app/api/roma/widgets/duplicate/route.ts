@@ -356,6 +356,7 @@ export async function POST(request: NextRequest) {
         accessToken: session.accessToken,
         accountId,
         publicId,
+        policyProfile: authz.payload.profile,
         accountCapsule: authz.token,
         previousConfig: null,
       });

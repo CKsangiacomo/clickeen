@@ -143,6 +143,17 @@ var Dieter = (() => {
     parent.removeChild(el);
   }
 
+  // components/textedit/textedit-types.ts
+  var Command = {
+    Bold: "bold",
+    Italic: "italic",
+    Underline: "underline",
+    Strike: "strike",
+    Link: "link",
+    ClearFormat: "clear-format",
+    ClearLinks: "clear-links"
+  };
+
   // components/textedit/textedit-dom.ts
   function buttonHTML(command, icon) {
     return `
@@ -168,16 +179,16 @@ var Dieter = (() => {
     palette.innerHTML = `
     <div class="diet-textedit__toolbarrow">
       <div class="diet-textedit__group diet-textedit__group--format">
-        ${buttonHTML("bold" /* Bold */, "bold")}
-        ${buttonHTML("italic" /* Italic */, "italic")}
-        ${buttonHTML("underline" /* Underline */, "underline")}
-        ${buttonHTML("strike" /* Strike */, "strikethrough")}
-        ${buttonHTML("link" /* Link */, "link")}
+        ${buttonHTML(Command.Bold, "bold")}
+        ${buttonHTML(Command.Italic, "italic")}
+        ${buttonHTML(Command.Underline, "underline")}
+        ${buttonHTML(Command.Strike, "strikethrough")}
+        ${buttonHTML(Command.Link, "link")}
       </div>
       <span class="diet-textedit__divider is-hidden"></span>
       <div class="diet-textedit__group diet-textedit__group--clear">
-        ${buttonHTML("clear-format" /* ClearFormat */, "arrow.counterclockwise")}
-        ${buttonHTML("clear-links" /* ClearLinks */, "personalhotspot.slash")}
+        ${buttonHTML(Command.ClearFormat, "arrow.counterclockwise")}
+        ${buttonHTML(Command.ClearLinks, "personalhotspot.slash")}
       </div>
     </div>
     <div class="diet-textedit__linkform is-hidden" data-validity="empty">
@@ -217,9 +228,9 @@ var Dieter = (() => {
     palette.querySelectorAll("button[data-command]").forEach((btn) => {
       paletteButtons.set(btn.dataset.command, btn);
     });
-    const paletteLinkButton = paletteButtons.get("link" /* Link */) ?? null;
-    const clearFormatButton = paletteButtons.get("clear-format" /* ClearFormat */);
-    const clearLinksButton = paletteButtons.get("clear-links" /* ClearLinks */);
+    const paletteLinkButton = paletteButtons.get(Command.Link) ?? null;
+    const clearFormatButton = paletteButtons.get(Command.ClearFormat);
+    const clearLinksButton = paletteButtons.get(Command.ClearLinks);
     const toolbarDivider = palette.querySelector(".diet-textedit__divider");
     if (!clearFormatButton || !clearLinksButton || !toolbarDivider) {
       throw new Error("[textedit] missing clear buttons or divider");
@@ -234,7 +245,7 @@ var Dieter = (() => {
     linkApply.disabled = true;
     linkRemove.style.display = "none";
     if (!allowLinks) {
-      const linkButton = paletteButtons.get("link" /* Link */);
+      const linkButton = paletteButtons.get(Command.Link);
       if (linkButton) linkButton.style.display = "none";
       clearLinksButton.classList.add("is-hidden");
       linkForm.classList.add("is-hidden");
@@ -717,7 +728,7 @@ var Dieter = (() => {
     if (state.linkForm.classList.contains("is-hidden")) return;
     state.linkForm.classList.add("is-hidden");
     state.palette.classList.remove("has-linkform");
-    state.paletteButtons.get("link" /* Link */)?.classList.remove("is-active");
+    state.paletteButtons.get(Command.Link)?.classList.remove("is-active");
     state.linkForm.dataset.validity = "empty";
     state.linkTitle.textContent = "Link this text";
     state.linkTitle.classList.remove("is-error");
@@ -829,7 +840,7 @@ var Dieter = (() => {
     setLinkValidity(state, res.state);
     state.linkForm.classList.remove("is-hidden");
     state.palette.classList.add("has-linkform");
-    state.paletteButtons.get("link" /* Link */)?.classList.add("is-active");
+    state.paletteButtons.get(Command.Link)?.classList.add("is-active");
     runtime.updatePalettePosition(state, range);
     state.linkInput.focus({ preventScroll: true });
     state.linkInput.select();
@@ -1075,7 +1086,7 @@ var Dieter = (() => {
     });
   }
   function handleCommand(state, command) {
-    if (!state.allowLinks && (command === "link" /* Link */ || command === "clear-links" /* ClearLinks */)) {
+    if (!state.allowLinks && (command === Command.Link || command === Command.ClearLinks)) {
       return;
     }
     if (!restoreSelection(state)) {
@@ -1083,26 +1094,26 @@ var Dieter = (() => {
       return;
     }
     switch (command) {
-      case "bold" /* Bold */:
+      case Command.Bold:
         surroundSelection(state, "strong");
         break;
-      case "italic" /* Italic */:
+      case Command.Italic:
         surroundSelection(state, "em");
         break;
-      case "underline" /* Underline */:
+      case Command.Underline:
         surroundSelection(state, "u");
         break;
-      case "strike" /* Strike */:
+      case Command.Strike:
         surroundSelection(state, "s");
         break;
-      case "link" /* Link */:
+      case Command.Link:
         toggleLinkForm(state, { restoreSelection, schedulePaletteUpdate, updatePalettePosition });
         return;
-      case "clear-format" /* ClearFormat */:
+      case Command.ClearFormat:
         clearAllFormatting(state);
         closeLinkForm(state);
         return;
-      case "clear-links" /* ClearLinks */:
+      case Command.ClearLinks:
         clearAllLinks(state);
         closeLinkForm(state);
         return;
@@ -1178,10 +1189,10 @@ var Dieter = (() => {
     const tags = collectFormattingTags(state.selection);
     state.paletteButtons.forEach((btn, command) => {
       let tag = null;
-      if (command === "bold" /* Bold */) tag = "STRONG";
-      if (command === "italic" /* Italic */) tag = "EM";
-      if (command === "underline" /* Underline */) tag = "U";
-      if (command === "strike" /* Strike */) tag = "S";
+      if (command === Command.Bold) tag = "STRONG";
+      if (command === Command.Italic) tag = "EM";
+      if (command === Command.Underline) tag = "U";
+      if (command === Command.Strike) tag = "S";
       if (!tag) return;
       btn.classList.toggle("is-active", tags.has(tag));
     });

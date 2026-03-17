@@ -1,5 +1,14 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
-import type { AiGrantPolicy } from '@clickeen/ck-policy';
+import {
+  resolveAiAgent,
+  resolveAiBudgets,
+  resolveAiDefaultProvider,
+  resolveAiModels,
+  resolveAiPolicyCapsule,
+  type AiGrantPolicy,
+  type AiProvider,
+  type PolicyProfile,
+} from '@clickeen/ck-policy';
 import { HttpError, isRecord, noStore, readJson, json } from './http';
 import { assertInternalAuth, asTrimmedString } from './internalAuth';
 import type { AIGrant, Env, Usage } from './types';
@@ -12,7 +21,7 @@ import {
   buildUserPrompt,
   chunkTranslationEntries,
   collectTranslatableEntries,
-  deepseekTranslate,
+  executeTranslationModel,
   deleteMergedByPathOrPattern,
   expandPathPatterns,
   isLikelyNonTranslatableLiteral,
@@ -27,7 +36,21 @@ import {
 } from './agents/l10nTranslationCore';
 
 type LocalizationOp = { op: 'set'; path: string; value: string };
-type L10nProvider = 'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon';
+
+function normalizePolicyProfile(value: unknown): PolicyProfile | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim();
+  if (
+    normalized === 'minibob' ||
+    normalized === 'free' ||
+    normalized === 'tier1' ||
+    normalized === 'tier2' ||
+    normalized === 'tier3'
+  ) {
+    return normalized;
+  }
+  return null;
+}
 
 function normalizeAllowlist(raw: unknown): AllowlistEntry[] {
   if (!Array.isArray(raw)) return [];
@@ -64,71 +87,88 @@ function normalizePathList(raw: unknown): string[] | null {
   );
 }
 
-function resolveProvider(env: Env): L10nProvider {
-  if (asTrimmedString(env.DEEPSEEK_API_KEY)) return 'deepseek';
-  if (asTrimmedString(env.OPENAI_API_KEY)) return 'openai';
-  if (asTrimmedString(env.ANTHROPIC_API_KEY)) return 'anthropic';
-  if (asTrimmedString(env.GROQ_API_KEY)) return 'groq';
-  if (
-    asTrimmedString(env.NOVA_API_KEY) ||
-    (asTrimmedString(env.AMAZON_BEDROCK_ACCESS_KEY_ID) &&
-      asTrimmedString(env.AMAZON_BEDROCK_SECRET_ACCESS_KEY) &&
-      asTrimmedString(env.AMAZON_BEDROCK_REGION))
-  ) {
-    return 'amazon';
-  }
-  throw new HttpError(503, {
-    code: 'PROVIDER_ERROR',
-    provider: 'sanfrancisco',
-    message: 'No configured model provider for account l10n generation',
-  });
-}
-
-function resolveProviderModel(env: Env, provider: L10nProvider): string {
-  if (provider === 'deepseek') return env.DEEPSEEK_MODEL ?? 'deepseek-chat';
-  if (provider === 'openai') return env.OPENAI_MODEL ?? 'gpt-5.2';
-  if (provider === 'groq') return env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
+function providerHasCredentials(env: Env, provider: AiProvider): boolean {
+  if (provider === 'deepseek') return Boolean(asTrimmedString(env.DEEPSEEK_API_KEY));
+  if (provider === 'openai') return Boolean(asTrimmedString(env.OPENAI_API_KEY));
+  if (provider === 'anthropic') return Boolean(asTrimmedString(env.ANTHROPIC_API_KEY));
+  if (provider === 'groq') return Boolean(asTrimmedString(env.GROQ_API_KEY));
   if (provider === 'amazon') {
-    return env.NOVA_MODEL ?? env.AMAZON_BEDROCK_MODEL_ID ?? 'nova-2-lite-v1';
+    return (
+      Boolean(asTrimmedString(env.NOVA_API_KEY)) ||
+      (Boolean(asTrimmedString(env.AMAZON_BEDROCK_ACCESS_KEY_ID)) &&
+        Boolean(asTrimmedString(env.AMAZON_BEDROCK_SECRET_ACCESS_KEY)) &&
+        Boolean(asTrimmedString(env.AMAZON_BEDROCK_REGION)))
+    );
   }
-  return env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20240620';
+  return false;
 }
 
-function buildInternalGrant(env: Env): AIGrant {
-  const provider = resolveProvider(env);
-  const model = resolveProviderModel(env, provider);
-  const models = {
-    [provider]: {
-      defaultModel: model,
-      allowed: [model],
-    },
-  } as NonNullable<AiGrantPolicy['models']>;
+function buildInternalGrant(args: {
+  env: Env;
+  policyProfile: PolicyProfile;
+}): AIGrant {
+  const resolvedAgent = resolveAiAgent('l10n.instance.v1');
+  if (!resolvedAgent) {
+    throw new HttpError(500, {
+      code: 'PROVIDER_ERROR',
+      provider: 'sanfrancisco',
+      message: 'Missing AI registry entry for account l10n generation',
+    });
+  }
 
+  const baseAi = resolveAiPolicyCapsule({
+    entry: resolvedAgent.entry,
+    policyProfile: args.policyProfile,
+  });
+  const allowedProviders = baseAi.allowedProviders.filter((provider) =>
+    providerHasCredentials(args.env, provider),
+  );
+  if (!allowedProviders.length) {
+    throw new HttpError(503, {
+      code: 'PROVIDER_ERROR',
+      provider: 'sanfrancisco',
+      message: `No configured model provider for account l10n generation (${baseAi.profile})`,
+    });
+  }
+
+  const defaultProvider = allowedProviders.includes(baseAi.defaultProvider)
+    ? baseAi.defaultProvider
+    : resolveAiDefaultProvider(baseAi.profile, allowedProviders);
+  const models = Object.fromEntries(
+    allowedProviders
+      .map((provider) => {
+        const policy = resolveAiModels(baseAi.profile, provider);
+        return policy ? [provider, policy] : null;
+      })
+      .filter(Boolean) as Array<[AiProvider, NonNullable<AiGrantPolicy['models']>[AiProvider]]>,
+  ) as NonNullable<AiGrantPolicy['models']>;
+  const budget = resolveAiBudgets(resolvedAgent.entry, baseAi.profile);
   const ai: AiGrantPolicy = {
-    profile: 'paid_standard',
-    allowedProviders: [provider],
-    defaultProvider: provider,
+    ...baseAi,
+    allowedProviders,
+    defaultProvider,
     models,
   };
 
   const nowSec = Math.floor(Date.now() / 1000);
   return {
     v: 1,
-    iss: 'paris',
+    iss: 'sanfrancisco',
     jti: crypto.randomUUID(),
     sub: { kind: 'service', serviceId: 'roma.account.l10n' },
     exp: nowSec + 10 * 60,
     caps: ['agent:l10n.instance.v1'],
     budgets: {
-      maxTokens: 1200,
-      timeoutMs: 35_000,
+      maxTokens: budget.maxTokens,
+      timeoutMs: budget.timeoutMs,
+      // One Roma save/publication request may batch many provider calls across locales/items.
       maxRequests: 512,
     },
     mode: 'ops',
     ai,
     trace: {
       sessionId: crypto.randomUUID(),
-      envStage: asTrimmedString(env.ENVIRONMENT) ?? 'dev',
+      envStage: asTrimmedString(args.env.ENVIRONMENT) ?? 'dev',
     },
   };
 }
@@ -218,7 +258,7 @@ async function generateLocaleOps(args: {
 
     for (const batch of batches) {
       const user = buildUserPrompt(batch);
-      const result = await deepseekTranslate({
+      const result = await executeTranslationModel({
         env: args.env,
         grant: args.grant,
         agentId: 'l10n.instance.v1',
@@ -305,6 +345,7 @@ export async function handleAccountL10nOpsGenerate(
   const config = isRecord(body.config) ? (body.config as Record<string, unknown>) : null;
   const allowlist = normalizeAllowlist(body.allowlist);
   const baseLocale = normalizeLocaleToken(body.baseLocale) ?? null;
+  const policyProfile = normalizePolicyProfile(body.policyProfile);
 
   const targetLocalesRaw = Array.isArray(body.targetLocales) ? body.targetLocales : [];
   const targetLocales = Array.from(
@@ -339,6 +380,12 @@ export async function handleAccountL10nOpsGenerate(
       message: 'Missing required field: baseLocale',
     });
   }
+  if (!policyProfile) {
+    throw new HttpError(400, {
+      code: 'BAD_REQUEST',
+      message: 'Missing required field: policyProfile',
+    });
+  }
   if (!targetLocales.length) {
     return noStore(json({ ok: true, results: [] }));
   }
@@ -350,7 +397,7 @@ export async function handleAccountL10nOpsGenerate(
     : {};
 
   const entries = collectTranslatableEntries(config, allowlist, true);
-  const grant = buildInternalGrant(env);
+  const grant = buildInternalGrant({ env, policyProfile });
 
   const results = await Promise.all(
     targetLocales.map(async (locale) => {

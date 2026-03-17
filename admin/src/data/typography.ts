@@ -42,16 +42,6 @@ const LABEL_SCALE = [
   'overline-small',
 ];
 
-const SECTION_FILTER: Record<string, Set<string> | undefined> = {
-  Body: new Set(BODY_SCALE),
-  'Labels & Captions': new Set(LABEL_SCALE),
-};
-
-const SECTION_ORDER: Record<string, string[] | undefined> = {
-  Body: BODY_SCALE,
-  'Labels & Captions': LABEL_SCALE,
-};
-
 const flatLookup = Object.values(generated)
   .flat()
   .reduce<Record<string, string>>((acc, entry) => {

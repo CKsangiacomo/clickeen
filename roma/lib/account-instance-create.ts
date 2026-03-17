@@ -8,6 +8,7 @@ import {
   writeSavedConfigToTokyo,
 } from './account-instance-direct';
 import { resolveTokyoBaseUrl } from './env/tokyo';
+import { buildTokyoProductHeaders } from './tokyo-product-auth';
 
 export type AccountInstanceCreateError = {
   kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE' | 'INTERNAL';
@@ -73,12 +74,10 @@ async function writeSavedConfigRollback(args: {
     )}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
     {
       method: 'DELETE',
-      headers: {
-        accept: 'application/json',
-        authorization: `Bearer ${args.accessToken}`,
-        'x-account-id': args.accountId,
-        ...(args.accountCapsule ? { 'x-ck-authz-capsule': args.accountCapsule } : {}),
-      },
+      headers: buildTokyoProductHeaders({
+        accountId: args.accountId,
+        accountCapsule: args.accountCapsule,
+      }),
       cache: 'no-store',
     },
   );

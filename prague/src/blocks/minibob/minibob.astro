@@ -36,7 +36,8 @@ if (!BOB_URL) {
 }
 
 const publicId = `wgt_main_${widget}`;
-const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?boot=url&subject=minibob&publicId=${encodeURIComponent(publicId)}&locale=${encodeURIComponent(locale)}`;
+const bobBaseUrl = BOB_URL.replace(/\/+$/, '');
+const iframeSrc = `${bobBaseUrl}/bob?boot=message&subject=minibob&publicId=${encodeURIComponent(publicId)}`;
 const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 const createHref = (() => {
   try {
@@ -61,6 +62,7 @@ const bobOrigin = (() => {
   id="minibob"
   class="ck-canvas"
   data-bob-origin={bobOrigin}
+  data-bob-base={bobBaseUrl}
   data-create-href={createHref}
   data-public-id={publicId}
 >
@@ -89,11 +91,15 @@ const bobOrigin = (() => {
     root.dataset.ckUpsellBound = '1';
 
     const expectedOrigin = root.dataset.bobOrigin || '';
+    const bobBase = (root.dataset.bobBase || '').replace(/\/+$/, '');
     const signupHref = root.dataset.createHref || '';
     const fallbackPublicId = (root.dataset.publicId || '').trim();
     const HANDOFF_START_ENDPOINT = '/api/minibob/handoff-start';
     const EXPORT_TIMEOUT_MS = 8000;
+    const OPEN_TIMEOUT_MS = 12000;
     let handoffInFlight = false;
+    let bobSessionId = '';
+    let bootInFlight = false;
 
     const iframe = root.querySelector('iframe.ck-minibob__iframe');
     if (!(iframe instanceof HTMLIFrameElement)) return;
@@ -107,6 +113,111 @@ const bobOrigin = (() => {
       }
       return `handoff_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
     };
+
+    async function fetchJson(url, options) {
+      const response = await fetch(url, {
+        cache: 'no-store',
+        credentials: 'omit',
+        mode: 'cors',
+        ...options,
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const detail = asRecord(payload);
+        const error = asRecord(detail?.error);
+        throw new Error(asText(error?.detail) || asText(error?.reasonKey) || `request failed (${response.status})`);
+      }
+      const body = asRecord(payload);
+      if (!body) throw new Error('invalid JSON payload');
+      return body;
+    }
+
+    async function buildMinibobOpenMessage() {
+      if (!bobBase) throw new Error('missing Bob base URL');
+      const instance = await fetchJson(
+        `${bobBase}/api/instance/${encodeURIComponent(fallbackPublicId)}?subject=minibob`,
+        { method: 'GET' },
+      );
+      const widgetType = asText(instance.widgetType);
+      if (!widgetType) throw new Error('missing widget type');
+      const compiled = await fetchJson(
+        `${bobBase}/api/widgets/${encodeURIComponent(widgetType)}/compiled`,
+        { method: 'GET' },
+      );
+      const config = asRecord(instance.config);
+      if (!config) throw new Error('missing public instance config');
+      const policy = asRecord(instance.policy);
+      if (!policy) throw new Error('missing MiniBob policy');
+
+      return {
+        type: 'ck:open-editor',
+        requestId: nextRequestId(),
+        subjectMode: 'minibob',
+        publicId: asText(instance.publicId) || fallbackPublicId,
+        label: asText(instance.displayName) || fallbackPublicId || widgetType,
+        widgetname: widgetType,
+        compiled,
+        instanceData: config,
+        localization: instance.localization ?? null,
+        policy,
+      };
+    }
+
+    async function openMinibobInBob(sessionId) {
+      if (!iframe.contentWindow) throw new Error('bob iframe not ready');
+
+      const openMessage = await buildMinibobOpenMessage();
+      await new Promise((resolve, reject) => {
+        let timeoutId = null;
+
+        const done = (err) => {
+          if (timeoutId != null) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          window.removeEventListener('message', onMessage);
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve();
+        };
+
+        const onMessage = (event) => {
+          if (expectedOrigin && event.origin !== expectedOrigin) return;
+          if (event.source !== iframe.contentWindow) return;
+          const data = asRecord(event.data);
+          if (!data) return;
+          const type = asText(data.type);
+          if (type === 'bob:open-editor-ack') {
+            if (asText(data.requestId) !== asText(openMessage.requestId)) return;
+            return;
+          }
+          if (type === 'bob:open-editor-applied') {
+            if (asText(data.requestId) !== asText(openMessage.requestId)) return;
+            done(null);
+            return;
+          }
+          if (type === 'bob:open-editor-failed') {
+            if (asText(data.requestId) !== asText(openMessage.requestId)) return;
+            done(new Error(asText(data.message) || asText(data.reasonKey) || 'bob open-editor failed'));
+          }
+        };
+
+        timeoutId = window.setTimeout(() => {
+          done(new Error('bob open-editor timeout'));
+        }, OPEN_TIMEOUT_MS);
+
+        window.addEventListener('message', onMessage);
+        iframe.contentWindow.postMessage(
+          {
+            ...openMessage,
+            sessionId,
+          },
+          expectedOrigin || '*',
+        );
+      });
+    }
 
     async function exportHandoffContextFromBob() {
       if (!iframe.contentWindow) throw new Error('bob iframe not ready');
@@ -148,7 +259,7 @@ const bobOrigin = (() => {
         window.addEventListener('message', onMessage);
         iframe.contentWindow.postMessage(
           {
-            type: 'devstudio:export-instance-data',
+            type: 'host:export-instance-data',
             requestId,
             exportMode: 'current',
             persistAssets: false,
@@ -208,11 +319,33 @@ const bobOrigin = (() => {
       window.alert(`Unable to continue signup from MiniBob right now. ${message}`);
     }
 
+    function surfaceBootError(error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[prague:minibob] minibob boot failed', message);
+    }
+
     window.addEventListener('message', (event) => {
       if (expectedOrigin && event.origin !== expectedOrigin) return;
       if (event.source !== iframe.contentWindow) return;
       const data = event.data;
       if (!data || typeof data !== 'object') return;
+      if (data.type === 'bob:session-ready') {
+        const sessionId = asText(data.sessionId);
+        if (!sessionId) return;
+        if (data.bootMode && data.bootMode !== 'message') return;
+        if (sessionId === bobSessionId || bootInFlight) return;
+        bobSessionId = sessionId;
+        bootInFlight = true;
+        openMinibobInBob(sessionId)
+          .catch((error) => {
+            bobSessionId = '';
+            surfaceBootError(error);
+          })
+          .finally(() => {
+            bootInFlight = false;
+          });
+        return;
+      }
       if (data.type !== 'bob:upsell') return;
       if (data.cta !== 'signup') return;
       if (!signupHref) return;

@@ -1,13 +1,11 @@
 import { isUuid } from '@clickeen/ck-contracts';
-import {
-  readRomaAuthzCapsuleHeader,
-  verifyRomaAccountAuthzCapsule,
-  type MemberRole,
-} from '@clickeen/ck-policy';
+import type { MemberRole } from '@clickeen/ck-policy';
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeAccountRoleFromCapsuleToken } from '../../../../../lib/account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
 import { resolveTokyoBaseUrl } from '../../../../../lib/env/tokyo';
 import { deleteAccountInstanceRow, getAccountInstanceCoreRow } from '../../../../../lib/michael';
+import { buildTokyoProductHeaders } from '../../../../../lib/tokyo-product-auth';
 
 export const runtime = 'edge';
 
@@ -28,88 +26,16 @@ function withSession(
   return withNoStore(applySessionCookies(response, request, setCookies));
 }
 
-function roleRank(value: MemberRole): number {
-  switch (value) {
-    case 'owner':
-      return 4;
-    case 'admin':
-      return 3;
-    case 'editor':
-      return 2;
-    case 'viewer':
-      return 1;
-  }
-}
-
 async function authorizeRequestAccountRoleFromCapsule(args: {
   request: Request;
   accountId: string;
   minRole: MemberRole;
 }) {
-  const token = readRomaAuthzCapsuleHeader(args.request);
-  if (!token) {
-    return {
-      ok: false as const,
-      status: 403,
-      error: {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.auth.forbidden',
-        detail: 'authz_capsule_required',
-      },
-    };
-  }
-
-  const secret = String(process.env.ROMA_AUTHZ_CAPSULE_SECRET || '').trim();
-  if (!secret) {
-    return {
-      ok: false as const,
-      status: 500,
-      error: {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.misconfigured',
-        detail: 'roma_authz_capsule_secret_missing',
-      },
-    };
-  }
-
-  const verified = await verifyRomaAccountAuthzCapsule(secret, token);
-  if (!verified.ok) {
-    return {
-      ok: false as const,
-      status: 403,
-      error: {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.auth.forbidden',
-        detail: verified.reason,
-      },
-    };
-  }
-
-  if (verified.payload.accountId !== args.accountId) {
-    return {
-      ok: false as const,
-      status: 403,
-      error: {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.auth.forbidden',
-        detail: 'account_mismatch',
-      },
-    };
-  }
-
-  if (roleRank(verified.payload.role) < roleRank(args.minRole)) {
-    return {
-      ok: false as const,
-      status: 403,
-      error: {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.auth.forbidden',
-        detail: 'role_insufficient',
-      },
-    };
-  }
-
-  return { ok: true as const, payload: verified.payload };
+  return authorizeAccountRoleFromCapsuleToken({
+    token: args.request.headers.get('x-ck-authz-capsule') || '',
+    accountId: args.accountId,
+    minRole: args.minRole,
+  });
 }
 
 async function deleteTokyoMirrors(args: {
@@ -117,10 +43,9 @@ async function deleteTokyoMirrors(args: {
   accountId: string;
   publicId: string;
 }): Promise<{ ok: true } | { ok: false; detail: string }> {
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${args.tokyoAccessToken}`);
-  headers.set('accept', 'application/json');
-  headers.set('x-account-id', args.accountId);
+  const headers = buildTokyoProductHeaders({
+    accountId: args.accountId,
+  });
 
   const tokyoBaseUrl = resolveTokyoBaseUrl().replace(/\/+$/, '');
   const savedUrl = `${tokyoBaseUrl}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`;

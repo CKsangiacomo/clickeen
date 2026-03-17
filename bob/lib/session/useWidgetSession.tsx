@@ -6,7 +6,6 @@ import {
   createInitialSessionState,
   type SessionState,
 } from './sessionTypes';
-import { resolveMinibobUrlPolicy, resolveSubjectModeFromUrl } from './sessionPolicy';
 import { useSessionTransport } from './sessionTransport';
 import { useSessionLocalization } from './useSessionLocalization';
 import { useSessionEditing } from './useSessionEditing';
@@ -15,10 +14,7 @@ import { useSessionSaving } from './useSessionSaving';
 import { useSessionCopilot } from './useSessionCopilot';
 
 function useWidgetSessionInternal() {
-  const initialSubjectMode = resolveSubjectModeFromUrl();
-  const [state, setState] = useState<SessionState>(() =>
-    createInitialSessionState(initialSubjectMode === 'minibob' ? resolveMinibobUrlPolicy() : null),
-  );
+  const [state, setState] = useState<SessionState>(() => createInitialSessionState(null));
 
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -42,7 +38,6 @@ function useWidgetSessionInternal() {
     setState,
     fetchApi: transport.fetchApi,
     bootModeRef: transport.bootModeRef,
-    surfaceRef: transport.surfaceRef,
     hostOriginRef: transport.hostOriginRef,
     sessionIdRef: transport.sessionIdRef,
     openRequestStatusRef: transport.openRequestStatusRef,

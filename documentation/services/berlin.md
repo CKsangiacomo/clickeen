@@ -14,6 +14,7 @@ Responsibilities:
 - Orchestrate provider login OAuth start+callback (`/auth/login/provider/*`).
 - Reconcile first successful sign-in into canonical product account state (`user_profiles`, first account, first owner membership, active account preference) during PRD 65 execution.
 - First successful sign-in provisions a distinct first account/workspace id; Berlin must never reuse `user_id` as `account_id`.
+- Keep `GET /v1/session/bootstrap` read-only. Bootstrap reads canonical user/account state and mints session truth; it never repairs or provisions missing profile/membership state on the hot path.
 - Own the first canonical account routes during PRD 65 execution:
   - `GET /v1/me`
   - `PUT /v1/me`
@@ -40,12 +41,14 @@ Responsibilities:
   - `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
   - `GET /v1/session/bootstrap`
 - Resolve the active account, role, entitlement snapshot, and short-lived Berlin-issued account authz capsule for bootstrap.
+- The signed account authz capsule carries stable account authz truth only; mutable locale settings and live `used` counters stay out of the signed capsule.
 - Normalize provider linkage into the minimal connector reuse summary Berlin exposes today:
   - `linkedIdentities`
   - `workspaceConnections`
   - `capabilityStates`
   - `traits.linkedProviders`
 - Resolve the active account only from persisted active-account preference or deterministic real membership truth; Berlin must fail explicitly if no real user-associated account can be opened and must never open a privileged fallback account.
+- Missing canonical profile or membership state at bootstrap is a producer bug. Berlin surfaces it as an internal contract failure instead of reconciling it during bootstrap.
 - Invalid persisted profile/account locale-policy truth must fail explicitly in canonical product/account routes; Berlin logs the defect and does not silently default it away.
 - Berlin owns verified contact-method state and challenge lifecycle for `phone` and `whatsapp`; in `local` it uses a delivery-capture adapter, while `cloud-dev`/prod fail unavailable until a real delivery boundary exists.
 - Mint short-lived Berlin access tokens (`RS256`) with stable product claims (`sub`, `sid`, `ver`, `iat`, `exp`, `iss`, `aud`).
@@ -132,7 +135,6 @@ Required:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `BERLIN_AUTH_TICKETS` (Wrangler Durable Object binding)
 - `BERLIN_SESSION_KV` (Wrangler binding)
-- `ROMA_AUTHZ_CAPSULE_SECRET` (dedicated account-authz capsule signing secret)
 
 Recommended:
 - `BERLIN_ISSUER`
@@ -143,7 +145,6 @@ Recommended:
 - `BERLIN_FINISH_REDIRECT_URL` (post-callback browser redirect; cloud-dev should point at Roma `/api/session/finish`)
 - `ENV_STAGE`
 - `CK_INTERNAL_SERVICE_JWT` (required for residual internal service auth on non-product paths)
-- `USAGE_KV` (required for non-local bootstrap budget usage reads)
 
 Optional key override:
 - `BERLIN_ACCESS_PRIVATE_KEY_PEM`
@@ -151,10 +152,10 @@ Optional key override:
 - `BERLIN_ACCESS_PREVIOUS_PUBLIC_KEY_PEM`
 - `BERLIN_ACCESS_PREVIOUS_KID`
 
-If signing key PEMs are not provided, Berlin generates an in-memory RSA keypair at runtime.
+Berlin requires explicit signing key PEMs. Local `dev-up` materializes them into `berlin/.dev.vars`, and cloud environments must provide them directly.
 
 ## Local development
 
 - Local URL: `http://localhost:3005`
 - Canonical startup: `bash scripts/dev-up.sh`
-- `dev-up` resolves one dedicated local `ROMA_AUTHZ_CAPSULE_SECRET` and passes it explicitly to Berlin/Paris/Bob. Berlin product auth must not borrow AI or service-role secrets.
+- `dev-up` reuses the Berlin access signing keypair for account capsules. There is no separate capsule secret to distribute.

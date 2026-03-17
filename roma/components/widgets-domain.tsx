@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
+import { useRomaAccountApi } from './account-api';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
-import { fetchSameOriginJson } from './same-origin-json';
-import { resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 import {
   buildBuilderRoute,
   DEFAULT_INSTANCE_DISPLAY_NAME,
@@ -29,7 +29,8 @@ export function WidgetsDomain() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const me = useRomaMe();
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const accountApi = useRomaAccountApi(me.data);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const autoCreateStartedRef = useRef(false);
 
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
@@ -43,30 +44,17 @@ export function WidgetsDomain() {
   const [renameError, setRenameError] = useState<string | null>(null);
 
   const accountId = context.accountId;
-  const accountCapsule =
-    me.data?.authz?.accountCapsule && me.data.authz.accountCapsule.trim() ? me.data.authz.accountCapsule.trim() : '';
   const searchIntent = useMemo(() => (searchParams.get('intent') || '').trim().toLowerCase(), [searchParams]);
   const searchWidgetType = useMemo(() => normalizeWidgetType(searchParams.get('widgetType')), [searchParams]);
   const selectedPublicId = useMemo(() => (searchParams.get('selected') || '').trim(), [searchParams]);
-
-  const createRequestHeaders = useCallback(
-    (contentType?: string) => {
-      const headers = new Headers();
-      if (contentType) headers.set('content-type', contentType);
-      if (accountCapsule) headers.set('x-ck-authz-capsule', accountCapsule);
-      return headers;
-    },
-    [accountCapsule],
-  );
 
   const refreshWidgets = useCallback(async () => {
     if (!accountId) return;
     setDomainLoading(true);
     setDataError(null);
     try {
-      const payload = await fetchSameOriginJson<unknown>(`/api/roma/widgets?accountId=${encodeURIComponent(accountId)}`, {
+      const payload = await accountApi.fetchJson<unknown>(`/api/roma/widgets?accountId=${encodeURIComponent(accountId)}`, {
         method: 'GET',
-        headers: createRequestHeaders(),
       });
       const normalized = normalizeRomaWidgetsResponse(payload);
       if (!normalized || normalized.accountId !== accountId) {
@@ -83,7 +71,7 @@ export function WidgetsDomain() {
     } finally {
       setDomainLoading(false);
     }
-  }, [accountId, createRequestHeaders]);
+  }, [accountApi, accountId]);
 
   useEffect(() => {
     void refreshWidgets();
@@ -138,11 +126,11 @@ export function WidgetsDomain() {
       setCreateError(null);
       try {
         const sourcePublicId = buildMainPublicId(normalizedWidgetType);
-        const payload = await fetchSameOriginJson<{ publicId?: string; widgetType?: string }>(
+        const payload = await accountApi.fetchJson<{ publicId?: string; widgetType?: string }>(
           `/api/roma/widgets/duplicate`,
           {
             method: 'POST',
-            headers: createRequestHeaders('application/json'),
+            headers: accountApi.buildHeaders({ contentType: 'application/json' }),
             body: JSON.stringify({
               accountId,
               sourcePublicId,
@@ -174,7 +162,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountId, createRequestHeaders, refreshWidgets, router],
+    [accountApi, accountId, refreshWidgets, router],
   );
 
   const handleDuplicateInstance = useCallback(
@@ -184,9 +172,9 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        const payload = await fetchSameOriginJson<{ publicId?: string; widgetType?: string }>(`/api/roma/widgets/duplicate`, {
+        const payload = await accountApi.fetchJson<{ publicId?: string; widgetType?: string }>(`/api/roma/widgets/duplicate`, {
           method: 'POST',
-          headers: createRequestHeaders('application/json'),
+          headers: accountApi.buildHeaders({ contentType: 'application/json' }),
           body: JSON.stringify({
             accountId,
             sourcePublicId: instance.publicId,
@@ -205,7 +193,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountId, createRequestHeaders, refreshWidgets],
+    [accountApi, accountId, refreshWidgets],
   );
 
   const handleDeleteInstance = useCallback(
@@ -215,11 +203,10 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        await fetchSameOriginJson<{ deleted?: boolean }>(
+        await accountApi.fetchJson<{ deleted?: boolean }>(
           `/api/roma/instances/${encodeURIComponent(instance.publicId)}?accountId=${encodeURIComponent(accountId)}`,
           {
             method: 'DELETE',
-            headers: createRequestHeaders(),
           },
         );
         await refreshWidgets();
@@ -230,7 +217,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountId, createRequestHeaders, refreshWidgets],
+    [accountApi, accountId, refreshWidgets],
   );
 
   const handleStatusChange = useCallback(
@@ -240,11 +227,10 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        await fetchSameOriginJson<{ status?: 'published' | 'unpublished' }>(
+        await accountApi.fetchJson<{ status?: 'published' | 'unpublished' }>(
           `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(instance.publicId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}?subject=account`,
           {
             method: 'POST',
-            headers: createRequestHeaders(),
           },
         );
         await refreshWidgets();
@@ -257,7 +243,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountId, createRequestHeaders, refreshWidgets],
+    [accountApi, accountId, refreshWidgets],
   );
 
   const startRename = useCallback((instance: WidgetInstance) => {
@@ -291,11 +277,11 @@ export function WidgetsDomain() {
       setCreateError(null);
       setRenameError(null);
       try {
-        const payload = await fetchSameOriginJson<{ publicId?: string; displayName?: string }>(
+        const payload = await accountApi.fetchJson<{ publicId?: string; displayName?: string }>(
           `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(instance.publicId)}/rename`,
           {
             method: 'POST',
-            headers: createRequestHeaders('application/json'),
+            headers: accountApi.buildHeaders({ contentType: 'application/json' }),
             body: JSON.stringify({ displayName: nextDisplayName }),
           },
         );
@@ -316,7 +302,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountId, cancelRename, createRequestHeaders, renameDraft],
+    [accountApi, accountId, cancelRename, renameDraft],
   );
 
   useEffect(() => {

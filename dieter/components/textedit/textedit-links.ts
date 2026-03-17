@@ -1,5 +1,5 @@
 import { parse as tldParse } from 'tldts';
-import { syncPreview, unwrapElement, updateClearButtons } from './textedit-content';
+import { syncPreview, updateClearButtons } from './textedit-content';
 import { Command } from './textedit-types';
 import type { LinkState, LinkValidity, TexteditState } from './textedit-types';
 

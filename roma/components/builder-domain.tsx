@@ -4,16 +4,16 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import openEditorLifecycleContractJson from '../../packages/ck-contracts/editor/open-editor-lifecycle.v1.json';
+import { useRomaAccountApi } from './account-api';
 import { getCompiledWidget, normalizeCompiledWidgetType } from './compiled-widget-cache';
 import {
   getAccountInstance,
   getAccountInstanceLocalization,
   invalidateAccountInstanceCache,
   prefetchAccountInstance,
-  primeAccountInstanceCache,
-  type AccountInstancePayload,
+  reconcileAccountInstanceCacheAfterMutation,
 } from './account-instance-cache';
-import { resolveAccountPolicyFromRomaAuthz, resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { resolveAccountPolicyFromRomaAuthz, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 type BuilderDomainProps = {
   initialPublicId?: string;
@@ -186,10 +186,6 @@ function buildRomaBuilderRoute(args: {
   return `/builder/${encodeURIComponent(args.publicId)}?${search.toString()}`;
 }
 
-function isAccountInstancePayload(value: unknown): value is AccountInstancePayload {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
 function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
   accountId: string;
@@ -268,6 +264,7 @@ function decodeBuilderPathPublicId(pathname: string): string {
 
 export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: BuilderDomainProps) {
   const me = useRomaMe();
+  const accountApi = useRomaAccountApi(me.data);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -282,7 +279,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
   });
   const [openError, setOpenError] = useState<string | null>(null);
 
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const accountId = useMemo(() => {
     const fromQuery = String(searchParams.get('accountId') || '').trim();
     if (fromQuery) return fromQuery;
@@ -302,7 +299,6 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
     url.searchParams.set('boot', 'message');
     url.searchParams.set('accountId', accountId);
     url.searchParams.set('subject', 'account');
-    url.searchParams.set('surface', 'roma');
     return url.toString();
   }, [accountId, bobBaseUrl]);
 
@@ -330,8 +326,8 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
 
   useEffect(() => {
     if (!accountId || !activePublicId) return;
-    void prefetchAccountInstance(accountId, activePublicId, me.data?.authz?.accountCapsule ?? null);
-  }, [accountId, activePublicId, me.data?.authz?.accountCapsule]);
+    void prefetchAccountInstance(accountId, activePublicId, accountApi.accountCapsule);
+  }, [accountApi.accountCapsule, accountId, activePublicId]);
 
   const runBobAccountCommand = useCallback(
     async (args: {
@@ -376,26 +372,24 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
       try {
         const init: RequestInit = {
           method: route.method,
-          cache: 'no-store',
         };
-        const headers = new Headers();
-        const accountCapsule =
-          typeof me.data?.authz?.accountCapsule === 'string' ? me.data.authz.accountCapsule.trim() : '';
-        if (accountCapsule) {
-          headers.set('x-ck-authz-capsule', accountCapsule);
-        }
         if (typeof args.body !== 'undefined') {
-          headers.set('content-type', 'application/json');
+          init.headers = accountApi.buildHeaders({ contentType: 'application/json' });
           init.body = JSON.stringify(args.body);
+        } else {
+          init.headers = accountApi.buildHeaders();
         }
-        if (Array.from(headers.keys()).length > 0) init.headers = headers;
 
-        const response = await fetch(route.path, init);
+        const response = await accountApi.fetchRaw(route.path, init);
         const payload = (await response.json().catch(() => null)) as unknown;
 
         if (response.ok) {
-          if (args.command === 'update-instance' && isAccountInstancePayload(payload)) {
-            primeAccountInstanceCache(args.accountId, args.publicId, payload);
+          if (args.command === 'update-instance') {
+            reconcileAccountInstanceCacheAfterMutation({
+              accountId: args.accountId,
+              publicId: args.publicId,
+              payload,
+            });
           } else {
             invalidateAccountInstanceCache(args.accountId, args.publicId);
           }
@@ -433,7 +427,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         });
       }
     },
-    [bobBaseUrl, me.data?.authz?.accountCapsule],
+    [accountApi, bobBaseUrl],
   );
 
   const postOpenEditorAndWait = useCallback(
@@ -570,12 +564,12 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         getAccountInstance({
           accountId,
           publicId: activePublicId,
-          authzCapsule: me.data?.authz?.accountCapsule ?? null,
+          authzCapsule: accountApi.accountCapsule,
         }),
         getAccountInstanceLocalization({
           accountId,
           publicId: activePublicId,
-          authzCapsule: me.data?.authz?.accountCapsule ?? null,
+          authzCapsule: accountApi.accountCapsule,
         }),
       ]);
       const instance = instanceResult.payload;
@@ -614,10 +608,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         subjectMode: 'account',
         publicId: resolvedPublicId,
         accountId,
-        accountCapsule:
-          typeof me.data?.authz?.accountCapsule === 'string' && me.data.authz.accountCapsule.trim()
-            ? me.data.authz.accountCapsule.trim()
-            : undefined,
+        ...(accountApi.accountCapsule ? { accountCapsule: accountApi.accountCapsule } : {}),
         ownerAccountId,
         label,
         widgetname: widgetType,
@@ -648,7 +639,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [accountId, activePublicId, me.data, me.error, me.loading, postOpenEditorAndWait, widgetTypeHint]);
+  }, [accountApi.accountCapsule, accountId, activePublicId, me.data, me.error, me.loading, postOpenEditorAndWait, widgetTypeHint]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {

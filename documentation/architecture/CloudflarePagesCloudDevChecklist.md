@@ -144,12 +144,13 @@ Dashboard action:
 
 These values remain outside git by design. Keep the inventory true; do not store secret values in repo files.
 
-Pages secrets:
-- Bob: `ROMA_AUTHZ_CAPSULE_SECRET`
-
 Worker secrets:
-- Berlin: `SUPABASE_SERVICE_ROLE_KEY`, `CK_INTERNAL_SERVICE_JWT`, `ROMA_AUTHZ_CAPSULE_SECRET`
+- Berlin: `SUPABASE_SERVICE_ROLE_KEY`, `CK_INTERNAL_SERVICE_JWT`
+- Tokyo-worker: `CK_INTERNAL_SERVICE_JWT`
 - San Francisco: `AI_GRANT_HMAC_SECRET`, `CK_INTERNAL_SERVICE_JWT`
+
+Pages secrets:
+- Roma: `CK_INTERNAL_SERVICE_JWT`
 
 CI secrets/vars:
 - `CLOUDFLARE_API_TOKEN`

@@ -133,7 +133,6 @@ export function mountDevWidgetWorkspace() {
     const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
     bobUrl.searchParams.set('boot', 'message');
     bobUrl.searchParams.set('subject', 'account');
-    bobUrl.searchParams.set('surface', SUPPORT_MODE ? 'devstudio-support' : 'devstudio');
     bobUrl.searchParams.set('assetApiBase', `${window.location.origin}/api/devstudio/assets`);
     bobUrl.searchParams.set(
       'assetUploadEndpoint',

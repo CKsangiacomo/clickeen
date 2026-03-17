@@ -60,6 +60,7 @@ Provider split (Tiered Execution):
 - **Paid Premium**: higher-capability defaults (OpenAI `gpt-5.2`) with policy + agent constraints
 - **Curated/Internal**: OpenAI curated set (`gpt-5.2` default)
 - **Prague strings L10n**: OpenAI via policy router
+- **Account-mode instance l10n**: Roma sends minted `policyProfile`; San Francisco derives `l10n.instance.v1` profile/provider policy from `@clickeen/ck-policy` and then intersects it with env-configured providers
 
 ## 3) HTTP endpoints
 
@@ -109,6 +110,11 @@ Purpose: generate account-mode locale ops for Roma save/publish/locale aftermath
 
 Auth:
 - `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
+
+Contract:
+- Roma must send the already-minted account `policyProfile`.
+- San Francisco must derive the `l10n.instance.v1` AI profile/provider policy from that truth instead of hardcoding a generic paid path.
+- San Francisco may reduce that provider set only by env reality: providers not configured in the current environment are removed from the allowed set.
 
 ### `POST /v1/l10n/translate` (local + cloud-dev)
 Purpose: translate Prague system-owned base content (prague-l10n pipeline).
@@ -258,7 +264,7 @@ SanFrancisco only:
 
 Full stack (recommended):
 - `bash scripts/dev-up.sh`
-  - starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) and SanFrancisco (3002 if enabled)
+  - starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) and SanFrancisco (3002 if enabled)
 
 Useful checks:
 - `curl http://localhost:3002/healthz`

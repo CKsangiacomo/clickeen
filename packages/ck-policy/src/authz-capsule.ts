@@ -3,8 +3,8 @@ import type { MemberRole, PolicyProfile } from './types';
 
 export const ROMA_AUTHZ_CAPSULE_HEADER = 'x-ck-authz-capsule';
 
-const ROMA_AUTHZ_CAPSULE_PREFIX = 'ckac.v1';
 const ROMA_AUTHZ_CAPSULE_MAX_SKEW_SEC = 60;
+const RS256_ALG = 'RSASSA-PKCS1-v1_5';
 
 export type RomaAccountAuthzCapsulePayload = {
   v: 1;
@@ -19,8 +19,6 @@ export type RomaAccountAuthzCapsulePayload = {
   accountName: string;
   accountSlug: string;
   accountWebsiteUrl: string | null;
-  accountL10nLocales?: unknown;
-  accountL10nPolicy?: unknown;
   entitlements?: PolicyEntitlementsSnapshot | null;
   profile: PolicyProfile;
   role: MemberRole;
@@ -30,6 +28,15 @@ export type RomaAccountAuthzCapsulePayload = {
 };
 
 type SignableRomaAccountAuthzCapsulePayload = Omit<RomaAccountAuthzCapsulePayload, 'v' | 'typ' | 'iss' | 'aud'>;
+type RomaAccountAuthzCapsuleHeader = {
+  alg: 'RS256';
+  typ: 'JWT';
+  kid: string;
+};
+export type RomaAccountAuthzCapsuleSigningContext = {
+  kid: string;
+  privateKey: CryptoKey;
+};
 
 function toBase64Url(bytes: Uint8Array): string {
   let binary = '';
@@ -52,6 +59,19 @@ function fromBase64Url(value: string): Uint8Array | null {
   }
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  if (
+    bytes.buffer instanceof ArrayBuffer &&
+    bytes.byteOffset === 0 &&
+    bytes.byteLength === bytes.buffer.byteLength
+  ) {
+    return bytes.buffer;
+  }
+  const cloned = new Uint8Array(bytes.byteLength);
+  cloned.set(bytes);
+  return cloned.buffer;
+}
+
 function encodeJsonToBase64Url(value: object): string {
   const encoded = new TextEncoder().encode(JSON.stringify(value));
   return toBase64Url(encoded);
@@ -66,22 +86,6 @@ function decodeJsonFromBase64Url<T>(value: string): T | null {
   } catch {
     return null;
   }
-}
-
-async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return toBase64Url(new Uint8Array(sig));
-}
-
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let mismatch = 0;
-  for (let i = 0; i < a.length; i += 1) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return mismatch === 0;
 }
 
 function normalizeMemberRole(value: unknown): MemberRole | null {
@@ -107,10 +111,6 @@ function normalizePolicyProfile(value: unknown): PolicyProfile | null {
     default:
       return null;
   }
-}
-
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 export function readRomaAuthzCapsuleHeader(req: Request): string | null {
@@ -139,8 +139,6 @@ function normalizeAccountPayload(
   const accountName = typeof record.accountName === 'string' ? record.accountName.trim() : '';
   const accountSlug = typeof record.accountSlug === 'string' ? record.accountSlug.trim() : '';
   const accountWebsiteUrlRaw = typeof record.accountWebsiteUrl === 'string' ? record.accountWebsiteUrl.trim() : '';
-  const accountL10nLocales = record.accountL10nLocales;
-  const accountL10nPolicy = record.accountL10nPolicy;
   let entitlements: PolicyEntitlementsSnapshot | null | undefined;
   try {
     entitlements =
@@ -177,8 +175,6 @@ function normalizeAccountPayload(
     accountName,
     accountSlug,
     accountWebsiteUrl: accountWebsiteUrlRaw || null,
-    accountL10nLocales,
-    accountL10nPolicy,
     ...(typeof entitlements === 'undefined' ? {} : { entitlements }),
     profile,
     role,
@@ -189,12 +185,12 @@ function normalizeAccountPayload(
 }
 
 export async function mintRomaAccountAuthzCapsule(
-  secret: string,
+  signing: RomaAccountAuthzCapsuleSigningContext,
   input: SignableRomaAccountAuthzCapsulePayload,
 ): Promise<{ token: string; payload: RomaAccountAuthzCapsulePayload }> {
-  const normalizedSecret = String(secret || '').trim();
-  if (!normalizedSecret) {
-    throw new Error('[ck-policy] Missing roma authz capsule secret');
+  const kid = String(signing.kid || '').trim();
+  if (!kid || !(signing.privateKey instanceof CryptoKey)) {
+    throw new Error('[ck-policy] Missing roma authz capsule signing context');
   }
 
   const payload: RomaAccountAuthzCapsulePayload = {
@@ -205,42 +201,71 @@ export async function mintRomaAccountAuthzCapsule(
     aud: 'roma',
   };
 
+  const header: RomaAccountAuthzCapsuleHeader = {
+    alg: 'RS256',
+    typ: 'JWT',
+    kid,
+  };
+  const headerBase64 = encodeJsonToBase64Url(header);
   const payloadBase64 = encodeJsonToBase64Url(payload);
-  const signature = await hmacSha256Base64Url(normalizedSecret, payloadBase64);
+  const message = `${headerBase64}.${payloadBase64}`;
+  const signature = await crypto.subtle.sign(RS256_ALG, signing.privateKey, new TextEncoder().encode(message));
   return {
-    token: `${ROMA_AUTHZ_CAPSULE_PREFIX}.${payloadBase64}.${signature}`,
+    token: `${message}.${toBase64Url(new Uint8Array(signature))}`,
     payload,
   };
 }
 
 export async function verifyRomaAccountAuthzCapsule(
-  secret: string,
-  token: string,
+  args: {
+    token: string;
+    resolveVerifyKey: (kid: string) => Promise<CryptoKey | null>;
+  },
 ): Promise<{ ok: true; payload: RomaAccountAuthzCapsulePayload } | { ok: false; reason: string }> {
-  const normalizedSecret = String(secret || '').trim();
-  if (!normalizedSecret) {
-    return { ok: false, reason: 'secret_missing' };
-  }
-
-  const normalized = String(token || '').trim();
-  const prefix = `${ROMA_AUTHZ_CAPSULE_PREFIX}.`;
-  if (!normalized.startsWith(prefix)) {
+  const normalized = String(args.token || '').trim();
+  if (!normalized) {
     return { ok: false, reason: 'format_invalid' };
   }
 
-  const remainder = normalized.slice(prefix.length);
-  const dotIndex = remainder.lastIndexOf('.');
-  if (dotIndex <= 0 || dotIndex >= remainder.length - 1) {
+  const parts = normalized.split('.');
+  if (parts.length !== 3) {
     return { ok: false, reason: 'format_invalid' };
   }
-  const payloadBase64 = remainder.slice(0, dotIndex);
-  const signature = remainder.slice(dotIndex + 1);
-  if (!payloadBase64 || !signature) {
+  const [headerBase64, payloadBase64, signatureBase64] = parts;
+  if (!headerBase64 || !payloadBase64 || !signatureBase64) {
     return { ok: false, reason: 'format_invalid' };
   }
 
-  const expected = await hmacSha256Base64Url(normalizedSecret, payloadBase64);
-  if (!timingSafeEqual(signature, expected)) {
+  const header = decodeJsonFromBase64Url<RomaAccountAuthzCapsuleHeader | Record<string, unknown>>(headerBase64);
+  const kid = header && typeof header === 'object' ? (typeof header.kid === 'string' ? header.kid.trim() : '') : '';
+  const alg = header && typeof header === 'object' ? header.alg : null;
+  const typ = header && typeof header === 'object' ? header.typ : null;
+  if (!kid || alg !== 'RS256' || typ !== 'JWT') {
+    return { ok: false, reason: 'header_invalid' };
+  }
+
+  let verifyKey: CryptoKey | null = null;
+  try {
+    verifyKey = await args.resolveVerifyKey(kid);
+  } catch {
+    return { ok: false, reason: 'verify_key_unavailable' };
+  }
+  if (!verifyKey) {
+    return { ok: false, reason: 'unknown_kid' };
+  }
+
+  const signature = fromBase64Url(signatureBase64);
+  if (!signature) {
+    return { ok: false, reason: 'format_invalid' };
+  }
+
+  const verified = await crypto.subtle.verify(
+    RS256_ALG,
+    verifyKey,
+    toArrayBuffer(signature),
+    new TextEncoder().encode(`${headerBase64}.${payloadBase64}`),
+  );
+  if (!verified) {
     return { ok: false, reason: 'signature_invalid' };
   }
 

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { resolvePersonLabel } from '../lib/person-profile';
-import { resolveAccountPolicyFromRomaAuthz, resolveDefaultRomaContext, useRomaMe } from './use-roma-me';
+import { resolveAccountPolicyFromRomaAuthz, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 type TeamMemberProfile = {
   userId: string;
@@ -81,7 +81,7 @@ function formatCountryValue(value: string | null | undefined): string {
 export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   const me = useRomaMe();
   const router = useRouter();
-  const context = useMemo(() => resolveDefaultRomaContext(me.data), [me.data]);
+  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const policy = useMemo(
     () => (context.accountId ? resolveAccountPolicyFromRomaAuthz(me.data, context.accountId) : null),
     [context.accountId, me.data],
@@ -156,6 +156,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       }
       setMember(parsed);
       setRoleDraft(parsed.member.role);
+      await me.reload();
     } catch (nextError) {
       const reason = nextError instanceof Error ? nextError.message : String(nextError);
       setMutationError(resolveTeamMemberErrorCopy(reason, 'Saving the membership failed. Please try again.'));
@@ -176,6 +177,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       if (!response.ok) {
         throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
       }
+      await me.reload();
       router.push('/team');
       router.refresh();
     } catch (nextError) {

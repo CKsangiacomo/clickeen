@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authorizeRequestAccountRoleFromCapsule } from '../../../../lib/account-authz-capsule';
 import { resolveSessionBearer, type SessionCookieSpec, applySessionCookies } from '../../../../lib/auth/session';
 import { resolveTokyoBaseUrl } from '../../../../lib/env/tokyo';
+import { buildTokyoProductHeaders } from '../../../../lib/tokyo-product-auth';
 
 export const runtime = 'edge';
 
@@ -114,10 +115,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const headers = new Headers();
-  headers.set('authorization', `Bearer ${session.accessToken}`);
-  headers.set('x-account-id', accountId);
-  headers.set('x-ck-authz-capsule', authz.token);
+  const headers = buildTokyoProductHeaders({
+    accountId,
+    accountCapsule: authz.token,
+  });
 
   const publicId = (request.headers.get('x-public-id') || '').trim();
   if (publicId) {

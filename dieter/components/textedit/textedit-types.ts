@@ -1,12 +1,14 @@
-const enum Command {
-  Bold = 'bold',
-  Italic = 'italic',
-  Underline = 'underline',
-  Strike = 'strike',
-  Link = 'link',
-  ClearFormat = 'clear-format',
-  ClearLinks = 'clear-links',
-}
+const Command = {
+  Bold: 'bold',
+  Italic: 'italic',
+  Underline: 'underline',
+  Strike: 'strike',
+  Link: 'link',
+  ClearFormat: 'clear-format',
+  ClearLinks: 'clear-links',
+} as const;
+
+type Command = (typeof Command)[keyof typeof Command];
 
 type LinkValidity = 'empty' | 'valid' | 'invalid';
 
