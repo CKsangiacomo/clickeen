@@ -4,9 +4,9 @@ set -euo pipefail
 # Canonical local startup script.
 # Keeps local bring-up boring:
 # - load env
-# - start services
-# - health checks
-# - source-profile local platform-state seed + verification
+# - start the DevStudio operating lane
+# - seed required local platform state
+# - health checks + verification
 
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT_DIR"
@@ -18,18 +18,14 @@ mkdir -p "$WRANGLER_PERSIST_DIR"
 LOCK_DIR="$ROOT_DIR/.dev-up.lock"
 
 TOKYO_WORKER_INSPECTOR_PORT=9231
-PARIS_INSPECTOR_PORT=9232
-SANFRANCISCO_INSPECTOR_PORT=9233
 BERLIN_INSPECTOR_PORT=9234
 
 DEV_UP_HEALTH_ATTEMPTS="${DEV_UP_HEALTH_ATTEMPTS:-60}"
 DEV_UP_HEALTH_INTERVAL="${DEV_UP_HEALTH_INTERVAL:-1}"
 DEV_UP_FULL_REBUILD=0
 DEV_UP_RESET=0
-NEEDS_PRAGUE_L10N_TRANSLATE=0
 STARTED_PID=""
-DEV_PROFILE="${CK_DEV_PROFILE:-product}"
-STACK_PORTS=(3000 3001 3002 3003 3005 4000 4321 5173 8790 8791)
+STACK_PORTS=(3000 3005 4000 5173 8791)
 
 ensure_lock() {
   if [ -d "$LOCK_DIR" ]; then
@@ -129,7 +125,7 @@ list_repo_wrangler_pids() {
     case "$cmd" in
       *"$ROOT_DIR"*wrangler*' dev --local '*)
         case "$cmd" in
-          *'--port 3001'*|*'--port 3002'*|*'--port 3005'*|*'--port 8790'*|*'--port 8791'*)
+          *'--port 3001'*|*'--port 3005'*|*'--port 8791'*)
             echo "$pid"
             ;;
         esac
@@ -167,7 +163,7 @@ preflight_existing_stack() {
   fi
 
   if [ "$listeners" -ge 4 ]; then
-    echo "[dev-up] Existing local stack detected ($listeners listening ports)."
+    echo "[dev-up] Existing local DevStudio lane detected ($listeners listening ports)."
     echo "[dev-up] Re-run with --reset to force a clean restart."
     print_stack_port_status
     exit 0
@@ -184,11 +180,7 @@ preflight_existing_stack() {
 ensure_stack_ports_healthy() {
   local attempts="${1:-8}"
   local interval_seconds="${2:-1}"
-  local include_sf="${3:-0}"
-  local ports=(3000 3003 3005 4000 4321 5173 8790 8791)
-  if [ "$include_sf" = "1" ]; then
-    ports+=(3002)
-  fi
+  local ports=(3000 3005 4000 5173 8791)
 
   local attempt port
   local failed_ports=()
@@ -207,22 +199,15 @@ ensure_stack_ports_healthy() {
     fi
   done
 
-  echo "[dev-up] ERROR: local stack failed readiness checks."
+  echo "[dev-up] ERROR: local DevStudio lane failed readiness checks."
   for port in "${failed_ports[@]}"; do
     echo "[dev-up]   failed health check on port $port"
   done
   tail_log "$LOG_DIR/tokyo.dev.log"
   tail_log "$LOG_DIR/tokyo-worker.dev.log"
   tail_log "$LOG_DIR/berlin.dev.log"
-  tail_log "$LOG_DIR/paris.dev.log"
-  tail_log "$LOG_DIR/venice.dev.log"
   tail_log "$LOG_DIR/bob.dev.log"
   tail_log "$LOG_DIR/devstudio.dev.log"
-  tail_log "$LOG_DIR/pitch.dev.log"
-  tail_log "$LOG_DIR/prague.dev.log"
-  if [ "$include_sf" = "1" ]; then
-    tail_log "$LOG_DIR/sanfrancisco.dev.log"
-  fi
   return 1
 }
 
@@ -232,13 +217,9 @@ is_stack_service_healthy() {
   case "$port" in
     3000) url="http://localhost:3000" ;;
     3001) url="http://localhost:3001/api/healthz" ;;
-    3002) url="http://localhost:3002/healthz" ;;
-    3003) url="http://localhost:3003/dieter/tokens/tokens.css" ;;
     3005) url="http://localhost:3005/internal/healthz" ;;
     4000) url="http://localhost:4000/healthz" ;;
-    4321) url="http://localhost:4321" ;;
     5173) url="http://localhost:5173" ;;
-    8790) url="http://localhost:8790/healthz" ;;
     8791) url="http://localhost:8791/healthz" ;;
   esac
 
@@ -347,53 +328,20 @@ stop_port() {
   fi
 }
 
-warn_dirty_widget_copy() {
-  if ! command -v git >/dev/null 2>&1; then
-    return 0
-  fi
-
-  local dirty
-  dirty=$(git status --porcelain --untracked-files=all -- tokyo/widgets/*/pages/*.json 2>/dev/null || true)
-  if [ -z "$dirty" ]; then
-    return 0
-  fi
-
-  echo "[dev-up] WARNING: Uncommitted widget page copy changes detected."
-  echo "[dev-up] WARNING: Local Prague may differ from committed/deployed previews."
-  while IFS= read -r line; do
-    [ -z "$line" ] && continue
-    echo "[dev-up]   $line"
-  done <<<"$dirty"
-}
-
 for arg in "$@"; do
   case "$arg" in
     --full|--rebuild-all)
       DEV_UP_FULL_REBUILD=1
       ;;
-    --prague-l10n|--l10n)
-      echo "[dev-up] --prague-l10n is now automatic; keeping startup behavior unchanged."
-      ;;
     --reset)
       DEV_UP_RESET=1
       ;;
-    --source)
-      DEV_PROFILE="source"
-      ;;
-    --product)
-      DEV_PROFILE="product"
-      ;;
     --help|-h)
-      echo "Usage: bash scripts/dev-up.sh [--full] [--reset] [--product|--source]"
+      echo "Usage: bash scripts/dev-up.sh [--full] [--reset]"
       echo ""
       echo "Options:"
       echo "  --full        Runs workspace build before starting services."
-      echo "  --reset       Force a clean restart of the local stack managed by dev-up."
-      echo "  --product     Product profile (default): local DevStudio shell + cloud data plane."
-      echo "  --source      Source profile: full local stack for low-level service development."
-      echo ""
-      echo "Env:"
-      echo "  CK_DEV_PROFILE=product|source   Profile selector (default: product)"
+      echo "  --reset       Force a clean restart of the local DevStudio lane managed by dev-up."
       exit 0
       ;;
     *)
@@ -403,21 +351,8 @@ for arg in "$@"; do
   esac
 done
 
-DEV_PROFILE="$(printf '%s' "$DEV_PROFILE" | tr '[:upper:]' '[:lower:]')"
-if [ "$DEV_PROFILE" != "product" ] && [ "$DEV_PROFILE" != "source" ]; then
-  echo "[dev-up] Invalid profile: $DEV_PROFILE (expected product|source)"
-  exit 1
-fi
-
-if [ "$DEV_PROFILE" = "product" ]; then
-  STACK_PORTS=(3000 5173)
-else
-  STACK_PORTS=(3000 3002 3003 3005 4000 4321 5173 8790 8791)
-fi
-
 ensure_lock
 trap cleanup_lock EXIT
-warn_dirty_widget_copy
 preflight_existing_stack
 
 if [ -f "$ROOT_DIR/.env.local" ]; then
@@ -442,58 +377,6 @@ if [ -z "${TOKYO_DEV_JWT:-}" ]; then
   TOKYO_DEV_JWT="$CK_INTERNAL_SERVICE_JWT"
 fi
 
-if [ "$DEV_PROFILE" = "product" ]; then
-  TOKYO_URL=${TOKYO_URL:-https://tokyo.dev.clickeen.com}
-  BERLIN_URL=${BERLIN_URL:-https://berlin-dev.clickeen.workers.dev}
-  SF_BASE_URL=${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}
-  PRODUCT_BERLIN_ISSUER=${BERLIN_ISSUER:-$BERLIN_URL}
-  PRODUCT_BERLIN_AUDIENCE=${BERLIN_AUDIENCE:-clickeen.product}
-  PRODUCT_TOKYO_DEV_JWT=${TOKYO_DEV_JWT:-$CK_INTERNAL_SERVICE_JWT}
-
-  echo "[dev-up] Profile: product (default)"
-  echo "[dev-up] Data plane: cloud-dev (Tokyo/Berlin)"
-  echo "[dev-up] Tokyo URL: $TOKYO_URL"
-  echo "[dev-up] Bob URL (default in DevStudio): http://localhost:3000"
-  echo "[dev-up] SanFrancisco URL: $SF_BASE_URL"
-
-  echo "[dev-up] Product profile uses cloud-dev Tokyo saved snapshots as-is"
-  echo "[dev-up] Skipping local repair of remote saved snapshots before boot"
-
-  stop_port "5173"
-  stop_port "3000"
-  echo "[dev-up] Starting local Bob (product profile)"
-  (
-    cd "$ROOT_DIR/bob"
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=product BERLIN_BASE_URL="$BERLIN_URL" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" SANFRANCISCO_BASE_URL="${SANFRANCISCO_BASE_URL:-https://sanfrancisco.dev.clickeen.com}" pnpm dev
-    BOB_PID="$STARTED_PID"
-    echo "[dev-up] Bob PID: $BOB_PID"
-    register_pid "bob" "$BOB_PID" "3000" "$LOG_DIR/bob.dev.log"
-  )
-  wait_for_url "http://localhost:3000" "Bob" "$LOG_DIR/bob.dev.log"
-  prewarm_bob_routes
-
-  echo "[dev-up] Starting DevStudio (5173)"
-  (
-    cd "$ROOT_DIR/admin"
-    start_detached "$LOG_DIR/devstudio.dev.log" env CI=1 PORT=5173 CK_DEV_PROFILE=product CK_INTERNAL_SERVICE_JWT="$CK_INTERNAL_SERVICE_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$PRODUCT_TOKYO_DEV_JWT" pnpm dev
-    DEVSTUDIO_PID="$STARTED_PID"
-    echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
-    register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"
-  )
-  wait_for_url "http://localhost:5173" "DevStudio" "$LOG_DIR/devstudio.dev.log"
-
-  echo "[dev-up] URLs:"
-  echo "  Bob local:  http://localhost:3000"
-  echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?profile=product&bob=http://localhost:3000"
-  echo "  Tokyo URL:  $TOKYO_URL"
-  echo "  Berlin URL: $BERLIN_URL"
-  echo "  DevStudio:  http://localhost:5173"
-  echo "[dev-up] Run 'pnpm dev:verify:platform' for an explicit DevStudio/Bob platform-lane check."
-  echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
-  print_stack_port_status
-  exit 0
-fi
-
 echo "[dev-up] Ensuring Supabase local DB is running"
 if ! supabase status >/dev/null 2>&1; then
   supabase start
@@ -503,14 +386,6 @@ echo "[dev-up] Applying pending Supabase migrations (non-destructive)"
 supabase migration up
 
 echo "[dev-up] Loading local Supabase connection values"
-ORIG_SUPABASE_URL="${SUPABASE_URL:-}"
-ORIG_SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"
-ORIG_SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:-${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}}"
-DEV_UP_USE_REMOTE_SUPABASE="${DEV_UP_USE_REMOTE_SUPABASE:-}"
-REMOTE_SUPABASE_MODE=0
-if [ "$DEV_UP_USE_REMOTE_SUPABASE" = "1" ] || [ "$DEV_UP_USE_REMOTE_SUPABASE" = "true" ]; then
-  REMOTE_SUPABASE_MODE=1
-fi
 # shellcheck disable=SC2046
 eval "$(supabase status --output env | grep -E '^[A-Z_]+=' || true)"
 SUPABASE_URL=${API_URL:-${SUPABASE_URL:-}}
@@ -520,29 +395,14 @@ SUPABASE_ANON_KEY_VALUE="${ANON_KEY:-${SUPABASE_ANON_KEY:-${NEXT_PUBLIC_SUPABASE
 # Older/newer Supabase CLI builds may emit an https API_URL for the local stack
 # even when Kong is listening in plain http on loopback. Normalize that here so
 # local helper scripts do not fail TLS handshakes against the local gateway.
-if [ "${REMOTE_SUPABASE_MODE:-0}" != "1" ] && [ -n "${SUPABASE_URL:-}" ]; then
+if [ -n "${SUPABASE_URL:-}" ]; then
   case "$SUPABASE_URL" in
     https://127.0.0.1:*|https://localhost:*)
       SUPABASE_URL="http://${SUPABASE_URL#https://}"
       ;;
   esac
 fi
-
-if [ -n "$ORIG_SUPABASE_URL" ] || [ -n "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ]; then
-  if [ "$REMOTE_SUPABASE_MODE" = "1" ]; then
-    if [ -z "$ORIG_SUPABASE_URL" ] || [ -z "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ] || [ -z "$ORIG_SUPABASE_ANON_KEY" ]; then
-      echo "[dev-up] DEV_UP_USE_REMOTE_SUPABASE=1 requires SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and SUPABASE_ANON_KEY in $ROOT_DIR/.env.local"
-      exit 1
-    fi
-    SUPABASE_URL="$ORIG_SUPABASE_URL"
-    SUPABASE_SERVICE_ROLE_KEY="$ORIG_SUPABASE_SERVICE_ROLE_KEY"
-    SUPABASE_ANON_KEY_VALUE="$ORIG_SUPABASE_ANON_KEY"
-    echo "[dev-up] Using Supabase values from $ROOT_DIR/.env.local (remote mode)"
-  else
-    echo "[dev-up] Using local Supabase (ignoring SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY from $ROOT_DIR/.env.local)"
-    echo "[dev-up] To use remote Supabase in local dev, set DEV_UP_USE_REMOTE_SUPABASE=1"
-  fi
-fi
+echo "[dev-up] Using local Supabase"
 
 if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
   echo "[dev-up] Failed to resolve SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY from Supabase status"
@@ -554,42 +414,13 @@ if [ -z "${SUPABASE_ANON_KEY_VALUE:-}" ]; then
   exit 1
 fi
 
-SUPABASE_TARGET_LABEL="local"
-if [ "$REMOTE_SUPABASE_MODE" = "1" ]; then
-  SUPABASE_TARGET_LABEL="remote"
-fi
-echo "[dev-up] Runtime data target: $SUPABASE_TARGET_LABEL Supabase"
-
-if [ "$REMOTE_SUPABASE_MODE" = "1" ]; then
-  echo "[dev-up] Skipping local persona seed (remote Supabase mode)"
-else
-  echo "[dev-up] Skipping local persona seed (local auth bootstrap is deprecated; DevStudio/Bob are tool-trusted)"
-fi
-
-AI_GRANT_HMAC_SECRET_FILE="$ROOT_DIR/Execution_Pipeline_Docs/ai.grant.hmac.secret"
-if [ -z "${AI_GRANT_HMAC_SECRET:-}" ] && [ -f "$AI_GRANT_HMAC_SECRET_FILE" ]; then
-  AI_GRANT_HMAC_SECRET="$(cat "$AI_GRANT_HMAC_SECRET_FILE")"
-fi
-if [ -z "${AI_GRANT_HMAC_SECRET:-}" ]; then
-  echo "[dev-up] AI_GRANT_HMAC_SECRET not set; SanFrancisco copilot services will stay disabled."
-fi
-
-USAGE_EVENT_HMAC_SECRET_FILE="$ROOT_DIR/Execution_Pipeline_Docs/usage.event.hmac.secret"
-if [ -z "${USAGE_EVENT_HMAC_SECRET:-}" ] && [ -f "$USAGE_EVENT_HMAC_SECRET_FILE" ]; then
-  USAGE_EVENT_HMAC_SECRET="$(cat "$USAGE_EVENT_HMAC_SECRET_FILE")"
-fi
-if [ -z "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
-  echo "[dev-up] USAGE_EVENT_HMAC_SECRET not set; view metering will be disabled in local dev."
-fi
+echo "[dev-up] Runtime data target: local Supabase"
+echo "[dev-up] Skipping local persona seed (local auth bootstrap is deprecated; DevStudio/Bob are tool-trusted)"
 
 TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
 BERLIN_URL=${BERLIN_URL:-http://localhost:3005}
 BERLIN_ISSUER=${BERLIN_ISSUER:-$BERLIN_URL}
 BERLIN_AUDIENCE=${BERLIN_AUDIENCE:-clickeen.product}
-SF_BASE_URL=""
-if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
-  SF_BASE_URL="http://localhost:3002"
-fi
 
 if [ "$DEV_UP_FULL_REBUILD" = "1" ]; then
   echo "[dev-up] Full rebuild requested (--full): running workspace build"
@@ -601,15 +432,6 @@ else
   echo "[dev-up] Building i18n bundles"
   node "$ROOT_DIR/scripts/i18n/build.mjs"
   node "$ROOT_DIR/scripts/i18n/validate.mjs"
-
-  echo "[dev-up] Verifying Prague l10n overlays (non-blocking)"
-  PRAGUE_L10N_VERIFY_LOG="$LOG_DIR/prague-l10n.verify.log"
-  if node "$ROOT_DIR/scripts/prague-l10n/verify.mjs" >"$PRAGUE_L10N_VERIFY_LOG" 2>&1; then
-    echo "[dev-up] Prague l10n overlays OK"
-  else
-    echo "[dev-up] Prague l10n overlays are out of date. See $PRAGUE_L10N_VERIFY_LOG"
-    NEEDS_PRAGUE_L10N_TRANSLATE=1
-  fi
 fi
 
 echo "[dev-up] Stopping stale listeners"
@@ -632,7 +454,6 @@ echo "[dev-up] Starting Tokyo Worker (8791)"
   cd "$ROOT_DIR/tokyo-worker"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY")
   VARS+=(--var "TOKYO_L10N_HTTP_BASE:$TOKYO_URL")
-  VARS+=(--var "VENICE_BASE_URL:http://localhost:3003")
   VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
   VARS+=(--var "CK_INTERNAL_SERVICE_JWT:$CK_INTERNAL_SERVICE_JWT")
   VARS+=(--var "BERLIN_BASE_URL:$BERLIN_URL")
@@ -669,73 +490,10 @@ if ! node "$ROOT_DIR/scripts/tokyo-fonts-sync.mjs" --local --persist-to "$WRANGL
   echo "[dev-up] WARNING: Tokyo font sync failed; special fonts may not load until sync succeeds."
 fi
 
-echo "[dev-up] Starting Venice embed runtime (3003)"
-(
-  cd "$ROOT_DIR/venice"
-  start_detached "$LOG_DIR/venice.dev.log" env PORT=3003 TOKYO_URL="$TOKYO_URL" USAGE_EVENT_HMAC_SECRET="${USAGE_EVENT_HMAC_SECRET:-}" pnpm dev
-  VENICE_PID="$STARTED_PID"
-  echo "[dev-up] Venice PID: $VENICE_PID"
-  register_pid "venice" "$VENICE_PID" "3003" "$LOG_DIR/venice.dev.log"
-)
-wait_for_url "http://localhost:3003/dieter/tokens/tokens.css" "Venice" "$LOG_DIR/venice.dev.log"
-
-if [ -n "$SF_BASE_URL" ]; then
-  echo "[dev-up] Starting SanFrancisco Worker (3002)"
-  (
-    cd "$ROOT_DIR/sanfrancisco"
-    VARS=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
-    if [ -n "${DEEPSEEK_API_KEY:-}" ]; then
-      VARS+=(--var "DEEPSEEK_API_KEY:$DEEPSEEK_API_KEY")
-    fi
-    if [ -n "${OPENAI_API_KEY:-}" ]; then
-      VARS+=(--var "OPENAI_API_KEY:$OPENAI_API_KEY")
-    fi
-    if [ -n "${OPENAI_MODEL:-}" ]; then
-      VARS+=(--var "OPENAI_MODEL:$OPENAI_MODEL")
-    fi
-    if [ -n "${NOVA_API_KEY:-}" ]; then
-      VARS+=(--var "NOVA_API_KEY:$NOVA_API_KEY")
-    fi
-    if [ -n "${NOVA_MODEL:-}" ]; then
-      VARS+=(--var "NOVA_MODEL:$NOVA_MODEL")
-    fi
-    if [ -n "${NOVA_BASE_URL:-}" ]; then
-      VARS+=(--var "NOVA_BASE_URL:$NOVA_BASE_URL")
-    fi
-    VARS+=(--var "CK_INTERNAL_SERVICE_JWT:$CK_INTERNAL_SERVICE_JWT")
-    VARS+=(--var "TOKYO_BASE_URL:$TOKYO_URL")
-    VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
-    start_detached "$LOG_DIR/sanfrancisco.dev.log" pnpm exec wrangler dev --local --env local --port 3002 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$SANFRANCISCO_INSPECTOR_PORT" \
-      "${VARS[@]}"
-    SF_PID="$STARTED_PID"
-    echo "[dev-up] SanFrancisco PID: $SF_PID"
-    register_pid "sanfrancisco" "$SF_PID" "3002" "$LOG_DIR/sanfrancisco.dev.log"
-  )
-  wait_for_url "http://localhost:3002/healthz" "SanFrancisco" "$LOG_DIR/sanfrancisco.dev.log"
-fi
-
-if [ "$NEEDS_PRAGUE_L10N_TRANSLATE" = "1" ]; then
-  if [ -z "${OPENAI_API_KEY:-}" ]; then
-    echo "[dev-up] Prague l10n overlays are stale, but OPENAI_API_KEY is missing. Skipping translation."
-  elif ! wait_for_url "http://localhost:3002/healthz" "SanFrancisco (for Prague l10n)" "$LOG_DIR/sanfrancisco.dev.log"; then
-    echo "[dev-up] Prague l10n overlays are stale, but SanFrancisco is not reachable. Skipping translation."
-  else
-    echo "[dev-up] Starting Prague l10n translate in background"
-    PRAGUE_L10N_TRANSLATE_LOG="$LOG_DIR/prague-l10n.translate.log"
-    nohup bash -lc "SANFRANCISCO_BASE_URL='http://localhost:3002' node '$ROOT_DIR/scripts/prague-l10n/translate.mjs' > '$PRAGUE_L10N_TRANSLATE_LOG' 2>&1 && node '$ROOT_DIR/scripts/prague-l10n/verify.mjs' > '$LOG_DIR/prague-l10n.verify.log' 2>&1" >/dev/null 2>&1 &
-    echo "[dev-up] Prague l10n translate PID: $!"
-    echo "[dev-up] Tail logs: tail -f $PRAGUE_L10N_TRANSLATE_LOG"
-  fi
-fi
-
 echo "[dev-up] Starting Bob (3000)"
 (
   cd "$ROOT_DIR/bob"
-  if [ -n "$SF_BASE_URL" ]; then
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=source BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
-  else
-    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local CK_DEV_PROFILE=source BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="$SUPABASE_TARGET_LABEL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
-  fi
+  start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="local" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   BOB_PID="$STARTED_PID"
   echo "[dev-up] Bob PID: $BOB_PID"
   register_pid "bob" "$BOB_PID" "3000" "$LOG_DIR/bob.dev.log"
@@ -746,57 +504,25 @@ prewarm_bob_routes
 echo "[dev-up] Starting DevStudio (5173)"
 (
   cd "$ROOT_DIR/admin"
-  start_detached "$LOG_DIR/devstudio.dev.log" env CI=1 PORT=5173 CK_DEV_PROFILE=source CK_INTERNAL_SERVICE_JWT="$CK_INTERNAL_SERVICE_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" pnpm dev
+  start_detached "$LOG_DIR/devstudio.dev.log" env CI=1 PORT=5173 CK_INTERNAL_SERVICE_JWT="$CK_INTERNAL_SERVICE_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" pnpm dev
   DEVSTUDIO_PID="$STARTED_PID"
   echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
   register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"
 )
 wait_for_url "http://localhost:5173" "DevStudio" "$LOG_DIR/devstudio.dev.log"
 
-echo "[dev-up] Starting Pitch worker (8790)"
-(
-  cd "$ROOT_DIR/pitch"
-  start_detached "$LOG_DIR/pitch.dev.log" pnpm dev
-  PITCH_PID="$STARTED_PID"
-  echo "[dev-up] Pitch PID: $PITCH_PID"
-  register_pid "pitch" "$PITCH_PID" "8790" "$LOG_DIR/pitch.dev.log"
-)
-wait_for_url "http://localhost:8790/healthz" "Pitch" "$LOG_DIR/pitch.dev.log"
-
-echo "[dev-up] Starting Prague (4321)"
-(
-  cd "$ROOT_DIR/prague"
-  start_detached "$LOG_DIR/prague.dev.log" env PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" PUBLIC_BOB_URL="http://localhost:3000" PUBLIC_VENICE_URL="http://localhost:3003" PUBLIC_ROMA_URL="https://roma.dev.clickeen.com" pnpm dev
-  PRAGUE_PID="$STARTED_PID"
-  echo "[dev-up] Prague PID: $PRAGUE_PID"
-  register_pid "prague" "$PRAGUE_PID" "4321" "$LOG_DIR/prague.dev.log"
-)
-wait_for_url "http://localhost:4321" "Prague" "$LOG_DIR/prague.dev.log"
-
 echo "[dev-up] URLs:"
 echo "  Tokyo URL: $TOKYO_URL"
 echo "  Tokyo local stub: http://localhost:4000/healthz"
 echo "  Berlin:    http://localhost:3005/internal/healthz"
-if [ -n "$SF_BASE_URL" ]; then
-  echo "  SF:        http://localhost:3002/healthz"
-fi
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
-echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000 ($SUPABASE_TARGET_LABEL Supabase)"
-echo "  Pitch:     http://localhost:8790/healthz"
-echo "  Prague:    http://localhost:4321/us/en/widgets/faq"
-if [ "$DEV_PROFILE" = "source" ]; then
-  echo "[dev-up] Source profile will seed + verify local platform state before completion."
-fi
+echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?bob=http://localhost:3000&tokyo=http://localhost:4000 (local Supabase)"
+echo "[dev-up] Local boot will seed + verify local platform state before completion."
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
 print_stack_port_status
 
-HEALTH_WITH_SF=0
-if [ -n "$SF_BASE_URL" ]; then
-  HEALTH_WITH_SF=1
-fi
-
-if ! ensure_stack_ports_healthy "$DEV_UP_HEALTH_ATTEMPTS" "$DEV_UP_HEALTH_INTERVAL" "$HEALTH_WITH_SF"; then
+if ! ensure_stack_ports_healthy "$DEV_UP_HEALTH_ATTEMPTS" "$DEV_UP_HEALTH_INTERVAL"; then
   echo "[dev-up] Startup failed health checks. Cleaning listeners."
   stop_repo_wrangler_processes
   for p in "${STACK_PORTS[@]}"; do
@@ -805,24 +531,22 @@ if ! ensure_stack_ports_healthy "$DEV_UP_HEALTH_ATTEMPTS" "$DEV_UP_HEALTH_INTERV
   exit 1
 fi
 
-if [ "$DEV_PROFILE" = "source" ]; then
-  echo "[dev-up] Seeding local platform state"
-  if ! node "$ROOT_DIR/scripts/dev/seed-local-platform-state.mjs" --persist-to "$WRANGLER_PERSIST_DIR"; then
-    echo "[dev-up] Source-profile platform seeding failed. Cleaning listeners."
-    stop_repo_wrangler_processes
-    for p in "${STACK_PORTS[@]}"; do
-      stop_port "$p"
-    done
-    exit 1
-  fi
+echo "[dev-up] Seeding local platform state"
+if ! node "$ROOT_DIR/scripts/dev/seed-local-platform-state.mjs" --persist-to "$WRANGLER_PERSIST_DIR"; then
+  echo "[dev-up] Local platform seeding failed. Cleaning listeners."
+  stop_repo_wrangler_processes
+  for p in "${STACK_PORTS[@]}"; do
+    stop_port "$p"
+  done
+  exit 1
+fi
 
-  echo "[dev-up] Verifying local platform state"
-  if ! node "$ROOT_DIR/scripts/dev/verify-local-platform-state.mjs"; then
-    echo "[dev-up] Source-profile platform verification failed. Cleaning listeners."
-    stop_repo_wrangler_processes
-    for p in "${STACK_PORTS[@]}"; do
-      stop_port "$p"
-    done
-    exit 1
-  fi
+echo "[dev-up] Verifying local platform state"
+if ! node "$ROOT_DIR/scripts/dev/verify-local-platform-state.mjs"; then
+  echo "[dev-up] Local platform verification failed. Cleaning listeners."
+  stop_repo_wrangler_processes
+  for p in "${STACK_PORTS[@]}"; do
+    stop_port "$p"
+  done
+  exit 1
 fi

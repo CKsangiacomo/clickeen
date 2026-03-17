@@ -86,13 +86,10 @@ export function listWidgetSlugs(widgetTypes, instances) {
   ).sort((a, b) => a.localeCompare(b));
 }
 
-export function getScopedInstances({ instances, selectedWidgetSlug, profile }) {
+export function getScopedInstances({ instances, selectedWidgetSlug }) {
   if (!selectedWidgetSlug) return instances;
   const scoped = instances.filter((inst) => inst.widgetSlug === selectedWidgetSlug);
   if (scoped.length) return scoped;
-  if (profile === 'source') {
-    const localDefault = buildLocalDefaultInstance(selectedWidgetSlug);
-    return localDefault ? [localDefault] : [];
-  }
-  return [];
+  const localDefault = buildLocalDefaultInstance(selectedWidgetSlug);
+  return localDefault ? [localDefault] : [];
 }

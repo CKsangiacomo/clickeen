@@ -24,13 +24,12 @@
 
 ## Canonical URLs (executed)
 
-- **Local (product profile)**: `https://tokyo.dev.clickeen.com` by default for Bob/DevStudio/Roma data parity.
-- **Local (source profile)**: `http://localhost:4000` (local Tokyo dev server + local Tokyo-worker path).
+- **Local**: `http://localhost:4000` (local Tokyo dev server + local Tokyo-worker path).
 - **Cloud-dev**: `https://tokyo.dev.clickeen.com` (Cloudflare dev)
 - **UAT / Limited GA / GA**: `https://tokyo.clickeen.com` (release stages share prod infra)
 
 Consumers should treat Tokyo as the **software plane**:
-- Widget definitions are fetched over HTTP using `NEXT_PUBLIC_TOKYO_URL` (cloud-dev Tokyo by default in local product flows)
+- Widget definitions are fetched over HTTP using `NEXT_PUBLIC_TOKYO_URL` (local Tokyo in canonical local development)
 - Dieter build artifacts are served from Tokyo (`tokyo/dieter/**`)
 - i18n bundles are served from Tokyo (`tokyo/i18n/**`)
 - Admin-owned authored i18n source catalogs live under `tokyo/admin-owned/i18n/**` and are built into `tokyo/i18n/**`
@@ -85,7 +84,7 @@ Local dev:
   - `GET /assets/integrity/:accountId` (account mirror integrity snapshot)
   - `GET /assets/integrity/:accountId/:assetId` (per-asset integrity snapshot)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
-- `scripts/dev-up.sh --source` starts the local Tokyo dev server + Tokyo-worker, builds Dieter + i18n, seeds required local platform state through the canonical seed scripts, and verifies the DevStudio/Bob localhost lane before completion.
+- `scripts/dev-up.sh` starts the local Tokyo dev server + Tokyo-worker as part of the local DevStudio operating lane, builds Dieter + i18n, seeds required local platform state through the canonical seed scripts, and verifies the DevStudio/Bob localhost lane before completion.
 - Explicit rerun commands:
   - `pnpm dev:seed:platform`
   - `pnpm dev:verify:platform`

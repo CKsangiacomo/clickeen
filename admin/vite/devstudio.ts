@@ -181,6 +181,16 @@ export function createDevstudioPlugins(options: DevstudioPluginOptions): Plugin[
     return raw;
   }
 
+  function resolveDevstudioTokyoWorkerBaseUrl(): string {
+    const raw = String(process.env.TOKYO_WORKER_BASE_URL || 'http://localhost:8791')
+      .trim()
+      .replace(/\/+$/, '');
+    if (!raw) {
+      throw new Error('Missing TOKYO_WORKER_BASE_URL for local DevStudio asset routes.');
+    }
+    return raw;
+  }
+
   function resolveDevstudioTokyoAccessToken(): string {
     const raw =
       resolveRootEnvValue('TOKYO_DEV_JWT') || resolveRootEnvValue('CK_INTERNAL_SERVICE_JWT');
@@ -804,8 +814,9 @@ export function createDevstudioPlugins(options: DevstudioPluginOptions): Plugin[
     method?: string;
     body?: Buffer;
     headers?: HeadersInit;
+    baseUrl?: string;
   }) {
-    const upstream = await fetch(`${resolveDevstudioTokyoBaseUrl()}${args.pathname}`, {
+    const upstream = await fetch(`${(args.baseUrl || resolveDevstudioTokyoBaseUrl()).replace(/\/+$/, '')}${args.pathname}`, {
       method: args.method || args.req.method || 'GET',
       headers: createDevstudioTokyoHeaders(args.headers),
       body: args.body,
@@ -1246,6 +1257,7 @@ export function createDevstudioPlugins(options: DevstudioPluginOptions): Plugin[
               return await proxyDevstudioTokyo({
                 req,
                 res,
+                baseUrl: resolveDevstudioTokyoWorkerBaseUrl(),
                 pathname: '/assets/upload',
                 method: 'POST',
                 body,
@@ -1259,6 +1271,7 @@ export function createDevstudioPlugins(options: DevstudioPluginOptions): Plugin[
               return await proxyDevstudioTokyo({
                 req,
                 res,
+                baseUrl: resolveDevstudioTokyoWorkerBaseUrl(),
                 pathname: `/assets/account/${encodeURIComponent(accountId)}${search ? `?${search}` : ''}`,
                 method: 'GET',
                 headers: { accept: 'application/json' },
@@ -1271,6 +1284,7 @@ export function createDevstudioPlugins(options: DevstudioPluginOptions): Plugin[
               return await proxyDevstudioTokyo({
                 req,
                 res,
+                baseUrl: resolveDevstudioTokyoWorkerBaseUrl(),
                 pathname: `/assets/account/${encodeURIComponent(accountId)}/resolve`,
                 method: 'POST',
                 body,
@@ -1281,10 +1295,12 @@ export function createDevstudioPlugins(options: DevstudioPluginOptions): Plugin[
             if (wantsDelete && deleteMatch) {
               const accountId = decodeURIComponent(deleteMatch[1] || '');
               const assetId = decodeURIComponent(deleteMatch[2] || '');
+              const search = requestUrl.searchParams.toString();
               return await proxyDevstudioTokyo({
                 req,
                 res,
-                pathname: `/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}`,
+                baseUrl: resolveDevstudioTokyoWorkerBaseUrl(),
+                pathname: `/assets/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}${search ? `?${search}` : ''}`,
                 method: 'DELETE',
                 headers: { accept: 'application/json' },
               });

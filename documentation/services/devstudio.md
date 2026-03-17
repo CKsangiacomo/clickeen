@@ -86,7 +86,7 @@ Implementation note:
 - the surviving DevStudio local-tool routes are explicit Vite middleware routes
 - current runtime does not ship a Paris-backed DevStudio proxy layer
 - DevStudio local must not rely on Roma bootstrap capsules or customer auth semantics
-- in source profile, DevStudio expects explicit local platform-state seeding when local Tokyo saved snapshots or account asset manifests/blobs are missing
+- DevStudio expects explicit local platform-state seeding when local Tokyo saved snapshots or account asset manifests/blobs are missing
 
 Current local implementation layout:
 - [dev-widget-workspace.html](/Users/piero_macpro/code/VS/clickeen/admin/src/html/tools/dev-widget-workspace.html) is now a thin shell for the tool page
@@ -142,8 +142,8 @@ The surviving local DevStudio tool routes use explicit internal-tool transport w
 These are valid only for explicit DevStudio local tool routes.
 They must not be treated as product identity or account membership on product/account paths.
 
-Source-profile lane note:
-- `bash scripts/dev-up.sh --source` starts the full local stack, seeds required DevStudio-visible platform state, and verifies the DevStudio/Bob localhost route lane before finishing
+Local lane note:
+- `bash scripts/dev-up.sh` starts the local DevStudio operating lane, seeds required DevStudio-visible platform state, and verifies the DevStudio/Bob localhost route lane before finishing
 - use `pnpm dev:seed:platform` and `pnpm dev:verify:platform` only when you want to rerun those steps explicitly
 - do not reintroduce cloud-derived or blob-only repair logic into boot
 
@@ -155,7 +155,7 @@ Check:
 - local `GET /api/devstudio/context`
 - local `CK_INTERNAL_SERVICE_JWT`
 - local `TOKYO_DEV_JWT`
-- the selected local runtime profile from `bash scripts/dev-up.sh`
+- the canonical local DevStudio lane from `bash scripts/dev-up.sh`
 
 ### Widget editing works in Roma but not in DevStudio local
 

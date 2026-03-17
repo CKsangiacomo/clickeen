@@ -92,17 +92,16 @@ This repo is operated by **1 human architect + multiple AI dev teams**. The syst
 
 - **Modular surfaces:** widgets in `tokyo/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `paris/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
 - **Explicit contracts:** `spec.json`, `agent.md`, `*.allowlist.json`, PRDs, and service docs define what is safe to change. If it is not in a contract, assume it is unsafe.
-- **Automation intent:** local changes are designed to propagate through the local stack automatically. Cloud-dev propagation is explicit (promote/deploy).
+- **Automation intent:** local changes are designed to propagate through the local DevStudio operating lane automatically. Cloud-dev propagation is explicit (promote/deploy).
 - **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.
 
 ---
 
 ## End-to-End Journey (widget folder → Roma/DevStudio/Bob/Prague)
 
-Runtime profiles:
+Local runtime:
 
-- `product` (default): local DevStudio shell + cloud-dev data plane.
-- `source`: full local stack for low-level service development.
+- `bash scripts/dev-up.sh` starts the canonical local DevStudio operating lane.
 - See `documentation/architecture/RuntimeProfiles.md`.
 
 ### A) Widget definition path (local)
@@ -115,50 +114,42 @@ Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
 2. **Bob runtime** reads widget definitions/assets from Tokyo:
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
 3. **Local DevStudio** opens Bob in message boot from the internal toolbench:
-   - `admin/src/html/tools/dev-widget-workspace.html` defaults to local Bob + cloud Tokyo in product profile.
-   - Source profile can explicitly target local Bob/Tokyo via `?profile=source&bob=http://localhost:3000&tokyo=http://localhost:4000`.
+   - `admin/src/html/tools/dev-widget-workspace.html` defaults to local Bob + local Tokyo.
+   - Explicit `?bob=` / `?tokyo=` overrides remain available only when you intentionally need them.
 4. **Cloud-dev Roma** is the supported product/account host surface:
    - `roma/app/api/bootstrap/route.ts` proxies to Berlin `GET /v1/session/bootstrap`
    - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
    - local code changes only appear there after deploy
-5. **Local Prague** loads widget marketing JSON from the repo:
-   - `prague/src/lib/markdown.ts` bundles `tokyo/widgets/**/pages/*.json`.
-   - `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com` is the default overlay/token base (override to local Tokyo only for explicit local-debug workflows).
+Result: the supported local path is one boring topology: local DevStudio + local Bob + local Tokyo + local Tokyo-worker + local Berlin. Roma remains the customer account shell; DevStudio remains the internal toolbench.
 
-Result: product profile keeps local DevStudio + Bob aligned with Roma on the same cloud Tokyo data plane by default, while preserving the surface split: Roma is the customer account shell, DevStudio is the internal toolbench. Local Tokyo is a source-profile path.
+### A.1) Local auth issuer alignment (critical)
 
-### A.1) Source-profile auth issuer alignment (critical)
-
-Source profile app servers use the Supabase target chosen by `bash scripts/dev-up.sh --source`:
+Local app servers use the Supabase target chosen by `bash scripts/dev-up.sh`:
 
 - Default: local Supabase (`http://127.0.0.1:54321`)
-- Optional override: remote Supabase (`DEV_UP_USE_REMOTE_SUPABASE=1` + `.env.local` `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_ANON_KEY`)
 
 Invariant:
 
-- The Supabase JWT used against local Paris/Bob/Roma must be issued by the **same** Supabase project Paris is configured to use.
-- If you use a token from a different Supabase project, Paris returns `403 coreui.errors.auth.forbidden` with `issuer_mismatch` by design.
+- The Supabase JWT used against local Bob/Roma helper surfaces must be issued by the **same** Supabase project the local DevStudio lane is configured to use.
+- If you use a token from a different Supabase project, local auth surfaces return `403 coreui.errors.auth.forbidden` with `issuer_mismatch` by design.
 
 ### B) Instance + asset path (local)
 
-Instances are data (not code) and live in Paris/Michael. Assets live in Tokyo.
+Instances are data (not code) and live in Michael/Tokyo. Assets live in Tokyo.
 
 1. **Roma + Bob handle account user-instance flows**:
    - Roma Widgets/Templates create/duplicate/delete user instances through Roma same-origin routes.
    - Bob save writes base config via account `PUT`.
-2. **DevStudio Local handles curated/main authoring** via Paris + Tokyo from the internal toolbench surface.
-3. **Assets** referenced in configs point at cloud Tokyo by default (`https://tokyo.dev.clickeen.com`).
-4. **Venice embeds** render curated/user instances from published Tokyo bytes only; local Paris is involved only earlier in the write/publish path.
+2. **DevStudio Local handles curated/main authoring** through explicit local DevStudio tool routes backed by local Tokyo/Tokyo-worker.
+3. **Assets** referenced in configs point at local Tokyo in canonical local development (`http://localhost:4000`).
 
 ### C) Cloud-dev propagation (explicit)
 
 Local changes do not auto-appear in cloud-dev. You must deploy.
 
-1. **Prague/Bob/Roma/DevStudio**:
+1. **Bob/Roma/DevStudio**:
    - Code changes require Cloudflare deploys (Pages/Workers).
-   - Cloud Prague/Bob/Roma read `https://tokyo.dev.clickeen.com`, not your local filesystem.
-2. **Marketing JSON updates**:
-   - `tokyo/widgets/**/pages/*.json` updates require a Prague deployment to be visible in cloud-dev.
+   - Cloud Bob/Roma read `https://tokyo.dev.clickeen.com`, not your local filesystem.
 
 Invariant: **Local propagation is automatic; cloud-dev propagation is explicit.** Treat any assumption otherwise as a bug.
 

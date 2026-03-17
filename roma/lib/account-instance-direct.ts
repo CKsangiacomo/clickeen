@@ -400,7 +400,9 @@ export async function saveAccountInstanceDirect(args: {
     accountId: args.accountId,
     publicId: args.publicId,
     tokyoBaseUrl: args.tokyoBaseUrl,
+    tokyoAccessToken: args.tokyoAccessToken,
     accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
   });
   if (current.ok === false) {
     return {

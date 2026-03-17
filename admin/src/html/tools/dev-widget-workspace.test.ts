@@ -233,7 +233,6 @@ async function loadInstancesDom(
   instances: InstancePayload[],
   options?: {
     fetch?: FetchMockOptions;
-    profile?: 'product' | 'source';
     onBobPostMessage?: (
       payload: unknown,
       origin: string,
@@ -241,9 +240,8 @@ async function loadInstancesDom(
     ) => void;
   },
 ) {
-  const profile = options?.profile === 'source' ? 'source' : 'product';
   const dom = new JSDOM(HTML_SOURCE, {
-    url: `http://localhost:5173/?profile=${profile}#/tools/dev-widget-workspace`,
+    url: 'http://localhost:5173/#/tools/dev-widget-workspace',
     pretendToBeVisual: true,
     runScripts: 'outside-only',
   });
@@ -313,8 +311,8 @@ async function loadInstancesDom(
 }
 
 describe('DevStudio instances tool', () => {
-  it('keeps only the theme action and hides the local toolbar in product profile', async () => {
-    const { dom } = await loadInstancesDom([], { profile: 'product' });
+  it('shows the local theme action and hides the removed legacy toolbar buttons', async () => {
+    const { dom } = await loadInstancesDom([]);
     const actions = dom.window.document.getElementById('platform-actions') as HTMLElement | null;
     const updateThemeBtn = dom.window.document.getElementById(
       'platform-update-theme',
@@ -328,7 +326,7 @@ describe('DevStudio instances tool', () => {
       'promote-curated-cloud',
     ];
 
-    expect(actions?.style.display).toBe('none');
+    expect(actions?.style.display).toBe('inline-flex');
     expect(updateThemeBtn).toBeTruthy();
     removedButtons.forEach((id) => {
       expect(dom.window.document.getElementById(id)).toBeNull();
@@ -337,7 +335,7 @@ describe('DevStudio instances tool', () => {
     dom.window.close();
   });
 
-  it('shows the empty-state label when no instances exist', async () => {
+  it('falls back to the local default instance when no stored instances exist', async () => {
     const { dom } = await loadInstancesDom([], {
       fetch: {
         localWidgets: ['faq'],
@@ -347,9 +345,9 @@ describe('DevStudio instances tool', () => {
     const dropdown = dom.window.document.getElementById('instance-dropdown');
     const menu = dom.window.document.getElementById('instance-dropdown-menu');
 
-    expect(label?.textContent).toBe('No instances yet');
+    expect(label?.textContent).toBe('Main instance');
     expect(dropdown?.getAttribute('style') || '').toContain('display: inline-block');
-    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(0);
+    expect(menu?.querySelectorAll('[data-public-id]').length).toBe(1);
 
     dom.window.close();
   });
@@ -382,7 +380,7 @@ describe('DevStudio instances tool', () => {
     dom.window.close();
   });
 
-  it('boots product mode from instances and never calls the Roma starter route', async () => {
+  it('boots from DevStudio instances and never calls the Roma starter route', async () => {
     const instances = [
       {
         publicId: 'wgt_curated_faq_simple',
@@ -557,7 +555,6 @@ describe('DevStudio instances tool', () => {
           { id: 'dark', label: 'Dark' },
         ],
       },
-      profile: 'source',
       onBobPostMessage: (payload, origin, { dom: innerDom, bobWindow }) => {
         if (!payload || typeof payload !== 'object') return;
         const data = payload as { type?: string; requestId?: string };
@@ -628,7 +625,6 @@ describe('DevStudio instances tool', () => {
           themeUpdatePayload = payload;
         },
       },
-      profile: 'source',
       onBobPostMessage: (payload, origin, { dom: innerDom, bobWindow }) => {
         if (!payload || typeof payload !== 'object') return;
         const data = payload as { type?: string; requestId?: string };

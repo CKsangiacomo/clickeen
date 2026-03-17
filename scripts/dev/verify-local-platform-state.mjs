@@ -293,7 +293,7 @@ async function verifyHostEditorLane({ rows, platformAccountId, issues, failuresR
   }
 
   const statusResponse = requestLoopbackJson(
-    `${devstudioBase}/api/devstudio/instances/${encodeURIComponent(accountRow.publicId)}/l10n/status?widgetname=${encodeURIComponent(accountRow.widgetType)}&profile=source&accountId=${encodeURIComponent(platformAccountId)}`,
+    `${devstudioBase}/api/devstudio/instances/${encodeURIComponent(accountRow.publicId)}/l10n/status?widgetname=${encodeURIComponent(accountRow.widgetType)}&accountId=${encodeURIComponent(platformAccountId)}`,
     { method: 'GET' },
   );
   if (!statusResponse.ok || !Array.isArray(statusResponse.json?.locales)) {

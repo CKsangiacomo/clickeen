@@ -27,12 +27,6 @@ export function mountDevWidgetWorkspace() {
       window[CK_DEV_INSTANCES_ABORT_KEY] = abortController;
     } catch {}
 
-    const PROFILE = (() => {
-      const params = new URLSearchParams(window.location.search);
-      const raw = (params.get('profile') || 'product').trim().toLowerCase();
-      return raw === 'source' ? 'source' : 'product';
-    })();
-    const IS_SOURCE_PROFILE = PROFILE === 'source';
     const SUPPORT_TARGET_STORAGE_KEY = 'ck.devstudio.supportTargetEnvelope.v1';
 
     function resolveHashSearchParams() {
@@ -76,19 +70,15 @@ export function mountDevWidgetWorkspace() {
     const BOB_ORIGIN = requireBobOrigin();
 
     function resolveTokyoBaseUrl() {
-      // Keep in sync with bob/lib/env/tokyo.ts (plain JS variant for DevStudio tools).
-      // product profile: cloud-dev Tokyo (default)
-      // source profile: local Tokyo (explicit low-level service development)
+      // DevStudio local defaults to local Tokyo; explicit ?tokyo= remains available for debugging.
       const params = new URLSearchParams(window.location.search);
-      const profile = PROFILE;
       const raw = (params.get('tokyo') || '').trim();
       if (raw) {
         try {
           return new URL(raw).origin;
         } catch {}
       }
-      if (profile === 'source') return 'http://localhost:4000';
-      return 'https://tokyo.dev.clickeen.com';
+      return 'http://localhost:4000';
     }
 
     const TOKYO_BASE = resolveTokyoBaseUrl();
@@ -161,7 +151,6 @@ export function mountDevWidgetWorkspace() {
       return getScopedInstancesFromState({
         instances,
         selectedWidgetSlug,
-        profile: PROFILE,
       });
     }
 
@@ -704,10 +693,8 @@ export function mountDevWidgetWorkspace() {
     }
 
     async function updateThemeFromEditor() {
-      if (!IS_SOURCE_PROFILE) {
-        throw new Error(
-          '[DevStudio] Update Theme is source-profile only. Re-open DevStudio with ?profile=source.',
-        );
+      if (!isLocalDevStudio) {
+        throw new Error('[DevStudio] Update Theme is local DevStudio only.');
       }
       if (!currentPublicId) {
         throw new Error('[DevStudio] Select an instance first.');
@@ -771,7 +758,7 @@ export function mountDevWidgetWorkspace() {
     }
 
     if (platformActions instanceof HTMLElement) {
-      const showThemeAction = isLocalDevStudio && IS_SOURCE_PROFILE;
+      const showThemeAction = isLocalDevStudio;
       platformActions.style.display = showThemeAction ? 'inline-flex' : 'none';
     }
 

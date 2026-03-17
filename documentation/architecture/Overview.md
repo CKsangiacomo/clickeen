@@ -197,7 +197,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - DevStudio is the internal toolbench, not a second customer account shell.
 - It is the surface where Clickeen runs internal platform work such as curation, authoring, and verification.
 - DevStudio can host Bob for curated/admin authoring work, but it must reuse canonical account and content truth instead of inventing a second runtime model.
-- In local product profile, DevStudio uses local-only tool routes under `/api/devstudio/*` and resolves a seeded `local-tool` platform context.
+- In local development, DevStudio uses local-only tool routes under `/api/devstudio/*` and resolves a seeded `local-tool` platform context.
 - There is no canonical Cloudflare DevStudio runtime. DevStudio is local-only.
 
 #### Paris (Workers)

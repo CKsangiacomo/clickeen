@@ -354,8 +354,7 @@ pnpm build:dieter               # Build Dieter assets first
 pnpm build                      # Build all packages
 
 # Development
-bash scripts/dev-up.sh          # Profile=product (default): local DevStudio + local Bob over the cloud-dev data plane
-bash scripts/dev-up.sh --source # Profile=source: full local stack (Tokyo/Tokyo-worker/Berlin/Venice/Bob/DevStudio/Prague/Pitch, + SF if enabled)
+bash scripts/dev-up.sh          # Canonical local DevStudio operating lane (Tokyo/Tokyo-worker/Berlin/Bob/DevStudio)
 pnpm dev:bob                    # Bob only
 pnpm dev:paris                  # Paris only
 pnpm dev:admin                  # DevStudio only
@@ -370,6 +369,12 @@ node scripts/compile-all-widgets.mjs
 
 Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
+**Agent-run terminal limitation (important):**
+
+- Long-lived local servers started by an AI agent through a managed command session may be reaped when that session ends.
+- This is a limitation of the agent execution environment, not of a normal VS Code terminal.
+- If you need the DevStudio/Bob localhost lane to stay up for real browser use, run `bash scripts/dev-up.sh --reset` yourself in your own terminal.
+
 **Local instance data (important):**
 
 - Instances are **not** created by scripts anymore.
@@ -377,19 +382,17 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 - Local DevStudio is the local internal toolbench, not “local Roma” parity.
 - That local authoring scope currently centers on loading the instances on the admin account for config iteration and translation checks.
 
-**Source-profile auth target (important):**
+**Local auth target (important):**
 
-- `bash scripts/dev-up.sh --source` uses local Supabase by default and ignores remote Supabase values in `.env.local`.
-- To force local services to use remote Supabase, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`.
+- `bash scripts/dev-up.sh` uses local Supabase.
 - Berlin runs locally at `http://localhost:3005` for parity/unit work, but supported product auth happens in cloud Roma.
 - Berlin session token issuer must match the Berlin issuer Paris is configured to trust; mismatched issuers are rejected with `coreui.errors.auth.forbidden` and `issuer_mismatch`.
 
 ### Environments (Canonical)
 
-| Environment                 | Bob                              | Roma                            | Paris                                            | Tokyo                            | San Francisco                           | DevStudio                            |
-| --------------------------- | -------------------------------- | ------------------------------- | ------------------------------------------------ | -------------------------------- | --------------------------------------- | ------------------------------------ |
-| **Local (product profile)** | optional `http://localhost:3000` | `https://roma.dev.clickeen.com` | `http://localhost:3001` (trusted local boundary) | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `http://localhost:5173`              |
-| **Local (source profile)**  | `http://localhost:3000`          | (cloud-only)                    | `http://localhost:3001`                          | `http://localhost:4000`          | (optional) `http://localhost:3002`      | `http://localhost:5173`              |
+| Environment           | Bob                     | Roma                            | Paris                  | Tokyo                   | San Francisco                  | DevStudio               |
+| --------------------- | ----------------------- | ------------------------------- | ---------------------- | ----------------------- | ------------------------------ | ----------------------- |
+| **Local**             | `http://localhost:3000` | `https://roma.dev.clickeen.com` | `—`                    | `http://localhost:4000` | `—`                            | `http://localhost:5173` |
 | **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com`   | `https://roma.dev.clickeen.com` | `https://paris.dev.clickeen.com`                 | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `— local only`                       |
 | **UAT**                     | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://paris.clickeen.com`                     | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
 | **Limited GA**              | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://paris.clickeen.com`                     | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |

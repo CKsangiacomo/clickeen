@@ -14,10 +14,6 @@ const OPEN_EDITOR_CONTRACT_SOURCE_PATH = path.resolve(
 );
 const OPEN_EDITOR_CONTRACT_ROUTE = '/contracts/open-editor-lifecycle.v1.json';
 const ROOT_DIR = path.resolve(__dirname, '..');
-const CK_DEV_PROFILE = String(process.env.CK_DEV_PROFILE || 'product')
-  .trim()
-  .toLowerCase();
-const IS_SOURCE_PROFILE = CK_DEV_PROFILE === 'source';
 const PLATFORM_ACCOUNT_ID = String(
   process.env.CK_PLATFORM_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100',
 )
@@ -305,15 +301,6 @@ export default defineConfig({
 
           res.setHeader('Content-Type', 'application/json');
           res.setHeader('Cache-Control', 'no-store');
-          if (!IS_SOURCE_PROFILE) {
-            res.statusCode = 404;
-            res.end(
-              JSON.stringify({
-                error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.route.notFound' },
-              }),
-            );
-            return;
-          }
 
           const themesPath = path.resolve(__dirname, '..', 'tokyo', 'themes', 'themes.json');
 
