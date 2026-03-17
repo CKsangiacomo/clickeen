@@ -6,6 +6,12 @@ type ResolvedAssetEntry = {
   url: string;
 };
 
+type HostedAssetBridge = {
+  resolveAssets: (assetIds: string[]) => Promise<unknown>;
+};
+
+const HOSTED_ASSET_BRIDGE_KEY = '__CK_CLICKEEN_HOSTED_ACCOUNT_ASSET_BRIDGE__';
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -17,6 +23,16 @@ function normalizeResolvedAssetEntry(raw: unknown): ResolvedAssetEntry | null {
   const url = typeof raw.url === 'string' ? raw.url.trim() : '';
   if (!assetId || !assetRef || !url) return null;
   return { assetId, assetRef, url };
+}
+
+function resolveHostedAssetBridge(): HostedAssetBridge | null {
+  const root = globalThis as Record<string, unknown>;
+  const candidate = root[HOSTED_ASSET_BRIDGE_KEY];
+  if (!isRecord(candidate)) return null;
+  if (typeof candidate.resolveAssets !== 'function') return null;
+  return {
+    resolveAssets: candidate.resolveAssets as HostedAssetBridge['resolveAssets'],
+  };
 }
 
 export function resolveRuntimeAssetApiBase(raw: string | null | undefined): string {
@@ -38,21 +54,11 @@ export async function materializeRuntimeConfigForPreview(args: {
     return baseMaterialized;
   }
 
-  const accountId = String(args.accountId || '').trim();
-  if (!accountId || !assetApiBase) {
+  const hostedBridge = resolveHostedAssetBridge();
+  if (!hostedBridge && !assetApiBase) {
     throw new Error('coreui.errors.assets.previewMaterialization.missingContext');
   }
-
-  const response = await fetch(
-    `${assetApiBase}/resolve`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'application/json' },
-      cache: 'no-store',
-      body: JSON.stringify({ assetIds }),
-    },
-  );
-  const payload = (await response.json().catch(() => null)) as
+  let payload:
     | {
         assets?: unknown;
         missingAssetIds?: unknown;
@@ -60,14 +66,41 @@ export async function materializeRuntimeConfigForPreview(args: {
       }
     | null;
 
-  if (!response.ok) {
-    const detail =
-      typeof payload?.error?.detail === 'string'
-        ? payload.error.detail
-        : typeof payload?.error?.reasonKey === 'string'
-          ? payload.error.reasonKey
-          : `coreui.errors.assets.previewMaterialization.http_${response.status}`;
-    throw new Error(detail);
+  if (hostedBridge) {
+    payload = (await hostedBridge.resolveAssets(assetIds).catch((error) => {
+      throw error instanceof Error ? error : new Error(String(error));
+    })) as {
+      assets?: unknown;
+      missingAssetIds?: unknown;
+      error?: { detail?: unknown; reasonKey?: unknown };
+    } | null;
+  } else {
+    const response = await fetch(
+      `${assetApiBase}/resolve`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ assetIds }),
+      },
+    );
+    payload = (await response.json().catch(() => null)) as
+      | {
+          assets?: unknown;
+          missingAssetIds?: unknown;
+          error?: { detail?: unknown; reasonKey?: unknown };
+        }
+      | null;
+
+    if (!response.ok) {
+      const detail =
+        typeof payload?.error?.detail === 'string'
+          ? payload.error.detail
+          : typeof payload?.error?.reasonKey === 'string'
+            ? payload.error.reasonKey
+            : `coreui.errors.assets.previewMaterialization.http_${response.status}`;
+      throw new Error(detail);
+    }
   }
 
   const missingAssetIds = Array.isArray(payload?.missingAssetIds)

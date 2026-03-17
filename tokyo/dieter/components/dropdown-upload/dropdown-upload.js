@@ -436,6 +436,28 @@ var Dieter = (() => {
     return `/assets/v/${encodeURIComponent(key)}`;
   }
 
+  // components/shared/hostedAssetBridge.ts
+  var HOSTED_ASSET_BRIDGE_KEY = "__CK_CLICKEEN_HOSTED_ACCOUNT_ASSET_BRIDGE__";
+  function isRecord(value) {
+    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  }
+  function resolveHostedAssetBridge() {
+    const root = globalThis;
+    const candidate = root[HOSTED_ASSET_BRIDGE_KEY];
+    if (!isRecord(candidate)) return null;
+    const listAssets = candidate.listAssets;
+    const resolveAssets = candidate.resolveAssets;
+    const uploadAsset = candidate.uploadAsset;
+    if (typeof listAssets !== "function" || typeof resolveAssets !== "function" || typeof uploadAsset !== "function") {
+      return null;
+    }
+    return {
+      listAssets,
+      resolveAssets,
+      uploadAsset
+    };
+  }
+
   // components/shared/assetUpload.ts
   function isPublicId(value) {
     return isWidgetPublicId(value);
@@ -518,32 +540,42 @@ var Dieter = (() => {
     }
     const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? {});
     const source = args.source || "api";
-    const endpoint = (args.endpoint || resolveAssetUploadEndpoint() || `/api/account/assets/upload`).trim();
-    if (!isAccountScopedRomaUploadEndpoint(endpoint) && !isDevStudioUploadEndpoint(endpoint)) {
-      throw new Error("coreui.errors.assets.uploadEndpoint.invalid");
-    }
     const headers = new Headers();
     headers.set("content-type", file.type || "application/octet-stream");
-    if (isDevStudioUploadEndpoint(endpoint)) {
-      headers.set("x-account-id", context.accountId);
-    }
     headers.set("x-filename", file.name || "upload.bin");
     headers.set("x-source", source);
-    headers.set("x-clickeen-surface", isDevStudioUploadEndpoint(endpoint) ? "devstudio" : "roma-assets");
     if (context.publicId) headers.set("x-public-id", context.publicId);
     if (context.widgetType) headers.set("x-widget-type", context.widgetType);
-    const response = await fetch(`${endpoint.replace(/\/$/, "")}?_t=${Date.now()}`, {
-      method: "POST",
-      headers,
-      body: file
-    });
-    const text = await response.text().catch(() => "");
-    const payload = safeJsonParse(text);
-    if (!response.ok) {
-      const errorRecord = payload && typeof payload === "object" && !Array.isArray(payload) ? payload.error : void 0;
-      const reasonKey = typeof errorRecord?.reasonKey === "string" ? errorRecord.reasonKey : "";
-      const detail = typeof errorRecord?.detail === "string" ? errorRecord.detail : "";
-      throw new Error(reasonKey || detail || `coreui.errors.assets.uploadFailed (${response.status})`);
+    const hostedBridge = resolveHostedAssetBridge();
+    let payload = null;
+    if (hostedBridge) {
+      headers.set("x-clickeen-surface", "roma-assets");
+      payload = await hostedBridge.uploadAsset(file, Object.fromEntries(headers.entries()));
+    } else {
+      const endpoint = (args.endpoint || resolveAssetUploadEndpoint()).trim();
+      if (!endpoint) {
+        throw new Error("coreui.errors.builder.command.hostUnavailable");
+      }
+      if (!isAccountScopedRomaUploadEndpoint(endpoint) && !isDevStudioUploadEndpoint(endpoint)) {
+        throw new Error("coreui.errors.assets.uploadEndpoint.invalid");
+      }
+      if (isDevStudioUploadEndpoint(endpoint)) {
+        headers.set("x-account-id", context.accountId);
+      }
+      headers.set("x-clickeen-surface", isDevStudioUploadEndpoint(endpoint) ? "devstudio" : "roma-assets");
+      const response = await fetch(`${endpoint.replace(/\/$/, "")}?_t=${Date.now()}`, {
+        method: "POST",
+        headers,
+        body: file
+      });
+      const text = await response.text().catch(() => "");
+      payload = safeJsonParse(text);
+      if (!response.ok) {
+        const errorRecord = payload && typeof payload === "object" && !Array.isArray(payload) ? payload.error : void 0;
+        const reasonKey = typeof errorRecord?.reasonKey === "string" ? errorRecord.reasonKey : "";
+        const detail = typeof errorRecord?.detail === "string" ? errorRecord.detail : "";
+        throw new Error(reasonKey || detail || `coreui.errors.assets.uploadFailed (${response.status})`);
+      }
     }
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
       throw new Error("coreui.errors.assets.uploadFailed");
@@ -610,20 +642,29 @@ var Dieter = (() => {
       return true;
     });
     if (!assetIds.length) return /* @__PURE__ */ new Map();
-    const assetApiBase = resolveAssetApiBase();
-    const endpoint = assetApiBase ? `${assetApiBase}/resolve` : `/api/account/assets/resolve`;
-    const response = await fetch(endpoint, {
-      method: "POST",
-      cache: "no-store",
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({ assetIds })
-    });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) {
-      const reasonKey = String(payload?.error?.reasonKey || "").trim();
-      throw new Error(reasonKey || `HTTP_${response.status}`);
+    const hostedBridge = resolveHostedAssetBridge();
+    let payload = null;
+    if (hostedBridge) {
+      payload = await hostedBridge.resolveAssets(assetIds);
+    } else {
+      const assetApiBase = resolveAssetApiBase();
+      if (!assetApiBase) {
+        throw new Error("coreui.errors.builder.command.hostUnavailable");
+      }
+      const endpoint = `${assetApiBase}/resolve`;
+      const response = await fetch(endpoint, {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({ assetIds })
+      });
+      payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const reasonKey = String(payload?.error?.reasonKey || "").trim();
+        throw new Error(reasonKey || `HTTP_${response.status}`);
+      }
     }
     const assets = Array.isArray(payload?.assets) ? payload.assets : [];
     const resolved = /* @__PURE__ */ new Map();

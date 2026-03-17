@@ -49,6 +49,11 @@ type AccountAssetsListResponse = {
   assets: AssetRecord[];
 };
 
+type AccountUsageSummaryResponse = {
+  accountId: string;
+  storageBytesUsed?: number;
+};
+
 type AssetUploadResponse = {
   assetId?: string;
   assetRef?: string;
@@ -175,8 +180,8 @@ async function requestUploadAsset(
   };
 }
 
-function upsertAsset(existing: AssetRecord[], next: AssetRecord): AssetRecord[] {
-  const without = existing.filter((item) => item.assetRef !== next.assetRef);
+function upsertAsset(existing: AssetRecord[] | null, next: AssetRecord): AssetRecord[] {
+  const without = (existing ?? []).filter((item) => item.assetRef !== next.assetRef);
   return [next, ...without];
 }
 
@@ -198,10 +203,10 @@ export function AssetsDomain() {
   }, [entitlements?.caps]);
   const storageBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
 
-  const [assets, setAssets] = useState<AssetRecord[]>([]);
-  const [storageBytesUsed, setStorageBytesUsed] = useState(0);
+  const [assets, setAssets] = useState<AssetRecord[] | null>(null);
+  const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
@@ -213,36 +218,56 @@ export function AssetsDomain() {
 
   const refreshAssets = useCallback(async () => {
     if (!accountId) {
-      setAssets([]);
-      setStorageBytesUsed(0);
+      setAssets(null);
+      setStorageBytesUsed(null);
       setError(null);
+      setLoading(false);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const response = await accountApi.fetchRaw(`/api/account/assets?limit=500`, {
-        method: 'GET',
-      });
-      const payload = (await response.json().catch(() => null)) as AccountAssetsListResponse | { error?: unknown } | null;
-      if (!response.ok) {
-        throw new Error(parseApiErrorReason(payload, response.status));
+      const [assetsResponse, usageResponse] = await Promise.all([
+        accountApi.fetchRaw(`/api/account/assets?limit=500`, {
+          method: 'GET',
+        }),
+        accountApi.fetchRaw(`/api/account/usage`, {
+          method: 'GET',
+        }),
+      ]);
+      const assetsPayload = (await assetsResponse.json().catch(() => null)) as
+        | AccountAssetsListResponse
+        | { error?: unknown }
+        | null;
+      if (!assetsResponse.ok) {
+        throw new Error(parseApiErrorReason(assetsPayload, assetsResponse.status));
       }
       const resolvedAssets =
-        payload && typeof payload === 'object' && Array.isArray((payload as AccountAssetsListResponse).assets)
-          ? (payload as AccountAssetsListResponse).assets
+        assetsPayload && typeof assetsPayload === 'object' && Array.isArray((assetsPayload as AccountAssetsListResponse).assets)
+          ? (assetsPayload as AccountAssetsListResponse).assets
           : [];
-      const storageUsed =
-        payload && typeof payload === 'object' && typeof (payload as AccountAssetsListResponse).storageBytesUsed === 'number'
-          ? Math.max(0, Math.trunc((payload as AccountAssetsListResponse).storageBytesUsed ?? 0))
-          : resolvedAssets.reduce((total, asset) => total + Math.max(0, Math.trunc(asset.sizeBytes)), 0);
+      const usagePayload = (await usageResponse.json().catch(() => null)) as
+        | AccountUsageSummaryResponse
+        | { error?: unknown }
+        | null;
+      const nextStorageBytesUsed =
+        usageResponse.ok &&
+        usagePayload &&
+        typeof usagePayload === 'object' &&
+        typeof (usagePayload as AccountUsageSummaryResponse).storageBytesUsed === 'number'
+          ? Math.max(0, Math.trunc((usagePayload as AccountUsageSummaryResponse).storageBytesUsed ?? 0))
+          : null;
+
       setAssets(resolvedAssets);
-      setStorageBytesUsed(storageUsed);
-      setError(null);
+      setStorageBytesUsed(nextStorageBytesUsed);
+      if (!usageResponse.ok) {
+        const reason = parseApiErrorReason(usagePayload, usageResponse.status);
+        setError(resolveAssetErrorCopy(reason, 'Storage summary is unavailable right now.'));
+      } else {
+        setError(null);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setAssets([]);
-      setStorageBytesUsed(0);
       setError(resolveAssetErrorCopy(message, 'Failed to load assets. Please try again.'));
     } finally {
       setLoading(false);
@@ -265,8 +290,10 @@ export function AssetsDomain() {
       try {
         await requestDeleteAsset(accountApi, asset.assetId, confirmInUse);
         setPendingDelete(null);
-        setAssets((prev) => prev.filter((entry) => entry.assetRef !== asset.assetRef));
-        setStorageBytesUsed((prev) => Math.max(0, prev - Math.max(0, Math.trunc(asset.sizeBytes))));
+        setAssets((prev) => (prev ? prev.filter((entry) => entry.assetRef !== asset.assetRef) : prev));
+        setStorageBytesUsed((prev) =>
+          prev == null ? null : Math.max(0, prev - Math.max(0, Math.trunc(asset.sizeBytes))),
+        );
       } catch (err) {
         const typed = err as DeleteRequestError;
         if (
@@ -296,7 +323,7 @@ export function AssetsDomain() {
 
   const handleConfirmDelete = useCallback(async () => {
     if (!pendingDelete) return;
-    const asset = assets.find((entry) => entry.assetRef === pendingDelete.assetRef);
+    const asset = (assets ?? []).find((entry) => entry.assetRef === pendingDelete.assetRef);
     if (!asset) return;
     await deleteAsset(asset, true);
   }, [assets, deleteAsset, pendingDelete]);
@@ -321,8 +348,11 @@ export function AssetsDomain() {
       try {
         const uploaded = await requestUploadAsset(accountApi, file, 'api');
         setAssets((prev) => upsertAsset(prev, uploaded));
-        setStorageBytesUsed((prev) => prev + Math.max(0, Math.trunc(uploaded.sizeBytes)));
+        setStorageBytesUsed((prev) =>
+          prev == null ? null : prev + Math.max(0, Math.trunc(uploaded.sizeBytes)),
+        );
         await reloadMe();
+        await refreshAssets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setSingleUploadError(resolveAssetErrorCopy(message, 'Asset upload failed. Please try again.'));
@@ -330,7 +360,7 @@ export function AssetsDomain() {
         setSingleUploadBusy(false);
       }
     },
-    [accountApi, accountId, reloadMe, uploadSizeCapBytes],
+    [accountApi, accountId, refreshAssets, reloadMe, uploadSizeCapBytes],
   );
 
   const handleSingleFileChange = useCallback(
@@ -379,7 +409,9 @@ export function AssetsDomain() {
         try {
           const uploaded = await requestUploadAsset(accountApi, file, 'api');
           setAssets((prev) => upsertAsset(prev, uploaded));
-          setStorageBytesUsed((prev) => prev + Math.max(0, Math.trunc(uploaded.sizeBytes)));
+          setStorageBytesUsed((prev) =>
+            prev == null ? null : prev + Math.max(0, Math.trunc(uploaded.sizeBytes)),
+          );
           updateBulkItem(item.id, { status: 'success', error: null });
           uploadedAny = true;
         } catch (err) {
@@ -394,9 +426,10 @@ export function AssetsDomain() {
       setBulkUploadBusy(false);
       if (uploadedAny) {
         await reloadMe();
+        await refreshAssets();
       }
     },
-    [accountApi, accountId, reloadMe, updateBulkItem, uploadSizeCapBytes],
+    [accountApi, accountId, refreshAssets, reloadMe, updateBulkItem, uploadSizeCapBytes],
   );
 
   const handleBulkFileChange = useCallback(
@@ -426,6 +459,10 @@ export function AssetsDomain() {
 
   const successfulBulkCount = bulkItems.filter((item) => item.status === 'success').length;
   const failedBulkCount = bulkItems.filter((item) => item.status === 'failed').length;
+  const storedAssetsLabel = assets == null ? (loading ? 'Loading...' : 'Unavailable') : formatNumber(assets.length);
+  const storageUsedLabel =
+    storageBytesUsed == null ? (loading ? 'Loading...' : 'Unavailable') : formatBytes(storageBytesUsed);
+  const assetRows = assets ?? [];
 
   return (
     <>
@@ -453,9 +490,9 @@ export function AssetsDomain() {
             {resolveAssetErrorCopy(redirectReasonKey, 'Manage storage here, then retry the upload in Builder.')}
           </p>
         ) : null}
-        <p className="body-m">Stored assets: {formatNumber(assets.length)}</p>
+        <p className="body-m">Stored assets: {storedAssetsLabel}</p>
         <p className="body-m">
-          Storage used: {formatBytes(storageBytesUsed)} /{' '}
+          Storage used: {storageUsedLabel} /{' '}
           {storageBudget?.max == null ? 'unlimited' : formatBytes(storageBudget.max)}
         </p>
         {uploadSizeCapBytes != null ? (
@@ -527,7 +564,7 @@ export function AssetsDomain() {
             </tr>
           </thead>
           <tbody>
-            {assets.map((asset) => (
+            {assetRows.map((asset) => (
               <tr key={asset.assetRef}>
                 <td className="body-s">{asset.filename}</td>
                 <td className="body-s">{asset.assetType}</td>
@@ -549,7 +586,13 @@ export function AssetsDomain() {
                 </td>
               </tr>
             ))}
-            {assets.length === 0 ? (
+            {assets == null ? (
+              <tr>
+                <td colSpan={5} className="body-s">
+                  {loading ? 'Loading assets...' : 'Assets are unavailable right now.'}
+                </td>
+              </tr>
+            ) : assets.length === 0 ? (
               <tr>
                 <td colSpan={5} className="body-s">
                   No assets found for this account.

@@ -1,4 +1,5 @@
 import { isUuid } from '@clickeen/ck-contracts';
+import { resolveHostedAssetBridge } from './hostedAssetBridge';
 
 export type ResolvedEditorAssetChoice = {
   assetId: string;
@@ -50,23 +51,30 @@ export async function resolveEditorAssetChoices(
 
   if (!assetIds.length) return new Map();
 
-  const assetApiBase = resolveAssetApiBase();
-  const endpoint = assetApiBase
-    ? `${assetApiBase}/resolve`
-    : `/api/account/assets/resolve`;
+  const hostedBridge = resolveHostedAssetBridge();
+  let payload: Record<string, unknown> | null = null;
+  if (hostedBridge) {
+    payload = (await hostedBridge.resolveAssets(assetIds)) as Record<string, unknown> | null;
+  } else {
+    const assetApiBase = resolveAssetApiBase();
+    if (!assetApiBase) {
+      throw new Error('coreui.errors.builder.command.hostUnavailable');
+    }
+    const endpoint = `${assetApiBase}/resolve`;
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    cache: 'no-store',
-    headers: {
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({ assetIds }),
-  });
-  const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!response.ok) {
-    const reasonKey = String((payload?.error as Record<string, unknown> | undefined)?.reasonKey || '').trim();
-    throw new Error(reasonKey || `HTTP_${response.status}`);
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      cache: 'no-store',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ assetIds }),
+    });
+    payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+    if (!response.ok) {
+      const reasonKey = String((payload?.error as Record<string, unknown> | undefined)?.reasonKey || '').trim();
+      throw new Error(reasonKey || `HTTP_${response.status}`);
+    }
   }
 
   const assets = Array.isArray(payload?.assets) ? (payload.assets as unknown[]) : [];

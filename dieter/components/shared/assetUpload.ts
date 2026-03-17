@@ -1,4 +1,5 @@
 import { isUuid, isWidgetPublicId, parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '@clickeen/ck-contracts';
+import { resolveHostedAssetBridge } from './hostedAssetBridge';
 
 type EditorAssetUploadContext = {
   accountId: string;
@@ -136,42 +137,51 @@ export async function uploadEditorAsset(args: UploadEditorAssetArgs): Promise<Ed
 
   const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? ({} as EditorAssetUploadContext));
   const source = args.source || 'api';
-  const endpoint = (
-    args.endpoint ||
-    resolveAssetUploadEndpoint() ||
-    `/api/account/assets/upload`
-  ).trim();
-  if (!isAccountScopedRomaUploadEndpoint(endpoint) && !isDevStudioUploadEndpoint(endpoint)) {
-    throw new Error('coreui.errors.assets.uploadEndpoint.invalid');
-  }
-
   const headers = new Headers();
   headers.set('content-type', file.type || 'application/octet-stream');
-  if (isDevStudioUploadEndpoint(endpoint)) {
-    headers.set('x-account-id', context.accountId);
-  }
   headers.set('x-filename', file.name || 'upload.bin');
   headers.set('x-source', source);
-  headers.set('x-clickeen-surface', isDevStudioUploadEndpoint(endpoint) ? 'devstudio' : 'roma-assets');
   if (context.publicId) headers.set('x-public-id', context.publicId);
   if (context.widgetType) headers.set('x-widget-type', context.widgetType);
+  const hostedBridge = resolveHostedAssetBridge();
 
-  const response = await fetch(`${endpoint.replace(/\/$/, '')}?_t=${Date.now()}`, {
-    method: 'POST',
-    headers,
-    body: file,
-  });
-  const text = await response.text().catch(() => '');
-  const payload = safeJsonParse(text);
+  let payload: unknown = null;
+  if (hostedBridge) {
+    headers.set('x-clickeen-surface', 'roma-assets');
+    payload = await hostedBridge.uploadAsset(file, Object.fromEntries(headers.entries()));
+  } else {
+    const endpoint = (
+      args.endpoint ||
+      resolveAssetUploadEndpoint()
+    ).trim();
+    if (!endpoint) {
+      throw new Error('coreui.errors.builder.command.hostUnavailable');
+    }
+    if (!isAccountScopedRomaUploadEndpoint(endpoint) && !isDevStudioUploadEndpoint(endpoint)) {
+      throw new Error('coreui.errors.assets.uploadEndpoint.invalid');
+    }
+    if (isDevStudioUploadEndpoint(endpoint)) {
+      headers.set('x-account-id', context.accountId);
+    }
+    headers.set('x-clickeen-surface', isDevStudioUploadEndpoint(endpoint) ? 'devstudio' : 'roma-assets');
 
-  if (!response.ok) {
-    const errorRecord =
-      payload && typeof payload === 'object' && !Array.isArray(payload)
-        ? ((payload as Record<string, unknown>).error as Record<string, unknown> | undefined)
-        : undefined;
-    const reasonKey = typeof errorRecord?.reasonKey === 'string' ? errorRecord.reasonKey : '';
-    const detail = typeof errorRecord?.detail === 'string' ? errorRecord.detail : '';
-    throw new Error(reasonKey || detail || `coreui.errors.assets.uploadFailed (${response.status})`);
+    const response = await fetch(`${endpoint.replace(/\/$/, '')}?_t=${Date.now()}`, {
+      method: 'POST',
+      headers,
+      body: file,
+    });
+    const text = await response.text().catch(() => '');
+    payload = safeJsonParse(text);
+
+    if (!response.ok) {
+      const errorRecord =
+        payload && typeof payload === 'object' && !Array.isArray(payload)
+          ? ((payload as Record<string, unknown>).error as Record<string, unknown> | undefined)
+          : undefined;
+      const reasonKey = typeof errorRecord?.reasonKey === 'string' ? errorRecord.reasonKey : '';
+      const detail = typeof errorRecord?.detail === 'string' ? errorRecord.detail : '';
+      throw new Error(reasonKey || detail || `coreui.errors.assets.uploadFailed (${response.status})`);
+    }
   }
 
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {

@@ -9,6 +9,8 @@ import {
 } from './sessionTypes';
 import { resolveBootModeFromUrl, resolvePolicySubject } from './sessionPolicy';
 
+const HOSTED_ASSET_BRIDGE_KEY = '__CK_CLICKEEN_HOSTED_ACCOUNT_ASSET_BRIDGE__';
+
 export type OpenRequestStatusEntry = {
   status: 'processing' | 'applied' | 'failed';
   publicId?: string;
@@ -84,42 +86,6 @@ export function useSessionTransport(args: {
     return undefined;
   }, []);
 
-  const readRequestBlobBody = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Blob | undefined> => {
-    if (init?.body instanceof Blob) return init.body;
-    if (input instanceof Request) {
-      return input.clone().blob().catch(() => undefined);
-    }
-    return undefined;
-  }, []);
-
-  const readForwardableHeaders = useCallback((input: RequestInfo | URL, init?: RequestInit): Record<string, string> => {
-    const merged = new Headers(input instanceof Request ? input.headers : undefined);
-    if (init?.headers) {
-      const overrides = new Headers(init.headers);
-      overrides.forEach((value, key) => merged.set(key, value));
-    }
-    const forwarded: Record<string, string> = {};
-    for (const [key, value] of merged.entries()) {
-      const normalizedKey = key.trim().toLowerCase();
-      const normalizedValue = value.trim();
-      if (!normalizedValue) continue;
-      switch (normalizedKey) {
-        case 'accept':
-        case 'content-type':
-        case 'x-filename':
-        case 'x-source':
-        case 'x-clickeen-surface':
-        case 'x-public-id':
-        case 'x-widget-type':
-          forwarded[normalizedKey] = normalizedValue;
-          break;
-        default:
-          break;
-      }
-    }
-    return forwarded;
-  }, []);
-
   const isHostedAccountMode = useCallback((subject: SubjectMode): boolean => {
     return subject === 'account' && bootModeRef.current === 'message';
   }, []);
@@ -190,150 +156,117 @@ export function useSessionTransport(args: {
     [],
   );
 
-  const dispatchAccountApiThroughHost = useCallback(
-    async (inputUrl: string, input: RequestInfo | URL, init?: RequestInit): Promise<Response | null> => {
-      const policy = args.stateRef.current.policy;
-      if (!policy) {
-        return null;
-      }
-      const subject = resolvePolicySubject(policy);
-      if (!isHostedAccountMode(subject)) return null;
+  const hostedAccountMode = (() => {
+    const policy = args.stateRef.current.policy;
+    const subject = policy ? resolvePolicySubject(policy) : null;
+    return subject ? isHostedAccountMode(subject) : false;
+  })();
+  const hostedPublicId = String(args.stateRef.current.meta?.publicId || '').trim();
 
-      const accountId = String(args.stateRef.current.meta?.accountId || '').trim();
-      const publicId = String(args.stateRef.current.meta?.publicId || '').trim();
-      if (!accountId || !publicId) {
-        const normalizedUrl = normalizeInputUrl(input);
-        if (
-          normalizedUrl.startsWith('/api/account/') ||
-          normalizedUrl.startsWith('/api/accounts/') ||
-          normalizedUrl === '/api/ai/widget-copilot' ||
-          normalizedUrl === '/api/ai/outcome'
-        ) {
-          return Response.json(
-            { message: 'Account context is missing. Reopen the instance from Roma and try again.' },
-            { status: 409 },
-          );
+  useEffect(() => {
+    const root = globalThis as Record<string, unknown>;
+    if (!hostedAccountMode) {
+      delete root[HOSTED_ASSET_BRIDGE_KEY];
+      return;
+    }
+
+    const bridge = {
+      listAssets: async (): Promise<unknown> => {
+        if (!hostedPublicId) {
+          throw new Error('coreui.errors.builder.command.hostUnavailable');
         }
-        return null;
-      }
-
-      const normalizedUrl = normalizeInputUrl(input);
-      if (!normalizedUrl) return null;
-
-      if (normalizedUrl === '/api/ai/widget-copilot' || normalizedUrl === '/api/ai/outcome') {
-        const body = await readRequestJsonBody(input, init);
-        const result = await dispatchHostAccountCommand({
-          command: normalizedUrl === '/api/ai/widget-copilot' ? 'run-copilot' : 'attach-ai-outcome',
-          publicId,
-          ...(typeof body === 'undefined' ? {} : { body }),
-        });
-        return new Response(JSON.stringify(result.payload ?? null), {
-          status: result.status,
-          headers: { 'content-type': 'application/json; charset=utf-8' },
-        });
-      }
-
-      const pathname = normalizedUrl.replace(/\?.*$/, '');
-      const isAssetsListRoute =
-        pathname === '/api/account/assets' || /^\/api\/accounts\/[0-9a-f-]{36}\/assets$/i.test(pathname);
-      const isAssetsResolveRoute =
-        pathname === '/api/account/assets/resolve' ||
-        /^\/api\/accounts\/[0-9a-f-]{36}\/assets\/resolve$/i.test(pathname);
-      const isAssetsUploadRoute =
-        pathname === '/api/account/assets/upload' ||
-        /^\/api\/accounts\/[0-9a-f-]{36}\/assets\/upload$/i.test(pathname);
-
-      if (!isAssetsListRoute && !isAssetsResolveRoute && !isAssetsUploadRoute) return null;
-
-      if (isAssetsListRoute) {
         const result = await dispatchHostAccountCommand({
           command: 'list-assets',
-          publicId,
+          publicId: hostedPublicId,
         });
-        return new Response(JSON.stringify(result.payload ?? null), {
-          status: result.status,
-          headers: { 'content-type': 'application/json; charset=utf-8' },
-        });
-      }
-
-      if (isAssetsResolveRoute) {
-        const body = await readRequestJsonBody(input, init);
+        if (!result.ok) {
+          throw new Error(result.message || `HTTP_${result.status}`);
+        }
+        return result.payload ?? null;
+      },
+      resolveAssets: async (assetIds: string[]): Promise<unknown> => {
+        if (!hostedPublicId) {
+          throw new Error('coreui.errors.builder.command.hostUnavailable');
+        }
         const result = await dispatchHostAccountCommand({
           command: 'resolve-assets',
-          publicId,
-          ...(typeof body === 'undefined' ? {} : { body }),
+          publicId: hostedPublicId,
+          body: { assetIds },
         });
-        return new Response(JSON.stringify(result.payload ?? null), {
-          status: result.status,
-          headers: { 'content-type': 'application/json; charset=utf-8' },
+        if (!result.ok) {
+          throw new Error(result.message || `HTTP_${result.status}`);
+        }
+        return result.payload ?? null;
+      },
+      uploadAsset: async (file: Blob, headers?: Record<string, string>): Promise<unknown> => {
+        if (!hostedPublicId) {
+          throw new Error('coreui.errors.builder.command.hostUnavailable');
+        }
+        const result = await dispatchHostAccountCommand({
+          command: 'upload-asset',
+          publicId: hostedPublicId,
+          ...(headers ? { headers } : {}),
+          body: file,
         });
-      }
+        if (!result.ok) {
+          throw new Error(result.message || `HTTP_${result.status}`);
+        }
+        return result.payload ?? null;
+      },
+    };
 
-      const body = await readRequestBlobBody(input, init);
-      const headers = readForwardableHeaders(input, init);
-      const result = await dispatchHostAccountCommand({
-        command: 'upload-asset',
-        publicId,
-        ...(Object.keys(headers).length ? { headers } : {}),
-        ...(typeof body === 'undefined' ? {} : { body }),
-      });
-      return new Response(JSON.stringify(result.payload ?? null), {
-        status: result.status,
-        headers: { 'content-type': 'application/json; charset=utf-8' },
-      });
-    },
-    [
-      args.stateRef,
-      dispatchHostAccountCommand,
-      isHostedAccountMode,
-      normalizeInputUrl,
-      readForwardableHeaders,
-      readRequestBlobBody,
-      readRequestJsonBody,
-    ],
-  );
+    root[HOSTED_ASSET_BRIDGE_KEY] = bridge;
+    return () => {
+      if (root[HOSTED_ASSET_BRIDGE_KEY] === bridge) {
+        delete root[HOSTED_ASSET_BRIDGE_KEY];
+      }
+    };
+  }, [dispatchHostAccountCommand, hostedAccountMode, hostedPublicId]);
 
   const fetchApi = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const inputUrl = normalizeInputUrl(input);
-
-    const delegated = await dispatchAccountApiThroughHost(inputUrl, input, init);
-    if (delegated) return delegated;
     const policy = args.stateRef.current.policy;
     const subject = policy ? resolvePolicySubject(policy) : null;
-    if (
-      (inputUrl.startsWith('/api/account/') || inputUrl.startsWith('/api/accounts/')) &&
-      subject &&
-      isHostedAccountMode(subject)
-    ) {
-      return Response.json(
-        {
-          error: {
-            reasonKey: 'coreui.errors.builder.command.hostOnly',
-            message: 'Hosted account mode must delegate account routes through the parent host.',
+    if (subject && isHostedAccountMode(subject)) {
+      const publicId = String(args.stateRef.current.meta?.publicId || '').trim();
+      if (inputUrl === '/api/ai/widget-copilot' || inputUrl === '/api/ai/outcome') {
+        if (!publicId) {
+          return Response.json(
+            {
+              error: {
+                reasonKey: 'coreui.errors.builder.command.hostUnavailable',
+                message: 'Builder lost its connection to the workspace host.',
+              },
+            },
+            { status: 409 },
+          );
+        }
+        const body = await readRequestJsonBody(input, init);
+        const result = await dispatchHostAccountCommand({
+          command: inputUrl === '/api/ai/widget-copilot' ? 'run-copilot' : 'attach-ai-outcome',
+          publicId,
+          ...(typeof body === 'undefined' ? {} : { body }),
+        });
+        return new Response(JSON.stringify(result.payload ?? null), {
+          status: result.status,
+          headers: { 'content-type': 'application/json; charset=utf-8' },
+        });
+      }
+      if (inputUrl.startsWith('/api/account/') || inputUrl.startsWith('/api/accounts/')) {
+        return Response.json(
+          {
+            error: {
+              reasonKey: 'coreui.errors.builder.command.hostOnly',
+              message: 'Hosted account mode must delegate account routes through the parent host.',
+            },
           },
-        },
-        { status: 409 },
-      );
+          { status: 409 },
+        );
+      }
     }
     const nativeFetch = nativeFetchRef.current ?? fetch.bind(globalThis);
     return nativeFetch(input, init);
-  }, [args.stateRef, dispatchAccountApiThroughHost, isHostedAccountMode, normalizeInputUrl]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.fetch !== 'function') return;
-    const nativeFetch = nativeFetchRef.current ?? window.fetch.bind(window);
-    nativeFetchRef.current = nativeFetch;
-
-    const delegatedFetch: typeof window.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
-      fetchApi(input, init)) as typeof window.fetch;
-
-    window.fetch = delegatedFetch;
-    globalThis.fetch = delegatedFetch;
-    return () => {
-      window.fetch = nativeFetch;
-      globalThis.fetch = nativeFetch;
-    };
-  }, [fetchApi]);
+  }, [args.stateRef, dispatchHostAccountCommand, isHostedAccountMode, normalizeInputUrl, readRequestJsonBody]);
 
   const executeAccountCommand: ExecuteAccountCommand = useCallback(
     async (commandArgs: ExecuteAccountCommandArgs) => {

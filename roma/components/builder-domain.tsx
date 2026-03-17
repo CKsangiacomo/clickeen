@@ -603,20 +603,12 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       if (envelopeAccountId && envelopeAccountId !== openedAccountId) {
         throw new Error('coreui.errors.auth.contextUnavailable');
       }
-      const hostOrigin = typeof window !== 'undefined' ? window.location.origin.replace(/\/+$/, '') : '';
-
       const message: BobOpenEditorPayload = {
         type: OPEN_EDITOR_LIFECYCLE.events.openEditor,
         subjectMode: 'account',
         publicId: resolvedPublicId,
         accountId: openedAccountId,
         ...(accountApi.accountCapsule ? { accountCapsule: accountApi.accountCapsule } : {}),
-        ...(hostOrigin
-          ? {
-              assetApiBase: '/api/account/assets',
-              assetUploadEndpoint: '/api/account/assets/upload',
-            }
-          : {}),
         ownerAccountId,
         label,
         widgetname: widgetType,

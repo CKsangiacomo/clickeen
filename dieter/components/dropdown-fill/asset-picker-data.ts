@@ -4,6 +4,7 @@ import {
   resolveEditorAssetChoices,
   type ResolvedEditorAssetChoice,
 } from '../shared/assetResolve';
+import { resolveHostedAssetBridge } from '../shared/hostedAssetBridge';
 
 export type MediaAssetChoice = {
   assetId: string;
@@ -81,10 +82,19 @@ async function fetchMediaAssetChoices(kind: AssetPickerMediaKind): Promise<Media
     view: 'all',
     limit: '200',
   });
+  const hostedBridge = resolveHostedAssetBridge();
+  if (hostedBridge) {
+    const payload = (await hostedBridge.listAssets()) as Record<string, unknown> | null;
+    const assets = Array.isArray(payload?.assets) ? (payload.assets as Array<Record<string, unknown>>) : [];
+    return assets
+      .map((asset) => normalizeMediaAssetChoice(asset, kind))
+      .filter((asset): asset is MediaAssetChoice => Boolean(asset));
+  }
   const assetApiBase = resolveAssetApiBase();
-  const endpoint = assetApiBase
-    ? `${assetApiBase}?${params.toString()}`
-    : `/api/account/assets?${params.toString()}`;
+  if (!assetApiBase) {
+    throw new Error('coreui.errors.builder.command.hostUnavailable');
+  }
+  const endpoint = `${assetApiBase}?${params.toString()}`;
 
   const response = await fetch(endpoint, {
     cache: 'no-store',
