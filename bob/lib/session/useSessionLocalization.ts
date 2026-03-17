@@ -103,9 +103,7 @@ export function useSessionLocalization(args: {
             subject: requestArgs.subject,
             command: 'get-localization-snapshot',
             method: 'GET',
-            url: `/api/accounts/${encodeURIComponent(requestArgs.accountId)}/instances/${encodeURIComponent(
-              requestArgs.publicId,
-            )}/localization?subject=${encodeURIComponent(requestArgs.subject)}`,
+            url: `/api/account/instances/${encodeURIComponent(requestArgs.publicId)}/localization?subject=${encodeURIComponent(requestArgs.subject)}`,
             accountId: requestArgs.accountId,
             publicId: requestArgs.publicId,
           });
@@ -340,9 +338,7 @@ export function useSessionLocalization(args: {
             subject,
             command: 'delete-user-locale-layer',
             method: 'DELETE',
-            url: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
-              publicId,
-            )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
+            url: `/api/account/instances/${encodeURIComponent(publicId)}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
             accountId,
             publicId,
             locale,
@@ -351,9 +347,7 @@ export function useSessionLocalization(args: {
             subject,
             command: 'put-user-locale-layer',
             method: 'PUT',
-            url: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
-              publicId,
-            )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
+            url: `/api/account/instances/${encodeURIComponent(publicId)}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
             accountId,
             publicId,
             locale,
@@ -538,9 +532,7 @@ export function useSessionLocalization(args: {
           subject: requestArgs.subject,
           command: 'get-l10n-status',
           method: 'GET',
-          url: `/api/accounts/${encodeURIComponent(requestArgs.accountId)}/instances/${encodeURIComponent(
-            requestArgs.publicId,
-          )}/l10n/status?subject=${encodeURIComponent(requestArgs.subject)}&_t=${Date.now()}`,
+          url: `/api/account/instances/${encodeURIComponent(requestArgs.publicId)}/l10n/status?subject=${encodeURIComponent(requestArgs.subject)}&_t=${Date.now()}`,
           accountId: requestArgs.accountId,
           publicId: requestArgs.publicId,
         });

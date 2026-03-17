@@ -70,24 +70,24 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 Core account editing currently uses direct app-owned read/write paths plus a direct Roma-owned aftermath step:
 
-1. **Open core instance**: `GET /api/accounts/:accountId/instance/:publicId?subject=account` once per instance open. Bob/Roma same-origin routes resolve the saved authoring revision from Tokyo only; live status is derived from Tokyo live pointers.
-2. **Save**: `PUT /api/accounts/:accountId/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, return success immediately, and schedule direct aftermath against Berlin/Tokyo/San Francisco/Tokyo-worker after the response. The Tokyo commit is the save boundary.
+1. **Open core instance**: `GET /api/builder/:publicId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads the saved authoring revision from Tokyo through the private product-control binding, composes localization server-side, and then sends Bob one `ck:open-editor` payload. Explicit localization refresh/status routes remain separate.
+2. **Save**: `PUT /api/account/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, return success immediately, and schedule direct aftermath against Berlin/Tokyo/San Francisco/Tokyo-worker after the response. The Tokyo commit is the save boundary.
 3. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute policy on each open/save/localization/status call; the signed capsule carries stable authz truth, while live mutable counters are enforced at the canonical owner when needed.
 4. **After-save context**: Roma-owned aftermath reads the current Tokyo saved revision and account locale truth directly. Product-path save aftermath no longer mounts Paris endpoints.
 
 Explicit localization-only reads are separate from core open:
 
-- `GET /api/accounts/:accountId/instances/:publicId/localization?subject=account` — same-origin explicit localization snapshot rehydrate (Roma route backed by Berlin + Tokyo)
+- `GET /api/account/instances/:publicId/localization?subject=account` — same-origin explicit localization snapshot rehydrate (Roma route backed by Berlin + Tokyo)
 
 Async l10n pipeline status is observed through:
 
-- `GET /api/accounts/:accountId/instances/:publicId/l10n/status?subject=account` — same-origin l10n status derived from Berlin + Tokyo
+- `GET /api/account/instances/:publicId/l10n/status?subject=account` — same-origin l10n status derived from Berlin + Tokyo
 
 `subject` is required on editor endpoints (`account`, `minibob`) to select the editor mode. On `account` product routes, policy/entitlement truth comes from the bootstrap authz capsule, not a fresh Paris policy resolution.
 
 In the browser these flow through one of two host paths:
 
-- Roma message boot path: host fetches the same core instance through its same-origin route, then sends Bob a `ck:open-editor` message. Save delegates back to the Roma host and stays on the product same-origin route family.
+- Roma message boot path: host fetches one Builder-open envelope through its same-origin route, then sends Bob a `ck:open-editor` message. Save delegates back to the Roma host and stays on the product same-origin route family.
 - DevStudio message boot path: host fetches the same core/localization envelope through explicit `/api/devstudio/instance*` local-tool routes, then sends Bob a `ck:open-editor` message. Bob account mutations delegate back to the DevStudio host and do not call Bob customer account routes directly.
 
 Bob does not URL-bootstrap account mode. Account editing is host-only.
@@ -183,7 +183,7 @@ curated_widget_instances.meta = {
 
 **Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly before Roma-owned aftermath runs. Bob does not own a published/unpublished toggle; its copy-code affordance is only for getting website embed snippets. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
 
-**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and owns explicit localization rehydrate/save-aftermath account routes. In current cloud-dev, this collapses to one effective account: the seeded platform-owned account. Roma no longer exposes browser-side account switching there.
+**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and owns explicit localization rehydrate/save-aftermath account routes. Current Roma is a single-current-account customer shell and does not expose customer account switching. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
 
 **DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, internal authoring, and verification. DevStudio can host Bob for curated/admin authoring work, but it must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 

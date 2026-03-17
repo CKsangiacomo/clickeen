@@ -175,7 +175,7 @@ export function AccountLocaleSettingsCard(args: {
           ip?: { enabled?: unknown; countryToLocale?: unknown };
           switcher?: { enabled?: unknown; locales?: unknown };
         } | null;
-      }>(`/api/accounts/${encodeURIComponent(args.accountId)}/locales?_t=${Date.now()}`, { method: 'GET' });
+      }>(`/api/account/locales?_t=${Date.now()}`, { method: 'GET' });
 
       const baseLocale = normalizeLocaleToken(payload.policy?.baseLocale) ?? 'en';
       const additionalLocales = normalizeAdditionalAccountLocales(payload.locales, baseLocale);
@@ -280,7 +280,7 @@ export function AccountLocaleSettingsCard(args: {
     };
 
     try {
-      await accountApi.fetchJson(`/api/accounts/${encodeURIComponent(args.accountId)}/locales?subject=account`, {
+      await accountApi.fetchJson(`/api/account/locales?subject=account`, {
         method: 'PUT',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify(payload),
@@ -299,8 +299,7 @@ export function AccountLocaleSettingsCard(args: {
       setSaving(false);
     }
   }, [
-    args.accountId,
-    args.onSaved,
+    args,
     accountApi,
     draftAdditionalLocales,
     draftBaseLocale,

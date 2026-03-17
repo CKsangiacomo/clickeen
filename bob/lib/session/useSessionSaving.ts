@@ -100,9 +100,7 @@ export function useSessionSaving(args: {
         subject,
         command: 'update-instance',
         method: 'PUT',
-        url: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(
-          publicId,
-        )}?subject=${encodeURIComponent(subject)}`,
+        url: `/api/account/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`,
         accountId,
         publicId,
         body: { config: snapshot.baseInstanceData },

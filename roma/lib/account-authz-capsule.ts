@@ -52,13 +52,12 @@ async function resolveBerlinAccountCapsuleVerifyKey(kid: string): Promise<Crypto
   });
 }
 
-export async function authorizeAccountRoleFromCapsuleToken(args: {
-  token: string;
-  accountId: string;
-  minRole: MemberRole;
-}): Promise<AccountCapsuleAuthzResult> {
-  const token = String(args.token || '').trim();
-  if (!token) {
+async function verifyAccountCapsuleToken(token: string): Promise<
+  | { ok: true; token: string; payload: RomaAccountAuthzCapsulePayload }
+  | { ok: false; status: number; error: AccountCapsuleAuthzError }
+> {
+  const normalizedToken = String(token || '').trim();
+  if (!normalizedToken) {
     return {
       ok: false,
       status: 403,
@@ -85,7 +84,7 @@ export async function authorizeAccountRoleFromCapsuleToken(args: {
   }
 
   const verified = await verifyRomaAccountAuthzCapsule({
-    token,
+    token: normalizedToken,
     resolveVerifyKey: resolveBerlinAccountCapsuleVerifyKey,
   });
   if (!verified.ok) {
@@ -99,6 +98,17 @@ export async function authorizeAccountRoleFromCapsuleToken(args: {
       },
     };
   }
+
+  return { ok: true, token: normalizedToken, payload: verified.payload };
+}
+
+export async function authorizeAccountRoleFromCapsuleToken(args: {
+  token: string;
+  accountId: string;
+  minRole: MemberRole;
+}): Promise<AccountCapsuleAuthzResult> {
+  const verified = await verifyAccountCapsuleToken(args.token);
+  if (!verified.ok) return verified;
 
   if (verified.payload.accountId !== args.accountId) {
     return {
@@ -124,7 +134,29 @@ export async function authorizeAccountRoleFromCapsuleToken(args: {
     };
   }
 
-  return { ok: true, token, payload: verified.payload };
+  return verified;
+}
+
+export async function authorizeRequestRoleFromCapsule(args: {
+  request: Request;
+  minRole: MemberRole;
+}): Promise<AccountCapsuleAuthzResult> {
+  const verified = await verifyAccountCapsuleToken(readRomaAuthzCapsuleHeader(args.request) || '');
+  if (!verified.ok) return verified;
+
+  if (roleRank(verified.payload.role) < roleRank(args.minRole)) {
+    return {
+      ok: false,
+      status: 403,
+      error: {
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.auth.forbidden',
+        detail: 'role_insufficient',
+      },
+    };
+  }
+
+  return verified;
 }
 
 export async function authorizeRequestAccountRoleFromCapsule(args: {

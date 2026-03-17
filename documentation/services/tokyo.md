@@ -79,7 +79,7 @@ Local dev:
 - `tokyo/dev-server.mjs` proxies instance-backed `GET /l10n/instances/*` reads to `tokyo-worker`; repo-local Prague/admin-owned l10n content still serves directly from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
 - Local asset management does not go through `tokyo/dev-server.mjs`.
-  - Roma product uploads use `/api/accounts/:accountId/assets/upload`.
+  - Roma product uploads use `/api/account/assets/upload`.
   - DevStudio local uses `/api/devstudio/assets/*` and talks directly to `tokyo-worker` with explicit internal-tool auth.
 - `tokyo/dev-server.mjs` still supports local widget uploads:
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
@@ -109,21 +109,27 @@ Admin-owned repo-local l10n source overlays live under:
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
-  - `GET /renders/instances/:publicId/saved.json` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`; local internal tool reads may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; requires `x-account-id` or `?accountId=`.)
-  - `PUT /renders/instances/:publicId/saved.json` (product paths require `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}` + `x-ck-internal-service: roma.edge` + Roma `x-ck-authz-capsule`; local internal tool writes may use `TOKYO_DEV_JWT` plus an allowed `x-ck-internal-service`; requires `x-account-id` or `?accountId=`.)
   - `POST /__internal/assets/upload` (private Roma service-binding path; requires `x-account-id`, Roma `x-ck-authz-capsule`, optional `x-public-id`, `x-widget-type`, `x-source`)
   - `GET /__internal/assets/account/:accountId` (private Roma service-binding path; member-scoped list)
   - `POST /__internal/assets/account/:accountId/resolve` (private Roma service-binding path; resolves logical `assetId` values to canonical immutable asset reads for runtime materialization)
   - `DELETE /__internal/assets/:accountId/:assetId` (private Roma service-binding path; editor+-scoped hard delete path)
+  - `GET|PUT|PATCH|DELETE /__internal/renders/instances/:publicId/saved.json` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; account-scoped saved authoring revision)
+  - `POST /__internal/renders/instances/:publicId/config-pack` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; writes revisioned runtime config pack)
+  - `POST /__internal/renders/instances/:publicId/live/r.json` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; syncs live render pointer)
+  - `DELETE /__internal/renders/instances/:publicId/live.json` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; clears live render pointer)
+  - `POST /__internal/l10n/instances/:publicId/bases/:baseFingerprint` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; writes base snapshot)
+  - `POST|DELETE /__internal/l10n/instances/:publicId/:layer/:layerKey` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; upserts/deletes overlay authoring state)
   - `GET /assets/integrity/:accountId` (local internal only: `Authorization: Bearer ${TOKYO_DEV_JWT}` + allowed `x-ck-internal-service`)
   - `GET /assets/integrity/:accountId/:assetId` (local internal only: `Authorization: Bearer ${TOKYO_DEV_JWT}` + allowed `x-ck-internal-service`)
   - `GET /assets/v/:assetRef` (public, immutable, cacheable; canonical account-owned asset reads)
+  - `GET /renders/instances/:publicId/live/r.json` (public; mutable live pointer read only)
   - `GET /l10n/**` (public; serves published instance packs/live pointers plus Prague overlays)
   - `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague)
 
 Security rule (executed):
 - `TOKYO_DEV_JWT` must never be used from a browser. Browser product uploads go through same-origin Roma routes using Berlin session auth plus Roma `x-ck-authz-capsule`.
 - Asset control routes execute from Roma through a private Cloudflare service binding and Roma-minted `x-ck-authz-capsule`; Tokyo-worker does not rediscover account truth from Supabase or end-user JWTs on those paths.
+- Product render/l10n control routes execute from Roma through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding and Roma-minted `x-ck-authz-capsule`; public Tokyo HTTP is no longer the saved authoring control seam.
 - `TOKYO_DEV_JWT` is not a universal bypass. Local internal callers must identify themselves explicitly with `x-ck-internal-service`, and Tokyo only honors the specific service ids wired into the route.
 
 Asset-domain note:

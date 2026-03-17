@@ -179,7 +179,6 @@ export type BobAccountCommandMessage = {
   requestId: string;
   sessionId: string;
   command: BobAccountCommand;
-  accountId: string;
   publicId: string;
   locale?: string;
   body?: unknown;
@@ -190,7 +189,6 @@ export type HostAccountCommandResultMessage = {
   requestId: string;
   sessionId: string;
   command: BobAccountCommand;
-  accountId: string;
   publicId: string;
   ok: boolean;
   status: number;

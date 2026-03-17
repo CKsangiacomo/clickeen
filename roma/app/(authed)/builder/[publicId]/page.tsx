@@ -3,19 +3,11 @@ import { RomaShell, RomaShellDefaultActions } from '../../../../components/roma-
 
 type BuilderPageProps = {
   params: Promise<{ publicId: string }>;
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function singleParam(value: string | string[] | undefined): string {
-  if (Array.isArray(value)) return String(value[0] || '').trim();
-  return String(value || '').trim();
-}
-
-export default async function BuilderPage({ params, searchParams }: BuilderPageProps) {
+export default async function BuilderPage({ params }: BuilderPageProps) {
   const { publicId } = await params;
-  const query = (searchParams ? await searchParams : {}) ?? {};
-  const initialAccountId = singleParam(query.accountId);
-  const initialPublicId = String(publicId || '').trim() || singleParam(query.publicId);
+  const initialPublicId = String(publicId || '').trim();
 
   return (
     <RomaShell
@@ -24,7 +16,7 @@ export default async function BuilderPage({ params, searchParams }: BuilderPageP
       canvasClassName="rd-canvas rd-canvas--builder"
       headerRight={<RomaShellDefaultActions />}
     >
-      <BuilderDomain initialPublicId={initialPublicId} initialAccountId={initialAccountId} />
+      <BuilderDomain initialPublicId={initialPublicId} />
     </RomaShell>
   );
 }

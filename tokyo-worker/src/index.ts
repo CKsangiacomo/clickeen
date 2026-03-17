@@ -36,10 +36,8 @@ import {
   type TokyoMirrorQueueJob,
 } from './domains/render';
 import {
-  assertProductAccountAuth,
-  requireDevAuth,
-  TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
-  TOKYO_INTERNAL_SERVICE_SANFRANCISCO_L10N,
+  assertRomaAccountCapsuleAuth,
+  TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
 } from './auth';
 import {
   guessContentTypeFromExt,
@@ -53,13 +51,15 @@ import {
 import { json } from './http';
 import type { Env } from './types';
 
-async function authorizeAccountScopedRequest(args: {
+async function authorizeRomaAccountScopedRequest(args: {
   req: Request;
   env: Env;
   accountId: string;
   minRole: MemberRole;
 }): Promise<Response | null> {
-  const auth = await assertProductAccountAuth(args.req, args.env);
+  const auth = await assertRomaAccountCapsuleAuth(args.req, args.env, {
+    requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
+  });
   if (!auth.ok) return auth.response;
   const capsule = auth.principal.accountAuthz;
   if (capsule.accountId !== args.accountId) {
@@ -69,44 +69,6 @@ async function authorizeAccountScopedRequest(args: {
     return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 });
   }
   return null;
-}
-
-function hasTrustedInternalService(req: Request, serviceId: string): boolean {
-  const raw = req.headers.get('x-ck-internal-service');
-  if (typeof raw !== 'string') return false;
-  return raw.trim().toLowerCase() === serviceId;
-}
-
-async function authorizeSavedRenderRequest(args: {
-  req: Request;
-  env: Env;
-  accountId: string;
-  minRole: MemberRole;
-}): Promise<Response | null> {
-  if (hasTrustedInternalService(args.req, TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL)) {
-    return requireDevAuth(args.req, args.env, {
-      allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
-    });
-  }
-  return authorizeAccountScopedRequest(args);
-}
-
-async function authorizeL10nAuthoringRequest(args: {
-  req: Request;
-  env: Env;
-  accountId: string;
-}): Promise<Response | null> {
-  if (hasTrustedInternalService(args.req, TOKYO_INTERNAL_SERVICE_SANFRANCISCO_L10N)) {
-    return requireDevAuth(args.req, args.env, {
-      allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_SANFRANCISCO_L10N],
-    });
-  }
-  return authorizeAccountScopedRequest({
-    req: args.req,
-    env: args.env,
-    accountId: args.accountId,
-    minRole: 'editor',
-  });
 }
 
 function withCors(res: Response): Response {
@@ -146,87 +108,71 @@ export default {
         return withCors(json({ up: true }, { status: 200 }));
       }
 
-      const renderLivePointerMatch = pathname.match(
-        /^\/renders\/instances\/([^/]+)\/live\/r\.json$/,
+      const internalRenderLivePointerMatch = pathname.match(
+        /^\/__internal\/renders\/instances\/([^/]+)\/live\/r\.json$/,
       );
-      if (renderLivePointerMatch) {
-        const publicId = normalizePublicId(decodeURIComponent(renderLivePointerMatch[1]));
-        if (!publicId) {
+      if (internalRenderLivePointerMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(internalRenderLivePointerMatch[1]));
+        const accountId = String(req.headers.get('x-account-id') || '').trim();
+        if (!publicId || !isUuid(accountId)) {
           return withCors(
             json(
-              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalidPublicId' } },
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+        if (req.method !== 'POST') {
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        }
+        const authErr = await authorizeRomaAccountScopedRequest({
+          req,
+          env,
+          accountId,
+          minRole: 'editor',
+        });
+        if (authErr) return withCors(authErr);
+
+        const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+        const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
+        const configFp = normalizeSha256Hex(body?.configFp);
+        const localePolicy = body?.localePolicy;
+        if (!widgetType || !configFp || !isRecord(localePolicy)) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
               { status: 422 },
             ),
           );
         }
 
-        if (req.method === 'GET') {
-          return withCors(await handleGetR2Object(env, renderLivePointerKey(publicId), 'no-store'));
-        }
+        await syncLiveSurface(env, {
+          v: 1,
+          kind: 'sync-live-surface',
+          publicId,
+          live: true,
+          widgetType,
+          configFp,
+          localePolicy: localePolicy as any,
+          seoGeo: body?.seoGeo === true,
+        });
 
-        if (req.method === 'POST') {
-          const accountId = String(
-            url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
-          ).trim();
-          if (!isUuid(accountId)) {
-            return withCors(
-              json(
-                { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
-                { status: 422 },
-              ),
-            );
-          }
-          const authErr = await authorizeAccountScopedRequest({
-            req,
-            env,
-            accountId,
-            minRole: 'editor',
-          });
-          if (authErr) return withCors(authErr);
-
-          const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-          const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-          const configFp = normalizeSha256Hex(body?.configFp);
-          const localePolicy = body?.localePolicy;
-          if (!widgetType || !configFp || !isRecord(localePolicy)) {
-            return withCors(
-              json(
-                { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
-                { status: 422 },
-              ),
-            );
-          }
-
-          await syncLiveSurface(env, {
-            v: 1,
-            kind: 'sync-live-surface',
+        return withCors(
+          json({
+            ok: true,
             publicId,
             live: true,
-            widgetType,
             configFp,
-            localePolicy: localePolicy as any,
-            seoGeo: body?.seoGeo === true,
-          });
-
-          return withCors(
-            json({
-              ok: true,
-              publicId,
-              live: true,
-              configFp,
-            }),
-          );
-        }
-
-        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+          }),
+        );
       }
 
-      const renderLiveSurfaceMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/live\.json$/);
-      if (renderLiveSurfaceMatch) {
-        const publicId = normalizePublicId(decodeURIComponent(renderLiveSurfaceMatch[1]));
-        const accountId = String(
-          url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
-        ).trim();
+      const internalRenderLiveSurfaceMatch = pathname.match(
+        /^\/__internal\/renders\/instances\/([^/]+)\/live\.json$/,
+      );
+      if (internalRenderLiveSurfaceMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(internalRenderLiveSurfaceMatch[1]));
+        const accountId = String(req.headers.get('x-account-id') || '').trim();
         if (!publicId || !isUuid(accountId)) {
           return withCors(
             json(
@@ -235,28 +181,24 @@ export default {
             ),
           );
         }
-
-        if (req.method === 'DELETE') {
-          const authErr = await authorizeAccountScopedRequest({
-            req,
-            env,
-            accountId,
-            minRole: 'editor',
-          });
-          if (authErr) return withCors(authErr);
-          await syncLiveSurface(env, { v: 1, kind: 'sync-live-surface', publicId, live: false });
-          return withCors(json({ ok: true, publicId, live: false }));
+        if (req.method !== 'DELETE') {
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         }
-
-        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const authErr = await authorizeRomaAccountScopedRequest({
+          req,
+          env,
+          accountId,
+          minRole: 'editor',
+        });
+        if (authErr) return withCors(authErr);
+        await syncLiveSurface(env, { v: 1, kind: 'sync-live-surface', publicId, live: false });
+        return withCors(json({ ok: true, publicId, live: false }));
       }
 
-      const renderSavedMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/saved\.json$/);
-      if (renderSavedMatch) {
-        const publicId = normalizePublicId(decodeURIComponent(renderSavedMatch[1]));
-        const accountId = String(
-          url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
-        ).trim();
+      const internalRenderSavedMatch = pathname.match(/^\/__internal\/renders\/instances\/([^/]+)\/saved\.json$/);
+      if (internalRenderSavedMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(internalRenderSavedMatch[1]));
+        const accountId = String(req.headers.get('x-account-id') || '').trim();
         if (!publicId || !isUuid(accountId)) {
           return withCors(
             json(
@@ -267,7 +209,7 @@ export default {
         }
 
         if (req.method === 'GET') {
-          const authErr = await authorizeSavedRenderRequest({
+          const authErr = await authorizeRomaAccountScopedRequest({
             req,
             env,
             accountId,
@@ -283,16 +225,11 @@ export default {
               ),
             );
           }
-          return withCors(
-            json({
-              ...saved.pointer,
-              config: saved.config,
-            }),
-          );
+          return withCors(json({ ...saved.pointer, config: saved.config }));
         }
 
         if (req.method === 'PUT') {
-          const authErr = await authorizeSavedRenderRequest({
+          const authErr = await authorizeRomaAccountScopedRequest({
             req,
             env,
             accountId,
@@ -347,7 +284,7 @@ export default {
         }
 
         if (req.method === 'PATCH') {
-          const authErr = await authorizeAccountScopedRequest({
+          const authErr = await authorizeRomaAccountScopedRequest({
             req,
             env,
             accountId,
@@ -403,7 +340,7 @@ export default {
         }
 
         if (req.method === 'DELETE') {
-          const authErr = await authorizeAccountScopedRequest({
+          const authErr = await authorizeRomaAccountScopedRequest({
             req,
             env,
             accountId,
@@ -412,6 +349,233 @@ export default {
           if (authErr) return withCors(authErr);
           await deleteSavedRenderConfig({ env, publicId, accountId });
           return withCors(json({ ok: true, deleted: true }));
+        }
+
+        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+      }
+
+      const internalRenderConfigPackWriteMatch = pathname.match(
+        /^\/__internal\/renders\/instances\/([^/]+)\/config-pack$/,
+      );
+      if (internalRenderConfigPackWriteMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(internalRenderConfigPackWriteMatch[1]));
+        const accountId = String(req.headers.get('x-account-id') || '').trim();
+        if (!publicId || !isUuid(accountId)) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+        if (req.method !== 'POST') {
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        }
+
+        const authErr = await authorizeRomaAccountScopedRequest({
+          req,
+          env,
+          accountId,
+          minRole: 'editor',
+        });
+        if (authErr) return withCors(authErr);
+
+        const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+        const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
+        const configPack =
+          isRecord(body?.configPack) ? (body.configPack as Record<string, unknown>) : null;
+        if (!widgetType || !configPack) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+
+        const configFp = await sha256StableJson(configPack);
+        await writeConfigPack(env, {
+          v: 1,
+          kind: 'write-config-pack',
+          publicId,
+          widgetType,
+          configFp,
+          configPack,
+        });
+
+        return withCors(
+          json({
+            publicId,
+            widgetType,
+            configFp,
+            written: true,
+          }),
+        );
+      }
+
+      const internalL10nBaseSnapshotMatch = pathname.match(
+        /^\/__internal\/l10n\/instances\/([^/]+)\/bases\/([^/]+)$/,
+      );
+      if (internalL10nBaseSnapshotMatch) {
+        if (req.method !== 'POST')
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const publicId = normalizePublicId(decodeURIComponent(internalL10nBaseSnapshotMatch[1]));
+        const baseFingerprint = normalizeSha256Hex(
+          decodeURIComponent(internalL10nBaseSnapshotMatch[2]),
+        );
+        const accountId = String(req.headers.get('x-account-id') || '').trim();
+        if (!publicId || !isUuid(accountId) || !baseFingerprint) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+        const authErr = await authorizeRomaAccountScopedRequest({
+          req,
+          env,
+          accountId,
+          minRole: 'editor',
+        });
+        if (authErr) return withCors(authErr);
+        return withCors(await handleWriteL10nBaseSnapshot(req, env, publicId, baseFingerprint));
+      }
+
+      const internalL10nOverlayMatch = pathname.match(
+        /^\/__internal\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/,
+      );
+      if (internalL10nOverlayMatch && (req.method === 'POST' || req.method === 'DELETE')) {
+        const publicId = normalizePublicId(decodeURIComponent(internalL10nOverlayMatch[1]));
+        const layerRaw = decodeURIComponent(internalL10nOverlayMatch[2]);
+        const layer = layerRaw === 'locale' || layerRaw === 'user' ? layerRaw : null;
+        const layerKeyRaw = decodeURIComponent(internalL10nOverlayMatch[3]);
+        const layerKey =
+          layer === 'locale'
+            ? normalizeLocale(layerKeyRaw)
+            : normalizeLocale(layerKeyRaw) || (layerKeyRaw === 'global' ? 'global' : null);
+        const accountId = String(req.headers.get('x-account-id') || '').trim();
+        if (!publicId || !isUuid(accountId) || !layer || !layerKey) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+        const authErr = await authorizeRomaAccountScopedRequest({
+          req,
+          env,
+          accountId,
+          minRole: 'editor',
+        });
+        if (authErr) return withCors(authErr);
+        if (req.method === 'POST') {
+          return withCors(await handleUpsertL10nOverlay(req, env, publicId, layer, layerKey));
+        }
+        return withCors(await handleDeleteL10nOverlay(req, env, publicId, layer, layerKey));
+      }
+
+      const renderLivePointerMatch = pathname.match(
+        /^\/renders\/instances\/([^/]+)\/live\/r\.json$/,
+      );
+      if (renderLivePointerMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(renderLivePointerMatch[1]));
+        if (!publicId) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalidPublicId' } },
+              { status: 422 },
+            ),
+          );
+        }
+
+        if (req.method === 'GET') {
+          return withCors(await handleGetR2Object(env, renderLivePointerKey(publicId), 'no-store'));
+        }
+
+        if (req.method === 'POST') {
+          return withCors(
+            json({
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: 'tokyo.errors.internalOnly',
+                detail: 'Use the private Roma-bound render control route.',
+              },
+            }, { status: 410 }),
+          );
+        }
+
+        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+      }
+
+      const renderLiveSurfaceMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/live\.json$/);
+      if (renderLiveSurfaceMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(renderLiveSurfaceMatch[1]));
+        const accountId = String(
+          url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
+        ).trim();
+        if (!publicId || !isUuid(accountId)) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+
+        if (req.method === 'DELETE') {
+          return withCors(
+            json({
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: 'tokyo.errors.internalOnly',
+                detail: 'Use the private Roma-bound render control route.',
+              },
+            }, { status: 410 }),
+          );
+        }
+
+        return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+      }
+
+      const renderSavedMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/saved\.json$/);
+      if (renderSavedMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(renderSavedMatch[1]));
+        const accountId = String(
+          url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
+        ).trim();
+        if (!publicId || !isUuid(accountId)) {
+          return withCors(
+            json(
+              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+              { status: 422 },
+            ),
+          );
+        }
+
+        if (req.method === 'GET') {
+          return withCors(
+            json({
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: 'tokyo.errors.internalOnly',
+                detail: 'Use the private Roma-bound render control route.',
+              },
+            }, { status: 410 }),
+          );
+        }
+
+        if (req.method === 'PUT' || req.method === 'PATCH' || req.method === 'DELETE') {
+          return withCors(
+            json({
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: 'tokyo.errors.internalOnly',
+                detail: 'Use the private Roma-bound render control route.',
+              },
+            }, { status: 410 }),
+          );
         }
 
         return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
@@ -458,44 +622,14 @@ export default {
           return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         }
 
-        const authErr = await authorizeAccountScopedRequest({
-          req,
-          env,
-          accountId,
-          minRole: 'editor',
-        });
-        if (authErr) return withCors(authErr);
-
-        const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-        const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-        const configPack =
-          isRecord(body?.configPack) ? (body.configPack as Record<string, unknown>) : null;
-        if (!widgetType || !configPack) {
-          return withCors(
-            json(
-              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
-              { status: 422 },
-            ),
-          );
-        }
-
-        const configFp = await sha256StableJson(configPack);
-        await writeConfigPack(env, {
-          v: 1,
-          kind: 'write-config-pack',
-          publicId,
-          widgetType,
-          configFp,
-          configPack,
-        });
-
         return withCors(
           json({
-            publicId,
-            widgetType,
-            configFp,
-            written: true,
-          }),
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: 'tokyo.errors.internalOnly',
+              detail: 'Use the private Roma-bound render control route.',
+            },
+          }, { status: 410 }),
         );
       }
 
@@ -676,9 +810,15 @@ export default {
             ),
           );
         }
-        const authErr = await authorizeL10nAuthoringRequest({ req, env, accountId });
-        if (authErr) return withCors(authErr);
-        return withCors(await handleWriteL10nBaseSnapshot(req, env, publicId, baseFingerprint));
+        return withCors(
+          json({
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: 'tokyo.errors.internalOnly',
+              detail: 'Use the private Roma-bound l10n control route.',
+            },
+          }, { status: 410 }),
+        );
       }
 
       const l10nOverlayMatch = pathname.match(
@@ -705,14 +845,15 @@ export default {
             ),
           );
         }
-        if (req.method === 'POST') {
-          const authErr = await authorizeL10nAuthoringRequest({ req, env, accountId });
-          if (authErr) return withCors(authErr);
-          return withCors(await handleUpsertL10nOverlay(req, env, publicId, layer, layerKey));
-        }
-        const authErr = await authorizeL10nAuthoringRequest({ req, env, accountId });
-        if (authErr) return withCors(authErr);
-        return withCors(await handleDeleteL10nOverlay(req, env, publicId, layer, layerKey));
+        return withCors(
+          json({
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: 'tokyo.errors.internalOnly',
+              detail: 'Use the private Roma-bound l10n control route.',
+            },
+          }, { status: 410 }),
+        );
       }
 
       if (pathname.startsWith('/l10n/')) {

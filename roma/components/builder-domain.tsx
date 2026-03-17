@@ -1,23 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import openEditorLifecycleContractJson from '../../packages/ck-contracts/editor/open-editor-lifecycle.v1.json';
 import { useRomaAccountApi } from './account-api';
 import { getCompiledWidget, normalizeCompiledWidgetType } from './compiled-widget-cache';
-import {
-  getAccountInstance,
-  getAccountInstanceLocalization,
-  invalidateAccountInstanceCache,
-  prefetchAccountInstance,
-  reconcileAccountInstanceCacheAfterMutation,
-} from './account-instance-cache';
 import { resolveAccountPolicyFromRomaAuthz, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 type BuilderDomainProps = {
   initialPublicId?: string;
-  initialAccountId?: string;
 };
 
 type OpenEditorLifecycleContract = {
@@ -87,7 +79,6 @@ type BobAccountCommandMessage = {
   requestId?: string | null;
   sessionId?: string | null;
   command?: BobAccountCommand | null;
-  accountId?: string | null;
   publicId?: string | null;
   locale?: string | null;
   body?: unknown;
@@ -98,7 +89,6 @@ type HostAccountCommandResultMessage = {
   requestId: string;
   sessionId: string;
   command: BobAccountCommand;
-  accountId: string;
   publicId: string;
   ok: boolean;
   status: number;
@@ -125,6 +115,17 @@ type BobOpenEditorMessage = {
 };
 
 type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId' | 'sessionId'>;
+
+type BuilderOpenResponse = {
+  accountId?: string;
+  publicId?: string;
+  displayName?: string;
+  ownerAccountId?: string;
+  widgetType?: string;
+  status?: 'published' | 'unpublished';
+  config?: Record<string, unknown>;
+  localization?: unknown;
+};
 
 const BUILDER_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to open Builder.',
@@ -174,54 +175,44 @@ function resolveBobBaseUrl(): string {
 
 function buildRomaBuilderRoute(args: {
   publicId: string;
-  accountId: string;
-  widgetType?: string;
 }): string {
-  const search = new URLSearchParams({
-    accountId: args.accountId,
-    publicId: args.publicId,
-    subject: 'account',
-  });
-  if (args.widgetType) search.set('widgetType', args.widgetType);
-  return `/builder/${encodeURIComponent(args.publicId)}?${search.toString()}`;
+  return `/builder/${encodeURIComponent(args.publicId)}`;
 }
 
 function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
-  accountId: string;
   publicId: string;
   locale?: string;
 }): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
-  const accountId = String(args.accountId || '').trim();
   const publicId = String(args.publicId || '').trim();
   const locale = String(args.locale || '').trim();
-  if (!accountId || !publicId) return null;
+  if (!publicId) return null;
 
   switch (args.command) {
     case 'get-localization-snapshot':
       return {
         method: 'GET',
-        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+        path: `/api/account/instances/${encodeURIComponent(
           publicId,
         )}/localization?subject=account`,
       };
     case 'get-l10n-status':
       return {
         method: 'GET',
-        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+        path: `/api/account/instances/${encodeURIComponent(
           publicId,
         )}/l10n/status?subject=account`,
       };
     case 'update-instance':
       return {
         method: 'PUT',
-        path: `/api/accounts/${encodeURIComponent(accountId)}/instance/${encodeURIComponent(publicId)}?subject=account`,
+        path: `/api/account/instance/${encodeURIComponent(publicId)}?subject=account`,
       };
     case 'put-user-locale-layer':
       if (!locale) return null;
       return {
         method: 'PUT',
-        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+        path: `/api/account/instances/${encodeURIComponent(
           publicId,
         )}/layers/user/${encodeURIComponent(locale)}?subject=account`,
       };
@@ -229,21 +220,21 @@ function resolveBobAccountCommandRequest(args: {
       if (!locale) return null;
       return {
         method: 'DELETE',
-        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+        path: `/api/account/instances/${encodeURIComponent(
           publicId,
         )}/layers/user/${encodeURIComponent(locale)}?subject=account`,
       };
     case 'run-copilot':
       return {
         method: 'POST',
-        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+        path: `/api/account/instances/${encodeURIComponent(
           publicId,
         )}/copilot`,
       };
     case 'attach-ai-outcome':
       return {
         method: 'POST',
-        path: `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(
+        path: `/api/account/instances/${encodeURIComponent(
           publicId,
         )}/copilot/outcome`,
       };
@@ -262,12 +253,11 @@ function decodeBuilderPathPublicId(pathname: string): string {
   }
 }
 
-export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: BuilderDomainProps) {
+export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
   const me = useRomaMe();
   const accountApi = useRomaAccountApi(me.data);
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const bobReadyRef = useRef(false);
   const bobSessionIdRef = useRef('');
@@ -280,54 +270,36 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
   const [openError, setOpenError] = useState<string | null>(null);
 
   const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
-  const accountId = useMemo(() => {
-    const fromQuery = String(searchParams.get('accountId') || '').trim();
-    if (fromQuery) return fromQuery;
-    const fromProp = String(initialAccountId || '').trim();
-    if (fromProp) return fromProp;
-    return context.accountId;
-  }, [context.accountId, initialAccountId, searchParams]);
-  const widgetTypeHint = useMemo(() => normalizeCompiledWidgetType(searchParams.get('widgetType')), [searchParams]);
+  const accountId = context.accountId;
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
-  const searchQuery = searchParams.toString();
-  const currentUrl = useMemo(() => (searchQuery ? `${pathname}?${searchQuery}` : pathname), [pathname, searchQuery]);
+  const currentUrl = pathname;
   const pathPublicId = useMemo(() => decodeBuilderPathPublicId(pathname), [pathname]);
 
   const bobSrc = useMemo(() => {
-    if (!accountId) return '';
     const url = new URL('/bob', `${bobBaseUrl}/`);
     url.searchParams.set('boot', 'message');
-    url.searchParams.set('accountId', accountId);
     url.searchParams.set('subject', 'account');
     return url.toString();
-  }, [accountId, bobBaseUrl]);
+  }, [bobBaseUrl]);
 
   useEffect(() => {
-    if (!accountId || !activePublicId) return;
+    if (!activePublicId) return;
     const nextRoute = buildRomaBuilderRoute({
       publicId: activePublicId,
-      accountId,
-      widgetType: widgetTypeHint,
     });
     if (nextRoute === currentUrl) return;
     router.replace(nextRoute, { scroll: false });
-  }, [accountId, activePublicId, currentUrl, router, widgetTypeHint]);
+  }, [activePublicId, currentUrl, router]);
 
   useEffect(() => {
-    const queryPublicId = String(searchParams.get('publicId') || '').trim();
-    const resolved = pathPublicId || queryPublicId || String(initialPublicId || '').trim();
+    const resolved = pathPublicId || String(initialPublicId || '').trim();
     if (!resolved) {
       if (activePublicId) setActivePublicId('');
       return;
     }
     if (resolved === activePublicId) return;
     setActivePublicId(resolved);
-  }, [activePublicId, initialPublicId, pathPublicId, searchParams]);
-
-  useEffect(() => {
-    if (!accountId || !activePublicId) return;
-    void prefetchAccountInstance(accountId, activePublicId, accountApi.accountCapsule);
-  }, [accountApi.accountCapsule, accountId, activePublicId]);
+  }, [activePublicId, initialPublicId, pathPublicId]);
 
   const runBobAccountCommand = useCallback(
     async (args: {
@@ -335,17 +307,16 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
       requestId: string;
       sessionId: string;
       command: BobAccountCommand;
-      accountId: string;
       publicId: string;
       locale?: string;
       body?: unknown;
     }) => {
       const route = resolveBobAccountCommandRequest({
         command: args.command,
-        accountId: args.accountId,
         publicId: args.publicId,
         locale: args.locale,
       });
+      const currentAccountId = String(context.accountId || '').trim();
 
       const reply = (payload: Omit<HostAccountCommandResultMessage, 'type'>) => {
         const message: HostAccountCommandResultMessage = {
@@ -355,12 +326,24 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         args.source.postMessage(message, bobBaseUrl);
       };
 
+      if (!currentAccountId) {
+        reply({
+          requestId: args.requestId,
+          sessionId: args.sessionId,
+          command: args.command,
+          publicId: args.publicId,
+          ok: false,
+          status: 409,
+          message: 'coreui.errors.auth.contextUnavailable',
+        });
+        return;
+      }
+
       if (!route) {
         reply({
           requestId: args.requestId,
           sessionId: args.sessionId,
           command: args.command,
-          accountId: args.accountId,
           publicId: args.publicId,
           ok: false,
           status: 422,
@@ -383,23 +366,10 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         const response = await accountApi.fetchRaw(route.path, init);
         const payload = (await response.json().catch(() => null)) as unknown;
 
-        if (response.ok) {
-          if (args.command === 'update-instance') {
-            reconcileAccountInstanceCacheAfterMutation({
-              accountId: args.accountId,
-              publicId: args.publicId,
-              payload,
-            });
-          } else {
-            invalidateAccountInstanceCache(args.accountId, args.publicId);
-          }
-        }
-
         reply({
           requestId: args.requestId,
           sessionId: args.sessionId,
           command: args.command,
-          accountId: args.accountId,
           publicId: args.publicId,
           ok: response.ok,
           status: response.status,
@@ -419,7 +389,6 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
           requestId: args.requestId,
           sessionId: args.sessionId,
           command: args.command,
-          accountId: args.accountId,
           publicId: args.publicId,
           ok: false,
           status: 500,
@@ -427,7 +396,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         });
       }
     },
-    [accountApi, bobBaseUrl],
+    [accountApi, bobBaseUrl, context.accountId],
   );
 
   const postOpenEditorAndWait = useCallback(
@@ -546,61 +515,59 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
 
   const openActiveInstanceInBob = useCallback(async () => {
     const targetWindow = iframeRef.current?.contentWindow;
-    if (!targetWindow || !accountId || !activePublicId) return;
+    if (!targetWindow || !context.accountId || !activePublicId) return;
     if (me.loading) return;
 
     const openSeq = ++openDispatchSeqRef.current;
     setOpenError(null);
 
     try {
-      const bootstrapPolicy = resolveAccountPolicyFromRomaAuthz(me.data, accountId);
+      const bootstrapPolicy = resolveAccountPolicyFromRomaAuthz(me.data, context.accountId);
       if (!bootstrapPolicy) {
         throw new Error(me.error || 'coreui.errors.auth.forbidden');
       }
 
       const compileFetchStartedAt = performance.now();
-      const hintedCompiledPromise = widgetTypeHint ? getCompiledWidget(widgetTypeHint) : null;
-      const [instanceResult, localizationResult] = await Promise.all([
-        getAccountInstance({
-          accountId,
-          publicId: activePublicId,
-          authzCapsule: accountApi.accountCapsule,
-        }),
-        getAccountInstanceLocalization({
-          accountId,
-          publicId: activePublicId,
-          authzCapsule: accountApi.accountCapsule,
-        }),
-      ]);
-      const instance = instanceResult.payload;
-      const localization = localizationResult.payload.localization;
-
-      const widgetType = typeof instance.widgetType === 'string' ? instance.widgetType.trim() : '';
+      const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(
+        `/api/builder/${encodeURIComponent(activePublicId)}/open`,
+      );
+      const widgetType =
+        typeof builderOpen?.widgetType === 'string' ? builderOpen.widgetType.trim() : '';
       if (!widgetType) throw new Error('coreui.errors.instance.widgetMissing');
 
       const normalizedInstanceWidgetType = normalizeCompiledWidgetType(widgetType);
-      const compiledResult =
-        hintedCompiledPromise && normalizedInstanceWidgetType === widgetTypeHint
-          ? await hintedCompiledPromise
-          : await getCompiledWidget(widgetType);
+      const compiledResult = await getCompiledWidget(widgetType);
       const compiled = compiledResult.payload;
 
       if (openSeq !== openDispatchSeqRef.current) return;
 
       const resolvedPublicId =
-        typeof instance.publicId === 'string' && instance.publicId.trim() ? instance.publicId.trim() : activePublicId;
+        typeof builderOpen?.publicId === 'string' && builderOpen.publicId.trim()
+          ? builderOpen.publicId.trim()
+          : activePublicId;
       const label =
-        typeof instance.displayName === 'string' && instance.displayName.trim()
-          ? instance.displayName.trim()
+        typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim()
+          ? builderOpen.displayName.trim()
           : resolvedPublicId;
-      if (!instance.config || typeof instance.config !== 'object' || Array.isArray(instance.config)) {
+      if (!builderOpen?.config || typeof builderOpen.config !== 'object' || Array.isArray(builderOpen.config)) {
         throw new Error('coreui.errors.instance.config.invalid');
       }
-      const config = instance.config as Record<string, unknown>;
+      const config = builderOpen.config as Record<string, unknown>;
       const ownerAccountId =
-        typeof instance.ownerAccountId === 'string' && instance.ownerAccountId.trim() ? instance.ownerAccountId.trim() : '';
+        typeof builderOpen?.ownerAccountId === 'string' && builderOpen.ownerAccountId.trim()
+          ? builderOpen.ownerAccountId.trim()
+          : '';
       if (!ownerAccountId) {
         throw new Error('coreui.errors.instance.ownerAccountMissing');
+      }
+      const openedAccountId = String(context.accountId || '').trim();
+      if (!openedAccountId) {
+        throw new Error('coreui.errors.auth.contextUnavailable');
+      }
+      const envelopeAccountId =
+        typeof builderOpen?.accountId === 'string' ? builderOpen.accountId.trim() : '';
+      if (envelopeAccountId && envelopeAccountId !== openedAccountId) {
+        throw new Error('coreui.errors.auth.contextUnavailable');
       }
       const hostOrigin = typeof window !== 'undefined' ? window.location.origin.replace(/\/+$/, '') : '';
 
@@ -608,12 +575,12 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         type: OPEN_EDITOR_LIFECYCLE.events.openEditor,
         subjectMode: 'account',
         publicId: resolvedPublicId,
-        accountId,
+        accountId: openedAccountId,
         ...(accountApi.accountCapsule ? { accountCapsule: accountApi.accountCapsule } : {}),
         ...(hostOrigin
           ? {
-              assetApiBase: `${hostOrigin}/api/accounts/${encodeURIComponent(ownerAccountId)}/assets`,
-              assetUploadEndpoint: `${hostOrigin}/api/accounts/${encodeURIComponent(ownerAccountId)}/assets/upload`,
+              assetApiBase: `${hostOrigin}/api/account/assets`,
+              assetUploadEndpoint: `${hostOrigin}/api/account/assets/upload`,
             }
           : {}),
         ownerAccountId,
@@ -621,9 +588,9 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         widgetname: widgetType,
         compiled,
         instanceData: config,
-        localization,
+        localization: builderOpen.localization,
         policy: bootstrapPolicy,
-        enforcement: instance.enforcement,
+        enforcement: undefined,
       };
       await postOpenEditorAndWait({
         targetWindow,
@@ -635,7 +602,6 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         console.log('[RomaBuilder] instance open timing', {
           publicId: resolvedPublicId,
           widgetType: normalizedInstanceWidgetType,
-          instanceSource: instanceResult.source,
           compiledSource: compiledResult.source,
           elapsedMs: Math.round(performance.now() - compileFetchStartedAt),
         });
@@ -646,7 +612,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [accountApi.accountCapsule, accountId, activePublicId, me.data, me.error, me.loading, postOpenEditorAndWait, widgetTypeHint]);
+  }, [accountApi, activePublicId, context.accountId, me.data, me.error, me.loading, postOpenEditorAndWait]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {
@@ -691,17 +657,15 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         const requestId = typeof message.requestId === 'string' ? message.requestId.trim() : '';
         const sessionId = typeof message.sessionId === 'string' ? message.sessionId.trim() : '';
         const command = message.command ?? null;
-        const messageAccountId = typeof message.accountId === 'string' ? message.accountId.trim() : '';
         const publicId = typeof message.publicId === 'string' ? message.publicId.trim() : '';
         const locale = typeof message.locale === 'string' ? message.locale.trim() : '';
-        if (!requestId || !sessionId || !command || !messageAccountId || !publicId) return;
+        if (!requestId || !sessionId || !command || !publicId) return;
         if (sessionId !== bobSessionIdRef.current.trim()) return;
         void runBobAccountCommand({
           source,
           requestId,
           sessionId,
           command,
-          accountId: messageAccountId,
           publicId,
           ...(locale ? { locale } : {}),
           ...(typeof message.body === 'undefined' ? {} : { body: message.body }),
@@ -712,7 +676,6 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
         const denial = data as BobAssetEntitlementDeniedMessage;
         const reasonKey = String(denial.reasonKey || '').trim();
         const search = new URLSearchParams();
-        if (accountId) search.set('accountId', accountId);
         if (reasonKey) search.set('reasonKey', reasonKey);
         const nextRoute = search.size ? `/assets?${search.toString()}` : '/assets';
         router.push(nextRoute, { scroll: false });
@@ -721,7 +684,7 @@ export function BuilderDomain({ initialPublicId = '', initialAccountId = '' }: B
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [accountId, activePublicId, bobBaseUrl, openActiveInstanceInBob, router, runBobAccountCommand]);
+  }, [activePublicId, bobBaseUrl, context.accountId, openActiveInstanceInBob, router, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;

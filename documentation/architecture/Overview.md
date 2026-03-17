@@ -179,17 +179,17 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
 - Bob uses named same-origin routes (`/api/instance/:publicId`, `/api/ai/*`) for public/minibob surfaces only. Account-mode bootstrap/authz come from Roma host messaging and same-origin Roma account routes.
-- DevStudio local does not use `/api/roma/templates`; it uses its own explicit `/api/devstudio/instances*` and `/api/devstudio/instance*` tool paths for instance discovery, boot, save, localization, and status on the platform-owned account.
+- DevStudio local does not use Roma customer `/api/account/*` routes for instance discovery; it uses its own explicit `/api/devstudio/instances*` and `/api/devstudio/instance*` tool paths for instance discovery, boot, save, localization, and status on the platform-owned account.
 
 #### Roma (Pages)
 
 - Roma is the domain shell (`/home`, `/profile`, `/widgets`, `/templates`, `/builder`, ...).
 - Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Berlin `GET /v1/session/bootstrap`), including an account authz capsule and an account entitlement snapshot.
 - Roma exposes person-scoped User Settings through `/profile`, using Berlin-owned `/api/me` same-origin routes.
-- In current cloud-dev, Roma usually resolves one effective account context only: the seeded platform-owned account. When the current user has more than one membership, Roma exposes Berlin-backed account switching and does not use browser-side account preference overrides.
+- Current Roma resolves one effective active account context per session and does not expose customer account switching. Cloud-dev still usually collapses to the seeded platform-owned account, while any internal account switching belongs to DevStudio and future customer multi-account switching belongs to a separate Roma-for-agency product.
 - Roma uses named same-origin account routes and injects short-lived authz headers:
   - `x-ck-authz-capsule` for account-scoped calls
-- Roma serves Berlin-backed account member reads on same-origin routes (`GET /api/accounts/:accountId/members`).
+- Roma serves Berlin-backed account member reads on same-origin routes (`GET /api/account/team` and `GET /api/account/team/members/:memberId`).
 - Roma Builder embeds Bob with `boot=message` and sends explicit `ck:open-editor` payloads after `bob:session-ready`.
 
 #### DevStudio (Local toolbench)
@@ -206,10 +206,10 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - Public endpoints are under `/api/*`.
 - Shipped in this repo snapshot:
   - Health only: `GET /api/healthz`
-  - Core account instance open/save now lives only in Bob/Roma same-origin routes; Paris no longer exposes `GET/PUT /api/accounts/:accountId/instance/:publicId?subject=account`.
+  - Core account instance open/save now lives only in Bob/Roma same-origin routes; Paris no longer exposes customer account instance routes.
   - Locale/editor endpoints are Roma-owned and are not mounted in Paris.
-  - Roma starter discovery is Roma-owned (`GET /api/roma/widgets?accountId=...`, `GET /api/roma/templates?accountId=...`); Paris no longer mounts those routes.
-  - Roma widget commands stay explicit (`POST /api/roma/widgets/duplicate`, `DELETE /api/roma/instances/:publicId`).
+  - Roma starter discovery is Roma-owned (`GET /api/account/widgets`, `GET /api/account/templates`); Paris no longer mounts those routes.
+  - Roma widget commands stay explicit (`POST /api/account/widgets/duplicate`, `DELETE /api/account/instance/:publicId`).
   - Paris no longer mounts AI endpoints in the product path under 070A.
   - Venice now owns the public instance payload route (`GET /api/instance/:publicId`) on top of Tokyo live/config artifacts.
 - Current cloud-dev account rule:
@@ -249,10 +249,10 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - Ownership boundary is account (`account_id`).
 - End-to-end flow:
-  1. Bob uploads through Roma (`POST /api/accounts/:accountId/assets/upload`), and Roma forwards to Tokyo-worker over the `TOKYO_ASSET_CONTROL` Cloudflare service binding with optional public/widget trace headers.
+  1. Bob uploads through Roma (`POST /api/account/assets/upload`), and Roma forwards to Tokyo-worker over the `TOKYO_ASSET_CONTROL` Cloudflare service binding with optional public/widget trace headers.
   2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable URL (`/assets/v/:assetRef`).
   3. Roma validates account commands at the product boundary and Tokyo/Tokyo-worker enforce canonical asset/config contracts on write.
-  4. Roma Assets reads/deletes via Roma asset routes (`/api/accounts/:accountId/assets*`) which forward to Tokyo-worker through the private service binding plus the Roma account capsule; Tokyo-worker enforces account membership role.
+  4. Roma Assets reads/deletes via Roma asset routes (`/api/account/assets*`) which forward to Tokyo-worker through the private service binding plus the Roma account capsule; Tokyo-worker enforces account membership role.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
 
@@ -273,7 +273,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **Hard security rule:**
 
-- `CK_INTERNAL_SERVICE_JWT` is a server-only internal bearer for residual non-asset Roma -> Tokyo/Tokyo-worker paths and Roma -> San Francisco calls. The account asset lane uses a private Cloudflare service binding instead.
+- `CK_INTERNAL_SERVICE_JWT` is a server-only internal bearer for Roma -> San Francisco calls and residual non-product internal surfaces only. Roma -> Tokyo/Tokyo-worker account product control now uses private Cloudflare service bindings instead of shared-secret HTTP.
 
 **Local auth rule:**
 
@@ -340,7 +340,7 @@ Non-negotiable:
 - **Secrets isolation**:
   - Provider keys live only in San Francisco.
   - Supabase service role lives only in Berlin/Tokyo-worker where explicitly required.
-  - `CK_INTERNAL_SERVICE_JWT` stays server-only and must never be exposed client-side, but the asset lane is now private service-binding traffic rather than shared-secret HTTP.
+  - `CK_INTERNAL_SERVICE_JWT` stays server-only and must never be exposed client-side. Roma -> Tokyo/Tokyo-worker account product control now uses private Cloudflare service bindings; Roma still uses `CK_INTERNAL_SERVICE_JWT` for San Francisco internal calls.
 - **Caching**:
   - Tokyo assets are long-cacheable when versioned; avoid cache on `spec.json` when iterating in dev.
   - Venice serves short-cache shell HTML, `no-store` live pointers, and immutable fingerprinted packs/assets.
@@ -353,7 +353,7 @@ Non-negotiable:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           EDITING FLOW                                  │
 │                                                                         │
-│  ┌─────────┐    GET /api/accounts/:accountId/instance/:publicId?subject=account    ┌──────────────┐        │
+│  ┌─────────┐    GET /api/builder/:publicId/open                                    ┌──────────────┐        │
 │  │   Bob   │ ◄──────────────────────────────── │ Bob/Roma route │        │
 │  │ Builder │                                   │ Michael metadata│       │
 │  │         │                                   │ + Tokyo config │        │
@@ -370,7 +370,7 @@ Non-negotiable:
 │       │ User clicks Save                            │                   │
 │       │                                             ▼                   │
 │       └──────────────────────────────────────► ┌──────────────┐        │
-│            PUT /api/accounts/:accountId/instance/:publicId?subject=account         │ Tokyo saved    │      │
+│            PUT /api/account/instance/:publicId?subject=account                      │ Tokyo saved    │      │
 │                                                │   revision      │      │
 │                                                └──────┬─────────┘        │
 │                                                       │                  │
@@ -441,13 +441,13 @@ Base config exists in EXACTLY 3 places during editing:
 **The Pattern:**
 
 ```
-1. Load:    GET /api/accounts/:accountId/instance/:publicId?subject=account  → host (message boot) gets saved config through Roma same-origin routes
+1. Load:    GET /api/builder/:publicId/open  → host (message boot) gets saved config + localization through one Roma same-origin route
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/accounts/:accountId/instance/:publicId?subject=account`  → Commits to Tokyo first, then runs direct Roma-owned aftermath against Berlin/Tokyo/San Francisco/Tokyo-worker without rolling back the saved revision
+4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:publicId?subject=account`  → Commits to Tokyo first, then runs direct Roma-owned aftermath against Berlin/Tokyo/San Francisco/Tokyo-worker without rolling back the saved revision
 
 Snapshot/l10n convergence is observed via:
-- `GET /api/accounts/:accountId/instances/:publicId/l10n/status`
+- `GET /api/account/instances/:publicId/l10n/status`
 ```
 
 In Roma/DevStudio message-boot account flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Save, localization rehydrate, and l10n status reads also return through the host boundary before hitting the Roma account routes.

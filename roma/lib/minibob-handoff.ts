@@ -105,13 +105,8 @@ function resolveMinibobHandoffReplayKey(args: { userId: string; handoffId: strin
   return `roma:minibob:handoff:complete:${args.userId}:${args.handoffId}`;
 }
 
-function resolveMinibobHandoffRoute(publicId: string, accountId: string): string {
-  const search = new URLSearchParams({
-    accountId,
-    publicId,
-    subject: 'account',
-  });
-  return `/builder/${encodeURIComponent(publicId)}?${search.toString()}`;
+function resolveMinibobHandoffRoute(publicId: string): string {
+  return `/builder/${encodeURIComponent(publicId)}`;
 }
 
 function createUserInstancePublicIdFromHandoff(widgetType: string, handoffId: string): string {
@@ -377,7 +372,7 @@ export async function completeMinibobHandoff(args: {
         accountId: args.accountId,
         sourcePublicId: existingHandoff.sourcePublicId,
         publicId: resultPublicId,
-        builderRoute: resolveMinibobHandoffRoute(resultPublicId, args.accountId),
+        builderRoute: resolveMinibobHandoffRoute(resultPublicId),
         replay: true,
       },
     };
@@ -416,7 +411,7 @@ export async function completeMinibobHandoff(args: {
     accountId: args.accountId,
     sourcePublicId: existingHandoff.sourcePublicId,
     publicId: created.value.publicId,
-    builderRoute: resolveMinibobHandoffRoute(created.value.publicId, args.accountId),
+    builderRoute: resolveMinibobHandoffRoute(created.value.publicId),
     replay: false,
   };
   await kvPutJson(kv, replayKey, payload, MINIBOB_HANDOFF_STATE_TTL_SEC).catch(() => undefined);

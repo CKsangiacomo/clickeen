@@ -46,7 +46,6 @@ export function useSessionTransport(args: {
   const dispatchHostAccountCommand = useCallback(
     (commandArgs: {
       command: BobAccountCommand;
-      accountId: string;
       publicId: string;
       locale?: string;
       body?: unknown;
@@ -63,7 +62,6 @@ export function useSessionTransport(args: {
         requestId,
         sessionId,
         command: commandArgs.command,
-        accountId: String(commandArgs.accountId || '').trim(),
         publicId: String(commandArgs.publicId || '').trim(),
         ...(commandArgs.locale ? { locale: String(commandArgs.locale || '').trim() } : {}),
         ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
@@ -143,7 +141,6 @@ export function useSessionTransport(args: {
 
       const result = await dispatchHostAccountCommand({
         command: inputUrl === '/api/ai/widget-copilot' ? 'run-copilot' : 'attach-ai-outcome',
-        accountId,
         publicId,
         ...(typeof body === 'undefined' ? {} : { body }),
       });
@@ -169,7 +166,11 @@ export function useSessionTransport(args: {
     if (delegated) return delegated;
     const policy = args.stateRef.current.policy;
     const subject = policy ? resolvePolicySubject(policy) : null;
-    if (inputUrl.startsWith('/api/accounts/') && subject && isHostedAccountMode(subject)) {
+    if (
+      (inputUrl.startsWith('/api/account/') || inputUrl.startsWith('/api/accounts/')) &&
+      subject &&
+      isHostedAccountMode(subject)
+    ) {
       return Response.json(
         {
           error: {
@@ -188,7 +189,6 @@ export function useSessionTransport(args: {
       if (isHostedAccountMode(commandArgs.subject)) {
         const result = await dispatchHostAccountCommand({
           command: commandArgs.command,
-          accountId: commandArgs.accountId,
           publicId: commandArgs.publicId,
           ...(commandArgs.locale ? { locale: commandArgs.locale } : {}),
           ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),

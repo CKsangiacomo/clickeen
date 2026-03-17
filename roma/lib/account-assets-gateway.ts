@@ -1,6 +1,6 @@
 import type { MemberRole } from '@clickeen/ck-policy';
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeRequestAccountRoleFromCapsule } from './account-authz-capsule';
+import { authorizeRequestAccountRoleFromCapsule, authorizeRequestRoleFromCapsule } from './account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from './auth/session';
 import {
   assertTokyoAssetControlBindingAvailable,
@@ -121,6 +121,65 @@ export async function resolveAccountAssetGatewayContext(args: {
       ok: true,
       value: {
         accountId: args.accountId,
+        accountCapsule: authz.token,
+        sessionSetCookies: session.setCookies,
+      },
+    };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return {
+      ok: false,
+      response: buildErrorResponse(
+        args.request,
+        session.setCookies,
+        500,
+        { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail },
+        args.extraHeaders,
+      ),
+    };
+  }
+}
+
+export async function resolveCurrentAccountAssetGatewayContext(args: {
+  request: NextRequest;
+  minRole: MemberRole;
+  extraHeaders?: Record<string, string>;
+}): Promise<{ ok: true; value: AccountAssetGatewayContext } | { ok: false; response: NextResponse }> {
+  const session = await resolveSessionBearer(args.request);
+  if (!session.ok) {
+    return {
+      ok: false,
+      response: finalizeAccountAssetResponse({
+        request: args.request,
+        response: session.response,
+        extraHeaders: args.extraHeaders,
+      }),
+    };
+  }
+
+  const authz = await authorizeRequestRoleFromCapsule({
+    request: args.request,
+    minRole: args.minRole,
+  });
+  if (!authz.ok) {
+    return {
+      ok: false,
+      response: buildErrorResponse(
+        args.request,
+        session.setCookies,
+        authz.status,
+        authz.error,
+        args.extraHeaders,
+      ),
+    };
+  }
+
+  try {
+    assertTokyoAssetControlBindingAvailable();
+    return {
+      ok: true,
+      value: {
+        accountId: authz.payload.accountId,
         accountCapsule: authz.token,
         sessionSetCookies: session.setCookies,
       },

@@ -123,17 +123,7 @@ export function createUserInstancePublicId(widgetType: string): string {
 
 export function buildBuilderRoute(args: {
   publicId: string;
-  accountId: string;
   widgetType?: string | null;
 }): string {
-  const search = new URLSearchParams({
-    accountId: args.accountId,
-    publicId: args.publicId,
-    subject: 'account',
-  });
-  const normalizedWidgetType = normalizeWidgetType(args.widgetType);
-  if (normalizedWidgetType !== 'unknown') {
-    search.set('widgetType', normalizedWidgetType);
-  }
-  return `/builder/${encodeURIComponent(args.publicId)}?${search.toString()}`;
+  return `/builder/${encodeURIComponent(args.publicId)}`;
 }

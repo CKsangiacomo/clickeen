@@ -120,13 +120,12 @@ function resolveDeleteErrorCopy(reason: string): string {
 
 async function requestDeleteAsset(
   accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
-  accountId: string,
   assetId: string,
   confirmInUse: boolean,
 ): Promise<DeleteAssetPayload> {
   const search = confirmInUse ? '?confirmInUse=1' : '';
   const response = await accountApi.fetchRaw(
-    `/api/accounts/${encodeURIComponent(accountId)}/assets/${encodeURIComponent(assetId)}${search}`,
+    `/api/account/assets/${encodeURIComponent(assetId)}${search}`,
     {
       method: 'DELETE',
     },
@@ -139,16 +138,15 @@ async function requestDeleteAsset(
     error.payload = (payload as DeletePreconditionPayload | null) ?? null;
     throw error;
   }
-  return (payload as DeleteAssetPayload) ?? { accountId, assetId, deleted: true };
+  return (payload as DeleteAssetPayload) ?? { accountId: '', assetId, deleted: true };
 }
 
 async function requestUploadAsset(
   accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
-  accountId: string,
   file: File,
   source: string,
 ): Promise<AssetRecord> {
-  const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(accountId)}/assets/upload`, {
+  const response = await accountApi.fetchRaw(`/api/account/assets/upload`, {
     method: 'POST',
     headers: {
       'content-type': file.type || 'application/octet-stream',
@@ -223,7 +221,7 @@ export function AssetsDomain() {
     setLoading(true);
     setError(null);
     try {
-      const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(accountId)}/assets?limit=500`, {
+      const response = await accountApi.fetchRaw(`/api/account/assets?limit=500`, {
         method: 'GET',
       });
       const payload = (await response.json().catch(() => null)) as AccountAssetsListResponse | { error?: unknown } | null;
@@ -265,7 +263,7 @@ export function AssetsDomain() {
       setDeletingAssetId(asset.assetId);
       setDeleteError(null);
       try {
-        await requestDeleteAsset(accountApi, accountId, asset.assetId, confirmInUse);
+        await requestDeleteAsset(accountApi, asset.assetId, confirmInUse);
         setPendingDelete(null);
         setAssets((prev) => prev.filter((entry) => entry.assetRef !== asset.assetRef));
         setStorageBytesUsed((prev) => Math.max(0, prev - Math.max(0, Math.trunc(asset.sizeBytes))));
@@ -321,7 +319,7 @@ export function AssetsDomain() {
       setSingleUploadBusy(true);
       setSingleUploadError(null);
       try {
-        const uploaded = await requestUploadAsset(accountApi, accountId, file, 'api');
+        const uploaded = await requestUploadAsset(accountApi, file, 'api');
         setAssets((prev) => upsertAsset(prev, uploaded));
         setStorageBytesUsed((prev) => prev + Math.max(0, Math.trunc(uploaded.sizeBytes)));
         await reloadMe();
@@ -379,7 +377,7 @@ export function AssetsDomain() {
 
         updateBulkItem(item.id, { status: 'uploading', error: null });
         try {
-          const uploaded = await requestUploadAsset(accountApi, accountId, file, 'api');
+          const uploaded = await requestUploadAsset(accountApi, file, 'api');
           setAssets((prev) => upsertAsset(prev, uploaded));
           setStorageBytesUsed((prev) => prev + Math.max(0, Math.trunc(uploaded.sizeBytes)));
           updateBulkItem(item.id, { status: 'success', error: null });

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { resolvePersonLabel } from '../lib/person-profile';
+import { useRomaAccountApi } from './account-api';
 import { resolveAccountPolicyFromRomaAuthz, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 type TeamMemberProfile = {
@@ -80,6 +81,7 @@ function formatCountryValue(value: string | null | undefined): string {
 
 export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   const me = useRomaMe();
+  const accountApi = useRomaAccountApi(me.data);
   const router = useRouter();
   const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const policy = useMemo(
@@ -108,9 +110,8 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/accounts/${encodeURIComponent(accountId)}/members/${encodeURIComponent(memberId)}`, {
+      const response = await accountApi.fetchRaw(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
         method: 'GET',
-        cache: 'no-store',
       });
       const payload = (await response.json().catch(() => null)) as TeamMemberResponse | { error?: unknown } | null;
       if (!response.ok) {
@@ -130,7 +131,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     } finally {
       setLoading(false);
     }
-  }, [accountId, memberId]);
+  }, [accountApi, accountId, memberId]);
 
   useEffect(() => {
     void refreshMember();
@@ -141,9 +142,9 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     setSavingRole(true);
     setMutationError(null);
     try {
-      const response = await fetch(`/api/accounts/${encodeURIComponent(accountId)}/members/${encodeURIComponent(memberId)}`, {
+      const response = await accountApi.fetchRaw(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
         method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
+        headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ role: roleDraft }),
       });
       const payload = (await response.json().catch(() => null)) as TeamMemberResponse | { error?: unknown } | null;
@@ -163,14 +164,14 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     } finally {
       setSavingRole(false);
     }
-  }, [accountId, canManage, memberId, roleDraft]);
+  }, [accountApi, accountId, canManage, memberId, roleDraft, me]);
 
   const removeMember = useCallback(async () => {
     if (!accountId || !canManage || !member || member.member.role === 'owner') return;
     setRemovingMember(true);
     setMutationError(null);
     try {
-      const response = await fetch(`/api/accounts/${encodeURIComponent(accountId)}/members/${encodeURIComponent(memberId)}`, {
+      const response = await accountApi.fetchRaw(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
         method: 'DELETE',
       });
       const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
@@ -186,7 +187,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     } finally {
       setRemovingMember(false);
     }
-  }, [accountId, canManage, member, memberId, router]);
+  }, [accountApi, accountId, canManage, member, memberId, me, router]);
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading team context...</section>;
   if (me.error || !me.data) {

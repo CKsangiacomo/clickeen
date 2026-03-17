@@ -8,8 +8,8 @@ It defines the runtime boundary that Berlin, Roma, DevStudio, Bob, Michael, and 
 
 For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./Overview.md).
 Current status:
-- No active account-management correction PRD is open.
-- PRD 068 is the latest completed correction snapshot.
+- PRD 072 is the active Roma account-shell correction PRD.
+- PRD 068 is the latest completed account-management correction snapshot before PRD 072.
 
 Historical snapshots:
 - [PRD 064](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/064__PRD__Berlin_Account_Management_Boundary__Single_Identity_And_Account_API.md)
@@ -185,13 +185,14 @@ Rules:
 
 ### Switch Account
 
-If a person belongs to more than one account, the product exposes an explicit account-switch capability.
+Berlin still owns active-account resolution.
 
 Rules:
-- Berlin owns active-account resolution
 - Berlin persists the active-account preference on the canonical user-profile boundary; it does not live in Roma/Bob cookies or client-side overrides
-- Roma exposes the normal product-shell switch UX
+- current customer Roma does not expose account switching
 - Bob never owns account-switch logic
+- DevStudio internal switching, if needed for internal operations, is not Roma product behavior
+- future customer-facing multi-account switching belongs only to a separate Roma-for-agency product contract, not today's Roma
 
 ### Surface split
 

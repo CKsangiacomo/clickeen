@@ -123,7 +123,7 @@ In `?boot=message`, Bob ignores URL instance params and waits for host `ck:open-
 Hosted behavior is generic:
 - if `boot=message` and `subject=account`, Bob is a host-backed editor session
 - if `boot=message` and `subject=minibob`, Bob is also a host-backed editor session
-- Bob does not directly call customer `/api/accounts/*` routes in that mode
+- Bob does not directly call customer `/api/account/*` routes in that mode
 - all account reads/writes/l10n-status/copilot actions must go through the parent host bridge
 
 ### Hybrid dev (DevStudio in cloud, Bob local)
@@ -149,13 +149,13 @@ Source:
 
 - Roma user flows can create/duplicate/delete account user instances through Roma same-origin routes plus canonical account instance routes.
 - In hosted account mode (`boot=message`, `subject=account`), Bob does not own account transport. It emits explicit editor read/write intents back to the parent host, and the host executes the named account/tool routes on Bob's behalf.
-- Roma hosts customer account sessions through Roma same-origin account routes (`/api/accounts/...`).
+- Roma hosts customer account sessions through Roma same-origin current-account routes (`/api/account/...`).
 - DevStudio Local discovers platform-owned instances through the local DevStudio route family (`/api/devstudio/instances*`), boots Bob through explicit `/api/devstudio/instance*` host routes, and delegates Bob account mutations back to the DevStudio host instead of calling Bob customer account routes directly.
 - In that hosted DevStudio flow, Bob also reloads localization snapshots and l10n status through the same host command bridge instead of branching around DevStudio after save.
 - In DevStudio, Bob/Dieter asset controls also use the local DevStudio route family:
   - list/delete assets: `/api/devstudio/assets/:accountId`
   - upload assets: `/api/devstudio/assets/upload`
-    This keeps DevStudio on the trusted local boundary instead of reusing product `/api/accounts/:accountId/assets*` routes.
+    This keeps DevStudio on the trusted local boundary instead of reusing product `/api/account/assets*` routes.
 - MiniBob keeps a Bob-owned public helper route (`/api/instance/:publicId?subject=minibob`) for Prague host boot, but Bob still opens the editor only from the host `ck:open-editor` envelope. Bob no longer exposes account product routes.
 
 ### Dev subjects and policy (durable)
@@ -181,7 +181,7 @@ Core base-config lifecycle per open session:
 
 1. One core instance load plus one explicit localization rehydrate, both performed by the host in account message boot before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
-3. One save/write command on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes its same-origin `PUT /api/accounts/:accountId/instance/:publicId?subject=account`; Bob does not call account product routes directly. These routes commit the saved revision through Tokyo first, return success immediately, and schedule direct Roma-owned aftermath after the response. Base persistence remains immediate; aftermath stays async, is observed via l10n status routes, and does not roll back the saved revision.
+3. One save/write command on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes its same-origin `PUT /api/account/instance/:publicId?subject=account`; Bob does not call account product routes directly. These routes commit the saved revision through Tokyo first, return success immediately, and schedule direct Roma-owned aftermath after the response. Base persistence remains immediate; aftermath stays async, is observed via l10n status routes, and does not roll back the saved revision.
 
 Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
@@ -339,7 +339,7 @@ ToolDrawer has a single, global vertical rhythm. **Only clusters and groups defi
 
 Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file pick through the host-owned asset surface:
 
-- Product path: Roma asset routes (`/api/accounts/:accountId/assets*`) -> Tokyo-worker
+- Product path: Roma asset routes (`/api/account/assets*`) -> Tokyo-worker
 - DevStudio local: trusted local `/api/devstudio/assets*` endpoints injected into Bob via query params
 - The host forwards the Berlin session bearer, Roma `x-ck-authz-capsule`, and account/public/widget trace headers.
 - Tokyo-worker executes from the capsule truth, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
@@ -560,7 +560,7 @@ Reference:
 
 Important boundary:
 
-- Roma product starter discovery is Roma-owned (`/api/roma/widgets`, `/api/roma/templates`).
+- Roma product starter discovery is Roma-owned (`/api/account/widgets`, `/api/account/templates`).
 - DevStudio local must not use Roma starter routes for instance discovery.
 
 Bob editor routes are explicit and non-`/api/paris`:
@@ -578,7 +578,7 @@ Bob does not own account language policy/settings. Enabled languages, base local
 **Security rule (executed):**
 
 - Bob’s remaining AI/public helper routes use explicit backend calls; product auth does not use `CK_INTERNAL_SERVICE_JWT` passthrough.
-- Bob `/api/accounts/*` and residual Paris proxy routes always resolve a real Berlin-backed session plus the bootstrap account capsule, including `local`.
+- Bob does not own customer account product routes. Hosted account-mode reads/writes delegate through the Roma host message channel and use the Roma current-account contract.
 - Local `CK_INTERNAL_SERVICE_JWT` is supplied by `bash scripts/dev-up.sh` / `.env.local` only for explicit internal tooling outside Bob product-route authority. It must not be committed in Bob Pages config.
 
 ### Dev-up

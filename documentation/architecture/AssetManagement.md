@@ -50,11 +50,16 @@ Tokyo-worker authoritative endpoints:
 - `GET /assets/integrity/:accountId` (dev/internal)
 - `GET /assets/integrity/:accountId/:assetId` (dev/internal)
 
-Roma control-plane routes proxy account-safe operations for product UI:
-- `GET /api/accounts/:accountId/assets`
-- `POST /api/accounts/:accountId/assets/upload`
-- `POST /api/accounts/:accountId/assets/resolve`
-- `DELETE /api/accounts/:accountId/assets/:assetId`
+Roma product routes proxy current-account-safe operations for product UI:
+- `GET /api/account/assets`
+- `POST /api/account/assets/upload`
+- `POST /api/account/assets/resolve`
+- `DELETE /api/account/assets/:assetId`
+
+Rules:
+- normal Roma product routes do not require browser-supplied `accountId`
+- Roma resolves the current account server-side from the signed current-account authz capsule
+- explicit `:accountId` route shapes, if they still exist anywhere, are not part of the normal Roma customer shell
 
 ---
 

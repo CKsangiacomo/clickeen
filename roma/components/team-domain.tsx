@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
+import { useRomaAccountApi } from './account-api';
 import { resolveAccountPolicyFromRomaAuthz, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 type AccountMembersResponse = {
@@ -38,6 +39,7 @@ function resolveMemberLabel(member: AccountMembersResponse['members'][number]): 
 
 export function TeamDomain() {
   const me = useRomaMe();
+  const accountApi = useRomaAccountApi(me.data);
   const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const policy = useMemo(
     () => (context.accountId ? resolveAccountPolicyFromRomaAuthz(me.data, context.accountId) : null),
@@ -63,9 +65,8 @@ export function TeamDomain() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/accounts/${encodeURIComponent(accountId)}/members`, {
+      const response = await accountApi.fetchRaw(`/api/account/team`, {
         method: 'GET',
-        cache: 'no-store',
       });
       const payload = (await response.json().catch(() => null)) as AccountMembersResponse | { error?: unknown } | null;
       if (!response.ok) {
@@ -84,7 +85,7 @@ export function TeamDomain() {
     } finally {
       setLoading(false);
     }
-  }, [accountId]);
+  }, [accountApi, accountId]);
 
   const refreshInvitations = useCallback(async () => {
     if (!accountId || !canManage) {
@@ -94,9 +95,8 @@ export function TeamDomain() {
     }
 
     try {
-      const response = await fetch(`/api/accounts/${encodeURIComponent(accountId)}/invitations`, {
+      const response = await accountApi.fetchRaw(`/api/account/team/invitations`, {
         method: 'GET',
-        cache: 'no-store',
       });
       const payload = (await response.json().catch(() => null)) as
         | AccountInvitationsResponse
@@ -116,7 +116,7 @@ export function TeamDomain() {
       setInvitations(null);
       setInviteError(resolveAccountShellErrorCopy(message, 'Failed to load invitations. Please try again.'));
     }
-  }, [accountId, canManage]);
+  }, [accountApi, accountId, canManage]);
 
   useEffect(() => {
     void refreshMembers();
@@ -131,9 +131,9 @@ export function TeamDomain() {
     setInviteLoading(true);
     setInviteError(null);
     try {
-      const response = await fetch(`/api/accounts/${encodeURIComponent(accountId)}/invitations`, {
+      const response = await accountApi.fetchRaw(`/api/account/team/invitations`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
       });
       const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
@@ -149,7 +149,7 @@ export function TeamDomain() {
     } finally {
       setInviteLoading(false);
     }
-  }, [accountId, canManage, inviteEmail, inviteRole, refreshInvitations]);
+  }, [accountApi, accountId, canManage, inviteEmail, inviteRole, refreshInvitations]);
 
   const revokeInvitation = useCallback(
     async (invitationId: string) => {
@@ -157,12 +157,9 @@ export function TeamDomain() {
       setInviteLoading(true);
       setInviteError(null);
       try {
-        const response = await fetch(
-          `/api/accounts/${encodeURIComponent(accountId)}/invitations/${encodeURIComponent(invitationId)}`,
-          {
-            method: 'DELETE',
-          },
-        );
+        const response = await accountApi.fetchRaw(`/api/account/team/invitations/${encodeURIComponent(invitationId)}`, {
+          method: 'DELETE',
+        });
         const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
         if (!response.ok) {
           throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
@@ -175,7 +172,7 @@ export function TeamDomain() {
         setInviteLoading(false);
       }
     },
-    [accountId, canManage, refreshInvitations],
+    [accountApi, accountId, canManage, refreshInvitations],
   );
 
   if (me.loading) return <section className="rd-canvas-module body-m">Loading team context...</section>;

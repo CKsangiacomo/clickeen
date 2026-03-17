@@ -53,7 +53,7 @@ export function WidgetsDomain() {
     setDomainLoading(true);
     setDataError(null);
     try {
-      const payload = await accountApi.fetchJson<unknown>(`/api/roma/widgets?accountId=${encodeURIComponent(accountId)}`, {
+      const payload = await accountApi.fetchJson<unknown>(`/api/account/widgets`, {
         method: 'GET',
       });
       const normalized = normalizeRomaWidgetsResponse(payload);
@@ -127,12 +127,11 @@ export function WidgetsDomain() {
       try {
         const sourcePublicId = buildMainPublicId(normalizedWidgetType);
         const payload = await accountApi.fetchJson<{ publicId?: string; widgetType?: string }>(
-          `/api/roma/widgets/duplicate`,
+          `/api/account/widgets/duplicate`,
           {
             method: 'POST',
             headers: accountApi.buildHeaders({ contentType: 'application/json' }),
             body: JSON.stringify({
-              accountId,
               sourcePublicId,
             }),
           },
@@ -150,7 +149,6 @@ export function WidgetsDomain() {
           router.push(
             buildBuilderRoute({
               publicId: createdPublicId,
-              accountId,
               widgetType: createdType,
             }),
           );
@@ -172,11 +170,10 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        const payload = await accountApi.fetchJson<{ publicId?: string; widgetType?: string }>(`/api/roma/widgets/duplicate`, {
+        const payload = await accountApi.fetchJson<{ publicId?: string; widgetType?: string }>(`/api/account/widgets/duplicate`, {
           method: 'POST',
           headers: accountApi.buildHeaders({ contentType: 'application/json' }),
           body: JSON.stringify({
-            accountId,
             sourcePublicId: instance.publicId,
           }),
         });
@@ -204,7 +201,7 @@ export function WidgetsDomain() {
       setCreateError(null);
       try {
         await accountApi.fetchJson<{ deleted?: boolean }>(
-          `/api/roma/instances/${encodeURIComponent(instance.publicId)}?accountId=${encodeURIComponent(accountId)}`,
+          `/api/account/instance/${encodeURIComponent(instance.publicId)}?subject=account`,
           {
             method: 'DELETE',
           },
@@ -228,7 +225,7 @@ export function WidgetsDomain() {
       setCreateError(null);
       try {
         await accountApi.fetchJson<{ status?: 'published' | 'unpublished' }>(
-          `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(instance.publicId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}?subject=account`,
+          `/api/account/instances/${encodeURIComponent(instance.publicId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}?subject=account`,
           {
             method: 'POST',
           },
@@ -278,7 +275,7 @@ export function WidgetsDomain() {
       setRenameError(null);
       try {
         const payload = await accountApi.fetchJson<{ publicId?: string; displayName?: string }>(
-          `/api/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(instance.publicId)}/rename`,
+          `/api/account/instances/${encodeURIComponent(instance.publicId)}/rename`,
           {
             method: 'POST',
             headers: accountApi.buildHeaders({ contentType: 'application/json' }),
@@ -475,7 +472,6 @@ export function WidgetsDomain() {
                           <Link
                             href={buildBuilderRoute({
                               publicId: instance.publicId,
-                              accountId,
                               widgetType: instance.widgetType,
                             })}
                             className="diet-btn-txt"

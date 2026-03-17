@@ -76,7 +76,7 @@ export function RomaAccountNoticeModal() {
     setDismissError(null);
     try {
       await accountApi.fetchJson(
-        `/api/accounts/${encodeURIComponent(accountId)}/lifecycle/tier-drop/dismiss`,
+        `/api/account/lifecycle/tier-drop/dismiss`,
         {
           method: 'POST',
         },

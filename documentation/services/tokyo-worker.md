@@ -30,6 +30,7 @@ Tokyo-worker does not “decide what is live”. Roma/Bob decide; Tokyo-worker m
 Current auth rule:
 
 - Product asset control routes execute from Roma through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. Tokyo-worker does not re-read membership/tier/account status on those paths.
+- Product render/l10n authoring control routes execute from Roma through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. Tokyo-worker does not re-read membership/tier/account status on those paths.
 - Shared-secret `CK_INTERNAL_SERVICE_JWT` is not part of the asset lane.
 - Local internal tool routes may use `TOKYO_DEV_JWT` only when they also send an explicit allowed `x-ck-internal-service`.
 - There is no generic trusted-token bypass on account routes.
@@ -63,11 +64,12 @@ Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies
 - `GET /assets/**`
 - `GET /fonts/**`
 
-### Saved authoring snapshot (auth required)
+### Saved authoring snapshot (private Roma product-control lane)
 
-- `GET /renders/instances/:publicId/saved.json?accountId=:accountId`
-- `PUT /renders/instances/:publicId/saved.json?accountId=:accountId`
-- `PATCH /renders/instances/:publicId/saved.json?accountId=:accountId`
+- `GET /__internal/renders/instances/:publicId/saved.json`
+- `PUT /__internal/renders/instances/:publicId/saved.json`
+- `PATCH /__internal/renders/instances/:publicId/saved.json`
+- `DELETE /__internal/renders/instances/:publicId/saved.json`
 
 Current runtime contract:
 

@@ -6,7 +6,10 @@ import {
 } from '@clickeen/l10n';
 import { applyTextPackToConfig } from './text-packs';
 import { generateMetaPack } from './seo-geo';
-import { buildTokyoScopedHeaders } from './tokyo-product-auth';
+import {
+  buildTokyoProductControlHeaders,
+  fetchTokyoProductControl,
+} from './tokyo-product-control';
 
 export type AccountL10nPolicy = {
   v: 1;
@@ -222,20 +225,14 @@ function buildLocalizedTextPack(args: {
   return applyOpsToTextPack(withLocale, args.userOps);
 }
 
-function buildTokyoAccountHeaders(args: {
-  accessToken: string;
-  accountId: string;
-  internalServiceName?: string | null;
-  accountCapsule?: string | null;
-  contentType?: string;
-}): Headers {
-  return buildTokyoScopedHeaders({
-    accountId: args.accountId,
-    accessToken: args.accessToken,
-    internalServiceName: args.internalServiceName,
-    accountCapsule: args.accountCapsule,
-    contentType: args.contentType,
-  });
+function resolveTokyoControlErrorDetail(payload: unknown, fallback: string): string {
+  if (isRecord(payload) && isRecord(payload.error)) {
+    const reasonKey = asTrimmedString(payload.error.reasonKey);
+    if (reasonKey) return reasonKey;
+    const detail = asTrimmedString(payload.error.detail);
+    if (detail) return detail;
+  }
+  return fallback;
 }
 
 async function loadJson<T>(url: string, init?: RequestInit): Promise<{ status: number; json: T | null }> {
@@ -284,25 +281,18 @@ export async function loadSavedAccountInstanceFromTokyo(args: {
   seoGeoLive: boolean;
 }> {
   const base = args.tokyoBaseUrl.replace(/\/+$/, '');
-  const headers = buildTokyoAccountHeaders({
-    accessToken: args.accessToken,
+  const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
-    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
   });
-  const savedResponse = await fetch(
-    `${base}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(
-      args.accountId,
-    )}`,
-    {
-      method: 'GET',
-      headers,
-      cache: 'no-store',
-    },
-  );
+  const savedResponse = await fetchTokyoProductControl({
+    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
+    method: 'GET',
+    headers,
+  });
   const savedPayload = (await savedResponse.json().catch(() => null)) as TokyoSavedPayload | null;
   if (!savedResponse.ok || !isRecord(savedPayload?.config)) {
-    throw new Error(`tokyo_saved_http_${savedResponse.status}`);
+    throw new Error(resolveTokyoControlErrorDetail(savedPayload, `tokyo_saved_http_${savedResponse.status}`));
   }
 
   const liveResponse = await fetch(
@@ -774,30 +764,26 @@ export async function writeTokyoBaseSnapshot(args: {
   baseFingerprint: string;
   baseTextPack: Record<string, string>;
 }): Promise<void> {
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/l10n/instances/${encodeURIComponent(
-      args.publicId,
-    )}/bases/${encodeURIComponent(args.baseFingerprint)}?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'POST',
-      headers: buildTokyoAccountHeaders({
-        accessToken: args.accessToken,
-        accountId: args.accountId,
-        internalServiceName: args.internalServiceName,
-        accountCapsule: args.accountCapsule,
-        contentType: 'application/json',
-      }),
-      cache: 'no-store',
-      body: JSON.stringify({
-        v: 1,
-        publicId: args.publicId,
-        baseFingerprint: args.baseFingerprint,
-        snapshot: args.baseTextPack,
-      }),
-    },
-  );
+  const response = await fetchTokyoProductControl({
+    path: `/__internal/l10n/instances/${encodeURIComponent(args.publicId)}/bases/${encodeURIComponent(
+      args.baseFingerprint,
+    )}`,
+    method: 'POST',
+    headers: buildTokyoProductControlHeaders({
+      accountId: args.accountId,
+      accountCapsule: args.accountCapsule,
+      contentType: 'application/json',
+    }),
+    body: JSON.stringify({
+      v: 1,
+      publicId: args.publicId,
+      baseFingerprint: args.baseFingerprint,
+      snapshot: args.baseTextPack,
+    }),
+  });
   if (!response.ok) {
-    throw new Error(`tokyo_base_snapshot_http_${response.status}`);
+    const payload = (await response.json().catch(() => null)) as unknown;
+    throw new Error(resolveTokyoControlErrorDetail(payload, `tokyo_base_snapshot_http_${response.status}`));
   }
 }
 
@@ -816,32 +802,28 @@ export async function upsertTokyoOverlay(args: {
   textPack?: Record<string, string> | null;
   metaPack?: Record<string, unknown> | null;
 }): Promise<void> {
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/l10n/instances/${encodeURIComponent(
-      args.publicId,
-    )}/${args.layer}/${encodeURIComponent(args.layerKey)}?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'POST',
-      headers: buildTokyoAccountHeaders({
-        accessToken: args.accessToken,
-        accountId: args.accountId,
-        internalServiceName: args.internalServiceName,
-        accountCapsule: args.accountCapsule,
-        contentType: 'application/json',
-      }),
-      cache: 'no-store',
-      body: JSON.stringify({
-        v: 1,
-        baseFingerprint: args.baseFingerprint,
-        baseUpdatedAt: args.baseUpdatedAt,
-        ops: args.ops,
-        ...(args.textPack ? { textPack: args.textPack } : {}),
-        ...(args.metaPack ? { metaPack: args.metaPack } : {}),
-      }),
-    },
-  );
+  const response = await fetchTokyoProductControl({
+    path: `/__internal/l10n/instances/${encodeURIComponent(args.publicId)}/${args.layer}/${encodeURIComponent(
+      args.layerKey,
+    )}`,
+    method: 'POST',
+    headers: buildTokyoProductControlHeaders({
+      accountId: args.accountId,
+      accountCapsule: args.accountCapsule,
+      contentType: 'application/json',
+    }),
+    body: JSON.stringify({
+      v: 1,
+      baseFingerprint: args.baseFingerprint,
+      baseUpdatedAt: args.baseUpdatedAt,
+      ops: args.ops,
+      ...(args.textPack ? { textPack: args.textPack } : {}),
+      ...(args.metaPack ? { metaPack: args.metaPack } : {}),
+    }),
+  });
   if (!response.ok) {
-    throw new Error(`tokyo_overlay_write_http_${response.status}`);
+    const payload = (await response.json().catch(() => null)) as unknown;
+    throw new Error(resolveTokyoControlErrorDetail(payload, `tokyo_overlay_write_http_${response.status}`));
   }
 }
 
@@ -866,25 +848,21 @@ export async function deleteTokyoOverlay(args: {
           ...(args.metaPack ? { metaPack: args.metaPack } : {}),
         })
       : undefined;
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/l10n/instances/${encodeURIComponent(
-      args.publicId,
-    )}/${args.layer}/${encodeURIComponent(args.layerKey)}?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'DELETE',
-      headers: buildTokyoAccountHeaders({
-        accessToken: args.accessToken,
-        accountId: args.accountId,
-        internalServiceName: args.internalServiceName,
-        accountCapsule: args.accountCapsule,
-        ...(body ? { contentType: 'application/json' } : {}),
-      }),
-      cache: 'no-store',
-      ...(body ? { body } : {}),
-    },
-  );
+  const response = await fetchTokyoProductControl({
+    path: `/__internal/l10n/instances/${encodeURIComponent(args.publicId)}/${args.layer}/${encodeURIComponent(
+      args.layerKey,
+    )}`,
+    method: 'DELETE',
+    headers: buildTokyoProductControlHeaders({
+      accountId: args.accountId,
+      accountCapsule: args.accountCapsule,
+      ...(body ? { contentType: 'application/json' } : {}),
+    }),
+    ...(body ? { body } : {}),
+  });
   if (!response.ok) {
-    throw new Error(`tokyo_overlay_delete_http_${response.status}`);
+    const payload = (await response.json().catch(() => null)) as unknown;
+    throw new Error(resolveTokyoControlErrorDetail(payload, `tokyo_overlay_delete_http_${response.status}`));
   }
 }
 

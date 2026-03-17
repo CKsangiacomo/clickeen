@@ -16,6 +16,10 @@ import {
   resolveSanfranciscoInternalToken,
 } from './env/sanfrancisco';
 import { resolveTokyoBaseUrl } from './env/tokyo';
+import {
+  buildTokyoProductControlHeaders,
+  fetchTokyoProductControl,
+} from './tokyo-product-control';
 
 type LocalePolicy = {
   baseLocale: string;
@@ -122,20 +126,13 @@ function buildLiveLocalePolicy(args: {
   };
 }
 
-function buildTokyoAccountHeaders(args: {
-  accessToken: string;
-  accountId: string;
-  accountCapsule?: string | null;
-  contentType?: string;
-}): Headers {
-  const headers = new Headers({
-    accept: 'application/json',
-    authorization: `Bearer ${args.accessToken}`,
-    'x-account-id': args.accountId,
-  });
-  if (args.accountCapsule) headers.set('x-ck-authz-capsule', args.accountCapsule);
-  if (args.contentType) headers.set('content-type', args.contentType);
-  return headers;
+function resolveTokyoControlErrorDetail(payload: unknown, fallback: string): string {
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    const error = (payload as { error?: { detail?: unknown; reasonKey?: unknown } }).error;
+    if (typeof error?.detail === 'string' && error.detail.trim()) return error.detail.trim();
+    if (typeof error?.reasonKey === 'string' && error.reasonKey.trim()) return error.reasonKey.trim();
+  }
+  return fallback;
 }
 
 async function writeTokyoConfigPack(args: {
@@ -147,38 +144,26 @@ async function writeTokyoConfigPack(args: {
   widgetType: string;
   configPack: Record<string, unknown>;
 }): Promise<string> {
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(
-      args.publicId,
-    )}/config-pack?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'POST',
-      headers: buildTokyoAccountHeaders({
-        accessToken: args.accessToken,
-        accountId: args.accountId,
-        accountCapsule: args.accountCapsule,
-        contentType: 'application/json',
-      }),
-      cache: 'no-store',
-      body: JSON.stringify({
-        widgetType: args.widgetType,
-        configPack: args.configPack,
-      }),
-    },
-  );
+  const response = await fetchTokyoProductControl({
+    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/config-pack`,
+    method: 'POST',
+    headers: buildTokyoProductControlHeaders({
+      accountId: args.accountId,
+      accountCapsule: args.accountCapsule,
+      contentType: 'application/json',
+    }),
+    body: JSON.stringify({
+      widgetType: args.widgetType,
+      configPack: args.configPack,
+    }),
+  });
 
   const payload = (await response.json().catch(() => null)) as
     | { configFp?: unknown; error?: { detail?: unknown; reasonKey?: unknown } }
     | null;
 
   if (!response.ok) {
-    const detail =
-      typeof payload?.error?.detail === 'string'
-        ? payload.error.detail
-        : typeof payload?.error?.reasonKey === 'string'
-          ? payload.error.reasonKey
-          : `tokyo_config_pack_http_${response.status}`;
-    throw new Error(detail);
+    throw new Error(resolveTokyoControlErrorDetail(payload, `tokyo_config_pack_http_${response.status}`));
   }
 
   const configFp = typeof payload?.configFp === 'string' ? payload.configFp.trim() : '';
@@ -199,39 +184,27 @@ async function syncTokyoLivePointer(args: {
   localePolicy: LocalePolicy;
   seoGeo: boolean;
 }): Promise<void> {
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(
-      args.publicId,
-    )}/live/r.json?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'POST',
-      headers: buildTokyoAccountHeaders({
-        accessToken: args.accessToken,
-        accountId: args.accountId,
-        accountCapsule: args.accountCapsule,
-        contentType: 'application/json',
-      }),
-      cache: 'no-store',
-      body: JSON.stringify({
-        widgetType: args.widgetType,
-        configFp: args.configFp,
-        localePolicy: args.localePolicy,
-        seoGeo: args.seoGeo,
-      }),
-    },
-  );
+  const response = await fetchTokyoProductControl({
+    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/live/r.json`,
+    method: 'POST',
+    headers: buildTokyoProductControlHeaders({
+      accountId: args.accountId,
+      accountCapsule: args.accountCapsule,
+      contentType: 'application/json',
+    }),
+    body: JSON.stringify({
+      widgetType: args.widgetType,
+      configFp: args.configFp,
+      localePolicy: args.localePolicy,
+      seoGeo: args.seoGeo,
+    }),
+  });
 
   const payload = (await response.json().catch(() => null)) as
     | { error?: { detail?: unknown; reasonKey?: unknown } }
     | null;
   if (!response.ok) {
-    const detail =
-      typeof payload?.error?.detail === 'string'
-        ? payload.error.detail
-        : typeof payload?.error?.reasonKey === 'string'
-          ? payload.error.reasonKey
-          : `tokyo_live_sync_http_${response.status}`;
-    throw new Error(detail);
+    throw new Error(resolveTokyoControlErrorDetail(payload, `tokyo_live_sync_http_${response.status}`));
   }
 }
 

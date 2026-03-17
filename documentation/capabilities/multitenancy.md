@@ -173,7 +173,7 @@ account
 
 Key boundary rules:
 - Instances, assets, locales, and membership are all account-scoped.
-- Roma asset reads are account-canonical (`/api/accounts/:accountId/assets`).
+- Roma asset reads are account-canonical (`/api/account/assets`).
 - Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped Paris calls.
 - Curated platform content is owned by a platform account row and remains globally readable; runtime policy must use `accounts.is_platform` plus `owner_account_id`, not `ADMIN_ACCOUNT_ID`.
 
@@ -334,7 +334,7 @@ While we are building (before full auth/billing enforcement ships), we still nee
 ### Paris Enforcement
 
 Current shipped behavior:
-- Account member listing is read-only via `GET /api/accounts/:accountId/members` for authorized users.
+- Account member listing is read-only via `GET /api/account/team` and `GET /api/account/team/members/:memberId` for authorized users.
 - Publish and editor behavior use policy/entitlement enforcement already wired in runtime.
 - There is no shipped seat-cap write-path enforcement in Paris yet.
 - There is no shipped `SEAT_LIMIT_EXCEEDED` runtime error yet.

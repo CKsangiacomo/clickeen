@@ -81,9 +81,9 @@ export type RomaMeResponse = {
 };
 
 export type ResolvedRomaContext = {
-  accountId: string;
-  accountName: string;
-  accountSlug: string;
+  accountId: string | null;
+  accountName: string | null;
+  accountSlug: string | null;
 };
 
 export type RomaAuthzPolicy = {
@@ -233,17 +233,26 @@ function assertRomaMeAuthzPayload(data: RomaMeResponse | null): void {
 export function resolveActiveRomaAccount(data: RomaMeResponse | null): RomaActiveAccount | null {
   const activeAccount = data?.activeAccount;
   if (!activeAccount) return null;
+  const accountId = normalizeAccountId(activeAccount.accountId);
+  const role = normalizeOptionalString(activeAccount.role);
+  const name = normalizeOptionalString(activeAccount.name);
+  const slug = normalizeOptionalString(activeAccount.slug);
+  const tier = normalizeOptionalString(activeAccount.tier);
+  const status = normalizeOptionalString(activeAccount.status);
+  if (!accountId || !role || !name || !slug || !tier || !status || typeof activeAccount.isPlatform !== 'boolean') {
+    return null;
+  }
   return {
-    accountId: normalizeAccountId(activeAccount.accountId) ?? '',
-    role: normalizeOptionalString(activeAccount.role) ?? '',
-    name: normalizeOptionalString(activeAccount.name) ?? '',
-    slug: normalizeOptionalString(activeAccount.slug) ?? '',
-    tier: normalizeOptionalString(activeAccount.tier) ?? '',
+    accountId,
+    role,
+    name,
+    slug,
+    tier,
     websiteUrl: normalizeOptionalString(activeAccount.websiteUrl),
     membershipVersion: normalizeOptionalString(activeAccount.membershipVersion),
     lifecycleNotice: normalizeLifecycleNotice(activeAccount.lifecycleNotice),
-    status: normalizeOptionalString(activeAccount.status) ?? '',
-    isPlatform: Boolean(activeAccount.isPlatform),
+    status,
+    isPlatform: activeAccount.isPlatform,
     l10nLocales: activeAccount.l10nLocales,
     l10nPolicy: activeAccount.l10nPolicy,
   };
@@ -252,9 +261,9 @@ export function resolveActiveRomaAccount(data: RomaMeResponse | null): RomaActiv
 export function resolveActiveRomaContext(data: RomaMeResponse | null): ResolvedRomaContext {
   const activeAccount = resolveActiveRomaAccount(data);
   return {
-    accountId: activeAccount?.accountId ?? '',
-    accountName: activeAccount?.name ?? '',
-    accountSlug: activeAccount?.slug ?? '',
+    accountId: activeAccount?.accountId ?? null,
+    accountName: activeAccount?.name ?? null,
+    accountSlug: activeAccount?.slug ?? null,
   };
 }
 

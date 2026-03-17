@@ -21,15 +21,13 @@ export function TemplatesDomain() {
 
   const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
-  const activeAccountId = accountId;
-
   const refreshTemplates = useCallback(async () => {
     if (!accountId) return;
     setDomainLoading(true);
     setDataError(null);
     try {
       const payload = await accountApi.fetchJson<unknown>(
-        `/api/roma/templates?accountId=${encodeURIComponent(accountId)}`,
+        `/api/account/templates`,
         { method: 'GET' },
       );
       const normalized = normalizeRomaTemplatesSnapshot(payload);
@@ -83,11 +81,10 @@ export function TemplatesDomain() {
       setActiveActionKey(actionKey);
       setActionError(null);
       try {
-        const payload = await accountApi.fetchJson<{ publicId?: string }>(`/api/roma/widgets/duplicate`, {
+        const payload = await accountApi.fetchJson<{ publicId?: string }>(`/api/account/widgets/duplicate`, {
           method: 'POST',
           headers: accountApi.buildHeaders({ contentType: 'application/json' }),
           body: JSON.stringify({
-            accountId,
             sourcePublicId: instance.publicId,
           }),
         });
@@ -103,7 +100,6 @@ export function TemplatesDomain() {
         router.push(
           buildBuilderRoute({
             publicId: createdPublicId,
-            accountId: activeAccountId,
             widgetType: instance.widgetType,
           }),
         );
@@ -114,7 +110,7 @@ export function TemplatesDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, accountId, activeAccountId, router],
+    [accountApi, accountId, router],
   );
 
   if (me.loading)

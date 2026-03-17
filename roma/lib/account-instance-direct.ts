@@ -4,7 +4,10 @@ import {
   configNonPersistableUrlIssues,
 } from '@clickeen/ck-contracts';
 import { stableStringify } from '@clickeen/l10n';
-import { buildTokyoScopedHeaders } from './tokyo-product-auth';
+import {
+  buildTokyoProductControlHeaders,
+  fetchTokyoProductControl,
+} from './tokyo-product-control';
 
 export type DirectRouteError = {
   kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
@@ -63,20 +66,17 @@ function normalizeAccountInstanceSource(value: unknown, publicId: string): 'acco
   return kind === 'user' ? 'account' : 'curated';
 }
 
-function createTokyoAccountHeaders(args: {
-  accountId: string;
-  accessToken?: string | null;
-  internalServiceName?: string | null;
-  accountCapsule?: string | null;
-  contentType?: string | null;
-}): Headers {
-  return buildTokyoScopedHeaders({
-    accountId: args.accountId,
-    accessToken: args.accessToken,
-    internalServiceName: args.internalServiceName,
-    accountCapsule: args.accountCapsule,
-    contentType: args.contentType,
-  });
+function resolveTokyoControlErrorDetail(
+  payload: unknown,
+  fallback: string,
+): string {
+  if (isRecord(payload) && isRecord(payload.error)) {
+    const reasonKey = asTrimmedString(payload.error.reasonKey);
+    if (reasonKey) return reasonKey;
+    const detail = asTrimmedString(payload.error.detail);
+    if (detail) return detail;
+  }
+  return fallback;
 }
 
 export function validatePersistableConfig(
@@ -134,26 +134,21 @@ async function loadSavedInstanceFromTokyo(args: {
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<{ row: AccountInstanceCoreRow; config: Record<string, unknown> } | null> {
-  const headers = createTokyoAccountHeaders({
+  const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
-    accessToken: args.tokyoAccessToken,
-    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
   });
 
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'GET',
-      headers,
-      cache: 'no-store',
-    },
-  );
+  const response = await fetchTokyoProductControl({
+    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
+    method: 'GET',
+    headers,
+  });
 
   if (response.status === 404) return null;
   const payload = (await response.json().catch(() => null)) as TokyoSavedInstancePayload | null;
   if (!response.ok) {
-    throw new Error(`tokyo_saved_config_http_${response.status}`);
+    throw new Error(resolveTokyoControlErrorDetail(payload, `tokyo_saved_config_http_${response.status}`));
   }
   if (!isRecord(payload?.config)) return null;
 
@@ -202,32 +197,28 @@ export async function writeSavedConfigToTokyo(args: {
   meta?: Record<string, unknown> | null;
   internalServiceName?: string | null;
 }): Promise<void> {
-  const headers = createTokyoAccountHeaders({
+  const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
-    accessToken: args.tokyoAccessToken,
-    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
     contentType: 'application/json',
   });
 
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'PUT',
-      headers,
-      cache: 'no-store',
-      body: JSON.stringify({
-        widgetType: args.widgetType,
-        config: args.config,
-        ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
-        ...(args.source ? { source: args.source } : {}),
-        ...(args.meta !== undefined ? { meta: args.meta } : {}),
-      }),
-    },
-  );
+  const response = await fetchTokyoProductControl({
+    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({
+      widgetType: args.widgetType,
+      config: args.config,
+      ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
+      ...(args.source ? { source: args.source } : {}),
+      ...(args.meta !== undefined ? { meta: args.meta } : {}),
+    }),
+  });
 
   if (!response.ok) {
-    throw new Error(`tokyo_saved_config_http_${response.status}`);
+    const payload = (await response.json().catch(() => null)) as unknown;
+    throw new Error(resolveTokyoControlErrorDetail(payload, `tokyo_saved_config_http_${response.status}`));
   }
 }
 
@@ -239,24 +230,22 @@ export async function deleteSavedConfigFromTokyo(args: {
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<void> {
-  const headers = createTokyoAccountHeaders({
+  const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
-    accessToken: args.tokyoAccessToken,
-    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
   });
 
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'DELETE',
-      headers,
-      cache: 'no-store',
-    },
-  );
+  const response = await fetchTokyoProductControl({
+    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
+    method: 'DELETE',
+    headers,
+  });
 
   if (!response.ok && response.status !== 404) {
-    throw new Error(`tokyo_saved_config_delete_http_${response.status}`);
+    const payload = (await response.json().catch(() => null)) as unknown;
+    throw new Error(
+      resolveTokyoControlErrorDetail(payload, `tokyo_saved_config_delete_http_${response.status}`),
+    );
   }
 }
 
@@ -268,22 +257,22 @@ export async function deleteLiveSurfaceFromTokyo(args: {
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<void> {
-  const headers = createTokyoAccountHeaders({
+  const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
   });
 
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/live.json?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'DELETE',
-      headers,
-      cache: 'no-store',
-    },
-  );
+  const response = await fetchTokyoProductControl({
+    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/live.json`,
+    method: 'DELETE',
+    headers,
+  });
 
   if (!response.ok) {
-    throw new Error(`tokyo_live_surface_delete_http_${response.status}`);
+    const payload = (await response.json().catch(() => null)) as unknown;
+    throw new Error(
+      resolveTokyoControlErrorDetail(payload, `tokyo_live_surface_delete_http_${response.status}`),
+    );
   }
 }
 
@@ -298,30 +287,28 @@ export async function updateSavedPointerMetadataInTokyo(args: {
   meta?: Record<string, unknown> | null;
   internalServiceName?: string | null;
 }): Promise<void> {
-  const headers = createTokyoAccountHeaders({
+  const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
-    accessToken: args.tokyoAccessToken,
-    internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
     contentType: 'application/json',
   });
 
-  const response = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'PATCH',
-      headers,
-      cache: 'no-store',
-      body: JSON.stringify({
-        ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
-        ...(args.source !== undefined ? { source: args.source } : {}),
-        ...(args.meta !== undefined ? { meta: args.meta } : {}),
-      }),
-    },
-  );
+  const response = await fetchTokyoProductControl({
+    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({
+      ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
+      ...(args.source !== undefined ? { source: args.source } : {}),
+      ...(args.meta !== undefined ? { meta: args.meta } : {}),
+    }),
+  });
 
   if (!response.ok) {
-    throw new Error(`tokyo_saved_pointer_patch_http_${response.status}`);
+    const payload = (await response.json().catch(() => null)) as unknown;
+    throw new Error(
+      resolveTokyoControlErrorDetail(payload, `tokyo_saved_pointer_patch_http_${response.status}`),
+    );
   }
 }
 

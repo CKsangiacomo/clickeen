@@ -1,0 +1,45 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { readAccountBudgetUsed } from '@roma/lib/account-budget-usage';
+import { withSession } from '../_lib/current-account-route';
+import { resolveCurrentAccountRouteContext } from '../_lib/current-account-route';
+
+export const runtime = 'edge';
+
+export async function GET(request: NextRequest) {
+  const current = await resolveCurrentAccountRouteContext({
+    request,
+    minRole: 'viewer',
+  });
+  if (!current.ok) return current.response;
+
+  try {
+    const storageBytesUsed = await readAccountBudgetUsed(
+      current.value.authzPayload.accountId,
+      'budget.uploads.bytes',
+    );
+    return withSession(
+      request,
+      NextResponse.json({
+        accountId: current.value.authzPayload.accountId,
+        storageBytesUsed,
+      }),
+      current.value.setCookies,
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.db.readFailed',
+            detail,
+          },
+        },
+        { status: 502 },
+      ),
+      current.value.setCookies,
+    );
+  }
+}

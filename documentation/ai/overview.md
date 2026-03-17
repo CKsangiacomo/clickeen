@@ -119,7 +119,7 @@ Keeping product/persistence owners and San Francisco separate prevents:
 ## High‑Level Data Flow
 
 ### Editor agents (inside Clickeen app)
-1) Core instance state is loaded via same-origin app routes (`GET /api/accounts/:accountId/instance/:publicId?subject=account`) and localization is rehydrated separately (`GET /api/accounts/:accountId/instances/:publicId/localization?subject=account`): host-performed in Roma/DevStudio message boot, Bob-performed in URL boot. Product core-open resolves Michael + Tokyo saved state directly; explicit localization rehydrate now comes from Roma same-origin routes backed by Berlin + Tokyo.
+1) Core Builder open now loads through one Roma same-origin route (`GET /api/builder/:publicId/open`) that resolves the saved authoring revision + localization snapshot server-side for Roma message boot. Explicit localization refresh/status commands still use Roma same-origin account routes where needed; Bob URL boot remains only for non-account surfaces.
 2) Account-mode Builder requests execute through Roma instance routes; public MiniBob requests execute through Bob same-origin routes. The owning surface mints the short-lived AI Grant inline for that request.
 3) Bob calls San Francisco with `{ grant, agentId, input, context }`.
 4) San Francisco returns `{ ops[], usage }`.

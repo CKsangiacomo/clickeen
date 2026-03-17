@@ -73,7 +73,7 @@ export function SettingsDomain() {
     setMembersLoading(true);
     setMembersError(null);
     try {
-      const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(activeAccountId)}/members`, {
+      const response = await accountApi.fetchRaw(`/api/account/team`, {
         method: 'GET',
       });
       const payload = (await response.json().catch(() => null)) as AccountMembersResponse | { error?: unknown } | null;
@@ -106,7 +106,7 @@ export function SettingsDomain() {
     setOwnerTransferLoading(true);
     setOwnerTransferError(null);
     try {
-      const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(activeAccountId)}/owner-transfer`, {
+      const response = await accountApi.fetchRaw(`/api/account/owner-transfer`, {
         method: 'POST',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ nextOwnerUserId }),
@@ -129,7 +129,7 @@ export function SettingsDomain() {
     setDeleteLoading(true);
     setDeleteError(null);
     try {
-      const response = await accountApi.fetchRaw(`/api/accounts/${encodeURIComponent(activeAccountId)}`, {
+      const response = await accountApi.fetchRaw(`/api/account`, {
         method: 'DELETE',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ confirmAccountId: activeAccountId }),

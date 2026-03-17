@@ -13,6 +13,10 @@ NEXT_PUBLIC_BOB_URL = "https://bob.dev.clickeen.com"
 binding = "TOKYO_ASSET_CONTROL"
 service = "tokyo-assets-dev"
 
+[[services]]
+binding = "TOKYO_PRODUCT_CONTROL"
+service = "tokyo-assets-dev"
+
 [[kv_namespaces]]
 binding = "USAGE_KV"
 id = "eca50e55fa2a4f94a01fb81aeebf8377"

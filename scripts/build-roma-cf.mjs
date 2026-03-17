@@ -16,14 +16,38 @@ function run(cmd, args, opts = {}) {
   }
 }
 
+async function readWranglerVars(filePath) {
+  const source = await readFile(filePath, 'utf8').catch(() => '');
+  const vars = {};
+  let inVars = false;
+
+  for (const line of source.split(/\r?\n/u)) {
+    const trimmed = line.trim();
+    if (!inVars) {
+      if (trimmed === '[vars]') inVars = true;
+      continue;
+    }
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    if (trimmed.startsWith('[')) break;
+    const match = trimmed.match(/^([A-Z0-9_]+)\s*=\s*"([^"]*)"$/u);
+    if (!match) continue;
+    vars[match[1]] = match[2];
+  }
+
+  return vars;
+}
+
 async function main() {
   const vercelBin = path.join(romaRoot, 'node_modules', '.bin', 'vercel');
   const nextOnPagesBin = path.join(romaRoot, 'node_modules', '.bin', 'next-on-pages');
+  const wranglerTomlPath = path.join(romaRoot, 'wrangler.toml');
   const vercelDir = path.join(repoRoot, '.vercel');
   const vercelProjectJsonPath = path.join(vercelDir, 'project.json');
   const nextBuildDir = path.join(romaRoot, '.next');
   const nextDevBuildDir = path.join(romaRoot, '.next-dev');
   const vercelOutputDir = path.join(romaRoot, '.vercel', 'output');
+  const wranglerVars = await readWranglerVars(wranglerTomlPath);
+  const buildEnv = { ...process.env, ...wranglerVars };
   let previousProjectJson = null;
 
   // Roma's Pages artifact contract is app-local, but Vercel's monorepo Next.js
@@ -53,8 +77,8 @@ async function main() {
     await rm(nextDevBuildDir, { recursive: true, force: true });
     await rm(vercelOutputDir, { recursive: true, force: true });
 
-    run(vercelBin, ['build', '--output', vercelOutputDir], { cwd: repoRoot });
-    run(nextOnPagesBin, ['--skip-build'], { cwd: romaRoot });
+    run(vercelBin, ['build', '--output', vercelOutputDir], { cwd: repoRoot, env: buildEnv });
+    run(nextOnPagesBin, ['--skip-build'], { cwd: romaRoot, env: buildEnv });
   } finally {
     if (previousProjectJson === null) {
       await rm(vercelProjectJsonPath, { force: true });

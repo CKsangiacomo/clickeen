@@ -99,19 +99,19 @@ Client behavior (`use-roma-me.ts`):
 - Guards and re-initializes global store shape if corrupted.
 - When bootstrap returns `coreui.errors.auth.required`, Roma redirects to `/login?next=...` for explicit sign-in.
 - Account-affecting mutations explicitly refresh in-memory bootstrap state after success instead of waiting for passive expiry.
-- Account switching is a Berlin-backed shell action, not a local cache trick. Roma posts to `/api/accounts/:accountId/switch` and then hard-reloads the current page so the full shell reboots against the new active bootstrap context.
+- Roma is a single-current-account customer shell. It does not expose customer account switching; internal account switching belongs to DevStudio, and future customer multi-account switching belongs to a separate Roma-for-agency product.
 
 Current cloud-dev product rule:
 
-- Cloud-dev still effectively behaves as one seeded platform-owned account today, so the switcher is normally hidden there because `accounts.length <= 1`.
-- Bootstrap exposes `activeAccount` plus `accounts[]`, and Roma exposes switch-account automatically when the current user actually has more than one account membership.
+- Cloud-dev still effectively behaves as one seeded platform-owned account today.
+- Even if a user has multiple memberships upstream, current Roma still operates as a single-current-account shell and does not expose customer account switching.
 
 ## Upstream route model
 
 Roma talks to upstream systems only through same-origin API routes:
 
 - Browser code stays on `roma/app/api/**`.
-- Product routes are explicit and owned in Roma (`/api/accounts/**`, `/api/roma/**`, `/api/session/**`).
+- Normal customer product routes are explicit and owned in Roma (`/api/account/**`, `/api/session/**`).
 - Those routes call the real owners directly: Berlin for auth/account truth, Tokyo/Tokyo-worker for saved/artifact truth, and San Francisco for AI execution.
 - There is no generic Paris proxy in the active Roma product path.
 
@@ -120,16 +120,16 @@ Client fetch behavior:
 - Browser code calls same-origin Roma routes only.
 - `fetchSameOriginJson` in the browser is just a no-store fetch + timeout/reason wrapper.
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
-- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/roma/widgets`, `/api/roma/templates`, widget delete, builder/account routes, localization/layer routes).
-- Roma -> Tokyo/Tokyo-worker non-asset product calls still require explicit `CK_INTERNAL_SERVICE_JWT` plus `x-ck-internal-service: roma.edge`; Roma does not pass end-user Berlin bearer tokens through those product routes.
+- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/account/widgets`, `/api/account/templates`, `/api/account/assets*`, `/api/account/team*`, `/api/account/locales`, Builder/account routes, localization/layer routes).
+- Roma -> Tokyo/Tokyo-worker product control calls now execute through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Roma does not pass end-user Berlin bearer tokens or shared-secret product auth through those routes.
 - Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`; Roma does not infer or probe internal service hosts.
 
 ## Bob orchestration contract (Roma Builder)
 
 `BuilderDomain` flow:
 
-1. Resolve default account + target publicId.
-2. Load instance payload from Roma same-origin (`/api/accounts/:accountId/instance/:publicId?subject=account`), which resolves the saved authoring revision from Tokyo directly.
+1. Resolve active Roma workspace context + target `publicId`.
+2. Load one Builder-open envelope from Roma same-origin (`GET /api/builder/:publicId/open`), which resolves the saved authoring revision + localization snapshot server-side.
 3. Load compiled payload (`/api/widgets/:widgetname/compiled`).
 4. Wait for Bob `bob:session-ready` (`boot=message`).
 5. Send `ck:open-editor` with `requestId + sessionId` plus host asset endpoints for preview/upload materialization (no bearer handoff; Bob relies on shared cookies).
@@ -140,12 +140,12 @@ Notes:
 - Builder retries open while waiting for ack (bounded attempts + timeout).
 - Bob account mode is message-boot only. Explicit URL boot remains only for non-account surfaces.
 - In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
-- Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/accounts/:accountId/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Roma-owned aftermath for downstream locale work.
-- Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and non-owner member removal route through Roma same-origin APIs backed by Berlin (`/api/accounts/:accountId/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
+- Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/account/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Roma-owned aftermath for downstream locale work.
+- Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and non-owner member removal route through Roma same-origin APIs backed by Berlin (`/api/account/team/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
 - Roma now exposes a dedicated person-scoped User Settings domain at `/profile`. It renders canonical person data from bootstrap, writes self-profile updates through `/api/me` -> Berlin `PUT /v1/me`, initiates auth-owned email change through `/api/me/email-change` -> Berlin `POST /v1/me/email-change`, and runs phone/WhatsApp verification through same-origin relays to Berlin (`/api/me/contact-methods/:channel/start|verify`). Linked identities stay internal and are not part of the standard customer-facing surface.
-- Roma Team now also exposes Berlin-backed invitation issue/list/revoke flows through `/api/accounts/:accountId/invitations` and `/api/accounts/:accountId/invitations/:invitationId`. Team does not expose raw accept tokens or shareable acceptance paths as normal invitation metadata.
+- Roma Team now also exposes Berlin-backed invitation issue/list/revoke flows through `/api/account/team/invitations` and `/api/account/team/invitations/:invitationId`. Team does not expose raw accept tokens or shareable acceptance paths as normal invitation metadata.
 - Roma exposes `/accept-invite/:token` as the explicit invitation-accept handoff. If the visitor is not signed in, the page routes them to `/login?next=...`; if signed in, it proxies acceptance to Berlin through `/api/invitations/:token/accept`.
-- Roma Settings now exposes owner-only final account-holder actions through Berlin-backed same-origin routes: `/api/accounts/:accountId/owner-transfer` and `DELETE /api/accounts/:accountId`. Tier, locales, ownership, and delete-account controls now sit on the same Berlin-owned account boundary.
+- Roma Settings now exposes owner-only final account-holder actions through Berlin-backed same-origin routes: `/api/account/owner-transfer` and `DELETE /api/account`. Tier, locales, ownership, and delete-account controls now sit on the same Berlin-owned account boundary.
 
 ## Widgets domain ownership
 
@@ -162,9 +162,8 @@ Roma `widgets` is the only product surface that owns per-instance live status ch
 
 - `useRomaWidgets`: account list cache + in-flight dedupe.
 - `useRomaTemplates`: template list cache + in-flight dedupe.
-- `account-instance-cache`: per `(accountId, publicId)` cache for builder opens.
 - `compiled-widget-cache`: per widget compiled payload cache.
-- Widgets/Templates prefetch compiled + likely instances to reduce open latency.
+- Widgets/Templates prefetch compiled payloads only; Builder open itself is one Roma route.
 
 Usage, billing, and AI domain behavior:
 
@@ -174,8 +173,9 @@ Usage, billing, and AI domain behavior:
 
 Assets domain behavior:
 
-- `AssetsDomain` reads account inventory from `/api/accounts/:accountId/assets` and performs per-asset delete via `/api/accounts/:accountId/assets/:assetId`.
-- Roma exposes account-level asset routes (`/api/accounts/:accountId/assets`, `/api/accounts/:accountId/assets/resolve`, `/api/accounts/:accountId/assets/:assetId`, `/api/accounts/:accountId/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
+- `AssetsDomain` reads account inventory from `/api/account/assets` and performs per-asset delete via `/api/account/assets/:assetId`.
+- Roma exposes account-level asset routes (`/api/account/assets`, `/api/account/assets/resolve`, `/api/account/assets/:assetId`, `/api/account/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
+- Roma exposes private non-asset product control routes to Tokyo-worker through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Public Tokyo HTTP is no longer the Builder open/save authoring seam.
 - Asset inventory/upload payloads expose both `assetId` and canonical `assetRef`; Roma delete uses `assetId` directly instead of reverse-parsing it from the ref.
 - Published/runtime config packs are materialized through Tokyo asset resolution before Roma writes them to Tokyo live/runtime surfaces; saved authoring config remains logical authoring truth.
 - Assets supports single upload, bulk upload (multi-file queue), list, and per-asset delete only.
@@ -188,7 +188,7 @@ Assets domain behavior:
 - Roma runtime target: `https://roma.dev.clickeen.com` (Pages `*.pages.dev` deploys are not supported for authenticated Builder because cookies cannot be shared to Bob).
 - Uses cloud-dev Berlin/Tokyo/Bob/San Francisco URLs from env/config.
 - Cloud product auth currently supports both Google and email/password through Berlin-owned session endpoints.
-- Cloud-dev currently runs as one effective product account: admin. Roma does not expose account switching there.
+- Cloud-dev currently runs as one effective product account: admin. Roma does not expose customer account switching there or in the normal Roma product shell.
 
 ## Operational notes
 

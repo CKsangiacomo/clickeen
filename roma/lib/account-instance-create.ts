@@ -5,10 +5,10 @@ import {
 } from './michael';
 import {
   validatePersistableConfig,
+  deleteSavedConfigFromTokyo,
   writeSavedConfigToTokyo,
 } from './account-instance-direct';
 import { resolveTokyoBaseUrl } from './env/tokyo';
-import { buildTokyoProductHeaders } from './tokyo-product-auth';
 
 export type AccountInstanceCreateError = {
   kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE' | 'INTERNAL';
@@ -67,23 +67,13 @@ async function writeSavedConfigRollback(args: {
   accessToken: string;
   accountCapsule?: string | null;
 }) {
-  const tokyoBaseUrl = resolveTokyoBaseUrl();
-  const response = await fetch(
-    `${tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(
-      args.publicId,
-    )}/saved.json?accountId=${encodeURIComponent(args.accountId)}`,
-    {
-      method: 'DELETE',
-      headers: buildTokyoProductHeaders({
-        accountId: args.accountId,
-        accountCapsule: args.accountCapsule,
-      }),
-      cache: 'no-store',
-    },
-  );
-  if (!response.ok && response.status !== 404) {
-    throw new Error(`tokyo_saved_config_delete_http_${response.status}`);
-  }
+  await deleteSavedConfigFromTokyo({
+    tokyoBaseUrl: resolveTokyoBaseUrl(),
+    tokyoAccessToken: args.accessToken,
+    accountId: args.accountId,
+    publicId: args.publicId,
+    accountCapsule: args.accountCapsule,
+  });
 }
 
 export async function createAccountInstance(args: {

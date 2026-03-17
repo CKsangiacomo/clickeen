@@ -33,6 +33,10 @@
 │   │   │   │           TENET 4: DIETER TOKENS        │   │   │   │
 │   │   │   │   "All styling uses Dieter tokens"      │   │   │   │
 │   │   │   └─────────────────────────────────────────┘   │   │   │
+│   │   │   ┌─────────────────────────────────────────┐   │   │   │
+│   │   │   │        TENET 5: BORING SAAS SHELL       │   │   │   │
+│   │   │   │ "Boot once. Trust current-account truth"│   │   │   │
+│   │   │   └─────────────────────────────────────────┘   │   │   │
 │   │   └─────────────────────────────────────────────────┘   │   │
 │   └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
@@ -256,6 +260,57 @@ Users can override with RGB/HEX values in controls:
 | Theming | Change tokens once, all widgets update |
 | AI-friendly | AI knows valid token names |
 | User flexibility | Users can still use custom colors |
+
+---
+
+## Tenet 5: Boring SaaS Shells Operate From Minted Truth
+
+Clickeen is a complex multi-system platform, but the product shell must behave like a boring SaaS app.
+
+That means the normal product path is:
+
+1. user signs in
+2. the system mints identity, active account, and entitlements once
+3. Roma boots with that truth
+4. domains operate from the current account
+5. internal systems talk directly to the real owner systems
+
+### What This Means
+
+- Roma is not supposed to rediscover the current account on every domain action.
+- The browser is not the source of account truth for normal product flows.
+- Internal systems must not keep asking each other to re-prove already-minted current-account truth.
+- The browser expresses user intent; it is not an orchestration bus for server-owned identity/account state.
+- Explicit `accountId` is exceptional, not normal. It belongs only on flows like switch-account, support/internal tools, or clearly cross-account actions.
+
+### Why This Matters
+
+Without this tenet, the system drifts into a broken product shape:
+
+- bootstrap already knows the current account
+- each domain asks again "what account is this?"
+- server routes re-check already-minted truth
+- browser code starts ferrying context between internal services
+
+That creates duplication, drift, and blocked product domains.
+
+With this tenet:
+
+- the shell boots once
+- the current account is trusted
+- domains become boring
+- systems compose cleanly
+- complexity stays at the real ownership boundaries instead of leaking into every user flow
+
+### The Rule
+
+For ordinary product usage:
+
+- mint current-account truth once at the correct authority boundary
+- operate from that truth
+- send commands to the real owner systems directly
+
+If a normal product flow requires the browser to repeatedly restate "which account is this?", the architecture is wrong even if each local step looks explicit.
 
 ---
 

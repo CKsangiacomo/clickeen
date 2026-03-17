@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { RomaDomainKey } from '../lib/domains';
-import { RomaAccountSwitcher } from './roma-account-switcher';
 import { RomaNav } from './roma-nav';
 
 type RomaShellProps = {
@@ -15,7 +14,6 @@ type RomaShellProps = {
 export function RomaShellDefaultActions() {
   return (
     <>
-      <RomaAccountSwitcher />
       <Link className="diet-btn-txt" data-size="lg" data-variant="line2" href="/team">
         <span className="diet-btn-txt__label body-l">Invite members</span>
       </Link>
