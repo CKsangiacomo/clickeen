@@ -11,6 +11,7 @@ Rules:
 - Each app builds from its own root and writes only to its own output directory.
 - Bob and Roma must use custom `*.dev.clickeen.com` hosts for authenticated Builder flows. `*.pages.dev` is not a valid public runtime host for those apps.
 - Bob and Roma keep host/base-URL runtime vars in app-local `wrangler.toml`. Supabase project values are live environment config, not committed repo literals.
+- Bob and Roma `wrangler.toml` files must stay within the Pages-supported schema. Worker-only blocks such as top-level `observability` or named environments like `local` are not valid Pages config.
 - Venice and Prague keep runtime vars in the Cloudflare Pages dashboard because they do not use app-local Wrangler config today.
 - DevStudio is local-only and is not part of the Cloudflare Pages `cloud-dev` contract.
 

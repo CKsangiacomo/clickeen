@@ -10,7 +10,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* Roma loads Dieter assets from Tokyo at runtime; keep the app shell links explicit here. */}
         <link rel="stylesheet" href={`${DIETER_BASE}/tokens/tokens.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/segmented/segmented.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/button/button.css`} />

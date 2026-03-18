@@ -116,7 +116,7 @@ Roma talks to upstream systems only through same-origin API routes:
 - Those routes call the real owners directly: Berlin for auth/account truth, Tokyo/Tokyo-worker for saved/artifact truth, and San Francisco for AI execution.
 - There is no generic Paris proxy in the active Roma product path.
 - Account-scoped same-origin responses now stamp `x-request-id`, emit one structured completion log per request, and apply a first per-account KV-backed rate-limit floor on normal `/api/account/**` mutation routes (asset upload/delete included; AI copilot routes excluded from this floor).
-- Cloudflare observability is the first boring production sink for Roma server-side structured logs and failures.
+- Roma emits structured server-side logs and failures for Cloudflare ingestion. Pages-specific observability toggles are dashboard-owned; Worker-only `wrangler.toml` observability blocks are not valid for the Roma Pages project.
 
 Client fetch behavior:
 
