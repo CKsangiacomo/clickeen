@@ -1940,30 +1940,20 @@ var Dieter = (() => {
     if (state.videoRemoveButton) state.videoRemoveButton.disabled = uploading;
   }
   function syncImageHeader(state, deps) {
-    const placeholder = state.headerValue?.dataset.placeholder ?? "";
     if (state.imageSrc && !state.imageUnavailable) {
       const label = state.imageName || "Image selected";
       deps.updateHeader(state, { text: label, muted: false, chipColor: null });
       return;
     }
-    if (state.imageSrc && state.imageUnavailable) {
-      deps.updateHeader(state, { text: "", muted: true, chipColor: null, noneChip: true });
-      return;
-    }
-    deps.updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+    deps.updateHeader(state, { text: "", muted: true, chipColor: null, noneChip: true });
   }
   function syncVideoHeader(state, deps) {
-    const placeholder = state.headerValue?.dataset.placeholder ?? "";
     if (state.videoSrc && !state.videoUnavailable) {
       const label = state.videoName || "Video selected";
       deps.updateHeader(state, { text: label, muted: false, chipColor: null });
       return;
     }
-    if (state.videoSrc && state.videoUnavailable) {
-      deps.updateHeader(state, { text: "", muted: true, chipColor: null, noneChip: true });
-      return;
-    }
-    deps.updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+    deps.updateHeader(state, { text: "", muted: true, chipColor: null, noneChip: true });
   }
   function hasAvailableImage(state) {
     return Boolean(state.imageSrc && !state.imageUnavailable);

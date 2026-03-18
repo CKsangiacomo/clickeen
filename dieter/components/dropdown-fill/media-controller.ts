@@ -49,31 +49,21 @@ function setFillUploadingState(state: DropdownFillState, uploading: boolean): vo
 }
 
 function syncImageHeader(state: DropdownFillState, deps: MediaControllerDeps): void {
-  const placeholder = state.headerValue?.dataset.placeholder ?? '';
   if (state.imageSrc && !state.imageUnavailable) {
     const label = state.imageName || 'Image selected';
     deps.updateHeader(state, { text: label, muted: false, chipColor: null });
     return;
   }
-  if (state.imageSrc && state.imageUnavailable) {
-    deps.updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
-    return;
-  }
-  deps.updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+  deps.updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
 }
 
 function syncVideoHeader(state: DropdownFillState, deps: MediaControllerDeps): void {
-  const placeholder = state.headerValue?.dataset.placeholder ?? '';
   if (state.videoSrc && !state.videoUnavailable) {
     const label = state.videoName || 'Video selected';
     deps.updateHeader(state, { text: label, muted: false, chipColor: null });
     return;
   }
-  if (state.videoSrc && state.videoUnavailable) {
-    deps.updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
-    return;
-  }
-  deps.updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+  deps.updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
 }
 
 function hasAvailableImage(state: DropdownFillState): boolean {

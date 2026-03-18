@@ -144,7 +144,7 @@ export function Workspace() {
     const message = {
       type: 'ck:state-update',
       widgetname: compiled.widgetname,
-      state: runtimeData,
+      state: materializedRuntimeData,
       locale,
       device,
       theme,
