@@ -90,8 +90,8 @@ jobs:
             node -e "const fs=require('fs');const payload=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));if(!payload?.error||payload.error.kind!=='AUTH'||payload.error.reasonKey!=='coreui.errors.auth.required'){console.error('Unexpected payload',payload);process.exit(1)}" "$body_file"
             rm -f "$body_file"
           }
-          verify_route DELETE "https://roma.dev.clickeen.com/api/accounts/00000000-0000-0000-0000-000000000100/members/00000000-0000-0000-0000-000000000100" 401
-          verify_route POST "https://roma.dev.clickeen.com/api/accounts/00000000-0000-0000-0000-000000000100/instances/does-not-matter/publish" 401
+          verify_route GET "https://roma.dev.clickeen.com/api/account/widgets" 401
+          verify_route POST "https://roma.dev.clickeen.com/api/account/instances/does-not-matter/publish" 401
 
       - name: Verify authenticated Roma account asset lane
         env:
@@ -136,7 +136,7 @@ jobs:
           ACCOUNT_CAPSULE="$(node -e "const fs=require('fs');const payload=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const token=payload?.authz?.accountCapsule;if(!token){console.error('Missing authz.accountCapsule');process.exit(1)}process.stdout.write(String(token));" "$bootstrap_body")"
 
           list_status="$(curl -sS -b "$cookie_jar" -o "$list_body" -w '%{http_code}' \
-            "https://roma.dev.clickeen.com/api/accounts/${ACCOUNT_ID}/assets?limit=1" \
+            "https://roma.dev.clickeen.com/api/account/assets?limit=1" \
             -H "x-ck-authz-capsule: ${ACCOUNT_CAPSULE}")"
           if [[ "$list_status" != "200" ]]; then
             echo "Asset list failed with status $list_status" >&2
@@ -156,7 +156,7 @@ jobs:
 
           printf 'cloud-dev smoke asset %s\n' "$(date -u +%Y%m%dT%H%M%SZ)" > "$tmp_asset"
           upload_status="$(curl -sS -b "$cookie_jar" -o "$upload_body" -w '%{http_code}' \
-            -X POST "https://roma.dev.clickeen.com/api/accounts/${ACCOUNT_ID}/assets/upload" \
+            -X POST "https://roma.dev.clickeen.com/api/account/assets/upload" \
             -H "x-ck-authz-capsule: ${ACCOUNT_CAPSULE}" \
             -H 'content-type: text/plain' \
             -H 'x-filename: smoke-asset.txt' \
@@ -171,7 +171,7 @@ jobs:
           ASSET_ID="$(node -e "const fs=require('fs');const payload=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const assetId=payload?.assetId;if(!assetId){console.error('Missing assetId in upload response');process.exit(1)}process.stdout.write(String(assetId));" "$upload_body")"
 
           delete_status="$(curl -sS -b "$cookie_jar" -o "$delete_body" -w '%{http_code}' \
-            -X DELETE "https://roma.dev.clickeen.com/api/accounts/${ACCOUNT_ID}/assets/${ASSET_ID}" \
+            -X DELETE "https://roma.dev.clickeen.com/api/account/assets/${ASSET_ID}" \
             -H "x-ck-authz-capsule: ${ACCOUNT_CAPSULE}")"
           if [[ "$delete_status" != "200" ]]; then
             echo "Asset delete failed with status $delete_status" >&2
