@@ -21,7 +21,83 @@ import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import crypto from 'node:crypto';
-import { normalizeWidgetPublicId, parseCanonicalAssetRef } from '../packages/ck-contracts/src/index.js';
+
+// Keep the Tokyo dev stub self-contained so CI can boot it with plain `node`.
+const WIDGET_PUBLIC_ID_RE =
+  /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
+const ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/[^/]+$/;
+
+function normalizeWidgetPublicId(raw) {
+  const value = typeof raw === 'string' ? raw.trim() : '';
+  if (!value) return null;
+  return WIDGET_PUBLIC_ID_RE.test(value) ? value : null;
+}
+
+function decodePathPart(raw) {
+  try {
+    return decodeURIComponent(String(raw || '')).trim();
+  } catch {
+    return '';
+  }
+}
+
+function pathnameFromRawAssetRef(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  if (value.startsWith('/')) return value;
+  if (!/^https?:\/\//i.test(value)) return null;
+  try {
+    return new URL(value).pathname || '/';
+  } catch {
+    return null;
+  }
+}
+
+function decodeAssetVersionToken(raw) {
+  const token = decodePathPart(raw);
+  if (!token) return null;
+  try {
+    const key = decodeURIComponent(token).trim();
+    if (!key || key.startsWith('/') || key.includes('..')) return null;
+    return key;
+  } catch {
+    return null;
+  }
+}
+
+function isUuid(raw) {
+  const value = typeof raw === 'string' ? raw.trim() : '';
+  return Boolean(value && UUID_RE.test(value));
+}
+
+function parseCanonicalAssetRef(raw) {
+  const pathname = pathnameFromRawAssetRef(raw);
+  if (!pathname) return null;
+
+  const version = pathname.match(ASSET_VERSION_PATH_RE);
+  if (!version) return null;
+
+  const versionToken = decodePathPart(version[1]);
+  const versionKey = decodeAssetVersionToken(versionToken);
+  if (!versionKey) return null;
+
+  const keyMatch = versionKey.match(ASSET_VERSION_KEY_RE);
+  if (!keyMatch) return null;
+  const accountId = decodePathPart(keyMatch[1]);
+  const assetId = decodePathPart(keyMatch[2]);
+  if (!isUuid(accountId) || !isUuid(assetId)) return null;
+
+  return {
+    accountId,
+    assetId,
+    kind: 'version',
+    pathname,
+    versionToken,
+    versionKey,
+  };
+}
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
