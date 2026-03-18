@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import type { CompiledPanel, PanelId } from '../lib/types';
 import { TdMenu } from './TdMenu';
 import { TdMenuContent } from './TdMenuContent';
-import { CopilotPane } from './CopilotPane';
+import { AccountCopilotPane, MinibobCopilotPane } from './CopilotPane';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { resolvePolicySubject } from '../lib/session/sessionPolicy';
 import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 import { SettingsPanel } from './SettingsPanel';
 import { LocalizationControls } from './LocalizationControls';
@@ -148,6 +149,10 @@ export function ToolDrawer() {
     }
     return map;
   }, [compiled]);
+  const copilotSurface = useMemo(() => {
+    if (!session.policy) return 'account';
+    return resolvePolicySubject(session.policy);
+  }, [session.policy]);
 
   const isLocalizationPanel = activePanel === 'localization';
   const isLocalizationReadOnly = isLocalizationPanel && session.locale.activeLocale === session.locale.baseLocale;
@@ -287,7 +292,7 @@ export function ToolDrawer() {
           </>
         ) : (
           <div className="tooldrawer-copilot">
-            <CopilotPane />
+            {copilotSurface === 'minibob' ? <MinibobCopilotPane /> : <AccountCopilotPane />}
           </div>
         )}
       </div>

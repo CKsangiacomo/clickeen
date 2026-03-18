@@ -94,6 +94,16 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
 
     const specValidator = getFreshnessValidator(specRes);
     const limitsValidator = getFreshnessValidator(limitsRes);
+    const specText = await specRes.text();
+    const limitsText = limitsRes.ok ? await limitsRes.text() : '';
+    const widgetJson = JSON.parse(specText) as RawWidget;
+    if (widgetJson.v !== 1) {
+      return NextResponse.json(
+        { error: `[Bob] Unsupported widget spec version for ${widgetname}` },
+        { status: 503, headers: corsHeaders },
+      );
+    }
+
     let freshnessKey = [
       `widget=${widgetname}`,
       buildSourceSignal('spec', specRes.status, specValidator),
@@ -102,7 +112,12 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
 
     if (!cacheBust) {
       const cached = compiledWidgetCache.get(widgetname);
-      if (cached && hasStrongFreshnessSignal(specValidator) && (limitsRes.status === 404 || hasStrongFreshnessSignal(limitsValidator)) && cached.freshnessKey === freshnessKey) {
+      if (
+        cached &&
+        hasStrongFreshnessSignal(specValidator) &&
+        (limitsRes.status === 404 || hasStrongFreshnessSignal(limitsValidator)) &&
+        cached.freshnessKey === freshnessKey
+      ) {
         compiledWidgetCache.set(widgetname, {
           ...cached,
           cachedAt: Date.now(),
@@ -115,9 +130,6 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
         });
       }
     }
-
-    const specText = await specRes.text();
-    const limitsText = limitsRes.ok ? await limitsRes.text() : '';
 
     if (!hasStrongFreshnessSignal(specValidator)) {
       const specHash = await sha256Hex(specText);
@@ -144,7 +156,6 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ widgetname:
       }
     }
 
-    const widgetJson = JSON.parse(specText) as RawWidget;
     const compiled = await compileWidgetServer(widgetJson);
     let limits = null;
     if (limitsRes.ok && limitsText.trim()) {

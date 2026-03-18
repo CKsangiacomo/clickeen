@@ -22,8 +22,7 @@ import {
   type SessionState,
 } from './sessionTypes';
 import { resolveLocaleOverlayEntry } from './sessionLocalization';
-import { applyWidgetNormalizations } from './sessionNormalization';
-import { applyDefaultsIntoConfig } from './sessionConfig';
+import { applyWidgetNormalizationRules } from '../compiler/modules/normalization';
 
 export function useSessionEditing(args: {
   state: SessionState;
@@ -42,19 +41,15 @@ export function useSessionEditing(args: {
     const policy = snapshot.policy;
     if (!compiled || compiled.controls.length === 0) return false;
     if (!policy) return false;
-    if (!compiled.defaults || typeof compiled.defaults !== 'object' || Array.isArray(compiled.defaults)) return false;
-
-    const defaults = compiled.defaults as Record<string, unknown>;
     let resolved: Record<string, unknown> = structuredClone(nextState);
 
-    resolved = applyDefaultsIntoConfig(compiled.normalization, defaults, resolved);
     resolved = sanitizeConfig({
       config: resolved,
       limits: compiled.limits ?? null,
       policy,
       context: 'load',
     });
-    resolved = applyWidgetNormalizations(compiled.normalization, resolved);
+    resolved = applyWidgetNormalizationRules(resolved, compiled.normalization);
 
     const baseNext = resolved;
     const instanceNext =
@@ -176,7 +171,7 @@ export function useSessionEditing(args: {
         return applied;
       }
 
-      const normalizedData = applyWidgetNormalizations(compiled.normalization, applied.data);
+      const normalizedData = applyWidgetNormalizationRules(applied.data, compiled.normalization);
 
       const violations = evaluateLimits({
         config: normalizedData,
@@ -294,7 +289,7 @@ export function useSessionEditing(args: {
       return applied;
     }
 
-    const normalizedData = applyWidgetNormalizations(compiled.normalization, applied.data);
+    const normalizedData = applyWidgetNormalizationRules(applied.data, compiled.normalization);
 
     const violations = evaluateLimits({
       config: normalizedData,

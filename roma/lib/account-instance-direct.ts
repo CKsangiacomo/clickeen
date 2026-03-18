@@ -8,6 +8,7 @@ import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
 } from './tokyo-product-control';
+import { validateWidgetConfigContract } from './widget-config-contract';
 
 export type DirectRouteError = {
   kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
@@ -82,6 +83,7 @@ function resolveTokyoControlErrorDetail(
 export function validatePersistableConfig(
   config: unknown,
   expectedAccountId: string,
+  widgetType?: string | null,
 ): DirectRouteResult<{ config: Record<string, unknown> }> {
   if (!isRecord(config)) {
     return {
@@ -119,6 +121,23 @@ export function validatePersistableConfig(
         reasonKey: 'coreui.errors.publish.nonPersistableUrl',
         detail: assetIssues[0]?.message,
         paths: assetIssues.map((issue) => issue.path),
+      },
+    };
+  }
+
+  const contractIssues =
+    typeof widgetType === 'string' && widgetType.trim()
+      ? validateWidgetConfigContract(widgetType.trim(), config)
+      : [];
+  if (contractIssues.length) {
+    return {
+      ok: false,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.config.invalid',
+        detail: contractIssues[0]?.message,
+        paths: contractIssues.map((issue) => issue.path),
       },
     };
   }
@@ -375,6 +394,20 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
     };
   }
 
+  const contractIssues = validateWidgetConfigContract(saved.row.widgetType, saved.config);
+  if (contractIssues.length) {
+    return {
+      ok: false,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.instance.config.invalid',
+        detail: contractIssues[0]?.message,
+        paths: contractIssues.map((issue) => issue.path),
+      },
+    };
+  }
+
   return {
     ok: true,
     value: {
@@ -423,6 +456,19 @@ export async function saveAccountInstanceDirect(args: {
   }
 
   const previousConfig = current.value.config;
+  const validatedConfig = validatePersistableConfig(
+    args.config,
+    args.accountId,
+    current.value.row.widgetType,
+  );
+  if (!validatedConfig.ok) {
+    return {
+      ok: false,
+      status: validatedConfig.status,
+      error: validatedConfig.error,
+    };
+  }
+
   if (stableStringify(previousConfig) === stableStringify(args.config)) {
     return {
       ok: true,
@@ -449,7 +495,7 @@ export async function saveAccountInstanceDirect(args: {
       internalServiceName: args.internalServiceName,
       accountCapsule: args.accountCapsule,
       widgetType: current.value.row.widgetType,
-      config: args.config,
+      config: validatedConfig.value.config,
     });
   } catch (error) {
     return {
@@ -466,7 +512,7 @@ export async function saveAccountInstanceDirect(args: {
   return {
     ok: true,
     value: {
-      config: args.config,
+      config: validatedConfig.value.config,
       changed: true,
       instance: {
         widgetType: current.value.row.widgetType,

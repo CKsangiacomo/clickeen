@@ -1,4 +1,5 @@
 {
+  "v": 1,
   "widgetname": "faq",
   "itemKey": "faq.item",
   "normalization": {
@@ -273,9 +274,7 @@
       "expandAll": false,
       "multiOpen": false,
       "expandFirst": true,
-      "showBacklink": true,
-      "displayImages": true,
-      "displayVideos": true
+      "showBacklink": true
     },
     "sections": [
       {
@@ -309,32 +308,8 @@
         "title": "Getting started"
       }
     ],
-    "showTitle": true,
     "appearance": {
       "theme": "custom",
-      "itemCard": {
-        "border": {
-          "color": "#efeff2",
-          "width": 1,
-          "enabled": true
-        },
-        "radius": "2xl",
-        "shadow": {
-          "x": 7,
-          "y": 7,
-          "blur": 16,
-          "alpha": 13,
-          "color": "#007aff",
-          "inset": false,
-          "spread": 0,
-          "enabled": true
-        },
-        "radiusBL": "2xl",
-        "radiusBR": "2xl",
-        "radiusTL": "2xl",
-        "radiusTR": "2xl",
-        "radiusLinked": true
-      },
       "ctaBorder": {
         "color": "var(--color-system-blue)",
         "width": 1,

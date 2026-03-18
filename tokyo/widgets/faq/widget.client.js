@@ -232,13 +232,6 @@
     assertObject(state.geo, 'state.geo');
     assertBoolean(state.geo.enableDeepLinks, 'state.geo.enableDeepLinks');
 
-    if (state.context != null) {
-      assertObject(state.context, 'state.context');
-      if ('websiteUrl' in state.context) {
-        assertString(state.context.websiteUrl, 'state.context.websiteUrl');
-      }
-    }
-
     assertArray(state.sections, 'state.sections');
     state.sections.forEach((section, idx) => {
       assertObject(section, `state.sections[${idx}]`);

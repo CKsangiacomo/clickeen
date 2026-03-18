@@ -32,7 +32,7 @@ Set on the main element `[data-role="faq"]`:
 Content:
 - `sections[].title` (string)
 - `sections[].faqs[].question` (string; supports limited inline HTML)
-- `sections[].faqs[].answer` (string; supports limited inline HTML; URLs auto-link, and optionally embed images/videos)
+- `sections[].faqs[].answer` (string; supports limited inline HTML; URLs auto-link only)
 - `sections[].faqs[].defaultOpen` (boolean; accordion only)
 Required IDs:
 - `sections[].id` (string; stable; required)

@@ -44,7 +44,7 @@ Entitlements mapping (must match `tokyo/widgets/faq/limits.json`):
 ```text
 Key                      | Kind | Path(s)                    | Metric/Mode            | Enforcement        | Notes
 ------------------------ | ---- | -------------------------- | ---------------------- | ------------------ | ----------------------------
-branding.remove          | flag | behavior.showBacklink      | boolean (deny false)   | load+ops+publish   | sanitize to true on load
+branding.remove          | flag | behavior.showBacklink      | boolean (deny false)   | ops+save           | Bob gates the control; Roma rejects invalid saved config
 cap.group.items.small.max  | cap  | sections[]                 | count                  | ops+publish        | section count cap (cap group)
 cap.group.items.medium.max | cap  | sections[].faqs[]          | count                  | ops+publish        | per-section Q/A count cap (cap group)
 cap.group.items.large.max  | cap  | sections[].faqs[]          | count-total            | ops+publish        | total Q/A count cap (cap group)
@@ -57,7 +57,7 @@ Widget definition (the software): `tokyo/widgets/faq/`
 - `widget.css` — scoped styles (Dieter tokens)
 - `widget.client.js` — `applyState(state)` runtime
 - `agent.md` — AI editing contract
-- `limits.json` — entitlements caps/flags (Paris validation)
+- `limits.json` — entitlements caps/flags
 - `localization.json` — locale-layer allowlist
 - `layers/*.allowlist.json` — non-locale layer allowlists (when used)
 
@@ -131,10 +131,10 @@ Icon color is controlled via `appearance.iconColor` (color fill).
 Grouped state (source of truth: `tokyo/widgets/faq/spec.json`):
 - `sections[]` — content tree (section title + list of Q/A items)
 - `layout.*` — layout type, responsive columns, gap
-- `appearance.*` — link styling + accordion icon choice/color + Q&A card styling (background/border/radius/shadow) + pod border + `appearance.theme` (global theme selector; editor-only shortcut)
+- `appearance.*` — link styling + accordion icon choice/color + Q&A card styling (background/border/radius/shadow) + pod border + `appearance.theme` (global theme selector stored in the canonical authored document; runtime ignores it)
 - `behavior.*` — accordion toggles + backlink
 - `seoGeo.*` + `seo.*` + `geo.*` — SEO/GEO controls (schema, canonical URL, deep links)
-- `context.*` — Copilot context (editor-only; runtime may ignore)
+- `context.*` — Copilot/product context stored in the canonical authored document (runtime ignores it)
 - `typography.*` — global family + per-role selections (including text colors; compiler-injected panel)
 - `stage.*` + `pod.*` — stage/pod layout and appearance (including pod shadow)
 
@@ -221,7 +221,7 @@ Stage/Pod layout controls (compiler-injected for all widgets):
 Source: `tokyo/widgets/faq/spec.json` + compiler injection
 
 Widget appearance controls (spec-defined):
-- `appearance.theme` (editor-only theme selector; runtime ignores)
+- `appearance.theme` (canonical authoring theme selector; runtime ignores it)
 - Links (only shown when content contains links):
   - `appearance.linkStyle`
   - `appearance.linkUnderlineColor` (when `linkStyle == 'underline'`)
@@ -263,7 +263,7 @@ Source: `tokyo/widgets/faq/spec.json`
 
 Controls:
 - Copilot context:
-  - `context.websiteUrl` (AI-only; runtime ignores)
+- `context.websiteUrl` (canonical Copilot/product context; runtime ignores it)
 - SEO/GEO:
   - `seoGeo.enabled`
   - `seo.enableSchema` (shown when `seoGeo.enabled == true`)
@@ -273,7 +273,7 @@ Controls:
   - `behavior.showBacklink`
 
 Entitlements enforcement:
-- Enforced by `tokyo/widgets/faq/limits.json` (Paris validates load/ops/publish).
+- Enforced by `tokyo/widgets/faq/limits.json`; Bob uses policy/limits for UX gating and Roma validates saved config before Tokyo writes.
 
 ### Panel: Typography (`typography`, compiler-injected)
 Why it exists:
@@ -300,6 +300,11 @@ Compiler-injected (because defaults include `typography.roles`):
 - Theme is a **global** dropdown in Appearance (`appearance.theme`).
 - Selection previews in-editor; only **Apply theme** commits changes to state.
 - Themes apply only: `stage.background`, `pod.background`, `appearance.itemBackground`, and `typography.globalFamily`.
+- Canonical non-runtime fields:
+  - `appearance.theme` and `context.websiteUrl` remain part of the canonical authored FAQ document
+  - editor/Copilot/product flows may use them
+  - save/open boundary still validates the saved document shape
+  - FAQ runtime must not depend on either field
 
 ## 6) Runtime requirements
 Widget runtime (`tokyo/widgets/faq/widget.client.js`) must:
@@ -307,6 +312,10 @@ Widget runtime (`tokyo/widgets/faq/widget.client.js`) must:
 - Sanitize any inline HTML allowed in questions/answers
 - Convert URLs in answers to links only (no media embedding)
 - Use Dieter tokens + Dieter icon system for visuals
+
+Saved/open boundary requirements:
+- Roma must reject invalid FAQ config before it is written to or reopened from Tokyo.
+- Bob must open the document it was given and must not heal missing FAQ state on load.
 
 ## 7) Gold standard checklist (AI)
 When changing FAQ state/controls/runtime, keep the system coherent:

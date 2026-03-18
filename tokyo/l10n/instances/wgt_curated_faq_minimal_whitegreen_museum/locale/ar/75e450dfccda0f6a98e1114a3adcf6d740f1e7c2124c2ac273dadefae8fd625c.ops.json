@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "75e450dfccda0f6a98e1114a3adcf6d740f1e7c2124c2ac273dadefae8fd625c",
+  "baseUpdatedAt": "2026-02-12T17:01:21.211684+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "إجراء حجز"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "اكتشف سحر وراحة مبيت وإفطارنا في الولايات المتحدة."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "الأسئلة الشائعة لمعرض سوهو الفني"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "نعرض فنًا معاصرًا لفنانين محليين وiدوليين ."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "ما أنواع الفن المعروضة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "المعرض مفتوح من الثلاثاء إلى الأحد من 10 صباحًا حتى 6 مساءً."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "ما هي ساعات عمل المعرض؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "الدخول مجاني، لكن التبرعات محل تقدير."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "هل توجد رسوم دخول؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "نعم، يمكنك شراء الأعمال الفنية مباشرةً من المعرض."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "هل يمكنني شراء أعمال فنية من المعرض؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "اطّلع على موقعنا للحصول على معلومات حول المعارض والفعاليات القادمة."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "هل توجد فعاليات قادمة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "نعم، نوفر استضافة فعاليات خاصة مقابل رسوم."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "هل يمكنني إقامة فعالية خاصة في المعرض؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "معلومات المعرض"
+    }
+  ],
+  "v": 1
+}

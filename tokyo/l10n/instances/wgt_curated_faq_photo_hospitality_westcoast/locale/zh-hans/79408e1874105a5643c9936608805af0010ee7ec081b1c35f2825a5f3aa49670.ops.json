@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "79408e1874105a5643c9936608805af0010ee7ec081b1c35f2825a5f3aa49670",
+  "baseUpdatedAt": "2026-02-11T23:19:56.282307+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "立即预订"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "探索我们美国民宿的独特魅力与舒适体验。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "民宿常见问题"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "我们提供多种房型，包括 标准房、 豪华房，以及 套房。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "有哪些房型可供选择？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "入住时间为下午 3 点，退房时间为上午 11 点前。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "入住和退房时间是什么时候？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "是的，入住期间包含免费早餐。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "包含早餐吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "是的，我们提供浪漫的 度假套餐，以及 适合全家出行的选择。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "你们提供特别套餐吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "常见问题"
+    }
+  ],
+  "v": 1
+}

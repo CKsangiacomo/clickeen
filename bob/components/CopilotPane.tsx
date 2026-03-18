@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { WidgetOp } from '../lib/ops';
-import type { CopilotMessage } from '../lib/copilot/types';
+import type { CopilotCta, CopilotMessage } from '../lib/copilot/types';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import {
   labelAiModel,
@@ -15,6 +15,9 @@ import type { AiProvider } from '@clickeen/ck-policy';
 function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
+
+type CopilotSurfaceKind = 'account' | 'minibob';
+type WidgetSessionValue = ReturnType<typeof useWidgetSession>;
 
 function titleCase(input: string): string {
   const s = String(input || '')
@@ -84,9 +87,12 @@ function newId(): string {
   return crypto.randomUUID();
 }
 
-function initialCopilotMessage(args: { widgetType: string; config: Record<string, unknown> }): string {
+function initialCopilotMessage(args: { surface: CopilotSurfaceKind; widgetType: string }): string {
   const type = args.widgetType;
   const label = titleCase(type) || 'widget';
+  if (args.surface === 'account') {
+    return `You’re editing a ${label} widget in your workspace. Ask me for a concrete content, layout, styling, or settings change and I’ll stage it for review.`;
+  }
   return `Hello! I see you have a ${label} widget. You can ask me to change the title, colors, layout, add or edit content, adjust fonts, or modify any other settings listed in the editable controls. What would you like to customize?`;
 }
 
@@ -194,18 +200,121 @@ async function mintMinibobSessionToken(): Promise<StoredMinibobSession> {
   return { sessionToken, exp };
 }
 
-export function CopilotPane() {
-  const session = useWidgetSession();
-  const compiled = session.compiled;
-  const canApplyOps = Boolean(compiled && compiled.controls.length > 0);
+function AccountCopilotAiSettings(args: {
+  aiPolicy: NonNullable<ReturnType<typeof resolveAiPolicyCapsule>>;
+  aiSelection: AiSelection;
+  accountId: string | null;
+  setAiSelection: (value: AiSelection) => void;
+}) {
+  const { aiPolicy, aiSelection, accountId, setAiSelection } = args;
+  return (
+    <div
+      style={{
+        padding: 'var(--space-3)',
+        paddingBottom: 'var(--space-2)',
+        borderBottom: '1px solid var(--color-system-gray-5)',
+        background: 'var(--color-system-white)',
+      }}
+    >
+      <div className="label-s label-muted" style={{ marginBottom: 'var(--space-2)' }}>
+        Copilot AI
+      </div>
+      <div style={{ display: 'grid', gap: 'var(--space-2)', gridTemplateColumns: '1fr 1fr' }}>
+        {aiPolicy.allowProviderChoice ? (
+          <div className="diet-textfield" data-size="md">
+            <label className="diet-textfield__control">
+              <span className="diet-textfield__display-label label-s">Provider</span>
+              <select
+                className="diet-textfield__field body-s"
+                value={aiSelection.provider}
+                onChange={(event) => {
+                  const nextProvider = event.target.value;
+                  const clamped = clampAiSelection({ provider: nextProvider, model: '' }, aiPolicy);
+                  setAiSelection(clamped);
+                  writeStoredAiSelection(aiStorageKey({ accountId, subject: 'account' }), clamped);
+                }}
+              >
+                {aiPolicy.allowedProviders.map((provider) => (
+                  <option key={provider} value={provider}>
+                    {labelAiProvider(provider)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : (
+          <div className="diet-textfield" data-size="md">
+            <label className="diet-textfield__control">
+              <span className="diet-textfield__display-label label-s">Provider</span>
+              <input className="diet-textfield__field body-s" value={labelAiProvider(aiSelection.provider)} readOnly />
+            </label>
+          </div>
+        )}
 
-  const widgetType = compiled?.widgetname ?? null;
-  const instancePublicId = session.meta?.publicId ?? null;
+        {aiPolicy.allowModelChoice && (aiPolicy.models?.[aiSelection.provider]?.allowed?.length ?? 0) > 1 ? (
+          <div className="diet-textfield" data-size="md">
+            <label className="diet-textfield__control">
+              <span className="diet-textfield__display-label label-s">Model</span>
+              <select
+                className="diet-textfield__field body-s"
+                value={aiSelection.model}
+                onChange={(event) => {
+                  const next: AiSelection = { provider: aiSelection.provider, model: event.target.value };
+                  const clamped = clampAiSelection(next, aiPolicy);
+                  setAiSelection(clamped);
+                  writeStoredAiSelection(aiStorageKey({ accountId, subject: 'account' }), clamped);
+                }}
+              >
+                {(aiPolicy.models?.[aiSelection.provider]?.allowed ?? []).map((model) => (
+                  <option key={model} value={model}>
+                    {labelAiModel(model)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : (
+          <div className="diet-textfield" data-size="md">
+            <label className="diet-textfield__control">
+              <span className="diet-textfield__display-label label-s">Model</span>
+              <input className="diet-textfield__field body-s" value={labelAiModel(aiSelection.model)} readOnly />
+            </label>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type CopilotSurfaceContract = {
+  subject: CopilotSurfaceKind;
+  initialMessage: (widgetType: string) => string;
+  missingContextMessage: string | null;
+  pendingMode: 'keep' | 'signup';
+  pendingMessageText: (message: string) => string;
+  pendingNudge: string;
+  pendingPrimaryLabel: string;
+  pendingPrimaryUpsellReason?: string;
+  pendingCta: (cta?: CopilotCta) => CopilotCta | undefined;
+  resolveRequestContext: () => Promise<{
+    accountId?: string | null;
+    provider?: string;
+    model?: string;
+    sessionToken?: string;
+  }>;
+  settings: ReactNode;
+};
+
+type SharedCopilotPaneProps = {
+  session: WidgetSessionValue;
+  widgetCopilotAgentId: string | null;
+  surfaceContract: CopilotSurfaceContract;
+};
+
+export function AccountCopilotPane() {
+  const session = useWidgetSession();
   const accountId = session.meta?.accountId ?? null;
   const policyProfile = session.policy?.profile ?? null;
-  const subject = policyProfile === 'minibob' ? 'minibob' : policyProfile ? 'account' : null;
-  const isMinibob = subject === 'minibob';
-  const missingAccountForAccountSubject = subject === 'account' && !accountId;
   const widgetCopilotAgentId = useMemo(
     () => (policyProfile ? resolveWidgetCopilotAgentId({ policyProfile }) : null),
     [policyProfile],
@@ -220,20 +329,101 @@ export function CopilotPane() {
 
   const [aiSelection, setAiSelection] = useState<AiSelection | null>(null);
   useEffect(() => {
-    if (!aiPolicy || !subject) return;
-    const key = aiStorageKey({ accountId, subject });
+    if (!aiPolicy) return;
+    const key = aiStorageKey({ accountId, subject: 'account' });
     const stored = readStoredAiSelection(key);
     const next = clampAiSelection(stored, aiPolicy);
     setAiSelection(next);
-  }, [aiPolicy, accountId, subject]);
+  }, [aiPolicy, accountId]);
 
   const showAiSettings = useMemo(() => {
     if (!widgetCopilotAgentId || widgetCopilotAgentId !== WIDGET_COPILOT_AGENT_IDS.cs) return false;
-    if (!aiPolicy || isMinibob || !aiSelection) return false;
+    if (!aiPolicy || !aiSelection) return false;
     if (aiPolicy.allowProviderChoice) return true;
     const allowedModels = aiPolicy.models?.[aiSelection.provider]?.allowed ?? [];
     return Boolean(aiPolicy.allowModelChoice && allowedModels.length > 1);
-  }, [aiPolicy, isMinibob, aiSelection, widgetCopilotAgentId]);
+  }, [aiPolicy, aiSelection, widgetCopilotAgentId]);
+
+  const settingsNode = useMemo(() => {
+    if (!showAiSettings || !aiPolicy || !aiSelection) return null;
+    return (
+      <AccountCopilotAiSettings
+        aiPolicy={aiPolicy}
+        aiSelection={aiSelection}
+        accountId={accountId}
+        setAiSelection={setAiSelection}
+      />
+    );
+  }, [accountId, aiPolicy, aiSelection, showAiSettings]);
+
+  const surfaceContract = useMemo<CopilotSurfaceContract>(() => {
+    const selection =
+      aiPolicy && widgetCopilotAgentId === WIDGET_COPILOT_AGENT_IDS.cs ? clampAiSelection(aiSelection, aiPolicy) : null;
+    return {
+      subject: 'account',
+      initialMessage: (widgetType) => initialCopilotMessage({ surface: 'account', widgetType }),
+      missingContextMessage: accountId
+        ? null
+        : 'Account context is broken. Reopen the instance from Roma/DevStudio and try again.',
+      pendingMode: 'keep',
+      pendingMessageText: (message) => `${message}\n\nWant to keep this change?`,
+      pendingNudge: 'Keep or Undo? (Use the buttons above, or type “keep” / “undo”.)',
+      pendingPrimaryLabel: 'Keep',
+      pendingCta: (cta) => cta,
+      resolveRequestContext: async () => ({
+        accountId,
+        ...(selection?.provider ? { provider: selection.provider } : {}),
+        ...(selection?.model ? { model: selection.model } : {}),
+      }),
+      settings: settingsNode,
+    };
+  }, [accountId, aiPolicy, aiSelection, settingsNode, widgetCopilotAgentId]);
+
+  return <SharedCopilotPane session={session} widgetCopilotAgentId={widgetCopilotAgentId} surfaceContract={surfaceContract} />;
+}
+
+export function MinibobCopilotPane() {
+  const session = useWidgetSession();
+  const policyProfile = session.policy?.profile ?? null;
+  const widgetCopilotAgentId = useMemo(
+    () => (policyProfile ? resolveWidgetCopilotAgentId({ policyProfile }) : null),
+    [policyProfile],
+  );
+  const surfaceContract = useMemo<CopilotSurfaceContract>(
+    () => ({
+      subject: 'minibob',
+      initialMessage: (widgetType) => initialCopilotMessage({ surface: 'minibob', widgetType }),
+      missingContextMessage: null,
+      pendingMode: 'signup',
+      pendingMessageText: (message) => `${message}\n\nCreate a free account to keep this change.`,
+      pendingNudge: 'Create a free account to keep this change, or type “undo” to revert.',
+      pendingPrimaryLabel: 'Create a free account to keep this change',
+      pendingPrimaryUpsellReason: 'Create a free account to keep this change',
+      pendingCta: (cta) =>
+        !cta || cta.action !== 'signup' ? { text: 'Create a free account to keep this change', action: 'signup' } : cta,
+      resolveRequestContext: async () => {
+        const stored = readStoredMinibobSession();
+        if (stored && isMinibobSessionFresh(stored)) {
+          return { sessionToken: stored.sessionToken };
+        }
+        const minted = await mintMinibobSessionToken();
+        writeStoredMinibobSession(minted);
+        return { sessionToken: minted.sessionToken };
+      },
+      settings: null,
+    }),
+    [],
+  );
+
+  return <SharedCopilotPane session={session} widgetCopilotAgentId={widgetCopilotAgentId} surfaceContract={surfaceContract} />;
+}
+
+function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: SharedCopilotPaneProps) {
+  const compiled = session.compiled;
+  const canApplyOps = Boolean(compiled && compiled.controls.length > 0);
+
+  const widgetType = compiled?.widgetname ?? null;
+  const instancePublicId = session.meta?.publicId ?? null;
 
   const [draft, setDraft] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
@@ -290,9 +480,16 @@ export function CopilotPane() {
 
     session.setCopilotThread(threadKey, {
       sessionId: crypto.randomUUID(),
-      messages: [{ id: newId(), role: 'assistant', text: initialCopilotMessage({ widgetType, config: session.instanceData }), ts: Date.now() }],
+      messages: [
+        {
+          id: newId(),
+          role: 'assistant',
+          text: surfaceContract.initialMessage(widgetType),
+          ts: Date.now(),
+        },
+      ],
     });
-  }, [threadKey, compiled, canApplyOps, widgetType, thread, session]);
+  }, [threadKey, compiled, canApplyOps, widgetType, thread, session, surfaceContract]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -367,7 +564,7 @@ export function CopilotPane() {
       if (normalized === 'keep') {
         setDraft('');
         pushMessage({ role: 'user', text: prompt });
-        if (isMinibob) {
+        if (surfaceContract.pendingMode === 'signup') {
           pushMessage({
             role: 'assistant',
             text: 'Create a free account to keep this change.',
@@ -403,9 +600,7 @@ export function CopilotPane() {
         pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
         return;
       }
-      const nudge = isMinibob
-        ? 'Create a free account to keep this change, or type “undo” to revert.'
-        : 'Keep or Undo? (Use the buttons above, or type “keep” / “undo”.)';
+      const nudge = surfaceContract.pendingNudge;
       const last = messages[messages.length - 1];
       if (!(last?.role === 'assistant' && last.text === nudge)) {
         pushMessage({ role: 'assistant', text: nudge });
@@ -422,7 +617,7 @@ export function CopilotPane() {
           {
             id: newId(),
             role: 'assistant',
-            text: initialCopilotMessage({ widgetType, config: session.instanceData }),
+            text: surfaceContract.initialMessage(widgetType),
             ts: Date.now(),
           },
         ],
@@ -432,17 +627,17 @@ export function CopilotPane() {
       pushMessage({ role: 'assistant', text: 'Copilot session not ready. Please try again in a moment.' });
       return;
     }
-    if (!session.policy || !subject) {
+    if (!session.policy) {
       pushMessage({
         role: 'assistant',
         text: 'Editor context is not ready yet. Wait for Builder boot to complete and try again.',
       });
       return;
     }
-    if (missingAccountForAccountSubject) {
+    if (surfaceContract.missingContextMessage) {
       pushMessage({
         role: 'assistant',
-        text: 'Account context is broken. Reopen the instance from Roma/DevStudio and try again.',
+        text: surfaceContract.missingContextMessage,
       });
       return;
     }
@@ -452,22 +647,7 @@ export function CopilotPane() {
     pushMessage({ role: 'user', text: prompt });
 
     try {
-      let minibobSessionToken = '';
-      if (isMinibob) {
-        const stored = readStoredMinibobSession();
-        if (stored && isMinibobSessionFresh(stored)) {
-          minibobSessionToken = stored.sessionToken;
-        } else {
-          const minted = await mintMinibobSessionToken();
-          writeStoredMinibobSession(minted);
-          minibobSessionToken = minted.sessionToken;
-        }
-      }
-
-      const selection =
-        aiPolicy && !isMinibob && widgetCopilotAgentId === WIDGET_COPILOT_AGENT_IDS.cs
-          ? clampAiSelection(aiSelection, aiPolicy)
-          : null;
+      const requestContext = await surfaceContract.resolveRequestContext();
       const res = await session.apiFetch('/api/ai/widget-copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -478,12 +658,12 @@ export function CopilotPane() {
           currentConfig: session.instanceData,
           controls: controlsForAi,
           sessionId,
-          ...(isMinibob ? { sessionToken: minibobSessionToken } : {}),
           instancePublicId,
-          accountId,
-          subject,
-          ...(selection?.provider ? { provider: selection.provider } : {}),
-          ...(selection?.model ? { model: selection.model } : {}),
+          subject: surfaceContract.subject,
+          ...(requestContext.accountId ? { accountId: requestContext.accountId } : {}),
+          ...(requestContext.sessionToken ? { sessionToken: requestContext.sessionToken } : {}),
+          ...(requestContext.provider ? { provider: requestContext.provider } : {}),
+          ...(requestContext.model ? { model: requestContext.model } : {}),
         }),
       });
 
@@ -522,12 +702,8 @@ export function CopilotPane() {
 
         pendingOpsRef.current = ops;
         pendingDecisionRef.current = true;
-        const pendingText = isMinibob
-          ? `${message}\n\nCreate a free account to keep this change.`
-          : `${message}\n\nWant to keep this change?`;
-        const pendingCta = isMinibob && (!cta || cta.action !== 'signup')
-          ? { text: 'Create a free account to keep this change', action: 'signup' as const }
-          : cta;
+        const pendingText = surfaceContract.pendingMessageText(message);
+        const pendingCta = surfaceContract.pendingCta(cta);
         pushMessage({
           role: 'assistant',
           text: pendingText,
@@ -558,83 +734,7 @@ export function CopilotPane() {
       }}
       aria-label="Copilot"
     >
-      {showAiSettings && aiPolicy && aiSelection ? (
-        <div
-          style={{
-            padding: 'var(--space-3)',
-            paddingBottom: 'var(--space-2)',
-            borderBottom: '1px solid var(--color-system-gray-5)',
-            background: 'var(--color-system-white)',
-          }}
-        >
-          <div className="label-s label-muted" style={{ marginBottom: 'var(--space-2)' }}>
-            Copilot AI
-          </div>
-          <div style={{ display: 'grid', gap: 'var(--space-2)', gridTemplateColumns: '1fr 1fr' }}>
-            {aiPolicy.allowProviderChoice ? (
-              <div className="diet-textfield" data-size="md">
-                <label className="diet-textfield__control">
-                  <span className="diet-textfield__display-label label-s">Provider</span>
-                  <select
-                    className="diet-textfield__field body-s"
-                    value={aiSelection.provider}
-                    onChange={(event) => {
-                      const nextProvider = event.target.value;
-                      const clamped = clampAiSelection({ provider: nextProvider, model: '' }, aiPolicy);
-                      setAiSelection(clamped);
-                      if (subject) writeStoredAiSelection(aiStorageKey({ accountId, subject }), clamped);
-                    }}
-                  >
-                    {aiPolicy.allowedProviders.map((provider) => (
-                      <option key={provider} value={provider}>
-                        {labelAiProvider(provider)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            ) : (
-              <div className="diet-textfield" data-size="md">
-                <label className="diet-textfield__control">
-                  <span className="diet-textfield__display-label label-s">Provider</span>
-                  <input className="diet-textfield__field body-s" value={labelAiProvider(aiSelection.provider)} readOnly />
-                </label>
-              </div>
-            )}
-
-            {aiPolicy.allowModelChoice && (aiPolicy.models?.[aiSelection.provider]?.allowed?.length ?? 0) > 1 ? (
-              <div className="diet-textfield" data-size="md">
-                <label className="diet-textfield__control">
-                  <span className="diet-textfield__display-label label-s">Model</span>
-                  <select
-                    className="diet-textfield__field body-s"
-                    value={aiSelection.model}
-                    onChange={(event) => {
-                      const next: AiSelection = { provider: aiSelection.provider, model: event.target.value };
-                      const clamped = clampAiSelection(next, aiPolicy);
-                      setAiSelection(clamped);
-                      if (subject) writeStoredAiSelection(aiStorageKey({ accountId, subject }), clamped);
-                    }}
-                  >
-                    {(aiPolicy.models?.[aiSelection.provider]?.allowed ?? []).map((model) => (
-                      <option key={model} value={model}>
-                        {labelAiModel(model)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            ) : (
-              <div className="diet-textfield" data-size="md">
-                <label className="diet-textfield__control">
-                  <span className="diet-textfield__display-label label-s">Model</span>
-                  <input className="diet-textfield__field body-s" value={labelAiModel(aiSelection.model)} readOnly />
-                </label>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : null}
+      {surfaceContract.settings}
 
       <div
         ref={listRef}
@@ -709,7 +809,7 @@ export function CopilotPane() {
 
             {m.hasPendingDecision ? (
               <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
-                {!isMinibob ? (
+                {surfaceContract.pendingMode === 'keep' ? (
                   <button
                     className="diet-btn-txt"
                     data-size="md"
@@ -755,10 +855,10 @@ export function CopilotPane() {
                         requestId: m.requestId || '',
                         sessionId: copilotSessionId,
                       });
-                      session.requestUpsell('Create a free account to keep this change');
+                      session.requestUpsell(surfaceContract.pendingPrimaryUpsellReason || surfaceContract.pendingPrimaryLabel);
                     }}
                   >
-                    <span className="diet-btn-txt__label">Create a free account to keep this change</span>
+                    <span className="diet-btn-txt__label">{surfaceContract.pendingPrimaryLabel}</span>
                   </button>
                 )}
                 <button

@@ -14,7 +14,6 @@ import {
   type BobSessionReadyMessage,
   type EditorOpenMessage,
   type SessionState,
-  type SubjectMode,
 } from './sessionTypes';
 import {
   assertPolicy,
@@ -23,8 +22,6 @@ import {
   resolveSubjectModeFromUrl,
 } from './sessionPolicy';
 import { normalizeLocalizationSnapshotForOpenMode } from './sessionLocalization';
-import { applyDefaultsIntoConfig } from './sessionConfig';
-import { applyWidgetNormalizations } from './sessionNormalization';
 import type { OpenRequestStatusEntry } from './sessionTransport';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -76,7 +73,6 @@ export function useSessionBoot(args: {
             ? message.assetUploadEndpoint.trim()
             : undefined;
 
-        const nextSubjectMode: SubjectMode = message.subjectMode ?? resolveSubjectModeFromUrl();
         let nextPolicy: Policy | null = null;
 
         const incoming = message.instanceData as Record<string, unknown> | null | undefined;
@@ -102,14 +98,12 @@ export function useSessionBoot(args: {
           nextLabel = String(message.publicId || '').trim() || 'Untitled widget';
         }
 
-        resolved = applyDefaultsIntoConfig(compiled.normalization, defaults, resolved);
         resolved = sanitizeConfig({
           config: resolved,
           limits: compiled.limits ?? null,
           policy: nextPolicy,
           context: 'load',
         });
-        resolved = applyWidgetNormalizations(compiled.normalization, resolved);
         const localizationSnapshot = normalizeLocalizationSnapshotForOpenMode(nextLocalizationSnapshotRaw, {
           strict: args.bootModeRef.current === 'message',
         });

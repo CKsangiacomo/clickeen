@@ -74,10 +74,6 @@ const ALLOWED_WIDGET_COPILOT_AGENT_IDS = new Set<string>([
   WIDGET_COPILOT_AGENT_IDS.cs,
 ]);
 
-function isWidgetCopilotAgentId(value: string): value is (typeof WIDGET_COPILOT_AGENT_IDS)[keyof typeof WIDGET_COPILOT_AGENT_IDS] {
-  return value === WIDGET_COPILOT_AGENT_IDS.sdr || value === WIDGET_COPILOT_AGENT_IDS.cs;
-}
-
 function uniqStrings(values: Array<string | undefined | null>): string[] {
   const out: string[] = [];
   const seen = new Set<string>();

@@ -206,7 +206,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const validatedConfig = validatePersistableConfig(source.value.config, accountId);
+  const validatedConfig = validatePersistableConfig(
+    source.value.config,
+    accountId,
+    source.value.widgetType,
+  );
   if (!validatedConfig.ok) {
     return withSession(
       request,

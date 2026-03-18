@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "79408e1874105a5643c9936608805af0010ee7ec081b1c35f2825a5f3aa49670",
+  "baseUpdatedAt": "2026-02-11T23:19:56.282307+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "지금 예약하기"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "미국 B&B의 매력과 편안함을 만나보세요."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "B&B 자주 묻는 질문"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "스탠다드, 디럭스, 그리고 스위트 등 다양한 객실을 제공합니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "어떤 객실 타입이 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "체크인은 오후 3시, 체크아웃은 오전 11시까지입니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "체크인/체크아웃 시간은 어떻게 되나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "네, 숙박에는 무료 조식이 포함됩니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "조식이 포함되어 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "네, 로맨틱한 겟어웨이 패키지와 가족 친화 옵션을 제공합니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "특별 패키지가 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "자주 묻는 질문"
+    }
+  ],
+  "v": 1
+}

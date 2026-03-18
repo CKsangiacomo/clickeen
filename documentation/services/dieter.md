@@ -13,6 +13,15 @@ This document is the canonical reference for Clickeen’s design system and its 
 
 Dieter is Clickeen's shared design system: a token-first library consumed by Bob, Venice, marketing surfaces, and internal tools. It ships CSS plus optional JS hydrators for interactive components (see `componentsWithJs` in the manifest) under the package name `@ck/dieter` with accompanying static assets copied into each app under `/dieter/**`.
 
+Authoring boundary (current, explicit):
+- Dieter owns authoring primitives, including interactive editor controls such as `dropdown-fill` and `dropdown-upload`.
+- Those primitives may include hosted asset picker/upload/resolve behavior when that behavior is part of the control contract.
+- Bob/Roma still own host/account context, session/auth, persistence, entitlements, and route boundaries.
+- Dieter consumes that host context through explicit surfaces only:
+  - document dataset values for account/public/widget/asset endpoints
+  - the hosted asset bridge on `globalThis` when Builder runs in hosted account mode
+- Dieter does **not** own account policy, persistence, or product routing; it owns the primitive behavior that runs inside the authoring surface.
+
 ### Bundling manifest (executed)
 
 Dieter’s build produces an explicit bundling contract at:

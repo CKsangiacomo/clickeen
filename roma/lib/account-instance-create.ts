@@ -115,7 +115,7 @@ export async function createAccountInstance(args: {
     };
   }
 
-  const validatedConfig = validatePersistableConfig(args.config, args.accountId);
+  const validatedConfig = validatePersistableConfig(args.config, args.accountId, args.widgetType);
   if (!validatedConfig.ok) {
     return {
       ok: false,

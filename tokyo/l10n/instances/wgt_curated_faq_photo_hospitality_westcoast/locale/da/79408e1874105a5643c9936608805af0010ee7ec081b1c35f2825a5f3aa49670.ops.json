@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "79408e1874105a5643c9936608805af0010ee7ec081b1c35f2825a5f3aa49670",
+  "baseUpdatedAt": "2026-02-11T23:19:56.282307+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Book nu"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Oplev charmen og komforten på vores B&B i USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ om Bed and Breakfast"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Vi tilbyder et udvalg af værelser, herunder standard , deluxe og suiter ."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Hvilke værelsestyper findes der?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Check-in er kl. 15.00, og check-out senest kl. 11.00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hvornår er check-in og check-out?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, der er gratis morgenmad inkluderet i dit ophold."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Er morgenmad inkluderet?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ja, vi tilbyder romantiske getaway-pakker samt familievenlige muligheder."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Tilbyder I særlige pakker?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Ofte stillede spørgsmål"
+    }
+  ],
+  "v": 1
+}

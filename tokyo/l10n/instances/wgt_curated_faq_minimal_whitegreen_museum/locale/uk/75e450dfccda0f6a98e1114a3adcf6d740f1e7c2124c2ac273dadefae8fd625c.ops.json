@@ -1,0 +1,87 @@
+{
+  "baseFingerprint": "75e450dfccda0f6a98e1114a3adcf6d740f1e7c2124c2ac273dadefae8fd625c",
+  "baseUpdatedAt": "2026-02-12T17:01:21.211684+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Забронювати"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Відкрийте для себе шарм і затишок нашого американського B&B."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Поширені запитання про артгалерею Soho"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "У нас представлено сучасне мистецтво від місцевих та iнternational artists ."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Які види мистецтва представлені?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Галерея відкрита з вівторка по неділю з 10:00 до 18:00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Який графік роботи галереї?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Вхід безкоштовний, але ми будемо вдячні за донати."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Чи є плата за вхід?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Так, ви можете придбати роботи безпосередньо в галереї."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Чи можна купити роботи в галереї?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.answer",
+      "value": "Перегляньте наш сайт, щоб дізнатися про майбутні виставки та події."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.4.question",
+      "value": "Чи плануються найближчим часом події?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.answer",
+      "value": "Так, ми проводимо приватні заходи за окрему плату."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.5.question",
+      "value": "Чи можна провести приватний захід у галереї?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Інформація про галерею"
+    }
+  ],
+  "v": 1
+}

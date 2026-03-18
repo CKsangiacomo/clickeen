@@ -10,7 +10,6 @@ import {
   coercePxNumber,
   expandLinkedOps,
   isFiniteNumber,
-  isPlainRecord,
 } from './linkedOps';
 import {
   parseBobJsonValue,
@@ -41,8 +40,6 @@ export function useTdMenuBindings(args: {
   useEffect(() => {
     const container = args.containerRef.current;
     if (!container) return;
-
-    const setOp = (path: string, value: unknown): WidgetOp => ({ op: 'set', path, value });
 
     const applyExpandedOps = (ops: WidgetOp[]) =>
       args.applyOps(expandLinkedOps({ compiled: args.compiled, instanceData: args.instanceData, ops }));
@@ -136,118 +133,6 @@ export function useTdMenuBindings(args: {
       }
 
       if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-        const radiusLinkMatch = path.match(/^(pod|appearance\.cardwrapper)\.radiusLinked$/);
-        if (radiusLinkMatch) {
-          const nextLinked = target.checked;
-          const base = radiusLinkMatch[1];
-          const linkedPath = `${base}.radius`;
-          const tlPath = `${base}.radiusTL`;
-          const trPath = `${base}.radiusTR`;
-          const brPath = `${base}.radiusBR`;
-          const blPath = `${base}.radiusBL`;
-
-          const linkedValue = getAt<unknown>(args.instanceData, linkedPath);
-          const tlValue = getAt<unknown>(args.instanceData, tlPath);
-          const source = nextLinked ? tlValue : linkedValue;
-          if (typeof source !== 'string' || !source.trim()) {
-            applySet(path, nextLinked);
-            return;
-          }
-
-          args.applyOps([
-            setOp(path, nextLinked),
-            ...(nextLinked ? [setOp(linkedPath, source)] : []),
-            setOp(tlPath, source),
-            setOp(trPath, source),
-            setOp(brPath, source),
-            setOp(blPath, source),
-          ]);
-          return;
-        }
-
-        const v2PaddingMatch = path.match(/^(pod|stage)\.padding\.(desktop|mobile)\.linked$/);
-        if (v2PaddingMatch) {
-          const nextLinked = target.checked;
-          const rootKey = v2PaddingMatch[1];
-          const deviceKey = v2PaddingMatch[2];
-          const base = `${rootKey}.padding.${deviceKey}`;
-          const allPath = `${base}.all`;
-          const topPath = `${base}.top`;
-          const rightPath = `${base}.right`;
-          const bottomPath = `${base}.bottom`;
-          const leftPath = `${base}.left`;
-
-          const linkedValue = getAt<unknown>(args.instanceData, allPath);
-          const topValue = getAt<unknown>(args.instanceData, topPath);
-          const source = nextLinked ? topValue : linkedValue;
-          const numberValue = coerceFiniteNumber(source);
-          if (numberValue == null) {
-            applySet(path, nextLinked);
-            return;
-          }
-          args.applyOps([
-            setOp(path, nextLinked),
-            ...(nextLinked ? [setOp(allPath, numberValue)] : []),
-            setOp(topPath, numberValue),
-            setOp(rightPath, numberValue),
-            setOp(bottomPath, numberValue),
-            setOp(leftPath, numberValue),
-          ]);
-          return;
-        }
-
-        const insideShadowLinkMatch = path.match(/^(stage|pod|appearance\.cardwrapper)\.insideShadow\.linked$/);
-        if (insideShadowLinkMatch) {
-          const nextLinked = target.checked;
-          const base = insideShadowLinkMatch[1];
-          const allPath = `${base}.insideShadow.all`;
-          const topPath = `${base}.insideShadow.top`;
-          const rightPath = `${base}.insideShadow.right`;
-          const bottomPath = `${base}.insideShadow.bottom`;
-          const leftPath = `${base}.insideShadow.left`;
-
-          const allValue = getAt<unknown>(args.instanceData, allPath);
-          const topValue = getAt<unknown>(args.instanceData, topPath);
-          const source = nextLinked ? topValue : allValue;
-          if (!isPlainRecord(source)) {
-            applySet(path, nextLinked);
-            return;
-          }
-
-          const sourceShadow = source as Record<string, unknown>;
-          const makeShadow = () => ({ ...sourceShadow });
-          args.applyOps([
-            setOp(path, nextLinked),
-            ...(nextLinked ? [setOp(allPath, makeShadow())] : []),
-            setOp(topPath, makeShadow()),
-            setOp(rightPath, makeShadow()),
-            setOp(bottomPath, makeShadow()),
-            setOp(leftPath, makeShadow()),
-          ]);
-          return;
-        }
-
-        if (path === 'layout.itemPaddingLinked') {
-          const nextLinked = target.checked;
-          const linkedValue = getAt<unknown>(args.instanceData, 'layout.itemPadding');
-          const topValue = getAt<unknown>(args.instanceData, 'layout.itemPaddingTop');
-          const source = nextLinked ? topValue : linkedValue;
-          const numberValue = coerceFiniteNumber(source);
-          if (numberValue == null) {
-            applySet(path, nextLinked);
-            return;
-          }
-          args.applyOps([
-            setOp('layout.itemPaddingLinked', nextLinked),
-            ...(nextLinked ? [setOp('layout.itemPadding', numberValue)] : []),
-            setOp('layout.itemPaddingTop', numberValue),
-            setOp('layout.itemPaddingRight', numberValue),
-            setOp('layout.itemPaddingBottom', numberValue),
-            setOp('layout.itemPaddingLeft', numberValue),
-          ]);
-          return;
-        }
-
         applySet(path, target.checked);
         return;
       }

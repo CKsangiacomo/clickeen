@@ -162,6 +162,7 @@ Core base-config lifecycle per open session:
 1. One core instance load plus one explicit localization rehydrate, both performed by the host in account message boot before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
 3. One save/write command on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes its same-origin `PUT /api/account/instance/:publicId?subject=account`; Bob does not call account product routes directly. These routes commit the saved revision through Tokyo and return success immediately. Any localization refresh is observed later via l10n status routes and does not block or redefine save semantics.
+4. Bob opens the saved document it was given. It does not merge missing widget defaults into account-hosted config on load; invalid saved config is a save/open boundary bug and is rejected by Roma before Builder trusts it.
 
 Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
@@ -185,6 +186,10 @@ tokyo/widgets/{widget}/
 ```
 
 Bob consumes `spec.json` + runtime assets and loads `limits.json` for entitlements; the other contract files are consumed by Tokyo-worker, Venice, and Prague on their owner-correct surfaces.
+
+Widget spec contract:
+- `spec.json` carries an explicit top-level `v`.
+- Bob compile route fails closed on unsupported spec versions instead of caching malformed compiled output.
 
 ### Preview contract (Bob ↔ runtime)
 
@@ -322,6 +327,7 @@ Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file p
 - Product path: Roma asset routes (`/api/account/assets*`) -> Tokyo-worker
 - The host forwards the Berlin session bearer, Roma `x-ck-authz-capsule`, and account/public/widget trace headers.
 - Tokyo-worker executes from the capsule truth, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
+- Dieter remains the owner of the asset-aware authoring primitives themselves; Bob owns the host/account context they consume.
 
 Migrated asset-aware controls such as `dropdown-fill` and `dropdown-upload` now persist logical media identity (`assetId` / optional `posterAssetId`) on canonical media fields. Bob preview and published/runtime config packs materialize runtime URLs through the host/Tokyo resolve surface; authoring config does not persist runtime URLs.
 
@@ -332,6 +338,7 @@ Contracts:
   - runtime path derived from ref: `/assets/v/:assetRef`
 - **Trace context**: `accountId`, `publicId`, `widgetType`, `source` remain provenance fields.
 - Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are unsupported on writes.
+- **Hosted Builder contract**: Bob exposes document dataset values plus the hosted asset bridge on `globalThis` so Dieter primitives can resolve/upload assets without Dieter taking ownership of account routing or persistence.
 
 Operational baseline (local smoke, 2026-02-17):
 
@@ -346,7 +353,12 @@ Editor UX note:
 
 ## Copilot (chat-first, ops-based)
 
-Bob includes a chat-only Copilot panel in ToolDrawer (`bob/components/CopilotPane.tsx`).
+Bob includes a chat-first Copilot surface in ToolDrawer.
+The current split point is explicit:
+
+- `bob/components/ToolDrawer.tsx` chooses an account-mode Builder shell vs a MiniBob/public shell.
+- `bob/components/CopilotPane.tsx` now exposes separate account/minibob surfaces and keeps only the shared thread / staged-ops mechanics in common.
+- Roma account-mode Copilot remains a different product surface from MiniBob/public Copilot even where they still share low-level mechanics.
 
 Behavior:
 
@@ -364,7 +376,7 @@ Minibob keep gate (public UX):
 - In Minibob (`subject=minibob`), edits are preview-only until signup.
 - After a change, the UI shows a **signup CTA** (“Create a free account to keep this change”) instead of “Keep”.
 - Undo remains available locally; “Keep” is gated behind signup/publish.
-- On publish/signup, the current draft snapshot is claimed into the new instance in their account; draft context such as `context.websiteUrl` remains part of that instance when present.
+- On publish/signup, the current draft snapshot is claimed into the new instance in their account; draft context such as `context.websiteUrl` remains part of that canonical authored document when present, even though FAQ runtime does not depend on it.
 
 ### AI routes (current)
 
@@ -610,8 +622,6 @@ Editor session + ops:
 - `bob/lib/session/sessionTransport.ts`
 - `bob/lib/session/sessionPolicy.ts`
 - `bob/lib/session/sessionTypes.ts`
-- `bob/lib/session/sessionConfig.ts`
-- `bob/lib/session/sessionNormalization.ts`
 - `bob/lib/session/sessionLocalization.ts`
 - `bob/lib/ops.ts`
 - `bob/lib/edit/*`
