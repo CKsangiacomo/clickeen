@@ -9,6 +9,7 @@ import {
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
 import { readAccountBudgetUsed, type RomaUsageKv } from '../account-budget-usage';
+import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
 import { resolveSanfranciscoBaseUrl } from '../env/sanfrancisco';
 
 type AIGrant = {
@@ -44,8 +45,11 @@ const OUTCOME_EVENTS = new Set([
 ] as const);
 
 function resolveAiGrantSecret(): string {
-  const secret = String(process.env.AI_GRANT_HMAC_SECRET || '').trim();
+  const fromRequestContext = getOptionalCloudflareRequestContext<{ env?: { AI_GRANT_HMAC_SECRET?: string } }>()
+    ?.env?.AI_GRANT_HMAC_SECRET;
+  const secret = typeof fromRequestContext === 'string' ? fromRequestContext.trim() : '';
   if (secret) return secret;
+
   throw new Error('[Roma] Missing AI_GRANT_HMAC_SECRET');
 }
 

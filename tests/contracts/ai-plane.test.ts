@@ -9,14 +9,22 @@ import { withInflightLimit } from '../../sanfrancisco/src/concurrency';
 import { verifyGrant } from '../../sanfrancisco/src/grants';
 import { resolveModelSelection } from '../../sanfrancisco/src/ai/modelRouter';
 
+function setRomaEdgeSecret(secret: string): void {
+  (globalThis as Record<PropertyKey, unknown>)[Symbol.for('__cloudflare-request-context__')] = {
+    env: {
+      AI_GRANT_HMAC_SECRET: secret,
+    },
+  };
+}
+
 afterEach(() => {
-  delete process.env.AI_GRANT_HMAC_SECRET;
+  delete (globalThis as Record<PropertyKey, unknown>)[Symbol.for('__cloudflare-request-context__')];
 });
 
 describe('AI plane contract floor', () => {
   it('mints a Roma grant that San Francisco can verify and route to the selected provider', async () => {
     const policy = resolvePolicy({ profile: 'tier1', role: 'editor' });
-    process.env.AI_GRANT_HMAC_SECRET = 'roma-secret';
+    setRomaEdgeSecret('roma-secret');
 
     const issued = await issueAccountCopilotGrant({
       authz: {
@@ -67,7 +75,7 @@ describe('AI plane contract floor', () => {
   it('enforces budget ceilings before grant issuance', async () => {
     const policy = resolvePolicy({ profile: 'tier1', role: 'editor' });
     const maxTurns = policy.budgets['budget.copilot.turns']?.max ?? 0;
-    process.env.AI_GRANT_HMAC_SECRET = 'roma-secret';
+    setRomaEdgeSecret('roma-secret');
 
     const issued = await issueAccountCopilotGrant({
       authz: {
@@ -93,6 +101,39 @@ describe('AI plane contract floor', () => {
       reasonKey: 'coreui.upsell.reason.budgetExceeded',
       detail: `budget.copilot.turns budget exceeded (max=${maxTurns}).`,
     });
+  });
+
+  it('reads the Roma grant secret from Cloudflare edge request context', async () => {
+    const policy = resolvePolicy({ profile: 'tier1', role: 'editor' });
+    setRomaEdgeSecret('edge-secret');
+
+    const issued = await issueAccountCopilotGrant({
+      authz: {
+        userId: '0a5f59f9-27b9-4b31-bd2b-f3795ee9490a',
+        accountId: '11111111-1111-1111-1111-111111111111',
+        role: 'editor',
+        profile: 'tier1',
+        entitlements: {
+          flags: policy.flags,
+          caps: policy.caps,
+          budgets: policy.budgets,
+        },
+      } as RomaAccountAuthzCapsulePayload,
+      agentId: WIDGET_COPILOT_AGENT_ALIAS,
+      mode: 'ops',
+      trace: { sessionId: 'sess_ctx', instancePublicId: 'wgt_edge_ctx' },
+      usageKv: {
+        get: async () => '0',
+      },
+    });
+
+    expect(issued.ok).toBe(true);
+    if (!issued.ok) {
+      throw new Error('expected grant issuance to succeed from edge request context secret');
+    }
+
+    const grant = await verifyGrant(issued.grant, 'edge-secret');
+    expect(grant.iss).toBe('roma');
   });
 
   it('applies the per-isolate concurrency ceiling deterministically', async () => {
