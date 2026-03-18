@@ -1,3 +1,6 @@
+import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l10n';
+import localesJson from '@clickeen/l10n/locales.json';
+
 export const WIDGET_PUBLIC_ID_MAIN_RE = /^wgt_main_[a-z0-9][a-z0-9_-]*$/i;
 export const WIDGET_PUBLIC_ID_CURATED_RE = /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i;
 export const WIDGET_PUBLIC_ID_USER_RE = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i;
@@ -26,6 +29,17 @@ export const RENDER_SNAPSHOT_ACTION = Object.freeze({
   UPSERT: 'upsert',
   DELETE: 'delete',
 });
+const SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(localesJson).map((entry) => entry.code));
+
+function failAccountL10nContract(reason) {
+  throw new Error(`account_l10n_contract_invalid:${reason}`);
+}
+
+function normalizeSupportedLocaleToken(raw) {
+  const normalized = normalizeLocaleToken(raw);
+  if (!normalized) return null;
+  return SUPPORTED_LOCALES.has(normalized) ? normalized : null;
+}
 
 export function normalizeWidgetPublicId(raw) {
   const value = typeof raw === 'string' ? raw.trim() : '';
@@ -144,6 +158,133 @@ export function toCanonicalAssetVersionPath(versionKey) {
   const key = typeof versionKey === 'string' ? versionKey.trim() : '';
   if (!key || key.startsWith('/') || key.includes('..') || !ASSET_VERSION_KEY_RE.test(key)) return null;
   return `/assets/v/${encodeURIComponent(key)}`;
+}
+
+export function parseAccountLocaleListStrict(value) {
+  if (!Array.isArray(value)) failAccountL10nContract('locales_missing');
+  return Array.from(
+    new Set(
+      value.map((entry, index) => {
+        const normalized = normalizeSupportedLocaleToken(entry);
+        if (!normalized) failAccountL10nContract(`locales_invalid_${index}`);
+        return normalized;
+      }),
+    ),
+  );
+}
+
+export function parseAccountL10nPolicyStrict(raw) {
+  if (!isRecord(raw) || raw.v !== 1) failAccountL10nContract('policy_missing');
+  const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale);
+  if (!baseLocale) failAccountL10nContract('policy_base_locale_invalid');
+  const ipRaw = isRecord(raw.ip) ? raw.ip : null;
+  const switcherRaw = isRecord(raw.switcher) ? raw.switcher : null;
+  if (!ipRaw) failAccountL10nContract('policy_ip_invalid');
+  if (!switcherRaw) failAccountL10nContract('policy_switcher_invalid');
+  if (typeof ipRaw.enabled !== 'boolean') failAccountL10nContract('policy_ip_enabled_invalid');
+  if (typeof switcherRaw.enabled !== 'boolean') {
+    failAccountL10nContract('policy_switcher_enabled_invalid');
+  }
+  if (!isRecord(ipRaw.countryToLocale)) failAccountL10nContract('policy_country_map_invalid');
+
+  const countryToLocale = {};
+  for (const [countryRaw, localeRaw] of Object.entries(ipRaw.countryToLocale)) {
+    const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
+    const locale = normalizeSupportedLocaleToken(localeRaw);
+    if (!/^[A-Z]{2}$/.test(country) || !locale) {
+      failAccountL10nContract(`policy_country_locale_invalid_${countryRaw}`);
+    }
+    countryToLocale[country] = locale;
+  }
+
+  const switcherLocales =
+    switcherRaw.locales == null ? [] : parseAccountLocaleListStrict(switcherRaw.locales);
+
+  return {
+    v: 1,
+    baseLocale,
+    ip: {
+      enabled: ipRaw.enabled,
+      countryToLocale,
+    },
+    switcher: {
+      enabled: switcherRaw.enabled,
+      ...(switcherLocales.length ? { locales: switcherLocales } : {}),
+    },
+  };
+}
+
+export function normalizeLocalizationOps(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const entry of raw) {
+    if (!isRecord(entry) || entry.op !== 'set') continue;
+    const path = typeof entry.path === 'string' ? entry.path.trim() : '';
+    if (!path || typeof entry.value !== 'string') continue;
+    out.push({ op: 'set', path, value: entry.value });
+  }
+  return out;
+}
+
+export function validateAccountLocaleList(value, path = 'locales', options = undefined) {
+  const allowNull = options && options.allowNull === true;
+  if (value == null) return allowNull ? [] : [{ path, message: 'locales must be an array' }];
+  if (!Array.isArray(value)) {
+    return [{ path, message: 'locales must be an array' }];
+  }
+
+  const issues = [];
+  value.forEach((entry, index) => {
+    if (!normalizeSupportedLocaleToken(entry)) {
+      issues.push({ path: `${path}[${index}]`, message: 'locale must be a supported locale token' });
+    }
+  });
+  return issues;
+}
+
+export function validateAccountL10nPolicy(raw, path = 'policy') {
+  if (!isRecord(raw)) {
+    return [{ path, message: 'policy must be an object' }];
+  }
+  if (raw.v !== 1) {
+    return [{ path: `${path}.v`, message: 'policy.v must be 1' }];
+  }
+
+  const issues = [];
+  if (!normalizeSupportedLocaleToken(raw.baseLocale)) {
+    issues.push({ path: `${path}.baseLocale`, message: 'baseLocale must be a supported locale token' });
+  }
+
+  const ipRaw = isRecord(raw.ip) ? raw.ip : null;
+  if (ipRaw && Object.prototype.hasOwnProperty.call(ipRaw, 'countryToLocale')) {
+    if (!isRecord(ipRaw.countryToLocale)) {
+      issues.push({ path: `${path}.ip.countryToLocale`, message: 'countryToLocale must be an object' });
+    } else {
+      for (const [countryRaw, localeRaw] of Object.entries(ipRaw.countryToLocale)) {
+        const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
+        if (!/^[A-Z]{2}$/.test(country)) {
+          issues.push({
+            path: `${path}.ip.countryToLocale.${countryRaw}`,
+            message: 'country key must be ISO-3166 alpha-2',
+          });
+          continue;
+        }
+        if (!normalizeSupportedLocaleToken(localeRaw)) {
+          issues.push({
+            path: `${path}.ip.countryToLocale.${country}`,
+            message: 'locale must be a supported locale token',
+          });
+        }
+      }
+    }
+  }
+
+  const switcherRaw = isRecord(raw.switcher) ? raw.switcher : null;
+  if (switcherRaw && Object.prototype.hasOwnProperty.call(switcherRaw, 'locales')) {
+    issues.push(...validateAccountLocaleList(switcherRaw.locales, `${path}.switcher.locales`, { allowNull: true }));
+  }
+
+  return issues;
 }
 
 function isRecord(value) {

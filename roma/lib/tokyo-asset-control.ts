@@ -1,4 +1,4 @@
-import { getOptionalRequestContext } from '@cloudflare/next-on-pages';
+import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
 
 const TOKYO_ASSET_CONTROL_ORIGIN = 'https://tokyo-asset-control.internal';
 
@@ -7,7 +7,7 @@ type TokyoAssetControlBinding = {
 };
 
 function resolveTokyoAssetControlBinding(): TokyoAssetControlBinding {
-  const requestContext = getOptionalRequestContext();
+  const requestContext = getOptionalCloudflareRequestContext<{ env?: { TOKYO_ASSET_CONTROL?: TokyoAssetControlBinding } }>();
   const binding = requestContext?.env?.TOKYO_ASSET_CONTROL;
   if (binding && typeof binding.fetch === 'function') {
     return binding;

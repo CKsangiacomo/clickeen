@@ -6,6 +6,10 @@ routes = [
   { pattern = "berlin.dev.clickeen.com/*", zone_name = "clickeen.com" },
 ]
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 [vars]
 BERLIN_ISSUER = "https://berlin-dev.clickeen.workers.dev"
 BERLIN_AUDIENCE = "clickeen.product"
@@ -29,6 +33,10 @@ class_name = "BerlinAuthTicketDO"
 [env.local]
 name = "berlin-local"
 vars = { BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product", BERLIN_FINISH_REDIRECT_URL = "http://localhost:3000/api/session/finish", ENV_STAGE = "local" }
+
+[env.local.observability]
+enabled = true
+head_sampling_rate = 1
 
 [[env.local.kv_namespaces]]
 binding = "BERLIN_SESSION_KV"

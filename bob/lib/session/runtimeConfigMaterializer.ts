@@ -10,6 +10,8 @@ type HostedAssetBridge = {
   resolveAssets: (assetIds: string[]) => Promise<unknown>;
 };
 
+export type PreviewAssetResolver = (assetIds: string[]) => Promise<unknown>;
+
 const HOSTED_ASSET_BRIDGE_KEY = '__CK_CLICKEEN_HOSTED_ACCOUNT_ASSET_BRIDGE__';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -43,6 +45,7 @@ export async function materializeRuntimeConfigForPreview(args: {
   config: Record<string, unknown>;
   accountId?: string | null;
   assetApiBase?: string | null;
+  resolveAssets?: PreviewAssetResolver | null;
 }): Promise<Record<string, unknown>> {
   const assetIds = collectConfigMediaAssetIds(args.config);
   const assetApiBase = resolveRuntimeAssetApiBase(args.assetApiBase);
@@ -55,7 +58,8 @@ export async function materializeRuntimeConfigForPreview(args: {
   }
 
   const hostedBridge = resolveHostedAssetBridge();
-  if (!hostedBridge && !assetApiBase) {
+  const resolveAssets = args.resolveAssets ?? hostedBridge?.resolveAssets ?? null;
+  if (!resolveAssets && !assetApiBase) {
     throw new Error('coreui.errors.assets.previewMaterialization.missingContext');
   }
   let payload:
@@ -66,8 +70,8 @@ export async function materializeRuntimeConfigForPreview(args: {
       }
     | null;
 
-  if (hostedBridge) {
-    payload = (await hostedBridge.resolveAssets(assetIds).catch((error) => {
+  if (resolveAssets) {
+    payload = (await resolveAssets(assetIds).catch((error) => {
       throw error instanceof Error ? error : new Error(String(error));
     })) as {
       assets?: unknown;

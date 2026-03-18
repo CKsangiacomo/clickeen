@@ -77,6 +77,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       requestedModel: model,
       trace: { sessionId, instancePublicId: publicId },
       budgets: { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 },
+      usageKv: current.value.usageKv,
     });
     if (!issued.ok) {
       if (issued.status === 403) {

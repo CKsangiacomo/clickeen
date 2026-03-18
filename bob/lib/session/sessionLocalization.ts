@@ -18,14 +18,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
-export function resolveAftermathSaveMessage(value: unknown): string | null {
-  if (!isRecord(value)) return null;
-  const error = isRecord(value.error) ? value.error : null;
-  const detail = typeof error?.detail === 'string' ? error.detail.trim() : '';
-  if (detail) return detail;
-  return 'Saved, but background updates need attention.';
-}
-
 export function normalizeLocalizationOps(raw: unknown): LocalizationOp[] {
   if (!Array.isArray(raw)) return [];
   return raw

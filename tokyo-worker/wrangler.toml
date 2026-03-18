@@ -11,8 +11,13 @@ routes = [
   { pattern = "tokyo.dev.clickeen.com/renders/*", zone_name = "clickeen.com" },
 ]
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 [vars]
 BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
+SANFRANCISCO_BASE_URL = "https://sanfrancisco.dev.clickeen.com"
 TOKYO_PUBLIC_BASE_URL = "https://tokyo.dev.clickeen.com"
 
 [[kv_namespaces]]
@@ -33,7 +38,11 @@ queue = "instance-render-snapshot-cloud-dev"
 
 [env.local]
 name = "tokyo-assets-local"
-vars = { BERLIN_BASE_URL = "http://localhost:3005", TOKYO_PUBLIC_BASE_URL = "http://localhost:4000" }
+vars = { BERLIN_BASE_URL = "http://localhost:3005", SANFRANCISCO_BASE_URL = "http://localhost:3002", TOKYO_PUBLIC_BASE_URL = "http://localhost:4000" }
+
+[env.local.observability]
+enabled = true
+head_sampling_rate = 1
 
 [[env.local.kv_namespaces]]
 binding = "USAGE_KV"

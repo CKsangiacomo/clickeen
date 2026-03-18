@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { parseAccountL10nPolicyStrict, parseAccountLocaleListStrict } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { materializeAccountAdditionalLocales } from '@roma/lib/account-locales';
-import { runAccountLocalesAftermath } from '@roma/lib/account-locales-aftermath';
-import { parseAccountL10nPolicyStrict, parseAccountLocaleListStrict } from '@roma/lib/account-l10n';
+import { runAccountLocalesSync } from '@roma/lib/account-locales-sync';
 import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
@@ -188,13 +188,12 @@ export async function PUT(request: NextRequest) {
 
     const upstreamPayload = payloadText ? (JSON.parse(payloadText) as unknown) : null;
     const warnings = isRecord(upstreamPayload) ? normalizeWarnings(upstreamPayload.warnings) : [];
-    const aftermathWarnings = await runAccountLocalesAftermath({
+    const syncWarnings = await runAccountLocalesSync({
       accountId: current.value.authzPayload.accountId,
       accessToken: current.value.accessToken,
-      policyProfile: current.value.authzPayload.profile,
       accountCapsule: current.value.authzToken,
     });
-    const mergedWarnings = Array.from(new Set([...warnings, ...aftermathWarnings]));
+    const mergedWarnings = Array.from(new Set([...warnings, ...syncWarnings]));
 
     const responsePayload = isRecord(upstreamPayload)
       ? {

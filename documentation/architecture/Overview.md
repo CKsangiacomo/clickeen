@@ -35,7 +35,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **No Fallbacks**               | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Public renders must be revision-coherent (single published revision; missing locale artifacts fail visibly). |
 | **Widget Files = Truth**       | Core runtime files + contract files in `tokyo/widgets/{name}/` define widget behavior and validation.                                                                                                                    |
-| **Orchestrators = Dumb Pipes** | Bob/Paris/Venice avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. overlay composition) but must not “fix” state ad hoc.                                                             |
+| **Orchestrators = Dumb Pipes** | Bob/Roma/Tokyo-worker/Venice avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. overlay composition, artifact materialization) but must not “fix” state ad hoc.                    |
 | **Dieter Tokens**              | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB.                                                                                                                   |
 | **Locale Is Not Identity**     | Locale is a runtime parameter. IDs (`publicId`) must be locale-free; localization is applied via overlays, not DB fan-out.                                                                                               |
 
@@ -79,7 +79,7 @@ Traditional systems treat objects as mutable: update in place, invalidate caches
 
 This is the same principle that underpins content-addressed storage, Git, and distributed ledgers: if data is immutable and addressed by content, you can distribute it globally and cache it indefinitely without coordination.
 
-Every service section below is an instance of this pattern. Tokyo stores immutable artifacts. Paris flips pointers. Venice reads pointers and serves cached artifacts. Bob creates new artifacts. Roma and DevStudio orchestrate the cycle through different scopes: Roma is the account-scoped member shell, while DevStudio is the internal toolbench for platform work.
+Every service section below is an instance of this pattern. Tokyo stores immutable artifacts. Tokyo-worker materializes published artifacts and flips live pointers. Venice reads pointers and serves cached artifacts. Bob creates working artifacts. Roma orchestrates the account-scoped product cycle, while DevStudio remains the internal toolbench for platform work and local verification pages.
 
 ---
 
@@ -90,9 +90,9 @@ Every service section below is an instance of this pattern. Tokyo stores immutab
 | **Prague**        | `prague/`       | Cloudflare Pages                     | Marketing + SEO surface                                                 | ✅ Active   |
 | **Bob**           | `bob/`          | Cloudflare Pages                     | Widget builder, compiler, ToolDrawer, preview                           | ✅ Active   |
 | **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
-| **DevStudio**     | `admin/`        | Local Vite                           | Internal toolbench for platform curation, authoring, and verification   | ✅ Internal |
+| **DevStudio**     | `admin/`        | Local Vite                           | Internal toolbench for platform curation, verification, and local utility pages | ✅ Internal |
 | **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | SSR embed runtime, pixel, loader                                        | ✅ Active   |
-| **Paris**         | `paris/`        | Cloudflare Workers                   | HTTP API, instances, tokens, entitlements                               | ✅ Active   |
+| **Paris**         | `paris/`        | Cloudflare Workers                   | Residual health stub + non-product residue                              | ✅ Active   |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
 | **Pitch**         | `pitch/`        | Cloudflare Workers                   | Investor pitch agent (internal)                                         | ✅ Internal |
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
@@ -150,7 +150,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 | Primitive         | Used by                                                   | Why                                                      |
 | ----------------- | --------------------------------------------------------- | -------------------------------------------------------- |
 | **Pages**         | Prague, Bob, Roma                                          | Static + Next.js-style app surfaces; simple deploy model |
-| **Workers**       | Paris, Venice, San Francisco (and Tokyo assets worker)    | Edge HTTP services; consistent global runtime            |
+| **Workers**       | Paris (stub), Tokyo-worker, Venice, San Francisco         | Edge HTTP services; consistent global runtime            |
 | **R2**            | Tokyo (assets), San Francisco (raw logs)                  | Cheap object storage, zero egress for CDN patterns       |
 | **KV**            | San Francisco (sessions), Atlas (read-only runtime cache) | Hot key/value state, TTLs                                |
 | **D1**            | San Francisco (indexes)                                   | Queryable learning metadata; low-ops SQL                 |
@@ -179,7 +179,6 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
 - Bob uses named same-origin routes (`/api/instance/:publicId`, `/api/ai/*`) for public/minibob surfaces only. Account-mode bootstrap/authz come from Roma host messaging and same-origin Roma account routes.
-- DevStudio local does not use Roma customer `/api/account/*` routes for instance discovery; it uses its own explicit `/api/devstudio/instances*` and `/api/devstudio/instance*` tool paths for instance discovery, boot, save, localization, and status on the platform-owned account.
 
 #### Roma (Pages)
 
@@ -195,9 +194,8 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 #### DevStudio (Local toolbench)
 
 - DevStudio is the internal toolbench, not a second customer account shell.
-- It is the surface where Clickeen runs internal platform work such as curation, authoring, and verification.
-- DevStudio can host Bob for curated/admin authoring work, but it must reuse canonical account and content truth instead of inventing a second runtime model.
-- In local development, DevStudio uses local-only tool routes under `/api/devstudio/*` and resolves a seeded `local-tool` platform context.
+- It is the surface where Clickeen runs internal platform work such as curation, verification, and local utilities.
+- In local development, DevStudio is a local Vite toolbench for static/internal verification pages; removed widget-authoring and company-plane action lanes must not be reintroduced there.
 - There is no canonical Cloudflare DevStudio runtime. DevStudio is local-only.
 
 #### Paris (Workers)
@@ -211,12 +209,12 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
   - Roma starter discovery is Roma-owned (`GET /api/account/widgets`, `GET /api/account/templates`); Paris no longer mounts those routes.
   - Roma widget commands stay explicit (`POST /api/account/widgets/duplicate`, `DELETE /api/account/instance/:publicId`).
   - Paris no longer mounts AI endpoints in the product path under 070A.
-  - Venice now owns the public instance payload route (`GET /api/instance/:publicId`) on top of Tokyo live/config artifacts.
+  - Venice serves the public instance payload route (`GET /api/instance/:publicId`), but Tokyo-worker now assembles that public MiniBob payload directly from Tokyo live truth.
 - Current cloud-dev account rule:
   - Account creation is Berlin-owned; Paris no longer mounts account creation.
   - MiniBob handoff now starts in a Roma route and completes inside Roma session finish; non-local completion still targets platform-owned accounts only.
   - Instance routing uses `publicId` prefix: `wgt_main_*` marks the instance shown first in MiniBob, `wgt_curated_*` marks other starter instances, `wgt_*_u_*` marks instances in user accounts.
-- Product-path base-config writes persist through Bob/Roma same-origin routes to Tokyo; Roma handles translation and published-surface aftermath directly after the save response returns.
+- Product-path base-config writes persist through Bob/Roma same-origin routes to Tokyo; translation refresh and published-surface sync run through explicit Roma localization/widget routes that delegate execution to Tokyo-worker instead of the save response path.
 
 #### Venice (Workers)
 
@@ -238,11 +236,11 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - Canonical asset management contract (cross-surface behavior): [AssetManagement.md](./AssetManagement.md)
 - Handles private Roma-bound account asset authority routes and stores asset bytes + manifest metadata in Tokyo R2.
-- Paris validates account-owned asset refs on instance writes, but this repo snapshot does not persist a canonical "where used" table in Michael.
+- Tokyo-worker validates/materializes account-owned asset refs during instance sync and runtime-pack assembly, but this repo snapshot does not persist a canonical "where used" table in Michael.
 - Serves immutable account asset reads (`GET /assets/v/:assetRef`); legacy `/arsenale/*` paths are hard-failed.
 - Asset delete is synchronous hard delete (`metadata + blob delete`) with no snapshot rebuild enqueue or runtime healing.
 - Tokyo-worker exposes integrity endpoints for managed surfaces (`GET /assets/integrity/:accountId`, `GET /assets/integrity/:accountId/:assetId`).
-- Writes l10n text/meta/config packs and live pointers to Tokyo/R2 from Roma-owned aftermath plus Tokyo-worker execution; Tokyo-worker does not read Michael/Supabase to discover overlay state.
+- Writes l10n text/meta/config packs and live pointers to Tokyo/R2 from explicit Tokyo-worker instance-sync execution triggered by Roma widget/localization routes; Tokyo-worker does not read Michael/Supabase to discover overlay state.
 - Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path using revisioned indices + atomic published pointer flip.
 
 #### Asset ownership model (canonical)
@@ -267,8 +265,8 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 | **Bob (Pages)**             | `NEXT_PUBLIC_VENICE_URL`    | `https://venice.dev.clickeen.com`       | `https://embed.clickeen.com`        | Bob MiniBob public read shortcut + preview-shadow target                         |
 | **Bob (Pages)**             | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Explicit base URL for Copilot execution (San Francisco); no fallback probing |
 | **Roma (Pages)**            | `NEXT_PUBLIC_BOB_URL`       | `https://bob.dev.clickeen.com`          | `https://app.clickeen.com`          | Builder iframe origin (no query override; configured per environment)            |
-| **Paris (Workers)**         | `ENV_STAGE`                 | `cloud-dev`                             | `ga`                                | Exposure stage stamped into grants for learning attribution                      |
-| **San Francisco (Workers)** | `AI_GRANT_HMAC_SECRET`      | dev secret                              | prod secret                         | Shared HMAC secret with Paris (grant + outcome signatures)                       |
+| **Roma/Bob (trusted backends)** | `ENV_STAGE`             | `cloud-dev`                             | `ga`                                | Exposure stage stamped into AI grants on the active product/public issuer path   |
+| **Roma/Bob/San Francisco**  | `AI_GRANT_HMAC_SECRET`      | dev secret                              | prod secret                         | Shared HMAC secret between trusted grant issuers and San Francisco               |
 | **San Francisco (Workers)** | `DEEPSEEK_API_KEY`          | dev key                                 | prod key                            | Provider key lives only in San Francisco                                         |
 
 **Hard security rule:**
@@ -277,7 +275,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **Local auth rule:**
 
-- In local development, Supabase JWT issuer must match the Supabase target Paris is running against (local by default via `dev-up`; remote only when `DEV_UP_USE_REMOTE_SUPABASE=1`).
+- In local development, Supabase JWT issuer must match the Supabase target the active auth/product surfaces are running against (local by default via `dev-up`; remote only when `DEV_UP_USE_REMOTE_SUPABASE=1`).
 
 ### Cloudflare config checklist (what “done” looks like)
 
@@ -375,11 +373,11 @@ Non-negotiable:
 │                                                └──────┬─────────┘        │
 │                                                       │                  │
 │                                                       ▼                  │
-│                                                  ┌─────────┐             │
-│                                                  │ Paris   │             │
-│                                                  │ after-  │             │
-│                                                  │ save    │             │
-│                                                  └─────────┘             │
+│                                                  ┌──────────────┐        │
+│                                                  │ Tokyo-worker │        │
+│                                                  │ explicit     │        │
+│                                                  │ sync         │        │
+│                                                  └──────────────┘        │
 └─────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -424,7 +422,7 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 
 Notes:
 
-- `envStage` is stamped into grants by Paris (`ENV_STAGE`) so San Francisco can index learning data by exposure stage.
+- `envStage` is stamped into grants by the active trusted issuer path (Roma for account-mode, Bob for MiniBob) so San Francisco can index learning data by exposure stage.
 - San Francisco stores raw interaction payloads in R2 and indexes a queryable subset in D1 (see `documentation/ai/learning.md`).
 - Deployment contract: local and cloud-dev both use `POST /api/ai/widget-copilot` as the single Copilot endpoint.
 
@@ -444,13 +442,13 @@ Base config exists in EXACTLY 3 places during editing:
 1. Load:    GET /api/builder/:publicId/open  → host (message boot) gets saved config + localization through one Roma same-origin route
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:publicId?subject=account`  → Commits to Tokyo first, then runs direct Roma-owned aftermath against Berlin/Tokyo/San Francisco/Tokyo-worker without rolling back the saved revision
+4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:publicId?subject=account`  → Commits to Tokyo and returns immediately; localization refresh and live-surface sync happen only through explicit Roma localization/widget routes that invoke Tokyo-worker sync when needed
 
 Snapshot/l10n convergence is observed via:
 - `GET /api/account/instances/:publicId/l10n/status`
 ```
 
-In Roma/DevStudio message-boot account flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Save, localization rehydrate, and l10n status reads also return through the host boundary before hitting the Roma account routes.
+In Roma message-boot account flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Save, localization rehydrate, and l10n status reads also return through the host boundary before hitting the Roma account routes.
 
 `subject` is required on editor endpoints (`account`, `minibob`) to resolve policy.
 
@@ -621,7 +619,7 @@ All third-party embed traffic terminates at Venice:
 
 - Browsers **never** call Paris directly
 - Venice fetches only Tokyo live pointers and immutable runtime bytes
-- Paris + Tokyo-worker publish those bytes ahead of time during save/publish flows
+- Tokyo-worker publishes those bytes ahead of time during explicit sync/publish flows
 - If required Tokyo bytes are missing, Venice returns unavailable instead of healing or falling back
 
 ---
@@ -631,14 +629,13 @@ All third-party embed traffic terminates at Venice:
 ### 1. Editing Flow
 
 ```
-User opens widget → Host (Roma/DevStudio message boot) GET instance core, or Bob URL boot for non-account surfaces only
-                  → Roma same-origin route or DevStudio internal-tool route reads Tokyo saved revision
+User opens widget → Host (Roma message boot, or Prague MiniBob for minibob) GET instance core, or Bob URL boot for non-account surfaces only
+                  → Roma same-origin route reads Tokyo saved revision
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
                   → User clicks Save
-                  → Roma same-origin route or DevStudio internal-tool route writes Tokyo saved revision
-                  → Paris runs explicit translation sync and explicit published-surface sync
-                  → Paris/Tokyo-worker refresh Tokyo config/text/meta/live-pointer bytes when the instance is live
+                  → Roma same-origin route writes Tokyo saved revision
+                  → Tokyo-worker refreshes Tokyo config/text/meta/live-pointer bytes when explicit Roma widget/localization sync is requested for a live instance
 ```
 
 ### 2. Embed View Flow
@@ -673,7 +670,7 @@ Submission proxy path hard-cut in this repo snapshot.
 ## Security & Privacy
 
 - **Embeds:** No third-party scripts, no cookies, no storage
-- **Secrets:** Supabase service role stays in Paris; LLM provider keys stay in San Francisco
+- **Secrets:** Supabase service role stays in Berlin/Tokyo-worker where explicitly required; LLM provider keys stay in San Francisco
 - **CSP:** Strict; no third-party; `form-action 'self'`
 
 ---
@@ -695,7 +692,7 @@ Submission proxy path hard-cut in this repo snapshot.
 - Shared runtime modules (CKStagePod, CKTypography)
 - Two-API-Call pattern (base config)
 - Ops validation against controls[] allowlist
-- Paris instance API with entitlements
+- Public instance payload assembly moved to Tokyo-worker, with Venice as the thin public runtime proxy
 - Dieter component library (16+ components)
 
 ### What's Planned

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  ACCOUNT_ASSET_UPLOAD_CORS_HEADERS,
   accountAssetUploadOptionsResponse,
   finalizeAccountAssetResponse,
   isWidgetPublicId,
@@ -23,7 +22,6 @@ export async function POST(request: NextRequest) {
   const gateway = await resolveCurrentAccountAssetGatewayContext({
     request,
     minRole: 'editor',
-    extraHeaders: ACCOUNT_ASSET_UPLOAD_CORS_HEADERS,
   });
   if (!gateway.ok) return gateway.response;
 
@@ -37,7 +35,6 @@ export async function POST(request: NextRequest) {
         { status: 422 },
       ),
       setCookies: gateway.value.sessionSetCookies,
-      extraHeaders: ACCOUNT_ASSET_UPLOAD_CORS_HEADERS,
     });
   }
 
@@ -50,7 +47,6 @@ export async function POST(request: NextRequest) {
         { status: 422 },
       ),
       setCookies: gateway.value.sessionSetCookies,
-      extraHeaders: ACCOUNT_ASSET_UPLOAD_CORS_HEADERS,
     });
   }
 
@@ -63,7 +59,6 @@ export async function POST(request: NextRequest) {
         { status: 422 },
       ),
       setCookies: gateway.value.sessionSetCookies,
-      extraHeaders: ACCOUNT_ASSET_UPLOAD_CORS_HEADERS,
     });
   }
 
@@ -82,7 +77,6 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       ),
       setCookies: gateway.value.sessionSetCookies,
-      extraHeaders: ACCOUNT_ASSET_UPLOAD_CORS_HEADERS,
     });
   }
 
@@ -96,7 +90,6 @@ export async function POST(request: NextRequest) {
           { status: 422 },
         ),
         setCookies: gateway.value.sessionSetCookies,
-        extraHeaders: ACCOUNT_ASSET_UPLOAD_CORS_HEADERS,
       });
     }
     headers.set('x-public-id', publicId);
@@ -112,7 +105,6 @@ export async function POST(request: NextRequest) {
           { status: 422 },
         ),
         setCookies: gateway.value.sessionSetCookies,
-        extraHeaders: ACCOUNT_ASSET_UPLOAD_CORS_HEADERS,
       });
     }
     headers.set('x-widget-type', widgetType);
@@ -150,7 +142,6 @@ export async function POST(request: NextRequest) {
       request,
       response: NextResponse.json(body, { status: upstream.status }),
       setCookies: gateway.value.sessionSetCookies,
-      extraHeaders: ACCOUNT_ASSET_UPLOAD_CORS_HEADERS,
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -161,7 +152,6 @@ export async function POST(request: NextRequest) {
         { status: 502 },
       ),
       setCookies: gateway.value.sessionSetCookies,
-      extraHeaders: ACCOUNT_ASSET_UPLOAD_CORS_HEADERS,
     });
   }
 }

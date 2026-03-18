@@ -5,7 +5,7 @@
 It does one thing:
 - start the local DevStudio operating lane
 - seed required local platform state
-- verify the DevStudio/Bob localhost lane before finishing
+- verify the local stack and internal-tool surfaces before finishing
 
 Local boot topology:
 - Bob: `http://localhost:3000`
@@ -19,7 +19,7 @@ There are no alternate local runtime modes behind `dev-up`. Local development sh
 Rules:
 - `dev-up` is one-command local boot.
 - `dev-up` exists to make the local DevStudio operating lane usable.
-- Local DevStudio defaults to local Bob + local Tokyo.
+- Local DevStudio runs alongside local Bob + local Tokyo, but it does not host the removed widget-authoring lane.
 - Local theme mutation tools (`/api/themes/*`) are local DevStudio tools, not a separate runtime mode feature.
 - If local platform state is missing or invalid, `dev-up` fails loudly after seed/verify instead of pretending the stack is healthy.
 - Explicit rerun commands remain available only for debugging:

@@ -215,7 +215,7 @@ function resolveBobAccountCommandRequest(args: {
     case 'list-assets':
       return {
         method: 'GET',
-        path: `/api/account/assets?view=all&limit=200`,
+        path: `/api/account/assets?view=all`,
       };
     case 'resolve-assets':
       return {

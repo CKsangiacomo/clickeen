@@ -74,6 +74,7 @@ function useWidgetSessionInternal() {
       error: state.error,
       meta: state.meta,
       apiFetch: transport.fetchApi,
+      resolvePreviewAssets: transport.resolvePreviewAssets,
       canUndo: Boolean(state.undoSnapshot) && state.locale.activeLocale === state.locale.baseLocale,
       copilotThreads: state.copilotThreads,
       applyOps: editing.applyOps,
@@ -105,6 +106,7 @@ function useWidgetSessionInternal() {
       saving.save,
       state,
       transport.fetchApi,
+      transport.resolvePreviewAssets,
     ],
   );
 

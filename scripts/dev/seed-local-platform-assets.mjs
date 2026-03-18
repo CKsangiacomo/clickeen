@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '../../packages/ck-contracts/src/index.js';
+import { requestLoopbackJson } from './local-loopback-http.mjs';
 import { createSupabaseClient, supabaseFetchJson } from './local-supabase.mjs';
 import { resolveFirstRootEnvValue } from './local-root-env.mjs';
 
@@ -14,6 +15,7 @@ const scriptPath = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(scriptPath), '../..');
 
 const DEFAULT_LOCAL_BASE = 'http://localhost:4000';
+const DEFAULT_LOCAL_TOKYO_WORKER_BASE = 'http://localhost:8791';
 const DEFAULT_REMOTE_BASE = 'https://tokyo.dev.clickeen.com';
 const DEFAULT_PERSIST_TO = path.join(repoRoot, '.wrangler', 'state');
 const DEFAULT_BUCKET = 'tokyo-assets-dev';
@@ -41,6 +43,8 @@ Options:
 function parseArgs(argv) {
   const args = {
     localBase: process.env.TOKYO_LOCAL_BASE_URL || DEFAULT_LOCAL_BASE,
+    localTokyoWorkerBase:
+      process.env.TOKYO_WORKER_BASE_URL || process.env.TOKYO_LOCAL_WORKER_BASE_URL || DEFAULT_LOCAL_TOKYO_WORKER_BASE,
     remoteBase:
       process.env.CK_CLOUD_TOKYO_BASE_URL || process.env.TOKYO_REMOTE_BASE_URL || DEFAULT_REMOTE_BASE,
     bucket: process.env.TOKYO_R2_BUCKET || DEFAULT_BUCKET,
@@ -63,6 +67,11 @@ function parseArgs(argv) {
     }
     if (token === '--remote-base') {
       args.remoteBase = String(argv[i + 1] || '').trim();
+      i += 1;
+      continue;
+    }
+    if (token === '--local-worker-base') {
+      args.localTokyoWorkerBase = String(argv[i + 1] || '').trim();
       i += 1;
       continue;
     }
@@ -94,10 +103,12 @@ function parseArgs(argv) {
   }
 
   args.localBase = args.localBase.replace(/\/+$/, '');
+  args.localTokyoWorkerBase = args.localTokyoWorkerBase.replace(/\/+$/, '');
   args.remoteBase = args.remoteBase.replace(/\/+$/, '');
   args.platformAccountId = args.platformAccountId.toLowerCase();
   if (!args.localBase) throw new Error('Missing local Tokyo base URL');
   if (!args.remoteBase) throw new Error('Missing remote Tokyo base URL');
+  if (!args.localTokyoWorkerBase) throw new Error('Missing local Tokyo worker base URL');
   if (!args.bucket) throw new Error('Missing bucket name');
   if (!args.persistTo) throw new Error('Missing persist dir');
   if (!/^[0-9a-f-]{36}$/i.test(args.platformAccountId)) {
@@ -315,30 +326,7 @@ function createRemoteHeaders(accountId) {
   return headers;
 }
 
-async function resolveRemoteAssetsById(remoteBase, accountId, assetIds) {
-  if (!assetIds.length) {
-    return { assetsById: new Map(), missingAssetIds: [] };
-  }
-  const response = await fetch(
-    `${remoteBase}/assets/account/${encodeURIComponent(accountId)}/resolve`,
-    {
-      method: 'POST',
-      headers: createRemoteHeaders(accountId),
-      cache: 'no-store',
-      body: JSON.stringify({ assetIds }),
-    },
-  );
-  const payload = (await response.json().catch(() => null)) || null;
-  if (!response.ok) {
-    const detail =
-      typeof payload?.error?.detail === 'string'
-        ? payload.error.detail
-        : typeof payload?.error?.reasonKey === 'string'
-          ? payload.error.reasonKey
-          : `remote_asset_resolve_http_${response.status}`;
-    throw new Error(detail);
-  }
-
+function resolveAssetRows(payload) {
   const assetsById = new Map();
   const assets = Array.isArray(payload?.assets) ? payload.assets : [];
   for (const asset of assets) {
@@ -354,15 +342,71 @@ async function resolveRemoteAssetsById(remoteBase, accountId, assetIds) {
   return { assetsById, missingAssetIds };
 }
 
+function resolveControlErrorDetail(payload, fallback) {
+  if (typeof payload?.error?.detail === 'string') return payload.error.detail;
+  if (typeof payload?.error?.reasonKey === 'string') return payload.error.reasonKey;
+  return fallback;
+}
+
+function resolveLocalHeaders(accountId) {
+  return createRemoteHeaders(accountId);
+}
+
+function resolveLocalAssetsById(localTokyoWorkerBase, accountId, assetIds) {
+  if (!assetIds.length) {
+    return { assetsById: new Map(), missingAssetIds: [] };
+  }
+  const response = requestLoopbackJson(
+    `${localTokyoWorkerBase}/__internal/assets/account/${encodeURIComponent(accountId)}/resolve`,
+    {
+      method: 'POST',
+      headers: (() => {
+        const headers = resolveLocalHeaders(accountId);
+        headers.set('content-type', 'application/json');
+        return headers;
+      })(),
+      body: { assetIds },
+    },
+  );
+  const payload = response.json || null;
+  if (!response.ok) {
+    throw new Error(resolveControlErrorDetail(payload, `local_asset_resolve_http_${response.status}`));
+  }
+  return resolveAssetRows(payload);
+}
+
+async function resolveRemoteAssetsById(remoteBase, accountId, assetIds) {
+  if (!assetIds.length) {
+    return { assetsById: new Map(), missingAssetIds: [] };
+  }
+  const response = await fetch(
+    `${remoteBase}/__internal/assets/account/${encodeURIComponent(accountId)}/resolve`,
+    {
+      method: 'POST',
+      headers: createRemoteHeaders(accountId),
+      cache: 'no-store',
+      body: JSON.stringify({ assetIds }),
+    },
+  );
+  const payload = (await response.json().catch(() => null)) || null;
+  if (!response.ok) {
+    throw new Error(resolveControlErrorDetail(payload, `remote_asset_resolve_http_${response.status}`));
+  }
+  return resolveAssetRows(payload);
+}
+
 async function loadRemoteSavedConfig(remoteBase, accountId, publicId) {
   const response = await fetch(
-    `${remoteBase}/renders/instances/${encodeURIComponent(publicId)}/saved.json?accountId=${encodeURIComponent(accountId)}`,
+    `${remoteBase}/__internal/renders/instances/${encodeURIComponent(publicId)}/saved.json`,
     {
       method: 'GET',
       headers: createRemoteHeaders(accountId),
       cache: 'no-store',
     },
   );
+  if (response.status === 404) {
+    return null;
+  }
   const payload = (await response.json().catch(() => null)) || null;
   if (!response.ok) {
     const detail =
@@ -392,6 +436,7 @@ async function resolveRemoteAssetsBySavedSnapshots(remoteBase, accountId, rows, 
     if (!neededAssetIds.size) continue;
 
     const remoteConfig = await loadRemoteSavedConfig(remoteBase, accountId, row.publicId);
+    if (!remoteConfig) continue;
     const remoteRefs = new Map();
     collectLegacyAssetRefs(
       remoteConfig,
@@ -455,27 +500,43 @@ async function main() {
   let resolvedRemoteAssets = new Map();
   let missingAssetIds = [];
   let usedSavedSnapshotFallback = false;
-  try {
-    const resolved = await resolveRemoteAssetsById(
-      args.remoteBase,
-      args.platformAccountId,
-      Array.from(logicalAssetIds.keys()),
-    );
-    resolvedRemoteAssets = resolved.assetsById;
-    missingAssetIds = resolved.missingAssetIds;
-  } catch (error) {
-    usedSavedSnapshotFallback = true;
-    const resolved = await resolveRemoteAssetsBySavedSnapshots(
-      args.remoteBase,
-      args.platformAccountId,
-      rows,
-      logicalAssetIds,
-    );
-    resolvedRemoteAssets = resolved.assetsById;
-    missingAssetIds = resolved.missingAssetIds;
-    console.log(
-      `[seed-local-platform-assets] remote resolve unavailable; recovered asset refs from remote saved snapshots (${error instanceof Error ? error.message : String(error)})`,
-    );
+  const localResolvedAssets = resolveLocalAssetsById(
+    args.localTokyoWorkerBase,
+    args.platformAccountId,
+    Array.from(logicalAssetIds.keys()),
+  );
+  const missingRemoteCandidates = localResolvedAssets.missingAssetIds;
+  if (missingRemoteCandidates.length) {
+    try {
+      const resolved = await resolveRemoteAssetsById(
+        args.remoteBase,
+        args.platformAccountId,
+        missingRemoteCandidates,
+      );
+      resolvedRemoteAssets = resolved.assetsById;
+      missingAssetIds = resolved.missingAssetIds;
+    } catch (error) {
+      usedSavedSnapshotFallback = true;
+      const missingRows = rows.filter((row) =>
+        missingRemoteCandidates.some((assetId) => logicalAssetIds.get(assetId)?.publicId === row.publicId),
+      );
+      const missingLogicalAssetIds = new Map(
+        missingRemoteCandidates
+          .map((assetId) => [assetId, logicalAssetIds.get(assetId)])
+          .filter((entry) => Boolean(entry[1])),
+      );
+      const resolved = await resolveRemoteAssetsBySavedSnapshots(
+        args.remoteBase,
+        args.platformAccountId,
+        missingRows,
+        missingLogicalAssetIds,
+      );
+      resolvedRemoteAssets = resolved.assetsById;
+      missingAssetIds = resolved.missingAssetIds;
+      console.log(
+        `[seed-local-platform-assets] remote resolve unavailable; recovered asset refs from remote saved snapshots (${error instanceof Error ? error.message : String(error)})`,
+      );
+    }
   }
 
   console.log(
@@ -499,6 +560,9 @@ async function main() {
     const workItems = [];
 
     for (const [assetId, provenance] of logicalAssetIds.entries()) {
+      if (localResolvedAssets.assetsById.has(assetId)) {
+        continue;
+      }
       const resolved = resolvedRemoteAssets.get(assetId);
       const rawRef = typeof resolved?.assetRef === 'string' ? resolved.assetRef.trim() : '';
       const canonicalPath = rawRef ? toCanonicalAssetVersionPath(rawRef) : '';

@@ -2,7 +2,7 @@
 
 STATUS: Runtime reality (this repo)
 Created: 2024-12-27
-Last updated: 2026-02-15
+Last updated: 2026-03-18
 
 ---
 
@@ -171,7 +171,7 @@ Implementation:
   - `subject=minibob`
   - `publicId`
 - On `bob:session-ready`, Prague fetches:
-  - Bob public instance payload (`/api/instance/:publicId?subject=minibob`), which is backed by Venice public Tokyo truth
+  - Bob public instance payload (`/api/instance/:publicId?subject=minibob`), which is served by Venice and assembled by Tokyo-worker from public Tokyo live truth
   - Bob compiled widget payload (`/api/widgets/:widget/compiled`)
 - Prague then sends Bob a normal `ck:open-editor` envelope with:
   - `compiled`

@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { LocalizationOp } from '@clickeen/ck-contracts';
 import {
-  buildLocaleMirrorPayload,
-  deleteTokyoOverlay,
-  loadEffectiveUserLayerContext,
-  upsertTokyoOverlay,
-  validateUserOps,
-  writeTokyoBaseSnapshot,
-} from '@roma/lib/account-l10n';
-import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
-import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
+  deleteAccountUserLayer,
+  upsertAccountUserLayer,
+} from '@roma/lib/account-localization-control';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -68,18 +63,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    const contextData = await loadEffectiveUserLayerContext({
-      berlinBaseUrl: resolveBerlinBaseUrl(),
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      accessToken: resolved.current.value.accessToken,
-      accountId: resolved.accountId,
-      publicId: resolved.publicId,
-      locale: resolved.locale,
-      accountCapsule: resolved.current.value.authzToken,
-    });
-
-    const validatedOps = validateUserOps(body?.ops, contextData.userAllowlist);
-    if (!validatedOps) {
+    if (!Array.isArray(body?.ops)) {
       return withSession(
         request,
         NextResponse.json(
@@ -90,82 +74,18 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const nextUserOps = validatedOps;
-    const mirror = contextData.published
-      ? buildLocaleMirrorPayload({
-          widgetType: contextData.widgetType,
-          baseConfig: contextData.baseConfig,
-          baseLocale: contextData.baseLocale,
-          locale: resolved.locale,
-          baseTextPack: contextData.baseTextPack,
-          baseOps: contextData.localeOps,
-          userOps: nextUserOps,
-          seoGeoLive: contextData.seoGeoLive,
-        })
-      : { textPack: null, metaPack: null };
-
-    await writeTokyoBaseSnapshot({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
+    const payload = await upsertAccountUserLayer({
       accessToken: resolved.current.value.accessToken,
       accountId: resolved.accountId,
       publicId: resolved.publicId,
+      locale: resolved.locale,
+      ops: body.ops as LocalizationOp[],
       accountCapsule: resolved.current.value.authzToken,
-      baseFingerprint: contextData.baseFingerprint,
-      baseTextPack: contextData.baseTextPack,
-    });
-
-    if (nextUserOps.length === 0) {
-      await deleteTokyoOverlay({
-        tokyoBaseUrl: resolveTokyoBaseUrl(),
-        accessToken: resolved.current.value.accessToken,
-        accountId: resolved.accountId,
-        publicId: resolved.publicId,
-        accountCapsule: resolved.current.value.authzToken,
-        layer: 'user',
-        layerKey: resolved.locale,
-        baseFingerprint: contextData.baseFingerprint,
-        ...(mirror.textPack ? { textPack: mirror.textPack } : {}),
-        ...(mirror.metaPack ? { metaPack: mirror.metaPack } : {}),
-      });
-      return withSession(
-        request,
-        NextResponse.json({
-          publicId: resolved.publicId,
-          layer: 'user',
-          layerKey: resolved.locale,
-          deleted: true,
-          baseFingerprint: contextData.baseFingerprint,
-          baseUpdatedAt: contextData.baseUpdatedAt,
-        }),
-        resolved.current.value.setCookies,
-      );
-    }
-
-    await upsertTokyoOverlay({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      accessToken: resolved.current.value.accessToken,
-      accountId: resolved.accountId,
-      publicId: resolved.publicId,
-      accountCapsule: resolved.current.value.authzToken,
-      layer: 'user',
-      layerKey: resolved.locale,
-      baseFingerprint: contextData.baseFingerprint,
-      baseUpdatedAt: contextData.baseUpdatedAt,
-      ops: nextUserOps,
-      ...(mirror.textPack ? { textPack: mirror.textPack } : {}),
-      ...(mirror.metaPack ? { metaPack: mirror.metaPack } : {}),
     });
 
     return withSession(
       request,
-      NextResponse.json({
-        publicId: resolved.publicId,
-        layer: 'user',
-        layerKey: resolved.locale,
-        source: 'user',
-        baseFingerprint: contextData.baseFingerprint,
-        baseUpdatedAt: contextData.baseUpdatedAt,
-      }),
+      NextResponse.json(payload),
       resolved.current.value.setCookies,
     );
   } catch (error) {
@@ -192,9 +112,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   if (!resolved.ok) return resolved.response;
 
   try {
-    const contextData = await loadEffectiveUserLayerContext({
-      berlinBaseUrl: resolveBerlinBaseUrl(),
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
+    const payload = await deleteAccountUserLayer({
       accessToken: resolved.current.value.accessToken,
       accountId: resolved.accountId,
       publicId: resolved.publicId,
@@ -202,52 +120,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       accountCapsule: resolved.current.value.authzToken,
     });
 
-    const mirror = contextData.published
-      ? buildLocaleMirrorPayload({
-          widgetType: contextData.widgetType,
-          baseConfig: contextData.baseConfig,
-          baseLocale: contextData.baseLocale,
-          locale: resolved.locale,
-          baseTextPack: contextData.baseTextPack,
-          baseOps: contextData.localeOps,
-          userOps: [],
-          seoGeoLive: contextData.seoGeoLive,
-        })
-      : { textPack: null, metaPack: null };
-
-    await writeTokyoBaseSnapshot({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      accessToken: resolved.current.value.accessToken,
-      accountId: resolved.accountId,
-      publicId: resolved.publicId,
-      accountCapsule: resolved.current.value.authzToken,
-      baseFingerprint: contextData.baseFingerprint,
-      baseTextPack: contextData.baseTextPack,
-    });
-
-    await deleteTokyoOverlay({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      accessToken: resolved.current.value.accessToken,
-      accountId: resolved.accountId,
-      publicId: resolved.publicId,
-      accountCapsule: resolved.current.value.authzToken,
-      layer: 'user',
-      layerKey: resolved.locale,
-      baseFingerprint: contextData.baseFingerprint,
-      ...(mirror.textPack ? { textPack: mirror.textPack } : {}),
-      ...(mirror.metaPack ? { metaPack: mirror.metaPack } : {}),
-    });
-
     return withSession(
       request,
-      NextResponse.json({
-        publicId: resolved.publicId,
-        layer: 'user',
-        layerKey: resolved.locale,
-        deleted: true,
-        baseFingerprint: contextData.baseFingerprint,
-        baseUpdatedAt: contextData.baseUpdatedAt,
-      }),
+      NextResponse.json(payload),
       resolved.current.value.setCookies,
     );
   } catch (error) {

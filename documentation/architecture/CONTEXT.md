@@ -54,7 +54,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Complete functional software for a widget type (e.g. FAQ)
 - Lives in `tokyo/widgets/{widgetType}/`
 - Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
-- Contract/metadata in the same folder (used by Paris/Prague): `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
+- Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
 - Platform-controlled; **not stored in Michael** and **not served from Paris**
 
 **Widget Instance** = THE DATA
@@ -68,31 +68,30 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 ### Product-Path Account Editing (Current PRD 61 Cutover)
 
-Core account editing currently uses direct app-owned read/write paths plus a direct Roma-owned aftermath step:
+Core account editing currently uses direct app-owned read/write paths plus explicit follow-up routes for localization/live sync:
 
-1. **Open core instance**: `GET /api/builder/:publicId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads the saved authoring revision from Tokyo through the private product-control binding, composes localization server-side, and then sends Bob one `ck:open-editor` payload. Explicit localization refresh/status routes remain separate.
-2. **Save**: `PUT /api/account/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, return success immediately, and schedule direct aftermath against Berlin/Tokyo/San Francisco/Tokyo-worker after the response. The Tokyo commit is the save boundary.
+1. **Open core instance**: `GET /api/builder/:publicId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads the saved authoring revision from Tokyo through the private product-control binding, loads the localization snapshot from Tokyo-worker server-side, and then sends Bob one `ck:open-editor` payload. Explicit localization refresh/status routes remain separate.
+2. **Save**: `PUT /api/account/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly and return success immediately. Tokyo computes the canonical l10n fingerprint/snapshot on that save write. The Tokyo commit is the save boundary.
 3. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute policy on each open/save/localization/status call; the signed capsule carries stable authz truth, while live mutable counters are enforced at the canonical owner when needed.
-4. **After-save context**: Roma-owned aftermath reads the current Tokyo saved revision and account locale truth directly. Product-path save aftermath no longer mounts Paris endpoints.
+4. **Localization/live follow-up**: explicit Roma widget/localization routes trigger Tokyo-worker sync when locale artifacts or live/runtime surfaces need to converge. Tokyo-worker reads the current Tokyo saved revision plus Berlin account locale truth and performs the reconciliation. Product-path save does not own that work.
 
 Explicit localization-only reads are separate from core open:
 
-- `GET /api/account/instances/:publicId/localization?subject=account` — same-origin explicit localization snapshot rehydrate (Roma route backed by Berlin + Tokyo)
+- `GET /api/account/instances/:publicId/localization?subject=account` — same-origin explicit localization snapshot rehydrate (Roma route backed by Tokyo-worker account-localization control)
 
 Async l10n pipeline status is observed through:
 
-- `GET /api/account/instances/:publicId/l10n/status?subject=account` — same-origin l10n status derived from Berlin + Tokyo
+- `GET /api/account/instances/:publicId/l10n/status?subject=account` — same-origin l10n status read through Tokyo-worker account-localization control
 
 `subject` is required on editor endpoints (`account`, `minibob`) to select the editor mode. On `account` product routes, policy/entitlement truth comes from the bootstrap authz capsule, not a fresh Paris policy resolution.
 
-In the browser these flow through one of two host paths:
+In the browser the active account-mode host path is:
 
 - Roma message boot path: host fetches one Builder-open envelope through its same-origin route, then sends Bob a `ck:open-editor` message. Save delegates back to the Roma host and stays on the product same-origin route family.
-- DevStudio message boot path: host fetches the same core/localization envelope through explicit `/api/devstudio/instance*` local-tool routes, then sends Bob a `ck:open-editor` message. Bob account mutations delegate back to the DevStudio host and do not call Bob customer account routes directly.
 
 Bob does not URL-bootstrap account mode. Account editing is host-only.
 
-Localization is separate: Bob/Roma product flows call explicit account/instance localization endpoints when rehydrating overlay state or applying overlay edits; DevStudio local uses its explicit local-tool transport for the same envelope/write surface. Those reads/writes are intentional and do **not** save the base config.
+Localization is separate: Bob/Roma product flows call explicit account/instance localization endpoints when rehydrating overlay state or applying overlay edits. Those reads/writes are intentional and do **not** save the base config.
 
 Between open and save:
 
@@ -133,7 +132,7 @@ Between open and save:
 **Why this approach:**
 
 - **One editor**: Clickeen and users author in Bob; same config schema.
-- **One instance set**: the same instances appear as DevStudio authoring targets, Roma starters, and Prague embeds.
+- **One instance set**: the same instances appear as Roma starters, local internal verification targets, and Prague embeds.
 - **Deterministic publish**: Clickeen-authored instances are one-way (local -> cloud-dev).
 - **Scales to marketplace**: Curated instances remain shareable configs, not a new content type.
 
@@ -167,9 +166,9 @@ curated_widget_instances.meta = {
 | **Prague**        | Marketing site + gallery                                        | Cloudflare Pages                | `prague/`       |
 | **Bob**           | Widget builder app                                              | Cloudflare Pages (Next.js)      | `bob/`          |
 | **Roma**          | Product shell (account domains + Builder host orchestration)    | Cloudflare Pages (Next.js)      | `roma/`         |
-| **DevStudio**     | Internal toolbench for platform curation, authoring, and verification | Local Vite toolbench            | `admin/`        |
+| **DevStudio**     | Internal toolbench for platform curation, verification, and local utility pages | Local Vite toolbench            | `admin/`        |
 | **Venice**        | SSR embed runtime                                               | Cloudflare Pages (Next.js Edge) | `venice/`       |
-| **Paris**         | HTTP API gateway                                                | Cloudflare Workers              | `paris/`        |
+| **Paris**         | Residual health stub + non-product residue                      | Cloudflare Workers              | `paris/`        |
 | **San Francisco** | AI Workforce OS (agents, learning)                              | Workers (D1/KV/R2/Queues)       | `sanfrancisco/` |
 | **Michael**       | Database                                                        | Supabase Postgres               | `supabase/`     |
 | **Dieter**        | Design system                                                   | Build artifacts in Tokyo        | `dieter/`       |
@@ -181,15 +180,15 @@ curated_widget_instances.meta = {
 
 ## Glossary
 
-**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly before Roma-owned aftermath runs. Bob does not own a published/unpublished toggle; its copy-code affordance is only for getting website embed snippets. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
+**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly. Bob does not own published/unpublished state changes; those remain in Roma widgets domain, and its copy-code affordance is only for getting website embed snippets. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
 
-**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and owns explicit localization rehydrate/save-aftermath account routes. Current Roma is a single-current-account customer shell and does not expose customer account switching. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
+**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and exposes explicit localization rehydrate/status plus widget/localization sync routes that delegate execution to Tokyo-worker. Current Roma is a single-current-account customer shell and does not expose customer account switching. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
 
-**DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, internal authoring, and verification. DevStudio can host Bob for curated/admin authoring work, but it must not invent a second account or provider truth model and it must not become a generic customer-account browser.
+**DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, verification, and small local utility pages. The old local DevStudio widget-authoring lane is removed. DevStudio must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 
 **Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — Residual Cloudflare Worker boundary. Today it is mostly a public published-instance read surface plus other residual non-product paths. It is not on the account-mode product l10n path, not an auth/session authority, and not the owner of account localization state or account save/publish aftermath.
+**Paris** — Residual Cloudflare Worker boundary. Today it is a health stub plus a small amount of non-product residue. It is not on the account-mode product path, not an auth/session authority, and not the owner of account localization state, account widget save/publish sync, or public embed payload assembly.
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
@@ -197,7 +196,7 @@ curated_widget_instances.meta = {
 
 **Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and account-owned upload blobs.
 
-**Tokyo Worker** — Cloudflare Worker that serves immutable account asset paths (`/assets/v/:assetRef`), exposes private Roma-bound asset authority routes over a Cloudflare service binding, writes published **instance** l10n artifacts into Tokyo/R2, and publishes Venice render snapshots.
+**Tokyo Worker** — Cloudflare Worker that serves immutable account asset paths (`/assets/v/:assetRef`), exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, computes canonical saved-config l10n identity on save, executes explicit instance sync for localization/live/runtime convergence, writes published **instance** l10n artifacts into Tokyo/R2, and publishes Venice render snapshots.
 
 **Asset URL contract (pre-GA strict):**
 
@@ -230,7 +229,7 @@ tokyo/widgets/{widgetType}/
 ├── widget.css         # Scoped styles using Dieter tokens
 ├── widget.client.js   # applyState() for live DOM updates
 ├── agent.md           # AI contract (required for AI editing)
-├── limits.json        # Entitlements caps/flags for Paris validation
+├── limits.json        # Entitlements caps/flags consumed by shared policy enforcement
 ├── localization.json  # Locale-layer allowlist (translatable paths)
 ├── layers/            # Per-layer allowlists (e.g. user.allowlist.json)
 └── pages/             # Prague marketing pages (overview/features/examples/pricing)
@@ -319,7 +318,7 @@ Canonical reference:
 | Bob     | ✅ Active | Compiler, ToolDrawer, Account, Ops engine                                                                     |
 | Roma    | ✅ Active | Domain shell, account bootstrap, widgets/templates/builder orchestration                                      |
 | Tokyo   | ✅ Active | FAQ widget with shared modules                                                                                |
-| Paris   | ✅ Active | Instance API, tokens, entitlements, submissions                                                               |
+| Paris   | ✅ Active | Residual health stub and non-product residue only                                                             |
 | Venice  | ✅ Active | SSR embed runtime (published-only), loader, asset proxy (usage/submissions are stubbed in this repo snapshot) |
 | Dieter  | ✅ Active | 16+ components, tokens, typography                                                                            |
 | Michael | ✅ Active | Supabase Postgres with RLS                                                                                    |
@@ -373,20 +372,20 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 - Long-lived local servers started by an AI agent through a managed command session may be reaped when that session ends.
 - This is a limitation of the agent execution environment, not of a normal VS Code terminal.
-- If you need the DevStudio/Bob localhost lane to stay up for real browser use, run `bash scripts/dev-up.sh --reset` yourself in your own terminal.
+- If you need the full local stack to stay up for real browser use, run `bash scripts/dev-up.sh --reset` yourself in your own terminal.
 
 **Local instance data (important):**
 
 - Instances are **not** created by scripts anymore.
 - Supported product/account instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
 - Local DevStudio is the local internal toolbench, not “local Roma” parity.
-- That local authoring scope currently centers on loading the instances on the admin account for config iteration and translation checks.
+- That local verification scope currently centers on seeded platform state and local translation/runtime checks.
 
 **Local auth target (important):**
 
 - `bash scripts/dev-up.sh` uses local Supabase.
 - Berlin runs locally at `http://localhost:3005` for parity/unit work, but supported product auth happens in cloud Roma.
-- Berlin session token issuer must match the Berlin issuer Paris is configured to trust; mismatched issuers are rejected with `coreui.errors.auth.forbidden` and `issuer_mismatch`.
+- Berlin session token issuer must match the Berlin issuer configured for the active auth surface; mismatched issuers are rejected with `coreui.errors.auth.forbidden` and `issuer_mismatch`.
 
 ### Environments (Canonical)
 

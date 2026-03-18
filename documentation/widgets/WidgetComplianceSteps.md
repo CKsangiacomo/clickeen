@@ -23,12 +23,12 @@ OUTPUTS
 OUTPUT
 - A clear declaration of scope:
   - Which widgetType(s) are being modified.
-  - Which system(s) need changes: Tokyo only vs Tokyo+Bob/Venice/Paris/Prague.
+  - Which system(s) need changes: Tokyo only vs Tokyo+Bob/Roma/Tokyo-worker/Venice/Prague.
 
 STOP / ASK (do not proceed blindly)
 - Change requires a new Dieter primitive/token.
 - Change requires `tokyo/widgets/shared/*` edits.
-- Change requires Bob/Paris/Venice/Prague edits and you don’t have an explicit PRD direction.
+- Change requires Bob/Roma/Tokyo-worker/Venice/Prague edits and you don’t have an explicit PRD direction.
 
 GATE
 - `widgetType` is explicit and PRD exists.
@@ -49,8 +49,8 @@ cap.group.items.large.max | cap | sections[].faqs[]     | count-total          |
 ```
 
 NOTES
-- Every row must correspond to an entry in `tokyo/widgets/{widgetType}/limits.json` (Paris validates against it).
-- If the PRD expects UI gating (e.g. disabling a control), it must be explicit; otherwise keep UI generic and enforce only at Paris.
+- Every row must correspond to an entry in `tokyo/widgets/{widgetType}/limits.json`; shared policy/ops/publish enforcement consumes that mapping.
+- If the PRD expects UI gating (e.g. disabling a control), it must be explicit; otherwise keep UI generic and rely on shared policy plus owner-correct server enforcement.
 
 GATE
 - PRD exists and mapping is present.

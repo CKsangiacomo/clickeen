@@ -3,10 +3,10 @@
 This repo contains the full Clickeen widget platform:
 
 - **bob/** — Widget editor (Next.js). Consumes precompiled widget panels and hydrates Dieter components.
-- **admin/** — DevStudio tooling and component showcase (Vite). Hosts the widget workspace page that embeds Bob.
+- **admin/** — DevStudio tooling and component showcase (Vite). Internal toolbench for local verification and internal tools.
 - **dieter/** — Design system (tokens, CSS, web components). Built assets are served from **tokyo/**.
 - **tokyo/** — Local CDN stub serving Dieter assets and built widgets.
-- **paris/** — API service used by Bob/Roma/DevStudio for identity, policy, and instance data.
+- **paris/** — Residual API worker surface for published-instance and non-product paths.
 - **roma/** — Product shell app (workspace domains + Builder orchestration into Bob).
 - **documentation/** — Platform and architecture notes.
 
@@ -20,8 +20,8 @@ This repo contains the full Clickeen widget platform:
    - Bob’s compile API (`/api/widgets/[widgetname]/compiled`) reads the widget spec and expands `<tooldrawer-field>` using Dieter templates/specs.
    - Icons are inlined server-side; compiled panels include final HTML plus deterministic Dieter assets (CSS/JS).
 
-3) **Host surface (DevStudio / Roma) → Bob flow**
-   - Host app fetches instance data from Paris and compiled payload from Bob’s compile API.
+3) **Host surface (Roma / Prague MiniBob) → Bob flow**
+   - Host app fetches the instance payload through its owner-correct route and the compiled payload from Bob’s compile API.
    - Host posts an explicit `ck:open-editor` message; Bob renders panels, hydrates Dieter controls, and binds state.
 
 4) **Stage vs Pod fills**
@@ -45,6 +45,7 @@ Useful scripts:
 - `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`
 - `pnpm build` (after `pnpm build:dieter`)
 - `pnpm lint`, `pnpm typecheck`, `pnpm test`
+- `pnpm test:contracts` for the cross-owner contract floor (`Berlin -> Roma -> Tokyo-worker -> Venice`)
 
 ## Notes
 

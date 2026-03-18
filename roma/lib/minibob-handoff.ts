@@ -1,7 +1,7 @@
 import { isCuratedOrMainWidgetPublicId } from '@clickeen/ck-contracts';
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
-import { getRequestContext } from '@cloudflare/next-on-pages';
 import { authorizeAccountRoleFromCapsuleToken } from './account-authz-capsule';
+import { getCloudflareRequestContext } from './cloudflare-request-context';
 import { createAccountInstance } from './account-instance-create';
 
 type RomaKv = {
@@ -57,7 +57,7 @@ function isUuid(value: string): boolean {
 
 function requireUsageKv(): MinibobHandoffResult<RomaKv> {
   try {
-    const env = getRequestContext().env as { USAGE_KV?: RomaKv };
+    const env = getCloudflareRequestContext<{ env: { USAGE_KV?: RomaKv } }>().env;
     if (env.USAGE_KV) {
       return { ok: true, value: env.USAGE_KV };
     }

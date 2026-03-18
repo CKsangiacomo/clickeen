@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { EMBED_LOCALE_RUNTIME_SOURCE } from '../../embed/runtime-locale';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -25,21 +26,12 @@ const EMBED_SHELL_HTML = `<!doctype html>
     <div class="ck-shell" data-role="shell">Loading…</div>
     <script>
       (() => {
-        const normalizeLocaleToken = (raw) => {
-          const value = typeof raw === 'string' ? raw.trim().toLowerCase().replace(/_/g, '-') : '';
-          return value || '';
-        };
+${EMBED_LOCALE_RUNTIME_SOURCE}
 
         const parsePublicIdFromPath = () => {
           const parts = String(window.location.pathname || '').split('/').filter(Boolean);
           const last = parts[parts.length - 1] || '';
           try { return decodeURIComponent(last); } catch { return last; }
-        };
-
-        const parseGeoCountry = (response) => {
-          const raw = response && response.headers ? (response.headers.get('x-ck-geo-country') || response.headers.get('X-Ck-Geo-Country')) : '';
-          const normalized = String(raw || '').trim().toUpperCase();
-          return /^[A-Z]{2}$/.test(normalized) ? normalized : 'ZZ';
         };
 
         const showError = (title, body, detail) => {
@@ -174,35 +166,10 @@ const EMBED_SHELL_HTML = `<!doctype html>
           const widgetType = typeof pointer.widgetType === 'string' ? pointer.widgetType.trim() : '';
           const configFp = typeof pointer.configFp === 'string' ? pointer.configFp.trim() : '';
           const policy = pointer.localePolicy || null;
-          const baseLocale = normalizeLocaleToken(policy && policy.baseLocale) || 'en';
-          const readyLocales = Array.isArray(policy && policy.readyLocales)
-            ? Array.from(new Set(policy.readyLocales.map(normalizeLocaleToken).filter(Boolean)))
-            : [baseLocale];
-          const ipEnabled =
-            policy &&
-            typeof policy === 'object' &&
-            policy.ip &&
-            typeof policy.ip === 'object' &&
-            policy.ip.enabled === true;
-          const switcherEnabled =
-            policy &&
-            typeof policy === 'object' &&
-            policy.switcher &&
-            typeof policy.switcher === 'object' &&
-            policy.switcher.enabled === true;
-          const mapping =
-            policy && typeof policy === 'object' && policy.ip && typeof policy.ip === 'object' && policy.ip.countryToLocale
-              ? policy.ip.countryToLocale
-              : null;
+          const localePolicyState = resolveLocaleRuntimePolicy(pointer);
+          const { baseLocale, readyLocales, ipEnabled, switcherEnabled, mapping } = localePolicyState;
           const geoCountry = parseGeoCountry(pointerRes);
-
-          let locale = baseLocale;
-          if (fixedLocale && readyLocales.indexOf(fixedLocale) >= 0) {
-            locale = fixedLocale;
-          } else if (ipEnabled) {
-            const mapped = mapping && typeof mapping[geoCountry] === 'string' ? normalizeLocaleToken(mapping[geoCountry]) : '';
-            if (mapped && readyLocales.indexOf(mapped) >= 0) locale = mapped;
-          }
+          const locale = computeEffectiveLocale(localePolicyState, geoCountry, fixedLocale);
 
           if (!widgetType || !configFp) {
             showError('Widget unavailable', 'Missing widget metadata.', 'publicId=' + publicId);

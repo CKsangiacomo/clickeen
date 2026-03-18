@@ -1,6 +1,7 @@
 import type { TokyoMirrorQueueJob } from './domains/render';
 
 export type Env = {
+  ENV_STAGE?: string;
   TOKYO_DEV_JWT: string;
   CK_INTERNAL_SERVICE_JWT?: string;
   TOKYO_PUBLIC_BASE_URL?: string;
@@ -11,6 +12,7 @@ export type Env = {
   SUPABASE_SERVICE_ROLE_KEY?: string;
   BERLIN_BASE_URL?: string;
   BERLIN_JWKS_URL?: string;
+  SANFRANCISCO_BASE_URL?: string;
   TOKYO_L10N_HTTP_BASE?: string;
   CLOUDFLARE_ZONE_ID?: string;
   CLOUDFLARE_API_TOKEN?: string;

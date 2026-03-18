@@ -1,13 +1,12 @@
 import { after, NextRequest, NextResponse } from 'next/server';
-import type { PolicyProfile } from '@clickeen/ck-policy';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import {
   applySessionCookies,
   resolveRequestOrigin,
   resolveSessionCookieNames,
 } from '../../../../lib/auth/session';
+import { runAccountInstanceSync } from '../../../../lib/account-instance-sync';
 import { completeMinibobHandoff } from '../../../../lib/minibob-handoff';
-import { runAccountSaveAftermath } from '../../../../lib/account-save-aftermath';
 
 export const runtime = 'edge';
 
@@ -34,7 +33,6 @@ type BootstrapPayload = {
   };
   authz?: {
     accountCapsule?: unknown;
-    profile?: unknown;
   };
   error?: unknown;
 };
@@ -105,21 +103,6 @@ function resolveAccountId(value: unknown): string | null {
   return normalized || null;
 }
 
-function normalizePolicyProfile(value: unknown): PolicyProfile | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  if (
-    normalized === 'minibob' ||
-    normalized === 'free' ||
-    normalized === 'tier1' ||
-    normalized === 'tier2' ||
-    normalized === 'tier3'
-  ) {
-    return normalized;
-  }
-  return null;
-}
-
 async function fetchBootstrap(
   berlinBase: string,
   accessToken: string,
@@ -128,7 +111,6 @@ async function fetchBootstrap(
       ok: true;
       accountId: string | null;
       accountCapsule: string | null;
-      policyProfile: PolicyProfile | null;
     }
   | { ok: false; reasonKey: string }
 > {
@@ -156,7 +138,6 @@ async function fetchBootstrap(
       typeof payload?.authz?.accountCapsule === 'string' && payload.authz.accountCapsule.trim()
         ? payload.authz.accountCapsule.trim()
         : null,
-    policyProfile: normalizePolicyProfile(payload?.authz?.profile),
   };
 }
 
@@ -290,7 +271,6 @@ export async function GET(request: NextRequest) {
   }
   accountId = bootstrap.accountId;
   const accountCapsule = bootstrap.accountCapsule;
-  const policyProfile = bootstrap.policyProfile;
 
   if (!accountId) {
     return applySession(
@@ -299,7 +279,7 @@ export async function GET(request: NextRequest) {
       }),
     );
   }
-  if (!policyProfile) {
+  if (!accountCapsule) {
     return applySession(
       NextResponse.redirect(
         buildRecoveryUrl(
@@ -323,16 +303,15 @@ export async function GET(request: NextRequest) {
         if (!handoff.replay) {
           after(async () => {
             try {
-              await runAccountSaveAftermath({
+              await runAccountInstanceSync({
                 accessToken,
                 accountId,
                 publicId: handoff.publicId,
-                policyProfile,
                 accountCapsule,
-                previousConfig: null,
+                live: false,
               });
             } catch (error) {
-              console.error('[roma session finish] handoff create aftermath failed', {
+              console.error('[roma session finish] handoff tokyo instance sync failed', {
                 publicId: handoff.publicId,
                 detail: error instanceof Error ? error.message : String(error),
               });

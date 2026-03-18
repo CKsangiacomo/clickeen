@@ -1,4 +1,4 @@
-import { loadAccountLocalizationSnapshot } from './account-l10n';
+import { loadAccountLocalizationSnapshot } from './account-localization-control';
 import { loadTokyoPreferredAccountInstance } from './account-instance-direct';
 
 export type BuilderOpenEnvelope = {
@@ -44,8 +44,6 @@ export async function loadBuilderOpenEnvelope(args: {
 
   try {
     const localization = await loadAccountLocalizationSnapshot({
-      berlinBaseUrl: args.berlinBaseUrl,
-      tokyoBaseUrl: args.tokyoBaseUrl,
       accessToken: args.accessToken,
       accountId: args.accountId,
       publicId: args.publicId,

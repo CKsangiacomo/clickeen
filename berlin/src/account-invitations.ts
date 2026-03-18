@@ -1,6 +1,7 @@
 import type { BerlinAccountContext } from './account-state.types';
 import { findAccountContext, listAccountMembers, loadPrincipalAccountState, persistActiveAccountPreference } from './account-state';
 import { json, validationError } from './helpers';
+import { readSupabaseAdminListAll } from './supabase-list';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env } from './types';
 
@@ -38,6 +39,7 @@ type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const INVITATION_PAGE_SIZE = 200;
 
 function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -181,21 +183,17 @@ export async function listAccountInvitations(env: Env, accountId: string): Promi
     account_id: `eq.${accountId}`,
     accepted_at: 'is.null',
     revoked_at: 'is.null',
-    order: 'created_at.desc',
-    limit: '500',
+    order: 'created_at.desc,id.desc',
   });
-  const response = await supabaseAdminFetch(env, `/rest/v1/account_invitations?${params.toString()}`, {
-    method: 'GET',
+  const rows = await readSupabaseAdminListAll<InvitationRow>({
+    env,
+    pathname: '/rest/v1/account_invitations',
+    params,
+    pageSize: INVITATION_PAGE_SIZE,
   });
-  const payload = await readSupabaseAdminJson<InvitationRow[] | Record<string, unknown>>(response);
-  if (!response.ok) {
-    return {
-      ok: false,
-      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
-    };
-  }
+  if (!rows.ok) return rows;
 
-  const invitations = (Array.isArray(payload) ? payload : [])
+  const invitations = rows.value
     .map((row) => normalizeInvitationRow(row))
     .filter((row): row is BerlinAccountInvitation => Boolean(row))
     .filter((invitation) => !isInvitationExpired(invitation));

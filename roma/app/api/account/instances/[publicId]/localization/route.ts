@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { loadAccountLocalizationSnapshot } from '@roma/lib/account-l10n';
-import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
-import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
+import { loadAccountLocalizationSnapshot } from '@roma/lib/account-localization-control';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -27,8 +25,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   try {
     const result = await loadAccountLocalizationSnapshot({
-      berlinBaseUrl: resolveBerlinBaseUrl(),
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
       accessToken: current.value.accessToken,
       accountId: current.value.authzPayload.accountId,
       publicId,

@@ -71,7 +71,7 @@ documentation/
 
 Surface split to keep straight when reading the repo:
 - `Roma` = account-scoped customer/member shell
-- `DevStudio` = internal toolbench for platform curation, authoring, and verification
+- `DevStudio` = internal toolbench for platform curation, verification, and local utility pages
 
 ---
 
@@ -113,14 +113,14 @@ Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
    - Serves `/widgets/**` and `/dieter/**` directly from the repo.
 2. **Bob runtime** reads widget definitions/assets from Tokyo:
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
-3. **Local DevStudio** opens Bob in message boot from the internal toolbench:
-   - `admin/src/html/tools/dev-widget-workspace.html` defaults to local Bob + local Tokyo.
-   - Explicit `?bob=` / `?tokyo=` overrides remain available only when you intentionally need them.
+3. **Local DevStudio** remains the internal toolbench:
+   - it no longer hosts the local widget-authoring workspace
+   - local Bob/Tokyo debugging happens through direct local services and current internal pages, not through `/#/tools/dev-widget-workspace`
 4. **Cloud-dev Roma** is the supported product/account host surface:
    - `roma/app/api/bootstrap/route.ts` proxies to Berlin `GET /v1/session/bootstrap`
    - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
    - local code changes only appear there after deploy
-Result: the supported local path is one boring topology: local DevStudio + local Bob + local Tokyo + local Tokyo-worker + local Berlin. Roma remains the customer account shell; DevStudio remains the internal toolbench.
+Result: the supported local topology is one boring stack: local DevStudio + local Bob + local Tokyo + local Tokyo-worker + local Berlin. Roma remains the customer account shell; DevStudio remains the internal toolbench.
 
 ### A.1) Local auth issuer alignment (critical)
 
@@ -140,14 +140,16 @@ Instances are data (not code) and live in Michael/Tokyo. Assets live in Tokyo.
 1. **Roma + Bob handle account user-instance flows**:
    - Roma Widgets/Templates create/duplicate/delete user instances through Roma same-origin routes.
    - Bob save writes base config via account `PUT`.
-2. **DevStudio Local handles curated/main authoring** through explicit local DevStudio tool routes backed by local Tokyo/Tokyo-worker.
+2. **DevStudio Local does not host widget authoring**.
+   - Curated/main verification remains an internal toolbench concern only.
+   - Widget editing belongs to Roma-hosted or other explicit Bob surfaces, not hidden DevStudio routes.
 3. **Assets** referenced in configs point at local Tokyo in canonical local development (`http://localhost:4000`).
 
 ### C) Cloud-dev propagation (explicit)
 
 Local changes do not auto-appear in cloud-dev. You must deploy.
 
-1. **Bob/Roma/DevStudio**:
+1. **Bob/Roma and Cloudflare services**:
    - Code changes require Cloudflare deploys (Pages/Workers).
    - Cloud Bob/Roma read `https://tokyo.dev.clickeen.com`, not your local filesystem.
 

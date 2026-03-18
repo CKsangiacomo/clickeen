@@ -132,7 +132,7 @@ async function loadPlatformAccountRows() {
 
 async function hasSavedSnapshot(publicId, accountId) {
   const response = requestLoopback(
-    `${TOKYO_WORKER_BASE_URL}/renders/instances/${encodeURIComponent(publicId)}/saved.json?accountId=${encodeURIComponent(accountId)}`,
+    `${TOKYO_WORKER_BASE_URL}/__internal/renders/instances/${encodeURIComponent(publicId)}/saved.json`,
     {
       method: 'GET',
       headers: createTokyoHeaders(accountId),
@@ -161,7 +161,7 @@ async function writeSavedSnapshot(row) {
   }
 
   const response = requestLoopback(
-    `${TOKYO_WORKER_BASE_URL}/renders/instances/${encodeURIComponent(publicId)}/saved.json?accountId=${encodeURIComponent(accountId)}`,
+    `${TOKYO_WORKER_BASE_URL}/__internal/renders/instances/${encodeURIComponent(publicId)}/saved.json`,
     {
       method: 'PUT',
       headers: (() => {
@@ -201,7 +201,7 @@ async function writePlatformAccountSavedSnapshot(row) {
   }
 
   const response = requestLoopback(
-    `${TOKYO_WORKER_BASE_URL}/renders/instances/${encodeURIComponent(publicId)}/saved.json?accountId=${encodeURIComponent(accountId)}`,
+    `${TOKYO_WORKER_BASE_URL}/__internal/renders/instances/${encodeURIComponent(publicId)}/saved.json`,
     {
       method: 'PUT',
       headers: (() => {

@@ -3,9 +3,12 @@ import {
   resolvePolicy,
   type MemberRole,
 } from '@clickeen/ck-policy';
-import { isUserSettingsTimezoneSupported, normalizeUserSettingsCountry } from '@clickeen/ck-contracts';
-import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l10n';
-import localesJson from '@clickeen/l10n/locales.json';
+import {
+  isUserSettingsTimezoneSupported,
+  normalizeUserSettingsCountry,
+  parseAccountL10nPolicyStrict,
+  validateAccountLocaleList,
+} from '@clickeen/ck-contracts';
 import type {
   BerlinAccountContext,
   BerlinAccountMember,
@@ -20,13 +23,16 @@ import { ensureSupabaseAccessToken, toIdentityRecord } from './auth-session';
 import { loadUserContactMethods } from './contact-methods';
 import { internalError, validationError } from './helpers';
 import { resolveSigningContext } from './jwt-crypto';
+import { readSupabaseAdminListAll } from './supabase-list';
 import { requestSupabaseUser } from './supabase-client';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env, type SessionState } from './types';
 
 const ROMA_AUTHZ_CAPSULE_TTL_SEC = 15 * 60;
+const MEMBERSHIP_PAGE_SIZE = 200;
+const ACCOUNT_MEMBER_PAGE_SIZE = 200;
+const USER_PROFILE_QUERY_CHUNK_SIZE = 100;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(localesJson).map((entry) => entry.code));
 
 type UserProfileRow = {
   user_id?: unknown;
@@ -103,10 +109,6 @@ function asTrimmedString(value: unknown): string | null {
   return normalized || null;
 }
 
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
 function normalizeBoolean(value: unknown): boolean {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'string') {
@@ -149,10 +151,13 @@ function encodeInFilter(values: string[]): string {
   return values.map((value) => encodeURIComponent(value)).join(',');
 }
 
-function normalizeSupportedLocaleToken(raw: unknown): string | null {
-  const normalized = normalizeLocaleToken(raw);
-  if (!normalized) return null;
-  return SUPPORTED_LOCALES.has(normalized) ? normalized : null;
+function chunkValues<T>(values: T[], chunkSize: number): T[][] {
+  if (chunkSize <= 0) return [values];
+  const out: T[][] = [];
+  for (let index = 0; index < values.length; index += chunkSize) {
+    out.push(values.slice(index, index + chunkSize));
+  }
+  return out;
 }
 
 function invalidPersistedStateResponse(detail: string): Response {
@@ -182,55 +187,15 @@ function validateProfileLocation(rawCountry: unknown, rawTimezone: unknown, path
 }
 
 function validateAccountLocaleState(rawLocales: unknown, rawPolicy: unknown, path: string): string[] {
-  const issues: string[] = [];
+  const issues = validateAccountLocaleList(rawLocales, `${path}.l10n_locales`, {
+    allowNull: true,
+  }).map((issue) => `${issue.path}:${issue.message}`);
 
-  if (rawLocales != null) {
-    if (!Array.isArray(rawLocales)) {
-      issues.push(`${path}.l10n_locales_invalid_shape`);
-    } else {
-      rawLocales.forEach((entry, index) => {
-        if (!normalizeSupportedLocaleToken(entry)) {
-          issues.push(`${path}.l10n_locales[${index}]_invalid`);
-        }
-      });
-    }
-  }
-
-  if (!isPlainRecord(rawPolicy)) {
-    issues.push(`${path}.l10n_policy_invalid_shape`);
-    return issues;
-  }
-  if (rawPolicy.v !== 1) issues.push(`${path}.l10n_policy.v_invalid`);
-
-  const baseLocale = normalizeSupportedLocaleToken(rawPolicy.baseLocale);
-  if (!baseLocale) issues.push(`${path}.l10n_policy.baseLocale_invalid`);
-
-  const ip = rawPolicy.ip;
-  if (!isPlainRecord(ip)) {
-    issues.push(`${path}.l10n_policy.ip_invalid_shape`);
-  } else {
-    if (typeof ip.enabled !== 'boolean') issues.push(`${path}.l10n_policy.ip.enabled_invalid`);
-    if (!isPlainRecord(ip.countryToLocale)) {
-      issues.push(`${path}.l10n_policy.ip.countryToLocale_invalid_shape`);
-    } else {
-      for (const [countryRaw, localeRaw] of Object.entries(ip.countryToLocale)) {
-        const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
-        if (!/^[A-Z]{2}$/.test(country)) {
-          issues.push(`${path}.l10n_policy.ip.countryToLocale.${countryRaw}_invalid_country`);
-          continue;
-        }
-        if (!normalizeSupportedLocaleToken(localeRaw)) {
-          issues.push(`${path}.l10n_policy.ip.countryToLocale.${country}_invalid_locale`);
-        }
-      }
-    }
-  }
-
-  const switcher = rawPolicy.switcher;
-  if (!isPlainRecord(switcher)) {
-    issues.push(`${path}.l10n_policy.switcher_invalid_shape`);
-  } else if (typeof switcher.enabled !== 'boolean') {
-    issues.push(`${path}.l10n_policy.switcher.enabled_invalid`);
+  try {
+    parseAccountL10nPolicyStrict(rawPolicy);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    issues.push(`${path}.l10n_policy:${detail}`);
   }
 
   return issues;
@@ -303,20 +268,14 @@ async function loadAccountMembershipRows(
     select:
       'account_id,user_id,role,created_at,accounts(id,status,is_platform,tier,name,slug,website_url,l10n_locales,l10n_policy,tier_changed_at,tier_changed_from,tier_changed_to,tier_drop_dismissed_at,tier_drop_email_sent_at)',
     user_id: `eq.${userId}`,
-    order: 'created_at.asc',
-    limit: '1000',
+    order: 'created_at.asc,account_id.asc',
   });
-  const response = await supabaseAdminFetch(env, `/rest/v1/account_members?${params.toString()}`, {
-    method: 'GET',
+  return readSupabaseAdminListAll<AccountMembershipRow>({
+    env,
+    pathname: '/rest/v1/account_members',
+    params,
+    pageSize: MEMBERSHIP_PAGE_SIZE,
   });
-  const payload = await readSupabaseAdminJson<AccountMembershipRow[] | Record<string, unknown>>(response);
-  if (!response.ok) {
-    return {
-      ok: false,
-      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
-    };
-  }
-  return { ok: true, value: Array.isArray(payload) ? payload : [] };
 }
 
 function normalizeUserProfile(
@@ -484,33 +443,14 @@ export async function loadPrincipalIdentities(args: {
 
 export function summarizeConnectorState(args: {
   identities: BerlinIdentityPayload[];
-  activeAccountId: string | null;
 }): BerlinConnectorSummaryPayload {
   const linkedIdentities = [...args.identities];
   const linkedProviders = Array.from(new Set(linkedIdentities.map((entry) => entry.provider))).sort((a, b) =>
     a.localeCompare(b),
   );
-  const workspaceConnections =
-    args.activeAccountId == null
-      ? []
-      : linkedIdentities.map((entry) => ({
-          provider: entry.provider,
-          accountId: args.activeAccountId as string,
-          status: 'seed_available' as const,
-          linkedIdentityId: entry.identityId,
-        }));
-  const capabilityStates = linkedIdentities.map((entry) => ({
-    provider: entry.provider,
-    capabilityKey: 'identity.login' as const,
-    status: 'granted' as const,
-    source: 'linked_identity' as const,
-    linkedIdentityId: entry.identityId,
-  }));
 
   return {
     linkedIdentities,
-    workspaceConnections,
-    capabilityStates,
     traits: {
       linkedProviders,
     },
@@ -598,7 +538,6 @@ export async function buildBootstrapPayload(args: {
         defaults: { accountId: activeAccount.accountId },
         connectors: summarizeConnectorState({
           identities: identities.value,
-          activeAccountId: activeAccount.accountId,
         }),
         authz: {
           accountCapsule: capsule.token,
@@ -628,43 +567,46 @@ async function loadUserProfilesByIds(
   const uniqueUserIds = Array.from(new Set(userIds.filter((userId) => isUuid(userId))));
   if (uniqueUserIds.length === 0) return { ok: true, value: new Map() };
 
-  const params = new URLSearchParams({
-    select:
-      'user_id,primary_email,email_verified,given_name,family_name,primary_language,country,timezone',
-    user_id: `in.(${encodeInFilter(uniqueUserIds)})`,
-    limit: String(uniqueUserIds.length),
-  });
-  const response = await supabaseAdminFetch(env, `/rest/v1/user_profiles?${params.toString()}`, {
-    method: 'GET',
-  });
-  const payload = await readSupabaseAdminJson<UserProfileSummaryRow[] | Record<string, unknown>>(response);
-  if (!response.ok) {
-    return {
-      ok: false,
-      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
-    };
-  }
-
   const map = new Map<string, BerlinUserProfilePayload>();
-  for (const row of Array.isArray(payload) ? payload : []) {
-    const userId = asTrimmedString(row.user_id);
-    const primaryEmail = asTrimmedString(row.primary_email);
-    if (!userId || !primaryEmail) continue;
-    const issues = validateProfileLocation(row.country, row.timezone, `user_profiles.${userId}`);
-    if (issues.length) {
-      return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
-    }
-    const location = normalizeProfileLocation(row.country, row.timezone);
-    map.set(userId, {
-      userId,
-      primaryEmail,
-      emailVerified: normalizeBoolean(row.email_verified),
-      givenName: asTrimmedString(row.given_name),
-      familyName: asTrimmedString(row.family_name),
-      primaryLanguage: asTrimmedString(row.primary_language),
-      country: location.country,
-      timezone: location.timezone,
+
+  for (const chunk of chunkValues(uniqueUserIds, USER_PROFILE_QUERY_CHUNK_SIZE)) {
+    const params = new URLSearchParams({
+      select:
+        'user_id,primary_email,email_verified,given_name,family_name,primary_language,country,timezone',
+      user_id: `in.(${encodeInFilter(chunk)})`,
+      limit: String(chunk.length),
     });
+    const response = await supabaseAdminFetch(env, `/rest/v1/user_profiles?${params.toString()}`, {
+      method: 'GET',
+    });
+    const payload = await readSupabaseAdminJson<UserProfileSummaryRow[] | Record<string, unknown>>(response);
+    if (!response.ok) {
+      return {
+        ok: false,
+        response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
+      };
+    }
+
+    for (const row of Array.isArray(payload) ? payload : []) {
+      const userId = asTrimmedString(row.user_id);
+      const primaryEmail = asTrimmedString(row.primary_email);
+      if (!userId || !primaryEmail) continue;
+      const issues = validateProfileLocation(row.country, row.timezone, `user_profiles.${userId}`);
+      if (issues.length) {
+        return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
+      }
+      const location = normalizeProfileLocation(row.country, row.timezone);
+      map.set(userId, {
+        userId,
+        primaryEmail,
+        emailVerified: normalizeBoolean(row.email_verified),
+        givenName: asTrimmedString(row.given_name),
+        familyName: asTrimmedString(row.family_name),
+        primaryLanguage: asTrimmedString(row.primary_language),
+        country: location.country,
+        timezone: location.timezone,
+      });
+    }
   }
 
   return { ok: true, value: map };
@@ -677,22 +619,17 @@ export async function listAccountMembers(
   const params = new URLSearchParams({
     select: 'account_id,user_id,role,created_at',
     account_id: `eq.${accountId}`,
-    order: 'created_at.asc',
-    limit: '500',
+    order: 'created_at.asc,user_id.asc',
   });
-  const response = await supabaseAdminFetch(env, `/rest/v1/account_members?${params.toString()}`, {
-    method: 'GET',
+  const rows = await readSupabaseAdminListAll<AccountMemberRow>({
+    env,
+    pathname: '/rest/v1/account_members',
+    params,
+    pageSize: ACCOUNT_MEMBER_PAGE_SIZE,
   });
-  const payload = await readSupabaseAdminJson<AccountMemberRow[] | Record<string, unknown>>(response);
-  if (!response.ok) {
-    return {
-      ok: false,
-      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
-    };
-  }
+  if (!rows.ok) return rows;
 
-  const rows = Array.isArray(payload) ? payload : [];
-  const userIds = rows
+  const userIds = rows.value
     .map((row) => asTrimmedString(row.user_id))
     .filter((userId): userId is string => isUuid(userId ?? null));
   const profiles = await loadUserProfilesByIds(env, userIds);
@@ -700,7 +637,7 @@ export async function listAccountMembers(
 
   return {
     ok: true,
-    value: rows.flatMap((row) => {
+    value: rows.value.flatMap((row) => {
       const userId = asTrimmedString(row.user_id);
       const role = normalizeRole(row.role);
       if (!userId || !role) return [];

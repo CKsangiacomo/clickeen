@@ -63,6 +63,7 @@ tooling/whisper/
 
 # Misc
 .cache/
+.tmp/
 artifacts/
 Logs/
 .dev-up.lock/

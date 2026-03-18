@@ -35,6 +35,18 @@ Historical snapshots:
 9. Roma is the account-scoped customer/member shell. DevStudio is the internal toolbench for platform curation, verification, and internal operations.
 10. Bob consumes Berlin account truth; it never owns account management.
 
+Current account-scale DB floor:
+- Active RLS account predicates on `account_id` are already backed by current indexes:
+  - `account_members`: primary key `(account_id, user_id)`
+  - `widget_instances`: `widget_instances_account_id_idx`
+  - `comments`: `comments_account_id_idx`
+- Current account-scoped high-volume non-RLS tables also already carry account-first indexes where they matter on the active path:
+  - `account_invitations`: `account_invitations_account_id_idx`
+  - `account_notices`: `(account_id, status, created_at DESC)`
+  - `internal_control_events`: `(account_id, created_at DESC)`
+  - `account_business_profiles`: `account_business_profiles_account_id_idx`
+- Legacy Michael tables from the removed asset/l10n plane are out of scope for the active product path and are not part of this floor.
+
 ---
 
 ## Canonical model
@@ -197,10 +209,10 @@ Rules:
 ### Surface split
 
 - `Roma` = account-scoped customer/member shell
-- `DevStudio` = internal toolbench for platform curation, authoring, and verification
+- `DevStudio` = internal toolbench for platform curation, verification, and local utility pages
 - `Bob` = editor kernel and consumer of account truth
 
-DevStudio may host internal tools, but it must not invent a second account or provider model and it must not teach internal humans to act like privileged customers browsing accounts.
+DevStudio may host internal tools, but it must not invent a second account or provider model, it must not teach internal humans to act like privileged customers browsing accounts, and it must not recreate the removed local widget-authoring lane.
 
 ---
 
@@ -275,8 +287,6 @@ Returns:
 - entitlements snapshot
 - normalized bootstrap connector traits:
   - `linkedIdentities`
-  - `workspaceConnections`
-  - `capabilityStates`
   - `traits.linkedProviders`
 - signed account capsule
 
@@ -310,7 +320,7 @@ Rules:
 - `POST /v1/accounts/:id/members` is only for already-resolved user profiles
 - `PATCH /v1/accounts/:id/members/:memberId` mutates membership only
 - `DELETE /v1/accounts/:id/members/:memberId` removes a non-owner member from the account
-- `GET /v1/me/identities` returns Berlin's normalized provider reuse summary; shells must not invent their own provider/account linkage model on top
+- `GET /v1/me/identities` returns Berlin's minimal provider reuse summary; shells must not invent their own provider/account linkage model on top
 
 ---
 
@@ -350,8 +360,7 @@ Rules:
 - raw provider payloads do not become a product data model outside Berlin
 - current runtime exposes the minimal reusable summary only:
   - `linkedIdentities` = person-level provider facts
-  - `workspaceConnections` = account-scoped connection seeds Berlin can later upgrade
-  - `capabilityStates` = current granted capability state per provider relationship
+  - `traits.linkedProviders` = cheap shell-friendly provider summary
 
 ---
 

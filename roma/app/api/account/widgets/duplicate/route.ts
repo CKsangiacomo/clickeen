@@ -5,7 +5,7 @@ import {
   validatePersistableConfig,
   writeSavedConfigToTokyo,
 } from '@roma/lib/account-instance-direct';
-import { runAccountSaveAftermath } from '@roma/lib/account-save-aftermath';
+import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import {
   createAccountInstanceRow,
@@ -306,16 +306,15 @@ export async function POST(request: NextRequest) {
 
   after(async () => {
     try {
-      await runAccountSaveAftermath({
+      await runAccountInstanceSync({
         accessToken: current.value.accessToken,
         accountId,
         publicId,
-        policyProfile: current.value.authzPayload.profile,
         accountCapsule: current.value.authzToken,
-        previousConfig: null,
+        live: false,
       });
     } catch (error) {
-      console.error('[roma account widgets duplicate route] create aftermath failed', {
+      console.error('[roma account widgets duplicate route] tokyo instance sync failed', {
         publicId,
         detail: error instanceof Error ? error.message : String(error),
       });

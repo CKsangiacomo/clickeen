@@ -218,6 +218,119 @@ async function writeIndex(env: Env, index: LayerIndex): Promise<void> {
   } satisfies LayerIndex);
 }
 
+export async function upsertL10nOverlay(args: {
+  env: Env;
+  publicId: string;
+  layer: LayerKind;
+  layerKey: string;
+  baseFingerprint: string;
+  baseUpdatedAt?: string | null;
+  ops: L10nOp[];
+  geoTargets?: string[] | null;
+  textPack?: Record<string, string> | null;
+  metaPack?: Record<string, unknown> | null;
+}): Promise<void> {
+  const overlayKey = layerOverlayKey(args.publicId, args.layer, args.layerKey, args.baseFingerprint);
+  await putJson(args.env, overlayKey, {
+    v: 1,
+    baseFingerprint: args.baseFingerprint,
+    baseUpdatedAt: asTrimmedString(args.baseUpdatedAt),
+    ops: args.ops,
+  });
+  await deletePrefix(args.env, layerOverlayPrefix(args.publicId, args.layer, args.layerKey), overlayKey);
+
+  const index = await loadIndex(args.env, args.publicId);
+  const currentEntry = index.layers[args.layer] ?? { keys: [] };
+  const nextKeys = Array.from(new Set([...(currentEntry.keys || []), args.layerKey])).sort((left, right) =>
+    left.localeCompare(right),
+  );
+  const nextEntry: LayerIndexEntry = { keys: nextKeys };
+  if (args.layer === 'locale') {
+    const nextGeoTargets = { ...(currentEntry.geoTargets || {}) };
+    if (args.geoTargets) nextGeoTargets[args.layerKey] = args.geoTargets;
+    if (Object.keys(nextGeoTargets).length > 0) nextEntry.geoTargets = nextGeoTargets;
+  }
+  index.layers[args.layer] = nextEntry;
+  await writeIndex(args.env, index);
+
+  const textPack = normalizeTextPack(args.textPack);
+  if (textPack) {
+    await writeTextPack(args.env, {
+      v: 1,
+      kind: 'write-text-pack',
+      publicId: args.publicId,
+      locale: args.layerKey,
+      baseFingerprint: args.baseFingerprint,
+      textPack,
+    });
+  }
+
+  const metaPack = normalizeMetaPack(args.metaPack);
+  if (metaPack) {
+    await writeMetaPack(args.env, {
+      v: 1,
+      kind: 'write-meta-pack',
+      publicId: args.publicId,
+      locale: args.layerKey,
+      metaPack,
+    });
+  }
+}
+
+export async function deleteL10nOverlay(args: {
+  env: Env;
+  publicId: string;
+  layer: LayerKind;
+  layerKey: string;
+  baseFingerprint?: string | null;
+  textPack?: Record<string, string> | null;
+  metaPack?: Record<string, unknown> | null;
+}): Promise<void> {
+  await deletePrefix(args.env, layerOverlayPrefix(args.publicId, args.layer, args.layerKey));
+
+  const index = await loadIndex(args.env, args.publicId);
+  const currentEntry = index.layers[args.layer];
+  if (currentEntry) {
+    const nextKeys = currentEntry.keys.filter((value) => value !== args.layerKey);
+    if (nextKeys.length === 0) {
+      delete index.layers[args.layer];
+    } else {
+      const nextEntry: LayerIndexEntry = { keys: nextKeys };
+      if (args.layer === 'locale' && currentEntry.geoTargets) {
+        const nextGeoTargets = { ...currentEntry.geoTargets };
+        delete nextGeoTargets[args.layerKey];
+        if (Object.keys(nextGeoTargets).length > 0) nextEntry.geoTargets = nextGeoTargets;
+      }
+      index.layers[args.layer] = nextEntry;
+    }
+    await writeIndex(args.env, index);
+  }
+
+  const textPack = normalizeTextPack(args.textPack);
+  const baseFingerprint = normalizeSha256Hex(args.baseFingerprint);
+  if (textPack && baseFingerprint) {
+    await writeTextPack(args.env, {
+      v: 1,
+      kind: 'write-text-pack',
+      publicId: args.publicId,
+      locale: args.layerKey,
+      baseFingerprint,
+      textPack,
+    });
+  }
+
+  const metaPack = normalizeMetaPack(args.metaPack);
+  if (metaPack) {
+    await writeMetaPack(args.env, {
+      v: 1,
+      kind: 'write-meta-pack',
+      publicId: args.publicId,
+      locale: args.layerKey,
+      metaPack,
+    });
+  }
+}
+
 export async function handleWriteL10nBaseSnapshot(
   req: Request,
   env: Env,
@@ -293,51 +406,18 @@ export async function handleUpsertL10nOverlay(
   }
 
   const geoTargets = layer === 'locale' ? normalizeGeoTargets(payload.geoTargets) : null;
-  const overlayKey = layerOverlayKey(publicId, layer, layerKey, baseFingerprint);
-  await putJson(env, overlayKey, {
-    v: 1,
+  await upsertL10nOverlay({
+    env,
+    publicId,
+    layer,
+    layerKey,
     baseFingerprint,
     baseUpdatedAt: asTrimmedString(payload.baseUpdatedAt),
     ops: normalizedOps.ops,
+    geoTargets,
+    textPack: normalizeTextPack(payload.textPack),
+    metaPack: normalizeMetaPack(payload.metaPack),
   });
-  await deletePrefix(env, layerOverlayPrefix(publicId, layer, layerKey), overlayKey);
-
-  const index = await loadIndex(env, publicId);
-  const currentEntry = index.layers[layer] ?? { keys: [] };
-  const nextKeys = Array.from(new Set([...(currentEntry.keys || []), layerKey])).sort((left, right) =>
-    left.localeCompare(right),
-  );
-  const nextEntry: LayerIndexEntry = { keys: nextKeys };
-  if (layer === 'locale') {
-    const nextGeoTargets = { ...(currentEntry.geoTargets || {}) };
-    if (geoTargets) nextGeoTargets[layerKey] = geoTargets;
-    if (Object.keys(nextGeoTargets).length > 0) nextEntry.geoTargets = nextGeoTargets;
-  }
-  index.layers[layer] = nextEntry;
-  await writeIndex(env, index);
-
-  const textPack = normalizeTextPack(payload.textPack);
-  if (textPack) {
-    await writeTextPack(env, {
-      v: 1,
-      kind: 'write-text-pack',
-      publicId,
-      locale: layerKey,
-      baseFingerprint,
-      textPack,
-    });
-  }
-
-  const metaPack = normalizeMetaPack(payload.metaPack);
-  if (metaPack) {
-    await writeMetaPack(env, {
-      v: 1,
-      kind: 'write-meta-pack',
-      publicId,
-      locale: layerKey,
-      metaPack,
-    });
-  }
 
   return json({
     publicId,
@@ -358,49 +438,15 @@ export async function handleDeleteL10nOverlay(
   const payload = req.headers.get('content-length')
     ? ((await req.json().catch(() => null)) as Record<string, unknown> | null)
     : null;
-  await deletePrefix(env, layerOverlayPrefix(publicId, layer, layerKey));
-
-  const index = await loadIndex(env, publicId);
-  const currentEntry = index.layers[layer];
-  if (currentEntry) {
-    const nextKeys = currentEntry.keys.filter((value) => value !== layerKey);
-    if (nextKeys.length === 0) {
-      delete index.layers[layer];
-    } else {
-      const nextEntry: LayerIndexEntry = { keys: nextKeys };
-      if (layer === 'locale' && currentEntry.geoTargets) {
-        const nextGeoTargets = { ...currentEntry.geoTargets };
-        delete nextGeoTargets[layerKey];
-        if (Object.keys(nextGeoTargets).length > 0) nextEntry.geoTargets = nextGeoTargets;
-      }
-      index.layers[layer] = nextEntry;
-    }
-    await writeIndex(env, index);
-  }
-
-  const textPack = normalizeTextPack(payload?.textPack);
-  const baseFingerprint = normalizeSha256Hex(payload?.baseFingerprint);
-  if (textPack && baseFingerprint) {
-    await writeTextPack(env, {
-      v: 1,
-      kind: 'write-text-pack',
-      publicId,
-      locale: layerKey,
-      baseFingerprint,
-      textPack,
-    });
-  }
-
-  const metaPack = normalizeMetaPack(payload?.metaPack);
-  if (metaPack) {
-    await writeMetaPack(env, {
-      v: 1,
-      kind: 'write-meta-pack',
-      publicId,
-      locale: layerKey,
-      metaPack,
-    });
-  }
+  await deleteL10nOverlay({
+    env,
+    publicId,
+    layer,
+    layerKey,
+    baseFingerprint: asTrimmedString(payload?.baseFingerprint),
+    textPack: normalizeTextPack(payload?.textPack),
+    metaPack: normalizeMetaPack(payload?.metaPack),
+  });
 
   return json({ publicId, layer, layerKey, deleted: true });
 }

@@ -2,8 +2,18 @@ import type { AiGrantPolicy, AiProfile, AiProvider } from '@clickeen/ck-policy';
 import type { AIGrant } from './types';
 import { HttpError, asNumber, asString, isRecord } from './http';
 
+const AI_GRANT_ISSUER_SET = new Set<AIGrant['iss']>([
+  'paris',
+  'roma',
+  'bob',
+  'sanfrancisco',
+]);
 const AI_PROVIDER_SET = new Set<AiProvider>(['deepseek', 'openai', 'anthropic', 'groq', 'amazon']);
 const AI_PROFILE_SET = new Set<AiProfile>(['free_low', 'paid_standard', 'paid_premium', 'curated_premium']);
+
+function isAiGrantIssuer(value: string): value is AIGrant['iss'] {
+  return AI_GRANT_ISSUER_SET.has(value as AIGrant['iss']);
+}
 
 function isAiProvider(value: string): value is AiProvider {
   return AI_PROVIDER_SET.has(value as AiProvider);
@@ -64,7 +74,16 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
   const mode = asString(payload.mode);
   const sub = isRecord(payload.sub) ? payload.sub : null;
 
-  if (v !== 1 || iss !== 'paris' || exp === null || !caps || !budgets || !sub || (mode !== 'editor' && mode !== 'ops')) {
+  if (
+    v !== 1 ||
+    !iss ||
+    !isAiGrantIssuer(iss) ||
+    exp === null ||
+    !caps ||
+    !budgets ||
+    !sub ||
+    (mode !== 'editor' && mode !== 'ops')
+  ) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant missing required fields' });
   }
   if (jtiRaw !== undefined && !jti) {

@@ -8,16 +8,17 @@
 - `GET /healthz`
 - Queue consumers for agent jobs.
 - HTTP endpoints for AI outcomes.
-- `POST /v1/l10n/account/ops/generate` (internal auth; account-mode locale ops generation for Roma aftermath)
+- `POST /v1/l10n/account/ops/generate` (internal auth; account-mode locale ops generation for Tokyo-worker explicit instance sync)
 
 ## Dependencies
-- Roma (account-mode l10n aftermath caller)
+- Tokyo-worker (account-mode explicit instance-sync caller)
 - Tokyo (widget localization allowlists)
 - Cloudflare KV/R2/Queues (state, logs, scheduling)
 
 ## Deployment
 - Cloudflare Workers (edge).
 - Uses KV + R2 + Queues.
+- Cloudflare Workers observability is the first boring production sink for San Francisco runtime errors and operator logs.
 
 Health contract:
 - `GET /healthz` -> `{ "ok": true, "service": "sanfrancisco", "env": "<stage>", "ts": <unix_ms> }`
@@ -25,6 +26,7 @@ Health contract:
 ## Copilot execution (shipped)
 - Endpoint: `POST /v1/execute`.
 - Requires a Clickeen-signed grant; enforces `agent:*` caps and `ai` policy capsule.
+- Grant verification accepts the active internal Clickeen issuers (`paris`, `roma`, `bob`, `sanfrancisco`) so account-mode and MiniBob/public flows share one verifier contract.
 - Agent routing uses the registry canonical IDs (aliases accepted).
 - Budget enforcement is centralized in `callChatCompletion` (`maxTokens`, `timeoutMs`, `maxRequests`, and `maxCostUsd` when present).
 - Provider execution retries transient upstream failures once, then falls back across eligible model candidates (and across providers when the grant does not pin `selectedProvider`).
@@ -48,6 +50,7 @@ Health contract:
   - `paid_premium`: `gpt-4o` default, with higher-capability choices constrained by policy + agent support.
   - `curated_premium`: OpenAI curated set (`gpt-5.2` default).
 - Budget tracking persists to `SF_KV` per grant (requests + cost) with TTL aligned to grant expiry.
+- Contract coverage now explicitly guards grant verification, budget enforcement, provider routing, and concurrency ceilings before further AI-plane sophistication lands.
 
 ## Entrypoint posture
 - `sanfrancisco/src/index.ts` is now a thin route shell.
@@ -66,9 +69,9 @@ Health contract:
 - MiniBob remains one journey: edit a draft, click Publish, create an account, then continue in Roma. Draft context such as a captured website can travel with the claimed instance.
 
 ## Account-mode l10n flow (active)
-- Triggered by Roma account save/publish/locale-settings aftermath.
-- Loads widget allowlist from Tokyo (`/widgets/{widgetType}/localization.json`).
-- Translates only `changedPaths`, removes `removedPaths`, and returns set-only locale ops to Roma.
+- Triggered by explicit Tokyo-worker instance sync after Roma create/locale-management/publish flows request reconciliation.
+- Tokyo owns saved-config l10n identity/staleness; San Francisco is generation-only.
+- Returns set-only locale ops to Tokyo-worker.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext safety validation enforces placeholder parity, HTML tag parity, and anchor integrity (text-bearing link + href parity); failed richtext parity falls back to segment translation.
 - l10n translation calls go through the shared policy router via `callChatCompletion` (same budget enforcement + provider allowlist).
@@ -85,7 +88,7 @@ Health contract:
 
 ## Rules
 - Reject invalid allowlist paths.
-- Active account-mode l10n returns set-only locale ops to Roma; San Francisco does not own Tokyo overlay writes.
+- Active account-mode l10n returns set-only locale ops to Tokyo-worker; San Francisco does not own Tokyo overlay writes.
 - Agent writes must not touch layer=user; overrides remain in layer=user and are merged at publish time.
 
 ## Links

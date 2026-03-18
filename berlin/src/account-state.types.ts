@@ -35,25 +35,8 @@ export type BerlinIdentityPayload = {
   providerSubject: string | null;
 };
 
-export type BerlinWorkspaceConnectionPayload = {
-  provider: string;
-  accountId: string;
-  status: 'seed_available';
-  linkedIdentityId: string;
-};
-
-export type BerlinProviderCapabilityStatePayload = {
-  provider: string;
-  capabilityKey: 'identity.login';
-  status: 'granted';
-  source: 'linked_identity';
-  linkedIdentityId: string;
-};
-
 export type BerlinConnectorSummaryPayload = {
   linkedIdentities: BerlinIdentityPayload[];
-  workspaceConnections: BerlinWorkspaceConnectionPayload[];
-  capabilityStates: BerlinProviderCapabilityStatePayload[];
   traits: {
     linkedProviders: string[];
   };

@@ -147,9 +147,9 @@ This taxonomy is encoded in `public_id` across two tables:
 
 One per widget type. Used for:
 
-- dev sandbox editing in DevStudio/Bob
+- local platform baseline verification
 - canonical “baseline” config to copy/clone from
-- local dev convenience baseline; DevStudio’s **Update default config** keeps `wgt_main_*` and `spec.json` defaults in sync when you choose to do so (no automatic mirroring)
+- local dev convenience baseline; internal tooling may keep `wgt_main_*` and `spec.json` defaults in sync when you choose to do so (no automatic mirroring)
 
 **Naming**
 
@@ -259,5 +259,5 @@ Michael seeds one deterministic platform account:
 Today this seeded platform account owns:
 
 - `curated_widget_instances` (baseline + curated starter designs)
-- DevStudio internal authoring flows
+- local platform verification/state used by internal tooling
 - the current cloud-dev product/runtime account context after PRD 60

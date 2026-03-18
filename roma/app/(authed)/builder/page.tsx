@@ -1,4 +1,5 @@
 import { BuilderDomain } from '../../../components/builder-domain';
+import { RomaDomainErrorBoundary } from '../../../components/roma-domain-error-boundary';
 import { RomaShell, RomaShellDefaultActions } from '../../../components/roma-shell';
 
 export default function BuilderLandingPage() {
@@ -9,7 +10,9 @@ export default function BuilderLandingPage() {
       canvasClassName="rd-canvas rd-canvas--builder"
       headerRight={<RomaShellDefaultActions />}
     >
-      <BuilderDomain />
+      <RomaDomainErrorBoundary domainLabel="Builder" resetKey="builder">
+        <BuilderDomain />
+      </RomaDomainErrorBoundary>
     </RomaShell>
   );
 }

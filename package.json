@@ -22,7 +22,8 @@
     "build:l10n": "node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs",
     "build": "pnpm build:i18n && pnpm build:l10n && turbo build",
     "lint": "turbo lint",
-    "test": "turbo test",
+    "test": "pnpm test:contracts && turbo test",
+    "test:contracts": "vitest run --config vitest.contracts.config.ts",
     "typecheck": "turbo typecheck",
     "tokyo:fonts:sync:local": "node scripts/tokyo-fonts-sync.mjs --local",
     "tokyo:fonts:sync:remote": "node scripts/tokyo-fonts-sync.mjs --remote",
@@ -59,7 +60,8 @@
     "glob": "^10.3.10",
     "prettier": "^3.3.2",
     "turbo": "^2.0.6",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "pg": "^8.16.3"

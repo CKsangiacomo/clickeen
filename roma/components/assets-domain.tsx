@@ -225,10 +225,10 @@ export function AssetsDomain() {
       return;
     }
     setLoading(true);
-    setError(null);
+      setError(null);
     try {
       const [assetsResponse, usageResponse] = await Promise.all([
-        accountApi.fetchRaw(`/api/account/assets?limit=500`, {
+        accountApi.fetchRaw(`/api/account/assets`, {
           method: 'GET',
         }),
         accountApi.fetchRaw(`/api/account/usage`, {

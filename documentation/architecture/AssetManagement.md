@@ -1,6 +1,6 @@
 # Clickeen Asset Management Contract (Canonical)
 
-This file is the single source of truth for account-owned assets across Bob, Roma, Paris, Tokyo-worker, and Venice.
+This file is the single source of truth for account-owned assets across Bob, Roma, Tokyo-worker, and Venice.
 
 For platform context see [Overview.md](./Overview.md), [CONTEXT.md](./CONTEXT.md), and [Tenets.md](./Tenets.md).
 
@@ -91,9 +91,8 @@ Rules:
 | Surface | Owns |
 |---|---|
 | Bob | Upload trigger + editor ref assignment |
-| Roma | Asset inventory UX (list/upload/bulk-upload/delete, limits visibility) |
-| Paris | Ref validation in instance writes |
-| Tokyo-worker | Asset storage/read/delete/integrity |
+| Roma | Asset inventory UX (list/upload/bulk-upload/delete, limits visibility) + current-account command validation |
+| Tokyo-worker | Asset storage/read/delete/integrity + runtime asset ref materialization/validation |
 | Venice | Static serving of referenced bytes |
 
 ---

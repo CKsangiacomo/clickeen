@@ -269,7 +269,6 @@ export async function handleMeIdentities(request: Request, env: Env): Promise<Re
     identities: identities.value,
     connectors: summarizeConnectorState({
       identities: identities.value,
-      activeAccountId: resolved.state.defaultAccount?.accountId ?? null,
     }),
   });
 }

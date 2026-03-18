@@ -82,6 +82,9 @@ export async function resolveSigningContext(env: Env): Promise<SigningContext> {
   const scope = globalThis as Record<string, unknown>;
   const cached = scope[SIGNING_CONTEXT_KEY];
   if (cached) return cached as SigningContext;
+  // Berlin runs on Cloudflare Workers, so module/global state is isolate-local and
+  // single-threaded for the lifetime of that isolate. We intentionally cache the
+  // imported signing material here instead of building a second coordination layer.
 
   const privatePem = normalizePem(env.BERLIN_ACCESS_PRIVATE_KEY_PEM || '');
   const publicPem = normalizePem(env.BERLIN_ACCESS_PUBLIC_KEY_PEM || '');
@@ -133,7 +136,11 @@ async function resolveRefreshHmacKey(env: Env): Promise<CryptoKey> {
 
 export async function deriveNextRti(env: Env, args: { sid: string; ver: number; rti: string }): Promise<string> {
   const key = await resolveRefreshHmacKey(env);
-  const payload = `${args.sid}.${args.ver}.${args.rti}.${Date.now().toString(36)}`;
+  // Derive the next RTI deterministically from the currently presented token state.
+  // This keeps the refresh grace window convergent under concurrent refresh attempts:
+  // two valid refreshes racing on the same prior RTI compute the same next RTI instead
+  // of minting divergent session state that immediately invalidates one caller.
+  const payload = `${args.sid}.${args.ver}.${args.rti}`;
   const digest = await crypto.subtle.sign('HMAC', key, enc.encode(payload));
   return toBase64Url(new Uint8Array(digest));
 }

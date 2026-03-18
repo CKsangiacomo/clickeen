@@ -157,7 +157,7 @@ async function resolveLocalAssetsById(accountId, assetIds) {
     return { assetsById: new Map(), missingAssetIds: [] };
   }
   const response = requestLoopbackJson(
-    `${String(DEFAULT_TOKYO_WORKER_BASE).replace(/\/+$/, '')}/assets/account/${encodeURIComponent(accountId)}/resolve`,
+    `${String(DEFAULT_TOKYO_WORKER_BASE).replace(/\/+$/, '')}/__internal/assets/account/${encodeURIComponent(accountId)}/resolve`,
     {
       method: 'POST',
       headers: (() => {
@@ -196,9 +196,9 @@ async function resolveLocalAssetsById(accountId, assetIds) {
 }
 
 async function hasSavedSnapshot(row) {
-  const url = `${String(DEFAULT_TOKYO_WORKER_BASE).replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(
+  const url = `${String(DEFAULT_TOKYO_WORKER_BASE).replace(/\/+$/, '')}/__internal/renders/instances/${encodeURIComponent(
     row.publicId,
-  )}/saved.json?accountId=${encodeURIComponent(row.accountId)}`;
+  )}/saved.json`;
   const res = requestLoopback(url, {
     method: 'GET',
     headers: createInternalHeaders(row.accountId),

@@ -5,7 +5,7 @@ import { materializeRuntimeConfigForPreview } from '../lib/session/runtimeConfig
 
 export function Workspace() {
   const session = useWidgetSession();
-  const { compiled, instanceData, previewData, preview, setPreview, meta } = session;
+  const { compiled, instanceData, previewData, preview, setPreview, meta, resolvePreviewAssets } = session;
   const locale = session.locale.activeLocale;
   const device = preview.device;
   const theme = preview.theme;
@@ -36,6 +36,7 @@ export function Workspace() {
           config: runtimeData,
           accountId: meta?.ownerAccountId ?? meta?.accountId,
           assetApiBase: meta?.assetApiBase,
+          resolveAssets: resolvePreviewAssets,
         });
         if (cancelled) return;
         setMaterializedRuntimeData(next);
@@ -51,7 +52,7 @@ export function Workspace() {
     return () => {
       cancelled = true;
     };
-  }, [runtimeData, meta?.accountId, meta?.ownerAccountId, meta?.assetApiBase]);
+  }, [runtimeData, meta?.accountId, meta?.ownerAccountId, meta?.assetApiBase, resolvePreviewAssets]);
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';

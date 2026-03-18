@@ -107,7 +107,7 @@ tokyo/widgets/{widgetname}/
 ├── widget.css             ← All styling
 ├── widget.client.js       ← Runtime behavior
 ├── agent.md               ← AI editing contract
-├── limits.json            ← Entitlements caps/flags for Paris validation
+├── limits.json            ← Entitlements caps/flags consumed by shared policy enforcement
 ├── localization.json      ← Locale-layer allowlist (translatable paths)
 ├── layers/*.allowlist.json← Per-layer allowlists (user/geo/industry/etc.)
 └── pages/*.json           ← Prague marketing pages (overview/features/etc.)
@@ -147,16 +147,17 @@ tokyo/widgets/{widgetname}/
 
 ## Tenet 2: Orchestrators Are Dumb Pipes
 
-Bob, Paris, Venice, and Michael are **orchestrators**. They move data between systems.
+Bob, Roma, Tokyo-worker, and Venice are **orchestrators**. They move data between systems.
 
 ### What Orchestrators Do
 
 | System | Role |
 |--------|------|
 | **Bob** | Loads widget definition from Tokyo, renders ToolDrawer, stores edits in memory |
-| **Paris** | HTTP gateway to Michael (database) |
-| **Venice** | Fetches instance + widget files, combines, returns HTML |
-| **Michael** | Stores instanceData as JSON blob |
+| **Roma** | Resolves current account context and forwards product commands to owner-correct services |
+| **Tokyo-worker** | Materializes saved/live/localization/public artifacts from owner truth |
+| **Venice** | Reads published pointers + immutable runtime bytes and returns public embeds |
+| **Michael** | Stores account/registry state; it does not own widget semantics |
 
 ### What Orchestrators Never Do
 
@@ -174,14 +175,14 @@ Bob, Paris, Venice, and Michael are **orchestrators**. They move data between sy
     ┌─────────┼─────────┐
     │         │         │
     ▼         ▼         ▼
-  Bob      Venice    Paris
+  Bob      Venice     Roma
     │         │         │
     │    (dumb pipes)   │
     │         │         │
     └─────────┼─────────┘
               │
               ▼
-         Michael (Storage)
+     Tokyo-worker / Michael
 ```
 
 ---
@@ -368,7 +369,7 @@ If no → the change is correct
 |--------|------------------|
 | Bob renders ToolDrawer from `spec.json` | Bob compiles the widget definition into UI; it doesn’t invent widget semantics. |
 | Venice fetches `widget.html` and serves it | Venice passes through widget assets; it doesn’t mutate widget meaning. |
-| Paris reads/writes instances as JSON | Paris stores and returns `instanceData` verbatim; widget semantics live in the widget package. |
+| Roma opens/saves account instances through Tokyo-backed routes | Roma orchestrates the product command, but widget semantics still live in the widget package. |
 
 ---
 

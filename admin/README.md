@@ -10,7 +10,6 @@ DevStudio is Clickeen's local internal toolbench.
 
 It exists for:
 - widget curation and verification
-- Bob-hosted internal authoring flows
 - Dieter previews and internal fixtures
 - deploy/runtime verification from the owner machine
 - other narrowly scoped internal tools that do not belong in Roma
@@ -25,9 +24,8 @@ It is not:
 ## Current tool surface
 
 Shipped tools today include:
-- `/#/tools/dev-widget-workspace`
-- `/#/tools/sponsored-account-onboarding`
-- `/#/tools/customer-recovery`
+- `/#/tools/bob-ui-native`
+- `/#/tools/entitlements`
 - Dieter/foundations pages generated from source
 - other internal dev/verification pages under `src/html/tools/`
 
@@ -38,45 +36,17 @@ The old `account-operator` surface is intentionally removed.
 DevStudio local runs as an internal toolbench on the owner machine.
 
 Rules:
-- local tool routes live only under `/api/devstudio/*`
-- local `GET /api/devstudio/context` returns a minimal seeded platform context:
-  - `accountId`
-  - `scope: 'platform'`
-  - `mode: 'local-tool'`
 - local DevStudio does not require Roma-style login semantics by default
-- local DevStudio authority must not leak onto product routes
-
-Internal transport used by local tool routes:
-- `CK_INTERNAL_SERVICE_JWT`
-- `TOKYO_DEV_JWT`
-- `x-ck-internal-service: devstudio.local`
-
-Current local company-plane routes:
-- `POST /api/devstudio/control/sponsored-accounts`
-- `POST /api/devstudio/control/customer-email-recovery`
-- `POST /api/devstudio/control/account-member-removal`
-- `POST /api/devstudio/control/revoke-user-sessions`
-- `POST /api/devstudio/control/account-publish-containment`
-- `POST /api/devstudio/control/support-open-target`
-- `POST /api/devstudio/control/support-update-instance`
-
-These are for local DevStudio tool routes only.
-
-Current support-intervention slice:
-- open a targeted customer-owned widget in Bob from `customer-recovery`
-- save base-config changes back through the explicit support path
-- local only
+- local DevStudio must not grow hidden company-plane authority or fake product routes
 
 ## Runtime layout
 
-The DevStudio workspace/runtime split is now explicit:
-- [dev-widget-workspace.html](/Users/piero_macpro/code/VS/clickeen/admin/src/html/tools/dev-widget-workspace.html) is the thin page shell
-- [main.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/main.js) mounts the workspace and wires UI/controller state
-- [api.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/api.js) owns `/api/devstudio/*` transport and instance/l10n reads-writes
-- [bob-host.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/bob-host.js) owns Bob boot/handoff and compiled-widget fetch
-- [state.js](/Users/piero_macpro/code/VS/clickeen/admin/src/tools/dev-widget-workspace/state.js) owns widget/publicId/local-instance helpers
-- [devstudio.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite/devstudio.ts) owns the DevStudio Vite middleware/proxy routes
-- [vite.config.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite.config.ts) is the Vite shell plus route registration
+The local widget-authoring workspace at `/#/tools/dev-widget-workspace` is removed.
+DevStudio remains the internal toolbench for internal pages and supporting local tooling.
+
+Current runtime layout:
+- [devstudio.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite/devstudio.ts) owns the remaining DevStudio Vite route fallback
+- [vite.config.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite.config.ts) is the Vite shell plus plugin registration
 
 ## Development
 
@@ -107,5 +77,5 @@ When changing DevStudio:
 1. keep it a local internal toolbench
 2. do not add Roma-style product IA
 3. do not invent new account/admin concepts in DevStudio
-4. keep local-only authority confined to `/api/devstudio/*`
+4. do not reintroduce removed local widget-authoring or company-plane action lanes
 5. if a tool needs company-plane authority, that belongs in the separate internal control plane, not in a fake product account shell

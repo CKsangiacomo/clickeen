@@ -3,7 +3,6 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import { can } from '@clickeen/ck-policy';
 import { applyLocalizationOps, computeL10nFingerprint, type AllowlistEntry } from '../l10n/instance';
-import { resolveAftermathSaveMessage } from './sessionLocalization';
 import { resolvePolicySubject } from './sessionPolicy';
 import type { SessionState } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
@@ -141,28 +140,15 @@ export function useSessionSaving(args: {
         json?.config && typeof json.config === 'object' && !Array.isArray(json.config)
           ? structuredClone(json.config)
           : structuredClone(current.baseInstanceData);
-      const aftermathMessage = resolveAftermathSaveMessage(json?.aftermath);
-      const nextLocale =
-        aftermathMessage && subject === 'account' && textChanged
-          ? {
-              ...current.locale,
-              sync: {
-                stage: 'failed' as const,
-                detail: aftermathMessage,
-                lastUpdatedAt: current.locale.sync.lastUpdatedAt,
-                lastError: aftermathMessage,
-              },
-            }
-          : current.locale;
       const nextState: SessionState = {
         ...current,
         isSaving: false,
         isDirty: false,
-        error: aftermathMessage ? { source: 'save', message: aftermathMessage, committed: true } : null,
+        error: null,
         upsell: null,
         savedBaseInstanceData: structuredClone(nextBase),
         baseInstanceData: structuredClone(nextBase),
-        locale: nextLocale,
+        locale: current.locale,
         instanceData:
           current.locale.activeLocale !== current.locale.baseLocale
             ? applyLocalizationOps(applyLocalizationOps(nextBase, current.locale.baseOps), current.locale.userOps)
@@ -171,12 +157,7 @@ export function useSessionSaving(args: {
       args.stateRef.current = nextState;
       args.setState(nextState);
 
-      if (
-        !aftermathMessage &&
-        subject === 'account' &&
-        textChanged &&
-        !current.locale.dirty
-      ) {
+      if (subject === 'account' && textChanged && !current.locale.dirty) {
         window.setTimeout(() => {
           void args.monitorLocaleTranslationsAfterSave('Translations are updating.');
         }, 0);

@@ -106,13 +106,13 @@ Auth:
 - `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
 
 ### `POST /v1/l10n/account/ops/generate`
-Purpose: generate account-mode locale ops for Roma save/publish/locale aftermath.
+Purpose: generate account-mode locale ops for Tokyo-worker explicit instance-sync flows.
 
 Auth:
 - `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
 
 Contract:
-- Roma must send the already-minted account `policyProfile`.
+- Tokyo-worker must send the already-minted account `policyProfile`.
 - San Francisco must derive the `l10n.instance.v1` AI profile/provider policy from that truth instead of hardcoding a generic paid path.
 - San Francisco may reduce that provider set only by env reality: providers not configured in the current environment are removed from the allowed set.
 

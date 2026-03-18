@@ -1,15 +1,18 @@
 # System: Tokyo Worker — Assets + Tokyo Mirror Jobs (PRD 54)
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
-Last updated: 2026-03-09 (PRD 61 Tokyo-authoring cutover)
+Last updated: 2026-03-18 (PRD 73 public payload + request-boundary closure)
 
-Tokyo-worker has two responsibilities:
+Tokyo-worker has five responsibilities:
 
 1. **Assets** (Roma-owned): upload/read/delete account assets in Tokyo/R2 + manifest metadata.
-2. **Instance mirror** (PRD 54): write/delete the Tokyo files that Venice serves publicly (config/text/meta packs + live pointers).
-3. **Saved authoring snapshot** (PRD 61 cutover): store the latest saved user-instance config in Tokyo so product reads can treat Tokyo as the saved revision base.
+2. **Saved authoring snapshot** (PRD 61 cutover): store the latest saved user-instance config in Tokyo so product reads can treat Tokyo as the saved revision base.
+3. **Canonical l10n identity**: compute/store the current base snapshot + fingerprint on every saved-config write.
+4. **Explicit instance sync** (PRD 54): reconcile locale overlays, text/meta packs, runtime config packs, and live pointers when Roma widget/localization routes ask Tokyo-worker to do that work.
+5. **Public instance payload assembly**: build the public MiniBob boot payload from Tokyo live truth so Venice stays a thin surface.
 
-Tokyo-worker does not “decide what is live”. Roma/Bob decide; Tokyo-worker mirrors bytes from canonical saved/artifact truth.
+Roma Widgets decides whether an instance should become live. Tokyo-worker owns the execution that reconciles bytes and advances live pointers when Roma invokes explicit sync.
+Cloudflare Workers observability is the first boring production sink for Tokyo-worker request logs and failures, and internal/account-scoped routes do not inherit public wildcard CORS.
 
 ---
 
@@ -30,7 +33,7 @@ Tokyo-worker does not “decide what is live”. Roma/Bob decide; Tokyo-worker m
 Current auth rule:
 
 - Product asset control routes execute from Roma through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. Tokyo-worker does not re-read membership/tier/account status on those paths.
-- Product render/l10n authoring control routes execute from Roma through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. Tokyo-worker does not re-read membership/tier/account status on those paths.
+- Product render/l10n authoring control routes execute from Roma through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. The explicit instance-sync route also receives the caller's Berlin bearer so Tokyo-worker can read account locale policy/settings, but authz still comes from the capsule and Tokyo-worker does not rediscover membership/role from Berlin.
 - Shared-secret `CK_INTERNAL_SERVICE_JWT` is not part of the asset lane.
 - Local internal tool routes may use `TOKYO_DEV_JWT` only when they also send an explicit allowed `x-ck-internal-service`.
 - There is no generic trusted-token bypass on account routes.
@@ -55,7 +58,7 @@ Storage usage truth:
 - `USAGE_KV` is a warm mirror for downstream account usage reads; it is not the source of truth for write authorization or storage-limit enforcement.
 - If the `USAGE_KV` mirror is unavailable, product storage enforcement still uses manifest-backed truth and must not silently allow over-limit writes.
 
-### Public reads (R2 backed)
+### Public reads
 
 Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies):
 
@@ -63,6 +66,7 @@ Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies
 - `GET /l10n/**`
 - `GET /assets/**`
 - `GET /fonts/**`
+- `GET /renders/instances/:publicId/live/public-instance.json`
 
 ### Saved authoring snapshot (private Roma product-control lane)
 
@@ -70,6 +74,11 @@ Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies
 - `PUT /__internal/renders/instances/:publicId/saved.json`
 - `PATCH /__internal/renders/instances/:publicId/saved.json`
 - `DELETE /__internal/renders/instances/:publicId/saved.json`
+- `POST /__internal/renders/instances/:publicId/sync`
+- `GET /__internal/l10n/instances/:publicId/snapshot`
+- `GET /__internal/l10n/instances/:publicId/status`
+- `POST /__internal/l10n/instances/:publicId/user/:locale`
+- `DELETE /__internal/l10n/instances/:publicId/user/:locale`
 
 Current runtime contract:
 
@@ -78,11 +87,16 @@ Current runtime contract:
 - It stores the latest saved **user-instance** config in Tokyo under:
   - pointer: `renders/instances/<publicId>/saved/r.json`
   - pack: `renders/instances/<publicId>/saved/config/<configFp>.json`
-- Local `dev-up` may also use this surface once, explicitly, to repair missing saved authoring snapshots for historical curated/main rows before DevStudio/Bob open them. Editor reads never backfill on demand.
+- Local `dev-up` may also use this surface once, explicitly, to repair missing saved authoring snapshots for historical curated/main rows before Roma/Bob reads need them. Editor reads never backfill on demand.
 - The saved pointer also carries editor-facing metadata needed on the normal open path (`widgetType`, `displayName`, `source`, `accountId`, `updatedAt`).
 - Bob/Roma product-path save writes this snapshot synchronously before returning success.
+- On that same saved-config write, Tokyo-worker also computes the current localization base snapshot/fingerprint from `tokyo/widgets/{widgetType}/localization.json` and stamps that onto the saved pointer.
+- Bob/Roma product-path save does not inline l10n/live-surface convergence; explicit Tokyo-worker sync does that separately when Roma widget/localization routes request it.
 - Bob/Roma product-path account reads use this Tokyo saved snapshot as the active open/save truth.
-- Localization overlay authoring/readback is part of the Tokyo/Tokyo-worker l10n plane; explicit localization rehydrate now reads canonical Tokyo state.
+- Localization overlay authoring/readback is part of the Tokyo/Tokyo-worker l10n plane; explicit localization rehydrate/status now execute on Tokyo-worker and read canonical Tokyo state there.
+- `layer=user` writes/deletes also execute on Tokyo-worker; Roma only forwards the request/auth boundary.
+- Public MiniBob payload assembly also executes on Tokyo-worker from live Tokyo truth; Venice proxies that payload instead of reconstructing it locally.
+- The Tokyo account-localization implementation is now split by Tokyo-owned responsibilities (`state`, `user-layer`, `mirror`, `utils`) behind this same domain surface.
 
 ---
 
@@ -112,9 +126,8 @@ Safety gate (PRD 54):
   - when `seoGeo=true`, every locale in that same ready set also has a live meta pointer.
 
 Rule:
-- Tokyo-worker validates the consumer-ready set it was given.
-- Tokyo-worker does not interpret plan allowances, account entitlements, or which locales "should" exist.
-- Roma/runtime policy decides the desired locale set; Tokyo-worker guarantees the referenced bytes exist and are cheap to serve.
+- Roma decides when explicit sync should run and whether the instance should be live.
+- Tokyo-worker reads the saved config plus current Berlin locale truth, derives the desired ready set for that sync, and guarantees the referenced bytes exist and are cheap to serve.
 
 ---
 
@@ -122,7 +135,7 @@ Rule:
 
 Queue binding:
 
-- Roma/Tokyo-worker publish mirror jobs onto `instance-render-snapshot-{env}` via `RENDER_SNAPSHOT_QUEUE`.
+- Tokyo-worker publishes mirror jobs onto `instance-render-snapshot-{env}` via `RENDER_SNAPSHOT_QUEUE`.
 
 Job kinds (v1):
 
@@ -135,7 +148,7 @@ Job kinds (v1):
 Non-negotiable:
 
 - Mirror jobs are **DB-free**. Tokyo-worker must not read Supabase to “discover state”.
-- For l10n, Tokyo-worker writes public packs/live pointers from Roma-owned aftermath plus canonical Tokyo overlay state.
+- For l10n, Tokyo-worker writes public packs/live pointers from its own explicit instance-sync execution plus canonical Tokyo overlay state.
 
 Source of truth:
 

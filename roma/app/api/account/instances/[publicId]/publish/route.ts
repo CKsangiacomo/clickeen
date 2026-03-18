@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import { loadTokyoPreferredAccountInstance } from '@roma/lib/account-instance-direct';
-import { runAccountSaveAftermath } from '@roma/lib/account-save-aftermath';
+import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import {
   countPublishedAccountInstances,
@@ -163,13 +163,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    await runAccountSaveAftermath({
+    await runAccountInstanceSync({
       accessToken: current.value.accessToken,
       accountId,
       publicId,
-      policyProfile: current.value.authzPayload.profile,
       accountCapsule: current.value.authzToken,
-      previousConfig: currentInstance.value.config,
+      live: true,
     });
   } catch (error) {
     await updateAccountInstanceStatusRow({

@@ -32,7 +32,7 @@ The Settings panel is widget-defined behavior controls; it must not contain embe
 
 ### Builder chrome ownership (current)
 
-- Host surfaces (Roma/DevStudio) own widget-level navigation and host-only orchestration actions.
+- Host surfaces own widget-level navigation and host-only orchestration actions. In active product/account mode, that host is Roma.
 - Roma Builder embeds Bob via iframe and keeps only the standard Roma domain header above it (no ad-hoc middle toolbars).
 - Bob TopDrawer shows current-instance context and the copy-code affordance, but does not own instance metadata actions such as rename or publish/unpublish.
 - Translation status is shown in Bob’s Localization panel header (not in host page headers).
@@ -66,10 +66,10 @@ Bob compiles the spec into a deterministic contract:
 
 ### Host bootstrap contract (current repo behavior)
 
-Host surfaces (Roma/DevStudio/Prague MiniBob) fetch:
+Host surfaces (Roma/Prague MiniBob) fetch:
 
 - `compiled` (via Bob compile API)
-- `instanceData` (via host-owned routes; account mode uses Roma/DevStudio same-origin routes, MiniBob uses the Venice-backed public instance payload through Bob’s public helper route)
+- `instanceData` (via host-owned routes; account mode uses Roma same-origin routes, MiniBob uses the Venice-served, Tokyo-assembled public instance payload through Bob’s public helper route)
 - `localization`
 - `policy`
 
@@ -110,7 +110,7 @@ Together they:
 - Keeps request idempotency state per `requestId` so repeated host sends do not apply duplicate open operations.
 - Treats host asset endpoints as part of the hosted-editor contract when present; preview runtime may materialize logical media through the host’s asset resolve route instead of assuming authoring config already contains runtime URLs.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
-- Local DevStudio/Bob are tool-trusted only for explicit internal tool flows: there is **no local browser-login shortcut** and hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma/DevStudio account routes. Bob must not treat a trusted local token as sufficient authority on account product paths. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
+- Local Bob is tool-trusted only for explicit internal tool flows: there is **no local browser-login shortcut** and hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma account routes. Bob must not treat a trusted local token as sufficient authority on account product paths. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
 - Bob must not auto-upgrade a trusted local end-user token into Michael service-role access inside shared helpers or normal product routes.
 
 ### URL bootstrap (deterministic, no auto-pick)
@@ -126,37 +126,17 @@ Hosted behavior is generic:
 - Bob does not directly call customer `/api/account/*` routes in that mode
 - all account reads/writes/l10n-status/copilot actions must go through the parent host bridge
 
-### Hybrid dev (DevStudio in cloud, Bob local)
+### Hybrid dev (Roma in cloud, Bob local)
 
-DevStudio’s widget sandbox tool supports overriding the embedded Bob origin with a query param:
-
-- `?bob=http://localhost:3000` (example)
-
-This allows a fast loop where DevStudio runs on the local toolbench while Bob runs locally.
-The write plane does **not** move to any separate DevStudio runtime in this setup; writes still go through the attached local Bob/Roma/Tokyo stack and its selected Supabase target.
-
-### Runtime status (local authoring clarity)
-
-- `GET /api/dev/runtime` returns Bob runtime hints for the DevStudio tool (`envStage`, `supabaseTarget`).
-- DevStudio uses this to show whether the attached local Bob toolchain is pointed at `local` or `remote` Supabase.
-
-Source:
-- `admin/src/tools/dev-widget-workspace/main.js`
-- `admin/src/tools/dev-widget-workspace/api.js`
-- `admin/src/tools/dev-widget-workspace/bob-host.js`
+The old DevStudio local widget-authoring workspace is removed.
+Bob’s active account-mode host surface is Roma.
 
 ### Instance write surfaces (current)
 
 - Roma user flows can create/duplicate/delete account user instances through Roma same-origin routes plus canonical account instance routes.
 - In hosted account mode (`boot=message`, `subject=account`), Bob does not own account transport. It emits explicit editor read/write intents back to the parent host, and the host executes the named account/tool routes on Bob's behalf.
 - Roma hosts customer account sessions through Roma same-origin current-account routes (`/api/account/...`).
-- DevStudio Local discovers platform-owned instances through the local DevStudio route family (`/api/devstudio/instances*`), boots Bob through explicit `/api/devstudio/instance*` host routes, and delegates Bob account mutations back to the DevStudio host instead of calling Bob customer account routes directly.
-- In that hosted DevStudio flow, Bob also reloads localization snapshots and l10n status through the same host command bridge instead of branching around DevStudio after save.
-- In DevStudio, Bob/Dieter asset controls also use the local DevStudio route family:
-  - list/delete assets: `/api/devstudio/assets/:accountId`
-  - upload assets: `/api/devstudio/assets/upload`
-    This keeps DevStudio on the trusted local boundary instead of reusing product `/api/account/assets*` routes.
-- MiniBob keeps a Bob-owned public helper route (`/api/instance/:publicId?subject=minibob`) for Prague host boot, but Bob still opens the editor only from the host `ck:open-editor` envelope. Bob no longer exposes account product routes.
+- MiniBob keeps a Bob-owned public helper route (`/api/instance/:publicId?subject=minibob`) for Prague host boot, but Bob still opens the editor only from the host `ck:open-editor` envelope. Bob no longer exposes account product routes, and the public payload it reads is Tokyo-assembled and Venice-served.
 
 ### Dev subjects and policy (durable)
 
@@ -181,7 +161,7 @@ Core base-config lifecycle per open session:
 
 1. One core instance load plus one explicit localization rehydrate, both performed by the host in account message boot before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
-3. One save/write command on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes its same-origin `PUT /api/account/instance/:publicId?subject=account`; Bob does not call account product routes directly. These routes commit the saved revision through Tokyo first, return success immediately, and schedule direct Roma-owned aftermath after the response. Base persistence remains immediate; aftermath stays async, is observed via l10n status routes, and does not roll back the saved revision.
+3. One save/write command on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes its same-origin `PUT /api/account/instance/:publicId?subject=account`; Bob does not call account product routes directly. These routes commit the saved revision through Tokyo and return success immediately. Any localization refresh is observed later via l10n status routes and does not block or redefine save semantics.
 
 Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
@@ -204,7 +184,7 @@ tokyo/widgets/{widget}/
   pages/*.json
 ```
 
-Bob consumes `spec.json` + runtime assets and loads `limits.json` for entitlements; the other contract files are used by Paris/Prague.
+Bob consumes `spec.json` + runtime assets and loads `limits.json` for entitlements; the other contract files are consumed by Tokyo-worker, Venice, and Prague on their owner-correct surfaces.
 
 ### Preview contract (Bob ↔ runtime)
 
@@ -340,7 +320,6 @@ ToolDrawer has a single, global vertical rhythm. **Only clusters and groups defi
 Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file pick through the host-owned asset surface:
 
 - Product path: Roma asset routes (`/api/account/assets*`) -> Tokyo-worker
-- DevStudio local: trusted local `/api/devstudio/assets*` endpoints injected into Bob via query params
 - The host forwards the Berlin session bearer, Roma `x-ck-authz-capsule`, and account/public/widget trace headers.
 - Tokyo-worker executes from the capsule truth, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
 
@@ -565,7 +544,7 @@ Important boundary:
 
 Bob editor routes are explicit and non-`/api/paris`:
 
-- `bob/app/api/instance/[publicId]/route.ts` (minibob read shortcut; `subject=minibob`, backed by Venice public instance payload)
+- `bob/app/api/instance/[publicId]/route.ts` (minibob read shortcut; `subject=minibob`, backed by Venice-served, Tokyo-assembled public instance payload)
 - `bob/app/api/ai/widget-copilot/route.ts`
 - `bob/app/api/ai/widget-copilot/handler.ts`
 - `bob/app/api/ai/outcome/route.ts`
@@ -597,7 +576,7 @@ It:
 - Clears stale Next chunks (`bob/.next`)
 - Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)
 - Uses **local Supabase by default**; to point the local stack at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`
-- Passes Bob the resolved Supabase target explicitly, so DevStudio and Bob locale reads use the same local-vs-remote Michael target as the rest of the product stack.
+- Passes Bob the resolved Supabase target explicitly, so local Bob reads use the same local-vs-remote Michael target as the rest of the product stack.
 - Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).
 - Verifies Roma account capsules against Berlin JWKS; there is no separate account-capsule secret in local dev.
 

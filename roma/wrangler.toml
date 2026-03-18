@@ -3,6 +3,10 @@ pages_build_output_dir = ".vercel/output/static"
 compatibility_date = "2025-12-28"
 compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 [vars]
 NEXT_PUBLIC_TOKYO_URL = "https://tokyo.dev.clickeen.com"
 BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
@@ -21,3 +25,7 @@ service = "tokyo-assets-dev"
 binding = "USAGE_KV"
 id = "eca50e55fa2a4f94a01fb81aeebf8377"
 preview_id = "b31d28eb386c4c068821e32d41fbc92a"
+
+[env.local.observability]
+enabled = true
+head_sampling_rate = 1

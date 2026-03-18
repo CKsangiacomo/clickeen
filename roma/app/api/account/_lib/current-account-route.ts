@@ -2,12 +2,19 @@ import type { MemberRole, RomaAccountAuthzCapsulePayload } from '@clickeen/ck-po
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeRequestRoleFromCapsule } from '@roma/lib/account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '@roma/lib/auth/session';
+import { getOptionalCloudflareRequestContext } from '@roma/lib/cloudflare-request-context';
+import {
+  enforceRomaRateLimitForAccountRequest,
+  finalizeRomaObservedResponse,
+  type RomaRateLimitKv,
+} from '@roma/lib/request-ops';
 
 type CurrentAccountRouteContext = {
   accessToken: string;
   authzToken: string;
   authzPayload: RomaAccountAuthzCapsulePayload;
   setCookies?: SessionCookieSpec[];
+  usageKv?: RomaRateLimitKv | null;
 };
 
 export function withNoStore(response: NextResponse): NextResponse {
@@ -22,7 +29,8 @@ export function withSession(
   response: NextResponse,
   setCookies?: SessionCookieSpec[],
 ): NextResponse {
-  return withNoStore(applySessionCookies(response, request, setCookies));
+  const next = withNoStore(applySessionCookies(response, request, setCookies));
+  return finalizeRomaObservedResponse(request, next);
 }
 
 export async function resolveCurrentAccountRouteContext(args: {
@@ -31,7 +39,7 @@ export async function resolveCurrentAccountRouteContext(args: {
 }): Promise<{ ok: true; value: CurrentAccountRouteContext } | { ok: false; response: NextResponse }> {
   const session = await resolveSessionBearer(args.request);
   if (!session.ok) {
-    return { ok: false, response: withNoStore(session.response) };
+    return { ok: false, response: withSession(args.request, session.response) };
   }
 
   const authz = await authorizeRequestRoleFromCapsule({
@@ -49,6 +57,22 @@ export async function resolveCurrentAccountRouteContext(args: {
     };
   }
 
+  const usageKv =
+    getOptionalCloudflareRequestContext<{ env?: { USAGE_KV?: RomaRateLimitKv } }>()?.env?.USAGE_KV ??
+    null;
+
+  const limited = await enforceRomaRateLimitForAccountRequest(
+    args.request,
+    authz.payload.accountId,
+    usageKv,
+  );
+  if (limited) {
+    return {
+      ok: false,
+      response: withSession(args.request, limited, session.setCookies),
+    };
+  }
+
   return {
     ok: true,
     value: {
@@ -56,6 +80,7 @@ export async function resolveCurrentAccountRouteContext(args: {
       authzToken: authz.token,
       authzPayload: authz.payload,
       setCookies: session.setCookies,
+      usageKv,
     },
   };
 }

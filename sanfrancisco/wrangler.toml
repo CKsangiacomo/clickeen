@@ -2,6 +2,10 @@ name = "sanfrancisco-dev"
 main = "src/index.ts"
 compatibility_date = "2025-12-28"
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 [vars]
 ENVIRONMENT = "dev"
 
@@ -31,6 +35,10 @@ queue = "paris-sf-commands-cloud-dev"
 [env.local]
 name = "sanfrancisco-local"
 vars = { ENVIRONMENT = "local" }
+
+[env.local.observability]
+enabled = true
+head_sampling_rate = 1
 
 [[env.local.kv_namespaces]]
 binding = "SF_KV"

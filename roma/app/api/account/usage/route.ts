@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const storageBytesUsed = await readAccountBudgetUsed(
       current.value.authzPayload.accountId,
       'budget.uploads.bytes',
+      current.value.usageKv,
     );
     return withSession(
       request,

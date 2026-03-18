@@ -62,7 +62,7 @@ Rule: Type and Layout are the only top-level variant axes.
 
 Editor flow (Bob):
 ```
-Tokyo spec.json -> Bob compiles controls -> Bob loads instance (Paris)
+Tokyo spec.json -> Bob compiles controls -> Bob loads instance (Roma same-origin route backed by Tokyo)
 -> Bob holds working state -> Bob postMessage -> widget.client.js applyState
 ```
 
@@ -125,6 +125,6 @@ Runtime must not depend on `window.CK_ASSET_ORIGIN`; Venice owns proxying these 
 | --- | --- | --- |
 | Tokyo | Store widget definitions | Store instance data |
 | Bob | Compile spec, render ToolDrawer, hold working state | Apply widget-specific defaults at runtime |
-| Paris | CRUD instance JSON | Transform widget state |
-| Venice | Serve published pointer/config/text/widget bytes for public embeds | Modify widget state or fetch Paris at request time |
-| Michael | Persist instance JSON | Per-widget validation |
+| Roma | Open/save account editor state through same-origin routes backed by Tokyo | Transform widget state |
+| Venice | Serve published pointer/config/text/widget bytes for public embeds | Modify widget state or fetch product databases at request time |
+| Michael | Persist account/registry metadata and relational state | Per-widget validation or public embed assembly |

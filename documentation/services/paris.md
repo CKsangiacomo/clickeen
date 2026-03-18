@@ -22,11 +22,11 @@ Non-negotiable:
 
 ## What moved out
 
-- Account locale settings aftermath is Roma-owned.
-- Account localization snapshot reads are Roma-owned.
-- Account l10n status reads are Roma-owned.
-- Account `layer=user` writes are Roma-owned.
-- Account save/publish aftermath runs from Roma against Berlin/Tokyo/San Francisco/Tokyo-worker.
+- Account locale settings sync is Roma-owned.
+- Account localization snapshot reads are Roma-routed but Tokyo-worker-executed.
+- Account l10n status reads are Roma-routed but Tokyo-worker-executed.
+- Account `layer=user` writes are Roma-routed but Tokyo-worker-executed.
+- Account widget localization/live sync now runs outside Paris as Roma-triggered, Tokyo-worker-executed reconciliation against Berlin/Tokyo/San Francisco.
 - Canonical overlay/artifact state lives in Tokyo/Tokyo-worker, not Paris.
 - Public instance payload reads now live in Venice on top of Tokyo live/config artifacts.
 

@@ -1,5 +1,6 @@
 import { isUserSettingsTimezoneSupported, normalizeUserSettingsCountry } from '@clickeen/ck-contracts';
 import { internalError } from './helpers';
+import { readSupabaseAdminListAll } from './supabase-list';
 import { readSupabaseAdminJson, supabaseAdminFetch, supabaseAdminErrorResponse } from './supabase-admin';
 import { type Env, type SupabaseUserResponse } from './types';
 
@@ -46,6 +47,7 @@ const DEFAULT_ACCOUNT_L10N_POLICY = {
   ip: { enabled: false, countryToLocale: {} },
   switcher: { enabled: true },
 } as const;
+const USER_MEMBERSHIP_PAGE_SIZE = 200;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -238,18 +240,16 @@ async function listMembershipsForUser(env: Env, userId: string): Promise<
   const params = new URLSearchParams({
     select: 'account_id,role,created_at',
     user_id: `eq.${userId}`,
-    order: 'created_at.asc',
-    limit: '1000',
+    order: 'created_at.asc,account_id.asc',
   });
-  const response = await supabaseAdminFetch(env, `/rest/v1/account_members?${params.toString()}`, { method: 'GET' });
-  const payload = await readSupabaseAdminJson<MembershipRow[] | Record<string, unknown>>(response);
-  if (!response.ok) {
-    return {
-      ok: false,
-      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
-    };
-  }
-  return { ok: true, memberships: Array.isArray(payload) ? payload : [] };
+  const memberships = await readSupabaseAdminListAll<MembershipRow>({
+    env,
+    pathname: '/rest/v1/account_members',
+    params,
+    pageSize: USER_MEMBERSHIP_PAGE_SIZE,
+  });
+  if (!memberships.ok) return memberships;
+  return { ok: true, memberships: memberships.value };
 }
 
 function pickPrimaryAccountId(rows: MembershipRow[]): string | null {

@@ -3,6 +3,7 @@ import type { ComponentType } from 'react';
 import type { RomaDomainKey } from '../../lib/domains';
 import { RomaShell, RomaShellDefaultActions } from '../../components/roma-shell';
 import { RomaAccountNoticeModal } from '../../components/roma-account-notice-modal';
+import { RomaDomainErrorBoundary } from '../../components/roma-domain-error-boundary';
 
 type DomainPageShellProps = {
   activeDomain: RomaDomainKey;
@@ -16,7 +17,9 @@ export function DomainPageShell({ activeDomain, title, fallback, Component }: Do
     <RomaShell activeDomain={activeDomain} title={title} headerRight={<RomaShellDefaultActions />}>
       <RomaAccountNoticeModal />
       <Suspense fallback={<section className="roma-module-surface">{fallback}</section>}>
-        <Component />
+        <RomaDomainErrorBoundary domainLabel={title} resetKey={activeDomain}>
+          <Component />
+        </RomaDomainErrorBoundary>
       </Suspense>
     </RomaShell>
   );

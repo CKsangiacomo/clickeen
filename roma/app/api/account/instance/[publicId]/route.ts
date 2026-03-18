@@ -7,7 +7,6 @@ import {
   saveAccountInstanceDirect,
   validatePersistableConfig,
 } from '@roma/lib/account-instance-direct';
-import { runAccountSaveAftermath } from '@roma/lib/account-save-aftermath';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { deleteAccountInstanceRow, getAccountInstanceCoreRow } from '@roma/lib/michael';
 import {
@@ -153,27 +152,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  if (result.value.changed) {
-    try {
-      await runAccountSaveAftermath({
-        accessToken: current.value.accessToken,
-        accountId,
-        publicId,
-        policyProfile: current.value.authzPayload.profile,
-        accountCapsule: current.value.authzToken,
-        previousConfig: result.value.previousConfig,
-      });
-    } catch (error) {
-      console.error('[roma account instance current route] save aftermath failed', {
-        publicId,
-        detail: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
   return withSession(
     request,
-    NextResponse.json({ config: result.value.config, aftermath: null }),
+    NextResponse.json({ config: result.value.config }),
     current.value.setCookies,
   );
 }

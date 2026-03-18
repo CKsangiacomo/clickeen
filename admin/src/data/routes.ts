@@ -63,9 +63,6 @@ const getFolderTitle = (folder: string): string => {
 const staticShowcasePaths = Object.keys(staticShowcaseModules).sort();
 const slugTitleOverrides: Record<string, string> = {
   'bob-ui-native': 'Bob UI Native',
-  'dev-widget-workspace': 'Admin Instances',
-  'sponsored-account-onboarding': 'Sponsored Account Onboarding',
-  'customer-recovery': 'Customer Recovery',
 };
 
 const staticShowcasePages: ShowcasePage[] = staticShowcasePaths.map((path) => {

@@ -80,10 +80,9 @@ Local dev:
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
 - Local asset management does not go through `tokyo/dev-server.mjs`.
   - Roma product uploads use `/api/account/assets/upload`.
-  - DevStudio local uses `/api/devstudio/assets/*` and talks directly to `tokyo-worker` with explicit internal-tool auth.
 - `tokyo/dev-server.mjs` still supports local widget uploads:
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
-- `scripts/dev-up.sh` starts the local Tokyo dev server + Tokyo-worker as part of the local DevStudio operating lane, builds Dieter + i18n, seeds required local platform state through the canonical seed scripts, and verifies the DevStudio/Bob localhost lane before completion.
+- `scripts/dev-up.sh` starts the local Tokyo dev server + Tokyo-worker as part of the local DevStudio operating lane, builds Dieter + i18n, seeds required local platform state through the canonical seed scripts, and verifies the local stack before completion.
 - Explicit rerun commands:
   - `pnpm dev:seed:platform`
   - `pnpm dev:verify:platform`

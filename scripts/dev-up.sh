@@ -517,7 +517,7 @@ echo "  Tokyo local stub: http://localhost:4000/healthz"
 echo "  Berlin:    http://localhost:3005/internal/healthz"
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
-echo "  Admin Instances: http://localhost:5173/#/tools/dev-widget-workspace?bob=http://localhost:3000&tokyo=http://localhost:4000 (local Supabase)"
+echo "  DevStudio tools: http://localhost:5173/#/tools/bob-ui-native and http://localhost:5173/#/tools/entitlements"
 echo "[dev-up] Local boot will seed + verify local platform state before completion."
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
 print_stack_port_status

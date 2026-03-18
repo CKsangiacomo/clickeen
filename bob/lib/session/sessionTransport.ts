@@ -33,6 +33,8 @@ export type ExecuteAccountCommand = (
   commandArgs: ExecuteAccountCommandArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
+export type ResolvePreviewAssets = (assetIds: string[]) => Promise<unknown>;
+
 export function useSessionTransport(args: {
   stateRef: MutableRefObject<SessionState>;
 }) {
@@ -292,6 +294,71 @@ export function useSessionTransport(args: {
     [dispatchHostAccountCommand, fetchApi, isHostedAccountMode],
   );
 
+  const resolvePreviewAssets: ResolvePreviewAssets = useCallback(
+    async (assetIds: string[]) => {
+      const normalizedAssetIds = Array.from(
+        new Set(
+          assetIds
+            .map((entry) => String(entry || '').trim())
+            .filter((entry): entry is string => Boolean(entry)),
+        ),
+      );
+      if (!normalizedAssetIds.length) {
+        return { assets: [], missingAssetIds: [] };
+      }
+
+      const policy = args.stateRef.current.policy;
+      const subject = policy ? resolvePolicySubject(policy) : null;
+      const publicId = String(args.stateRef.current.meta?.publicId || '').trim();
+
+      if (subject && isHostedAccountMode(subject)) {
+        if (!publicId) {
+          throw new Error('coreui.errors.assets.previewMaterialization.missingContext');
+        }
+        const result = await dispatchHostAccountCommand({
+          command: 'resolve-assets',
+          publicId,
+          body: { assetIds: normalizedAssetIds },
+        });
+        if (!result.ok) {
+          throw new Error(result.message || `coreui.errors.assets.previewMaterialization.http_${result.status}`);
+        }
+        return result.payload ?? null;
+      }
+
+      const assetApiBase = String(args.stateRef.current.meta?.assetApiBase || '').trim().replace(/\/+$/, '');
+      if (!assetApiBase) {
+        throw new Error('coreui.errors.assets.previewMaterialization.missingContext');
+      }
+
+      const response = await fetchApi(`${assetApiBase}/resolve`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({ assetIds: normalizedAssetIds }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | {
+            assets?: unknown;
+            missingAssetIds?: unknown;
+            error?: { detail?: unknown; reasonKey?: unknown };
+          }
+        | null;
+
+      if (!response.ok) {
+        const detail =
+          typeof payload?.error?.detail === 'string'
+            ? payload.error.detail
+            : typeof payload?.error?.reasonKey === 'string'
+              ? payload.error.reasonKey
+              : `coreui.errors.assets.previewMaterialization.http_${response.status}`;
+        throw new Error(detail);
+      }
+
+      return payload;
+    },
+    [args.stateRef, dispatchHostAccountCommand, fetchApi, isHostedAccountMode],
+  );
+
   return {
     bootModeRef,
     hostOriginRef,
@@ -299,5 +366,6 @@ export function useSessionTransport(args: {
     openRequestStatusRef,
     fetchApi,
     executeAccountCommand,
+    resolvePreviewAssets,
   };
 }

@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "dependencies": {
+    "@clickeen/l10n": "workspace:*"
+  },
   "exports": {
     ".": {
       "types": "./src/index.d.ts",

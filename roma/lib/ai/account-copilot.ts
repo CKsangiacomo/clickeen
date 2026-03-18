@@ -8,7 +8,7 @@ import {
   type BudgetKey,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
-import { readAccountBudgetUsed } from '../account-budget-usage';
+import { readAccountBudgetUsed, type RomaUsageKv } from '../account-budget-usage';
 import { resolveSanfranciscoBaseUrl } from '../env/sanfrancisco';
 
 type AIGrant = {
@@ -100,6 +100,7 @@ export async function issueAccountCopilotGrant(args: {
   requestedModel?: string;
   trace?: { sessionId?: string; instancePublicId?: string };
   budgets?: { maxTokens?: number; timeoutMs?: number; maxRequests?: number };
+  usageKv?: RomaUsageKv | null;
 }): Promise<
   | { ok: true; grant: string; exp: number; agentId: string }
   | { ok: false; status: number; reasonKey: string; detail?: string }
@@ -133,7 +134,11 @@ export async function issueAccountCopilotGrant(args: {
       if (isBudgetEntitlementKey(policy, key)) {
         let used: number;
         try {
-          used = await readAccountBudgetUsed(args.authz.accountId, key);
+          used = await readAccountBudgetUsed(
+            args.authz.accountId,
+            key,
+            args.usageKv,
+          );
         } catch (error) {
           return {
             ok: false,

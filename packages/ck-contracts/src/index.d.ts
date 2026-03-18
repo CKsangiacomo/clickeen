@@ -25,6 +25,45 @@ export type ResolvedAssetMaterialization = {
   url: string;
 };
 
+export type AccountL10nPolicy = {
+  v: 1;
+  baseLocale: string;
+  ip: {
+    enabled: boolean;
+    countryToLocale: Record<string, string>;
+  };
+  switcher: {
+    enabled: boolean;
+    locales?: string[];
+  };
+};
+
+export type LocalizationOp = { op: 'set'; path: string; value: string };
+
+export type AccountOverlayEntry = {
+  locale: string;
+  source: string | null;
+  baseFingerprint: string | null;
+  baseUpdatedAt: string | null;
+  hasUserOps: boolean;
+  baseOps: LocalizationOp[];
+  userOps: LocalizationOp[];
+};
+
+export type AccountLocalizationSnapshot = {
+  baseLocale: string;
+  accountLocales: string[];
+  readyLocales: string[];
+  invalidAccountLocales: string | null;
+  localeOverlays: AccountOverlayEntry[];
+  policy: AccountL10nPolicy;
+};
+
+export type AccountL10nValidationIssue = {
+  path: string;
+  message: string;
+};
+
 export declare const CK_ERROR_CODE: Readonly<{
   VALIDATION: 'VALIDATION';
   NOT_FOUND: 'NOT_FOUND';
@@ -54,6 +93,18 @@ export declare function parseCanonicalAssetRef(raw: unknown): AssetRef | null;
 export declare function isCanonicalAssetVersionRef(raw: unknown): boolean;
 export declare function isCanonicalAssetRef(raw: unknown): boolean;
 export declare function toCanonicalAssetVersionPath(versionKey: unknown): string | null;
+export declare function parseAccountLocaleListStrict(value: unknown): string[];
+export declare function parseAccountL10nPolicyStrict(raw: unknown): AccountL10nPolicy;
+export declare function normalizeLocalizationOps(raw: unknown): LocalizationOp[];
+export declare function validateAccountLocaleList(
+  value: unknown,
+  path?: string,
+  options?: { allowNull?: boolean },
+): AccountL10nValidationIssue[];
+export declare function validateAccountL10nPolicy(
+  raw: unknown,
+  path?: string,
+): AccountL10nValidationIssue[];
 export declare function collectConfigMediaAssetIds(config: unknown): string[];
 export declare function materializeConfigMedia(
   config: unknown,

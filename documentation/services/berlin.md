@@ -44,8 +44,6 @@ Responsibilities:
 - The signed account authz capsule carries stable account authz truth only; mutable locale settings and live `used` counters stay out of the signed capsule.
 - Normalize provider linkage into the minimal connector reuse summary Berlin exposes today:
   - `linkedIdentities`
-  - `workspaceConnections`
-  - `capabilityStates`
   - `traits.linkedProviders`
 - Resolve the active account only from persisted active-account preference or deterministic real membership truth; Berlin must fail explicitly if no real user-associated account can be opened and must never open a privileged fallback account.
 - Missing canonical profile or membership state at bootstrap is a producer bug. Berlin surfaces it as an internal contract failure instead of reconciling it during bootstrap.
@@ -55,6 +53,10 @@ Responsibilities:
 - Rotate refresh tokens via `/auth/refresh`.
 - Revoke sessions via `/auth/logout`.
 - Publish JWKS for verifier services (`/.well-known/jwks.json`).
+- Stamp every response with `x-request-id` and emit one structured request-completion log per request.
+- Cloudflare Workers observability is the first boring production sink for Berlin request logs and server-side failures.
+- Apply a first operational abuse floor on auth/session mutation routes (`/auth/login/password`, `/auth/login/provider/start`, `/auth/finish`, `/auth/refresh`, `/auth/logout`) using KV-backed per-IP rate limiting.
+- Page large account/member/invitation reads internally at the Supabase boundary so Berlin does not silently truncate multi-workspace users, larger teams, or long invitation lists behind fixed `500/1000` caps.
 
 Non-responsibilities:
 - No downstream product decisioning or widget business logic.
@@ -75,7 +77,7 @@ Public:
 - `POST /v1/me/email-change`
 - `POST /v1/me/contact-methods/:channel/start`
 - `POST /v1/me/contact-methods/:channel/verify`
-- `GET /v1/me/identities` (linked identities + normalized connector summary)
+- `GET /v1/me/identities` (linked identities + minimal provider reuse summary)
 - `GET /v1/accounts`
 - `POST /v1/accounts`
 - `GET /v1/accounts/:id`
@@ -108,12 +110,18 @@ Health contract:
 
 - Access token: Berlin-signed JWT (`RS256`), default TTL 15 minutes.
 - Refresh token: opaque HMAC-signed Berlin token carrying internal refresh state; default TTL 30 days.
+- Refresh rotation contract:
+  - the first valid `/auth/refresh` rotates the session RTI and returns the next refresh token
+  - one grace-window retry using the immediately previous refresh token is allowed so concurrent refresh attempts converge on the same next RTI instead of revoking a healthy session
+  - replay of an old refresh token after the grace window is treated as reuse and revokes the session
+  - `POST /auth/logout` with `scope=user` revokes every session for the current user; logout with a specific refresh token revokes only that session
 - Session cookies used by Roma/Bob:
   - `ck-access-token`
   - `ck-refresh-token`
 - Session state persistence:
   - `BERLIN_SESSION_KV` (authoritative state in cloud-dev/prod, local-bound in local env)
   - in-memory cache as runtime optimization
+  - signing/HMAC key imports are cached on `globalThis` under the Cloudflare Workers isolate model; Berlin relies on isolate-local single-threaded cache semantics here and does not target portable multi-runtime cache behavior
 - OAuth transaction state:
   - One-time opaque `state` IDs are persisted in `BERLIN_AUTH_TICKETS` (Durable Object) with consume-once semantics
   - PKCE verifier + flow metadata are never encoded in callback URLs
@@ -135,6 +143,7 @@ Required:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `BERLIN_AUTH_TICKETS` (Wrangler Durable Object binding)
 - `BERLIN_SESSION_KV` (Wrangler binding)
+  - also carries the first Berlin rate-limit buckets under a dedicated key prefix
 
 Recommended:
 - `BERLIN_ISSUER`
@@ -159,3 +168,26 @@ Berlin requires explicit signing key PEMs. Local `dev-up` materializes them into
 - Local URL: `http://localhost:3005`
 - Canonical startup: `bash scripts/dev-up.sh`
 - `dev-up` reuses the Berlin access signing keypair for account capsules. There is no separate capsule secret to distribute.
+
+## Operational floor
+
+- Berlin emits one structured JSON completion log per request with:
+  - `event`
+  - `service`
+  - `stage`
+  - `requestId`
+  - `method`
+  - `path`
+  - `status`
+  - `durationMs`
+- Berlin returns `x-request-id` on every response so Roma/internal callers can correlate failures to Berlin logs.
+- The current rate-limit floor is intentionally narrow and boring:
+  - key = per-IP bucket
+  - storage = `BERLIN_SESSION_KV` under a dedicated prefix
+  - protected routes = auth/session mutation routes only
+  - limited responses return `429 coreui.errors.rateLimit.exceeded` plus `retry-after` and `x-rate-limit-*` headers
+- Berlin session-plane contract coverage now explicitly guards:
+  - grace-window refresh convergence
+  - replay-after-grace revocation
+  - logout `scope=user` all-session revocation
+  - logout-by-refresh-token single-session revocation

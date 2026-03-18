@@ -1,29 +1,19 @@
-import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l10n';
-import localesJson from '@clickeen/l10n/locales.json';
+import {
+  parseAccountL10nPolicyStrict,
+  parseAccountLocaleListStrict,
+  type AccountL10nPolicy,
+  validateAccountL10nPolicy,
+  validateAccountLocaleList,
+} from '@clickeen/ck-contracts';
 import { resolvePolicy, type Policy } from '@clickeen/ck-policy';
 import type { BerlinAccountContext } from './account-state.types';
 import { json, validationError } from './helpers';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env } from './types';
 
-type AccountL10nPolicy = {
-  v: 1;
-  baseLocale: string;
-  ip: {
-    enabled: boolean;
-    countryToLocale: Record<string, string>;
-  };
-  switcher: {
-    enabled: boolean;
-    locales?: string[];
-  };
-};
-
 type LocaleMutationResult =
   | { ok: true; warnings: string[] }
   | { ok: false; response: Response };
-
-const SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(localesJson).map((entry) => entry.code));
 
 const DEFAULT_ACCOUNT_L10N_POLICY: AccountL10nPolicy = {
   v: 1,
@@ -40,151 +30,22 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function normalizeSupportedLocaleToken(raw: unknown): string | null {
-  const normalized = normalizeLocaleToken(raw);
-  if (!normalized) return null;
-  return SUPPORTED_LOCALES.has(normalized) ? normalized : null;
-}
-
-function normalizeLocaleList(
+function resolveLocaleList(
   value: unknown,
   path: string,
 ): { ok: true; locales: string[] } | { ok: false; issues: Array<{ path: string; message: string }> } {
+  const issues = validateAccountLocaleList(value, path, { allowNull: true });
+  if (issues.length) return { ok: false, issues };
   if (value == null) return { ok: true, locales: [] };
-  if (!Array.isArray(value)) {
-    return { ok: false, issues: [{ path, message: 'locales must be an array' }] };
-  }
-
-  const locales: string[] = [];
-  const issues: Array<{ path: string; message: string }> = [];
-  const seen = new Set<string>();
-
-  value.forEach((entry, index) => {
-    const normalized = normalizeSupportedLocaleToken(entry);
-    if (!normalized) {
-      issues.push({ path: `${path}[${index}]`, message: 'locale must be a supported locale token' });
-      return;
-    }
-    if (seen.has(normalized)) return;
-    seen.add(normalized);
-    locales.push(normalized);
-  });
-
-  return issues.length ? { ok: false, issues } : { ok: true, locales };
+  return { ok: true, locales: parseAccountLocaleListStrict(value) };
 }
 
 function resolveAccountL10nPolicy(raw: unknown): AccountL10nPolicy {
-  if (!isPlainRecord(raw) || raw.v !== 1) return DEFAULT_ACCOUNT_L10N_POLICY;
-
-  const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale) ?? DEFAULT_ACCOUNT_L10N_POLICY.baseLocale;
-  const ipRaw = isPlainRecord(raw.ip) ? raw.ip : null;
-  const ipEnabled = typeof ipRaw?.enabled === 'boolean' ? ipRaw.enabled : DEFAULT_ACCOUNT_L10N_POLICY.ip.enabled;
-  const countryToLocale: Record<string, string> = {};
-
-  const mapRaw = ipRaw && isPlainRecord(ipRaw.countryToLocale) ? ipRaw.countryToLocale : null;
-  if (mapRaw) {
-    for (const [countryRaw, localeRaw] of Object.entries(mapRaw)) {
-      const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
-      const locale = normalizeSupportedLocaleToken(localeRaw);
-      if (!/^[A-Z]{2}$/.test(country) || !locale) continue;
-      countryToLocale[country] = locale;
-    }
+  try {
+    return parseAccountL10nPolicyStrict(raw);
+  } catch {
+    return DEFAULT_ACCOUNT_L10N_POLICY;
   }
-
-  const switcherRaw = isPlainRecord(raw.switcher) ? raw.switcher : null;
-  const switcherEnabled =
-    typeof switcherRaw?.enabled === 'boolean'
-      ? switcherRaw.enabled
-      : DEFAULT_ACCOUNT_L10N_POLICY.switcher.enabled;
-  const switcherLocalesResult = switcherRaw ? normalizeLocaleList(switcherRaw.locales, 'policy.switcher.locales') : null;
-  const switcherLocales = switcherLocalesResult?.ok ? switcherLocalesResult.locales : [];
-
-  return {
-    v: 1,
-    baseLocale,
-    ip: { enabled: ipEnabled, countryToLocale },
-    switcher: {
-      enabled: switcherEnabled,
-      ...(switcherLocales.length ? { locales: switcherLocales } : {}),
-    },
-  };
-}
-
-function parseAccountL10nPolicy(
-  raw: unknown,
-): { ok: true; policy: AccountL10nPolicy } | { ok: false; issues: Array<{ path: string; message: string }> } {
-  if (!isPlainRecord(raw)) {
-    return { ok: false, issues: [{ path: 'policy', message: 'policy must be an object' }] };
-  }
-  if (raw.v !== 1) {
-    return { ok: false, issues: [{ path: 'policy.v', message: 'policy.v must be 1' }] };
-  }
-
-  const issues: Array<{ path: string; message: string }> = [];
-  const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale);
-  if (!baseLocale) {
-    issues.push({ path: 'policy.baseLocale', message: 'baseLocale must be a supported locale token' });
-  }
-
-  const ipRaw = isPlainRecord(raw.ip) ? raw.ip : null;
-  const ipEnabled = typeof ipRaw?.enabled === 'boolean' ? ipRaw.enabled : DEFAULT_ACCOUNT_L10N_POLICY.ip.enabled;
-  const countryToLocale: Record<string, string> = {};
-
-  if (ipRaw && Object.prototype.hasOwnProperty.call(ipRaw, 'countryToLocale')) {
-    if (!isPlainRecord(ipRaw.countryToLocale)) {
-      issues.push({ path: 'policy.ip.countryToLocale', message: 'countryToLocale must be an object' });
-    } else {
-      for (const [countryRaw, localeRaw] of Object.entries(ipRaw.countryToLocale)) {
-        const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
-        if (!/^[A-Z]{2}$/.test(country)) {
-          issues.push({
-            path: `policy.ip.countryToLocale.${countryRaw}`,
-            message: 'country key must be ISO-3166 alpha-2',
-          });
-          continue;
-        }
-        const locale = normalizeSupportedLocaleToken(localeRaw);
-        if (!locale) {
-          issues.push({
-            path: `policy.ip.countryToLocale.${country}`,
-            message: 'locale must be a supported locale token',
-          });
-          continue;
-        }
-        countryToLocale[country] = locale;
-      }
-    }
-  }
-
-  const switcherRaw = isPlainRecord(raw.switcher) ? raw.switcher : null;
-  const switcherEnabled =
-    typeof switcherRaw?.enabled === 'boolean'
-      ? switcherRaw.enabled
-      : DEFAULT_ACCOUNT_L10N_POLICY.switcher.enabled;
-  let switcherLocales: string[] = [];
-  if (switcherRaw && Object.prototype.hasOwnProperty.call(switcherRaw, 'locales')) {
-    const localesResult = normalizeLocaleList(switcherRaw.locales, 'policy.switcher.locales');
-    if (!localesResult.ok) {
-      issues.push(...localesResult.issues);
-    } else {
-      switcherLocales = localesResult.locales;
-    }
-  }
-
-  if (issues.length) return { ok: false, issues };
-
-  return {
-    ok: true,
-    policy: {
-      v: 1,
-      baseLocale: baseLocale!,
-      ip: { enabled: ipEnabled, countryToLocale },
-      switcher: {
-        enabled: switcherEnabled,
-        ...(switcherLocales.length ? { locales: switcherLocales } : {}),
-      },
-    },
-  };
 }
 
 function resolveLocaleEntitlementMax(policy: Policy): number | null {
@@ -236,9 +97,9 @@ function resolveActivePublishLocales(args: {
   accountLocales: unknown;
   baseLocale: string;
 }): string[] {
-  const normalized = normalizeLocaleList(args.accountLocales, 'l10n_locales');
+  const normalized = resolveLocaleList(args.accountLocales, 'l10n_locales');
   const additionalLocales = normalized.ok ? normalized.locales : [];
-  const baseLocale = normalizeSupportedLocaleToken(args.baseLocale) ?? 'en';
+  const baseLocale = args.baseLocale || 'en';
   const locales = Array.from(new Set([baseLocale, ...additionalLocales]));
   return locales;
 }
@@ -294,7 +155,7 @@ export async function handleAccountLocalesUpdate(args: {
     return validationError('coreui.errors.payload.invalid');
   }
 
-  const localesResult = normalizeLocaleList((payload as { locales?: unknown }).locales, 'locales');
+  const localesResult = resolveLocaleList((payload as { locales?: unknown }).locales, 'locales');
   if (!localesResult.ok) {
     return json(localesResult.issues, { status: 422 });
   }
@@ -307,15 +168,15 @@ export async function handleAccountLocalesUpdate(args: {
   if (Object.prototype.hasOwnProperty.call(payload, 'policy')) {
     const policyRaw = (payload as { policy?: unknown }).policy;
     if (policyRaw != null) {
-      const parsed = parseAccountL10nPolicy(policyRaw);
-      if (!parsed.ok) return json(parsed.issues, { status: 422 });
-      nextPolicyPersisted = parsed.policy;
+      const issues = validateAccountL10nPolicy(policyRaw, 'policy');
+      if (issues.length) return json(issues, { status: 422 });
+      nextPolicyPersisted = parseAccountL10nPolicyStrict(policyRaw);
     } else {
       nextPolicyPersisted = null;
     }
   }
 
-  const previousLocales = normalizeLocaleList(args.account.l10nLocales, 'l10n_locales');
+  const previousLocales = resolveLocaleList(args.account.l10nLocales, 'l10n_locales');
   if (!previousLocales.ok) {
     return json(
       {

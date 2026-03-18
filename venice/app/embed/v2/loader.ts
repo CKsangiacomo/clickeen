@@ -1,3 +1,5 @@
+import { EMBED_LOCALE_RUNTIME_SOURCE } from '../runtime-locale';
+
 function buildScript(): string {
   return `(() => {
   const scriptEl = document.currentScript;
@@ -67,48 +69,9 @@ function buildScript(): string {
 
 			  const PLACEHOLDER_SELECTOR = '[data-clickeen-id]';
 
-			  const normalizeLocaleToken = (raw) => {
-			    const value = typeof raw === 'string' ? raw.trim().toLowerCase().replace(/_/g, '-') : '';
-			    return value || '';
-			  };
+${EMBED_LOCALE_RUNTIME_SOURCE}
 
 			  const fixedLocale = normalizeLocaleToken(localeAttr);
-
-			  const parseGeoCountry = (response) => {
-			    const raw =
-			      response && response.headers
-			        ? response.headers.get('x-ck-geo-country') || response.headers.get('X-Ck-Geo-Country')
-			        : '';
-			    const normalized = String(raw || '').trim().toUpperCase();
-			    return /^[A-Z]{2}$/.test(normalized) ? normalized : 'ZZ';
-			  };
-
-			  const computeEffectiveLocale = (pointer, geoCountry, fixedLocaleOverride) => {
-			    const policy =
-			      pointer && typeof pointer === 'object' && pointer.localePolicy && typeof pointer.localePolicy === 'object'
-			        ? pointer.localePolicy
-			        : null;
-			    const baseLocale = normalizeLocaleToken(policy && policy.baseLocale) || 'en';
-			    const readyLocales = Array.isArray(policy && policy.readyLocales)
-			      ? Array.from(new Set(policy.readyLocales.map(normalizeLocaleToken).filter(Boolean)))
-			      : [baseLocale];
-			    const ipEnabled =
-			      policy && typeof policy === 'object' && policy.ip && typeof policy.ip === 'object' && policy.ip.enabled === true;
-			    const mapping =
-			      policy && typeof policy === 'object' && policy.ip && typeof policy.ip === 'object' && policy.ip.countryToLocale
-			        ? policy.ip.countryToLocale
-			        : null;
-
-			    let locale = baseLocale;
-			    const fixed = normalizeLocaleToken(fixedLocaleOverride);
-			    if (fixed && readyLocales.indexOf(fixed) >= 0) {
-			      locale = fixed;
-			    } else if (ipEnabled) {
-			      const mapped = mapping && typeof mapping[geoCountry] === 'string' ? normalizeLocaleToken(mapping[geoCountry]) : '';
-			      if (mapped && readyLocales.indexOf(mapped) >= 0) locale = mapped;
-			    }
-			    return locale;
-			  };
 
 			  let missingIdErrorEl = null;
 			  let missingIdErrorTimer = null;
@@ -427,7 +390,7 @@ function buildScript(): string {
       // Not entitled / not published with SEO meta.
       if (!pointer.seoGeo) return;
 
-      const effectiveLocale = computeEffectiveLocale(pointer, geoCountry, fixedLocaleOverride);
+      const effectiveLocale = computeEffectiveLocale(resolveLocaleRuntimePolicy(pointer), geoCountry, fixedLocaleOverride);
       const metaPointerRes = await fetch(
         embedUrlFor(opts, '/r/' + encodeURIComponent(targetPublicId), { meta: '1', locale: effectiveLocale }),
         { mode: 'cors', credentials: 'omit' },

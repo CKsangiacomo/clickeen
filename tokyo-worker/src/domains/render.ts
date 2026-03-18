@@ -1,4 +1,9 @@
 import {
+  buildL10nSnapshot,
+  computeBaseFingerprint,
+  type AllowlistEntry,
+} from '@clickeen/l10n';
+import {
   guessContentTypeFromExt,
   normalizeLocale,
   normalizeSha256Hex,
@@ -48,6 +53,9 @@ export type SavedRenderPointer = {
   meta?: Record<string, unknown> | null;
   configFp: string;
   updatedAt: string;
+  l10n?: {
+    baseFingerprint: string;
+  };
 };
 
 export type L10nLivePointer = {
@@ -164,6 +172,10 @@ function renderSavedConfigPackKey(publicId: string, configFp: string): string {
   return `renders/instances/${publicId}/saved/config/${configFp}.json`;
 }
 
+function l10nBaseSnapshotKey(publicId: string, baseFingerprint: string): string {
+  return `l10n/instances/${publicId}/bases/${baseFingerprint}.snapshot.json`;
+}
+
 function renderMetaLivePointerKey(publicId: string, locale: string): string {
   return `renders/instances/${publicId}/live/meta/${locale}.json`;
 }
@@ -206,7 +218,7 @@ async function deletePrefix(env: Env, prefix: string): Promise<void> {
   } while (cursor);
 }
 
-function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
+export function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const payload = raw as Record<string, unknown>;
   const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
@@ -270,7 +282,7 @@ function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
   };
 }
 
-function normalizeLiveRenderPointer(raw: unknown): LiveRenderPointer | null {
+export function normalizeLiveRenderPointer(raw: unknown): LiveRenderPointer | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const payload = raw as Record<string, unknown>;
   if (payload.v !== 1) return null;
@@ -338,6 +350,11 @@ function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | null {
       : payload.meta === null || payload.meta === undefined
         ? null
         : null;
+  const l10nRaw =
+    payload.l10n && typeof payload.l10n === 'object' && !Array.isArray(payload.l10n)
+      ? (payload.l10n as Record<string, unknown>)
+      : null;
+  const baseFingerprint = normalizeFingerprint(l10nRaw?.baseFingerprint);
   const configFp = normalizeFingerprint(payload.configFp) ?? '';
   const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
   if (!publicId || !accountId || !widgetType || !source || !configFp || !updatedAt) return null;
@@ -351,10 +368,85 @@ function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | null {
     meta,
     configFp,
     updatedAt,
+    ...(baseFingerprint ? { l10n: { baseFingerprint } } : {}),
   };
 }
 
-function normalizeTextPointer(raw: unknown): L10nLivePointer | null {
+function normalizeAllowlistEntries(raw: unknown): AllowlistEntry[] {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return [];
+  const paths = Array.isArray((raw as { paths?: unknown }).paths)
+    ? (raw as { paths: unknown[] }).paths
+    : [];
+  return paths.reduce<AllowlistEntry[]>((entries, entry) => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entries;
+    const path = typeof (entry as { path?: unknown }).path === 'string'
+      ? (entry as { path: string }).path.trim()
+      : '';
+    if (!path) return entries;
+    entries.push({
+      path,
+      type: (entry as { type?: unknown }).type === 'richtext' ? 'richtext' : 'string',
+    });
+    return entries;
+  }, []);
+}
+
+export function resolveTokyoPublicBaseUrl(env: Env): string | null {
+  const configured =
+    typeof env.TOKYO_PUBLIC_BASE_URL === 'string' ? env.TOKYO_PUBLIC_BASE_URL.trim() : '';
+  return configured ? configured.replace(/\/+$/, '') : null;
+}
+
+export async function loadWidgetLocalizationAllowlist(args: {
+  env: Env;
+  widgetType: string;
+}): Promise<AllowlistEntry[]> {
+  const baseUrl = resolveTokyoPublicBaseUrl(args.env);
+  if (!baseUrl) return [];
+
+  const response = await fetch(
+    `${baseUrl}/widgets/${encodeURIComponent(args.widgetType)}/localization.json`,
+    {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+      cache: 'no-store',
+    },
+  );
+
+  if (response.status === 404) {
+    return [];
+  }
+
+  const payload = (await response.json().catch(() => null)) as unknown;
+  if (!response.ok) {
+    throw new Error(`tokyo_widget_localization_http_${response.status}`);
+  }
+
+  return normalizeAllowlistEntries(payload);
+}
+
+async function writeSavedRenderL10nState(args: {
+  env: Env;
+  publicId: string;
+  widgetType: string;
+  config: Record<string, unknown>;
+}): Promise<{ baseFingerprint: string } | null> {
+  const allowlist = await loadWidgetLocalizationAllowlist({
+    env: args.env,
+    widgetType: args.widgetType,
+  });
+  const snapshot = buildL10nSnapshot(args.config, allowlist);
+  const baseFingerprint = await computeBaseFingerprint(snapshot);
+  await putJson(args.env, l10nBaseSnapshotKey(args.publicId, baseFingerprint), {
+    v: 1,
+    publicId: args.publicId,
+    baseFingerprint,
+    snapshot,
+  });
+  return { baseFingerprint };
+}
+
+export function normalizeTextPointer(raw: unknown): L10nLivePointer | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const payload = raw as Record<string, unknown>;
   if (payload.v !== 1) return null;
@@ -453,6 +545,12 @@ export async function writeSavedRenderConfig(args: {
       : (existing?.displayName ?? null);
   const source = args.source ?? existing?.source ?? 'account';
   const meta = args.meta !== undefined ? args.meta : (existing?.meta ?? null);
+  const l10n = await writeSavedRenderL10nState({
+    env: args.env,
+    publicId,
+    widgetType,
+    config: args.config,
+  });
 
   const pointer: SavedRenderPointer = {
     v: 1,
@@ -464,6 +562,7 @@ export async function writeSavedRenderConfig(args: {
     meta,
     configFp,
     updatedAt: new Date().toISOString(),
+    ...(l10n ? { l10n } : {}),
   };
   await putJson(args.env, renderSavedPointerKey(publicId), pointer);
   return pointer;

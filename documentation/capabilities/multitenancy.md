@@ -312,12 +312,12 @@ While we are building (before full auth/billing enforcement ships), we still nee
 - PRDs do **not** encode "free vs paid" in per-row copy; it is derived from the matrix deltas and current viewer profile.
 
 **Current runtime subjects:**
-- `account`: standard editor subject used by Roma and DevStudio.
+- `account`: standard editor subject used by Roma.
 - `minibob`: internal “demo” subject used by Prague MiniBob.
 
 **How the subject is set today (shipped in Bob):**
 - Bob accepts the subject via either:
-  - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'account'|'minibob', ... }` (used by Roma/DevStudio/Prague MiniBob)
+  - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'account'|'minibob', ... }` (used by Roma/Prague MiniBob)
 - Bob account mode does not URL-bootstrap.
 - The shipped Prague MiniBob path is also host-booted now; Bob does not self-discover MiniBob instance truth from URL parameters.
 

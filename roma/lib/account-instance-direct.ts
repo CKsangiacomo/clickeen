@@ -128,6 +128,7 @@ export function validatePersistableConfig(
 
 async function loadSavedInstanceFromTokyo(args: {
   tokyoBaseUrl: string;
+  tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountId: string;
   publicId: string;
@@ -137,12 +138,15 @@ async function loadSavedInstanceFromTokyo(args: {
   const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
   });
 
   const response = await fetchTokyoProductControl({
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
     method: 'GET',
     headers,
+    baseUrl: args.tokyoControlBaseUrl,
+    accessToken: args.tokyoAccessToken,
   });
 
   if (response.status === 404) return null;
@@ -186,6 +190,7 @@ async function loadSavedInstanceFromTokyo(args: {
 
 export async function writeSavedConfigToTokyo(args: {
   tokyoBaseUrl: string;
+  tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountId: string;
   publicId: string;
@@ -201,12 +206,15 @@ export async function writeSavedConfigToTokyo(args: {
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     contentType: 'application/json',
+    internalServiceName: args.internalServiceName,
   });
 
   const response = await fetchTokyoProductControl({
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
     method: 'PUT',
     headers,
+    baseUrl: args.tokyoControlBaseUrl,
+    accessToken: args.tokyoAccessToken,
     body: JSON.stringify({
       widgetType: args.widgetType,
       config: args.config,
@@ -224,6 +232,7 @@ export async function writeSavedConfigToTokyo(args: {
 
 export async function deleteSavedConfigFromTokyo(args: {
   tokyoBaseUrl: string;
+  tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountId: string;
   publicId: string;
@@ -233,12 +242,15 @@ export async function deleteSavedConfigFromTokyo(args: {
   const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
   });
 
   const response = await fetchTokyoProductControl({
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
     method: 'DELETE',
     headers,
+    baseUrl: args.tokyoControlBaseUrl,
+    accessToken: args.tokyoAccessToken,
   });
 
   if (!response.ok && response.status !== 404) {
@@ -251,6 +263,7 @@ export async function deleteSavedConfigFromTokyo(args: {
 
 export async function deleteLiveSurfaceFromTokyo(args: {
   tokyoBaseUrl: string;
+  tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountId: string;
   publicId: string;
@@ -260,12 +273,15 @@ export async function deleteLiveSurfaceFromTokyo(args: {
   const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
   });
 
   const response = await fetchTokyoProductControl({
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/live.json`,
     method: 'DELETE',
     headers,
+    baseUrl: args.tokyoControlBaseUrl,
+    accessToken: args.tokyoAccessToken,
   });
 
   if (!response.ok) {
@@ -278,6 +294,7 @@ export async function deleteLiveSurfaceFromTokyo(args: {
 
 export async function updateSavedPointerMetadataInTokyo(args: {
   tokyoBaseUrl: string;
+  tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountId: string;
   publicId: string;
@@ -291,12 +308,15 @@ export async function updateSavedPointerMetadataInTokyo(args: {
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     contentType: 'application/json',
+    internalServiceName: args.internalServiceName,
   });
 
   const response = await fetchTokyoProductControl({
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
     method: 'PATCH',
     headers,
+    baseUrl: args.tokyoControlBaseUrl,
+    accessToken: args.tokyoAccessToken,
     body: JSON.stringify({
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.source !== undefined ? { source: args.source } : {}),
@@ -316,6 +336,7 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
   accountId: string;
   publicId: string;
   tokyoBaseUrl: string;
+  tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
@@ -324,6 +345,7 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
   try {
     saved = await loadSavedInstanceFromTokyo({
       tokyoBaseUrl: args.tokyoBaseUrl,
+      tokyoControlBaseUrl: args.tokyoControlBaseUrl,
       tokyoAccessToken: args.tokyoAccessToken,
       accountId: args.accountId,
       publicId: args.publicId,
@@ -367,6 +389,7 @@ export async function saveAccountInstanceDirect(args: {
   publicId: string;
   config: Record<string, unknown>;
   tokyoBaseUrl: string;
+  tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
@@ -374,7 +397,6 @@ export async function saveAccountInstanceDirect(args: {
   DirectRouteResult<{
     config: Record<string, unknown>;
     changed: boolean;
-    previousConfig: Record<string, unknown>;
     instance: {
       widgetType: string;
       status: 'published' | 'unpublished';
@@ -387,6 +409,7 @@ export async function saveAccountInstanceDirect(args: {
     accountId: args.accountId,
     publicId: args.publicId,
     tokyoBaseUrl: args.tokyoBaseUrl,
+    tokyoControlBaseUrl: args.tokyoControlBaseUrl,
     tokyoAccessToken: args.tokyoAccessToken,
     accountCapsule: args.accountCapsule,
     internalServiceName: args.internalServiceName,
@@ -406,7 +429,6 @@ export async function saveAccountInstanceDirect(args: {
       value: {
         config: previousConfig,
         changed: false,
-        previousConfig,
         instance: {
           widgetType: current.value.row.widgetType,
           status: current.value.row.status,
@@ -420,6 +442,7 @@ export async function saveAccountInstanceDirect(args: {
   try {
     await writeSavedConfigToTokyo({
       tokyoBaseUrl: args.tokyoBaseUrl,
+      tokyoControlBaseUrl: args.tokyoControlBaseUrl,
       tokyoAccessToken: args.tokyoAccessToken,
       accountId: args.accountId,
       publicId: args.publicId,
@@ -445,7 +468,6 @@ export async function saveAccountInstanceDirect(args: {
     value: {
       config: args.config,
       changed: true,
-      previousConfig,
       instance: {
         widgetType: current.value.row.widgetType,
         status: current.value.row.status,

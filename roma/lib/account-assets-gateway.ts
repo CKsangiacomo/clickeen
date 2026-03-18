@@ -2,18 +2,17 @@ import type { MemberRole } from '@clickeen/ck-policy';
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeRequestAccountRoleFromCapsule, authorizeRequestRoleFromCapsule } from './account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from './auth/session';
+import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
+import {
+  enforceRomaRateLimitForAccountRequest,
+  finalizeRomaObservedResponse,
+  type RomaRateLimitKv,
+} from './request-ops';
 import {
   assertTokyoAssetControlBindingAvailable,
   buildTokyoAssetControlHeaders,
   fetchTokyoAssetControl,
 } from './tokyo-asset-control';
-
-export const ACCOUNT_ASSET_UPLOAD_CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, content-type, x-public-id, x-widget-type, x-filename, x-source, x-request-id',
-} as const;
 
 type AccountAssetGatewayContext = {
   accountId: string;
@@ -44,15 +43,13 @@ export function finalizeAccountAssetResponse(args: {
   request: NextRequest;
   response: NextResponse;
   setCookies?: SessionCookieSpec[];
-  extraHeaders?: Record<string, string>;
 }): NextResponse {
   const next = withNoStore(applySessionCookies(args.response, args.request, args.setCookies));
-  Object.entries(args.extraHeaders ?? {}).forEach(([key, value]) => next.headers.set(key, value));
-  return next;
+  return finalizeRomaObservedResponse(args.request, next);
 }
 
 export function accountAssetUploadOptionsResponse() {
-  return new NextResponse(null, { status: 204, headers: ACCOUNT_ASSET_UPLOAD_CORS_HEADERS });
+  return withNoStore(new NextResponse(null, { status: 204, headers: { allow: 'POST, OPTIONS' } }));
 }
 
 export function parseJsonOrNull(text: string): unknown | null {
@@ -69,21 +66,25 @@ function buildErrorResponse(
   setCookies: SessionCookieSpec[] | undefined,
   status: number,
   error: { kind: string; reasonKey: string; detail?: string },
-  extraHeaders?: Record<string, string>,
 ) {
   return finalizeAccountAssetResponse({
     request,
     response: NextResponse.json({ error }, { status }),
     setCookies,
-    extraHeaders,
   });
+}
+
+function resolveUsageKvFromRequestContext() {
+  return (
+    getOptionalCloudflareRequestContext<{ env?: { USAGE_KV?: RomaRateLimitKv } }>()?.env?.USAGE_KV ??
+    null
+  );
 }
 
 export async function resolveAccountAssetGatewayContext(args: {
   request: NextRequest;
   accountId: string;
   minRole: MemberRole;
-  extraHeaders?: Record<string, string>;
 }): Promise<{ ok: true; value: AccountAssetGatewayContext } | { ok: false; response: NextResponse }> {
   const session = await resolveSessionBearer(args.request);
   if (!session.ok) {
@@ -92,7 +93,6 @@ export async function resolveAccountAssetGatewayContext(args: {
       response: finalizeAccountAssetResponse({
         request: args.request,
         response: session.response,
-        extraHeaders: args.extraHeaders,
       }),
     };
   }
@@ -110,13 +110,27 @@ export async function resolveAccountAssetGatewayContext(args: {
         session.setCookies,
         authz.status,
         authz.error,
-        args.extraHeaders,
       ),
     };
   }
 
   try {
     assertTokyoAssetControlBindingAvailable();
+    const limited = await enforceRomaRateLimitForAccountRequest(
+      args.request,
+      args.accountId,
+      resolveUsageKvFromRequestContext(),
+    );
+    if (limited) {
+      return {
+        ok: false,
+        response: finalizeAccountAssetResponse({
+          request: args.request,
+          response: limited,
+          setCookies: session.setCookies,
+        }),
+      };
+    }
     return {
       ok: true,
       value: {
@@ -134,7 +148,6 @@ export async function resolveAccountAssetGatewayContext(args: {
         session.setCookies,
         500,
         { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail },
-        args.extraHeaders,
       ),
     };
   }
@@ -143,7 +156,6 @@ export async function resolveAccountAssetGatewayContext(args: {
 export async function resolveCurrentAccountAssetGatewayContext(args: {
   request: NextRequest;
   minRole: MemberRole;
-  extraHeaders?: Record<string, string>;
 }): Promise<{ ok: true; value: AccountAssetGatewayContext } | { ok: false; response: NextResponse }> {
   const session = await resolveSessionBearer(args.request);
   if (!session.ok) {
@@ -152,7 +164,6 @@ export async function resolveCurrentAccountAssetGatewayContext(args: {
       response: finalizeAccountAssetResponse({
         request: args.request,
         response: session.response,
-        extraHeaders: args.extraHeaders,
       }),
     };
   }
@@ -169,13 +180,27 @@ export async function resolveCurrentAccountAssetGatewayContext(args: {
         session.setCookies,
         authz.status,
         authz.error,
-        args.extraHeaders,
       ),
     };
   }
 
   try {
     assertTokyoAssetControlBindingAvailable();
+    const limited = await enforceRomaRateLimitForAccountRequest(
+      args.request,
+      authz.payload.accountId,
+      resolveUsageKvFromRequestContext(),
+    );
+    if (limited) {
+      return {
+        ok: false,
+        response: finalizeAccountAssetResponse({
+          request: args.request,
+          response: limited,
+          setCookies: session.setCookies,
+        }),
+      };
+    }
     return {
       ok: true,
       value: {
@@ -193,7 +218,6 @@ export async function resolveCurrentAccountAssetGatewayContext(args: {
         session.setCookies,
         500,
         { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail },
-        args.extraHeaders,
       ),
     };
   }
@@ -208,7 +232,6 @@ export async function proxyAccountAssetJson(args: {
   contentType?: string;
   extraHeaders?: HeadersInit;
   passthroughSearchParams?: URLSearchParams;
-  responseHeaders?: Record<string, string>;
 }): Promise<NextResponse> {
   let headers: Headers;
   try {
@@ -225,7 +248,6 @@ export async function proxyAccountAssetJson(args: {
       args.context.sessionSetCookies,
       500,
       { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail },
-      args.responseHeaders,
     );
   }
 
@@ -257,7 +279,6 @@ export async function proxyAccountAssetJson(args: {
       request: args.request,
       response: NextResponse.json(body, { status: upstream.status }),
       setCookies: args.context.sessionSetCookies,
-      extraHeaders: args.responseHeaders,
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -266,7 +287,6 @@ export async function proxyAccountAssetJson(args: {
       args.context.sessionSetCookies,
       502,
       { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'roma.errors.proxy.tokyo_unavailable', detail },
-      args.responseHeaders,
     );
   }
 }
