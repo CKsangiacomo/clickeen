@@ -1,3 +1,4 @@
+# Git-connected Cloudflare Pages build is the only deploy plane for Roma.
 name = "roma-dev"
 pages_build_output_dir = ".vercel/output/static"
 compatibility_date = "2025-12-28"
