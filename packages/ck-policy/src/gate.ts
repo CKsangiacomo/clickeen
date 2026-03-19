@@ -38,33 +38,6 @@ export function can(policy: Policy, actionKey: ActionKey, _payload?: unknown): G
       }
       return { allow: true };
     }
-    case 'context.websiteUrl.set': {
-      return { allow: true };
-    }
-    case 'embed.seoGeo.toggle': {
-      if (policy.flags['embed.seoGeo.enabled'] !== true) {
-        return {
-          allow: false,
-          upsell: 'UP',
-          reasonKey: 'coreui.upsell.reason.flagBlocked',
-          detail: 'SEO/GEO optimized embed is not available on this plan.',
-        };
-      }
-      return { allow: true };
-    }
-    case 'platform.upload': {
-      const storageBudget = policy.budgets['budget.uploads.bytes'];
-      if (storageBudget && storageBudget.max === 0) {
-        return { allow: false, upsell: 'UP', reasonKey: 'coreui.upsell.reason.platform.uploads' };
-      }
-      return { allow: true };
-    }
-    case 'widget.faq.section.add': {
-      return { allow: true };
-    }
-    case 'widget.faq.qa.add': {
-      return { allow: true };
-    }
     default: {
       const exhaustive: never = actionKey;
       throw new Error(`[ck-policy] Unhandled actionKey: ${exhaustive}`);

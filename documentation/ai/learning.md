@@ -95,33 +95,16 @@ Every interaction should include these “version stamps” in the indexed row:
 
 If any of these are missing, analysis becomes garbage (“we changed something, but don’t know what”).
 
-## 4) Golden set (regression harness)
+## 4) Copilot regression harness (current repo reality)
 
-The golden set is a deterministic regression suite for Copilot behavior:
-- it protects routing decisions (`intent`)
-- it protects deterministic clarifications (dictionary)
-- it protects guards (URL rules, Cloudflare HTML detection)
+There is currently **no active repo-owned golden-set fixture suite** for Copilot in this codebase.
 
-It is intentionally **not** a benchmark of “LLM creativity” (flaky).
+If we reintroduce one, it must:
+- execute from a real test or verification path
+- protect deterministic UX-critical behavior such as routing decisions, clarifications, and guards
+- justify its maintenance cost by catching user-facing regressions before they ship
 
-Files:
-- `fixtures/copilot/widgets/{widgetType}.json`
-  - `{ "currentConfig": {...}, "controls": [...] }`
-- `fixtures/copilot/prompts.jsonl`
-  - one JSON object per line (comments allowed with `#`)
-- Runner: golden-set execution is manual/ad-hoc (no mandatory scripted CI gate)
-
-Current target size:
-- ≥ 50 prompts (enough to catch regressions, small enough to stay fast)
-
-How to run:
-- `bash scripts/dev-up.sh`
-- Execute fixture-level harnesses owned by the active service test suite.
-
-How to expand safely:
-- Prefer prompts that hit deterministic routes (explain/clarify/guards) to avoid upstream flakiness.
-- Avoid relying on live websites or requiring DeepSeek output determinism.
-- If you want to test “real model edits”, put that in a separate upstream smoke suite (not the golden set).
+Do not add passive fixture files or fixture-only docs without an executable harness behind them.
 
 ## 5) What to measure (minimum)
 

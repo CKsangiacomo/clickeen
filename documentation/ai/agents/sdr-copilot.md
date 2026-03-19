@@ -370,17 +370,11 @@ San Francisco logs every interaction and Paris/Bob attach outcomes:
 - CTA clicks + conversions (critical for SDR effectiveness)
 - failure reasons (invalid ops, timeouts, upstream errors)
 
-### 9.2 Golden set (deterministic regression harness)
-The golden set protects:
-- routing decisions (explain vs clarify vs edit)
-- vocabulary clarifications
-- URL guardrails / Cloudflare HTML detection
-- CTA timing appropriateness
-
-Location + runner:
-- `fixtures/copilot/prompts.jsonl`
-- `fixtures/copilot/widgets/{widgetType}.json`
-- Golden-set checks are manual/ad-hoc (no required scripted CI gate)
+### 9.2 Deterministic regression harness
+Current repo reality:
+- there is no active checked-in golden-set fixture pack for Copilot
+- there is no required scripted golden-set gate in this repo
+- if a deterministic harness is reintroduced, it must be executable and must protect real user-facing Copilot UX
 
 ---
 

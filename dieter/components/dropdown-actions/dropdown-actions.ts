@@ -211,35 +211,9 @@ function setSelection(state: DropdownActionsState, value: string, label: string 
   state.input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-function dispatchPreview(state: DropdownActionsState, value: string | null): void {
-  if (!state.applyActions) return;
-  const path = state.input.dataset.bobPath;
-  if (!path) return;
-
-  if (value == null) {
-    state.input.dispatchEvent(
-      new CustomEvent('bob-preview', {
-        bubbles: true,
-        detail: { clear: true },
-      }),
-    );
-    return;
-  }
-
-  state.input.dispatchEvent(
-    new CustomEvent('bob-preview', {
-      bubbles: true,
-      detail: {
-        ops: [{ op: 'set', path, value }],
-      },
-    }),
-  );
-}
-
 function setPendingSelection(state: DropdownActionsState, value: string, label: string | null): void {
   state.pendingValue = value;
   syncFromValue(state, value, label);
-  dispatchPreview(state, value);
 }
 
 function commitPending(state: DropdownActionsState): void {

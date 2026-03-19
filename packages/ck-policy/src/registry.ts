@@ -191,10 +191,5 @@ assertMetaMatchesRegistry();
 export const ACTION_KEYS = [
   'instance.create',
   'instance.update',
-  'context.websiteUrl.set',
-  'embed.seoGeo.toggle',
-  'platform.upload',
-  'widget.faq.section.add',
-  'widget.faq.qa.add',
 ] as const;
 export type ActionKey = (typeof ACTION_KEYS)[number];

@@ -1,4 +1,3 @@
-import { loadAccountLocalizationSnapshot } from './account-localization-control';
 import { loadTokyoPreferredAccountInstance } from './account-instance-direct';
 
 export type BuilderOpenEnvelope = {
@@ -9,7 +8,6 @@ export type BuilderOpenEnvelope = {
   widgetType: string;
   status: 'published' | 'unpublished';
   config: Record<string, unknown>;
-  localization: unknown;
 };
 
 export async function loadBuilderOpenEnvelope(args: {
@@ -42,36 +40,16 @@ export async function loadBuilderOpenEnvelope(args: {
     return instance;
   }
 
-  try {
-    const localization = await loadAccountLocalizationSnapshot({
-      accessToken: args.accessToken,
+  return {
+    ok: true,
+    value: {
       accountId: args.accountId,
-      publicId: args.publicId,
-      accountCapsule: args.accountCapsule,
-    });
-
-    return {
-      ok: true,
-      value: {
-        accountId: args.accountId,
-        publicId: instance.value.row.publicId,
-        displayName: instance.value.row.displayName || 'Untitled widget',
-        ownerAccountId: instance.value.row.accountId,
-        widgetType: instance.value.row.widgetType,
-        status: instance.value.row.status,
-        config: instance.value.config,
-        localization: localization.snapshot,
-      },
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      status: 502,
-      error: {
-        kind: 'UPSTREAM_UNAVAILABLE',
-        reasonKey: 'coreui.errors.db.readFailed',
-        detail: error instanceof Error ? error.message : String(error),
-      },
-    };
-  }
+      publicId: instance.value.row.publicId,
+      displayName: instance.value.row.displayName || 'Untitled widget',
+      ownerAccountId: instance.value.row.accountId,
+      widgetType: instance.value.row.widgetType,
+      status: instance.value.row.status,
+      config: instance.value.config,
+    },
+  };
 }

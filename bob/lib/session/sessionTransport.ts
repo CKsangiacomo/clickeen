@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, type MutableRefObject } from 'react';
 import {
   type BobAccountCommand,
   type BobAccountCommandMessage,
-  type BootMode,
   type HostAccountCommandResultMessage,
   type SessionState,
   type SubjectMode,
@@ -11,13 +10,6 @@ import { resolveBootModeFromUrl, resolvePolicySubject } from './sessionPolicy';
 
 const HOSTED_ASSET_BRIDGE_KEY = '__CK_CLICKEEN_HOSTED_ACCOUNT_ASSET_BRIDGE__';
 
-export type OpenRequestStatusEntry = {
-  status: 'processing' | 'applied' | 'failed';
-  publicId?: string;
-  widgetname?: string;
-  error?: string;
-};
-
 export type ExecuteAccountCommandArgs = {
   subject: SubjectMode;
   command: BobAccountCommand;
@@ -25,7 +17,6 @@ export type ExecuteAccountCommandArgs = {
   method: 'GET' | 'PUT' | 'POST' | 'DELETE';
   accountId: string;
   publicId: string;
-  locale?: string;
   body?: unknown;
 };
 
@@ -38,10 +29,8 @@ export type ResolvePreviewAssets = (assetIds: string[]) => Promise<unknown>;
 export function useSessionTransport(args: {
   stateRef: MutableRefObject<SessionState>;
 }) {
-  const sessionIdRef = useRef<string>(crypto.randomUUID());
-  const bootModeRef = useRef<BootMode>(resolveBootModeFromUrl());
+  const bootModeRef = useRef(resolveBootModeFromUrl());
   const hostOriginRef = useRef<string | null>(null);
-  const openRequestStatusRef = useRef<Map<string, OpenRequestStatusEntry>>(new Map());
   const nativeFetchRef = useRef<typeof fetch | null>(
     typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : null,
   );
@@ -96,13 +85,11 @@ export function useSessionTransport(args: {
     (commandArgs: {
       command: BobAccountCommand;
       publicId: string;
-      locale?: string;
       headers?: Record<string, string>;
       body?: unknown;
     }): Promise<{ ok: boolean; status: number; payload: any; message?: string }> => {
       const targetOrigin = hostOriginRef.current;
-      const sessionId = sessionIdRef.current.trim();
-      if (!targetOrigin || !sessionId) {
+      if (!targetOrigin) {
         return Promise.reject(new Error('coreui.errors.builder.command.hostUnavailable'));
       }
 
@@ -110,10 +97,8 @@ export function useSessionTransport(args: {
       const message: BobAccountCommandMessage = {
         type: 'bob:account-command',
         requestId,
-        sessionId,
         command: commandArgs.command,
         publicId: String(commandArgs.publicId || '').trim(),
-        ...(commandArgs.locale ? { locale: String(commandArgs.locale || '').trim() } : {}),
         ...(commandArgs.headers ? { headers: commandArgs.headers } : {}),
         ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
       };
@@ -131,7 +116,7 @@ export function useSessionTransport(args: {
           if (event.source !== window.parent) return;
           const data = event.data as HostAccountCommandResultMessage | null;
           if (!data || typeof data !== 'object' || data.type !== 'host:account-command-result') return;
-          if (data.requestId !== requestId || data.sessionId !== sessionId) return;
+          if (data.requestId !== requestId) return;
           cleanup();
           resolve({
             ok: data.ok === true,
@@ -276,7 +261,6 @@ export function useSessionTransport(args: {
         const result = await dispatchHostAccountCommand({
           command: commandArgs.command,
           publicId: commandArgs.publicId,
-          ...(commandArgs.locale ? { locale: commandArgs.locale } : {}),
           ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
         });
         return { ok: result.ok, status: result.status, json: result.payload };
@@ -362,8 +346,6 @@ export function useSessionTransport(args: {
   return {
     bootModeRef,
     hostOriginRef,
-    sessionIdRef,
-    openRequestStatusRef,
     fetchApi,
     executeAccountCommand,
     resolvePreviewAssets,

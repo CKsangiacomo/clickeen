@@ -114,10 +114,6 @@ export declare function materializeConfigMedia(
     | null
     | undefined,
 ): unknown;
-export declare function configAssetUrlContractIssues(
-  config: unknown,
-  expectedAccountId?: string | null,
-): Array<{ path: string; message: string }>;
 export declare function configNonPersistableUrlIssues(
   config: unknown,
 ): Array<{ path: string; message: string }>;

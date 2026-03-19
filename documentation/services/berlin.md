@@ -186,8 +186,3 @@ Berlin requires explicit signing key PEMs. Local `dev-up` materializes them into
   - storage = `BERLIN_SESSION_KV` under a dedicated prefix
   - protected routes = auth/session mutation routes only
   - limited responses return `429 coreui.errors.rateLimit.exceeded` plus `retry-after` and `x-rate-limit-*` headers
-- Berlin session-plane contract coverage now explicitly guards:
-  - grace-window refresh convergence
-  - replay-after-grace revocation
-  - logout `scope=user` all-session revocation
-  - logout-by-refresh-token single-session revocation

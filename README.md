@@ -45,7 +45,6 @@ Useful scripts:
 - `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`
 - `pnpm build` (after `pnpm build:dieter`)
 - `pnpm lint`, `pnpm typecheck`, `pnpm test`
-- `pnpm test:contracts` for the cross-owner contract floor (`Berlin -> Roma -> Tokyo-worker -> Venice`)
 
 ## Notes
 

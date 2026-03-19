@@ -10,12 +10,28 @@ Before touching code, read the relevant context:
 - `documentation/strategy/WhyClickeen.md` (why it matters)
 - The relevant PRD/architecture doc for the area you’re changing
 
+### 1A) Product Truth Before Code Topology
+- Start from what the user is actually doing in the product, not from which files call which files.
+- Active callers are **not** proof that a concept belongs in the product.
+- If a branch, file, type, or workflow exists only to preserve a fake product mode, a placeholder, dead scaffolding, or duplicate truth, treat it as a deletion target by default.
+- Before changing a product-path concern, name the surviving authority for that concern.
+
+### 1B) Non-Negotiable Product Boundaries
+- The real authoring product is: account opens widget in Roma, Bob edits, Roma saves to Tokyo.
+- Builder is the only real authoring surface.
+- Minibob/demo/funnel surfaces are **not** users, accounts, editor identities, policy profiles, or save-capable product modes.
+- Editing always happens on **one widget in one active locale at a time**. Translation is async follow-up work after save.
+- Preview is not a second widget truth.
+- Entitlements/upsell truth comes from real account policy only.
+- Invalid state must fail at the named boundary; do not silently heal product truth into a new normal.
+
 ### 2) No Smoke and Mirrors
 - Don’t ship “works for now” patches that create silent downstream breakage.
 - If impact is unclear, stop and ask a targeted yes/no question.
+- If an audit or PRD identifies a toxic mechanism, do not clean around it. Delete it, isolate it behind an explicit surviving boundary, or mark it blocked.
 
 ### 3) Elegant Engineering Only
-If you’re tempted to add special cases, workarounds, or one-off parameters, redesign for an elegant, general solution that scales across 100s of widgets.
+If you’re tempted to add special cases, workarounds, or one-off parameters, redesign for an elegant solution that fits the real current product and current widget model. Do not answer local mess with speculative frameworks, fake generic layers, or platform theory the product does not need.
 
 ### 4) Design & UX Is the Moat
 - Dieter and tokens are not optional: reuse tokens, don’t invent ad-hoc styling.
@@ -28,6 +44,7 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 ### 6) Preserve What Works
 - No speculative refactors, “modernization”, or churn.
 - Change only what’s necessary to solve the problem correctly.
+- Preserve real product behavior; do **not** preserve fake product identities, placeholders, dead scaffolding, or duplicate truths just because they already have callers.
 
 ### 7) Documentation Is Truth
 - Update docs when behavior changes.
@@ -36,13 +53,13 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 ## Repository Guidelines
 
 ### Project Structure & Module Organization
-- `bob/` – Next.js widget editor UI; reads Dieter assets from `tokyo/dieter`.
-- `roma/` – Next.js product shell (workspace domains + Builder host orchestration).
+- `bob/` – Next.js account Builder editor UI; shared Bob code must model the real authoring path, not a multi-product container.
+- `roma/` – Next.js current-account product shell and Builder host orchestration; the real authoring path begins here.
 - `admin/` – Vite-based DevStudio showcase; docs generated via `scripts/`.
 - `dieter/` – Design system source (tokens, CSS, web components, `*.spec.json` fixtures).
-- `paris/` – Cloudflare Worker API service workspace (Supabase-backed).
+- `paris/` – Cloudflare Worker residue/health surface; not part of the real account authoring path.
 - `venice/` – Next.js Edge embed runtime (Cloudflare Pages).
-- `prague/` – Astro marketing + SEO surface (Cloudflare Pages).
+- `prague/` – Astro marketing + SEO + demo/funnel surface (Cloudflare Pages); not account authoring truth.
 - `documentation/` stores product/architecture context; `scripts/` has build helpers; `tokyo/` serves built Dieter assets for local use.
 
 ### Build, Test, and Development Commands

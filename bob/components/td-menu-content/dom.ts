@@ -1,5 +1,3 @@
-import { pathMatchesAllowlist, type AllowlistEntry } from '../../lib/l10n/instance';
-
 declare global {
   interface Window {
     Dieter?: {
@@ -61,67 +59,9 @@ function loadScript(src: string): Promise<void> {
   return promise;
 }
 
-function applyDisabledState(
-  el: { disabled: boolean; dataset: DOMStringMap },
-  readOnly: boolean,
-  disabledKey: string,
-) {
-  if (readOnly) {
-    if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
-    el.disabled = true;
-    return;
-  }
-  if (disabledKey in el.dataset) {
-    el.disabled = el.dataset[disabledKey] === '1';
-    delete el.dataset[disabledKey];
-  }
-}
-
-function applyReadOnlyFlag(
-  el: { readOnly: boolean; dataset: DOMStringMap },
-  readOnly: boolean,
-  readonlyKey: string,
-) {
-  if (readOnly) {
-    if (!(readonlyKey in el.dataset)) el.dataset[readonlyKey] = el.readOnly ? '1' : '0';
-    el.readOnly = true;
-    return;
-  }
-  if (readonlyKey in el.dataset) {
-    el.readOnly = el.dataset[readonlyKey] === '1';
-    delete el.dataset[readonlyKey];
-  }
-}
-
 function labelForGroup(key: string | null): string {
   if (!key) return '';
   return GROUP_LABELS[key] || key.replace(/-/g, ' ');
-}
-
-function normalizeBobPath(raw: string): string {
-  return String(raw || '')
-    .replace(/\[(\d+)\]/g, '.$1')
-    .replace(/\.+/g, '.')
-    .replace(/^\./, '')
-    .replace(/\.$/, '');
-}
-
-function resolveTranslateRoot(field: HTMLElement): HTMLElement {
-  return (
-    field.closest<HTMLElement>(
-      '.diet-dropdown-actions, .diet-dropdown-edit, .diet-textedit, .diet-textfield, .diet-valuefield, .diet-toggle, .diet-select, .diet-dropdown, .diet-range, .diet-slider, .diet-color, .diet-input'
-    ) || field
-  );
-}
-
-function normalizeTranslateAllowlist(allowlist: Array<string | AllowlistEntry>): string[] {
-  return allowlist
-    .map((entry) => {
-      if (typeof entry === 'string') return entry.trim();
-      if (entry && typeof entry === 'object' && typeof entry.path === 'string') return entry.path.trim();
-      return '';
-    })
-    .filter(Boolean);
 }
 
 export function resetDieterAssetCaches() {
@@ -175,43 +115,6 @@ export function syncSegmentedPressedState(input: HTMLInputElement) {
   button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
 }
 
-export function applyReadOnlyState(container: HTMLElement, readOnly: boolean) {
-  const disabledKey = 'ckReadonlyDisabled';
-  const readonlyKey = 'ckReadonlyReadonly';
-  const contentEditableKey = 'ckReadonlyContenteditable';
-
-  container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea').forEach((el) => {
-    applyDisabledState(el, readOnly, disabledKey);
-    applyReadOnlyFlag(el, readOnly, readonlyKey);
-  });
-
-  container.querySelectorAll<HTMLSelectElement>('select').forEach((el) => {
-    applyDisabledState(el, readOnly, disabledKey);
-  });
-
-  container.querySelectorAll<HTMLButtonElement>('button').forEach((el) => {
-    if (el.classList.contains('tdmenucontent__cluster-toggle')) return;
-    applyDisabledState(el, readOnly, disabledKey);
-  });
-
-  container.querySelectorAll<HTMLElement>('[contenteditable]').forEach((el) => {
-    if (readOnly) {
-      if (!(contentEditableKey in el.dataset)) {
-        const original = el.getAttribute('contenteditable');
-        el.dataset[contentEditableKey] = original == null ? '__unset__' : original;
-      }
-      el.setAttribute('contenteditable', 'false');
-      return;
-    }
-    if (contentEditableKey in el.dataset) {
-      const original = el.dataset[contentEditableKey];
-      if (original === '__unset__') el.removeAttribute('contenteditable');
-      else el.setAttribute('contenteditable', original ?? '');
-      delete el.dataset[contentEditableKey];
-    }
-  });
-}
-
 export function applyGroupHeaders(scope: HTMLElement) {
   const children = Array.from(scope.children) as HTMLElement[];
   if (!children.length) return;
@@ -257,54 +160,6 @@ export function applyGroupHeaders(scope: HTMLElement) {
 
 export function getClusterBody(cluster: HTMLElement): HTMLElement | null {
   return cluster.querySelector<HTMLElement>(':scope > .tdmenucontent__cluster-body');
-}
-
-export function applyTranslateVisibility(
-  scope: HTMLElement,
-  allowlist: Array<string | AllowlistEntry>,
-  enabled: boolean,
-) {
-  const tagged = scope.querySelectorAll<HTMLElement>(
-    '[data-translate-hidden], [data-translate-allow], [data-translate-empty]'
-  );
-  tagged.forEach((node) => {
-    node.removeAttribute('data-translate-hidden');
-    node.removeAttribute('data-translate-allow');
-    node.removeAttribute('data-translate-empty');
-  });
-
-  const allowlistPaths = normalizeTranslateAllowlist(allowlist);
-  if (!enabled || allowlistPaths.length === 0) return;
-
-  const isAllowed = (path: string) => allowlistPaths.some((allow) => pathMatchesAllowlist(path, allow));
-  const rootAllow = new Map<HTMLElement, boolean>();
-  const fields = Array.from(scope.querySelectorAll<HTMLElement>('[data-bob-path]'));
-
-  fields.forEach((field) => {
-    const rawPath = field.getAttribute('data-bob-path') || '';
-    const path = normalizeBobPath(rawPath);
-    if (!path) return;
-    const root = resolveTranslateRoot(field);
-    const allowed = isAllowed(path);
-    const previous = rootAllow.get(root);
-    rootAllow.set(root, previous === true ? true : allowed);
-  });
-
-  rootAllow.forEach((allowed, root) => {
-    if (allowed) {
-      root.setAttribute('data-translate-allow', 'true');
-      return;
-    }
-    root.setAttribute('data-translate-hidden', 'true');
-  });
-
-  const groups = scope.querySelectorAll<HTMLElement>('.tdmenucontent__cluster, .tdmenucontent__group');
-  groups.forEach((group) => {
-    const hasAllowed = Boolean(group.querySelector('[data-translate-allow="true"]'));
-    if (!hasAllowed) {
-      group.setAttribute('data-translate-empty', 'true');
-    }
-  });
 }
 
 export function installClusterCollapseBehavior(container: HTMLElement): () => void {

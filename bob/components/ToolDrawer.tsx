@@ -8,7 +8,6 @@ import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { resolvePolicySubject } from '../lib/session/sessionPolicy';
 import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 import { SettingsPanel } from './SettingsPanel';
-import { LocalizationControls } from './LocalizationControls';
 
 const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to keep editing this widget.',
@@ -23,7 +22,6 @@ const BUILDER_ERROR_COPY: Record<string, string> = {
     'Builder account editing must run through the workspace host. Please reopen this widget.',
   'coreui.errors.builder.command.timeout': 'Saving took too long. Please try again.',
   'coreui.errors.builder.open.invalidRequest': 'Builder received an invalid open request.',
-  'coreui.errors.builder.open.sessionMismatch': 'Builder session expired. Please reopen this widget.',
   'coreui.errors.builder.open.failed': 'Builder could not open this widget. Please try again.',
   'coreui.errors.instance.notFound': 'This widget could not be found. It may have been deleted.',
   'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot load right now.',
@@ -114,12 +112,6 @@ export function ToolDrawer() {
   }, [compiled?.widgetname, compiled?.panels]);
 
   useEffect(() => {
-    if (activePanel === 'localization') return;
-    if (session.locale.activeLocale === session.locale.baseLocale) return;
-    session.setLocalePreview(session.locale.baseLocale);
-  }, [activePanel, session, session.locale.activeLocale, session.locale.baseLocale, session.setLocalePreview]);
-
-  useEffect(() => {
     // Keep editor upload context in one place for Dieter upload controls.
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
@@ -154,20 +146,7 @@ export function ToolDrawer() {
     return resolvePolicySubject(session.policy);
   }, [session.policy]);
 
-  const isLocalizationPanel = activePanel === 'localization';
-  const isLocalizationReadOnly = isLocalizationPanel && session.locale.activeLocale === session.locale.baseLocale;
-  const activePanelHtml =
-    activePanel === 'localization' ? panelsById['content']?.html ?? null : panelsById[activePanel]?.html ?? null;
-  const contentHeader = isLocalizationPanel ? (
-    <div className="tdmenucontent__translate tdmenucontent__translate-top">
-      <LocalizationControls mode="translate" section="selector" />
-    </div>
-  ) : null;
-  const contentFooter = isLocalizationPanel ? (
-    <div className="tdmenucontent__footer tdmenucontent__translate">
-      <LocalizationControls mode="translate" section="footer" />
-    </div>
-  ) : null;
+  const activePanelHtml = panelsById[activePanel]?.html ?? null;
   const isCommittedSaveWarning = sessionError?.source === 'save' && Boolean(sessionError.committed);
   const alertBorderColor = isCommittedSaveWarning
     ? '1px solid color-mix(in oklab, var(--color-system-yellow), transparent 55%)'
@@ -272,15 +251,8 @@ export function ToolDrawer() {
                   widgetKey={compiled.widgetname}
                   instanceData={session.instanceData}
                   applyOps={session.applyOps}
-                  undoLastOps={session.undoLastOps}
-                  canUndo={session.canUndo}
                   lastUpdate={session.lastUpdate}
                   dieterAssets={compiled.assets.dieter}
-                  header={contentHeader}
-                  footer={contentFooter}
-                  translateMode={isLocalizationPanel}
-                  readOnly={isLocalizationReadOnly}
-                  translateAllowlist={session.locale.allowlist}
                 />
               )
             ) : (

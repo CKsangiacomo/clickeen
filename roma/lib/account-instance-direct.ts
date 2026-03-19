@@ -1,14 +1,12 @@
 import {
   classifyWidgetPublicId,
-  configAssetUrlContractIssues,
-  configNonPersistableUrlIssues,
 } from '@clickeen/ck-contracts';
-import { stableStringify } from '@clickeen/l10n';
 import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
 } from './tokyo-product-control';
-import { validateWidgetConfigContract } from './widget-config-contract';
+
+// Roma's direct instance path is the server boundary for one boring product flow: open the saved document from Tokyo, validate the persisted-document contract, and save it back.
 
 export type DirectRouteError = {
   kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
@@ -17,16 +15,11 @@ export type DirectRouteError = {
   paths?: string[];
 };
 
-export type DirectRouteResult<T> =
-  | {
-      ok: true;
-      value: T;
-    }
-  | {
-      ok: false;
-      status: number;
-      error: DirectRouteError;
-    };
+type RouteFailure = {
+  ok: false;
+  status: number;
+  error: DirectRouteError;
+};
 
 export type AccountInstanceCoreRow = {
   publicId: string;
@@ -51,7 +44,7 @@ type TokyoSavedInstancePayload = {
   config?: unknown;
 };
 
-export function isRecord(value: unknown): value is Record<string, unknown> {
+function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
@@ -78,71 +71,6 @@ function resolveTokyoControlErrorDetail(
     if (detail) return detail;
   }
   return fallback;
-}
-
-export function validatePersistableConfig(
-  config: unknown,
-  expectedAccountId: string,
-  widgetType?: string | null,
-): DirectRouteResult<{ config: Record<string, unknown> }> {
-  if (!isRecord(config)) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.config.invalid',
-        paths: ['config'],
-      },
-    };
-  }
-
-  const nonPersistableIssues = configNonPersistableUrlIssues(config);
-  if (nonPersistableIssues.length) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.publish.nonPersistableUrl',
-        detail: nonPersistableIssues[0]?.message,
-        paths: nonPersistableIssues.map((issue) => issue.path),
-      },
-    };
-  }
-
-  const assetIssues = configAssetUrlContractIssues(config, expectedAccountId);
-  if (assetIssues.length) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.publish.nonPersistableUrl',
-        detail: assetIssues[0]?.message,
-        paths: assetIssues.map((issue) => issue.path),
-      },
-    };
-  }
-
-  const contractIssues =
-    typeof widgetType === 'string' && widgetType.trim()
-      ? validateWidgetConfigContract(widgetType.trim(), config)
-      : [];
-  if (contractIssues.length) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.config.invalid',
-        detail: contractIssues[0]?.message,
-        paths: contractIssues.map((issue) => issue.path),
-      },
-    };
-  }
-
-  return { ok: true, value: { config } };
 }
 
 async function loadSavedInstanceFromTokyo(args: {
@@ -359,7 +287,13 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
   tokyoAccessToken?: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
-}): Promise<DirectRouteResult<{ row: TRow; config: Record<string, unknown> }>> {
+}): Promise<
+  | {
+      ok: true;
+      value: { row: TRow; config: Record<string, unknown> };
+    }
+  | RouteFailure
+> {
   let saved: { row: AccountInstanceCoreRow; config: Record<string, unknown> } | null = null;
   try {
     saved = await loadSavedInstanceFromTokyo({
@@ -394,20 +328,6 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
     };
   }
 
-  const contractIssues = validateWidgetConfigContract(saved.row.widgetType, saved.config);
-  if (contractIssues.length) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.config.invalid',
-        detail: contractIssues[0]?.message,
-        paths: contractIssues.map((issue) => issue.path),
-      },
-    };
-  }
-
   return {
     ok: true,
     value: {
@@ -420,23 +340,27 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
 export async function saveAccountInstanceDirect(args: {
   accountId: string;
   publicId: string;
-  config: Record<string, unknown>;
+  config: unknown;
   tokyoBaseUrl: string;
   tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
-  DirectRouteResult<{
-    config: Record<string, unknown>;
-    changed: boolean;
-    instance: {
-      widgetType: string;
-      status: 'published' | 'unpublished';
-      source?: 'account' | 'curated';
-    };
-    published: boolean;
-  }>
+  | {
+      ok: true;
+      value: {
+        config: Record<string, unknown>;
+        changed: boolean;
+        instance: {
+          widgetType: string;
+          status: 'published' | 'unpublished';
+          source?: 'account' | 'curated';
+        };
+        published: boolean;
+      };
+    }
+  | RouteFailure
 > {
   const current = await loadTokyoPreferredAccountInstance({
     accountId: args.accountId,
@@ -455,35 +379,18 @@ export async function saveAccountInstanceDirect(args: {
     };
   }
 
-  const previousConfig = current.value.config;
-  const validatedConfig = validatePersistableConfig(
-    args.config,
-    args.accountId,
-    current.value.row.widgetType,
-  );
-  if (!validatedConfig.ok) {
+  if (!isRecord(args.config)) {
     return {
       ok: false,
-      status: validatedConfig.status,
-      error: validatedConfig.error,
-    };
-  }
-
-  if (stableStringify(previousConfig) === stableStringify(args.config)) {
-    return {
-      ok: true,
-      value: {
-        config: previousConfig,
-        changed: false,
-        instance: {
-          widgetType: current.value.row.widgetType,
-          status: current.value.row.status,
-          source: current.value.row.source,
-        },
-        published: current.value.row.status === 'published',
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.config.invalid',
+        paths: ['config'],
       },
     };
   }
+  const nextConfig = args.config as Record<string, unknown>;
 
   try {
     await writeSavedConfigToTokyo({
@@ -495,7 +402,7 @@ export async function saveAccountInstanceDirect(args: {
       internalServiceName: args.internalServiceName,
       accountCapsule: args.accountCapsule,
       widgetType: current.value.row.widgetType,
-      config: validatedConfig.value.config,
+      config: nextConfig,
     });
   } catch (error) {
     return {
@@ -512,7 +419,7 @@ export async function saveAccountInstanceDirect(args: {
   return {
     ok: true,
     value: {
-      config: validatedConfig.value.config,
+      config: nextConfig,
       changed: true,
       instance: {
         widgetType: current.value.row.widgetType,

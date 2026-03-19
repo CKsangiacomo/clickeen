@@ -571,7 +571,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
           });
           return;
         }
-        const pendingOps = pendingOpsRef.current ?? session.previewOps ?? null;
+        const pendingOps = pendingOpsRef.current;
         if (pendingOps && pendingOps.length > 0) {
           const applied = session.applyOps(pendingOps);
           if (!applied.ok) {
@@ -580,12 +580,10 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
               role: 'assistant',
               text: `I couldn’t keep that change because it’s no longer valid:\n${details}`,
             });
-            session.clearPreviewOps();
             clearPendingDecision();
             return;
           }
         }
-        session.clearPreviewOps();
         void reportOutcome({ event: 'ux_keep', requestId: pendingRequestId, sessionId: copilotSessionId, timeToDecisionMs });
         clearPendingDecision();
         pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
@@ -594,7 +592,6 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
       if (normalized === 'undo') {
         setDraft('');
         pushMessage({ role: 'user', text: prompt });
-        session.clearPreviewOps();
         void reportOutcome({ event: 'ux_undo', requestId: pendingRequestId, sessionId: copilotSessionId, timeToDecisionMs });
         clearPendingDecision();
         pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
@@ -689,17 +686,6 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
       const requestId = asTrimmedString(parsed?.meta?.requestId) || asTrimmedString(parsed?.requestId);
 
       if (ops && ops.length > 0) {
-        const applied = session.setPreviewOps(ops);
-        if (!applied.ok) {
-          const details = applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n');
-          pushMessage({
-            role: 'assistant',
-            text: `I couldn’t apply that change because it’s not valid for this widget:\n${details}`,
-          });
-          setStatus('idle');
-          return;
-        }
-
         pendingOpsRef.current = ops;
         pendingDecisionRef.current = true;
         const pendingText = surfaceContract.pendingMessageText(message);
@@ -816,7 +802,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
                     data-variant="primary"
                     type="button"
                   onClick={() => {
-                      const pendingOps = pendingOpsRef.current ?? session.previewOps ?? null;
+                      const pendingOps = pendingOpsRef.current;
                       if (pendingOps && pendingOps.length > 0) {
                         const applied = session.applyOps(pendingOps);
                         if (!applied.ok) {
@@ -825,12 +811,10 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
                             role: 'assistant',
                             text: `I couldn’t keep that change because it’s no longer valid:\n${details}`,
                           });
-                          session.clearPreviewOps();
                           clearPendingDecision();
                           return;
                         }
                       }
-                      session.clearPreviewOps();
                       void reportOutcome({
                         event: 'ux_keep',
                         requestId: m.requestId || '',
@@ -867,7 +851,6 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
                   data-variant="neutral"
                   type="button"
                   onClick={() => {
-                    session.clearPreviewOps();
                     void reportOutcome({
                       event: 'ux_undo',
                       requestId: m.requestId || '',
@@ -877,7 +860,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
                     clearPendingDecision();
                     pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
                   }}
-                  disabled={!pendingOpsRef.current && !session.previewOps}
+                  disabled={!pendingOpsRef.current}
                 >
                   <span className="diet-btn-txt__label">Undo</span>
                 </button>

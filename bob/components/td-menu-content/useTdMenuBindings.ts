@@ -29,10 +29,7 @@ export function useTdMenuBindings(args: {
   applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
   panelHtml: string;
   renderKey: number;
-  readOnly: boolean;
   compiled: CompiledWidget | null;
-  clearPreviewOps: () => void;
-  setPreviewOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
   requestUpsell: (reasonKey: string, detail?: string) => void;
   lastUpdateRef: MutableRefObject<LastUpdate>;
   activePathRef: MutableRefObject<string | null>;
@@ -51,37 +48,7 @@ export function useTdMenuBindings(args: {
       }
     };
 
-    const revertTargetValue = (
-      target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
-      path: string,
-    ) => {
-      const previousValue = getAt<unknown>(args.instanceData, path);
-
-      if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-        target.checked = previousValue === true;
-        return;
-      }
-
-      const nextValue =
-        target instanceof HTMLInputElement && target.dataset.bobJson != null
-          ? serializeBobJsonFieldValue(target, previousValue)
-          : previousValue == null
-            ? ''
-            : String(previousValue);
-
-      target.value = nextValue;
-
-      if (target instanceof HTMLInputElement) {
-        target.dispatchEvent(
-          new CustomEvent('external-sync', {
-            detail: { value: nextValue, source: 'bob-deny', bobIgnore: true },
-          }),
-        );
-      }
-    };
-
     const handleBobOpsEvent = (event: Event) => {
-      if (args.readOnly) return;
       const detail = (event as any).detail;
       const ops = detail?.ops as WidgetOp[] | undefined;
       if (!Array.isArray(ops) || ops.length === 0) return;
@@ -90,20 +57,6 @@ export function useTdMenuBindings(args: {
       if (!applied.ok && process.env.NODE_ENV === 'development') {
         console.warn('[TdMenuContent] Failed to apply ops event', applied.errors);
       }
-    };
-
-    const handleBobPreviewEvent = (event: Event) => {
-      if (args.readOnly) return;
-      const detail = (event as any).detail;
-      if (detail?.clear) {
-        event.stopPropagation();
-        args.clearPreviewOps();
-        return;
-      }
-      const ops = detail?.ops as WidgetOp[] | undefined;
-      if (!Array.isArray(ops) || ops.length === 0) return;
-      event.stopPropagation();
-      args.setPreviewOps(expandLinkedOps({ compiled: args.compiled, instanceData: args.instanceData, ops }));
     };
 
     const handleUpsellEvent = (event: Event) => {
@@ -125,13 +78,6 @@ export function useTdMenuBindings(args: {
       const path = resolvePathFromTarget(target);
       if (!path) return;
 
-      if (args.readOnly) {
-        revertTargetValue(target, path);
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-
       if (target instanceof HTMLInputElement && target.type === 'checkbox') {
         applySet(path, target.checked);
         return;
@@ -150,7 +96,14 @@ export function useTdMenuBindings(args: {
         }
         const applied = applyExpandedOps([{ op: 'set', path, value: parsed }]);
         if (!applied.ok) {
-          revertTargetValue(target, path);
+          const previousValue = getAt<unknown>(args.instanceData, path);
+          const nextValue = serializeBobJsonFieldValue(target, previousValue);
+          target.value = nextValue;
+          target.dispatchEvent(
+            new CustomEvent('external-sync', {
+              detail: { value: nextValue, source: 'bob-deny', bobIgnore: true },
+            }),
+          );
           if (process.env.NODE_ENV === 'development') {
             console.warn('[TdMenuContent] Denied JSON input for path', path, applied.errors);
           }
@@ -216,7 +169,6 @@ export function useTdMenuBindings(args: {
     };
 
     container.addEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
-    container.addEventListener('bob-preview', handleBobPreviewEvent as EventListener, true);
     container.addEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
     container.addEventListener('input', handleContainerEvent, true);
     container.addEventListener('change', handleContainerEvent, true);
@@ -227,11 +179,7 @@ export function useTdMenuBindings(args: {
       const path = field.getAttribute('data-bob-path');
       if (!path) return;
 
-      const rawValue = getAt(args.instanceData, path);
-      const value =
-        rawValue === undefined && args.compiled?.defaults
-          ? getAt(args.compiled.defaults as Record<string, unknown>, path)
-          : rawValue;
+      const value = getAt(args.instanceData, path);
 
       const isActive = args.activePathRef.current === path;
       const lastUpdate = args.lastUpdateRef.current;
@@ -314,7 +262,6 @@ export function useTdMenuBindings(args: {
 
     return () => {
       container.removeEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
-      container.removeEventListener('bob-preview', handleBobPreviewEvent as EventListener, true);
       container.removeEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
       container.removeEventListener('input', handleContainerEvent, true);
       container.removeEventListener('change', handleContainerEvent, true);
@@ -322,15 +269,12 @@ export function useTdMenuBindings(args: {
   }, [
     args.activePathRef,
     args.applyOps,
-    args.clearPreviewOps,
     args.compiled,
     args.containerRef,
     args.instanceData,
     args.lastUpdateRef,
     args.panelHtml,
-    args.readOnly,
     args.renderKey,
     args.requestUpsell,
-    args.setPreviewOps,
   ]);
 }

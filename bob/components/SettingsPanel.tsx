@@ -197,13 +197,8 @@ export function SettingsPanel() {
         widgetKey={compiled.widgetname}
         instanceData={session.instanceData}
         applyOps={session.applyOps}
-        undoLastOps={session.undoLastOps}
-        canUndo={session.canUndo}
         lastUpdate={session.lastUpdate}
         dieterAssets={compiled.assets.dieter}
-        translateMode={false}
-        readOnly={false}
-        translateAllowlist={session.locale.allowlist}
         header={
           <div className="settings-panel__fullwidth">
             <button

@@ -4,10 +4,10 @@ import { createContext, useContext, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   createInitialSessionState,
+  hasUnsavedDocument,
   type SessionState,
 } from './sessionTypes';
 import { useSessionTransport } from './sessionTransport';
-import { useSessionLocalization } from './useSessionLocalization';
 import { useSessionEditing } from './useSessionEditing';
 import { useSessionBoot } from './useSessionBoot';
 import { useSessionSaving } from './useSessionSaving';
@@ -25,13 +25,6 @@ function useWidgetSessionInternal() {
     stateRef,
     setState,
   });
-  const localization = useSessionLocalization({
-    state,
-    stateRef,
-    setState,
-    fetchApi: transport.fetchApi,
-    executeAccountCommand: transport.executeAccountCommand,
-  });
   const boot = useSessionBoot({
     state,
     stateRef,
@@ -39,49 +32,35 @@ function useWidgetSessionInternal() {
     fetchApi: transport.fetchApi,
     bootModeRef: transport.bootModeRef,
     hostOriginRef: transport.hostOriginRef,
-    sessionIdRef: transport.sessionIdRef,
-    openRequestStatusRef: transport.openRequestStatusRef,
     applyMinibobInjectedState: editing.applyMinibobInjectedState,
   });
   const saving = useSessionSaving({
     stateRef,
     setState,
     executeAccountCommand: transport.executeAccountCommand,
-    persistLocaleEdits: localization.persistLocaleEdits,
-    loadLocaleAllowlist: localization.loadLocaleAllowlist,
-    monitorLocaleTranslationsAfterSave: localization.monitorLocaleTranslationsAfterSave,
   });
   const copilot = useSessionCopilot({ setState });
+  const isDirty = hasUnsavedDocument(state);
+  const hasUnsavedChanges = isDirty;
 
   const value = useMemo(
     () => ({
       compiled: state.compiled,
       instanceData: state.instanceData,
-      baseInstanceData: state.baseInstanceData,
-      previewData: state.previewData,
-      previewOps: state.previewOps,
-      isDirty: state.isDirty,
-      hasUnsavedChanges: state.isDirty || state.locale.dirty,
-      minibobPersonalizationUsed: state.minibobPersonalizationUsed,
-      isMinibob: state.policy?.profile === 'minibob',
+      isDirty,
+      hasUnsavedChanges,
       policy: state.policy,
       upsell: state.upsell,
       isSaving: state.isSaving,
       preview: state.preview,
-      locale: state.locale,
       selectedPath: state.selectedPath,
       lastUpdate: state.lastUpdate,
       error: state.error,
       meta: state.meta,
       apiFetch: transport.fetchApi,
       resolvePreviewAssets: transport.resolvePreviewAssets,
-      canUndo: Boolean(state.undoSnapshot) && state.locale.activeLocale === state.locale.baseLocale,
       copilotThreads: state.copilotThreads,
       applyOps: editing.applyOps,
-      setPreviewOps: editing.setPreviewOps,
-      clearPreviewOps: editing.clearPreviewOps,
-      undoLastOps: editing.undoLastOps,
-      commitLastOps: editing.commitLastOps,
       save: saving.save,
       discardChanges: editing.discardChanges,
       dismissUpsell: editing.dismissUpsell,
@@ -89,11 +68,7 @@ function useWidgetSessionInternal() {
       setSelectedPath: editing.setSelectedPath,
       setInstanceLabel: editing.setInstanceLabel,
       setPreview: editing.setPreview,
-      setLocalePreview: localization.setLocalePreview,
-      clearLocaleManualOverrides: localization.clearLocaleManualOverrides,
-      reloadLocalizationSnapshot: localization.reloadLocalizationSnapshot,
       loadInstance: boot.loadInstance,
-      consumeBudget: editing.consumeBudget,
       setCopilotThread: copilot.setCopilotThread,
       updateCopilotThread: copilot.updateCopilotThread,
     }),
@@ -102,7 +77,8 @@ function useWidgetSessionInternal() {
       copilot.setCopilotThread,
       copilot.updateCopilotThread,
       editing,
-      localization,
+      hasUnsavedChanges,
+      isDirty,
       saving.save,
       state,
       transport.fetchApi,

@@ -5,7 +5,6 @@ import {
   deleteSavedConfigFromTokyo,
   loadTokyoPreferredAccountInstance,
   saveAccountInstanceDirect,
-  validatePersistableConfig,
 } from '@roma/lib/account-instance-direct';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { deleteAccountInstanceRow, getAccountInstanceCoreRow } from '@roma/lib/michael';
@@ -126,19 +125,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const validatedConfig = validatePersistableConfig(body?.config, accountId);
-  if (!validatedConfig.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: validatedConfig.error }, { status: validatedConfig.status }),
-      current.value.setCookies,
-    );
-  }
-
   const result = await saveAccountInstanceDirect({
     accountId,
     publicId,
-    config: validatedConfig.value.config,
+    config: body?.config,
     tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,

@@ -4,7 +4,6 @@ import {
   deleteAccountInstanceRow,
 } from './michael';
 import {
-  validatePersistableConfig,
   deleteSavedConfigFromTokyo,
   writeSavedConfigToTokyo,
 } from './account-instance-direct';
@@ -115,20 +114,24 @@ export async function createAccountInstance(args: {
     };
   }
 
-  const validatedConfig = validatePersistableConfig(args.config, args.accountId, args.widgetType);
-  if (!validatedConfig.ok) {
+  if (!args.config || typeof args.config !== 'object' || Array.isArray(args.config)) {
     return {
       ok: false,
-      status: validatedConfig.status,
-      error: validatedConfig.error,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.config.invalid',
+        paths: ['config'],
+      },
     };
   }
+  const config = args.config as Record<string, unknown>;
 
   const createdRow = await createAccountInstanceRow({
     accountId: args.accountId,
     publicId: args.publicId,
     widgetType: args.widgetType,
-    config: validatedConfig.value.config,
+    config,
     berlinAccessToken: args.accessToken,
     status: 'unpublished',
   });
@@ -171,7 +174,7 @@ export async function createAccountInstance(args: {
       publicId: args.publicId,
       accountCapsule: args.accountCapsule,
       widgetType: createdRow.row.widgetType,
-      config: validatedConfig.value.config,
+      config,
       displayName: createdRow.row.displayName,
       source: createdRow.row.source,
       meta: createdRow.row.meta ?? null,

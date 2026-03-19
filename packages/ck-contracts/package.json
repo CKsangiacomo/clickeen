@@ -10,10 +10,6 @@
     ".": {
       "types": "./src/index.d.ts",
       "default": "./src/index.js"
-    },
-    "./editor/open-editor-lifecycle.v1.json": {
-      "types": "./editor/open-editor-lifecycle.v1.json.d.ts",
-      "default": "./editor/open-editor-lifecycle.v1.json"
     }
   }
 }

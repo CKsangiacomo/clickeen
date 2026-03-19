@@ -2,9 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
-import type { AllowlistEntry } from '../lib/l10n/instance';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-import { applyReadOnlyState, applyTranslateVisibility, type DieterAssets } from './td-menu-content/dom';
+import { type DieterAssets } from './td-menu-content/dom';
 import { resolvePathFromTarget } from './td-menu-content/fieldValue';
 import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './td-menu-content/showIf';
 import { useTdMenuBindings } from './td-menu-content/useTdMenuBindings';
@@ -16,15 +15,10 @@ type TdMenuContentProps = {
   widgetKey?: string;
   instanceData: Record<string, unknown>;
   applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
-  canUndo?: boolean;
-  undoLastOps?: () => void;
   lastUpdate?: { source: 'field' | 'load' | 'external' | 'ops' | 'unknown'; path: string; ts: number } | null;
   dieterAssets?: DieterAssets;
   header?: ReactNode;
   footer?: ReactNode;
-  translateMode?: boolean;
-  readOnly?: boolean;
-  translateAllowlist?: Array<string | AllowlistEntry>;
 };
 
 export function TdMenuContent({
@@ -37,9 +31,6 @@ export function TdMenuContent({
   lastUpdate,
   header,
   footer,
-  translateMode = false,
-  readOnly = false,
-  translateAllowlist = [],
 }: TdMenuContentProps) {
   const session = useWidgetSession();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -110,10 +101,7 @@ export function TdMenuContent({
     applyOps,
     panelHtml,
     renderKey,
-    readOnly,
     compiled: session.compiled,
-    clearPreviewOps: session.clearPreviewOps,
-    setPreviewOps: session.setPreviewOps,
     requestUpsell: session.requestUpsell,
     lastUpdateRef,
     activePathRef,
@@ -124,8 +112,6 @@ export function TdMenuContent({
     if (!container) return;
     showIfEntriesRef.current = buildShowIfEntries(container);
     applyShowIfVisibility(showIfEntriesRef.current, instanceData);
-    applyTranslateVisibility(container, translateAllowlist, translateMode);
-    applyReadOnlyState(container, readOnly);
   });
 
   if (!panelId) {
@@ -139,7 +125,7 @@ export function TdMenuContent({
   const panelTitle = `${panelId.charAt(0).toUpperCase()}${panelId.slice(1)}`;
 
   return (
-    <div className="tdmenucontent" data-translate-mode={translateMode ? 'true' : 'false'} data-readonly={readOnly ? 'true' : 'false'}>
+    <div className="tdmenucontent">
       <div className="tdmenucontent__header">
         <div className="heading-3">{panelTitle}</div>
         {header}

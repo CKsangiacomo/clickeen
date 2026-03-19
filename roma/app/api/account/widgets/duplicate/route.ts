@@ -2,7 +2,6 @@ import { after, NextRequest, NextResponse } from 'next/server';
 import {
   deleteSavedConfigFromTokyo,
   loadTokyoPreferredAccountInstance,
-  validatePersistableConfig,
   writeSavedConfigToTokyo,
 } from '@roma/lib/account-instance-direct';
 import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
@@ -206,25 +205,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const validatedConfig = validatePersistableConfig(
-    source.value.config,
-    accountId,
-    source.value.widgetType,
-  );
-  if (!validatedConfig.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: validatedConfig.error }, { status: validatedConfig.status }),
-      current.value.setCookies,
-    );
-  }
-
   const publicId = createUserInstancePublicId(source.value.widgetType);
   const createdRow = await createAccountInstanceRow({
     accountId,
     publicId,
     widgetType: source.value.widgetType,
-    config: validatedConfig.value.config,
+    config: source.value.config,
     berlinAccessToken: current.value.accessToken,
     status: 'unpublished',
   });
@@ -280,7 +266,7 @@ export async function POST(request: NextRequest) {
       publicId,
       accountCapsule: current.value.authzToken,
       widgetType: created.widgetType,
-      config: validatedConfig.value.config,
+      config: source.value.config,
       displayName: created.displayName,
       source: created.source,
       meta: created.meta ?? null,

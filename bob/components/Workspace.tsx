@@ -5,27 +5,25 @@ import { materializeRuntimeConfigForPreview } from '../lib/session/runtimeConfig
 
 export function Workspace() {
   const session = useWidgetSession();
-  const { compiled, instanceData, previewData, preview, setPreview, meta, resolvePreviewAssets } = session;
-  const locale = session.locale.activeLocale;
+  const { compiled, instanceData, preview, setPreview, meta, resolvePreviewAssets } = session;
   const device = preview.device;
   const theme = preview.theme;
   const host = preview.host;
   const hasWidget = Boolean(compiled);
-  const runtimeData = previewData ?? instanceData;
-  const [materializedRuntimeData, setMaterializedRuntimeData] = useState<Record<string, unknown>>(runtimeData);
+  const [materializedRuntimeData, setMaterializedRuntimeData] = useState<Record<string, unknown>>(instanceData);
   const [runtimeMaterializationError, setRuntimeMaterializationError] = useState<string | null>(null);
-  const stageMode = String((runtimeData as any)?.stage?.canvas?.mode || 'viewport');
-  const stageFixedWidth = Number((runtimeData as any)?.stage?.canvas?.width || 0);
-  const stageFixedHeight = Number((runtimeData as any)?.stage?.canvas?.height || 0);
+  const stageMode = String((instanceData as any)?.stage?.canvas?.mode || 'viewport');
+  const stageFixedWidth = Number((instanceData as any)?.stage?.canvas?.width || 0);
+  const stageFixedHeight = Number((instanceData as any)?.stage?.canvas?.height || 0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeHasState, setIframeHasState] = useState(false);
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
-  const latestRef = useRef({ compiled, instanceData: materializedRuntimeData, device, theme, locale });
+  const latestRef = useRef({ compiled, instanceData: materializedRuntimeData, device, theme });
   useEffect(() => {
-    latestRef.current = { compiled, instanceData: materializedRuntimeData, device, theme, locale };
-  }, [compiled, materializedRuntimeData, device, theme, locale]);
+    latestRef.current = { compiled, instanceData: materializedRuntimeData, device, theme };
+  }, [compiled, materializedRuntimeData, device, theme]);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +31,7 @@ export function Workspace() {
     void (async () => {
       try {
         const next = await materializeRuntimeConfigForPreview({
-          config: runtimeData,
+          config: instanceData,
           accountId: meta?.ownerAccountId ?? meta?.accountId,
           assetApiBase: meta?.assetApiBase,
           resolveAssets: resolvePreviewAssets,
@@ -44,7 +42,7 @@ export function Workspace() {
       } catch (error) {
         if (cancelled) return;
         const message = error instanceof Error ? error.message : String(error);
-        setMaterializedRuntimeData(runtimeData);
+        setMaterializedRuntimeData(instanceData);
         setRuntimeMaterializationError(message);
       }
     })();
@@ -52,7 +50,7 @@ export function Workspace() {
     return () => {
       cancelled = true;
     };
-  }, [runtimeData, meta?.accountId, meta?.ownerAccountId, meta?.assetApiBase, resolvePreviewAssets]);
+  }, [instanceData, meta?.accountId, meta?.ownerAccountId, meta?.assetApiBase, resolvePreviewAssets]);
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';
@@ -105,7 +103,6 @@ export function Workspace() {
           type: 'ck:state-update',
           widgetname: nextCompiled.widgetname,
           state: snapshot.instanceData,
-          locale: snapshot.locale,
           device: snapshot.device,
           theme: snapshot.theme,
         },
@@ -146,13 +143,12 @@ export function Workspace() {
       type: 'ck:state-update',
       widgetname: compiled.widgetname,
       state: materializedRuntimeData,
-      locale,
       device,
       theme,
     };
 
     iframeWindow.postMessage(message, '*');
-  }, [hasWidget, compiled, materializedRuntimeData, locale, device, theme, iframeLoaded]);
+  }, [hasWidget, compiled, materializedRuntimeData, device, theme, iframeLoaded]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

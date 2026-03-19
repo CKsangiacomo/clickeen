@@ -18,6 +18,8 @@ Roma is the authenticated product shell for account users. It owns:
 
 Roma is a host/orchestrator. Bob remains the editor kernel.
 
+For the 075 authoring simplification track, Roma's governing authoring path is one boring account flow: resolve current account, open one saved widget document, host Bob editing in memory, and save that document back to Tokyo.
+
 ## Deploy plane (cloud-dev/prod)
 
 - Roma is a Cloudflare Pages app with **one deploy plane**: Git-connected Cloudflare Pages build.
@@ -123,8 +125,8 @@ Client fetch behavior:
 - Browser code calls same-origin Roma routes only.
 - `fetchSameOriginJson` in the browser is just a no-store fetch + timeout/reason wrapper.
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
-- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/account/widgets`, `/api/account/templates`, `/api/account/assets*`, `/api/account/team*`, `/api/account/locales`, Builder/account routes, localization/layer routes).
-- Roma -> Tokyo/Tokyo-worker product control calls now execute through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Explicit Tokyo-worker localization/status/user-layer/sync calls also forward the caller's Berlin bearer so Tokyo-worker can read current account locale truth without reintroducing Roma-owned orchestration.
+- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/account/widgets`, `/api/account/templates`, `/api/account/assets*`, `/api/account/team*`, `/api/account/locales`, Builder/account routes).
+- Roma -> Tokyo/Tokyo-worker product control calls now execute through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
 - Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`; Roma does not infer or probe internal service hosts.
 
 ## Bob orchestration contract (Roma Builder)
@@ -132,18 +134,19 @@ Client fetch behavior:
 `BuilderDomain` flow:
 
 1. Resolve active Roma workspace context + target `publicId`.
-2. Load one Builder-open envelope from Roma same-origin (`GET /api/builder/:publicId/open`), which resolves the saved authoring revision + Tokyo-worker localization snapshot server-side.
+2. Load one Builder-open envelope from Roma same-origin (`GET /api/builder/:publicId/open`), which resolves the saved authoring revision server-side.
 3. Load compiled payload (`/api/widgets/:widgetname/compiled`).
 4. Wait for Bob `bob:session-ready` (`boot=message`).
-5. Send `ck:open-editor` with `requestId + sessionId` plus host asset endpoints for preview/upload materialization (no bearer handoff; Bob relies on shared cookies).
-6. Require ack/applied lifecycle (`bob:open-editor-ack` → `bob:open-editor-applied` or `bob:open-editor-failed`).
+5. Send `ck:open-editor` with `requestId` plus host asset endpoints for preview/upload materialization (no bearer handoff; Bob relies on shared cookies).
+6. Wait for terminal open result (`bob:open-editor-applied` or `bob:open-editor-failed`).
+
+This is the governing product-path authoring flow for the 075 authoring simplification track.
 
 Notes:
 
-- Builder retries open while waiting for ack (bounded attempts + timeout).
 - Bob account mode is message-boot only. Explicit URL boot remains only for non-account surfaces.
 - In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
-- Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/account/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Tokyo-worker-owned instance sync for downstream locale/live work.
+- Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/account/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Tokyo-worker-owned downstream locale/live work.
 - Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and non-owner member removal route through Roma same-origin APIs backed by Berlin (`/api/account/team/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
 - Roma now exposes a dedicated person-scoped User Settings domain at `/profile`. It renders canonical person data from bootstrap, writes self-profile updates through `/api/me` -> Berlin `PUT /v1/me`, initiates auth-owned email change through `/api/me/email-change` -> Berlin `POST /v1/me/email-change`, and runs phone/WhatsApp verification through same-origin relays to Berlin (`/api/me/contact-methods/:channel/start|verify`). Linked identities stay internal and are not part of the standard customer-facing surface.
 - Roma Team now also exposes Berlin-backed invitation issue/list/revoke flows through `/api/account/team/invitations` and `/api/account/team/invitations/:invitationId`. Team does not expose raw accept tokens or shareable acceptance paths as normal invitation metadata.

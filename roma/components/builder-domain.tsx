@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import openEditorLifecycleContractJson from '../../packages/ck-contracts/editor/open-editor-lifecycle.v1.json';
 import { useRomaAccountApi } from './account-api';
 import { getCompiledWidget, normalizeCompiledWidgetType } from './compiled-widget-cache';
 import { resolveAccountPolicyFromRomaAuthz, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
@@ -12,26 +11,10 @@ type BuilderDomainProps = {
   initialPublicId?: string;
 };
 
-type OpenEditorLifecycleContract = {
-  events: {
-    openEditor: string;
-    sessionReady: string;
-    ack: string;
-    applied: string;
-    failed: string;
-  };
-  timing: {
-    ackRetryMs: number;
-    maxAckAttempts: number;
-    timeoutMs: number;
-  };
-};
-
-const OPEN_EDITOR_LIFECYCLE: OpenEditorLifecycleContract = openEditorLifecycleContractJson;
+const OPEN_EDITOR_TIMEOUT_MS = 7000;
 
 type BobReadyMessage = {
-  type: typeof OPEN_EDITOR_LIFECYCLE.events.sessionReady;
-  sessionId?: string | null;
+  type: 'bob:session-ready';
   bootMode?: 'message' | 'url' | null;
 };
 
@@ -40,22 +23,14 @@ type BobSwitchMessage = {
   publicId?: string | null;
 };
 
-type BobOpenEditorAckMessage = {
-  type: typeof OPEN_EDITOR_LIFECYCLE.events.ack;
-  requestId?: string | null;
-  sessionId?: string | null;
-};
-
 type BobOpenEditorAppliedMessage = {
-  type: typeof OPEN_EDITOR_LIFECYCLE.events.applied;
+  type: 'bob:open-editor-applied';
   requestId?: string | null;
-  sessionId?: string | null;
 };
 
 type BobOpenEditorFailedMessage = {
-  type: typeof OPEN_EDITOR_LIFECYCLE.events.failed;
+  type: 'bob:open-editor-failed';
   requestId?: string | null;
-  sessionId?: string | null;
   reasonKey?: string | null;
   message?: string | null;
 };
@@ -66,24 +41,18 @@ type BobAssetEntitlementDeniedMessage = {
 };
 
 type BobAccountCommand =
-  | 'get-localization-snapshot'
-  | 'get-l10n-status'
   | 'list-assets'
   | 'resolve-assets'
   | 'upload-asset'
   | 'update-instance'
-  | 'put-user-locale-layer'
-  | 'delete-user-locale-layer'
   | 'run-copilot'
   | 'attach-ai-outcome';
 
 type BobAccountCommandMessage = {
   type: 'bob:account-command';
   requestId?: string | null;
-  sessionId?: string | null;
   command?: BobAccountCommand | null;
   publicId?: string | null;
-  locale?: string | null;
   headers?: Record<string, string> | null;
   body?: unknown;
 };
@@ -91,7 +60,6 @@ type BobAccountCommandMessage = {
 type HostAccountCommandResultMessage = {
   type: 'host:account-command-result';
   requestId: string;
-  sessionId: string;
   command: BobAccountCommand;
   publicId: string;
   ok: boolean;
@@ -101,9 +69,8 @@ type HostAccountCommandResultMessage = {
 };
 
 type BobOpenEditorMessage = {
-  type: typeof OPEN_EDITOR_LIFECYCLE.events.openEditor;
+  type: 'ck:open-editor';
   requestId: string;
-  sessionId: string;
   subjectMode: 'account';
   publicId: string;
   accountId: string;
@@ -113,12 +80,11 @@ type BobOpenEditorMessage = {
   widgetname: string;
   compiled: unknown;
   instanceData: Record<string, unknown>;
-  localization?: unknown;
   policy?: unknown;
   enforcement?: unknown;
 };
 
-type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId' | 'sessionId'>;
+type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId'>;
 
 type BuilderOpenResponse = {
   accountId?: string;
@@ -128,7 +94,6 @@ type BuilderOpenResponse = {
   widgetType?: string;
   status?: 'published' | 'unpublished';
   config?: Record<string, unknown>;
-  localization?: unknown;
 };
 
 const BUILDER_REASON_COPY: Record<string, string> = {
@@ -144,10 +109,8 @@ const BUILDER_REASON_COPY: Record<string, string> = {
   'coreui.errors.instance.config.invalid': 'This widget has invalid saved data and cannot open right now.',
   'coreui.errors.instance.ownerAccountMissing':
     'This widget is missing required account data and cannot open right now.',
-  'coreui.errors.builder.open.sessionMissing': 'Builder did not start correctly. Please retry.',
   'coreui.errors.builder.open.bootModeInvalid': 'Builder did not start correctly. Please retry.',
   'coreui.errors.builder.open.stale': 'Builder refreshed while opening this widget. Please retry.',
-  'coreui.errors.builder.open.ackTimeout': 'Builder took too long to respond. Please retry.',
   'coreui.errors.builder.open.timeout': 'Builder took too long to respond. Please retry.',
   'coreui.errors.builder.open.failed': 'Builder could not open this widget. Please try again.',
 };
@@ -186,27 +149,11 @@ function buildRomaBuilderRoute(args: {
 function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
   publicId: string;
-  locale?: string;
 }): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
   const publicId = String(args.publicId || '').trim();
-  const locale = String(args.locale || '').trim();
   if (!publicId) return null;
 
   switch (args.command) {
-    case 'get-localization-snapshot':
-      return {
-        method: 'GET',
-        path: `/api/account/instances/${encodeURIComponent(
-          publicId,
-        )}/localization?subject=account`,
-      };
-    case 'get-l10n-status':
-      return {
-        method: 'GET',
-        path: `/api/account/instances/${encodeURIComponent(
-          publicId,
-        )}/l10n/status?subject=account`,
-      };
     case 'update-instance':
       return {
         method: 'PUT',
@@ -226,22 +173,6 @@ function resolveBobAccountCommandRequest(args: {
       return {
         method: 'POST',
         path: `/api/account/assets/upload`,
-      };
-    case 'put-user-locale-layer':
-      if (!locale) return null;
-      return {
-        method: 'PUT',
-        path: `/api/account/instances/${encodeURIComponent(
-          publicId,
-        )}/layers/user/${encodeURIComponent(locale)}?subject=account`,
-      };
-    case 'delete-user-locale-layer':
-      if (!locale) return null;
-      return {
-        method: 'DELETE',
-        path: `/api/account/instances/${encodeURIComponent(
-          publicId,
-        )}/layers/user/${encodeURIComponent(locale)}?subject=account`,
       };
     case 'run-copilot':
       return {
@@ -279,7 +210,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
   const pathname = usePathname();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const bobReadyRef = useRef(false);
-  const bobSessionIdRef = useRef('');
   const openDispatchSeqRef = useRef(0);
   const [activePublicId, setActivePublicId] = useState(() => {
     const fromPath = decodeBuilderPathPublicId(pathname);
@@ -294,6 +224,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
   const currentUrl = pathname;
   const pathPublicId = useMemo(() => decodeBuilderPathPublicId(pathname), [pathname]);
 
+  // Active account authoring truth: Roma hosts one current-account Builder session and opens Bob through one explicit message-boot contract.
   const bobSrc = useMemo(() => {
     const url = new URL('/bob', `${bobBaseUrl}/`);
     url.searchParams.set('boot', 'message');
@@ -324,17 +255,14 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
     async (args: {
       source: Window;
       requestId: string;
-      sessionId: string;
       command: BobAccountCommand;
       publicId: string;
-      locale?: string;
       headers?: Record<string, string>;
       body?: unknown;
     }) => {
       const route = resolveBobAccountCommandRequest({
         command: args.command,
         publicId: args.publicId,
-        locale: args.locale,
       });
       const currentAccountId = String(context.accountId || '').trim();
 
@@ -349,7 +277,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       if (!currentAccountId) {
         reply({
           requestId: args.requestId,
-          sessionId: args.sessionId,
           command: args.command,
           publicId: args.publicId,
           ok: false,
@@ -362,7 +289,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       if (!route) {
         reply({
           requestId: args.requestId,
-          sessionId: args.sessionId,
           command: args.command,
           publicId: args.publicId,
           ok: false,
@@ -402,7 +328,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
 
         reply({
           requestId: args.requestId,
-          sessionId: args.sessionId,
           command: args.command,
           publicId: args.publicId,
           ok: response.ok,
@@ -421,7 +346,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         const message = error instanceof Error ? error.message : String(error);
         reply({
           requestId: args.requestId,
-          sessionId: args.sessionId,
           command: args.command,
           publicId: args.publicId,
           ok: false,
@@ -441,26 +365,17 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         openSeq: number;
       },
     ): Promise<void> => {
-      const sessionId = bobSessionIdRef.current.trim();
-      if (!sessionId) {
-        return Promise.reject(new Error('coreui.errors.builder.open.sessionMissing'));
-      }
       const requestId = crypto.randomUUID();
       const payload: BobOpenEditorMessage = {
         ...args.message,
         requestId,
-        sessionId,
       };
 
       return new Promise((resolve, reject) => {
         let settled = false;
-        let acknowledged = false;
-        let attempts = 0;
-        let retryTimer: number | null = null;
         let timeoutTimer: number | null = null;
 
         const cleanup = () => {
-          if (retryTimer != null) window.clearTimeout(retryTimer);
           if (timeoutTimer != null) window.clearTimeout(timeoutTimer);
           window.removeEventListener('message', onMessage);
         };
@@ -479,54 +394,24 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
           resolve();
         };
 
-        const send = () => {
-          if (settled) return;
-          if (args.openSeq !== openDispatchSeqRef.current) {
-            fail(new Error('coreui.errors.builder.open.stale'));
-            return;
-          }
-
-          attempts += 1;
-          args.targetWindow.postMessage(payload, bobBaseUrl);
-
-          if (!acknowledged) {
-            if (attempts >= OPEN_EDITOR_LIFECYCLE.timing.maxAckAttempts) {
-              fail(new Error('coreui.errors.builder.open.ackTimeout'));
-              return;
-            }
-            retryTimer = window.setTimeout(send, OPEN_EDITOR_LIFECYCLE.timing.ackRetryMs);
-          }
-        };
-
         const onMessage = (event: MessageEvent) => {
           if (event.origin !== bobBaseUrl) return;
           const source = iframeRef.current?.contentWindow;
           if (!source || event.source !== source) return;
           const data = event.data as
-            | BobOpenEditorAckMessage
             | BobOpenEditorAppliedMessage
             | BobOpenEditorFailedMessage
             | null;
           if (!data || typeof data !== 'object') return;
           const dataRequestId = typeof data.requestId === 'string' ? data.requestId.trim() : '';
-          const dataSessionId = typeof data.sessionId === 'string' ? data.sessionId.trim() : '';
-          if (dataRequestId !== requestId || dataSessionId !== sessionId) return;
+          if (dataRequestId !== requestId) return;
 
-          if (data.type === OPEN_EDITOR_LIFECYCLE.events.ack) {
-            acknowledged = true;
-            if (retryTimer != null) {
-              window.clearTimeout(retryTimer);
-              retryTimer = null;
-            }
-            return;
-          }
-
-          if (data.type === OPEN_EDITOR_LIFECYCLE.events.applied) {
+          if (data.type === 'bob:open-editor-applied') {
             succeed();
             return;
           }
 
-          if (data.type === OPEN_EDITOR_LIFECYCLE.events.failed) {
+          if (data.type === 'bob:open-editor-failed') {
             const failed = data as BobOpenEditorFailedMessage;
             const reason =
               (typeof failed.reasonKey === 'string' && failed.reasonKey.trim()) ||
@@ -539,9 +424,13 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         window.addEventListener('message', onMessage);
         timeoutTimer = window.setTimeout(() => {
           fail(new Error('coreui.errors.builder.open.timeout'));
-        }, OPEN_EDITOR_LIFECYCLE.timing.timeoutMs);
+        }, OPEN_EDITOR_TIMEOUT_MS);
 
-        send();
+        if (args.openSeq !== openDispatchSeqRef.current) {
+          fail(new Error('coreui.errors.builder.open.stale'));
+          return;
+        }
+        args.targetWindow.postMessage(payload, bobBaseUrl);
       });
     },
     [bobBaseUrl],
@@ -604,7 +493,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         throw new Error('coreui.errors.auth.contextUnavailable');
       }
       const message: BobOpenEditorPayload = {
-        type: OPEN_EDITOR_LIFECYCLE.events.openEditor,
+        type: 'ck:open-editor',
         subjectMode: 'account',
         publicId: resolvedPublicId,
         accountId: openedAccountId,
@@ -614,7 +503,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         widgetname: widgetType,
         compiled,
         instanceData: config,
-        localization: builderOpen.localization,
         policy: bootstrapPolicy,
         enforcement: undefined,
       };
@@ -652,18 +540,12 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         | BobAccountCommandMessage
         | null;
       if (!data || typeof data !== 'object') return;
-      if (data.type === OPEN_EDITOR_LIFECYCLE.events.sessionReady) {
+      if (data.type === 'bob:session-ready') {
         const ready = data as BobReadyMessage;
-        const sessionId = typeof ready.sessionId === 'string' ? ready.sessionId.trim() : '';
-        if (!sessionId) {
-          setOpenError('coreui.errors.builder.open.sessionMissing');
-          return;
-        }
         if (ready.bootMode && ready.bootMode !== 'message') {
           setOpenError('coreui.errors.builder.open.bootModeInvalid');
           return;
         }
-        bobSessionIdRef.current = sessionId;
         bobReadyRef.current = true;
         if (activePublicId) {
           void openActiveInstanceInBob();
@@ -681,21 +563,16 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       if (data.type === 'bob:account-command') {
         const message = data as BobAccountCommandMessage;
         const requestId = typeof message.requestId === 'string' ? message.requestId.trim() : '';
-        const sessionId = typeof message.sessionId === 'string' ? message.sessionId.trim() : '';
         const command = message.command ?? null;
         const publicId = typeof message.publicId === 'string' ? message.publicId.trim() : '';
-        const locale = typeof message.locale === 'string' ? message.locale.trim() : '';
         const headers =
           message.headers && typeof message.headers === 'object' ? message.headers : undefined;
-        if (!requestId || !sessionId || !command || !publicId) return;
-        if (sessionId !== bobSessionIdRef.current.trim()) return;
+        if (!requestId || !command || !publicId) return;
         void runBobAccountCommand({
           source,
           requestId,
-          sessionId,
           command,
           publicId,
-          ...(locale ? { locale } : {}),
           ...(headers ? { headers } : {}),
           ...(typeof message.body === 'undefined' ? {} : { body: message.body }),
         });
@@ -717,7 +594,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
 
   useEffect(() => {
     bobReadyRef.current = false;
-    bobSessionIdRef.current = '';
     openDispatchSeqRef.current += 1;
     setOpenError(null);
   }, [bobSrc]);

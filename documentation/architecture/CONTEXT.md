@@ -17,6 +17,31 @@ Docs are the source of truth for intended behavior; runtime code + schema are th
 
 ---
 
+## Product Truth (Read Before Coding)
+
+Clickeen is a simple product.
+
+The real product path is:
+
+1. A real account owns widgets and assets.
+2. A real user in that account opens Builder in Roma.
+3. Bob edits one widget in memory.
+4. Roma saves that widget to Tokyo.
+5. Entitlements from the account are the only source of limits, caps, budgets, and upsell.
+
+Non-negotiable negative truths:
+
+- Builder is the only real authoring surface.
+- Minibob is a demo/funnel surface. It may preview, collect intent, and hand off to signup. It is **not** a user, account, editor identity, policy profile, or save-capable product mode.
+- Editing always happens in **one active locale at a time**. Switching locale changes the active editing context only. Translation is async follow-up work after save.
+- Preview must reflect the same widget the customer is editing. Preview is **not** a second widget-shaped truth.
+- Invalid state must fail at the named boundary. Do not silently heal product truth into a new normal.
+- Non-account/helper/demo flows may exist in code while being reduced, but they do **not** define account authoring truth.
+
+If code cannot be explained in that model, it is suspect by default.
+
+---
+
 ## AI-First Company Architecture
 
 Clickeen is designed from the ground up to be **built by AI** and **run by AI**:
@@ -68,22 +93,16 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 ### Product-Path Account Editing (Current PRD 61 Cutover)
 
-Core account editing currently uses direct app-owned read/write paths plus explicit follow-up routes for localization/live sync:
+Core account editing currently uses direct app-owned read/write paths for the one widget document Builder edits:
 
-1. **Open core instance**: `GET /api/builder/:publicId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads the saved authoring revision from Tokyo through the private product-control binding, loads the localization snapshot from Tokyo-worker server-side, and then sends Bob one `ck:open-editor` payload. Explicit localization refresh/status routes remain separate.
+For the 075 authoring simplification track, this account-mode Roma -> Bob -> Tokyo chain is the governing authoring path; non-account/helper flows do not define account authoring truth.
+
+1. **Open core instance**: `GET /api/builder/:publicId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads the saved authoring revision from Tokyo through the private product-control binding, and then sends Bob one `ck:open-editor` payload.
 2. **Save**: `PUT /api/account/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly and return success immediately. Tokyo computes the canonical l10n fingerprint/snapshot on that save write. The Tokyo commit is the save boundary.
-3. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute policy on each open/save/localization/status call; the signed capsule carries stable authz truth, while live mutable counters are enforced at the canonical owner when needed.
-4. **Localization/live follow-up**: explicit Roma widget/localization routes trigger Tokyo-worker sync when locale artifacts or live/runtime surfaces need to converge. Tokyo-worker reads the current Tokyo saved revision plus Berlin account locale truth and performs the reconciliation. Product-path save does not own that work.
+3. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute policy on each open/save call; the signed capsule carries stable authz truth, while live mutable counters are enforced at the canonical owner when needed.
+4. **Localization/live follow-up**: translation and locale convergence remain downstream work owned outside the Builder save loop. Product-path save does not own that work.
 
-Explicit localization-only reads are separate from core open:
-
-- `GET /api/account/instances/:publicId/localization?subject=account` — same-origin explicit localization snapshot rehydrate (Roma route backed by Tokyo-worker account-localization control)
-
-Async l10n pipeline status is observed through:
-
-- `GET /api/account/instances/:publicId/l10n/status?subject=account` — same-origin l10n status read through Tokyo-worker account-localization control
-
-`subject` is required on editor endpoints (`account`, `minibob`) to select the editor mode. On `account` product routes, policy/entitlement truth comes from the bootstrap authz capsule, not a fresh Paris policy resolution.
+On the real product path, editor routes are account-mode routes. If non-account/demo/helper route shapes still exist in code while being reduced, they do not define shared editor semantics or account authoring truth. On `account` product routes, policy/entitlement truth comes from the bootstrap authz capsule, not a fresh Paris policy resolution.
 
 In the browser the active account-mode host path is:
 
@@ -91,7 +110,7 @@ In the browser the active account-mode host path is:
 
 Bob does not URL-bootstrap account mode. Account editing is host-only.
 
-Localization is separate: Bob/Roma product flows call explicit account/instance localization endpoints when rehydrating overlay state or applying overlay edits. Those reads/writes are intentional and do **not** save the base config.
+Localization is separate from Builder authoring: account locale policy lives in Roma Settings, and translation/runtime locale convergence happens downstream from the one widget save path.
 
 Between open and save:
 
@@ -99,9 +118,9 @@ Between open and save:
 - Preview updates via postMessage (no Paris API calls for base config)
 - Core account instance open does not require Paris
 - Core account instance persistence does not proxy Paris
-- Localization overlay reads/writes use Roma same-origin routes backed by Tokyo l10n artifacts
 - ZERO database writes for base config during normal product open/save
-- Base config is not required to be English; Minibob may author base config in the user’s ConversationLanguage.
+- Base config is not required to be English; Builder always edits one active locale at a time, and translation to other locales is async follow-up work after save.
+- No demo/non-account surface writes durable account widget truth.
 
 **Why:** 10,000 users editing simultaneously = no server load for base config. Localization writes are scoped overlays, enabling async translation while preserving user edits. Millions of landing page visitors = zero DB pollution until signup + publish.
 
@@ -163,12 +182,12 @@ curated_widget_instances.meta = {
 
 | System            | Purpose                                                         | Runtime                         | Repo Path       |
 | ----------------- | --------------------------------------------------------------- | ------------------------------- | --------------- |
-| **Prague**        | Marketing site + gallery                                        | Cloudflare Pages                | `prague/`       |
-| **Bob**           | Widget builder app                                              | Cloudflare Pages (Next.js)      | `bob/`          |
-| **Roma**          | Product shell (account domains + Builder host orchestration)    | Cloudflare Pages (Next.js)      | `roma/`         |
+| **Prague**        | Marketing site + gallery + demo/funnel surfaces                 | Cloudflare Pages                | `prague/`       |
+| **Bob**           | Account Builder editor runtime; the real widget authoring UI    | Cloudflare Pages (Next.js)      | `bob/`          |
+| **Roma**          | Current-account product shell + Builder host orchestration      | Cloudflare Pages (Next.js)      | `roma/`         |
 | **DevStudio**     | Internal toolbench for platform curation, verification, and local utility pages | Local Vite toolbench            | `admin/`        |
 | **Venice**        | SSR embed runtime                                               | Cloudflare Pages (Next.js Edge) | `venice/`       |
-| **Paris**         | Residual health stub + non-product residue                      | Cloudflare Workers              | `paris/`        |
+| **Paris**         | Residual health stub + non-product residue; not on the product authoring path | Cloudflare Workers              | `paris/`        |
 | **San Francisco** | AI Workforce OS (agents, learning)                              | Workers (D1/KV/R2/Queues)       | `sanfrancisco/` |
 | **Michael**       | Database                                                        | Supabase Postgres               | `supabase/`     |
 | **Dieter**        | Design system                                                   | Build artifacts in Tokyo        | `dieter/`       |
@@ -180,9 +199,9 @@ curated_widget_instances.meta = {
 
 ## Glossary
 
-**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly. Bob does not own published/unpublished state changes; those remain in Roma widgets domain, and its copy-code affordance is only for getting website embed snippets. Widget-agnostic: ONE codebase serves ALL widgets. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
+**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly. Bob does not own published/unpublished state changes; those remain in Roma widgets domain, and its copy-code affordance is only for getting website embed snippets. Bob is the real account authoring UI. Shared Bob code must model the account Builder product path, not preserve demo/funnel identities as co-equal editor modes. Copilot browser entrypoint is `POST /api/ai/widget-copilot`.
 
-**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`ck:open-editor` with ack/applied/fail lifecycle), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and exposes explicit localization rehydrate/status plus widget/localization sync routes that delegate execution to Tokyo-worker. Current Roma is a single-current-account customer shell and does not expose customer account switching. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
+**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`bob:session-ready` -> `ck:open-editor` -> applied/fail), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and exposes explicit localization rehydrate/status plus widget/localization sync routes that delegate execution to Tokyo-worker. Current Roma is a single-current-account customer shell and does not expose customer account switching. Roma is the real account/product boundary for Builder. It must not model a fake anonymous editor/account mode inside shared account truth. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
 
 **DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, verification, and small local utility pages. The old local DevStudio widget-authoring lane is removed. DevStudio must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 

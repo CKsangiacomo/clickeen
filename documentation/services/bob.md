@@ -6,6 +6,8 @@ For the canonical account-management model Bob must consume rather than own, see
 
 This document describes the **current** repo implementation.
 
+For the 075 authoring simplification track, Bob's governing product path is Roma-hosted account editing: Roma opens one saved widget document for the current account, Bob edits it in memory, and save delegates back to Roma. Non-account boot paths do not define account authoring truth.
+
 ---
 
 ## Core Invariants
@@ -23,7 +25,7 @@ Between load and save, Bob does not write intermediate edits to the saved revisi
 
 Bob intentionally separates:
 
-- **Saving config** (writes through Bob/Roma same-origin routes to Tokyo): appears as **Save / Discard** buttons whenever the current editor state is dirty, including base edits and locale override edits.
+- **Saving config** (writes through Bob/Roma same-origin routes to Tokyo): appears as **Save / Discard** buttons when the base widget document is dirty. Save persists that one widget document only. Builder no longer treats localization as a second save lane.
 - **Copy code in Bob** is only the embed-code affordance: the **Copy code** button opens a modal containing the snippets needed to place the widget on a website (safe iframe + gated iframe++ SEO/GEO).
 - **Bob has no live/unlive toggle** and does not manage published/unpublished state.
 - Active account routes authorize from the Berlin-issued bootstrap account authz capsule carried by Roma/Bob. They do not re-read account membership on normal editor open/save paths.
@@ -35,7 +37,6 @@ The Settings panel is widget-defined behavior controls; it must not contain embe
 - Host surfaces own widget-level navigation and host-only orchestration actions. In active product/account mode, that host is Roma.
 - Roma Builder embeds Bob via iframe and keeps only the standard Roma domain header above it (no ad-hoc middle toolbars).
 - Bob TopDrawer shows current-instance context and the copy-code affordance, but does not own instance metadata actions such as rename or publish/unpublish.
-- Translation status is shown in Bob’s Localization panel header (not in host page headers).
 
 ### Spec-driven + control-driven (not UI-driven)
 
@@ -58,7 +59,7 @@ Bob compiles the spec into a deterministic contract:
 
 - Product/backend grant issuers resolve entitlements from the global matrix (`packages/ck-policy/entitlements.matrix.json`).
 - Widget-specific limits live in `tokyo/widgets/{widget}/limits.json` and are loaded with the compiled payload.
-- Bob enforces limits on ops and sanitizes blocked values on load (no widget-specific branches).
+- Bob may surface UX guidance from policy, but the account save/open boundary belongs to Roma. Bob does not run a second authoritative save gate on the hot edit path.
 
 ---
 
@@ -66,29 +67,22 @@ Bob compiles the spec into a deterministic contract:
 
 ### Host bootstrap contract (current repo behavior)
 
-Host surfaces (Roma/Prague MiniBob) fetch:
-
-- `compiled` (via Bob compile API)
-- `instanceData` (via host-owned routes; account mode uses Roma same-origin routes, MiniBob uses the Venice-served, Tokyo-assembled public instance payload through Bob’s public helper route)
-- `localization`
-- `policy`
+Active account authoring host path: Roma Builder fetches `compiled`, `instanceData`, and `policy`, then waits for Bob session readiness and sends `ck:open-editor`.
 
 Then they wait for Bob session readiness and post into Bob:
 
 ```js
 // Bob -> host
-{ type: 'bob:session-ready', sessionId, bootMode: 'message' }
+{ type: 'bob:session-ready', bootMode: 'message' }
 
 // host -> Bob
 {
   type: 'ck:open-editor',
   requestId,
-  sessionId,
   subjectMode, // 'account' | 'minibob'
   widgetname,
   compiled,
   instanceData,
-  localization,
   policy,
   accountId,
   publicId,
@@ -99,15 +93,14 @@ Then they wait for Bob session readiness and post into Bob:
 ```
 
 Bob’s session runtime is now composed from explicit modules under `bob/lib/session/`.
-`useWidgetSession.tsx` is the composition shell; boot/open lives in `useSessionBoot.ts`, transport in `sessionTransport.ts`, editing in `useSessionEditing.ts`, localization in `useSessionLocalization.ts`, saving in `useSessionSaving.ts`, and copilot thread state in `useSessionCopilot.ts`.
+`useWidgetSession.tsx` is the composition shell; boot/open lives in `useSessionBoot.ts`, transport in `sessionTransport.ts`, editing in `useSessionEditing.ts`, saving in `useSessionSaving.ts`, and copilot thread state in `useSessionCopilot.ts`.
 Together they:
 
 - Requires `compiled.controls[]` (must be present and non-empty)
-- Uses `compiled.defaults` when `instanceData` is null
+- Requires an explicit `instanceData` document on open; Bob does not promote `compiled.defaults` into visible widget truth
 - Stores `{ compiled, instanceData }` in React state
 - Never auto-picks a different instance when `publicId` is missing.
-- Replies with `bob:open-editor-ack`, then terminal `bob:open-editor-applied` or `bob:open-editor-failed`.
-- Keeps request idempotency state per `requestId` so repeated host sends do not apply duplicate open operations.
+- Replies with terminal `bob:open-editor-applied` or `bob:open-editor-failed` for the current host request.
 - Treats host asset endpoints as part of the hosted-editor contract when present; preview runtime may materialize logical media through the host’s asset resolve route instead of assuming authoring config already contains runtime URLs.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
 - Local Bob is tool-trusted only for explicit internal tool flows: there is **no local browser-login shortcut** and hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma account routes. Bob must not treat a trusted local token as sufficient authority on account product paths. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
@@ -115,16 +108,7 @@ Together they:
 
 ### URL bootstrap (deterministic, no auto-pick)
 
-Bob URL bootstrap is only for explicit non-hosted surfaces.
-If `?subject=account`, Bob requires `?boot=message` and host `ck:open-editor`.
-The shipped Prague MiniBob path also uses `?boot=message` plus host `ck:open-editor`.
-If URL mode is selected for account mode, Bob fails instead of acting like a second product client.
-In `?boot=message`, Bob ignores URL instance params and waits for host `ck:open-editor`.
-Hosted behavior is generic:
-- if `boot=message` and `subject=account`, Bob is a host-backed editor session
-- if `boot=message` and `subject=minibob`, Bob is also a host-backed editor session
-- Bob does not directly call customer `/api/account/*` routes in that mode
-- all account reads/writes/l10n-status/copilot actions must go through the parent host bridge
+Bob URL bootstrap is only for explicit non-hosted surfaces. In account mode, Bob requires `?boot=message`, ignores URL instance params, waits for host `ck:open-editor`, and does not call customer `/api/account/*` routes directly.
 
 ### Hybrid dev (Roma in cloud, Bob local)
 
@@ -159,10 +143,12 @@ Read-only mode (DevStudio cloud):
 
 Core base-config lifecycle per open session:
 
-1. One core instance load plus one explicit localization rehydrate, both performed by the host in account message boot before Bob receives `ck:open-editor`.
+1. One core instance load performed by the host in account message boot before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
-3. One save/write command on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes its same-origin `PUT /api/account/instance/:publicId?subject=account`; Bob does not call account product routes directly. These routes commit the saved revision through Tokyo and return success immediately. Any localization refresh is observed later via l10n status routes and does not block or redefine save semantics.
+3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instance/:publicId?subject=account` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
 4. Bob opens the saved document it was given. It does not merge missing widget defaults into account-hosted config on load; invalid saved config is a save/open boundary bug and is rejected by Roma before Builder trusts it.
+
+Within Bob, explicit save ownership stays in `useSessionSaving.ts`. Builder no longer mounts a localization overlay/session subsystem on the active account editing path.
 
 Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
 
@@ -188,6 +174,7 @@ tokyo/widgets/{widget}/
 Bob consumes `spec.json` + runtime assets and loads `limits.json` for entitlements; the other contract files are consumed by Tokyo-worker, Venice, and Prague on their owner-correct surfaces.
 
 Widget spec contract:
+
 - `spec.json` carries an explicit top-level `v`.
 - Bob compile route fails closed on unsupported spec versions instead of caching malformed compiled output.
 
@@ -496,28 +483,14 @@ See also:
 
 ## l10n (Instance content overlays)
 
-Bob supports instance-content localization (not editor chrome):
+Builder no longer owns localization overlay authoring, localization snapshot rehydrate, localization status polling, or user-layer writes on the active account editing path.
 
-- Locale preview uses layered overlays through Roma-owned account routes in hosted account mode.
-- MiniBob locale preview uses a host-provided public localization snapshot built from Venice/Tokyo `ready` truth.
-- Manual overrides are stored in layer=user (`/layers/user/:locale` or `/layers/user/global`) and merged last at runtime.
-- In Translate mode, edits are saved as per-field overrides (layer=user) and never change structure.
-- Structural edits (add/remove items) happen only in the base locale (Edit mode), then publish to regenerate locale overlays.
-- "Use auto-translate instead" is a local editor change; Bob clears the active locale's manual overrides in memory, and the actual `layer=user` delete happens only when the user clicks **Save**.
-- Localization status is derived from the current localization snapshot:
-  - `Base only` when no non-base locales are available
-  - `x/y ready` from `readyLocales` vs `allowedLocales`
-  - `Needs save` when the current snapshot is stale against the base
-- If a locale is selected but no usable overlay exists, Bob must show explicit "not generated yet" state (no silent fallback-as-ready).
+Current product truth:
 
-MiniBob contract:
-- MiniBob can view all locales that are already `ready` in the public localization snapshot.
-- MiniBob action limits still come from `policy` and upsell handling.
-- Bob must not collapse visible locales to the base locale just because the subject is `minibob`.
-- Host-backed localization is a strict contract for both `account` and `minibob`: if the host/public payload is malformed, Bob must fail the open/load instead of normalizing it.
-
-Note: localization writes are separate from the base-config two-call pattern; overlays persist through Roma/Tokyo authoring routes without publishing the base config.
-In Roma-hosted account flows, those localization writes also traverse the Roma host command boundary instead of Bob writing straight through itself.
+- Bob edits one widget document in memory.
+- Roma saves that one widget document.
+- Account locale policy/settings remain Roma-owned.
+- Translation and locale follow-up work happen downstream, outside the Builder save flow.
 
 Reference:
 
