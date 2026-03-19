@@ -93,8 +93,8 @@ Current runtime contract:
 - On that same saved-config write, Tokyo-worker also computes the current localization base snapshot/fingerprint from `tokyo/widgets/{widgetType}/localization.json` and stamps that onto the saved pointer.
 - Bob/Roma product-path save does not inline l10n/live-surface convergence; explicit Tokyo-worker sync does that separately when Roma widget/localization routes request it.
 - Bob/Roma product-path account reads use this Tokyo saved snapshot as the active open/save truth.
-- Localization overlay authoring/readback is part of the Tokyo/Tokyo-worker l10n plane; explicit localization rehydrate/status now execute on Tokyo-worker and read canonical Tokyo state there.
-- `layer=user` writes/deletes also execute on Tokyo-worker; Roma only forwards the request/auth boundary.
+- Localization overlay authoring/readback remains part of the Tokyo/Tokyo-worker l10n plane. It is no longer a Builder-localization control loop on the active account authoring path.
+- `layer=user` writes/deletes still execute on Tokyo-worker where that l10n plane is used; Roma is only the account/request boundary for those non-Builder flows.
 - Public MiniBob payload assembly also executes on Tokyo-worker from live Tokyo truth; Venice proxies that payload instead of reconstructing it locally.
 - The Tokyo account-localization implementation is now split by Tokyo-owned responsibilities (`state`, `user-layer`, `mirror`, `utils`) behind this same domain surface.
 

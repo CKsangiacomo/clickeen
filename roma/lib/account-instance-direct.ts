@@ -1,12 +1,9 @@
 import {
-  classifyWidgetPublicId,
-} from '@clickeen/ck-contracts';
-import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
 } from './tokyo-product-control';
 
-// Roma's direct instance path is the server boundary for one boring product flow: open the saved document from Tokyo, validate the persisted-document contract, and save it back.
+// Roma's direct instance path is the server boundary for one boring product flow: open the saved document from Tokyo and save it back.
 
 export type DirectRouteError = {
   kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
@@ -24,7 +21,6 @@ type RouteFailure = {
 export type AccountInstanceCoreRow = {
   publicId: string;
   displayName: string | null;
-  status: 'published' | 'unpublished';
   updatedAt?: string | null;
   widgetId?: string;
   accountId: string;
@@ -32,6 +28,8 @@ export type AccountInstanceCoreRow = {
   meta?: Record<string, unknown> | null;
   source?: 'account' | 'curated';
 };
+
+export type AccountInstanceLiveStatus = 'published' | 'unpublished';
 
 type TokyoSavedInstancePayload = {
   publicId?: unknown;
@@ -54,10 +52,14 @@ function asTrimmedString(value: unknown): string | null {
   return normalized || null;
 }
 
-function normalizeAccountInstanceSource(value: unknown, publicId: string): 'account' | 'curated' {
-  if (value === 'account' || value === 'curated') return value;
-  const kind = classifyWidgetPublicId(publicId);
-  return kind === 'user' ? 'account' : 'curated';
+class InvalidSavedInstanceError extends Error {
+  reasonKey: string;
+
+  constructor(reasonKey: string, detail?: string) {
+    super(detail || reasonKey);
+    this.name = 'InvalidSavedInstanceError';
+    this.reasonKey = reasonKey;
+  }
 }
 
 function resolveTokyoControlErrorDetail(
@@ -74,7 +76,6 @@ function resolveTokyoControlErrorDetail(
 }
 
 async function loadSavedInstanceFromTokyo(args: {
-  tokyoBaseUrl: string;
   tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountId: string;
@@ -101,35 +102,30 @@ async function loadSavedInstanceFromTokyo(args: {
   if (!response.ok) {
     throw new Error(resolveTokyoControlErrorDetail(payload, `tokyo_saved_config_http_${response.status}`));
   }
-  if (!isRecord(payload?.config)) return null;
-
-  const liveResponse = await fetch(
-    `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/live/r.json`,
-    {
-      method: 'GET',
-      headers: { accept: 'application/json' },
-      cache: 'no-store',
-    },
-  );
-  if (!liveResponse.ok && liveResponse.status !== 404) {
-    throw new Error(`tokyo_live_pointer_http_${liveResponse.status}`);
+  if (!isRecord(payload?.config)) {
+    throw new InvalidSavedInstanceError('coreui.errors.instance.config.invalid');
   }
 
-  const publicId = asTrimmedString(payload?.publicId) ?? args.publicId;
-  const accountId = asTrimmedString(payload?.accountId) ?? args.accountId;
+  const publicId = asTrimmedString(payload?.publicId);
+  const accountId = asTrimmedString(payload?.accountId);
   const widgetType = asTrimmedString(payload?.widgetType);
-  if (!publicId || !accountId || !widgetType) return null;
+  if (!publicId || !accountId) {
+    throw new InvalidSavedInstanceError('coreui.errors.instance.config.invalid');
+  }
+  if (!widgetType) {
+    throw new InvalidSavedInstanceError('coreui.errors.instance.widgetMissing');
+  }
+  const source = payload?.source === 'account' || payload?.source === 'curated' ? payload.source : undefined;
 
   return {
     row: {
       publicId,
       displayName: asTrimmedString(payload?.displayName),
-      status: liveResponse.status === 404 ? 'unpublished' : 'published',
       updatedAt: asTrimmedString(payload?.updatedAt),
       accountId,
       widgetType,
       meta: isRecord(payload?.meta) ? (payload.meta as Record<string, unknown>) : null,
-      source: normalizeAccountInstanceSource(payload?.source, publicId),
+      source,
     },
     config: payload.config as Record<string, unknown>,
   };
@@ -142,7 +138,7 @@ export async function writeSavedConfigToTokyo(args: {
   accountId: string;
   publicId: string;
   accountCapsule?: string | null;
-  widgetType: string;
+  widgetType?: string;
   config: Record<string, unknown>;
   displayName?: string | null;
   source?: 'account' | 'curated';
@@ -163,7 +159,7 @@ export async function writeSavedConfigToTokyo(args: {
     baseUrl: args.tokyoControlBaseUrl,
     accessToken: args.tokyoAccessToken,
     body: JSON.stringify({
-      widgetType: args.widgetType,
+      ...(args.widgetType ? { widgetType: args.widgetType } : {}),
       config: args.config,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.source ? { source: args.source } : {}),
@@ -279,10 +275,9 @@ export async function updateSavedPointerMetadataInTokyo(args: {
   }
 }
 
-export async function loadTokyoPreferredAccountInstance<TRow extends AccountInstanceCoreRow>(args: {
+export async function loadTokyoAccountInstanceDocument<TRow extends AccountInstanceCoreRow>(args: {
   accountId: string;
   publicId: string;
-  tokyoBaseUrl: string;
   tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountCapsule?: string | null;
@@ -297,7 +292,6 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
   let saved: { row: AccountInstanceCoreRow; config: Record<string, unknown> } | null = null;
   try {
     saved = await loadSavedInstanceFromTokyo({
-      tokyoBaseUrl: args.tokyoBaseUrl,
       tokyoControlBaseUrl: args.tokyoControlBaseUrl,
       tokyoAccessToken: args.tokyoAccessToken,
       accountId: args.accountId,
@@ -306,6 +300,17 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
       accountCapsule: args.accountCapsule,
     });
   } catch (error) {
+    if (error instanceof InvalidSavedInstanceError) {
+      return {
+        ok: false,
+        status: 422,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: error.reasonKey,
+          detail: error.message,
+        },
+      };
+    }
     return {
       ok: false,
       status: 502,
@@ -337,61 +342,64 @@ export async function loadTokyoPreferredAccountInstance<TRow extends AccountInst
   };
 }
 
+export async function loadTokyoAccountInstanceLiveStatus(args: {
+  tokyoBaseUrl: string;
+  publicId: string;
+}): Promise<
+  | { ok: true; value: AccountInstanceLiveStatus }
+  | RouteFailure
+> {
+  try {
+    const response = await fetch(
+      `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/live/r.json`,
+      {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+        cache: 'no-store',
+      },
+    );
+    if (!response.ok && response.status !== 404) {
+      return {
+        ok: false,
+        status: 502,
+        error: {
+          kind: 'UPSTREAM_UNAVAILABLE',
+          reasonKey: 'coreui.errors.db.readFailed',
+          detail: `tokyo_live_pointer_http_${response.status}`,
+        },
+      };
+    }
+
+    return {
+      ok: true,
+      value: response.status === 404 ? 'unpublished' : 'published',
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      status: 502,
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'coreui.errors.db.readFailed',
+        detail: error instanceof Error ? error.message : String(error),
+      },
+    };
+  }
+}
+
 export async function saveAccountInstanceDirect(args: {
   accountId: string;
   publicId: string;
-  config: unknown;
+  config: Record<string, unknown>;
   tokyoBaseUrl: string;
   tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
-  | {
-      ok: true;
-      value: {
-        config: Record<string, unknown>;
-        changed: boolean;
-        instance: {
-          widgetType: string;
-          status: 'published' | 'unpublished';
-          source?: 'account' | 'curated';
-        };
-        published: boolean;
-      };
-    }
+  | { ok: true }
   | RouteFailure
 > {
-  const current = await loadTokyoPreferredAccountInstance({
-    accountId: args.accountId,
-    publicId: args.publicId,
-    tokyoBaseUrl: args.tokyoBaseUrl,
-    tokyoControlBaseUrl: args.tokyoControlBaseUrl,
-    tokyoAccessToken: args.tokyoAccessToken,
-    accountCapsule: args.accountCapsule,
-    internalServiceName: args.internalServiceName,
-  });
-  if (current.ok === false) {
-    return {
-      ok: false,
-      status: current.status,
-      error: current.error,
-    };
-  }
-
-  if (!isRecord(args.config)) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.config.invalid',
-        paths: ['config'],
-      },
-    };
-  }
-  const nextConfig = args.config as Record<string, unknown>;
-
   try {
     await writeSavedConfigToTokyo({
       tokyoBaseUrl: args.tokyoBaseUrl,
@@ -401,8 +409,7 @@ export async function saveAccountInstanceDirect(args: {
       publicId: args.publicId,
       internalServiceName: args.internalServiceName,
       accountCapsule: args.accountCapsule,
-      widgetType: current.value.row.widgetType,
-      config: nextConfig,
+      config: args.config,
     });
   } catch (error) {
     return {
@@ -416,17 +423,5 @@ export async function saveAccountInstanceDirect(args: {
     };
   }
 
-  return {
-    ok: true,
-    value: {
-      config: nextConfig,
-      changed: true,
-      instance: {
-        widgetType: current.value.row.widgetType,
-        status: current.value.row.status,
-        source: current.value.row.source,
-      },
-      published: current.value.row.status === 'published',
-    },
-  };
+  return { ok: true };
 }

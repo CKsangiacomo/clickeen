@@ -428,31 +428,27 @@ Notes:
 
 ---
 
-## Base-Config Two-Call Architecture
+## Account Builder Open/Edit/Save Architecture
 
-Base config exists in EXACTLY 3 places during editing:
+On the active account authoring path, the widget document exists in exactly 2 places during editing:
 
-1. **Tokyo saved snapshot** — Persisted saved revision base
-2. **Michael (database)** — Compatibility/account row copy during cutover
-3. **Bob's React state** — Working copy (`instanceData`)
+1. **Tokyo saved revision** — persisted document truth
+2. **Bob's React state** — working copy (`instanceData`)
 
 **The Pattern:**
 
 ```
-1. Load:    GET /api/builder/:publicId/open  → host (message boot) gets saved config + localization through one Roma same-origin route
+1. Load:    GET /api/builder/:publicId/open  → Roma gets the saved widget and message-boots Bob once
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:publicId?subject=account`  → Commits to Tokyo and returns immediately; localization refresh and live-surface sync happen only through explicit Roma localization/widget routes that invoke Tokyo-worker sync when needed
-
-Snapshot/l10n convergence is observed via:
-- `GET /api/account/instances/:publicId/l10n/status`
+4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:publicId?subject=account` → commits the one widget document to Tokyo and returns immediately
 ```
 
-In Roma message-boot account flows, the host performs the initial load call and sends Bob a resolved `ck:open-editor` payload. Save, localization rehydrate, and l10n status reads also return through the host boundary before hitting the Roma account routes.
+In Roma message-boot account flows, the host performs the initial load call and sends Bob one resolved `ck:open-editor` payload. Save returns through that same Roma account boundary.
 
-`subject` is required on editor endpoints (`account`, `minibob`) to resolve policy.
+Builder no longer mounts a localization authoring lane on this path. Translation and runtime convergence are downstream follow-up work, not part of the user meaning of Save.
 
-Localization is separate: overlay edits write through Roma into Tokyo/Tokyo-worker and do not touch the base config.
+Preview reflects the widget Bob is editing. It is not a second widget-shaped state.
 
 **Between load and save:** Zero base-config writes. 10,000 users editing = 10,000 in-memory states, no server load for base config.
 
@@ -629,13 +625,13 @@ All third-party embed traffic terminates at Venice:
 ### 1. Editing Flow
 
 ```
-User opens widget → Host (Roma message boot, or Prague MiniBob for minibob) GET instance core, or Bob URL boot for non-account surfaces only
-                  → Roma same-origin route reads Tokyo saved revision
+User opens widget → Roma GET /api/builder/:publicId/open
+                  → Roma sends one ck:open-editor payload to Bob
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
                   → User clicks Save
                   → Roma same-origin route writes Tokyo saved revision
-                  → Tokyo-worker refreshes Tokyo config/text/meta/live-pointer bytes when explicit Roma widget/localization sync is requested for a live instance
+                  → Any translation/live follow-up happens outside the Builder save loop
 ```
 
 ### 2. Embed View Flow

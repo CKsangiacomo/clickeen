@@ -5,10 +5,10 @@ import { ToolDrawer } from './ToolDrawer';
 import { UpsellPopup } from './UpsellPopup';
 import { Workspace } from './Workspace';
 import { WidgetSessionProvider } from '../lib/session/useWidgetSession';
-import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 
 function UpsellPopupHost() {
-  const session = useWidgetSession();
+  const session = useWidgetSessionChrome();
   const upsell = session.upsell;
   return (
     <UpsellPopup

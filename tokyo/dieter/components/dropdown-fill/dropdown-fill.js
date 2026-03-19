@@ -5,7 +5,6 @@ var Dieter = (() => {
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __getOwnPropNames = Object.getOwnPropertyNames;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
-  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __export = (target, all) => {
     for (var name in all)
       __defProp(target, name, { get: all[name], enumerable: true });
@@ -19,7 +18,6 @@ var Dieter = (() => {
     return to;
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-  var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
   // components/dropdown-fill/dropdown-fill.ts
   var dropdown_fill_exports = {};
@@ -97,214 +95,6 @@ var Dieter = (() => {
       }
     };
   }
-
-  // components/dropdown-fill/asset-picker-overlay.ts
-  function clampNumber(value, min, max) {
-    if (!Number.isFinite(value)) return min;
-    if (value < min) return min;
-    if (value > max) return max;
-    return value;
-  }
-  var AssetPickerOverlay = class {
-    constructor(callbacks) {
-      __publicField(this, "root");
-      __publicField(this, "closeButton");
-      __publicField(this, "messageEl");
-      __publicField(this, "rowsEl");
-      __publicField(this, "callbacks");
-      __publicField(this, "anchor", null);
-      __publicField(this, "openState", false);
-      __publicField(this, "handleDocumentPointerDown");
-      __publicField(this, "handleDocumentKeydown");
-      __publicField(this, "handleViewportChange");
-      this.callbacks = callbacks;
-      this.root = document.createElement("div");
-      this.root.className = "diet-popover diet-dropdown-fill__asset-picker diet-dropdown-fill__asset-picker-portal";
-      this.root.setAttribute("role", "dialog");
-      this.root.setAttribute("aria-label", "Choose from assets");
-      this.root.hidden = true;
-      this.root.innerHTML = `
-      <div class="diet-popover__header">
-        <span class="diet-popover__header-label label-s">Choose from assets</span>
-        <button
-          type="button"
-          class="diet-btn-ic diet-popover__header-trigger diet-dropdown-fill__asset-picker-close"
-          data-size="sm"
-          data-variant="neutral"
-          aria-label="Close assets list"
-        >
-          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="multiply"></span>
-        </button>
-      </div>
-      <div class="diet-popover__body">
-        <p class="diet-dropdown-fill__asset-picker-message body-s" data-role="asset-picker-message"></p>
-        <div class="diet-dropdown-fill__asset-picker-tablewrap">
-          <table class="diet-dropdown-fill__asset-picker-table">
-            <thead>
-              <tr>
-                <th class="label-s">Asset</th>
-                <th class="label-s">Type</th>
-                <th class="label-s">Size</th>
-                <th class="label-s">Action</th>
-              </tr>
-            </thead>
-            <tbody data-role="asset-picker-rows"></tbody>
-          </table>
-        </div>
-      </div>
-    `;
-      const closeButton = this.root.querySelector(".diet-dropdown-fill__asset-picker-close");
-      const messageEl = this.root.querySelector('[data-role="asset-picker-message"]');
-      const rowsEl = this.root.querySelector('[data-role="asset-picker-rows"]');
-      if (!closeButton || !messageEl || !rowsEl) {
-        throw new Error("[dropdown-fill] asset picker overlay missing DOM nodes");
-      }
-      this.closeButton = closeButton;
-      this.messageEl = messageEl;
-      this.rowsEl = rowsEl;
-      this.handleDocumentPointerDown = (event) => {
-        if (!this.openState) return;
-        const target = event.target;
-        if (!target) return;
-        if (this.root.contains(target)) return;
-        if (this.anchor?.contains(target)) return;
-        this.close();
-      };
-      this.handleDocumentKeydown = (event) => {
-        if (!this.openState) return;
-        if (event.key !== "Escape") return;
-        this.close();
-      };
-      this.handleViewportChange = () => {
-        if (!this.openState) return;
-        this.position();
-      };
-      document.body.appendChild(this.root);
-      this.bindStaticHandlers();
-    }
-    bindStaticHandlers() {
-      this.closeButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        this.close();
-      });
-    }
-    bindOpenHandlers() {
-      document.addEventListener("pointerdown", this.handleDocumentPointerDown, true);
-      document.addEventListener("keydown", this.handleDocumentKeydown);
-      window.addEventListener("resize", this.handleViewportChange);
-      window.addEventListener("scroll", this.handleViewportChange, true);
-    }
-    unbindOpenHandlers() {
-      document.removeEventListener("pointerdown", this.handleDocumentPointerDown, true);
-      document.removeEventListener("keydown", this.handleDocumentKeydown);
-      window.removeEventListener("resize", this.handleViewportChange);
-      window.removeEventListener("scroll", this.handleViewportChange, true);
-    }
-    position() {
-      if (!this.openState) return;
-      if (!this.anchor?.isConnected) {
-        this.close();
-        return;
-      }
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const margin = 12;
-      const gap = 8;
-      const maxWidth = Math.max(260, viewportWidth - margin * 2);
-      const width = Math.min(480, maxWidth);
-      this.root.style.inlineSize = `${Math.round(width)}px`;
-      const anchorRect = this.anchor.getBoundingClientRect();
-      let left = anchorRect.left;
-      left = clampNumber(left, margin, Math.max(margin, viewportWidth - width - margin));
-      let top = anchorRect.bottom + gap;
-      const currentHeight = this.root.getBoundingClientRect().height || 320;
-      const minBelowSpace = 220;
-      if (viewportHeight - top - margin < minBelowSpace) {
-        top = Math.max(margin, anchorRect.top - gap - currentHeight);
-      }
-      const maxBlockSize = Math.max(180, viewportHeight - top - margin);
-      this.root.style.insetInlineStart = `${Math.round(left)}px`;
-      this.root.style.insetBlockStart = `${Math.round(top)}px`;
-      this.root.style.maxBlockSize = `${Math.round(maxBlockSize)}px`;
-    }
-    isOpen() {
-      return this.openState;
-    }
-    open(anchor) {
-      this.anchor = anchor;
-      if (this.openState) {
-        this.position();
-        return;
-      }
-      this.openState = true;
-      this.bindOpenHandlers();
-      this.root.hidden = false;
-      this.callbacks.onOpenChange?.(true);
-      this.position();
-      requestAnimationFrame(() => this.position());
-    }
-    close() {
-      if (!this.openState) return;
-      this.openState = false;
-      this.unbindOpenHandlers();
-      this.root.hidden = true;
-      this.callbacks.onOpenChange?.(false);
-    }
-    contains(target) {
-      return this.root.contains(target);
-    }
-    setMessage(message) {
-      this.messageEl.textContent = message;
-    }
-    setRows(items) {
-      this.rowsEl.innerHTML = "";
-      if (!items.length) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 4;
-        td.className = "body-s";
-        td.textContent = "No assets found.";
-        tr.appendChild(td);
-        this.rowsEl.appendChild(tr);
-        return;
-      }
-      items.forEach((item) => {
-        const tr = document.createElement("tr");
-        const nameCell = document.createElement("td");
-        nameCell.className = "body-s";
-        nameCell.textContent = item.normalizedFilename;
-        tr.appendChild(nameCell);
-        const typeCell = document.createElement("td");
-        typeCell.className = "body-s";
-        typeCell.textContent = item.contentType;
-        tr.appendChild(typeCell);
-        const sizeCell = document.createElement("td");
-        sizeCell.className = "body-s";
-        sizeCell.textContent = item.sizeLabel;
-        tr.appendChild(sizeCell);
-        const actionCell = document.createElement("td");
-        const useButton = document.createElement("button");
-        useButton.type = "button";
-        useButton.className = "diet-btn-txt diet-dropdown-fill__asset-picker-use";
-        useButton.setAttribute("data-size", "sm");
-        useButton.setAttribute("data-variant", "line1");
-        useButton.innerHTML = '<span class="diet-btn-txt__label body-s">Use</span>';
-        useButton.addEventListener("click", (event) => {
-          event.preventDefault();
-          this.callbacks.onUse(item);
-          this.close();
-        });
-        actionCell.appendChild(useButton);
-        tr.appendChild(actionCell);
-        this.rowsEl.appendChild(tr);
-      });
-    }
-    destroy() {
-      this.unbindOpenHandlers();
-      this.close();
-      this.root.remove();
-    }
-  };
 
   // ../packages/l10n/src/index.ts
   var LOCALE_PATTERN = /^[a-z]{2,3}(?:-[a-z0-9]+)*$/;
@@ -1623,10 +1413,7 @@ var Dieter = (() => {
   var USER_SETTINGS_COUNTRY_CODES = Object.freeze(Object.keys(USER_SETTINGS_COUNTRY_TIMEZONES));
 
   // ../packages/ck-contracts/src/index.js
-  var WIDGET_PUBLIC_ID_RE = /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
   var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  var ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
-  var ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/[^/]+$/;
   var CK_ERROR_CODE = Object.freeze({
     VALIDATION: "VALIDATION",
     NOT_FOUND: "NOT_FOUND",
@@ -1642,261 +1429,9 @@ var Dieter = (() => {
     DELETE: "delete"
   });
   var SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(locales_default).map((entry) => entry.code));
-  function normalizeWidgetPublicId(raw) {
-    const value = typeof raw === "string" ? raw.trim() : "";
-    if (!value) return null;
-    return WIDGET_PUBLIC_ID_RE.test(value) ? value : null;
-  }
-  function isWidgetPublicId(raw) {
-    return normalizeWidgetPublicId(raw) != null;
-  }
-  function decodePathPart(raw) {
-    try {
-      return decodeURIComponent(String(raw || "")).trim();
-    } catch {
-      return "";
-    }
-  }
-  function pathnameFromRawAssetRef(raw) {
-    const value = String(raw || "").trim();
-    if (!value) return null;
-    if (value.startsWith("/")) return value;
-    if (!/^https?:\/\//i.test(value)) return null;
-    try {
-      return new URL(value).pathname || "/";
-    } catch {
-      return null;
-    }
-  }
-  function decodeAssetVersionToken(raw) {
-    const token = decodePathPart(raw);
-    if (!token) return null;
-    try {
-      const key = decodeURIComponent(token).trim();
-      if (!key || key.startsWith("/") || key.includes("..")) return null;
-      return key;
-    } catch {
-      return null;
-    }
-  }
   function isUuid(raw) {
     const value = typeof raw === "string" ? raw.trim() : "";
     return Boolean(value && UUID_RE.test(value));
-  }
-  function parseCanonicalAssetRef(raw) {
-    const pathname = pathnameFromRawAssetRef(raw);
-    if (!pathname) return null;
-    const version = pathname.match(ASSET_VERSION_PATH_RE);
-    if (!version) return null;
-    const versionToken = decodePathPart(version[1]);
-    const versionKey = decodeAssetVersionToken(versionToken);
-    if (!versionKey) return null;
-    const keyMatch = versionKey.match(ASSET_VERSION_KEY_RE);
-    if (!keyMatch) return null;
-    const accountId = decodePathPart(keyMatch[1]);
-    const assetId = decodePathPart(keyMatch[2]);
-    if (!isUuid(accountId) || !isUuid(assetId)) return null;
-    return {
-      accountId,
-      assetId,
-      kind: "version",
-      pathname,
-      versionToken,
-      versionKey
-    };
-  }
-  function toCanonicalAssetVersionPath(versionKey) {
-    const key = typeof versionKey === "string" ? versionKey.trim() : "";
-    if (!key || key.startsWith("/") || key.includes("..") || !ASSET_VERSION_KEY_RE.test(key)) return null;
-    return `/assets/v/${encodeURIComponent(key)}`;
-  }
-
-  // components/shared/hostedAssetBridge.ts
-  var HOSTED_ASSET_BRIDGE_KEY = "__CK_CLICKEEN_HOSTED_ACCOUNT_ASSET_BRIDGE__";
-  function isRecord(value) {
-    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-  }
-  function resolveHostedAssetBridge() {
-    const root = globalThis;
-    const candidate = root[HOSTED_ASSET_BRIDGE_KEY];
-    if (!isRecord(candidate)) return null;
-    const listAssets = candidate.listAssets;
-    const resolveAssets = candidate.resolveAssets;
-    const uploadAsset = candidate.uploadAsset;
-    if (typeof listAssets !== "function" || typeof resolveAssets !== "function" || typeof uploadAsset !== "function") {
-      return null;
-    }
-    return {
-      listAssets,
-      resolveAssets,
-      uploadAsset
-    };
-  }
-
-  // components/shared/assetResolve.ts
-  function readDocumentDatasetValue(key) {
-    if (typeof document === "undefined") return "";
-    const value = document.documentElement.dataset[key];
-    return typeof value === "string" ? value.trim() : "";
-  }
-  function resolveAssetApiBase() {
-    return readDocumentDatasetValue("ckAssetApiBase").replace(/\/+$/, "");
-  }
-  function resolveEditorAssetAccountId() {
-    const accountId = readDocumentDatasetValue("ckOwnerAccountId");
-    return isUuid(accountId) ? accountId : null;
-  }
-  function normalizeResolvedEditorAssetChoice(raw) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-    const asset = raw;
-    const assetId = String(asset.assetId || "").trim();
-    const assetRef = String(asset.assetRef || "").trim();
-    const url = String(asset.url || "").trim();
-    if (!isUuid(assetId) || !assetRef || !url) return null;
-    return { assetId, assetRef, url };
-  }
-  async function resolveEditorAssetChoices(assetIdsRaw) {
-    const accountId = resolveEditorAssetAccountId();
-    if (!accountId) {
-      throw new Error("No account context available.");
-    }
-    const seen = /* @__PURE__ */ new Set();
-    const assetIds = assetIdsRaw.map((entry) => String(entry || "").trim()).filter((assetId) => {
-      if (!isUuid(assetId) || seen.has(assetId)) return false;
-      seen.add(assetId);
-      return true;
-    });
-    if (!assetIds.length) return /* @__PURE__ */ new Map();
-    const hostedBridge = resolveHostedAssetBridge();
-    let payload = null;
-    if (hostedBridge) {
-      payload = await hostedBridge.resolveAssets(assetIds);
-    } else {
-      const assetApiBase = resolveAssetApiBase();
-      if (!assetApiBase) {
-        throw new Error("coreui.errors.builder.command.hostUnavailable");
-      }
-      const endpoint = `${assetApiBase}/resolve`;
-      const response = await fetch(endpoint, {
-        method: "POST",
-        cache: "no-store",
-        headers: {
-          "content-type": "application/json"
-        },
-        body: JSON.stringify({ assetIds })
-      });
-      payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        const reasonKey = String(payload?.error?.reasonKey || "").trim();
-        throw new Error(reasonKey || `HTTP_${response.status}`);
-      }
-    }
-    const assets = Array.isArray(payload?.assets) ? payload.assets : [];
-    const resolved = /* @__PURE__ */ new Map();
-    for (const asset of assets) {
-      const normalized = normalizeResolvedEditorAssetChoice(asset);
-      if (!normalized) continue;
-      resolved.set(normalized.assetId, normalized);
-    }
-    return resolved;
-  }
-
-  // components/dropdown-fill/asset-picker-data.ts
-  function readFillDocumentDatasetValue(key) {
-    if (typeof document === "undefined") return "";
-    const value = document.documentElement.dataset[key];
-    return typeof value === "string" ? value.trim() : "";
-  }
-  function resolveAssetApiBase2() {
-    return readFillDocumentDatasetValue("ckAssetApiBase").replace(/\/+$/, "");
-  }
-  function resolveImageAssetPickerContext() {
-    const accountId = readFillDocumentDatasetValue("ckOwnerAccountId");
-    if (!isUuid(accountId)) return null;
-    return {
-      accountId
-    };
-  }
-  function formatAssetSizeLabel(sizeBytes) {
-    const safe = Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0;
-    if (safe < 1024) return `${safe} B`;
-    if (safe < 1024 * 1024) return `${Math.round(safe / 1024)} KB`;
-    return `${(safe / (1024 * 1024)).toFixed(1)} MB`;
-  }
-  function normalizeMediaAssetChoice(asset, kind) {
-    const assetId = String(asset.assetId || "").trim();
-    if (!isUuid(assetId)) return null;
-    const assetRef = String(asset.assetRef || "").trim();
-    if (!assetRef.startsWith("assets/versions/")) return null;
-    const assetType = String(asset.assetType || "").trim().toLowerCase();
-    if (kind === "image") {
-      if (assetType !== "image" && assetType !== "vector") return null;
-    } else if (kind === "video" && assetType !== "video") {
-      return null;
-    }
-    const contentType = String(asset.contentType || "").trim().toLowerCase();
-    const filename = String(asset.filename || "").trim();
-    const sizeBytes = Number(asset.sizeBytes);
-    const url = String(asset.url || "").trim();
-    if (!url || !url.startsWith("/") && !/^https?:\/\//i.test(url)) return null;
-    return {
-      assetId,
-      assetRef,
-      filename,
-      assetType,
-      contentType,
-      sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
-      url
-    };
-  }
-  async function fetchMediaAssetChoices(kind) {
-    const context = resolveImageAssetPickerContext();
-    if (!context) {
-      throw new Error("No account context available.");
-    }
-    const params = new URLSearchParams({
-      view: "all",
-      limit: "200"
-    });
-    const hostedBridge = resolveHostedAssetBridge();
-    if (hostedBridge) {
-      const payload2 = await hostedBridge.listAssets();
-      const assets2 = Array.isArray(payload2?.assets) ? payload2.assets : [];
-      return assets2.map((asset) => normalizeMediaAssetChoice(asset, kind)).filter((asset) => Boolean(asset));
-    }
-    const assetApiBase = resolveAssetApiBase2();
-    if (!assetApiBase) {
-      throw new Error("coreui.errors.builder.command.hostUnavailable");
-    }
-    const endpoint = `${assetApiBase}?${params.toString()}`;
-    const response = await fetch(endpoint, {
-      cache: "no-store"
-    });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) {
-      const reasonKey = String(payload?.error?.reasonKey || "").trim();
-      throw new Error(reasonKey || `HTTP_${response.status}`);
-    }
-    const assets = Array.isArray(payload?.assets) ? payload?.assets : [];
-    return assets.map((asset) => normalizeMediaAssetChoice(asset, kind)).filter((asset) => Boolean(asset));
-  }
-  function fetchImageAssetChoices() {
-    return fetchMediaAssetChoices("image");
-  }
-  function fetchVideoAssetChoices() {
-    return fetchMediaAssetChoices("video");
-  }
-  async function resolveMediaAssetChoices(assetIdsRaw) {
-    return resolveEditorAssetChoices(assetIdsRaw);
-  }
-  function toAssetPickerOverlayItems(assets) {
-    return assets.map((asset) => ({
-      assetId: asset.assetId,
-      normalizedFilename: asset.filename,
-      contentType: asset.assetType || asset.contentType,
-      sizeLabel: formatAssetSizeLabel(asset.sizeBytes),
-      url: asset.url
-    }));
   }
 
   // components/dropdown-fill/fill-types.ts
@@ -1910,7 +1445,7 @@ var Dieter = (() => {
   };
 
   // components/dropdown-fill/color-utils.ts
-  function clampNumber2(value, min, max) {
+  function clampNumber(value, min, max) {
     if (Number.isNaN(value)) return min;
     return Math.min(Math.max(value, min), max);
   }
@@ -1998,7 +1533,7 @@ var Dieter = (() => {
     if (h < 0) h += 360;
     const s = max === 0 ? 0 : delta / max;
     const v = max;
-    return { h, s, v, a: clampNumber2(alpha, 0, 1) };
+    return { h, s, v, a: clampNumber(alpha, 0, 1) };
   }
   function hsvToRgb(h, s, v) {
     const c = v * s;
@@ -2039,7 +1574,7 @@ var Dieter = (() => {
     };
   }
   function toHex(value) {
-    return clampNumber2(Math.round(value), 0, 255).toString(16).padStart(2, "0");
+    return clampNumber(Math.round(value), 0, 255).toString(16).padStart(2, "0");
   }
   function formatHex(hsv) {
     const { r, g, b } = hsvToRgb(hsv.h, hsv.s, hsv.v);
@@ -2078,7 +1613,7 @@ var Dieter = (() => {
     const base = colorStringToRgba(colorExpr, root);
     if (!base) return null;
     const baseWeight = 1 - transparentWeight;
-    return { r: base.r, g: base.g, b: base.b, a: clampNumber2(base.a * baseWeight, 0, 1) };
+    return { r: base.r, g: base.g, b: base.b, a: clampNumber(base.a * baseWeight, 0, 1) };
   }
   function colorStringToRgba(value, root) {
     const trimmed = value.trim();
@@ -2231,14 +1766,14 @@ var Dieter = (() => {
     if (css) return { css };
     const kindRaw = typeof value.kind === "string" ? value.kind.trim() : "";
     const kind = kindRaw === "radial" || kindRaw === "conic" ? kindRaw : "linear";
-    const angle = clampNumber2(typeof value.angle === "number" ? value.angle : 0, 0, 360);
+    const angle = clampNumber(typeof value.angle === "number" ? value.angle : 0, 0, 360);
     const stopsRaw = Array.isArray(value.stops) ? value.stops : [];
     const stops = stopsRaw.map((stop) => {
       if (!stop || typeof stop !== "object" || Array.isArray(stop)) return null;
       const entry = stop;
       const color = typeof entry.color === "string" ? entry.color.trim() : "";
       if (!color) return null;
-      const position = clampNumber2(typeof entry.position === "number" ? entry.position : 0, 0, 100);
+      const position = clampNumber(typeof entry.position === "number" ? entry.position : 0, 0, 100);
       return { color, position };
     }).filter((stop) => Boolean(stop));
     return { kind, angle, stops };
@@ -2328,7 +1863,7 @@ var Dieter = (() => {
     return {
       id: createGradientStopId(),
       color: safeColor,
-      position: clampNumber2(stop.position, 0, 100),
+      position: clampNumber(stop.position, 0, 100),
       hsv
     };
   }
@@ -2338,7 +1873,7 @@ var Dieter = (() => {
   function installGradientHandlers(state, deps) {
     if (state.gradientAngleInput) {
       state.gradientAngleInput.addEventListener("input", () => {
-        const angle = clampNumber2(Number(state.gradientAngleInput?.value), 0, 360);
+        const angle = clampNumber(Number(state.gradientAngleInput?.value), 0, 360);
         state.gradientCss = null;
         state.gradient.angle = angle;
         syncGradientUI(state, { commit: true }, deps);
@@ -2368,7 +1903,7 @@ var Dieter = (() => {
     }
     if (!("kind" in gradient)) return;
     const angle = typeof gradient.angle === "number" ? gradient.angle : DEFAULT_GRADIENT.angle;
-    state.gradient.angle = clampNumber2(angle, 0, 360);
+    state.gradient.angle = clampNumber(angle, 0, 360);
     if (Array.isArray(gradient.stops) && gradient.stops.length >= 2) {
       state.gradientStops = gradient.stops.map(
         (stop) => createGradientStopState(state.root, {
@@ -2384,7 +1919,7 @@ var Dieter = (() => {
     const shouldUpdateRemove = opts.updateRemove !== false;
     ensureGradientStops(state);
     if (state.gradientAngleInput) {
-      state.gradientAngleInput.value = String(clampNumber2(state.gradient.angle, 0, 360));
+      state.gradientAngleInput.value = String(clampNumber(state.gradient.angle, 0, 360));
       state.gradientAngleInput.style.setProperty("--value", state.gradientAngleInput.value);
       state.gradientAngleInput.style.setProperty("--min", "0");
       state.gradientAngleInput.style.setProperty("--max", "360");
@@ -2428,7 +1963,7 @@ var Dieter = (() => {
   function gradientPercentToPx(state, position) {
     const metrics = getGradientStopMetrics(state);
     if (!metrics) return null;
-    const percent = clampNumber2(position, 0, 100);
+    const percent = clampNumber(position, 0, 100);
     const span = metrics.maxX - metrics.minX;
     if (span <= 0) return metrics.minX;
     return metrics.minX + span * percent / 100;
@@ -2436,10 +1971,10 @@ var Dieter = (() => {
   function gradientPxToPercent(state, clientX) {
     const metrics = getGradientStopMetrics(state);
     if (!metrics) return 0;
-    const x = clampNumber2(clientX - metrics.rect.left, metrics.minX, metrics.maxX);
+    const x = clampNumber(clientX - metrics.rect.left, metrics.minX, metrics.maxX);
     const span = metrics.maxX - metrics.minX;
     if (span <= 0) return 0;
-    return clampNumber2((x - metrics.minX) / span * 100, 0, 100);
+    return clampNumber((x - metrics.minX) / span * 100, 0, 100);
   }
   function getActiveGradientStopIndex(state) {
     const sorted = getSortedGradientStops(state.gradientStops);
@@ -2641,7 +2176,7 @@ var Dieter = (() => {
       state.gradientStopAlphaField.value = `${Math.round(hsv.a * 100)}%`;
       return;
     }
-    const percent = clampNumber2(parsed, 0, 100);
+    const percent = clampNumber(parsed, 0, 100);
     hsv.a = percent / 100;
     commitGradientStopFromHsv(state, deps);
   }
@@ -2729,13 +2264,13 @@ var Dieter = (() => {
       const move = (event) => {
         const rect = state.gradientStopSv?.getBoundingClientRect();
         if (!rect) return;
-        const x = clampNumber2(event.clientX - rect.left, 0, rect.width);
-        const y = clampNumber2(event.clientY - rect.top, 0, rect.height);
+        const x = clampNumber(event.clientX - rect.left, 0, rect.width);
+        const y = clampNumber(event.clientY - rect.top, 0, rect.height);
         const s = rect.width ? x / rect.width : 0;
         const v = rect.height ? 1 - y / rect.height : 0;
         const stop = getActiveGradientStop(state);
-        stop.hsv.s = clampNumber2(s, 0, 1);
-        stop.hsv.v = clampNumber2(v, 0, 1);
+        stop.hsv.s = clampNumber(s, 0, 1);
+        stop.hsv.v = clampNumber(v, 0, 1);
         if (stop.hsv.a === 0) stop.hsv.a = 1;
         commitGradientStopFromHsv(state, deps);
       };
@@ -2755,7 +2290,7 @@ var Dieter = (() => {
     }
     if (state.gradientStopHueInput) {
       state.gradientStopHueInput.addEventListener("input", () => {
-        const hue = clampNumber2(Number(state.gradientStopHueInput?.value), 0, 360);
+        const hue = clampNumber(Number(state.gradientStopHueInput?.value), 0, 360);
         const stop = getActiveGradientStop(state);
         stop.hsv.h = hue;
         if (stop.hsv.a === 0) stop.hsv.a = 1;
@@ -2764,7 +2299,7 @@ var Dieter = (() => {
     }
     if (state.gradientStopAlphaInput) {
       state.gradientStopAlphaInput.addEventListener("input", () => {
-        const alpha = clampNumber2(Number(state.gradientStopAlphaInput?.value) / 100, 0, 1);
+        const alpha = clampNumber(Number(state.gradientStopAlphaInput?.value) / 100, 0, 1);
         const stop = getActiveGradientStop(state);
         stop.hsv.a = alpha;
         commitGradientStopFromHsv(state, deps);
@@ -2798,12 +2333,12 @@ var Dieter = (() => {
       const fallback = fallbackStops[Math.min(index, fallbackStops.length - 1)]?.color || fallbackStops[0].color;
       return {
         color: normalizeGradientColor(state, stop.color, fallback),
-        position: clampNumber2(stop.position, 0, 100)
+        position: clampNumber(stop.position, 0, 100)
       };
     });
   }
   function buildGradientFill(state) {
-    const angle = clampNumber2(state.gradient.angle, 0, 360);
+    const angle = clampNumber(state.gradient.angle, 0, 360);
     const normalizedStops = normalizeGradientStopsForOutput(state);
     return {
       type: "gradient",
@@ -2815,9 +2350,9 @@ var Dieter = (() => {
     };
   }
   function buildGradientCss(state) {
-    const angle = clampNumber2(state.gradient.angle, 0, 360);
+    const angle = clampNumber(state.gradient.angle, 0, 360);
     const normalizedStops = normalizeGradientStopsForOutput(state);
-    const stopList = normalizedStops.map((stop) => `${stop.color} ${clampNumber2(stop.position, 0, 100)}%`).join(", ");
+    const stopList = normalizedStops.map((stop) => `${stop.color} ${clampNumber(stop.position, 0, 100)}%`).join(", ");
     return `linear-gradient(${angle}deg, ${stopList})`;
   }
   function colorStringFromHsv(hsv) {
@@ -2825,185 +2360,7 @@ var Dieter = (() => {
     return hsv.a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(hsv.a, 2)})` : formatHex({ ...hsv, a: 1 });
   }
 
-  // components/shared/assetUpload.ts
-  function isPublicId(value) {
-    return isWidgetPublicId(value);
-  }
-  function isWidgetType(value) {
-    return /^[a-z0-9][a-z0-9_-]*$/i.test(value);
-  }
-  function readDatasetValue(name) {
-    if (typeof document === "undefined") return "";
-    const value = document.documentElement.dataset?.[name];
-    return typeof value === "string" ? value.trim() : "";
-  }
-  function resolveAssetUploadEndpoint() {
-    return readDatasetValue("ckAssetUploadEndpoint").trim();
-  }
-  function isAccountScopedRomaUploadEndpoint(value) {
-    return /\/api\/account\/assets\/upload(?:\?|$)/i.test(value) || /\/api\/accounts\/[0-9a-f-]{36}\/assets\/upload(?:\?|$)/i.test(value);
-  }
-  function isDevStudioUploadEndpoint(value) {
-    return /\/api\/devstudio\/assets\/upload(?:\?|$)/i.test(value);
-  }
-  function resolveContextFromDocument() {
-    const accountId = readDatasetValue("ckOwnerAccountId");
-    const publicId = readDatasetValue("ckPublicId");
-    const widgetType = readDatasetValue("ckWidgetType");
-    if (!accountId || !isUuid(accountId)) return null;
-    const context = {
-      accountId
-    };
-    if (publicId && isPublicId(publicId)) context.publicId = publicId;
-    if (widgetType && isWidgetType(widgetType)) context.widgetType = widgetType.toLowerCase();
-    return context;
-  }
-  function safeJsonParse(text) {
-    if (!text || typeof text !== "string") return null;
-    try {
-      return JSON.parse(text);
-    } catch {
-      return null;
-    }
-  }
-  function normalizeAssetUrl(payload) {
-    const direct = typeof payload.url === "string" ? payload.url.trim() : "";
-    if (!direct) return null;
-    const parsed = parseCanonicalAssetRef(direct);
-    if (!parsed || parsed.kind !== "version") return null;
-    if (/^https?:\/\//i.test(direct)) return direct;
-    return parsed.pathname;
-  }
-  function normalizeAssetRef(payload) {
-    const direct = typeof payload.assetRef === "string" ? payload.assetRef.trim() : "";
-    if (!direct) return null;
-    const parsed = parseCanonicalAssetRef(direct);
-    if (!parsed || parsed.kind !== "version") return null;
-    return parsed.versionKey;
-  }
-  function assertUploadContext(context) {
-    const accountId = String(context.accountId || "").trim();
-    const publicId = String(context.publicId || "").trim();
-    const widgetType = String(context.widgetType || "").trim().toLowerCase();
-    if (!isUuid(accountId)) {
-      throw new Error("coreui.errors.accountId.invalid");
-    }
-    if (publicId && !isPublicId(publicId)) {
-      throw new Error("coreui.errors.publicId.invalid");
-    }
-    if (widgetType && !isWidgetType(widgetType)) {
-      throw new Error("coreui.errors.widgetType.invalid");
-    }
-    return {
-      accountId,
-      publicId: publicId || void 0,
-      widgetType: widgetType || void 0
-    };
-  }
-  async function uploadEditorAsset(args) {
-    const file = args.file;
-    if (!(file instanceof File) || file.size <= 0) {
-      throw new Error("coreui.errors.payload.empty");
-    }
-    const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? {});
-    const source = args.source || "api";
-    const headers = new Headers();
-    headers.set("content-type", file.type || "application/octet-stream");
-    headers.set("x-filename", file.name || "upload.bin");
-    headers.set("x-source", source);
-    if (context.publicId) headers.set("x-public-id", context.publicId);
-    if (context.widgetType) headers.set("x-widget-type", context.widgetType);
-    const hostedBridge = resolveHostedAssetBridge();
-    let payload = null;
-    if (hostedBridge) {
-      headers.set("x-clickeen-surface", "roma-assets");
-      payload = await hostedBridge.uploadAsset(file, Object.fromEntries(headers.entries()));
-    } else {
-      const endpoint = (args.endpoint || resolveAssetUploadEndpoint()).trim();
-      if (!endpoint) {
-        throw new Error("coreui.errors.builder.command.hostUnavailable");
-      }
-      if (!isAccountScopedRomaUploadEndpoint(endpoint) && !isDevStudioUploadEndpoint(endpoint)) {
-        throw new Error("coreui.errors.assets.uploadEndpoint.invalid");
-      }
-      if (isDevStudioUploadEndpoint(endpoint)) {
-        headers.set("x-account-id", context.accountId);
-      }
-      headers.set("x-clickeen-surface", isDevStudioUploadEndpoint(endpoint) ? "devstudio" : "roma-assets");
-      const response = await fetch(`${endpoint.replace(/\/$/, "")}?_t=${Date.now()}`, {
-        method: "POST",
-        headers,
-        body: file
-      });
-      const text = await response.text().catch(() => "");
-      payload = safeJsonParse(text);
-      if (!response.ok) {
-        const errorRecord = payload && typeof payload === "object" && !Array.isArray(payload) ? payload.error : void 0;
-        const reasonKey = typeof errorRecord?.reasonKey === "string" ? errorRecord.reasonKey : "";
-        const detail = typeof errorRecord?.detail === "string" ? errorRecord.detail : "";
-        throw new Error(reasonKey || detail || `coreui.errors.assets.uploadFailed (${response.status})`);
-      }
-    }
-    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-      throw new Error("coreui.errors.assets.uploadFailed");
-    }
-    const payloadRecord = payload;
-    const assetId = typeof payloadRecord.assetId === "string" ? payloadRecord.assetId.trim() : "";
-    const assetRef = normalizeAssetRef(payloadRecord);
-    if (!assetId) {
-      throw new Error("coreui.errors.assets.uploadFailed");
-    }
-    if (!assetRef) {
-      throw new Error("coreui.errors.assets.uploadFailed");
-    }
-    const url = normalizeAssetUrl(payloadRecord) || toCanonicalAssetVersionPath(assetRef) || "";
-    if (!url) throw new Error("coreui.errors.assets.uploadFailed");
-    const assetType = typeof payloadRecord.assetType === "string" ? payloadRecord.assetType.trim() : "";
-    const contentType = typeof payloadRecord.contentType === "string" ? payloadRecord.contentType.trim() : "";
-    const sizeBytesRaw = Number(payloadRecord.sizeBytes);
-    const filename = typeof payloadRecord.filename === "string" ? payloadRecord.filename.trim() : "";
-    const createdAt = typeof payloadRecord.createdAt === "string" ? payloadRecord.createdAt.trim() : "";
-    return {
-      assetId,
-      assetRef,
-      url,
-      assetType: assetType || "other",
-      contentType: contentType || file.type || "application/octet-stream",
-      sizeBytes: Number.isFinite(sizeBytesRaw) ? Math.max(0, Math.trunc(sizeBytesRaw)) : file.size,
-      filename: filename || file.name || "upload.bin",
-      createdAt: createdAt || (/* @__PURE__ */ new Date()).toISOString()
-    };
-  }
-
   // components/dropdown-fill/media-controller.ts
-  var ASSET_ENTITLEMENT_REASON_KEYS = /* @__PURE__ */ new Set([
-    "coreui.upsell.reason.budgetExceeded",
-    "coreui.upsell.reason.capReached"
-  ]);
-  function isAssetEntitlementReasonKey(value) {
-    const reasonKey = String(value || "").trim();
-    return ASSET_ENTITLEMENT_REASON_KEYS.has(reasonKey);
-  }
-  function dispatchAssetEntitlementGate(root, reasonKey) {
-    root.dispatchEvent(
-      new CustomEvent("bob-upsell", {
-        bubbles: true,
-        detail: { reasonKey }
-      })
-    );
-    if (typeof window === "undefined") return;
-    if (!window.parent || window.parent === window) return;
-    window.parent.postMessage({ type: "bob:asset-entitlement-denied", reasonKey }, "*");
-  }
-  function setFillUploadingState(state, uploading) {
-    state.root.dataset.uploading = uploading ? "true" : "false";
-    if (state.uploadButton) state.uploadButton.disabled = uploading;
-    if (state.chooseButton) state.chooseButton.disabled = uploading;
-    if (state.removeButton) state.removeButton.disabled = uploading;
-    if (state.videoUploadButton) state.videoUploadButton.disabled = uploading;
-    if (state.videoChooseButton) state.videoChooseButton.disabled = uploading;
-    if (state.videoRemoveButton) state.videoRemoveButton.disabled = uploading;
-  }
   function syncImageHeader(state, deps) {
     if (state.imageSrc && !state.imageUnavailable) {
       const label = state.imageName || "Image selected";
@@ -3083,33 +2440,6 @@ var Dieter = (() => {
     probe.addEventListener("error", () => finalize(false), { once: true });
     probe.src = normalizedSrc;
   }
-  async function openAssetPicker(state, kind) {
-    if (!state.assetPickerOverlay) return;
-    state.assetPickerKind = kind;
-    const anchorButton = kind === "video" ? state.videoChooseButton : state.chooseButton;
-    if (!anchorButton) return;
-    state.assetPickerOverlay.open(anchorButton);
-    state.assetPickerOverlay.setMessage("Loading assets...");
-    state.assetPickerOverlay.setRows([]);
-    state.imageAssetPickerLoading = true;
-    try {
-      const assets = kind === "video" ? await fetchVideoAssetChoices() : await fetchImageAssetChoices();
-      const rows = toAssetPickerOverlayItems(assets);
-      state.assetPickerOverlay.setRows(rows);
-      if (assets.length === 0) {
-        state.assetPickerOverlay.setMessage(kind === "video" ? "No video assets available." : "No image assets available.");
-      } else {
-        const mediaLabel = kind === "video" ? "video asset" : "image asset";
-        state.assetPickerOverlay.setMessage(`Select from ${assets.length} ${mediaLabel}${assets.length === 1 ? "" : "s"}.`);
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to load assets.";
-      state.assetPickerOverlay.setMessage(message || "Failed to load assets.");
-      state.assetPickerOverlay.setRows([]);
-    } finally {
-      state.imageAssetPickerLoading = false;
-    }
-  }
   function setImageSrc(state, src, opts, deps) {
     const shouldUpdateHeader = opts.updateHeader !== false;
     const shouldUpdateRemove = opts.updateRemove !== false;
@@ -3184,22 +2514,13 @@ var Dieter = (() => {
   function installImageHandlers(state, deps) {
     const { uploadButton, chooseButton, removeButton, fileInput } = state;
     if (uploadButton && fileInput) {
-      uploadButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        fileInput.value = "";
-        fileInput.click();
-      });
+      uploadButton.disabled = true;
+      uploadButton.hidden = true;
+      fileInput.disabled = true;
     }
     if (chooseButton) {
-      chooseButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        if (!state.assetPickerOverlay) return;
-        if (state.assetPickerOverlay.isOpen()) {
-          state.assetPickerOverlay.close();
-          return;
-        }
-        void openAssetPicker(state, "image");
-      });
+      chooseButton.disabled = true;
+      chooseButton.hidden = true;
     }
     if (removeButton) {
       removeButton.addEventListener("click", (event) => {
@@ -3208,48 +2529,9 @@ var Dieter = (() => {
           URL.revokeObjectURL(state.imageObjectUrl);
           state.imageObjectUrl = null;
         }
-        state.assetPickerOverlay?.close();
         state.imageAssetId = null;
         state.imageName = null;
         setImageSrc(state, null, { commit: true }, deps);
-      });
-    }
-    if (fileInput) {
-      fileInput.addEventListener("change", async () => {
-        const file = fileInput.files && fileInput.files[0];
-        if (!file) return;
-        const previousSrc = state.imageSrc;
-        const previousAssetId = state.imageAssetId;
-        const previousName = state.imageName;
-        state.imageName = file.name || null;
-        setFillUploadingState(state, true);
-        state.assetPickerOverlay?.close();
-        deps.updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
-        const localPreviewUrl = URL.createObjectURL(file);
-        state.imageObjectUrl = localPreviewUrl;
-        setImageSrc(state, localPreviewUrl, { commit: false, updateHeader: true, updateRemove: true }, deps);
-        try {
-          const uploaded = await uploadEditorAsset({
-            file,
-            source: "api"
-          });
-          state.imageAssetId = uploaded.assetId;
-          setImageSrc(state, uploaded.url, { commit: true }, deps);
-        } catch (error) {
-          const message = error instanceof Error ? error.message : "";
-          if (isAssetEntitlementReasonKey(message)) {
-            dispatchAssetEntitlementGate(state.root, message);
-          }
-          state.imageAssetId = previousAssetId;
-          state.imageName = previousName;
-          setImageSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
-          if (!previousSrc) {
-            deps.updateHeader(state, { text: "Upload failed", muted: true, chipColor: null, noneChip: true });
-          }
-        } finally {
-          setFillUploadingState(state, false);
-          fileInput.value = "";
-        }
       });
     }
   }
@@ -3272,22 +2554,13 @@ var Dieter = (() => {
       });
     }
     if (videoUploadButton && videoFileInput) {
-      videoUploadButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        videoFileInput.value = "";
-        videoFileInput.click();
-      });
+      videoUploadButton.disabled = true;
+      videoUploadButton.hidden = true;
+      videoFileInput.disabled = true;
     }
     if (videoChooseButton) {
-      videoChooseButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        if (!state.assetPickerOverlay) return;
-        if (state.assetPickerOverlay.isOpen()) {
-          state.assetPickerOverlay.close();
-          return;
-        }
-        void openAssetPicker(state, "video");
-      });
+      videoChooseButton.disabled = true;
+      videoChooseButton.hidden = true;
     }
     if (videoRemoveButton) {
       videoRemoveButton.addEventListener("click", (event) => {
@@ -3296,52 +2569,10 @@ var Dieter = (() => {
           URL.revokeObjectURL(state.videoObjectUrl);
           state.videoObjectUrl = null;
         }
-        state.assetPickerOverlay?.close();
         state.videoAssetId = null;
         state.videoPosterAssetId = null;
         state.videoName = null;
         setVideoSrc(state, null, { commit: true }, deps);
-      });
-    }
-    if (videoFileInput) {
-      videoFileInput.addEventListener("change", async () => {
-        const file = videoFileInput.files && videoFileInput.files[0];
-        if (!file) return;
-        const previousSrc = state.videoSrc;
-        const previousAssetId = state.videoAssetId;
-        const previousPosterAssetId = state.videoPosterAssetId;
-        const previousName = state.videoName;
-        state.videoName = file.name || null;
-        setFillUploadingState(state, true);
-        state.assetPickerOverlay?.close();
-        deps.updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
-        const localPreviewUrl = URL.createObjectURL(file);
-        state.videoObjectUrl = localPreviewUrl;
-        setVideoSrc(state, localPreviewUrl, { commit: false, updateHeader: true, updateRemove: true }, deps);
-        try {
-          const uploaded = await uploadEditorAsset({
-            file,
-            source: "api"
-          });
-          state.videoAssetId = uploaded.assetId;
-          state.videoPosterAssetId = null;
-          setVideoSrc(state, uploaded.url, { commit: true }, deps);
-        } catch (error) {
-          const message = error instanceof Error ? error.message : "";
-          if (isAssetEntitlementReasonKey(message)) {
-            dispatchAssetEntitlementGate(state.root, message);
-          }
-          state.videoAssetId = previousAssetId;
-          state.videoPosterAssetId = previousPosterAssetId;
-          state.videoName = previousName;
-          setVideoSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
-          if (!previousSrc) {
-            deps.updateHeader(state, { text: "Upload failed", muted: true, chipColor: null, noneChip: true });
-          }
-        } finally {
-          setFillUploadingState(state, false);
-          videoFileInput.value = "";
-        }
       });
     }
   }
@@ -3357,16 +2588,7 @@ var Dieter = (() => {
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-fill",
     triggerSelector: ".diet-dropdown-fill__control",
-    isInsideTarget: (root, target) => {
-      const state = states.get(root);
-      if (!state?.assetPickerOverlay) return false;
-      return state.assetPickerOverlay.contains(target);
-    },
-    onClose: (root) => {
-      const state = states.get(root);
-      if (!state) return;
-      state.assetPickerOverlay?.close();
-    }
+    isInsideTarget: () => false
   });
   function hydrateDropdownFill(scope) {
     const roots = Array.from(scope.querySelectorAll(".diet-dropdown-fill"));
@@ -3442,43 +2664,10 @@ var Dieter = (() => {
     if (!input || !hueInput || !alphaInput || !hexField || !alphaField || !svCanvas || !svThumb) {
       return null;
     }
-    const assetPickerOverlay = chooseButton ? new AssetPickerOverlay({
-      onUse: (item) => {
-        const current = states.get(root);
-        if (!current) return;
-        if (current.assetPickerKind === "video") {
-          current.videoAssetId = item.assetId;
-          current.videoPosterAssetId = null;
-          current.videoName = item.normalizedFilename;
-          setVideoSrc2(current, item.url, { commit: true });
-          return;
-        }
-        current.imageAssetId = item.assetId;
-        current.imageName = item.normalizedFilename;
-        setImageSrc2(current, item.url, { commit: true });
-      },
-      onOpenChange: (open) => {
-        const current = states.get(root);
-        if (!current) return;
-        current.imageAssetPickerOpen = open;
-        const imagePickerOpen = open && current.assetPickerKind === "image";
-        const videoPickerOpen = open && current.assetPickerKind === "video";
-        if (current.chooseButton) {
-          current.chooseButton.setAttribute("aria-expanded", imagePickerOpen ? "true" : "false");
-          current.chooseButton.classList.toggle("is-active", imagePickerOpen);
-        }
-        if (current.videoChooseButton) {
-          current.videoChooseButton.setAttribute("aria-expanded", videoPickerOpen ? "true" : "false");
-          current.videoChooseButton.classList.toggle("is-active", videoPickerOpen);
-        }
-      }
-    }) : null;
     if (chooseButton) {
-      chooseButton.setAttribute("aria-haspopup", "dialog");
       chooseButton.setAttribute("aria-expanded", "false");
     }
     if (videoChooseButton) {
-      videoChooseButton.setAttribute("aria-haspopup", "dialog");
       videoChooseButton.setAttribute("aria-expanded", "false");
     }
     const nativeValue = captureNativeValue(input);
@@ -3529,7 +2718,6 @@ var Dieter = (() => {
       uploadButton,
       chooseButton,
       removeButton,
-      assetPickerOverlay,
       fileInput,
       imageSrc: null,
       imageAssetId: null,
@@ -3538,8 +2726,6 @@ var Dieter = (() => {
       imageUnavailable: false,
       imageAvailabilityRequestId: 0,
       imageResolveRequestId: 0,
-      imageAssetPickerOpen: false,
-      imageAssetPickerLoading: false,
       videoPanel,
       videoPreview,
       videoUploadButton,
@@ -3553,7 +2739,6 @@ var Dieter = (() => {
       videoObjectUrl: null,
       videoUnavailable: false,
       videoResolveRequestId: 0,
-      assetPickerKind: "image",
       allowedModes,
       mode,
       nativeValue,
@@ -3578,13 +2763,13 @@ var Dieter = (() => {
       syncFromValue(state, readValue());
     });
     state.hueInput.addEventListener("input", () => {
-      const hue = clampNumber2(Number(state.hueInput.value), 0, 360);
+      const hue = clampNumber(Number(state.hueInput.value), 0, 360);
       state.hsv.h = hue;
       if (state.hsv.a === 0) state.hsv.a = 1;
       syncColorUI(state, { commit: true });
     });
     state.alphaInput.addEventListener("input", () => {
-      const alpha = clampNumber2(Number(state.alphaInput.value) / 100, 0, 1);
+      const alpha = clampNumber(Number(state.alphaInput.value) / 100, 0, 1);
       state.hsv.a = alpha;
       syncColorUI(state, { commit: true });
     });
@@ -3627,12 +2812,12 @@ var Dieter = (() => {
   function installSvCanvasHandlers(state) {
     const move = (event) => {
       const rect = state.svCanvas.getBoundingClientRect();
-      const x = clampNumber2(event.clientX - rect.left, 0, rect.width);
-      const y = clampNumber2(event.clientY - rect.top, 0, rect.height);
+      const x = clampNumber(event.clientX - rect.left, 0, rect.width);
+      const y = clampNumber(event.clientY - rect.top, 0, rect.height);
       const s = rect.width ? x / rect.width : 0;
       const v = rect.height ? 1 - y / rect.height : 0;
-      state.hsv.s = clampNumber2(s, 0, 1);
-      state.hsv.v = clampNumber2(v, 0, 1);
+      state.hsv.s = clampNumber(s, 0, 1);
+      state.hsv.v = clampNumber(v, 0, 1);
       if (state.hsv.a === 0) state.hsv.a = 1;
       syncColorUI(state, { commit: true });
     };
@@ -3668,32 +2853,6 @@ var Dieter = (() => {
   }
   function setVideoSrc2(state, src, opts) {
     setVideoSrc(state, src, opts, mediaDeps());
-  }
-  async function resolveImagePreviewFromAssetId(state, assetId) {
-    state.imageResolveRequestId += 1;
-    const requestId = state.imageResolveRequestId;
-    try {
-      const resolved = await resolveMediaAssetChoices([assetId]);
-      if (state.imageResolveRequestId !== requestId) return;
-      if (state.imageAssetId !== assetId) return;
-      const entry = resolved.get(assetId);
-      if (!entry?.url) return;
-      setImageSrc2(state, entry.url, { commit: false });
-    } catch {
-    }
-  }
-  async function resolveVideoPreviewFromAssetId(state, assetId) {
-    state.videoResolveRequestId += 1;
-    const requestId = state.videoResolveRequestId;
-    try {
-      const resolved = await resolveMediaAssetChoices([assetId]);
-      if (state.videoResolveRequestId !== requestId) return;
-      if (state.videoAssetId !== assetId) return;
-      const entry = resolved.get(assetId);
-      if (!entry?.url) return;
-      setVideoSrc2(state, entry.url, { commit: false });
-    } catch {
-    }
   }
   function setInputValue(state, value, emit) {
     const json = JSON.stringify(value);
@@ -3762,7 +2921,7 @@ var Dieter = (() => {
       state.alphaField.value = `${Math.round(state.hsv.a * 100)}%`;
       return;
     }
-    const percent = clampNumber2(parsed, 0, 100);
+    const percent = clampNumber(parsed, 0, 100);
     state.hsv.a = percent / 100;
     syncColorUI(state, { commit: true });
   }
@@ -3827,9 +2986,6 @@ var Dieter = (() => {
       state.imageAssetId = readImageAssetId(fill);
       state.imageName = readImageName(fill);
       setImageSrc2(state, null, { commit: false });
-      if (state.imageAssetId) {
-        void resolveImagePreviewFromAssetId(state, state.imageAssetId);
-      }
       return;
     }
     if (fill.type === "video") {
@@ -3838,9 +2994,6 @@ var Dieter = (() => {
       state.videoPosterAssetId = readVideoPosterAssetId(fill);
       state.videoName = readVideoName(fill);
       setVideoSrc2(state, null, { commit: false });
-      if (state.videoAssetId) {
-        void resolveVideoPreviewFromAssetId(state, state.videoAssetId);
-      }
       return;
     }
   }
@@ -3943,9 +3096,6 @@ var Dieter = (() => {
     });
     if (state.headerLabel) {
       state.headerLabel.textContent = MODE_LABELS[next] || state.headerLabel.textContent;
-    }
-    if (next !== "image" && next !== "video" && state.imageAssetPickerOpen) {
-      state.assetPickerOverlay?.close();
     }
   }
   function syncModeUI(state, opts) {

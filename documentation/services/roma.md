@@ -137,14 +137,17 @@ Client fetch behavior:
 2. Load one Builder-open envelope from Roma same-origin (`GET /api/builder/:publicId/open`), which resolves the saved authoring revision server-side.
 3. Load compiled payload (`/api/widgets/:widgetname/compiled`).
 4. Wait for Bob `bob:session-ready` (`boot=message`).
-5. Send `ck:open-editor` with `requestId` plus host asset endpoints for preview/upload materialization (no bearer handoff; Bob relies on shared cookies).
+5. Send `ck:open-editor` with `requestId`, `widgetname`, `compiled`, `instanceData`, `policy`, `publicId`, and `label`.
 6. Wait for terminal open result (`bob:open-editor-applied` or `bob:open-editor-failed`).
 
 This is the governing product-path authoring flow for the 075 authoring simplification track.
 
 Notes:
 
-- Bob account mode is message-boot only. Explicit URL boot remains only for non-account surfaces.
+- Bob account mode is message-boot only. Bob does not recover host asset context from iframe URL params on the account Builder path. Explicit URL boot remains only for non-account surfaces.
+- Builder-open is document-only. Roma does not pull publish/live-plane status into the Bob editor envelope.
+- Roma no longer uses one mixed helper for both Builder-open document loading and publish/live-status lookup. Builder-open loads the saved document only; widgets-domain/account routes that need live status ask the live plane separately.
+- Asset picker/upload/resolve behavior is removed from the active Builder path in the 075A cut. Roma no longer feeds a hosted asset bridge into Bob for this path.
 - In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
 - Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/account/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Tokyo-worker-owned downstream locale/live work.
 - Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and non-owner member removal route through Roma same-origin APIs backed by Berlin (`/api/account/team/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.

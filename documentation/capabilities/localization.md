@@ -107,7 +107,7 @@ Where the write plane fits (current repo snapshot):
 - Tokyo/Tokyo-worker store editable overlay rows and base snapshots under `tokyo/l10n/instances/<publicId>/...`.
   - `layer=locale` = generated/managed translation ops
   - `layer=user` = user overrides on top of the locale translation (choosing auto-translate again clears this layer on the next Save)
-- Tokyo-worker derives account-mode localization snapshot/status from canonical Tokyo overlay/artifact state and Roma relays that result.
+- Tokyo-worker still owns canonical overlay/artifact state, but Builder no longer mounts account-mode localization snapshot/status as part of the active authoring loop.
 - Every overlay row is keyed by `baseFingerprint` (sha256 of the current allowlist snapshot).
 - Repo-authored admin-owned l10n source overlays, when kept in-repo, live under `tokyo/admin-owned/l10n/**` and build into `tokyo/l10n/**`.
 - Stale writes are rejected when `baseFingerprint` does not match.

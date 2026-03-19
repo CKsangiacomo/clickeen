@@ -6,8 +6,6 @@ import {
   type SessionCookieSpec,
 } from '@roma/lib/auth/session';
 import { loadBuilderOpenEnvelope } from '@roma/lib/builder-open';
-import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
-import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 
 export const runtime = 'edge';
 
@@ -58,8 +56,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   const result = await loadBuilderOpenEnvelope({
-    berlinBaseUrl: resolveBerlinBaseUrl(),
-    tokyoBaseUrl: resolveTokyoBaseUrl(),
     accessToken: session.accessToken,
     accountId: authz.payload.accountId,
     publicId,

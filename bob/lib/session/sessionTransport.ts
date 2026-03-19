@@ -3,19 +3,14 @@ import {
   type BobAccountCommand,
   type BobAccountCommandMessage,
   type HostAccountCommandResultMessage,
+  type SessionMeta,
   type SessionState,
-  type SubjectMode,
 } from './sessionTypes';
-import { resolveBootModeFromUrl, resolvePolicySubject } from './sessionPolicy';
-
-const HOSTED_ASSET_BRIDGE_KEY = '__CK_CLICKEEN_HOSTED_ACCOUNT_ASSET_BRIDGE__';
 
 export type ExecuteAccountCommandArgs = {
-  subject: SubjectMode;
   command: BobAccountCommand;
   url: string;
   method: 'GET' | 'PUT' | 'POST' | 'DELETE';
-  accountId: string;
   publicId: string;
   body?: unknown;
 };
@@ -24,12 +19,10 @@ export type ExecuteAccountCommand = (
   commandArgs: ExecuteAccountCommandArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
-export type ResolvePreviewAssets = (assetIds: string[]) => Promise<unknown>;
-
 export function useSessionTransport(args: {
   stateRef: MutableRefObject<SessionState>;
+  metaRef: MutableRefObject<SessionMeta>;
 }) {
-  const bootModeRef = useRef(resolveBootModeFromUrl());
   const hostOriginRef = useRef<string | null>(null);
   const nativeFetchRef = useRef<typeof fetch | null>(
     typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : null,
@@ -77,9 +70,10 @@ export function useSessionTransport(args: {
     return undefined;
   }, []);
 
-  const isHostedAccountMode = useCallback((subject: SubjectMode): boolean => {
-    return subject === 'account' && bootModeRef.current === 'message';
-  }, []);
+  const isHostedBuilderSession = useCallback((): boolean => {
+    const publicId = String(args.metaRef.current?.publicId || '').trim();
+    return Boolean(hostOriginRef.current && publicId);
+  }, [args.metaRef]);
 
   const dispatchHostAccountCommand = useCallback(
     (commandArgs: {
@@ -143,79 +137,10 @@ export function useSessionTransport(args: {
     [],
   );
 
-  const hostedAccountMode = (() => {
-    const policy = args.stateRef.current.policy;
-    const subject = policy ? resolvePolicySubject(policy) : null;
-    return subject ? isHostedAccountMode(subject) : false;
-  })();
-  const hostedPublicId = String(args.stateRef.current.meta?.publicId || '').trim();
-
-  useEffect(() => {
-    const root = globalThis as Record<string, unknown>;
-    if (!hostedAccountMode) {
-      delete root[HOSTED_ASSET_BRIDGE_KEY];
-      return;
-    }
-
-    const bridge = {
-      listAssets: async (): Promise<unknown> => {
-        if (!hostedPublicId) {
-          throw new Error('coreui.errors.builder.command.hostUnavailable');
-        }
-        const result = await dispatchHostAccountCommand({
-          command: 'list-assets',
-          publicId: hostedPublicId,
-        });
-        if (!result.ok) {
-          throw new Error(result.message || `HTTP_${result.status}`);
-        }
-        return result.payload ?? null;
-      },
-      resolveAssets: async (assetIds: string[]): Promise<unknown> => {
-        if (!hostedPublicId) {
-          throw new Error('coreui.errors.builder.command.hostUnavailable');
-        }
-        const result = await dispatchHostAccountCommand({
-          command: 'resolve-assets',
-          publicId: hostedPublicId,
-          body: { assetIds },
-        });
-        if (!result.ok) {
-          throw new Error(result.message || `HTTP_${result.status}`);
-        }
-        return result.payload ?? null;
-      },
-      uploadAsset: async (file: Blob, headers?: Record<string, string>): Promise<unknown> => {
-        if (!hostedPublicId) {
-          throw new Error('coreui.errors.builder.command.hostUnavailable');
-        }
-        const result = await dispatchHostAccountCommand({
-          command: 'upload-asset',
-          publicId: hostedPublicId,
-          ...(headers ? { headers } : {}),
-          body: file,
-        });
-        if (!result.ok) {
-          throw new Error(result.message || `HTTP_${result.status}`);
-        }
-        return result.payload ?? null;
-      },
-    };
-
-    root[HOSTED_ASSET_BRIDGE_KEY] = bridge;
-    return () => {
-      if (root[HOSTED_ASSET_BRIDGE_KEY] === bridge) {
-        delete root[HOSTED_ASSET_BRIDGE_KEY];
-      }
-    };
-  }, [dispatchHostAccountCommand, hostedAccountMode, hostedPublicId]);
-
   const fetchApi = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const inputUrl = normalizeInputUrl(input);
-    const policy = args.stateRef.current.policy;
-    const subject = policy ? resolvePolicySubject(policy) : null;
-    if (subject && isHostedAccountMode(subject)) {
-      const publicId = String(args.stateRef.current.meta?.publicId || '').trim();
+    if (isHostedBuilderSession()) {
+      const publicId = String(args.metaRef.current?.publicId || '').trim();
       if (inputUrl === '/api/ai/widget-copilot' || inputUrl === '/api/ai/outcome') {
         if (!publicId) {
           return Response.json(
@@ -253,11 +178,11 @@ export function useSessionTransport(args: {
     }
     const nativeFetch = nativeFetchRef.current ?? fetch.bind(globalThis);
     return nativeFetch(input, init);
-  }, [args.stateRef, dispatchHostAccountCommand, isHostedAccountMode, normalizeInputUrl, readRequestJsonBody]);
+  }, [args.metaRef, dispatchHostAccountCommand, isHostedBuilderSession, normalizeInputUrl, readRequestJsonBody]);
 
   const executeAccountCommand: ExecuteAccountCommand = useCallback(
     async (commandArgs: ExecuteAccountCommandArgs) => {
-      if (isHostedAccountMode(commandArgs.subject)) {
+      if (isHostedBuilderSession()) {
         const result = await dispatchHostAccountCommand({
           command: commandArgs.command,
           publicId: commandArgs.publicId,
@@ -275,79 +200,12 @@ export function useSessionTransport(args: {
       const json = (await response.json().catch(() => null)) as any;
       return { ok: response.ok, status: response.status, json };
     },
-    [dispatchHostAccountCommand, fetchApi, isHostedAccountMode],
-  );
-
-  const resolvePreviewAssets: ResolvePreviewAssets = useCallback(
-    async (assetIds: string[]) => {
-      const normalizedAssetIds = Array.from(
-        new Set(
-          assetIds
-            .map((entry) => String(entry || '').trim())
-            .filter((entry): entry is string => Boolean(entry)),
-        ),
-      );
-      if (!normalizedAssetIds.length) {
-        return { assets: [], missingAssetIds: [] };
-      }
-
-      const policy = args.stateRef.current.policy;
-      const subject = policy ? resolvePolicySubject(policy) : null;
-      const publicId = String(args.stateRef.current.meta?.publicId || '').trim();
-
-      if (subject && isHostedAccountMode(subject)) {
-        if (!publicId) {
-          throw new Error('coreui.errors.assets.previewMaterialization.missingContext');
-        }
-        const result = await dispatchHostAccountCommand({
-          command: 'resolve-assets',
-          publicId,
-          body: { assetIds: normalizedAssetIds },
-        });
-        if (!result.ok) {
-          throw new Error(result.message || `coreui.errors.assets.previewMaterialization.http_${result.status}`);
-        }
-        return result.payload ?? null;
-      }
-
-      const assetApiBase = String(args.stateRef.current.meta?.assetApiBase || '').trim().replace(/\/+$/, '');
-      if (!assetApiBase) {
-        throw new Error('coreui.errors.assets.previewMaterialization.missingContext');
-      }
-
-      const response = await fetchApi(`${assetApiBase}/resolve`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
-        body: JSON.stringify({ assetIds: normalizedAssetIds }),
-      });
-      const payload = (await response.json().catch(() => null)) as
-        | {
-            assets?: unknown;
-            missingAssetIds?: unknown;
-            error?: { detail?: unknown; reasonKey?: unknown };
-          }
-        | null;
-
-      if (!response.ok) {
-        const detail =
-          typeof payload?.error?.detail === 'string'
-            ? payload.error.detail
-            : typeof payload?.error?.reasonKey === 'string'
-              ? payload.error.reasonKey
-              : `coreui.errors.assets.previewMaterialization.http_${response.status}`;
-        throw new Error(detail);
-      }
-
-      return payload;
-    },
-    [args.stateRef, dispatchHostAccountCommand, fetchApi, isHostedAccountMode],
+    [dispatchHostAccountCommand, fetchApi, isHostedBuilderSession],
   );
 
   return {
-    bootModeRef,
     hostOriginRef,
     fetchApi,
     executeAccountCommand,
-    resolvePreviewAssets,
   };
 }

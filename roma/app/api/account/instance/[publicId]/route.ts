@@ -3,7 +3,8 @@ import { classifyWidgetPublicId, isUuid } from '@clickeen/ck-contracts';
 import {
   deleteLiveSurfaceFromTokyo,
   deleteSavedConfigFromTokyo,
-  loadTokyoPreferredAccountInstance,
+  loadTokyoAccountInstanceDocument,
+  loadTokyoAccountInstanceLiveStatus,
   saveAccountInstanceDirect,
 } from '@roma/lib/account-instance-direct';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
@@ -63,10 +64,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const result = await loadTokyoPreferredAccountInstance({
+  const result = await loadTokyoAccountInstanceDocument({
     accountId: current.value.authzPayload.accountId,
     publicId,
-    tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
@@ -79,14 +79,25 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
 
+  const liveStatus = await loadTokyoAccountInstanceLiveStatus({
+    tokyoBaseUrl: resolveTokyoBaseUrl(),
+    publicId,
+  });
+  if (!liveStatus.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: liveStatus.error }, { status: liveStatus.status }),
+      current.value.setCookies,
+    );
+  }
+
   return withSession(
     request,
     NextResponse.json({
       publicId: result.value.row.publicId,
       displayName: result.value.row.displayName || 'Untitled widget',
-      ownerAccountId: result.value.row.accountId,
       widgetType: result.value.row.widgetType,
-      status: result.value.row.status,
+      status: liveStatus.value,
       config: result.value.config,
     }),
     current.value.setCookies,
@@ -111,9 +122,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  let body: { config?: unknown } | null = null;
+  let body: { config: Record<string, unknown> } | null = null;
   try {
-    body = (await request.json()) as { config?: unknown } | null;
+    body = (await request.json()) as { config: Record<string, unknown> } | null;
   } catch {
     return withSession(
       request,
@@ -128,7 +139,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   const result = await saveAccountInstanceDirect({
     accountId,
     publicId,
-    config: body?.config,
+    config: body?.config as Record<string, unknown>,
     tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
@@ -144,7 +155,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   return withSession(
     request,
-    NextResponse.json({ config: result.value.config }),
+    NextResponse.json({ ok: true }),
     current.value.setCookies,
   );
 }

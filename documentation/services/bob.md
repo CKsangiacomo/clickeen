@@ -25,7 +25,7 @@ Between load and save, Bob does not write intermediate edits to the saved revisi
 
 Bob intentionally separates:
 
-- **Saving config** (writes through Bob/Roma same-origin routes to Tokyo): appears as **Save / Discard** buttons when the base widget document is dirty. Save persists that one widget document only. Builder no longer treats localization as a second save lane.
+- **Saving config** (writes through Bob/Roma same-origin routes to Tokyo): appears as a plain **Save** action. Save persists the one widget document currently open in Builder. Builder no longer treats localization as a second save lane and no longer carries a shadow saved-document model just to drive dirty/discard UI.
 - **Copy code in Bob** is only the embed-code affordance: the **Copy code** button opens a modal containing the snippets needed to place the widget on a website (safe iframe + gated iframe++ SEO/GEO).
 - **Bob has no live/unlive toggle** and does not manage published/unpublished state.
 - Active account routes authorize from the Berlin-issued bootstrap account authz capsule carried by Roma/Bob. They do not re-read account membership on normal editor open/save paths.
@@ -69,46 +69,49 @@ Bob compiles the spec into a deterministic contract:
 
 Active account authoring host path: Roma Builder fetches `compiled`, `instanceData`, and `policy`, then waits for Bob session readiness and sends `ck:open-editor`.
 
+That open envelope is document-only for authoring. It does not carry published/unpublished live-state noise into the editor.
+
 Then they wait for Bob session readiness and post into Bob:
 
 ```js
 // Bob -> host
-{ type: 'bob:session-ready', bootMode: 'message' }
+{ type: 'bob:session-ready' }
 
 // host -> Bob
 {
   type: 'ck:open-editor',
   requestId,
-  subjectMode, // 'account' | 'minibob'
   widgetname,
   compiled,
   instanceData,
   policy,
-  accountId,
   publicId,
-  assetApiBase, // optional host asset list/resolve base for preview + picker
-  assetUploadEndpoint, // optional host upload endpoint for editor media controls
   label
 }
 ```
 
 Bob’s session runtime is now composed from explicit modules under `bob/lib/session/`.
-`useWidgetSession.tsx` is the composition shell; boot/open lives in `useSessionBoot.ts`, transport in `sessionTransport.ts`, editing in `useSessionEditing.ts`, saving in `useSessionSaving.ts`, and copilot thread state in `useSessionCopilot.ts`.
+`useWidgetSession.tsx` is now only the public barrel for the active account Builder path. Provider ownership is split across `WidgetDocumentSession.tsx`, `WidgetSessionChrome.tsx`, `WidgetSessionCopilot.tsx`, and `WidgetSessionProvider.tsx`. They split:
+
+- one document session surface (`compiled`, `instanceData`, save/edit/load)
+- one chrome surface (`policy`, `meta`, `preview`, `upsell`)
+- one copilot-thread surface
+
+Boot/open lives in `useSessionBoot.ts`, transport in `sessionTransport.ts`, editing in `useSessionEditing.ts`, saving in `useSessionSaving.ts`, and copilot thread state in `useSessionCopilot.ts`.
 Together they:
 
-- Requires `compiled.controls[]` (must be present and non-empty)
+- Consumes the one host-opened compiled widget contract
 - Requires an explicit `instanceData` document on open; Bob does not promote `compiled.defaults` into visible widget truth
 - Stores `{ compiled, instanceData }` in React state
 - Never auto-picks a different instance when `publicId` is missing.
 - Replies with terminal `bob:open-editor-applied` or `bob:open-editor-failed` for the current host request.
-- Treats host asset endpoints as part of the hosted-editor contract when present; preview runtime may materialize logical media through the host’s asset resolve route instead of assuming authoring config already contains runtime URLs.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
 - Local Bob is tool-trusted only for explicit internal tool flows: there is **no local browser-login shortcut** and hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma account routes. Bob must not treat a trusted local token as sufficient authority on account product paths. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
 - Bob must not auto-upgrade a trusted local end-user token into Michael service-role access inside shared helpers or normal product routes.
 
-### URL bootstrap (deterministic, no auto-pick)
+### Builder boot (current)
 
-Bob URL bootstrap is only for explicit non-hosted surfaces. In account mode, Bob requires `?boot=message`, ignores URL instance params, waits for host `ck:open-editor`, and does not call customer `/api/account/*` routes directly.
+Shared Builder boot is message-only. Roma opens Bob with one explicit `ck:open-editor` payload. Shared Builder core no longer models `subjectMode`, URL boot, or alternate account authoring modes.
 
 ### Hybrid dev (Roma in cloud, Bob local)
 
@@ -118,26 +121,13 @@ Bob’s active account-mode host surface is Roma.
 ### Instance write surfaces (current)
 
 - Roma user flows can create/duplicate/delete account user instances through Roma same-origin routes plus canonical account instance routes.
-- In hosted account mode (`boot=message`, `subject=account`), Bob does not own account transport. It emits explicit editor read/write intents back to the parent host, and the host executes the named account/tool routes on Bob's behalf.
+- In hosted account mode, Bob does not own account transport. It emits explicit editor read/write intents back to the parent host, and the host executes the named account/tool routes on Bob's behalf.
 - Roma hosts customer account sessions through Roma same-origin current-account routes (`/api/account/...`).
 - MiniBob keeps a Bob-owned public helper route (`/api/instance/:publicId?subject=minibob`) for Prague host boot, but Bob still opens the editor only from the host `ck:open-editor` envelope. Bob no longer exposes account product routes, and the public payload it reads is Tokyo-assembled and Venice-served.
 
-### Dev subjects and policy (durable)
+### Policy in shared Builder core
 
-Bob resolves a single subject mode and computes a single policy object:
-
-- **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=account|minibob`.
-- **Policy output**: `policy = { flags, caps, budgets }` used to gate controls and reject ops deterministically.
-
-Example enforcement (today):
-
-- `minibob` cannot create/save account instances (`can(policy, 'instance.create'|'instance.update')` denies with upsell).
-- Uploads + Copilot are bounded by budgets/caps (server-enforced; Bob uses policy for UX gating).
-
-Read-only mode (DevStudio cloud):
-
-- Passing `?readonly=1` (or `?role=viewer`) forces `policy.role = viewer`.
-- Bob blocks edits and saves when in viewer role (read-only DevStudio experience).
+Bob still receives one policy object with the open payload. In the shared Builder core, that policy is used for UX and Copilot/account capability context. Shared Builder no longer computes or switches a runtime subject/boot mode before deciding what product it is.
 
 ### Intended product shape (still aligned)
 
@@ -145,12 +135,12 @@ Core base-config lifecycle per open session:
 
 1. One core instance load performed by the host in account message boot before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
-3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instance/:publicId?subject=account` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
-4. Bob opens the saved document it was given. It does not merge missing widget defaults into account-hosted config on load; invalid saved config is a save/open boundary bug and is rejected by Roma before Builder trusts it.
+3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instance/:publicId` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
+4. Bob opens the saved document it was given. It does not merge missing widget defaults into account-hosted config on load. If Roma/Tokyo surface malformed saved widget payload, Builder fails open at that boundary instead of healing or masking the bad row.
 
 Within Bob, explicit save ownership stays in `useSessionSaving.ts`. Builder no longer mounts a localization overlay/session subsystem on the active account editing path.
 
-Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on boot mode/caching strategy.
+Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on caching strategy, but account Builder still opens through one Roma message-boot envelope.
 
 ---
 
@@ -305,27 +295,16 @@ ToolDrawer has a single, global vertical rhythm. **Only clusters and groups defi
 
 ### Built-in editor actions (current)
 
-- Undo is supported for the last applied ops batch (`undoSnapshot` in `useWidgetSession`).
+- Undo is supported for the last applied ops batch in Bob’s document session path.
 
 ### Asset uploads (account-owned, immediate)
 
-Asset controls (`dropdown-upload`, `dropdown-fill`) upload immediately on file pick through the host-owned asset surface:
+Asset authoring is removed from the active account Builder path in the 075A cut.
 
-- Product path: Roma asset routes (`/api/account/assets*`) -> Tokyo-worker
-- The host forwards the Berlin session bearer, Roma `x-ck-authz-capsule`, and account/public/widget trace headers.
-- Tokyo-worker executes from the capsule truth, applies upload budgets/caps, writes R2 + metadata, and returns canonical URL.
-- Dieter remains the owner of the asset-aware authoring primitives themselves; Bob owns the host/account context they consume.
-
-Migrated asset-aware controls such as `dropdown-fill` and `dropdown-upload` now persist logical media identity (`assetId` / optional `posterAssetId`) on canonical media fields. Bob preview and published/runtime config packs materialize runtime URLs through the host/Tokyo resolve surface; authoring config does not persist runtime URLs.
-
-Contracts:
-
-- **Canonical ownership**: uploads are account-owned and stored at:
-  - key: `assets/versions/{accountId}/{assetId}/{filename}`
-  - runtime path derived from ref: `/assets/v/:assetRef`
-- **Trace context**: `accountId`, `publicId`, `widgetType`, `source` remain provenance fields.
-- Legacy Tokyo asset paths (`/workspace-assets/**`, `/curated-assets/**`, `/assets/accounts/**`) are unsupported on writes.
-- **Hosted Builder contract**: Bob exposes document dataset values plus the hosted asset bridge on `globalThis` so Dieter primitives can resolve/upload assets without Dieter taking ownership of account routing or persistence.
+- `dropdown-fill` and `dropdown-upload` no longer perform hosted picker/upload/resolve work in Builder.
+- Bob no longer exposes a hosted asset bridge or global dataset fallback for Dieter asset controls.
+- Existing saved media identity (`assetId`, optional `posterAssetId`) may still exist in authored config, but Builder no longer tries to rebuild a second hosted asset workflow around it.
+- Clean asset-path rebuilding belongs to the dedicated asset cleanup track, not the one-widget/one-save `75A` path.
 
 Operational baseline (local smoke, 2026-02-17):
 
@@ -586,16 +565,13 @@ This compiles every widget under `tokyo/widgets/*` via Bob’s compile endpoint 
 
 Editor session + ops:
 
-- `bob/lib/session/useWidgetSession.tsx` (composition shell)
+- `bob/lib/session/useWidgetSession.tsx` (composition shell with separate document/chrome/copilot surfaces)
 - `bob/lib/session/useSessionBoot.ts`
 - `bob/lib/session/useSessionEditing.ts`
-- `bob/lib/session/useSessionLocalization.ts`
 - `bob/lib/session/useSessionSaving.ts`
 - `bob/lib/session/useSessionCopilot.ts`
 - `bob/lib/session/sessionTransport.ts`
-- `bob/lib/session/sessionPolicy.ts`
 - `bob/lib/session/sessionTypes.ts`
-- `bob/lib/session/sessionLocalization.ts`
 - `bob/lib/ops.ts`
 - `bob/lib/edit/*`
 

@@ -1,18 +1,13 @@
-import { loadTokyoPreferredAccountInstance } from './account-instance-direct';
+import { loadTokyoAccountInstanceDocument } from './account-instance-direct';
 
 export type BuilderOpenEnvelope = {
-  accountId: string;
   publicId: string;
   displayName: string;
-  ownerAccountId: string;
   widgetType: string;
-  status: 'published' | 'unpublished';
   config: Record<string, unknown>;
 };
 
 export async function loadBuilderOpenEnvelope(args: {
-  berlinBaseUrl: string;
-  tokyoBaseUrl: string;
   accessToken: string;
   accountId: string;
   publicId: string;
@@ -29,10 +24,9 @@ export async function loadBuilderOpenEnvelope(args: {
       };
     }
 > {
-  const instance = await loadTokyoPreferredAccountInstance({
+  const instance = await loadTokyoAccountInstanceDocument({
     accountId: args.accountId,
     publicId: args.publicId,
-    tokyoBaseUrl: args.tokyoBaseUrl,
     tokyoAccessToken: args.accessToken,
     accountCapsule: args.accountCapsule,
   });
@@ -43,12 +37,9 @@ export async function loadBuilderOpenEnvelope(args: {
   return {
     ok: true,
     value: {
-      accountId: args.accountId,
       publicId: instance.value.row.publicId,
       displayName: instance.value.row.displayName || 'Untitled widget',
-      ownerAccountId: instance.value.row.accountId,
       widgetType: instance.value.row.widgetType,
-      status: instance.value.row.status,
       config: instance.value.config,
     },
   };

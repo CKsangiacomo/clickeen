@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
-import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import { type DieterAssets } from './td-menu-content/dom';
 import { resolvePathFromTarget } from './td-menu-content/fieldValue';
 import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './td-menu-content/showIf';
@@ -33,6 +33,7 @@ export function TdMenuContent({
   footer,
 }: TdMenuContentProps) {
   const session = useWidgetSession();
+  const chrome = useWidgetSessionChrome();
   const containerRef = useRef<HTMLDivElement>(null);
   const [renderKey, setRenderKey] = useState(0);
   const showIfEntriesRef = useRef<ShowIfEntry[]>([]);
@@ -51,28 +52,15 @@ export function TdMenuContent({
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const flags = session.policy?.flags ?? null;
-    if (!flags || typeof flags !== 'object') {
-      delete container.dataset.ckPolicyFlags;
-      return;
-    }
-    container.dataset.ckPolicyFlags = JSON.stringify(flags);
-  }, [session.policy]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
 
     const handleFocusIn = (event: FocusEvent) => {
       const path = resolvePathFromTarget(event.target);
       activePathRef.current = path;
-      session.setSelectedPath(path);
     };
     const handleFocusOut = (event: FocusEvent) => {
       const next = event.relatedTarget as HTMLElement | null;
       if (!next || !container.contains(next)) {
         activePathRef.current = null;
-        session.setSelectedPath(null);
       }
     };
 
@@ -82,7 +70,7 @@ export function TdMenuContent({
       container.removeEventListener('focusin', handleFocusIn);
       container.removeEventListener('focusout', handleFocusOut);
     };
-  }, [panelHtml, session]);
+  }, [panelHtml]);
 
   useTdMenuHydration({
     containerRef,
@@ -102,7 +90,7 @@ export function TdMenuContent({
     panelHtml,
     renderKey,
     compiled: session.compiled,
-    requestUpsell: session.requestUpsell,
+    requestUpsell: chrome.requestUpsell,
     lastUpdateRef,
     activePathRef,
   });

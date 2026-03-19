@@ -186,7 +186,7 @@ Defaults (local/dev):
 - publicId is derived from the widget slug as `wgt_main_{widget}` (no override)
 
 MiniBob publish/signup handoff:
-- Prague requests current draft context from Bob iframe via postMessage (`host:export-instance-data`).
+- Current shared Builder core no longer exposes draft export from Bob iframe. Prague MiniBob handoff needs a rebuild against a dedicated demo boundary instead of shared Builder session internals.
 - Prague starts a server-side handoff via `POST /api/minibob/handoff-start`.
 - Prague redirects to the create/signup URL with `handoffId` + `publicId` query params.
 - Handoff start accepts only curated/base MiniBob source ids (`wgt_main_*` or `wgt_curated_*`), never user instance ids.

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteLiveSurfaceFromTokyo,
-  loadTokyoPreferredAccountInstance,
+  loadTokyoAccountInstanceDocument,
+  loadTokyoAccountInstanceLiveStatus,
 } from '@roma/lib/account-instance-direct';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { updateAccountInstanceStatusRow } from '@roma/lib/michael';
@@ -29,10 +30,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const currentInstance = await loadTokyoPreferredAccountInstance({
+  const currentInstance = await loadTokyoAccountInstanceDocument({
     accountId,
     publicId,
-    tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
@@ -44,7 +44,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  if (currentInstance.value.row.status === 'unpublished') {
+  const liveStatus = await loadTokyoAccountInstanceLiveStatus({
+    tokyoBaseUrl: resolveTokyoBaseUrl(),
+    publicId,
+  });
+  if (!liveStatus.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: liveStatus.error }, { status: liveStatus.status }),
+      current.value.setCookies,
+    );
+  }
+
+  if (liveStatus.value === 'unpublished') {
     return withSession(
       request,
       NextResponse.json({ ok: true, publicId, status: 'unpublished', changed: false }),

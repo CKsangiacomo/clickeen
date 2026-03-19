@@ -1,7 +1,5 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
-import { uploadEditorAsset } from '../shared/assetUpload';
 import { isUuid } from '@clickeen/ck-contracts';
-import { resolveEditorAssetChoices } from '../shared/assetResolve';
 
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
@@ -42,28 +40,6 @@ type DropdownUploadState = {
 const states = new Map<HTMLElement, DropdownUploadState>();
 const UUID_FILENAME_STEM_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ASSET_UNAVAILABLE_MESSAGE = 'Asset URL is unavailable. Upload a new file to restore preview.';
-const ASSET_ENTITLEMENT_REASON_KEYS = new Set([
-  'coreui.upsell.reason.budgetExceeded',
-  'coreui.upsell.reason.capReached',
-]);
-
-function isAssetEntitlementReasonKey(value: string): boolean {
-  const reasonKey = String(value || '').trim();
-  return ASSET_ENTITLEMENT_REASON_KEYS.has(reasonKey);
-}
-
-function dispatchAssetEntitlementGate(root: HTMLElement, reasonKey: string): void {
-  root.dispatchEvent(
-    new CustomEvent('bob-upsell', {
-      bubbles: true,
-      detail: { reasonKey },
-    }),
-  );
-  if (typeof window === 'undefined') return;
-  if (!window.parent || window.parent === window) return;
-  window.parent.postMessage({ type: 'bob:asset-entitlement-denied', reasonKey }, '*');
-}
-
 // IMPORTANT: keep this at module scope.
 // DevStudio (and some Bob flows) may call hydrators more than once over the same DOM.
 // `createDropdownHydrator` uses an internal registry to avoid double-binding, but only
@@ -231,8 +207,11 @@ function installHandlers(state: DropdownUploadState) {
     state.fileInput.value = '';
     state.fileInput.click();
   };
-  state.uploadButton.addEventListener('click', pickUploadFile);
-  state.replaceButton.addEventListener('click', pickReplaceFile);
+  state.uploadButton.disabled = true;
+  state.uploadButton.hidden = true;
+  state.replaceButton.disabled = true;
+  state.replaceButton.hidden = true;
+  state.fileInput.disabled = true;
   state.removeButton.addEventListener('click', (event) => {
     event.preventDefault();
     if (state.localObjectUrl) {
@@ -243,57 +222,8 @@ function installHandlers(state: DropdownUploadState) {
     setFileKey(state, 'transparent', true);
   });
 
-  state.fileInput.addEventListener('change', async () => {
-    const file = state.fileInput.files && state.fileInput.files[0];
-    if (!file) return;
-
-    const error = validateFileSelection(state, file);
-    if (error) {
-      setError(state, error);
-      return;
-    }
-    clearError(state);
-
-    try {
-      setUploadingState(state, true);
-      const uploaded = await uploadEditorAsset({
-        file,
-        source: 'api',
-      });
-      const existingMeta = readMeta(state);
-      const nextMeta: UploadMeta = {
-        ...(existingMeta || {}),
-        name: file.name,
-        assetId: uploaded.assetId,
-        source:
-          typeof existingMeta?.source === 'string' && existingMeta.source.trim()
-            ? existingMeta.source.trim()
-            : 'user',
-      };
-      const { kind, ext } = classifyByNameAndType(file.name, file.type);
-      state.root.dataset.localName = file.name;
-      setMetaValue(state, nextMeta, true);
-      setHeaderWithFile(state, file.name, false);
-      setPreview(state, {
-        kind,
-        previewUrl: kind === 'image' || kind === 'video' ? uploaded.url : undefined,
-        name: file.name,
-        ext,
-        hasFile: true,
-      });
-      setFileKey(state, 'transparent', true);
-      clearError(state);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
-      if (isAssetEntitlementReasonKey(message)) {
-        dispatchAssetEntitlementGate(state.root, message);
-      }
-      setError(state, message);
-    } finally {
-      setUploadingState(state, false);
-      state.fileInput.value = '';
-    }
-  });
+  void pickUploadFile;
+  void pickReplaceFile;
 }
 
 function setUploadingState(state: DropdownUploadState, uploading: boolean) {
@@ -404,38 +334,6 @@ function normalizeUrlForCompare(raw: string): string {
   }
 }
 
-async function resolvePreviewFromAssetId(
-  state: DropdownUploadState,
-  assetId: string,
-  displayName: string,
-  kindName: string,
-) {
-  try {
-    const resolved = await resolveEditorAssetChoices([assetId]);
-    if (readCurrentAssetId(state) !== assetId) return;
-    const entry = resolved.get(assetId);
-    if (!entry?.url) {
-      setHeaderWithFile(state, displayName, true);
-      setError(state, ASSET_UNAVAILABLE_MESSAGE);
-      return;
-    }
-    const resolvedName = displayName || guessNameFromUrl(entry.url) || 'Uploaded file';
-    const { kind, ext } = classifyByNameAndType(kindName || resolvedName, '');
-    setPreview(state, {
-      kind,
-      previewUrl: entry.url,
-      name: resolvedName,
-      ext,
-      hasFile: true,
-    });
-    clearError(state);
-  } catch (_error) {
-    if (readCurrentAssetId(state) !== assetId) return;
-    setHeaderWithFile(state, displayName, true);
-    setError(state, ASSET_UNAVAILABLE_MESSAGE);
-  }
-}
-
 function previewFromUrl(state: DropdownUploadState, raw: string, name: string, kindName: string) {
   const url = extractPrimaryUrl(raw);
   if (!url) return;
@@ -486,7 +384,7 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
       ext: guessExtFromName(kindName || displayName).toLowerCase(),
       hasFile: true,
     });
-    void resolvePreviewFromAssetId(state, currentAssetId, displayName, kindName || displayName);
+    clearError(state);
     return;
   }
 

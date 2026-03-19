@@ -1,5 +1,3 @@
-import { uploadEditorAsset } from '../shared/assetUpload';
-import { fetchImageAssetChoices, fetchVideoAssetChoices, toAssetPickerOverlayItems } from './asset-picker-data';
 import { normalizeAssetReferenceUrl, sameAssetReferenceUrl } from './color-utils';
 import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fill-types';
 import type { FillValue } from './fill-types';
@@ -15,28 +13,6 @@ export type MediaControllerDeps = {
   updateHeader: (state: DropdownFillState, opts: DropdownFillHeaderUpdate) => void;
   setRemoveFillState: (state: DropdownFillState, isEmpty: boolean) => void;
 };
-
-const ASSET_ENTITLEMENT_REASON_KEYS = new Set([
-  'coreui.upsell.reason.budgetExceeded',
-  'coreui.upsell.reason.capReached',
-]);
-
-function isAssetEntitlementReasonKey(value: string): boolean {
-  const reasonKey = String(value || '').trim();
-  return ASSET_ENTITLEMENT_REASON_KEYS.has(reasonKey);
-}
-
-function dispatchAssetEntitlementGate(root: HTMLElement, reasonKey: string): void {
-  root.dispatchEvent(
-    new CustomEvent('bob-upsell', {
-      bubbles: true,
-      detail: { reasonKey },
-    }),
-  );
-  if (typeof window === 'undefined') return;
-  if (!window.parent || window.parent === window) return;
-  window.parent.postMessage({ type: 'bob:asset-entitlement-denied', reasonKey }, '*');
-}
 
 function setFillUploadingState(state: DropdownFillState, uploading: boolean): void {
   state.root.dataset.uploading = uploading ? 'true' : 'false';
@@ -144,35 +120,6 @@ function verifyImageAvailability(state: DropdownFillState, src: string, deps: Me
   probe.src = normalizedSrc;
 }
 
-async function openAssetPicker(state: DropdownFillState, kind: 'image' | 'video'): Promise<void> {
-  if (!state.assetPickerOverlay) return;
-  state.assetPickerKind = kind;
-  const anchorButton = kind === 'video' ? state.videoChooseButton : state.chooseButton;
-  if (!anchorButton) return;
-  state.assetPickerOverlay.open(anchorButton);
-  state.assetPickerOverlay.setMessage('Loading assets...');
-  state.assetPickerOverlay.setRows([]);
-  state.imageAssetPickerLoading = true;
-
-  try {
-    const assets = kind === 'video' ? await fetchVideoAssetChoices() : await fetchImageAssetChoices();
-    const rows = toAssetPickerOverlayItems(assets);
-    state.assetPickerOverlay.setRows(rows);
-    if (assets.length === 0) {
-      state.assetPickerOverlay.setMessage(kind === 'video' ? 'No video assets available.' : 'No image assets available.');
-    } else {
-      const mediaLabel = kind === 'video' ? 'video asset' : 'image asset';
-      state.assetPickerOverlay.setMessage(`Select from ${assets.length} ${mediaLabel}${assets.length === 1 ? '' : 's'}.`);
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to load assets.';
-    state.assetPickerOverlay.setMessage(message || 'Failed to load assets.');
-    state.assetPickerOverlay.setRows([]);
-  } finally {
-    state.imageAssetPickerLoading = false;
-  }
-}
-
 export function setImageSrc(
   state: DropdownFillState,
   src: string | null,
@@ -263,22 +210,13 @@ export function setVideoSrc(
 export function installImageHandlers(state: DropdownFillState, deps: MediaControllerDeps): void {
   const { uploadButton, chooseButton, removeButton, fileInput } = state;
   if (uploadButton && fileInput) {
-    uploadButton.addEventListener('click', (event) => {
-      event.preventDefault();
-      fileInput.value = '';
-      fileInput.click();
-    });
+    uploadButton.disabled = true;
+    uploadButton.hidden = true;
+    fileInput.disabled = true;
   }
   if (chooseButton) {
-    chooseButton.addEventListener('click', (event) => {
-      event.preventDefault();
-      if (!state.assetPickerOverlay) return;
-      if (state.assetPickerOverlay.isOpen()) {
-        state.assetPickerOverlay.close();
-        return;
-      }
-      void openAssetPicker(state, 'image');
-    });
+    chooseButton.disabled = true;
+    chooseButton.hidden = true;
   }
   if (removeButton) {
     removeButton.addEventListener('click', (event) => {
@@ -287,48 +225,9 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
         URL.revokeObjectURL(state.imageObjectUrl);
         state.imageObjectUrl = null;
       }
-      state.assetPickerOverlay?.close();
       state.imageAssetId = null;
       state.imageName = null;
       setImageSrc(state, null, { commit: true }, deps);
-    });
-  }
-  if (fileInput) {
-    fileInput.addEventListener('change', async () => {
-      const file = fileInput.files && fileInput.files[0];
-      if (!file) return;
-      const previousSrc = state.imageSrc;
-      const previousAssetId = state.imageAssetId;
-      const previousName = state.imageName;
-      state.imageName = file.name || null;
-      setFillUploadingState(state, true);
-      state.assetPickerOverlay?.close();
-      deps.updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
-      const localPreviewUrl = URL.createObjectURL(file);
-      state.imageObjectUrl = localPreviewUrl;
-      setImageSrc(state, localPreviewUrl, { commit: false, updateHeader: true, updateRemove: true }, deps);
-      try {
-        const uploaded = await uploadEditorAsset({
-          file,
-          source: 'api',
-        });
-        state.imageAssetId = uploaded.assetId;
-        setImageSrc(state, uploaded.url, { commit: true }, deps);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : '';
-        if (isAssetEntitlementReasonKey(message)) {
-          dispatchAssetEntitlementGate(state.root, message);
-        }
-        state.imageAssetId = previousAssetId;
-        state.imageName = previousName;
-        setImageSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
-        if (!previousSrc) {
-          deps.updateHeader(state, { text: 'Upload failed', muted: true, chipColor: null, noneChip: true });
-        }
-      } finally {
-        setFillUploadingState(state, false);
-        fileInput.value = '';
-      }
     });
   }
 }
@@ -352,22 +251,13 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
     });
   }
   if (videoUploadButton && videoFileInput) {
-    videoUploadButton.addEventListener('click', (event) => {
-      event.preventDefault();
-      videoFileInput.value = '';
-      videoFileInput.click();
-    });
+    videoUploadButton.disabled = true;
+    videoUploadButton.hidden = true;
+    videoFileInput.disabled = true;
   }
   if (videoChooseButton) {
-    videoChooseButton.addEventListener('click', (event) => {
-      event.preventDefault();
-      if (!state.assetPickerOverlay) return;
-      if (state.assetPickerOverlay.isOpen()) {
-        state.assetPickerOverlay.close();
-        return;
-      }
-      void openAssetPicker(state, 'video');
-    });
+    videoChooseButton.disabled = true;
+    videoChooseButton.hidden = true;
   }
   if (videoRemoveButton) {
     videoRemoveButton.addEventListener('click', (event) => {
@@ -376,52 +266,10 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
         URL.revokeObjectURL(state.videoObjectUrl);
         state.videoObjectUrl = null;
       }
-      state.assetPickerOverlay?.close();
       state.videoAssetId = null;
       state.videoPosterAssetId = null;
       state.videoName = null;
       setVideoSrc(state, null, { commit: true }, deps);
-    });
-  }
-  if (videoFileInput) {
-    videoFileInput.addEventListener('change', async () => {
-      const file = videoFileInput.files && videoFileInput.files[0];
-      if (!file) return;
-      const previousSrc = state.videoSrc;
-      const previousAssetId = state.videoAssetId;
-      const previousPosterAssetId = state.videoPosterAssetId;
-      const previousName = state.videoName;
-      state.videoName = file.name || null;
-      setFillUploadingState(state, true);
-      state.assetPickerOverlay?.close();
-      deps.updateHeader(state, { text: `Uploading ${file.name}...`, muted: true, chipColor: null });
-      const localPreviewUrl = URL.createObjectURL(file);
-      state.videoObjectUrl = localPreviewUrl;
-      setVideoSrc(state, localPreviewUrl, { commit: false, updateHeader: true, updateRemove: true }, deps);
-      try {
-        const uploaded = await uploadEditorAsset({
-          file,
-          source: 'api',
-        });
-        state.videoAssetId = uploaded.assetId;
-        state.videoPosterAssetId = null;
-        setVideoSrc(state, uploaded.url, { commit: true }, deps);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : '';
-        if (isAssetEntitlementReasonKey(message)) {
-          dispatchAssetEntitlementGate(state.root, message);
-        }
-        state.videoAssetId = previousAssetId;
-        state.videoPosterAssetId = previousPosterAssetId;
-        state.videoName = previousName;
-        setVideoSrc(state, previousSrc, { commit: false, updateHeader: true, updateRemove: true }, deps);
-        if (!previousSrc) {
-          deps.updateHeader(state, { text: 'Upload failed', muted: true, chipColor: null, noneChip: true });
-        }
-      } finally {
-        setFillUploadingState(state, false);
-        videoFileInput.value = '';
-      }
     });
   }
 }

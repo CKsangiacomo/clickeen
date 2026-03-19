@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import type { CompiledPanel, PanelId } from '../lib/types';
 import { TdMenu } from './TdMenu';
 import { TdMenuContent } from './TdMenuContent';
-import { AccountCopilotPane, MinibobCopilotPane } from './CopilotPane';
+import { AccountCopilotPane } from './CopilotPane';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-import { resolvePolicySubject } from '../lib/session/sessionPolicy';
 import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 import { SettingsPanel } from './SettingsPanel';
 
@@ -25,12 +24,6 @@ const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.builder.open.failed': 'Builder could not open this widget. Please try again.',
   'coreui.errors.instance.notFound': 'This widget could not be found. It may have been deleted.',
   'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot load right now.',
-  'coreui.errors.instance.config.invalid': 'This widget has invalid saved data and cannot load right now.',
-  'coreui.errors.accountId.invalid': 'This workspace context is invalid. Please reopen the widget.',
-  'coreui.errors.widgetType.invalid': 'This widget type is invalid and cannot be saved right now.',
-  'coreui.errors.config.invalid': 'Some widget settings are invalid. Review your changes and try again.',
-  'coreui.errors.publish.nonPersistableUrl':
-    'This widget contains content that cannot be saved yet. Remove the blocked URL and try again.',
 };
 
 function resolveBuilderErrorCopy(reason: string, fallback: string): string {
@@ -46,7 +39,7 @@ function resolveBuilderErrorCopy(reason: string, fallback: string): string {
 
 function resolveSessionErrorTitle(error: NonNullable<ReturnType<typeof useWidgetSession>['error']>): string {
   if (error.source === 'load') return 'Builder unavailable';
-  if (error.source === 'save') return error.committed ? 'Saved with warning' : 'Save failed';
+  if (error.source === 'save') return 'Save failed';
   return 'Edit blocked';
 }
 
@@ -59,9 +52,7 @@ function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidget
     return [
       resolveBuilderErrorCopy(
         error.message,
-        error.committed
-          ? 'Saved, but some follow-up updates need attention.'
-          : 'Saving changes failed. Please try again.',
+        'Saving changes failed. Please try again.',
       ),
     ];
   }
@@ -78,31 +69,9 @@ export function ToolDrawer() {
   const session = useWidgetSession();
   const compiled = session.compiled;
   const sessionError = session.error;
-  const accountId = session.meta?.accountId ? String(session.meta.accountId) : '';
-  const ownerAccountId = session.meta?.ownerAccountId ? String(session.meta.ownerAccountId) : '';
-  const publicId = session.meta?.publicId ? String(session.meta.publicId) : '';
-  const widgetType = session.meta?.widgetname ? String(session.meta.widgetname) : '';
-  const assetApiBaseFromMeta =
-    session.meta?.assetApiBase && String(session.meta.assetApiBase).trim()
-      ? String(session.meta.assetApiBase).trim()
-      : '';
-  const assetUploadEndpointFromMeta =
-    session.meta?.assetUploadEndpoint && String(session.meta.assetUploadEndpoint).trim()
-      ? String(session.meta.assetUploadEndpoint).trim()
-      : '';
 
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
-
-  function readQueryParam(name: string): string {
-    if (typeof window === 'undefined') return '';
-    try {
-      const value = new URL(window.location.href).searchParams.get(name);
-      return typeof value === 'string' ? value.trim() : '';
-    } catch {
-      return '';
-    }
-  }
 
   // Reset active panel when widget changes
   useEffect(() => {
@@ -110,27 +79,6 @@ export function ToolDrawer() {
       setActivePanel(compiled.panels[0].id as PanelId);
     }
   }, [compiled?.widgetname, compiled?.panels]);
-
-  useEffect(() => {
-    // Keep editor upload context in one place for Dieter upload controls.
-    if (typeof document === 'undefined') return;
-    const root = document.documentElement;
-    const dataset = root.dataset as any;
-    const assetApiBase = assetApiBaseFromMeta || readQueryParam('assetApiBase');
-    const assetUploadEndpoint = assetUploadEndpointFromMeta || readQueryParam('assetUploadEndpoint');
-    if (accountId) dataset.ckAccountId = accountId;
-    else delete dataset.ckAccountId;
-    if (ownerAccountId) dataset.ckOwnerAccountId = ownerAccountId;
-    else delete dataset.ckOwnerAccountId;
-    if (publicId) dataset.ckPublicId = publicId;
-    else delete dataset.ckPublicId;
-    if (widgetType) dataset.ckWidgetType = widgetType;
-    else delete dataset.ckWidgetType;
-    if (assetApiBase) dataset.ckAssetApiBase = assetApiBase;
-    else delete dataset.ckAssetApiBase;
-    if (assetUploadEndpoint) dataset.ckAssetUploadEndpoint = assetUploadEndpoint;
-    else delete dataset.ckAssetUploadEndpoint;
-  }, [accountId, ownerAccountId, publicId, widgetType, assetApiBaseFromMeta, assetUploadEndpointFromMeta]);
 
   const panelsById = useMemo(() => {
     const map: Record<string, CompiledPanel> = {};
@@ -141,20 +89,10 @@ export function ToolDrawer() {
     }
     return map;
   }, [compiled]);
-  const copilotSurface = useMemo(() => {
-    if (!session.policy) return 'account';
-    return resolvePolicySubject(session.policy);
-  }, [session.policy]);
-
   const activePanelHtml = panelsById[activePanel]?.html ?? null;
-  const isCommittedSaveWarning = sessionError?.source === 'save' && Boolean(sessionError.committed);
-  const alertBorderColor = isCommittedSaveWarning
-    ? '1px solid color-mix(in oklab, var(--color-system-yellow), transparent 55%)'
-    : '1px solid color-mix(in oklab, var(--color-system-red), transparent 55%)';
-  const alertBackground = isCommittedSaveWarning
-    ? 'color-mix(in oklab, var(--color-system-yellow-5), transparent 82%)'
-    : 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';
-  const alertLabelColor = isCommittedSaveWarning ? 'var(--color-system-yellow)' : 'var(--color-system-red)';
+  const alertBorderColor = '1px solid color-mix(in oklab, var(--color-system-red), transparent 55%)';
+  const alertBackground = 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';
+  const alertLabelColor = 'var(--color-system-red)';
   const sessionErrorLines = sessionError ? resolveSessionErrorLines(sessionError) : [];
 
   return (
@@ -264,7 +202,7 @@ export function ToolDrawer() {
           </>
         ) : (
           <div className="tooldrawer-copilot">
-            {copilotSurface === 'minibob' ? <MinibobCopilotPane /> : <AccountCopilotPane />}
+            <AccountCopilotPane />
           </div>
         )}
       </div>

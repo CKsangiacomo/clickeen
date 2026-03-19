@@ -1,18 +1,19 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import { EmbedModal } from './EmbedModal';
 
 export function TopDrawer() {
   const session = useWidgetSession();
-  const { meta, save, isSaving, hasUnsavedChanges, discardChanges } = session;
+  const chrome = useWidgetSessionChrome();
+  const { save, isSaving } = session;
   const [embedOpen, setEmbedOpen] = useState(false);
 
+  const meta = chrome.meta;
   const currentPublicId = typeof meta?.publicId === 'string' ? meta.publicId : '';
-  const accountId = typeof meta?.accountId === 'string' ? meta.accountId : '';
   const hasInstance = Boolean(currentPublicId);
-  const canPersist = hasInstance && Boolean(accountId);
+  const canPersist = hasInstance;
   const currentLabel = useMemo(
     () => (typeof meta?.label === 'string' ? meta.label.trim() : ''),
     [meta?.label]
@@ -31,30 +32,16 @@ export function TopDrawer() {
       </div>
 
       <div className="topdrawer-actions">
-        {hasUnsavedChanges ? (
-          <>
-            <button
-              className="diet-btn-txt"
-              data-size="xl"
-              data-variant="neutral"
-              type="button"
-              disabled={!canPersist || isSaving}
-              onClick={() => discardChanges()}
-            >
-              <span className="diet-btn-txt__label">Discard</span>
-            </button>
-            <button
-              className="diet-btn-txt"
-              data-size="xl"
-              data-variant="primary"
-              type="button"
-              disabled={!canPersist || isSaving}
-              onClick={() => save()}
-            >
-              <span className="diet-btn-txt__label">{isSaving ? 'Saving…' : 'Save'}</span>
-            </button>
-          </>
-        ) : null}
+        <button
+          className="diet-btn-txt"
+          data-size="xl"
+          data-variant="primary"
+          type="button"
+          disabled={!canPersist || isSaving}
+          onClick={() => save()}
+        >
+          <span className="diet-btn-txt__label">{isSaving ? 'Saving…' : 'Save'}</span>
+        </button>
         <button
           className="diet-btn-txt"
           data-size="xl"

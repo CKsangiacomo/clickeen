@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { WidgetOp } from '../lib/ops';
 import type { CopilotCta, CopilotMessage } from '../lib/copilot/types';
-import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { useWidgetSession, useWidgetSessionChrome, useWidgetSessionCopilot } from '../lib/session/useWidgetSession';
 import {
   labelAiModel,
   labelAiProvider,
@@ -313,8 +313,9 @@ type SharedCopilotPaneProps = {
 
 export function AccountCopilotPane() {
   const session = useWidgetSession();
-  const accountId = session.meta?.accountId ?? null;
-  const policyProfile = session.policy?.profile ?? null;
+  const chrome = useWidgetSessionChrome();
+  const accountId = null;
+  const policyProfile = chrome.policy?.profile ?? null;
   const widgetCopilotAgentId = useMemo(
     () => (policyProfile ? resolveWidgetCopilotAgentId({ policyProfile }) : null),
     [policyProfile],
@@ -384,7 +385,8 @@ export function AccountCopilotPane() {
 
 export function MinibobCopilotPane() {
   const session = useWidgetSession();
-  const policyProfile = session.policy?.profile ?? null;
+  const chrome = useWidgetSessionChrome();
+  const policyProfile = chrome.policy?.profile ?? null;
   const widgetCopilotAgentId = useMemo(
     () => (policyProfile ? resolveWidgetCopilotAgentId({ policyProfile }) : null),
     [policyProfile],
@@ -419,11 +421,13 @@ export function MinibobCopilotPane() {
 }
 
 function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: SharedCopilotPaneProps) {
+  const chrome = useWidgetSessionChrome();
+  const copilot = useWidgetSessionCopilot();
   const compiled = session.compiled;
   const canApplyOps = Boolean(compiled && compiled.controls.length > 0);
 
   const widgetType = compiled?.widgetname ?? null;
-  const instancePublicId = session.meta?.publicId ?? null;
+  const instancePublicId = chrome.meta?.publicId ?? null;
 
   const [draft, setDraft] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
@@ -438,7 +442,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
     return `${widgetType}:${instancePublicId ?? 'local'}`;
   }, [widgetType, instancePublicId]);
 
-  const thread = threadKey ? session.copilotThreads?.[threadKey] ?? null : null;
+  const thread = threadKey ? copilot.copilotThreads?.[threadKey] ?? null : null;
   const messages = useMemo(() => thread?.messages ?? [], [thread?.messages]);
   const copilotSessionId = thread?.sessionId ?? '';
 
@@ -478,7 +482,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
     if (!threadKey || !compiled || !canApplyOps || !widgetType) return;
     if (thread && thread.messages.length > 0) return;
 
-    session.setCopilotThread(threadKey, {
+    copilot.setCopilotThread(threadKey, {
       sessionId: crypto.randomUUID(),
       messages: [
         {
@@ -489,7 +493,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
         },
       ],
     });
-  }, [threadKey, compiled, canApplyOps, widgetType, thread, session, surfaceContract]);
+  }, [threadKey, compiled, canApplyOps, widgetType, thread, copilot, surfaceContract]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -529,7 +533,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
 
   const pushMessage = (msg: Omit<CopilotMessage, 'id' | 'ts'>) => {
     if (!threadKey) return;
-    session.updateCopilotThread(threadKey, (current) => {
+    copilot.updateCopilotThread(threadKey, (current) => {
       const base = current ?? { sessionId: crypto.randomUUID(), messages: [] };
       return { ...base, messages: [...base.messages, { ...msg, id: newId(), ts: Date.now() }] };
     });
@@ -539,7 +543,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
     pendingDecisionRef.current = false;
     pendingOpsRef.current = null;
     if (!threadKey) return;
-    session.updateCopilotThread(threadKey, (current) => {
+    copilot.updateCopilotThread(threadKey, (current) => {
       const base = current ?? { sessionId: crypto.randomUUID(), messages: [] };
       return {
         ...base,
@@ -608,7 +612,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
     let sessionId = copilotSessionId;
     if (!sessionId && threadKey && compiled && canApplyOps && widgetType) {
       sessionId = crypto.randomUUID();
-      session.setCopilotThread(threadKey, {
+      copilot.setCopilotThread(threadKey, {
         sessionId,
         messages: [
           {
@@ -624,7 +628,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
       pushMessage({ role: 'assistant', text: 'Copilot session not ready. Please try again in a moment.' });
       return;
     }
-    if (!session.policy) {
+    if (!chrome.policy) {
       pushMessage({
         role: 'assistant',
         text: 'Editor context is not ready yet. Wait for Builder boot to complete and try again.',
@@ -766,7 +770,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
                             requestId: m.requestId || '',
                             sessionId: copilotSessionId,
                           });
-                          session.requestUpsell(cta.text);
+                          chrome.requestUpsell(cta.text);
                         }}
                       >
                         <span className="diet-btn-txt__label">{cta.text}</span>
@@ -839,7 +843,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
                         requestId: m.requestId || '',
                         sessionId: copilotSessionId,
                       });
-                      session.requestUpsell(surfaceContract.pendingPrimaryUpsellReason || surfaceContract.pendingPrimaryLabel);
+                      chrome.requestUpsell(surfaceContract.pendingPrimaryUpsellReason || surfaceContract.pendingPrimaryLabel);
                     }}
                   >
                     <span className="diet-btn-txt__label">{surfaceContract.pendingPrimaryLabel}</span>

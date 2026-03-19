@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
-import { loadTokyoPreferredAccountInstance } from '@roma/lib/account-instance-direct';
+import {
+  loadTokyoAccountInstanceDocument,
+  loadTokyoAccountInstanceLiveStatus,
+} from '@roma/lib/account-instance-direct';
 import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import {
@@ -62,10 +65,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const currentInstance = await loadTokyoPreferredAccountInstance({
+  const currentInstance = await loadTokyoAccountInstanceDocument({
     accountId,
     publicId,
-    tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
@@ -77,7 +79,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  if (currentInstance.value.row.status === 'published') {
+  const liveStatus = await loadTokyoAccountInstanceLiveStatus({
+    tokyoBaseUrl: resolveTokyoBaseUrl(),
+    publicId,
+  });
+  if (!liveStatus.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: liveStatus.error }, { status: liveStatus.status }),
+      current.value.setCookies,
+    );
+  }
+
+  if (liveStatus.value === 'published') {
     return withSession(
       request,
       NextResponse.json({ ok: true, publicId, status: 'published', changed: false }),

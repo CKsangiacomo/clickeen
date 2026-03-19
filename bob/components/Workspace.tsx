@@ -1,17 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getIcon } from '../lib/icons';
-import { useWidgetSession } from '../lib/session/useWidgetSession';
-import { materializeRuntimeConfigForPreview } from '../lib/session/runtimeConfigMaterializer';
+import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 
 export function Workspace() {
   const session = useWidgetSession();
-  const { compiled, instanceData, preview, setPreview, meta, resolvePreviewAssets } = session;
+  const chrome = useWidgetSessionChrome();
+  const { compiled, instanceData } = session;
+  const { preview, setPreview, meta } = chrome;
   const device = preview.device;
   const theme = preview.theme;
   const host = preview.host;
   const hasWidget = Boolean(compiled);
-  const [materializedRuntimeData, setMaterializedRuntimeData] = useState<Record<string, unknown>>(instanceData);
-  const [runtimeMaterializationError, setRuntimeMaterializationError] = useState<string | null>(null);
   const stageMode = String((instanceData as any)?.stage?.canvas?.mode || 'viewport');
   const stageFixedWidth = Number((instanceData as any)?.stage?.canvas?.width || 0);
   const stageFixedHeight = Number((instanceData as any)?.stage?.canvas?.height || 0);
@@ -20,37 +19,10 @@ export function Workspace() {
   const [iframeHasState, setIframeHasState] = useState(false);
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
-  const latestRef = useRef({ compiled, instanceData: materializedRuntimeData, device, theme });
+  const latestRef = useRef({ compiled, instanceData, device, theme });
   useEffect(() => {
-    latestRef.current = { compiled, instanceData: materializedRuntimeData, device, theme };
-  }, [compiled, materializedRuntimeData, device, theme]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      try {
-        const next = await materializeRuntimeConfigForPreview({
-          config: instanceData,
-          accountId: meta?.ownerAccountId ?? meta?.accountId,
-          assetApiBase: meta?.assetApiBase,
-          resolveAssets: resolvePreviewAssets,
-        });
-        if (cancelled) return;
-        setMaterializedRuntimeData(next);
-        setRuntimeMaterializationError(null);
-      } catch (error) {
-        if (cancelled) return;
-        const message = error instanceof Error ? error.message : String(error);
-        setMaterializedRuntimeData(instanceData);
-        setRuntimeMaterializationError(message);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [instanceData, meta?.accountId, meta?.ownerAccountId, meta?.assetApiBase, resolvePreviewAssets]);
+    latestRef.current = { compiled, instanceData, device, theme };
+  }, [compiled, instanceData, device, theme]);
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';
@@ -58,7 +30,7 @@ export function Workspace() {
   }, [hasWidget, compiled]);
 
   const iframeBackdrop = (() => {
-    const raw = (materializedRuntimeData as any)?.stage?.background;
+    const raw = (instanceData as any)?.stage?.background;
     if (typeof raw !== 'string') return undefined;
     const value = raw.trim();
     if (!value) return undefined;
@@ -142,13 +114,13 @@ export function Workspace() {
     const message = {
       type: 'ck:state-update',
       widgetname: compiled.widgetname,
-      state: materializedRuntimeData,
+      state: instanceData,
       device,
       theme,
     };
 
     iframeWindow.postMessage(message, '*');
-  }, [hasWidget, compiled, materializedRuntimeData, device, theme, iframeLoaded]);
+  }, [hasWidget, compiled, instanceData, device, theme, iframeLoaded]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -221,9 +193,9 @@ export function Workspace() {
           <span className="label-s">Loading preview...</span>
         </div>
       ) : null}
-      {hasWidget && (iframeLoadError || runtimeMaterializationError) ? (
+      {hasWidget && iframeLoadError ? (
         <div className="workspace-status-overlay workspace-status-overlay--error" role="alert">
-          <span className="label-s">{iframeLoadError || runtimeMaterializationError}</span>
+          <span className="label-s">{iframeLoadError}</span>
         </div>
       ) : null}
 

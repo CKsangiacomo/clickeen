@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveVeniceBaseUrl } from '../lib/env/venice';
-import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 
 type EmbedModalProps = {
   open: boolean;
@@ -34,7 +34,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 export function EmbedModal({ open, onClose }: EmbedModalProps) {
-  const session = useWidgetSession();
+  const session = useWidgetSessionChrome();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const publicId = session.meta?.publicId ? String(session.meta.publicId) : '';
 

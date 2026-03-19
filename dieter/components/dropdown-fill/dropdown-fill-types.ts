@@ -1,4 +1,3 @@
-import type { AssetPickerOverlay } from './asset-picker-overlay';
 import type { FillMode, FillValue } from './fill-types';
 
 export type GradientStopState = {
@@ -50,7 +49,6 @@ export type DropdownFillState = {
   uploadButton: HTMLButtonElement | null;
   chooseButton: HTMLButtonElement | null;
   removeButton: HTMLButtonElement | null;
-  assetPickerOverlay: AssetPickerOverlay | null;
   fileInput: HTMLInputElement | null;
   imageSrc: string | null;
   imageAssetId: string | null;
@@ -59,8 +57,6 @@ export type DropdownFillState = {
   imageUnavailable: boolean;
   imageAvailabilityRequestId: number;
   imageResolveRequestId: number;
-  imageAssetPickerOpen: boolean;
-  imageAssetPickerLoading: boolean;
   videoPanel: HTMLElement | null;
   videoPreview: HTMLVideoElement | null;
   videoUploadButton: HTMLButtonElement | null;
@@ -74,7 +70,6 @@ export type DropdownFillState = {
   videoObjectUrl: string | null;
   videoUnavailable: boolean;
   videoResolveRequestId: number;
-  assetPickerKind: 'image' | 'video';
   allowedModes: FillMode[];
   mode: FillMode;
   nativeValue?: { get: () => string; set: (next: string) => void };

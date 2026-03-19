@@ -15,7 +15,6 @@ const OPEN_EDITOR_TIMEOUT_MS = 7000;
 
 type BobReadyMessage = {
   type: 'bob:session-ready';
-  bootMode?: 'message' | 'url' | null;
 };
 
 type BobSwitchMessage = {
@@ -41,9 +40,6 @@ type BobAssetEntitlementDeniedMessage = {
 };
 
 type BobAccountCommand =
-  | 'list-assets'
-  | 'resolve-assets'
-  | 'upload-asset'
   | 'update-instance'
   | 'run-copilot'
   | 'attach-ai-outcome';
@@ -71,29 +67,21 @@ type HostAccountCommandResultMessage = {
 type BobOpenEditorMessage = {
   type: 'ck:open-editor';
   requestId: string;
-  subjectMode: 'account';
   publicId: string;
-  accountId: string;
-  ownerAccountId?: string;
-  accountCapsule?: string;
   label: string;
   widgetname: string;
   compiled: unknown;
   instanceData: Record<string, unknown>;
   policy?: unknown;
-  enforcement?: unknown;
 };
 
 type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId'>;
 
 type BuilderOpenResponse = {
-  accountId?: string;
-  publicId?: string;
-  displayName?: string;
-  ownerAccountId?: string;
-  widgetType?: string;
-  status?: 'published' | 'unpublished';
-  config?: Record<string, unknown>;
+  publicId: string;
+  displayName: string;
+  widgetType: string;
+  config: Record<string, unknown>;
 };
 
 const BUILDER_REASON_COPY: Record<string, string> = {
@@ -107,9 +95,6 @@ const BUILDER_REASON_COPY: Record<string, string> = {
   'coreui.errors.instance.notFound': 'This widget could not be found. It may have been deleted.',
   'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot open right now.',
   'coreui.errors.instance.config.invalid': 'This widget has invalid saved data and cannot open right now.',
-  'coreui.errors.instance.ownerAccountMissing':
-    'This widget is missing required account data and cannot open right now.',
-  'coreui.errors.builder.open.bootModeInvalid': 'Builder did not start correctly. Please retry.',
   'coreui.errors.builder.open.stale': 'Builder refreshed while opening this widget. Please retry.',
   'coreui.errors.builder.open.timeout': 'Builder took too long to respond. Please retry.',
   'coreui.errors.builder.open.failed': 'Builder could not open this widget. Please try again.',
@@ -157,22 +142,7 @@ function resolveBobAccountCommandRequest(args: {
     case 'update-instance':
       return {
         method: 'PUT',
-        path: `/api/account/instance/${encodeURIComponent(publicId)}?subject=account`,
-      };
-    case 'list-assets':
-      return {
-        method: 'GET',
-        path: `/api/account/assets?view=all`,
-      };
-    case 'resolve-assets':
-      return {
-        method: 'POST',
-        path: `/api/account/assets/resolve`,
-      };
-    case 'upload-asset':
-      return {
-        method: 'POST',
-        path: `/api/account/assets/upload`,
+        path: `/api/account/instance/${encodeURIComponent(publicId)}`,
       };
     case 'run-copilot':
       return {
@@ -226,10 +196,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
 
   // Active account authoring truth: Roma hosts one current-account Builder session and opens Bob through one explicit message-boot contract.
   const bobSrc = useMemo(() => {
-    const url = new URL('/bob', `${bobBaseUrl}/`);
-    url.searchParams.set('boot', 'message');
-    url.searchParams.set('subject', 'account');
-    return url.toString();
+    return new URL('/bob', `${bobBaseUrl}/`).toString();
   }, [bobBaseUrl]);
 
   useEffect(() => {
@@ -312,14 +279,10 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
           }
         }
         if (typeof args.body !== 'undefined') {
-          if (args.command === 'upload-asset') {
-            init.body = args.body as BodyInit;
-          } else {
-            if (!headers.has('content-type')) {
-              headers.set('content-type', 'application/json');
-            }
-            init.body = JSON.stringify(args.body);
+          if (!headers.has('content-type')) {
+            headers.set('content-type', 'application/json');
           }
+          init.body = JSON.stringify(args.body);
         }
         init.headers = headers;
 
@@ -472,39 +435,15 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim()
           ? builderOpen.displayName.trim()
           : resolvedPublicId;
-      if (!builderOpen?.config || typeof builderOpen.config !== 'object' || Array.isArray(builderOpen.config)) {
-        throw new Error('coreui.errors.instance.config.invalid');
-      }
       const config = builderOpen.config as Record<string, unknown>;
-      const ownerAccountId =
-        typeof builderOpen?.ownerAccountId === 'string' && builderOpen.ownerAccountId.trim()
-          ? builderOpen.ownerAccountId.trim()
-          : '';
-      if (!ownerAccountId) {
-        throw new Error('coreui.errors.instance.ownerAccountMissing');
-      }
-      const openedAccountId = String(context.accountId || '').trim();
-      if (!openedAccountId) {
-        throw new Error('coreui.errors.auth.contextUnavailable');
-      }
-      const envelopeAccountId =
-        typeof builderOpen?.accountId === 'string' ? builderOpen.accountId.trim() : '';
-      if (envelopeAccountId && envelopeAccountId !== openedAccountId) {
-        throw new Error('coreui.errors.auth.contextUnavailable');
-      }
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
-        subjectMode: 'account',
         publicId: resolvedPublicId,
-        accountId: openedAccountId,
-        ...(accountApi.accountCapsule ? { accountCapsule: accountApi.accountCapsule } : {}),
-        ownerAccountId,
         label,
         widgetname: widgetType,
         compiled,
         instanceData: config,
         policy: bootstrapPolicy,
-        enforcement: undefined,
       };
       await postOpenEditorAndWait({
         targetWindow,
@@ -541,11 +480,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         | null;
       if (!data || typeof data !== 'object') return;
       if (data.type === 'bob:session-ready') {
-        const ready = data as BobReadyMessage;
-        if (ready.bootMode && ready.bootMode !== 'message') {
-          setOpenError('coreui.errors.builder.open.bootModeInvalid');
-          return;
-        }
         bobReadyRef.current = true;
         if (activePublicId) {
           void openActiveInstanceInBob();

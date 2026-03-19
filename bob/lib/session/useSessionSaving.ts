@@ -1,55 +1,35 @@
 'use client';
 
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
-import { hasUnsavedDocument, type SessionState } from './sessionTypes';
+import type { SessionMeta, SessionState, SessionUpsell } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
 
 export function useSessionSaving(args: {
   stateRef: MutableRefObject<SessionState>;
+  metaRef: MutableRefObject<SessionMeta>;
+  setUpsell: Dispatch<SetStateAction<SessionUpsell>>;
   setState: Dispatch<SetStateAction<SessionState>>;
   executeAccountCommand: ExecuteAccountCommand;
 }) {
   const save = useCallback(async () => {
     // Save persists the one widget the customer is actively editing.
     const snapshot = args.stateRef.current;
-    const baseDocumentDirty = hasUnsavedDocument(snapshot);
-    const policy = snapshot.policy;
-    const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
-    const accountId = snapshot.meta?.accountId ? String(snapshot.meta.accountId) : '';
-    if (!policy) {
-      args.setState((prev) => ({
-        ...prev,
-        error: { source: 'save', message: 'Editor context is not ready.' },
-      }));
-      return;
-    }
-
-    if (!publicId || !accountId) {
+    const publicId = args.metaRef.current?.publicId ? String(args.metaRef.current.publicId) : '';
+    if (!publicId) {
       args.setState((prev) => ({
         ...prev,
         error: { source: 'save', message: 'Missing instance context for save.' },
       }));
       return;
     }
-    if (policy.role === 'viewer') {
-      args.setState((prev) => ({
-        ...prev,
-        error: { source: 'save', message: 'Read-only mode: saving is disabled.' },
-      }));
-      return;
-    }
-
-    if (!baseDocumentDirty) return;
 
     args.setState((prev) => ({ ...prev, isSaving: true, error: null }));
 
     try {
       const { ok, json } = await args.executeAccountCommand({
-        subject: 'account',
         command: 'update-instance',
         method: 'PUT',
-        url: `/api/account/instance/${encodeURIComponent(publicId)}?subject=account`,
-        accountId,
+        url: `/api/account/instance/${encodeURIComponent(publicId)}`,
         publicId,
         body: { config: snapshot.instanceData },
       });
@@ -72,18 +52,13 @@ export function useSessionSaving(args: {
       }
 
       const current = args.stateRef.current;
-      const nextBase =
-        json?.config && typeof json.config === 'object' && !Array.isArray(json.config)
-          ? structuredClone(json.config)
-          : structuredClone(current.instanceData);
       const nextState: SessionState = {
         ...current,
         isSaving: false,
         error: null,
-        upsell: null,
-        savedBaseInstanceData: structuredClone(nextBase),
-        instanceData: structuredClone(nextBase),
+        instanceData: structuredClone(current.instanceData),
       };
+      args.setUpsell(null);
       args.stateRef.current = nextState;
       args.setState(nextState);
     } catch (err) {
@@ -92,7 +67,9 @@ export function useSessionSaving(args: {
     }
   }, [
     args.executeAccountCommand,
+    args.metaRef,
     args.setState,
+    args.setUpsell,
     args.stateRef,
   ]);
 

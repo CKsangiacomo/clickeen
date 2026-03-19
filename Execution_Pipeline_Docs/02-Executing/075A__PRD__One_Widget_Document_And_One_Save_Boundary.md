@@ -1,6 +1,6 @@
 # 075A — Builder Must Edit And Save One Real Widget
 
-Status: READY FOR REVIEW
+Status: EXECUTED
 Date: 2026-03-18
 Owner: Product Dev Team
 Priority: P0
@@ -183,7 +183,6 @@ For account-mode Builder:
 
 - there is one canonical widget document in memory
 - Builder shows that same widget while the customer edits
-- Discard returns Builder to the last saved version of that same widget
 - Preview does not get its own widget-shaped state
 
 Rules:
@@ -226,6 +225,7 @@ We are fixing the actual product:
 - Builder open/save must ask only the narrow persisted-document sanity questions that actually belong at the save boundary
 - saved rows must not be judged against current full software defaults
 - Roma must not re-litigate widget software truth with a second widget-shape validator
+- malformed saved rows must fail at the Roma/Tokyo open boundary instead of being healed or masked as "not found"
 
 ### E. Silent client-side healing will stop pretending to be truth
 
@@ -273,6 +273,7 @@ Forbidden:
 - `bob/lib/session/useSessionEditing.ts`
 - `bob/lib/session/useSessionSaving.ts`
 - `bob/lib/session/sessionTransport.ts`
+- `bob/lib/session/sessionPolicy.ts`
 - `bob/components/TdMenu.tsx`
 - `bob/components/TdMenuContent.tsx`
 - `bob/components/td-menu-content/useTdMenuBindings.ts`
@@ -286,13 +287,24 @@ Forbidden:
 - `roma/components/builder-domain.tsx`
 - `roma/lib/builder-open.ts`
 - `roma/lib/account-instance-direct.ts`
+- `dieter/components/dropdown-fill/asset-picker-data.ts`
+- `dieter/components/dropdown-fill/asset-picker-overlay.ts`
+- `dieter/components/dropdown-fill/dropdown-fill.ts`
+- `dieter/components/dropdown-fill/dropdown-fill-types.ts`
+- `dieter/components/dropdown-fill/media-controller.ts`
+- `dieter/components/dropdown-upload/dropdown-upload.ts`
+- `dieter/components/shared/assetResolve.ts`
+- `dieter/components/shared/assetUpload.ts`
 - touched Bob/Roma/context docs for current-truth wording
+- `documentation/architecture/Overview.md`
+- `documentation/ai/overview.md`
+- `documentation/services/roma.md`
 
 ### Toxic LOCs and code shapes to remove or collapse
 
 - `bob/lib/session/useWidgetSession.tsx`
-  - `hasUnsavedChanges: isDirty || state.locale.dirty`
-  - toxic because it exposes two unsaved models at the session API
+  - any dirty/discard API that depends on a second saved-widget shadow in Bob
+  - toxic because it turns one widget into current-truth plus saved-shadow truth
 
 - `bob/components/Workspace.tsx`
   - `const runtimeData = previewData ?? instanceData;`
@@ -302,19 +314,34 @@ Forbidden:
   - any account-path fallback that reintroduces `compiled.defaults` as visible widget truth
   - any load sanitization that silently rewrites the visible widget and makes that rewrite look normal
 
+- `bob/components/ToolDrawer.tsx`
+  - any account-path fallback that recovers asset picker/upload context from iframe URL query params instead of the Roma open envelope
+  - any global document dataset bridge used to leak Builder host/account/widget context into shared controls
+  - toxic because Builder host context must come from the one explicit Roma boot payload, not ambient URL leakage or a hidden side-channel bridge
+
+- `dieter/components/dropdown-fill/*` and `dieter/components/dropdown-upload/*`
+  - any hosted asset picker/upload/resolve helper, overlay, or fallback path surviving inside Builder controls after the bridge/path is removed
+  - toxic because deleted Builder asset authoring must not survive as dormant control architecture
+
 - `bob/lib/session/useSessionSaving.ts`
   - locale-only save as a separate user meaning of Save
   - base-save plus any second hidden save workflow
   - translation-monitor aftermath living inside the user meaning of Save
+  - any save response loop that re-hydrates the same widget back into Bob just to confirm the write
 
 - `bob/lib/session/sessionTypes.ts`
   - any extra top-level widget-shaped state beyond the one real widget being edited
   - `previewData` and any other shadow preview state that duplicates the widget
   - `baseInstanceData` and any duplicate live-widget alias that preserves a second in-memory truth
+  - `savedBaseInstanceData` and any saved-widget shadow used only for dirty/discard comparison
 
 - `roma/lib/account-instance-direct.ts`
   - any persisted-document validation that is broader than the real saved-row contract
   - any duplicated validation branch that survives without a clear boundary reason
+  - any shared helper mode-switch that makes document-open and publish/live-status lookup share one mixed loader
+
+- `bob/lib/session/sessionPolicy.ts`
+  - any Bob-side policy re-validation/parsing layer that re-checks the Roma open envelope instead of trusting the named host boundary
 
 ### Toxic workflows to remove
 
@@ -322,6 +349,7 @@ Forbidden:
 - Builder shows hidden non-document state as if it were the real widget
 - Save has multiple hidden meanings
 - localization behaves like a second product inside Builder
+- Builder asset authoring survives as disabled-but-still-architected helper code
 - Builder and Roma both act like saved-document authorities
 - validation claims platform coverage while only partially protecting the real product
 
@@ -335,6 +363,8 @@ Forbidden:
   - deleted because Builder no longer reconstructs widget truth from locale overlays
 - `bob/components/LocalizationControls.tsx`
   - deleted because Builder no longer exposes a localization panel or locale preview lane
+- `bob/lib/session/sessionPolicy.ts`
+  - deleted because Builder no longer re-validates policy shape after Roma opens the session
 - `roma/lib/account-localization-control.ts`
   - deleted because Roma no longer wraps Builder-owned localization snapshot/status/user-layer calls
 - `roma/app/api/account/instances/[publicId]/localization/route.ts`

@@ -285,13 +285,14 @@ Free user → invites team as viewers → viewers comment
 
 ## Technical Notes
 
-## Runtime Subjects (Account + MiniBob) — Durable policy architecture
+## Runtime Subjects — current truth
 
-While we are building (before full auth/billing enforcement ships), we still need deterministic gating/caps across surfaces.
+The shared Builder core no longer models runtime `subjectMode` or boot-mode switching.
 
-**Durable architecture:**
-- **Input**: a single `subjectMode` that describes the calling surface.
-- **Output**: a single `policy` object (flags + caps + budgets) used by Bob for gating and ops validation.
+**Current architecture:**
+- Builder authoring is the Roma-hosted account path only.
+- Bob receives one open payload and one policy object from Roma.
+- MiniBob/demo surfaces are not shared Builder subjects and should not shape shared Bob architecture.
 
 **Budgets (MiniBob + Free conversion gates):**
 - Budgets are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls, snapshot regenerations).
@@ -311,25 +312,18 @@ While we are building (before full auth/billing enforcement ships), we still nee
   - If the viewer is logged in but blocked by plan/tier: upsell takes them to **Upgrade Plan**
 - PRDs do **not** encode "free vs paid" in per-row copy; it is derived from the matrix deltas and current viewer profile.
 
-**Current runtime subjects:**
-- `account`: standard editor subject used by Roma.
-- `minibob`: internal “demo” subject used by Prague MiniBob.
+**Builder boot today:**
+- Roma opens Bob through one message payload: `postMessage { type:'ck:open-editor', ... }`.
+- Shared Builder core does not accept or switch on `subjectMode`.
+- Shared Builder core does not URL-bootstrap account sessions.
 
-**How the subject is set today (shipped in Bob):**
-- Bob accepts the subject via either:
-  - Message bootstrap mode: `?boot=message` + `postMessage { type:'ck:open-editor', subjectMode:'account'|'minibob', ... }` (used by Roma/Prague MiniBob)
-- Bob account mode does not URL-bootstrap.
-- The shipped Prague MiniBob path is also host-booted now; Bob does not self-discover MiniBob instance truth from URL parameters.
-
-**What Bob enforces today (example):**
-- `branding.remove` maps to `behavior.showBacklink` and is sanitized on load when blocked.
-- `minibob` cannot create/publish instances (action gates).
-- Uploads are bounded by a per-file cap (`uploads.size.max`) and total workspace storage (`budget.uploads.bytes`), enforced server-side.
-- Enforcement is centralized via `limits.json` + policy + server metering, so we do not scatter `if (minibob)` checks.
+**What still matters:**
+- Uploads and Copilot remain bounded by server-side policy/budget enforcement.
+- Shared Builder should not carry `if (minibob)` checks or other fake editor identities.
 
 **Why this scales:**
-- New surfaces add a new `subjectMode` without changing widget code.
-- Later, real roles/plans become another subject source, but Bob still consumes a single resolved `policy`.
+- The editor stays one product path: account opens widget, Bob edits, Roma saves.
+- Demo/funnel surfaces can evolve separately without contaminating the shared Builder core.
 
 ### Paris Enforcement
 

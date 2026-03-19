@@ -1,6 +1,4 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
-import { AssetPickerOverlay } from './asset-picker-overlay';
-import { resolveMediaAssetChoices } from './asset-picker-data';
 import {
   parseFillValue,
   readImageAssetId,
@@ -54,16 +52,7 @@ const states = new Map<HTMLElement, DropdownFillState>();
 const hydrateHost = createDropdownHydrator({
   rootSelector: '.diet-dropdown-fill',
   triggerSelector: '.diet-dropdown-fill__control',
-  isInsideTarget: (root, target) => {
-    const state = states.get(root);
-    if (!state?.assetPickerOverlay) return false;
-    return state.assetPickerOverlay.contains(target);
-  },
-  onClose: (root) => {
-    const state = states.get(root);
-    if (!state) return;
-    state.assetPickerOverlay?.close();
-  },
+  isInsideTarget: () => false,
 });
 
 export function hydrateDropdownFill(scope: Element | DocumentFragment): void {
@@ -151,45 +140,10 @@ function createState(root: HTMLElement): DropdownFillState | null {
     return null;
   }
 
-  const assetPickerOverlay = chooseButton
-    ? new AssetPickerOverlay({
-        onUse: (item) => {
-          const current = states.get(root);
-          if (!current) return;
-          if (current.assetPickerKind === 'video') {
-            current.videoAssetId = item.assetId;
-            current.videoPosterAssetId = null;
-            current.videoName = item.normalizedFilename;
-            setVideoSrc(current, item.url, { commit: true });
-            return;
-          }
-          current.imageAssetId = item.assetId;
-          current.imageName = item.normalizedFilename;
-          setImageSrc(current, item.url, { commit: true });
-        },
-        onOpenChange: (open) => {
-          const current = states.get(root);
-          if (!current) return;
-          current.imageAssetPickerOpen = open;
-          const imagePickerOpen = open && current.assetPickerKind === 'image';
-          const videoPickerOpen = open && current.assetPickerKind === 'video';
-          if (current.chooseButton) {
-            current.chooseButton.setAttribute('aria-expanded', imagePickerOpen ? 'true' : 'false');
-            current.chooseButton.classList.toggle('is-active', imagePickerOpen);
-          }
-          if (current.videoChooseButton) {
-            current.videoChooseButton.setAttribute('aria-expanded', videoPickerOpen ? 'true' : 'false');
-            current.videoChooseButton.classList.toggle('is-active', videoPickerOpen);
-          }
-        },
-      })
-    : null;
   if (chooseButton) {
-    chooseButton.setAttribute('aria-haspopup', 'dialog');
     chooseButton.setAttribute('aria-expanded', 'false');
   }
   if (videoChooseButton) {
-    videoChooseButton.setAttribute('aria-haspopup', 'dialog');
     videoChooseButton.setAttribute('aria-expanded', 'false');
   }
 
@@ -242,7 +196,6 @@ function createState(root: HTMLElement): DropdownFillState | null {
     uploadButton,
     chooseButton,
     removeButton,
-    assetPickerOverlay,
     fileInput,
     imageSrc: null,
     imageAssetId: null,
@@ -251,8 +204,6 @@ function createState(root: HTMLElement): DropdownFillState | null {
     imageUnavailable: false,
     imageAvailabilityRequestId: 0,
     imageResolveRequestId: 0,
-    imageAssetPickerOpen: false,
-    imageAssetPickerLoading: false,
     videoPanel,
     videoPreview,
     videoUploadButton,
@@ -266,7 +217,6 @@ function createState(root: HTMLElement): DropdownFillState | null {
     videoObjectUrl: null,
     videoUnavailable: false,
     videoResolveRequestId: 0,
-    assetPickerKind: 'image',
     allowedModes,
     mode,
     nativeValue,
@@ -402,36 +352,6 @@ function setImageSrc(state: DropdownFillState, src: string | null, opts: SetMedi
 
 function setVideoSrc(state: DropdownFillState, src: string | null, opts: SetMediaSrcOptions): void {
   setVideoSrcCore(state, src, opts, mediaDeps());
-}
-
-async function resolveImagePreviewFromAssetId(state: DropdownFillState, assetId: string): Promise<void> {
-  state.imageResolveRequestId += 1;
-  const requestId = state.imageResolveRequestId;
-  try {
-    const resolved = await resolveMediaAssetChoices([assetId]);
-    if (state.imageResolveRequestId !== requestId) return;
-    if (state.imageAssetId !== assetId) return;
-    const entry = resolved.get(assetId);
-    if (!entry?.url) return;
-    setImageSrc(state, entry.url, { commit: false });
-  } catch {
-    // Keep the authoring state intact even if preview hydration cannot resolve this asset.
-  }
-}
-
-async function resolveVideoPreviewFromAssetId(state: DropdownFillState, assetId: string): Promise<void> {
-  state.videoResolveRequestId += 1;
-  const requestId = state.videoResolveRequestId;
-  try {
-    const resolved = await resolveMediaAssetChoices([assetId]);
-    if (state.videoResolveRequestId !== requestId) return;
-    if (state.videoAssetId !== assetId) return;
-    const entry = resolved.get(assetId);
-    if (!entry?.url) return;
-    setVideoSrc(state, entry.url, { commit: false });
-  } catch {
-    // Keep the authoring state intact even if preview hydration cannot resolve this asset.
-  }
 }
 
 function setInputValue(state: DropdownFillState, value: FillValue, emit: boolean) {
@@ -578,9 +498,6 @@ function syncFromValue(state: DropdownFillState, raw: string) {
     state.imageAssetId = readImageAssetId(fill);
     state.imageName = readImageName(fill);
     setImageSrc(state, null, { commit: false });
-    if (state.imageAssetId) {
-      void resolveImagePreviewFromAssetId(state, state.imageAssetId);
-    }
     return;
   }
 
@@ -590,9 +507,6 @@ function syncFromValue(state: DropdownFillState, raw: string) {
     state.videoPosterAssetId = readVideoPosterAssetId(fill);
     state.videoName = readVideoName(fill);
     setVideoSrc(state, null, { commit: false });
-    if (state.videoAssetId) {
-      void resolveVideoPreviewFromAssetId(state, state.videoAssetId);
-    }
     return;
   }
 }
@@ -714,9 +628,6 @@ function setMode(state: DropdownFillState, mode: FillMode) {
     state.headerLabel.textContent = MODE_LABELS[next] || state.headerLabel.textContent;
   }
 
-  if (next !== 'image' && next !== 'video' && state.imageAssetPickerOpen) {
-    state.assetPickerOverlay?.close();
-  }
 }
 
 function syncModeUI(state: DropdownFillState, opts: { commit: boolean; updateHeader?: boolean; updateRemove?: boolean }) {

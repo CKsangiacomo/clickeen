@@ -17,6 +17,18 @@ This PRD is about one product promise:
 
 When a customer uses assets in Builder, Clickeen must behave like one account-owned asset system.
 
+This PRD also owns the clean reintroduction of Builder asset functionality that `75A` deliberately removed from the active account authoring path.
+
+`75A` correctly deleted the old hosted asset bridge, asset-picker overlay glue, direct resolve/upload helper files, and the disabled-but-still-architected Dieter asset workflow because that machinery was toxic.
+
+So `75B` is not allowed to "bring assets back" by restoring that old mechanism family.
+`75B` must re-add the product capability cleanly:
+
+- re-add upload
+- re-add choose/list
+- re-add resolve for preview/runtime
+- do all of that through one explicit Roma account asset path
+
 That means:
 
 - when the customer uploads an asset, there is one clear upload path
@@ -37,6 +49,7 @@ This PRD covers:
 - how Builder resolves asset ids into preview/runtime bytes
 - how Builder handles asset entitlement denial
 - how Roma hosts those asset actions for the active account
+- how the Builder asset functionality removed in `75A` is reintroduced without reviving the deleted bridge/fallback/event soup
 
 This PRD does not cover:
 
@@ -57,6 +70,26 @@ For the active Builder product path:
 3. Builder uses that account boundary for upload, list, resolve, and denial.
 4. Tokyo-worker remains the underlying asset/storage authority downstream.
 5. Upload, choose, resolve, and denial are distinct concerns, but each concern gets one clear product-path story.
+
+### Non-Negotiable Asset Lifecycle
+
+For the active product:
+
+1. An uploaded asset is immutable.
+2. An asset is never updated in place.
+3. A changed file is a new asset with a new identity.
+4. Canonical asset delivery URLs are aggressively cacheable.
+5. There is no product workflow for recache, refresh-in-place, mutable caching controls, or replace-in-place behavior.
+6. Other than upload/list/use, the only destructive asset lifecycle action is delete.
+7. Delete makes the asset unavailable. It does not trigger fallback, healing, or runtime substitution.
+
+In plain product terms:
+
+- upload asset
+- cache asset aggressively
+- optionally delete asset
+
+Period.
 
 This is already the canonical asset contract in the repo:
 
@@ -124,6 +157,19 @@ Preview/runtime asset resolution currently exists in more than one place:
 
 That happened because asset use in the editor was allowed to grow separate lookup paths instead of one Builder resolve story.
 
+### E. We let mutable-asset thinking leak into the system
+
+An asset is not a tiny document that needs refresh, recache, or replace-in-place behavior.
+
+The real product truth is simpler:
+
+- upload creates one immutable asset identity
+- runtime serves that immutable asset aggressively cached
+- if the customer wants a different file, they upload a different asset
+- if they no longer want the old one, they delete it
+
+Any code or workflow that acts like assets need mutable caching controls or in-place replacement is outside product truth.
+
 ---
 
 ## 2. Why This Is Toxic And Why It Makes Roma/Clickeen Unusable
@@ -170,6 +216,20 @@ If Builder reaches Roma through bridge logic, command logic, dataset logic, and 
 
 That slows every future asset change.
 
+### E. Mutable-asset folklore creates fake complexity
+
+If the repo behaves as if assets can be updated in place, then it starts inventing:
+
+- recache language
+- refresh language
+- replace-in-place behavior
+- mutable cache-control workflows
+- hidden runtime healing
+
+None of that belongs in this product.
+
+Once asset identity is immutable, the caching and delivery story becomes boring and world-class by default.
+
 ---
 
 ## 3. How We Are Fixing It
@@ -199,6 +259,19 @@ Each one gets one story.
 
 Not one mechanism total.
 One mechanism per concern.
+
+Asset lifecycle itself also gets one story:
+
+- upload creates a new immutable asset
+- runtime reads the immutable canonical asset URL
+- delete removes the asset
+
+There is no second story for “updating” or “refreshing” an existing asset.
+
+This is also the rule for rebuilding what `75A` removed:
+
+- re-add the product capability
+- do not re-add the deleted mechanism family
 
 ### C. Duplicate bridge/event glue gets deleted
 
@@ -231,6 +304,22 @@ Builder should not have:
 - another resolve path for runtime materialization
 - another hidden hosted-bridge fallback for the same concern
 
+### F. Caching is simple because asset identity is immutable
+
+`75B` must preserve the canonical asset rule:
+
+- canonical asset delivery URLs are immutable
+- immutable asset delivery URLs are aggressively cacheable
+- cache policy is not a user-facing workflow
+
+So `75B` must not introduce:
+
+- recache commands
+- asset refresh commands
+- mutable cache-control workflows
+- replace-in-place upload semantics
+- runtime fallback that treats a deleted asset as if it still exists
+
 ---
 
 ## 4. What The System Looks Like Before / After
@@ -250,6 +339,10 @@ Builder should not have:
 - Choose/list has one clear Builder path.
 - Resolve has one clear Builder path.
 - Denial has one clear Builder path.
+- Uploaded assets are immutable and served aggressively cached through their canonical asset URL.
+- If a file changes, Clickeen creates a new asset identity instead of mutating the old one.
+- Delete is the only destructive asset lifecycle action.
+- The asset functionality deleted from the active Builder path in `75A` is restored here through one clean Roma account path, not through a resurrected hosted bridge or consumer fallback maze.
 - Roma is the boring current-account asset boundary the product says it is.
 
 ---
@@ -310,6 +403,8 @@ Builder should not have:
 - resolve behavior duplicated between editor controls and runtime materialization
 - one entitlement denial producing more than one parallel signal path
 - asset consumers deciding their own transport shape instead of following one Builder asset path
+- any workflow that treats assets as mutable and therefore needing refresh/recache/update-in-place behavior
+- "re-add what `75A` removed" by reviving `hostedAssetBridge`, asset-picker overlay glue, direct helper fallback files, or any other deleted mechanism family instead of rebuilding the product path cleanly
 
 ### Files removed from the system
 
@@ -333,4 +428,5 @@ But 75B does not invent file deletion just to create churn.
 5. Entitlement denial has one clear account path.
 6. Roma reads like the boring current-account asset boundary described by the product.
 7. Duplicate bridge/event/message glue for the same concern is materially smaller or gone.
-
+8. Asset lifecycle is still brutally simple: upload immutable asset, cache it aggressively, delete it if needed.
+9. No product-path code acts as if assets can be updated in place, recached, or refreshed under the same identity.

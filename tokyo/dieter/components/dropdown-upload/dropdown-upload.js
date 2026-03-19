@@ -1413,10 +1413,7 @@ var Dieter = (() => {
   var USER_SETTINGS_COUNTRY_CODES = Object.freeze(Object.keys(USER_SETTINGS_COUNTRY_TIMEZONES));
 
   // ../packages/ck-contracts/src/index.js
-  var WIDGET_PUBLIC_ID_RE = /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
   var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  var ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
-  var ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/[^/]+$/;
   var CK_ERROR_CODE = Object.freeze({
     VALIDATION: "VALIDATION",
     NOT_FOUND: "NOT_FOUND",
@@ -1432,338 +1429,15 @@ var Dieter = (() => {
     DELETE: "delete"
   });
   var SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(locales_default).map((entry) => entry.code));
-  function normalizeWidgetPublicId(raw) {
-    const value = typeof raw === "string" ? raw.trim() : "";
-    if (!value) return null;
-    return WIDGET_PUBLIC_ID_RE.test(value) ? value : null;
-  }
-  function isWidgetPublicId(raw) {
-    return normalizeWidgetPublicId(raw) != null;
-  }
-  function decodePathPart(raw) {
-    try {
-      return decodeURIComponent(String(raw || "")).trim();
-    } catch {
-      return "";
-    }
-  }
-  function pathnameFromRawAssetRef(raw) {
-    const value = String(raw || "").trim();
-    if (!value) return null;
-    if (value.startsWith("/")) return value;
-    if (!/^https?:\/\//i.test(value)) return null;
-    try {
-      return new URL(value).pathname || "/";
-    } catch {
-      return null;
-    }
-  }
-  function decodeAssetVersionToken(raw) {
-    const token = decodePathPart(raw);
-    if (!token) return null;
-    try {
-      const key = decodeURIComponent(token).trim();
-      if (!key || key.startsWith("/") || key.includes("..")) return null;
-      return key;
-    } catch {
-      return null;
-    }
-  }
   function isUuid(raw) {
     const value = typeof raw === "string" ? raw.trim() : "";
     return Boolean(value && UUID_RE.test(value));
-  }
-  function parseCanonicalAssetRef(raw) {
-    const pathname = pathnameFromRawAssetRef(raw);
-    if (!pathname) return null;
-    const version = pathname.match(ASSET_VERSION_PATH_RE);
-    if (!version) return null;
-    const versionToken = decodePathPart(version[1]);
-    const versionKey = decodeAssetVersionToken(versionToken);
-    if (!versionKey) return null;
-    const keyMatch = versionKey.match(ASSET_VERSION_KEY_RE);
-    if (!keyMatch) return null;
-    const accountId = decodePathPart(keyMatch[1]);
-    const assetId = decodePathPart(keyMatch[2]);
-    if (!isUuid(accountId) || !isUuid(assetId)) return null;
-    return {
-      accountId,
-      assetId,
-      kind: "version",
-      pathname,
-      versionToken,
-      versionKey
-    };
-  }
-  function toCanonicalAssetVersionPath(versionKey) {
-    const key = typeof versionKey === "string" ? versionKey.trim() : "";
-    if (!key || key.startsWith("/") || key.includes("..") || !ASSET_VERSION_KEY_RE.test(key)) return null;
-    return `/assets/v/${encodeURIComponent(key)}`;
-  }
-
-  // components/shared/hostedAssetBridge.ts
-  var HOSTED_ASSET_BRIDGE_KEY = "__CK_CLICKEEN_HOSTED_ACCOUNT_ASSET_BRIDGE__";
-  function isRecord(value) {
-    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-  }
-  function resolveHostedAssetBridge() {
-    const root = globalThis;
-    const candidate = root[HOSTED_ASSET_BRIDGE_KEY];
-    if (!isRecord(candidate)) return null;
-    const listAssets = candidate.listAssets;
-    const resolveAssets = candidate.resolveAssets;
-    const uploadAsset = candidate.uploadAsset;
-    if (typeof listAssets !== "function" || typeof resolveAssets !== "function" || typeof uploadAsset !== "function") {
-      return null;
-    }
-    return {
-      listAssets,
-      resolveAssets,
-      uploadAsset
-    };
-  }
-
-  // components/shared/assetUpload.ts
-  function isPublicId(value) {
-    return isWidgetPublicId(value);
-  }
-  function isWidgetType(value) {
-    return /^[a-z0-9][a-z0-9_-]*$/i.test(value);
-  }
-  function readDatasetValue(name) {
-    if (typeof document === "undefined") return "";
-    const value = document.documentElement.dataset?.[name];
-    return typeof value === "string" ? value.trim() : "";
-  }
-  function resolveAssetUploadEndpoint() {
-    return readDatasetValue("ckAssetUploadEndpoint").trim();
-  }
-  function isAccountScopedRomaUploadEndpoint(value) {
-    return /\/api\/account\/assets\/upload(?:\?|$)/i.test(value) || /\/api\/accounts\/[0-9a-f-]{36}\/assets\/upload(?:\?|$)/i.test(value);
-  }
-  function isDevStudioUploadEndpoint(value) {
-    return /\/api\/devstudio\/assets\/upload(?:\?|$)/i.test(value);
-  }
-  function resolveContextFromDocument() {
-    const accountId = readDatasetValue("ckOwnerAccountId");
-    const publicId = readDatasetValue("ckPublicId");
-    const widgetType = readDatasetValue("ckWidgetType");
-    if (!accountId || !isUuid(accountId)) return null;
-    const context = {
-      accountId
-    };
-    if (publicId && isPublicId(publicId)) context.publicId = publicId;
-    if (widgetType && isWidgetType(widgetType)) context.widgetType = widgetType.toLowerCase();
-    return context;
-  }
-  function safeJsonParse(text) {
-    if (!text || typeof text !== "string") return null;
-    try {
-      return JSON.parse(text);
-    } catch {
-      return null;
-    }
-  }
-  function normalizeAssetUrl(payload) {
-    const direct = typeof payload.url === "string" ? payload.url.trim() : "";
-    if (!direct) return null;
-    const parsed = parseCanonicalAssetRef(direct);
-    if (!parsed || parsed.kind !== "version") return null;
-    if (/^https?:\/\//i.test(direct)) return direct;
-    return parsed.pathname;
-  }
-  function normalizeAssetRef(payload) {
-    const direct = typeof payload.assetRef === "string" ? payload.assetRef.trim() : "";
-    if (!direct) return null;
-    const parsed = parseCanonicalAssetRef(direct);
-    if (!parsed || parsed.kind !== "version") return null;
-    return parsed.versionKey;
-  }
-  function assertUploadContext(context) {
-    const accountId = String(context.accountId || "").trim();
-    const publicId = String(context.publicId || "").trim();
-    const widgetType = String(context.widgetType || "").trim().toLowerCase();
-    if (!isUuid(accountId)) {
-      throw new Error("coreui.errors.accountId.invalid");
-    }
-    if (publicId && !isPublicId(publicId)) {
-      throw new Error("coreui.errors.publicId.invalid");
-    }
-    if (widgetType && !isWidgetType(widgetType)) {
-      throw new Error("coreui.errors.widgetType.invalid");
-    }
-    return {
-      accountId,
-      publicId: publicId || void 0,
-      widgetType: widgetType || void 0
-    };
-  }
-  async function uploadEditorAsset(args) {
-    const file = args.file;
-    if (!(file instanceof File) || file.size <= 0) {
-      throw new Error("coreui.errors.payload.empty");
-    }
-    const context = assertUploadContext(args.context ?? resolveContextFromDocument() ?? {});
-    const source = args.source || "api";
-    const headers = new Headers();
-    headers.set("content-type", file.type || "application/octet-stream");
-    headers.set("x-filename", file.name || "upload.bin");
-    headers.set("x-source", source);
-    if (context.publicId) headers.set("x-public-id", context.publicId);
-    if (context.widgetType) headers.set("x-widget-type", context.widgetType);
-    const hostedBridge = resolveHostedAssetBridge();
-    let payload = null;
-    if (hostedBridge) {
-      headers.set("x-clickeen-surface", "roma-assets");
-      payload = await hostedBridge.uploadAsset(file, Object.fromEntries(headers.entries()));
-    } else {
-      const endpoint = (args.endpoint || resolveAssetUploadEndpoint()).trim();
-      if (!endpoint) {
-        throw new Error("coreui.errors.builder.command.hostUnavailable");
-      }
-      if (!isAccountScopedRomaUploadEndpoint(endpoint) && !isDevStudioUploadEndpoint(endpoint)) {
-        throw new Error("coreui.errors.assets.uploadEndpoint.invalid");
-      }
-      if (isDevStudioUploadEndpoint(endpoint)) {
-        headers.set("x-account-id", context.accountId);
-      }
-      headers.set("x-clickeen-surface", isDevStudioUploadEndpoint(endpoint) ? "devstudio" : "roma-assets");
-      const response = await fetch(`${endpoint.replace(/\/$/, "")}?_t=${Date.now()}`, {
-        method: "POST",
-        headers,
-        body: file
-      });
-      const text = await response.text().catch(() => "");
-      payload = safeJsonParse(text);
-      if (!response.ok) {
-        const errorRecord = payload && typeof payload === "object" && !Array.isArray(payload) ? payload.error : void 0;
-        const reasonKey = typeof errorRecord?.reasonKey === "string" ? errorRecord.reasonKey : "";
-        const detail = typeof errorRecord?.detail === "string" ? errorRecord.detail : "";
-        throw new Error(reasonKey || detail || `coreui.errors.assets.uploadFailed (${response.status})`);
-      }
-    }
-    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-      throw new Error("coreui.errors.assets.uploadFailed");
-    }
-    const payloadRecord = payload;
-    const assetId = typeof payloadRecord.assetId === "string" ? payloadRecord.assetId.trim() : "";
-    const assetRef = normalizeAssetRef(payloadRecord);
-    if (!assetId) {
-      throw new Error("coreui.errors.assets.uploadFailed");
-    }
-    if (!assetRef) {
-      throw new Error("coreui.errors.assets.uploadFailed");
-    }
-    const url = normalizeAssetUrl(payloadRecord) || toCanonicalAssetVersionPath(assetRef) || "";
-    if (!url) throw new Error("coreui.errors.assets.uploadFailed");
-    const assetType = typeof payloadRecord.assetType === "string" ? payloadRecord.assetType.trim() : "";
-    const contentType = typeof payloadRecord.contentType === "string" ? payloadRecord.contentType.trim() : "";
-    const sizeBytesRaw = Number(payloadRecord.sizeBytes);
-    const filename = typeof payloadRecord.filename === "string" ? payloadRecord.filename.trim() : "";
-    const createdAt = typeof payloadRecord.createdAt === "string" ? payloadRecord.createdAt.trim() : "";
-    return {
-      assetId,
-      assetRef,
-      url,
-      assetType: assetType || "other",
-      contentType: contentType || file.type || "application/octet-stream",
-      sizeBytes: Number.isFinite(sizeBytesRaw) ? Math.max(0, Math.trunc(sizeBytesRaw)) : file.size,
-      filename: filename || file.name || "upload.bin",
-      createdAt: createdAt || (/* @__PURE__ */ new Date()).toISOString()
-    };
-  }
-
-  // components/shared/assetResolve.ts
-  function readDocumentDatasetValue(key) {
-    if (typeof document === "undefined") return "";
-    const value = document.documentElement.dataset[key];
-    return typeof value === "string" ? value.trim() : "";
-  }
-  function resolveAssetApiBase() {
-    return readDocumentDatasetValue("ckAssetApiBase").replace(/\/+$/, "");
-  }
-  function resolveEditorAssetAccountId() {
-    const accountId = readDocumentDatasetValue("ckOwnerAccountId");
-    return isUuid(accountId) ? accountId : null;
-  }
-  function normalizeResolvedEditorAssetChoice(raw) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-    const asset = raw;
-    const assetId = String(asset.assetId || "").trim();
-    const assetRef = String(asset.assetRef || "").trim();
-    const url = String(asset.url || "").trim();
-    if (!isUuid(assetId) || !assetRef || !url) return null;
-    return { assetId, assetRef, url };
-  }
-  async function resolveEditorAssetChoices(assetIdsRaw) {
-    const accountId = resolveEditorAssetAccountId();
-    if (!accountId) {
-      throw new Error("No account context available.");
-    }
-    const seen = /* @__PURE__ */ new Set();
-    const assetIds = assetIdsRaw.map((entry) => String(entry || "").trim()).filter((assetId) => {
-      if (!isUuid(assetId) || seen.has(assetId)) return false;
-      seen.add(assetId);
-      return true;
-    });
-    if (!assetIds.length) return /* @__PURE__ */ new Map();
-    const hostedBridge = resolveHostedAssetBridge();
-    let payload = null;
-    if (hostedBridge) {
-      payload = await hostedBridge.resolveAssets(assetIds);
-    } else {
-      const assetApiBase = resolveAssetApiBase();
-      if (!assetApiBase) {
-        throw new Error("coreui.errors.builder.command.hostUnavailable");
-      }
-      const endpoint = `${assetApiBase}/resolve`;
-      const response = await fetch(endpoint, {
-        method: "POST",
-        cache: "no-store",
-        headers: {
-          "content-type": "application/json"
-        },
-        body: JSON.stringify({ assetIds })
-      });
-      payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        const reasonKey = String(payload?.error?.reasonKey || "").trim();
-        throw new Error(reasonKey || `HTTP_${response.status}`);
-      }
-    }
-    const assets = Array.isArray(payload?.assets) ? payload.assets : [];
-    const resolved = /* @__PURE__ */ new Map();
-    for (const asset of assets) {
-      const normalized = normalizeResolvedEditorAssetChoice(asset);
-      if (!normalized) continue;
-      resolved.set(normalized.assetId, normalized);
-    }
-    return resolved;
   }
 
   // components/dropdown-upload/dropdown-upload.ts
   var states = /* @__PURE__ */ new Map();
   var UUID_FILENAME_STEM_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   var ASSET_UNAVAILABLE_MESSAGE = "Asset URL is unavailable. Upload a new file to restore preview.";
-  var ASSET_ENTITLEMENT_REASON_KEYS = /* @__PURE__ */ new Set([
-    "coreui.upsell.reason.budgetExceeded",
-    "coreui.upsell.reason.capReached"
-  ]);
-  function isAssetEntitlementReasonKey(value) {
-    const reasonKey = String(value || "").trim();
-    return ASSET_ENTITLEMENT_REASON_KEYS.has(reasonKey);
-  }
-  function dispatchAssetEntitlementGate(root, reasonKey) {
-    root.dispatchEvent(
-      new CustomEvent("bob-upsell", {
-        bubbles: true,
-        detail: { reasonKey }
-      })
-    );
-    if (typeof window === "undefined") return;
-    if (!window.parent || window.parent === window) return;
-    window.parent.postMessage({ type: "bob:asset-entitlement-denied", reasonKey }, "*");
-  }
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-upload",
     triggerSelector: ".diet-dropdown-upload__control",
@@ -1901,8 +1575,11 @@ var Dieter = (() => {
       state.fileInput.value = "";
       state.fileInput.click();
     };
-    state.uploadButton.addEventListener("click", pickUploadFile);
-    state.replaceButton.addEventListener("click", pickReplaceFile);
+    state.uploadButton.disabled = true;
+    state.uploadButton.hidden = true;
+    state.replaceButton.disabled = true;
+    state.replaceButton.hidden = true;
+    state.fileInput.disabled = true;
     state.removeButton.addEventListener("click", (event) => {
       event.preventDefault();
       if (state.localObjectUrl) {
@@ -1912,84 +1589,6 @@ var Dieter = (() => {
       setMetaValue(state, null, true);
       setFileKey(state, "transparent", true);
     });
-    state.fileInput.addEventListener("change", async () => {
-      const file = state.fileInput.files && state.fileInput.files[0];
-      if (!file) return;
-      const error = validateFileSelection(state, file);
-      if (error) {
-        setError(state, error);
-        return;
-      }
-      clearError(state);
-      try {
-        setUploadingState(state, true);
-        const uploaded = await uploadEditorAsset({
-          file,
-          source: "api"
-        });
-        const existingMeta = readMeta(state);
-        const nextMeta = {
-          ...existingMeta || {},
-          name: file.name,
-          assetId: uploaded.assetId,
-          source: typeof existingMeta?.source === "string" && existingMeta.source.trim() ? existingMeta.source.trim() : "user"
-        };
-        const { kind, ext } = classifyByNameAndType(file.name, file.type);
-        state.root.dataset.localName = file.name;
-        setMetaValue(state, nextMeta, true);
-        setHeaderWithFile(state, file.name, false);
-        setPreview(state, {
-          kind,
-          previewUrl: kind === "image" || kind === "video" ? uploaded.url : void 0,
-          name: file.name,
-          ext,
-          hasFile: true
-        });
-        setFileKey(state, "transparent", true);
-        clearError(state);
-      } catch (error2) {
-        const message = error2 instanceof Error ? error2.message : "coreui.errors.assets.uploadFailed";
-        if (isAssetEntitlementReasonKey(message)) {
-          dispatchAssetEntitlementGate(state.root, message);
-        }
-        setError(state, message);
-      } finally {
-        setUploadingState(state, false);
-        state.fileInput.value = "";
-      }
-    });
-  }
-  function setUploadingState(state, uploading) {
-    state.root.dataset.uploading = uploading ? "true" : "false";
-    state.uploadButton.disabled = uploading;
-    state.replaceButton.disabled = uploading;
-    state.removeButton.disabled = uploading;
-  }
-  function validateFileSelection(state, file) {
-    const { kind } = classifyByNameAndType(file.name, file.type);
-    const capKb = kind === "image" ? state.maxImageKb : kind === "video" ? state.maxVideoKb : state.maxOtherKb;
-    if (capKb && Number.isFinite(capKb)) {
-      const maxBytes = capKb * 1024;
-      if (file.size > maxBytes) return `File too large (max ${capKb}KB)`;
-    }
-    const accept = state.accept;
-    if (!accept) return null;
-    const accepted = accept.split(",").map((s) => s.trim()).filter(Boolean);
-    if (!accepted.length) return null;
-    const nameLower = file.name.toLowerCase();
-    const typeLower = (file.type || "").toLowerCase();
-    const ok = accepted.some((rule) => {
-      if (rule === "*/*") return true;
-      if (rule.endsWith("/*")) {
-        const prefix = rule.slice(0, -2).toLowerCase();
-        return typeLower.startsWith(`${prefix}/`);
-      }
-      if (rule.startsWith(".")) {
-        return nameLower.endsWith(rule.toLowerCase());
-      }
-      return typeLower === rule.toLowerCase();
-    });
-    return ok ? null : "File type not allowed";
   }
   function syncFromInputs(state, fallbackValue) {
     const value = fallbackValue ?? state.input.value;
@@ -2024,12 +1623,6 @@ var Dieter = (() => {
     const assetId = typeof meta?.assetId === "string" ? meta.assetId.trim() : "";
     return isUuid(assetId) ? assetId : "";
   }
-  function readCurrentAssetId(state) {
-    const metaAssetId = readMetaAssetId(readMeta(state));
-    if (metaAssetId) return metaAssetId;
-    const rawValue = String(state.input.value || "").trim();
-    return isUuid(rawValue) ? rawValue : "";
-  }
   function sameAssetUrl(leftRaw, rightRaw) {
     const left = normalizeUrlForCompare(leftRaw);
     const right = normalizeUrlForCompare(rightRaw);
@@ -2044,32 +1637,6 @@ var Dieter = (() => {
       return parsed.toString();
     } catch {
       return value;
-    }
-  }
-  async function resolvePreviewFromAssetId(state, assetId, displayName, kindName) {
-    try {
-      const resolved = await resolveEditorAssetChoices([assetId]);
-      if (readCurrentAssetId(state) !== assetId) return;
-      const entry = resolved.get(assetId);
-      if (!entry?.url) {
-        setHeaderWithFile(state, displayName, true);
-        setError(state, ASSET_UNAVAILABLE_MESSAGE);
-        return;
-      }
-      const resolvedName = displayName || guessNameFromUrl(entry.url) || "Uploaded file";
-      const { kind, ext } = classifyByNameAndType(kindName || resolvedName, "");
-      setPreview(state, {
-        kind,
-        previewUrl: entry.url,
-        name: resolvedName,
-        ext,
-        hasFile: true
-      });
-      clearError(state);
-    } catch (_error) {
-      if (readCurrentAssetId(state) !== assetId) return;
-      setHeaderWithFile(state, displayName, true);
-      setError(state, ASSET_UNAVAILABLE_MESSAGE);
     }
   }
   function previewFromUrl(state, raw, name, kindName) {
@@ -2117,7 +1684,7 @@ var Dieter = (() => {
         ext: guessExtFromName(kindName || displayName).toLowerCase(),
         hasFile: true
       });
-      void resolvePreviewFromAssetId(state, currentAssetId, displayName, kindName || displayName);
+      clearError(state);
       return;
     }
     if (rawUrl) {
@@ -2203,13 +1770,13 @@ var Dieter = (() => {
     const cleaned = url.split("?")[0];
     const parts = cleaned.split("/").filter(Boolean);
     if (!parts.length) return "";
-    const filename = decodePathPart2(parts[parts.length - 1]);
+    const filename = decodePathPart(parts[parts.length - 1]);
     if (!filename || !filename.includes(".")) return "";
     const stem = filename.replace(/\.[^.]+$/, "");
     if (!stem || UUID_FILENAME_STEM_RE.test(stem)) return "";
     return filename;
   }
-  function decodePathPart2(raw) {
+  function decodePathPart(raw) {
     try {
       return decodeURIComponent(raw);
     } catch {

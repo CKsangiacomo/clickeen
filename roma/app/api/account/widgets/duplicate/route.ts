@@ -1,7 +1,7 @@
 import { after, NextRequest, NextResponse } from 'next/server';
 import {
   deleteSavedConfigFromTokyo,
-  loadTokyoPreferredAccountInstance,
+  loadTokyoAccountInstanceDocument,
   writeSavedConfigToTokyo,
 } from '@roma/lib/account-instance-direct';
 import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
@@ -130,10 +130,9 @@ async function loadDuplicateSource(args: {
     };
   }
 
-  const source = await loadTokyoPreferredAccountInstance({
+  const source = await loadTokyoAccountInstanceDocument({
     accountId: sourceCore.row.accountId,
     publicId: args.publicId,
-    tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: args.tokyoAccessToken,
     accountCapsule: args.accountCapsule,
   });
