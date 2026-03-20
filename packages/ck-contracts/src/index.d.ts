@@ -25,6 +25,22 @@ export type ResolvedAssetMaterialization = {
   url: string;
 };
 
+export type AccountAssetRecord = {
+  assetId: string;
+  assetRef: string;
+  assetType: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  createdAt: string;
+};
+
+export type ResolvedAccountAsset = {
+  assetId: string;
+  assetRef: string;
+  url: string;
+};
+
 export type AccountL10nPolicy = {
   v: 1;
   baseLocale: string;
@@ -89,6 +105,8 @@ export declare function isCuratedWidgetPublicId(raw: unknown): boolean;
 export declare function isCuratedOrMainWidgetPublicId(raw: unknown): boolean;
 export declare function isUserWidgetPublicId(raw: unknown): boolean;
 export declare function isUuid(raw: unknown): boolean;
+export declare function normalizeAccountAssetRecord(raw: unknown): AccountAssetRecord | null;
+export declare function normalizeResolvedAccountAsset(raw: unknown): ResolvedAccountAsset | null;
 export declare function parseCanonicalAssetRef(raw: unknown): AssetRef | null;
 export declare function isCanonicalAssetVersionRef(raw: unknown): boolean;
 export declare function isCanonicalAssetRef(raw: unknown): boolean;

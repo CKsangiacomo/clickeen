@@ -1,23 +1,13 @@
-import { collectConfigMediaAssetIds, materializeConfigMedia } from '@clickeen/ck-contracts';
+import {
+  collectConfigMediaAssetIds,
+  materializeConfigMedia,
+  normalizeResolvedAccountAsset,
+  type ResolvedAccountAsset,
+} from '@clickeen/ck-contracts';
 import { buildTokyoAssetControlHeaders, fetchTokyoAssetControl } from './tokyo-asset-control';
-
-type ResolvedAccountAssetEntry = {
-  assetId: string;
-  assetRef: string;
-  url: string;
-};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function normalizeResolvedAccountAssetEntry(raw: unknown): ResolvedAccountAssetEntry | null {
-  if (!isRecord(raw)) return null;
-  const assetId = typeof raw.assetId === 'string' ? raw.assetId.trim() : '';
-  const assetRef = typeof raw.assetRef === 'string' ? raw.assetRef.trim() : '';
-  const url = typeof raw.url === 'string' ? raw.url.trim() : '';
-  if (!assetId || !assetRef || !url) return null;
-  return { assetId, assetRef, url };
 }
 
 async function resolveTokyoAccountAssetsById(args: {
@@ -25,7 +15,7 @@ async function resolveTokyoAccountAssetsById(args: {
   accountCapsule?: string | null;
   assetIds: string[];
 }): Promise<{
-  assetsById: Map<string, ResolvedAccountAssetEntry>;
+  assetsById: Map<string, ResolvedAccountAsset>;
   missingAssetIds: string[];
 }> {
   if (!args.assetIds.length) {
@@ -61,10 +51,10 @@ async function resolveTokyoAccountAssetsById(args: {
     throw new Error(detail);
   }
 
-  const assetsById = new Map<string, ResolvedAccountAssetEntry>();
+  const assetsById = new Map<string, ResolvedAccountAsset>();
   const assets = Array.isArray(payload?.assets) ? payload.assets : [];
   for (const asset of assets) {
-    const normalized = normalizeResolvedAccountAssetEntry(asset);
+    const normalized = normalizeResolvedAccountAsset(asset);
     if (!normalized) continue;
     assetsById.set(normalized.assetId, normalized);
   }

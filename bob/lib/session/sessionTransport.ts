@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type MutableRefObject } from 'react';
+import { useCallback, useRef, type MutableRefObject } from 'react';
 import {
   type BobAccountCommand,
   type BobAccountCommandMessage,
@@ -68,6 +68,46 @@ export function useSessionTransport(args: {
       }
     }
     return undefined;
+  }, []);
+
+  const readRequestBody = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<unknown> => {
+    if (typeof init?.body !== 'undefined') {
+      if (typeof init.body === 'string') {
+        try {
+          return JSON.parse(init.body) as unknown;
+        } catch {
+          return init.body;
+        }
+      }
+      return init.body;
+    }
+    if (!(input instanceof Request)) return undefined;
+    const contentType = input.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const text = await input.clone().text().catch(() => '');
+      if (!text.trim()) return undefined;
+      try {
+        return JSON.parse(text) as unknown;
+      } catch {
+        return text;
+      }
+    }
+    return input.clone().blob().catch(() => undefined);
+  }, []);
+
+  const readRequestHeaders = useCallback((input: RequestInfo | URL, init?: RequestInit): Record<string, string> => {
+    const headers = new Headers(input instanceof Request ? input.headers : undefined);
+    if (init?.headers) {
+      new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+    }
+    const normalized: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      const headerKey = String(key || '').trim().toLowerCase();
+      const headerValue = String(value || '').trim();
+      if (!headerKey || !headerValue) return;
+      normalized[headerKey] = headerValue;
+    });
+    return normalized;
   }, []);
 
   const isHostedBuilderSession = useCallback((): boolean => {
@@ -164,6 +204,77 @@ export function useSessionTransport(args: {
           headers: { 'content-type': 'application/json; charset=utf-8' },
         });
       }
+      if (inputUrl === '/api/account/assets' || inputUrl.startsWith('/api/account/assets?')) {
+        if (!publicId) {
+          return Response.json(
+            {
+              error: {
+                reasonKey: 'coreui.errors.builder.command.hostUnavailable',
+                message: 'Builder lost its connection to the workspace host.',
+              },
+            },
+            { status: 409 },
+          );
+        }
+        const result = await dispatchHostAccountCommand({
+          command: 'list-assets',
+          publicId,
+        });
+        return new Response(JSON.stringify(result.payload ?? null), {
+          status: result.status,
+          headers: { 'content-type': 'application/json; charset=utf-8' },
+        });
+      }
+      if (inputUrl === '/api/account/assets/resolve') {
+        if (!publicId) {
+          return Response.json(
+            {
+              error: {
+                reasonKey: 'coreui.errors.builder.command.hostUnavailable',
+                message: 'Builder lost its connection to the workspace host.',
+              },
+            },
+            { status: 409 },
+          );
+        }
+        const body = await readRequestBody(input, init);
+        const headers = readRequestHeaders(input, init);
+        const result = await dispatchHostAccountCommand({
+          command: 'resolve-assets',
+          publicId,
+          ...(Object.keys(headers).length ? { headers } : {}),
+          ...(typeof body === 'undefined' ? {} : { body }),
+        });
+        return new Response(JSON.stringify(result.payload ?? null), {
+          status: result.status,
+          headers: { 'content-type': 'application/json; charset=utf-8' },
+        });
+      }
+      if (inputUrl === '/api/account/assets/upload') {
+        if (!publicId) {
+          return Response.json(
+            {
+              error: {
+                reasonKey: 'coreui.errors.builder.command.hostUnavailable',
+                message: 'Builder lost its connection to the workspace host.',
+              },
+            },
+            { status: 409 },
+          );
+        }
+        const body = await readRequestBody(input, init);
+        const headers = readRequestHeaders(input, init);
+        const result = await dispatchHostAccountCommand({
+          command: 'upload-asset',
+          publicId,
+          ...(Object.keys(headers).length ? { headers } : {}),
+          ...(typeof body === 'undefined' ? {} : { body }),
+        });
+        return new Response(JSON.stringify(result.payload ?? null), {
+          status: result.status,
+          headers: { 'content-type': 'application/json; charset=utf-8' },
+        });
+      }
       if (inputUrl.startsWith('/api/account/') || inputUrl.startsWith('/api/accounts/')) {
         return Response.json(
           {
@@ -178,7 +289,15 @@ export function useSessionTransport(args: {
     }
     const nativeFetch = nativeFetchRef.current ?? fetch.bind(globalThis);
     return nativeFetch(input, init);
-  }, [args.metaRef, dispatchHostAccountCommand, isHostedBuilderSession, normalizeInputUrl, readRequestJsonBody]);
+  }, [
+    args.metaRef,
+    dispatchHostAccountCommand,
+    isHostedBuilderSession,
+    normalizeInputUrl,
+    readRequestBody,
+    readRequestHeaders,
+    readRequestJsonBody,
+  ]);
 
   const executeAccountCommand: ExecuteAccountCommand = useCallback(
     async (commandArgs: ExecuteAccountCommandArgs) => {

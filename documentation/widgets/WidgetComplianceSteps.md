@@ -219,10 +219,9 @@ GATE
 ## Step 8 - Verification (local)
 Required checks
 - Start stack: `bash scripts/dev-up.sh`
-- Widget compile (Bob):
-  - `curl -s http://localhost:3000/api/widgets/{widgetType}/compiled | head`
-- Compile all widgets:
-  - `node scripts/compile-all-widgets.mjs`
+- Repo validation:
+  - `pnpm typecheck`
+  - `pnpm build:dieter`
 - Defaults safety:
   - Defaults must not ship `data:` or `blob:` URLs (allowed only as user-edited/runtime values, never in `spec.json` defaults).
 - Prague pages/l10n verification (if pages changed):

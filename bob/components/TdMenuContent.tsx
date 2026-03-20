@@ -77,6 +77,7 @@ export function TdMenuContent({
     panelHtml,
     widgetKey,
     widgetName: session.compiled?.widgetname ?? null,
+    accountAssets: session.accountAssets,
     dieterAssets,
     instanceDataRef,
     showIfEntriesRef,

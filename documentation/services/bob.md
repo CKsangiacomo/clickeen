@@ -250,11 +250,7 @@ Requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin
 
 ### Guardrails
 
-There are no golden compiler fixtures yet. The current sanity check is to compile every widget via Bob:
-
-- `pnpm compile:widgets` (runs `scripts/compile-all-widgets.mjs`, defaults `BOB_ORIGIN=http://localhost:3000`)
-
-This catches missing/unknown control kinds, invalid JSON in `options="..."`, and asset contract regressions before they ship.
+There are no golden compiler fixtures yet. The surviving guardrails are repo-local type/build checks plus Cloudflare verification. Bob is not verified by booting a localhost editor server and querying its HTTP compile route anymore.
 
 ---
 
@@ -299,12 +295,17 @@ ToolDrawer has a single, global vertical rhythm. **Only clusters and groups defi
 
 ### Asset uploads (account-owned, immediate)
 
-Asset authoring is removed from the active account Builder path in the 075A cut.
+Asset authoring is restored on the active account Builder path through one current-account route family.
 
-- `dropdown-fill` and `dropdown-upload` no longer perform hosted picker/upload/resolve work in Builder.
-- Bob no longer exposes a hosted asset bridge or global dataset fallback for Dieter asset controls.
-- Existing saved media identity (`assetId`, optional `posterAssetId`) may still exist in authored config, but Builder no longer tries to rebuild a second hosted asset workflow around it.
-- Clean asset-path rebuilding belongs to the dedicated asset cleanup track, not the one-widget/one-save `75A` path.
+- `dropdown-fill` and `dropdown-upload` use Roma current-account asset routes only:
+  - `GET /api/account/assets`
+  - `POST /api/account/assets/resolve`
+  - `POST /api/account/assets/upload`
+- In hosted Builder, Bob installs one explicit Dieter asset transport and delegates those exact routes through the host account-command seam. Bob does not expose a hosted asset bridge, dataset fallback, consumer-owned route selection logic, or ambient fetch patching.
+- Authored media identity stays logical (`assetId`, optional `posterAssetId`). Bob/Dieter resolve those ids through the Roma account asset boundary for editor preview and assignment.
+- `dropdown-upload` is asset-backed only. It requires `meta-path`, persists logical asset identity in meta only, and uses resolved URLs for preview without writing the uploaded delivery URL back into widget state.
+- Asset denial now has one Builder story: local `bob-upsell`. Builder no longer emits a parallel host-only asset denial event.
+- Assets remain immutable on this path. Upload creates a new asset identity, canonical `/assets/v/:assetRef` delivery stays aggressively cacheable, and delete is the only destructive lifecycle action.
 
 Operational baseline (local smoke, 2026-02-17):
 
@@ -313,7 +314,7 @@ Operational baseline (local smoke, 2026-02-17):
 
 Editor UX note:
 
-- `dropdown-upload` now surfaces an inline preview error when a persisted asset URL is unreachable (e.g. stale/deleted asset), so missing assets are explicit instead of appearing as a silent blank preview.
+- `dropdown-upload` now surfaces an inline preview error when a resolved asset preview is unavailable (for example stale/deleted asset identity), so missing assets are explicit instead of appearing as a silent blank preview.
 
 ---
 
@@ -544,15 +545,9 @@ It:
 - Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).
 - Verifies Roma account capsules against Berlin JWKS; there is no separate account-capsule secret in local dev.
 
-### Deterministic compilation gate (executed)
+### Deterministic compilation contract (executed)
 
-Bob compilation must remain deterministic (no classname heuristics). Run:
-
-```bash
-node scripts/compile-all-widgets.mjs
-```
-
-This compiles every widget under `tokyo/widgets/*` via Bob’s compile endpoint and asserts `compiled.assets.dieter.styles[]` and `compiled.assets.dieter.scripts[]` are present.
+Bob compilation must remain deterministic (no classname heuristics). The contract is enforced by the compiler, the Dieter bundling manifest, repo build/typecheck, and Cloudflare verification. There is no longer a localhost Bob HTTP compile gate.
 
 **Bundling contract (executed):**
 

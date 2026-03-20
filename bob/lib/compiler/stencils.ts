@@ -327,6 +327,11 @@ export async function buildContext(
   const accept = attrs.accept || (merged.accept as string) || 'image/*';
   const maxSizeMb = attrs.maxSizeMb || attrs['max-size-mb'] || (merged.maxSizeMb as string) || '';
 
+  if (component === 'dropdown-upload' && !metaPath.trim()) {
+    const controlId = pathAttr || label || idBase || 'unknown';
+    throw new Error(`[BobCompiler] dropdown-upload control "${controlId}" requires meta-path`);
+  }
+
   let templateValue = attrs.template ? decodeHtmlEntities(attrs.template) : (merged.template as string) || '';
   if (templateValue) {
     templateValue = templateValue.replace(

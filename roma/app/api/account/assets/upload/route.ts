@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { normalizeAccountAssetRecord } from '@clickeen/ck-contracts';
 import {
   accountAssetUploadOptionsResponse,
   finalizeAccountAssetResponse,
-  isWidgetPublicId,
-  isWidgetType,
   parseJsonOrNull,
   resolveCurrentAccountAssetGatewayContext,
 } from '@roma/lib/account-assets-gateway';
@@ -80,36 +79,6 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const publicId = (request.headers.get('x-public-id') || '').trim();
-  if (publicId) {
-    if (!isWidgetPublicId(publicId)) {
-      return finalizeAccountAssetResponse({
-        request,
-        response: NextResponse.json(
-          { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } },
-          { status: 422 },
-        ),
-        setCookies: gateway.value.sessionSetCookies,
-      });
-    }
-    headers.set('x-public-id', publicId);
-  }
-
-  const widgetType = (request.headers.get('x-widget-type') || '').trim().toLowerCase();
-  if (widgetType) {
-    if (!isWidgetType(widgetType)) {
-      return finalizeAccountAssetResponse({
-        request,
-        response: NextResponse.json(
-          { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } },
-          { status: 422 },
-        ),
-        setCookies: gateway.value.sessionSetCookies,
-      });
-    }
-    headers.set('x-widget-type', widgetType);
-  }
-
   const source = (request.headers.get('x-source') || '').trim();
   if (source) headers.set('x-source', source);
 
@@ -127,8 +96,9 @@ export async function POST(request: NextRequest) {
 
     const text = await upstream.text().catch(() => '');
     const payload = parseJsonOrNull(text);
-    const body =
-      payload && typeof payload === 'object'
+    const body = upstream.ok
+      ? normalizeAccountAssetRecord(payload)
+      : payload && typeof payload === 'object'
         ? payload
         : {
             error: {
@@ -137,6 +107,17 @@ export async function POST(request: NextRequest) {
               detail: text || `tokyo upload failed (HTTP ${upstream.status})`,
             },
           };
+
+    if (upstream.ok && !body) {
+      return finalizeAccountAssetResponse({
+        request,
+        response: NextResponse.json(
+          { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.assets.uploadFailed' } },
+          { status: 502 },
+        ),
+        setCookies: gateway.value.sessionSetCookies,
+      });
+    }
 
     return finalizeAccountAssetResponse({
       request,

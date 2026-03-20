@@ -1,7 +1,9 @@
+import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
+
 declare global {
   interface Window {
     Dieter?: {
-      hydrateAll?: (scope?: HTMLElement) => void;
+      hydrateAll?: (scope?: HTMLElement, deps?: DieterHydratorDeps) => void;
     };
   }
 }
@@ -20,6 +22,10 @@ const GROUP_LABELS: Record<string, string> = {
 export type DieterAssets = {
   styles?: string[];
   scripts?: string[];
+};
+
+export type DieterHydratorDeps = {
+  accountAssets: AccountAssetsClient;
 };
 
 function loadStyle(href: string): Promise<void> {
@@ -88,7 +94,7 @@ export async function ensureAssets(dieterAssets: DieterAssets | undefined): Prom
   }
 }
 
-export function runHydrators(scope: HTMLElement) {
+export function runHydrators(scope: HTMLElement, deps?: DieterHydratorDeps) {
   if (typeof window === 'undefined' || !window.Dieter) return;
   const entries = Object.entries(window.Dieter).filter(
     ([name, fn]) =>
@@ -98,7 +104,7 @@ export function runHydrators(scope: HTMLElement) {
   );
   for (const [, fn] of entries) {
     try {
-      (fn as (el?: HTMLElement) => void)(scope);
+      (fn as (el?: HTMLElement, deps?: DieterHydratorDeps) => void)(scope, deps);
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
         console.warn('[TdMenuContent] Hydrator error', err);

@@ -193,7 +193,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 
 ## Drift Detection (cheap checks)
 
-- Compiler determinism: `node scripts/compile-all-widgets.mjs`
+- Compiler determinism: repo typecheck/build plus Cloudflare verification, not a localhost Bob HTTP gate
 - Quick grep for removed/renamed surfaces:
   - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/ai/minibob/session|/api/account/instances/.*/copilot|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
   - `rg -n "claims/minibob/complete|/api/account/assets|GET /api/account/instance/:publicId|PUT /api/account/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`

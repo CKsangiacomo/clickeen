@@ -16,7 +16,8 @@ Dieter is Clickeen's shared design system: a token-first library consumed by Bob
 Authoring boundary (current, explicit):
 - Dieter owns authoring primitives, including interactive editor controls such as `dropdown-fill` and `dropdown-upload`.
 - Bob/Roma still own host/account context, session/auth, persistence, entitlements, and route boundaries.
-- Active account Builder no longer carries hosted asset picker/upload/resolve behavior inside Dieter primitives. That workflow was deleted in the 075A authoring cleanup and must be rebuilt explicitly in the asset-path PRD instead of surviving as hidden control plumbing.
+- Active account Builder asset behavior is explicit and narrow inside Dieter primitives. `dropdown-fill` and `dropdown-upload` use one shared current-account asset helper for `/api/account/assets`, `/api/account/assets/resolve`, and `/api/account/assets/upload`. On hosted Builder, Bob installs the transport for that helper through the host command seam. Dieter no longer carries hosted asset bridges, dataset fallbacks, consumer-owned route selection logic, or ambient fetch interception.
+- `dropdown-upload` is asset-backed only. It requires `meta-path`, persists logical asset identity in meta, and treats resolved delivery URLs as preview-only. Uploaded delivery URLs are not written back into widget document truth.
 - Dieter does **not** own account policy, persistence, or product routing; it owns the primitive behavior that runs inside the authoring surface.
 
 ### Bundling manifest (executed)

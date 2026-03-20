@@ -34,13 +34,11 @@ type BobOpenEditorFailedMessage = {
   message?: string | null;
 };
 
-type BobAssetEntitlementDeniedMessage = {
-  type: 'bob:asset-entitlement-denied';
-  reasonKey?: string | null;
-};
-
 type BobAccountCommand =
   | 'update-instance'
+  | 'list-assets'
+  | 'resolve-assets'
+  | 'upload-asset'
   | 'run-copilot'
   | 'attach-ai-outcome';
 
@@ -143,6 +141,21 @@ function resolveBobAccountCommandRequest(args: {
       return {
         method: 'PUT',
         path: `/api/account/instance/${encodeURIComponent(publicId)}`,
+      };
+    case 'list-assets':
+      return {
+        method: 'GET',
+        path: `/api/account/assets`,
+      };
+    case 'resolve-assets':
+      return {
+        method: 'POST',
+        path: `/api/account/assets/resolve`,
+      };
+    case 'upload-asset':
+      return {
+        method: 'POST',
+        path: `/api/account/assets/upload`,
       };
     case 'run-copilot':
       return {
@@ -282,7 +295,20 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
           if (!headers.has('content-type')) {
             headers.set('content-type', 'application/json');
           }
-          init.body = JSON.stringify(args.body);
+          const body = args.body;
+          if (
+            typeof body === 'string' ||
+            body instanceof Blob ||
+            body instanceof ArrayBuffer ||
+            ArrayBuffer.isView(body) ||
+            body instanceof FormData ||
+            body instanceof URLSearchParams ||
+            body instanceof ReadableStream
+          ) {
+            init.body = body as BodyInit;
+          } else {
+            init.body = JSON.stringify(body);
+          }
         }
         init.headers = headers;
 
@@ -475,7 +501,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       const data = event.data as
         | BobReadyMessage
         | BobSwitchMessage
-        | BobAssetEntitlementDeniedMessage
         | BobAccountCommandMessage
         | null;
       if (!data || typeof data !== 'object') return;
@@ -512,19 +537,11 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         });
         return;
       }
-      if (data.type === 'bob:asset-entitlement-denied') {
-        const denial = data as BobAssetEntitlementDeniedMessage;
-        const reasonKey = String(denial.reasonKey || '').trim();
-        const search = new URLSearchParams();
-        if (reasonKey) search.set('reasonKey', reasonKey);
-        const nextRoute = search.size ? `/assets?${search.toString()}` : '/assets';
-        router.push(nextRoute, { scroll: false });
-      }
     };
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activePublicId, bobBaseUrl, context.accountId, openActiveInstanceInBob, router, runBobAccountCommand]);
+  }, [activePublicId, bobBaseUrl, context.accountId, openActiveInstanceInBob, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;

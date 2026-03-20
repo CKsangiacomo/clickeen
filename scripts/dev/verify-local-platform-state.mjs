@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '../../packages/ck-contracts/src/index.js';
 import { requestLoopback, requestLoopbackJson } from './local-loopback-http.mjs';
 import { createSupabaseClient, supabaseFetchJson } from './local-supabase.mjs';
 import { resolveFirstRootEnvValue } from './local-root-env.mjs';
@@ -10,9 +9,11 @@ const DEFAULT_PLATFORM_ACCOUNT_ID =
 const DEFAULT_LOCAL_TOKYO_BASE = process.env.TOKYO_LOCAL_BASE_URL || 'http://localhost:4000';
 const DEFAULT_TOKYO_WORKER_BASE = process.env.TOKYO_WORKER_BASE_URL || 'http://localhost:8791';
 const DEFAULT_DEVSTUDIO_BASE = process.env.DEVSTUDIO_BASE_URL || 'http://localhost:5173';
-const DEFAULT_BOB_BASE = process.env.BOB_BASE_URL || 'http://localhost:3000';
 const DEFAULT_INTERNAL_SERVICE = 'devstudio.local';
 const DEFAULT_PAGE_SIZE = 500;
+
+let parseCanonicalAssetRefFn = null;
+let toCanonicalAssetVersionPathFn = null;
 
 function printUsage() {
   console.log(`Usage: node scripts/dev/verify-local-platform-state.mjs
@@ -21,7 +22,7 @@ Verifies DevStudio-visible platform state explicitly:
 - local Tokyo saved snapshots exist
 - local canonical /assets/v/* reads work
 - no zero-id or invalid asset refs are present in DevStudio-visible rows
-- DevStudio host routes and Bob local asset/compile surfaces respond on localhost
+- DevStudio host routes respond on localhost
 `);
 }
 
@@ -30,17 +31,27 @@ if (process.argv.includes('--help') || process.argv.includes('-h')) {
   process.exit(0);
 }
 
+async function ensureContractHelpers() {
+  if (parseCanonicalAssetRefFn && toCanonicalAssetVersionPathFn) return;
+  const contracts = await import('../../packages/ck-contracts/src/index.js');
+  parseCanonicalAssetRefFn = contracts.parseCanonicalAssetRef;
+  toCanonicalAssetVersionPathFn = contracts.toCanonicalAssetVersionPath;
+}
+
 function asTrimmedString(value) {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
 function extractCanonicalAssetRef(raw) {
+  if (!parseCanonicalAssetRefFn || !toCanonicalAssetVersionPathFn) {
+    throw new Error('Contract helpers not loaded');
+  }
   const direct = String(raw || '').trim();
   if (!direct) return null;
-  const directPath = parseCanonicalAssetRef(direct);
+  const directPath = parseCanonicalAssetRefFn(direct);
   if (directPath) return directPath;
-  const canonicalPath = toCanonicalAssetVersionPath(direct);
-  return canonicalPath ? parseCanonicalAssetRef(canonicalPath) : null;
+  const canonicalPath = toCanonicalAssetVersionPathFn(direct);
+  return canonicalPath ? parseCanonicalAssetRefFn(canonicalPath) : null;
 }
 
 function collectLegacyAssetRefs(node, provenance, out, pathPrefix = '') {
@@ -226,7 +237,6 @@ function appendIssue(issues, failuresRef, message) {
 
 async function verifyHostEditorLane({ rows, platformAccountId, issues, failuresRef }) {
   const devstudioBase = String(DEFAULT_DEVSTUDIO_BASE).replace(/\/+$/, '');
-  const bobBase = String(DEFAULT_BOB_BASE).replace(/\/+$/, '');
 
   const instancesResponse = requestLoopbackJson(`${devstudioBase}/api/devstudio/instances`, {
     method: 'GET',
@@ -303,32 +313,10 @@ async function verifyHostEditorLane({ rows, platformAccountId, issues, failuresR
       `devstudio l10n status route failed for ${accountRow.publicId} (${statusResponse.status})`,
     );
   }
-
-  const bobTokensResponse = requestLoopback(`${bobBase}/dieter/tokens/tokens.css`, {
-    method: 'HEAD',
-    discardBody: true,
-  });
-  if (!bobTokensResponse.ok) {
-    appendIssue(issues, failuresRef, `bob dieter tokens route failed (${bobTokensResponse.status})`);
-  }
-
-  const bobCompiledResponse = requestLoopback(
-    `${bobBase}/api/widgets/${encodeURIComponent(accountRow.widgetType)}/compiled`,
-    {
-      method: 'GET',
-      discardBody: true,
-    },
-  );
-  if (!bobCompiledResponse.ok) {
-    appendIssue(
-      issues,
-      failuresRef,
-      `bob compiled widget route failed for ${accountRow.widgetType} (${bobCompiledResponse.status})`,
-    );
-  }
 }
 
 async function main() {
+  await ensureContractHelpers();
   const client = createSupabaseClient({ preferLocal: true });
   const platformAccountId = String(DEFAULT_PLATFORM_ACCOUNT_ID).trim().toLowerCase();
   const rows = await loadPlatformRows(client, platformAccountId);
@@ -426,7 +414,7 @@ async function main() {
       );
       continue;
     }
-    if (!(await hasLocalAssetAtPath(toCanonicalAssetVersionPath(parsed.versionKey)))) {
+    if (!(await hasLocalAssetAtPath(toCanonicalAssetVersionPathFn(parsed.versionKey)))) {
       appendIssue(
         issues,
         failuresRef,

@@ -7,6 +7,10 @@ import { useSessionEditing } from './useSessionEditing';
 import { useSessionBoot } from './useSessionBoot';
 import { useSessionSaving } from './useSessionSaving';
 import { useWidgetSessionChromeController } from './WidgetSessionChrome';
+import {
+  createAccountAssetsClient,
+  type AccountAssetsClient,
+} from '../../../dieter/components/shared/account-assets';
 
 export type WidgetDocumentSessionValue = {
   compiled: SessionState['compiled'];
@@ -14,6 +18,7 @@ export type WidgetDocumentSessionValue = {
   isSaving: SessionState['isSaving'];
   lastUpdate: SessionState['lastUpdate'];
   error: SessionState['error'];
+  accountAssets: AccountAssetsClient;
   apiFetch: ReturnType<typeof useSessionTransport>['fetchApi'];
   applyOps: ReturnType<typeof useSessionEditing>['applyOps'];
   save: ReturnType<typeof useSessionSaving>['save'];
@@ -51,6 +56,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     setState,
     executeAccountCommand: transport.executeAccountCommand,
   });
+  const accountAssets = useMemo(() => createAccountAssetsClient(transport.fetchApi), [transport.fetchApi]);
 
   const value = useMemo<WidgetDocumentSessionValue>(
     () => ({
@@ -59,13 +65,14 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       isSaving: state.isSaving,
       lastUpdate: state.lastUpdate,
       error: state.error,
+      accountAssets,
       apiFetch: transport.fetchApi,
       applyOps: editing.applyOps,
       save: saving.save,
       setInstanceLabel: editing.setInstanceLabel,
       loadInstance: boot.loadInstance,
     }),
-    [boot.loadInstance, editing.applyOps, editing.setInstanceLabel, saving.save, state, transport.fetchApi],
+    [accountAssets, boot.loadInstance, editing.applyOps, editing.setInstanceLabel, saving.save, state, transport.fetchApi],
   );
 
   return <WidgetDocumentSessionContext.Provider value={value}>{children}</WidgetDocumentSessionContext.Provider>;

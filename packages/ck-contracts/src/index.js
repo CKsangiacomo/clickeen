@@ -41,6 +41,14 @@ function normalizeSupportedLocaleToken(raw) {
   return SUPPORTED_LOCALES.has(normalized) ? normalized : null;
 }
 
+function isRecord(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function asTrimmedString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 export function normalizeWidgetPublicId(raw) {
   const value = typeof raw === 'string' ? raw.trim() : '';
   if (!value) return null;
@@ -116,6 +124,36 @@ function decodeAssetVersionToken(raw) {
 export function isUuid(raw) {
   const value = typeof raw === 'string' ? raw.trim() : '';
   return Boolean(value && UUID_RE.test(value));
+}
+
+export function normalizeAccountAssetRecord(raw) {
+  if (!isRecord(raw)) return null;
+  const assetId = asTrimmedString(raw.assetId);
+  const assetRef = asTrimmedString(raw.assetRef);
+  const assetType = asTrimmedString(raw.assetType);
+  const filename = asTrimmedString(raw.filename);
+  const contentType = asTrimmedString(raw.contentType);
+  const createdAt = asTrimmedString(raw.createdAt);
+  const sizeBytes = Number(raw.sizeBytes);
+  if (!isUuid(assetId) || !assetRef || !filename) return null;
+  return {
+    assetId,
+    assetRef,
+    assetType: assetType || 'other',
+    filename,
+    contentType: contentType || 'application/octet-stream',
+    sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
+    createdAt: createdAt || new Date().toISOString(),
+  };
+}
+
+export function normalizeResolvedAccountAsset(raw) {
+  if (!isRecord(raw)) return null;
+  const assetId = asTrimmedString(raw.assetId);
+  const assetRef = asTrimmedString(raw.assetRef);
+  const url = asTrimmedString(raw.url);
+  if (!isUuid(assetId) || !assetRef || !url) return null;
+  return { assetId, assetRef, url };
 }
 
 export function parseCanonicalAssetRef(raw) {
@@ -286,11 +324,6 @@ export function validateAccountL10nPolicy(raw, path = 'policy') {
 
   return issues;
 }
-
-function isRecord(value) {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
 function normalizeResolvedAssetSource(entry) {
   if (!isRecord(entry)) return null;
   const directUrl = typeof entry.url === 'string' ? entry.url.trim() : '';

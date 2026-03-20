@@ -683,7 +683,7 @@ Submission proxy path hard-cut in this repo snapshot.
 
 - Bob compiler with stencil expansion
 - Deterministic compilation contract (Dieter bundling manifest + no classname heuristics)
-- Compile-all widgets gate (`node scripts/compile-all-widgets.mjs`)
+- Cloudflare verification as the runtime/product verification plane
 - Auto-generated Typography and Stage/Pod panels
 - Shared runtime modules (CKStagePod, CKTypography)
 - Two-API-Call pattern (base config)

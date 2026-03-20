@@ -11,6 +11,7 @@ import {
   runHydrators,
   type DieterAssets,
 } from './dom';
+import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
 import {
   applyShowIfVisibility,
   autoNestShowIfDependentClusters,
@@ -23,6 +24,7 @@ export function useTdMenuHydration(args: {
   panelHtml: string;
   widgetKey?: string;
   widgetName: string | null;
+  accountAssets: AccountAssetsClient;
   dieterAssets?: DieterAssets;
   instanceDataRef: MutableRefObject<Record<string, unknown>>;
   showIfEntriesRef: MutableRefObject<ShowIfEntry[]>;
@@ -50,7 +52,7 @@ export function useTdMenuHydration(args: {
     ensureAssets(args.dieterAssets)
       .then(() => {
         if (!container) return;
-        runHydrators(container);
+        runHydrators(container, { accountAssets: args.accountAssets });
         applyI18nToDom(container, args.widgetName).catch((err) => {
           if (process.env.NODE_ENV === 'development') {
             console.warn('[TdMenuContent] i18n apply failed', err);
@@ -68,5 +70,5 @@ export function useTdMenuHydration(args: {
     return () => {
       cleanupCollapse();
     };
-  }, [args.containerRef, args.dieterAssets, args.instanceDataRef, args.panelHtml, args.setRenderKey, args.showIfEntriesRef, args.widgetName]);
+  }, [args.accountAssets, args.containerRef, args.dieterAssets, args.instanceDataRef, args.panelHtml, args.setRenderKey, args.showIfEntriesRef, args.widgetName]);
 }

@@ -27,7 +27,6 @@
     "tokyo:fonts:sync:local": "node scripts/tokyo-fonts-sync.mjs --local",
     "tokyo:fonts:sync:remote": "node scripts/tokyo-fonts-sync.mjs --remote",
     "e2e": "turbo run e2e",
-    "compile:widgets": "node scripts/compile-all-widgets.mjs",
     "dev:bob": "pnpm --filter @clickeen/bob dev",
     "dev:admin": "pnpm --filter @clickeen/devstudio dev",
     "dev:berlin": "pnpm --filter @clickeen/berlin dev",

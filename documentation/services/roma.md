@@ -147,7 +147,7 @@ Notes:
 - Bob account mode is message-boot only. Bob does not recover host asset context from iframe URL params on the account Builder path. Explicit URL boot remains only for non-account surfaces.
 - Builder-open is document-only. Roma does not pull publish/live-plane status into the Bob editor envelope.
 - Roma no longer uses one mixed helper for both Builder-open document loading and publish/live-status lookup. Builder-open loads the saved document only; widgets-domain/account routes that need live status ask the live plane separately.
-- Asset picker/upload/resolve behavior is removed from the active Builder path in the 075A cut. Roma no longer feeds a hosted asset bridge into Bob for this path.
+- Asset picker/upload/resolve behavior on the active Builder path now runs through the Roma current-account asset routes, delegated from Bob through the hosted account-command seam. Roma does not feed a hosted asset bridge into Bob for this path.
 - In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
 - Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/account/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Tokyo-worker-owned downstream locale/live work.
 - Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and non-owner member removal route through Roma same-origin APIs backed by Berlin (`/api/account/team/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
@@ -184,6 +184,7 @@ Assets domain behavior:
 
 - `AssetsDomain` reads account inventory from `/api/account/assets` and performs per-asset delete via `/api/account/assets/:assetId`.
 - Roma exposes account-level asset routes (`/api/account/assets`, `/api/account/assets/resolve`, `/api/account/assets/:assetId`, `/api/account/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
+- On the active Builder path, Bob delegates asset list/resolve/upload back to these same Roma routes through the normal host account-command seam. Roma does not maintain a second hosted-asset mechanism family for Builder.
 - Roma widget/template/assets list surfaces no longer rely on fixed client-side `200/500` caps; Michael pages account/template catalogs internally and Tokyo-worker asset inventory already returns the full account manifest.
 - Account asset upload is same-origin Roma product traffic. The active product path no longer exposes wildcard CORS on `/api/account/assets/upload`.
 - Roma exposes private non-asset product control routes to Tokyo-worker through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Public Tokyo HTTP is no longer the Builder open/save authoring seam.
@@ -191,7 +192,8 @@ Assets domain behavior:
 - Builder save writes only the Tokyo saved authoring config; published/runtime config packs are materialized later when Roma widget-domain routes invoke Tokyo-worker sync for live/runtime convergence.
 - Localization staleness is derived from Tokyo-owned saved-pointer l10n fingerprint + Tokyo artifact state; San Francisco remains generation-only.
 - Roma-side account-budget reads now take `USAGE_KV` explicitly from the request boundary instead of reaching through ambient global context in the hot product path.
-- Assets supports single upload, bulk upload (multi-file queue), list, and per-asset delete only.
+- Assets supports single upload, bulk upload (multi-file queue), list, resolve, and per-asset delete only.
+- Assets are immutable. Upload creates a new asset identity, canonical delivery URLs stay aggressively cacheable, and there is no product workflow for refresh-in-place, recache, or replace-in-place mutation.
 - Account is the ownership boundary.
 
 ## Local vs cloud-dev

@@ -380,9 +380,6 @@ pnpm dev:admin                  # DevStudio only
 # Quality
 pnpm lint && pnpm typecheck
 pnpm test
-
-# Compilation safety (deterministic)
-node scripts/compile-all-widgets.mjs
 ```
 
 Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
@@ -428,7 +425,7 @@ Pages deploy rule:
 
 - **Dieter bundling manifest (authoritative)**: `tokyo/dieter/manifest.json`
 - **Rule**: ToolDrawer `type="..."` drives required bundles; CSS classnames never add bundles.
-- **Compile-all gate**: `node scripts/compile-all-widgets.mjs` must stay green.
+- **Verification plane**: compilation discipline is enforced through repo typecheck/build and Cloudflare verification, not a localhost Bob HTTP gate.
 
 **Key Discipline:**
 

@@ -1,6 +1,6 @@
 # 075B — Builder Asset Actions Must Follow One Clear Account Path
 
-Status: READY FOR REVIEW
+Status: EXECUTED
 Date: 2026-03-18
 Owner: Product Dev Team
 Priority: P0
@@ -243,6 +243,15 @@ For Builder asset actions:
 - Roma owns the current-account route family
 - Bob delegates account asset actions to the Roma host
 - Tokyo-worker remains the downstream storage/control authority
+- Dieter controls use one shared current-account asset helper for:
+  - `GET /api/account/assets`
+  - `POST /api/account/assets/resolve`
+  - `POST /api/account/assets/upload`
+- Hosted Builder installs one explicit asset transport into that helper; it does not patch ambient `fetch`
+- Hosted Builder handles those exact routes by delegating them through Bob account commands:
+  - `list-assets`
+  - `resolve-assets`
+  - `upload-asset`
 
 Builder does not get its own parallel asset system.
 
@@ -254,6 +263,7 @@ The product concerns are:
 - list/choose
 - resolve for preview/runtime
 - entitlement denial
+- asset-backed controls persist logical identity only
 
 Each one gets one story.
 
@@ -294,6 +304,11 @@ If the customer is denied because of uploads/storage entitlements, Builder shoul
 
 It should not signal the same denial through several independent mechanism families.
 
+Executed shape:
+
+- Builder now uses one local denial signal: `bob-upsell`
+- host-level `bob:asset-entitlement-denied` messaging is deleted
+
 ### E. Asset resolve becomes one Builder-owned flow
 
 If Builder needs asset ids resolved into usable URLs for preview/runtime, that should happen through one clear account asset resolve path.
@@ -301,8 +316,8 @@ If Builder needs asset ids resolved into usable URLs for preview/runtime, that s
 Builder should not have:
 
 - one resolve path for controls
-- another resolve path for runtime materialization
 - another hidden hosted-bridge fallback for the same concern
+- another dataset-driven or consumer-owned direct helper family for the same concern
 
 ### F. Caching is simple because asset identity is immutable
 
@@ -354,53 +369,45 @@ So `75B` must not introduce:
 - `roma/lib/account-assets-gateway.ts`
 - `roma/components/builder-domain.tsx`
 - `bob/lib/session/sessionTransport.ts`
-- `bob/lib/session/runtimeConfigMaterializer.ts`
-- `dieter/components/shared/hostedAssetBridge.ts`
-- `dieter/components/shared/assetUpload.ts`
-- `dieter/components/shared/assetResolve.ts`
-- `dieter/components/dropdown-fill/asset-picker-data.ts`
+- `bob/lib/session/sessionTypes.ts`
+- `dieter/components/shared/account-assets.ts`
 - `dieter/components/dropdown-fill/media-controller.ts`
+- `dieter/components/dropdown-fill/dropdown-fill.ts`
+- `dieter/components/dropdown-fill/dropdown-fill.html`
+- `dieter/components/dropdown-fill/dropdown-fill.css`
+- `dieter/components/dropdown-fill/dropdown-fill-types.ts`
 - `dieter/components/dropdown-upload/dropdown-upload.ts`
-- `bob/components/td-menu-content/useTdMenuBindings.ts`
+- `documentation/services/bob.md`
+- `documentation/services/roma.md`
+- `documentation/services/dieter.md`
 - touched current-truth docs for asset behavior if behavior changes
 
 ### Toxic LOCs and code shapes to remove or collapse
 
 - `bob/lib/session/sessionTransport.ts`
-  - global hosted asset bridge injection on `__CK_CLICKEEN_HOSTED_ACCOUNT_ASSET_BRIDGE__`
-  - duplicate asset resolve logic living alongside other Builder asset routing
+  - blanket hosted rejection of all `/api/account/*` asset concerns without one explicit Builder asset delegation seam
+  - toxic if Builder assets require any second transport family beyond the normal host account-command path
 
-- `dieter/components/shared/hostedAssetBridge.ts`
-  - global bridge lookup as a parallel asset routing mechanism
-
-- `dieter/components/shared/assetUpload.ts`
-  - consumer-level choice between hosted bridge and direct endpoint path for the same upload concern
-
-- `dieter/components/shared/assetResolve.ts`
-  - consumer-level choice between hosted bridge and direct endpoint path for the same resolve concern
-
-- `bob/lib/session/runtimeConfigMaterializer.ts`
-  - separate asset resolve fallback logic for preview/runtime materialization
-  - toxic because it duplicates resolve concern already present elsewhere on the Builder path
-
-- `dieter/components/dropdown-fill/asset-picker-data.ts`
-  - chooser-specific list path selection logic
-  - toxic because list/choose becomes another consumer-owned asset route family
+- `dieter/components/shared/account-assets.ts`
+  - this file is allowed only as the one Dieter-side Roma route client for list/resolve/upload
+  - it becomes toxic immediately if it grows fallback routing, bridge lookup, dataset lookup, or environment-specific path choice
 
 - `dieter/components/dropdown-fill/media-controller.ts`
-  - asset denial signaling through both `bob-upsell` and `window.parent.postMessage`
+  - chooser/upload/resolve logic must stay on the single current-account route family
+  - asset denial signaling through both `bob-upsell` and any host event/message path is toxic
 
 - `dieter/components/dropdown-upload/dropdown-upload.ts`
-  - asset denial signaling through both `bob-upsell` and `window.parent.postMessage`
+  - upload logic must stay on the single current-account route family
+  - asset denial signaling through both `bob-upsell` and any host event/message path is toxic
 
 - `roma/components/builder-domain.tsx`
-  - asset command routing and asset denial routing that survive without a clear one-path-per-concern explanation
+  - asset command routing that survives without a clear one-path-per-concern explanation
+  - host-level asset denial routing outside the chosen one denial behavior
 
 ### Toxic workflows to remove
 
 - one Builder asset action crossing bridge, dataset, command, and direct-fetch logic
 - chooser/list behavior owning its own route story
-- resolve behavior duplicated between editor controls and runtime materialization
 - one entitlement denial producing more than one parallel signal path
 - asset consumers deciding their own transport shape instead of following one Builder asset path
 - any workflow that treats assets as mutable and therefore needing refresh/recache/update-in-place behavior
@@ -430,3 +437,13 @@ But 75B does not invent file deletion just to create churn.
 7. Duplicate bridge/event/message glue for the same concern is materially smaller or gone.
 8. Asset lifecycle is still brutally simple: upload immutable asset, cache it aggressively, delete it if needed.
 9. No product-path code acts as if assets can be updated in place, recached, or refreshed under the same identity.
+
+Execution notes:
+
+- The deleted `75A` mechanism family stayed deleted:
+  - no hosted asset bridge
+  - no dataset fallback
+  - no consumer-owned direct resolve/upload helper pair
+- Reintroduced Builder asset capability now lives on one Roma route family and one Bob host delegation seam only.
+- Asset-backed `dropdown-upload` no longer writes uploaded delivery URLs into widget state. Uploaded asset identity lives in meta (`assetId` + editor metadata), and resolved URLs are preview-only.
+- `dropdown-upload` is asset-backed only and now requires `meta-path`. The old optional URL-backed upload mode is deleted.

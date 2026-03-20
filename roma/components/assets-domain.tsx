@@ -2,22 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { normalizeAccountAssetRecord, type AccountAssetRecord } from '@clickeen/ck-contracts';
 import { formatBytes, formatNumber } from '../lib/format';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { useRomaAccountApi, type RomaAccountApi } from './account-api';
 import { parseApiErrorReason } from './same-origin-json';
 import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
-
-type AssetRecord = {
-  assetId: string;
-  assetRef: string;
-  assetType: string;
-  filename: string;
-  url: string;
-  contentType: string;
-  sizeBytes: number;
-  createdAt: string;
-};
 
 type DeleteAssetPayload = {
   accountId: string;
@@ -46,24 +36,12 @@ type DeleteRequestError = Error & {
 type AccountAssetsListResponse = {
   accountId: string;
   storageBytesUsed?: number;
-  assets: AssetRecord[];
+  assets: unknown[];
 };
 
 type AccountUsageSummaryResponse = {
   accountId: string;
   storageBytesUsed?: number;
-};
-
-type AssetUploadResponse = {
-  assetId?: string;
-  assetRef?: string;
-  assetType?: string;
-  filename?: string;
-  url?: string;
-  contentType?: string;
-  sizeBytes?: number;
-  createdAt?: string;
-  error?: unknown;
 };
 
 type BulkItemStatus = 'queued' | 'uploading' | 'success' | 'failed';
@@ -150,7 +128,7 @@ async function requestUploadAsset(
   accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
   file: File,
   source: string,
-): Promise<AssetRecord> {
+): Promise<AccountAssetRecord> {
   const response = await accountApi.fetchRaw(`/api/account/assets/upload`, {
     method: 'POST',
     headers: {
@@ -160,27 +138,16 @@ async function requestUploadAsset(
     },
     body: file,
   });
-  const payload = (await response.json().catch(() => null)) as AssetUploadResponse | null;
+  const payload = (await response.json().catch(() => null)) as unknown;
   if (!response.ok) {
     throw new Error(parseApiErrorReason(payload, response.status));
   }
-  const assetId = typeof payload?.assetId === 'string' ? payload.assetId.trim() : '';
-  const assetRef = typeof payload?.assetRef === 'string' ? payload.assetRef.trim() : '';
-  if (!assetId) throw new Error('coreui.errors.assets.uploadFailed');
-  if (!assetRef) throw new Error('coreui.errors.assets.uploadFailed');
-  return {
-    assetId,
-    assetRef,
-    assetType: typeof payload?.assetType === 'string' ? payload.assetType : 'other',
-    filename: typeof payload?.filename === 'string' ? payload.filename : file.name || 'upload.bin',
-    url: typeof payload?.url === 'string' ? payload.url : '',
-    contentType: typeof payload?.contentType === 'string' ? payload.contentType : file.type || 'application/octet-stream',
-    sizeBytes: typeof payload?.sizeBytes === 'number' && Number.isFinite(payload.sizeBytes) ? Math.max(0, Math.trunc(payload.sizeBytes)) : file.size,
-    createdAt: typeof payload?.createdAt === 'string' ? payload.createdAt : new Date().toISOString(),
-  };
+  const normalized = normalizeAccountAssetRecord(payload);
+  if (!normalized) throw new Error('coreui.errors.assets.uploadFailed');
+  return normalized;
 }
 
-function upsertAsset(existing: AssetRecord[] | null, next: AssetRecord): AssetRecord[] {
+function upsertAsset(existing: AccountAssetRecord[] | null, next: AccountAssetRecord): AccountAssetRecord[] {
   const without = (existing ?? []).filter((item) => item.assetRef !== next.assetRef);
   return [next, ...without];
 }
@@ -203,7 +170,7 @@ export function AssetsDomain() {
   }, [entitlements?.caps]);
   const storageBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
 
-  const [assets, setAssets] = useState<AssetRecord[] | null>(null);
+  const [assets, setAssets] = useState<AccountAssetRecord[] | null>(null);
   const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -245,6 +212,8 @@ export function AssetsDomain() {
       const resolvedAssets =
         assetsPayload && typeof assetsPayload === 'object' && Array.isArray((assetsPayload as AccountAssetsListResponse).assets)
           ? (assetsPayload as AccountAssetsListResponse).assets
+              .map(normalizeAccountAssetRecord)
+              .filter((asset): asset is AccountAssetRecord => Boolean(asset))
           : [];
       const usagePayload = (await usageResponse.json().catch(() => null)) as
         | AccountUsageSummaryResponse
@@ -279,7 +248,7 @@ export function AssetsDomain() {
   }, [refreshAssets]);
 
   const deleteAsset = useCallback(
-    async (asset: AssetRecord, confirmInUse: boolean) => {
+    async (asset: AccountAssetRecord, confirmInUse: boolean) => {
       if (!accountId) return;
       if (!asset.assetId) {
         setDeleteError('Asset delete failed. Invalid assetId.');
@@ -329,7 +298,7 @@ export function AssetsDomain() {
   }, [assets, deleteAsset, pendingDelete]);
 
   const handleDeleteAsset = useCallback(
-    (asset: AssetRecord) => {
+    (asset: AccountAssetRecord) => {
       if (!accountId) return;
       void deleteAsset(asset, false);
     },

@@ -70,6 +70,9 @@ export type BobOpenEditorFailedMessage = {
 
 export type BobAccountCommand =
   | 'update-instance'
+  | 'list-assets'
+  | 'resolve-assets'
+  | 'upload-asset'
   | 'run-copilot'
   | 'attach-ai-outcome';
 

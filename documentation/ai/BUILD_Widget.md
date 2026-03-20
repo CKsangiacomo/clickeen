@@ -178,7 +178,8 @@ Checklist:
 ### Step 7 — Validation (only when asked)
 
 Run only if the human asks:
-- `node scripts/compile-all-widgets.mjs`
+- `pnpm typecheck`
+- the relevant Cloudflare verification for the touched surface
 
 If validation fails, fix the widget files only (no cross-repo edits).
 

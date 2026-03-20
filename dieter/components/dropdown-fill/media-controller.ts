@@ -1,6 +1,9 @@
 import { normalizeAssetReferenceUrl, sameAssetReferenceUrl } from './color-utils';
 import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fill-types';
 import type { FillValue } from './fill-types';
+import {
+  type AccountAssetRecord,
+} from '../shared/account-assets';
 
 export type SetMediaSrcOptions = {
   commit: boolean;
@@ -22,6 +25,53 @@ function setFillUploadingState(state: DropdownFillState, uploading: boolean): vo
   if (state.videoUploadButton) state.videoUploadButton.disabled = uploading;
   if (state.videoChooseButton) state.videoChooseButton.disabled = uploading;
   if (state.videoRemoveButton) state.videoRemoveButton.disabled = uploading;
+}
+
+function formatSizeBytes(sizeBytes: number): string {
+  const size = Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0;
+  if (size >= 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  if (size >= 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
+  return `${size} B`;
+}
+
+function dispatchUpsell(root: HTMLElement, reasonKey: string): void {
+  root.dispatchEvent(
+    new CustomEvent('bob-upsell', {
+      detail: { reasonKey },
+      bubbles: true,
+    }),
+  );
+}
+
+function isUpsellReason(reasonKey: string): boolean {
+  return (
+    reasonKey === 'coreui.upsell.reason.budgetExceeded' ||
+    reasonKey === 'coreui.upsell.reason.capReached' ||
+    reasonKey === 'coreui.upsell.reason.platform.uploads'
+  );
+}
+
+function setBrowserOpen(browser: HTMLElement | null, button: HTMLButtonElement | null, open: boolean): void {
+  if (browser) browser.hidden = !open;
+  if (button) button.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function setAssetPanelMessage(target: HTMLElement | null, message: string): void {
+  if (!target) return;
+  target.textContent = message;
+  target.hidden = !message;
+}
+
+function clearAssetBrowser(browserList: HTMLElement | null): void {
+  if (!browserList) return;
+  browserList.innerHTML = '';
+}
+
+function filterAssetsForKind(assets: AccountAssetRecord[], kind: 'image' | 'video'): AccountAssetRecord[] {
+  if (kind === 'image') {
+    return assets.filter((asset) => asset.assetType === 'image' || asset.assetType === 'vector');
+  }
+  return assets.filter((asset) => asset.assetType === 'video');
 }
 
 function syncImageHeader(state: DropdownFillState, deps: MediaControllerDeps): void {
@@ -207,16 +257,257 @@ export function setVideoSrc(
   syncVideoMediaState(state, { updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove }, deps);
 }
 
+function renderAssetBrowserRows(args: {
+  state: DropdownFillState;
+  kind: 'image' | 'video';
+  assets: AccountAssetRecord[];
+  deps: MediaControllerDeps;
+}): void {
+  const browserList = args.kind === 'image' ? args.state.imageBrowserList : args.state.videoBrowserList;
+  if (!browserList) return;
+  browserList.innerHTML = '';
+
+  if (!args.assets.length) {
+    const empty = document.createElement('div');
+    empty.className = 'diet-dropdown-fill__asset-browser-empty body-s';
+    empty.textContent = 'No assets found.';
+    browserList.appendChild(empty);
+    return;
+  }
+
+  args.assets.forEach((asset) => {
+    const row = document.createElement('div');
+    row.className = 'diet-dropdown-fill__asset-browser-row';
+
+    const meta = document.createElement('div');
+    meta.className = 'diet-dropdown-fill__asset-browser-meta';
+
+    const name = document.createElement('div');
+    name.className = 'diet-dropdown-fill__asset-browser-name label-s';
+    name.textContent = asset.filename;
+    meta.appendChild(name);
+
+    const subline = document.createElement('div');
+    subline.className = 'diet-dropdown-fill__asset-browser-subline body-xs';
+    subline.textContent = `${asset.assetType} • ${formatSizeBytes(asset.sizeBytes)}`;
+    meta.appendChild(subline);
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'diet-btn-txt diet-dropdown-fill__asset-browser-use';
+    button.setAttribute('data-size', 'sm');
+    button.setAttribute('data-variant', 'line1');
+    button.innerHTML = '<span class="diet-btn-txt__label body-s">Use</span>';
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (args.kind === 'image') {
+        commitImageAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+        setBrowserOpen(args.state.imageBrowser, args.state.chooseButton, false);
+        return;
+      }
+      commitVideoAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+      setBrowserOpen(args.state.videoBrowser, args.state.videoChooseButton, false);
+    });
+
+    row.appendChild(meta);
+    row.appendChild(button);
+    browserList.appendChild(row);
+  });
+}
+
+async function openAssetBrowser(args: {
+  state: DropdownFillState;
+  kind: 'image' | 'video';
+  deps: MediaControllerDeps;
+}): Promise<void> {
+  const browser = args.kind === 'image' ? args.state.imageBrowser : args.state.videoBrowser;
+  const browserMessage = args.kind === 'image' ? args.state.imageBrowserMessage : args.state.videoBrowserMessage;
+  const browserList = args.kind === 'image' ? args.state.imageBrowserList : args.state.videoBrowserList;
+  const button = args.kind === 'image' ? args.state.chooseButton : args.state.videoChooseButton;
+  const oppositeBrowser = args.kind === 'image' ? args.state.videoBrowser : args.state.imageBrowser;
+  const oppositeButton = args.kind === 'image' ? args.state.videoChooseButton : args.state.chooseButton;
+
+  if (!browser || !button) return;
+
+  if (!browser.hidden) {
+    setBrowserOpen(browser, button, false);
+    return;
+  }
+
+  setBrowserOpen(oppositeBrowser, oppositeButton, false);
+  setBrowserOpen(browser, button, true);
+  setFillUploadingState(args.state, true);
+  setAssetPanelMessage(browserMessage, 'Loading assets…');
+  clearAssetBrowser(browserList);
+
+  try {
+    const assets = filterAssetsForKind(await args.state.accountAssets.listAssets(), args.kind);
+    setAssetPanelMessage(browserMessage, assets.length ? '' : 'No assets available yet.');
+    renderAssetBrowserRows({
+      state: args.state,
+      kind: args.kind,
+      assets,
+      deps: args.deps,
+    });
+  } catch (error) {
+    setAssetPanelMessage(
+      browserMessage,
+      error instanceof Error ? error.message : 'coreui.errors.db.readFailed',
+    );
+    clearAssetBrowser(browserList);
+  } finally {
+    setFillUploadingState(args.state, false);
+  }
+}
+
+async function handleAssetUpload(args: {
+  state: DropdownFillState;
+  kind: 'image' | 'video';
+  file: File;
+  deps: MediaControllerDeps;
+}): Promise<void> {
+  setFillUploadingState(args.state, true);
+  setAssetPanelMessage(args.kind === 'image' ? args.state.imageMessage : args.state.videoMessage, '');
+
+  try {
+    const asset = await args.state.accountAssets.uploadAsset(args.file, 'api');
+    if (args.kind === 'image') {
+      commitImageAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+      setBrowserOpen(args.state.imageBrowser, args.state.chooseButton, false);
+      return;
+    }
+    commitVideoAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+    setBrowserOpen(args.state.videoBrowser, args.state.videoChooseButton, false);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
+    if (isUpsellReason(message)) {
+      dispatchUpsell(args.state.root, message);
+      return;
+    }
+    setAssetPanelMessage(args.kind === 'image' ? args.state.imageMessage : args.state.videoMessage, message);
+  } finally {
+    setFillUploadingState(args.state, false);
+  }
+}
+
+function commitImageAssetSelection(
+  state: DropdownFillState,
+  assetId: string,
+  filename: string,
+  commit: boolean,
+  deps: MediaControllerDeps,
+): void {
+  state.imageResolveRequestId += 1;
+  state.imageAssetId = assetId;
+  state.imageName = filename;
+  state.imageUnavailable = false;
+  setAssetPanelMessage(state.imageMessage, '');
+  setImageSrc(state, null, { commit }, deps);
+  void resolveImageAsset(state, deps);
+}
+
+function commitVideoAssetSelection(
+  state: DropdownFillState,
+  assetId: string,
+  filename: string,
+  commit: boolean,
+  deps: MediaControllerDeps,
+): void {
+  state.videoResolveRequestId += 1;
+  state.videoAssetId = assetId;
+  state.videoName = filename;
+  state.videoUnavailable = false;
+  setAssetPanelMessage(state.videoMessage, '');
+  setVideoSrc(state, null, { commit }, deps);
+  void resolveVideoAsset(state, deps);
+}
+
+export async function resolveImageAsset(state: DropdownFillState, deps: MediaControllerDeps): Promise<void> {
+  const assetId = String(state.imageAssetId || '').trim();
+  const requestId = state.imageResolveRequestId;
+  setAssetPanelMessage(state.imageMessage, '');
+  if (!assetId) return;
+
+  try {
+    const { assetsById, missingAssetIds } = await state.accountAssets.resolveAssets([assetId]);
+    if (state.imageResolveRequestId !== requestId || String(state.imageAssetId || '').trim() !== assetId) return;
+    if (missingAssetIds.includes(assetId)) {
+      state.imageUnavailable = true;
+      setAssetPanelMessage(state.imageMessage, 'Asset unavailable.');
+      setImageSrc(state, null, { commit: false }, deps);
+      return;
+    }
+    const asset = assetsById.get(assetId);
+    if (!asset) {
+      setAssetPanelMessage(state.imageMessage, 'Asset unavailable.');
+      setImageSrc(state, null, { commit: false }, deps);
+      return;
+    }
+    setImageSrc(state, asset.url, { commit: false }, deps);
+  } catch (error) {
+    if (state.imageResolveRequestId !== requestId || String(state.imageAssetId || '').trim() !== assetId) return;
+    setAssetPanelMessage(
+      state.imageMessage,
+      error instanceof Error ? error.message : 'coreui.errors.db.readFailed',
+    );
+  }
+}
+
+export async function resolveVideoAsset(state: DropdownFillState, deps: MediaControllerDeps): Promise<void> {
+  const assetId = String(state.videoAssetId || '').trim();
+  const requestId = state.videoResolveRequestId;
+  setAssetPanelMessage(state.videoMessage, '');
+  if (!assetId) return;
+
+  try {
+    const { assetsById, missingAssetIds } = await state.accountAssets.resolveAssets([assetId]);
+    if (state.videoResolveRequestId !== requestId || String(state.videoAssetId || '').trim() !== assetId) return;
+    if (missingAssetIds.includes(assetId)) {
+      state.videoUnavailable = true;
+      setAssetPanelMessage(state.videoMessage, 'Asset unavailable.');
+      setVideoSrc(state, null, { commit: false }, deps);
+      return;
+    }
+    const asset = assetsById.get(assetId);
+    if (!asset) {
+      setAssetPanelMessage(state.videoMessage, 'Asset unavailable.');
+      setVideoSrc(state, null, { commit: false }, deps);
+      return;
+    }
+    setVideoSrc(state, asset.url, { commit: false }, deps);
+  } catch (error) {
+    if (state.videoResolveRequestId !== requestId || String(state.videoAssetId || '').trim() !== assetId) return;
+    setAssetPanelMessage(
+      state.videoMessage,
+      error instanceof Error ? error.message : 'coreui.errors.db.readFailed',
+    );
+  }
+}
+
 export function installImageHandlers(state: DropdownFillState, deps: MediaControllerDeps): void {
   const { uploadButton, chooseButton, removeButton, fileInput } = state;
   if (uploadButton && fileInput) {
-    uploadButton.disabled = true;
-    uploadButton.hidden = true;
-    fileInput.disabled = true;
+    uploadButton.disabled = false;
+    uploadButton.hidden = false;
+    fileInput.disabled = false;
+    uploadButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      fileInput.value = '';
+      fileInput.click();
+    });
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+      void handleAssetUpload({ state, kind: 'image', file, deps });
+    });
   }
   if (chooseButton) {
-    chooseButton.disabled = true;
-    chooseButton.hidden = true;
+    chooseButton.disabled = false;
+    chooseButton.hidden = false;
+    chooseButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      void openAssetBrowser({ state, kind: 'image', deps });
+    });
   }
   if (removeButton) {
     removeButton.addEventListener('click', (event) => {
@@ -227,6 +518,8 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
       }
       state.imageAssetId = null;
       state.imageName = null;
+      setAssetPanelMessage(state.imageMessage, '');
+      setBrowserOpen(state.imageBrowser, state.chooseButton, false);
       setImageSrc(state, null, { commit: true }, deps);
     });
   }
@@ -251,13 +544,27 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
     });
   }
   if (videoUploadButton && videoFileInput) {
-    videoUploadButton.disabled = true;
-    videoUploadButton.hidden = true;
-    videoFileInput.disabled = true;
+    videoUploadButton.disabled = false;
+    videoUploadButton.hidden = false;
+    videoFileInput.disabled = false;
+    videoUploadButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      videoFileInput.value = '';
+      videoFileInput.click();
+    });
+    videoFileInput.addEventListener('change', () => {
+      const file = videoFileInput.files?.[0];
+      if (!file) return;
+      void handleAssetUpload({ state, kind: 'video', file, deps });
+    });
   }
   if (videoChooseButton) {
-    videoChooseButton.disabled = true;
-    videoChooseButton.hidden = true;
+    videoChooseButton.disabled = false;
+    videoChooseButton.hidden = false;
+    videoChooseButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      void openAssetBrowser({ state, kind: 'video', deps });
+    });
   }
   if (videoRemoveButton) {
     videoRemoveButton.addEventListener('click', (event) => {
@@ -269,6 +576,8 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
       state.videoAssetId = null;
       state.videoPosterAssetId = null;
       state.videoName = null;
+      setAssetPanelMessage(state.videoMessage, '');
+      setBrowserOpen(state.videoBrowser, state.videoChooseButton, false);
       setVideoSrc(state, null, { commit: true }, deps);
     });
   }

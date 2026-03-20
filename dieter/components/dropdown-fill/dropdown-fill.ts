@@ -23,6 +23,8 @@ import type {
 } from './dropdown-fill-types';
 import {
   installImageHandlers as installImageHandlersCore,
+  resolveImageAsset as resolveImageAssetCore,
+  resolveVideoAsset as resolveVideoAssetCore,
   installVideoHandlers as installVideoHandlersCore,
   setImageSrc as setImageSrcCore,
   setVideoSrc as setVideoSrcCore,
@@ -39,6 +41,7 @@ import {
   rgbToHsv,
   roundTo,
 } from './color-utils';
+import type { AccountAssetsClient } from '../shared/account-assets';
 
 const MODE_LABELS: Record<FillMode, string> = {
   color: 'Color fill',
@@ -55,13 +58,16 @@ const hydrateHost = createDropdownHydrator({
   isInsideTarget: () => false,
 });
 
-export function hydrateDropdownFill(scope: Element | DocumentFragment): void {
+export function hydrateDropdownFill(
+  scope: Element | DocumentFragment,
+  options: { accountAssets: AccountAssetsClient },
+): void {
   const roots = Array.from(scope.querySelectorAll<HTMLElement>('.diet-dropdown-fill'));
   if (!roots.length) return;
 
   roots.forEach((root) => {
     if (states.has(root)) return;
-    const state = createState(root);
+    const state = createState(root, options.accountAssets);
     if (!state) return;
     wireModes(state);
     states.set(root, state);
@@ -90,7 +96,7 @@ function parseAllowedModes(root: HTMLElement): FillMode[] {
   return ['color', 'gradient', 'image'];
 }
 
-function createState(root: HTMLElement): DropdownFillState | null {
+function createState(root: HTMLElement, accountAssets: AccountAssetsClient): DropdownFillState | null {
   const input = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__value-field');
   const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
   const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-fill__label');
@@ -125,12 +131,20 @@ function createState(root: HTMLElement): DropdownFillState | null {
   const gradientActiveStopId = gradientStops[0]?.id ?? '';
   const imagePanel = root.querySelector<HTMLElement>(".diet-dropdown-fill__panel--image");
   const imagePreview = root.querySelector<HTMLElement>('.diet-dropdown-fill__image-preview');
+  const imageBrowser = root.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser--image');
+  const imageBrowserMessage = imageBrowser?.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser-message') ?? null;
+  const imageBrowserList = imageBrowser?.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser-list') ?? null;
+  const imageMessage = imagePanel?.querySelector<HTMLElement>('.diet-dropdown-fill__asset-message') ?? null;
   const uploadButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__upload-btn');
   const chooseButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__choose-btn');
   const removeButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__remove-btn');
   const fileInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__file-input');
   const videoPanel = root.querySelector<HTMLElement>('.diet-dropdown-fill__panel--video');
   const videoPreview = root.querySelector<HTMLVideoElement>('.diet-dropdown-fill__video-preview');
+  const videoBrowser = root.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser--video');
+  const videoBrowserMessage = videoBrowser?.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser-message') ?? null;
+  const videoBrowserList = videoBrowser?.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser-list') ?? null;
+  const videoMessage = videoPanel?.querySelector<HTMLElement>('.diet-dropdown-fill__asset-message') ?? null;
   const videoUploadButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__video-upload-btn');
   const videoChooseButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__video-choose-btn');
   const videoRemoveButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__video-remove-btn');
@@ -157,6 +171,7 @@ function createState(root: HTMLElement): DropdownFillState | null {
 
   return {
     root,
+    accountAssets,
     input,
     headerValue,
     headerValueLabel,
@@ -193,6 +208,10 @@ function createState(root: HTMLElement): DropdownFillState | null {
     gradientCss: null,
     imagePanel,
     imagePreview,
+    imageBrowser,
+    imageBrowserMessage,
+    imageBrowserList,
+    imageMessage,
     uploadButton,
     chooseButton,
     removeButton,
@@ -206,6 +225,10 @@ function createState(root: HTMLElement): DropdownFillState | null {
     imageResolveRequestId: 0,
     videoPanel,
     videoPreview,
+    videoBrowser,
+    videoBrowserMessage,
+    videoBrowserList,
+    videoMessage,
     videoUploadButton,
     videoChooseButton,
     videoRemoveButton,
@@ -498,6 +521,7 @@ function syncFromValue(state: DropdownFillState, raw: string) {
     state.imageAssetId = readImageAssetId(fill);
     state.imageName = readImageName(fill);
     setImageSrc(state, null, { commit: false });
+    void resolveImageAssetCore(state, mediaDeps());
     return;
   }
 
@@ -507,6 +531,7 @@ function syncFromValue(state: DropdownFillState, raw: string) {
     state.videoPosterAssetId = readVideoPosterAssetId(fill);
     state.videoName = readVideoName(fill);
     setVideoSrc(state, null, { commit: false });
+    void resolveVideoAssetCore(state, mediaDeps());
     return;
   }
 }

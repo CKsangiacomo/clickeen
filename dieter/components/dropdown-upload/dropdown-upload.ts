@@ -1,5 +1,6 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 import { isUuid } from '@clickeen/ck-contracts';
+import type { AccountAssetsClient } from '../shared/account-assets';
 
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
@@ -11,6 +12,7 @@ type UploadMeta = {
 
 type DropdownUploadState = {
   root: HTMLElement;
+  accountAssets: AccountAssetsClient;
   input: HTMLInputElement;
   metaInput: HTMLInputElement | null;
   metaHasPath: boolean;
@@ -33,13 +35,14 @@ type DropdownUploadState = {
   maxVideoKb?: number;
   maxOtherKb?: number;
   localObjectUrl: string | null;
+  resolveRequestId: number;
   nativeValue?: { get: () => string; set: (next: string) => void };
   internalWrite: boolean;
 };
 
 const states = new Map<HTMLElement, DropdownUploadState>();
-const UUID_FILENAME_STEM_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ASSET_UNAVAILABLE_MESSAGE = 'Asset URL is unavailable. Upload a new file to restore preview.';
+const META_PATH_REQUIRED_MESSAGE = 'Asset-backed dropdown-upload requires meta-path.';
 // IMPORTANT: keep this at module scope.
 // DevStudio (and some Bob flows) may call hydrators more than once over the same DOM.
 // `createDropdownHydrator` uses an internal registry to avoid double-binding, but only
@@ -54,13 +57,16 @@ const hydrateHost = createDropdownHydrator({
   },
 });
 
-export function hydrateDropdownUpload(scope: Element | DocumentFragment): void {
+export function hydrateDropdownUpload(
+  scope: Element | DocumentFragment,
+  options: { accountAssets: AccountAssetsClient },
+): void {
   const roots = Array.from(scope.querySelectorAll<HTMLElement>('.diet-dropdown-upload'));
   if (!roots.length) return;
 
   roots.forEach((root) => {
     if (states.has(root)) return;
-    const state = createState(root);
+    const state = createState(root, options.accountAssets);
     if (!state) return;
     states.set(root, state);
     installHandlers(state);
@@ -71,7 +77,7 @@ export function hydrateDropdownUpload(scope: Element | DocumentFragment): void {
   hydrateHost(scope);
 }
 
-function createState(root: HTMLElement): DropdownUploadState | null {
+function createState(root: HTMLElement, accountAssets: AccountAssetsClient): DropdownUploadState | null {
   const input = root.querySelector<HTMLInputElement>('.diet-dropdown-upload__value-field');
   const headerLabel = root.querySelector<HTMLElement>('.diet-dropdown-header-label');
   const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
@@ -117,6 +123,7 @@ function createState(root: HTMLElement): DropdownUploadState | null {
 
   return {
     root,
+    accountAssets,
     input,
     metaInput,
     metaHasPath,
@@ -139,6 +146,7 @@ function createState(root: HTMLElement): DropdownUploadState | null {
     maxVideoKb: Number.isFinite(maxVideoKb as number) ? (maxVideoKb as number) : undefined,
     maxOtherKb: Number.isFinite(maxOtherKb as number) ? (maxOtherKb as number) : undefined,
     localObjectUrl: null,
+    resolveRequestId: 0,
     nativeValue: captureNativeValue(input),
     internalWrite: false,
   };
@@ -161,6 +169,13 @@ function installHandlers(state: DropdownUploadState) {
   if (state.metaInput) {
     state.metaInput.addEventListener('external-sync', () => syncFromInputs(state));
     state.metaInput.addEventListener('input', () => syncFromInputs(state));
+  }
+
+  if (!state.metaHasPath) {
+    state.uploadButton.disabled = true;
+    state.replaceButton.disabled = true;
+    state.removeButton.disabled = true;
+    state.fileInput.disabled = true;
   }
 
   const handlePreviewMediaError = (kind: Kind, currentSrc: string) => {
@@ -197,21 +212,71 @@ function installHandlers(state: DropdownUploadState) {
     handlePreviewMediaReady('video', state.previewVideoEl.currentSrc || state.previewVideoEl.src || '');
   });
 
-  const pickUploadFile = (event: Event) => {
+  const pickFile = (event: Event) => {
     event.preventDefault();
     state.fileInput.value = '';
     state.fileInput.click();
   };
-  const pickReplaceFile = (event: Event) => {
-    event.preventDefault();
-    state.fileInput.value = '';
-    state.fileInput.click();
+
+  const dispatchUpsell = (reasonKey: string) => {
+    state.root.dispatchEvent(
+      new CustomEvent('bob-upsell', {
+        detail: { reasonKey },
+        bubbles: true,
+      }),
+    );
   };
-  state.uploadButton.disabled = true;
-  state.uploadButton.hidden = true;
-  state.replaceButton.disabled = true;
-  state.replaceButton.hidden = true;
-  state.fileInput.disabled = true;
+
+  const isUpsellReason = (reasonKey: string) =>
+    reasonKey === 'coreui.upsell.reason.budgetExceeded' ||
+    reasonKey === 'coreui.upsell.reason.capReached' ||
+    reasonKey === 'coreui.upsell.reason.platform.uploads';
+
+  const uploadSelectedFile = async (file: File) => {
+    const validationError = validateFileSelection(state, file);
+    if (validationError) {
+      setError(state, validationError);
+      return;
+    }
+
+    setUploadingState(state, true);
+    clearError(state);
+    try {
+      const asset = await state.accountAssets.uploadAsset(file, 'api');
+      setMetaValue(
+        state,
+        {
+          name: asset.filename,
+          assetId: asset.assetId,
+          source: 'user',
+        },
+        true,
+      );
+      setFileKey(state, 'transparent', true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
+      if (isUpsellReason(message)) {
+        dispatchUpsell(message);
+      } else {
+        setError(state, message);
+      }
+    } finally {
+      setUploadingState(state, false);
+    }
+  };
+
+  state.uploadButton.disabled = false;
+  state.uploadButton.hidden = false;
+  state.replaceButton.disabled = false;
+  state.replaceButton.hidden = false;
+  state.fileInput.disabled = false;
+  state.uploadButton.addEventListener('click', pickFile);
+  state.replaceButton.addEventListener('click', pickFile);
+  state.fileInput.addEventListener('change', () => {
+    const file = state.fileInput.files?.[0];
+    if (!file) return;
+    void uploadSelectedFile(file);
+  });
   state.removeButton.addEventListener('click', (event) => {
     event.preventDefault();
     if (state.localObjectUrl) {
@@ -221,9 +286,6 @@ function installHandlers(state: DropdownUploadState) {
     setMetaValue(state, null, true);
     setFileKey(state, 'transparent', true);
   });
-
-  void pickUploadFile;
-  void pickReplaceFile;
 }
 
 function setUploadingState(state: DropdownUploadState, uploading: boolean) {
@@ -309,13 +371,6 @@ function readMetaAssetId(meta: UploadMeta | null): string {
   return isUuid(assetId) ? assetId : '';
 }
 
-function readCurrentAssetId(state: DropdownUploadState): string {
-  const metaAssetId = readMetaAssetId(readMeta(state));
-  if (metaAssetId) return metaAssetId;
-  const rawValue = String(state.input.value || '').trim();
-  return isUuid(rawValue) ? rawValue : '';
-}
-
 function sameAssetUrl(leftRaw: string, rightRaw: string): boolean {
   const left = normalizeUrlForCompare(leftRaw);
   const right = normalizeUrlForCompare(rightRaw);
@@ -343,23 +398,22 @@ function previewFromUrl(state: DropdownUploadState, raw: string, name: string, k
 }
 
 function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta | null = null) {
+  if (!state.metaHasPath) {
+    setHeaderWithFile(state, 'Invalid control', true);
+    setError(state, META_PATH_REQUIRED_MESSAGE);
+    setPreview(state, { kind: 'empty', previewUrl: undefined, name: '', ext: '', hasFile: false });
+    return;
+  }
+
   let key = String(raw ?? '').trim();
   if (key === 'transparent') key = '';
   const placeholder = state.headerValue?.dataset.placeholder ?? '';
   const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
-  const expectsMeta = state.metaHasPath;
   const assetId = readMetaAssetId(meta);
-  const rawAssetId = isUuid(key) ? key : '';
-  const rawUrl = extractPrimaryUrl(key) || '';
-  const kindName = metaName || guessNameFromUrl(rawUrl) || '';
-  const guessedUrlName = guessNameFromUrl(rawUrl);
-  const fallbackName = expectsMeta
-    ? ''
-    : state.root.dataset.localName || guessedUrlName || (rawUrl ? 'Uploaded file' : key || 'Uploaded file');
-  const displayName = metaName || fallbackName || (expectsMeta ? 'Unnamed file' : 'Uploaded file');
-  const currentAssetId = assetId || rawAssetId;
+  const displayName = metaName || 'Uploaded file';
+  const currentAssetId = assetId;
 
-  if (!key && !rawUrl && !currentAssetId) {
+  if (!key && !currentAssetId && !metaName) {
     clearError(state);
     setHeaderEmpty(state, placeholder);
     state.root.dataset.hasFile = 'false';
@@ -369,34 +423,54 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   }
 
   state.root.dataset.hasFile = 'true';
-  const hasMetaError = expectsMeta && !metaName && !rawUrl && !currentAssetId;
-  if (hasMetaError) {
-    setError(state, 'Missing file metadata.');
-  } else {
-    clearError(state);
-  }
   if (currentAssetId) {
     setHeaderWithFile(state, displayName, false);
     setPreview(state, {
       kind: 'unknown',
       previewUrl: undefined,
       name: displayName,
-      ext: guessExtFromName(kindName || displayName).toLowerCase(),
+      ext: guessExtFromName(displayName).toLowerCase(),
       hasFile: true,
     });
     clearError(state);
+    void resolveStoredAssetPreview(state, currentAssetId, displayName);
     return;
   }
 
-  if (rawUrl) {
-    setHeaderWithFile(state, displayName, false);
-    previewFromUrl(state, rawUrl, displayName, kindName || displayName);
-    return;
-  }
+  setPreview(state, {
+    kind: 'unknown',
+    previewUrl: undefined,
+    name: displayName,
+    ext: guessExtFromName(displayName).toLowerCase(),
+    hasFile: true,
+  });
+  setHeaderWithFile(state, displayName, true);
+  setError(state, 'Missing asset identity. Upload a new file to restore it.');
+}
 
-  setPreview(state, { kind: 'unknown', previewUrl: undefined, name: '', ext: '', hasFile: true });
-  setHeaderWithFile(state, 'Invalid value', true);
-  setError(state, 'Unsupported value. Expected an absolute URL (http/https) or root-relative path.');
+async function resolveStoredAssetPreview(state: DropdownUploadState, assetId: string, displayName: string) {
+  state.resolveRequestId += 1;
+  const requestId = state.resolveRequestId;
+  try {
+    const { assetsById, missingAssetIds } = await state.accountAssets.resolveAssets([assetId]);
+    if (state.resolveRequestId !== requestId) return;
+    if (missingAssetIds.includes(assetId)) {
+      setError(state, ASSET_UNAVAILABLE_MESSAGE);
+      setHeaderWithFile(state, displayName || 'Asset unavailable', true);
+      return;
+    }
+    const resolved = assetsById.get(assetId);
+    if (!resolved) {
+      setError(state, ASSET_UNAVAILABLE_MESSAGE);
+      setHeaderWithFile(state, displayName || 'Asset unavailable', true);
+      return;
+    }
+    clearError(state);
+    previewFromUrl(state, resolved.url, displayName, displayName);
+  } catch (error) {
+    if (state.resolveRequestId !== requestId) return;
+    setError(state, error instanceof Error ? error.message : 'coreui.errors.db.readFailed');
+  }
 }
 
 function setFileKey(state: DropdownUploadState, fileKey: string, emit: boolean) {
@@ -487,25 +561,6 @@ function guessExtFromName(name: string): string {
   const parts = base.split('.').filter(Boolean);
   if (parts.length < 2) return '';
   return parts[parts.length - 1];
-}
-
-function guessNameFromUrl(url: string): string {
-  const cleaned = url.split('?')[0];
-  const parts = cleaned.split('/').filter(Boolean);
-  if (!parts.length) return '';
-  const filename = decodePathPart(parts[parts.length - 1]);
-  if (!filename || !filename.includes('.')) return '';
-  const stem = filename.replace(/\.[^.]+$/, '');
-  if (!stem || UUID_FILENAME_STEM_RE.test(stem)) return '';
-  return filename;
-}
-
-function decodePathPart(raw: string): string {
-  try {
-    return decodeURIComponent(raw);
-  } catch {
-    return raw;
-  }
 }
 
 function captureNativeValue(input: HTMLInputElement): DropdownUploadState['nativeValue'] {

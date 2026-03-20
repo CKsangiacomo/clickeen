@@ -41,15 +41,6 @@ var Dieter = (() => {
       return null;
     }
   }
-  function extractFileNameFromValue(raw) {
-    const trimmed = raw.trim();
-    if (!trimmed) return "";
-    const urlMatch = trimmed.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    const candidate = urlMatch?.[2] || trimmed;
-    const base = candidate.split("?")[0].split("#")[0];
-    const parts = base.split("/").filter(Boolean);
-    return parts.length ? parts[parts.length - 1] : "";
-  }
   function stripFileExtension(name) {
     const trimmed = name.trim();
     if (!trimmed) return "";
@@ -64,15 +55,11 @@ var Dieter = (() => {
   }
   function wireAutoNameSync(uploadRoot, row, namePath) {
     const metaInput = uploadRoot.querySelector(".diet-dropdown-upload__meta-field");
-    const valueInput = uploadRoot.querySelector(".diet-dropdown-upload__value-field");
     if (!metaInput || !namePath) return;
     const deriveName = () => {
       const meta = parseMetaValue(metaInput.value || "");
       const metaName = typeof meta?.name === "string" ? meta.name.trim() : "";
-      if (metaName) return stripFileExtension(metaName);
-      const rawValue = valueInput?.value || valueInput?.getAttribute("value") || "";
-      const fileName = extractFileNameFromValue(rawValue);
-      return stripFileExtension(fileName);
+      return metaName ? stripFileExtension(metaName) : "";
     };
     const sync = () => {
       const nameInput = findBulkInput(row, namePath);
@@ -172,7 +159,7 @@ var Dieter = (() => {
     empty.textContent = label || "No rows available";
     tableWrap.appendChild(empty);
   }
-  function renderTable(tableWrap, rows, columns, flags, emptyLabel) {
+  function renderTable(tableWrap, rows, columns, flags, emptyLabel, accountAssets) {
     tableWrap.innerHTML = "";
     if (rows.length === 0) {
       renderEmpty(tableWrap, emptyLabel);
@@ -270,7 +257,7 @@ var Dieter = (() => {
     });
     table.appendChild(tbody);
     tableWrap.appendChild(table);
-    hydrateUploadControls(tableWrap);
+    hydrateUploadControls(tableWrap, accountAssets);
   }
   function dispatchUpsell(root, reasonKey) {
     root.dispatchEvent(
@@ -280,7 +267,7 @@ var Dieter = (() => {
       })
     );
   }
-  function hydrateBulkEdit(scope) {
+  function hydrateBulkEdit(scope, options) {
     scope.querySelectorAll(".diet-bulk-edit").forEach((root) => {
       if (root.dataset.bulkEditHydrated === "true") return;
       root.dataset.bulkEditHydrated = "true";
@@ -300,7 +287,7 @@ var Dieter = (() => {
         const rows = buildRows(path, rowPath, strips);
         const flags = readPolicyFlags(root);
         const emptyLabel = root.getAttribute("data-empty-label");
-        renderTable(tableWrap, rows, columns, flags, emptyLabel);
+        renderTable(tableWrap, rows, columns, flags, emptyLabel, options?.accountAssets ?? null);
       };
       const openModal = () => {
         const flags = readPolicyFlags(root);
@@ -352,14 +339,21 @@ var Dieter = (() => {
       saveBtn.addEventListener("click", save);
     });
   }
-  function hydrateUploadControls(scope) {
+  function hydrateUploadControls(scope, accountAssets) {
     const anyWindow = window;
     const hydrate = anyWindow?.Dieter?.hydrateDropdownUpload;
+    const hasUploadControls = Boolean(scope.querySelector(".diet-dropdown-upload"));
+    if (hasUploadControls && !accountAssets) {
+      throw new Error("diet-bulk-edit upload controls require an explicit account asset client");
+    }
     if (typeof hydrate === "function") {
-      hydrate(scope);
+      hydrate(scope, { accountAssets });
     }
   }
   function buildUploadControl(args) {
+    if (!String(args.metaPath || "").trim()) {
+      throw new Error("[Dieter] bulk-edit dropdown-upload requires metaPath");
+    }
     const root = document.createElement("div");
     root.className = "diet-dropdown-upload diet-popover-host";
     root.dataset.size = "md";
@@ -372,7 +366,6 @@ var Dieter = (() => {
     const accept = escapeAttr(args.accept || "image/*");
     const value = escapeAttr(args.value || "");
     const metaValue = args.meta ? escapeAttr(JSON.stringify(args.meta)) : "";
-    const metaAttr = metaPath ? ` data-bob-path="${metaPath}"` : "";
     root.innerHTML = `
     <input
       id="${id}"
@@ -387,7 +380,7 @@ var Dieter = (() => {
       type="hidden"
       class="diet-dropdown-upload__meta-field"
       value="${metaValue}"
-      ${metaAttr}
+      data-bob-path="${metaPath}"
       data-bob-json
     />
     <div

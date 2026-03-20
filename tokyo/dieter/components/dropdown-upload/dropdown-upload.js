@@ -1436,8 +1436,8 @@ var Dieter = (() => {
 
   // components/dropdown-upload/dropdown-upload.ts
   var states = /* @__PURE__ */ new Map();
-  var UUID_FILENAME_STEM_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   var ASSET_UNAVAILABLE_MESSAGE = "Asset URL is unavailable. Upload a new file to restore preview.";
+  var META_PATH_REQUIRED_MESSAGE = "Asset-backed dropdown-upload requires meta-path.";
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-upload",
     triggerSelector: ".diet-dropdown-upload__control",
@@ -1447,12 +1447,12 @@ var Dieter = (() => {
       syncFromInputs(state);
     }
   });
-  function hydrateDropdownUpload(scope) {
+  function hydrateDropdownUpload(scope, options) {
     const roots = Array.from(scope.querySelectorAll(".diet-dropdown-upload"));
     if (!roots.length) return;
     roots.forEach((root) => {
       if (states.has(root)) return;
-      const state = createState(root);
+      const state = createState(root, options.accountAssets);
       if (!state) return;
       states.set(root, state);
       installHandlers(state);
@@ -1461,7 +1461,7 @@ var Dieter = (() => {
     });
     hydrateHost(scope);
   }
-  function createState(root) {
+  function createState(root, accountAssets) {
     const input = root.querySelector(".diet-dropdown-upload__value-field");
     const headerLabel = root.querySelector(".diet-dropdown-header-label");
     const headerValue = root.querySelector(".diet-dropdown-header-value");
@@ -1491,6 +1491,7 @@ var Dieter = (() => {
     if (accept) fileInput.setAttribute("accept", accept);
     return {
       root,
+      accountAssets,
       input,
       metaInput,
       metaHasPath,
@@ -1513,6 +1514,7 @@ var Dieter = (() => {
       maxVideoKb: Number.isFinite(maxVideoKb) ? maxVideoKb : void 0,
       maxOtherKb: Number.isFinite(maxOtherKb) ? maxOtherKb : void 0,
       localObjectUrl: null,
+      resolveRequestId: 0,
       nativeValue: captureNativeValue(input),
       internalWrite: false
     };
@@ -1533,6 +1535,12 @@ var Dieter = (() => {
     if (state.metaInput) {
       state.metaInput.addEventListener("external-sync", () => syncFromInputs(state));
       state.metaInput.addEventListener("input", () => syncFromInputs(state));
+    }
+    if (!state.metaHasPath) {
+      state.uploadButton.disabled = true;
+      state.replaceButton.disabled = true;
+      state.removeButton.disabled = true;
+      state.fileInput.disabled = true;
     }
     const handlePreviewMediaError = (kind, currentSrc) => {
       const raw = state.input.value || "";
@@ -1565,21 +1573,63 @@ var Dieter = (() => {
     state.previewVideoEl.addEventListener("loadeddata", () => {
       handlePreviewMediaReady("video", state.previewVideoEl.currentSrc || state.previewVideoEl.src || "");
     });
-    const pickUploadFile = (event) => {
+    const pickFile = (event) => {
       event.preventDefault();
       state.fileInput.value = "";
       state.fileInput.click();
     };
-    const pickReplaceFile = (event) => {
-      event.preventDefault();
-      state.fileInput.value = "";
-      state.fileInput.click();
+    const dispatchUpsell = (reasonKey) => {
+      state.root.dispatchEvent(
+        new CustomEvent("bob-upsell", {
+          detail: { reasonKey },
+          bubbles: true
+        })
+      );
     };
-    state.uploadButton.disabled = true;
-    state.uploadButton.hidden = true;
-    state.replaceButton.disabled = true;
-    state.replaceButton.hidden = true;
-    state.fileInput.disabled = true;
+    const isUpsellReason = (reasonKey) => reasonKey === "coreui.upsell.reason.budgetExceeded" || reasonKey === "coreui.upsell.reason.capReached" || reasonKey === "coreui.upsell.reason.platform.uploads";
+    const uploadSelectedFile = async (file) => {
+      const validationError = validateFileSelection(state, file);
+      if (validationError) {
+        setError(state, validationError);
+        return;
+      }
+      setUploadingState(state, true);
+      clearError(state);
+      try {
+        const asset = await state.accountAssets.uploadAsset(file, "api");
+        setMetaValue(
+          state,
+          {
+            name: asset.filename,
+            assetId: asset.assetId,
+            source: "user"
+          },
+          true
+        );
+        setFileKey(state, "transparent", true);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "coreui.errors.assets.uploadFailed";
+        if (isUpsellReason(message)) {
+          dispatchUpsell(message);
+        } else {
+          setError(state, message);
+        }
+      } finally {
+        setUploadingState(state, false);
+      }
+    };
+    state.uploadButton.disabled = false;
+    state.uploadButton.hidden = false;
+    state.replaceButton.disabled = false;
+    state.replaceButton.hidden = false;
+    state.fileInput.disabled = false;
+    state.uploadButton.addEventListener("click", pickFile);
+    state.replaceButton.addEventListener("click", pickFile);
+    state.fileInput.addEventListener("change", () => {
+      const file = state.fileInput.files?.[0];
+      if (!file) return;
+      void uploadSelectedFile(file);
+    });
     state.removeButton.addEventListener("click", (event) => {
       event.preventDefault();
       if (state.localObjectUrl) {
@@ -1589,6 +1639,38 @@ var Dieter = (() => {
       setMetaValue(state, null, true);
       setFileKey(state, "transparent", true);
     });
+  }
+  function setUploadingState(state, uploading) {
+    state.root.dataset.uploading = uploading ? "true" : "false";
+    state.uploadButton.disabled = uploading;
+    state.replaceButton.disabled = uploading;
+    state.removeButton.disabled = uploading;
+  }
+  function validateFileSelection(state, file) {
+    const { kind } = classifyByNameAndType(file.name, file.type);
+    const capKb = kind === "image" ? state.maxImageKb : kind === "video" ? state.maxVideoKb : state.maxOtherKb;
+    if (capKb && Number.isFinite(capKb)) {
+      const maxBytes = capKb * 1024;
+      if (file.size > maxBytes) return `File too large (max ${capKb}KB)`;
+    }
+    const accept = state.accept;
+    if (!accept) return null;
+    const accepted = accept.split(",").map((s) => s.trim()).filter(Boolean);
+    if (!accepted.length) return null;
+    const nameLower = file.name.toLowerCase();
+    const typeLower = (file.type || "").toLowerCase();
+    const ok = accepted.some((rule) => {
+      if (rule === "*/*") return true;
+      if (rule.endsWith("/*")) {
+        const prefix = rule.slice(0, -2).toLowerCase();
+        return typeLower.startsWith(`${prefix}/`);
+      }
+      if (rule.startsWith(".")) {
+        return nameLower.endsWith(rule.toLowerCase());
+      }
+      return typeLower === rule.toLowerCase();
+    });
+    return ok ? null : "File type not allowed";
   }
   function syncFromInputs(state, fallbackValue) {
     const value = fallbackValue ?? state.input.value;
@@ -1647,20 +1729,20 @@ var Dieter = (() => {
     setPreview(state, { kind, previewUrl: url, name, ext, hasFile: true });
   }
   function syncFromValue(state, raw, meta = null) {
+    if (!state.metaHasPath) {
+      setHeaderWithFile(state, "Invalid control", true);
+      setError(state, META_PATH_REQUIRED_MESSAGE);
+      setPreview(state, { kind: "empty", previewUrl: void 0, name: "", ext: "", hasFile: false });
+      return;
+    }
     let key = String(raw ?? "").trim();
     if (key === "transparent") key = "";
     const placeholder = state.headerValue?.dataset.placeholder ?? "";
     const metaName = typeof meta?.name === "string" ? meta.name.trim() : "";
-    const expectsMeta = state.metaHasPath;
     const assetId = readMetaAssetId(meta);
-    const rawAssetId = isUuid(key) ? key : "";
-    const rawUrl = extractPrimaryUrl(key) || "";
-    const kindName = metaName || guessNameFromUrl(rawUrl) || "";
-    const guessedUrlName = guessNameFromUrl(rawUrl);
-    const fallbackName = expectsMeta ? "" : state.root.dataset.localName || guessedUrlName || (rawUrl ? "Uploaded file" : key || "Uploaded file");
-    const displayName = metaName || fallbackName || (expectsMeta ? "Unnamed file" : "Uploaded file");
-    const currentAssetId = assetId || rawAssetId;
-    if (!key && !rawUrl && !currentAssetId) {
+    const displayName = metaName || "Uploaded file";
+    const currentAssetId = assetId;
+    if (!key && !currentAssetId && !metaName) {
       clearError(state);
       setHeaderEmpty(state, placeholder);
       state.root.dataset.hasFile = "false";
@@ -1669,32 +1751,52 @@ var Dieter = (() => {
       return;
     }
     state.root.dataset.hasFile = "true";
-    const hasMetaError = expectsMeta && !metaName && !rawUrl && !currentAssetId;
-    if (hasMetaError) {
-      setError(state, "Missing file metadata.");
-    } else {
-      clearError(state);
-    }
     if (currentAssetId) {
       setHeaderWithFile(state, displayName, false);
       setPreview(state, {
         kind: "unknown",
         previewUrl: void 0,
         name: displayName,
-        ext: guessExtFromName(kindName || displayName).toLowerCase(),
+        ext: guessExtFromName(displayName).toLowerCase(),
         hasFile: true
       });
       clearError(state);
+      void resolveStoredAssetPreview(state, currentAssetId, displayName);
       return;
     }
-    if (rawUrl) {
-      setHeaderWithFile(state, displayName, false);
-      previewFromUrl(state, rawUrl, displayName, kindName || displayName);
-      return;
+    setPreview(state, {
+      kind: "unknown",
+      previewUrl: void 0,
+      name: displayName,
+      ext: guessExtFromName(displayName).toLowerCase(),
+      hasFile: true
+    });
+    setHeaderWithFile(state, displayName, true);
+    setError(state, "Missing asset identity. Upload a new file to restore it.");
+  }
+  async function resolveStoredAssetPreview(state, assetId, displayName) {
+    state.resolveRequestId += 1;
+    const requestId = state.resolveRequestId;
+    try {
+      const { assetsById, missingAssetIds } = await state.accountAssets.resolveAssets([assetId]);
+      if (state.resolveRequestId !== requestId) return;
+      if (missingAssetIds.includes(assetId)) {
+        setError(state, ASSET_UNAVAILABLE_MESSAGE);
+        setHeaderWithFile(state, displayName || "Asset unavailable", true);
+        return;
+      }
+      const resolved = assetsById.get(assetId);
+      if (!resolved) {
+        setError(state, ASSET_UNAVAILABLE_MESSAGE);
+        setHeaderWithFile(state, displayName || "Asset unavailable", true);
+        return;
+      }
+      clearError(state);
+      previewFromUrl(state, resolved.url, displayName, displayName);
+    } catch (error) {
+      if (state.resolveRequestId !== requestId) return;
+      setError(state, error instanceof Error ? error.message : "coreui.errors.db.readFailed");
     }
-    setPreview(state, { kind: "unknown", previewUrl: void 0, name: "", ext: "", hasFile: true });
-    setHeaderWithFile(state, "Invalid value", true);
-    setError(state, "Unsupported value. Expected an absolute URL (http/https) or root-relative path.");
   }
   function setFileKey(state, fileKey, emit) {
     state.internalWrite = true;
@@ -1765,23 +1867,6 @@ var Dieter = (() => {
     const parts = base.split(".").filter(Boolean);
     if (parts.length < 2) return "";
     return parts[parts.length - 1];
-  }
-  function guessNameFromUrl(url) {
-    const cleaned = url.split("?")[0];
-    const parts = cleaned.split("/").filter(Boolean);
-    if (!parts.length) return "";
-    const filename = decodePathPart(parts[parts.length - 1]);
-    if (!filename || !filename.includes(".")) return "";
-    const stem = filename.replace(/\.[^.]+$/, "");
-    if (!stem || UUID_FILENAME_STEM_RE.test(stem)) return "";
-    return filename;
-  }
-  function decodePathPart(raw) {
-    try {
-      return decodeURIComponent(raw);
-    } catch {
-      return raw;
-    }
   }
   function captureNativeValue(input) {
     const proto = Object.getPrototypeOf(input);

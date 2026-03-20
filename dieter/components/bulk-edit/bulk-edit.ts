@@ -45,16 +45,6 @@ function parseMetaValue(raw: string): Record<string, unknown> | null {
   }
 }
 
-function extractFileNameFromValue(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) return '';
-  const urlMatch = trimmed.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-  const candidate = urlMatch?.[2] || trimmed;
-  const base = candidate.split('?')[0].split('#')[0];
-  const parts = base.split('/').filter(Boolean);
-  return parts.length ? parts[parts.length - 1] : '';
-}
-
 function stripFileExtension(name: string): string {
   const trimmed = name.trim();
   if (!trimmed) return '';
@@ -71,16 +61,12 @@ function findBulkInput(scope: HTMLElement, path: string): HTMLInputElement | nul
 
 function wireAutoNameSync(uploadRoot: HTMLElement, row: HTMLElement, namePath: string) {
   const metaInput = uploadRoot.querySelector<HTMLInputElement>('.diet-dropdown-upload__meta-field');
-  const valueInput = uploadRoot.querySelector<HTMLInputElement>('.diet-dropdown-upload__value-field');
   if (!metaInput || !namePath) return;
 
   const deriveName = () => {
     const meta = parseMetaValue(metaInput.value || '');
     const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
-    if (metaName) return stripFileExtension(metaName);
-    const rawValue = valueInput?.value || valueInput?.getAttribute('value') || '';
-    const fileName = extractFileNameFromValue(rawValue);
-    return stripFileExtension(fileName);
+    return metaName ? stripFileExtension(metaName) : '';
   };
 
   const sync = () => {
@@ -196,7 +182,8 @@ function renderTable(
   rows: BulkRow[],
   columns: BulkColumn[],
   flags: Record<string, boolean> | null,
-  emptyLabel: string | null
+  emptyLabel: string | null,
+  accountAssets: AccountAssetsClient | null,
 ) {
   tableWrap.innerHTML = '';
   if (rows.length === 0) {
@@ -306,7 +293,7 @@ function renderTable(
 
   table.appendChild(tbody);
   tableWrap.appendChild(table);
-  hydrateUploadControls(tableWrap);
+  hydrateUploadControls(tableWrap, accountAssets);
 }
 
 function dispatchUpsell(root: HTMLElement, reasonKey: string) {
@@ -318,7 +305,10 @@ function dispatchUpsell(root: HTMLElement, reasonKey: string) {
   );
 }
 
-export function hydrateBulkEdit(scope: Element | DocumentFragment): void {
+export function hydrateBulkEdit(
+  scope: Element | DocumentFragment,
+  options?: { accountAssets?: AccountAssetsClient },
+): void {
   scope.querySelectorAll<HTMLElement>('.diet-bulk-edit').forEach((root) => {
     if (root.dataset.bulkEditHydrated === 'true') return;
     root.dataset.bulkEditHydrated = 'true';
@@ -338,12 +328,12 @@ export function hydrateBulkEdit(scope: Element | DocumentFragment): void {
     const path = root.getAttribute('data-bulk-path') || root.getAttribute('data-path') || '';
 
     const render = () => {
-    const strips = readJsonArray(hidden);
-    const rows = buildRows(path, rowPath, strips);
-    const flags = readPolicyFlags(root);
-    const emptyLabel = root.getAttribute('data-empty-label');
-    renderTable(tableWrap, rows, columns, flags, emptyLabel);
-  };
+      const strips = readJsonArray(hidden);
+      const rows = buildRows(path, rowPath, strips);
+      const flags = readPolicyFlags(root);
+      const emptyLabel = root.getAttribute('data-empty-label');
+      renderTable(tableWrap, rows, columns, flags, emptyLabel, options?.accountAssets ?? null);
+    };
 
     const openModal = () => {
       const flags = readPolicyFlags(root);
@@ -403,11 +393,17 @@ export function hydrateBulkEdit(scope: Element | DocumentFragment): void {
   });
 }
 
-function hydrateUploadControls(scope: HTMLElement) {
-  const anyWindow = window as unknown as { Dieter?: { hydrateDropdownUpload?: (scope: Element) => void } };
+function hydrateUploadControls(scope: HTMLElement, accountAssets: AccountAssetsClient | null) {
+  const anyWindow = window as unknown as {
+    Dieter?: { hydrateDropdownUpload?: (scope: Element, options: { accountAssets: AccountAssetsClient }) => void };
+  };
   const hydrate = anyWindow?.Dieter?.hydrateDropdownUpload;
+  const hasUploadControls = Boolean(scope.querySelector('.diet-dropdown-upload'));
+  if (hasUploadControls && !accountAssets) {
+    throw new Error('diet-bulk-edit upload controls require an explicit account asset client');
+  }
   if (typeof hydrate === 'function') {
-    hydrate(scope);
+    hydrate(scope, { accountAssets: accountAssets as AccountAssetsClient });
   }
 }
 
@@ -421,6 +417,10 @@ function buildUploadControl(args: {
   value: string;
   meta: Record<string, unknown> | null;
 }): HTMLElement {
+  if (!String(args.metaPath || '').trim()) {
+    throw new Error('[Dieter] bulk-edit dropdown-upload requires metaPath');
+  }
+
   const root = document.createElement('div');
   root.className = 'diet-dropdown-upload diet-popover-host';
   root.dataset.size = 'md';
@@ -434,8 +434,6 @@ function buildUploadControl(args: {
   const accept = escapeAttr(args.accept || 'image/*');
   const value = escapeAttr(args.value || '');
   const metaValue = args.meta ? escapeAttr(JSON.stringify(args.meta)) : '';
-  const metaAttr = metaPath ? ` data-bob-path="${metaPath}"` : '';
-
   root.innerHTML = `
     <input
       id="${id}"
@@ -450,7 +448,7 @@ function buildUploadControl(args: {
       type="hidden"
       class="diet-dropdown-upload__meta-field"
       value="${metaValue}"
-      ${metaAttr}
+      data-bob-path="${metaPath}"
       data-bob-json
     />
     <div
@@ -546,3 +544,4 @@ function buildUploadControl(args: {
 
   return root;
 }
+import type { AccountAssetsClient } from '../shared/account-assets';

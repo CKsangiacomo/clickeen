@@ -325,4 +325,4 @@ When changing FAQ state/controls/runtime, keep the system coherent:
 4. `tokyo/widgets/faq/localization.json`: update allowlist if you add/move any localized content fields.
 5. `tokyo/widgets/faq/limits.json`: update entitlements limits if you add gated controls/metrics.
 6. Venice SEO/GEO: update `venice/lib/schema/faq.ts` (schema + excerpt) if SEO/GEO outputs change.
-7. Verify: `node scripts/compile-all-widgets.mjs` must pass.
+7. Verify with repo typecheck/build and the relevant Cloudflare verification; do not use a localhost Bob HTTP compile gate.

@@ -1,4 +1,5 @@
 import type { FillMode, FillValue } from './fill-types';
+import type { AccountAssetsClient } from '../shared/account-assets';
 
 export type GradientStopState = {
   id: string;
@@ -9,6 +10,7 @@ export type GradientStopState = {
 
 export type DropdownFillState = {
   root: HTMLElement;
+  accountAssets: AccountAssetsClient;
   input: HTMLInputElement;
   headerValue: HTMLElement | null;
   headerValueLabel: HTMLElement | null;
@@ -46,6 +48,10 @@ export type DropdownFillState = {
   gradientDrag?: { id: string; pointerId: number };
   imagePanel: HTMLElement | null;
   imagePreview: HTMLElement | null;
+  imageBrowser: HTMLElement | null;
+  imageBrowserMessage: HTMLElement | null;
+  imageBrowserList: HTMLElement | null;
+  imageMessage: HTMLElement | null;
   uploadButton: HTMLButtonElement | null;
   chooseButton: HTMLButtonElement | null;
   removeButton: HTMLButtonElement | null;
@@ -59,6 +65,10 @@ export type DropdownFillState = {
   imageResolveRequestId: number;
   videoPanel: HTMLElement | null;
   videoPreview: HTMLVideoElement | null;
+  videoBrowser: HTMLElement | null;
+  videoBrowserMessage: HTMLElement | null;
+  videoBrowserList: HTMLElement | null;
+  videoMessage: HTMLElement | null;
   videoUploadButton: HTMLButtonElement | null;
   videoChooseButton: HTMLButtonElement | null;
   videoRemoveButton: HTMLButtonElement | null;
