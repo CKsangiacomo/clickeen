@@ -195,8 +195,8 @@ If you change runtime behavior, update docs in the same PR/commit:
 
 - Compiler determinism: repo typecheck/build plus Cloudflare verification, not a localhost Bob HTTP gate
 - Quick grep for removed/renamed surfaces:
-  - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/ai/minibob/session|/api/account/instances/.*/copilot|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
+  - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/account/instances/.*/copilot|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
   - `rg -n "claims/minibob/complete|/api/account/assets|GET /api/account/instance/:publicId|PUT /api/account/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`
-  - `rg -n "/api/bootstrap|/api/account/widgets|/api/minibob/handoff/start|/api/session/finish|/api/account/assets" documentation --glob '*.md'`
+  - `rg -n "/api/bootstrap|/api/account/widgets|/api/session/finish|/api/account/assets" documentation --glob '*.md'`
 
 When drift is found: update docs to match the shipped code/config immediately; treat mismatches as P0 doc bugs.

@@ -102,7 +102,6 @@ function normalizeMemberRole(value: unknown): MemberRole | null {
 
 function normalizePolicyProfile(value: unknown): PolicyProfile | null {
   switch (value) {
-    case 'minibob':
     case 'free':
     case 'tier1':
     case 'tier2':

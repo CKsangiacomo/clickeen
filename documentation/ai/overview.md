@@ -244,9 +244,9 @@ Shipped in this repo:
 1) **Account-mode product AI**
    - Roma owns authenticated Builder Copilot execution on instance-scoped account routes.
    - Roma consumes Berlin-minted account truth, mints the request-scoped AI Grant, and calls San Francisco directly.
-2) **MiniBob/public AI**
-   - Bob owns `POST /api/ai/minibob/session`, `POST /api/ai/widget-copilot`, and `POST /api/ai/outcome` for public MiniBob flows.
-   - Bob mints the MiniBob session token, mints the request-scoped MiniBob AI Grant inline, and forwards outcomes directly to San Francisco.
+2) **Prague demo**
+   - Prague demo is not a live AI execution surface in the current product path.
+   - Minibob no longer has Bob-owned public Copilot/session routes.
 
 ### San Francisco (AI execution service endpoints)
 This is a separate deployable service (Cloudflare Workers) from day one.
@@ -265,7 +265,7 @@ Request:
   "grant": "<string>",
   "agentId": "widget.copilot.v1",
   "input": {},
-  "trace": { "requestId": "optional-uuid", "client": "minibob|bob|ops" }
+  "trace": { "requestId": "optional-uuid", "client": "roma|ops" }
 }
 ```
 
@@ -380,14 +380,10 @@ Status: shipped (dev grants; user/workspace grants evolve with auth)
 
 Definition of done:
   - Clickeen backend surfaces can issue signed grants for:
-    - anon sessions (MiniBob via Bob)
     - account sessions (product app via Roma)
   - San Francisco verifies signature + expiry + capabilities
 
-**Minibob public mint (shipped):**
-- `POST /api/ai/minibob/session` on Bob → returns a server-signed `sessionToken` (prevents infinite client-generated sessionIds).
-- `POST /api/ai/widget-copilot` on Bob verifies that token and mints the restricted MiniBob grant inline before calling San Francisco.
-- Cloudflare edge rate limits + bot controls are required in non-local stages (manual ops).
+Minibob no longer owns a public AI grant/session mint on Bob.
 
 ### Milestone 4 — Bob uses San Francisco for AI
 Status: shipped

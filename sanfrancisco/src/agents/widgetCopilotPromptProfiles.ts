@@ -12,7 +12,7 @@ export const WIDGET_COPILOT_PROMPT_PROFILE_VERSION = 'widget.copilot.prompt-prof
 export const WIDGET_COPILOT_PROMPT_PROFILES: Record<WidgetCopilotRole, WidgetCopilotPromptProfile> = {
   sdr: {
     role: 'sdr',
-    intro: "You are Clickeen's Minibob SDR agent.",
+    intro: "You are Clickeen's SDR acquisition agent.",
     objective: '3) After a visible win, return a conversion CTA (signup/publish/upgrade).',
     focus: '- Keep edits minimal and conversion-focused.',
   },
@@ -23,4 +23,3 @@ export const WIDGET_COPILOT_PROMPT_PROFILES: Record<WidgetCopilotRole, WidgetCop
     focus: '- Keep edits minimal and user-goal focused.',
   },
 };
-

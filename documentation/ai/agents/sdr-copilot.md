@@ -26,7 +26,7 @@ We'll improve the conversion strategy as we learn from real interactions, but th
 
 ## 1) Overview
 
-SDR Copilot is the ToolDrawer "Copilot" tab that lets an anonymous visitor customize a widget using natural language.
+SDR Copilot is the conversion-oriented widget copilot role used for free-tier acquisition flows.
 
 Key properties:
 - **Chat-only UI** (full-height conversation + bottom input).
@@ -239,7 +239,7 @@ Notes:
 - `sessionId` is used for learning + conversion attribution.
 - Each widget has an `agent.md` file defining editable paths, enums, and binding maps. Copilot uses this + `spec.json` to understand what's editable.
 - `agentId` (when provided by the UI) is restricted to widget-copilot IDs only: `widget.copilot.v1`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`.
-- `subject` is normalized server-side to `account|minibob` only (`account` requires `accountId`).
+- Account-mode Builder Copilot runs through Roma instance routes. The old Bob `account|minibob` subject split is removed from the live product path.
 
 Response shape (success):
 ```json

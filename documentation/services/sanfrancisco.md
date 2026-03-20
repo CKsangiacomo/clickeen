@@ -26,13 +26,13 @@ Health contract:
 ## Copilot execution (shipped)
 - Endpoint: `POST /v1/execute`.
 - Requires a Clickeen-signed grant; enforces `agent:*` caps and `ai` policy capsule.
-- Grant verification accepts the active internal Clickeen issuers (`paris`, `roma`, `bob`, `sanfrancisco`) so account-mode and MiniBob/public flows share one verifier contract.
+- Grant verification accepts the active internal Clickeen issuers (`paris`, `roma`, `bob`, `sanfrancisco`). The live product copilot path now executes from Roma account routes; Bob no longer owns a public Minibob copilot flow.
 - Agent routing uses the registry canonical IDs (aliases accepted).
 - Budget enforcement is centralized in `callChatCompletion` (`maxTokens`, `timeoutMs`, `maxRequests`, and `maxCostUsd` when present).
 - Provider execution retries transient upstream failures once, then falls back across eligible model candidates (and across providers when the grant does not pin `selectedProvider`).
 - OpenAI responses are normalized across string/array/refusal content shapes before being treated as empty output.
 - Widget-copilot canonical IDs:
-  - `sdr.widget.copilot.v1` (Minibob + free)
+  - `sdr.widget.copilot.v1` (free-tier acquisition)
   - `cs.widget.copilot.v1` (paid tiers + DevStudio)
 - The grant issuer resolves widget-copilot aliasing before SF execution (`widget.copilot.v1` and forced SDR/CS IDs are normalized by profile).
 - Prompt persona pack lives in `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`.

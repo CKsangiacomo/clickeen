@@ -2,7 +2,7 @@ STATUS: EXECUTION RUNBOOK — WIDGET COPILOT (SDR + CS)
 Updated: March 15, 2026 (070A AI ownership cut)
 This file keeps rollout history, but the current runtime owner shape is now:
 - account-mode Builder Copilot: Roma-owned backend routes
-- MiniBob/public Copilot: Bob-owned same-origin routes
+- Prague demo: not a live Copilot execution surface
 - Paris: no `/api/ai/*` ownership
 
 ## Purpose
@@ -16,17 +16,14 @@ This runbook captures the rollout status for widget copilot routing:
 
 - Request alias: `widget.copilot.v1`
 - Backend grant resolution:
-  - `minibob|free` -> `sdr.widget.copilot.v1`
+  - `free` -> `sdr.widget.copilot.v1`
   - `tier1|tier2|tier3` -> `cs.widget.copilot.v1`
-- Minibob public grants are fixed server-side to SDR (`sdr.widget.copilot.v1`).
 
 ## Environment behavior matrix
 
 | Environment | Browser endpoint | Observed status |
 |---|---|---|
-| Local | `POST /api/ai/widget-copilot` | Active primary route |
-| Cloud-dev (`bob.dev`) | `POST /api/ai/widget-copilot` | Active primary route |
-| Local / Cloud-dev (`bob.dev`) | `POST /api/ai/minibob/session` | MiniBob session mint lives on Bob |
+| Local / Cloud-dev Roma Builder | `/api/account/instances/:publicId/copilot` | Active primary route |
 
 ## Cloud-dev verification findings (February 11, 2026)
 
@@ -34,12 +31,10 @@ Pre-deploy finding (earlier same day):
 - `bob.dev` was missing `/api/ai/widget-copilot` and temporarily operating through `/api/ai/sdr-copilot` (now removed).
 
 Post-deploy findings:
-- Bob cloud-dev now serves `/api/ai/widget-copilot`.
-- Roma/Bob + San Francisco cloud-dev resolve policy correctly through that route:
+- Roma + San Francisco cloud-dev resolve policy correctly through the Roma instance route:
   - free workspace calls return `meta.promptRole = "sdr"`
   - tier3 workspace calls return `meta.promptRole = "cs"`
 - For paid tiers, forcing `agentId = sdr.widget.copilot.v1` is canonicalized back to CS (`meta.promptRole = "cs"`), matching the policy contract.
-- Minibob flow remains fixed to SDR through Bob-owned same-origin routes.
 - Workspace coverage in shared cloud-dev DB at verification time:
   - present: `free`, `tier3`
   - missing: `tier1`, `tier2`
@@ -49,14 +44,11 @@ Post-deploy findings:
 Core runtime files:
 - `packages/ck-policy/src/ai.ts`
 - `roma/lib/ai/account-copilot.ts`
-- `bob/lib/ai/minibob.ts`
 - `sanfrancisco/src/index.ts`
 - `sanfrancisco/src/agents/widgetCopilotCore.ts`
 - `sanfrancisco/src/agents/sdrWidgetCopilot.ts`
 - `sanfrancisco/src/agents/csWidgetCopilot.ts`
 - `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`
-- `bob/app/api/ai/widget-copilot/handler.ts`
-- `bob/app/api/ai/widget-copilot/route.ts`
 - `bob/components/CopilotPane.tsx`
 - `admin/src/html/tools/entitlements.html`
 

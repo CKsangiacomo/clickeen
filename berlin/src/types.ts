@@ -110,10 +110,9 @@ export type OAuthTransaction = {
   userId?: string;
   intent?: LoginIntent;
   next?: string;
-  handoffId?: string;
 };
 
-export type LoginIntent = 'signin' | 'signup_prague' | 'signup_minibob_publish';
+export type LoginIntent = 'signin' | 'signup_prague';
 
 export type OAuthFinishTransaction = {
   v: 1;
@@ -127,7 +126,6 @@ export type OAuthFinishTransaction = {
   expiresAt: string;
   intent: LoginIntent;
   next: string;
-  handoffId?: string;
   createdAt: number;
   finishExpiresAt: number;
 };

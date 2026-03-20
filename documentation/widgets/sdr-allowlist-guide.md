@@ -1,6 +1,6 @@
 # SDR Allowlist Authoring Guide
 
-Purpose: define the **only** copy fields the Minibob SDR agent may personalize.
+Purpose: define the **only** copy fields the SDR acquisition agent may personalize.
 
 Location:
 `tokyo/widgets/{widgetType}/sdr.allowlist.json`

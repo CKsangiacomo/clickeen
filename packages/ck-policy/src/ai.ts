@@ -130,7 +130,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     agentId: WIDGET_COPILOT_AGENT_IDS.sdr,
     category: 'copilot',
     taskClass: 'copilot.widget.editor',
-    description: 'SDR widget copilot (Minibob + free tiers).',
+    description: 'SDR widget copilot (free-tier acquisition flows).',
     supportedProviders: ['deepseek', 'amazon'],
     defaultProvider: 'deepseek',
     executionSurface: 'execute',
@@ -237,7 +237,6 @@ for (const entry of AI_AGENT_REGISTRY) {
 }
 
 const PROFILE_BY_POLICY: Record<PolicyProfile, AiProfile> = {
-  minibob: 'free_low',
   free: 'free_low',
   tier1: 'paid_standard',
   tier2: 'paid_premium',
@@ -358,7 +357,7 @@ export function isWidgetCopilotAgentId(agentId: string): agentId is WidgetCopilo
 export function resolveWidgetCopilotAgentId(args: {
   policyProfile: PolicyProfile;
 }): WidgetCopilotAgentId {
-  if (args.policyProfile === 'minibob' || args.policyProfile === 'free') {
+  if (args.policyProfile === 'free') {
     return WIDGET_COPILOT_AGENT_IDS.sdr;
   }
   return WIDGET_COPILOT_AGENT_IDS.cs;

@@ -1,7 +1,7 @@
 import { consumeAuthTicket, storeAuthTicket, type TicketConsumeResult } from './auth-ticket-store';
 import { claimAsNumber, claimAsString, enc, toBase64Url } from './helpers';
 import { type Env, type OAuthFinishTransaction, type OAuthTransaction } from './types';
-import { normalizeHandoffId, normalizeIntent, normalizeNextPath, normalizeProvider } from './auth-config';
+import { normalizeIntent, normalizeNextPath, normalizeProvider } from './auth-config';
 
 export function createOauthStateId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(24));
@@ -36,7 +36,6 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
   const userId = claimAsString(record.userId) || undefined;
   const intent = normalizeIntent(record.intent) || undefined;
   const next = normalizeNextPath(record.next) || undefined;
-  const handoffId = normalizeHandoffId(record.handoffId) || undefined;
 
   if (version !== 1) return null;
   if ((flow !== 'login' && flow !== 'link') || !provider || !codeVerifier) return null;
@@ -44,7 +43,6 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
   if (flow === 'link' && (!sid || !userId)) return null;
   if (record.intent !== undefined && !intent) return null;
   if (record.next !== undefined && !next) return null;
-  if (record.handoffId !== undefined && !handoffId) return null;
 
   return {
     v: 1,
@@ -57,7 +55,6 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
     ...(userId ? { userId } : {}),
     ...(intent ? { intent } : {}),
     ...(next ? { next } : {}),
-    ...(handoffId ? { handoffId } : {}),
   };
 }
 
@@ -75,7 +72,6 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
   const expiresAt = claimAsString(record.expiresAt);
   const intent = normalizeIntent(record.intent);
   const next = normalizeNextPath(record.next);
-  const handoffId = normalizeHandoffId(record.handoffId) || undefined;
   const createdAt = claimAsNumber(record.createdAt);
   const finishExpiresAt = claimAsNumber(record.finishExpiresAt);
 
@@ -86,7 +82,6 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
   if (!refreshTokenMaxAge || refreshTokenMaxAge <= 0) return null;
   if (!intent || !next) return null;
   if (!createdAt || !finishExpiresAt || finishExpiresAt <= createdAt) return null;
-  if (record.handoffId !== undefined && !handoffId) return null;
 
   return {
     v: 1,
@@ -100,7 +95,6 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
     expiresAt,
     intent,
     next,
-    ...(handoffId ? { handoffId } : {}),
     createdAt,
     finishExpiresAt,
   };

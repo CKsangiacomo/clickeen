@@ -151,7 +151,6 @@ export function AccountLocaleSettingsCard(args: {
   const policyProfile = useMemo(() => {
     const raw = typeof me.data?.authz?.profile === 'string' ? me.data.authz.profile.trim() : '';
     switch (raw) {
-      case 'minibob':
       case 'free':
       case 'tier1':
       case 'tier2':

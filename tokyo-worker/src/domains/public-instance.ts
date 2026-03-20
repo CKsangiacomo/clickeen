@@ -218,7 +218,7 @@ export async function handleGetPublicInstance(env: Env, publicId: string): Promi
       baseFingerprint,
       localePolicy: localization.policy,
       localization,
-      policy: resolvePolicy({ profile: 'minibob', role: 'editor' }),
+      policy: resolvePolicy({ profile: 'free', role: 'editor' }),
     };
   } catch (error) {
     return ckError(

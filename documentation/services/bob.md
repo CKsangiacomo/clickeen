@@ -123,7 +123,7 @@ Bob’s active account-mode host surface is Roma.
 - Roma user flows can create/duplicate/delete account user instances through Roma same-origin routes plus canonical account instance routes.
 - In hosted account mode, Bob does not own account transport. It emits explicit editor read/write intents back to the parent host, and the host executes the named account/tool routes on Bob's behalf.
 - Roma hosts customer account sessions through Roma same-origin current-account routes (`/api/account/...`).
-- MiniBob keeps a Bob-owned public helper route (`/api/instance/:publicId?subject=minibob`) for Prague host boot, but Bob still opens the editor only from the host `ck:open-editor` envelope. Bob no longer exposes account product routes, and the public payload it reads is Tokyo-assembled and Venice-served.
+- Prague demo no longer boots Bob as a second editor. Public demo playback is Venice-owned; Bob no longer exposes MiniBob helper routes or a public editor boot path.
 
 ### Policy in shared Builder core
 
@@ -335,27 +335,17 @@ Behavior:
 - Reports outcomes (keep/undo/CTA clicks) via `/api/ai/outcome` (best-effort).
 - Server-side hardening in `/api/ai/widget-copilot`:
   - Accepts only widget-copilot agent IDs (`widget.copilot.v1`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`).
-  - Normalizes `subject` on the server. Only `account|minibob` are accepted (`account` requires `accountId`).
-  - For widget-copilot IDs (alias or canonical), grant routing is policy-resolved server-side (`free|minibob` -> SDR, `tier1|tier2|tier3` -> CS).
-
-Minibob keep gate (public UX):
-
-- In Minibob (`subject=minibob`), edits are preview-only until signup.
-- After a change, the UI shows a **signup CTA** (“Create a free account to keep this change”) instead of “Keep”.
-- Undo remains available locally; “Keep” is gated behind signup/publish.
-- On publish/signup, the current draft snapshot is claimed into the new instance in their account; draft context such as `context.websiteUrl` remains part of that canonical authored document when present, even though FAQ runtime does not depend on it.
+  - Account-mode Builder requests execute only through Roma-owned instance-scoped routes.
+  - For widget-copilot IDs (alias or canonical), grant routing is policy-resolved server-side (`free` -> SDR, `tier1|tier2|tier3` -> CS).
 
 ### AI routes (current)
 
-- `/api/ai/widget-copilot`: public MiniBob Copilot execution (Bob-minted MiniBob grant → San Francisco execute). Account-mode Builder requests no longer execute here; embedded Bob delegates those to Roma.
-- `/api/ai/outcome`: best-effort outcome attach to San Francisco for same-origin Bob flows.
-- `/api/ai/minibob/session`: Bob-owned MiniBob session mint. The browser no longer calls Paris directly for this.
+- `/api/ai/widget-copilot`: not a live product execution path anymore; Bob returns a conflict and tells the caller to reopen Builder from Roma.
+- `/api/ai/outcome`: not a live product execution path anymore; Bob returns a conflict and tells the caller outcomes must attach through Roma.
 
 Deployment note (verified on February 11, 2026):
 
-- Local Bob uses `/api/ai/widget-copilot` as primary.
-- Cloud-dev Bob (`bob.dev.clickeen.com`) serves `/api/ai/widget-copilot` as the only Copilot execution endpoint.
-- Cloud-dev verification confirms profile routing works through this endpoint (`free -> SDR`, `tier3 -> CS`) via `meta.promptRole`.
+- Local and cloud-dev account Builder Copilot now execute through Roma instance routes, not Bob same-origin AI routes.
 
 ### User-Facing Controls (PRD 041)
 
@@ -500,7 +490,7 @@ Reference:
 
 ### Optional
 
-- `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (required for the public/minibob `/api/instance/:publicId` read shortcut and the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
+- `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (required for the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
 
 Important boundary:
 
@@ -509,11 +499,8 @@ Important boundary:
 
 Bob editor routes are explicit and non-`/api/paris`:
 
-- `bob/app/api/instance/[publicId]/route.ts` (minibob read shortcut; `subject=minibob`, backed by Venice-served, Tokyo-assembled public instance payload)
 - `bob/app/api/ai/widget-copilot/route.ts`
-- `bob/app/api/ai/widget-copilot/handler.ts`
 - `bob/app/api/ai/outcome/route.ts`
-- `bob/app/api/ai/minibob/session/route.ts`
 
 Account-mode Builder reads/writes do not proxy through Bob. They delegate to Roma same-origin routes through the Builder host message channel, and account-mode bootstrap truth comes from the Roma host open-editor payload rather than any Bob bootstrap route.
 

@@ -1,7 +1,7 @@
 import type { MemberRole, PolicyProfile } from '@clickeen/ck-policy';
 import type { BerlinContactMethodsPayload } from './contact-methods';
 
-type WorkspaceTier = Exclude<PolicyProfile, 'minibob'>;
+type WorkspaceTier = PolicyProfile;
 
 type LifecycleNotice = {
   tierChangedAt: string | null;

@@ -82,7 +82,7 @@ Current repo behavior:
 ### 1.4 Create bridge route
 
 - `/{market}/{locale}/create` is a redirect bridge from Prague into Roma (`${PUBLIC_ROMA_URL}/home`).
-- Prague preserves incoming query params (including `handoffId` / `publicId`) and appends source context (`from=prague_create`, `market`, `locale`).
+- Prague preserves incoming query params and appends source context (`from=prague_create`, `market`, `locale`).
 - If `PUBLIC_ROMA_URL` is missing, this route fails visibly with `503` (no silent fallback).
 - Prague l10n cache token is resolved automatically from `CF_PAGES_COMMIT_SHA`; `PUBLIC_PRAGUE_BUILD_ID` is only an optional manual override.
 
@@ -159,45 +159,30 @@ Validation:
 
 ---
 
-## 3) Minibob embed (shipped)
+## 3) Minibob demo block (shipped)
 
-Prague embeds Bob in **minibob** mode as the only JS island.
-MiniBob is now a host-backed Bob session, not a Bob URL-discovery flow.
+Prague keeps the `minibob` block type as a **demo surface**, not as a second editor mode.
 
 Implementation:
 - `prague/src/blocks/minibob/minibob.astro`
-- iframe URL includes:
-  - `boot=message`
-  - `subject=minibob`
-  - `publicId`
-- On `bob:session-ready`, Prague fetches:
-  - Bob public instance payload (`/api/instance/:publicId?subject=minibob`), which is served by Venice and assembled by Tokyo-worker from public Tokyo live truth
-  - Bob compiled widget payload (`/api/widgets/:widget/compiled`)
-- Prague then sends Bob a normal `ck:open-editor` envelope with:
-  - `compiled`
-  - `instanceData`
-  - `localization`
-  - `policy`
-  - `publicId`
-  - `label`
-  - `widgetname`
+- renders the marketing copy block (`heading`, `subhead`)
+- embeds the public live widget through `InstanceEmbed`
+- links the user to `/{market}/{locale}/create`
+
+What it no longer does:
+- does not iframe Bob
+- does not boot Bob in a demo-editor mode
+- does not fetch editor bootstrap payloads from Bob
+- does not export draft state from a Bob iframe
+- does not start a server-side handoff
 
 Defaults (local/dev):
 - publicId is derived from the widget slug as `wgt_main_{widget}` (no override)
 
-MiniBob publish/signup handoff:
-- Current shared Builder core no longer exposes draft export from Bob iframe. Prague MiniBob handoff needs a rebuild against a dedicated demo boundary instead of shared Builder session internals.
-- Prague starts a server-side handoff via `POST /api/minibob/handoff-start`.
-- Prague redirects to the create/signup URL with `handoffId` + `publicId` query params.
-- Handoff start accepts only curated/base MiniBob source ids (`wgt_main_*` or `wgt_curated_*`), never user instance ids.
-- No signed payload token is carried in URL; Roma stores snapshot state server-side and consumes it by opaque `handoffId`.
-- The handoff snapshot is the current MiniBob draft. If the draft includes context such as `context.websiteUrl`, that context travels with the claimed account instance.
-- Current cloud-dev rule: finish does not mint a new account. Handoff completion succeeds only if the signed-in user already lands in a platform-owned account context.
-
-MiniBob locale visibility contract:
-- MiniBob can view all locales that are already `ready` in public Tokyo truth for the current live fingerprint.
-- MiniBob does not gain locale governance, translation generation, publish, or account writes from that visibility.
-- Prague/Bob must not collapse locale visibility back to the base locale just because the current subject is `minibob`.
+Demo locale visibility contract:
+- the demo can view locales that are already public-live through Venice/Tokyo truth
+- the demo does not gain locale governance, translation generation, publish, or account writes
+- the demo is not a save-capable editor identity
 
 ---
 

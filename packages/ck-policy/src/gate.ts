@@ -27,15 +27,9 @@ export function can(policy: Policy, actionKey: ActionKey, _payload?: unknown): G
 
   switch (actionKey) {
     case 'instance.create': {
-      if (policy.profile === 'minibob') {
-        return { allow: false, upsell: 'UP', reasonKey: 'coreui.upsell.reason.minibob.createAccount' };
-      }
       return { allow: true };
     }
     case 'instance.update': {
-      if (policy.profile === 'minibob') {
-        return { allow: false, upsell: 'UP', reasonKey: 'coreui.upsell.reason.minibob.createAccount' };
-      }
       return { allow: true };
     }
     default: {

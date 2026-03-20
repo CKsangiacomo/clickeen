@@ -95,7 +95,7 @@ type CopilotSession = {
 
 const PROMPT_VERSION = 'widget.copilot.core.v2@2026-02-11';
 const POLICY_VERSION_BY_ROLE: Record<WidgetCopilotRole, string> = {
-  sdr: 'widget.copilot.policy.sdr.minibob.v1@2026-02-11',
+  sdr: 'widget.copilot.policy.sdr.acquisition.v1@2026-02-11',
   cs: 'widget.copilot.policy.cs.editor.v1@2026-02-11',
 };
 

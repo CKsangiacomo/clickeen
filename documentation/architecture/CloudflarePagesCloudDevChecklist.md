@@ -134,13 +134,12 @@ Env contract:
 | Variable | Required | Cloud-dev value | Source-of-truth owner |
 | --- | --- | --- | --- |
 | `PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | Cloudflare Pages dashboard |
-| `PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | Cloudflare Pages dashboard |
 | `PUBLIC_VENICE_URL` | yes | `https://venice.dev.clickeen.com` | Cloudflare Pages dashboard |
 | `PUBLIC_ROMA_URL` | yes | `https://roma.dev.clickeen.com` | Cloudflare Pages dashboard |
 | `PUBLIC_PRAGUE_BUILD_ID` | no | leave unset (Cloudflare provides `CF_PAGES_COMMIT_SHA`) | Cloudflare Pages runtime |
 
 Dashboard action:
-- Keep the 4 public base URLs in the Cloudflare Pages dashboard.
+- Keep the 3 public base URLs in the Cloudflare Pages dashboard.
 - Leave `PUBLIC_PRAGUE_BUILD_ID` unset unless there is a deliberate override reason.
 
 ## Live-Only Secrets And External State

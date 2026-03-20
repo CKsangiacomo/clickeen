@@ -2,7 +2,6 @@ import { authError, claimAsString, conflictError, json, redirect, validationErro
 import { readJsonBody } from './auth-request';
 import {
   normalizeEmail,
-  normalizeHandoffId,
   normalizeIntent,
   normalizeNextPath,
   normalizePassword,
@@ -107,10 +106,6 @@ export async function handleProviderLoginStart(request: Request, env: Env): Prom
   const nextPath = normalizeNextPath(body?.next);
   if (hasNext && !nextPath) return validationError('coreui.errors.auth.next.invalid');
 
-  const hasHandoffId = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'handoffId'));
-  const handoffId = normalizeHandoffId(body?.handoffId);
-  if (hasHandoffId && !handoffId) return validationError('coreui.errors.minibobHandoff.idInvalid');
-
   const allowed = parseAllowedProviders(env);
   if (!allowed.has(provider)) {
     return authError('coreui.errors.auth.provider.notEnabled', 422, `provider=${provider}`);
@@ -129,7 +124,6 @@ export async function handleProviderLoginStart(request: Request, env: Env): Prom
     expiresAt: nowSec + OAUTH_STATE_TTL_SECONDS,
     intent: intent || 'signin',
     next: nextPath || '/home',
-    ...(handoffId ? { handoffId } : {}),
   };
   const stored = await saveOauthTransaction(env, stateId, transaction);
   if (!stored) return authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_state_store');
@@ -151,7 +145,6 @@ export async function handleProviderLoginStart(request: Request, env: Env): Prom
     continuation: {
       intent: transaction.intent || 'signin',
       next: transaction.next || '/home',
-      ...(transaction.handoffId ? { handoffId: transaction.handoffId } : {}),
     },
   });
 }
@@ -216,7 +209,6 @@ export async function handleProviderLoginCallback(request: Request, env: Env): P
     expiresAt: session.expiresAt,
     intent,
     next: nextPath,
-    ...(transaction.handoffId ? { handoffId: transaction.handoffId } : {}),
     createdAt: nowSec,
     finishExpiresAt: nowSec + OAUTH_FINISH_TTL_SECONDS,
   };
@@ -268,7 +260,6 @@ export async function handleFinish(request: Request, env: Env): Promise<Response
     continuation: {
       intent: transaction.intent,
       next: transaction.next,
-      ...(transaction.handoffId ? { handoffId: transaction.handoffId } : {}),
     },
   });
 }

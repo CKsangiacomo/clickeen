@@ -1,6 +1,6 @@
 # 075C - Minibob Is A Demo, Not A User, Account, Or Editor
 
-Status: READY FOR REVIEW
+Status: EXECUTED
 Date: 2026-03-19
 Owner: Product Dev Team
 Priority: P0
@@ -251,17 +251,13 @@ Policy/entitlements should model real account states, not funnel states.
 Any Minibob-only throttles, caps, or demo restrictions belong only inside Minibob implementation.
 They must not exist in shared account entitlement or policy types.
 
-### D. Conversion/handoff becomes explicit and narrow
+### D. Demo stays demo
 
-The only allowed Minibob-aware product boundary after this cleanup is Roma signup conversion intake.
+This execution took the stricter path:
 
-If Minibob hands off a draft during signup:
-
-- that handoff is one temporary conversion payload
-- that payload is not a user, account, policy profile, or editor subject
-- that payload does not enter shared Bob editor state
-- that payload does not enter shared account entitlement logic
-- real authoring starts only after Roma creates or opens a real account widget
+- Prague demo no longer hands a draft into signup
+- there is no surviving Minibob draft-conversion backend path
+- real authoring starts only after the user has a real account and opens Builder from Roma
 
 ### E. Roma account logic stops branching on Minibob
 
@@ -289,7 +285,7 @@ Current-account routes, account helpers, and account types may not branch on `mi
 - Shared Bob code models account authoring only.
 - Minibob is a demo/funnel surface, not an editor identity.
 - Policy/entitlements describe real workspace/account states only.
-- Roma handles conversion only at the explicit funnel edge, not inside shared account logic.
+- Roma no longer carries Minibob conversion/handoff logic inside shared account logic.
 - The product truth becomes boring again:
   - visitor plays
   - visitor signs up
@@ -377,8 +373,7 @@ Documentation truth:
 - `bob/app/api/ai/minibob/session/route.ts`
 - `bob/lib/ai/minibob.ts`
 
-If the product keeps demo-to-signup handoff, the only surviving Minibob-aware backend path is one narrow Roma conversion intake.
-That surviving path must not preserve subject mode, policy profile, save gating, or shared editor/account branching.
+This execution removed demo-to-signup draft handoff entirely instead of preserving a narrowed backend intake.
 
 ---
 
@@ -389,7 +384,7 @@ This PRD is done when all of the following are true:
 - no shared Bob authoring code models `minibob` as a peer subject to `account`
 - no workspace policy or entitlement type models `minibob` as a real account/workspace profile
 - Minibob is no longer described or implemented as a save-capable editor identity
-- the only allowed Minibob-aware product boundary is one explicit Roma signup conversion intake
+- Prague demo no longer boots Bob or hands draft state into signup
 - Roma account logic no longer branches on `minibob`
 - the codebase once again tells one simple truth:
   - Minibob is a demo

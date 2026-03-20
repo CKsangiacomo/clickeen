@@ -254,7 +254,7 @@ export async function executeCopilotOnSanFrancisco(args: {
   grant: string;
   agentId: string;
   input: unknown;
-  traceClient: 'roma' | 'minibob';
+  traceClient: 'roma';
 }): Promise<
   | { ok: true; requestId: string; result: unknown }
   | { ok: false; message: string }

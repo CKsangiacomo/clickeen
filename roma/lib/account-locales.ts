@@ -31,7 +31,6 @@ export function materializeAccountAdditionalLocales(args: {
   requestedLocales: unknown;
 }): string[] {
   const requestedLocales = normalizeAdditionalAccountLocales(args.requestedLocales, args.baseLocale);
-  if (args.profile === 'minibob') return [];
   if (args.profile !== 'free') return requestedLocales;
   const systemLocale = resolveSystemChosenAdditionalLocale({ baseLocale: args.baseLocale });
   return systemLocale ? [systemLocale] : [];

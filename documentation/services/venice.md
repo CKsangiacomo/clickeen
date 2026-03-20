@@ -43,7 +43,7 @@ This doc describes the **current Venice runtime** after the PRD 54 pivot:
 - `GET /e/:publicId` — iframe UI shell + bootstrap (Tokyo-only)
 - `GET /r/:publicId` — live pointer proxy (Tokyo-only, `no-store`)
 - `GET /r/:publicId?meta=1&locale=...` — meta pointer proxy (Tokyo-only, `no-store`)
-- `GET /api/instance/:publicId` — public instance payload proxy for Bob MiniBob host boot (Venice-served, Tokyo-assembled, public-live only)
+- `GET /api/instance/:publicId` — public instance payload proxy for public demo/runtime consumers (Venice-served, Tokyo-assembled, public-live only)
 - `GET /widgets/*` — Tokyo widget runtime proxy
 - `GET /dieter/*` — Tokyo Dieter assets proxy
 - `GET /renders/*` — Tokyo `renders/` proxy

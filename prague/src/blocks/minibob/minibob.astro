@@ -1,6 +1,7 @@
 ---
 import { assertPrimitives } from '../../composition/index';
 import PrimitiveRenderer from '../../composition/renderers/astro/PrimitiveRenderer.astro';
+import InstanceEmbed from '../../components/InstanceEmbed.astro';
 
 type Props = {
   widget: string;
@@ -30,15 +31,7 @@ const headerPrimitives = assertPrimitives(
   'minibob.header',
 );
 
-const BOB_URL = import.meta.env.PUBLIC_BOB_URL ?? process.env.PUBLIC_BOB_URL;
-if (!BOB_URL) {
-  throw new Error('[prague] PUBLIC_BOB_URL is required (e.g. http://localhost:3000)');
-}
-
 const publicId = `wgt_main_${widget}`;
-const bobBaseUrl = BOB_URL.replace(/\/+$/, '');
-const iframeSrc = `${bobBaseUrl}/bob?boot=message&subject=minibob&publicId=${encodeURIComponent(publicId)}`;
-const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 const createHref = (() => {
   try {
     const parts = Astro.url.pathname.split('/').filter(Boolean);
@@ -49,322 +42,30 @@ const createHref = (() => {
     return `/${locale || 'en'}/create`;
   }
 })();
-const bobOrigin = (() => {
-  try {
-    return new URL(BOB_URL).origin;
-  } catch {
-    return '';
-  }
-})();
 ---
 
-<section
-  id="minibob"
-  class="ck-canvas"
-  data-bob-origin={bobOrigin}
-  data-bob-base={bobBaseUrl}
-  data-create-href={createHref}
-  data-public-id={publicId}
->
+<section id="minibob" class="ck-canvas">
   <div class="ck-minibobStage ck-stack ck-gap-tight">
     <PrimitiveRenderer primitives={headerPrimitives} />
+    <div class="ck-minibobStage__actions">
+      <a class="ck-btn ck-btn--md label-s" href={createHref}>
+        Create free account
+      </a>
+    </div>
   </div>
 
   <div class="ck-inline">
-    <iframe
-      id={iframeId}
-      class="ck-minibob__iframe"
-      title="Minibob"
-      src={iframeSrc}
-      loading="lazy"
-      referrerpolicy="no-referrer"
-      sandbox="allow-scripts allow-same-origin allow-forms"
-    />
+    <div class="ck-minibob__embed">
+      <InstanceEmbed
+        publicId={publicId}
+        locale={locale}
+        title="Demo widget preview"
+        loading="eager"
+        showShareChrome={false}
+      />
+    </div>
   </div>
 </section>
-
-<script is:inline>
-  (() => {
-    const root = document.getElementById('minibob');
-    if (!(root instanceof HTMLElement)) return;
-    if (root.dataset.ckUpsellBound === '1') return;
-    root.dataset.ckUpsellBound = '1';
-
-    const expectedOrigin = root.dataset.bobOrigin || '';
-    const bobBase = (root.dataset.bobBase || '').replace(/\/+$/, '');
-    const signupHref = root.dataset.createHref || '';
-    const fallbackPublicId = (root.dataset.publicId || '').trim();
-    const HANDOFF_START_ENDPOINT = '/api/minibob/handoff-start';
-    const EXPORT_TIMEOUT_MS = 8000;
-    const OPEN_TIMEOUT_MS = 12000;
-    let handoffInFlight = false;
-    let bobSessionId = '';
-    let bootInFlight = false;
-
-    const iframe = root.querySelector('iframe.ck-minibob__iframe');
-    if (!(iframe instanceof HTMLIFrameElement)) return;
-
-    const asRecord = (value) => (value && typeof value === 'object' && !Array.isArray(value) ? value : null);
-    const asText = (value) => (typeof value === 'string' ? value.trim() : '');
-
-    const nextRequestId = () => {
-      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-        return `handoff_${crypto.randomUUID()}`;
-      }
-      return `handoff_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
-    };
-
-    async function fetchJson(url, options) {
-      const response = await fetch(url, {
-        cache: 'no-store',
-        credentials: 'omit',
-        mode: 'cors',
-        ...options,
-      });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        const detail = asRecord(payload);
-        const error = asRecord(detail?.error);
-        throw new Error(asText(error?.detail) || asText(error?.reasonKey) || `request failed (${response.status})`);
-      }
-      const body = asRecord(payload);
-      if (!body) throw new Error('invalid JSON payload');
-      return body;
-    }
-
-    async function buildMinibobOpenMessage() {
-      if (!bobBase) throw new Error('missing Bob base URL');
-      const instance = await fetchJson(
-        `${bobBase}/api/instance/${encodeURIComponent(fallbackPublicId)}?subject=minibob`,
-        { method: 'GET' },
-      );
-      const widgetType = asText(instance.widgetType);
-      if (!widgetType) throw new Error('missing widget type');
-      const compiled = await fetchJson(
-        `${bobBase}/api/widgets/${encodeURIComponent(widgetType)}/compiled`,
-        { method: 'GET' },
-      );
-      const config = asRecord(instance.config);
-      if (!config) throw new Error('missing public instance config');
-      const policy = asRecord(instance.policy);
-      if (!policy) throw new Error('missing MiniBob policy');
-
-      return {
-        type: 'ck:open-editor',
-        requestId: nextRequestId(),
-        subjectMode: 'minibob',
-        publicId: asText(instance.publicId) || fallbackPublicId,
-        label: asText(instance.displayName) || fallbackPublicId || widgetType,
-        widgetname: widgetType,
-        compiled,
-        instanceData: config,
-        localization: instance.localization ?? null,
-        policy,
-      };
-    }
-
-    async function openMinibobInBob(sessionId) {
-      if (!iframe.contentWindow) throw new Error('bob iframe not ready');
-
-      const openMessage = await buildMinibobOpenMessage();
-      await new Promise((resolve, reject) => {
-        let timeoutId = null;
-
-        const done = (err) => {
-          if (timeoutId != null) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-          window.removeEventListener('message', onMessage);
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve();
-        };
-
-        const onMessage = (event) => {
-          if (expectedOrigin && event.origin !== expectedOrigin) return;
-          if (event.source !== iframe.contentWindow) return;
-          const data = asRecord(event.data);
-          if (!data) return;
-          const type = asText(data.type);
-          if (type === 'bob:open-editor-ack') {
-            if (asText(data.requestId) !== asText(openMessage.requestId)) return;
-            return;
-          }
-          if (type === 'bob:open-editor-applied') {
-            if (asText(data.requestId) !== asText(openMessage.requestId)) return;
-            done(null);
-            return;
-          }
-          if (type === 'bob:open-editor-failed') {
-            if (asText(data.requestId) !== asText(openMessage.requestId)) return;
-            done(new Error(asText(data.message) || asText(data.reasonKey) || 'bob open-editor failed'));
-          }
-        };
-
-        timeoutId = window.setTimeout(() => {
-          done(new Error('bob open-editor timeout'));
-        }, OPEN_TIMEOUT_MS);
-
-        window.addEventListener('message', onMessage);
-        iframe.contentWindow.postMessage(
-          {
-            ...openMessage,
-            sessionId,
-          },
-          expectedOrigin || '*',
-        );
-      });
-    }
-
-    async function exportHandoffContextFromBob() {
-      if (!iframe.contentWindow) throw new Error('bob iframe not ready');
-
-      const requestId = nextRequestId();
-      const response = await new Promise((resolve, reject) => {
-        let timeoutId = null;
-
-        const done = (err, payload) => {
-          if (timeoutId != null) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-          window.removeEventListener('message', onMessage);
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve(payload);
-        };
-
-        const onMessage = (event) => {
-          if (expectedOrigin && event.origin !== expectedOrigin) return;
-          if (event.source !== iframe.contentWindow) return;
-          const data = asRecord(event.data);
-          if (!data || data.type !== 'bob:export-instance-data') return;
-          if (asText(data.requestId) !== requestId) return;
-          if (data.ok !== true) {
-            done(new Error(asText(data.error) || 'bob export failed'));
-            return;
-          }
-          done(null, data);
-        };
-
-        timeoutId = window.setTimeout(() => {
-          done(new Error('bob export timeout'));
-        }, EXPORT_TIMEOUT_MS);
-
-        window.addEventListener('message', onMessage);
-        iframe.contentWindow.postMessage(
-          {
-            type: 'host:export-instance-data',
-            requestId,
-            exportMode: 'current',
-            persistAssets: false,
-          },
-          expectedOrigin || '*',
-        );
-      });
-
-      const payload = asRecord(response);
-      const meta = asRecord(payload?.meta);
-      const publicId = asText(meta?.publicId) || fallbackPublicId;
-      if (!publicId) throw new Error('missing publicId for handoff');
-
-      const widgetType = asText(meta?.widgetname) || undefined;
-      const draftConfig = asRecord(payload?.instanceData);
-      if (!draftConfig) {
-        throw new Error('missing draft config for minibob handoff');
-      }
-
-      return {
-        publicId,
-        widgetType,
-        draftConfig,
-      };
-    }
-
-    async function startHandoff(input) {
-      const response = await fetch(HANDOFF_START_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify(input),
-      });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        const detail = asRecord(payload);
-        throw new Error(asText(detail?.message) || asText(detail?.error) || `handoff start failed (${response.status})`);
-      }
-      const body = asRecord(payload);
-      const handoffId = asText(body?.handoffId);
-      if (!handoffId) throw new Error('handoff start returned empty id');
-      return handoffId;
-    }
-
-    function buildSignupUrl(baseHref, args) {
-      const url = new URL(baseHref, window.location.href);
-      url.searchParams.set('intent', 'signup_minibob_publish');
-      url.searchParams.set('handoffId', args.handoffId);
-      url.searchParams.set('publicId', args.publicId);
-      return url.toString();
-    }
-
-    function surfaceHandoffError(error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error('[prague:minibob] minibob handoff failed', message);
-      window.alert(`Unable to continue signup from MiniBob right now. ${message}`);
-    }
-
-    function surfaceBootError(error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error('[prague:minibob] minibob boot failed', message);
-    }
-
-    window.addEventListener('message', (event) => {
-      if (expectedOrigin && event.origin !== expectedOrigin) return;
-      if (event.source !== iframe.contentWindow) return;
-      const data = event.data;
-      if (!data || typeof data !== 'object') return;
-      if (data.type === 'bob:session-ready') {
-        const sessionId = asText(data.sessionId);
-        if (!sessionId) return;
-        if (data.bootMode && data.bootMode !== 'message') return;
-        if (sessionId === bobSessionId || bootInFlight) return;
-        bobSessionId = sessionId;
-        bootInFlight = true;
-        openMinibobInBob(sessionId)
-          .catch((error) => {
-            bobSessionId = '';
-            surfaceBootError(error);
-          })
-          .finally(() => {
-            bootInFlight = false;
-          });
-        return;
-      }
-      if (data.type !== 'bob:upsell') return;
-      if (data.cta !== 'signup') return;
-      if (!signupHref) return;
-
-      if (handoffInFlight) return;
-      handoffInFlight = true;
-
-      (async () => {
-        const handoffInput = await exportHandoffContextFromBob();
-        const handoffId = await startHandoff(handoffInput);
-        const nextUrl = buildSignupUrl(signupHref, { handoffId, publicId: handoffInput.publicId });
-        window.location.assign(nextUrl);
-      })().catch((error) => {
-        handoffInFlight = false;
-        surfaceHandoffError(error);
-      });
-    });
-  })();
-</script>
 
 <style>
   #minibob.ck-canvas {
@@ -379,28 +80,19 @@ const bobOrigin = (() => {
     text-align: center;
   }
 
-  .ck-minibobStage__personalize {
+  .ck-minibobStage__actions {
     display: flex;
     justify-content: center;
     margin-top: var(--space-4);
   }
 
-  .ck-minibob__iframe {
+  .ck-minibob__embed {
     width: 100%;
-    height: clamp(520px, 78vh, 920px);
-    border: 0;
-    border-radius: var(--control-radius-lg);
-    box-shadow: none;
-    background: var(--color-system-white);
-  }
-
-  @supports (height: 1svh) {
-    .ck-minibob__iframe {
-      height: clamp(520px, 78svh, 920px);
-    }
   }
 
   @media (max-width: 900px) {
-    .ck-minibobStage { margin-bottom: var(--space-5); }
+    .ck-minibobStage {
+      margin-bottom: var(--space-5);
+    }
   }
 </style>

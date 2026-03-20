@@ -88,7 +88,7 @@ export type ResolvedRomaContext = {
 
 export type RomaAuthzPolicy = {
   v: 1;
-  profile: 'minibob' | 'free' | 'tier1' | 'tier2' | 'tier3';
+  profile: 'free' | 'tier1' | 'tier2' | 'tier3';
   role: 'viewer' | 'editor' | 'admin' | 'owner';
   flags: Record<string, boolean>;
   caps: Record<string, number | null>;
@@ -122,7 +122,6 @@ function normalizeRole(value: unknown): RomaAuthzPolicy['role'] | null {
 
 function normalizeProfile(value: unknown): RomaAuthzPolicy['profile'] | null {
   switch (value) {
-    case 'minibob':
     case 'free':
     case 'tier1':
     case 'tier2':

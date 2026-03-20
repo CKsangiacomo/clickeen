@@ -24,8 +24,6 @@ export function normalizeIntent(value: unknown): LoginIntent | null {
       return 'signin';
     case 'signup_prague':
       return 'signup_prague';
-    case 'signup_minibob_publish':
-      return 'signup_minibob_publish';
     default:
       return null;
   }
@@ -39,14 +37,6 @@ export function normalizeNextPath(value: unknown): string | null {
   if (!normalized.startsWith('/')) return null;
   if (normalized.startsWith('//')) return null;
   return normalized;
-}
-
-export function normalizeHandoffId(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  if (!normalized) return null;
-  if (!/^mbh_[a-z0-9]{16,64}$/i.test(normalized)) return null;
-  return normalized.toLowerCase();
 }
 
 export function resolveIssuer(env: Env): string {

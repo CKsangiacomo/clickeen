@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { WidgetOp } from '../lib/ops';
-import type { CopilotCta, CopilotMessage } from '../lib/copilot/types';
+import type { CopilotMessage } from '../lib/copilot/types';
 import { useWidgetSession, useWidgetSessionChrome, useWidgetSessionCopilot } from '../lib/session/useWidgetSession';
 import {
   labelAiModel,
@@ -16,7 +16,6 @@ function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-type CopilotSurfaceKind = 'account' | 'minibob';
 type WidgetSessionValue = ReturnType<typeof useWidgetSession>;
 
 function titleCase(input: string): string {
@@ -87,13 +86,9 @@ function newId(): string {
   return crypto.randomUUID();
 }
 
-function initialCopilotMessage(args: { surface: CopilotSurfaceKind; widgetType: string }): string {
-  const type = args.widgetType;
-  const label = titleCase(type) || 'widget';
-  if (args.surface === 'account') {
-    return `You’re editing a ${label} widget in your workspace. Ask me for a concrete content, layout, styling, or settings change and I’ll stage it for review.`;
-  }
-  return `Hello! I see you have a ${label} widget. You can ask me to change the title, colors, layout, add or edit content, adjust fonts, or modify any other settings listed in the editable controls. What would you like to customize?`;
+function initialCopilotMessage(widgetType: string): string {
+  const label = titleCase(widgetType) || 'widget';
+  return `You’re editing a ${label} widget in your workspace. Ask me for a concrete content, layout, styling, or settings change and I’ll stage it for review.`;
 }
 
 type RawAiSelection = { provider: string; model: string };
@@ -114,7 +109,7 @@ function clampAiSelection(
   return { provider, model };
 }
 
-function aiStorageKey(args: { accountId?: string | null; subject: string }): string {
+function aiStorageKey(args: { accountId?: string | null; subject: 'account' }): string {
   const accountId =
     typeof args.accountId === 'string' && args.accountId.trim() ? args.accountId.trim() : 'local';
   return `ck:ai.settings.v1:${args.subject}:${accountId}`;
@@ -140,64 +135,6 @@ function writeStoredAiSelection(key: string, value: AiSelection) {
   } catch {
     // best-effort
   }
-}
-
-const MINIBOB_SESSION_STORAGE_KEY = 'ck:minibob.session.v1';
-const MINIBOB_SESSION_EXP_SKEW_SEC = 30;
-
-type StoredMinibobSession = { sessionToken: string; exp: number };
-
-function readStoredMinibobSession(): StoredMinibobSession | null {
-  try {
-    const raw = sessionStorage.getItem(MINIBOB_SESSION_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as any;
-    const sessionToken = asTrimmedString(parsed?.sessionToken);
-    const exp = typeof parsed?.exp === 'number' && Number.isFinite(parsed.exp) ? parsed.exp : 0;
-    if (!sessionToken || !exp) return null;
-    return { sessionToken, exp };
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredMinibobSession(value: StoredMinibobSession) {
-  try {
-    sessionStorage.setItem(MINIBOB_SESSION_STORAGE_KEY, JSON.stringify(value));
-  } catch {
-    // best-effort
-  }
-}
-
-function isMinibobSessionFresh(session: StoredMinibobSession): boolean {
-  const nowSec = Math.floor(Date.now() / 1000);
-  return session.exp > nowSec + MINIBOB_SESSION_EXP_SKEW_SEC;
-}
-
-async function mintMinibobSessionToken(): Promise<StoredMinibobSession> {
-  const res = await fetch('/api/ai/minibob/session', { method: 'POST', headers: { accept: 'application/json' } });
-  const text = await res.text().catch(() => '');
-  if (looksLikeHtml(text)) {
-    throw new Error(normalizeAssistantText(text));
-  }
-  const parsed = safeJsonParse(text) as any;
-  if (!res.ok) {
-    throw new Error(
-      normalizeErrorMessage({
-        resStatus: res.status,
-        parsed,
-        bodyText: text,
-        fallback: `Minibob session request failed (${res.status}).`,
-      }),
-    );
-  }
-
-  const sessionToken = asTrimmedString(parsed?.sessionToken);
-  const exp = typeof parsed?.exp === 'number' && Number.isFinite(parsed.exp) ? parsed.exp : 0;
-  if (!sessionToken || !exp) {
-    throw new Error('Minibob session service returned an invalid response.');
-  }
-  return { sessionToken, exp };
 }
 
 function AccountCopilotAiSettings(args: {
@@ -287,20 +224,12 @@ function AccountCopilotAiSettings(args: {
 }
 
 type CopilotSurfaceContract = {
-  subject: CopilotSurfaceKind;
   initialMessage: (widgetType: string) => string;
-  missingContextMessage: string | null;
-  pendingMode: 'keep' | 'signup';
   pendingMessageText: (message: string) => string;
   pendingNudge: string;
-  pendingPrimaryLabel: string;
-  pendingPrimaryUpsellReason?: string;
-  pendingCta: (cta?: CopilotCta) => CopilotCta | undefined;
   resolveRequestContext: () => Promise<{
-    accountId?: string | null;
     provider?: string;
     model?: string;
-    sessionToken?: string;
   }>;
   settings: ReactNode;
 };
@@ -361,61 +290,16 @@ export function AccountCopilotPane() {
     const selection =
       aiPolicy && widgetCopilotAgentId === WIDGET_COPILOT_AGENT_IDS.cs ? clampAiSelection(aiSelection, aiPolicy) : null;
     return {
-      subject: 'account',
-      initialMessage: (widgetType) => initialCopilotMessage({ surface: 'account', widgetType }),
-      missingContextMessage: accountId
-        ? null
-        : 'Account context is broken. Reopen the instance from Roma/DevStudio and try again.',
-      pendingMode: 'keep',
+      initialMessage: (widgetType) => initialCopilotMessage(widgetType),
       pendingMessageText: (message) => `${message}\n\nWant to keep this change?`,
       pendingNudge: 'Keep or Undo? (Use the buttons above, or type “keep” / “undo”.)',
-      pendingPrimaryLabel: 'Keep',
-      pendingCta: (cta) => cta,
       resolveRequestContext: async () => ({
-        accountId,
         ...(selection?.provider ? { provider: selection.provider } : {}),
         ...(selection?.model ? { model: selection.model } : {}),
       }),
       settings: settingsNode,
     };
-  }, [accountId, aiPolicy, aiSelection, settingsNode, widgetCopilotAgentId]);
-
-  return <SharedCopilotPane session={session} widgetCopilotAgentId={widgetCopilotAgentId} surfaceContract={surfaceContract} />;
-}
-
-export function MinibobCopilotPane() {
-  const session = useWidgetSession();
-  const chrome = useWidgetSessionChrome();
-  const policyProfile = chrome.policy?.profile ?? null;
-  const widgetCopilotAgentId = useMemo(
-    () => (policyProfile ? resolveWidgetCopilotAgentId({ policyProfile }) : null),
-    [policyProfile],
-  );
-  const surfaceContract = useMemo<CopilotSurfaceContract>(
-    () => ({
-      subject: 'minibob',
-      initialMessage: (widgetType) => initialCopilotMessage({ surface: 'minibob', widgetType }),
-      missingContextMessage: null,
-      pendingMode: 'signup',
-      pendingMessageText: (message) => `${message}\n\nCreate a free account to keep this change.`,
-      pendingNudge: 'Create a free account to keep this change, or type “undo” to revert.',
-      pendingPrimaryLabel: 'Create a free account to keep this change',
-      pendingPrimaryUpsellReason: 'Create a free account to keep this change',
-      pendingCta: (cta) =>
-        !cta || cta.action !== 'signup' ? { text: 'Create a free account to keep this change', action: 'signup' } : cta,
-      resolveRequestContext: async () => {
-        const stored = readStoredMinibobSession();
-        if (stored && isMinibobSessionFresh(stored)) {
-          return { sessionToken: stored.sessionToken };
-        }
-        const minted = await mintMinibobSessionToken();
-        writeStoredMinibobSession(minted);
-        return { sessionToken: minted.sessionToken };
-      },
-      settings: null,
-    }),
-    [],
-  );
+  }, [aiPolicy, aiSelection, settingsNode, widgetCopilotAgentId]);
 
   return <SharedCopilotPane session={session} widgetCopilotAgentId={widgetCopilotAgentId} surfaceContract={surfaceContract} />;
 }
@@ -568,13 +452,6 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
       if (normalized === 'keep') {
         setDraft('');
         pushMessage({ role: 'user', text: prompt });
-        if (surfaceContract.pendingMode === 'signup') {
-          pushMessage({
-            role: 'assistant',
-            text: 'Create a free account to keep this change.',
-          });
-          return;
-        }
         const pendingOps = pendingOpsRef.current;
         if (pendingOps && pendingOps.length > 0) {
           const applied = session.applyOps(pendingOps);
@@ -635,13 +512,6 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
       });
       return;
     }
-    if (surfaceContract.missingContextMessage) {
-      pushMessage({
-        role: 'assistant',
-        text: surfaceContract.missingContextMessage,
-      });
-      return;
-    }
 
     setStatus('loading');
     setDraft('');
@@ -660,9 +530,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
           controls: controlsForAi,
           sessionId,
           instancePublicId,
-          subject: surfaceContract.subject,
-          ...(requestContext.accountId ? { accountId: requestContext.accountId } : {}),
-          ...(requestContext.sessionToken ? { sessionToken: requestContext.sessionToken } : {}),
+          subject: 'account',
           ...(requestContext.provider ? { provider: requestContext.provider } : {}),
           ...(requestContext.model ? { model: requestContext.model } : {}),
         }),
@@ -693,11 +561,10 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
         pendingOpsRef.current = ops;
         pendingDecisionRef.current = true;
         const pendingText = surfaceContract.pendingMessageText(message);
-        const pendingCta = surfaceContract.pendingCta(cta);
         pushMessage({
           role: 'assistant',
           text: pendingText,
-          cta: pendingCta,
+          cta,
           hasPendingDecision: true,
           ...(requestId ? { requestId } : {}),
         });
@@ -799,56 +666,37 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
 
             {m.hasPendingDecision ? (
               <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
-                {surfaceContract.pendingMode === 'keep' ? (
-                  <button
-                    className="diet-btn-txt"
-                    data-size="md"
-                    data-variant="primary"
-                    type="button"
+                <button
+                  className="diet-btn-txt"
+                  data-size="md"
+                  data-variant="primary"
+                  type="button"
                   onClick={() => {
-                      const pendingOps = pendingOpsRef.current;
-                      if (pendingOps && pendingOps.length > 0) {
-                        const applied = session.applyOps(pendingOps);
-                        if (!applied.ok) {
-                          const details = applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n');
-                          pushMessage({
-                            role: 'assistant',
-                            text: `I couldn’t keep that change because it’s no longer valid:\n${details}`,
-                          });
-                          clearPendingDecision();
-                          return;
-                        }
+                    const pendingOps = pendingOpsRef.current;
+                    if (pendingOps && pendingOps.length > 0) {
+                      const applied = session.applyOps(pendingOps);
+                      if (!applied.ok) {
+                        const details = applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n');
+                        pushMessage({
+                          role: 'assistant',
+                          text: `I couldn’t keep that change because it’s no longer valid:\n${details}`,
+                        });
+                        clearPendingDecision();
+                        return;
                       }
-                      void reportOutcome({
-                        event: 'ux_keep',
-                        requestId: m.requestId || '',
-                        sessionId: copilotSessionId,
-                        timeToDecisionMs: Math.max(0, Date.now() - m.ts),
-                      });
-                      clearPendingDecision();
-                      pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
-                    }}
-                  >
-                    <span className="diet-btn-txt__label">Keep</span>
-                  </button>
-                ) : (
-                  <button
-                    className="diet-btn-txt"
-                    data-size="md"
-                    data-variant="primary"
-                    type="button"
-                    onClick={() => {
-                      void reportOutcome({
-                        event: 'cta_clicked',
-                        requestId: m.requestId || '',
-                        sessionId: copilotSessionId,
-                      });
-                      chrome.requestUpsell(surfaceContract.pendingPrimaryUpsellReason || surfaceContract.pendingPrimaryLabel);
-                    }}
-                  >
-                    <span className="diet-btn-txt__label">{surfaceContract.pendingPrimaryLabel}</span>
-                  </button>
-                )}
+                    }
+                    void reportOutcome({
+                      event: 'ux_keep',
+                      requestId: m.requestId || '',
+                      sessionId: copilotSessionId,
+                      timeToDecisionMs: Math.max(0, Date.now() - m.ts),
+                    });
+                    clearPendingDecision();
+                    pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
+                  }}
+                >
+                  <span className="diet-btn-txt__label">Keep</span>
+                </button>
                 <button
                   className="diet-btn-txt"
                   data-size="md"

@@ -41,7 +41,6 @@ function normalizePolicyProfile(value: unknown): PolicyProfile | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
   if (
-    normalized === 'minibob' ||
     normalized === 'free' ||
     normalized === 'tier1' ||
     normalized === 'tier2' ||

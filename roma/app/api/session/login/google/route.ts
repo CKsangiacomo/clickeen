@@ -10,7 +10,7 @@ const CACHE_HEADERS = {
   'cloudflare-cdn-cache-control': 'no-store',
 } as const;
 
-type LoginIntent = 'signin' | 'signup_prague' | 'signup_minibob_publish';
+type LoginIntent = 'signin' | 'signup_prague';
 
 function resolveNextPath(value: string | null): string {
   const normalized = String(value || '').trim();
@@ -22,15 +22,7 @@ function resolveNextPath(value: string | null): string {
 function resolveIntent(value: string | null): LoginIntent {
   const normalized = String(value || '').trim().toLowerCase();
   if (normalized === 'signup_prague') return 'signup_prague';
-  if (normalized === 'signup_minibob_publish') return 'signup_minibob_publish';
   return 'signin';
-}
-
-function resolveHandoffId(value: string | null): string | null {
-  const normalized = String(value || '').trim().toLowerCase();
-  if (!normalized) return null;
-  if (!/^mbh_[a-z0-9]{16,64}$/.test(normalized)) return null;
-  return normalized;
 }
 
 function parseNextUrl(nextPath: string): URL {
@@ -41,15 +33,13 @@ function deriveIntent(args: {
   explicitIntent: LoginIntent;
   explicitIntentRaw: string | null;
   nextPath: string;
-  handoffId: string | null;
 }): LoginIntent {
   if (args.explicitIntentRaw) return args.explicitIntent;
-  if (args.handoffId) return 'signup_minibob_publish';
 
   try {
     const nextUrl = parseNextUrl(args.nextPath);
     const nextIntent = resolveIntent(nextUrl.searchParams.get('intent'));
-    if (!args.handoffId && nextIntent !== 'signin') return nextIntent;
+    if (nextIntent !== 'signin') return nextIntent;
 
     const from = (nextUrl.searchParams.get('from') || '').trim().toLowerCase();
     if (from === 'prague_create') return 'signup_prague';
@@ -73,20 +63,10 @@ export async function GET(request: NextRequest) {
   const nextPath = resolveNextPath(url.searchParams.get('next'));
   const explicitIntentRaw = url.searchParams.get('intent');
   const explicitIntent = resolveIntent(explicitIntentRaw);
-  const handoffFromQuery = resolveHandoffId(url.searchParams.get('handoffId'));
-  const handoffFromNext = (() => {
-    try {
-      return resolveHandoffId(parseNextUrl(nextPath).searchParams.get('handoffId'));
-    } catch {
-      return null;
-    }
-  })();
-  const handoffId = handoffFromQuery || handoffFromNext;
   const intent = deriveIntent({
     explicitIntent,
     explicitIntentRaw,
     nextPath,
-    handoffId,
   });
 
   let berlinBase = '';
@@ -109,7 +89,6 @@ export async function GET(request: NextRequest) {
       provider: 'google',
       intent,
       next: nextPath,
-      ...(handoffId ? { handoffId } : {}),
     }),
   });
 

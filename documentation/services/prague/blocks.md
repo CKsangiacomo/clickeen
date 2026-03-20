@@ -256,22 +256,18 @@ Copy contract:
 Copy contract:
 - `title`, `subtitle`
 
-### 2.13 Minibob island
+### 2.13 Minibob block
 
 `blocks/minibob/minibob`
 - Island: the only Prague section that ships JS.
-- Responsibility: embed Bob in Minibob mode and bootstrap a demo instance.
+- Responsibility: render the public demo instance and send the visitor to account signup.
 - Structure (non-negotiable):
   - Stage: heading + subhead (from compiled strings for `blocks[].id=="minibob"`)
-  - Pod: iframe only (Minibob takes full available width)
+  - Pod: public demo embed
 - Contract:
   - It must not introduce global CSS (only block-scoped styles).
   - It must not access host cookies/storage.
-  - It must identify itself as the `minibob` subject (so Bob applies the MiniBob policy: flags/caps/budgets).
-  - It must pass `workspaceId` + `publicId` via the iframe URL query params (Bob loads them on mount).
-  - It may override the default `workspaceId` via env:
-    - `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>`
-    - fallback: `PUBLIC_MINIBOB_WORKSPACE_ID`
+  - It must not boot Bob or start a draft handoff flow.
   - `publicId` is always derived as `wgt_main_{widget}` (no override).
 
 ## 3) Page templates (composition)

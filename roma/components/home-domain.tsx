@@ -2,14 +2,11 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
 
 export function HomeDomain() {
   const me = useRomaMe();
-  const searchParams = useSearchParams();
-  const handoffId = useMemo(() => (searchParams.get('handoffId') || '').trim(), [searchParams]);
   const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const hasAccountContext = Boolean(context.accountId);
 
@@ -54,12 +51,6 @@ export function HomeDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        {handoffId ? (
-          <article className="roma-card">
-            <p className="body-m">MiniBob continuation was not finalized in finish flow.</p>
-          </article>
-        ) : null}
-
         <p className="body-m">
           Account: {context.accountName || 'Current account'}
           {context.accountSlug ? ` (${context.accountSlug})` : ''}

@@ -7,7 +7,7 @@ Canonical contracts (must match runtime):
 - `documentation/widgets/WidgetBuildContract.md`
 - `documentation/widgets/WidgetArchitecture.md`
 - `documentation/capabilities/seo-geo.md` (only if the widget exposes SEO/GEO)
-- `documentation/widgets/sdr-allowlist-guide.md` (only if the widget supports Minibob SDR personalization)
+- `documentation/widgets/sdr-allowlist-guide.md` (only if the widget supports SDR acquisition personalization)
 
 INPUTS
 - `widgetType` (explicit)
@@ -178,7 +178,7 @@ GATE
 OUTPUT
 - `limits.json` (unless PRD opts out).
 - `localization.json` with all translatable paths.
-- `sdr.allowlist.json` (required if the widget supports Minibob SDR personalization; fail-closed by design).
+- `sdr.allowlist.json` (required if the widget supports SDR acquisition personalization; fail-closed by design).
 - `layers/*.allowlist.json` only when that layer exists and is used.
 - `pages/*.json` (Prague widget pages: overview/features/examples/templates/pricing).
 

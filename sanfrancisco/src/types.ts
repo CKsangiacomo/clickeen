@@ -33,7 +33,7 @@ export type ExecuteRequest = {
   input: unknown;
   trace?: {
     requestId?: string;
-    client?: 'minibob' | 'bob' | 'ops';
+    client?: 'roma' | 'ops';
     locale?: string;
   };
 };

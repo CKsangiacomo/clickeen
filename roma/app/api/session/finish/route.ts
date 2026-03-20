@@ -1,12 +1,10 @@
-import { after, NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import {
   applySessionCookies,
   resolveRequestOrigin,
   resolveSessionCookieNames,
 } from '../../../../lib/auth/session';
-import { runAccountInstanceSync } from '../../../../lib/account-instance-sync';
-import { completeMinibobHandoff } from '../../../../lib/minibob-handoff';
 
 export const runtime = 'edge';
 
@@ -16,7 +14,7 @@ const CACHE_HEADERS = {
   'cloudflare-cdn-cache-control': 'no-store',
 } as const;
 
-type LoginIntent = 'signin' | 'signup_prague' | 'signup_minibob_publish';
+type LoginIntent = 'signin' | 'signup_prague';
 
 type BerlinFinishPayload = {
   accessToken?: unknown;
@@ -72,28 +70,18 @@ function extractReasonKey(payload: Record<string, unknown> | null, fallback: str
 function normalizeIntent(value: unknown): LoginIntent {
   const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
   if (normalized === 'signup_prague') return 'signup_prague';
-  if (normalized === 'signup_minibob_publish') return 'signup_minibob_publish';
   return 'signin';
 }
 
-function normalizeHandoffId(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim().toLowerCase();
-  if (!normalized) return null;
-  if (!/^mbh_[a-z0-9]{16,64}$/.test(normalized)) return null;
-  return normalized;
-}
-
-function extractContinuation(payload: BerlinFinishPayload | null): { intent: LoginIntent; next: string; handoffId: string | null } {
+function extractContinuation(payload: BerlinFinishPayload | null): { intent: LoginIntent; next: string } {
   if (!payload || !payload.continuation || typeof payload.continuation !== 'object') {
-    return { intent: 'signin', next: '/home', handoffId: null };
+    return { intent: 'signin', next: '/home' };
   }
   const continuation = payload.continuation as Record<string, unknown>;
   const nextRaw = typeof continuation.next === 'string' ? continuation.next : null;
   return {
     intent: normalizeIntent(continuation.intent),
     next: resolveNextPath(nextRaw),
-    handoffId: normalizeHandoffId(continuation.handoffId),
   };
 }
 
@@ -141,48 +129,10 @@ async function fetchBootstrap(
   };
 }
 
-async function completeHandoff(
-  accessToken: string,
-  handoffId: string,
-  accountId: string,
-  accountCapsule: string | null,
-) : Promise<
-  | { ok: true; builderRoute: string; publicId: string; replay: boolean }
-  | { ok: false; reasonKey: string }
-> {
-  const result = await completeMinibobHandoff({
-    accessToken,
-    handoffId,
-    accountId,
-    accountCapsule,
-  });
-  if (!result.ok) {
-    return { ok: false, reasonKey: result.error.reasonKey };
-  }
-  const builderRoute = typeof result.value.builderRoute === 'string' ? result.value.builderRoute.trim() : '';
-  const publicId = typeof result.value.publicId === 'string' ? result.value.publicId.trim() : '';
-  if (!builderRoute || !publicId) {
-    return { ok: false, reasonKey: 'coreui.errors.minibobHandoff.unavailable' };
-  }
-  return {
-    ok: true,
-    builderRoute,
-    publicId,
-    replay: result.value.replay === true,
-  };
-}
-
-function appendHandoffToPath(path: string, handoffId: string): string {
-  const target = new URL(path, 'https://roma.local');
-  target.searchParams.set('handoffId', handoffId);
-  return `${target.pathname}${target.search}`;
-}
-
-function buildRecoveryUrl(request: NextRequest, reasonKey: string, handoffId: string | null): URL {
+function buildRecoveryUrl(request: NextRequest, reasonKey: string): URL {
   const recovery = new URL('/home', resolveRequestOrigin(request));
   recovery.searchParams.set('authRecovery', '1');
   recovery.searchParams.set('error', reasonKey);
-  if (handoffId) recovery.searchParams.set('handoffId', handoffId);
   return recovery;
 }
 
@@ -260,73 +210,32 @@ export async function GET(request: NextRequest) {
     return response;
   };
 
-  let accountId: string | null = null;
   const bootstrap = await fetchBootstrap(berlinBase, accessToken);
   if (!bootstrap.ok) {
     return applySession(
-      NextResponse.redirect(buildRecoveryUrl(request, bootstrap.reasonKey, continuation.handoffId), {
+      NextResponse.redirect(buildRecoveryUrl(request, bootstrap.reasonKey), {
         headers: CACHE_HEADERS,
       }),
     );
   }
-  accountId = bootstrap.accountId;
-  const accountCapsule = bootstrap.accountCapsule;
 
-  if (!accountId) {
+  if (!bootstrap.accountId) {
     return applySession(
-      NextResponse.redirect(buildRecoveryUrl(request, 'coreui.errors.account.createFailed', continuation.handoffId), {
+      NextResponse.redirect(buildRecoveryUrl(request, 'coreui.errors.account.createFailed'), {
         headers: CACHE_HEADERS,
       }),
     );
   }
-  if (!accountCapsule) {
+
+  if (!bootstrap.accountCapsule) {
     return applySession(
-      NextResponse.redirect(
-        buildRecoveryUrl(
-          request,
-          'coreui.errors.auth.contextUnavailable',
-          continuation.handoffId,
-        ),
-        {
-          headers: CACHE_HEADERS,
-        },
-      ),
+      NextResponse.redirect(buildRecoveryUrl(request, 'coreui.errors.auth.contextUnavailable'), {
+        headers: CACHE_HEADERS,
+      }),
     );
   }
 
-  let destinationPath = continuation.next;
-  if (continuation.handoffId) {
-    if (accountId) {
-      const handoff = await completeHandoff(accessToken, continuation.handoffId, accountId, accountCapsule);
-      if (handoff.ok) {
-        destinationPath = handoff.builderRoute;
-        if (!handoff.replay) {
-          after(async () => {
-            try {
-              await runAccountInstanceSync({
-                accessToken,
-                accountId,
-                publicId: handoff.publicId,
-                accountCapsule,
-                live: false,
-              });
-            } catch (error) {
-              console.error('[roma session finish] handoff tokyo instance sync failed', {
-                publicId: handoff.publicId,
-                detail: error instanceof Error ? error.message : String(error),
-              });
-            }
-          });
-        }
-      } else {
-        destinationPath = appendHandoffToPath('/home', continuation.handoffId);
-      }
-    } else {
-      destinationPath = appendHandoffToPath('/home', continuation.handoffId);
-    }
-  }
-
-  const destination = new URL(destinationPath, resolveRequestOrigin(request));
+  const destination = new URL(continuation.next, resolveRequestOrigin(request));
   const response = NextResponse.redirect(destination, { headers: CACHE_HEADERS });
   return applySession(response);
 }

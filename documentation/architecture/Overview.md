@@ -178,7 +178,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 #### Bob (Pages)
 
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
-- Bob uses named same-origin routes (`/api/instance/:publicId`, `/api/ai/*`) for public/minibob surfaces only. Account-mode bootstrap/authz come from Roma host messaging and same-origin Roma account routes.
+- Bob is the account editor kernel only. Account-mode bootstrap/authz come from Roma host messaging and same-origin Roma account routes. Public demo playback belongs to Prague + Venice, not to Bob helper routes.
 
 #### Roma (Pages)
 
@@ -209,10 +209,9 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
   - Roma starter discovery is Roma-owned (`GET /api/account/widgets`, `GET /api/account/templates`); Paris no longer mounts those routes.
   - Roma widget commands stay explicit (`POST /api/account/widgets/duplicate`, `DELETE /api/account/instance/:publicId`).
   - Paris no longer mounts AI endpoints in the product path under 070A.
-  - Venice serves the public instance payload route (`GET /api/instance/:publicId`), but Tokyo-worker now assembles that public MiniBob payload directly from Tokyo live truth.
+  - Venice serves the public instance payload route (`GET /api/instance/:publicId`) for public live/demo use, assembled by Tokyo-worker from Tokyo live truth.
 - Current cloud-dev account rule:
   - Account creation is Berlin-owned; Paris no longer mounts account creation.
-  - MiniBob handoff now starts in a Roma route and completes inside Roma session finish; non-local completion still targets platform-owned accounts only.
   - Instance routing uses `publicId` prefix: `wgt_main_*` marks the instance shown first in MiniBob, `wgt_curated_*` marks other starter instances, `wgt_*_u_*` marks instances in user accounts.
 - Product-path base-config writes persist through Bob/Roma same-origin routes to Tokyo; translation refresh and published-surface sync run through explicit Roma localization/widget routes that delegate execution to Tokyo-worker instead of the save response path.
 
@@ -397,7 +396,7 @@ Non-negotiable:
 - Roma resolves selected instance from URL path (`/builder/:publicId`) and keeps that as the single active selection source.
 - Roma preloads instance + compiled payload, then opens Bob via `ck:open-editor` in message mode (`boot=message`) and waits for ack/applied/fail responses.
 
-### AI Copilot Flow (Minibob / Bob)
+### AI Copilot Flow (Current)
 
 Copilot execution is a separate, budgeted flow that never exposes provider keys to the browser.
 
@@ -409,22 +408,17 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 │    Browser UI (Bob iframe) → Roma instance-scoped copilot route         │
 │    → SanFrancisco /v1/execute                                            │
 │                                                                         │
-│  MiniBob/public:                                                        │
-│    Browser UI → Bob /api/ai/minibob/session                             │
-│    Browser UI → Bob /api/ai/widget-copilot                              │
-│    → SanFrancisco /v1/execute                                            │
-│                                                                         │
 │  Outcomes (keep/undo/CTA clicks):                                       │
-│    Browser → Roma/Bob same-origin outcome route                         │
+│    Browser → Roma same-origin outcome route                             │
 │           → POST /v1/outcome (SanFrancisco, signed)                     │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 Notes:
 
-- `envStage` is stamped into grants by the active trusted issuer path (Roma for account-mode, Bob for MiniBob) so San Francisco can index learning data by exposure stage.
+- `envStage` is stamped into grants by the active trusted issuer path (Roma on the live product path) so San Francisco can index learning data by exposure stage.
 - San Francisco stores raw interaction payloads in R2 and indexes a queryable subset in D1 (see `documentation/ai/learning.md`).
-- Deployment contract: local and cloud-dev both use `POST /api/ai/widget-copilot` as the single Copilot endpoint.
+- Deployment contract: account Builder Copilot executes through Roma instance routes, not Bob same-origin AI routes.
 
 ---
 

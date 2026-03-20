@@ -33,14 +33,12 @@ export default function RomaLoginPage() {
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => resolveNextPath(searchParams.get('next')), [searchParams]);
   const intent = useMemo(() => String(searchParams.get('intent') || '').trim(), [searchParams]);
-  const handoffId = useMemo(() => String(searchParams.get('handoffId') || '').trim().toLowerCase(), [searchParams]);
   const googleLoginHref = useMemo(() => {
     const params = new URLSearchParams();
     params.set('next', nextPath);
     if (intent) params.set('intent', intent);
-    if (handoffId) params.set('handoffId', handoffId);
     return `/api/session/login/google?${params.toString()}`;
-  }, [handoffId, intent, nextPath]);
+  }, [intent, nextPath]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
