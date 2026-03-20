@@ -9,6 +9,7 @@ import {
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
 import { readAccountBudgetUsed, type RomaUsageKv } from '../account-budget-usage';
+import { readAccountStorageBytesUsed } from '../account-storage-usage';
 import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
 import { resolveSanfranciscoBaseUrl } from '../env/sanfrancisco';
 
@@ -43,6 +44,7 @@ const OUTCOME_EVENTS = new Set([
   'ux_keep',
   'ux_undo',
 ] as const);
+const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
 
 function resolveAiGrantSecret(): string {
   const fromRequestContext = getOptionalCloudflareRequestContext<{ env?: { AI_GRANT_HMAC_SECRET?: string } }>()
@@ -98,6 +100,7 @@ async function mintGrant(grant: AIGrant, secret: string): Promise<string> {
 
 export async function issueAccountCopilotGrant(args: {
   authz: RomaAccountAuthzCapsulePayload;
+  accountCapsule?: string | null;
   agentId: string;
   mode?: 'editor' | 'ops';
   requestedProvider?: string;
@@ -138,11 +141,17 @@ export async function issueAccountCopilotGrant(args: {
       if (isBudgetEntitlementKey(policy, key)) {
         let used: number;
         try {
-          used = await readAccountBudgetUsed(
-            args.authz.accountId,
-            key,
-            args.usageKv,
-          );
+          used =
+            key === STORAGE_BYTES_BUDGET_KEY
+              ? await readAccountStorageBytesUsed({
+                  accountId: args.authz.accountId,
+                  accountCapsule: String(args.accountCapsule || '').trim(),
+                })
+              : await readAccountBudgetUsed(
+                  args.authz.accountId,
+                  key,
+                  args.usageKv,
+                );
         } catch (error) {
           return {
             ok: false,

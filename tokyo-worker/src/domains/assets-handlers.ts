@@ -46,7 +46,6 @@ import {
   roleRank,
   STORAGE_BYTES_BUDGET_KEY,
   sumAccountAssetManifestSizeBytes,
-  syncAccountStoredBytesUsage,
 } from './assets';
 
 const ACCOUNT_ASSET_NAMESPACE_PREFIX = 'assets/versions/';
@@ -207,22 +206,6 @@ async function enforceAccountStorageLimit(args: {
   }
 }
 
-async function mirrorAccountStorageUsage(
-  env: Env,
-  accountId: string,
-  manifests?: AccountAssetManifest[],
-): Promise<void> {
-  try {
-    await syncAccountStoredBytesUsage(env, accountId, manifests);
-  } catch (error) {
-    // Asset manifests remain the source of truth, but the mirror failure must be explicit.
-    console.warn('[tokyo] account storage usage mirror degraded', {
-      accountId,
-      detail: error instanceof Error ? error.message : String(error),
-    });
-  }
-}
-
 function resolveAccountAssetNamespacePrefix(accountId: string): string {
   return `${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/`;
 }
@@ -231,9 +214,8 @@ function resolveAccountAssetIdentityPrefix(accountId: string, assetId: string): 
   return `${resolveAccountAssetNamespacePrefix(accountId)}${assetId}/`;
 }
 
-function serializeAccountAssetManifest(
+function serializeAccountAssetRecord(
   manifest: AccountAssetManifest,
-  origin: string,
 ): Record<string, unknown> {
   const assetRef = String(manifest.key || '').trim();
   return {
@@ -244,6 +226,16 @@ function serializeAccountAssetManifest(
     sizeBytes: manifest.sizeBytes,
     filename: manifest.normalizedFilename,
     createdAt: manifest.createdAt,
+  };
+}
+
+function serializeResolvedAccountAsset(
+  manifest: AccountAssetManifest,
+  origin: string,
+): Record<string, unknown> {
+  const assetRef = String(manifest.key || '').trim();
+  return {
+    ...serializeAccountAssetRecord(manifest),
     url: `${origin}${buildAccountAssetVersionPath(assetRef)}`,
   };
 }
@@ -436,18 +428,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   if (!authorized.ok) return authorized.response;
   const accountAuthz = authorized.accountAuthz;
 
-  const publicIdRaw = (req.headers.get('x-public-id') || '').trim();
-  const publicId = publicIdRaw ? normalizePublicId(publicIdRaw) : null;
-  if (publicIdRaw && !publicId) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } }, { status: 422 });
-  }
-
-  const widgetTypeRaw = (req.headers.get('x-widget-type') || '').trim();
-  const widgetType = widgetTypeRaw ? normalizeWidgetType(widgetTypeRaw) : null;
-  if (widgetTypeRaw && !widgetType) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } }, { status: 422 });
-  }
-
   const filenameRaw = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
   const filenameValidation = validateUploadFilename(filenameRaw);
   if (!filenameValidation.ok) {
@@ -512,8 +492,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       env,
       accountId,
       assetId,
-      publicId,
-      widgetType,
       key,
       source,
       originalFilename: filename,
@@ -532,9 +510,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
     );
   }
 
-  await mirrorAccountStorageUsage(env, accountId);
-
-  const url = `${resolveTokyoAssetPublicBaseUrl(env, req)}${buildAccountAssetVersionPath(key)}`;
   return json(
     {
       assetId,
@@ -543,7 +518,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       assetType,
       contentType,
       sizeBytes: body.byteLength,
-      url,
       createdAt: new Date().toISOString(),
     },
     { status: 200 },
@@ -593,15 +567,37 @@ async function handleListAccountAssetMetadata(
     minRole: 'viewer',
   });
   if (authErr) return authErr;
-  const publicBaseUrl = resolveTokyoAssetPublicBaseUrl(env, req);
   const manifests = await listAccountAssetManifestsByAccount(env, accountId);
   manifests.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   const storageBytesUsed = sumAccountAssetManifestSizeBytes(manifests);
-  await mirrorAccountStorageUsage(env, accountId, manifests);
   return json({
     accountId,
     storageBytesUsed,
-    assets: manifests.map((manifest) => serializeAccountAssetManifest(manifest, publicBaseUrl)),
+    assets: manifests.map((manifest) => serializeAccountAssetRecord(manifest)),
+  });
+}
+
+async function handleGetAccountAssetUsage(
+  req: Request,
+  env: Env,
+  accountIdRaw: string,
+): Promise<Response> {
+  const accountId = String(accountIdRaw || '').trim();
+  if (!accountId || !isUuid(accountId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
+  }
+  const authErr = await authorizeAccountAssetAccess({
+    req,
+    env,
+    accountId,
+    minRole: 'viewer',
+  });
+  if (authErr) return authErr;
+
+  const storageBytesUsed = await loadAccountStoredBytesUsage(env, accountId);
+  return json({
+    accountId,
+    storageBytesUsed,
   });
 }
 
@@ -663,7 +659,7 @@ async function handleResolveAccountAssetMetadata(
       missingAssetIds.push(entry.assetId);
       continue;
     }
-    assets.push(serializeAccountAssetManifest(entry.manifest, publicBaseUrl));
+    assets.push(serializeResolvedAccountAsset(entry.manifest, publicBaseUrl));
   }
 
   return json({
@@ -866,8 +862,6 @@ async function handleDeleteAccountAsset(
     );
   }
 
-  await mirrorAccountStorageUsage(env, accountId);
-
   return json(
     {
       accountId,
@@ -883,6 +877,7 @@ export {
   handleDeleteAccountAsset,
   handleGetAccountAsset,
   handleGetAccountAssetIdentityIntegrity,
+  handleGetAccountAssetUsage,
   handleListAccountAssetMetadata,
   handleResolveAccountAssetMetadata,
   handleGetAccountAssetMirrorIntegrity,

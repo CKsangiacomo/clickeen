@@ -56,7 +56,6 @@ export function useSessionSaving(args: {
         ...current,
         isSaving: false,
         error: null,
-        instanceData: structuredClone(current.instanceData),
       };
       args.setUpsell(null);
       args.stateRef.current = nextState;

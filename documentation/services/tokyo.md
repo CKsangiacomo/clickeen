@@ -80,8 +80,7 @@ Local dev:
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
 - Local asset management does not go through `tokyo/dev-server.mjs`.
   - Roma product uploads use `/api/account/assets/upload`.
-- `tokyo/dev-server.mjs` still supports local widget uploads:
-  - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
+  - Local verification of canonical asset delivery uses `/assets/v/*`; the dev server is not a separate widget-scoped asset upload boundary.
 - `scripts/dev-up.sh` starts the local Tokyo dev server + Tokyo-worker as part of the local DevStudio operating lane, builds Dieter + i18n, seeds required local platform state through the canonical seed scripts, and verifies the local stack before completion.
 - Explicit rerun commands:
   - `pnpm dev:seed:platform`
@@ -108,7 +107,7 @@ Admin-owned repo-local l10n source overlays live under:
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
-  - `POST /__internal/assets/upload` (private Roma service-binding path; requires `x-account-id`, Roma `x-ck-authz-capsule`, optional `x-public-id`, `x-widget-type`, `x-source`)
+  - `POST /__internal/assets/upload` (private Roma service-binding path; requires `x-account-id`, Roma `x-ck-authz-capsule`, optional `x-source`)
   - `GET /__internal/assets/account/:accountId` (private Roma service-binding path; member-scoped list)
   - `POST /__internal/assets/account/:accountId/resolve` (private Roma service-binding path; resolves logical `assetId` values to canonical immutable asset reads for runtime materialization)
   - `DELETE /__internal/assets/:accountId/:assetId` (private Roma service-binding path; editor+-scoped hard delete path)
@@ -133,7 +132,8 @@ Security rule (executed):
 
 Asset-domain note:
 - Tokyo upload metadata is ownership/file-centric and stored as per-asset manifest JSON in Tokyo R2.
-- Upload/list payloads expose both logical identity (`assetId`) and canonical storage identity (`assetRef`).
+- Upload/list payloads expose inventory truth only: logical identity (`assetId`) plus canonical storage identity (`assetRef`).
+- Delivery URL is resolve-only: `/__internal/assets/account/:accountId/resolve` is the path that returns canonical `/assets/v/...` reads.
 - Tokyo runtime materialization resolves logical `assetId` values into canonical `/assets/v/...` reads before config packs are written.
 - The current repo snapshot does not persist a canonical "where used" index in Michael/Supabase.
 

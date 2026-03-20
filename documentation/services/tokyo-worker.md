@@ -22,6 +22,7 @@ Cloudflare Workers observability is the first boring production sink for Tokyo-w
 
 - `POST /__internal/assets/upload` (private Roma service-binding path)
 - `GET /__internal/assets/account/:accountId` (private Roma service-binding path; member-scoped asset manifest list)
+- `GET /__internal/assets/account/:accountId/usage` (private Roma service-binding path; manifest-authoritative storage-bytes read)
 - `POST /__internal/assets/account/:accountId/resolve` (private Roma service-binding path; runtime materialization helper)
 - `GET /assets/v/:assetRef` (public; immutable)
 - `DELETE /__internal/assets/:accountId/:assetId` (private Roma service-binding path; editor+ hard delete metadata + blobs)
@@ -33,6 +34,7 @@ Cloudflare Workers observability is the first boring production sink for Tokyo-w
 Current auth rule:
 
 - Product asset control routes execute from Roma through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. Tokyo-worker does not re-read membership/tier/account status on those paths.
+- Product asset upload is account-owned only. Tokyo-worker does not accept widget-scoped upload identity (`x-public-id` / `x-widget-type`) on that path.
 - Product render/l10n authoring control routes execute from Roma through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. The explicit instance-sync route also receives the caller's Berlin bearer so Tokyo-worker can read account locale policy/settings, but authz still comes from the capsule and Tokyo-worker does not rediscover membership/role from Berlin.
 - Shared-secret `CK_INTERNAL_SERVICE_JWT` is not part of the asset lane.
 - Local internal tool routes may use `TOKYO_DEV_JWT` only when they also send an explicit allowed `x-ck-internal-service`.
@@ -55,8 +57,8 @@ Health contract:
 Storage usage truth:
 
 - Upload enforcement uses the authoritative current stored-bytes view derived from Tokyo asset manifests.
-- `USAGE_KV` is a warm mirror for downstream account usage reads; it is not the source of truth for write authorization or storage-limit enforcement.
-- If the `USAGE_KV` mirror is unavailable, product storage enforcement still uses manifest-backed truth and must not silently allow over-limit writes.
+- Product storage reads now also use the authoritative manifest-backed stored-bytes view through `GET /__internal/assets/account/:accountId/usage`.
+- Tokyo-worker does not mirror or heal storage usage into a second store on asset read paths. Asset `GET` routes are read-only.
 
 ### Public reads
 
@@ -90,9 +92,13 @@ Current runtime contract:
 - Local `dev-up` may also use this surface once, explicitly, to repair missing saved authoring snapshots for historical curated/main rows before Roma/Bob reads need them. Editor reads never backfill on demand.
 - The saved pointer also carries editor-facing metadata needed on the normal open path (`widgetType`, `displayName`, `source`, `accountId`, `updatedAt`).
 - Bob/Roma product-path save writes this snapshot synchronously before returning success.
+- Product-path save does not read the previous saved pointer to recover sibling metadata. Roma sends the current saved-pointer metadata explicitly on save, and Tokyo-worker writes that payload directly.
+- Product-path saved-config validation is owned once at the Tokyo-worker save helper boundary. The internal route does not keep a second parallel save-validity story for the same widget payload.
 - On that same saved-config write, Tokyo-worker also computes the current localization base snapshot/fingerprint from `tokyo/widgets/{widgetType}/localization.json` and stamps that onto the saved pointer.
 - Bob/Roma product-path save does not inline l10n/live-surface convergence; explicit Tokyo-worker sync does that separately when Roma widget/localization routes request it.
 - Bob/Roma product-path account reads use this Tokyo saved snapshot as the active open/save truth.
+- `GET /__internal/renders/instances/:publicId/saved.json` is the named saved-document read boundary for Builder. If the saved pointer/config is malformed, Tokyo-worker now returns a validation failure instead of hiding that state as a fake not-found.
+- Tokyo-worker now uses that same truthful saved-document read contract across Builder-open, explicit instance sync, and account-localization state. Invalid saved state is not silently collapsed into “missing” in sibling product flows.
 - Localization overlay authoring/readback remains part of the Tokyo/Tokyo-worker l10n plane. It is no longer a Builder-localization control loop on the active account authoring path.
 - `layer=user` writes/deletes still execute on Tokyo-worker where that l10n plane is used; Roma is only the account/request boundary for those non-Builder flows.
 - Public MiniBob payload assembly also executes on Tokyo-worker from live Tokyo truth; Venice proxies that payload instead of reconstructing it locally.

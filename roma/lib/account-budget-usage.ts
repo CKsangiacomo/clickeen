@@ -4,15 +4,8 @@ export type RomaUsageKv = {
   get(key: string): Promise<string | null>;
 };
 
-const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
-const ACCOUNT_STORAGE_USAGE_PREFIX = 'usage.storage.v1';
-
 function budgetCounterKey(accountId: string, budgetKey: BudgetKey, periodKey: string): string {
   return `usage.budget.v1.${budgetKey}.${periodKey}.acct:${accountId}`;
-}
-
-function storageBudgetCounterKey(accountId: string, budgetKey: BudgetKey): string {
-  return `${ACCOUNT_STORAGE_USAGE_PREFIX}.${budgetKey}.acct:${accountId}`;
 }
 
 function currentBudgetPeriodKey(now = new Date()): string {
@@ -26,10 +19,7 @@ export async function readAccountBudgetUsed(
   budgetKey: BudgetKey,
   usageKv: RomaUsageKv | null | undefined,
 ): Promise<number> {
-  const counterKey =
-    budgetKey === STORAGE_BYTES_BUDGET_KEY
-      ? storageBudgetCounterKey(accountId, budgetKey)
-      : budgetCounterKey(accountId, budgetKey, currentBudgetPeriodKey());
+  const counterKey = budgetCounterKey(accountId, budgetKey, currentBudgetPeriodKey());
   if (!usageKv) {
     throw new Error('[Roma] Missing USAGE_KV binding');
   }

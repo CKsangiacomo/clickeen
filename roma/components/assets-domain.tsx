@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { normalizeAccountAssetRecord, type AccountAssetRecord } from '@clickeen/ck-contracts';
 import { formatBytes, formatNumber } from '../lib/format';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
@@ -37,11 +36,6 @@ type AccountAssetsListResponse = {
   accountId: string;
   storageBytesUsed?: number;
   assets: unknown[];
-};
-
-type AccountUsageSummaryResponse = {
-  accountId: string;
-  storageBytesUsed?: number;
 };
 
 type BulkItemStatus = 'queued' | 'uploading' | 'success' | 'failed';
@@ -147,22 +141,14 @@ async function requestUploadAsset(
   return normalized;
 }
 
-function upsertAsset(existing: AccountAssetRecord[] | null, next: AccountAssetRecord): AccountAssetRecord[] {
-  const without = (existing ?? []).filter((item) => item.assetRef !== next.assetRef);
-  return [next, ...without];
-}
-
 export function AssetsDomain() {
   const me = useRomaMe();
   const accountApi = useRomaAccountApi(me.data);
-  const reloadMe = me.reload;
-  const searchParams = useSearchParams();
   const singleUploadInputRef = useRef<HTMLInputElement | null>(null);
   const bulkUploadInputRef = useRef<HTMLInputElement | null>(null);
 
   const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
   const accountId = context.accountId;
-  const redirectReasonKey = useMemo(() => String(searchParams.get('reasonKey') || '').trim(), [searchParams]);
   const entitlements = me.data?.authz?.entitlements ?? null;
   const uploadSizeCapBytes = useMemo(() => {
     const raw = entitlements?.caps?.['uploads.size.max'];
@@ -192,16 +178,11 @@ export function AssetsDomain() {
       return;
     }
     setLoading(true);
-      setError(null);
+    setError(null);
     try {
-      const [assetsResponse, usageResponse] = await Promise.all([
-        accountApi.fetchRaw(`/api/account/assets`, {
-          method: 'GET',
-        }),
-        accountApi.fetchRaw(`/api/account/usage`, {
-          method: 'GET',
-        }),
-      ]);
+      const assetsResponse = await accountApi.fetchRaw(`/api/account/assets`, {
+        method: 'GET',
+      });
       const assetsPayload = (await assetsResponse.json().catch(() => null)) as
         | AccountAssetsListResponse
         | { error?: unknown }
@@ -215,26 +196,16 @@ export function AssetsDomain() {
               .map(normalizeAccountAssetRecord)
               .filter((asset): asset is AccountAssetRecord => Boolean(asset))
           : [];
-      const usagePayload = (await usageResponse.json().catch(() => null)) as
-        | AccountUsageSummaryResponse
-        | { error?: unknown }
-        | null;
       const nextStorageBytesUsed =
-        usageResponse.ok &&
-        usagePayload &&
-        typeof usagePayload === 'object' &&
-        typeof (usagePayload as AccountUsageSummaryResponse).storageBytesUsed === 'number'
-          ? Math.max(0, Math.trunc((usagePayload as AccountUsageSummaryResponse).storageBytesUsed ?? 0))
+        assetsPayload &&
+        typeof assetsPayload === 'object' &&
+        typeof (assetsPayload as AccountAssetsListResponse).storageBytesUsed === 'number'
+          ? Math.max(0, Math.trunc((assetsPayload as AccountAssetsListResponse).storageBytesUsed ?? 0))
           : null;
 
       setAssets(resolvedAssets);
       setStorageBytesUsed(nextStorageBytesUsed);
-      if (!usageResponse.ok) {
-        const reason = parseApiErrorReason(usagePayload, usageResponse.status);
-        setError(resolveAssetErrorCopy(reason, 'Storage summary is unavailable right now.'));
-      } else {
-        setError(null);
-      }
+      setError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError(resolveAssetErrorCopy(message, 'Failed to load assets. Please try again.'));
@@ -259,10 +230,7 @@ export function AssetsDomain() {
       try {
         await requestDeleteAsset(accountApi, asset.assetId, confirmInUse);
         setPendingDelete(null);
-        setAssets((prev) => (prev ? prev.filter((entry) => entry.assetRef !== asset.assetRef) : prev));
-        setStorageBytesUsed((prev) =>
-          prev == null ? null : Math.max(0, prev - Math.max(0, Math.trunc(asset.sizeBytes))),
-        );
+        await refreshAssets();
       } catch (err) {
         const typed = err as DeleteRequestError;
         if (
@@ -315,12 +283,7 @@ export function AssetsDomain() {
       setSingleUploadBusy(true);
       setSingleUploadError(null);
       try {
-        const uploaded = await requestUploadAsset(accountApi, file, 'api');
-        setAssets((prev) => upsertAsset(prev, uploaded));
-        setStorageBytesUsed((prev) =>
-          prev == null ? null : prev + Math.max(0, Math.trunc(uploaded.sizeBytes)),
-        );
-        await reloadMe();
+        await requestUploadAsset(accountApi, file, 'api');
         await refreshAssets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -329,7 +292,7 @@ export function AssetsDomain() {
         setSingleUploadBusy(false);
       }
     },
-    [accountApi, accountId, refreshAssets, reloadMe, uploadSizeCapBytes],
+    [accountApi, accountId, refreshAssets, uploadSizeCapBytes],
   );
 
   const handleSingleFileChange = useCallback(
@@ -376,11 +339,7 @@ export function AssetsDomain() {
 
         updateBulkItem(item.id, { status: 'uploading', error: null });
         try {
-          const uploaded = await requestUploadAsset(accountApi, file, 'api');
-          setAssets((prev) => upsertAsset(prev, uploaded));
-          setStorageBytesUsed((prev) =>
-            prev == null ? null : prev + Math.max(0, Math.trunc(uploaded.sizeBytes)),
-          );
+          await requestUploadAsset(accountApi, file, 'api');
           updateBulkItem(item.id, { status: 'success', error: null });
           uploadedAny = true;
         } catch (err) {
@@ -394,11 +353,10 @@ export function AssetsDomain() {
 
       setBulkUploadBusy(false);
       if (uploadedAny) {
-        await reloadMe();
         await refreshAssets();
       }
     },
-    [accountApi, accountId, refreshAssets, reloadMe, updateBulkItem, uploadSizeCapBytes],
+    [accountApi, accountId, refreshAssets, updateBulkItem, uploadSizeCapBytes],
   );
 
   const handleBulkFileChange = useCallback(
@@ -452,12 +410,6 @@ export function AssetsDomain() {
               <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
           </div>
-        ) : null}
-        {redirectReasonKey ? (
-          <p className="body-m">
-            Builder upload is blocked.{' '}
-            {resolveAssetErrorCopy(redirectReasonKey, 'Manage storage here, then retry the upload in Builder.')}
-          </p>
         ) : null}
         <p className="body-m">Stored assets: {storedAssetsLabel}</p>
         <p className="body-m">

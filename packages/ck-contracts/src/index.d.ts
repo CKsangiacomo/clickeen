@@ -41,6 +41,8 @@ export type ResolvedAccountAsset = {
   url: string;
 };
 
+export type AccountAssetHostCommand = 'list-assets' | 'resolve-assets' | 'upload-asset';
+
 export type AccountL10nPolicy = {
   v: 1;
   baseLocale: string;

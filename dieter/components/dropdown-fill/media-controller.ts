@@ -1,9 +1,13 @@
-import { normalizeAssetReferenceUrl, sameAssetReferenceUrl } from './color-utils';
+import { sameAssetReferenceUrl } from './color-utils';
 import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fill-types';
 import type { FillValue } from './fill-types';
 import {
+  dispatchAccountAssetUpsell,
   type AccountAssetRecord,
 } from '../shared/account-assets';
+import { resolveSingleAccountAsset } from '../shared/account-asset-resolve';
+
+const VIDEO_PREVIEW_FAILED_MESSAGE = 'Preview failed to load.';
 
 export type SetMediaSrcOptions = {
   commit: boolean;
@@ -34,23 +38,6 @@ function formatSizeBytes(sizeBytes: number): string {
   return `${size} B`;
 }
 
-function dispatchUpsell(root: HTMLElement, reasonKey: string): void {
-  root.dispatchEvent(
-    new CustomEvent('bob-upsell', {
-      detail: { reasonKey },
-      bubbles: true,
-    }),
-  );
-}
-
-function isUpsellReason(reasonKey: string): boolean {
-  return (
-    reasonKey === 'coreui.upsell.reason.budgetExceeded' ||
-    reasonKey === 'coreui.upsell.reason.capReached' ||
-    reasonKey === 'coreui.upsell.reason.platform.uploads'
-  );
-}
-
 function setBrowserOpen(browser: HTMLElement | null, button: HTMLButtonElement | null, open: boolean): void {
   if (browser) browser.hidden = !open;
   if (button) button.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -75,7 +62,7 @@ function filterAssetsForKind(assets: AccountAssetRecord[], kind: 'image' | 'vide
 }
 
 function syncImageHeader(state: DropdownFillState, deps: MediaControllerDeps): void {
-  if (state.imageSrc && !state.imageUnavailable) {
+  if (state.imageSrc) {
     const label = state.imageName || 'Image selected';
     deps.updateHeader(state, { text: label, muted: false, chipColor: null });
     return;
@@ -84,7 +71,7 @@ function syncImageHeader(state: DropdownFillState, deps: MediaControllerDeps): v
 }
 
 function syncVideoHeader(state: DropdownFillState, deps: MediaControllerDeps): void {
-  if (state.videoSrc && !state.videoUnavailable) {
+  if (state.videoSrc) {
     const label = state.videoName || 'Video selected';
     deps.updateHeader(state, { text: label, muted: false, chipColor: null });
     return;
@@ -93,11 +80,11 @@ function syncVideoHeader(state: DropdownFillState, deps: MediaControllerDeps): v
 }
 
 function hasAvailableImage(state: DropdownFillState): boolean {
-  return Boolean(state.imageSrc && !state.imageUnavailable);
+  return Boolean(state.imageSrc);
 }
 
 function hasAvailableVideo(state: DropdownFillState): boolean {
-  return Boolean(state.videoSrc && !state.videoUnavailable);
+  return Boolean(state.videoSrc);
 }
 
 function syncImageMediaState(
@@ -145,31 +132,6 @@ function syncVideoMediaState(
   }
 }
 
-function verifyImageAvailability(state: DropdownFillState, src: string, deps: MediaControllerDeps): void {
-  const normalizedSrc = normalizeAssetReferenceUrl(src);
-  if (!normalizedSrc) {
-    state.imageUnavailable = true;
-    if (state.mode === 'image') syncImageMediaState(state, { updateHeader: true, updateRemove: true }, deps);
-    return;
-  }
-
-  state.imageAvailabilityRequestId += 1;
-  const requestId = state.imageAvailabilityRequestId;
-  const probe = new Image();
-  const finalize = (available: boolean) => {
-    if (state.imageAvailabilityRequestId !== requestId) return;
-    if (!sameAssetReferenceUrl(state.imageSrc || '', normalizedSrc)) return;
-    const nextUnavailable = !available;
-    if (state.imageUnavailable === nextUnavailable) return;
-    state.imageUnavailable = nextUnavailable;
-    if (state.mode === 'image') syncImageMediaState(state, { updateHeader: true, updateRemove: true }, deps);
-  };
-
-  probe.addEventListener('load', () => finalize(true), { once: true });
-  probe.addEventListener('error', () => finalize(false), { once: true });
-  probe.src = normalizedSrc;
-}
-
 export function setImageSrc(
   state: DropdownFillState,
   src: string | null,
@@ -184,12 +146,6 @@ export function setImageSrc(
     state.imageObjectUrl = null;
   }
   state.imageSrc = src;
-  if (!src) {
-    state.imageUnavailable = false;
-    state.imageAvailabilityRequestId += 1;
-  } else if (!sameAssetReferenceUrl(src, previousSrc ?? '')) {
-    state.imageUnavailable = false;
-  }
   if (opts.commit) {
     const assetId = String(state.imageAssetId || '').trim();
     const fill: FillValue = assetId
@@ -205,9 +161,6 @@ export function setImageSrc(
         }
       : { type: 'none' };
     deps.setInputValue(state, fill, true);
-  }
-  if (src) {
-    verifyImageAvailability(state, src, deps);
   }
   syncImageMediaState(state, { updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove }, deps);
 }
@@ -226,11 +179,6 @@ export function setVideoSrc(
     state.videoObjectUrl = null;
   }
   state.videoSrc = src;
-  if (!src) {
-    state.videoUnavailable = false;
-  } else if (!sameAssetReferenceUrl(src, previousSrc ?? '')) {
-    state.videoUnavailable = false;
-  }
   if (opts.commit) {
     const assetId = String(state.videoAssetId || '').trim();
     const fill: FillValue = assetId
@@ -380,8 +328,7 @@ async function handleAssetUpload(args: {
     setBrowserOpen(args.state.videoBrowser, args.state.videoChooseButton, false);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
-    if (isUpsellReason(message)) {
-      dispatchUpsell(args.state.root, message);
+    if (dispatchAccountAssetUpsell(args.state.root, message)) {
       return;
     }
     setAssetPanelMessage(args.kind === 'image' ? args.state.imageMessage : args.state.videoMessage, message);
@@ -397,10 +344,8 @@ function commitImageAssetSelection(
   commit: boolean,
   deps: MediaControllerDeps,
 ): void {
-  state.imageResolveRequestId += 1;
   state.imageAssetId = assetId;
   state.imageName = filename;
-  state.imageUnavailable = false;
   setAssetPanelMessage(state.imageMessage, '');
   setImageSrc(state, null, { commit }, deps);
   void resolveImageAsset(state, deps);
@@ -413,75 +358,59 @@ function commitVideoAssetSelection(
   commit: boolean,
   deps: MediaControllerDeps,
 ): void {
-  state.videoResolveRequestId += 1;
   state.videoAssetId = assetId;
   state.videoName = filename;
-  state.videoUnavailable = false;
   setAssetPanelMessage(state.videoMessage, '');
   setVideoSrc(state, null, { commit }, deps);
   void resolveVideoAsset(state, deps);
 }
 
 export async function resolveImageAsset(state: DropdownFillState, deps: MediaControllerDeps): Promise<void> {
-  const assetId = String(state.imageAssetId || '').trim();
-  const requestId = state.imageResolveRequestId;
-  setAssetPanelMessage(state.imageMessage, '');
-  if (!assetId) return;
-
-  try {
-    const { assetsById, missingAssetIds } = await state.accountAssets.resolveAssets([assetId]);
-    if (state.imageResolveRequestId !== requestId || String(state.imageAssetId || '').trim() !== assetId) return;
-    if (missingAssetIds.includes(assetId)) {
-      state.imageUnavailable = true;
+  return resolveSingleAccountAsset({
+    accountAssets: state.accountAssets,
+    getAssetId: () => String(state.imageAssetId || '').trim(),
+    beginRequest: () => {
+      state.imageResolveRequestId += 1;
+      return state.imageResolveRequestId;
+    },
+    isCurrent: (requestId, assetId) =>
+      state.imageResolveRequestId === requestId && String(state.imageAssetId || '').trim() === assetId,
+    onStart: () => setAssetPanelMessage(state.imageMessage, ''),
+    onMissing: () => {
       setAssetPanelMessage(state.imageMessage, 'Asset unavailable.');
       setImageSrc(state, null, { commit: false }, deps);
-      return;
-    }
-    const asset = assetsById.get(assetId);
-    if (!asset) {
-      setAssetPanelMessage(state.imageMessage, 'Asset unavailable.');
-      setImageSrc(state, null, { commit: false }, deps);
-      return;
-    }
-    setImageSrc(state, asset.url, { commit: false }, deps);
-  } catch (error) {
-    if (state.imageResolveRequestId !== requestId || String(state.imageAssetId || '').trim() !== assetId) return;
-    setAssetPanelMessage(
-      state.imageMessage,
-      error instanceof Error ? error.message : 'coreui.errors.db.readFailed',
-    );
-  }
+    },
+    onResolved: (asset) => {
+      setImageSrc(state, asset.url, { commit: false }, deps);
+    },
+    onError: (message) => {
+      setAssetPanelMessage(state.imageMessage, message);
+    },
+  });
 }
 
 export async function resolveVideoAsset(state: DropdownFillState, deps: MediaControllerDeps): Promise<void> {
-  const assetId = String(state.videoAssetId || '').trim();
-  const requestId = state.videoResolveRequestId;
-  setAssetPanelMessage(state.videoMessage, '');
-  if (!assetId) return;
-
-  try {
-    const { assetsById, missingAssetIds } = await state.accountAssets.resolveAssets([assetId]);
-    if (state.videoResolveRequestId !== requestId || String(state.videoAssetId || '').trim() !== assetId) return;
-    if (missingAssetIds.includes(assetId)) {
-      state.videoUnavailable = true;
+  return resolveSingleAccountAsset({
+    accountAssets: state.accountAssets,
+    getAssetId: () => String(state.videoAssetId || '').trim(),
+    beginRequest: () => {
+      state.videoResolveRequestId += 1;
+      return state.videoResolveRequestId;
+    },
+    isCurrent: (requestId, assetId) =>
+      state.videoResolveRequestId === requestId && String(state.videoAssetId || '').trim() === assetId,
+    onStart: () => setAssetPanelMessage(state.videoMessage, ''),
+    onMissing: () => {
       setAssetPanelMessage(state.videoMessage, 'Asset unavailable.');
       setVideoSrc(state, null, { commit: false }, deps);
-      return;
-    }
-    const asset = assetsById.get(assetId);
-    if (!asset) {
-      setAssetPanelMessage(state.videoMessage, 'Asset unavailable.');
-      setVideoSrc(state, null, { commit: false }, deps);
-      return;
-    }
-    setVideoSrc(state, asset.url, { commit: false }, deps);
-  } catch (error) {
-    if (state.videoResolveRequestId !== requestId || String(state.videoAssetId || '').trim() !== assetId) return;
-    setAssetPanelMessage(
-      state.videoMessage,
-      error instanceof Error ? error.message : 'coreui.errors.db.readFailed',
-    );
-  }
+    },
+    onResolved: (asset) => {
+      setVideoSrc(state, asset.url, { commit: false }, deps);
+    },
+    onError: (message) => {
+      setAssetPanelMessage(state.videoMessage, message);
+    },
+  });
 }
 
 export function installImageHandlers(state: DropdownFillState, deps: MediaControllerDeps): void {
@@ -531,16 +460,13 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
     state.videoPreview.addEventListener('error', () => {
       const currentSrc = state.videoPreview?.currentSrc || state.videoPreview?.src || '';
       if (!state.videoSrc || !sameAssetReferenceUrl(currentSrc, state.videoSrc)) return;
-      if (state.videoUnavailable) return;
-      state.videoUnavailable = true;
-      if (state.mode === 'video') syncVideoMediaState(state, { updateHeader: true, updateRemove: true }, deps);
+      setAssetPanelMessage(state.videoMessage, VIDEO_PREVIEW_FAILED_MESSAGE);
     });
     state.videoPreview.addEventListener('loadeddata', () => {
       const currentSrc = state.videoPreview?.currentSrc || state.videoPreview?.src || '';
       if (!state.videoSrc || !sameAssetReferenceUrl(currentSrc, state.videoSrc)) return;
-      if (!state.videoUnavailable) return;
-      state.videoUnavailable = false;
-      if (state.mode === 'video') syncVideoMediaState(state, { updateHeader: true, updateRemove: true }, deps);
+      if ((state.videoMessage?.textContent || '').trim() !== VIDEO_PREVIEW_FAILED_MESSAGE) return;
+      setAssetPanelMessage(state.videoMessage, '');
     });
   }
   if (videoUploadButton && videoFileInput) {

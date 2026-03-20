@@ -220,8 +220,6 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     imageAssetId: null,
     imageName: null,
     imageObjectUrl: null,
-    imageUnavailable: false,
-    imageAvailabilityRequestId: 0,
     imageResolveRequestId: 0,
     videoPanel,
     videoPreview,
@@ -238,7 +236,6 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     videoPosterAssetId: null,
     videoName: null,
     videoObjectUrl: null,
-    videoUnavailable: false,
     videoResolveRequestId: 0,
     allowedModes,
     mode,
@@ -517,7 +514,6 @@ function syncFromValue(state: DropdownFillState, raw: string) {
   }
 
   if (fill.type === 'image') {
-    state.imageResolveRequestId += 1;
     state.imageAssetId = readImageAssetId(fill);
     state.imageName = readImageName(fill);
     setImageSrc(state, null, { commit: false });
@@ -526,7 +522,6 @@ function syncFromValue(state: DropdownFillState, raw: string) {
   }
 
   if (fill.type === 'video') {
-    state.videoResolveRequestId += 1;
     state.videoAssetId = readVideoAssetId(fill);
     state.videoPosterAssetId = readVideoPosterAssetId(fill);
     state.videoName = readVideoName(fill);

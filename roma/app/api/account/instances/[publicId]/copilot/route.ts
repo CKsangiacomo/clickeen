@@ -71,6 +71,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const issued = await issueAccountCopilotGrant({
       authz: current.value.authzPayload,
+      accountCapsule: current.value.authzToken,
       agentId: requestedAgentId,
       mode: 'ops',
       requestedProvider: provider,

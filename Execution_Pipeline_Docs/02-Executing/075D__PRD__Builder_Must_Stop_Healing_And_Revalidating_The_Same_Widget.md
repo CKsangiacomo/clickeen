@@ -1,6 +1,6 @@
 # 075D - Builder Must Stop Healing And Revalidating The Same Widget
 
-Status: READY FOR REVIEW
+Status: EXECUTED
 Date: 2026-03-19
 Owner: Product Dev Team
 Priority: P0
@@ -216,7 +216,8 @@ The open path must remain honest about saved-document reality.
 - `bob/lib/session/useSessionSaving.ts`
 - `bob/lib/session/useWidgetSession.tsx`
 - `roma/lib/account-instance-direct.ts`
-- `roma/lib/widget-config-contract.ts`
+- `tokyo-worker/src/routes/internal-render-routes.ts`
+- `tokyo-worker/src/domains/render.ts`
 - any shared contract helpers used by both Bob and Roma
 
 ### Toxic LOCs and concepts that will be removed from the system
@@ -248,3 +249,7 @@ The open path must remain honest about saved-document reality.
 - invalid widget data fails visibly instead of being normalized into ambiguity
 - hot edit/preview paths are no longer carrying persisted-document repair logic
 - customers can trust what Builder is showing and what Save means
+- Tokyo no longer keeps one saved-document truth for Builder open and a second null-collapsing truth for sibling sync/localization flows
+- product-path save no longer reads backward into the previous saved pointer to recover sibling metadata in Tokyo
+- Tokyo product-path save no longer validates the same widget payload twice in parallel route/helper layers
+- Roma no longer keeps a successful-200 saved-document guard after Tokyo has already passed its named read boundary

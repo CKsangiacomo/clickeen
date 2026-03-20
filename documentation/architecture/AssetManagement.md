@@ -45,6 +45,7 @@ Tokyo-worker authoritative endpoints:
 - `POST /__internal/assets/upload` (private Roma service-binding path)
 - `GET /assets/v/:assetRef`
 - `GET /__internal/assets/account/:accountId` (private Roma service-binding path)
+- `GET /__internal/assets/account/:accountId/usage` (private Roma service-binding path)
 - `POST /__internal/assets/account/:accountId/resolve` (private Roma service-binding path)
 - `DELETE /__internal/assets/:accountId/:assetId` (private Roma service-binding path)
 - `GET /assets/integrity/:accountId` (dev/internal)
@@ -60,6 +61,12 @@ Rules:
 - normal Roma product routes do not require browser-supplied `accountId`
 - Roma resolves the current account server-side from the signed current-account authz capsule
 - explicit `:accountId` route shapes, if they still exist anywhere, are not part of the normal Roma customer shell
+- hosted Builder installs one explicit asset transport with three concerns only: `list`, `resolve`, and `upload`
+- Bob delegates those asset concerns to Roma through one hosted asset-command seam (`list-assets`, `resolve-assets`, `upload-asset`) and Roma handles those commands directly against the current-account routes
+- authoring missing/not-missing truth comes from `POST /api/account/assets/resolve` via Tokyo-worker, not from local preview probes inside Dieter/Bob
+- Builder asset controls use one shared resolve helper to interpret missing-state and one shared upsell emitter for asset-denial UI events
+- preview render failures in Builder are non-authoritative UI errors only
+- storage-used truth for Assets, `/api/account/usage`, and storage-budget checks comes from Tokyo-worker asset manifests through the asset authority, not a mirrored KV counter
 
 ---
 
@@ -91,8 +98,8 @@ Rules:
 | Surface | Owns |
 |---|---|
 | Bob | Upload trigger + editor ref assignment |
-| Roma | Asset inventory UX (list/upload/bulk-upload/delete, limits visibility) + current-account command validation |
-| Tokyo-worker | Asset storage/read/delete/integrity + runtime asset ref materialization/validation |
+| Roma | Asset inventory UX (list/upload/bulk-upload/delete, limits visibility, storage-bytes display from `/api/account/assets`) + current-account command validation |
+| Tokyo-worker | Asset storage/read/delete/integrity + storage-used truth + runtime asset ref materialization/validation |
 | Venice | Static serving of referenced bytes |
 
 ---

@@ -143,14 +143,20 @@ export async function handleSyncAccountInstance(
   }
 
   const saved = await readSavedRenderConfig({ env, publicId, accountId });
-  if (!saved) {
+  if (!saved.ok && saved.kind === 'NOT_FOUND') {
     return json(
-      { error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' } },
+      { error: { kind: 'NOT_FOUND', reasonKey: saved.reasonKey } },
       { status: 404 },
     );
   }
+  if (!saved.ok) {
+    return json(
+      { error: { kind: 'VALIDATION', reasonKey: saved.reasonKey } },
+      { status: 422 },
+    );
+  }
 
-  const baseFingerprint = saved.pointer.l10n?.baseFingerprint ?? null;
+  const baseFingerprint = saved.value.pointer.l10n?.baseFingerprint ?? null;
   if (!baseFingerprint) {
     return json(
       {
@@ -172,7 +178,7 @@ export async function handleSyncAccountInstance(
     }),
     loadWidgetLocalizationAllowlist({
       env,
-      widgetType: saved.pointer.widgetType,
+      widgetType: saved.value.pointer.widgetType,
     }),
     loadBaseTextPack({
       env,
@@ -219,8 +225,8 @@ export async function handleSyncAccountInstance(
       ? await generateLocaleOpsWithSanfrancisco({
           env,
           policyProfile: accountAuthz.profile,
-          widgetType: saved.pointer.widgetType,
-          config: saved.config,
+          widgetType: saved.value.pointer.widgetType,
+          config: saved.value.config,
           allowlist: localizationAllowlist.map((entry) => ({
             path: entry.path,
             type: entry.type === 'richtext' ? 'richtext' : 'string',
@@ -238,7 +244,7 @@ export async function handleSyncAccountInstance(
     role: accountAuthz.role,
     entitlements: accountAuthz.entitlements ?? null,
   });
-  const seoGeoConfig = asRecord(saved.config.seoGeo);
+  const seoGeoConfig = asRecord(saved.value.config.seoGeo);
   const seoGeoEnabled =
     live &&
     policyResolved.flags['embed.seoGeo.enabled'] === true &&
@@ -253,8 +259,8 @@ export async function handleSyncAccountInstance(
     const userOps = locale === baseLocale ? [] : (existing?.userOps ?? []);
 
     const mirror = buildLocaleMirrorPayload({
-      widgetType: saved.pointer.widgetType,
-      baseConfig: saved.config,
+      widgetType: saved.value.pointer.widgetType,
+      baseConfig: saved.value.config,
       baseLocale,
       locale,
       baseTextPack,
@@ -269,7 +275,7 @@ export async function handleSyncAccountInstance(
       layer: 'locale',
       layerKey: locale,
       baseFingerprint,
-      baseUpdatedAt: saved.pointer.updatedAt,
+      baseUpdatedAt: saved.value.pointer.updatedAt,
       ops: baseOps,
       textPack: mirror.textPack,
       ...(mirror.metaPack ? { metaPack: mirror.metaPack } : {}),
@@ -281,7 +287,7 @@ export async function handleSyncAccountInstance(
     const runtimeConfigPack = await materializeRuntimeConfigPack({
       env,
       accountId,
-      config: saved.config,
+      config: saved.value.config,
     });
     configFp = await (async () => {
       const bytes = new TextEncoder().encode(prettyStableJson(runtimeConfigPack));
@@ -292,7 +298,7 @@ export async function handleSyncAccountInstance(
         v: 1,
         kind: 'write-config-pack',
         publicId,
-        widgetType: saved.pointer.widgetType,
+        widgetType: saved.value.pointer.widgetType,
         configFp: nextConfigFp,
         configPack: runtimeConfigPack,
       });
@@ -309,7 +315,7 @@ export async function handleSyncAccountInstance(
       kind: 'sync-live-surface',
       publicId,
       live: true,
-      widgetType: saved.pointer.widgetType,
+      widgetType: saved.value.pointer.widgetType,
       configFp,
       localePolicy,
       seoGeo: seoGeoEnabled,

@@ -6,10 +6,17 @@ import {
   type ResolvedAccountAsset,
 } from '@clickeen/ck-contracts';
 
-export type AccountAssetTransport = (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-) => Promise<Response>;
+export type AccountAssetsTransport = {
+  listAssets: () => Promise<Response>;
+  resolveAssets: (assetIds: string[]) => Promise<Response>;
+  uploadAsset: (file: File, source?: string) => Promise<Response>;
+};
+
+const ACCOUNT_ASSET_UPSELL_REASONS = new Set([
+  'coreui.upsell.reason.budgetExceeded',
+  'coreui.upsell.reason.capReached',
+  'coreui.upsell.reason.platform.uploads',
+]);
 
 export type AccountAssetsClient = {
   listAssets: () => Promise<AccountAssetRecord[]>;
@@ -61,14 +68,26 @@ function resolveApiErrorReason(payload: unknown, status: number, fallback: strin
   return fallback || `HTTP_${status}`;
 }
 
-export function createAccountAssetsClient(fetchRoute: AccountAssetTransport): AccountAssetsClient {
+export function isAccountAssetUpsellReason(reasonKey: unknown): boolean {
+  return ACCOUNT_ASSET_UPSELL_REASONS.has(asTrimmedString(reasonKey));
+}
+
+export function dispatchAccountAssetUpsell(root: HTMLElement, reasonKey: unknown): boolean {
+  const normalizedReasonKey = asTrimmedString(reasonKey);
+  if (!isAccountAssetUpsellReason(normalizedReasonKey)) return false;
+  root.dispatchEvent(
+    new CustomEvent('bob-upsell', {
+      detail: { reasonKey: normalizedReasonKey },
+      bubbles: true,
+    }),
+  );
+  return true;
+}
+
+export function createAccountAssetsClient(transport: AccountAssetsTransport): AccountAssetsClient {
   return {
     async listAssets(): Promise<AccountAssetRecord[]> {
-      const response = await fetchRoute('/api/account/assets', {
-        method: 'GET',
-        cache: 'no-store',
-        headers: { accept: 'application/json' },
-      });
+      const response = await transport.listAssets();
       const payload = (await response.json().catch(() => null)) as AccountAssetsListResponse | null;
       if (!response.ok) {
         throw new Error(resolveApiErrorReason(payload, response.status, 'coreui.errors.db.readFailed'));
@@ -94,15 +113,7 @@ export function createAccountAssetsClient(fetchRoute: AccountAssetTransport): Ac
         return { assetsById: new Map(), missingAssetIds: [] };
       }
 
-      const response = await fetchRoute('/api/account/assets/resolve', {
-        method: 'POST',
-        cache: 'no-store',
-        headers: {
-          accept: 'application/json',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({ assetIds }),
-      });
+      const response = await transport.resolveAssets(assetIds);
       const payload = (await response.json().catch(() => null)) as AccountAssetsResolveResponse | null;
       if (!response.ok) {
         throw new Error(resolveApiErrorReason(payload, response.status, 'coreui.errors.db.readFailed'));
@@ -130,17 +141,7 @@ export function createAccountAssetsClient(fetchRoute: AccountAssetTransport): Ac
         throw new Error('coreui.errors.payload.empty');
       }
 
-      const response = await fetchRoute('/api/account/assets/upload', {
-        method: 'POST',
-        cache: 'no-store',
-        headers: {
-          accept: 'application/json',
-          'content-type': file.type || 'application/octet-stream',
-          'x-filename': file.name || 'upload.bin',
-          'x-source': source,
-        },
-        body: file,
-      });
+      const response = await transport.uploadAsset(file, source);
       const payload = (await response.json().catch(() => null)) as AccountAssetUploadResponse | null;
       if (!response.ok) {
         throw new Error(resolveApiErrorReason(payload, response.status, 'coreui.errors.assets.uploadFailed'));

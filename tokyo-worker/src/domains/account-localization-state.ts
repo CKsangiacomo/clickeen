@@ -161,8 +161,8 @@ async function loadSavedL10nState(args: {
   accountId: string;
 }): Promise<AccountLocalizationBaseContext['saved']> {
   const saved = await readSavedRenderConfig(args);
-  if (!saved) {
-    throw new Error('tokyo_saved_not_found');
+  if (!saved.ok) {
+    throw new Error(saved.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : 'tokyo_saved_invalid');
   }
 
   const livePayload = normalizeLiveRenderPointer(
@@ -171,20 +171,20 @@ async function loadSavedL10nState(args: {
     ),
   );
 
-  const baseFingerprint = saved.pointer.l10n?.baseFingerprint ?? null;
-  if (!saved.pointer.widgetType || !saved.pointer.updatedAt || !baseFingerprint) {
+  const baseFingerprint = saved.value.pointer.l10n?.baseFingerprint ?? null;
+  if (!saved.value.pointer.widgetType || !saved.value.pointer.updatedAt || !baseFingerprint) {
     throw new Error('tokyo_saved_invalid');
   }
 
   return {
-    config: saved.config,
-    widgetType: saved.pointer.widgetType,
-    updatedAt: saved.pointer.updatedAt,
+    config: saved.value.config,
+    widgetType: saved.value.pointer.widgetType,
+    updatedAt: saved.value.pointer.updatedAt,
     published: Boolean(livePayload),
     seoGeoLive: Boolean(
       livePayload?.seoGeo?.metaLiveBase && livePayload?.seoGeo?.metaPacksBase,
     ),
-    pointer: saved.pointer,
+    pointer: saved.value.pointer,
   };
 }
 

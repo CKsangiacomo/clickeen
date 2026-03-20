@@ -54,7 +54,7 @@ function applyPublicCors(headers: Headers): void {
   headers.set('access-control-allow-methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
   headers.set(
     'access-control-allow-headers',
-    'authorization, content-type, x-account-id, x-filename, x-public-id, x-widget-type, x-source, idempotency-key, x-tokyo-l10n-bridge, x-ck-internal-service',
+    'authorization, content-type, x-account-id, x-filename, x-source, idempotency-key, x-tokyo-l10n-bridge, x-ck-internal-service',
   );
 }
 

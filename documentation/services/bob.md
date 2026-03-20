@@ -136,6 +136,7 @@ Core base-config lifecycle per open session:
 1. One core instance load performed by the host in account message boot before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
 3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instance/:publicId` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
+   Save success clears the save/error state and keeps the same in-memory widget truth; Bob does not swap in a server-returned replacement copy of the widget.
 4. Bob opens the saved document it was given. It does not merge missing widget defaults into account-hosted config on load. If Roma/Tokyo surface malformed saved widget payload, Builder fails open at that boundary instead of healing or masking the bad row.
 
 Within Bob, explicit save ownership stays in `useSessionSaving.ts`. Builder no longer mounts a localization overlay/session subsystem on the active account editing path.
@@ -301,10 +302,10 @@ Asset authoring is restored on the active account Builder path through one curre
   - `GET /api/account/assets`
   - `POST /api/account/assets/resolve`
   - `POST /api/account/assets/upload`
-- In hosted Builder, Bob installs one explicit Dieter asset transport and delegates those exact routes through the host account-command seam. Bob does not expose a hosted asset bridge, dataset fallback, consumer-owned route selection logic, or ambient fetch patching.
+- In hosted Builder, Bob installs one explicit Dieter asset transport with three methods only: `listAssets`, `resolveAssets`, and `uploadAsset`. Bob delegates those concerns through one hosted asset-command seam: `list-assets`, `resolve-assets`, and `upload-asset`. Bob does not expose a hosted asset bridge, dataset fallback, consumer-owned route selection logic, route-table round-tripping, or ambient fetch patching.
 - Authored media identity stays logical (`assetId`, optional `posterAssetId`). Bob/Dieter resolve those ids through the Roma account asset boundary for editor preview and assignment.
 - `dropdown-upload` is asset-backed only. It requires `meta-path`, persists logical asset identity in meta only, and uses resolved URLs for preview without writing the uploaded delivery URL back into widget state.
-- Asset denial now has one Builder story: local `bob-upsell`. Builder no longer emits a parallel host-only asset denial event.
+- Asset resolve now uses one shared Builder helper, and asset denial now uses one shared `bob-upsell` emitter path. Builder no longer emits a parallel host-only asset denial event.
 - Assets remain immutable on this path. Upload creates a new asset identity, canonical `/assets/v/:assetRef` delivery stays aggressively cacheable, and delete is the only destructive lifecycle action.
 
 Operational baseline (local smoke, 2026-02-17):
@@ -314,7 +315,7 @@ Operational baseline (local smoke, 2026-02-17):
 
 Editor UX note:
 
-- `dropdown-upload` now surfaces an inline preview error when a resolved asset preview is unavailable (for example stale/deleted asset identity), so missing assets are explicit instead of appearing as a silent blank preview.
+- Missing asset truth comes from Roma/Tokyo-worker resolve only. Local preview render failures remain inline UI errors and do not relabel the asset as deleted/missing.
 
 ---
 

@@ -3,8 +3,6 @@ import {
   getAccountInstanceCoreRow,
   renameAccountInstanceRow,
 } from '@roma/lib/michael';
-import { updateSavedPointerMetadataInTokyo } from '@roma/lib/account-instance-direct';
-import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -82,7 +80,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const previousDisplayName = currentInstance.row?.displayName || 'Untitled widget';
   const result = await renameAccountInstanceRow({
     accountId,
     publicId,
@@ -108,45 +105,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
       NextResponse.json(
         { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' } },
         { status: 404 },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  try {
-    await updateSavedPointerMetadataInTokyo({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      tokyoAccessToken: current.value.accessToken,
-      accountId,
-      publicId,
-      displayName: result.row.displayName || 'Untitled widget',
-    });
-  } catch (error) {
-    try {
-      await renameAccountInstanceRow({
-        accountId,
-        publicId,
-        displayName: previousDisplayName,
-        berlinAccessToken: current.value.accessToken,
-      });
-    } catch (rollbackError) {
-      console.error('[roma account rename current route] failed to rollback Michael rename after Tokyo failure', {
-        publicId,
-        detail: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
-      });
-    }
-
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail: error instanceof Error ? error.message : String(error),
-          },
-        },
-        { status: 502 },
       ),
       current.value.setCookies,
     );

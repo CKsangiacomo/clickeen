@@ -1,6 +1,7 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 import { isUuid } from '@clickeen/ck-contracts';
-import type { AccountAssetsClient } from '../shared/account-assets';
+import { dispatchAccountAssetUpsell, type AccountAssetsClient } from '../shared/account-assets';
+import { resolveSingleAccountAsset } from '../shared/account-asset-resolve';
 
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
@@ -41,7 +42,8 @@ type DropdownUploadState = {
 };
 
 const states = new Map<HTMLElement, DropdownUploadState>();
-const ASSET_UNAVAILABLE_MESSAGE = 'Asset URL is unavailable. Upload a new file to restore preview.';
+const MISSING_ASSET_MESSAGE = 'Asset unavailable. Upload a new file to restore it.';
+const PREVIEW_FAILED_MESSAGE = 'Preview failed to load.';
 const META_PATH_REQUIRED_MESSAGE = 'Asset-backed dropdown-upload requires meta-path.';
 // IMPORTANT: keep this at module scope.
 // DevStudio (and some Bob flows) may call hydrators more than once over the same DOM.
@@ -179,22 +181,18 @@ function installHandlers(state: DropdownUploadState) {
   }
 
   const handlePreviewMediaError = (kind: Kind, currentSrc: string) => {
-    const raw = state.input.value || '';
-    const expected = extractPrimaryUrl(raw) || '';
+    const expected = state.previewPanel.dataset.previewUrl || '';
     if (!expected) return;
     if (state.previewPanel.dataset.kind !== kind) return;
     if (!sameAssetUrl(currentSrc, expected)) return;
-    const fallbackLabel = state.previewName.textContent?.trim() || 'Asset unavailable';
-    setHeaderWithFile(state, fallbackLabel, true);
-    setError(state, ASSET_UNAVAILABLE_MESSAGE);
+    setError(state, PREVIEW_FAILED_MESSAGE);
   };
 
   const handlePreviewMediaReady = (kind: Kind, currentSrc: string) => {
-    const raw = state.input.value || '';
-    const expected = extractPrimaryUrl(raw) || '';
+    const expected = state.previewPanel.dataset.previewUrl || '';
     if (!expected || state.previewPanel.dataset.kind !== kind) return;
     if (!sameAssetUrl(currentSrc, expected)) return;
-    if ((state.previewError.textContent || '').trim() === ASSET_UNAVAILABLE_MESSAGE) {
+    if ((state.previewError.textContent || '').trim() === PREVIEW_FAILED_MESSAGE) {
       clearError(state);
     }
   };
@@ -217,20 +215,6 @@ function installHandlers(state: DropdownUploadState) {
     state.fileInput.value = '';
     state.fileInput.click();
   };
-
-  const dispatchUpsell = (reasonKey: string) => {
-    state.root.dispatchEvent(
-      new CustomEvent('bob-upsell', {
-        detail: { reasonKey },
-        bubbles: true,
-      }),
-    );
-  };
-
-  const isUpsellReason = (reasonKey: string) =>
-    reasonKey === 'coreui.upsell.reason.budgetExceeded' ||
-    reasonKey === 'coreui.upsell.reason.capReached' ||
-    reasonKey === 'coreui.upsell.reason.platform.uploads';
 
   const uploadSelectedFile = async (file: File) => {
     const validationError = validateFileSelection(state, file);
@@ -255,8 +239,7 @@ function installHandlers(state: DropdownUploadState) {
       setFileKey(state, 'transparent', true);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
-      if (isUpsellReason(message)) {
-        dispatchUpsell(message);
+      if (dispatchAccountAssetUpsell(state.root, message)) {
       } else {
         setError(state, message);
       }
@@ -354,21 +337,13 @@ function readMeta(state: DropdownUploadState): UploadMeta | null {
   }
 }
 
-function extractPrimaryUrl(raw: string): string | null {
-  const v = (raw || '').trim();
-  if (!v) return null;
-  if (/^https?:\/\//i.test(v) || v.startsWith('/')) return v;
-  const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-  if (m && m[2]) {
-    const extracted = m[2].trim();
-    if (/^https?:\/\//i.test(extracted) || extracted.startsWith('/')) return extracted;
-  }
-  return null;
-}
-
 function readMetaAssetId(meta: UploadMeta | null): string {
   const assetId = typeof meta?.assetId === 'string' ? meta.assetId.trim() : '';
   return isUuid(assetId) ? assetId : '';
+}
+
+function invalidateResolve(state: DropdownUploadState): void {
+  state.resolveRequestId += 1;
 }
 
 function sameAssetUrl(leftRaw: string, rightRaw: string): boolean {
@@ -389,16 +364,17 @@ function normalizeUrlForCompare(raw: string): string {
   }
 }
 
-function previewFromUrl(state: DropdownUploadState, raw: string, name: string, kindName: string) {
-  const url = extractPrimaryUrl(raw);
-  if (!url) return;
+function previewFromResolvedUrl(state: DropdownUploadState, url: string, name: string, kindName: string) {
+  const normalizedUrl = String(url || '').trim();
+  if (!normalizedUrl) return;
   const ext = (guessExtFromName(kindName) || '').toLowerCase();
   const kind = classifyByNameAndType(kindName || 'file', '').kind;
-  setPreview(state, { kind, previewUrl: url, name, ext, hasFile: true });
+  setPreview(state, { kind, previewUrl: normalizedUrl, name, ext, hasFile: true });
 }
 
 function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta | null = null) {
   if (!state.metaHasPath) {
+    invalidateResolve(state);
     setHeaderWithFile(state, 'Invalid control', true);
     setError(state, META_PATH_REQUIRED_MESSAGE);
     setPreview(state, { kind: 'empty', previewUrl: undefined, name: '', ext: '', hasFile: false });
@@ -414,6 +390,7 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   const currentAssetId = assetId;
 
   if (!key && !currentAssetId && !metaName) {
+    invalidateResolve(state);
     clearError(state);
     setHeaderEmpty(state, placeholder);
     state.root.dataset.hasFile = 'false';
@@ -444,33 +421,35 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
     ext: guessExtFromName(displayName).toLowerCase(),
     hasFile: true,
   });
+  invalidateResolve(state);
   setHeaderWithFile(state, displayName, true);
   setError(state, 'Missing asset identity. Upload a new file to restore it.');
 }
 
 async function resolveStoredAssetPreview(state: DropdownUploadState, assetId: string, displayName: string) {
-  state.resolveRequestId += 1;
-  const requestId = state.resolveRequestId;
-  try {
-    const { assetsById, missingAssetIds } = await state.accountAssets.resolveAssets([assetId]);
-    if (state.resolveRequestId !== requestId) return;
-    if (missingAssetIds.includes(assetId)) {
-      setError(state, ASSET_UNAVAILABLE_MESSAGE);
+  return resolveSingleAccountAsset({
+    accountAssets: state.accountAssets,
+    getAssetId: () => assetId,
+    beginRequest: () => {
+      state.resolveRequestId += 1;
+      return state.resolveRequestId;
+    },
+    isCurrent: (requestId, currentAssetId) => {
+      if (state.resolveRequestId !== requestId) return false;
+      return readMetaAssetId(readMeta(state)) === currentAssetId;
+    },
+    onMissing: () => {
+      setError(state, MISSING_ASSET_MESSAGE);
       setHeaderWithFile(state, displayName || 'Asset unavailable', true);
-      return;
-    }
-    const resolved = assetsById.get(assetId);
-    if (!resolved) {
-      setError(state, ASSET_UNAVAILABLE_MESSAGE);
-      setHeaderWithFile(state, displayName || 'Asset unavailable', true);
-      return;
-    }
-    clearError(state);
-    previewFromUrl(state, resolved.url, displayName, displayName);
-  } catch (error) {
-    if (state.resolveRequestId !== requestId) return;
-    setError(state, error instanceof Error ? error.message : 'coreui.errors.db.readFailed');
-  }
+    },
+    onResolved: (resolved) => {
+      clearError(state);
+      previewFromResolvedUrl(state, resolved.url, displayName, displayName);
+    },
+    onError: (message) => {
+      setError(state, message);
+    },
+  });
 }
 
 function setFileKey(state: DropdownUploadState, fileKey: string, emit: boolean) {
@@ -493,6 +472,11 @@ function setPreview(
 ) {
   state.previewPanel.dataset.hasFile = args.hasFile ? 'true' : 'false';
   state.previewPanel.dataset.kind = args.kind;
+  if (args.previewUrl) {
+    state.previewPanel.dataset.previewUrl = args.previewUrl;
+  } else {
+    delete state.previewPanel.dataset.previewUrl;
+  }
   state.previewName.textContent = args.name || '';
   state.previewExt.textContent = args.ext ? args.ext.toUpperCase() : '';
 

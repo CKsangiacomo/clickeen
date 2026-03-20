@@ -52,16 +52,6 @@ function asTrimmedString(value: unknown): string | null {
   return normalized || null;
 }
 
-class InvalidSavedInstanceError extends Error {
-  reasonKey: string;
-
-  constructor(reasonKey: string, detail?: string) {
-    super(detail || reasonKey);
-    this.name = 'InvalidSavedInstanceError';
-    this.reasonKey = reasonKey;
-  }
-}
-
 function resolveTokyoControlErrorDetail(
   payload: unknown,
   fallback: string,
@@ -82,7 +72,13 @@ async function loadSavedInstanceFromTokyo(args: {
   publicId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
-}): Promise<{ row: AccountInstanceCoreRow; config: Record<string, unknown> } | null> {
+}): Promise<
+  | {
+      ok: true;
+      value: { row: AccountInstanceCoreRow; config: Record<string, unknown> } | null;
+    }
+  | RouteFailure
+> {
   const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
@@ -97,37 +93,84 @@ async function loadSavedInstanceFromTokyo(args: {
     accessToken: args.tokyoAccessToken,
   });
 
-  if (response.status === 404) return null;
-  const payload = (await response.json().catch(() => null)) as TokyoSavedInstancePayload | null;
+  if (response.status === 404) {
+    return { ok: true, value: null };
+  }
+  const payload = (await response.json()) as TokyoSavedInstancePayload;
   if (!response.ok) {
-    throw new Error(resolveTokyoControlErrorDetail(payload, `tokyo_saved_config_http_${response.status}`));
+    const detail = resolveTokyoControlErrorDetail(payload, `tokyo_saved_config_http_${response.status}`);
+    if (response.status === 401) {
+      return {
+        ok: false,
+        status: 401,
+        error: {
+          kind: 'AUTH',
+          reasonKey: detail,
+          detail,
+        },
+      };
+    }
+    if (response.status === 403) {
+      return {
+        ok: false,
+        status: 403,
+        error: {
+          kind: 'DENY',
+          reasonKey: detail,
+          detail,
+        },
+      };
+    }
+    if (response.status === 422) {
+      return {
+        ok: false,
+        status: 422,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: detail,
+          detail,
+        },
+      };
+    }
+    return {
+      ok: false,
+      status: 502,
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'coreui.errors.db.readFailed',
+        detail,
+      },
+    };
   }
-  if (!isRecord(payload?.config)) {
-    throw new InvalidSavedInstanceError('coreui.errors.instance.config.invalid');
-  }
-
-  const publicId = asTrimmedString(payload?.publicId);
-  const accountId = asTrimmedString(payload?.accountId);
-  const widgetType = asTrimmedString(payload?.widgetType);
-  if (!publicId || !accountId) {
-    throw new InvalidSavedInstanceError('coreui.errors.instance.config.invalid');
-  }
-  if (!widgetType) {
-    throw new InvalidSavedInstanceError('coreui.errors.instance.widgetMissing');
-  }
-  const source = payload?.source === 'account' || payload?.source === 'curated' ? payload.source : undefined;
+  const saved = payload as {
+    publicId: string;
+    accountId: string;
+    widgetType: string;
+    displayName?: unknown;
+    source?: unknown;
+    meta?: unknown;
+    updatedAt?: unknown;
+    config: Record<string, unknown>;
+  };
+  const source =
+    saved.source === 'account' || saved.source === 'curated'
+      ? saved.source
+      : undefined;
 
   return {
-    row: {
-      publicId,
-      displayName: asTrimmedString(payload?.displayName),
-      updatedAt: asTrimmedString(payload?.updatedAt),
-      accountId,
-      widgetType,
-      meta: isRecord(payload?.meta) ? (payload.meta as Record<string, unknown>) : null,
-      source,
+    ok: true,
+    value: {
+      row: {
+        publicId: saved.publicId,
+        displayName: asTrimmedString(saved.displayName),
+        updatedAt: asTrimmedString(saved.updatedAt),
+        accountId: saved.accountId,
+        widgetType: saved.widgetType,
+        meta: isRecord(saved.meta) ? (saved.meta as Record<string, unknown>) : null,
+        source,
+      },
+      config: saved.config,
     },
-    config: payload.config as Record<string, unknown>,
   };
 }
 
@@ -235,46 +278,6 @@ export async function deleteLiveSurfaceFromTokyo(args: {
   }
 }
 
-export async function updateSavedPointerMetadataInTokyo(args: {
-  tokyoBaseUrl: string;
-  tokyoControlBaseUrl?: string;
-  tokyoAccessToken?: string;
-  accountId: string;
-  publicId: string;
-  accountCapsule?: string | null;
-  displayName?: string | null;
-  source?: 'account' | 'curated';
-  meta?: Record<string, unknown> | null;
-  internalServiceName?: string | null;
-}): Promise<void> {
-  const headers = buildTokyoProductControlHeaders({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    contentType: 'application/json',
-    internalServiceName: args.internalServiceName,
-  });
-
-  const response = await fetchTokyoProductControl({
-    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
-    method: 'PATCH',
-    headers,
-    baseUrl: args.tokyoControlBaseUrl,
-    accessToken: args.tokyoAccessToken,
-    body: JSON.stringify({
-      ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
-      ...(args.source !== undefined ? { source: args.source } : {}),
-      ...(args.meta !== undefined ? { meta: args.meta } : {}),
-    }),
-  });
-
-  if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as unknown;
-    throw new Error(
-      resolveTokyoControlErrorDetail(payload, `tokyo_saved_pointer_patch_http_${response.status}`),
-    );
-  }
-}
-
 export async function loadTokyoAccountInstanceDocument<TRow extends AccountInstanceCoreRow>(args: {
   accountId: string;
   publicId: string;
@@ -289,40 +292,19 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
     }
   | RouteFailure
 > {
-  let saved: { row: AccountInstanceCoreRow; config: Record<string, unknown> } | null = null;
-  try {
-    saved = await loadSavedInstanceFromTokyo({
-      tokyoControlBaseUrl: args.tokyoControlBaseUrl,
-      tokyoAccessToken: args.tokyoAccessToken,
-      accountId: args.accountId,
-      publicId: args.publicId,
-      internalServiceName: args.internalServiceName,
-      accountCapsule: args.accountCapsule,
-    });
-  } catch (error) {
-    if (error instanceof InvalidSavedInstanceError) {
-      return {
-        ok: false,
-        status: 422,
-        error: {
-          kind: 'VALIDATION',
-          reasonKey: error.reasonKey,
-          detail: error.message,
-        },
-      };
-    }
-    return {
-      ok: false,
-      status: 502,
-      error: {
-        kind: 'UPSTREAM_UNAVAILABLE',
-        reasonKey: 'coreui.errors.db.readFailed',
-        detail: error instanceof Error ? error.message : String(error),
-      },
-    };
+  const saved = await loadSavedInstanceFromTokyo({
+    tokyoControlBaseUrl: args.tokyoControlBaseUrl,
+    tokyoAccessToken: args.tokyoAccessToken,
+    accountId: args.accountId,
+    publicId: args.publicId,
+    internalServiceName: args.internalServiceName,
+    accountCapsule: args.accountCapsule,
+  });
+  if (!saved.ok) {
+    return saved;
   }
 
-  if (!saved || saved.row.accountId !== args.accountId) {
+  if (!saved.value) {
     return {
       ok: false,
       status: 404,
@@ -336,8 +318,8 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
   return {
     ok: true,
     value: {
-      row: saved.row as TRow,
-      config: saved.config,
+      row: saved.value.row as TRow,
+      config: saved.value.config,
     },
   };
 }

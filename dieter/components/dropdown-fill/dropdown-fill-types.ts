@@ -60,8 +60,6 @@ export type DropdownFillState = {
   imageAssetId: string | null;
   imageName: string | null;
   imageObjectUrl: string | null;
-  imageUnavailable: boolean;
-  imageAvailabilityRequestId: number;
   imageResolveRequestId: number;
   videoPanel: HTMLElement | null;
   videoPreview: HTMLVideoElement | null;
@@ -78,7 +76,6 @@ export type DropdownFillState = {
   videoPosterAssetId: string | null;
   videoName: string | null;
   videoObjectUrl: string | null;
-  videoUnavailable: boolean;
   videoResolveRequestId: number;
   allowedModes: FillMode[];
   mode: FillMode;

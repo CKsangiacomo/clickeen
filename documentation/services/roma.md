@@ -147,7 +147,11 @@ Notes:
 - Bob account mode is message-boot only. Bob does not recover host asset context from iframe URL params on the account Builder path. Explicit URL boot remains only for non-account surfaces.
 - Builder-open is document-only. Roma does not pull publish/live-plane status into the Bob editor envelope.
 - Roma no longer uses one mixed helper for both Builder-open document loading and publish/live-status lookup. Builder-open loads the saved document only; widgets-domain/account routes that need live status ask the live plane separately.
-- Asset picker/upload/resolve behavior on the active Builder path now runs through the Roma current-account asset routes, delegated from Bob through the hosted account-command seam. Roma does not feed a hosted asset bridge into Bob for this path.
+- Invalid saved-document failures now surface at the Tokyo saved-document control boundary. Roma forwards that boundary result to Builder instead of re-validating the same saved payload again on read.
+- Roma now consumes the saved-document identity returned by Tokyo on that path instead of reconstructing `publicId` / `accountId` locally after Tokyo has already answered.
+- The Builder host now trusts the successful Builder-open envelope for widget identity instead of running another local `widgetType` proof step before opening Bob.
+- On save, Roma now forwards the already-opened saved-pointer metadata (`widgetType`, `displayName`, `source`, `meta`) back to Tokyo with the config write. Tokyo does not look backward at the previous saved pointer to recover sibling metadata during product-path save.
+- Asset picker/upload/resolve behavior on the active Builder path now runs through the Roma current-account asset routes, delegated from Bob through one hosted account-command seam. Roma handles `list-assets`, `resolve-assets`, and `upload-asset` directly against those current-account routes and does not feed a hosted asset bridge into Bob for this path.
 - In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
 - Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/account/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Tokyo-worker-owned downstream locale/live work.
 - Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and non-owner member removal route through Roma same-origin APIs backed by Berlin (`/api/account/team/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
@@ -176,22 +180,23 @@ Roma `widgets` is the only product surface that owns per-instance live status ch
 
 Usage, billing, and AI domain behavior:
 
-- `UsageDomain` reads live storage usage through Roma same-origin account asset routes; bootstrap provides only plan/maxima context.
+- `UsageDomain` reads live storage usage through `/api/account/usage`, and that route reads the same Tokyo-worker asset authority used by Assets and storage-budget checks. Bootstrap provides only plan/maxima context.
 - `BillingDomain` is a placeholder surface today; billing is not configured in current environments.
 - `AiDomain` remains bootstrap-driven and renders plan/profile summaries from bootstrap authz context (no extra policy/entitlements fetches).
 
 Assets domain behavior:
 
-- `AssetsDomain` reads account inventory from `/api/account/assets` and performs per-asset delete via `/api/account/assets/:assetId`.
+- `AssetsDomain` reads account inventory and `storageBytesUsed` from `/api/account/assets` and performs per-asset delete via `/api/account/assets/:assetId`.
 - Roma exposes account-level asset routes (`/api/account/assets`, `/api/account/assets/resolve`, `/api/account/assets/:assetId`, `/api/account/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
-- On the active Builder path, Bob delegates asset list/resolve/upload back to these same Roma routes through the normal host account-command seam. Roma does not maintain a second hosted-asset mechanism family for Builder.
+- On the active Builder path, Bob delegates asset list/resolve/upload back to these same Roma routes through the normal host account-command seam. Bob owns the explicit asset transport; Roma owns the direct current-account route handling for those commands.
+- `/api/account/usage` remains the Usage domain surface, but it now reads storage bytes from the same Tokyo-worker asset authority as `/api/account/assets`. Assets does not double-read storage truth from both routes on the same screen.
 - Roma widget/template/assets list surfaces no longer rely on fixed client-side `200/500` caps; Michael pages account/template catalogs internally and Tokyo-worker asset inventory already returns the full account manifest.
 - Account asset upload is same-origin Roma product traffic. The active product path no longer exposes wildcard CORS on `/api/account/assets/upload`.
 - Roma exposes private non-asset product control routes to Tokyo-worker through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Public Tokyo HTTP is no longer the Builder open/save authoring seam.
-- Asset inventory/upload payloads expose both `assetId` and canonical `assetRef`; Roma delete uses `assetId` directly instead of reverse-parsing it from the ref.
+- Asset inventory/upload payloads expose `assetId` and canonical `assetRef` only; delivery URL comes from `/api/account/assets/resolve`, and Roma delete uses `assetId` directly instead of reverse-parsing it from the ref.
 - Builder save writes only the Tokyo saved authoring config; published/runtime config packs are materialized later when Roma widget-domain routes invoke Tokyo-worker sync for live/runtime convergence.
 - Localization staleness is derived from Tokyo-owned saved-pointer l10n fingerprint + Tokyo artifact state; San Francisco remains generation-only.
-- Roma-side account-budget reads now take `USAGE_KV` explicitly from the request boundary instead of reaching through ambient global context in the hot product path.
+- Roma-side non-storage account-budget reads now take `USAGE_KV` explicitly from the request boundary instead of reaching through ambient global context in the hot product path. Storage bytes are no longer read from `USAGE_KV`.
 - Assets supports single upload, bulk upload (multi-file queue), list, resolve, and per-asset delete only.
 - Assets are immutable. Upload creates a new asset identity, canonical delivery URLs stay aggressively cacheable, and there is no product workflow for refresh-in-place, recache, or replace-in-place mutation.
 - Account is the ownership boundary.

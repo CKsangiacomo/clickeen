@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readAccountBudgetUsed } from '@roma/lib/account-budget-usage';
+import { readAccountStorageBytesUsed } from '@roma/lib/account-storage-usage';
 import { withSession } from '../_lib/current-account-route';
 import { resolveCurrentAccountRouteContext } from '../_lib/current-account-route';
 
@@ -13,11 +13,10 @@ export async function GET(request: NextRequest) {
   if (!current.ok) return current.response;
 
   try {
-    const storageBytesUsed = await readAccountBudgetUsed(
-      current.value.authzPayload.accountId,
-      'budget.uploads.bytes',
-      current.value.usageKv,
-    );
+    const storageBytesUsed = await readAccountStorageBytesUsed({
+      accountId: current.value.authzPayload.accountId,
+      accountCapsule: current.value.authzToken,
+    });
     return withSession(
       request,
       NextResponse.json({

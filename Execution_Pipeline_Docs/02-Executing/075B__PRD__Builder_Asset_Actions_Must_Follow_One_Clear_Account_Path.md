@@ -313,6 +313,14 @@ Executed shape:
 
 If Builder needs asset ids resolved into usable URLs for preview/runtime, that should happen through one clear account asset resolve path.
 
+Inventory/list/upload must stay inventory truth only:
+
+- `assetId`
+- `assetRef`
+- asset metadata
+
+Delivery URL belongs to resolve only.
+
 Builder should not have:
 
 - one resolve path for controls

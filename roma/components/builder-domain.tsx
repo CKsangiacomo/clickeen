@@ -1,5 +1,6 @@
 'use client';
 
+import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -36,9 +37,7 @@ type BobOpenEditorFailedMessage = {
 
 type BobAccountCommand =
   | 'update-instance'
-  | 'list-assets'
-  | 'resolve-assets'
-  | 'upload-asset'
+  | AccountAssetHostCommand
   | 'run-copilot'
   | 'attach-ai-outcome';
 
@@ -80,6 +79,8 @@ type BuilderOpenResponse = {
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
+  source?: 'account' | 'curated';
+  meta?: Record<string, unknown> | null;
 };
 
 const BUILDER_REASON_COPY: Record<string, string> = {
@@ -145,17 +146,17 @@ function resolveBobAccountCommandRequest(args: {
     case 'list-assets':
       return {
         method: 'GET',
-        path: `/api/account/assets`,
+        path: '/api/account/assets',
       };
     case 'resolve-assets':
       return {
         method: 'POST',
-        path: `/api/account/assets/resolve`,
+        path: '/api/account/assets/resolve',
       };
     case 'upload-asset':
       return {
         method: 'POST',
-        path: `/api/account/assets/upload`,
+        path: '/api/account/assets/upload',
       };
     case 'run-copilot':
       return {
@@ -434,34 +435,24 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
     setOpenError(null);
 
     try {
-      const bootstrapPolicy = resolveAccountPolicyFromRomaAuthz(me.data, context.accountId);
-      if (!bootstrapPolicy) {
-        throw new Error(me.error || 'coreui.errors.auth.forbidden');
-      }
-
       const compileFetchStartedAt = performance.now();
       const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(
         `/api/builder/${encodeURIComponent(activePublicId)}/open`,
       );
-      const widgetType =
-        typeof builderOpen?.widgetType === 'string' ? builderOpen.widgetType.trim() : '';
-      if (!widgetType) throw new Error('coreui.errors.instance.widgetMissing');
-
+      const widgetType = builderOpen.widgetType;
       const normalizedInstanceWidgetType = normalizeCompiledWidgetType(widgetType);
       const compiledResult = await getCompiledWidget(widgetType);
       const compiled = compiledResult.payload;
 
       if (openSeq !== openDispatchSeqRef.current) return;
 
-      const resolvedPublicId =
-        typeof builderOpen?.publicId === 'string' && builderOpen.publicId.trim()
-          ? builderOpen.publicId.trim()
-          : activePublicId;
+      const resolvedPublicId = builderOpen.publicId;
       const label =
         typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim()
           ? builderOpen.displayName.trim()
           : resolvedPublicId;
       const config = builderOpen.config as Record<string, unknown>;
+      const policy = resolveAccountPolicyFromRomaAuthz(me.data, context.accountId);
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
         publicId: resolvedPublicId,
@@ -469,7 +460,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         widgetname: widgetType,
         compiled,
         instanceData: config,
-        policy: bootstrapPolicy,
+        policy,
       };
       await postOpenEditorAndWait({
         targetWindow,
@@ -491,7 +482,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [accountApi, activePublicId, context.accountId, me.data, me.error, me.loading, postOpenEditorAndWait]);
+  }, [accountApi, activePublicId, context.accountId, me.data, me.loading, postOpenEditorAndWait]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {

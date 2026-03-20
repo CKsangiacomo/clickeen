@@ -1,6 +1,7 @@
 import type { CompiledWidget } from '../types';
 import type { WidgetOp, WidgetOpError } from '../ops';
 import type { Policy } from '@clickeen/ck-policy';
+import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 
 export type UpdateMeta = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
@@ -70,9 +71,7 @@ export type BobOpenEditorFailedMessage = {
 
 export type BobAccountCommand =
   | 'update-instance'
-  | 'list-assets'
-  | 'resolve-assets'
-  | 'upload-asset'
+  | AccountAssetHostCommand
   | 'run-copilot'
   | 'attach-ai-outcome';
 

@@ -9,9 +9,9 @@ import {
   deleteSavedRenderConfig,
   readSavedRenderConfig,
   syncLiveSurface,
-  updateSavedRenderPointerMetadata,
   writeConfigPack,
   writeSavedRenderConfig,
+  writeSavedRenderL10nState,
 } from '../domains/render';
 import { handleSyncAccountInstance } from '../domains/account-instance-sync';
 import {
@@ -155,15 +155,23 @@ export async function tryHandleInternalRenderRoutes(
       });
       if (authErr) return respond(authErr);
       const saved = await readSavedRenderConfig({ env, publicId: publicId!, accountId });
-      if (!saved) {
+      if (!saved.ok && saved.kind === 'NOT_FOUND') {
         return respond(
           json(
-            { error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' } },
+            { error: { kind: 'NOT_FOUND', reasonKey: saved.reasonKey } },
             { status: 404 },
           ),
         );
       }
-      return respond(json({ ...saved.pointer, config: saved.config }));
+      if (!saved.ok) {
+        return respond(
+          json(
+            { error: { kind: 'VALIDATION', reasonKey: saved.reasonKey } },
+            { status: 422 },
+          ),
+        );
+      }
+      return respond(json({ ...saved.value.pointer, config: saved.value.config }));
     }
 
     if (req.method === 'PUT') {
@@ -175,94 +183,42 @@ export async function tryHandleInternalRenderRoutes(
       });
       if (authErr) return respond(authErr);
       const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-      const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-      const displayName =
-        body?.displayName === undefined
-          ? undefined
-          : typeof body.displayName === 'string'
-            ? body.displayName.trim() || null
-            : null;
-      const source =
-        body?.source === 'curated'
-          ? 'curated'
-          : body?.source === 'account'
-            ? 'account'
-            : undefined;
-      const meta =
-        body?.meta === undefined
-          ? undefined
-          : body?.meta === null
-            ? null
-            : isRecord(body.meta)
-              ? (body.meta as Record<string, unknown>)
-              : null;
-      const config =
-        isRecord(body?.config) ? (body.config as Record<string, unknown>) : null;
-      if (!widgetType || !config) {
+      if (!body?.config || typeof body.config !== 'object' || Array.isArray(body.config)) {
         return respondValidation(respond, 'tokyo.errors.render.invalid');
       }
-      const pointer = await writeSavedRenderConfig({
-        env,
-        publicId: publicId!,
-        accountId,
-        widgetType,
-        config,
-        displayName,
-        source,
-        meta,
-      });
-      return respond(json({ ...pointer, config }));
-    }
+      const config = body.config as Record<string, unknown>;
 
-    if (req.method === 'PATCH') {
-      const authErr = await authorizeSavedRenderControlRequest({
-        req,
-        env,
-        accountId,
-        minRole: 'editor',
-      });
-      if (authErr) return respond(authErr);
-      const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-      const displayName =
-        body?.displayName === undefined
-          ? undefined
-          : typeof body.displayName === 'string'
-            ? body.displayName.trim() || null
-            : null;
-      const source =
-        body?.source === 'curated'
-          ? 'curated'
-          : body?.source === 'account'
-            ? 'account'
-            : undefined;
-      const meta =
-        body?.meta === undefined
-          ? undefined
-          : body?.meta === null
-            ? null
-            : isRecord(body.meta)
-              ? (body.meta as Record<string, unknown>)
-              : null;
-      if (displayName === undefined && source === undefined && meta === undefined) {
-        return respondValidation(respond, 'tokyo.errors.render.invalid');
+      // Resolve widgetType: use body value if present, else carry forward from existing pointer.
+      let widgetType = typeof body.widgetType === 'string' ? body.widgetType.trim() : '';
+      if (!widgetType) {
+        const existing = await readSavedRenderConfig({ env, publicId: publicId!, accountId });
+        if (!existing.ok) return respondValidation(respond, 'tokyo.errors.render.invalid');
+        widgetType = existing.value.pointer.widgetType;
       }
-      const pointer = await updateSavedRenderPointerMetadata({
-        env,
-        publicId: publicId!,
-        accountId,
-        displayName,
-        source,
-        meta,
-      });
-      if (!pointer) {
-        return respond(
-          json(
-            { error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' } },
-            { status: 404 },
-          ),
-        );
+
+      // Write L10n snapshot first (explicit), then write config + pointer.
+      const l10n = await writeSavedRenderL10nState({ env, publicId: publicId!, widgetType, config });
+      let pointer;
+      try {
+        pointer = await writeSavedRenderConfig({
+          env,
+          publicId: publicId!,
+          accountId,
+          widgetType,
+          config,
+          displayName: body.displayName,
+          source: body.source,
+          meta: body.meta,
+          l10n,
+        });
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        if (detail === '[tokyo] write-saved-render config must be an object') {
+          return respondValidation(respond, 'tokyo.errors.render.invalid');
+        }
+        throw error;
       }
-      return respond(json(pointer));
+      return respond(json({ ...pointer, config }));
     }
 
     if (req.method === 'DELETE') {
@@ -273,7 +229,23 @@ export async function tryHandleInternalRenderRoutes(
         minRole: 'editor',
       });
       if (authErr) return respond(authErr);
-      await deleteSavedRenderConfig({ env, publicId: publicId!, accountId });
+      const deleted = await deleteSavedRenderConfig({ env, publicId: publicId!, accountId });
+      if (!deleted.ok && deleted.kind === 'NOT_FOUND') {
+        return respond(
+          json(
+            { error: { kind: 'NOT_FOUND', reasonKey: deleted.reasonKey } },
+            { status: 404 },
+          ),
+        );
+      }
+      if (!deleted.ok) {
+        return respond(
+          json(
+            { error: { kind: 'VALIDATION', reasonKey: deleted.reasonKey } },
+            { status: 422 },
+          ),
+        );
+      }
       return respond(json({ ok: true, deleted: true }));
     }
 

@@ -2,6 +2,7 @@ import {
   handleDeleteAccountAsset,
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
+  handleGetAccountAssetUsage,
   handleListAccountAssetMetadata,
   handleResolveAccountAssetMetadata,
   handleUploadAccountAsset,
@@ -25,6 +26,17 @@ export async function tryHandleAssetRoutes(
     const accountId = decodeURIComponent(accountAssetsListMatch[1] || '');
     if (req.method === 'GET') {
       return respond(await handleListAccountAssetMetadata(req, env, accountId));
+    }
+    return respondMethodNotAllowed(respond);
+  }
+
+  const accountAssetsUsageMatch = pathname.match(
+    /^\/__internal\/assets\/account\/([0-9a-f-]{36})\/usage$/i,
+  );
+  if (accountAssetsUsageMatch) {
+    const accountId = decodeURIComponent(accountAssetsUsageMatch[1] || '');
+    if (req.method === 'GET') {
+      return respond(await handleGetAccountAssetUsage(req, env, accountId));
     }
     return respondMethodNotAllowed(respond);
   }

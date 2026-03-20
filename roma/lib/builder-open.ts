@@ -5,6 +5,8 @@ export type BuilderOpenEnvelope = {
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
+  source?: 'account' | 'curated';
+  meta?: Record<string, unknown> | null;
 };
 
 export async function loadBuilderOpenEnvelope(args: {
@@ -41,6 +43,8 @@ export async function loadBuilderOpenEnvelope(args: {
       displayName: instance.value.row.displayName || 'Untitled widget',
       widgetType: instance.value.row.widgetType,
       config: instance.value.config,
+      source: instance.value.row.source,
+      meta: instance.value.row.meta,
     },
   };
 }

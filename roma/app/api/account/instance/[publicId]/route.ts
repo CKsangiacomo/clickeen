@@ -122,9 +122,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  let body: { config: Record<string, unknown> } | null = null;
+  let body: { config?: Record<string, unknown> } | null = null;
   try {
-    body = (await request.json()) as { config: Record<string, unknown> } | null;
+    body = (await request.json()) as { config?: Record<string, unknown> } | null;
   } catch {
     return withSession(
       request,

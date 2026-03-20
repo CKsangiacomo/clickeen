@@ -2,7 +2,7 @@
 
 This document is the canonical reference for Clickeen’s design system and its preview harness. It replaces older scattered notes and should be kept aligned with the Dieter source tree.
 
-**Last updated:** 2025-10-12 — Always verify against `dieter/components/*/*.css`, `dieter/components/*/*.spec.json`, `dieter/tokens/tokens.css`, and the DevStudio Dieter showcases when making changes.
+**Last updated:** 2026-03-20 — Always verify against `dieter/components/*/*.css`, `dieter/components/*/*.spec.json`, `dieter/tokens/tokens.css`, and the DevStudio Dieter showcases when making changes.
 
 - [1. Dieter Core](#1-dieter-core)
 - [2. Dieter Admin](#2-dieter-admin)
@@ -16,8 +16,9 @@ Dieter is Clickeen's shared design system: a token-first library consumed by Bob
 Authoring boundary (current, explicit):
 - Dieter owns authoring primitives, including interactive editor controls such as `dropdown-fill` and `dropdown-upload`.
 - Bob/Roma still own host/account context, session/auth, persistence, entitlements, and route boundaries.
-- Active account Builder asset behavior is explicit and narrow inside Dieter primitives. `dropdown-fill` and `dropdown-upload` use one shared current-account asset helper for `/api/account/assets`, `/api/account/assets/resolve`, and `/api/account/assets/upload`. On hosted Builder, Bob installs the transport for that helper through the host command seam. Dieter no longer carries hosted asset bridges, dataset fallbacks, consumer-owned route selection logic, or ambient fetch interception.
+- Active account Builder asset behavior is explicit and narrow inside Dieter primitives. `dropdown-fill` and `dropdown-upload` use one shared current-account asset helper plus one shared Builder resolve helper. On hosted Builder, Bob installs an explicit asset transport (`listAssets`, `resolveAssets`, `uploadAsset`) through the host command seam. Dieter no longer carries hosted asset bridges, dataset fallbacks, consumer-owned route selection logic, route-table round-tripping, or ambient fetch interception.
 - `dropdown-upload` is asset-backed only. It requires `meta-path`, persists logical asset identity in meta, and treats resolved delivery URLs as preview-only. Uploaded delivery URLs are not written back into widget document truth.
+- Missing/not-missing truth for Builder-owned assets comes only from the shared resolve path. Asset upsell denial for those controls uses one shared `bob-upsell` emitter path. Local preview render failures are UI-only errors; Dieter controls must not re-probe resolved URLs or reinterpret preview media failures as asset deletion/missing truth.
 - Dieter does **not** own account policy, persistence, or product routing; it owns the primitive behavior that runs inside the authoring surface.
 
 ### Bundling manifest (executed)

@@ -56,7 +56,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     setState,
     executeAccountCommand: transport.executeAccountCommand,
   });
-  const accountAssets = useMemo(() => createAccountAssetsClient(transport.fetchApi), [transport.fetchApi]);
+  const accountAssets = useMemo(() => createAccountAssetsClient(transport.accountAssets), [transport.accountAssets]);
 
   const value = useMemo<WidgetDocumentSessionValue>(
     () => ({

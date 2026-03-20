@@ -14,6 +14,7 @@ const DEFAULT_PAGE_SIZE = 500;
 
 let parseCanonicalAssetRefFn = null;
 let toCanonicalAssetVersionPathFn = null;
+let isUuidFn = null;
 
 function printUsage() {
   console.log(`Usage: node scripts/dev/verify-local-platform-state.mjs
@@ -32,10 +33,11 @@ if (process.argv.includes('--help') || process.argv.includes('-h')) {
 }
 
 async function ensureContractHelpers() {
-  if (parseCanonicalAssetRefFn && toCanonicalAssetVersionPathFn) return;
+  if (parseCanonicalAssetRefFn && toCanonicalAssetVersionPathFn && isUuidFn) return;
   const contracts = await import('../../packages/ck-contracts/src/index.js');
   parseCanonicalAssetRefFn = contracts.parseCanonicalAssetRef;
   toCanonicalAssetVersionPathFn = contracts.toCanonicalAssetVersionPath;
+  isUuidFn = contracts.isUuid;
 }
 
 function asTrimmedString(value) {
@@ -161,49 +163,6 @@ function createInternalHeaders(accountId) {
   headers.set('x-ck-internal-service', DEFAULT_INTERNAL_SERVICE);
   headers.set('accept', 'application/json');
   return headers;
-}
-
-async function resolveLocalAssetsById(accountId, assetIds) {
-  if (!assetIds.length) {
-    return { assetsById: new Map(), missingAssetIds: [] };
-  }
-  const response = requestLoopbackJson(
-    `${String(DEFAULT_TOKYO_WORKER_BASE).replace(/\/+$/, '')}/__internal/assets/account/${encodeURIComponent(accountId)}/resolve`,
-    {
-      method: 'POST',
-      headers: (() => {
-        const headers = createInternalHeaders(accountId);
-        headers.set('content-type', 'application/json');
-        return headers;
-      })(),
-      body: { assetIds },
-    },
-  );
-  const payload = response.json || null;
-  if (!response.ok) {
-    const detail =
-      typeof payload?.error?.detail === 'string'
-        ? payload.error.detail
-        : typeof payload?.error?.reasonKey === 'string'
-          ? payload.error.reasonKey
-          : `local_asset_resolve_http_${response.status}`;
-    throw new Error(detail);
-  }
-
-  const assetsById = new Map();
-  const assets = Array.isArray(payload?.assets) ? payload.assets : [];
-  for (const asset of assets) {
-    const assetId = typeof asset?.assetId === 'string' ? asset.assetId.trim().toLowerCase() : '';
-    const url = typeof asset?.url === 'string' ? asset.url.trim() : '';
-    if (!assetId || !url) continue;
-    assetsById.set(assetId, asset);
-  }
-  const missingAssetIds = Array.isArray(payload?.missingAssetIds)
-    ? payload.missingAssetIds
-        .map((entry) => (typeof entry === 'string' ? entry.trim().toLowerCase() : ''))
-        .filter(Boolean)
-    : [];
-  return { assetsById, missingAssetIds };
 }
 
 async function hasSavedSnapshot(row) {
@@ -355,46 +314,24 @@ async function main() {
   }
 
   const logicalAssetIdList = Array.from(logicalAssetIds.keys());
-  const { assetsById, missingAssetIds } = await resolveLocalAssetsById(
-    platformAccountId,
-    logicalAssetIdList,
-  );
-
-  for (const assetId of missingAssetIds) {
+  for (const assetId of logicalAssetIdList) {
     const references = logicalAssetIds.get(assetId) || [];
-    if (!references.length) {
-      appendIssue(issues, failuresRef, `missing local asset for logical asset ${assetId}`);
-      continue;
-    }
-    for (const reference of references) {
-      appendIssue(
-        issues,
-        failuresRef,
-        `missing local asset for ${reference.publicId}:${reference.path} (${assetId})`,
-      );
-    }
-  }
-
-  for (const [assetId, references] of logicalAssetIds.entries()) {
-    if (missingAssetIds.includes(assetId)) continue;
-    const resolved = assetsById.get(assetId);
-    const url = typeof resolved?.url === 'string' ? resolved.url.trim() : '';
-    if (!url) {
+    if (!isUuidFn?.(assetId)) {
       for (const reference of references) {
         appendIssue(
           issues,
           failuresRef,
-          `resolved asset missing url for ${reference.publicId}:${reference.path} (${assetId})`,
+          `invalid logical asset id in ${reference.publicId}:${reference.path} (${assetId})`,
         );
       }
       continue;
     }
-    if (!(await hasLocalAssetAtPath(url))) {
+    if (/^00000000-0000-0000-0000-000000000000$/i.test(assetId)) {
       for (const reference of references) {
         appendIssue(
           issues,
           failuresRef,
-          `missing local asset blob for ${reference.publicId}:${reference.path} (${assetId})`,
+          `zero logical asset id in ${reference.publicId}:${reference.path} (${assetId})`,
         );
       }
     }

@@ -1,6 +1,6 @@
 import type { MemberRole } from '@clickeen/ck-policy';
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeRequestAccountRoleFromCapsule, authorizeRequestRoleFromCapsule } from './account-authz-capsule';
+import { authorizeRequestRoleFromCapsule } from './account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from './auth/session';
 import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
 import {
@@ -79,78 +79,6 @@ function resolveUsageKvFromRequestContext() {
     getOptionalCloudflareRequestContext<{ env?: { USAGE_KV?: RomaRateLimitKv } }>()?.env?.USAGE_KV ??
     null
   );
-}
-
-export async function resolveAccountAssetGatewayContext(args: {
-  request: NextRequest;
-  accountId: string;
-  minRole: MemberRole;
-}): Promise<{ ok: true; value: AccountAssetGatewayContext } | { ok: false; response: NextResponse }> {
-  const session = await resolveSessionBearer(args.request);
-  if (!session.ok) {
-    return {
-      ok: false,
-      response: finalizeAccountAssetResponse({
-        request: args.request,
-        response: session.response,
-      }),
-    };
-  }
-
-  const authz = await authorizeRequestAccountRoleFromCapsule({
-    request: args.request,
-    accountId: args.accountId,
-    minRole: args.minRole,
-  });
-  if (!authz.ok) {
-    return {
-      ok: false,
-      response: buildErrorResponse(
-        args.request,
-        session.setCookies,
-        authz.status,
-        authz.error,
-      ),
-    };
-  }
-
-  try {
-    assertTokyoAssetControlBindingAvailable();
-    const limited = await enforceRomaRateLimitForAccountRequest(
-      args.request,
-      args.accountId,
-      resolveUsageKvFromRequestContext(),
-    );
-    if (limited) {
-      return {
-        ok: false,
-        response: finalizeAccountAssetResponse({
-          request: args.request,
-          response: limited,
-          setCookies: session.setCookies,
-        }),
-      };
-    }
-    return {
-      ok: true,
-      value: {
-        accountId: args.accountId,
-        accountCapsule: authz.token,
-        sessionSetCookies: session.setCookies,
-      },
-    };
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return {
-      ok: false,
-      response: buildErrorResponse(
-        args.request,
-        session.setCookies,
-        500,
-        { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail },
-      ),
-    };
-  }
 }
 
 export async function resolveCurrentAccountAssetGatewayContext(args: {

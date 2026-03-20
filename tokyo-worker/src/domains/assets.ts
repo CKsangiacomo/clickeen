@@ -10,7 +10,6 @@ import type { Env } from '../types';
 const L10N_VERSION_CAP_KEY = 'l10n.versions.max';
 export const UPLOAD_SIZE_CAP_KEY = 'uploads.size.max';
 export const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
-const ACCOUNT_STORAGE_USAGE_PREFIX = 'usage.storage.v1';
 
 function resolveEntitlementTierOrThrow(tier: string | null): string {
   const normalized = typeof tier === 'string' ? tier.trim() : '';
@@ -68,18 +67,6 @@ function normalizeNonNegativeInt(value: number): number {
   return Math.max(0, Math.floor(value));
 }
 
-function accountStorageUsageKey(accountId: string, budgetKey = STORAGE_BYTES_BUDGET_KEY): string {
-  return `${ACCOUNT_STORAGE_USAGE_PREFIX}.${budgetKey}.acct:${accountId}`;
-}
-
-async function writeAccountStoredBytesUsage(env: Env, accountId: string, totalBytes: number): Promise<void> {
-  const kv = env.USAGE_KV;
-  if (!kv) {
-    throw new Error('[tokyo] Missing USAGE_KV for account storage usage mirror');
-  }
-  await kv.put(accountStorageUsageKey(accountId), String(normalizeNonNegativeInt(totalBytes)));
-}
-
 export type MemberRole = 'viewer' | 'editor' | 'admin' | 'owner';
 
 export function roleRank(role: MemberRole): number {
@@ -113,8 +100,6 @@ export async function persistAccountAssetMetadata(args: {
   env: Env;
   accountId: string;
   assetId: string;
-  publicId?: string | null;
-  widgetType?: string | null;
   key: string;
   source: AccountAssetSource;
   originalFilename: string;
@@ -130,8 +115,6 @@ export async function persistAccountAssetMetadata(args: {
   const manifest: AccountAssetManifest = {
     assetId: args.assetId,
     accountId: args.accountId,
-    publicId: args.publicId ?? existing?.publicId ?? null,
-    widgetType: args.widgetType ?? existing?.widgetType ?? null,
     source: args.source,
     originalFilename: args.originalFilename,
     normalizedFilename: args.normalizedFilename,
@@ -155,8 +138,6 @@ type AccountAssetRow = {
 export type AccountAssetManifest = {
   assetId: string;
   accountId: string;
-  publicId: string | null;
-  widgetType: string | null;
   source: AccountAssetSource;
   originalFilename: string;
   normalizedFilename: string;
@@ -221,8 +202,6 @@ export function normalizeAccountAssetManifestStrict(raw: unknown): AccountAssetM
   return {
     accountId,
     assetId,
-    publicId: typeof row.publicId === 'string' && row.publicId.trim() ? row.publicId.trim() : null,
-    widgetType: typeof row.widgetType === 'string' && row.widgetType.trim() ? row.widgetType.trim() : null,
     source,
     originalFilename:
       typeof row.originalFilename === 'string' && row.originalFilename.trim()
@@ -304,16 +283,6 @@ export async function loadAccountStoredBytesUsage(env: Env, accountId: string): 
   return sumAccountAssetManifestSizeBytes(manifests);
 }
 
-export async function syncAccountStoredBytesUsage(
-  env: Env,
-  accountId: string,
-  manifests?: AccountAssetManifest[],
-): Promise<number> {
-  const totalBytes = manifests ? sumAccountAssetManifestSizeBytes(manifests) : await loadAccountStoredBytesUsage(env, accountId);
-  await writeAccountStoredBytesUsage(env, accountId, totalBytes);
-  return totalBytes;
-}
-
 export async function loadAccountAssetByIdentity(
   env: Env,
   accountId: string,
@@ -393,6 +362,7 @@ export {
   handleGetAccountAsset,
   handleGetAccountAssetIdentityIntegrity,
   handleGetAccountAssetMirrorIntegrity,
+  handleGetAccountAssetUsage,
   handleListAccountAssetMetadata,
   handleResolveAccountAssetMetadata,
   handleUploadAccountAsset,

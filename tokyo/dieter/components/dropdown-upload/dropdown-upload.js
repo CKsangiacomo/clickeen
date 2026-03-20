@@ -1434,9 +1434,59 @@ var Dieter = (() => {
     return Boolean(value && UUID_RE.test(value));
   }
 
+  // components/shared/account-assets.ts
+  var ACCOUNT_ASSET_UPSELL_REASONS = /* @__PURE__ */ new Set([
+    "coreui.upsell.reason.budgetExceeded",
+    "coreui.upsell.reason.capReached",
+    "coreui.upsell.reason.platform.uploads"
+  ]);
+  function asTrimmedString(value) {
+    return typeof value === "string" ? value.trim() : "";
+  }
+  function isAccountAssetUpsellReason(reasonKey) {
+    return ACCOUNT_ASSET_UPSELL_REASONS.has(asTrimmedString(reasonKey));
+  }
+  function dispatchAccountAssetUpsell(root, reasonKey) {
+    const normalizedReasonKey = asTrimmedString(reasonKey);
+    if (!isAccountAssetUpsellReason(normalizedReasonKey)) return false;
+    root.dispatchEvent(
+      new CustomEvent("bob-upsell", {
+        detail: { reasonKey: normalizedReasonKey },
+        bubbles: true
+      })
+    );
+    return true;
+  }
+
+  // components/shared/account-asset-resolve.ts
+  async function resolveSingleAccountAsset(args) {
+    const assetId = String(args.getAssetId() || "").trim();
+    const requestId = args.beginRequest();
+    args.onStart?.();
+    if (!assetId) return;
+    try {
+      const { assetsById, missingAssetIds } = await args.accountAssets.resolveAssets([assetId]);
+      if (!args.isCurrent(requestId, assetId)) return;
+      if (missingAssetIds.includes(assetId)) {
+        args.onMissing();
+        return;
+      }
+      const asset = assetsById.get(assetId);
+      if (!asset) {
+        args.onMissing();
+        return;
+      }
+      args.onResolved(asset);
+    } catch (error) {
+      if (!args.isCurrent(requestId, assetId)) return;
+      args.onError(error instanceof Error ? error.message : "coreui.errors.db.readFailed");
+    }
+  }
+
   // components/dropdown-upload/dropdown-upload.ts
   var states = /* @__PURE__ */ new Map();
-  var ASSET_UNAVAILABLE_MESSAGE = "Asset URL is unavailable. Upload a new file to restore preview.";
+  var MISSING_ASSET_MESSAGE = "Asset unavailable. Upload a new file to restore it.";
+  var PREVIEW_FAILED_MESSAGE = "Preview failed to load.";
   var META_PATH_REQUIRED_MESSAGE = "Asset-backed dropdown-upload requires meta-path.";
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-upload",
@@ -1543,21 +1593,17 @@ var Dieter = (() => {
       state.fileInput.disabled = true;
     }
     const handlePreviewMediaError = (kind, currentSrc) => {
-      const raw = state.input.value || "";
-      const expected = extractPrimaryUrl(raw) || "";
+      const expected = state.previewPanel.dataset.previewUrl || "";
       if (!expected) return;
       if (state.previewPanel.dataset.kind !== kind) return;
       if (!sameAssetUrl(currentSrc, expected)) return;
-      const fallbackLabel = state.previewName.textContent?.trim() || "Asset unavailable";
-      setHeaderWithFile(state, fallbackLabel, true);
-      setError(state, ASSET_UNAVAILABLE_MESSAGE);
+      setError(state, PREVIEW_FAILED_MESSAGE);
     };
     const handlePreviewMediaReady = (kind, currentSrc) => {
-      const raw = state.input.value || "";
-      const expected = extractPrimaryUrl(raw) || "";
+      const expected = state.previewPanel.dataset.previewUrl || "";
       if (!expected || state.previewPanel.dataset.kind !== kind) return;
       if (!sameAssetUrl(currentSrc, expected)) return;
-      if ((state.previewError.textContent || "").trim() === ASSET_UNAVAILABLE_MESSAGE) {
+      if ((state.previewError.textContent || "").trim() === PREVIEW_FAILED_MESSAGE) {
         clearError(state);
       }
     };
@@ -1578,15 +1624,6 @@ var Dieter = (() => {
       state.fileInput.value = "";
       state.fileInput.click();
     };
-    const dispatchUpsell = (reasonKey) => {
-      state.root.dispatchEvent(
-        new CustomEvent("bob-upsell", {
-          detail: { reasonKey },
-          bubbles: true
-        })
-      );
-    };
-    const isUpsellReason = (reasonKey) => reasonKey === "coreui.upsell.reason.budgetExceeded" || reasonKey === "coreui.upsell.reason.capReached" || reasonKey === "coreui.upsell.reason.platform.uploads";
     const uploadSelectedFile = async (file) => {
       const validationError = validateFileSelection(state, file);
       if (validationError) {
@@ -1609,8 +1646,7 @@ var Dieter = (() => {
         setFileKey(state, "transparent", true);
       } catch (error) {
         const message = error instanceof Error ? error.message : "coreui.errors.assets.uploadFailed";
-        if (isUpsellReason(message)) {
-          dispatchUpsell(message);
+        if (dispatchAccountAssetUpsell(state.root, message)) {
         } else {
           setError(state, message);
         }
@@ -1690,20 +1726,12 @@ var Dieter = (() => {
       return null;
     }
   }
-  function extractPrimaryUrl(raw) {
-    const v = (raw || "").trim();
-    if (!v) return null;
-    if (/^https?:\/\//i.test(v) || v.startsWith("/")) return v;
-    const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    if (m && m[2]) {
-      const extracted = m[2].trim();
-      if (/^https?:\/\//i.test(extracted) || extracted.startsWith("/")) return extracted;
-    }
-    return null;
-  }
   function readMetaAssetId(meta) {
     const assetId = typeof meta?.assetId === "string" ? meta.assetId.trim() : "";
     return isUuid(assetId) ? assetId : "";
+  }
+  function invalidateResolve(state) {
+    state.resolveRequestId += 1;
   }
   function sameAssetUrl(leftRaw, rightRaw) {
     const left = normalizeUrlForCompare(leftRaw);
@@ -1721,15 +1749,16 @@ var Dieter = (() => {
       return value;
     }
   }
-  function previewFromUrl(state, raw, name, kindName) {
-    const url = extractPrimaryUrl(raw);
-    if (!url) return;
+  function previewFromResolvedUrl(state, url, name, kindName) {
+    const normalizedUrl = String(url || "").trim();
+    if (!normalizedUrl) return;
     const ext = (guessExtFromName(kindName) || "").toLowerCase();
     const kind = classifyByNameAndType(kindName || "file", "").kind;
-    setPreview(state, { kind, previewUrl: url, name, ext, hasFile: true });
+    setPreview(state, { kind, previewUrl: normalizedUrl, name, ext, hasFile: true });
   }
   function syncFromValue(state, raw, meta = null) {
     if (!state.metaHasPath) {
+      invalidateResolve(state);
       setHeaderWithFile(state, "Invalid control", true);
       setError(state, META_PATH_REQUIRED_MESSAGE);
       setPreview(state, { kind: "empty", previewUrl: void 0, name: "", ext: "", hasFile: false });
@@ -1743,6 +1772,7 @@ var Dieter = (() => {
     const displayName = metaName || "Uploaded file";
     const currentAssetId = assetId;
     if (!key && !currentAssetId && !metaName) {
+      invalidateResolve(state);
       clearError(state);
       setHeaderEmpty(state, placeholder);
       state.root.dataset.hasFile = "false";
@@ -1771,32 +1801,34 @@ var Dieter = (() => {
       ext: guessExtFromName(displayName).toLowerCase(),
       hasFile: true
     });
+    invalidateResolve(state);
     setHeaderWithFile(state, displayName, true);
     setError(state, "Missing asset identity. Upload a new file to restore it.");
   }
   async function resolveStoredAssetPreview(state, assetId, displayName) {
-    state.resolveRequestId += 1;
-    const requestId = state.resolveRequestId;
-    try {
-      const { assetsById, missingAssetIds } = await state.accountAssets.resolveAssets([assetId]);
-      if (state.resolveRequestId !== requestId) return;
-      if (missingAssetIds.includes(assetId)) {
-        setError(state, ASSET_UNAVAILABLE_MESSAGE);
+    return resolveSingleAccountAsset({
+      accountAssets: state.accountAssets,
+      getAssetId: () => assetId,
+      beginRequest: () => {
+        state.resolveRequestId += 1;
+        return state.resolveRequestId;
+      },
+      isCurrent: (requestId, currentAssetId) => {
+        if (state.resolveRequestId !== requestId) return false;
+        return readMetaAssetId(readMeta(state)) === currentAssetId;
+      },
+      onMissing: () => {
+        setError(state, MISSING_ASSET_MESSAGE);
         setHeaderWithFile(state, displayName || "Asset unavailable", true);
-        return;
+      },
+      onResolved: (resolved) => {
+        clearError(state);
+        previewFromResolvedUrl(state, resolved.url, displayName, displayName);
+      },
+      onError: (message) => {
+        setError(state, message);
       }
-      const resolved = assetsById.get(assetId);
-      if (!resolved) {
-        setError(state, ASSET_UNAVAILABLE_MESSAGE);
-        setHeaderWithFile(state, displayName || "Asset unavailable", true);
-        return;
-      }
-      clearError(state);
-      previewFromUrl(state, resolved.url, displayName, displayName);
-    } catch (error) {
-      if (state.resolveRequestId !== requestId) return;
-      setError(state, error instanceof Error ? error.message : "coreui.errors.db.readFailed");
-    }
+    });
   }
   function setFileKey(state, fileKey, emit) {
     state.internalWrite = true;
@@ -1813,6 +1845,11 @@ var Dieter = (() => {
   function setPreview(state, args) {
     state.previewPanel.dataset.hasFile = args.hasFile ? "true" : "false";
     state.previewPanel.dataset.kind = args.kind;
+    if (args.previewUrl) {
+      state.previewPanel.dataset.previewUrl = args.previewUrl;
+    } else {
+      delete state.previewPanel.dataset.previewUrl;
+    }
     state.previewName.textContent = args.name || "";
     state.previewExt.textContent = args.ext ? args.ext.toUpperCase() : "";
     if (args.hasFile && args.name) setHeaderWithFile(state, args.name, false);
