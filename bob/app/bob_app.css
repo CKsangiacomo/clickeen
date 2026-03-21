@@ -436,6 +436,54 @@ body {
   gap: var(--space-1);
 }
 
+.translations-panel__status-focus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--control-radius-md);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
+  background: color-mix(in oklab, var(--color-system-gray-6), transparent 74%);
+}
+
+.translations-panel__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-1);
+}
+
+.translations-panel__summary-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--control-radius-md);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 92%);
+  background: color-mix(in oklab, var(--color-system-gray-6), transparent 82%);
+}
+
+.translations-panel__subheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.translations-panel__toggle {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--color-system-blue);
+  padding: 0;
+  cursor: pointer;
+}
+
+.translations-panel__toggle:hover,
+.translations-panel__toggle:focus-visible {
+  text-decoration: underline;
+}
+
 .translations-panel__status-row {
   display: flex;
   align-items: center;
@@ -485,6 +533,10 @@ body {
   border-radius: var(--control-radius-md);
   border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
   background: color-mix(in oklab, var(--color-system-gray-6), transparent 74%);
+}
+
+.translations-panel__path {
+  word-break: break-word;
 }
 
 .translations-panel__value {
