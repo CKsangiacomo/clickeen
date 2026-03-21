@@ -1,10 +1,16 @@
 # SDR Copilot — Conversational Widget Copilot
 
-STATUS: REFERENCE / PRD (keep in sync with shipped code)
+STATUS: ARCHIVAL REFERENCE
 Created: 2024-12-27
 Last updated: 2026-02-26
 
 ---
+
+Current runtime truth:
+- This document is historical reference for the retired SDR widget-copilot experiment.
+- It is not the live product path.
+- Account Builder Copilot now runs only through Roma account routes and resolves `widget.copilot.v1` to `cs.widget.copilot.v1`.
+- Bob no longer owns MiniBob/public AI execution or outcome routes.
 
 ## 0) What SDR means
 
@@ -147,15 +153,11 @@ If user hits the overall widget limit:
 
 Runtime budgets are grant-scoped and strict (there is no 50K session budget):
 
-- Minibob public grant (local): `maxTokens=650`, `maxRequests=2`, `timeoutMs=45_000`
-- Minibob public grant (non-local stages, including cloud-dev): `maxTokens=420`, `maxRequests=2`, `timeoutMs=12_000`
-- Minibob session turns budget: `budget.copilot.turns = 4` (entitlements policy)
+- Historical demo grants (retired): this section describes the old Minibob/public experiment, not the current product path.
 
-Effective upper bound for anonymous Minibob sessions:
-- Local: up to `5,200` tokens (`650 * 2 * 4`) before turn budget is exhausted
-- Non-local/cloud-dev: up to `3,360` tokens (`420 * 2 * 4`) before turn budget is exhausted
+The live product account path no longer uses anonymous/public grants.
 
-When budgets/turns are exhausted, Paris/San Francisco return explicit deny + upsell signals.
+When budgets/turns are exhausted on the live product path, Roma/San Francisco return explicit deny + upsell signals.
 
 **Token efficiency guardrails**:
 1. **Single-page only** — no crawling, no follow-links, SSRF-blocked URL fetch.
@@ -187,14 +189,15 @@ CTAs are **never interruptive**. They appear as part of the natural conversation
 
 ### 4.1 Call chain
 
-1) UI calls Bob (same-origin):
-- `POST /api/ai/widget-copilot`
+1) Historical note:
+- the retired Minibob/public experiment called Bob same-origin routes
+- the live product account path now calls Roma instance routes
 
 2) The owning backend surface mints the short-lived grant:
 - account-mode Builder: Roma instance route
-- MiniBob/public: Bob same-origin route
+- retired demo/public experiment: Bob same-origin route
 
-3) Bob executes on San Francisco:
+3) The owning backend surface executes on San Francisco:
 - `POST {SANFRANCISCO_BASE_URL}/v1/execute`
 
 4) San Francisco calls the provider selected by grant profile + agent constraints and returns structured output.
@@ -204,8 +207,8 @@ Prompt profiles (runtime persona pack):
 
 5) Bob applies ops, then waits for Keep/Undo.
 
-6) UI reports outcomes:
-- `POST /api/ai/outcome` (Bob public flow) or Roma instance outcome route (account flow) → `POST {SANFRANCISCO_BASE_URL}/v1/outcome`
+6) UI reports outcomes through the owning backend surface:
+- live product account flow: Roma instance outcome route → `POST {SANFRANCISCO_BASE_URL}/v1/outcome`
 
 ### 4.2 "Two-call model" clarification
 From the product perspective, a single Copilot request uses **two backend steps**:
@@ -238,7 +241,7 @@ Notes:
 - `controls` must be derived from `compiled.controls[]` (binding + AI context). Controls are organized by panel (Content, Layout, Appearance, Typography) per `WidgetArchitecture.md`.
 - `sessionId` is used for learning + conversion attribution.
 - Each widget has an `agent.md` file defining editable paths, enums, and binding maps. Copilot uses this + `spec.json` to understand what's editable.
-- `agentId` (when provided by the UI) is restricted to widget-copilot IDs only: `widget.copilot.v1`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`.
+- `agentId` (when provided by the live account UI) is restricted to `widget.copilot.v1` or `cs.widget.copilot.v1`.
 - Account-mode Builder Copilot runs through Roma instance routes. The old Bob `account|minibob` subject split is removed from the live product path.
 
 Response shape (success):
@@ -246,7 +249,7 @@ Response shape (success):
 {
   "message": "string",
   "ops": [],
-  "cta": { "text": "string", "action": "signup" },
+  "cta": { "text": "string", "action": "upgrade" },
   "meta": { "requestId": "uuid", "intent": "edit", "outcome": "ops_applied" }
 }
 ```
@@ -270,7 +273,6 @@ Best-effort outcome attach used by the UI:
 Supported `event` values:
 - `ux_keep`, `ux_undo`
 - `cta_clicked`
-- `signup_started`, `signup_completed`
 - `upgrade_clicked`, `upgrade_completed`
 
 HTTP semantics:
@@ -280,13 +282,11 @@ HTTP semantics:
 
 ## 6) San Francisco widget-copilot contract (SDR + CS)
 
-Current request alias:
+Current live account request alias:
 - `agentId: "widget.copilot.v1"`
 
-The grant issuer resolves this alias by policy profile:
-- `minibob` + `free` -> `sdr.widget.copilot.v1`
-- `tier1`/`tier2`/`tier3` -> `cs.widget.copilot.v1`
-- If callers force `sdr.widget.copilot.v1` or `cs.widget.copilot.v1`, the grant issuer still canonicalizes to the profile-resolved ID for widget-copilot requests.
+The live account grant issuer resolves this alias to:
+- account Builder -> `cs.widget.copilot.v1`
 
 The agent is expected to return:
 - `message` (always)

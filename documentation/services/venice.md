@@ -115,9 +115,9 @@ What it does (plain English):
    - If the iframe URL includes `?locale=...`, use that only if it is in `readyLocales`.
    - Otherwise follow the pointer’s `localePolicy`:
      - If `localePolicy.ip.enabled=true`: map the viewer’s country to a locale only when that mapping resolves to a `readyLocale` (best-effort, no DB).
+     - Else if `localePolicy.switcher.alwaysShowLocale` is present and ready: start there.
      - Otherwise start at `baseLocale`.
-     - If `localePolicy.switcher.enabled=true` and there is more than one `readyLocale`, show a language switcher UI.
-     - If `localePolicy.switcher.locales` is present, Venice uses that ordered subset of `readyLocales` for the switcher.
+     - Venice does not inject its own language switcher UI. It passes locale policy + locale labels into the widget runtime, and the widget-owned locale switcher element decides whether it renders.
 3. Fetch config pack + effective locale text pack from Tokyo.
 4. Fetch widget runtime HTML from Tokyo: `/widgets/<widgetType>/widget.html`.
 5. Bootstrap `window.CK_WIDGET` with the config + localized text.

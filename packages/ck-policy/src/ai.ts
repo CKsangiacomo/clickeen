@@ -357,9 +357,7 @@ export function isWidgetCopilotAgentId(agentId: string): agentId is WidgetCopilo
 export function resolveWidgetCopilotAgentId(args: {
   policyProfile: PolicyProfile;
 }): WidgetCopilotAgentId {
-  if (args.policyProfile === 'free') {
-    return WIDGET_COPILOT_AGENT_IDS.sdr;
-  }
+  void args;
   return WIDGET_COPILOT_AGENT_IDS.cs;
 }
 

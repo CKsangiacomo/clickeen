@@ -13,10 +13,13 @@ import {
   type MichaelTemplateCatalogResult,
   type MichaelWidgetRow,
 } from './michael-shared';
+import { loadTokyoAccountInstanceDocument } from './account-instance-direct';
 
 export async function loadAccountWidgetCatalog(args: {
   accountId: string;
   berlinAccessToken: string;
+  tokyoAccessToken: string;
+  accountCapsule?: string | null;
 }): Promise<MichaelAccountWidgetCatalogResult> {
   try {
     const michaelAccess = await resolveMichaelAccessToken(args.berlinAccessToken);
@@ -29,12 +32,10 @@ export async function loadAccountWidgetCatalog(args: {
     const [accountRows, curatedRows, widgetRows, containmentResponse] = await Promise.all([
       fetchMichaelListRows<{
         public_id?: unknown;
-        display_name?: unknown;
         status?: unknown;
-        widget_id?: unknown;
       }>({
         headers,
-        pathname: `/rest/v1/widget_instances?select=public_id,display_name,status,widget_id&account_id=eq.${encodeFilterValue(args.accountId)}&order=created_at.desc,public_id.desc`,
+        pathname: `/rest/v1/widget_instances?select=public_id,status&account_id=eq.${encodeFilterValue(args.accountId)}&order=created_at.desc,public_id.desc`,
       }),
       fetchMichaelListRows<{
         public_id?: unknown;
@@ -63,27 +64,58 @@ export async function loadAccountWidgetCatalog(args: {
     if (!curatedRows.ok) return curatedRows;
     if (!widgetRows.ok) return widgetRows;
 
-    const widgetTypeById = new Map<string, string>();
     const widgetTypeSet = new Set<string>();
     for (const row of widgetRows.rows) {
-      const id = asTrimmedString(row.id);
       const type = asTrimmedString(row.type);
       if (!type || type === 'unknown') continue;
       widgetTypeSet.add(type.toLowerCase());
-      if (id) widgetTypeById.set(id, type);
     }
 
-    const accountInstances: MichaelListedWidgetInstance[] = accountRows.rows.map((row) => {
-      const widgetId = asTrimmedString(row.widget_id);
-      const widgetType = widgetId ? (widgetTypeById.get(widgetId) ?? 'unknown') : 'unknown';
-      if (widgetType !== 'unknown') widgetTypeSet.add(widgetType);
-      return {
-        publicId: asTrimmedString(row.public_id) ?? 'unknown',
-        widgetType,
-        displayName: asTrimmedString(row.display_name) ?? 'Untitled widget',
-        status: row.status === 'published' ? 'published' : 'unpublished',
-      };
-    });
+    const accountIdentityResults = await Promise.all(
+      accountRows.rows.map(async (row) => {
+        const publicId = asTrimmedString(row.public_id);
+        if (!publicId) return { ok: true as const, value: null };
+
+        const saved = await loadTokyoAccountInstanceDocument({
+          accountId: args.accountId,
+          publicId,
+          tokyoAccessToken: args.tokyoAccessToken,
+          accountCapsule: args.accountCapsule,
+        });
+        if (!saved.ok) {
+          if (saved.status === 404) {
+            return { ok: true as const, value: null };
+          }
+          return {
+            ok: false as const,
+            status: saved.status,
+            reasonKey: saved.error.reasonKey,
+            detail: saved.error.detail,
+          };
+        }
+
+        const widgetType = saved.value.row.widgetType.trim() || 'unknown';
+        if (widgetType !== 'unknown') widgetTypeSet.add(widgetType.toLowerCase());
+        return {
+          ok: true as const,
+          value: {
+            publicId: saved.value.row.publicId,
+            widgetType,
+            displayName: saved.value.row.displayName || 'Untitled widget',
+            status: row.status === 'published' ? 'published' as const : 'unpublished' as const,
+          },
+        };
+      }),
+    );
+
+    const accountIdentityFailure = accountIdentityResults.find((result) => result.ok === false);
+    if (accountIdentityFailure) {
+      return accountIdentityFailure;
+    }
+
+    const accountInstances: MichaelListedWidgetInstance[] = accountIdentityResults.flatMap((result) =>
+      result.ok && result.value ? [result.value] : [],
+    );
 
     const curatedInstances: MichaelListedWidgetInstance[] = curatedRows.rows.map((row) => {
       const publicId = asTrimmedString(row.public_id) ?? 'unknown';

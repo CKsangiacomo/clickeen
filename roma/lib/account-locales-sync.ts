@@ -14,6 +14,8 @@ export async function runAccountLocalesSync(args: {
   const catalog = await loadAccountWidgetCatalog({
     accountId: args.accountId,
     berlinAccessToken: args.accessToken,
+    tokyoAccessToken: args.accessToken,
+    accountCapsule: args.accountCapsule,
   });
   if (!catalog.ok) {
     return [

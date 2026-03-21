@@ -528,6 +528,14 @@
     }
     window.CKHeader.applyHeader(state, widgetRoot);
 
+    if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
+      throw new Error('[Countdown] Missing CKLocaleSwitcher.applyLocaleSwitcher');
+    }
+    window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
+      locale: runtimeContext && runtimeContext.locale,
+      typographyScope: countdownRoot,
+    });
+
     applyAppearanceVars(state);
     applyLayoutVars(state);
     applyUnitLabels(state.timer);

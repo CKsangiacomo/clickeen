@@ -181,7 +181,7 @@ export async function writeSavedConfigToTokyo(args: {
   accountId: string;
   publicId: string;
   accountCapsule?: string | null;
-  widgetType?: string;
+  widgetType: string;
   config: Record<string, unknown>;
   displayName?: string | null;
   source?: 'account' | 'curated';
@@ -202,7 +202,7 @@ export async function writeSavedConfigToTokyo(args: {
     baseUrl: args.tokyoControlBaseUrl,
     accessToken: args.tokyoAccessToken,
     body: JSON.stringify({
-      ...(args.widgetType ? { widgetType: args.widgetType } : {}),
+      widgetType: args.widgetType,
       config: args.config,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.source ? { source: args.source } : {}),
@@ -372,7 +372,11 @@ export async function loadTokyoAccountInstanceLiveStatus(args: {
 export async function saveAccountInstanceDirect(args: {
   accountId: string;
   publicId: string;
+  widgetType: string;
   config: Record<string, unknown>;
+  displayName?: string | null;
+  source?: 'account' | 'curated';
+  meta?: Record<string, unknown> | null;
   tokyoBaseUrl: string;
   tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
@@ -391,7 +395,11 @@ export async function saveAccountInstanceDirect(args: {
       publicId: args.publicId,
       internalServiceName: args.internalServiceName,
       accountCapsule: args.accountCapsule,
+      widgetType: args.widgetType,
       config: args.config,
+      displayName: args.displayName,
+      source: args.source,
+      meta: args.meta,
     });
   } catch (error) {
     return {

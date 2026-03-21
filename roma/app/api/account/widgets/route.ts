@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
   const widgetCatalog = await loadAccountWidgetCatalog({
     accountId,
     berlinAccessToken: current.value.accessToken,
+    tokyoAccessToken: current.value.accessToken,
+    accountCapsule: current.value.authzToken,
   });
   if (widgetCatalog.ok === false) {
     const kind =

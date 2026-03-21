@@ -6,7 +6,7 @@ type UpsellPopupProps = {
   open: boolean;
   reasonKey: string;
   detail?: string;
-  cta: 'signup' | 'upgrade';
+  cta: 'upgrade';
   onClose: () => void;
 };
 
@@ -31,8 +31,8 @@ export function UpsellPopup({ open, reasonKey, detail, cta, onClose }: UpsellPop
 
   if (!open) return null;
 
-  const headline = cta === 'signup' ? 'Create a free account to continue' : 'Upgrade to continue';
-  const primaryLabel = cta === 'signup' ? 'Create free account' : 'Upgrade plan';
+  const headline = 'Upgrade to continue';
+  const primaryLabel = 'Upgrade plan';
 
   return (
     <div className="ck-upsellOverlay" role="presentation" onMouseDown={onClose}>

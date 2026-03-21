@@ -32,12 +32,14 @@ export type SessionMeta = {
   publicId?: string;
   widgetname?: string;
   label?: string;
+  source?: 'account' | 'curated';
+  meta?: Record<string, unknown> | null;
 } | null;
 
 export type SessionUpsell = {
   reasonKey: string;
   detail?: string;
-  cta: 'signup' | 'upgrade';
+  cta: 'upgrade';
 } | null;
 
 export type EditorOpenMessage = {
@@ -49,6 +51,8 @@ export type EditorOpenMessage = {
   policy?: Policy;
   publicId?: string;
   label?: string;
+  source?: 'account' | 'curated';
+  meta?: Record<string, unknown> | null;
 };
 
 export type BobSessionReadyMessage = {

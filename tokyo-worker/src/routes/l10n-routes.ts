@@ -1,6 +1,7 @@
 import { isUuid } from '@clickeen/ck-contracts';
 import { normalizeLocale, normalizePublicId, normalizeSha256Hex } from '../asset-utils';
 import {
+  handleGetAccountTranslationsPanel,
   handleDeleteAccountUserLayer,
   handleGetAccountLocalizationSnapshot,
   handleGetAccountL10nStatus,
@@ -86,6 +87,28 @@ export async function tryHandleInternalL10nRoutes(
     });
     if (authErr) return respond(authErr);
     return respond(await handleGetAccountL10nStatus(req, env, publicId, accountId));
+  }
+
+  const internalL10nTranslationsMatch = pathname.match(
+    /^\/__internal\/l10n\/instances\/([^/]+)\/translations$/,
+  );
+  if (internalL10nTranslationsMatch) {
+    const publicId = normalizePublicId(decodeURIComponent(internalL10nTranslationsMatch[1]));
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!publicId || !isUuid(accountId)) {
+      return respondValidation(respond, 'tokyo.errors.l10n.invalid');
+    }
+    if (req.method !== 'GET') {
+      return respondMethodNotAllowed(respond);
+    }
+    const authErr = await authorizeRomaAccountScopedRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+    return respond(await handleGetAccountTranslationsPanel(req, env, publicId, accountId));
   }
 
   const internalL10nUserLayerMatch = pathname.match(

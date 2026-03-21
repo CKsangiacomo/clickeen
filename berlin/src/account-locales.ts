@@ -18,8 +18,7 @@ type LocaleMutationResult =
 const DEFAULT_ACCOUNT_L10N_POLICY: AccountL10nPolicy = {
   v: 1,
   baseLocale: 'en',
-  ip: { enabled: false, countryToLocale: {} },
-  switcher: { enabled: true },
+  ip: { countryToLocale: {} },
 };
 
 function canManageAccountLocales(role: BerlinAccountContext['role']): boolean {
@@ -191,23 +190,6 @@ export async function handleAccountLocalesUpdate(args: {
   }
 
   const nextPolicy = resolveAccountL10nPolicy(nextPolicyPersisted);
-  const nextAvailable = resolveActivePublishLocales({
-    accountLocales: localesResult.locales,
-    baseLocale: nextPolicy.baseLocale,
-  });
-  const nextAvailableSet = new Set(nextAvailable);
-  const invalidSwitcherLocales = Array.isArray(nextPolicy.switcher.locales)
-    ? nextPolicy.switcher.locales.filter((locale) => !nextAvailableSet.has(locale))
-    : [];
-  if (invalidSwitcherLocales.length > 0) {
-    return json(
-      invalidSwitcherLocales.map((locale, index) => ({
-        path: `policy.switcher.locales[${index}]`,
-        message: `switcher locale must be enabled on the account: ${locale}`,
-      })),
-      { status: 422 },
-    );
-  }
   const patched = await patchAccountLocales({
     env: args.env,
     accountId: args.account.accountId,

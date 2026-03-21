@@ -30,6 +30,17 @@ export const RENDER_SNAPSHOT_ACTION = Object.freeze({
   DELETE: 'delete',
 });
 const SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(localesJson).map((entry) => entry.code));
+const WIDGET_LOCALE_SWITCHER_ATTACH = new Set(['pod', 'stage']);
+const WIDGET_LOCALE_SWITCHER_POSITION = new Set([
+  'top-left',
+  'top-center',
+  'top-right',
+  'right-middle',
+  'bottom-right',
+  'bottom-center',
+  'bottom-left',
+  'left-middle',
+]);
 
 function failAccountL10nContract(reason) {
   throw new Error(`account_l10n_contract_invalid:${reason}`);
@@ -216,13 +227,7 @@ export function parseAccountL10nPolicyStrict(raw) {
   const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale);
   if (!baseLocale) failAccountL10nContract('policy_base_locale_invalid');
   const ipRaw = isRecord(raw.ip) ? raw.ip : null;
-  const switcherRaw = isRecord(raw.switcher) ? raw.switcher : null;
   if (!ipRaw) failAccountL10nContract('policy_ip_invalid');
-  if (!switcherRaw) failAccountL10nContract('policy_switcher_invalid');
-  if (typeof ipRaw.enabled !== 'boolean') failAccountL10nContract('policy_ip_enabled_invalid');
-  if (typeof switcherRaw.enabled !== 'boolean') {
-    failAccountL10nContract('policy_switcher_enabled_invalid');
-  }
   if (!isRecord(ipRaw.countryToLocale)) failAccountL10nContract('policy_country_map_invalid');
 
   const countryToLocale = {};
@@ -235,19 +240,11 @@ export function parseAccountL10nPolicyStrict(raw) {
     countryToLocale[country] = locale;
   }
 
-  const switcherLocales =
-    switcherRaw.locales == null ? [] : parseAccountLocaleListStrict(switcherRaw.locales);
-
   return {
     v: 1,
     baseLocale,
     ip: {
-      enabled: ipRaw.enabled,
       countryToLocale,
-    },
-    switcher: {
-      enabled: switcherRaw.enabled,
-      ...(switcherLocales.length ? { locales: switcherLocales } : {}),
     },
   };
 }
@@ -294,35 +291,47 @@ export function validateAccountL10nPolicy(raw, path = 'policy') {
   }
 
   const ipRaw = isRecord(raw.ip) ? raw.ip : null;
-  if (ipRaw && Object.prototype.hasOwnProperty.call(ipRaw, 'countryToLocale')) {
-    if (!isRecord(ipRaw.countryToLocale)) {
-      issues.push({ path: `${path}.ip.countryToLocale`, message: 'countryToLocale must be an object' });
-    } else {
-      for (const [countryRaw, localeRaw] of Object.entries(ipRaw.countryToLocale)) {
-        const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
-        if (!/^[A-Z]{2}$/.test(country)) {
-          issues.push({
-            path: `${path}.ip.countryToLocale.${countryRaw}`,
-            message: 'country key must be ISO-3166 alpha-2',
-          });
-          continue;
-        }
-        if (!normalizeSupportedLocaleToken(localeRaw)) {
-          issues.push({
-            path: `${path}.ip.countryToLocale.${country}`,
-            message: 'locale must be a supported locale token',
-          });
-        }
-      }
+  if (!ipRaw) {
+    issues.push({ path: `${path}.ip`, message: 'ip must be an object' });
+    return issues;
+  }
+  if (!isRecord(ipRaw.countryToLocale)) {
+    issues.push({ path: `${path}.ip.countryToLocale`, message: 'countryToLocale must be an object' });
+    return issues;
+  }
+  for (const [countryRaw, localeRaw] of Object.entries(ipRaw.countryToLocale)) {
+    const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
+    if (!/^[A-Z]{2}$/.test(country)) {
+      issues.push({
+        path: `${path}.ip.countryToLocale.${countryRaw}`,
+        message: 'country key must be ISO-3166 alpha-2',
+      });
+      continue;
+    }
+    if (!normalizeSupportedLocaleToken(localeRaw)) {
+      issues.push({
+        path: `${path}.ip.countryToLocale.${country}`,
+        message: 'locale must be a supported locale token',
+      });
     }
   }
 
-  const switcherRaw = isRecord(raw.switcher) ? raw.switcher : null;
-  if (switcherRaw && Object.prototype.hasOwnProperty.call(switcherRaw, 'locales')) {
-    issues.push(...validateAccountLocaleList(switcherRaw.locales, `${path}.switcher.locales`, { allowNull: true }));
-  }
-
   return issues;
+}
+
+export function normalizeWidgetLocaleSwitcherSettings(raw) {
+  const payload = isRecord(raw) ? raw : {};
+  const attachTo = asTrimmedString(payload.attachTo).toLowerCase();
+  const position = asTrimmedString(payload.position).toLowerCase();
+  const alwaysShowLocale = normalizeSupportedLocaleToken(payload.alwaysShowLocale);
+
+  return {
+    enabled: payload.enabled === true,
+    byIp: payload.byIp === true,
+    alwaysShowLocale: alwaysShowLocale || null,
+    attachTo: WIDGET_LOCALE_SWITCHER_ATTACH.has(attachTo) ? attachTo : 'stage',
+    position: WIDGET_LOCALE_SWITCHER_POSITION.has(position) ? position : 'top-right',
+  };
 }
 function normalizeResolvedAssetSource(entry) {
   if (!isRecord(entry)) return null;

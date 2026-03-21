@@ -18,8 +18,7 @@ type AccountLocalesPayload = {
   policy: {
     v: 1;
     baseLocale: string;
-    ip: { enabled: boolean; countryToLocale: Record<string, string> };
-    switcher: { enabled: boolean; locales?: string[] };
+    ip: { countryToLocale: Record<string, string> };
   };
 };
 
@@ -81,35 +80,6 @@ function buildDefaultCountryToLocale(args: { enabledLocales: string[]; baseLocal
   return mapping;
 }
 
-function normalizeSwitcherLocales(value: unknown, enabledLocales: string[]): string[] {
-  if (!Array.isArray(value)) return enabledLocales;
-  const enabledSet = new Set(enabledLocales);
-  const normalized = value
-    .map((entry) => normalizeLocaleToken(entry))
-    .filter((entry): entry is string => Boolean(entry))
-    .filter((entry) => enabledSet.has(entry));
-  const selected = new Set(normalized);
-  return enabledLocales.filter((locale) => selected.has(locale));
-}
-
-function toggleOrderedLocale(current: string[], locale: string, enabled: boolean): string[] {
-  if (!enabled) return current.filter((entry) => entry !== locale);
-  if (current.includes(locale)) return current;
-  return [...current, locale];
-}
-
-function moveOrderedLocale(current: string[], locale: string, direction: 'up' | 'down'): string[] {
-  const index = current.indexOf(locale);
-  if (index < 0) return current;
-  const targetIndex = direction === 'up' ? index - 1 : index + 1;
-  if (targetIndex < 0 || targetIndex >= current.length) return current;
-  const next = current.slice();
-  const [entry] = next.splice(index, 1);
-  if (!entry) return current;
-  next.splice(targetIndex, 0, entry);
-  return next;
-}
-
 const ACCOUNT_LOCALES_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to manage account languages.',
   'coreui.errors.auth.contextUnavailable': 'Account languages are unavailable right now. Please try again.',
@@ -145,9 +115,6 @@ export function AccountLocaleSettingsCard(args: {
   const [success, setSuccess] = useState<string | null>(null);
   const [draftBaseLocale, setDraftBaseLocale] = useState('en');
   const [draftAdditionalLocales, setDraftAdditionalLocales] = useState<string[]>([]);
-  const [draftIpEnabled, setDraftIpEnabled] = useState(false);
-  const [draftSwitcherEnabled, setDraftSwitcherEnabled] = useState(true);
-  const [draftSwitcherLocales, setDraftSwitcherLocales] = useState<string[]>([]);
   const policyProfile = useMemo(() => {
     const raw = typeof me.data?.authz?.profile === 'string' ? me.data.authz.profile.trim() : '';
     switch (raw) {
@@ -171,19 +138,14 @@ export function AccountLocaleSettingsCard(args: {
         locales?: unknown;
         policy?: {
           baseLocale?: unknown;
-          ip?: { enabled?: unknown; countryToLocale?: unknown };
-          switcher?: { enabled?: unknown; locales?: unknown };
+          ip?: { countryToLocale?: unknown };
         } | null;
       }>(`/api/account/locales?_t=${Date.now()}`, { method: 'GET' });
 
       const baseLocale = normalizeLocaleToken(payload.policy?.baseLocale) ?? 'en';
       const additionalLocales = normalizeAdditionalAccountLocales(payload.locales, baseLocale);
-      const enabledLocales = [baseLocale, ...additionalLocales];
       setDraftBaseLocale(baseLocale);
       setDraftAdditionalLocales(additionalLocales);
-      setDraftIpEnabled(payload.policy?.ip?.enabled === true);
-      setDraftSwitcherEnabled(payload.policy?.switcher?.enabled !== false);
-      setDraftSwitcherLocales(normalizeSwitcherLocales(payload.policy?.switcher?.locales, enabledLocales));
       setSuccess(null);
     } catch (nextError) {
       setError(resolveAccountLocalesErrorCopy(nextError instanceof Error ? nextError.message : nextError, 'Failed to load account languages. Please try again.'));
@@ -210,9 +172,6 @@ export function AccountLocaleSettingsCard(args: {
     () => [baseLocale, ...effectiveAdditionalLocales.filter((entry) => entry !== baseLocale)],
     [baseLocale, effectiveAdditionalLocales],
   );
-  useEffect(() => {
-    setDraftSwitcherLocales((current) => enabledLocales.filter((locale) => current.includes(locale)));
-  }, [enabledLocales]);
   const systemChosenLocale = useMemo(
     () => (usesSystemLocale ? resolveSystemChosenAdditionalLocale({ baseLocale }) : null),
     [baseLocale, usesSystemLocale],
@@ -226,16 +185,6 @@ export function AccountLocaleSettingsCard(args: {
       })),
     [baseLocale, effectiveAdditionalLocales],
   );
-  const switcherOptions = useMemo(
-    () =>
-      enabledLocales.map((code) => ({
-        code,
-        label: resolveLocaleUiLabel(code),
-        enabled: draftSwitcherLocales.includes(code),
-      })),
-    [draftSwitcherLocales, enabledLocales],
-  );
-
   const saveSettings = useCallback(async () => {
     if (!args.accountId) return;
     setSaving(true);
@@ -250,30 +199,13 @@ export function AccountLocaleSettingsCard(args: {
     });
 
     const enabledLocales = [normalizedBase, ...additionalLocales];
-    const switcherLocales = draftSwitcherEnabled
-        ? Array.from(
-            new Set(
-              draftSwitcherLocales
-                .map((entry) => normalizeLocaleToken(entry))
-                .filter((entry): entry is string => Boolean(entry))
-                .filter((entry) => enabledLocales.includes(entry)),
-            ),
-          )
-      : [];
     const payload: AccountLocalesPayload = {
       locales: additionalLocales,
       policy: {
         v: 1,
         baseLocale: normalizedBase,
         ip: {
-          enabled: draftIpEnabled,
-          countryToLocale: draftIpEnabled
-            ? buildDefaultCountryToLocale({ enabledLocales, baseLocale: normalizedBase })
-            : {},
-        },
-        switcher: {
-          enabled: draftSwitcherEnabled,
-          ...(switcherLocales.length ? { locales: switcherLocales } : {}),
+          countryToLocale: buildDefaultCountryToLocale({ enabledLocales, baseLocale: normalizedBase }),
         },
       },
     };
@@ -302,9 +234,6 @@ export function AccountLocaleSettingsCard(args: {
     accountApi,
     draftAdditionalLocales,
     draftBaseLocale,
-    draftIpEnabled,
-    draftSwitcherEnabled,
-    draftSwitcherLocales,
     loadSettings,
     policyProfile,
   ]);
@@ -369,90 +298,12 @@ export function AccountLocaleSettingsCard(args: {
           </div>
         </div>
 
-        <div className="roma-locale-settings__toggles">
-          <label className="roma-locale-settings__option">
-            <input
-              type="checkbox"
-              checked={draftIpEnabled}
-              disabled={loading || saving || !args.canEdit}
-              onChange={(event) => setDraftIpEnabled(event.target.checked)}
-            />
-            <span className="body-s">Auto-detect language by visitor IP</span>
-          </label>
-          <label className="roma-locale-settings__option">
-            <input
-              type="checkbox"
-              checked={draftSwitcherEnabled}
-              disabled={loading || saving || !args.canEdit}
-              onChange={(event) => setDraftSwitcherEnabled(event.target.checked)}
-            />
-            <span className="body-s">Show language switcher in the widget</span>
-          </label>
-          {draftSwitcherEnabled ? (
-            <div className="roma-inline-stack">
-              <div className="label-s">Locales in switcher</div>
-              <p className="body-s">Choose which enabled languages appear in the widget dropdown, then set their order.</p>
-              <div className="roma-locale-settings__list">
-                {switcherOptions.map((entry) => (
-                  <label key={`switcher-${entry.code}`} className="roma-locale-settings__option">
-                    <input
-                      type="checkbox"
-                      checked={entry.enabled}
-                      disabled={loading || saving || !args.canEdit}
-                      onChange={(event) => {
-                        const nextChecked = event.target.checked;
-                        setDraftSwitcherLocales((current) => {
-                          return toggleOrderedLocale(current, entry.code, nextChecked);
-                        });
-                      }}
-                    />
-                    <span className="body-s">{entry.label}</span>
-                  </label>
-                ))}
-              </div>
-              {draftSwitcherLocales.length > 1 ? (
-                <div className="roma-inline-stack">
-                  <div className="label-s">Switcher order</div>
-                  <p className="body-s">These languages appear in the widget dropdown from top to bottom in this order.</p>
-                  <div className="roma-locale-settings__list">
-                    {draftSwitcherLocales.map((code, index) => (
-                      <div key={`switcher-order-${code}`} className="roma-locale-settings__option">
-                        <span className="body-s">
-                          {index + 1}. {resolveLocaleUiLabel(code)}
-                        </span>
-                        <div className="rd-canvas-module__actions">
-                          <button
-                            className="diet-btn-txt"
-                            data-size="sm"
-                            data-variant="line2"
-                            type="button"
-                            disabled={loading || saving || !args.canEdit || index === 0}
-                            onClick={() =>
-                              setDraftSwitcherLocales((current) => moveOrderedLocale(current, code, 'up'))
-                            }
-                          >
-                            <span className="diet-btn-txt__label body-s">Up</span>
-                          </button>
-                          <button
-                            className="diet-btn-txt"
-                            data-size="sm"
-                            data-variant="line2"
-                            type="button"
-                            disabled={loading || saving || !args.canEdit || index === draftSwitcherLocales.length - 1}
-                            onClick={() =>
-                              setDraftSwitcherLocales((current) => moveOrderedLocale(current, code, 'down'))
-                            }
-                          >
-                            <span className="diet-btn-txt__label body-s">Down</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
+        <div className="roma-inline-stack">
+          <div className="label-s">Widget locale behavior</div>
+          <p className="body-s">
+            Locale switcher visibility and IP-based locale behavior now belong to each widget in Builder.
+            Settings only decide which languages this account has available and keep the country-to-locale support map up to date.
+          </p>
         </div>
 
         <div className="rd-canvas-module__actions">

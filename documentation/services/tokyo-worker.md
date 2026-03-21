@@ -7,7 +7,7 @@ Tokyo-worker has five responsibilities:
 
 1. **Assets** (Roma-owned): upload/read/delete account assets in Tokyo/R2 + manifest metadata.
 2. **Saved authoring snapshot** (PRD 61 cutover): store the latest saved user-instance config in Tokyo so product reads can treat Tokyo as the saved revision base.
-3. **Canonical l10n identity**: compute/store the current base snapshot + fingerprint on every saved-config write.
+3. **Canonical l10n identity**: derive/store the current base snapshot + fingerprint when localization/live follow-up consumers need it after save.
 4. **Explicit instance sync** (PRD 54): reconcile locale overlays, text/meta packs, runtime config packs, and live pointers when Roma widget/localization routes ask Tokyo-worker to do that work.
 5. **Public instance payload assembly**: build the public MiniBob boot payload from Tokyo live truth so Venice stays a thin surface.
 
@@ -94,7 +94,8 @@ Current runtime contract:
 - Bob/Roma product-path save writes this snapshot synchronously before returning success.
 - Product-path save does not read the previous saved pointer to recover sibling metadata. Roma sends the current saved-pointer metadata explicitly on save, and Tokyo-worker writes that payload directly.
 - Product-path saved-config validation is owned once at the Tokyo-worker save helper boundary. The internal route does not keep a second parallel save-validity story for the same widget payload.
-- On that same saved-config write, Tokyo-worker also computes the current localization base snapshot/fingerprint from `tokyo/widgets/{widgetType}/localization.json` and stamps that onto the saved pointer.
+- Product-path save does not compute localization base state inline and does not stamp a new l10n fingerprint onto the saved pointer during the save request.
+- Explicit Tokyo-worker sync and account-localization state now lazy-derive/ensure the current localization base snapshot/fingerprint from `tokyo/widgets/{widgetType}/localization.json` when those follow-up consumers need it.
 - Bob/Roma product-path save does not inline l10n/live-surface convergence; explicit Tokyo-worker sync does that separately when Roma widget/localization routes request it.
 - Bob/Roma product-path account reads use this Tokyo saved snapshot as the active open/save truth.
 - `GET /__internal/renders/instances/:publicId/saved.json` is the named saved-document read boundary for Builder. If the saved pointer/config is malformed, Tokyo-worker now returns a validation failure instead of hiding that state as a fake not-found.

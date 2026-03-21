@@ -426,6 +426,72 @@ body {
   color: var(--color-system-green);
 }
 
+.translations-panel__body {
+  margin-top: var(--space-2);
+}
+
+.translations-panel__status-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.translations-panel__status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.translations-panel__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7rem;
+  padding: 0.35rem 0.625rem;
+  border-radius: var(--control-radius-pill);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+  background: color-mix(in oklab, var(--color-system-gray-6), transparent 65%);
+  color: var(--color-system-black);
+}
+
+.translations-panel__badge[data-tone='success'] {
+  border-color: color-mix(in oklab, var(--color-system-green), transparent 55%);
+  background: color-mix(in oklab, var(--color-system-green-5), transparent 82%);
+  color: var(--color-system-green);
+}
+
+.translations-panel__badge[data-tone='warning'] {
+  border-color: color-mix(in oklab, var(--color-system-orange), transparent 55%);
+  background: color-mix(in oklab, var(--color-system-orange-5), transparent 82%);
+  color: var(--color-system-orange-contrast);
+}
+
+.translations-panel__badge[data-tone='neutral'] {
+  border-color: color-mix(in oklab, var(--color-system-blue), transparent 55%);
+  background: color-mix(in oklab, var(--color-system-blue-5), transparent 82%);
+  color: var(--color-system-blue);
+}
+
+.translations-panel__badge[data-selected='true'] {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-system-black), transparent 82%);
+}
+
+.translations-panel__entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: var(--control-radius-md);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
+  background: color-mix(in oklab, var(--color-system-gray-6), transparent 74%);
+}
+
+.translations-panel__value {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .workspace {
   position: relative;
   display: flex;

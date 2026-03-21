@@ -525,11 +525,9 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
         body: JSON.stringify({
           agentId: widgetCopilotAgentId,
           prompt,
-          widgetType,
           currentConfig: session.instanceData,
           controls: controlsForAi,
           sessionId,
-          instancePublicId,
           subject: 'account',
           ...(requestContext.provider ? { provider: requestContext.provider } : {}),
           ...(requestContext.model ? { model: requestContext.model } : {}),
@@ -625,7 +623,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
 
                 {cta?.text ? (
                   <div style={{ marginTop: 'var(--space-1)' }}>
-                    {cta.action === 'signup' || cta.action === 'upgrade' ? (
+                    {cta.action === 'upgrade' ? (
                       <button
                         className="diet-btn-txt"
                         data-size="md"

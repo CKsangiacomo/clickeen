@@ -1,9 +1,12 @@
 import type { AccountLocalizationSnapshot } from '@clickeen/ck-contracts';
+import localesJson from '@clickeen/l10n/locales.json';
+import { normalizeCanonicalLocalesFile, resolveLocaleLabel } from '@clickeen/l10n';
 import { resolvePolicy } from '@clickeen/ck-policy';
 import { buildL10nSnapshot, computeBaseFingerprint } from '@clickeen/l10n';
 import { json } from '../http';
 import type { Env } from '../types';
 import {
+  type LocalePolicy,
   l10nLivePointerKey,
   l10nTextPackKey,
   loadWidgetLocalizationAllowlist,
@@ -30,10 +33,13 @@ type PublicInstancePayload = {
   widgetType: string;
   config: Record<string, unknown>;
   baseFingerprint: string;
-  localePolicy: AccountLocalizationSnapshot['policy'];
+  localePolicy: LocalePolicy;
+  localeLabels: Record<string, string>;
   localization: AccountLocalizationSnapshot;
   policy: ReturnType<typeof resolvePolicy>;
 };
+
+const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 
 type LocalizationOp = {
   op: 'set';
@@ -101,6 +107,7 @@ async function loadPublicLocalizationSnapshot(args: {
   localePolicyRaw: unknown;
 }): Promise<{
   baseFingerprint: string;
+  localePolicy: LocalePolicy;
   localization: AccountLocalizationSnapshot;
 }> {
   const localePolicy = normalizeLocalePolicy(args.localePolicyRaw);
@@ -154,12 +161,9 @@ async function loadPublicLocalizationSnapshot(args: {
       readyLocales.includes(locale),
     ),
   );
-  const switcherLocales = (
-    localePolicy.switcher.locales?.length ? localePolicy.switcher.locales : readyLocales
-  ).filter((locale) => locale !== localePolicy.baseLocale && readyLocales.includes(locale));
-
   return {
     baseFingerprint,
+    localePolicy,
     localization: {
       baseLocale: localePolicy.baseLocale,
       accountLocales: Array.from(new Set(nonBaseReadyLocales)),
@@ -170,16 +174,24 @@ async function loadPublicLocalizationSnapshot(args: {
         v: 1,
         baseLocale: localePolicy.baseLocale,
         ip: {
-          enabled: localePolicy.ip.enabled === true,
           countryToLocale: filteredCountryMap,
-        },
-        switcher: {
-          enabled: localePolicy.switcher.enabled === true,
-          ...(switcherLocales.length ? { locales: Array.from(new Set(switcherLocales)) } : {}),
         },
       },
     },
   };
+}
+
+function buildLocaleLabels(locales: string[]): Record<string, string> {
+  return Object.fromEntries(
+    locales.map((locale) => [
+      locale,
+      resolveLocaleLabel({
+        locales: CANONICAL_LOCALES,
+        uiLocale: locale,
+        targetLocale: locale,
+      }),
+    ]),
+  );
 }
 
 export async function handleGetPublicInstance(env: Env, publicId: string): Promise<Response> {
@@ -202,7 +214,7 @@ export async function handleGetPublicInstance(env: Env, publicId: string): Promi
 
   let publicPayload: PublicInstancePayload;
   try {
-    const { baseFingerprint, localization } = await loadPublicLocalizationSnapshot({
+    const { baseFingerprint, localePolicy, localization } = await loadPublicLocalizationSnapshot({
       env,
       publicId,
       widgetType: livePointer.widgetType,
@@ -216,7 +228,8 @@ export async function handleGetPublicInstance(env: Env, publicId: string): Promi
       widgetType: livePointer.widgetType,
       config,
       baseFingerprint,
-      localePolicy: localization.policy,
+      localePolicy,
+      localeLabels: buildLocaleLabels(localePolicy.readyLocales),
       localization,
       policy: resolvePolicy({ profile: 'free', role: 'editor' }),
     };

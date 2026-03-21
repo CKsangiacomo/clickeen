@@ -47,12 +47,7 @@ export type AccountL10nPolicy = {
   v: 1;
   baseLocale: string;
   ip: {
-    enabled: boolean;
     countryToLocale: Record<string, string>;
-  };
-  switcher: {
-    enabled: boolean;
-    locales?: string[];
   };
 };
 
@@ -75,6 +70,22 @@ export type AccountLocalizationSnapshot = {
   invalidAccountLocales: string | null;
   localeOverlays: AccountOverlayEntry[];
   policy: AccountL10nPolicy;
+};
+
+export type WidgetLocaleSwitcherSettings = {
+  enabled: boolean;
+  byIp: boolean;
+  alwaysShowLocale: string | null;
+  attachTo: 'pod' | 'stage';
+  position:
+    | 'top-left'
+    | 'top-center'
+    | 'top-right'
+    | 'right-middle'
+    | 'bottom-right'
+    | 'bottom-center'
+    | 'bottom-left'
+    | 'left-middle';
 };
 
 export type AccountL10nValidationIssue = {
@@ -125,6 +136,7 @@ export declare function validateAccountL10nPolicy(
   raw: unknown,
   path?: string,
 ): AccountL10nValidationIssue[];
+export declare function normalizeWidgetLocaleSwitcherSettings(raw: unknown): WidgetLocaleSwitcherSettings;
 export declare function collectConfigMediaAssetIds(config: unknown): string[];
 export declare function materializeConfigMedia(
   config: unknown,

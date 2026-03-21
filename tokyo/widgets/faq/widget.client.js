@@ -593,6 +593,14 @@
     }
     window.CKHeader.applyHeader(state, widgetRoot);
 
+    if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
+      throw new Error('[FAQ] Missing CKLocaleSwitcher.applyLocaleSwitcher');
+    }
+    window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
+      locale: runtimeContext && runtimeContext.locale,
+      typographyScope: faqRoot,
+    });
+
     applyAccordionIcons(state.appearance.iconStyle);
 
     applyAppearance(state.appearance);

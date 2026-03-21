@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CompiledPanel, PanelId } from '../lib/types';
-import { TdMenu } from './TdMenu';
+import { DEFAULT_PANELS, TdMenu } from './TdMenu';
 import { TdMenuContent } from './TdMenuContent';
 import { AccountCopilotPane } from './CopilotPane';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 import { SettingsPanel } from './SettingsPanel';
+import { TranslationsPanel } from './TranslationsPanel';
 
 const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to keep editing this widget.',
@@ -89,6 +90,13 @@ export function ToolDrawer() {
     }
     return map;
   }, [compiled]);
+  const menuPanels = useMemo(() => {
+    if (!compiled?.panels?.length) {
+      return DEFAULT_PANELS.filter((panel) => panel.id !== 'translations');
+    }
+    const availableIds = new Set(compiled.panels.map((panel) => panel.id));
+    return DEFAULT_PANELS.filter((panel) => availableIds.has(panel.id));
+  }, [compiled?.panels]);
   const activePanelHtml = panelsById[activePanel]?.html ?? null;
   const alertBorderColor = '1px solid color-mix(in oklab, var(--color-system-red), transparent 55%)';
   const alertBackground = 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';
@@ -159,7 +167,7 @@ export function ToolDrawer() {
       <div className="tdcontent">
         {mode === 'manual' ? (
           <>
-            <TdMenu active={activePanel} onSelect={(id) => setActivePanel(id)} />
+            <TdMenu active={activePanel} panels={menuPanels} onSelect={(id) => setActivePanel(id)} />
             {sessionError ? (
               <div
                 role="alert"
@@ -182,6 +190,8 @@ export function ToolDrawer() {
             {compiled ? (
               activePanel === 'settings' ? (
                 <SettingsPanel />
+              ) : activePanel === 'translations' ? (
+                <TranslationsPanel />
               ) : (
                 <TdMenuContent
                   panelId={activePanel}

@@ -297,7 +297,7 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 **Budgets (MiniBob + Free conversion gates):**
 - Budgets are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls, snapshot regenerations).
 - Budgets are **metered and enforced server-side** at the point where cost is incurred (Paris/Tokyo-worker/Venice); Bob uses the resolved policy for UX gating + upsell messaging.
-- Budgets are defined by the subject policy (e.g. `minibob` vs `account`) and account tier, not by individual widgets.
+- Budgets are defined by the real account policy plus explicit demo-surface gates, not by a fake `minibob` subject profile and not by individual widgets.
 
 **How this appears in widget PRDs (required):**
 - PRDs list **which entitlement keys** a widget uses and **how they map** to widget state (paths + metrics).
@@ -308,7 +308,7 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 **Upsell popup standard (durable):**
 - Every rejected limit or budget uses the same **Upsell** popup (no per-row copy).
 - The system chooses the destination and CTA deterministically:
-  - If the viewer has no account/session (MiniBob / anonymous): upsell takes them to **Create Free Account**
+  - If the viewer has no account/session (Prague demo / anonymous): upsell takes them to **Create Free Account**
   - If the viewer is logged in but blocked by plan/tier: upsell takes them to **Upgrade Plan**
 - PRDs do **not** encode "free vs paid" in per-row copy; it is derived from the matrix deltas and current viewer profile.
 

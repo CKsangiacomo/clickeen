@@ -8,6 +8,7 @@ import {
   materializeConfigMedia,
   type AccountL10nPolicy,
   type LocalizationOp,
+  normalizeWidgetLocaleSwitcherSettings,
 } from '@clickeen/ck-contracts';
 import {
   buildAccountAssetVersionPath,
@@ -29,6 +30,7 @@ import {
 } from './account-localization';
 import { upsertL10nOverlay } from './l10n-authoring';
 import {
+  ensureSavedRenderL10nBase,
   loadWidgetLocalizationAllowlist,
   readSavedRenderConfig,
   resolveTokyoPublicBaseUrl,
@@ -51,27 +53,30 @@ function buildLiveLocalePolicy(args: {
   baseLocale: string;
   readyLocales: string[];
   policy: AccountL10nPolicy;
+  config: Record<string, unknown>;
 }): LocalePolicy {
+  const localeSwitcher = normalizeWidgetLocaleSwitcherSettings(args.config.localeSwitcher);
   const readySet = new Set(args.readyLocales);
   const countryToLocale = Object.fromEntries(
     Object.entries(args.policy.ip.countryToLocale || {}).filter(([, locale]) =>
       readySet.has(locale),
     ),
   );
-  const switcherLocales = (args.policy.switcher.locales || []).filter((locale) =>
-    readySet.has(locale),
-  );
+  const alwaysShowLocale =
+    localeSwitcher.byIp === true || !localeSwitcher.alwaysShowLocale || !readySet.has(localeSwitcher.alwaysShowLocale)
+      ? undefined
+      : localeSwitcher.alwaysShowLocale;
 
   return {
     baseLocale: args.baseLocale,
     readyLocales: args.readyLocales,
     ip: {
-      enabled: args.policy.ip.enabled === true,
-      countryToLocale,
+      enabled: localeSwitcher.byIp === true,
+      countryToLocale: localeSwitcher.byIp === true ? countryToLocale : {},
     },
     switcher: {
-      enabled: args.policy.switcher.enabled !== false,
-      ...(switcherLocales.length ? { locales: switcherLocales } : {}),
+      enabled: localeSwitcher.enabled === true,
+      ...(alwaysShowLocale ? { alwaysShowLocale } : {}),
     },
   };
 }
@@ -156,36 +161,23 @@ export async function handleSyncAccountInstance(
     );
   }
 
-  const baseFingerprint = saved.value.pointer.l10n?.baseFingerprint ?? null;
-  if (!baseFingerprint) {
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'tokyo.errors.internal',
-          detail: 'saved_pointer_missing_l10n_fingerprint',
-        },
-      },
-      { status: 500 },
-    );
-  }
-
-  const [{ accountLocales, policy }, localizationAllowlist, baseTextPack] = await Promise.all([
+  const [{ accountLocales, policy }, l10nBase] = await Promise.all([
     loadBerlinAccountL10nState({
       env,
       accessToken,
       accountId,
     }),
-    loadWidgetLocalizationAllowlist({
-      env,
-      widgetType: saved.value.pointer.widgetType,
-    }),
-    loadBaseTextPack({
+    ensureSavedRenderL10nBase({
       env,
       publicId,
-      baseFingerprint,
+      widgetType: saved.value.pointer.widgetType,
+      config: saved.value.config,
+      existingBaseFingerprint: saved.value.pointer.l10n?.baseFingerprint ?? null,
     }),
   ]);
+  const baseFingerprint = l10nBase.baseFingerprint;
+  const localizationAllowlist = l10nBase.allowlist;
+  const baseTextPack = l10nBase.snapshot;
 
   const baseLocale = policy.baseLocale;
   const desiredLocales = normalizeReadyLocales({
@@ -309,6 +301,7 @@ export async function handleSyncAccountInstance(
       baseLocale,
       readyLocales: desiredLocales,
       policy,
+      config: saved.value.config,
     });
     await syncLiveSurface(env, {
       v: 1,

@@ -24,7 +24,14 @@ export function useSessionBoot(args: {
       try {
         const compiled = message.compiled;
         let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
-        const resolved = structuredClone((message.instanceData ?? {}) as Record<string, unknown>);
+        const rawInstanceData = message.instanceData;
+        if (!rawInstanceData || typeof rawInstanceData !== 'object' || Array.isArray(rawInstanceData)) {
+          return {
+            ok: false,
+            error: 'coreui.errors.instance.config.invalid',
+          };
+        }
+        const resolved = structuredClone(rawInstanceData as Record<string, unknown>);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
 
         if (!nextLabel) {
@@ -36,6 +43,8 @@ export function useSessionBoot(args: {
           publicId: message.publicId,
           widgetname: compiled.widgetname,
           label: nextLabel,
+          source: message.source,
+          meta: message.meta ?? null,
         });
         args.setState((prev) => ({
           ...prev,

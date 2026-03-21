@@ -68,6 +68,7 @@ export function buildTypographyPanel(args: {
     { key: 'timer', label: 'Timer' },
     { key: 'label', label: 'Labels' },
     { key: 'button', label: 'CTA' },
+    { key: 'localeSwitcher', label: 'Locale switcher' },
   ].filter((entry) => hasRole(entry.key));
 
   if (roleEntries.length === 0) return [];

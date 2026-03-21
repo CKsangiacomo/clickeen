@@ -197,6 +197,7 @@ Rules:
 Save means:
 
 - save this widget for this account
+- save the current document identity and config through one explicit save envelope
 
 Save does not mean:
 
@@ -206,6 +207,8 @@ Save does not mean:
 
 Any translation work happens after save. It is not part of the product meaning of Save.
 Builder no longer owns a localization authoring lane.
+The current save boundary carries the opened document metadata explicitly (`widgetType`, `displayName`, `source`, `meta`) and does not look backward at the previous saved row to recover sibling identity.
+Widgets-domain user-facing identity (`widgetType`, `displayName`) is now read from the same Tokyo saved document owner. Michael remains only the row/status shell on the active account path.
 
 ### C. Roma will stay the only persisted-document authority
 
@@ -237,6 +240,15 @@ Allowed:
 Forbidden:
 
 - silently rewriting the visible widget and then treating that rewritten version as normal saved truth
+- silently inventing an empty widget document when Builder-open failed to provide one
+
+### F. Duplicate/create will not expose Michael-before-Tokyo gap state
+
+For account user instances:
+
+- Roma must commit the Tokyo saved document before creating the Michael row
+- Widgets must not surface a Michael-only row whose real saved document does not exist yet
+- Michael must not persist a second live widget document on create/duplicate; any schema-required Michael config residue is non-authoritative and must stay inert
 
 ---
 

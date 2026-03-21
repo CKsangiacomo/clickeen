@@ -125,18 +125,6 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
           return html.replace(/<head(\\b[^>]*)>/i, '<head$1>' + baseTag);
         };
 
-        const injectLocaleSwitcher = (html, localePolicy) => {
-          const enabled = localePolicy && localePolicy.switcher && localePolicy.switcher.enabled === true;
-          if (!enabled) return html;
-          const readyLocales = Array.isArray(localePolicy.readyLocales) ? localePolicy.readyLocales : [];
-          const locales = Array.isArray(localePolicy.switcher && localePolicy.switcher.locales)
-            ? localePolicy.switcher.locales
-            : readyLocales;
-          if (locales.length <= 1) return html;
-          const script = \`<script>(function(){try{var policy=window.CK_LOCALE_POLICY||null;var enabled=policy&&policy.switcher&&policy.switcher.enabled===true;if(!enabled)return;var readyLocales=Array.isArray(policy.readyLocales)?policy.readyLocales:[];var locales=Array.isArray(policy.switcher&&policy.switcher.locales)?policy.switcher.locales:readyLocales;if(locales.length<=1)return;var current=(window.CK_WIDGET&&typeof window.CK_WIDGET.locale==='string')?window.CK_WIDGET.locale:'';var wrap=document.createElement('div');wrap.setAttribute('data-ck-locale-switcher','1');wrap.style.position='fixed';wrap.style.top='12px';wrap.style.right='12px';wrap.style.zIndex='2147483647';wrap.style.background='rgba(248,250,252,0.98)';wrap.style.border='1px solid rgba(148,163,184,0.6)';wrap.style.borderRadius='12px';wrap.style.padding='8px 10px';wrap.style.boxShadow='0 10px 30px rgba(15,23,42,0.12)';wrap.style.fontFamily='ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif';var label=document.createElement('div');label.textContent='Language';label.style.fontSize='12px';label.style.opacity='0.85';label.style.marginBottom='6px';var select=document.createElement('select');select.style.fontSize='13px';select.style.padding='6px 8px';select.style.borderRadius='10px';select.style.border='1px solid rgba(148,163,184,0.8)';select.style.background='white';locales.forEach(function(loc){var opt=document.createElement('option');opt.value=loc;opt.textContent=loc;select.appendChild(opt);});if(current&&locales.indexOf(current)>=0)select.value=current;select.addEventListener('change',function(){try{var url=new URL(window.location.href);url.searchParams.set('locale',select.value);window.location.href=url.toString();}catch(e){}});wrap.appendChild(label);wrap.appendChild(select);document.body.appendChild(wrap);}catch(e){}})();<\\/script>\`;
-          return html.replace(/<\/body>/i, script + '</body>');
-        };
-
         const boot = async () => {
           const publicId = parsePublicIdFromPath();
           if (!publicId) {
@@ -165,9 +153,8 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 
           const widgetType = typeof pointer.widgetType === 'string' ? pointer.widgetType.trim() : '';
           const configFp = typeof pointer.configFp === 'string' ? pointer.configFp.trim() : '';
-          const policy = pointer.localePolicy || null;
           const localePolicyState = resolveLocaleRuntimePolicy(pointer);
-          const { baseLocale, readyLocales, ipEnabled, switcherEnabled, mapping } = localePolicyState;
+          const { baseLocale, readyLocales, ipEnabled, alwaysShowLocale, mapping } = localePolicyState;
           const geoCountry = parseGeoCountry(pointerRes);
           const locale = computeEffectiveLocale(localePolicyState, geoCountry, fixedLocale);
 
@@ -238,6 +225,10 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
           applyTextOverrides(baseState, textPack);
 
           window.CK_WIDGET = { publicId, locale, state: baseState };
+          window.CK_LOCALE_LABELS =
+            pointer && typeof pointer === 'object' && pointer.localeLabels && typeof pointer.localeLabels === 'object'
+              ? pointer.localeLabels
+              : {};
           window.CK_LOCALE_POLICY = {
             baseLocale,
             readyLocales,
@@ -246,10 +237,17 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
               countryToLocale: mapping && typeof mapping === 'object' ? mapping : {},
             },
             switcher: {
-              enabled: Boolean(switcherEnabled),
-              ...(Array.isArray(policy && policy.switcher && policy.switcher.locales)
-                ? { locales: policy.switcher.locales }
-                : {}),
+              enabled:
+                Boolean(
+                  pointer &&
+                    typeof pointer === 'object' &&
+                    pointer.localePolicy &&
+                    typeof pointer.localePolicy === 'object' &&
+                    pointer.localePolicy.switcher &&
+                    typeof pointer.localePolicy.switcher === 'object' &&
+                    pointer.localePolicy.switcher.enabled === true,
+                ),
+              ...(alwaysShowLocale ? { alwaysShowLocale } : {}),
             },
           };
 
@@ -265,7 +263,6 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
           }
 
           let html = injectBaseHref(widgetHtml, widgetType);
-          html = injectLocaleSwitcher(html, window.CK_LOCALE_POLICY);
           document.open();
           document.write(html);
           document.close();

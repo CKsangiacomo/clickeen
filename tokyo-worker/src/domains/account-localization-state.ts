@@ -12,6 +12,7 @@ import { normalizeLocaleToken, type AllowlistEntry } from '@clickeen/l10n';
 import { json } from '../http';
 import type { Env } from '../types';
 import {
+  ensureSavedRenderL10nBase,
   l10nLivePointerKey,
   readSavedRenderConfig,
   renderLivePointerKey,
@@ -27,6 +28,7 @@ import {
   parseBearerToken,
   resolveTokyoControlErrorDetail,
 } from './account-localization-utils';
+import { buildLocalizedTextPack } from './account-localization-mirror';
 
 type LiveRenderPointer = {
   seoGeo?: {
@@ -70,6 +72,152 @@ type AccountLocalizationBaseContext = {
     pointer: SavedRenderPointer;
   };
 };
+
+type AccountL10nStatusEntry = {
+  locale: string;
+  status: 'dirty' | 'succeeded' | 'superseded';
+  attempts: number;
+  nextAttemptAt: null;
+  lastAttemptAt: string | null;
+  lastError: null;
+};
+
+async function buildAccountLocalizationSnapshotFromBase(args: {
+  env: Env;
+  publicId: string;
+  base: AccountLocalizationBaseContext;
+}): Promise<{
+  snapshot: AccountLocalizationSnapshot;
+  widgetType: string;
+  baseFingerprint: string;
+  saved: {
+    config: Record<string, unknown>;
+    updatedAt: string;
+    published: boolean;
+    seoGeoLive: boolean;
+  };
+}> {
+  const nonBaseLocales = args.base.desiredLocales.filter(
+    (locale) => locale !== args.base.policy.baseLocale,
+  );
+  const overlayEntries = await Promise.all(
+    nonBaseLocales.map(async (locale) => {
+      const [baseOverlay, userOverlay] = await Promise.all([
+        loadOverlayOps({
+          env: args.env,
+          publicId: args.publicId,
+          layer: 'locale',
+          layerKey: locale,
+          baseFingerprint: args.base.baseFingerprint,
+          allowlist: args.base.localizationAllowlist,
+        }),
+        loadOverlayOps({
+          env: args.env,
+          publicId: args.publicId,
+          layer: 'user',
+          layerKey: locale,
+          baseFingerprint: args.base.baseFingerprint,
+          allowlist: args.base.localizationAllowlist,
+        }),
+      ]);
+      return {
+        locale,
+        source:
+          userOverlay.ops.length > 0
+            ? 'user'
+            : baseOverlay.ops.length > 0
+              ? 'agent'
+              : null,
+        baseFingerprint:
+          baseOverlay.ops.length > 0 || userOverlay.ops.length > 0
+            ? args.base.baseFingerprint
+            : null,
+        baseUpdatedAt: userOverlay.baseUpdatedAt ?? baseOverlay.baseUpdatedAt,
+        hasUserOps: userOverlay.ops.length > 0,
+        baseOps: baseOverlay.ops,
+        userOps: userOverlay.ops,
+      } satisfies AccountOverlayEntry;
+    }),
+  );
+
+  const readyLocales = await loadTokyoCurrentArtifactReadyLocales({
+    env: args.env,
+    publicId: args.publicId,
+    baseLocale: args.base.policy.baseLocale,
+    locales: args.base.desiredLocales,
+    baseFingerprint: args.base.baseFingerprint,
+  });
+
+  return {
+    snapshot: {
+      baseLocale: args.base.policy.baseLocale,
+      accountLocales: args.base.accountLocales,
+      readyLocales,
+      invalidAccountLocales: null,
+      localeOverlays: overlayEntries,
+      policy: args.base.policy,
+    },
+    widgetType: args.base.saved.widgetType,
+    baseFingerprint: args.base.baseFingerprint,
+    saved: {
+      config: args.base.saved.config,
+      updatedAt: args.base.saved.updatedAt,
+      published: args.base.saved.published,
+      seoGeoLive: args.base.saved.seoGeoLive,
+    },
+  };
+}
+
+async function buildAccountL10nStatusFromBase(args: {
+  env: Env;
+  publicId: string;
+  base: AccountLocalizationBaseContext;
+}): Promise<{
+  publicId: string;
+  widgetType: string;
+  baseFingerprint: string;
+  baseUpdatedAt: string;
+  locales: AccountL10nStatusEntry[];
+}> {
+  const [index, artifactStates] = await Promise.all([
+    loadTokyoIndex({ env: args.env, publicId: args.publicId }),
+    loadTokyoLocaleArtifactStates({
+      env: args.env,
+      publicId: args.publicId,
+      locales: args.base.accountLocales,
+    }),
+  ]);
+
+  return {
+    publicId: args.publicId,
+    widgetType: args.base.saved.widgetType,
+    baseFingerprint: args.base.baseFingerprint,
+    baseUpdatedAt: args.base.saved.updatedAt,
+    locales: args.base.accountLocales.map((locale) => {
+      const artifact = artifactStates.get(locale) ?? null;
+      const hasCurrent =
+        artifact !== null &&
+        artifact.hasTextPack &&
+        artifact.baseFingerprint === args.base.baseFingerprint;
+      const hasArtifact = artifact !== null && artifact.hasTextPack;
+      const hasIndexed =
+        index.localeKeys.has(locale) || index.userKeys.has(locale);
+      const status: 'dirty' | 'succeeded' | 'superseded' = hasCurrent
+        ? 'succeeded'
+        : hasArtifact || hasIndexed
+          ? 'superseded'
+          : 'dirty';
+      return {
+        locale,
+        status,
+        attempts: hasCurrent || hasArtifact || hasIndexed ? 1 : 0,
+        nextAttemptAt: null,
+        lastAttemptAt: artifact?.updatedAt ?? null,
+        lastError: null,
+      };
+    }),
+  };
+}
 
 function normalizeLiveRenderPointer(raw: unknown): LiveRenderPointer | null {
   if (!isRecord(raw)) return null;
@@ -171,8 +319,7 @@ async function loadSavedL10nState(args: {
     ),
   );
 
-  const baseFingerprint = saved.value.pointer.l10n?.baseFingerprint ?? null;
-  if (!saved.value.pointer.widgetType || !saved.value.pointer.updatedAt || !baseFingerprint) {
+  if (!saved.value.pointer.widgetType || !saved.value.pointer.updatedAt) {
     throw new Error('tokyo_saved_invalid');
   }
 
@@ -443,28 +590,21 @@ async function loadAccountLocalizationBaseContext(args: {
   ]);
 
   const desiredLocales = Array.from(new Set([policy.baseLocale, ...accountLocales]));
-  const localizationAllowlist = await loadWidgetAllowlist({
-    env: args.env,
-    widgetType: saved.widgetType,
-    path: 'localization',
-  });
-  const baseFingerprint = saved.pointer.l10n?.baseFingerprint ?? null;
-  if (!baseFingerprint) {
-    throw new Error('tokyo_saved_invalid');
-  }
-  const baseTextPack = await loadBaseTextPack({
+  const l10nBase = await ensureSavedRenderL10nBase({
     env: args.env,
     publicId: args.publicId,
-    baseFingerprint,
+    widgetType: saved.widgetType,
+    config: saved.config,
+    existingBaseFingerprint: saved.pointer.l10n?.baseFingerprint ?? null,
   });
 
   return {
     accountLocales,
     desiredLocales,
     policy,
-    localizationAllowlist,
-    baseTextPack,
-    baseFingerprint,
+    localizationAllowlist: l10nBase.allowlist,
+    baseTextPack: l10nBase.snapshot,
+    baseFingerprint: l10nBase.baseFingerprint,
     saved,
   };
 }
@@ -486,75 +626,11 @@ export async function loadAccountLocalizationSnapshotData(args: {
   };
 }> {
   const base = await loadAccountLocalizationBaseContext(args);
-  const nonBaseLocales = base.desiredLocales.filter(
-    (locale) => locale !== base.policy.baseLocale,
-  );
-  const overlayEntries = await Promise.all(
-    nonBaseLocales.map(async (locale) => {
-      const [baseOverlay, userOverlay] = await Promise.all([
-        loadOverlayOps({
-          env: args.env,
-          publicId: args.publicId,
-          layer: 'locale',
-          layerKey: locale,
-          baseFingerprint: base.baseFingerprint,
-          allowlist: base.localizationAllowlist,
-        }),
-        loadOverlayOps({
-          env: args.env,
-          publicId: args.publicId,
-          layer: 'user',
-          layerKey: locale,
-          baseFingerprint: base.baseFingerprint,
-          allowlist: base.localizationAllowlist,
-        }),
-      ]);
-      return {
-        locale,
-        source:
-          userOverlay.ops.length > 0
-            ? 'user'
-            : baseOverlay.ops.length > 0
-              ? 'agent'
-              : null,
-        baseFingerprint:
-          baseOverlay.ops.length > 0 || userOverlay.ops.length > 0
-            ? base.baseFingerprint
-            : null,
-        baseUpdatedAt: userOverlay.baseUpdatedAt ?? baseOverlay.baseUpdatedAt,
-        hasUserOps: userOverlay.ops.length > 0,
-        baseOps: baseOverlay.ops,
-        userOps: userOverlay.ops,
-      } satisfies AccountOverlayEntry;
-    }),
-  );
-
-  const readyLocales = await loadTokyoCurrentArtifactReadyLocales({
+  return buildAccountLocalizationSnapshotFromBase({
     env: args.env,
     publicId: args.publicId,
-    baseLocale: base.policy.baseLocale,
-    locales: base.desiredLocales,
-    baseFingerprint: base.baseFingerprint,
+    base,
   });
-
-  return {
-    snapshot: {
-      baseLocale: base.policy.baseLocale,
-      accountLocales: base.accountLocales,
-      readyLocales,
-      invalidAccountLocales: null,
-      localeOverlays: overlayEntries,
-      policy: base.policy,
-    },
-    widgetType: base.saved.widgetType,
-    baseFingerprint: base.baseFingerprint,
-    saved: {
-      config: base.saved.config,
-      updatedAt: base.saved.updatedAt,
-      published: base.saved.published,
-      seoGeoLive: base.saved.seoGeoLive,
-    },
-  };
 }
 
 export async function handleGetAccountLocalizationSnapshot(
@@ -594,47 +670,138 @@ export async function handleGetAccountL10nStatus(
     );
   }
 
-  const base = await loadAccountLocalizationBaseContext({
+  const result = await loadAccountL10nStatusData({
     env,
     accessToken,
     accountId,
     publicId,
   });
-  const [index, artifactStates] = await Promise.all([
-    loadTokyoIndex({ env, publicId }),
-    loadTokyoLocaleArtifactStates({
-      env,
-      publicId,
-      locales: base.accountLocales,
+  return json(result);
+}
+
+export async function loadAccountL10nStatusData(args: {
+  env: Env;
+  accessToken: string;
+  accountId: string;
+  publicId: string;
+}): Promise<{
+  publicId: string;
+  widgetType: string;
+  baseFingerprint: string;
+  baseUpdatedAt: string;
+  locales: AccountL10nStatusEntry[];
+}> {
+  const base = await loadAccountLocalizationBaseContext({
+    env: args.env,
+    accessToken: args.accessToken,
+    accountId: args.accountId,
+    publicId: args.publicId,
+  });
+  return buildAccountL10nStatusFromBase({
+    env: args.env,
+    publicId: args.publicId,
+    base,
+  });
+}
+
+export async function loadAccountTranslationsPanelData(args: {
+  env: Env;
+  accessToken: string;
+  accountId: string;
+  publicId: string;
+  locale?: string | null;
+}): Promise<{
+  publicId: string;
+  widgetType: string;
+  baseLocale: string;
+  activeLocales: string[];
+  selectedLocale: string;
+  statuses: Array<{
+    locale: string;
+    status: 'base' | 'dirty' | 'succeeded' | 'superseded';
+  }>;
+  translatedOutput: Array<{ path: string; value: string }>;
+}> {
+  const base = await loadAccountLocalizationBaseContext({
+    env: args.env,
+    accessToken: args.accessToken,
+    accountId: args.accountId,
+    publicId: args.publicId,
+  });
+  const [snapshotData, statusData] = await Promise.all([
+    buildAccountLocalizationSnapshotFromBase({
+      env: args.env,
+      publicId: args.publicId,
+      base,
+    }),
+    buildAccountL10nStatusFromBase({
+      env: args.env,
+      publicId: args.publicId,
+      base,
     }),
   ]);
 
-  return json({
-    publicId,
-    widgetType: base.saved.widgetType,
-    baseFingerprint: base.baseFingerprint,
-    baseUpdatedAt: base.saved.updatedAt,
-    locales: base.accountLocales.map((locale) => {
-      const artifact = artifactStates.get(locale) ?? null;
-      const hasCurrent =
-        artifact !== null &&
-        artifact.hasTextPack &&
-        artifact.baseFingerprint === base.baseFingerprint;
-      const hasArtifact = artifact !== null && artifact.hasTextPack;
-      const hasIndexed = index.localeKeys.has(locale) || index.userKeys.has(locale);
-      const status: 'dirty' | 'succeeded' | 'superseded' = hasCurrent
-        ? 'succeeded'
-        : hasArtifact || hasIndexed
-          ? 'superseded'
-          : 'dirty';
+  const activeLocales = Array.from(
+    new Set([snapshotData.snapshot.baseLocale, ...snapshotData.snapshot.accountLocales]),
+  );
+  const requestedLocale = normalizeLocaleToken(args.locale);
+  const selectedLocale =
+    requestedLocale && activeLocales.includes(requestedLocale)
+      ? requestedLocale
+      : snapshotData.snapshot.baseLocale;
+  const overlay =
+    snapshotData.snapshot.localeOverlays.find((entry) => entry.locale === selectedLocale) ?? null;
+  const textPack = buildLocalizedTextPack({
+    baseLocale: snapshotData.snapshot.baseLocale,
+    locale: selectedLocale,
+    basePack: base.baseTextPack,
+    baseOps: overlay?.baseOps ?? [],
+    userOps: overlay?.userOps ?? [],
+  });
+
+  return {
+    publicId: args.publicId,
+    widgetType: snapshotData.widgetType,
+    baseLocale: snapshotData.snapshot.baseLocale,
+    activeLocales,
+    selectedLocale,
+    statuses: activeLocales.map((locale) => {
+      if (locale === snapshotData.snapshot.baseLocale) {
+        return { locale, status: 'base' as const };
+      }
+      const status = statusData.locales.find((entry) => entry.locale === locale) ?? null;
       return {
         locale,
-        status,
-        attempts: hasCurrent || hasArtifact || hasIndexed ? 1 : 0,
-        nextAttemptAt: null,
-        lastAttemptAt: artifact?.updatedAt ?? null,
-        lastError: null,
+        status: status?.status ?? 'dirty',
       };
     }),
+    translatedOutput: Object.entries(textPack)
+      .map(([path, value]) => ({ path, value }))
+      .sort((a, b) => a.path.localeCompare(b.path)),
+  };
+}
+
+export async function handleGetAccountTranslationsPanel(
+  req: Request,
+  env: Env,
+  publicId: string,
+  accountId: string,
+): Promise<Response> {
+  const accessToken = parseBearerToken(req.headers.get('authorization'));
+  if (!accessToken) {
+    return json(
+      { error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } },
+      { status: 401 },
+    );
+  }
+
+  const url = new URL(req.url);
+  const result = await loadAccountTranslationsPanelData({
+    env,
+    accessToken,
+    accountId,
+    publicId,
+    locale: url.searchParams.get('locale'),
   });
+  return json(result);
 }

@@ -1,0 +1,137 @@
+.ck-locale-switcher {
+  position: absolute;
+  z-index: 80;
+  display: inline-flex;
+  max-inline-size: min(220px, calc(100% - (var(--space-3) * 2)));
+  color: var(--ck-locale-switcher-fg, var(--color-system-black));
+}
+
+.ck-locale-switcher[data-host='pod'] {
+  --ck-locale-switcher-gap: var(--space-3);
+}
+
+.ck-locale-switcher[data-host='stage'] {
+  --ck-locale-switcher-gap: var(--space-3);
+}
+
+.ck-locale-switcher[data-host='pod'][data-position='top-left'] {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  transform: translate(0, calc(-100% - var(--ck-locale-switcher-gap)));
+}
+
+.ck-locale-switcher[data-host='pod'][data-position='top-center'] {
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  transform: translate(-50%, calc(-100% - var(--ck-locale-switcher-gap)));
+}
+
+.ck-locale-switcher[data-host='pod'][data-position='top-right'] {
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  transform: translate(0, calc(-100% - var(--ck-locale-switcher-gap)));
+}
+
+.ck-locale-switcher[data-host='pod'][data-position='right-middle'] {
+  inset-block-start: 50%;
+  inset-inline-end: 0;
+  transform: translate(calc(100% + var(--ck-locale-switcher-gap)), -50%);
+}
+
+.ck-locale-switcher[data-host='pod'][data-position='bottom-right'] {
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  transform: translate(0, calc(100% + var(--ck-locale-switcher-gap)));
+}
+
+.ck-locale-switcher[data-host='pod'][data-position='bottom-center'] {
+  inset-block-end: 0;
+  inset-inline-start: 50%;
+  transform: translate(-50%, calc(100% + var(--ck-locale-switcher-gap)));
+}
+
+.ck-locale-switcher[data-host='pod'][data-position='bottom-left'] {
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  transform: translate(0, calc(100% + var(--ck-locale-switcher-gap)));
+}
+
+.ck-locale-switcher[data-host='pod'][data-position='left-middle'] {
+  inset-block-start: 50%;
+  inset-inline-start: 0;
+  transform: translate(calc(-100% - var(--ck-locale-switcher-gap)), -50%);
+}
+
+.ck-locale-switcher[data-host='stage'][data-position='top-left'] {
+  inset-block-start: var(--space-3);
+  inset-inline-start: var(--space-3);
+}
+
+.ck-locale-switcher[data-host='stage'][data-position='top-center'] {
+  inset-block-start: var(--space-3);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+}
+
+.ck-locale-switcher[data-host='stage'][data-position='top-right'] {
+  inset-block-start: var(--space-3);
+  inset-inline-end: var(--space-3);
+}
+
+.ck-locale-switcher[data-host='stage'][data-position='right-middle'] {
+  inset-block-start: 50%;
+  inset-inline-end: var(--space-3);
+  transform: translateY(-50%);
+}
+
+.ck-locale-switcher[data-host='stage'][data-position='bottom-right'] {
+  inset-block-end: var(--space-3);
+  inset-inline-end: var(--space-3);
+}
+
+.ck-locale-switcher[data-host='stage'][data-position='bottom-center'] {
+  inset-block-end: var(--space-3);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+}
+
+.ck-locale-switcher[data-host='stage'][data-position='bottom-left'] {
+  inset-block-end: var(--space-3);
+  inset-inline-start: var(--space-3);
+}
+
+.ck-locale-switcher[data-host='stage'][data-position='left-middle'] {
+  inset-block-start: 50%;
+  inset-inline-start: var(--space-3);
+  transform: translateY(-50%);
+}
+
+.ck-locale-switcher__select {
+  appearance: none;
+  display: inline-flex;
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding-block: var(--ck-locale-switcher-padding-block, 10px);
+  padding-inline: var(--ck-locale-switcher-padding-inline, 14px);
+  padding-inline-end: calc(var(--ck-locale-switcher-padding-inline, 14px) + 24px);
+  border-radius: var(--ck-locale-switcher-radius, var(--control-radius-md));
+  border: var(--ck-locale-switcher-border-width, 1px) solid
+    var(--ck-locale-switcher-border-color, transparent);
+  background:
+    var(--ck-locale-switcher-arrow, none) no-repeat right 10px center / 14px 14px,
+    var(--ck-locale-switcher-bg, var(--color-system-white));
+  color: inherit;
+  font-family: var(--typo-locale-switcher-family, var(--font-ui));
+  font-style: var(--typo-locale-switcher-style, normal);
+  font-weight: var(--typo-locale-switcher-weight, 600);
+  font-size: var(--typo-locale-switcher-size, var(--fs-14));
+  letter-spacing: var(--typo-locale-switcher-tracking, 0em);
+  line-height: var(--typo-locale-switcher-line-height, var(--lh-tight));
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.ck-locale-switcher__select:focus-visible {
+  outline: 2px solid color-mix(in oklab, currentColor, transparent 72%);
+  outline-offset: 2px;
+}

@@ -3,8 +3,6 @@ import { classifyWidgetPublicId, isUuid } from '@clickeen/ck-contracts';
 import {
   deleteLiveSurfaceFromTokyo,
   deleteSavedConfigFromTokyo,
-  loadTokyoAccountInstanceDocument,
-  loadTokyoAccountInstanceLiveStatus,
   saveAccountInstanceDirect,
 } from '@roma/lib/account-instance-direct';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
@@ -47,63 +45,6 @@ async function deleteTokyoMirrors(args: {
   }
 }
 
-export async function GET(request: NextRequest, context: RouteContext) {
-  const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
-  if (!current.ok) return current.response;
-
-  const { publicId: publicIdRaw } = await context.params;
-  const publicId = String(publicIdRaw || '').trim();
-  if (!publicId) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.publicIdRequired' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  const result = await loadTokyoAccountInstanceDocument({
-    accountId: current.value.authzPayload.accountId,
-    publicId,
-    tokyoAccessToken: current.value.accessToken,
-    accountCapsule: current.value.authzToken,
-  });
-
-  if (!result.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: result.error }, { status: result.status }),
-      current.value.setCookies,
-    );
-  }
-
-  const liveStatus = await loadTokyoAccountInstanceLiveStatus({
-    tokyoBaseUrl: resolveTokyoBaseUrl(),
-    publicId,
-  });
-  if (!liveStatus.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: liveStatus.error }, { status: liveStatus.status }),
-      current.value.setCookies,
-    );
-  }
-
-  return withSession(
-    request,
-    NextResponse.json({
-      publicId: result.value.row.publicId,
-      displayName: result.value.row.displayName || 'Untitled widget',
-      widgetType: result.value.row.widgetType,
-      status: liveStatus.value,
-      config: result.value.config,
-    }),
-    current.value.setCookies,
-  );
-}
-
 export async function PUT(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
@@ -122,9 +63,25 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  let body: { config?: Record<string, unknown> } | null = null;
+  let body:
+    | {
+        widgetType?: string;
+        config?: Record<string, unknown>;
+        displayName?: string | null;
+        source?: 'account' | 'curated';
+        meta?: Record<string, unknown> | null;
+      }
+    | null = null;
   try {
-    body = (await request.json()) as { config?: Record<string, unknown> } | null;
+    body = (await request.json()) as
+      | {
+          widgetType?: string;
+          config?: Record<string, unknown>;
+          displayName?: string | null;
+          source?: 'account' | 'curated';
+          meta?: Record<string, unknown> | null;
+        }
+      | null;
   } catch {
     return withSession(
       request,
@@ -136,10 +93,82 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
+  const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
+  const config = body?.config;
+  const source = body?.source;
+  const displayName =
+    body && Object.prototype.hasOwnProperty.call(body, 'displayName')
+      ? typeof body.displayName === 'string'
+        ? body.displayName
+        : body.displayName === null
+          ? null
+          : undefined
+      : undefined;
+  const meta =
+    body && Object.prototype.hasOwnProperty.call(body, 'meta')
+      ? body.meta && typeof body.meta === 'object' && !Array.isArray(body.meta)
+        ? (body.meta as Record<string, unknown>)
+        : body.meta === null
+          ? null
+          : undefined
+      : undefined;
+  if (!widgetType || !config || typeof config !== 'object' || Array.isArray(config)) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (source !== undefined && source !== 'account' && source !== 'curated') {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (
+    body &&
+    Object.prototype.hasOwnProperty.call(body, 'meta') &&
+    meta === undefined
+  ) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (
+    body &&
+    Object.prototype.hasOwnProperty.call(body, 'displayName') &&
+    displayName === undefined
+  ) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+
   const result = await saveAccountInstanceDirect({
     accountId,
     publicId,
-    config: body?.config as Record<string, unknown>,
+    widgetType,
+    config,
+    displayName,
+    source,
+    meta,
     tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,

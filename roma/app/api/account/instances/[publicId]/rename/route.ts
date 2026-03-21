@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { classifyWidgetPublicId } from '@clickeen/ck-contracts';
 import {
-  getAccountInstanceCoreRow,
-  renameAccountInstanceRow,
-} from '@roma/lib/michael';
+  loadTokyoAccountInstanceDocument,
+  saveAccountInstanceDirect,
+} from '@roma/lib/account-instance-direct';
+import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -29,6 +31,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.publicIdRequired' } },
         { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (classifyWidgetPublicId(publicId) !== 'user') {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
+        { status: 403 },
       ),
       current.value.setCookies,
     );
@@ -66,45 +78,81 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const currentInstance = await getAccountInstanceCoreRow(accountId, publicId, current.value.accessToken);
-  if (!currentInstance.ok) {
-    const status = currentInstance.status === 401 ? 401 : currentInstance.status === 404 ? 404 : 502;
-    const kind = status === 401 ? 'AUTH' : status === 404 ? 'NOT_FOUND' : 'UPSTREAM_UNAVAILABLE';
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind, reasonKey: currentInstance.reasonKey, detail: currentInstance.detail } },
-        { status },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  const result = await renameAccountInstanceRow({
+  const currentInstance = await loadTokyoAccountInstanceDocument({
     accountId,
     publicId,
-    displayName,
-    berlinAccessToken: current.value.accessToken,
+    tokyoAccessToken: current.value.accessToken,
+    accountCapsule: current.value.authzToken,
   });
-  if (!result.ok) {
-    const status = result.status === 401 ? 401 : result.status === 404 ? 404 : 502;
-    const kind = status === 401 ? 'AUTH' : status === 404 ? 'NOT_FOUND' : 'UPSTREAM_UNAVAILABLE';
+  if (!currentInstance.ok) {
+    const status =
+      currentInstance.status === 401
+        ? 401
+        : currentInstance.status === 403
+          ? 403
+          : currentInstance.status === 404
+            ? 404
+            : currentInstance.status === 422
+              ? 422
+              : 502;
+    const kind =
+      status === 401
+        ? 'AUTH'
+        : status === 403
+          ? 'DENY'
+          : status === 404
+            ? 'NOT_FOUND'
+            : status === 422
+              ? 'VALIDATION'
+              : 'UPSTREAM_UNAVAILABLE';
     return withSession(
       request,
       NextResponse.json(
-        { error: { kind, reasonKey: result.reasonKey, detail: result.detail } },
+        { error: { kind, reasonKey: currentInstance.error.reasonKey, detail: currentInstance.error.detail } },
         { status },
       ),
       current.value.setCookies,
     );
   }
 
-  if (!result.row) {
+  const result = await saveAccountInstanceDirect({
+    accountId,
+    publicId,
+    widgetType: currentInstance.value.row.widgetType,
+    config: currentInstance.value.config,
+    displayName,
+    source: currentInstance.value.row.source,
+    meta: currentInstance.value.row.meta ?? null,
+    tokyoBaseUrl: resolveTokyoBaseUrl(),
+    tokyoAccessToken: current.value.accessToken,
+    accountCapsule: current.value.authzToken,
+  });
+  if (result.ok === false) {
+    const status =
+      result.status === 401
+        ? 401
+        : result.status === 403
+          ? 403
+          : result.status === 404
+            ? 404
+            : result.status === 422
+              ? 422
+              : 502;
+    const kind =
+      status === 401
+        ? 'AUTH'
+        : status === 403
+          ? 'DENY'
+          : status === 404
+            ? 'NOT_FOUND'
+            : status === 422
+              ? 'VALIDATION'
+              : 'UPSTREAM_UNAVAILABLE';
     return withSession(
       request,
       NextResponse.json(
-        { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' } },
-        { status: 404 },
+        { error: { kind, reasonKey: result.error.reasonKey, detail: result.error.detail } },
+        { status },
       ),
       current.value.setCookies,
     );
@@ -113,9 +161,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
   return withSession(
     request,
     NextResponse.json({
-      publicId: result.row.publicId,
-      displayName: result.row.displayName || 'Untitled widget',
-      status: result.row.status,
+      publicId,
+      displayName,
     }),
     current.value.setCookies,
   );

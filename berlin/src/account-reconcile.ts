@@ -44,8 +44,7 @@ type OwnedAccountProvisionResult =
 const DEFAULT_ACCOUNT_L10N_POLICY = {
   v: 1,
   baseLocale: 'en',
-  ip: { enabled: false, countryToLocale: {} },
-  switcher: { enabled: true },
+  ip: { countryToLocale: {} },
 } as const;
 const USER_MEMBERSHIP_PAGE_SIZE = 200;
 

@@ -23,7 +23,7 @@ function applyOpsToTextPack(
   return next;
 }
 
-function buildLocalizedTextPack(args: {
+export function buildLocalizedTextPack(args: {
   baseLocale: string;
   locale: string;
   basePack: Record<string, string>;

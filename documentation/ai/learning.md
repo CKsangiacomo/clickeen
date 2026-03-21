@@ -46,12 +46,11 @@ Payload: `OutcomeAttachRequest` (see `sanfrancisco/src/types.ts`)
 Events currently supported:
 - `ux_keep`, `ux_undo`
 - `cta_clicked`
-- `signup_started`, `signup_completed`
 - `upgrade_clicked`, `upgrade_completed`
 
 Auth:
 - The caller must sign the JSON body with `AI_GRANT_HMAC_SECRET` and pass the signature as `x-clickeen-signature`.
-- Roma and Bob are the backend surfaces that forward outcomes to San Francisco for their respective flows.
+- Roma is the live product backend surface that forwards account-mode outcomes to San Francisco.
 
 ## 2) Storage model (cheap raw + small indexes)
 

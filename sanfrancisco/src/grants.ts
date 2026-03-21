@@ -2,12 +2,7 @@ import type { AiGrantPolicy, AiProfile, AiProvider } from '@clickeen/ck-policy';
 import type { AIGrant } from './types';
 import { HttpError, asNumber, asString, isRecord } from './http';
 
-const AI_GRANT_ISSUER_SET = new Set<AIGrant['iss']>([
-  'paris',
-  'roma',
-  'bob',
-  'sanfrancisco',
-]);
+const AI_GRANT_ISSUER_SET = new Set<AIGrant['iss']>(['roma', 'sanfrancisco']);
 const AI_PROVIDER_SET = new Set<AiProvider>(['deepseek', 'openai', 'anthropic', 'groq', 'amazon']);
 const AI_PROFILE_SET = new Set<AiProfile>(['free_low', 'paid_standard', 'paid_premium', 'curated_premium']);
 
@@ -92,9 +87,7 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
   if (jti) (payload as any).jti = jti;
 
   const subKind = asString(sub.kind);
-  if (subKind === 'anon') {
-    if (!asString(sub.sessionId)) throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant subject missing sessionId' });
-  } else if (subKind === 'user') {
+  if (subKind === 'user') {
     if (!asString(sub.userId) || !asString(sub.accountId)) {
       throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant subject missing userId/accountId' });
     }

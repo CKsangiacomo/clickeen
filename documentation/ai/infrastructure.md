@@ -55,7 +55,7 @@ Worker vars/secrets:
 - `AMAZON_BEDROCK_ACCESS_KEY_ID` / `AMAZON_BEDROCK_SECRET_ACCESS_KEY` / `AMAZON_BEDROCK_REGION` (secret/var, optional): Bedrock fallback path for Amazon provider
 
 Provider split (Tiered Execution):
-- **Free / Minibob**: profile default `deepseek-chat`; Minibob public grant mint currently defaults request selection to `amazon -> nova-2-lite-v1`
+- **Free account**: profile default `deepseek-chat`
 - **Paid Standard**: mixed provider access (OpenAI/Anthropic/DeepSeek/Groq/Nova) with policy + agent constraints
 - **Paid Premium**: higher-capability defaults (OpenAI `gpt-5.2`) with policy + agent constraints
 - **Curated/Internal**: OpenAI curated set (`gpt-5.2` default)
@@ -182,7 +182,6 @@ The owning backend surface is expected to cap these budgets server-side so the c
 Canonical runtime budget source:
 - `packages/ck-policy/src/ai.ts` (`budgetsByProfile` per agent)
 - `roma/lib/ai/account-copilot.ts` (account-mode grant clamp caps)
-- `bob/lib/ai/minibob.ts` (MiniBob session/grant mint)
 
 Budget matrix (`maxTokens / timeoutMs / maxRequests`):
 
@@ -196,10 +195,7 @@ Budget matrix (`maxTokens / timeoutMs / maxRequests`):
 | `agent.personalization.onboarding.v1` | `900 / 30s / 2` | `1200 / 45s / 2` | `1800 / 60s / 3` | `2200 / 60s / 3` |
 
 `agent.personalization.onboarding.v1` is the legacy grant identifier for the same post-signup account-context carry-forward path.
-
-Minibob public mint override (Bob-owned MiniBob execution path):
-- `local` stage: `650 / 45s / 2`
-- non-local stages (including cloud-dev): `420 / 12s / 2`
+`sdr.widget.copilot.v1` remains a legacy registry entry; it is not the live account Builder copilot path.
 
 ### Profile -> model policy (canonical)
 

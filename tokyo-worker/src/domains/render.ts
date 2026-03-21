@@ -23,7 +23,7 @@ export type LocalePolicy = {
   };
   switcher: {
     enabled: boolean;
-    locales?: string[];
+    alwaysShowLocale?: string;
   };
 };
 
@@ -261,17 +261,10 @@ export function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
       ? (switcherRaw as Record<string, unknown>)
       : null;
   const ipEnabled = typeof ipRecord?.enabled === 'boolean' ? ipRecord.enabled : false;
-  const switcherEnabled = typeof switcherRecord?.enabled === 'boolean' ? switcherRecord.enabled : true;
-
-  const switcherLocales = Array.isArray(switcherRecord?.locales)
-    ? Array.from(
-        new Set(
-          switcherRecord.locales
-            .map((value) => normalizeLocale(value))
-            .filter((value): value is string => typeof value === 'string' && outReadyLocales.includes(value)),
-        ),
-      )
-    : [];
+  const switcherEnabled = typeof switcherRecord?.enabled === 'boolean' ? switcherRecord.enabled : false;
+  const alwaysShowLocaleRaw =
+    typeof switcherRecord?.alwaysShowLocale === 'string' ? switcherRecord.alwaysShowLocale : '';
+  const alwaysShowLocale = normalizeLocale(alwaysShowLocaleRaw);
 
   const countryToLocaleRaw = ipRecord?.countryToLocale;
   const countryToLocale: Record<string, string> = {};
@@ -295,7 +288,9 @@ export function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
     ip: { enabled: ipEnabled, countryToLocale },
     switcher: {
       enabled: switcherEnabled,
-      ...(switcherLocales.length ? { locales: switcherLocales } : {}),
+      ...(alwaysShowLocale && outReadyLocales.includes(alwaysShowLocale)
+        ? { alwaysShowLocale }
+        : {}),
     },
   };
 }
@@ -454,25 +449,62 @@ export async function loadWidgetLocalizationAllowlist(args: {
   return normalizeAllowlistEntries(payload);
 }
 
-export async function writeSavedRenderL10nState(args: {
+function normalizeSavedL10nSnapshot(raw: unknown): Record<string, string> | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const snapshot: Record<string, string> = {};
+  for (const [path, value] of Object.entries(raw as Record<string, unknown>)) {
+    const normalizedPath = typeof path === 'string' ? path.trim() : '';
+    if (!normalizedPath || typeof value !== 'string') return null;
+    snapshot[normalizedPath] = value;
+  }
+  return snapshot;
+}
+
+export async function ensureSavedRenderL10nBase(args: {
   env: Env;
   publicId: string;
   widgetType: string;
   config: Record<string, unknown>;
-}): Promise<{ baseFingerprint: string } | null> {
+  existingBaseFingerprint?: string | null;
+}): Promise<{
+  baseFingerprint: string;
+  snapshot: Record<string, string>;
+  allowlist: AllowlistEntry[];
+}> {
+  const publicId = normalizePublicId(args.publicId);
+  if (!publicId) throw new Error('[tokyo] ensure-saved-render-l10n-base invalid publicId');
+  const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
+  if (!widgetType) throw new Error('[tokyo] ensure-saved-render-l10n-base missing widgetType');
+
   const allowlist = await loadWidgetLocalizationAllowlist({
     env: args.env,
-    widgetType: args.widgetType,
+    widgetType,
   });
+  const existingBaseFingerprint = normalizeFingerprint(args.existingBaseFingerprint);
+  if (existingBaseFingerprint) {
+    const existing = await loadJson<{ snapshot?: unknown }>(
+      args.env,
+      l10nBaseSnapshotKey(publicId, existingBaseFingerprint),
+    );
+    const existingSnapshot = normalizeSavedL10nSnapshot(existing?.snapshot);
+    if (existingSnapshot) {
+      return {
+        baseFingerprint: existingBaseFingerprint,
+        snapshot: existingSnapshot,
+        allowlist,
+      };
+    }
+  }
+
   const snapshot = buildL10nSnapshot(args.config, allowlist);
   const baseFingerprint = await computeBaseFingerprint(snapshot);
-  await putJson(args.env, l10nBaseSnapshotKey(args.publicId, baseFingerprint), {
+  await putJson(args.env, l10nBaseSnapshotKey(publicId, baseFingerprint), {
     v: 1,
-    publicId: args.publicId,
+    publicId,
     baseFingerprint,
     snapshot,
   });
-  return { baseFingerprint };
+  return { baseFingerprint, snapshot, allowlist };
 }
 
 export function normalizeTextPointer(raw: unknown): L10nLivePointer | null {
@@ -545,29 +577,17 @@ export async function writeSavedRenderConfig(args: {
   env: Env;
   publicId: string;
   accountId: string;
-  widgetType?: unknown;
-  config: unknown;
+  widgetType: string;
+  config: Record<string, unknown>;
   displayName?: unknown;
   source?: unknown;
   meta?: unknown;
   l10n?: { baseFingerprint: string } | null;
 }): Promise<SavedRenderPointer> {
-  const publicId = normalizePublicId(args.publicId);
-  if (!publicId) throw new Error('[tokyo] write-saved-render invalid publicId');
-  const accountId = normalizePublicId(args.accountId);
-  if (!accountId) throw new Error('[tokyo] write-saved-render invalid accountId');
-  if (!args.config || typeof args.config !== 'object' || Array.isArray(args.config)) {
-    throw new Error('[tokyo] write-saved-render config must be an object');
-  }
-  const config = args.config as Record<string, unknown>;
-
-  // Resolve widgetType: use supplied value if present, else carry forward from existing pointer.
-  let widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
-  if (!widgetType) {
-    const existing = await readSavedRenderConfig({ env: args.env, publicId, accountId });
-    if (!existing.ok) throw new Error('[tokyo] write-saved-render missing widgetType and no existing pointer');
-    widgetType = existing.value.pointer.widgetType;
-  }
+  const publicId = args.publicId;
+  const accountId = args.accountId;
+  const config = args.config;
+  const widgetType = args.widgetType;
 
   const configFp = await jsonSha256Hex(config);
   const packKey = renderSavedConfigPackKey(publicId, configFp);

@@ -205,15 +205,50 @@ export async function POST(request: NextRequest) {
   }
 
   const publicId = createUserInstancePublicId(source.value.widgetType);
+  try {
+    await writeSavedConfigToTokyo({
+      tokyoBaseUrl: resolveTokyoBaseUrl(),
+      tokyoAccessToken: current.value.accessToken,
+      accountId,
+      publicId,
+      accountCapsule: current.value.authzToken,
+      widgetType: source.value.widgetType,
+      config: source.value.config,
+      displayName: null,
+      source: 'account',
+      meta: null,
+    });
+  } catch (error) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail: error instanceof Error ? error.message : String(error),
+          },
+        },
+        { status: 502 },
+      ),
+      current.value.setCookies,
+    );
+  }
+
   const createdRow = await createAccountInstanceRow({
     accountId,
     publicId,
     widgetType: source.value.widgetType,
-    config: source.value.config,
     berlinAccessToken: current.value.accessToken,
     status: 'unpublished',
   });
   if (!createdRow.ok) {
+    await rollbackDuplicateCreate({
+      accountId,
+      publicId,
+      tokyoAccessToken: current.value.accessToken,
+      berlinAccessToken: current.value.accessToken,
+    });
     const status = createdRow.status === 401 ? 401 : createdRow.status;
     const kind =
       status === 401
@@ -240,6 +275,12 @@ export async function POST(request: NextRequest) {
   }
 
   if (!createdRow.row) {
+    await rollbackDuplicateCreate({
+      accountId,
+      publicId,
+      tokyoAccessToken: current.value.accessToken,
+      berlinAccessToken: current.value.accessToken,
+    });
     return withSession(
       request,
       NextResponse.json(
@@ -257,41 +298,6 @@ export async function POST(request: NextRequest) {
   }
 
   const created = createdRow.row;
-  try {
-    await writeSavedConfigToTokyo({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      tokyoAccessToken: current.value.accessToken,
-      accountId,
-      publicId,
-      accountCapsule: current.value.authzToken,
-      widgetType: created.widgetType,
-      config: source.value.config,
-      displayName: created.displayName,
-      source: created.source,
-      meta: created.meta ?? null,
-    });
-  } catch (error) {
-    await rollbackDuplicateCreate({
-      accountId,
-      publicId,
-      tokyoAccessToken: current.value.accessToken,
-      berlinAccessToken: current.value.accessToken,
-    });
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail: error instanceof Error ? error.message : String(error),
-          },
-        },
-        { status: 502 },
-      ),
-      current.value.setCookies,
-    );
-  }
 
   after(async () => {
     try {

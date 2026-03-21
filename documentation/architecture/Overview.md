@@ -261,11 +261,11 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 | Surface                     | Variable                    | Dev                                     | Prod                                | Notes                                                                            |
 | --------------------------- | --------------------------- | --------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
 | **Bob (Pages)**             | `NEXT_PUBLIC_TOKYO_URL`     | `https://tokyo.dev.clickeen.com`        | `https://tokyo.clickeen.com`        | Compiler fetches widget specs over HTTP (even locally)                           |
-| **Bob (Pages)**             | `NEXT_PUBLIC_VENICE_URL`    | `https://venice.dev.clickeen.com`       | `https://embed.clickeen.com`        | Bob MiniBob public read shortcut + preview-shadow target                         |
+| **Bob (Pages)**             | `NEXT_PUBLIC_VENICE_URL`    | `https://venice.dev.clickeen.com`       | `https://embed.clickeen.com`        | Bob preview/embed target                                                         |
 | **Bob (Pages)**             | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Explicit base URL for Copilot execution (San Francisco); no fallback probing |
 | **Roma (Pages)**            | `NEXT_PUBLIC_BOB_URL`       | `https://bob.dev.clickeen.com`          | `https://app.clickeen.com`          | Builder iframe origin (no query override; configured per environment)            |
-| **Roma/Bob (trusted backends)** | `ENV_STAGE`             | `cloud-dev`                             | `ga`                                | Exposure stage stamped into AI grants on the active product/public issuer path   |
-| **Roma/Bob/San Francisco**  | `AI_GRANT_HMAC_SECRET`      | dev secret                              | prod secret                         | Shared HMAC secret between trusted grant issuers and San Francisco               |
+| **Roma/San Francisco (trusted backends)** | `ENV_STAGE`   | `cloud-dev`                             | `ga`                                | Exposure stage stamped into AI grants on the active product/internal issuer path |
+| **Roma/San Francisco**      | `AI_GRANT_HMAC_SECRET`      | dev secret                              | prod secret                         | Shared HMAC secret between trusted grant issuers and San Francisco               |
 | **San Francisco (Workers)** | `DEEPSEEK_API_KEY`          | dev key                                 | prod key                            | Provider key lives only in San Francisco                                         |
 
 **Hard security rule:**

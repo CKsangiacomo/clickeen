@@ -9,6 +9,7 @@ export type Panel = { id: PanelId; label: string; icon?: string };
 type TdMenuProps = {
   active?: PanelId;
   onSelect?: (id: PanelId) => void;
+  panels?: Panel[];
 };
 
 // Default order for ToolDrawer panels.
@@ -17,12 +18,13 @@ export const DEFAULT_PANELS: Panel[] = [
   { id: 'layout', icon: 'circle.grid.2x2', label: 'Layout' },
   { id: 'appearance', icon: 'paintbrush.pointed', label: 'Appearance' },
   { id: 'typography', icon: 'character.circle', label: 'Typography' },
+  { id: 'translations', icon: 'globe', label: 'Translations' },
   { id: 'settings', icon: 'gearshape', label: 'Settings' },
 ];
 
-export function TdMenu({ active, onSelect }: TdMenuProps) {
+export function TdMenu({ active, onSelect, panels }: TdMenuProps) {
   const navRef = useRef<HTMLElement>(null);
-  const items = useMemo(() => DEFAULT_PANELS, []);
+  const items = useMemo(() => panels ?? DEFAULT_PANELS, [panels]);
   const [internalActive, setInternalActive] = useState<PanelId>(active ?? items[0]?.id ?? 'appearance');
   const current = (active ?? internalActive) as PanelId;
 

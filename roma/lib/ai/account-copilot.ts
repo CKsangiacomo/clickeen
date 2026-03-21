@@ -36,8 +36,6 @@ type AIGrant = {
 };
 
 const OUTCOME_EVENTS = new Set([
-  'signup_started',
-  'signup_completed',
   'upgrade_clicked',
   'upgrade_completed',
   'cta_clicked',

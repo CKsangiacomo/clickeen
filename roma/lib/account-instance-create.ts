@@ -127,15 +127,45 @@ export async function createAccountInstance(args: {
   }
   const config = args.config as Record<string, unknown>;
 
+  try {
+    await writeSavedConfigToTokyo({
+      tokyoBaseUrl: resolveTokyoBaseUrl(),
+      tokyoAccessToken: args.accessToken,
+      accountId: args.accountId,
+      publicId: args.publicId,
+      accountCapsule: args.accountCapsule,
+      widgetType: args.widgetType,
+      config,
+      displayName: null,
+      source: 'account',
+      meta: null,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      status: 502,
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'coreui.errors.db.writeFailed',
+        detail: error instanceof Error ? error.message : String(error),
+      },
+    };
+  }
+
   const createdRow = await createAccountInstanceRow({
     accountId: args.accountId,
     publicId: args.publicId,
     widgetType: args.widgetType,
-    config,
     berlinAccessToken: args.accessToken,
     status: 'unpublished',
   });
   if (!createdRow.ok) {
+    await rollbackCreate({
+      accountId: args.accountId,
+      publicId: args.publicId,
+      accessToken: args.accessToken,
+      accountCapsule: args.accountCapsule,
+    });
     return {
       ok: false,
       status: createdRow.status,
@@ -155,31 +185,6 @@ export async function createAccountInstance(args: {
   }
 
   if (!createdRow.row) {
-    return {
-      ok: false,
-      status: 500,
-      error: {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.db.writeFailed',
-        detail: 'instance_create_empty',
-      },
-    };
-  }
-
-  try {
-    await writeSavedConfigToTokyo({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      tokyoAccessToken: args.accessToken,
-      accountId: args.accountId,
-      publicId: args.publicId,
-      accountCapsule: args.accountCapsule,
-      widgetType: createdRow.row.widgetType,
-      config,
-      displayName: createdRow.row.displayName,
-      source: createdRow.row.source,
-      meta: createdRow.row.meta ?? null,
-    });
-  } catch (error) {
     await rollbackCreate({
       accountId: args.accountId,
       publicId: args.publicId,
@@ -188,11 +193,11 @@ export async function createAccountInstance(args: {
     });
     return {
       ok: false,
-      status: 502,
+      status: 500,
       error: {
-        kind: 'UPSTREAM_UNAVAILABLE',
+        kind: 'INTERNAL',
         reasonKey: 'coreui.errors.db.writeFailed',
-        detail: error instanceof Error ? error.message : String(error),
+        detail: 'instance_create_empty',
       },
     };
   }

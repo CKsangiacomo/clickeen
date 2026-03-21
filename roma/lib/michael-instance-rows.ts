@@ -199,7 +199,6 @@ export async function createAccountInstanceRow(args: {
   accountId: string;
   publicId: string;
   widgetType: string;
-  config: Record<string, unknown>;
   displayName?: string | null;
   status?: 'published' | 'unpublished';
   meta?: Record<string, unknown> | null;
@@ -278,6 +277,9 @@ export async function createAccountInstanceRow(args: {
           public_id: args.publicId,
           status: args.status === 'published' ? 'published' : 'unpublished',
           display_name: asTrimmedString(args.displayName) ?? 'Untitled widget',
+          // Michael still requires config at the schema level, but the active
+          // product document truth lives in Tokyo. Keep this as inert residue
+          // instead of persisting a second live widget document copy.
           config: {},
           kind: 'user',
         }),
@@ -559,24 +561,6 @@ async function patchAccountInstanceRow(args: {
       widgetType: widgetType.widgetType,
     },
   };
-}
-
-export async function renameAccountInstanceRow(args: {
-  accountId: string;
-  publicId: string;
-  displayName: string;
-  berlinAccessToken: string;
-}): Promise<MichaelRenameInstanceResult> {
-  try {
-    return await patchAccountInstanceRow({
-      accountId: args.accountId,
-      publicId: args.publicId,
-      berlinAccessToken: args.berlinAccessToken,
-      body: { display_name: args.displayName },
-    });
-  } catch (error) {
-    return michaelUnavailableResult(error);
-  }
 }
 
 export async function updateAccountInstanceStatusRow(args: {

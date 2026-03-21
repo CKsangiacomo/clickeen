@@ -14,11 +14,20 @@ export function useSessionSaving(args: {
   const save = useCallback(async () => {
     // Save persists the one widget the customer is actively editing.
     const snapshot = args.stateRef.current;
-    const publicId = args.metaRef.current?.publicId ? String(args.metaRef.current.publicId) : '';
+    const meta = args.metaRef.current;
+    const publicId = meta?.publicId ? String(meta.publicId) : '';
+    const widgetType = meta?.widgetname ? String(meta.widgetname).trim() : '';
     if (!publicId) {
       args.setState((prev) => ({
         ...prev,
         error: { source: 'save', message: 'Missing instance context for save.' },
+      }));
+      return;
+    }
+    if (!widgetType) {
+      args.setState((prev) => ({
+        ...prev,
+        error: { source: 'save', message: 'Missing widget type for save.' },
       }));
       return;
     }
@@ -31,7 +40,13 @@ export function useSessionSaving(args: {
         method: 'PUT',
         url: `/api/account/instance/${encodeURIComponent(publicId)}`,
         publicId,
-        body: { config: snapshot.instanceData },
+        body: {
+          widgetType,
+          config: snapshot.instanceData,
+          displayName: meta?.label ?? null,
+          source: meta?.source,
+          meta: meta?.meta ?? null,
+        },
       });
       if (!ok) {
         const err = json?.error;

@@ -67,7 +67,7 @@ Bob compiles the spec into a deterministic contract:
 
 ### Host bootstrap contract (current repo behavior)
 
-Active account authoring host path: Roma Builder fetches `compiled`, `instanceData`, and `policy`, then waits for Bob session readiness and sends `ck:open-editor`.
+Active account authoring host path: Roma Builder fetches the saved document envelope (`compiled`, `instanceData`, `policy`, `publicId`, `displayName`, `source`, `meta`), then waits for Bob session readiness and sends `ck:open-editor`.
 
 That open envelope is document-only for authoring. It does not carry published/unpublished live-state noise into the editor.
 
@@ -86,7 +86,9 @@ Then they wait for Bob session readiness and post into Bob:
   instanceData,
   policy,
   publicId,
-  label
+  label,
+  source,
+  meta
 }
 ```
 
@@ -102,6 +104,7 @@ Together they:
 
 - Consumes the one host-opened compiled widget contract
 - Requires an explicit `instanceData` document on open; Bob does not promote `compiled.defaults` into visible widget truth
+- Fails the open request when `instanceData` is missing or invalid; Bob does not invent `{}` as a replacement widget
 - Stores `{ compiled, instanceData }` in React state
 - Never auto-picks a different instance when `publicId` is missing.
 - Replies with terminal `bob:open-editor-applied` or `bob:open-editor-failed` for the current host request.
@@ -136,8 +139,15 @@ Core base-config lifecycle per open session:
 1. One core instance load performed by the host in account message boot before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
 3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instance/:publicId` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
+   Bob sends the current document metadata back with the save (`widgetType`, `displayName`, `source`, `meta`, `config`) so Roma/Tokyo do not reconstruct sibling identity from the previously saved row.
    Save success clears the save/error state and keeps the same in-memory widget truth; Bob does not swap in a server-returned replacement copy of the widget.
 4. Bob opens the saved document it was given. It does not merge missing widget defaults into account-hosted config on load. If Roma/Tokyo surface malformed saved widget payload, Builder fails open at that boundary instead of healing or masking the bad row.
+5. Bob does not own instance rename. Widgets-domain rename mutates the Tokyo saved document separately, and Bob save does not re-author identity through a second authority.
+
+Copilot account path:
+
+- Bob posts prompt, current config, controls, and session metadata to Roma.
+- Bob does not restate widget identity in the request body; Roma resolves widget type from the current saved instance for that `publicId`.
 
 Within Bob, explicit save ownership stays in `useSessionSaving.ts`. Builder no longer mounts a localization overlay/session subsystem on the active account editing path.
 
@@ -322,22 +332,20 @@ Editor UX note:
 ## Copilot (chat-first, ops-based)
 
 Bob includes a chat-first Copilot surface in ToolDrawer.
-The current split point is explicit:
+Current product truth:
 
-- `bob/components/ToolDrawer.tsx` chooses an account-mode Builder shell vs a MiniBob/public shell.
-- `bob/components/CopilotPane.tsx` now exposes separate account/minibob surfaces and keeps only the shared thread / staged-ops mechanics in common.
-- Roma account-mode Copilot remains a different product surface from MiniBob/public Copilot even where they still share low-level mechanics.
+- Bob exposes one live account-Builder Copilot surface.
+- The browser sends Copilot requests through Roma instance routes, not Bob same-origin AI routes.
+- Bob keeps only the local thread / staged-ops mechanics and does not own a public MiniBob Copilot path.
 
 Behavior:
 
-- Sends prompts to `/api/ai/widget-copilot` with `{ prompt, widgetType, currentConfig, controls, sessionId, instancePublicId }`.
+- Sends prompts to Roma instance Copilot routes with `{ prompt, currentConfig, controls, sessionId }`.
 - Applies returned `ops[]` locally as pure state transforms (no orchestrator-owned schema validation/coercion).
 - Requires an explicit **Keep** or **Undo** decision for any applied ops (blocks new prompts while pending; no auto-commit).
-- Reports outcomes (keep/undo/CTA clicks) via `/api/ai/outcome` (best-effort).
-- Server-side hardening in `/api/ai/widget-copilot`:
-  - Accepts only widget-copilot agent IDs (`widget.copilot.v1`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`).
-  - Account-mode Builder requests execute only through Roma-owned instance-scoped routes.
-  - For widget-copilot IDs (alias or canonical), grant routing is policy-resolved server-side (`free` -> SDR, `tier1|tier2|tier3` -> CS).
+- Reports outcomes (keep/undo/CTA clicks) through Roma-owned outcome attach paths.
+- Account-mode Builder requests execute only through Roma-owned instance-scoped routes.
+- Account Builder widget-copilot routing resolves to the CS editor copilot on the live product path.
 
 ### AI routes (current)
 
@@ -354,8 +362,8 @@ Deployment note (verified on February 11, 2026):
 
 ### Copilot env vars (local + Cloud-dev)
 
-- `AI_GRANT_HMAC_SECRET` is used by Bob’s public MiniBob AI routes to mint MiniBob session/grant tokens and sign outcomes.
-- `SANFRANCISCO_BASE_URL` must point explicitly at the San Francisco Worker. Bob does not probe fallback hosts.
+- Bob no longer mints grants or calls San Francisco directly on the live product path.
+- Roma owns `AI_GRANT_HMAC_SECRET` and `SANFRANCISCO_BASE_URL` for account-mode Copilot execution.
 
 ---
 
@@ -580,5 +588,5 @@ Preview:
 
 - Backward compatibility / legacy instance migration.
 - Hardened embed runtime surface (Venice) as a product contract.
-- Copilot rollout/auth: account-mode Copilot now runs through Roma-owned backend routes, while public MiniBob grant/session minting lives on Bob. Production allowlists/flags still evolve with the release model.
+- Copilot rollout/auth: account-mode Copilot now runs through Roma-owned backend routes. Production allowlists/flags still evolve with the release model.
 - Copilot policy hardening: post-model “light edits only” caps + scope confirmation + deeper grounding to per-widget `agent.md` contracts (in progress).

@@ -54,11 +54,9 @@ function resolvePriceTable(env: Env): Record<string, PriceEntry> {
 
 function budgetKey(grant: AIGrant, agentId: string): string {
   const subjectKey =
-    grant.sub.kind === 'anon'
-      ? grant.sub.sessionId
-      : grant.sub.kind === 'user'
-        ? `${grant.sub.userId}:${grant.sub.accountId}`
-        : grant.sub.serviceId;
+    grant.sub.kind === 'user'
+      ? `${grant.sub.userId}:${grant.sub.accountId}`
+      : grant.sub.serviceId;
   const sessionId = grant.trace?.sessionId ?? subjectKey;
   const capsKey = grant.caps.join(',');
   const grantKey = grant.jti ?? `${sessionId}:${capsKey}:${grant.exp}`;

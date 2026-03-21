@@ -765,6 +765,14 @@
     }
     window.CKHeader.applyHeader(state, widgetRoot);
 
+    if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
+      throw new Error('[LogoShowcase] Missing CKLocaleSwitcher.applyLocaleSwitcher');
+    }
+    window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
+      locale: runtimeContext && runtimeContext.locale,
+      typographyScope: lsRoot,
+    });
+
     const nextSignature = JSON.stringify([
       state.type,
       state.type === 'carousel' ? state.typeConfig.carousel.mode : 'grid',

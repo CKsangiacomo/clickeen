@@ -4,6 +4,7 @@ import {
   executeCopilotOnSanFrancisco,
   issueAccountCopilotGrant,
 } from '@roma/lib/ai/account-copilot';
+import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-direct';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -12,7 +13,6 @@ type RouteContext = { params: Promise<{ publicId: string }> };
 
 const ALLOWED_WIDGET_COPILOT_AGENT_IDS = new Set<string>([
   WIDGET_COPILOT_AGENT_ALIAS,
-  WIDGET_COPILOT_AGENT_IDS.sdr,
   WIDGET_COPILOT_AGENT_IDS.cs,
 ] as const);
 
@@ -46,7 +46,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const payload = isRecord(body) ? body : null;
 
     const prompt = asTrimmedString(payload?.prompt);
-    const widgetType = asTrimmedString(payload?.widgetType);
     const sessionId = asTrimmedString(payload?.sessionId);
     const requestedAgentId = asTrimmedString(payload?.agentId) || WIDGET_COPILOT_AGENT_ALIAS;
     const subject = asTrimmedString(payload?.subject);
@@ -57,17 +56,31 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const issues: Array<{ path: string; message: string }> = [];
     if (!prompt) issues.push({ path: 'prompt', message: 'prompt is required' });
-    if (!widgetType) issues.push({ path: 'widgetType', message: 'widgetType is required' });
     if (!sessionId) issues.push({ path: 'sessionId', message: 'sessionId is required' });
     if (!isRecord(currentConfig)) issues.push({ path: 'currentConfig', message: 'currentConfig must be an object' });
     if (!Array.isArray(controls)) issues.push({ path: 'controls', message: 'controls must be an array' });
     if (subject && subject !== 'account') issues.push({ path: 'subject', message: 'subject must be account' });
     if (!ALLOWED_WIDGET_COPILOT_AGENT_IDS.has(requestedAgentId)) {
-      issues.push({ path: 'agentId', message: 'agentId must be widget.copilot.v1, sdr.widget.copilot.v1, or cs.widget.copilot.v1' });
+      issues.push({ path: 'agentId', message: 'agentId must be widget.copilot.v1 or cs.widget.copilot.v1' });
     }
     if (issues.length) {
       return withSession(request, NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 }), current.value.setCookies);
     }
+
+    const currentInstance = await loadTokyoAccountInstanceDocument({
+      accountId: current.value.authzPayload.accountId,
+      publicId,
+      tokyoAccessToken: current.value.accessToken,
+      accountCapsule: current.value.authzToken,
+    });
+    if (!currentInstance.ok) {
+      return withSession(
+        request,
+        NextResponse.json({ error: currentInstance.error }, { status: currentInstance.status }),
+        current.value.setCookies,
+      );
+    }
+    const widgetType = currentInstance.value.row.widgetType;
 
     const issued = await issueAccountCopilotGrant({
       authz: current.value.authzPayload,

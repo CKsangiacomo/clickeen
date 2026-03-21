@@ -11,7 +11,6 @@ import {
   syncLiveSurface,
   writeConfigPack,
   writeSavedRenderConfig,
-  writeSavedRenderL10nState,
 } from '../domains/render';
 import { handleSyncAccountInstance } from '../domains/account-instance-sync';
 import {
@@ -182,43 +181,22 @@ export async function tryHandleInternalRenderRoutes(
         minRole: 'editor',
       });
       if (authErr) return respond(authErr);
-      const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-      if (!body?.config || typeof body.config !== 'object' || Array.isArray(body.config)) {
+      const rawBody = (await req.json().catch(() => null)) as unknown;
+      if (!isRecord(rawBody)) {
         return respondValidation(respond, 'tokyo.errors.render.invalid');
       }
-      const config = body.config as Record<string, unknown>;
-
-      // Resolve widgetType: use body value if present, else carry forward from existing pointer.
-      let widgetType = typeof body.widgetType === 'string' ? body.widgetType.trim() : '';
-      if (!widgetType) {
-        const existing = await readSavedRenderConfig({ env, publicId: publicId!, accountId });
-        if (!existing.ok) return respondValidation(respond, 'tokyo.errors.render.invalid');
-        widgetType = existing.value.pointer.widgetType;
-      }
-
-      // Write L10n snapshot first (explicit), then write config + pointer.
-      const l10n = await writeSavedRenderL10nState({ env, publicId: publicId!, widgetType, config });
-      let pointer;
-      try {
-        pointer = await writeSavedRenderConfig({
-          env,
-          publicId: publicId!,
-          accountId,
-          widgetType,
-          config,
-          displayName: body.displayName,
-          source: body.source,
-          meta: body.meta,
-          l10n,
-        });
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        if (detail === '[tokyo] write-saved-render config must be an object') {
-          return respondValidation(respond, 'tokyo.errors.render.invalid');
-        }
-        throw error;
-      }
-      return respond(json({ ...pointer, config }));
+      const body = rawBody;
+      const pointer = await writeSavedRenderConfig({
+        env,
+        publicId: publicId!,
+        accountId,
+        widgetType: body.widgetType as string,
+        config: body.config as Record<string, unknown>,
+        displayName: body.displayName,
+        source: body.source,
+        meta: body.meta,
+      });
+      return respond(json({ ...pointer, config: body?.config }));
     }
 
     if (req.method === 'DELETE') {

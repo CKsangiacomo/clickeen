@@ -1,4 +1,4 @@
-export type CopilotCta = { text: string; action: 'signup' | 'upgrade' | 'learn-more'; url?: string };
+export type CopilotCta = { text: string; action: 'upgrade' | 'learn-more'; url?: string };
 
 export type CopilotMessage = {
   id: string;

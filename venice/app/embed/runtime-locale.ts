@@ -21,17 +21,19 @@ export const EMBED_LOCALE_RUNTIME_SOURCE = String.raw`
             : [baseLocale];
           const ipEnabled =
             policy && typeof policy === 'object' && policy.ip && typeof policy.ip === 'object' && policy.ip.enabled === true;
-          const switcherEnabled =
+          const alwaysShowLocale =
             policy &&
             typeof policy === 'object' &&
             policy.switcher &&
             typeof policy.switcher === 'object' &&
-            policy.switcher.enabled === true;
+            typeof policy.switcher.alwaysShowLocale === 'string'
+              ? normalizeLocaleToken(policy.switcher.alwaysShowLocale)
+              : '';
           const mapping =
             policy && typeof policy === 'object' && policy.ip && typeof policy.ip === 'object' && policy.ip.countryToLocale
               ? policy.ip.countryToLocale
               : null;
-          return { baseLocale, readyLocales, ipEnabled, switcherEnabled, mapping };
+          return { baseLocale, readyLocales, ipEnabled, alwaysShowLocale, mapping };
         };
 
         const computeEffectiveLocale = (policyState, geoCountry, fixedLocaleOverride) => {
@@ -49,6 +51,8 @@ export const EMBED_LOCALE_RUNTIME_SOURCE = String.raw`
                 ? normalizeLocaleToken(resolved.mapping[geoCountry])
                 : '';
             if (mapped && resolved.readyLocales.indexOf(mapped) >= 0) locale = mapped;
+          } else if (resolved.alwaysShowLocale && resolved.readyLocales.indexOf(resolved.alwaysShowLocale) >= 0) {
+            locale = resolved.alwaysShowLocale;
           }
           return locale;
         };

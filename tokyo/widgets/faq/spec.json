@@ -39,6 +39,13 @@
       "answerFormat": "direct-first",
       "enableDeepLinks": true
     },
+    "localeSwitcher": {
+      "enabled": false,
+      "byIp": false,
+      "alwaysShowLocale": "",
+      "attachTo": "stage",
+      "position": "top-right"
+    },
     "pod": {
       "radius": "4xl",
       "shadow": {
@@ -405,6 +412,16 @@
       "ctaTextColor": "var(--color-system-white)",
       "ctaBackground": "var(--color-system-blue)",
       "ctaSizePreset": "custom",
+      "localeSwitcherBorder": {
+        "color": "var(--color-system-gray-5)",
+        "width": 1,
+        "enabled": true
+      },
+      "localeSwitcherRadius": "md",
+      "localeSwitcherTextColor": "var(--color-system-black)",
+      "localeSwitcherBackground": "var(--color-system-white)",
+      "localeSwitcherPaddingBlock": 10,
+      "localeSwitcherPaddingInline": 14,
       "linkTextColor": "var(--color-system-blue)",
       "itemBackground": {
         "type": "color",
@@ -473,6 +490,18 @@
           "lineHeightCustom": 1.4,
           "lineHeightPreset": "normal"
         },
+        "localeSwitcher": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "500",
+          "fontStyle": "normal",
+          "sizeCustom": 14,
+          "sizePreset": "s",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.2,
+          "lineHeightPreset": "tight"
+        },
         "section": {
           "color": {
             "type": "color",
@@ -527,6 +556,13 @@
           "xs": "14px"
         },
         "button": {
+          "l": "20px",
+          "m": "18px",
+          "s": "15px",
+          "xl": "24px",
+          "xs": "13px"
+        },
+        "localeSwitcher": {
           "l": "20px",
           "m": "18px",
           "s": "15px",
@@ -592,6 +628,14 @@
     "    <tooldrawer-field-appearance-accordion group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.iconColor' label='Accordion icon color' value='{{appearance.iconColor}}' show-if=\"layout.type == 'accordion'\" />",
     "  </tooldrawer-cluster>",
     "  @slot:header-appearance",
+    "  <tooldrawer-cluster label='Locale switcher' show-if=\"localeSwitcher.enabled == true\">",
+    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.localeSwitcherBackground' label='Background' value='{{appearance.localeSwitcherBackground}}' />",
+    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.localeSwitcherTextColor' label='Text color' value='{{appearance.localeSwitcherTextColor}}' />",
+    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-border' size='md' path='appearance.localeSwitcherBorder' label='Border' value='{{appearance.localeSwitcherBorder}}' />",
+    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-actions' size='md' path='appearance.localeSwitcherRadius' label='Corner radius' value='{{appearance.localeSwitcherRadius}}' options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;X-Small&quot;,&quot;value&quot;:&quot;xs&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;sm&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;md&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;lg&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;xl&quot;},{&quot;label&quot;:&quot;2X-Large&quot;,&quot;value&quot;:&quot;2xl&quot;}]' />",
+    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='valuefield' size='md' path='appearance.localeSwitcherPaddingInline' label='Horizontal padding (px)' value='{{appearance.localeSwitcherPaddingInline}}' min='0' max='48' step='1' />",
+    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='valuefield' size='md' path='appearance.localeSwitcherPaddingBlock' label='Vertical padding (px)' value='{{appearance.localeSwitcherPaddingBlock}}' min='0' max='32' step='1' />",
+    "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster label='Links' show-if=\"hasLinks(sections)\">",
     "    <tooldrawer-field-appearance-links group-label='' type='dropdown-actions' size='md' path='appearance.linkStyle' label='Link style' value='{{appearance.linkStyle}}' options='[{&quot;label&quot;:&quot;Underline&quot;,&quot;value&quot;:&quot;underline&quot;},{&quot;label&quot;:&quot;Highlight&quot;,&quot;value&quot;:&quot;highlight&quot;},{&quot;label&quot;:&quot;Color&quot;,&quot;value&quot;:&quot;color&quot;}]' />",
     "    <tooldrawer-field-appearance-links group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkUnderlineColor' label='Underline color' value='{{appearance.linkUnderlineColor}}' show-if=\"appearance.linkStyle == 'underline'\" />",
@@ -629,6 +673,15 @@
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='pod.insideShadow.right' label='Pod inside shadow (right)' value='{{pod.insideShadow.right}}' show-if=\"pod.insideShadow.linked == false\" />",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='pod.insideShadow.bottom' label='Pod inside shadow (bottom)' value='{{pod.insideShadow.bottom}}' show-if=\"pod.insideShadow.linked == false\" />",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='pod.insideShadow.left' label='Pod inside shadow (left)' value='{{pod.insideShadow.left}}' show-if=\"pod.insideShadow.linked == false\" />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='translations'>",
+    "  <tooldrawer-cluster label='Locale behavior'>",
+    "    <tooldrawer-field-translations-behavior group-label='' type='toggle' size='md' path='localeSwitcher.enabled' label='Show locale switcher' show-if=\"false\" />",
+    "    <tooldrawer-field-translations-behavior group-label='' type='toggle' size='md' path='localeSwitcher.byIp' label='Show by IP' show-if=\"false\" />",
+    "    <tooldrawer-field-translations-behavior group-label='' type='textfield' size='md' path='localeSwitcher.alwaysShowLocale' label='Always show locale' show-if=\"false\" />",
+    "    <tooldrawer-field-translations-behavior group-label='' type='textfield' size='md' path='localeSwitcher.attachTo' label='Attach to' show-if=\"false\" />",
+    "    <tooldrawer-field-translations-behavior group-label='' type='textfield' size='md' path='localeSwitcher.position' label='Position' show-if=\"false\" />",
     "  </tooldrawer-cluster>",
     "</bob-panel>",
     "<bob-panel id='settings'>",

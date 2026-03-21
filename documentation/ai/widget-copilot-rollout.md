@@ -1,23 +1,23 @@
-STATUS: EXECUTION RUNBOOK — WIDGET COPILOT (SDR + CS)
+STATUS: EXECUTION RUNBOOK — WIDGET COPILOT
 Updated: March 15, 2026 (070A AI ownership cut)
 This file keeps rollout history, but the current runtime owner shape is now:
 - account-mode Builder Copilot: Roma-owned backend routes
 - Prague demo: not a live Copilot execution surface
 - Paris: no `/api/ai/*` ownership
+- Account Builder widget copilot: `widget.copilot.v1` -> `cs.widget.copilot.v1`
 
 ## Purpose
 
 This runbook captures the rollout status for widget copilot routing:
 - `widget.copilot.v1` alias
-- policy-resolved SDR/CS canonical IDs
+- current CS canonical ID on the live account product path
 - environment verification (local vs cloud-dev)
 
 ## Canonical routing contract
 
 - Request alias: `widget.copilot.v1`
-- Backend grant resolution:
-  - `free` -> `sdr.widget.copilot.v1`
-  - `tier1|tier2|tier3` -> `cs.widget.copilot.v1`
+- Backend grant resolution on the live account path:
+  - account Builder -> `cs.widget.copilot.v1`
 
 ## Environment behavior matrix
 
@@ -32,9 +32,7 @@ Pre-deploy finding (earlier same day):
 
 Post-deploy findings:
 - Roma + San Francisco cloud-dev resolve policy correctly through the Roma instance route:
-  - free workspace calls return `meta.promptRole = "sdr"`
-  - tier3 workspace calls return `meta.promptRole = "cs"`
-- For paid tiers, forcing `agentId = sdr.widget.copilot.v1` is canonicalized back to CS (`meta.promptRole = "cs"`), matching the policy contract.
+  - account Builder calls return `meta.promptRole = "cs"`
 - Workspace coverage in shared cloud-dev DB at verification time:
   - present: `free`, `tier3`
   - missing: `tier1`, `tier2`
@@ -46,16 +44,13 @@ Core runtime files:
 - `roma/lib/ai/account-copilot.ts`
 - `sanfrancisco/src/index.ts`
 - `sanfrancisco/src/agents/widgetCopilotCore.ts`
-- `sanfrancisco/src/agents/sdrWidgetCopilot.ts`
 - `sanfrancisco/src/agents/csWidgetCopilot.ts`
 - `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`
 - `bob/components/CopilotPane.tsx`
 - `admin/src/html/tools/entitlements.html`
 
-Policy split notes (local runtime):
-- SDR and CS still share grant plumbing + telemetry shape, but behavior is now role-scoped in the widget copilot runtime.
-- SDR path is constrained to FAQ sales workflow (rewrite existing Q&A, or website-based FAQ personalization).
-- CS path handles general control-driven editor requests and does not use the SDR website/seller clarification loop.
+Current runtime note:
+- Historical SDR routing notes below are archival. The live account Builder route now uses the CS widget copilot only.
 
 Verification:
 - service-owned integration tests and cloud-dev runtime checks.

@@ -41,10 +41,9 @@ At GA scale (100s of widgets, millions of installs), San Francisco must be **iso
 ## The Core Boundary (Non‑Negotiable)
 
 ### Product Backend Surfaces (Policy + Persistence)
-Roma/Bob are the trusted backend surfaces that issue short-lived grants for their own product paths.
+Roma and San Francisco internal services are the trusted backend surfaces that issue short-lived grants for their own product paths.
 - Berlin mints auth/session/account truth
 - Roma owns authenticated product-path grant issuance
-- Bob owns public MiniBob grant issuance
 - Tokyo/Tokyo-worker own saved/artifact truth
 - Audit/billing-oriented usage records stay outside San Francisco
 
@@ -69,7 +68,7 @@ As of PRD 041, LLM access is strictly tiered. The grant issuer resolves the call
 
 | AI Profile | Target User | Default Access | Performance |
 |------------|-------------|----------------|-------------|
-| `free_low` | Free / Minibob | Policy default `deepseek -> deepseek-chat` (Minibob public mint may request `amazon -> nova-2-lite-v1`) | Fast, low-cost |
+| `free_low` | Free account / lowest-cost account policy | Policy default `deepseek -> deepseek-chat` | Fast, low-cost |
 | `paid_standard` | Tier 1 (Basic) | Policy default `openai -> gpt-5-mini` (plus DeepSeek, Claude Sonnet, Groq Llama, Nova where agent allows) | Balanced |
 | `paid_premium` | Tier 2+ (Pro) | Policy default `openai -> gpt-5.2` (plus DeepSeek Reasoner, Claude Sonnet, Groq Llama, Nova where agent allows) | Higher quality |
 | `curated_premium`| Internal/Special | Policy default `openai -> gpt-5.2` (OpenAI curated set) | Max capability |
@@ -80,21 +79,17 @@ San Francisco enforces this profile by:
 3.  Rejecting requests for providers/models not allowed by the profile.
 
 Widget copilot routing (shipped):
-- `minibob` + `free` resolve to `sdr.widget.copilot.v1`
-- `tier1`/`tier2`/`tier3` resolve to `cs.widget.copilot.v1`
-- Callers may request the alias `widget.copilot.v1`; the grant issuer resolves it by profile.
+- Account Builder resolves `widget.copilot.v1` to `cs.widget.copilot.v1`
+- Callers may request the alias `widget.copilot.v1`; Roma resolves it server-side for the account route.
 - DevStudio Entitlements now exposes both profile-level model access and per-agent runtime access so provider/model differences are explicit.
 - Runtime behavior is policy-scoped by agent role (shared infra, separate behavior packs):
-  - `sdr.widget.copilot.v1`: FAQ-only SDR workflow (rewrite existing Q&A or personalize from one website URL with consent). Non-supported requests return seller guidance + signup CTA.
   - `cs.widget.copilot.v1`: in-product editor copilot (control-driven edits, task-completion clarifications, no SDR website/seller loop).
 
 Deployment status (code-synced on February 26, 2026; last cloud-dev smoke notes from February 11, 2026):
-- Local target behavior: browser calls `POST /api/ai/widget-copilot`.
-- Cloud-dev current behavior: `https://bob.dev.clickeen.com/api/ai/widget-copilot` is live (after Bob Pages deploy).
+- Local + cloud-dev target behavior: browser calls `POST /api/account/instances/:publicId/copilot` on Roma.
 - Verified post-deploy routing on cloud-dev:
-  - free workspace -> `meta.promptRole = "sdr"`
-  - tier3 workspace -> `meta.promptRole = "cs"`
-  - forcing `agentId = "sdr.widget.copilot.v1"` on paid tiers is canonicalized back to CS by the grant issuer.
+  - account Builder requests execute through Roma instance routes
+  - widget-copilot alias resolves to CS on the live product path
 
 ## Why This Separation Exists (GA Reality)
 At scale, AI workloads are bursty, slow, and failure-prone; instance APIs must remain boring and stable.
@@ -111,7 +106,7 @@ Keeping product/persistence owners and San Francisco separate prevents:
 
 ## Terms (Precise)
 - **Agent**: A named AI capability (e.g. `editor.faqAnswer`, `support.reply`, `ops.communityModeration`).
-- **AI Grant**: A signed authorization payload from a Clickeen backend surface (Roma for account-mode product flows, Bob for MiniBob/public flows) that defines what San Francisco is allowed to do for a subject for a short time window.
+- **AI Grant**: A signed authorization payload from a trusted Clickeen backend surface (Roma for account-mode product flows, San Francisco internal services for service work) that defines what San Francisco is allowed to do for a subject for a short time window.
 - **Execution Request**: The payload sent to San Francisco containing `agentId`, input, and the AI Grant.
 - **Result**: Structured output from San Francisco (`ops[]` for editor agents, or a typed payload for non-editor agents).
 - **Playbook**: A versioned runtime contract attached to an `agentId` via the registry (server-resolved, not client-selected).
@@ -120,7 +115,7 @@ Keeping product/persistence owners and San Francisco separate prevents:
 
 ### Editor agents (inside Clickeen app)
 1) Core Builder open now loads through one Roma same-origin route (`GET /api/builder/:publicId/open`) that resolves the saved authoring revision server-side for Roma message boot. Account-mode save delegates back to Roma through `PUT /api/account/instance/:publicId?subject=account`. Builder no longer carries localization refresh/status commands on the active account authoring path.
-2) Account-mode Builder requests execute through Roma instance routes; public MiniBob requests execute through Bob same-origin routes. The owning surface mints the short-lived AI Grant inline for that request.
+2) Account-mode Builder requests execute through Roma instance routes. Roma mints the short-lived AI Grant inline for that request.
 3) Bob calls San Francisco with `{ grant, agentId, input, context }`.
 4) San Francisco returns `{ ops[], usage }`.
 5) Bob applies `ops[]` locally as pure state transforms. If an op cannot be applied, Bob fails loudly (platform bug) and the developer fixes the widget/package or copilot output.
@@ -148,13 +143,12 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `SF_R2` (raw event storage)
 - Agent IDs currently recognized by the worker:
   - `sdr.copilot`
-  - `sdr.widget.copilot.v1`
   - `cs.widget.copilot.v1`
   - `l10n.instance.v1`
   - `l10n.prague.strings.v1`
   - `agent.personalization.onboarding.v1`
   - `debug.grantProbe` (dev only)
-  - `POST /v1/execute` currently wires executors for: `sdr.copilot`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`, `debug.grantProbe`.
+  - `POST /v1/execute` currently wires executors for: `sdr.copilot`, `cs.widget.copilot.v1`, `debug.grantProbe`.
 
 This matters because the “learning loop” is not theoretical: every `/v1/execute` call enqueues an `InteractionEvent`, and the queue consumer writes raw payloads to R2 + indexes a small subset into D1.
 
@@ -172,10 +166,9 @@ Shape (conceptual):
 ```ts
 type AIGrant = {
   v: 1;
-  iss: 'clickeen';
+  iss: 'roma' | 'sanfrancisco';
   jti?: string; // unique grant id (used for per-grant budget tracking)
   sub:
-    | { kind: 'anon'; sessionId: string } // Minibob / public experiences
     | { kind: 'user'; userId: string; accountId: string } // Clickeen app
     | { kind: 'service'; serviceId: string }; // internal automation
   exp: number; // epoch seconds
@@ -201,7 +194,7 @@ type AIGrant = {
 
 #### Grant format (shipped)
 
-San Francisco verifies grants using an HMAC signature shared across trusted Clickeen grant issuers (`AI_GRANT_HMAC_SECRET`).
+San Francisco verifies grants using an HMAC signature shared across trusted Clickeen grant issuers (`AI_GRANT_HMAC_SECRET`), currently Roma and San Francisco internal services.
 
 Format:
 `v1.<base64url(payloadJson)>.<base64url(hmacSha256("v1.<payloadB64>", AI_GRANT_HMAC_SECRET))>`
@@ -295,7 +288,7 @@ Orchestration is San Francisco’s “meat” and is built incrementally behind 
 Phase‑1 (shipped orchestration surface):
 - Multiple agents behind the same `/v1/execute` interface:
   - `sdr.copilot`
-  - `sdr.widget.copilot.v1` / `cs.widget.copilot.v1` (profile-resolved widget editing Copilot)
+  - `cs.widget.copilot.v1` (live account widget editing Copilot)
   - `debug.grantProbe` (dev only)
 - Provider/model policy is explicit per agent/profile; runtime may retry retryable upstream failures across grant-allowed selections, and returns typed errors when retries are exhausted.
 - No general “tool” system yet; any extra capabilities must be explicitly implemented inside the agent (for example: widget copilot includes bounded, SSRF-guarded single-page URL reads + Cloudflare HTML detection).
@@ -391,7 +384,6 @@ Status: shipped
 Definition of done:
 - Bob no longer calls provider APIs directly.
 - Account-mode Builder calls San Francisco through Roma-owned backend routes.
-- MiniBob/public calls San Francisco through Bob-owned same-origin routes.
 - Errors are explicit; no silent behavior changes.
 
 ### Milestone 5 — Remove Bob-local AI route
@@ -399,7 +391,7 @@ Status: shipped (implemented as thin proxies)
 
 Definition of done:
 - Legacy compatibility AI routes are removed.
-- `bob/app/api/ai/widget-copilot` is the only Copilot execution path.
+- Roma account instance routes are the only live Copilot execution path.
 
 ## Open Questions (next)
 - Where AI usage is recorded for billing: backend-owned ledger in Roma/Berlin, or a later aggregation pipeline.
