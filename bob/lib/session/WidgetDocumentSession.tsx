@@ -29,7 +29,7 @@ export type WidgetDocumentSessionValue = {
 const WidgetDocumentSessionContext = createContext<WidgetDocumentSessionValue | null>(null);
 
 export function WidgetDocumentSessionProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<SessionState>(() => createInitialSessionState(null));
+  const [state, setState] = useState<SessionState>(() => createInitialSessionState());
   const chrome = useWidgetSessionChromeController();
 
   const stateRef = useRef(state);

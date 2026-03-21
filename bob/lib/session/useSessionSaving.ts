@@ -37,8 +37,6 @@ export function useSessionSaving(args: {
     try {
       const { ok, json } = await args.executeAccountCommand({
         command: 'update-instance',
-        method: 'PUT',
-        url: `/api/account/instance/${encodeURIComponent(publicId)}`,
         publicId,
         body: {
           widgetType,

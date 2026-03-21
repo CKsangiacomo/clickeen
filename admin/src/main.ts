@@ -42,8 +42,21 @@ import {
   getEntitlementsMatrix,
   type PolicyProfile,
 } from '@clickeen/ck-policy';
+import type { AccountAssetsClient } from '@dieter/components/shared/account-assets';
 
 const entitlements = getEntitlementsMatrix();
+
+const showcaseAccountAssets: AccountAssetsClient = {
+  async listAssets() {
+    return [];
+  },
+  async resolveAssets() {
+    return { assetsById: new Map(), missingAssetIds: [] };
+  },
+  async uploadAsset() {
+    throw new Error('Asset uploads are not available in the Dieter showcase.');
+  },
+};
 
 window.__CK_ENTITLEMENTS__ = entitlements;
 window.__CK_ENTITLEMENTS_META__ = CAPABILITY_META;
@@ -295,9 +308,9 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateTextrename(scope);
   hydrateDropdownActions(scope);
   hydrateDropdownBorder(scope);
-  hydrateDropdownFill(scope);
+  hydrateDropdownFill(scope, { accountAssets: showcaseAccountAssets });
   hydrateDropdownShadow(scope);
-  hydrateDropdownUpload(scope);
+  hydrateDropdownUpload(scope, { accountAssets: showcaseAccountAssets });
   hydrateDropdownEdit(scope);
   hydrateTabs(scope);
   hydrateMenuactions(scope);

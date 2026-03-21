@@ -249,6 +249,8 @@ var Dieter = (() => {
     state.display.textContent = label ?? placeholder;
     state.display.dataset.muted = label ? "false" : "true";
   }
+  function dispatchPreview(_state, _value) {
+  }
   function setSelection(state, value, label) {
     state.input.value = value;
     if (!state.nativeValue) syncFromValue(state, value, label);

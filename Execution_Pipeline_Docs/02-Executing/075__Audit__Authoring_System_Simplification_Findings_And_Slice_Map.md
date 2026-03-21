@@ -442,10 +442,10 @@ One product concern should not require that many shapes.
 Active path evidence:
 - `roma/components/builder-domain.tsx`
 - `bob/lib/session/sessionTransport.ts`
-- `packages/ck-contracts/editor/open-editor-lifecycle.v1.json`
+- `admin/vite.config.ts`
 
 The product has one account-hosted editor.
-The code still treats that as a general cross-runtime lifecycle protocol.
+The runtime now has one real Roma↔Bob message contract, but DevStudio/build residue still advertises an older shared lifecycle artifact shape.
 
 Some transport is unavoidable.
 Transport inflation is not.

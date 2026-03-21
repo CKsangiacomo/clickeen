@@ -10,8 +10,6 @@ import {
 
 export type ExecuteAccountCommandArgs = {
   command: BobAccountCommand;
-  url: string;
-  method: 'GET' | 'PUT' | 'POST' | 'DELETE';
   publicId: string;
   body?: unknown;
 };
@@ -89,11 +87,6 @@ export function useSessionTransport(args: {
     }
     return undefined;
   }, []);
-
-  const isHostedBuilderSession = useCallback((): boolean => {
-    const publicId = String(args.metaRef.current?.publicId || '').trim();
-    return Boolean(hostOriginRef.current && publicId);
-  }, [args.metaRef]);
 
   const dispatchHostAccountCommand = useCallback(
     (commandArgs: {
@@ -187,34 +180,17 @@ export function useSessionTransport(args: {
 
   if (!accountAssets.current) {
     accountAssets.current = {
-      listAssets: async () => {
-        if (isHostedBuilderSession()) {
-          return dispatchHostedAssetCommand({ command: 'list-assets' });
-        }
-        return fetchDirect('/api/account/assets', {
-          method: 'GET',
-          cache: 'no-store',
-          headers: { accept: 'application/json' },
-        });
-      },
+      listAssets: async () => dispatchHostedAssetCommand({ command: 'list-assets' }),
       resolveAssets: async (assetIds: string[]) => {
         const headers = {
           accept: 'application/json',
           'content-type': 'application/json',
         };
         const body = { assetIds };
-        if (isHostedBuilderSession()) {
-          return dispatchHostedAssetCommand({
-            command: 'resolve-assets',
-            headers,
-            body,
-          });
-        }
-        return fetchDirect('/api/account/assets/resolve', {
-          method: 'POST',
-          cache: 'no-store',
+        return dispatchHostedAssetCommand({
+          command: 'resolve-assets',
           headers,
-          body: JSON.stringify(body),
+          body,
         });
       },
       uploadAsset: async (file: File, source = 'api') => {
@@ -224,16 +200,8 @@ export function useSessionTransport(args: {
           'x-filename': file.name || 'upload.bin',
           'x-source': source,
         };
-        if (isHostedBuilderSession()) {
-          return dispatchHostedAssetCommand({
-            command: 'upload-asset',
-            headers,
-            body: file,
-          });
-        }
-        return fetchDirect('/api/account/assets/upload', {
-          method: 'POST',
-          cache: 'no-store',
+        return dispatchHostedAssetCommand({
+          command: 'upload-asset',
           headers,
           body: file,
         });
@@ -243,63 +211,49 @@ export function useSessionTransport(args: {
 
   const fetchApi = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const inputUrl = normalizeInputUrl(input);
-    if (isHostedBuilderSession()) {
-      const publicId = String(args.metaRef.current?.publicId || '').trim();
-      if (inputUrl === '/api/ai/widget-copilot' || inputUrl === '/api/ai/outcome') {
-        if (!publicId) {
-          return createHostUnavailableResponse();
-        }
-        const body = await readRequestJsonBody(input, init);
-        const result = await dispatchHostAccountCommand({
-          command: inputUrl === '/api/ai/widget-copilot' ? 'run-copilot' : 'attach-ai-outcome',
-          publicId,
-          ...(typeof body === 'undefined' ? {} : { body }),
-        });
-        return createJsonResponse(result.status, result.payload);
+    const publicId = String(args.metaRef.current?.publicId || '').trim();
+    if (inputUrl === '/api/ai/widget-copilot' || inputUrl === '/api/ai/outcome') {
+      if (!publicId) {
+        return createHostUnavailableResponse();
       }
-      if (inputUrl.startsWith('/api/account/') || inputUrl.startsWith('/api/accounts/')) {
-        return Response.json(
-          {
-            error: {
-              reasonKey: 'coreui.errors.builder.command.hostOnly',
-              message: 'Hosted account mode must delegate account routes through the parent host.',
-            },
+      const body = await readRequestJsonBody(input, init);
+      const result = await dispatchHostAccountCommand({
+        command: inputUrl === '/api/ai/widget-copilot' ? 'run-copilot' : 'attach-ai-outcome',
+        publicId,
+        ...(typeof body === 'undefined' ? {} : { body }),
+      });
+      return createJsonResponse(result.status, result.payload);
+    }
+    if (inputUrl.startsWith('/api/account/') || inputUrl.startsWith('/api/accounts/')) {
+      return Response.json(
+        {
+          error: {
+            reasonKey: 'coreui.errors.builder.command.hostOnly',
+            message: 'Hosted account mode must delegate account routes through the parent host.',
           },
-          { status: 409 },
-        );
-      }
+        },
+        { status: 409 },
+      );
     }
     return fetchDirect(input, init);
   }, [
     args.metaRef,
     fetchDirect,
     dispatchHostAccountCommand,
-    isHostedBuilderSession,
     normalizeInputUrl,
     readRequestJsonBody,
   ]);
 
   const executeAccountCommand: ExecuteAccountCommand = useCallback(
     async (commandArgs: ExecuteAccountCommandArgs) => {
-      if (isHostedBuilderSession()) {
-        const result = await dispatchHostAccountCommand({
-          command: commandArgs.command,
-          publicId: commandArgs.publicId,
-          ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
-        });
-        return { ok: result.ok, status: result.status, json: result.payload };
-      }
-
-      const init: RequestInit = { method: commandArgs.method };
-      if (typeof commandArgs.body !== 'undefined') {
-        init.headers = { 'content-type': 'application/json' };
-        init.body = JSON.stringify(commandArgs.body);
-      }
-      const response = await fetchApi(commandArgs.url, init);
-      const json = (await response.json().catch(() => null)) as any;
-      return { ok: response.ok, status: response.status, json };
+      const result = await dispatchHostAccountCommand({
+        command: commandArgs.command,
+        publicId: commandArgs.publicId,
+        ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
+      });
+      return { ok: result.ok, status: result.status, json: result.payload };
     },
-    [dispatchHostAccountCommand, fetchApi, isHostedBuilderSession],
+    [dispatchHostAccountCommand],
   );
 
   return {

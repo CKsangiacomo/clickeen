@@ -6,6 +6,8 @@ import {
   type ResolvedAccountAsset,
 } from '@clickeen/ck-contracts';
 
+export type { AccountAssetRecord, ResolvedAccountAsset } from '@clickeen/ck-contracts';
+
 export type AccountAssetsTransport = {
   listAssets: () => Promise<Response>;
   resolveAssets: (assetIds: string[]) => Promise<Response>;

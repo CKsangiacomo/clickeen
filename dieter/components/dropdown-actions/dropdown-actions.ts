@@ -205,6 +205,11 @@ function updateDisplay(state: DropdownActionsState, label: string | null): void 
   state.display.dataset.muted = label ? 'false' : 'true';
 }
 
+function dispatchPreview(_state: DropdownActionsState, _value: string | null): void {
+  // Dropdown actions currently commit directly through bob-ops/input events.
+  // There is no surviving preview-only channel for pending action values here.
+}
+
 function setSelection(state: DropdownActionsState, value: string, label: string | null): void {
   state.input.value = value;
   if (!state.nativeValue) syncFromValue(state, value, label);

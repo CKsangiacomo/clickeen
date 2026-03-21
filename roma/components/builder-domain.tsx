@@ -91,7 +91,6 @@ const BUILDER_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.forbidden': 'You do not have permission to open this widget in Builder.',
   'coreui.errors.network.timeout': 'Builder took too long to respond. Please try again.',
   'coreui.errors.misconfigured': 'Builder is temporarily unavailable. Please try again.',
-  'roma.errors.proxy.paris_unavailable': 'Builder is temporarily unavailable. Please try again.',
   'coreui.errors.payload.invalid': 'Builder received an invalid response. Please try again.',
   'coreui.errors.instance.notFound': 'This widget could not be found. It may have been deleted.',
   'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot open right now.',

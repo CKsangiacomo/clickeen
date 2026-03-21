@@ -105,8 +105,7 @@ export const DEFAULT_PREVIEW: PreviewSettings = {
   host: 'canvas',
 };
 
-export function createInitialSessionState(policy: Policy | null = null): SessionState {
-  void policy;
+export function createInitialSessionState(): SessionState {
   return {
     compiled: null,
     instanceData: {},

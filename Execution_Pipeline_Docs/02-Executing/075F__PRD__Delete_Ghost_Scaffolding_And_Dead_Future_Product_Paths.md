@@ -13,179 +13,357 @@ Source:
 
 ## What This PRD Is About
 
-This PRD is about one product promise:
+This PRD is about one narrow cleanup job:
 
-The product should ship code for the product that exists today.
+Delete product-path scaffolding that still teaches the repo a Builder product that does not exist.
 
-Not:
+This is not a broad refactor PRD.
+This is not a "simplify whatever looks old" PRD.
 
-- code for future editor hosts
-- code for future AI execution surfaces
-- code for future budget systems
-- code for future retry protocols
-- code for future product modes that are not real
-
-Dead future-product scaffolding is not harmless.
-It teaches the repo the wrong product.
-
----
-
-## Product Scope
-
-This PRD covers:
-
-- dead or speculative product-path scaffolding in the active authoring/editor path
-- dual boot and extra runtime modes that are not the real product path
-- dead fields and enum members that imply features we do not ship
-- fake future-oriented branches that expand the authoring surface without improving UX
-
-This PRD does not cover:
-
-- Minibob identity cleanup from `75C`
-- asset-path cleanup from `75B`
-- localization tax from `75E`
+It is a deletion ledger for specific dead branches, dead type members, and stale residue that survive inside the active authoring path.
 
 ---
 
 ## Product Truth
 
-For the active product:
+The active authoring product is:
 
 1. Roma hosts Builder for the current account.
-2. Bob runs the editor.
-3. The real Builder path is the current product path.
-4. Code that exists only for hypothetical future product modes does not belong in the active authoring system.
+2. Bob runs inside that Roma-hosted Builder session.
+3. Bob edits one widget in memory.
+4. Account commands go through the Roma host boundary.
+5. Roma saves that widget to Tokyo.
 
-If a field, mode, enum member, branch, or retry shape does not improve current product UX, it should not survive by default.
+If shared code still teaches:
 
----
+- Bob as a standalone account client
+- AI execution surfaces that do not exist
+- grant-budget systems that do not exist
+- dead parameters that imply state is seeded from a concern that is not used
 
-## 1. Where We Fucked Up / How And Why
-
-We kept scaffolding after the imagined future failed to arrive.
-
-### A. We left dead future modes in shared types
-
-Some shared types still advertise capabilities that are not actually product realities.
-
-That happened because AI tends to leave "just in case" members behind after product direction narrows.
-
-### B. We preserved more than one boot/runtime path for one real product
-
-The active Builder product path is not "many equal hosts."
-But shared session code still carries more than one boot shape.
-
-That happened because flexibility was preserved instead of cut over.
-
-### C. We left dead AI/product fields behind
-
-Some AI-related fields and surfaces still describe budgeting/provisioning shapes the product does not actually use.
-
-That happened because speculative infrastructure was added before the product needed it.
-
-### D. We normalized speculative product ideas into shared code
-
-Every dead mode or dead field teaches future engineers and future AI that the product is broader than it really is.
+then that code should be deleted.
 
 ---
 
-## 2. Why This Is Toxic And Why It Makes Roma/Clickeen Unusable
+## Non-Negotiable Preserves
 
-### A. The repo lies about what the product is
+These are not deletion targets in `75F`:
 
-If shared code advertises modes and fields that do not correspond to real product behavior, every future change starts from false assumptions.
+- `curated` is live product truth and must survive.
+- The real Roma -> Bob Builder host path must survive.
+- The real Bob `ck:open-editor` boot contract must survive.
+- Live widget copilot, localization, and personalization policy must survive.
 
-### B. AI preserves the dead paths
-
-A dead branch with an enum member and a caller looks "important" to AI.
-
-So the branch survives forever.
-
-### C. Real product work gets slower
-
-Every extra mode and every extra field expands review, testing, reasoning, and fear.
-
-### D. Product boundaries blur
-
-If one real Builder path ships beside speculative alternates, the code stops reflecting one clear product path.
+`75F` must not delete a concept just because it looks like an alternate mode.
+It must delete only concepts that are proven to be dead on the real current product path.
 
 ---
 
-## 3. How We Are Fixing It
+## In Scope
 
-### A. Dead fields and enum members get deleted
+This PRD covers:
 
-If the product does not use them now, they do not stay as placeholders.
+- dead Bob authoring-path fallback branches that preserve a fake standalone account mode
+- dead shared AI type members that advertise execution or budget systems the product does not have
+- dead parameters and stale authoring-path residue that imply product behavior that is not real
 
-### B. The real Builder boot path becomes the only product path
+This PRD does not cover:
 
-Any alternate boot/runtime shape that exists only for non-product or dev residue must be removed or clearly gated out of the product path.
-
-### C. AI/product scaffolding gets judged by current UX, not theoretical reuse
-
-If a field or branch does not make Builder better for customers now, it does not survive because it is "nice to have later."
-
-### D. Shared code stops advertising futures it does not own
-
-The product path should read like the product.
-Not like a roadmap wishlist.
+- `curated` / templates / starter designs
+- localization cleanup from `75E`
+- Minibob/demo identity cleanup from `75C`
+- asset-path cleanup from `75B`
+- broad registry or policy redesign
 
 ---
 
-## 4. What The System Looks Like Before / After
+## The Surviving Authorities
 
-### Before
+- Roma host owns account-command dispatch for Builder.
+- Bob owns in-memory editing only.
+- Tokyo save remains the one widget save boundary.
+- Shared AI policy types may advertise only real execution surfaces and real live budget fields.
 
-- shared code advertises extra modes and product futures
-- dead AI and runtime fields survive in core types
-- alternate boot/runtime residue expands the active path
-- the codebase looks broader than the actual product
-
-### After
-
-- shared code names only real product modes
-- dead scaffolding is deleted
-- Builder follows one clear product path
-- the codebase becomes harder to misread and easier to simplify
+If a field or branch survives after `75F`, it must have a real current owner.
 
 ---
 
-## 5. Files Touched + Clear List Of Toxic LOCs / Workflows / Files Removed
+## Execution Ledger
 
-### Files touched
+### Slice 1 - Delete Bob's Fake Standalone Account-Command Path
+
+#### Why
+
+The product has one real Builder topology:
+
+- Roma hosts Builder
+- Bob runs in the iframe
+- Bob delegates account commands through the Roma host
+
+`bob/lib/session/sessionTransport.ts` still preserves a second authoring story:
+
+- Bob directly fetching account asset/account command routes itself
+
+That second story is not the product.
+
+#### Delete
+
+- direct asset fallback branches in `accountAssets.listAssets`
+- direct asset fallback branches in `accountAssets.resolveAssets`
+- direct asset fallback branches in `accountAssets.uploadAsset`
+- direct `executeAccountCommand` fallback path
+- any now-dead hosted/non-hosted branching that only exists to preserve Bob-as-standalone account mode
+
+#### Files
+
+- `bob/lib/session/sessionTransport.ts`
+- `bob/components/ToolDrawer.tsx` only if dead transport error copy disappears
+- any Bob session type file only if needed for fallout cleanup
+
+#### Must Preserve
+
+- non-command direct fetches that are still real, such as same-origin panel/API reads that are not host-dispatched account commands
+- the Roma host message boundary
+
+#### Verification Gate
+
+- no Bob direct fetch remains for:
+  - `/api/account/assets`
+  - `/api/account/assets/resolve`
+  - `/api/account/assets/upload`
+- Bob save still works through the Roma host path
+- Bob asset list/resolve/upload still works through the Roma host path
+- Bob copilot/account command flow still works through the Roma host path
+- `pnpm exec tsc -p bob/tsconfig.json --noEmit`
+- `pnpm exec tsc -p roma/tsconfig.json --noEmit`
+
+---
+
+### Slice 2 - Delete Dead AI Execution Surface `queue`
+
+#### Why
+
+`AiExecutionSurface` still advertises `queue`, but the live registry only uses:
+
+- `execute`
+- `endpoint`
+
+`queue` teaches the repo that a third AI dispatch system exists when it does not.
+
+#### Delete
+
+- `'queue'` from `AiExecutionSurface`
+- any now-dead switch/if branches that only exist because `queue` was in the union
+
+#### Files
+
+- `packages/ck-policy/src/ai.ts`
+- any fallout file that typechecks against `AiExecutionSurface`
+
+#### Verification Gate
+
+- no live registry entry uses `queue`
+- no branch remains that handles `queue`
+- `pnpm exec tsc -p sanfrancisco/tsconfig.json --noEmit`
+- `pnpm exec tsc -p admin/tsconfig.json --noEmit`
+
+---
+
+### Slice 3 - Delete Dead Rolling Token Budget Fields
+
+#### Why
+
+`AiGrantPolicy` still advertises:
+
+- `tokenBudgetDay`
+- `tokenBudgetMonth`
+
+Those fields imply a rolling token-budget system that the product does not populate or enforce.
+
+The real live budget surface remains:
+
+- `budgetsByProfile`
+- `AiBudget.maxTokens`
+- `AiBudget.timeoutMs`
+- `AiBudget.maxRequests`
+
+#### Delete
+
+- `tokenBudgetDay`
+- `tokenBudgetMonth`
+- any parsing/serialization code that exists only for those fields
+
+#### Files
+
+- `packages/ck-policy/src/ai.ts`
+- `sanfrancisco/src/grants.ts`
+
+#### Must Preserve
+
+- real live entitlement and budget registry
+- real live per-profile AI budgets
+
+#### Verification Gate
+
+- no `tokenBudgetDay` remains in product code
+- no `tokenBudgetMonth` remains in product code
+- `AiGrantPolicy` names only live fields
+- `pnpm exec tsc -p sanfrancisco/tsconfig.json --noEmit`
+- `pnpm exec tsc -p roma/tsconfig.json --noEmit`
+- `pnpm exec tsc -p bob/tsconfig.json --noEmit`
+
+---
+
+### Slice 4 - Delete Dead Session Initial-State Parameter
+
+#### Why
+
+`createInitialSessionState(policy)` accepts a `policy` parameter and then discards it.
+
+That signature teaches callers that policy seeds initial session state.
+It does not.
+
+#### Delete
+
+- the unused `policy` parameter
+- any dead call-site argument
+
+#### Files
 
 - `bob/lib/session/sessionTypes.ts`
-- `bob/lib/session/sessionPolicy.ts`
-- `bob/lib/session/useSessionBoot.ts`
+- `bob/lib/session/WidgetDocumentSession.tsx`
+
+#### Verification Gate
+
+- no `void policy`
+- no caller passes a policy into `createInitialSessionState`
+- `pnpm exec tsc -p bob/tsconfig.json --noEmit`
+
+---
+
+### Slice 5 - Delete Stale Builder Error Residue
+
+#### Why
+
+The active Builder product path is not Paris-proxied authoring.
+Stale Builder error copy must stop teaching that old path.
+
+#### Delete
+
+- stale Paris-era Builder open error copy
+
+#### Files
+
+- `roma/components/builder-domain.tsx`
+
+#### Verification Gate
+
+- no stale Paris Builder-open error copy remains on the active authoring path
+- `pnpm exec tsc -p roma/tsconfig.json --noEmit`
+
+---
+
+## Conditional Slice - `debug.grantProbe`
+
+This slice is not automatic.
+
+`debug.grantProbe` is not dead code.
+It is live dev/ops probe code currently normalized into the shared AI registry.
+
+This slice should execute only if product direction is:
+
+- product AI registry should contain product agents only
+
+If that direction is confirmed, then:
+
+- move/gate/delete `debug.grantProbe`
+- remove its budget entry
+- preserve any deliberate dev-only replacement path if needed
+
+If that direction is not confirmed, defer this slice.
+
+---
+
+## Deferred Slice - Preview Host Cleanup
+
+This slice is not part of core `75F` unless separately proven safe.
+
+`PreviewSettings.host` still advertises:
+
+- `canvas`
+- `column`
+- `banner`
+- `floating`
+
+Those values still affect Workspace and CSS.
+
+So this is not a one-line enum cleanup.
+
+Do not execute this slice inside core `75F` unless all of the following are true:
+
+1. non-canvas host values are proven unreachable in product UX
+2. runtime branches for them are removed
+3. CSS branches for them are removed
+4. canvas preview still behaves correctly after deletion
+
+If that proof does not exist, defer the slice.
+
+---
+
+## Files Touched
+
+Core `75F` files:
+
 - `bob/lib/session/sessionTransport.ts`
+- `bob/lib/session/sessionTypes.ts`
+- `bob/lib/session/WidgetDocumentSession.tsx`
 - `roma/components/builder-domain.tsx`
 - `packages/ck-policy/src/ai.ts`
-- any shared files carrying dead authoring/product modes or fields
+- `sanfrancisco/src/grants.ts`
 
-### Toxic LOCs and concepts that will be removed from the system
+Possible fallout files:
 
-- dead enum members such as unused AI execution surfaces
-- dead AI budget/provisioning fields that the product does not populate or read
-- alternate boot/runtime branches that are not part of the real Builder product path
-- shared code that advertises future product modes instead of current product truth
+- `bob/components/ToolDrawer.tsx`
+- `admin/src/main.ts`
+- any file that only type-falls out from the narrowed AI policy types
 
-### Toxic workflows that will be removed
+---
 
-- preserving production complexity for hypothetical future hosts or AI surfaces
-- keeping dead product-shape fields just because they are already in types
-- reasoning about Builder as multiple equal runtime paths when the product has one real path
+## Verification Plan
 
-### Files or branches that should disappear if they only preserve ghost scaffolding
+Each slice must go green before the next slice starts.
 
-- dead AI execution-surface branches
-- unused provisioning/budget metadata fields
-- non-product boot/runtime branches left in shared Builder code
+Required typechecks:
+
+- `pnpm exec tsc -p bob/tsconfig.json --noEmit`
+- `pnpm exec tsc -p roma/tsconfig.json --noEmit`
+- `pnpm exec tsc -p sanfrancisco/tsconfig.json --noEmit`
+- `pnpm exec tsc -p admin/tsconfig.json --noEmit`
+
+Required residual audit after core `75F` slices:
+
+- no Bob direct fetch to `/api/account/assets`
+- no Bob direct fetch to `/api/account/assets/resolve`
+- no Bob direct fetch to `/api/account/assets/upload`
+- no `AiExecutionSurface` member `queue`
+- no `tokenBudgetDay`
+- no `tokenBudgetMonth`
+- no dead `createInitialSessionState(policy)` signature
+- no stale Paris Builder-open error copy
+- `curated` still survives where product needs it
 
 ---
 
 ## Done Means
 
-- dead future-product scaffolding no longer survives in the active authoring path
-- shared types advertise only real product modes and fields
-- Builder follows one clear runtime/boot story
-- the codebase is narrower, more honest, and easier to evolve
+`75F` is done only when:
+
+- Bob no longer teaches a fake standalone account-command authoring mode
+- shared AI policy types advertise only real live execution surfaces and live budget fields
+- Bob session initialization signatures stop implying policy-seeded state when none exists
+- stale authoring-path residue is deleted
+- `curated` survives untouched as live product truth
+- the real Roma -> Bob Builder host path remains the only authoring host story
+- the residual audit above is empty for the executed slices
+
+This PRD is successful only if the codebase is narrower and more honest without deleting live product truth.

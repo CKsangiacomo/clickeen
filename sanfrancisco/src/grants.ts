@@ -165,9 +165,6 @@ function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
       models[provider] = { defaultModel, allowed };
     }
   }
-  const tokenBudgetDay = asNumber((value as any).tokenBudgetDay);
-  const tokenBudgetMonth = asNumber((value as any).tokenBudgetMonth);
-
   const policy: AiGrantPolicy = {
     profile,
     allowedProviders,
@@ -177,8 +174,6 @@ function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
     ...(allowModelChoice ? { allowModelChoice: true } : {}),
     ...(selectedProvider ? { selectedProvider } : {}),
     ...(selectedModel ? { selectedModel } : {}),
-    ...(tokenBudgetDay != null ? { tokenBudgetDay } : {}),
-    ...(tokenBudgetMonth != null ? { tokenBudgetMonth } : {}),
   };
 
   return policy;

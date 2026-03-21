@@ -2,7 +2,7 @@ import type { Policy, PolicyProfile } from './types';
 
 export type AiProvider = 'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon';
 export type AiProfile = 'free_low' | 'paid_standard' | 'paid_premium' | 'curated_premium';
-export type AiExecutionSurface = 'execute' | 'endpoint' | 'queue';
+export type AiExecutionSurface = 'execute' | 'endpoint';
 
 export type AiBudget = {
   maxTokens: number;
@@ -27,8 +27,6 @@ export type AiGrantPolicy = {
   selectedModel?: string;
   allowProviderChoice?: boolean;
   allowModelChoice?: boolean;
-  tokenBudgetDay?: number;
-  tokenBudgetMonth?: number;
 };
 
 export type AiRegistryEntry = {
