@@ -102,6 +102,26 @@ export function ToolDrawer() {
   const alertBackground = 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';
   const alertLabelColor = 'var(--color-system-red)';
   const sessionErrorLines = sessionError ? resolveSessionErrorLines(sessionError) : [];
+  const activePanelNode = !compiled ? (
+    <div className="tdmenucontent">
+      <div className="heading-3">Content</div>
+      <div className="label-s label-muted">No instance selected yet. Choose one from Widgets to begin editing.</div>
+    </div>
+  ) : activePanel === 'settings' ? (
+    <SettingsPanel />
+  ) : activePanel === 'translations' ? (
+    <TranslationsPanel />
+  ) : (
+    <TdMenuContent
+      panelId={activePanel}
+      panelHtml={activePanelHtml ?? ''}
+      widgetKey={compiled.widgetname}
+      instanceData={session.instanceData}
+      applyOps={session.applyOps}
+      lastUpdate={session.lastUpdate}
+      dieterAssets={compiled.assets.dieter}
+    />
+  );
 
   return (
     <aside className="tooldrawer">
@@ -187,28 +207,7 @@ export function ToolDrawer() {
                 </pre>
               </div>
             ) : null}
-            {compiled ? (
-              activePanel === 'settings' ? (
-                <SettingsPanel />
-              ) : activePanel === 'translations' ? (
-                <TranslationsPanel />
-              ) : (
-                <TdMenuContent
-                  panelId={activePanel}
-                  panelHtml={activePanelHtml ?? ''}
-                  widgetKey={compiled.widgetname}
-                  instanceData={session.instanceData}
-                  applyOps={session.applyOps}
-                  lastUpdate={session.lastUpdate}
-                  dieterAssets={compiled.assets.dieter}
-                />
-              )
-            ) : (
-              <div className="tdmenucontent">
-                <div className="heading-3">Content</div>
-                <div className="label-s label-muted">No instance selected yet. Choose one from Widgets to begin editing.</div>
-              </div>
-            )}
+            {activePanelNode}
           </>
         ) : (
           <div className="tooldrawer-copilot">

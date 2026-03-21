@@ -17,19 +17,16 @@ type TranslationStatusEntry = {
   status: TranslationStatus;
 };
 
-type TranslationOutputEntry = {
-  path: string;
-  value: string;
-};
-
 type TranslationsPanelData = {
-  publicId: string;
-  widgetType: string;
   baseLocale: string;
   activeLocales: string[];
-  selectedLocale: string;
   statuses: TranslationStatusEntry[];
-  translatedOutput: TranslationOutputEntry[];
+};
+
+type OverallTranslationStatus = {
+  title: string;
+  detail: string;
+  className: 'settings-panel__note' | 'settings-panel__warning' | 'settings-panel__success';
 };
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
@@ -62,63 +59,10 @@ function resolveLocaleLabel(locale: string): string {
   );
 }
 
-function resolveStatusLabel(status: TranslationStatus): string {
-  if (status === 'base') return 'Base';
-  if (status === 'dirty') return 'Updating';
-  if (status === 'superseded') return 'Needs refresh';
-  return 'Ready';
-}
-
-function resolveStatusTone(status: TranslationStatus): 'muted' | 'warning' | 'success' | 'neutral' {
-  if (status === 'dirty') return 'warning';
-  if (status === 'succeeded') return 'success';
-  if (status === 'base') return 'neutral';
-  return 'muted';
-}
-
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-}
-
-function stripHtmlToText(input: string): string {
-  const raw = String(input ?? '');
-  if (!raw.trim()) return '';
-
-  const withoutBlocks = raw
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(p|div|li|h1|h2|h3|h4|h5|h6|tr|blockquote)>/gi, '\n');
-
-  const withoutTags = withoutBlocks.replace(/<[^>]+>/g, ' ');
-  const decoded = decodeHtmlEntities(withoutTags);
-  return decoded.replace(/\s+/g, ' ').trim();
-}
-
-function formatTranslationPreview(value: string): string {
-  const raw = String(value ?? '');
-  if (!raw.trim()) return '';
-  const looksHtml =
-    /<[^>]+>/.test(raw) ||
-    /&(quot|amp|lt|gt|#39|apos);/.test(raw) ||
-    /(?:href|class)=["']/.test(raw);
-  if (!looksHtml) return raw.trim();
-  return stripHtmlToText(raw) || raw.trim();
-}
-
 function normalizePanelData(payload: unknown): TranslationsPanelData | null {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
   const record = payload as Record<string, unknown>;
-  const publicId = typeof record.publicId === 'string' ? record.publicId.trim() : '';
-  const widgetType = typeof record.widgetType === 'string' ? record.widgetType.trim() : '';
   const baseLocale = typeof record.baseLocale === 'string' ? record.baseLocale.trim() : '';
-  const selectedLocale = typeof record.selectedLocale === 'string' ? record.selectedLocale.trim() : '';
   const activeLocales = Array.isArray(record.activeLocales)
     ? record.activeLocales.map((entry) => (typeof entry === 'string' ? entry.trim() : '')).filter(Boolean)
     : [];
@@ -135,28 +79,52 @@ function normalizePanelData(payload: unknown): TranslationsPanelData | null {
         })
         .filter((entry): entry is TranslationStatusEntry => Boolean(entry))
     : [];
-  const translatedOutput = Array.isArray(record.translatedOutput)
-    ? record.translatedOutput
-        .map((entry) => {
-          if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
-          const item = entry as Record<string, unknown>;
-          const path = typeof item.path === 'string' ? item.path.trim() : '';
-          const value = typeof item.value === 'string' ? item.value : '';
-          if (!path) return null;
-          return { path, value };
-        })
-        .filter((entry): entry is TranslationOutputEntry => Boolean(entry))
-    : [];
 
-  if (!publicId || !widgetType || !baseLocale) return null;
+  if (!baseLocale) return null;
   return {
-    publicId,
-    widgetType,
     baseLocale,
     activeLocales,
-    selectedLocale: selectedLocale || baseLocale,
     statuses,
-    translatedOutput,
+  };
+}
+
+function resolveOverallTranslationStatus(data: TranslationsPanelData | null): OverallTranslationStatus | null {
+  if (!data) return null;
+  const translatedLocales = data.activeLocales.filter((locale) => locale !== data.baseLocale);
+  if (translatedLocales.length === 0) {
+    return {
+      title: 'No active translations yet',
+      detail: 'Add more locales in Settings before translation preview becomes available.',
+      className: 'settings-panel__note',
+    };
+  }
+
+  const translatedStatuses = data.statuses.filter((entry) => entry.locale !== data.baseLocale);
+  if (translatedStatuses.some((entry) => entry.status === 'dirty')) {
+    return {
+      title: 'Updating',
+      detail: 'Translations are still catching up with the latest saved widget content.',
+      className: 'settings-panel__warning',
+    };
+  }
+  if (translatedStatuses.some((entry) => entry.status === 'superseded')) {
+    return {
+      title: 'Needs refresh',
+      detail: 'Save the widget again to refresh translations against the latest content.',
+      className: 'settings-panel__warning',
+    };
+  }
+  if (translatedStatuses.some((entry) => entry.status === 'succeeded')) {
+    return {
+      title: 'Up to date',
+      detail: 'Active locales are ready to preview.',
+      className: 'settings-panel__success',
+    };
+  }
+  return {
+    title: 'Not available yet',
+    detail: 'Translations are not ready for this widget yet.',
+    className: 'settings-panel__note',
   };
 }
 
@@ -232,6 +200,7 @@ function SelectField({
 export function TranslationsPanel() {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
+  const apiFetch = session.apiFetch;
   const baseId = useId();
   const publicId = chrome.meta?.publicId ?? '';
   const localeSwitcherState =
@@ -242,29 +211,23 @@ export function TranslationsPanel() {
     () => normalizeWidgetLocaleSwitcherSettings(localeSwitcherState ?? null),
     [localeSwitcherState],
   );
-  const [requestedLocale, setRequestedLocale] = useState('');
   const [data, setData] = useState<TranslationsPanelData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAllStatuses, setShowAllStatuses] = useState(false);
 
   useEffect(() => {
-    setRequestedLocale('');
     setData(null);
     setError(null);
-    setShowAllStatuses(false);
   }, [publicId]);
 
   useEffect(() => {
     if (!publicId) return;
     const controller = new AbortController();
-    const url = new URL(`https://builder.invalid/api/account/instances/${publicId}/translations`);
-    if (requestedLocale) url.searchParams.set('locale', requestedLocale);
 
     setLoading(true);
     setError(null);
 
-    session.apiFetch(`${url.pathname}${url.search}`, {
+    apiFetch(`/api/account/instances/${encodeURIComponent(publicId)}/translations`, {
       method: 'GET',
       cache: 'no-store',
       signal: controller.signal,
@@ -281,16 +244,19 @@ export function TranslationsPanel() {
         if (controller.signal.aborted) return;
         const message = err instanceof Error ? err.message : 'Builder could not load translations right now.';
         setData(null);
-        setError(message === 'HTTP_404' ? 'Translations are not available for this widget yet.' : 'Builder could not load translations right now.');
+        setError(
+          message === 'HTTP_404'
+            ? 'Translations are not available for this widget yet.'
+            : 'Builder could not load translations right now.',
+        );
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
       });
 
     return () => controller.abort();
-  }, [publicId, requestedLocale]);
+  }, [apiFetch, publicId]);
 
-  const selectedLocale = requestedLocale || data?.selectedLocale || data?.baseLocale || '';
   const localeOptions = useMemo(() => {
     const locales = data?.activeLocales ?? [];
     return locales.map((locale) => ({
@@ -303,46 +269,20 @@ export function TranslationsPanel() {
     switcher.alwaysShowLocale && localeOptions.some((option) => option.value === switcher.alwaysShowLocale)
       ? switcher.alwaysShowLocale
       : localeOptions[0]?.value || data?.baseLocale || '';
+  const previewLocaleValue = (() => {
+    const normalized = normalizeLocaleToken(chrome.preview.locale) ?? '';
+    if (normalized && localeOptions.some((option) => option.value === normalized)) return normalized;
+    return data?.baseLocale || localeOptions[0]?.value || '';
+  })();
+  const overallStatus = resolveOverallTranslationStatus(data);
 
-  const statusEntries = useMemo(() => {
-    const statuses = data?.statuses ?? [];
-    const ranked = statuses.map((entry) => ({
-      ...entry,
-      label: resolveLocaleLabel(entry.locale),
-      tone: resolveStatusTone(entry.status),
-      copy: resolveStatusLabel(entry.status),
-      isSelected: selectedLocale === entry.locale,
-    }));
-    return ranked.sort((left, right) => {
-      if (left.isSelected !== right.isSelected) return left.isSelected ? -1 : 1;
-      if (left.status === 'base' && right.status !== 'base') return -1;
-      if (right.status === 'base' && left.status !== 'base') return 1;
-      return left.label.localeCompare(right.label);
-    });
-  }, [data?.statuses, selectedLocale]);
-  const selectedStatus = statusEntries.find((entry) => entry.isSelected) ?? null;
-  const otherStatusEntries = statusEntries.filter((entry) => !entry.isSelected);
-  const visibleOtherStatusEntries =
-    showAllStatuses || otherStatusEntries.length <= 6
-      ? otherStatusEntries
-      : otherStatusEntries.slice(0, 6);
-  const hiddenStatusCount = Math.max(0, otherStatusEntries.length - visibleOtherStatusEntries.length);
-  const statusCounts = useMemo(
-    () => ({
-      ready: statusEntries.filter((entry) => entry.status === 'succeeded').length,
-      updating: statusEntries.filter((entry) => entry.status === 'dirty').length,
-      needsRefresh: statusEntries.filter((entry) => entry.status === 'superseded').length,
-    }),
-    [statusEntries],
-  );
-  const translatedEntries = useMemo(
-    () =>
-      (data?.translatedOutput ?? []).map((entry) => ({
-        ...entry,
-        preview: formatTranslationPreview(entry.value),
-      })),
-    [data?.translatedOutput],
-  );
+  useEffect(() => {
+    if (!data?.baseLocale) return;
+    if (!previewLocaleValue) return;
+    if (previewLocaleValue === data.baseLocale && chrome.preview.locale) {
+      chrome.setPreview({ locale: '' });
+    }
+  }, [chrome.preview.locale, chrome.setPreview, data?.baseLocale, previewLocaleValue]);
 
   if (!session.compiled) {
     return (
@@ -375,10 +315,10 @@ export function TranslationsPanel() {
     <div className="tdmenucontent">
       <div className="heading-3">Translations</div>
       <div className="label-s label-muted">
-        Inspect Tokyo translation truth for this widget. Translation stays read-only here; widget locale behavior lives below.
+        Inspect whether translations are current for this widget. Translation stays read-only here; locale viewing happens in the preview.
       </div>
 
-      <div className="tdmenucontent__fields translations-panel__body">
+      <div className="tdmenucontent__fields">
         <div className="tdmenucontent__cluster">
           <div className="tdmenucontent__cluster-header">
             <div className="label-s tdmenucontent__cluster-label">Widget locale behavior</div>
@@ -436,106 +376,31 @@ export function TranslationsPanel() {
 
         <div className="tdmenucontent__cluster">
           <div className="tdmenucontent__cluster-header">
-            <div className="label-s tdmenucontent__cluster-label">Translation status</div>
+            <div className="label-s tdmenucontent__cluster-label">Translation freshness</div>
           </div>
           <div className="tdmenucontent__cluster-body">
             {loading ? <div className="settings-panel__status body-s">Loading translations…</div> : null}
             {error ? <div className="settings-panel__error body-s">{error}</div> : null}
-            {!loading && !error && statusEntries.length > 0 ? (
-              <>
-                {selectedStatus ? (
-                  <div className="translations-panel__status-focus">
-                    <div>
-                      <div className="label-s label-muted">Current locale</div>
-                      <div className="body-s">{selectedStatus.label}</div>
-                    </div>
-                    <span
-                      className="translations-panel__badge"
-                      data-tone={selectedStatus.tone}
-                      data-selected="true"
-                    >
-                      {selectedStatus.copy}
-                    </span>
-                  </div>
-                ) : null}
-                <div className="translations-panel__summary">
-                  <div className="translations-panel__summary-chip">
-                    <span className="label-s label-muted">Ready</span>
-                    <span className="body-s">{statusCounts.ready}</span>
-                  </div>
-                  <div className="translations-panel__summary-chip">
-                    <span className="label-s label-muted">Updating</span>
-                    <span className="body-s">{statusCounts.updating}</span>
-                  </div>
-                  <div className="translations-panel__summary-chip">
-                    <span className="label-s label-muted">Needs refresh</span>
-                    <span className="body-s">{statusCounts.needsRefresh}</span>
-                  </div>
-                </div>
-                {otherStatusEntries.length > 0 ? (
-                  <>
-                    <div className="translations-panel__subheader">
-                      <span className="label-s label-muted">Other locales</span>
-                      {otherStatusEntries.length > 6 ? (
-                        <button
-                          type="button"
-                          className="translations-panel__toggle body-s"
-                          onClick={() => setShowAllStatuses((current) => !current)}
-                        >
-                          {showAllStatuses ? 'Show less' : `Show all ${otherStatusEntries.length}`}
-                        </button>
-                      ) : null}
-                    </div>
-                    <div className="translations-panel__status-list">
-                      {visibleOtherStatusEntries.map((entry) => (
-                        <div key={entry.locale} className="translations-panel__status-row">
-                          <span className="body-s">{entry.label}</span>
-                          <span
-                            className="translations-panel__badge"
-                            data-tone={entry.tone}
-                            data-selected="false"
-                          >
-                            {entry.copy}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    {hiddenStatusCount > 0 && !showAllStatuses ? (
-                      <div className="label-s label-muted">
-                        {hiddenStatusCount} more locale{hiddenStatusCount === 1 ? '' : 's'} hidden.
-                      </div>
-                    ) : null}
-                  </>
-                ) : null}
-              </>
+            {!loading && !error && overallStatus ? (
+              <div className={`${overallStatus.className} body-s`}>
+                <strong>{overallStatus.title}</strong>
+                <div>{overallStatus.detail}</div>
+              </div>
             ) : null}
-          </div>
-        </div>
-
-        <div className="tdmenucontent__cluster">
-          <div className="tdmenucontent__cluster-header">
-            <div className="label-s tdmenucontent__cluster-label">Translated output</div>
-          </div>
-          <div className="tdmenucontent__cluster-body">
             <SelectField
-              label="View locale"
-              value={selectedLocale}
-              onChange={(next) => setRequestedLocale(next)}
+              label="Show translation"
+              value={previewLocaleValue}
+              onChange={(next) =>
+                chrome.setPreview({
+                  locale: next === data?.baseLocale ? '' : next,
+                })
+              }
               options={localeOptions.length > 0 ? localeOptions : [{ value: '', label: 'No locales available yet' }]}
               disabled={localeOptions.length === 0}
             />
-            {selectedLocale === data?.baseLocale ? (
-              <div className="settings-panel__note body-s">The base locale is shown for reference only and cannot be edited here.</div>
-            ) : null}
-            {!loading && !error && translatedEntries.length === 0 ? (
-              <div className="settings-panel__warning body-s">No translated output is ready for this locale yet.</div>
-            ) : null}
-            {translatedEntries.map((entry) => (
-              <div key={entry.path} className="translations-panel__entry">
-                <div className="label-s label-muted translations-panel__path">{entry.path}</div>
-                <div className="body-s translations-panel__value">{entry.preview || '—'}</div>
-              </div>
-            ))}
+            <div className="settings-panel__note body-s">
+              This loads the selected locale into the preview only. The drawer stays read-only.
+            </div>
           </div>
         </div>
       </div>

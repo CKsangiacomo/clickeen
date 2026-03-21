@@ -18,6 +18,7 @@ export type PreviewSettings = {
   device: 'desktop' | 'mobile';
   theme: 'light' | 'dark';
   host: 'canvas' | 'column' | 'banner' | 'floating';
+  locale: string;
 };
 
 export type SessionState = {
@@ -104,6 +105,7 @@ export const DEFAULT_PREVIEW: PreviewSettings = {
   device: 'desktop',
   theme: 'light',
   host: 'canvas',
+  locale: '',
 };
 
 export function createInitialSessionState(): SessionState {
