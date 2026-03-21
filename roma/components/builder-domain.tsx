@@ -135,6 +135,7 @@ function buildRomaBuilderRoute(args: {
 function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
   publicId: string;
+  body?: unknown;
 }): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
   const publicId = String(args.publicId || '').trim();
   if (!publicId) return null;
@@ -161,11 +162,18 @@ function resolveBobAccountCommandRequest(args: {
         path: '/api/account/assets/upload',
       };
     case 'load-translations':
+      const locale =
+        args.body &&
+        typeof args.body === 'object' &&
+        !Array.isArray(args.body) &&
+        typeof (args.body as { locale?: unknown }).locale === 'string'
+          ? String((args.body as { locale?: unknown }).locale).trim()
+          : '';
       return {
         method: 'GET',
-        path: `/api/account/instances/${encodeURIComponent(
-          publicId,
-        )}/translations`,
+        path: locale
+          ? `/api/account/instances/${encodeURIComponent(publicId)}/translations?locale=${encodeURIComponent(locale)}`
+          : `/api/account/instances/${encodeURIComponent(publicId)}/translations`,
       };
     case 'run-copilot':
       return {
@@ -253,6 +261,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       const route = resolveBobAccountCommandRequest({
         command: args.command,
         publicId: args.publicId,
+        body: args.body,
       });
       const currentAccountId = String(context.accountId || '').trim();
 
@@ -289,17 +298,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       }
 
       try {
-        const routePath =
-          args.command === 'load-translations' &&
-          args.body &&
-          typeof args.body === 'object' &&
-          !Array.isArray(args.body) &&
-          typeof (args.body as { locale?: unknown }).locale === 'string' &&
-          String((args.body as { locale?: unknown }).locale).trim()
-            ? `${route.path}?locale=${encodeURIComponent(
-                String((args.body as { locale?: unknown }).locale).trim(),
-              )}`
-            : route.path;
         const init: RequestInit = {
           method: route.method,
         };
@@ -312,30 +310,28 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
             headers.set(normalizedKey, normalizedValue);
           }
         }
-        if (typeof args.body !== 'undefined') {
-          if (args.command !== 'load-translations') {
-            if (!headers.has('content-type')) {
-              headers.set('content-type', 'application/json');
-            }
-            const body = args.body;
-            if (
-              typeof body === 'string' ||
-              body instanceof Blob ||
-              body instanceof ArrayBuffer ||
-              ArrayBuffer.isView(body) ||
-              body instanceof FormData ||
-              body instanceof URLSearchParams ||
-              body instanceof ReadableStream
-            ) {
-              init.body = body as BodyInit;
-            } else {
-              init.body = JSON.stringify(body);
-            }
+        if (typeof args.body !== 'undefined' && route.method !== 'GET') {
+          if (!headers.has('content-type')) {
+            headers.set('content-type', 'application/json');
+          }
+          const body = args.body;
+          if (
+            typeof body === 'string' ||
+            body instanceof Blob ||
+            body instanceof ArrayBuffer ||
+            ArrayBuffer.isView(body) ||
+            body instanceof FormData ||
+            body instanceof URLSearchParams ||
+            body instanceof ReadableStream
+          ) {
+            init.body = body as BodyInit;
+          } else {
+            init.body = JSON.stringify(body);
           }
         }
         init.headers = headers;
 
-        const response = await accountApi.fetchRaw(routePath, init);
+        const response = await accountApi.fetchRaw(route.path, init);
         const payload = (await response.json().catch(() => null)) as unknown;
 
         reply({

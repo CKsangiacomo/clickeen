@@ -661,11 +661,13 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     ? (rewriteAssetUrlsInDefaults(presetsFinal as Record<string, unknown>, tokyoBase) as WidgetPresets)
     : undefined;
 
-  const controls = compileControlsFromPanels({
-    panels: parsed.panels,
-    defaults: defaultsWithAssets,
-    optionsByPath: themeOptions ? { 'appearance.theme': themeOptions } : undefined,
-  });
+  const controls = [
+    ...compileControlsFromPanels({
+      panels: parsed.panels,
+      defaults: defaultsWithAssets,
+      optionsByPath: themeOptions ? { 'appearance.theme': themeOptions } : undefined,
+    }),
+  ];
 
   const panels: CompiledPanel[] = parsed.panels.map((panel) => {
     return panel;

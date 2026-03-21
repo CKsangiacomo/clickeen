@@ -1,61 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { normalizeLocaleToken } from '@clickeen/l10n';
 import { getIcon } from '../lib/icons';
-import { setAt } from '../lib/utils/paths';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 
-type PreviewTranslationPayload = {
-  baseLocale: string;
-  selectedLocale: string;
-  translatedOutput: Array<{ path: string; value: string }>;
-};
-
-function normalizePreviewTranslationPayload(payload: unknown): PreviewTranslationPayload | null {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const record = payload as Record<string, unknown>;
-  const baseLocale = typeof record.baseLocale === 'string' ? record.baseLocale.trim() : '';
-  const selectedLocale = typeof record.selectedLocale === 'string' ? record.selectedLocale.trim() : '';
-  const translatedOutput = Array.isArray(record.translatedOutput)
-    ? record.translatedOutput.reduce<Array<{ path: string; value: string }>>((entries, entry) => {
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entries;
-        const item = entry as Record<string, unknown>;
-        const path = typeof item.path === 'string' ? item.path.trim() : '';
-        const value = typeof item.value === 'string' ? item.value : '';
-        if (!path) return entries;
-        entries.push({ path, value });
-        return entries;
-      }, [])
-    : [];
-  if (!baseLocale) return null;
-  return {
-    baseLocale,
-    selectedLocale: selectedLocale || baseLocale,
-    translatedOutput,
-  };
-}
-
-function applyTranslationPreview(
-  state: Record<string, unknown>,
-  translatedOutput: Array<{ path: string; value: string }>,
-): Record<string, unknown> {
-  if (!Array.isArray(translatedOutput) || translatedOutput.length === 0) return state;
-  let next =
-    typeof structuredClone === 'function'
-      ? structuredClone(state)
-      : (JSON.parse(JSON.stringify(state)) as Record<string, unknown>);
-  for (const entry of translatedOutput) {
-    if (!entry?.path) continue;
-    next = setAt(next, entry.path, entry.value) as Record<string, unknown>;
-  }
-  return next;
-}
-
-export function Workspace() {
+export function Workspace({ previewLocale }: { previewLocale: string }) {
   const session = useWidgetSession();
-  const apiFetch = session.apiFetch;
   const chrome = useWidgetSessionChrome();
   const { compiled, instanceData } = session;
-  const { preview, setPreview, meta } = chrome;
+  const { preview, setPreview } = chrome;
+  const publicId = chrome.meta?.publicId ?? '';
   const device = preview.device;
   const theme = preview.theme;
   const host = preview.host;
@@ -68,74 +20,25 @@ export function Workspace() {
   const [iframeHasState, setIframeHasState] = useState(false);
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
-  const [translationPreview, setTranslationPreview] = useState<PreviewTranslationPayload | null>(null);
-  const resolvedPreviewLocale = normalizeLocaleToken(preview.locale) ?? '';
   const latestRef = useRef({
     compiled,
     instanceData,
-    previewState: instanceData,
-    locale: resolvedPreviewLocale,
+    publicId,
+    previewLocale,
     device,
     theme,
   });
 
   useEffect(() => {
-    setPreview({ locale: '' });
-  }, [meta?.publicId, setPreview]);
-
-  useEffect(() => {
-    if (!compiled || !meta?.publicId || !resolvedPreviewLocale) {
-      setTranslationPreview(null);
-      return;
-    }
-    const controller = new AbortController();
-    const url = `/api/account/instances/${encodeURIComponent(meta.publicId)}/translations?locale=${encodeURIComponent(
-      resolvedPreviewLocale,
-    )}`;
-
-    setTranslationPreview(null);
-    apiFetch(url, {
-      method: 'GET',
-      cache: 'no-store',
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`HTTP_${response.status}`);
-        const payload = normalizePreviewTranslationPayload(await response.json());
-        if (!payload) throw new Error('coreui.errors.translations.invalid');
-        setTranslationPreview(payload);
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setTranslationPreview(null);
-      });
-
-    return () => controller.abort();
-  }, [apiFetch, compiled, meta?.publicId, resolvedPreviewLocale]);
-
-  const translatedPreviewPayload =
-    translationPreview &&
-    translationPreview.selectedLocale !== translationPreview.baseLocale &&
-    translationPreview.translatedOutput.length > 0
-      ? translationPreview
-      : null;
-
-  const previewState = useMemo(() => {
-    if (!translatedPreviewPayload) return instanceData;
-    return applyTranslationPreview(instanceData, translatedPreviewPayload.translatedOutput);
-  }, [instanceData, translatedPreviewPayload]);
-
-  const runtimeLocale = translatedPreviewPayload?.selectedLocale || '';
-
-  useEffect(() => {
     latestRef.current = {
       compiled,
       instanceData,
-      previewState,
-      locale: runtimeLocale,
+      publicId,
+      previewLocale,
       device,
       theme,
     };
-  }, [compiled, instanceData, previewState, runtimeLocale, device, theme]);
+  }, [compiled, instanceData, publicId, previewLocale, device, theme]);
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';
@@ -162,7 +65,9 @@ export function Workspace() {
 
     // Plain colors/gradients can be applied directly.
     if (
-      /^(?:#|var\(|rgba?\(|hsla?\(|color-mix\(|-?(?:repeating-)?(?:linear|radial|conic)-gradient\()/i.test(value)
+      /^(?:#|var\(|rgba?\(|hsla?\(|color-mix\(|-?(?:repeating-)?(?:linear|radial|conic)-gradient\()/i.test(
+        value,
+      )
     ) {
       return value === 'transparent' ? 'var(--color-system-white)' : value;
     }
@@ -187,8 +92,9 @@ export function Workspace() {
         {
           type: 'ck:state-update',
           widgetname: nextCompiled.widgetname,
-          state: snapshot.previewState,
-          locale: snapshot.locale,
+          publicId: snapshot.publicId,
+          state: snapshot.instanceData,
+          locale: snapshot.previewLocale,
           device: snapshot.device,
           theme: snapshot.theme,
         },
@@ -228,14 +134,15 @@ export function Workspace() {
     const message = {
       type: 'ck:state-update',
       widgetname: compiled.widgetname,
-      state: previewState,
-      locale: runtimeLocale,
+      publicId,
+      state: instanceData,
+      locale: previewLocale,
       device,
       theme,
     };
 
     iframeWindow.postMessage(message, '*');
-  }, [hasWidget, compiled, previewState, runtimeLocale, device, theme, iframeLoaded]);
+  }, [hasWidget, compiled, publicId, instanceData, previewLocale, device, theme, iframeLoaded]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -265,17 +172,24 @@ export function Workspace() {
   useEffect(() => {
     // When switching instances/devices/modes, allow the iframe to re-measure.
     setMeasuredHeight(null);
-  }, [meta?.publicId, device, theme, host]);
+  }, [device, theme, host]);
 
   const isDesktopCanvas = host === 'canvas' && device === 'desktop';
   const shouldResizeCanvas = isDesktopCanvas && (stageMode === 'wrap' || stageMode === 'fixed');
   const resolvedCanvasHeight =
-    isDesktopCanvas && stageMode === 'fixed' && Number.isFinite(stageFixedHeight) && stageFixedHeight > 0
+    isDesktopCanvas &&
+    stageMode === 'fixed' &&
+    Number.isFinite(stageFixedHeight) &&
+    stageFixedHeight > 0
       ? stageFixedHeight
       : measuredHeight;
-  const canvasHeightPx = shouldResizeCanvas && resolvedCanvasHeight ? `${resolvedCanvasHeight}px` : null;
+  const canvasHeightPx =
+    shouldResizeCanvas && resolvedCanvasHeight ? `${resolvedCanvasHeight}px` : null;
   const canvasWidthPx =
-    shouldResizeCanvas && stageMode === 'fixed' && Number.isFinite(stageFixedWidth) && stageFixedWidth > 0
+    shouldResizeCanvas &&
+    stageMode === 'fixed' &&
+    Number.isFinite(stageFixedWidth) &&
+    stageFixedWidth > 0
       ? `${stageFixedWidth}px`
       : null;
   const shouldRenderCanvasCard = Boolean(shouldResizeCanvas && (canvasHeightPx || canvasWidthPx));

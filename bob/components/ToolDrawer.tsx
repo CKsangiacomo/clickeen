@@ -66,7 +66,13 @@ function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidget
   return deduped.size > 0 ? Array.from(deduped) : ['Some widget edits are blocked by current limits or settings.'];
 }
 
-export function ToolDrawer() {
+export function ToolDrawer({
+  previewLocale,
+  onPreviewLocaleChange,
+}: {
+  previewLocale: string;
+  onPreviewLocaleChange: (locale: string) => void;
+}) {
   const session = useWidgetSession();
   const compiled = session.compiled;
   const sessionError = session.error;
@@ -95,7 +101,10 @@ export function ToolDrawer() {
       return DEFAULT_PANELS.filter((panel) => panel.id !== 'translations');
     }
     const availableIds = new Set(compiled.panels.map((panel) => panel.id));
-    return DEFAULT_PANELS.filter((panel) => availableIds.has(panel.id));
+    return DEFAULT_PANELS.filter((panel) => {
+      if (panel.id === 'translations') return true;
+      return availableIds.has(panel.id);
+    });
   }, [compiled?.panels]);
   const activePanelHtml = panelsById[activePanel]?.html ?? null;
   const alertBorderColor = '1px solid color-mix(in oklab, var(--color-system-red), transparent 55%)';
@@ -110,7 +119,7 @@ export function ToolDrawer() {
   ) : activePanel === 'settings' ? (
     <SettingsPanel />
   ) : activePanel === 'translations' ? (
-    <TranslationsPanel />
+    <TranslationsPanel previewLocale={previewLocale} onPreviewLocaleChange={onPreviewLocaleChange} />
   ) : (
     <TdMenuContent
       panelId={activePanel}

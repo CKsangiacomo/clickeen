@@ -850,13 +850,34 @@
     numberValueEl.textContent = String(Math.round(value));
   }
 
+  let previewLocaleRequest = 0;
+
+  async function applyPreviewState(state, locale, publicId) {
+    const requestId = ++previewLocaleRequest;
+    const helper =
+      window.CK_PREVIEW_L10N &&
+      typeof window.CK_PREVIEW_L10N === 'object' &&
+      typeof window.CK_PREVIEW_L10N.loadLocalizedState === 'function'
+        ? window.CK_PREVIEW_L10N
+        : null;
+    const localizedState = helper
+      ? await helper.loadLocalizedState({
+          publicId: typeof publicId === 'string' ? publicId : resolvedPublicId,
+          locale,
+          baseState: state,
+        })
+      : state;
+    if (requestId !== previewLocaleRequest) return;
+    applyState(localizedState, { locale });
+    syncTimerScheduler(localizedState);
+  }
+
   window.addEventListener('message', (event) => {
     const data = event.data;
     if (!data || typeof data !== 'object') return;
     if (data.type !== 'ck:state-update') return;
     if (data.widgetname !== 'countdown') return;
-    applyState(data.state, { locale: data.locale });
-    syncTimerScheduler(data.state);
+    void applyPreviewState(data.state, data.locale, data.publicId);
   });
 
   const keyedPayload =

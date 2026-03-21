@@ -1,5 +1,5 @@
 import type { CompiledWidget } from '../types';
-import type { WidgetOp, WidgetOpError } from '../ops';
+import type { WidgetOpError } from '../ops';
 import type { Policy } from '@clickeen/ck-policy';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 
@@ -18,7 +18,6 @@ export type PreviewSettings = {
   device: 'desktop' | 'mobile';
   theme: 'light' | 'dark';
   host: 'canvas' | 'column' | 'banner' | 'floating';
-  locale: string;
 };
 
 export type SessionState = {
@@ -105,7 +104,6 @@ export const DEFAULT_PREVIEW: PreviewSettings = {
   device: 'desktop',
   theme: 'light',
   host: 'canvas',
-  locale: '',
 };
 
 export function createInitialSessionState(): SessionState {

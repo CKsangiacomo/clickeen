@@ -787,12 +787,33 @@
     bindMotion(state);
   }
 
+  let previewLocaleRequest = 0;
+
+  async function applyPreviewState(state, locale, publicId) {
+    const requestId = ++previewLocaleRequest;
+    const helper =
+      window.CK_PREVIEW_L10N &&
+      typeof window.CK_PREVIEW_L10N === 'object' &&
+      typeof window.CK_PREVIEW_L10N.loadLocalizedState === 'function'
+        ? window.CK_PREVIEW_L10N
+        : null;
+    const localizedState = helper
+      ? await helper.loadLocalizedState({
+          publicId: typeof publicId === 'string' ? publicId : resolvedPublicId,
+          locale,
+          baseState: state,
+        })
+      : state;
+    if (requestId !== previewLocaleRequest) return;
+    applyState(localizedState, { locale });
+  }
+
   window.addEventListener('message', (event) => {
     const msg = event.data;
     if (!msg || msg.type !== 'ck:state-update') return;
     if (msg.widgetname && msg.widgetname !== 'logoshowcase') return;
     if (resolvedPublicId && msg.publicId && msg.publicId !== resolvedPublicId) return;
-    applyState(msg.state, { locale: msg.locale });
+    void applyPreviewState(msg.state, msg.locale, msg.publicId);
   });
 
   const keyedPayload =

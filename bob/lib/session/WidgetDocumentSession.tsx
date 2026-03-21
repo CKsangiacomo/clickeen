@@ -20,6 +20,7 @@ export type WidgetDocumentSessionValue = {
   error: SessionState['error'];
   accountAssets: AccountAssetsClient;
   apiFetch: ReturnType<typeof useSessionTransport>['fetchApi'];
+  loadTranslations: ReturnType<typeof useSessionTransport>['loadTranslations'];
   applyOps: ReturnType<typeof useSessionEditing>['applyOps'];
   save: ReturnType<typeof useSessionSaving>['save'];
   setInstanceLabel: ReturnType<typeof useSessionEditing>['setInstanceLabel'];
@@ -67,12 +68,22 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       error: state.error,
       accountAssets,
       apiFetch: transport.fetchApi,
+      loadTranslations: transport.loadTranslations,
       applyOps: editing.applyOps,
       save: saving.save,
       setInstanceLabel: editing.setInstanceLabel,
       loadInstance: boot.loadInstance,
     }),
-    [accountAssets, boot.loadInstance, editing.applyOps, editing.setInstanceLabel, saving.save, state, transport.fetchApi],
+    [
+      accountAssets,
+      boot.loadInstance,
+      editing.applyOps,
+      editing.setInstanceLabel,
+      saving.save,
+      state,
+      transport.fetchApi,
+      transport.loadTranslations,
+    ],
   );
 
   return <WidgetDocumentSessionContext.Provider value={value}>{children}</WidgetDocumentSessionContext.Provider>;

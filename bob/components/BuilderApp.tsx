@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { TopDrawer } from './TopDrawer';
 import { ToolDrawer } from './ToolDrawer';
 import { UpsellPopup } from './UpsellPopup';
@@ -21,18 +22,34 @@ function UpsellPopupHost() {
   );
 }
 
-export function BuilderApp() {
+function BuilderShell() {
+  const chrome = useWidgetSessionChrome();
+  const publicId = chrome.meta?.publicId ?? '';
+  const [previewLocale, setPreviewLocale] = useState('');
+
+  useEffect(() => {
+    setPreviewLocale('');
+  }, [publicId]);
+
   return (
-    <WidgetSessionProvider>
+    <>
       <div className="builder-app">
         <TopDrawer />
 
         <div className="builder-app__content">
-          <ToolDrawer />
-          <Workspace />
+          <ToolDrawer previewLocale={previewLocale} onPreviewLocaleChange={setPreviewLocale} />
+          <Workspace previewLocale={previewLocale} />
         </div>
       </div>
       <UpsellPopupHost />
+    </>
+  );
+}
+
+export function BuilderApp() {
+  return (
+    <WidgetSessionProvider>
+      <BuilderShell />
     </WidgetSessionProvider>
   );
 }
