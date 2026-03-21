@@ -76,6 +76,7 @@ export type BobOpenEditorFailedMessage = {
 export type BobAccountCommand =
   | 'update-instance'
   | AccountAssetHostCommand
+  | 'load-translations'
   | 'run-copilot'
   | 'attach-ai-outcome';
 

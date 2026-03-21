@@ -220,15 +220,14 @@ export function TranslationsPanel() {
   useEffect(() => {
     if (!publicId) return;
     const controller = new AbortController();
-    const url = new URL(`/api/account/instances/${publicId}/translations`, window.location.origin);
+    const url = new URL(`https://builder.invalid/api/account/instances/${publicId}/translations`);
     if (requestedLocale) url.searchParams.set('locale', requestedLocale);
 
     setLoading(true);
     setError(null);
 
-    fetch(url.toString(), {
+    session.apiFetch(`${url.pathname}${url.search}`, {
       method: 'GET',
-      credentials: 'same-origin',
       cache: 'no-store',
       signal: controller.signal,
     })

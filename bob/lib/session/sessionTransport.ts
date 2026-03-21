@@ -212,6 +212,9 @@ export function useSessionTransport(args: {
   const fetchApi = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const inputUrl = normalizeInputUrl(input);
     const publicId = String(args.metaRef.current?.publicId || '').trim();
+    const translationsMatch = inputUrl.match(
+      /^\/api\/account\/instances\/([^/?#]+)\/translations(?:\?([^#]*))?$/,
+    );
     if (inputUrl === '/api/ai/widget-copilot' || inputUrl === '/api/ai/outcome') {
       if (!publicId) {
         return createHostUnavailableResponse();
@@ -221,6 +224,26 @@ export function useSessionTransport(args: {
         command: inputUrl === '/api/ai/widget-copilot' ? 'run-copilot' : 'attach-ai-outcome',
         publicId,
         ...(typeof body === 'undefined' ? {} : { body }),
+      });
+      return createJsonResponse(result.status, result.payload);
+    }
+    if (translationsMatch) {
+      const routePublicId = (() => {
+        try {
+          return decodeURIComponent(translationsMatch[1] || '').trim();
+        } catch {
+          return String(translationsMatch[1] || '').trim();
+        }
+      })();
+      if (!routePublicId) {
+        return createHostUnavailableResponse();
+      }
+      const params = new URLSearchParams(translationsMatch[2] || '');
+      const locale = params.get('locale');
+      const result = await dispatchHostAccountCommand({
+        command: 'load-translations',
+        publicId: routePublicId,
+        ...(locale && locale.trim() ? { body: { locale: locale.trim() } } : {}),
       });
       return createJsonResponse(result.status, result.payload);
     }
