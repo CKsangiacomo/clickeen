@@ -5,6 +5,8 @@ import {
   deleteSavedConfigFromTokyo,
   saveAccountInstanceDirect,
 } from '@roma/lib/account-instance-direct';
+import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
+import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
 import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { deleteAccountInstanceRow, getAccountInstanceCoreRow } from '@roma/lib/michael';
@@ -162,6 +164,46 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
+  const accountLocalesState = await loadCurrentAccountLocalesState({
+    accessToken: current.value.accessToken,
+    accountId,
+  });
+  if (!accountLocalesState.ok) {
+    const status =
+      accountLocalesState.status === 401
+        ? 401
+        : accountLocalesState.status === 403
+          ? 403
+          : 502;
+    const kind =
+      status === 401
+        ? 'AUTH'
+        : status === 403
+          ? 'DENY'
+          : 'UPSTREAM_UNAVAILABLE';
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind,
+            reasonKey:
+              status === 401
+                ? 'coreui.errors.auth.required'
+                : status === 403
+                  ? 'coreui.errors.auth.forbidden'
+                  : 'coreui.errors.auth.contextUnavailable',
+            detail:
+              accountLocalesState.detail ||
+              `berlin_account_http_${accountLocalesState.status}`,
+          },
+        },
+        { status },
+      ),
+      current.value.setCookies,
+    );
+  }
+
   const result = await saveAccountInstanceDirect({
     accountId,
     publicId,
@@ -170,6 +212,15 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     displayName,
     source,
     meta,
+    l10n: {
+      summary: {
+        baseLocale: accountLocalesState.policy.baseLocale,
+        desiredLocales: normalizeDesiredAccountLocales({
+          baseLocale: accountLocalesState.policy.baseLocale,
+          locales: accountLocalesState.locales,
+        }),
+      },
+    },
     tokyoBaseUrl: resolveTokyoBaseUrl(),
     tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,

@@ -92,7 +92,8 @@ These are the actual remaining problems in the current codebase:
 4. The shared locale switcher in `tokyo/widgets/shared/localeSwitcher.js` still self-navigates the iframe URL.
 5. `tokyo/widgets/shared/previewL10n.js` still treats missing locale artifacts as normal consumer control flow instead of as an invariant break.
 6. `loadAccountLocalizationBaseContext()` still calls `ensureSavedRenderL10nBase()` on the read path, which can write missing base snapshot state during a panel/status read instead of failing at the Tokyo/Tokyo-worker boundary.
-7. Repo-level architecture docs still describe older locale behavior and best-available overlays, which will confuse implementation if left unresolved.
+7. The saved Tokyo widget pointer does not yet carry durable l10n summary truth for Builder (`baseFingerprint` + last synced desired locale set), so the panel route still reaches back into Berlin to rebuild that truth on read.
+8. Repo-level architecture docs still describe older locale behavior and best-available overlays, which will confuse implementation if left unresolved.
 
 ---
 
@@ -101,6 +102,7 @@ These are the actual remaining problems in the current codebase:
 This slice should stay inside this file set:
 
 - `tokyo-worker/src/domains/account-localization-state.ts`
+- `tokyo-worker/src/domains/account-instance-sync.ts`
 - `tokyo-worker/src/domains/render.ts`
 - `roma/lib/account-instance-translations.ts`
 - `roma/app/api/account/instances/[publicId]/translations/route.ts`

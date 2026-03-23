@@ -19,6 +19,13 @@ type TranslationsPanelData = {
   translationOk: boolean;
 };
 
+type ErrorPayload = {
+  error?: {
+    reasonKey?: unknown;
+    detail?: unknown;
+  };
+};
+
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
 
@@ -50,12 +57,43 @@ function normalizePanelData(payload: unknown): TranslationsPanelData | null {
   const translationOk = typeof record.translationOk === 'boolean' ? record.translationOk : null;
 
   if (!baseLocale || translationOk === null) return null;
-  if (!readyLocales.includes(baseLocale)) readyLocales.unshift(baseLocale);
+  if (!readyLocales.includes(baseLocale)) return null;
   return {
     baseLocale,
     readyLocales,
     translationOk,
   };
+}
+
+function resolveRouteErrorReason(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const errorPayload = payload as ErrorPayload;
+  const reasonKey =
+    typeof errorPayload.error?.reasonKey === 'string' ? errorPayload.error.reasonKey.trim() : '';
+  if (reasonKey) return reasonKey;
+  const detail =
+    typeof errorPayload.error?.detail === 'string' ? errorPayload.error.detail.trim() : '';
+  return detail || null;
+}
+
+function resolveTranslationsErrorMessage(args: {
+  status?: number;
+  reasonKey?: string | null;
+  error?: unknown;
+}): string {
+  if (
+    args.reasonKey === 'tokyo_saved_l10n_summary_missing' ||
+    args.reasonKey === 'tokyo_saved_l10n_base_missing'
+  ) {
+    return 'Translations are not available for this widget yet.';
+  }
+  if (args.reasonKey === 'coreui.errors.translations.baseLocaleMismatch') {
+    return 'Translations are out of sync for this widget right now.';
+  }
+  if (args.status === 404) {
+    return 'This widget is not available for translation preview.';
+  }
+  return 'Builder could not load translations right now.';
 }
 
 function SelectField({
@@ -123,15 +161,35 @@ export function TranslationsPanel({
     loadTranslations({ publicId })
       .then((response) => {
         if (cancelled) return;
-        if (!response.ok) throw new Error(`HTTP_${response.status}`);
+        if (!response.ok) {
+          throw {
+            status: response.status,
+            reasonKey: resolveRouteErrorReason(response.json),
+          };
+        }
         const payload = normalizePanelData(response.json);
         if (!payload) throw new Error('coreui.errors.translations.invalid');
+        if (bootBaseLocale && payload.baseLocale !== bootBaseLocale) {
+          throw new Error('coreui.errors.translations.baseLocaleMismatch');
+        }
         setData(payload);
       })
-      .catch(() => {
+      .catch((caught) => {
         if (cancelled) return;
         setData(null);
-        setError('Builder could not load translations right now.');
+        if (caught instanceof Error) {
+          setError(resolveTranslationsErrorMessage({ reasonKey: caught.message, error: caught }));
+          return;
+        }
+        const status =
+          typeof (caught as { status?: unknown } | null | undefined)?.status === 'number'
+            ? (caught as { status: number }).status
+            : undefined;
+        const reasonKey =
+          typeof (caught as { reasonKey?: unknown } | null | undefined)?.reasonKey === 'string'
+            ? ((caught as { reasonKey: string }).reasonKey || null)
+            : null;
+        setError(resolveTranslationsErrorMessage({ status, reasonKey, error: caught }));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -140,7 +198,7 @@ export function TranslationsPanel({
     return () => {
       cancelled = true;
     };
-  }, [loadTranslations, publicId]);
+  }, [bootBaseLocale, loadTranslations, publicId]);
 
   const localeOptions = useMemo(() => {
     const locales = data?.readyLocales ?? [];
@@ -150,7 +208,7 @@ export function TranslationsPanel({
     }));
   }, [data?.readyLocales]);
 
-  const resolvedBaseLocale = bootBaseLocale || data?.baseLocale || '';
+  const resolvedBaseLocale = data?.baseLocale || bootBaseLocale || '';
 
   const localeValue =
     overlayPreviewLocale && localeOptions.some((option) => option.value === overlayPreviewLocale)

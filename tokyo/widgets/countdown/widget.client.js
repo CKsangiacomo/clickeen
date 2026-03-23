@@ -853,7 +853,7 @@
 
   let previewLocaleRequest = 0;
 
-  async function applyPreviewState(state, locale, publicId, previewMode) {
+  async function applyPreviewState(state, locale, publicId, previewMode, baseLocale) {
     const requestId = ++previewLocaleRequest;
     const helper =
       window.CK_PREVIEW_L10N &&
@@ -865,6 +865,7 @@
       ? await helper.loadLocalizedState({
           publicId: typeof publicId === 'string' ? publicId : resolvedPublicId,
           locale,
+          baseLocale,
           baseState: state,
         })
       : state;
@@ -878,7 +879,13 @@
     if (!data || typeof data !== 'object') return;
     if (data.type !== 'ck:state-update') return;
     if (data.widgetname !== 'countdown') return;
-    void applyPreviewState(data.state, data.locale, data.publicId, data.previewMode);
+    void applyPreviewState(
+      data.state,
+      data.locale,
+      data.publicId,
+      data.previewMode,
+      data.baseLocale,
+    );
   });
 
   const keyedPayload =

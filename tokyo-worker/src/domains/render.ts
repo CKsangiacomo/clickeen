@@ -55,6 +55,10 @@ export type SavedRenderPointer = {
   updatedAt: string;
   l10n?: {
     baseFingerprint: string;
+    summary?: {
+      baseLocale: string;
+      desiredLocales: string[];
+    };
   };
 };
 
@@ -172,6 +176,17 @@ function normalizePublicId(value: unknown): string | null {
 
 function normalizeFingerprint(value: unknown): string | null {
   return normalizeSha256Hex(value);
+}
+
+function normalizeLocaleList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(
+    new Set(
+      value
+        .map((entry) => normalizeLocale(entry))
+        .filter((entry): entry is string => Boolean(entry)),
+    ),
+  );
 }
 
 function renderLivePointerKey(publicId: string): string {
@@ -368,6 +383,19 @@ export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | 
       ? (payload.l10n as Record<string, unknown>)
       : null;
   const baseFingerprint = normalizeFingerprint(l10nRaw?.baseFingerprint);
+  const summaryRaw =
+    l10nRaw?.summary && typeof l10nRaw.summary === 'object' && !Array.isArray(l10nRaw.summary)
+      ? (l10nRaw.summary as Record<string, unknown>)
+      : null;
+  const summaryBaseLocale = normalizeLocale(summaryRaw?.baseLocale) ?? '';
+  const summaryDesiredLocales = normalizeLocaleList(summaryRaw?.desiredLocales);
+  const summary =
+    summaryBaseLocale && summaryDesiredLocales.includes(summaryBaseLocale)
+      ? {
+          baseLocale: summaryBaseLocale,
+          desiredLocales: summaryDesiredLocales,
+        }
+      : null;
   const configFp = normalizeFingerprint(payload.configFp) ?? '';
   const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
   if (!publicId || !accountId || !widgetType || !source || !configFp || !updatedAt) return null;
@@ -381,7 +409,14 @@ export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | 
     meta,
     configFp,
     updatedAt,
-    ...(baseFingerprint ? { l10n: { baseFingerprint } } : {}),
+    ...(baseFingerprint
+      ? {
+          l10n: {
+            baseFingerprint,
+            ...(summary ? { summary } : {}),
+          },
+        }
+      : {}),
   };
 }
 
@@ -613,7 +648,15 @@ export async function writeSavedRenderConfig(args: {
   displayName?: unknown;
   source?: unknown;
   meta?: unknown;
-  l10n?: { baseFingerprint: string } | null;
+  l10n?:
+    | {
+        baseFingerprint?: string | null;
+        summary?: {
+          baseLocale: string;
+          desiredLocales: string[];
+        } | null;
+      }
+    | null;
 }): Promise<SavedRenderPointer> {
   const publicId = args.publicId;
   const accountId = args.accountId;
@@ -634,6 +677,28 @@ export async function writeSavedRenderConfig(args: {
       : args.meta && typeof args.meta === 'object' && !Array.isArray(args.meta)
         ? (args.meta as Record<string, unknown>)
         : null;
+  const existingPointer = normalizeSavedRenderPointer(
+    await loadJson(args.env, renderSavedPointerKey(publicId)),
+  );
+  const l10nBase = await ensureSavedRenderL10nBase({
+    env: args.env,
+    publicId,
+    widgetType,
+    config,
+    existingBaseFingerprint:
+      typeof args.l10n?.baseFingerprint === 'string'
+        ? args.l10n.baseFingerprint
+        : existingPointer?.l10n?.baseFingerprint ?? null,
+  });
+  const requestedSummary = args.l10n?.summary ?? undefined;
+  const carriedSummary =
+    requestedSummary === null
+      ? null
+      : requestedSummary ?? existingPointer?.l10n?.summary ?? null;
+  const l10n = {
+    baseFingerprint: l10nBase.baseFingerprint,
+    ...(carriedSummary ? { summary: carriedSummary } : {}),
+  } satisfies NonNullable<SavedRenderPointer['l10n']>;
 
   const pointer: SavedRenderPointer = {
     v: 1,
@@ -645,17 +710,23 @@ export async function writeSavedRenderConfig(args: {
     meta,
     configFp,
     updatedAt: new Date().toISOString(),
-    ...(args.l10n ? { l10n: args.l10n } : {}),
+    l10n,
   };
   await putJson(args.env, renderSavedPointerKey(publicId), pointer);
   return pointer;
 }
 
-export async function readSavedRenderConfig(args: {
+export async function readSavedRenderPointer(args: {
   env: Env;
   publicId: string;
   accountId: string;
-}): Promise<SavedRenderDocumentReadResult> {
+}): Promise<
+  | {
+      ok: true;
+      value: SavedRenderPointer;
+    }
+  | SavedRenderDocumentReadFailure
+> {
   const publicId = normalizePublicId(args.publicId);
   const accountId = normalizePublicId(args.accountId);
   if (!publicId || !accountId) {
@@ -697,6 +768,28 @@ export async function readSavedRenderConfig(args: {
     };
   }
 
+  return { ok: true, value: pointer };
+}
+
+export async function readSavedRenderConfig(args: {
+  env: Env;
+  publicId: string;
+  accountId: string;
+}): Promise<SavedRenderDocumentReadResult> {
+  const publicId = normalizePublicId(args.publicId);
+  const accountId = normalizePublicId(args.accountId);
+  if (!publicId || !accountId) {
+    return {
+      ok: false,
+      kind: 'VALIDATION',
+      reasonKey: 'tokyo.errors.render.invalid',
+    };
+  }
+
+  const pointerResult = await readSavedRenderPointer(args);
+  if (!pointerResult.ok) return pointerResult;
+  const pointer = pointerResult.value;
+
   const config =
     (await loadJson<Record<string, unknown>>(
       args.env,
@@ -710,6 +803,38 @@ export async function readSavedRenderConfig(args: {
     };
   }
   return { ok: true, value: { pointer, config } };
+}
+
+export async function writeSavedRenderL10nState(args: {
+  env: Env;
+  publicId: string;
+  accountId: string;
+  baseFingerprint: string;
+  summary?: {
+    baseLocale: string;
+    desiredLocales: string[];
+  } | null;
+}): Promise<SavedRenderPointer> {
+  const pointerResult = await readSavedRenderPointer({
+    env: args.env,
+    publicId: args.publicId,
+    accountId: args.accountId,
+  });
+  if (!pointerResult.ok) {
+    throw new Error(
+      pointerResult.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : pointerResult.reasonKey,
+    );
+  }
+
+  const pointer: SavedRenderPointer = {
+    ...pointerResult.value,
+    l10n: {
+      baseFingerprint: args.baseFingerprint,
+      ...(args.summary ? { summary: args.summary } : {}),
+    },
+  };
+  await putJson(args.env, renderSavedPointerKey(args.publicId), pointer);
+  return pointer;
 }
 
 export async function deleteSavedRenderConfig(args: {

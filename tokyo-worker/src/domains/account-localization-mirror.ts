@@ -28,11 +28,9 @@ export function buildLocalizedTextPack(args: {
   locale: string;
   basePack: Record<string, string>;
   baseOps: LocalizationOp[];
-  userOps: LocalizationOp[];
 }): Record<string, string> {
   if (args.locale === args.baseLocale) return { ...args.basePack };
-  const withLocale = applyOpsToTextPack(args.basePack, args.baseOps);
-  return applyOpsToTextPack(withLocale, args.userOps);
+  return applyOpsToTextPack(args.basePack, args.baseOps);
 }
 
 function setExistingStringAtPath(
@@ -359,7 +357,6 @@ export function buildLocaleMirrorPayload(args: {
   locale: string;
   baseTextPack: Record<string, string>;
   baseOps: LocalizationOp[];
-  userOps: LocalizationOp[];
   seoGeoLive: boolean;
 }): { textPack: Record<string, string>; metaPack: Record<string, unknown> | null } {
   const textPack = buildLocalizedTextPack({
@@ -367,7 +364,6 @@ export function buildLocaleMirrorPayload(args: {
     locale: args.locale,
     basePack: args.baseTextPack,
     baseOps: args.baseOps,
-    userOps: args.userOps,
   });
   if (!args.seoGeoLive) {
     return { textPack, metaPack: null };

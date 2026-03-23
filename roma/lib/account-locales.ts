@@ -39,3 +39,12 @@ export function materializeAccountAdditionalLocales(args: {
 export function usesSystemChosenAdditionalLocale(profile: PolicyProfile | null | undefined): boolean {
   return profile === 'free';
 }
+
+export function normalizeDesiredAccountLocales(args: {
+  baseLocale: string;
+  locales: unknown;
+}): string[] {
+  const baseLocale = normalizeLocaleToken(args.baseLocale) ?? 'en';
+  const desired = normalizeAdditionalAccountLocales(args.locales, baseLocale);
+  return [baseLocale, ...desired];
+}

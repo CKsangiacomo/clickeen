@@ -232,11 +232,13 @@ This is why the workflow is incremental instead of “retranslate the whole widg
 - Tokyo is the source of translation truth.
 - A locale is customer-ready only when Tokyo has the translation artifact for the current base fingerprint.
 - The base snapshot for that fingerprint must already exist before Builder or embed reads translation truth.
+- The saved widget plane in Tokyo carries the current `baseFingerprint` and the last synced locale-summary truth for that widget (`baseLocale` + desired locale set).
 - Builder and embed consume only customer-ready locales.
 - Queue state, attempts, pipeline stages, and other internal mechanics are not customer truth.
 - Bob does not own translation truth.
 - Roma does not invent translation truth.
 - Tokyo/Tokyo-worker read routes do not run `ensure` logic that silently writes missing base state on demand.
+- Builder Translations reads do not live-recompute account locale truth from Berlin on panel open; explicit save/sync writes that desired-locale summary into the saved Tokyo widget plane, and the panel reads it there.
 - If the base snapshot or current locale artifacts are missing, that is an invariant break at the Tokyo/Tokyo-worker boundary, not a Builder/runtime fallback case and not a read-path self-heal.
 
 ### 5. How the Translations panel fits cleanly

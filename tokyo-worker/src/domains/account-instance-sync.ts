@@ -22,7 +22,6 @@ import { loadAccountAssetManifestByIdentity } from './assets';
 import {
   buildLocaleMirrorPayload,
   generateLocaleOpsWithSanfrancisco,
-  loadBaseTextPack,
   loadBerlinAccountL10nState,
   loadOverlayOps,
   normalizeReadyLocales,
@@ -35,6 +34,7 @@ import {
   readSavedRenderConfig,
   resolveTokyoPublicBaseUrl,
   syncLiveSurface,
+  writeSavedRenderL10nState,
   writeConfigPack,
   type LocalePolicy,
 } from './render';
@@ -189,25 +189,15 @@ export async function handleSyncAccountInstance(
   const existingLocaleOverlays = new Map(
     await Promise.all(
       nonBaseLocales.map(async (locale) => {
-        const [baseOverlay, userOverlay] = await Promise.all([
-          loadOverlayOps({
-            env,
-            publicId,
-            layer: 'locale',
-            layerKey: locale,
-            baseFingerprint,
-            allowlist: localizationAllowlist,
-          }),
-          loadOverlayOps({
-            env,
-            publicId,
-            layer: 'user',
-            layerKey: locale,
-            baseFingerprint,
-            allowlist: localizationAllowlist,
-          }),
-        ]);
-        return [locale, { baseOps: baseOverlay.ops, userOps: userOverlay.ops }] as const;
+        const baseOverlay = await loadOverlayOps({
+          env,
+          publicId,
+          layer: 'locale',
+          layerKey: locale,
+          baseFingerprint,
+          allowlist: localizationAllowlist,
+        });
+        return [locale, { baseOps: baseOverlay.ops }] as const;
       }),
     ),
   );
@@ -248,7 +238,6 @@ export async function handleSyncAccountInstance(
       locale === baseLocale
         ? []
         : generatedBaseOpsByLocale.get(locale) ?? existing?.baseOps ?? [];
-    const userOps = locale === baseLocale ? [] : (existing?.userOps ?? []);
 
     const mirror = buildLocaleMirrorPayload({
       widgetType: saved.value.pointer.widgetType,
@@ -257,7 +246,6 @@ export async function handleSyncAccountInstance(
       locale,
       baseTextPack,
       baseOps,
-      userOps,
       seoGeoLive: seoGeoEnabled,
     });
 
@@ -273,6 +261,17 @@ export async function handleSyncAccountInstance(
       ...(mirror.metaPack ? { metaPack: mirror.metaPack } : {}),
     });
   }
+
+  await writeSavedRenderL10nState({
+    env,
+    publicId,
+    accountId,
+    baseFingerprint,
+    summary: {
+      baseLocale,
+      desiredLocales,
+    },
+  });
 
   let configFp: string | null = null;
   if (live) {

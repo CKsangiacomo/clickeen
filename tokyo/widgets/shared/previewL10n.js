@@ -70,9 +70,11 @@
   async function loadLocalizedState(args) {
     const publicId = typeof args?.publicId === 'string' ? args.publicId.trim() : '';
     const locale = normalizeLocale(args?.locale);
+    const baseLocale = normalizeLocale(args?.baseLocale);
     const sourceState = args?.baseState;
     if (!sourceState || typeof sourceState !== 'object') return sourceState;
     if (!publicId || !locale) return sourceState;
+    if (baseLocale && locale === baseLocale) return sourceState;
 
     const pointerRes = await fetch(
       '/l10n/instances/' + encodeURIComponent(publicId) + '/live/' + encodeURIComponent(locale) + '.json',

@@ -186,6 +186,12 @@ export async function writeSavedConfigToTokyo(args: {
   displayName?: string | null;
   source?: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
+  l10n?: {
+    summary?: {
+      baseLocale: string;
+      desiredLocales: string[];
+    } | null;
+  } | null;
   internalServiceName?: string | null;
 }): Promise<void> {
   const headers = buildTokyoProductControlHeaders({
@@ -207,6 +213,7 @@ export async function writeSavedConfigToTokyo(args: {
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.source ? { source: args.source } : {}),
       ...(args.meta !== undefined ? { meta: args.meta } : {}),
+      ...(args.l10n !== undefined ? { l10n: args.l10n } : {}),
     }),
   });
 
@@ -377,6 +384,12 @@ export async function saveAccountInstanceDirect(args: {
   displayName?: string | null;
   source?: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
+  l10n?: {
+    summary?: {
+      baseLocale: string;
+      desiredLocales: string[];
+    } | null;
+  } | null;
   tokyoBaseUrl: string;
   tokyoControlBaseUrl?: string;
   tokyoAccessToken?: string;
@@ -400,6 +413,7 @@ export async function saveAccountInstanceDirect(args: {
       displayName: args.displayName,
       source: args.source,
       meta: args.meta,
+      l10n: args.l10n,
     });
   } catch (error) {
     return {

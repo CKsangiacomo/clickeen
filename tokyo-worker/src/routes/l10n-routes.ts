@@ -2,10 +2,6 @@ import { isUuid } from '@clickeen/ck-contracts';
 import { normalizeLocale, normalizePublicId, normalizeSha256Hex } from '../asset-utils';
 import {
   handleGetAccountTranslationsPanel,
-  handleDeleteAccountUserLayer,
-  handleGetAccountLocalizationSnapshot,
-  handleGetAccountL10nStatus,
-  handleUpsertAccountUserLayer,
 } from '../domains/account-localization';
 import { handleGetL10nAsset } from '../domains/l10n-read';
 import {
@@ -45,50 +41,6 @@ export async function tryHandleInternalL10nRoutes(
     );
   }
 
-  const internalL10nSnapshotMatch = pathname.match(
-    /^\/__internal\/l10n\/instances\/([^/]+)\/snapshot$/,
-  );
-  if (internalL10nSnapshotMatch) {
-    const publicId = normalizePublicId(decodeURIComponent(internalL10nSnapshotMatch[1]));
-    const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!publicId || !isUuid(accountId)) {
-      return respondValidation(respond, 'tokyo.errors.l10n.invalid');
-    }
-    if (req.method !== 'GET') {
-      return respondMethodNotAllowed(respond);
-    }
-    const authErr = await authorizeRomaAccountScopedRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'viewer',
-    });
-    if (authErr) return respond(authErr);
-    return respond(await handleGetAccountLocalizationSnapshot(req, env, publicId, accountId));
-  }
-
-  const internalL10nStatusMatch = pathname.match(
-    /^\/__internal\/l10n\/instances\/([^/]+)\/status$/,
-  );
-  if (internalL10nStatusMatch) {
-    const publicId = normalizePublicId(decodeURIComponent(internalL10nStatusMatch[1]));
-    const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!publicId || !isUuid(accountId)) {
-      return respondValidation(respond, 'tokyo.errors.l10n.invalid');
-    }
-    if (req.method !== 'GET') {
-      return respondMethodNotAllowed(respond);
-    }
-    const authErr = await authorizeRomaAccountScopedRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'viewer',
-    });
-    if (authErr) return respond(authErr);
-    return respond(await handleGetAccountL10nStatus(req, env, publicId, accountId));
-  }
-
   const internalL10nTranslationsMatch = pathname.match(
     /^\/__internal\/l10n\/instances\/([^/]+)\/translations$/,
   );
@@ -111,46 +63,16 @@ export async function tryHandleInternalL10nRoutes(
     return respond(await handleGetAccountTranslationsPanel(req, env, publicId, accountId));
   }
 
-  const internalL10nUserLayerMatch = pathname.match(
-    /^\/__internal\/l10n\/instances\/([^/]+)\/user\/([^/]+)$/,
-  );
-  if (internalL10nUserLayerMatch && (req.method === 'POST' || req.method === 'DELETE')) {
-    const publicId = normalizePublicId(decodeURIComponent(internalL10nUserLayerMatch[1]));
-    const layerKeyRaw = decodeURIComponent(internalL10nUserLayerMatch[2]);
-    const locale = normalizeLocale(layerKeyRaw) || (layerKeyRaw === 'global' ? 'global' : null);
-    const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!publicId || !isUuid(accountId) || !locale) {
-      return respondValidation(respond, 'tokyo.errors.l10n.invalid');
-    }
-    const authErr = await authorizeRomaAccountScopedRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'editor',
-    });
-    if (authErr) return respond(authErr);
-    if (req.method === 'POST') {
-      return respond(
-        await handleUpsertAccountUserLayer(req, env, publicId, accountId, locale),
-      );
-    }
-    return respond(
-      await handleDeleteAccountUserLayer(req, env, publicId, accountId, locale),
-    );
-  }
-
   const internalL10nOverlayMatch = pathname.match(
     /^\/__internal\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/,
   );
   if (internalL10nOverlayMatch && (req.method === 'POST' || req.method === 'DELETE')) {
     const publicId = normalizePublicId(decodeURIComponent(internalL10nOverlayMatch[1]));
     const layerRaw = decodeURIComponent(internalL10nOverlayMatch[2]);
-    const layer = layerRaw === 'locale' || layerRaw === 'user' ? layerRaw : null;
+    const layer = layerRaw === 'locale' ? layerRaw : null;
     const layerKeyRaw = decodeURIComponent(internalL10nOverlayMatch[3]);
     const layerKey =
-      layer === 'locale'
-        ? normalizeLocale(layerKeyRaw)
-        : normalizeLocale(layerKeyRaw) || (layerKeyRaw === 'global' ? 'global' : null);
+      layer === 'locale' ? normalizeLocale(layerKeyRaw) : null;
     const accountId = String(req.headers.get('x-account-id') || '').trim();
     if (!publicId || !isUuid(accountId) || !layer || !layerKey) {
       return respondValidation(respond, 'tokyo.errors.l10n.invalid');

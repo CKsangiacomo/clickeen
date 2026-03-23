@@ -186,6 +186,18 @@ export async function tryHandleInternalRenderRoutes(
         return respondValidation(respond, 'tokyo.errors.render.invalid');
       }
       const body = rawBody;
+      const l10n =
+        body.l10n === null || isRecord(body.l10n)
+          ? (body.l10n as
+              | {
+                  baseFingerprint?: string | null;
+                  summary?: {
+                    baseLocale: string;
+                    desiredLocales: string[];
+                  } | null;
+                }
+              | null)
+          : undefined;
       const pointer = await writeSavedRenderConfig({
         env,
         publicId: publicId!,
@@ -195,6 +207,7 @@ export async function tryHandleInternalRenderRoutes(
         displayName: body.displayName,
         source: body.source,
         meta: body.meta,
+        ...(l10n !== undefined ? { l10n } : {}),
       });
       return respond(json({ ...pointer, config: body?.config }));
     }

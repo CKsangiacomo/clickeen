@@ -106,14 +106,14 @@ Rules:
 Where the write plane fits (current repo snapshot):
 - Tokyo/Tokyo-worker store editable overlay rows and base snapshots under `tokyo/l10n/instances/<publicId>/...`.
   - `layer=locale` = generated/managed translation ops
-  - `layer=user` = user overrides on top of the locale translation (choosing auto-translate again clears this layer on the next Save)
-- Tokyo-worker still owns canonical overlay/artifact state, but Builder no longer mounts account-mode localization snapshot/status as part of the active authoring loop.
+  - legacy `layer=user` rows may still exist in Tokyo, but the active Builder authoring path no longer exposes or writes a user-layer surface
+- Tokyo-worker still owns canonical overlay/artifact state, but Builder no longer mounts account-mode localization snapshot/status/user-layer flows as part of the active authoring loop.
 - Every overlay row is keyed by `baseFingerprint` (sha256 of the current allowlist snapshot).
 - Repo-authored admin-owned l10n source overlays, when kept in-repo, live under `tokyo/admin-owned/l10n/**` and build into `tokyo/l10n/**`.
 - Stale writes are rejected when `baseFingerprint` does not match.
 - These authoring records are **never** served publicly.
 - When overlay/base state changes and the instance is live, Tokyo-worker rebuilds the full text pack and publishes it:
-  - `fullPack = baseSnapshot + localeOps + userOps` (user ops win per key)
+  - `fullPack = baseSnapshot + localeOps`
 
 **Generation + mirroring (current after PRD 54)**
 
@@ -122,7 +122,10 @@ Where the write plane fits (current repo snapshot):
 - Roma forwards the caller capsule/bearer to Tokyo-worker; Tokyo-worker sends the already-minted account `policyProfile` with the San Francisco request, and San Francisco derives the `l10n.instance.v1` AI profile/provider lane from `@clickeen/ck-policy` rather than defaulting to a generic paid path.
 - San Francisco returns set-only locale ops.
 - Tokyo-worker persists those overlay rows in the canonical Tokyo l10n plane.
-- Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane, and Tokyo-worker reads that account-locale truth directly from Berlin during explicit snapshot/status/sync execution.
+- Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane, and Tokyo-worker reads that account-locale truth directly from Berlin during explicit sync execution.
+- Product-path save writes the current saved-widget l10n summary (`baseLocale` + desired locale set) into the Tokyo saved widget plane alongside the current `baseFingerprint`.
+- Explicit sync refreshes that saved-widget l10n summary and converges locale artifacts against it.
+- Builder Translations reads consume that saved Tokyo summary plus current Tokyo artifact state; they do not live-recompute desired locales from Berlin on every panel open.
 - On explicit Tokyo-worker sync, the pipeline reconciles Tokyo against that desired set for the current `baseFingerprint`:
   - if Tokyo already has the locale artifact for that exact fingerprint, skip
   - if Tokyo does not have it, generate and write it
@@ -144,7 +147,7 @@ Where the write plane fits (current repo snapshot):
 
 - Tokyo stores per-instance overlay rows for authoring/generation (write plane only).
   - Locale translations: `layer='locale'`, `layer_key=<locale>`, set-only ops, `base_fingerprint=<hash of base snapshot>`.
-  - User overrides: `layer='user'`, `layer_key=<locale>`, set-only ops, `base_fingerprint=<hash of base snapshot>`.
+- Historical `layer='user'` rows may still exist in Tokyo storage from older flows, but the active `75E` product path no longer writes or consumes them.
 - Tokyo-worker derives status from canonical Tokyo overlay/artifact state.
 - These authoring records are never served publicly.
 - Public embeds read only Tokyo packs + live pointers (`l10n/instances/.../live/*.json` and `l10n/instances/.../packs/...`).

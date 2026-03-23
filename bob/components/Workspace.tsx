@@ -42,6 +42,7 @@ export function Workspace({
     compiled,
     instanceData,
     publicId,
+    baseLocale,
     previewMode,
     effectivePreviewLocale,
     device,
@@ -53,12 +54,13 @@ export function Workspace({
       compiled,
       instanceData,
       publicId,
+      baseLocale,
       previewMode,
       effectivePreviewLocale,
       device,
       theme,
     };
-  }, [compiled, instanceData, publicId, previewMode, effectivePreviewLocale, device, theme]);
+  }, [compiled, instanceData, publicId, baseLocale, previewMode, effectivePreviewLocale, device, theme]);
 
   useEffect(() => {
     if (!switcherNotice) return undefined;
@@ -119,6 +121,7 @@ export function Workspace({
           type: 'ck:state-update',
           widgetname: nextCompiled.widgetname,
           publicId: snapshot.publicId,
+          baseLocale: snapshot.baseLocale,
           state: snapshot.instanceData,
           locale: snapshot.effectivePreviewLocale,
           previewMode: snapshot.previewMode,
@@ -162,6 +165,7 @@ export function Workspace({
       type: 'ck:state-update',
       widgetname: compiled.widgetname,
       publicId,
+      baseLocale,
       state: instanceData,
       locale: effectivePreviewLocale,
       previewMode,
@@ -177,6 +181,7 @@ export function Workspace({
     instanceData,
     effectivePreviewLocale,
     previewMode,
+    baseLocale,
     device,
     theme,
     iframeLoaded,

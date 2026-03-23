@@ -4,7 +4,7 @@ import type { Env } from '../types';
 import { normalizePublicId, normalizeSha256Hex } from '../asset-utils';
 import { writeMetaPack, writeTextPack } from './render';
 
-type LayerKind = 'locale' | 'user';
+type LayerKind = 'locale';
 type L10nOp = { op: 'set'; path: string; value: string };
 type LayerIndexEntry = {
   keys: string[];
@@ -16,7 +16,7 @@ type LayerIndex = {
   layers: Partial<Record<LayerKind, LayerIndexEntry>>;
 };
 
-const L10N_LAYER_ALLOWED = new Set<LayerKind>(['locale', 'user']);
+const L10N_LAYER_ALLOWED = new Set<LayerKind>(['locale']);
 const L10N_PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
 const UTF8_ENCODER = new TextEncoder();
 
@@ -61,14 +61,8 @@ function normalizeLayer(raw: unknown): LayerKind | null {
   return normalized as LayerKind;
 }
 
-function normalizeLayerKey(layer: LayerKind, raw: unknown): string | null {
-  const normalized = normalizeLocaleToken(raw);
-  if (normalized) return normalized;
-  if (layer === 'user') {
-    const global = String(raw || '').trim().toLowerCase();
-    if (global === 'global') return 'global';
-  }
-  return null;
+function normalizeLayerKey(_layer: LayerKind, raw: unknown): string | null {
+  return normalizeLocaleToken(raw);
 }
 
 function normalizeGeoTargets(raw: unknown): string[] | null {
