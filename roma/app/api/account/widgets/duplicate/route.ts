@@ -1,10 +1,12 @@
-import { after, NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteSavedConfigFromTokyo,
   loadTokyoAccountInstanceDocument,
   writeSavedConfigToTokyo,
 } from '@roma/lib/account-instance-direct';
-import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
+import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
+import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
+import { enqueueAccountInstanceSync } from '@roma/lib/account-instance-sync';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import {
   createAccountInstanceRow,
@@ -204,6 +206,46 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const accountLocalesState = await loadCurrentAccountLocalesState({
+    accessToken: current.value.accessToken,
+    accountId,
+  });
+  if (!accountLocalesState.ok) {
+    const status =
+      accountLocalesState.status === 401
+        ? 401
+        : accountLocalesState.status === 403
+          ? 403
+          : 502;
+    const kind =
+      status === 401
+        ? 'AUTH'
+        : status === 403
+          ? 'DENY'
+          : 'UPSTREAM_UNAVAILABLE';
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind,
+            reasonKey:
+              status === 401
+                ? 'coreui.errors.auth.required'
+                : status === 403
+                  ? 'coreui.errors.auth.forbidden'
+                  : 'coreui.errors.auth.contextUnavailable',
+            detail:
+              accountLocalesState.detail ||
+              `berlin_account_http_${accountLocalesState.status}`,
+          },
+        },
+        { status },
+      ),
+      current.value.setCookies,
+    );
+  }
+
   const publicId = createUserInstancePublicId(source.value.widgetType);
   try {
     await writeSavedConfigToTokyo({
@@ -217,6 +259,15 @@ export async function POST(request: NextRequest) {
       displayName: null,
       source: 'account',
       meta: null,
+      l10n: {
+        summary: {
+          baseLocale: accountLocalesState.policy.baseLocale,
+          desiredLocales: normalizeDesiredAccountLocales({
+            baseLocale: accountLocalesState.policy.baseLocale,
+            locales: accountLocalesState.locales,
+          }),
+        },
+      },
     });
   } catch (error) {
     return withSession(
@@ -298,23 +349,44 @@ export async function POST(request: NextRequest) {
   }
 
   const created = createdRow.row;
-
-  after(async () => {
-    try {
-      await runAccountInstanceSync({
-        accessToken: current.value.accessToken,
-        accountId,
-        publicId,
-        accountCapsule: current.value.authzToken,
-        live: false,
-      });
-    } catch (error) {
-      console.error('[roma account widgets duplicate route] tokyo instance sync failed', {
-        publicId,
-        detail: error instanceof Error ? error.message : String(error),
-      });
-    }
-  });
+  try {
+    await enqueueAccountInstanceSync({
+      accessToken: current.value.accessToken,
+      accountId,
+      publicId,
+      accountCapsule: current.value.authzToken,
+      live: false,
+      l10nIntent: {
+        baseLocale: accountLocalesState.policy.baseLocale,
+        desiredLocales: normalizeDesiredAccountLocales({
+          baseLocale: accountLocalesState.policy.baseLocale,
+          locales: accountLocalesState.locales,
+        }),
+        countryToLocale: accountLocalesState.policy.ip.countryToLocale,
+      },
+    });
+  } catch (error) {
+    await rollbackDuplicateCreate({
+      accountId,
+      publicId,
+      tokyoAccessToken: current.value.accessToken,
+      berlinAccessToken: current.value.accessToken,
+    });
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail: error instanceof Error ? error.message : String(error),
+          },
+        },
+        { status: 502 },
+      ),
+      current.value.setCookies,
+    );
+  }
 
   return withSession(
     request,

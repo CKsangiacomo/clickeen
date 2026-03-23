@@ -71,13 +71,15 @@
     const publicId = typeof args?.publicId === 'string' ? args.publicId.trim() : '';
     const locale = normalizeLocale(args?.locale);
     const baseLocale = normalizeLocale(args?.baseLocale);
+    const previewMode = typeof args?.previewMode === 'string' ? args.previewMode.trim() : '';
     const sourceState = args?.baseState;
     if (!sourceState || typeof sourceState !== 'object') return sourceState;
+    if (previewMode !== 'translations') return sourceState;
     if (!publicId || !locale) return sourceState;
     if (baseLocale && locale === baseLocale) return sourceState;
 
     const pointerRes = await fetch(
-      '/l10n/instances/' + encodeURIComponent(publicId) + '/live/' + encodeURIComponent(locale) + '.json',
+      '/l10n/instances/' + encodeURIComponent(publicId) + '/saved/' + encodeURIComponent(locale) + '.json',
       { method: 'GET', cache: 'no-store', credentials: 'omit' },
     ).catch(() => null);
     if (!pointerRes) throw new Error('ck_preview_l10n_pointer_request_failed');

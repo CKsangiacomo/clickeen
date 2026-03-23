@@ -4,6 +4,8 @@ import {
   loadTokyoAccountInstanceDocument,
   loadTokyoAccountInstanceLiveStatus,
 } from '@roma/lib/account-instance-direct';
+import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
+import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
 import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import {
@@ -176,6 +178,46 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
+  const accountLocalesState = await loadCurrentAccountLocalesState({
+    accessToken: current.value.accessToken,
+    accountId,
+  });
+  if (!accountLocalesState.ok) {
+    const status =
+      accountLocalesState.status === 401
+        ? 401
+        : accountLocalesState.status === 403
+          ? 403
+          : 502;
+    const kind =
+      status === 401
+        ? 'AUTH'
+        : status === 403
+          ? 'DENY'
+          : 'UPSTREAM_UNAVAILABLE';
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind,
+            reasonKey:
+              status === 401
+                ? 'coreui.errors.auth.required'
+                : status === 403
+                  ? 'coreui.errors.auth.forbidden'
+                  : 'coreui.errors.auth.contextUnavailable',
+            detail:
+              accountLocalesState.detail ||
+              `berlin_account_http_${accountLocalesState.status}`,
+          },
+        },
+        { status },
+      ),
+      current.value.setCookies,
+    );
+  }
+
   try {
     await runAccountInstanceSync({
       accessToken: current.value.accessToken,
@@ -183,6 +225,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
       publicId,
       accountCapsule: current.value.authzToken,
       live: true,
+      l10nIntent: {
+        baseLocale: accountLocalesState.policy.baseLocale,
+        desiredLocales: normalizeDesiredAccountLocales({
+          baseLocale: accountLocalesState.policy.baseLocale,
+          locales: accountLocalesState.locales,
+        }),
+        countryToLocale: accountLocalesState.policy.ip.countryToLocale,
+      },
     });
   } catch (error) {
     await updateAccountInstanceStatusRow({

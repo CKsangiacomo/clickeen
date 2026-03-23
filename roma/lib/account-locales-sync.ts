@@ -1,4 +1,4 @@
-import { runAccountInstanceSync } from './account-instance-sync';
+import { enqueueAccountInstanceSync, type AccountInstanceSyncIntent } from './account-instance-sync';
 import { loadAccountWidgetCatalog } from './michael';
 
 function formatWarning(prefix: string, detail?: string | null): string {
@@ -10,6 +10,7 @@ export async function runAccountLocalesSync(args: {
   accountId: string;
   accessToken: string;
   accountCapsule?: string | null;
+  l10nIntent: AccountInstanceSyncIntent;
 }): Promise<string[]> {
   const catalog = await loadAccountWidgetCatalog({
     accountId: args.accountId,
@@ -37,12 +38,13 @@ export async function runAccountLocalesSync(args: {
   const warnings: string[] = [];
   for (const instance of publishedInstances) {
     try {
-      await runAccountInstanceSync({
+      await enqueueAccountInstanceSync({
         accessToken: args.accessToken,
         accountId: args.accountId,
         publicId: instance.publicId,
         accountCapsule: args.accountCapsule,
         live: true,
+        l10nIntent: args.l10nIntent,
       });
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);

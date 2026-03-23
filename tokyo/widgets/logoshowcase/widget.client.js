@@ -803,6 +803,7 @@
           publicId: typeof publicId === 'string' ? publicId : resolvedPublicId,
           locale,
           baseLocale,
+          previewMode,
           baseState: state,
         })
       : state;

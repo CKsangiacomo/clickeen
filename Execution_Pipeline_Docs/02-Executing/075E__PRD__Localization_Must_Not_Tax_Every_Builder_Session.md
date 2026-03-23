@@ -46,6 +46,8 @@ It is part of the architecture:
 - locales that already have overlay ops must update only those changed/removed paths
 - locales that do not yet have overlay ops may still need a full first generation
 - unchanged locale ops/text packs must be reused instead of paying whole-widget translation cost again
+- post-save translation convergence must be durably enqueued and retried by Tokyo/Tokyo-worker; it must not depend on best-effort fire-and-forget callbacks from Roma
+- Builder/editor reads and preview must consume the saved/editor overlay artifact plane for the current saved fingerprint; public embed/runtime consumes the public/live consumer-pointer plane only
 
 The widget/instance identity is locale-free.
 The translation base is **not**.
@@ -228,10 +230,11 @@ Execution is blocked until the implementer can explain this chain plainly:
 - It lives in Tokyo/Tokyo-worker.
 - Tokyo-worker starts from the saved widget state in Tokyo.
 - It derives one immutable **base-locale base** and fingerprint for that saved widget state.
-- It reads the account locale policy from Berlin.
+- Roma records the deterministic desired locale set and passes that overlay intent into Tokyo/Tokyo-worker sync.
 - It reuses existing locale ops when possible.
 - It asks San Francisco only for the changed translation work that is actually needed.
 - It writes the resulting translation artifacts back into Tokyo.
+- It does that through a durable Tokyo/Tokyo-worker reconciliation job, not a best-effort request callback.
 - That changed work is derived from the previous saved base snapshot vs the current saved base snapshot at the Tokyo/Tokyo-worker boundary, not from Bob UI state and not from ad-hoc runtime guesses.
 
 This is why the workflow is incremental instead of “retranslate the whole widget every time.”
@@ -242,6 +245,9 @@ This is why the workflow is incremental instead of “retranslate the whole widg
 - A locale is customer-ready only when Tokyo has the translation artifact for the current base fingerprint.
 - The base snapshot for that fingerprint must already exist before Builder or embed reads translation truth.
 - The saved widget plane in Tokyo carries the current `baseFingerprint` and the last synced locale-summary truth for that widget (`baseLocale` + desired locale set).
+- Tokyo maintains two consumer planes over the same canonical artifacts:
+  - saved/editor pointers for Builder/current-saved-fingerprint inspection
+  - public/live pointers for embed/runtime consumers
 - Builder and embed consume only customer-ready locales.
 - Queue state, attempts, pipeline stages, and other internal mechanics are not customer truth.
 - Bob does not own translation truth.

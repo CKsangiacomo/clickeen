@@ -7,6 +7,7 @@ import { assertRomaAccountCapsuleAuth, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '
 import { json } from '../http';
 import {
   deleteSavedRenderConfig,
+  enqueueTokyoMirrorJob,
   readSavedRenderConfig,
   syncLiveSurface,
   writeConfigPack,
@@ -56,6 +57,97 @@ export async function tryHandleInternalRenderRoutes(
       );
     }
     return respond(await handleSyncAccountInstance(req, env, publicId!, accountId, capsule));
+  }
+
+  const internalRenderSyncQueueMatch = pathname.match(
+    /^\/__internal\/renders\/instances\/([^/]+)\/sync\/queue$/,
+  );
+  if (internalRenderSyncQueueMatch) {
+    const publicId = normalizePublicId(decodeURIComponent(internalRenderSyncQueueMatch[1]));
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isValidScopedInstance(publicId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'POST') {
+      return respondMethodNotAllowed(respond);
+    }
+    const auth = await assertRomaAccountCapsuleAuth(req, env, {
+      requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
+    });
+    if (!auth.ok) return respond(auth.response);
+    const capsule = auth.principal.accountAuthz;
+    if (capsule.accountId !== accountId || roleRank(capsule.role) < roleRank('editor')) {
+      return respond(
+        json(
+          { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
+          { status: 403 },
+        ),
+      );
+    }
+
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const live = body?.live === true;
+    if (body && Object.prototype.hasOwnProperty.call(body, 'live') && typeof body.live !== 'boolean') {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    const previousBaseFingerprint =
+      body && Object.prototype.hasOwnProperty.call(body, 'previousBaseFingerprint')
+        ? normalizeSha256Hex(body.previousBaseFingerprint)
+        : null;
+    if (
+      body &&
+      Object.prototype.hasOwnProperty.call(body, 'previousBaseFingerprint') &&
+      body.previousBaseFingerprint !== null &&
+      !previousBaseFingerprint
+    ) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    const l10nIntent =
+      body && isRecord(body.l10nIntent)
+        ? body.l10nIntent
+        : null;
+    const baseLocale =
+      l10nIntent && typeof l10nIntent.baseLocale === 'string' ? l10nIntent.baseLocale.trim() : '';
+    const desiredLocales = Array.isArray(l10nIntent?.desiredLocales)
+      ? l10nIntent.desiredLocales
+          .filter((entry): entry is string => typeof entry === 'string')
+          .map((entry) => entry.trim())
+          .filter((entry) => entry.length > 0)
+      : [];
+    const countryToLocale =
+      l10nIntent && isRecord(l10nIntent.countryToLocale)
+        ? Object.fromEntries(
+            Object.entries(l10nIntent.countryToLocale).flatMap(([country, locale]) => {
+              if (!/^[A-Z]{2}$/.test(country) || typeof locale !== 'string') return [];
+              const normalized = locale.trim().toLowerCase();
+              return normalized ? [[country, normalized] as const] : [];
+            }),
+          )
+        : {};
+    if (!baseLocale || !desiredLocales.length) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+
+    await enqueueTokyoMirrorJob(env, {
+      v: 1,
+      kind: 'sync-instance-overlays',
+      publicId: publicId!,
+      accountId,
+      live,
+      ...(previousBaseFingerprint ? { previousBaseFingerprint } : {}),
+      accountAuthz: {
+        profile: capsule.profile,
+        role: capsule.role,
+        entitlements: capsule.entitlements ?? null,
+      },
+      l10nIntent: {
+        baseLocale: baseLocale.toLowerCase(),
+        desiredLocales: desiredLocales.map((locale) => locale.trim().toLowerCase()),
+        countryToLocale,
+      },
+    });
+
+    return respond(json({ ok: true, queued: true, publicId, live }));
   }
 
   const internalRenderLivePointerMatch = pathname.match(

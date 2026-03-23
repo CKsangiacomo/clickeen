@@ -79,6 +79,8 @@ There are only three product-truth questions in this PRD:
      - public consumer surfaces consume Tokyo/Venice ready truth only
    - Contract:
      - Bob and Venice are consumers of truth, not locale-policy interpreters.
+     - Builder/editor surfaces read Tokyo saved/editor artifact pointers for the current saved fingerprint.
+     - Public/runtime surfaces read Tokyo public/live consumer pointers only.
      - Account-mode Bob may show `desired` and `ready`.
      - MiniBob/public Bob may show `ready` only.
      - Action gating comes from policy; locale visibility comes from truth.
@@ -184,6 +186,7 @@ These tenets are the architectural memory for PRD 070.
 
 10. Consumer readiness must converge by write-path trigger, not by request-time cleverness
    - `readyLocales` is a point-in-time consumer projection of Tokyo truth.
+   - Save-triggered overlay convergence must be durably enqueued and retried by the system; it must not depend on best-effort request callbacks.
    - When a locale becomes ready for a published instance/current fingerprint, the system must trigger consumer-pointer reconciliation.
    - Venice must not query or reconstruct readiness dynamically at request time.
    - The embed must not wait for a future manual save to pick up already-ready locales.

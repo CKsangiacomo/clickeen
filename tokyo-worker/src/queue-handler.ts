@@ -7,6 +7,7 @@ import {
   writeMetaPack,
   writeTextPack,
 } from './domains/render';
+import { runQueuedAccountInstanceSync } from './domains/account-instance-sync';
 import type { Env } from './types';
 
 function retryDelaySeconds(attempt: number, baseSeconds: number, capSeconds: number): number {
@@ -48,6 +49,9 @@ export async function handleTokyoQueue(
           break;
         case 'delete-instance-mirror':
           await deleteInstanceMirror(env, body.publicId);
+          break;
+        case 'sync-instance-overlays':
+          await runQueuedAccountInstanceSync(env, body);
           break;
       }
       msg.ack();

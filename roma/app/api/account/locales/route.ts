@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
-import { materializeAccountAdditionalLocales } from '@roma/lib/account-locales';
+import { materializeAccountAdditionalLocales, normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
 import { runAccountLocalesSync } from '@roma/lib/account-locales-sync';
 import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
@@ -259,10 +259,40 @@ export async function PUT(request: NextRequest) {
 
     const upstreamPayload = payloadText ? (JSON.parse(payloadText) as unknown) : null;
     const warnings = isRecord(upstreamPayload) ? normalizeWarnings(upstreamPayload.warnings) : [];
+    const refreshedAccountState = await loadCurrentAccountLocalesState({
+      accessToken: current.value.accessToken,
+      accountId: current.value.authzPayload.accountId,
+    });
+    if (!refreshedAccountState.ok) {
+      return withSession(
+        request,
+        NextResponse.json(
+          refreshedAccountState.payload ?? {
+            error: {
+              kind: refreshedAccountState.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+              reasonKey:
+                refreshedAccountState.status === 401
+                  ? 'coreui.errors.auth.required'
+                  : 'coreui.errors.auth.contextUnavailable',
+            },
+          },
+          { status: refreshedAccountState.status },
+        ),
+        current.value.setCookies,
+      );
+    }
     const syncWarnings = await runAccountLocalesSync({
       accountId: current.value.authzPayload.accountId,
       accessToken: current.value.accessToken,
       accountCapsule: current.value.authzToken,
+      l10nIntent: {
+        baseLocale: refreshedAccountState.policy.baseLocale,
+        desiredLocales: normalizeDesiredAccountLocales({
+          baseLocale: refreshedAccountState.policy.baseLocale,
+          locales: refreshedAccountState.locales,
+        }),
+        countryToLocale: refreshedAccountState.policy.ip.countryToLocale,
+      },
     });
     const mergedWarnings = Array.from(new Set([...warnings, ...syncWarnings]));
 

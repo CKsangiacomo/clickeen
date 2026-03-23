@@ -48,6 +48,7 @@ If implementation starts naming extra subsystems, extra preview paths, or generi
 17. `readyLocales` is the only Builder/embed consumer locale set for this slice. Do not reintroduce `activeLocales` on the consumer path.
 18. If repo-level architecture docs still contradict `75E` at the end of execution, the slice is not done.
 19. Small text edits must not trigger whole-widget retranslation for locales that already have overlay ops. Save/sync must diff previous vs current saved bases and send only changed/removed translatable paths to San Francisco. Locales with no existing ops may still require a full first generation.
+20. Saved/editor overlay pointers and public/live consumer pointers are different planes. Builder must read saved/editor truth; embed/runtime must read public/live truth.
 
 ### Discipline Checks
 
@@ -138,11 +139,12 @@ make save follow the incremental translation contract already promised by the PR
 ### Product behavior after this phase
 
 - Save still means only `save this widget`.
-- Save still hands translation work off asynchronously.
+- Save still hands translation work off asynchronously, but it does so by durably enqueuing Tokyo overlay convergence before the request completes.
 - Tokyo-worker can now compare the previous saved base against the new saved base.
 - Locales that already have overlay ops update only changed/removed translatable paths.
 - Locales that do not yet have overlay ops still get a full first generation.
 - Tiny copy edits no longer fan out into whole-widget translation work for already-synced locales.
+- Tokyo sync no longer rediscoveries desired locales from Berlin on the save path; Roma passes the deterministic locale intent snapshot directly.
 
 ### Files To Change
 
@@ -151,7 +153,7 @@ make save follow the incremental translation contract already promised by the PR
 Code this:
 
 - keep the one boring save boundary
-- pass previous saved-base identity into async sync after a successful save
+- pass previous saved-base identity plus deterministic locale intent into durable Tokyo overlay sync after a successful save
 
 Do not code:
 
@@ -173,7 +175,8 @@ Do not code:
 
 Code this:
 
-- thread optional previous saved-base identity into the Tokyo sync request
+- thread optional previous saved-base identity and deterministic locale intent into the Tokyo sync request
+- support a durable enqueue path for background convergence and an inline path for explicit live publish
 
 Do not code:
 
@@ -184,7 +187,8 @@ Do not code:
 Code this:
 
 - return previous saved-base identity from the saved-write route
-- accept optional previous saved-base identity on the sync route
+- accept optional previous saved-base identity and deterministic locale intent on the sync route
+- add a private enqueue route that writes a durable Tokyo queue job instead of relying on best-effort Roma callbacks
 
 #### 5. `tokyo-worker/src/domains/account-instance-sync.ts`
 
@@ -195,6 +199,8 @@ Code this:
 - reuse existing locale ops from the previous/current saved base when possible
 - ask San Francisco only for changed work for locales that already have ops
 - fall back to full generation only for locales that do not yet have ops or when previous diff input is genuinely unavailable
+- consume Roma-owned locale intent directly instead of live-reading Berlin on the sync path
+- expose the same convergence logic to both the inline route and the durable queue consumer
 
 Do not code:
 
@@ -211,10 +217,11 @@ Code this:
 
 Phase 0A is green only if all of the following are true:
 
-- save can hand previous saved-base identity into async sync
+- save can durably enqueue overlay convergence with previous saved-base identity and locale intent
 - Tokyo-worker diffs previous/current saved bases when that identity is available
 - locales with existing ops no longer require a full-widget translation request for tiny edits
 - locales without existing ops still get a full first generation
+- Tokyo-worker sync no longer depends on Berlin reads or bearer-token auth on the sync path
 - Roma typecheck passes
 - Tokyo-worker typecheck passes
 

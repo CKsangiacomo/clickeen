@@ -1,4 +1,4 @@
-import { after, NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { classifyWidgetPublicId, isUuid } from '@clickeen/ck-contracts';
 import {
   deleteLiveSurfaceFromTokyo,
@@ -7,7 +7,7 @@ import {
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
-import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
+import { enqueueAccountInstanceSync } from '@roma/lib/account-instance-sync';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { deleteAccountInstanceRow, getAccountInstanceCoreRow } from '@roma/lib/michael';
 import {
@@ -257,23 +257,39 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  after(async () => {
-    try {
-      await runAccountInstanceSync({
-        accessToken: current.value.accessToken,
-        accountId,
-        publicId,
-        accountCapsule: current.value.authzToken,
-        live: false,
-        previousBaseFingerprint: result.previousBaseFingerprint,
-      });
-    } catch (error) {
-      console.error('[roma account instance route] tokyo instance sync failed after save', {
-        publicId,
-        detail: error instanceof Error ? error.message : String(error),
-      });
-    }
-  });
+  try {
+    await enqueueAccountInstanceSync({
+      accessToken: current.value.accessToken,
+      accountId,
+      publicId,
+      accountCapsule: current.value.authzToken,
+      live: false,
+      previousBaseFingerprint: result.previousBaseFingerprint,
+      l10nIntent: {
+        baseLocale: accountLocalesState.policy.baseLocale,
+        desiredLocales: normalizeDesiredAccountLocales({
+          baseLocale: accountLocalesState.policy.baseLocale,
+          locales: accountLocalesState.locales,
+        }),
+        countryToLocale: accountLocalesState.policy.ip.countryToLocale,
+      },
+    });
+  } catch (error) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail: error instanceof Error ? error.message : String(error),
+          },
+        },
+        { status: 502 },
+      ),
+      current.value.setCookies,
+    );
+  }
 
   return withSession(
     request,
