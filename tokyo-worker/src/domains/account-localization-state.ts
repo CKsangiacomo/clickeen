@@ -1,4 +1,5 @@
 import {
+  normalizeWidgetLocaleSwitcherSettings,
   normalizeLocalizationOps,
   parseAccountL10nPolicyStrict,
   parseAccountLocaleListStrict,
@@ -6,6 +7,7 @@ import {
   type AccountL10nPolicy,
   type AccountOverlayEntry,
   type LocalizationOp,
+  type WidgetLocaleSwitcherSettings,
 } from '@clickeen/ck-contracts';
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import { normalizeLocaleToken, type AllowlistEntry } from '@clickeen/l10n';
@@ -28,7 +30,6 @@ import {
   parseBearerToken,
   resolveTokyoControlErrorDetail,
 } from './account-localization-utils';
-import { buildLocalizedTextPack } from './account-localization-mirror';
 
 type LiveRenderPointer = {
   seoGeo?: {
@@ -715,12 +716,12 @@ export async function loadAccountTranslationsPanelData(args: {
   widgetType: string;
   baseLocale: string;
   activeLocales: string[];
-  selectedLocale: string;
-  statuses: Array<{
+  inspectionLocale: string;
+  localeStatuses: Array<{
     locale: string;
-    status: 'base' | 'dirty' | 'succeeded' | 'superseded';
+    ok: boolean;
   }>;
-  translatedOutput: Array<{ path: string; value: string }>;
+  localeBehavior: WidgetLocaleSwitcherSettings;
 }> {
   const base = await loadAccountLocalizationBaseContext({
     env: args.env,
@@ -728,56 +729,39 @@ export async function loadAccountTranslationsPanelData(args: {
     accountId: args.accountId,
     publicId: args.publicId,
   });
-  const [snapshotData, statusData] = await Promise.all([
-    buildAccountLocalizationSnapshotFromBase({
-      env: args.env,
-      publicId: args.publicId,
-      base,
-    }),
-    buildAccountL10nStatusFromBase({
-      env: args.env,
-      publicId: args.publicId,
-      base,
-    }),
-  ]);
+  const statusData = await buildAccountL10nStatusFromBase({
+    env: args.env,
+    publicId: args.publicId,
+    base,
+  });
 
-  const activeLocales = Array.from(
-    new Set([snapshotData.snapshot.baseLocale, ...snapshotData.snapshot.accountLocales]),
-  );
+  const activeLocales = base.desiredLocales;
   const requestedLocale = normalizeLocaleToken(args.locale);
-  const selectedLocale =
+  const inspectionLocale =
     requestedLocale && activeLocales.includes(requestedLocale)
       ? requestedLocale
-      : snapshotData.snapshot.baseLocale;
-  const overlay =
-    snapshotData.snapshot.localeOverlays.find((entry) => entry.locale === selectedLocale) ?? null;
-  const textPack = buildLocalizedTextPack({
-    baseLocale: snapshotData.snapshot.baseLocale,
-    locale: selectedLocale,
-    basePack: base.baseTextPack,
-    baseOps: overlay?.baseOps ?? [],
-    userOps: overlay?.userOps ?? [],
-  });
+      : base.policy.baseLocale;
+  const localeStatusByLocale = new Map(
+    statusData.locales.map((entry) => [entry.locale, entry.status] as const),
+  );
+  const localeBehavior = normalizeWidgetLocaleSwitcherSettings(base.saved.config.localeSwitcher);
 
   return {
     publicId: args.publicId,
-    widgetType: snapshotData.widgetType,
-    baseLocale: snapshotData.snapshot.baseLocale,
+    widgetType: base.saved.widgetType,
+    baseLocale: base.policy.baseLocale,
     activeLocales,
-    selectedLocale,
-    statuses: activeLocales.map((locale) => {
-      if (locale === snapshotData.snapshot.baseLocale) {
-        return { locale, status: 'base' as const };
+    inspectionLocale,
+    localeStatuses: activeLocales.map((locale) => {
+      if (locale === base.policy.baseLocale) {
+        return { locale, ok: true };
       }
-      const status = statusData.locales.find((entry) => entry.locale === locale) ?? null;
       return {
         locale,
-        status: status?.status ?? 'dirty',
+        ok: localeStatusByLocale.get(locale) === 'succeeded',
       };
     }),
-    translatedOutput: Object.entries(textPack)
-      .map(([path, value]) => ({ path, value }))
-      .sort((a, b) => a.path.localeCompare(b.path)),
+    localeBehavior,
   };
 }
 

@@ -90,6 +90,8 @@ const ACCOUNT_LOCALES_REASON_COPY: Record<string, string> = {
   'coreui.errors.payload.invalidJson': 'The account language request was invalid. Please try again.',
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
   'coreui.errors.account.locales.invalid': 'Account language settings are invalid. Please review the inputs and try again.',
+  'coreui.errors.account.locales.baseLocaleLocked':
+    'Base language is locked after your first widget save. Changing it later requires support/migration.',
   'coreui.upsell.reason.capReached': 'Your current plan cannot enable more languages.',
 };
 
@@ -113,6 +115,7 @@ export function AccountLocaleSettingsCard(args: {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [baseLocaleLocked, setBaseLocaleLocked] = useState(false);
   const [draftBaseLocale, setDraftBaseLocale] = useState('en');
   const [draftAdditionalLocales, setDraftAdditionalLocales] = useState<string[]>([]);
   const policyProfile = useMemo(() => {
@@ -136,6 +139,7 @@ export function AccountLocaleSettingsCard(args: {
     try {
       const payload = await accountApi.fetchJson<{
         locales?: unknown;
+        baseLocaleLocked?: unknown;
         policy?: {
           baseLocale?: unknown;
           ip?: { countryToLocale?: unknown };
@@ -144,6 +148,7 @@ export function AccountLocaleSettingsCard(args: {
 
       const baseLocale = normalizeLocaleToken(payload.policy?.baseLocale) ?? 'en';
       const additionalLocales = normalizeAdditionalAccountLocales(payload.locales, baseLocale);
+      setBaseLocaleLocked(payload.baseLocaleLocked === true);
       setDraftBaseLocale(baseLocale);
       setDraftAdditionalLocales(additionalLocales);
       setSuccess(null);
@@ -167,10 +172,6 @@ export function AccountLocaleSettingsCard(args: {
         requestedLocales: draftAdditionalLocales,
       }),
     [baseLocale, draftAdditionalLocales, policyProfile],
-  );
-  const enabledLocales = useMemo(
-    () => [baseLocale, ...effectiveAdditionalLocales.filter((entry) => entry !== baseLocale)],
-    [baseLocale, effectiveAdditionalLocales],
   );
   const systemChosenLocale = useMemo(
     () => (usesSystemLocale ? resolveSystemChosenAdditionalLocale({ baseLocale }) : null),
@@ -242,6 +243,9 @@ export function AccountLocaleSettingsCard(args: {
     <section className="rd-canvas-module">
       <h2 className="heading-6">Languages</h2>
       <p className="body-m">These account languages drive automatic translation after Save for every widget in this account.</p>
+      <p className="body-s">
+        Base language is the source language for translation overlays. It can be changed only before the first widget save in this account. After authoring starts, changing it becomes a support/migration operation.
+      </p>
       {!args.canEdit ? <p className="body-s">Read-only mode: language settings are disabled.</p> : null}
       {error ? <p className="body-m">{error}</p> : null}
       {success ? <p className="body-s">{success}</p> : null}
@@ -253,7 +257,7 @@ export function AccountLocaleSettingsCard(args: {
             id="roma-settings-base-locale"
             className="roma-select"
             value={baseLocale}
-            disabled={loading || saving || !args.canEdit}
+            disabled={loading || saving || !args.canEdit || baseLocaleLocked}
             onChange={(event) => {
               const nextBase = normalizeLocaleToken(event.target.value) ?? 'en';
               setDraftBaseLocale(nextBase);
@@ -266,6 +270,11 @@ export function AccountLocaleSettingsCard(args: {
               </option>
             ))}
           </select>
+          <span className="body-s">
+            {baseLocaleLocked
+              ? 'Base language is locked because this account already has saved widgets. Changing it later requires support/migration.'
+              : 'Choose the source language before the first widget save. After authoring starts, this setting locks.'}
+          </span>
         </label>
 
         <div className="roma-inline-stack">

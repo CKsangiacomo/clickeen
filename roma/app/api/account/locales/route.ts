@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseAccountL10nPolicyStrict, parseAccountLocaleListStrict } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
+import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
 import { materializeAccountAdditionalLocales } from '@roma/lib/account-locales';
 import { runAccountLocalesSync } from '@roma/lib/account-locales-sync';
 import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
@@ -28,61 +29,121 @@ function normalizeWarnings(value: unknown): string[] {
   );
 }
 
+async function loadCurrentAccountLocalesState(args: {
+  accessToken: string;
+  accountId: string;
+}): Promise<
+  | {
+      ok: true;
+      locales: string[];
+      policy: ReturnType<typeof parseAccountL10nPolicyStrict>;
+    }
+  | {
+      ok: false;
+      status: number;
+      payload: unknown;
+      detail?: string;
+    }
+> {
+  const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
+  const upstream = await fetch(
+    `${berlinBase}/v1/accounts/${encodeURIComponent(args.accountId)}`,
+    {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${args.accessToken}`,
+        accept: 'application/json',
+      },
+      cache: 'no-store',
+    },
+  );
+  const payload = (await upstream.json().catch(() => null)) as
+    | {
+        account?: {
+          l10nLocales?: unknown;
+          l10nPolicy?: unknown;
+        } | null;
+        error?: unknown;
+      }
+    | null;
+
+  if (!upstream.ok) {
+    return {
+      ok: false,
+      status: upstream.status,
+      payload,
+      detail: `berlin_account_http_${upstream.status}`,
+    };
+  }
+
+  return {
+    ok: true,
+    locales: parseAccountLocaleListStrict(payload?.account?.l10nLocales),
+    policy: parseAccountL10nPolicyStrict(payload?.account?.l10nPolicy),
+  };
+}
+
 export async function GET(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
   if (!current.ok) return current.response;
 
   try {
-    const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
-    const upstream = await fetch(
-      `${berlinBase}/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}`,
-      {
-        method: 'GET',
-        headers: {
-          authorization: `Bearer ${current.value.accessToken}`,
-          accept: 'application/json',
-        },
-        cache: 'no-store',
-      },
-    );
-    const payload = (await upstream.json().catch(() => null)) as
-      | {
-          account?: {
-            l10nLocales?: unknown;
-            l10nPolicy?: unknown;
-          } | null;
-          error?: unknown;
-        }
-      | null;
-
-    if (!upstream.ok) {
+    const accountState = await loadCurrentAccountLocalesState({
+      accessToken: current.value.accessToken,
+      accountId: current.value.authzPayload.accountId,
+    });
+    if (!accountState.ok) {
       return withSession(
         request,
         NextResponse.json(
-          payload ?? {
+          accountState.payload ?? {
             error: {
-              kind: upstream.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+              kind: accountState.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
               reasonKey:
-                upstream.status === 401
+                accountState.status === 401
                   ? 'coreui.errors.auth.required'
                   : 'coreui.errors.auth.contextUnavailable',
             },
           },
-          { status: upstream.status },
+          { status: accountState.status },
         ),
         current.value.setCookies,
       );
     }
 
-    const locales = parseAccountLocaleListStrict(payload?.account?.l10nLocales);
-    const policy = parseAccountL10nPolicyStrict(payload?.account?.l10nPolicy);
+    const baseLocaleLock = await loadAccountBaseLocaleLockState({
+      accountId: current.value.authzPayload.accountId,
+      berlinAccessToken: current.value.accessToken,
+      tokyoAccessToken: current.value.accessToken,
+      accountCapsule: current.value.authzToken,
+    });
+    if (!baseLocaleLock.ok) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: baseLocaleLock.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+              reasonKey:
+                baseLocaleLock.status === 401
+                  ? 'coreui.errors.auth.required'
+                  : 'coreui.errors.auth.contextUnavailable',
+              detail: baseLocaleLock.detail,
+            },
+          },
+          { status: baseLocaleLock.status },
+        ),
+        current.value.setCookies,
+      );
+    }
 
     return withSession(
       request,
       NextResponse.json({
         accountId: current.value.authzPayload.accountId,
-        locales,
-        policy,
+        locales: accountState.locales,
+        policy: accountState.policy,
+        baseLocaleLocked: baseLocaleLock.locked,
       }),
       current.value.setCookies,
     );
@@ -144,6 +205,70 @@ export async function PUT(request: NextRequest) {
         request,
         NextResponse.json(
           { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+          { status: 422 },
+        ),
+        current.value.setCookies,
+      );
+    }
+
+    const accountState = await loadCurrentAccountLocalesState({
+      accessToken: current.value.accessToken,
+      accountId: current.value.authzPayload.accountId,
+    });
+    if (!accountState.ok) {
+      return withSession(
+        request,
+        NextResponse.json(
+          accountState.payload ?? {
+            error: {
+              kind: accountState.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+              reasonKey:
+                accountState.status === 401
+                  ? 'coreui.errors.auth.required'
+                  : 'coreui.errors.auth.contextUnavailable',
+            },
+          },
+          { status: accountState.status },
+        ),
+        current.value.setCookies,
+      );
+    }
+
+    const baseLocaleLock = await loadAccountBaseLocaleLockState({
+      accountId: current.value.authzPayload.accountId,
+      berlinAccessToken: current.value.accessToken,
+      tokyoAccessToken: current.value.accessToken,
+      accountCapsule: current.value.authzToken,
+    });
+    if (!baseLocaleLock.ok) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: baseLocaleLock.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+              reasonKey:
+                baseLocaleLock.status === 401
+                  ? 'coreui.errors.auth.required'
+                  : 'coreui.errors.auth.contextUnavailable',
+              detail: baseLocaleLock.detail,
+            },
+          },
+          { status: baseLocaleLock.status },
+        ),
+        current.value.setCookies,
+      );
+    }
+    if (baseLocaleLock.locked && baseLocale !== accountState.policy.baseLocale) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: 'coreui.errors.account.locales.baseLocaleLocked',
+            },
+          },
           { status: 422 },
         ),
         current.value.setCookies,

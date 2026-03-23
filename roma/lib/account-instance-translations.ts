@@ -1,3 +1,4 @@
+import type { WidgetLocaleSwitcherSettings } from '@clickeen/ck-contracts';
 import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
@@ -8,12 +9,12 @@ export type AccountTranslationsPanelPayload = {
   widgetType: string;
   baseLocale: string;
   activeLocales: string[];
-  selectedLocale: string;
-  statuses: Array<{
+  inspectionLocale: string;
+  localeStatuses: Array<{
     locale: string;
-    status: 'base' | 'dirty' | 'succeeded' | 'superseded';
+    ok: boolean;
   }>;
-  translatedOutput: Array<{ path: string; value: string }>;
+  localeBehavior: WidgetLocaleSwitcherSettings;
 };
 
 type RouteFailure = {
@@ -36,6 +37,23 @@ function asTrimmedString(value: unknown): string | null {
   return normalized || null;
 }
 
+function isLocaleSwitcherAttachTo(value: unknown): value is WidgetLocaleSwitcherSettings['attachTo'] {
+  return value === 'pod' || value === 'stage';
+}
+
+function isLocaleSwitcherPosition(value: unknown): value is WidgetLocaleSwitcherSettings['position'] {
+  return (
+    value === 'top-left' ||
+    value === 'top-center' ||
+    value === 'top-right' ||
+    value === 'right-middle' ||
+    value === 'bottom-right' ||
+    value === 'bottom-center' ||
+    value === 'bottom-left' ||
+    value === 'left-middle'
+  );
+}
+
 function resolveTokyoControlErrorDetail(payload: unknown, fallback: string): string {
   if (isRecord(payload) && isRecord(payload.error)) {
     const reasonKey = asTrimmedString(payload.error.reasonKey);
@@ -51,48 +69,57 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
   const publicId = asTrimmedString(raw.publicId);
   const widgetType = asTrimmedString(raw.widgetType);
   const baseLocale = asTrimmedString(raw.baseLocale);
-  const selectedLocale = asTrimmedString(raw.selectedLocale);
+  const inspectionLocale = asTrimmedString(raw.inspectionLocale);
   const activeLocales = Array.isArray(raw.activeLocales)
     ? raw.activeLocales
         .map((entry) => asTrimmedString(entry))
         .filter((entry): entry is string => Boolean(entry))
     : [];
-  const statuses = Array.isArray(raw.statuses)
-    ? raw.statuses.reduce<AccountTranslationsPanelPayload['statuses']>((entries, entry) => {
+  const localeStatuses = Array.isArray(raw.localeStatuses)
+    ? raw.localeStatuses.reduce<AccountTranslationsPanelPayload['localeStatuses']>((entries, entry) => {
         if (!isRecord(entry)) return entries;
         const locale = asTrimmedString(entry.locale);
-        const status =
-          entry.status === 'base' ||
-          entry.status === 'dirty' ||
-          entry.status === 'succeeded' ||
-          entry.status === 'superseded'
-            ? entry.status
-            : null;
-        if (!locale || !status) return entries;
-        entries.push({ locale, status });
+        if (!locale || typeof entry.ok !== 'boolean') return entries;
+        entries.push({ locale, ok: entry.ok });
         return entries;
       }, [])
     : [];
-  const translatedOutput = Array.isArray(raw.translatedOutput)
-    ? raw.translatedOutput.reduce<AccountTranslationsPanelPayload['translatedOutput']>((entries, entry) => {
-        if (!isRecord(entry)) return entries;
-        const path = asTrimmedString(entry.path);
-        const value = typeof entry.value === 'string' ? entry.value : null;
-        if (!path || value === null) return entries;
-        entries.push({ path, value });
-        return entries;
-      }, [])
-    : [];
+  const localeBehavior = isRecord(raw.localeBehavior)
+    && typeof raw.localeBehavior.enabled === 'boolean'
+    && typeof raw.localeBehavior.byIp === 'boolean'
+    && (raw.localeBehavior.alwaysShowLocale === null || typeof raw.localeBehavior.alwaysShowLocale === 'string')
+    && isLocaleSwitcherAttachTo(raw.localeBehavior.attachTo)
+    && isLocaleSwitcherPosition(raw.localeBehavior.position)
+      ? {
+          enabled: raw.localeBehavior.enabled,
+          byIp: raw.localeBehavior.byIp,
+          alwaysShowLocale:
+            raw.localeBehavior.alwaysShowLocale === null
+              ? null
+              : raw.localeBehavior.alwaysShowLocale,
+          attachTo: raw.localeBehavior.attachTo,
+          position: raw.localeBehavior.position,
+        }
+      : null;
 
-  if (!publicId || !widgetType || !baseLocale || !selectedLocale) return null;
+  if (!publicId || !widgetType || !baseLocale || !inspectionLocale || !localeBehavior) return null;
+  if (!activeLocales.includes(baseLocale) || !activeLocales.includes(inspectionLocale)) return null;
+  if (localeStatuses.length !== activeLocales.length) return null;
+  const activeLocaleSet = new Set(activeLocales);
+  const localeStatusSet = new Set(localeStatuses.map((entry) => entry.locale));
+  if (localeStatusSet.size !== activeLocales.length) return null;
+  for (const locale of activeLocaleSet) {
+    if (!localeStatusSet.has(locale)) return null;
+  }
+
   return {
     publicId,
     widgetType,
     baseLocale,
     activeLocales,
-    selectedLocale,
-    statuses,
-    translatedOutput,
+    inspectionLocale,
+    localeStatuses,
+    localeBehavior,
   };
 }
 

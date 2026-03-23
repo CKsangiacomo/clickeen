@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { classifyWidgetPublicId, isUuid } from '@clickeen/ck-contracts';
 import {
   deleteLiveSurfaceFromTokyo,
   deleteSavedConfigFromTokyo,
   saveAccountInstanceDirect,
 } from '@roma/lib/account-instance-direct';
+import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { deleteAccountInstanceRow, getAccountInstanceCoreRow } from '@roma/lib/michael';
 import {
@@ -181,6 +182,23 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+
+  after(async () => {
+    try {
+      await runAccountInstanceSync({
+        accessToken: current.value.accessToken,
+        accountId,
+        publicId,
+        accountCapsule: current.value.authzToken,
+        live: false,
+      });
+    } catch (error) {
+      console.error('[roma account instance route] tokyo instance sync failed after save', {
+        publicId,
+        detail: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
 
   return withSession(
     request,

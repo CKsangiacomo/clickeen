@@ -276,8 +276,11 @@ We use ops overlays because they scale cleanly:
 
 **Base language note (current architecture):**
 
-- The base config may be authored in **any** language (ConversationLanguage in Minibob).
-- Overlays are generated from whatever base language is stored; no English‑only assumption.
+- The base config may be authored in **any** language.
+- The account base locale is the source language for translation bases.
+- That base locale must be chosen before the first widget save in the account.
+- After the first widget save, base locale is locked in product UI; later changes are support/migration work, not a normal settings toggle.
+- Overlays are generated from whatever base language is stored; no English-only assumption.
 
 ## Default locale (Phase 1)
 

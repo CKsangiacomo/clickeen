@@ -20,14 +20,18 @@ export type WidgetDocumentSessionValue = {
   error: SessionState['error'];
   accountAssets: AccountAssetsClient;
   apiFetch: ReturnType<typeof useSessionTransport>['fetchApi'];
-  loadTranslations: ReturnType<typeof useSessionTransport>['loadTranslations'];
   applyOps: ReturnType<typeof useSessionEditing>['applyOps'];
   save: ReturnType<typeof useSessionSaving>['save'];
   setInstanceLabel: ReturnType<typeof useSessionEditing>['setInstanceLabel'];
   loadInstance: ReturnType<typeof useSessionBoot>['loadInstance'];
 };
 
+type WidgetSessionTransportValue = {
+  loadTranslations: ReturnType<typeof useSessionTransport>['loadTranslations'];
+};
+
 const WidgetDocumentSessionContext = createContext<WidgetDocumentSessionValue | null>(null);
+const WidgetSessionTransportContext = createContext<WidgetSessionTransportValue | null>(null);
 
 export function WidgetDocumentSessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SessionState>(() => createInitialSessionState());
@@ -58,6 +62,12 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     executeAccountCommand: transport.executeAccountCommand,
   });
   const accountAssets = useMemo(() => createAccountAssetsClient(transport.accountAssets), [transport.accountAssets]);
+  const transportValue = useMemo<WidgetSessionTransportValue>(
+    () => ({
+      loadTranslations: transport.loadTranslations,
+    }),
+    [transport.loadTranslations],
+  );
 
   const value = useMemo<WidgetDocumentSessionValue>(
     () => ({
@@ -68,7 +78,6 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       error: state.error,
       accountAssets,
       apiFetch: transport.fetchApi,
-      loadTranslations: transport.loadTranslations,
       applyOps: editing.applyOps,
       save: saving.save,
       setInstanceLabel: editing.setInstanceLabel,
@@ -82,17 +91,28 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       saving.save,
       state,
       transport.fetchApi,
-      transport.loadTranslations,
     ],
   );
 
-  return <WidgetDocumentSessionContext.Provider value={value}>{children}</WidgetDocumentSessionContext.Provider>;
+  return (
+    <WidgetSessionTransportContext.Provider value={transportValue}>
+      <WidgetDocumentSessionContext.Provider value={value}>{children}</WidgetDocumentSessionContext.Provider>
+    </WidgetSessionTransportContext.Provider>
+  );
 }
 
 export function useWidgetSession() {
   const context = useContext(WidgetDocumentSessionContext);
   if (!context) {
     throw new Error('useWidgetSession must be used within WidgetSessionProvider');
+  }
+  return context;
+}
+
+export function useWidgetSessionTransport() {
+  const context = useContext(WidgetSessionTransportContext);
+  if (!context) {
+    throw new Error('useWidgetSessionTransport must be used within WidgetSessionProvider');
   }
   return context;
 }
