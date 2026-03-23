@@ -7,13 +7,13 @@ import { EmbedModal } from './EmbedModal';
 export function TopDrawer() {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const { save, isSaving } = session;
+  const { save, isSaving, isDirty } = session;
   const [embedOpen, setEmbedOpen] = useState(false);
 
   const meta = chrome.meta;
   const currentPublicId = typeof meta?.publicId === 'string' ? meta.publicId : '';
   const hasInstance = Boolean(currentPublicId);
-  const canPersist = hasInstance;
+  const canPersist = hasInstance && isDirty;
   const currentLabel = useMemo(
     () => (typeof meta?.label === 'string' ? meta.label.trim() : ''),
     [meta?.label]

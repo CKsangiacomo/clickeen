@@ -9,6 +9,7 @@ import {
   type EditorOpenMessage,
   type SessionMeta,
   type SessionState,
+  serializeInstanceDataSignature,
 } from './sessionTypes';
 
 export function useSessionBoot(args: {
@@ -40,6 +41,7 @@ export function useSessionBoot(args: {
           };
         }
         const resolved = structuredClone(rawInstanceData as Record<string, unknown>);
+        const savedInstanceDataSignature = serializeInstanceDataSignature(resolved);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
 
         if (!nextLabel) {
@@ -59,6 +61,8 @@ export function useSessionBoot(args: {
           ...prev,
           compiled,
           instanceData: resolved,
+          savedInstanceDataSignature,
+          isDirty: false,
           error: null,
           lastUpdate: {
             source: 'load',
@@ -82,6 +86,8 @@ export function useSessionBoot(args: {
           ...prev,
           compiled: null,
           instanceData: {},
+          savedInstanceDataSignature: serializeInstanceDataSignature({}),
+          isDirty: false,
           error: { source: 'load', message: messageText },
         }));
         return { ok: false, error: messageText };

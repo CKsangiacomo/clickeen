@@ -3,7 +3,7 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../ops';
 import { applyWidgetOps } from '../ops';
-import { type SessionMeta, type SessionState } from './sessionTypes';
+import { serializeInstanceDataSignature, type SessionMeta, type SessionState } from './sessionTypes';
 
 export function useSessionEditing(args: {
   state: SessionState;
@@ -35,6 +35,7 @@ export function useSessionEditing(args: {
       args.setState((prev) => ({
         ...prev,
         instanceData: applied.data,
+        isDirty: serializeInstanceDataSignature(applied.data) !== prev.savedInstanceDataSignature,
         error: null,
         lastUpdate: {
           source: 'ops',

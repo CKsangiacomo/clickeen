@@ -23,6 +23,8 @@ export type PreviewSettings = {
 export type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
+  savedInstanceDataSignature: string;
+  isDirty: boolean;
   isSaving: boolean;
   lastUpdate: UpdateMeta | null;
   error: SessionError | null;
@@ -108,10 +110,20 @@ export const DEFAULT_PREVIEW: PreviewSettings = {
   host: 'canvas',
 };
 
+export function serializeInstanceDataSignature(value: Record<string, unknown>): string {
+  try {
+    return JSON.stringify(value ?? {});
+  } catch {
+    return '{}';
+  }
+}
+
 export function createInitialSessionState(): SessionState {
   return {
     compiled: null,
     instanceData: {},
+    savedInstanceDataSignature: serializeInstanceDataSignature({}),
+    isDirty: false,
     isSaving: false,
     lastUpdate: null,
     error: null,

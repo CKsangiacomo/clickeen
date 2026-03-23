@@ -72,9 +72,19 @@ export function useTdMenuBindings(args: {
       const detail = (event as any).detail;
       if (detail?.bobIgnore === true) return;
 
-      const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+      const target = event.target;
       if (!target) return;
+      if (!(target instanceof HTMLElement)) return;
       if (target.closest('.diet-popaddlink')) return;
+      if (
+        !(
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement
+        )
+      ) {
+        return;
+      }
       const path = resolvePathFromTarget(target);
       if (!path) return;
 

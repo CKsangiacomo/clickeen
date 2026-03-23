@@ -1,7 +1,12 @@
 'use client';
 
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
-import type { SessionMeta, SessionState, SessionUpsell } from './sessionTypes';
+import {
+  serializeInstanceDataSignature,
+  type SessionMeta,
+  type SessionState,
+  type SessionUpsell,
+} from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
 
 export function useSessionSaving(args: {
@@ -29,6 +34,9 @@ export function useSessionSaving(args: {
         ...prev,
         error: { source: 'save', message: 'Missing widget type for save.' },
       }));
+      return;
+    }
+    if (!snapshot.isDirty) {
       return;
     }
 
@@ -65,8 +73,11 @@ export function useSessionSaving(args: {
       }
 
       const current = args.stateRef.current;
+      const savedInstanceDataSignature = serializeInstanceDataSignature(current.instanceData);
       const nextState: SessionState = {
         ...current,
+        savedInstanceDataSignature,
+        isDirty: false,
         isSaving: false,
         error: null,
       };
