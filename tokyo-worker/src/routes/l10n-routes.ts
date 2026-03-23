@@ -99,7 +99,7 @@ export async function tryHandleInternalL10nRoutes(
   }
 
   const l10nBaseSnapshotMatch = pathname.match(
-    /^\/l10n\/instances\/([^/]+)\/bases\/([^/]+)$/,
+    /^\/l10n\/instances\/([^/]+)\/bases\/([a-f0-9]{64})$/,
   );
   if (l10nBaseSnapshotMatch) {
     if (req.method !== 'POST') return respondMethodNotAllowed(respond);

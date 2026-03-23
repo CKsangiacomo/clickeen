@@ -2,6 +2,7 @@ import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
 } from './tokyo-product-control';
+import { formatCuratedDisplayName } from './michael-shared';
 
 // Roma's direct instance path is the server boundary for one boring product flow: open the saved document from Tokyo and save it back.
 
@@ -63,6 +64,18 @@ function resolveTokyoControlErrorDetail(
     if (detail) return detail;
   }
   return fallback;
+}
+
+function resolveSavedInstanceDisplayName(args: {
+  publicId: string;
+  source?: 'account' | 'curated';
+  displayName: unknown;
+  meta: unknown;
+}): string | null {
+  if (args.source === 'curated') {
+    return formatCuratedDisplayName(args.meta, args.publicId);
+  }
+  return asTrimmedString(args.displayName);
 }
 
 async function loadSavedInstanceFromTokyo(args: {
@@ -162,7 +175,12 @@ async function loadSavedInstanceFromTokyo(args: {
     value: {
       row: {
         publicId: saved.publicId,
-        displayName: asTrimmedString(saved.displayName),
+        displayName: resolveSavedInstanceDisplayName({
+          publicId: saved.publicId,
+          source,
+          displayName: saved.displayName,
+          meta: saved.meta,
+        }),
         updatedAt: asTrimmedString(saved.updatedAt),
         accountId: saved.accountId,
         widgetType: saved.widgetType,

@@ -65,6 +65,19 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  const publicIdKind = classifyWidgetPublicId(publicId);
+  if (!publicIdKind) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const authoritativeSource: 'account' | 'curated' =
+    publicIdKind === 'main' || publicIdKind === 'curated' ? 'curated' : 'account';
 
   let body:
     | {
@@ -126,6 +139,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
   if (source !== undefined && source !== 'account' && source !== 'curated') {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (source !== undefined && source !== authoritativeSource) {
     return withSession(
       request,
       NextResponse.json(
@@ -209,8 +232,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     publicId,
     widgetType,
     config,
-    displayName,
-    source,
+    displayName: authoritativeSource === 'curated' ? null : displayName,
+    source: authoritativeSource,
     meta,
     l10n: {
       summary: {
