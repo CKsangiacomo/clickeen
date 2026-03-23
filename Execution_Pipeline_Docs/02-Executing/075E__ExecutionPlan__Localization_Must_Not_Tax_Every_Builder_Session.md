@@ -45,6 +45,20 @@ If implementation starts naming extra subsystems, extra preview paths, or generi
 14. No fallback locale, best-available output, or heal-on-click behavior in Builder preview.
 15. Do not reopen session-core architecture unless a file in this write set makes it strictly necessary.
 16. If a phase is not green, do not move to the next phase.
+17. `readyLocales` is the only Builder/embed consumer locale set for this slice. Do not reintroduce `activeLocales` on the consumer path.
+18. If repo-level architecture docs still contradict `75E` at the end of execution, the slice is not done.
+
+### Discipline Checks
+
+These checks are here to stop implementation drift:
+
+- If code introduces a second preview surface, stop.
+- If code introduces server-owned selected-locale UI state, stop.
+- If code reintroduces `activeLocales` to Builder preview selection, stop.
+- If code adds any read-path healing or `ensure` behavior on Builder/embed consumer reads, stop.
+- If code makes the Translations panel render translated widget content itself, stop.
+- If code makes Bob responsible for translation truth instead of preview interaction, stop.
+- If code adds files outside the declared write set, justify them against product truth before proceeding.
 
 ---
 
@@ -78,6 +92,7 @@ These are the actual remaining problems in the current codebase:
 4. The shared locale switcher in `tokyo/widgets/shared/localeSwitcher.js` still self-navigates the iframe URL.
 5. `tokyo/widgets/shared/previewL10n.js` still treats missing locale artifacts as normal consumer control flow instead of as an invariant break.
 6. `loadAccountLocalizationBaseContext()` still calls `ensureSavedRenderL10nBase()` on the read path, which can write missing base snapshot state during a panel/status read instead of failing at the Tokyo/Tokyo-worker boundary.
+7. Repo-level architecture docs still describe older locale behavior and best-available overlays, which will confuse implementation if left unresolved.
 
 ---
 
@@ -558,6 +573,10 @@ rg -n "inspectionLocale|localeStatuses|localeBehavior|activeLocales" \
   roma/lib/account-instance-translations.ts \
   tokyo-worker/src/domains/account-localization-state.ts \
   bob/components/TranslationsPanel.tsx
+
+rg -n "best-available|one active locale at a time|Switching locale changes the active editing context" \
+  documentation/architecture/CONTEXT.md \
+  documentation/architecture/Tenets.md
 ```
 
 ### Final Manual Product Scenarios

@@ -533,6 +533,7 @@
     }
     window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
       locale: runtimeContext && runtimeContext.locale,
+      previewMode: runtimeContext && runtimeContext.previewMode,
       typographyScope: countdownRoot,
     });
 
@@ -852,7 +853,7 @@
 
   let previewLocaleRequest = 0;
 
-  async function applyPreviewState(state, locale, publicId) {
+  async function applyPreviewState(state, locale, publicId, previewMode) {
     const requestId = ++previewLocaleRequest;
     const helper =
       window.CK_PREVIEW_L10N &&
@@ -868,7 +869,7 @@
         })
       : state;
     if (requestId !== previewLocaleRequest) return;
-    applyState(localizedState, { locale });
+    applyState(localizedState, { locale, previewMode });
     syncTimerScheduler(localizedState);
   }
 
@@ -877,7 +878,7 @@
     if (!data || typeof data !== 'object') return;
     if (data.type !== 'ck:state-update') return;
     if (data.widgetname !== 'countdown') return;
-    void applyPreviewState(data.state, data.locale, data.publicId);
+    void applyPreviewState(data.state, data.locale, data.publicId, data.previewMode);
   });
 
   const keyedPayload =

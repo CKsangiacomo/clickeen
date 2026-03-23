@@ -20,7 +20,6 @@ export type ExecuteAccountCommand = (
 
 export type LoadTranslationsArgs = {
   publicId: string;
-  locale?: string;
 };
 
 export type LoadTranslations = (
@@ -268,11 +267,9 @@ export function useSessionTransport(args: {
   const loadTranslations: LoadTranslations = useCallback(
     async (commandArgs: LoadTranslationsArgs) => {
       const publicId = String(commandArgs.publicId || '').trim();
-      const locale = String(commandArgs.locale || '').trim();
       const result = await dispatchHostAccountCommand({
         command: 'load-translations',
         publicId,
-        ...(locale ? { body: { locale } } : {}),
       });
       return { ok: result.ok, status: result.status, json: result.payload };
     },

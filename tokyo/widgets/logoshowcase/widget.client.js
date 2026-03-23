@@ -770,6 +770,7 @@
     }
     window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
       locale: runtimeContext && runtimeContext.locale,
+      previewMode: runtimeContext && runtimeContext.previewMode,
       typographyScope: lsRoot,
     });
 
@@ -789,7 +790,7 @@
 
   let previewLocaleRequest = 0;
 
-  async function applyPreviewState(state, locale, publicId) {
+  async function applyPreviewState(state, locale, publicId, previewMode) {
     const requestId = ++previewLocaleRequest;
     const helper =
       window.CK_PREVIEW_L10N &&
@@ -805,7 +806,7 @@
         })
       : state;
     if (requestId !== previewLocaleRequest) return;
-    applyState(localizedState, { locale });
+    applyState(localizedState, { locale, previewMode });
   }
 
   window.addEventListener('message', (event) => {
@@ -813,7 +814,7 @@
     if (!msg || msg.type !== 'ck:state-update') return;
     if (msg.widgetname && msg.widgetname !== 'logoshowcase') return;
     if (resolvedPublicId && msg.publicId && msg.publicId !== resolvedPublicId) return;
-    void applyPreviewState(msg.state, msg.locale, msg.publicId);
+    void applyPreviewState(msg.state, msg.locale, msg.publicId, msg.previewMode);
   });
 
   const keyedPayload =

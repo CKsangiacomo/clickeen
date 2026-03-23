@@ -2,7 +2,7 @@
 
 This is the technical reference for working in the Clickeen codebase. For strategy and vision, see `documentation/strategy/WhyClickeen.md`.
 
-**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, ad‑hoc fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. (Exception: **best‑available localization overlays** are an explicit core contract; missing latest overlays must not break runtime.) Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/widgets/*`), defaults (`spec.json` → `defaults`), and curated local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high‑impact changes, still use safety rails (feature flags, rollback switches, and data‑safety checks) when a change can affect runtime behavior.
+**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, ad‑hoc fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Locale overlays are exposed only when current for the active base fingerprint; missing current overlays are system failures, not something runtime consumers soften or hide. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/widgets/*`), defaults (`spec.json` → `defaults`), and curated local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high‑impact changes, still use safety rails (feature flags, rollback switches, and data‑safety checks) when a change can affect runtime behavior.
 
 **Debugging order (when something is unclear):**
 
@@ -33,7 +33,7 @@ Non-negotiable negative truths:
 
 - Builder is the only real authoring surface.
 - Minibob is a demo/funnel surface. It may preview, collect intent, and hand off to signup. It is **not** a user, account, editor identity, policy profile, or save-capable product mode.
-- Editing always happens in **one active locale at a time**. Switching locale changes the active editing context only. Translation is async follow-up work after save.
+- Builder authoring happens on one widget in the account `baseLocale`. Translation is async follow-up work after save. Locale overlay preview is read-only inspection enabled only from the Translations panel.
 - Preview must reflect the same widget the customer is editing. Preview is **not** a second widget-shaped truth.
 - Invalid state must fail at the named boundary. Do not silently heal product truth into a new normal.
 - Non-account/helper/demo flows may exist in code while being reduced, but they do **not** define account authoring truth.
@@ -123,7 +123,7 @@ Between open and save:
 - Core account instance open does not require Paris
 - Core account instance persistence does not proxy Paris
 - ZERO database writes for base config during normal product open/save
-- Base config is not required to be English; Builder always edits one active locale at a time, and translation to other locales is async follow-up work after save.
+- Base config is not required to be English; Builder authors the account `baseLocale`, and translation to other locales is async follow-up work after save while overlay preview remains read-only inspection.
 - No demo/non-account surface writes durable account widget truth.
 
 **Why:** 10,000 users editing simultaneously = no server load for base config. Localization writes are scoped overlays, enabling async translation while preserving user edits. Millions of landing page visitors = zero DB pollution until signup + publish.

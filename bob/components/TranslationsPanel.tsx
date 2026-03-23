@@ -7,11 +7,16 @@ import {
   resolveLocaleLabel as resolveCanonicalLocaleLabel,
 } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
-import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
+import {
+  useWidgetSession,
+  useWidgetSessionChrome,
+  useWidgetSessionTransport,
+} from '../lib/session/useWidgetSession';
 
 type TranslationsPanelData = {
   baseLocale: string;
-  activeLocales: string[];
+  readyLocales: string[];
+  translationOk: boolean;
 };
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
@@ -33,21 +38,23 @@ function normalizePanelData(payload: unknown): TranslationsPanelData | null {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
   const record = payload as Record<string, unknown>;
   const baseLocale = typeof record.baseLocale === 'string' ? record.baseLocale.trim() : '';
-  const activeLocales = Array.isArray(record.activeLocales)
+  const readyLocales = Array.isArray(record.readyLocales)
     ? Array.from(
         new Set(
-          record.activeLocales
+          record.readyLocales
             .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
             .filter(Boolean),
         ),
       )
     : [];
+  const translationOk = typeof record.translationOk === 'boolean' ? record.translationOk : null;
 
-  if (!baseLocale) return null;
-  if (!activeLocales.includes(baseLocale)) activeLocales.unshift(baseLocale);
+  if (!baseLocale || translationOk === null) return null;
+  if (!readyLocales.includes(baseLocale)) readyLocales.unshift(baseLocale);
   return {
     baseLocale,
-    activeLocales,
+    readyLocales,
+    translationOk,
   };
 }
 
@@ -86,16 +93,17 @@ function SelectField({
 }
 
 export function TranslationsPanel({
-  previewLocale,
-  onPreviewLocaleChange,
+  overlayPreviewLocale,
+  onOverlayPreviewLocaleChange,
 }: {
-  previewLocale: string;
-  onPreviewLocaleChange: (locale: string) => void;
+  overlayPreviewLocale: string;
+  onOverlayPreviewLocaleChange: (locale: string) => void;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const loadTranslations = session.loadTranslations;
+  const { loadTranslations } = useWidgetSessionTransport();
   const publicId = chrome.meta?.publicId ?? '';
+  const bootBaseLocale = chrome.meta?.baseLocale ?? '';
   const [data, setData] = useState<TranslationsPanelData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,27 +143,41 @@ export function TranslationsPanel({
   }, [loadTranslations, publicId]);
 
   const localeOptions = useMemo(() => {
-    const locales = data?.activeLocales ?? [];
+    const locales = data?.readyLocales ?? [];
     return locales.map((locale) => ({
       value: locale,
       label: resolveLocaleLabel(locale),
     }));
-  }, [data?.activeLocales]);
+  }, [data?.readyLocales]);
+
+  const resolvedBaseLocale = bootBaseLocale || data?.baseLocale || '';
 
   const localeValue =
-    previewLocale && localeOptions.some((option) => option.value === previewLocale)
-      ? previewLocale
-      : data?.baseLocale || localeOptions[0]?.value || '';
+    overlayPreviewLocale && localeOptions.some((option) => option.value === overlayPreviewLocale)
+      ? overlayPreviewLocale
+      : resolvedBaseLocale || localeOptions[0]?.value || '';
 
   useEffect(() => {
     if (!localeOptions.length) {
-      if (previewLocale) onPreviewLocaleChange('');
+      if (overlayPreviewLocale) onOverlayPreviewLocaleChange('');
       return;
     }
-    if (previewLocale && localeOptions.some((option) => option.value === previewLocale)) return;
-    const nextLocale = data?.baseLocale || localeOptions[0]?.value || '';
-    if (nextLocale && nextLocale !== previewLocale) onPreviewLocaleChange(nextLocale);
-  }, [data?.baseLocale, localeOptions, onPreviewLocaleChange, previewLocale]);
+    if (
+      overlayPreviewLocale &&
+      localeOptions.some((option) => option.value === overlayPreviewLocale)
+    ) {
+      return;
+    }
+    const nextLocale = resolvedBaseLocale || localeOptions[0]?.value || '';
+    if (nextLocale && nextLocale !== overlayPreviewLocale) {
+      onOverlayPreviewLocaleChange(nextLocale);
+    }
+  }, [
+    resolvedBaseLocale,
+    localeOptions,
+    onOverlayPreviewLocaleChange,
+    overlayPreviewLocale,
+  ]);
 
   const selectOptions =
     localeOptions.length > 0
@@ -170,6 +192,20 @@ export function TranslationsPanel({
                 : 'No locales available yet',
           },
         ];
+  const translationStatusTitle = loading
+    ? 'Checking translations'
+    : error
+      ? 'Translations unavailable'
+      : data?.translationOk
+        ? 'Translations are ok'
+        : 'Translations are updating';
+  const translationStatusBody = loading
+    ? 'Builder is loading current translation status.'
+    : error
+      ? error
+      : data?.translationOk
+        ? 'All selected locales are current for the latest saved widget state.'
+        : 'Only ready locales are previewable until background convergence finishes.';
 
   if (!session.compiled) {
     return (
@@ -184,14 +220,18 @@ export function TranslationsPanel({
     <div className="tdmenucontent">
       <div className="heading-3">Translations</div>
       <div className="tdmenucontent__fields">
+        <div className="tdmenucontent__cluster">
+          <div className="label-s label-muted">Translation status</div>
+          <div className="body-s">{translationStatusTitle}</div>
+          <div className="label-s label-muted">{translationStatusBody}</div>
+        </div>
         <SelectField
-          label="Locale"
+          label="Preview locale"
           value={localeValue}
-          onChange={onPreviewLocaleChange}
+          onChange={onOverlayPreviewLocaleChange}
           options={selectOptions}
           disabled={!selectOptions[0]?.value}
         />
-        {error ? <div className="settings-panel__error">{error}</div> : null}
       </div>
     </div>
   );

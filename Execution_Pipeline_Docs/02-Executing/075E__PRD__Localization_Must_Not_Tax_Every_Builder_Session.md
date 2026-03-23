@@ -79,6 +79,15 @@ It does not exist to teach the user about locale failures, fallback mechanics, o
 It does not own any translation logic.
 It only reads current translation status truth from Tokyo and lets the user choose a locale for the main preview.
 
+For product language and human reasoning, Bob is always the editor.
+The clean user-facing rule is:
+
+- Translations panel closed => overlay preview is disabled and preview is locked to `baseLocale`
+- Translations panel open => overlay preview is enabled on that same preview surface
+
+If implementation uses `previewMode` internally, that is only an implementation detail.
+It must not turn into product language that makes Bob sound like multiple products or multiple preview systems.
+
 Bob has one preview surface.
 That surface can be in exactly one of these states:
 
@@ -161,6 +170,25 @@ It should be executed as a small, explicit build:
 - one deletion of dead Bob localization residue that could tempt the implementation back into the old model
 
 If execution starts turning into “find old localization code and reshape it,” execution has already drifted.
+
+---
+
+## Implementation Guardrails
+
+These guardrails exist to keep execution disciplined.
+
+- Bob is always the editor.
+- Overlay preview is enabled only when the Translations panel is open.
+- Builder consumers use `readyLocales`, never `activeLocales`, for preview/runtime selection.
+- Save writes base widget truth only.
+- Translation, status, and runtime reads stay read-only.
+- Consumer paths do not `ensure`, backfill, or heal localization state.
+- The Translations panel owns no translation truth, no translated-content rendering, and no editing.
+- Builder preview and embed consume the same Tokyo-backed locale display truth.
+- If a locale is selectable in Builder or embed, its artifact exists and is current for the active base fingerprint.
+- Missing base/artifact state is a Tokyo/Tokyo-worker boundary failure, not a Builder/Roma coping workflow.
+- Product docs should describe this as “overlay preview disabled/enabled,” not “Bob has multiple modes.”
+- Contradictory repo-level architecture docs are execution drift and must be closed before this slice is called done.
 
 ---
 
@@ -368,6 +396,20 @@ After `75E`, the runtime story must be boring:
 - the main preview shows only current/ready locale output from Tokyo
 - leaving the Translations panel returns the preview to `baseLocale`
 
+### Authority Map
+
+| Concern | Surviving authority |
+| --- | --- |
+| Account locale activation | Roma Settings |
+| Account `baseLocale` | Roma Settings |
+| Base widget document | Tokyo |
+| Base snapshot + `baseFingerprint` | Tokyo/Tokyo-worker |
+| Current/ready locale truth | Tokyo/Tokyo-worker |
+| Translations panel read boundary | Roma |
+| Overlay preview enabled/disabled | Bob local UI state |
+| Overlay preview locale while Translations is open | Bob local UI state |
+| Translation generation | San Francisco via Tokyo/Tokyo-worker workflow |
+
 ---
 
 ## Clean Build Rules
@@ -410,6 +452,75 @@ If an implementation needs:
 - Bob-side translation merge/apply logic for the panel
 
 then it is the wrong implementation for `75E`.
+
+### Do Not Reintroduce These Shapes
+
+- `activeLocales` in the Bob-facing Translations contract
+- server-owned `inspectionLocale`
+- per-locale status rows in the panel UI
+- locale-switcher config controls in the Translations panel
+- Bob-side localization stores or overlay orchestration
+- preview fallback to base content for a selected translated locale
+- read-path `ensure` logic that writes missing localization base/artifact state
+- a second preview surface or second locale renderer
+
+---
+
+## Canonical User Journey
+
+This is the journey implementation must preserve.
+
+1. User writes FAQ content in `Content`.
+   User sees editable base content only.
+   System truth: Bob edits one widget draft; overlay preview is disabled.
+   Must not happen: translated preview while authoring.
+
+2. User clicks Save.
+   User sees normal save behavior.
+   System truth: Roma saves the widget to Tokyo; Tokyo/Tokyo-worker derive the base snapshot and `baseFingerprint`; translation convergence runs after save.
+   Must not happen: Bob entering translation-management state.
+
+3. User opens Settings and sees 2 locales selected out of 29.
+   User sees account locale policy.
+   System truth: Roma Settings owns active locales and account `baseLocale`.
+   Must not happen: widget-local locale truth overriding account policy.
+
+4. User selects 4 more locales and saves Settings.
+   User now has 6 active locales.
+   System truth: account locale policy changes; Tokyo/Tokyo-worker can converge those locales for saved widgets.
+   Must not happen: Builder becoming a locale-management control plane.
+
+5. User goes back to `Content`, changes text, and clicks Save.
+   User still sees editable base content.
+   System truth: a new saved widget state creates a new current base snapshot and `baseFingerprint`; only locales current for that fingerprint may be exposed.
+   Must not happen: stale locale artifacts remaining preview-selectable.
+
+6. User opens `Translations`.
+   User sees one translation-health answer and one locale dropdown on the same preview surface.
+   System truth: Bob enables overlay preview and makes one lazy Roma read for panel truth.
+   Must not happen: a second preview surface or panel-owned translated rendering.
+
+7. User chooses `DE`, then switches preview to `FR` from the in-widget locale switcher.
+   User sees the main preview change from `DE` to `FR`.
+   System truth: both controls mutate one Bob-local overlay preview locale and display only Tokyo-backed current/ready output.
+   Must not happen: iframe self-navigation, fallback, or divergent locale truth.
+
+8. User clicks back to `Content`.
+   User sees editable base content and preview snaps back to `baseLocale`.
+   System truth: overlay preview is disabled again; same preview surface remains.
+   Must not happen: translated preview lingering while authoring continues.
+
+---
+
+## Boundary Failures
+
+When something is wrong, it must fail at the named boundary.
+
+- Missing base snapshot for the current `baseFingerprint` => fail at Tokyo/Tokyo-worker read boundary.
+- Missing current locale artifact for a supposedly ready locale => fail at Tokyo/Tokyo-worker boundary.
+- Invalid Translations payload => fail in Roma validation.
+- Locale switcher click while Translations is closed => Bob blocks it with the exact product copy.
+- Request for a non-ready locale in Builder/embed => unsupported by contract; do not add consumer-side handling for it.
 
 ---
 
@@ -737,3 +848,4 @@ The real execution slice is:
 - there is no hidden parallel translation system fighting the main Builder flow
 - translation health remains system-owned and self-healing rather than becoming a customer workflow
 - dead Bob localization residue that would encourage the old model is removed
+- `documentation/architecture/CONTEXT.md` and `documentation/architecture/Tenets.md` no longer contradict `75E` on Builder locale behavior or no-fallback overlay truth

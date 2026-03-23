@@ -1,5 +1,4 @@
 import {
-  normalizeWidgetLocaleSwitcherSettings,
   normalizeLocalizationOps,
   parseAccountL10nPolicyStrict,
   parseAccountLocaleListStrict,
@@ -7,15 +6,14 @@ import {
   type AccountL10nPolicy,
   type AccountOverlayEntry,
   type LocalizationOp,
-  type WidgetLocaleSwitcherSettings,
 } from '@clickeen/ck-contracts';
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import { normalizeLocaleToken, type AllowlistEntry } from '@clickeen/l10n';
 import { json } from '../http';
 import type { Env } from '../types';
 import {
-  ensureSavedRenderL10nBase,
   l10nLivePointerKey,
+  loadSavedRenderL10nBase,
   readSavedRenderConfig,
   renderLivePointerKey,
   resolveTokyoPublicBaseUrl,
@@ -62,7 +60,6 @@ type AccountLocalizationBaseContext = {
   desiredLocales: string[];
   policy: AccountL10nPolicy;
   localizationAllowlist: AllowlistEntry[];
-  baseTextPack: Record<string, string>;
   baseFingerprint: string;
   saved: {
     config: Record<string, unknown>;
@@ -590,21 +587,25 @@ async function loadAccountLocalizationBaseContext(args: {
     }),
   ]);
 
-  const desiredLocales = Array.from(new Set([policy.baseLocale, ...accountLocales]));
-  const l10nBase = await ensureSavedRenderL10nBase({
+  const desiredLocales = normalizeReadyLocales({
+    baseLocale: policy.baseLocale,
+    locales: accountLocales,
+  });
+  const l10nBase = await loadSavedRenderL10nBase({
     env: args.env,
     publicId: args.publicId,
     widgetType: saved.widgetType,
-    config: saved.config,
-    existingBaseFingerprint: saved.pointer.l10n?.baseFingerprint ?? null,
+    baseFingerprint: saved.pointer.l10n?.baseFingerprint ?? null,
   });
+  if (!l10nBase) {
+    throw new Error('tokyo_saved_l10n_base_missing');
+  }
 
   return {
     accountLocales,
     desiredLocales,
     policy,
     localizationAllowlist: l10nBase.allowlist,
-    baseTextPack: l10nBase.snapshot,
     baseFingerprint: l10nBase.baseFingerprint,
     saved,
   };
@@ -710,18 +711,12 @@ export async function loadAccountTranslationsPanelData(args: {
   accessToken: string;
   accountId: string;
   publicId: string;
-  locale?: string | null;
 }): Promise<{
   publicId: string;
   widgetType: string;
   baseLocale: string;
-  activeLocales: string[];
-  inspectionLocale: string;
-  localeStatuses: Array<{
-    locale: string;
-    ok: boolean;
-  }>;
-  localeBehavior: WidgetLocaleSwitcherSettings;
+  readyLocales: string[];
+  translationOk: boolean;
 }> {
   const base = await loadAccountLocalizationBaseContext({
     env: args.env,
@@ -729,39 +724,21 @@ export async function loadAccountTranslationsPanelData(args: {
     accountId: args.accountId,
     publicId: args.publicId,
   });
-  const statusData = await buildAccountL10nStatusFromBase({
+  const readyLocales = await loadTokyoCurrentArtifactReadyLocales({
     env: args.env,
     publicId: args.publicId,
-    base,
+    baseLocale: base.policy.baseLocale,
+    locales: base.desiredLocales,
+    baseFingerprint: base.baseFingerprint,
   });
-
-  const activeLocales = base.desiredLocales;
-  const requestedLocale = normalizeLocaleToken(args.locale);
-  const inspectionLocale =
-    requestedLocale && activeLocales.includes(requestedLocale)
-      ? requestedLocale
-      : base.policy.baseLocale;
-  const localeStatusByLocale = new Map(
-    statusData.locales.map((entry) => [entry.locale, entry.status] as const),
-  );
-  const localeBehavior = normalizeWidgetLocaleSwitcherSettings(base.saved.config.localeSwitcher);
+  const readyLocaleSet = new Set(readyLocales);
 
   return {
     publicId: args.publicId,
     widgetType: base.saved.widgetType,
     baseLocale: base.policy.baseLocale,
-    activeLocales,
-    inspectionLocale,
-    localeStatuses: activeLocales.map((locale) => {
-      if (locale === base.policy.baseLocale) {
-        return { locale, ok: true };
-      }
-      return {
-        locale,
-        ok: localeStatusByLocale.get(locale) === 'succeeded',
-      };
-    }),
-    localeBehavior,
+    readyLocales: base.desiredLocales.filter((locale) => readyLocaleSet.has(locale)),
+    translationOk: base.desiredLocales.every((locale) => readyLocaleSet.has(locale)),
   };
 }
 
@@ -779,13 +756,11 @@ export async function handleGetAccountTranslationsPanel(
     );
   }
 
-  const url = new URL(req.url);
   const result = await loadAccountTranslationsPanelData({
     env,
     accessToken,
     accountId,
     publicId,
-    locale: url.searchParams.get('locale'),
   });
   return json(result);
 }

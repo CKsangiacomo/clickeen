@@ -83,7 +83,7 @@ If any system along this path "corrects" or "defaults" the value, the user's int
 - The widget files define everything; orchestrators pass data through unchanged
 
 Note: request parameters (like `locale`) may have a deterministic default (Phase 1: `en`) when omitted. This is not identity and must not create DB fan-out.
-Note: localization overlays are **not** “fallbacks for config.” The base config is always complete and renderable; locale overlays are applied **best-available** (base/fresh/stale) and must never break runtime or lie about the rendered locale.
+Note: localization overlays are **not** “fallbacks for config.” The base config is always complete and renderable; locale overlays are exposed only when current for the active base fingerprint. Consumers must not silently substitute base, stale, or other locale output and must not lie about the rendered locale.
 
 ### Why No Fallbacks
 

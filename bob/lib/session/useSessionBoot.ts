@@ -17,14 +17,22 @@ export function useSessionBoot(args: {
   setPolicy: Dispatch<SetStateAction<Policy | null>>;
   hostOriginRef: MutableRefObject<string | null>;
 }) {
+  const { setState, setMeta, setPolicy, hostOriginRef } = args;
   const loadInstance = useCallback(
     async (
       message: EditorOpenMessage,
     ): Promise<{ ok: true; publicId?: string; widgetname?: string } | { ok: false; error: string }> => {
       try {
         const compiled = message.compiled;
+        const baseLocale = typeof message.baseLocale === 'string' ? message.baseLocale.trim() : '';
         let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
         const rawInstanceData = message.instanceData;
+        if (!baseLocale) {
+          return {
+            ok: false,
+            error: 'coreui.errors.builder.open.invalidRequest',
+          };
+        }
         if (!rawInstanceData || typeof rawInstanceData !== 'object' || Array.isArray(rawInstanceData)) {
           return {
             ok: false,
@@ -38,15 +46,16 @@ export function useSessionBoot(args: {
           nextLabel = String(message.publicId || '').trim() || 'Untitled widget';
         }
 
-        args.setPolicy(nextPolicy);
-        args.setMeta({
+        setPolicy(nextPolicy);
+        setMeta({
           publicId: message.publicId,
+          baseLocale,
           widgetname: compiled.widgetname,
           label: nextLabel,
           source: message.source,
           meta: message.meta ?? null,
         });
-        args.setState((prev) => ({
+        setState((prev) => ({
           ...prev,
           compiled,
           instanceData: resolved,
@@ -67,9 +76,9 @@ export function useSessionBoot(args: {
           console.error('[useWidgetSession] Failed to load instance', err, message);
         }
         const messageText = err instanceof Error ? err.message : String(err);
-        args.setPolicy(null);
-        args.setMeta(null);
-        args.setState((prev) => ({
+        setPolicy(null);
+        setMeta(null);
+        setState((prev) => ({
           ...prev,
           compiled: null,
           instanceData: {},
@@ -78,7 +87,7 @@ export function useSessionBoot(args: {
         return { ok: false, error: messageText };
       }
     },
-    [args.setMeta, args.setPolicy, args.setState],
+    [setMeta, setPolicy, setState],
   );
 
   useEffect(() => {
@@ -101,7 +110,7 @@ export function useSessionBoot(args: {
       if (data.type === 'ck:open-editor') {
         const requestId = typeof data.requestId === 'string' ? data.requestId.trim() : '';
         const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
-        args.hostOriginRef.current = targetOrigin === '*' ? args.hostOriginRef.current : targetOrigin;
+        hostOriginRef.current = targetOrigin === '*' ? hostOriginRef.current : targetOrigin;
         if (!requestId) {
           postToParent(
             {
@@ -155,8 +164,7 @@ export function useSessionBoot(args: {
     }
     return () => window.removeEventListener('message', handleMessage);
   }, [
-    args.hostOriginRef,
-    args.setState,
+    hostOriginRef,
     loadInstance,
   ]);
 

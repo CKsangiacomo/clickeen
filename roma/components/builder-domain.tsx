@@ -1,5 +1,6 @@
 'use client';
 
+import { parseAccountL10nPolicyStrict } from '@clickeen/ck-contracts';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -66,6 +67,7 @@ type BobOpenEditorMessage = {
   type: 'ck:open-editor';
   requestId: string;
   publicId: string;
+  baseLocale: string;
   label: string;
   widgetname: string;
   compiled: unknown;
@@ -162,18 +164,9 @@ function resolveBobAccountCommandRequest(args: {
         path: '/api/account/assets/upload',
       };
     case 'load-translations':
-      const locale =
-        args.body &&
-        typeof args.body === 'object' &&
-        !Array.isArray(args.body) &&
-        typeof (args.body as { locale?: unknown }).locale === 'string'
-          ? String((args.body as { locale?: unknown }).locale).trim()
-          : '';
       return {
         method: 'GET',
-        path: locale
-          ? `/api/account/instances/${encodeURIComponent(publicId)}/translations?locale=${encodeURIComponent(locale)}`
-          : `/api/account/instances/${encodeURIComponent(publicId)}/translations`,
+        path: `/api/account/instances/${encodeURIComponent(publicId)}/translations`,
       };
     case 'run-copilot':
       return {
@@ -471,9 +464,11 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
           : resolvedPublicId;
       const config = builderOpen.config as Record<string, unknown>;
       const policy = resolveAccountPolicyFromRomaAuthz(me.data, context.accountId);
+      const baseLocale = parseAccountL10nPolicyStrict(me.data?.activeAccount?.l10nPolicy).baseLocale;
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
         publicId: resolvedPublicId,
+        baseLocale,
         label,
         widgetname: widgetType,
         compiled,

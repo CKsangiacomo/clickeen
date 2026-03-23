@@ -70,18 +70,19 @@
   async function loadLocalizedState(args) {
     const publicId = typeof args?.publicId === 'string' ? args.publicId.trim() : '';
     const locale = normalizeLocale(args?.locale);
-    const baseState = args?.baseState;
-    if (!baseState || typeof baseState !== 'object') return baseState;
-    if (!publicId || !locale) return baseState;
+    const sourceState = args?.baseState;
+    if (!sourceState || typeof sourceState !== 'object') return sourceState;
+    if (!publicId || !locale) return sourceState;
 
     const pointerRes = await fetch(
       '/l10n/instances/' + encodeURIComponent(publicId) + '/live/' + encodeURIComponent(locale) + '.json',
       { method: 'GET', cache: 'no-store', credentials: 'omit' },
     ).catch(() => null);
-    if (!pointerRes || !pointerRes.ok) return baseState;
+    if (!pointerRes) throw new Error('ck_preview_l10n_pointer_request_failed');
+    if (!pointerRes.ok) throw new Error('ck_preview_l10n_pointer_missing');
     const pointer = await pointerRes.json().catch(() => null);
     const textFp = pointer && typeof pointer.textFp === 'string' ? pointer.textFp.trim() : '';
-    if (!textFp) return baseState;
+    if (!textFp) throw new Error('ck_preview_l10n_textfp_missing');
 
     const textRes = await fetch(
       '/l10n/instances/' +
@@ -93,14 +94,17 @@
         '.json',
       { method: 'GET', cache: 'force-cache', credentials: 'omit' },
     ).catch(() => null);
-    if (!textRes || !textRes.ok) return baseState;
+    if (!textRes) throw new Error('ck_preview_l10n_pack_request_failed');
+    if (!textRes.ok) throw new Error('ck_preview_l10n_pack_missing');
     const textPack = await textRes.json().catch(() => null);
-    if (!textPack || typeof textPack !== 'object' || Array.isArray(textPack)) return baseState;
+    if (!textPack || typeof textPack !== 'object' || Array.isArray(textPack)) {
+      throw new Error('ck_preview_l10n_pack_invalid');
+    }
 
     const localized =
       typeof structuredClone === 'function'
-        ? structuredClone(baseState)
-        : JSON.parse(JSON.stringify(baseState));
+        ? structuredClone(sourceState)
+        : JSON.parse(JSON.stringify(sourceState));
     applyTextOverrides(localized, textPack);
     return localized;
   }

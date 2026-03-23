@@ -27,13 +27,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const locale = request.nextUrl.searchParams.get('locale');
   const result = await loadAccountInstanceTranslationsPanel({
     accountId,
     publicId,
     tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
-    locale,
   });
 
   if (!result.ok) {

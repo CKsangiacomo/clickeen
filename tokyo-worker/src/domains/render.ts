@@ -460,6 +460,42 @@ function normalizeSavedL10nSnapshot(raw: unknown): Record<string, string> | null
   return snapshot;
 }
 
+export async function loadSavedRenderL10nBase(args: {
+  env: Env;
+  publicId: string;
+  widgetType: string;
+  baseFingerprint?: string | null;
+}): Promise<{
+  baseFingerprint: string;
+  snapshot: Record<string, string>;
+  allowlist: AllowlistEntry[];
+} | null> {
+  const publicId = normalizePublicId(args.publicId);
+  if (!publicId) throw new Error('[tokyo] load-saved-render-l10n-base invalid publicId');
+  const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
+  if (!widgetType) throw new Error('[tokyo] load-saved-render-l10n-base missing widgetType');
+
+  const allowlist = await loadWidgetLocalizationAllowlist({
+    env: args.env,
+    widgetType,
+  });
+  const baseFingerprint = normalizeFingerprint(args.baseFingerprint);
+  if (!baseFingerprint) return null;
+
+  const existing = await loadJson<{ snapshot?: unknown }>(
+    args.env,
+    l10nBaseSnapshotKey(publicId, baseFingerprint),
+  );
+  const existingSnapshot = normalizeSavedL10nSnapshot(existing?.snapshot);
+  if (!existingSnapshot) return null;
+
+  return {
+    baseFingerprint,
+    snapshot: existingSnapshot,
+    allowlist,
+  };
+}
+
 export async function ensureSavedRenderL10nBase(args: {
   env: Env;
   publicId: string;
@@ -476,25 +512,20 @@ export async function ensureSavedRenderL10nBase(args: {
   const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
   if (!widgetType) throw new Error('[tokyo] ensure-saved-render-l10n-base missing widgetType');
 
+  const existing = await loadSavedRenderL10nBase({
+    env: args.env,
+    publicId,
+    widgetType,
+    baseFingerprint: args.existingBaseFingerprint ?? null,
+  });
+  if (existing) {
+    return existing;
+  }
+
   const allowlist = await loadWidgetLocalizationAllowlist({
     env: args.env,
     widgetType,
   });
-  const existingBaseFingerprint = normalizeFingerprint(args.existingBaseFingerprint);
-  if (existingBaseFingerprint) {
-    const existing = await loadJson<{ snapshot?: unknown }>(
-      args.env,
-      l10nBaseSnapshotKey(publicId, existingBaseFingerprint),
-    );
-    const existingSnapshot = normalizeSavedL10nSnapshot(existing?.snapshot);
-    if (existingSnapshot) {
-      return {
-        baseFingerprint: existingBaseFingerprint,
-        snapshot: existingSnapshot,
-        allowlist,
-      };
-    }
-  }
 
   const snapshot = buildL10nSnapshot(args.config, allowlist);
   const baseFingerprint = await computeBaseFingerprint(snapshot);

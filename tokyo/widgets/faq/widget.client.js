@@ -598,6 +598,7 @@
     }
     window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
       locale: runtimeContext && runtimeContext.locale,
+      previewMode: runtimeContext && runtimeContext.previewMode,
       typographyScope: faqRoot,
     });
 
@@ -716,7 +717,7 @@
 
   let previewLocaleRequest = 0;
 
-  async function applyPreviewState(state, locale, publicId) {
+  async function applyPreviewState(state, locale, publicId, previewMode) {
     const requestId = ++previewLocaleRequest;
     const helper =
       window.CK_PREVIEW_L10N &&
@@ -732,14 +733,14 @@
         })
       : state;
     if (requestId !== previewLocaleRequest) return;
-    applyState(localizedState, { locale });
+    applyState(localizedState, { locale, previewMode });
   }
 
   window.addEventListener('message', (event) => {
     const data = event.data;
     if (!data || data.type !== 'ck:state-update') return;
     if (data.widgetname !== 'faq') return;
-    void applyPreviewState(data.state, data.locale, data.publicId);
+    void applyPreviewState(data.state, data.locale, data.publicId, data.previewMode);
   });
 
   function containsUrl(value) {

@@ -30,6 +30,7 @@ export type SessionState = {
 
 export type SessionMeta = {
   publicId?: string;
+  baseLocale?: string;
   widgetname?: string;
   label?: string;
   source?: 'account' | 'curated';
@@ -46,6 +47,7 @@ export type EditorOpenMessage = {
   type: 'ck:open-editor';
   requestId?: string;
   widgetname: string;
+  baseLocale: string;
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
   policy?: Policy;

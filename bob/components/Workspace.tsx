@@ -2,7 +2,20 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 
-export function Workspace({ previewLocale }: { previewLocale: string }) {
+const BLOCKED_SWITCHER_COPY =
+  'Translations not available while in editing mode. Preview translations in Translations panel.';
+
+export function Workspace({
+  baseLocale,
+  previewMode,
+  overlayPreviewLocale,
+  onOverlayPreviewLocaleChange,
+}: {
+  baseLocale: string;
+  previewMode: 'editing' | 'translations';
+  overlayPreviewLocale: string;
+  onOverlayPreviewLocaleChange: (locale: string) => void;
+}) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
   const { compiled, instanceData } = session;
@@ -20,11 +33,17 @@ export function Workspace({ previewLocale }: { previewLocale: string }) {
   const [iframeHasState, setIframeHasState] = useState(false);
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
+  const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
+  const effectivePreviewLocale =
+    previewMode === 'translations'
+      ? (overlayPreviewLocale || baseLocale)
+      : baseLocale;
   const latestRef = useRef({
     compiled,
     instanceData,
     publicId,
-    previewLocale,
+    previewMode,
+    effectivePreviewLocale,
     device,
     theme,
   });
@@ -34,11 +53,18 @@ export function Workspace({ previewLocale }: { previewLocale: string }) {
       compiled,
       instanceData,
       publicId,
-      previewLocale,
+      previewMode,
+      effectivePreviewLocale,
       device,
       theme,
     };
-  }, [compiled, instanceData, publicId, previewLocale, device, theme]);
+  }, [compiled, instanceData, publicId, previewMode, effectivePreviewLocale, device, theme]);
+
+  useEffect(() => {
+    if (!switcherNotice) return undefined;
+    const timer = window.setTimeout(() => setSwitcherNotice(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [switcherNotice]);
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';
@@ -94,7 +120,8 @@ export function Workspace({ previewLocale }: { previewLocale: string }) {
           widgetname: nextCompiled.widgetname,
           publicId: snapshot.publicId,
           state: snapshot.instanceData,
-          locale: snapshot.previewLocale,
+          locale: snapshot.effectivePreviewLocale,
+          previewMode: snapshot.previewMode,
           device: snapshot.device,
           theme: snapshot.theme,
         },
@@ -136,13 +163,24 @@ export function Workspace({ previewLocale }: { previewLocale: string }) {
       widgetname: compiled.widgetname,
       publicId,
       state: instanceData,
-      locale: previewLocale,
+      locale: effectivePreviewLocale,
+      previewMode,
       device,
       theme,
     };
 
     iframeWindow.postMessage(message, '*');
-  }, [hasWidget, compiled, publicId, instanceData, previewLocale, device, theme, iframeLoaded]);
+  }, [
+    hasWidget,
+    compiled,
+    publicId,
+    instanceData,
+    effectivePreviewLocale,
+    previewMode,
+    device,
+    theme,
+    iframeLoaded,
+  ]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -156,6 +194,21 @@ export function Workspace({ previewLocale }: { previewLocale: string }) {
         setIframeLoadError(null);
         return;
       }
+      if (data.type === 'ck:preview-locale-switch-blocked') {
+        setSwitcherNotice(BLOCKED_SWITCHER_COPY);
+        return;
+      }
+      if (data.type === 'ck:preview-locale-change-request') {
+        const requestedLocale =
+          typeof data.locale === 'string' ? data.locale.trim() : '';
+        if (!requestedLocale) return;
+        if (latestRef.current.previewMode !== 'translations') {
+          setSwitcherNotice(BLOCKED_SWITCHER_COPY);
+          return;
+        }
+        onOverlayPreviewLocaleChange(requestedLocale);
+        return;
+      }
       if (data.type !== 'ck:resize') return;
       const h = Number(data.height);
       if (!Number.isFinite(h) || h <= 0) return;
@@ -167,7 +220,7 @@ export function Workspace({ previewLocale }: { previewLocale: string }) {
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [onOverlayPreviewLocaleChange]);
 
   useEffect(() => {
     // When switching instances/devices/modes, allow the iframe to re-measure.
@@ -225,6 +278,11 @@ export function Workspace({ previewLocale }: { previewLocale: string }) {
       {hasWidget && iframeLoadError ? (
         <div className="workspace-status-overlay workspace-status-overlay--error" role="alert">
           <span className="label-s">{iframeLoadError}</span>
+        </div>
+      ) : null}
+      {hasWidget && switcherNotice ? (
+        <div className="workspace-status-overlay" role="status" aria-live="polite">
+          <span className="label-s">{switcherNotice}</span>
         </div>
       ) : null}
 

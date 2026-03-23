@@ -67,11 +67,13 @@ function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidget
 }
 
 export function ToolDrawer({
-  previewLocale,
-  onPreviewLocaleChange,
+  overlayPreviewLocale,
+  onOverlayPreviewLocaleChange,
+  onPreviewModeChange,
 }: {
-  previewLocale: string;
-  onPreviewLocaleChange: (locale: string) => void;
+  overlayPreviewLocale: string;
+  onOverlayPreviewLocaleChange: (locale: string) => void;
+  onPreviewModeChange: (mode: 'editing' | 'translations') => void;
 }) {
   const session = useWidgetSession();
   const compiled = session.compiled;
@@ -86,6 +88,10 @@ export function ToolDrawer({
       setActivePanel(compiled.panels[0].id as PanelId);
     }
   }, [compiled?.widgetname, compiled?.panels]);
+
+  useEffect(() => {
+    onPreviewModeChange(mode === 'manual' && activePanel === 'translations' ? 'translations' : 'editing');
+  }, [activePanel, mode, onPreviewModeChange]);
 
   const panelsById = useMemo(() => {
     const map: Record<string, CompiledPanel> = {};
@@ -119,7 +125,10 @@ export function ToolDrawer({
   ) : activePanel === 'settings' ? (
     <SettingsPanel />
   ) : activePanel === 'translations' ? (
-    <TranslationsPanel previewLocale={previewLocale} onPreviewLocaleChange={onPreviewLocaleChange} />
+    <TranslationsPanel
+      overlayPreviewLocale={overlayPreviewLocale}
+      onOverlayPreviewLocaleChange={onOverlayPreviewLocaleChange}
+    />
   ) : (
     <TdMenuContent
       panelId={activePanel}

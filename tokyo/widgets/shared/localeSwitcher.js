@@ -119,6 +119,12 @@
     };
   }
 
+  function postToHost(payload) {
+    try {
+      window.parent?.postMessage(payload, '*');
+    } catch {}
+  }
+
   function ensureElement(widgetRoot, hostName) {
     const key = resolveInstanceKey(widgetRoot);
     let existing = document.querySelector(
@@ -210,6 +216,10 @@
     const currentLocale =
       normalizeLocale(runtimeContext && runtimeContext.locale) ||
       normalizeLocale(window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET.locale : '');
+    const previewMode =
+      runtimeContext && typeof runtimeContext.previewMode === 'string'
+        ? runtimeContext.previewMode.trim()
+        : '';
     const labels = readLabels();
     const element = ensureElement(widgetRoot, config.attachTo);
     const select = element.querySelector('.ck-locale-switcher__select');
@@ -240,11 +250,36 @@
     if (currentLocale && readyLocales.indexOf(currentLocale) >= 0) {
       select.value = currentLocale;
     }
+    select.dataset.previewMode = previewMode;
+    select.dataset.currentLocale = currentLocale;
 
     if (select.dataset.bound !== 'true') {
       select.addEventListener('change', function () {
         const nextLocale = normalizeLocale(select.value);
         if (!nextLocale) return;
+        const current = normalizeLocale(select.dataset.currentLocale);
+        const resetSelection = function () {
+          if (current) {
+            const hasCurrent = Array.from(select.options).some((option) => option.value === current);
+            if (hasCurrent) {
+              select.value = current;
+              return;
+            }
+          }
+          select.value = select.options[0] ? select.options[0].value : '';
+        };
+        if (nextLocale === current) return;
+        const currentPreviewMode = typeof select.dataset.previewMode === 'string' ? select.dataset.previewMode : '';
+        if (currentPreviewMode === 'editing') {
+          resetSelection();
+          postToHost({ type: 'ck:preview-locale-switch-blocked' });
+          return;
+        }
+        if (currentPreviewMode === 'translations') {
+          resetSelection();
+          postToHost({ type: 'ck:preview-locale-change-request', locale: nextLocale });
+          return;
+        }
         try {
           const url = new URL(window.location.href);
           url.searchParams.set('locale', nextLocale);

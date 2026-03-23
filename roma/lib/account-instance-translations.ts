@@ -1,4 +1,3 @@
-import type { WidgetLocaleSwitcherSettings } from '@clickeen/ck-contracts';
 import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
@@ -8,13 +7,8 @@ export type AccountTranslationsPanelPayload = {
   publicId: string;
   widgetType: string;
   baseLocale: string;
-  activeLocales: string[];
-  inspectionLocale: string;
-  localeStatuses: Array<{
-    locale: string;
-    ok: boolean;
-  }>;
-  localeBehavior: WidgetLocaleSwitcherSettings;
+  readyLocales: string[];
+  translationOk: boolean;
 };
 
 type RouteFailure = {
@@ -37,23 +31,6 @@ function asTrimmedString(value: unknown): string | null {
   return normalized || null;
 }
 
-function isLocaleSwitcherAttachTo(value: unknown): value is WidgetLocaleSwitcherSettings['attachTo'] {
-  return value === 'pod' || value === 'stage';
-}
-
-function isLocaleSwitcherPosition(value: unknown): value is WidgetLocaleSwitcherSettings['position'] {
-  return (
-    value === 'top-left' ||
-    value === 'top-center' ||
-    value === 'top-right' ||
-    value === 'right-middle' ||
-    value === 'bottom-right' ||
-    value === 'bottom-center' ||
-    value === 'bottom-left' ||
-    value === 'left-middle'
-  );
-}
-
 function resolveTokyoControlErrorDetail(payload: unknown, fallback: string): string {
   if (isRecord(payload) && isRecord(payload.error)) {
     const reasonKey = asTrimmedString(payload.error.reasonKey);
@@ -69,57 +46,22 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
   const publicId = asTrimmedString(raw.publicId);
   const widgetType = asTrimmedString(raw.widgetType);
   const baseLocale = asTrimmedString(raw.baseLocale);
-  const inspectionLocale = asTrimmedString(raw.inspectionLocale);
-  const activeLocales = Array.isArray(raw.activeLocales)
-    ? raw.activeLocales
+  const readyLocales = Array.isArray(raw.readyLocales)
+    ? raw.readyLocales
         .map((entry) => asTrimmedString(entry))
         .filter((entry): entry is string => Boolean(entry))
     : [];
-  const localeStatuses = Array.isArray(raw.localeStatuses)
-    ? raw.localeStatuses.reduce<AccountTranslationsPanelPayload['localeStatuses']>((entries, entry) => {
-        if (!isRecord(entry)) return entries;
-        const locale = asTrimmedString(entry.locale);
-        if (!locale || typeof entry.ok !== 'boolean') return entries;
-        entries.push({ locale, ok: entry.ok });
-        return entries;
-      }, [])
-    : [];
-  const localeBehavior = isRecord(raw.localeBehavior)
-    && typeof raw.localeBehavior.enabled === 'boolean'
-    && typeof raw.localeBehavior.byIp === 'boolean'
-    && (raw.localeBehavior.alwaysShowLocale === null || typeof raw.localeBehavior.alwaysShowLocale === 'string')
-    && isLocaleSwitcherAttachTo(raw.localeBehavior.attachTo)
-    && isLocaleSwitcherPosition(raw.localeBehavior.position)
-      ? {
-          enabled: raw.localeBehavior.enabled,
-          byIp: raw.localeBehavior.byIp,
-          alwaysShowLocale:
-            raw.localeBehavior.alwaysShowLocale === null
-              ? null
-              : raw.localeBehavior.alwaysShowLocale,
-          attachTo: raw.localeBehavior.attachTo,
-          position: raw.localeBehavior.position,
-        }
-      : null;
+  const translationOk = typeof raw.translationOk === 'boolean' ? raw.translationOk : null;
 
-  if (!publicId || !widgetType || !baseLocale || !inspectionLocale || !localeBehavior) return null;
-  if (!activeLocales.includes(baseLocale) || !activeLocales.includes(inspectionLocale)) return null;
-  if (localeStatuses.length !== activeLocales.length) return null;
-  const activeLocaleSet = new Set(activeLocales);
-  const localeStatusSet = new Set(localeStatuses.map((entry) => entry.locale));
-  if (localeStatusSet.size !== activeLocales.length) return null;
-  for (const locale of activeLocaleSet) {
-    if (!localeStatusSet.has(locale)) return null;
-  }
+  if (!publicId || !widgetType || !baseLocale || translationOk === null) return null;
+  if (!readyLocales.includes(baseLocale)) return null;
 
   return {
     publicId,
     widgetType,
     baseLocale,
-    activeLocales,
-    inspectionLocale,
-    localeStatuses,
-    localeBehavior,
+    readyLocales: Array.from(new Set(readyLocales)),
+    translationOk,
   };
 }
 
@@ -128,11 +70,9 @@ export async function loadAccountInstanceTranslationsPanel(args: {
   publicId: string;
   tokyoAccessToken?: string;
   accountCapsule?: string | null;
-  locale?: string | null;
 }): Promise<{ ok: true; value: AccountTranslationsPanelPayload } | RouteFailure> {
-  const query = args.locale ? `?locale=${encodeURIComponent(args.locale)}` : '';
   const response = await fetchTokyoProductControl({
-    path: `/__internal/l10n/instances/${encodeURIComponent(args.publicId)}/translations${query}`,
+    path: `/__internal/l10n/instances/${encodeURIComponent(args.publicId)}/translations`,
     method: 'GET',
     headers: buildTokyoProductControlHeaders({
       accountId: args.accountId,

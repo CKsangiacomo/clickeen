@@ -25,10 +25,13 @@ function UpsellPopupHost() {
 function BuilderShell() {
   const chrome = useWidgetSessionChrome();
   const publicId = chrome.meta?.publicId ?? '';
-  const [inspectionLocale, setInspectionLocale] = useState('');
+  const baseLocale = chrome.meta?.baseLocale ?? '';
+  const [previewMode, setPreviewMode] = useState<'editing' | 'translations'>('editing');
+  const [overlayPreviewLocale, setOverlayPreviewLocale] = useState('');
 
   useEffect(() => {
-    setInspectionLocale('');
+    setPreviewMode('editing');
+    setOverlayPreviewLocale('');
   }, [publicId]);
 
   return (
@@ -38,10 +41,16 @@ function BuilderShell() {
 
         <div className="builder-app__content">
           <ToolDrawer
-            inspectionLocale={inspectionLocale}
-            onInspectionLocaleChange={setInspectionLocale}
+            overlayPreviewLocale={overlayPreviewLocale}
+            onOverlayPreviewLocaleChange={setOverlayPreviewLocale}
+            onPreviewModeChange={setPreviewMode}
           />
-          <Workspace inspectionLocale={inspectionLocale} />
+          <Workspace
+            baseLocale={baseLocale}
+            previewMode={previewMode}
+            overlayPreviewLocale={overlayPreviewLocale}
+            onOverlayPreviewLocaleChange={setOverlayPreviewLocale}
+          />
         </div>
       </div>
       <UpsellPopupHost />
