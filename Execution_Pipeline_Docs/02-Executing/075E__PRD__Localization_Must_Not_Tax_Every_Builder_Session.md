@@ -38,6 +38,14 @@ There is exactly **one** translation workflow.
 It is Tokyo/Tokyo-worker owned.
 It keeps translations in Tokyo current for the current saved widget state.
 It is incremental: when only some translatable text changed, the system updates only the affected translation ops/text packs instead of turning Builder into a whole-widget retranslation workflow.
+That incremental behavior is not optional implementation polish.
+It is part of the architecture:
+
+- save/sync must carry forward enough previous-base identity for Tokyo/Tokyo-worker to compare the previous saved base against the current saved base
+- Tokyo/Tokyo-worker must derive changed and removed translatable paths from those two saved bases
+- locales that already have overlay ops must update only those changed/removed paths
+- locales that do not yet have overlay ops may still need a full first generation
+- unchanged locale ops/text packs must be reused instead of paying whole-widget translation cost again
 
 The widget/instance identity is locale-free.
 The translation base is **not**.
@@ -224,6 +232,7 @@ Execution is blocked until the implementer can explain this chain plainly:
 - It reuses existing locale ops when possible.
 - It asks San Francisco only for the changed translation work that is actually needed.
 - It writes the resulting translation artifacts back into Tokyo.
+- That changed work is derived from the previous saved base snapshot vs the current saved base snapshot at the Tokyo/Tokyo-worker boundary, not from Bob UI state and not from ad-hoc runtime guesses.
 
 This is why the workflow is incremental instead of “retranslate the whole widget every time.”
 

@@ -211,7 +211,7 @@ export async function writeSavedConfigToTokyo(args: {
     } | null;
   } | null;
   internalServiceName?: string | null;
-}): Promise<void> {
+}): Promise<{ previousBaseFingerprint: string | null; baseFingerprint: string | null }> {
   const headers = buildTokyoProductControlHeaders({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
@@ -235,10 +235,22 @@ export async function writeSavedConfigToTokyo(args: {
     }),
   });
 
+  const payload = (await response.json().catch(() => null)) as
+    | {
+        error?: unknown;
+        previousBaseFingerprint?: unknown;
+        l10n?: { baseFingerprint?: unknown } | null;
+      }
+    | null;
+
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as unknown;
     throw new Error(resolveTokyoControlErrorDetail(payload, `tokyo_saved_config_http_${response.status}`));
   }
+
+  return {
+    previousBaseFingerprint: asTrimmedString(payload?.previousBaseFingerprint),
+    baseFingerprint: asTrimmedString(payload?.l10n?.baseFingerprint),
+  };
 }
 
 export async function deleteSavedConfigFromTokyo(args: {
@@ -414,11 +426,11 @@ export async function saveAccountInstanceDirect(args: {
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
-  | { ok: true }
+  | { ok: true; previousBaseFingerprint: string | null; baseFingerprint: string | null }
   | RouteFailure
 > {
   try {
-    await writeSavedConfigToTokyo({
+    const write = await writeSavedConfigToTokyo({
       tokyoBaseUrl: args.tokyoBaseUrl,
       tokyoControlBaseUrl: args.tokyoControlBaseUrl,
       tokyoAccessToken: args.tokyoAccessToken,
@@ -433,6 +445,11 @@ export async function saveAccountInstanceDirect(args: {
       meta: args.meta,
       l10n: args.l10n,
     });
+    return {
+      ok: true,
+      previousBaseFingerprint: write.previousBaseFingerprint,
+      baseFingerprint: write.baseFingerprint,
+    };
   } catch (error) {
     return {
       ok: false,
@@ -444,6 +461,4 @@ export async function saveAccountInstanceDirect(args: {
       },
     };
   }
-
-  return { ok: true };
 }

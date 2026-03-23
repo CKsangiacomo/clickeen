@@ -47,6 +47,7 @@ If implementation starts naming extra subsystems, extra preview paths, or generi
 16. If a phase is not green, do not move to the next phase.
 17. `readyLocales` is the only Builder/embed consumer locale set for this slice. Do not reintroduce `activeLocales` on the consumer path.
 18. If repo-level architecture docs still contradict `75E` at the end of execution, the slice is not done.
+19. Small text edits must not trigger whole-widget retranslation for locales that already have overlay ops. Save/sync must diff previous vs current saved bases and send only changed/removed translatable paths to San Francisco. Locales with no existing ops may still require a full first generation.
 
 ### Discipline Checks
 
@@ -94,6 +95,7 @@ These are the actual remaining problems in the current codebase:
 6. `loadAccountLocalizationBaseContext()` still calls `ensureSavedRenderL10nBase()` on the read path, which can write missing base snapshot state during a panel/status read instead of failing at the Tokyo/Tokyo-worker boundary.
 7. The saved Tokyo widget pointer does not yet carry durable l10n summary truth for Builder (`baseFingerprint` + last synced desired locale set), so the panel route still reaches back into Berlin to rebuild that truth on read.
 8. Repo-level architecture docs still describe older locale behavior and best-available overlays, which will confuse implementation if left unresolved.
+9. Save/sync still fails the incremental overlay contract: Roma does not pass previous saved-base identity into sync, Tokyo-worker does not diff previous vs current saved bases, and San Francisco therefore falls back to whole-widget translation work even for tiny text edits.
 
 ---
 
@@ -104,8 +106,12 @@ This slice should stay inside this file set:
 - `tokyo-worker/src/domains/account-localization-state.ts`
 - `tokyo-worker/src/domains/account-instance-sync.ts`
 - `tokyo-worker/src/domains/render.ts`
+- `tokyo-worker/src/routes/internal-render-routes.ts`
 - `roma/lib/account-instance-translations.ts`
+- `roma/lib/account-instance-direct.ts`
+- `roma/lib/account-instance-sync.ts`
 - `roma/app/api/account/instances/[publicId]/translations/route.ts`
+- `roma/app/api/account/instance/[publicId]/route.ts`
 - `roma/components/builder-domain.tsx`
 - `bob/lib/session/sessionTypes.ts`
 - `bob/lib/session/useSessionBoot.ts`
@@ -121,6 +127,96 @@ This slice should stay inside this file set:
 - `tokyo/widgets/logoshowcase/widget.client.js`
 
 If execution wants more files than this, stop and justify them against real product truth first.
+
+---
+
+## Phase 0A - Restore Incremental Overlay Sync After Save
+
+Goal:
+make save follow the incremental translation contract already promised by the PRD.
+
+### Product behavior after this phase
+
+- Save still means only `save this widget`.
+- Save still hands translation work off asynchronously.
+- Tokyo-worker can now compare the previous saved base against the new saved base.
+- Locales that already have overlay ops update only changed/removed translatable paths.
+- Locales that do not yet have overlay ops still get a full first generation.
+- Tiny copy edits no longer fan out into whole-widget translation work for already-synced locales.
+
+### Files To Change
+
+#### 1. `roma/app/api/account/instance/[publicId]/route.ts`
+
+Code this:
+
+- keep the one boring save boundary
+- pass previous saved-base identity into async sync after a successful save
+
+Do not code:
+
+- synchronous translation work inside Save
+- Builder-owned diffing logic
+
+#### 2. `roma/lib/account-instance-direct.ts`
+
+Code this:
+
+- return the previous saved `baseFingerprint` from the Tokyo saved-write boundary so Roma can hand that forward to sync
+
+Do not code:
+
+- route-side localization diffing
+- a second source of saved l10n truth in Roma
+
+#### 3. `roma/lib/account-instance-sync.ts`
+
+Code this:
+
+- thread optional previous saved-base identity into the Tokyo sync request
+
+Do not code:
+
+- client-side changed-path computation
+
+#### 4. `tokyo-worker/src/routes/internal-render-routes.ts`
+
+Code this:
+
+- return previous saved-base identity from the saved-write route
+- accept optional previous saved-base identity on the sync route
+
+#### 5. `tokyo-worker/src/domains/account-instance-sync.ts`
+
+Code this:
+
+- diff previous saved base snapshot vs current saved base snapshot when previous identity is available
+- derive `changedPaths` and `removedPaths` from those two saved bases
+- reuse existing locale ops from the previous/current saved base when possible
+- ask San Francisco only for changed work for locales that already have ops
+- fall back to full generation only for locales that do not yet have ops or when previous diff input is genuinely unavailable
+
+Do not code:
+
+- whole-widget translation calls for tiny edits when reusable locale ops already exist
+- Builder-side fallback logic to hide slow or stale overlays
+
+#### 6. `tokyo-worker/src/domains/account-localization-state.ts`
+
+Code this:
+
+- pass `changedPaths` / `removedPaths` through to San Francisco
+
+### Green Gate
+
+Phase 0A is green only if all of the following are true:
+
+- save can hand previous saved-base identity into async sync
+- Tokyo-worker diffs previous/current saved bases when that identity is available
+- locales with existing ops no longer require a full-widget translation request for tiny edits
+- locales without existing ops still get a full first generation
+- Roma typecheck passes
+- Tokyo-worker typecheck passes
 
 ---
 

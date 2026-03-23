@@ -18,6 +18,7 @@ export async function runAccountInstanceSync(args: {
   publicId: string;
   accountCapsule?: string | null;
   live?: boolean;
+  previousBaseFingerprint?: string | null;
 }): Promise<void> {
   const response = await fetchTokyoProductControl({
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/sync`,
@@ -30,6 +31,9 @@ export async function runAccountInstanceSync(args: {
     accessToken: args.accessToken,
     body: JSON.stringify({
       live: args.live === true,
+      ...(args.previousBaseFingerprint
+        ? { previousBaseFingerprint: args.previousBaseFingerprint }
+        : {}),
     }),
   });
 

@@ -13,6 +13,7 @@ import {
 import {
   buildAccountAssetVersionPath,
   normalizePublicId,
+  normalizeSha256Hex,
   prettyStableJson,
   sha256Hex,
 } from '../asset-utils';
@@ -30,6 +31,7 @@ import {
 import { upsertL10nOverlay } from './l10n-authoring';
 import {
   ensureSavedRenderL10nBase,
+  loadSavedRenderL10nBase,
   loadWidgetLocalizationAllowlist,
   readSavedRenderConfig,
   resolveTokyoPublicBaseUrl,
@@ -47,6 +49,20 @@ function asNumber(value: unknown): number | null {
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
+}
+
+function diffL10nSnapshots(args: {
+  previous: Record<string, string>;
+  current: Record<string, string>;
+}): { changedPaths: string[]; removedPaths: string[] } {
+  return {
+    changedPaths: Object.keys(args.current)
+      .filter((path) => args.previous[path] !== args.current[path])
+      .sort(),
+    removedPaths: Object.keys(args.previous)
+      .filter((path) => !Object.prototype.hasOwnProperty.call(args.current, path))
+      .sort(),
+  };
 }
 
 function buildLiveLocalePolicy(args: {
@@ -141,6 +157,21 @@ export async function handleSyncAccountInstance(
       { status: 422 },
     );
   }
+  const previousBaseFingerprint =
+    body && Object.prototype.hasOwnProperty.call(body, 'previousBaseFingerprint')
+      ? normalizeSha256Hex(body.previousBaseFingerprint)
+      : null;
+  if (
+    body &&
+    Object.prototype.hasOwnProperty.call(body, 'previousBaseFingerprint') &&
+    body.previousBaseFingerprint !== null &&
+    !previousBaseFingerprint
+  ) {
+    return json(
+      { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
+      { status: 422 },
+    );
+  }
 
   const accessToken = parseBearerToken(req.headers.get('authorization'));
   if (!accessToken) {
@@ -178,6 +209,28 @@ export async function handleSyncAccountInstance(
   const baseFingerprint = l10nBase.baseFingerprint;
   const localizationAllowlist = l10nBase.allowlist;
   const baseTextPack = l10nBase.snapshot;
+  const sourceBaseFingerprint =
+    previousBaseFingerprint && previousBaseFingerprint !== baseFingerprint
+      ? previousBaseFingerprint
+      : baseFingerprint;
+  const previousL10nBase =
+    sourceBaseFingerprint !== baseFingerprint
+      ? await loadSavedRenderL10nBase({
+          env,
+          publicId,
+          widgetType: saved.value.pointer.widgetType,
+          baseFingerprint: sourceBaseFingerprint,
+        })
+      : null;
+  const snapshotDiff =
+    sourceBaseFingerprint !== baseFingerprint
+      ? previousL10nBase
+        ? diffL10nSnapshots({
+            previous: previousL10nBase.snapshot,
+            current: baseTextPack,
+          })
+        : { changedPaths: null as string[] | null, removedPaths: [] as string[] }
+      : { changedPaths: [] as string[], removedPaths: [] as string[] };
 
   const baseLocale = policy.baseLocale;
   const desiredLocales = normalizeReadyLocales({
@@ -194,32 +247,81 @@ export async function handleSyncAccountInstance(
           publicId,
           layer: 'locale',
           layerKey: locale,
-          baseFingerprint,
+          baseFingerprint: sourceBaseFingerprint,
           allowlist: localizationAllowlist,
         });
-        return [locale, { baseOps: baseOverlay.ops }] as const;
+        return [
+          locale,
+          {
+            baseOps: baseOverlay.ops,
+            hasSourceOverlay: baseOverlay.baseUpdatedAt !== null || baseOverlay.ops.length > 0,
+          },
+        ] as const;
       }),
     ),
   );
 
-  const generatedBaseOpsByLocale =
-    nonBaseLocales.length > 0
-      ? await generateLocaleOpsWithSanfrancisco({
-          env,
-          policyProfile: accountAuthz.profile,
-          widgetType: saved.value.pointer.widgetType,
-          config: saved.value.config,
-          allowlist: localizationAllowlist.map((entry) => ({
-            path: entry.path,
-            type: entry.type === 'richtext' ? 'richtext' : 'string',
-          })),
-          baseLocale,
-          targetLocales: nonBaseLocales,
-          existingBaseOpsByLocale: Object.fromEntries(
-            nonBaseLocales.map((locale) => [locale, existingLocaleOverlays.get(locale)?.baseOps ?? []]),
-          ) as Record<string, LocalizationOp[]>,
-        })
-      : new Map<string, LocalizationOp[]>();
+  const localesWithSourceOps = nonBaseLocales.filter(
+    (locale) => existingLocaleOverlays.get(locale)?.hasSourceOverlay === true,
+  );
+  const localesNeedingFullGeneration = nonBaseLocales.filter(
+    (locale) => existingLocaleOverlays.get(locale)?.hasSourceOverlay !== true,
+  );
+  const generatedBaseOpsByLocale = new Map<string, LocalizationOp[]>();
+  const localeAllowlist = localizationAllowlist.map((entry) => ({
+    path: entry.path,
+    type: entry.type === 'richtext' ? 'richtext' : 'string',
+  })) as Array<{ path: string; type: 'string' | 'richtext' }>;
+
+  if (
+    localesWithSourceOps.length > 0 &&
+    (sourceBaseFingerprint !== baseFingerprint ||
+      snapshotDiff.changedPaths === null ||
+      snapshotDiff.changedPaths.length > 0 ||
+      snapshotDiff.removedPaths.length > 0)
+  ) {
+    const incremental = await generateLocaleOpsWithSanfrancisco({
+      env,
+      policyProfile: accountAuthz.profile,
+      widgetType: saved.value.pointer.widgetType,
+      config: saved.value.config,
+      allowlist: localeAllowlist,
+      baseLocale,
+      targetLocales: localesWithSourceOps,
+      existingBaseOpsByLocale: Object.fromEntries(
+        localesWithSourceOps.map((locale) => [locale, existingLocaleOverlays.get(locale)?.baseOps ?? []]),
+      ) as Record<string, LocalizationOp[]>,
+      changedPaths: snapshotDiff.changedPaths,
+      removedPaths: snapshotDiff.removedPaths,
+    });
+    incremental.forEach((ops, locale) => {
+      generatedBaseOpsByLocale.set(locale, ops);
+    });
+  } else {
+    localesWithSourceOps.forEach((locale) => {
+      generatedBaseOpsByLocale.set(locale, existingLocaleOverlays.get(locale)?.baseOps ?? []);
+    });
+  }
+
+  if (localesNeedingFullGeneration.length > 0) {
+    const full = await generateLocaleOpsWithSanfrancisco({
+      env,
+      policyProfile: accountAuthz.profile,
+      widgetType: saved.value.pointer.widgetType,
+      config: saved.value.config,
+      allowlist: localeAllowlist,
+      baseLocale,
+      targetLocales: localesNeedingFullGeneration,
+      existingBaseOpsByLocale: Object.fromEntries(
+        localesNeedingFullGeneration.map((locale) => [locale, []]),
+      ) as Record<string, LocalizationOp[]>,
+      changedPaths: null,
+      removedPaths: [],
+    });
+    full.forEach((ops, locale) => {
+      generatedBaseOpsByLocale.set(locale, ops);
+    });
+  }
 
   const policyResolved = resolvePolicyFromEntitlementsSnapshot({
     profile: accountAuthz.profile,

@@ -110,6 +110,8 @@ export async function generateLocaleOpsWithSanfrancisco(args: {
   baseLocale: string;
   targetLocales: string[];
   existingBaseOpsByLocale: Record<string, LocalizationOp[]>;
+  changedPaths?: string[] | null;
+  removedPaths?: string[];
 }): Promise<Map<string, LocalizationOp[]>> {
   if (!args.targetLocales.length) return new Map();
 
@@ -143,6 +145,8 @@ export async function generateLocaleOpsWithSanfrancisco(args: {
         baseLocale: args.baseLocale,
         targetLocales: args.targetLocales,
         existingBaseOpsByLocale: args.existingBaseOpsByLocale,
+        changedPaths: args.changedPaths ?? null,
+        removedPaths: args.removedPaths ?? [],
       }),
     },
   );

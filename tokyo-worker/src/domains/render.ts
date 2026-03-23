@@ -671,7 +671,7 @@ export async function writeSavedRenderConfig(args: {
         } | null;
       }
     | null;
-}): Promise<SavedRenderPointer> {
+}): Promise<{ pointer: SavedRenderPointer; previousBaseFingerprint: string | null }> {
   const publicId = args.publicId;
   const accountId = args.accountId;
   const config = args.config;
@@ -694,6 +694,7 @@ export async function writeSavedRenderConfig(args: {
   const existingPointer = normalizeSavedRenderPointer(
     await loadJson(args.env, renderSavedPointerKey(publicId)),
   );
+  const previousBaseFingerprint = existingPointer?.l10n?.baseFingerprint ?? null;
   const l10nBase = await ensureSavedRenderL10nBase({
     env: args.env,
     publicId,
@@ -727,7 +728,10 @@ export async function writeSavedRenderConfig(args: {
     l10n,
   };
   await putJson(args.env, renderSavedPointerKey(publicId), pointer);
-  return pointer;
+  return {
+    pointer,
+    previousBaseFingerprint,
+  };
 }
 
 export async function readSavedRenderPointer(args: {

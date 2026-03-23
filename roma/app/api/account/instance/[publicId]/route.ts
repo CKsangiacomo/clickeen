@@ -265,6 +265,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         publicId,
         accountCapsule: current.value.authzToken,
         live: false,
+        previousBaseFingerprint: result.previousBaseFingerprint,
       });
     } catch (error) {
       console.error('[roma account instance route] tokyo instance sync failed after save', {

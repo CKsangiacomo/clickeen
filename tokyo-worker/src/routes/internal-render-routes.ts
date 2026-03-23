@@ -198,7 +198,7 @@ export async function tryHandleInternalRenderRoutes(
                 }
               | null)
           : undefined;
-      const pointer = await writeSavedRenderConfig({
+      const savedWrite = await writeSavedRenderConfig({
         env,
         publicId: publicId!,
         accountId,
@@ -209,7 +209,13 @@ export async function tryHandleInternalRenderRoutes(
         meta: body.meta,
         ...(l10n !== undefined ? { l10n } : {}),
       });
-      return respond(json({ ...pointer, config: body?.config }));
+      return respond(
+        json({
+          ...savedWrite.pointer,
+          config: body?.config,
+          previousBaseFingerprint: savedWrite.previousBaseFingerprint,
+        }),
+      );
     }
 
     if (req.method === 'DELETE') {
