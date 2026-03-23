@@ -547,16 +547,6 @@ export async function ensureSavedRenderL10nBase(args: {
   const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
   if (!widgetType) throw new Error('[tokyo] ensure-saved-render-l10n-base missing widgetType');
 
-  const existing = await loadSavedRenderL10nBase({
-    env: args.env,
-    publicId,
-    widgetType,
-    baseFingerprint: args.existingBaseFingerprint ?? null,
-  });
-  if (existing) {
-    return existing;
-  }
-
   const allowlist = await loadWidgetLocalizationAllowlist({
     env: args.env,
     widgetType,
@@ -564,6 +554,30 @@ export async function ensureSavedRenderL10nBase(args: {
 
   const snapshot = buildL10nSnapshot(args.config, allowlist);
   const baseFingerprint = await computeBaseFingerprint(snapshot);
+  const existingBaseFingerprint = normalizeFingerprint(args.existingBaseFingerprint);
+
+  if (existingBaseFingerprint && existingBaseFingerprint === baseFingerprint) {
+    const existing = await loadSavedRenderL10nBase({
+      env: args.env,
+      publicId,
+      widgetType,
+      baseFingerprint,
+    });
+    if (existing) {
+      return existing;
+    }
+  }
+
+  const existingCurrent = await loadSavedRenderL10nBase({
+    env: args.env,
+    publicId,
+    widgetType,
+    baseFingerprint,
+  });
+  if (existingCurrent) {
+    return existingCurrent;
+  }
+
   await putJson(args.env, l10nBaseSnapshotKey(publicId, baseFingerprint), {
     v: 1,
     publicId,
