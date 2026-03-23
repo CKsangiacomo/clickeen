@@ -518,7 +518,7 @@ echo "  Berlin:    http://localhost:3005/internal/healthz"
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
 echo "  DevStudio tools: http://localhost:5173/#/tools/bob-ui-native and http://localhost:5173/#/tools/entitlements"
-echo "[dev-up] Local boot will seed + verify local platform state before completion."
+echo "[dev-up] Local boot will seed local platform state before completion."
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
 print_stack_port_status
 
@@ -534,16 +534,6 @@ fi
 echo "[dev-up] Seeding local platform state"
 if ! node "$ROOT_DIR/scripts/dev/seed-local-platform-state.mjs" --persist-to "$WRANGLER_PERSIST_DIR"; then
   echo "[dev-up] Local platform seeding failed. Cleaning listeners."
-  stop_repo_wrangler_processes
-  for p in "${STACK_PORTS[@]}"; do
-    stop_port "$p"
-  done
-  exit 1
-fi
-
-echo "[dev-up] Verifying local platform state"
-if ! node "$ROOT_DIR/scripts/dev/verify-local-platform-state.mjs"; then
-  echo "[dev-up] Local platform verification failed. Cleaning listeners."
   stop_repo_wrangler_processes
   for p in "${STACK_PORTS[@]}"; do
     stop_port "$p"

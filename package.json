@@ -46,8 +46,7 @@
     "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs",
     "prague:sync": "node scripts/prague-sync.mjs --publish --local",
     "dev:seed:platform": "node scripts/dev/seed-local-platform-state.mjs",
-    "dev:seed:platform:assets": "node scripts/dev/seed-local-platform-assets.mjs",
-    "dev:verify:platform": "node scripts/dev/verify-local-platform-state.mjs"
+    "dev:seed:platform:assets": "node scripts/dev/seed-local-platform-assets.mjs"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

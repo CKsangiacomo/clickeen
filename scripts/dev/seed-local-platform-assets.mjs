@@ -6,8 +6,6 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseCanonicalAssetRef, toCanonicalAssetVersionPath } from '../../packages/ck-contracts/src/index.js';
-import { requestLoopbackJson } from './local-loopback-http.mjs';
 import { createSupabaseClient, supabaseFetchJson } from './local-supabase.mjs';
 import { resolveFirstRootEnvValue } from './local-root-env.mjs';
 
@@ -22,11 +20,14 @@ const DEFAULT_BUCKET = 'tokyo-assets-dev';
 const DEFAULT_PLATFORM_ACCOUNT_ID =
   process.env.CK_PLATFORM_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100';
 const DEFAULT_PAGE_SIZE = 500;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
+const ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/[^/]+$/;
 
 function printUsage() {
   console.log(`Usage: node scripts/dev/seed-local-platform-assets.mjs [options]
 
-Seeds local Tokyo asset state for DevStudio-visible platform rows.
+Seeds local Tokyo asset state for current platform-owned rows.
 This command can be run explicitly, and canonical local dev-up also invokes it.
 
 Options:
@@ -119,6 +120,78 @@ function parseArgs(argv) {
 
 function asTrimmedString(value) {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function isUuid(value) {
+  const normalized = String(value || '').trim();
+  return Boolean(normalized && UUID_RE.test(normalized));
+}
+
+function decodePathPart(raw) {
+  try {
+    return decodeURIComponent(String(raw || '')).trim();
+  } catch {
+    return '';
+  }
+}
+
+function pathnameFromRawAssetRef(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  if (value.startsWith('/')) return value;
+  if (!/^https?:\/\//i.test(value)) return null;
+  try {
+    return new URL(value).pathname || '/';
+  } catch {
+    return null;
+  }
+}
+
+function decodeAssetVersionToken(raw) {
+  const token = decodePathPart(raw);
+  if (!token) return null;
+  try {
+    const key = decodeURIComponent(token).trim();
+    if (!key || key.startsWith('/') || key.includes('..')) return null;
+    return key;
+  } catch {
+    return null;
+  }
+}
+
+function parseCanonicalAssetRef(raw) {
+  const pathname = pathnameFromRawAssetRef(raw);
+  if (!pathname) return null;
+
+  const version = pathname.match(ASSET_VERSION_PATH_RE);
+  if (!version) return null;
+
+  const versionToken = decodePathPart(version[1]);
+  const versionKey = decodeAssetVersionToken(versionToken);
+  if (!versionKey) return null;
+
+  const keyMatch = versionKey.match(ASSET_VERSION_KEY_RE);
+  if (!keyMatch) return null;
+  const accountId = decodePathPart(keyMatch[1]);
+  const assetId = decodePathPart(keyMatch[2]);
+  if (!isUuid(accountId) || !isUuid(assetId)) return null;
+
+  return {
+    accountId,
+    assetId,
+    kind: 'version',
+    pathname,
+    versionToken,
+    versionKey,
+  };
+}
+
+function toCanonicalAssetVersionPath(versionKey) {
+  const key = typeof versionKey === 'string' ? versionKey.trim() : '';
+  if (!key || key.startsWith('/') || key.includes('..') || !ASSET_VERSION_KEY_RE.test(key)) {
+    return null;
+  }
+  return `/assets/v/${encodeURIComponent(key)}`;
 }
 
 function extractCanonicalAssetRef(raw) {
@@ -352,11 +425,26 @@ function resolveLocalHeaders(accountId) {
   return createRemoteHeaders(accountId);
 }
 
-function resolveLocalAssetsById(localTokyoWorkerBase, accountId, assetIds) {
+async function fetchJson(url, init = {}) {
+  const response = await fetch(url, {
+    ...init,
+    cache: 'no-store',
+    signal: AbortSignal.timeout(20_000),
+  });
+  const text = await response.text().catch(() => '');
+  return {
+    ok: response.ok,
+    status: response.status,
+    text,
+    json: text ? JSON.parse(text) : null,
+  };
+}
+
+async function resolveLocalAssetsById(localTokyoWorkerBase, accountId, assetIds) {
   if (!assetIds.length) {
     return { assetsById: new Map(), missingAssetIds: [] };
   }
-  const response = requestLoopbackJson(
+  const response = await fetchJson(
     `${localTokyoWorkerBase}/__internal/assets/account/${encodeURIComponent(accountId)}/resolve`,
     {
       method: 'POST',
@@ -365,7 +453,7 @@ function resolveLocalAssetsById(localTokyoWorkerBase, accountId, assetIds) {
         headers.set('content-type', 'application/json');
         return headers;
       })(),
-      body: { assetIds },
+      body: JSON.stringify({ assetIds }),
     },
   );
   const payload = response.json || null;
@@ -500,7 +588,7 @@ async function main() {
   let resolvedRemoteAssets = new Map();
   let missingAssetIds = [];
   let usedSavedSnapshotFallback = false;
-  const localResolvedAssets = resolveLocalAssetsById(
+  const localResolvedAssets = await resolveLocalAssetsById(
     args.localTokyoWorkerBase,
     args.platformAccountId,
     Array.from(logicalAssetIds.keys()),
@@ -540,7 +628,7 @@ async function main() {
   }
 
   console.log(
-    `[seed-local-platform-assets] found ${logicalAssetIds.size} logical asset id(s) and ${legacyRefs.size} legacy asset ref(s) across ${rows.length} DevStudio-visible row(s)`,
+    `[seed-local-platform-assets] found ${logicalAssetIds.size} logical asset id(s) and ${legacyRefs.size} legacy asset ref(s) across ${rows.length} platform-owned row(s)`,
   );
 
   let seeded = 0;

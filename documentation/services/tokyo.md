@@ -81,10 +81,9 @@ Local dev:
 - Local asset management does not go through `tokyo/dev-server.mjs`.
   - Roma product uploads use `/api/account/assets/upload`.
   - Local verification of canonical asset delivery uses `/assets/v/*`; the dev server is not a separate widget-scoped asset upload boundary.
-- `scripts/dev-up.sh` starts the local Tokyo dev server + Tokyo-worker as part of the local DevStudio operating lane, builds Dieter + i18n, seeds required local platform state through the canonical seed scripts, and verifies the local stack before completion.
+- `scripts/dev-up.sh` starts the local Tokyo dev server + Tokyo-worker as part of the local DevStudio operating lane, builds Dieter + i18n, and seeds required local platform state through the canonical seed scripts before completion.
 - Explicit rerun commands:
   - `pnpm dev:seed:platform`
-  - `pnpm dev:verify:platform`
 - Account asset state is manifest-backed product truth. It must not be “repaired” by boot scripts with blob-only sync logic.
 
 ## l10n published artifacts (executed)

@@ -243,9 +243,7 @@ If it exists only to support removed DevStudio-hosted authoring, it is a deletio
 - `documentation/services/bob.md`
 - `documentation/README.md`
 - `scripts/dev-up.sh`
-- `scripts/dev/verify-local-platform-state.mjs`
 - `scripts/dev/seed-local-platform-state.mjs`
-- `scripts/dev/ensure-curated-tokyo-saved.mjs`
 - `scripts/dev/seed-local-platform-assets.mjs`
 - `bob/lib/session/sessionPolicy.ts`
 - `bob/lib/session/useSessionBoot.ts`
@@ -274,19 +272,8 @@ If it exists only to support removed DevStudio-hosted authoring, it is a deletio
   - any architecture wording that still normalizes Bob URL boot or a second non-Roma host story for Builder
   - toxic because it preserves removed local-host residue as if it were system truth
 
-- `scripts/dev/verify-local-platform-state.mjs`
-  - `verifyHostEditorLane(...)` checks against `/api/devstudio/instances`
-  - `/api/devstudio/instance`
-  - `/api/devstudio/instance/localization`
-  - `/api/devstudio/instances/:publicId/l10n/status`
-  - toxic because they keep verifying a removed host model
-
 - `scripts/dev/seed-local-platform-state.mjs`
   - any description of local state preparation that still exists only to support DevStudio-hosted editing
-
-- `scripts/dev/ensure-curated-tokyo-saved.mjs`
-  - `TOKYO_INTERNAL_SERVICE_ID = 'devstudio.local'`
-  - any language or behavior that frames Tokyo saved-snapshot sync as DevStudio-hosted authoring support rather than current internal verification/capture needs
 
 - `admin/vite.config.ts`
   - any DevStudio-served Builder/open-editor contract artifact that exists only because DevStudio used to host Bob authoring
