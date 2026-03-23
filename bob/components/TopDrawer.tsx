@@ -13,7 +13,7 @@ export function TopDrawer() {
   const meta = chrome.meta;
   const currentPublicId = typeof meta?.publicId === 'string' ? meta.publicId : '';
   const hasInstance = Boolean(currentPublicId);
-  const canPersist = hasInstance && isDirty;
+  const canSave = hasInstance && isDirty;
   const currentLabel = useMemo(
     () => (typeof meta?.label === 'string' ? meta.label.trim() : ''),
     [meta?.label]
@@ -32,22 +32,24 @@ export function TopDrawer() {
       </div>
 
       <div className="topdrawer-actions">
+        {canSave || isSaving ? (
+          <button
+            className="diet-btn-txt"
+            data-size="xl"
+            data-variant="primary"
+            type="button"
+            disabled={!canSave || isSaving}
+            onClick={() => save()}
+          >
+            <span className="diet-btn-txt__label">{isSaving ? 'Saving…' : 'Save'}</span>
+          </button>
+        ) : null}
         <button
           className="diet-btn-txt"
           data-size="xl"
           data-variant="primary"
           type="button"
-          disabled={!canPersist || isSaving}
-          onClick={() => save()}
-        >
-          <span className="diet-btn-txt__label">{isSaving ? 'Saving…' : 'Save'}</span>
-        </button>
-        <button
-          className="diet-btn-txt"
-          data-size="xl"
-          data-variant="primary"
-          type="button"
-          disabled={!canPersist}
+          disabled={!hasInstance}
           onClick={() => setEmbedOpen(true)}
         >
           <span className="diet-btn-txt__label">Copy code</span>
