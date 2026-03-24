@@ -105,6 +105,7 @@ The target overlay architecture is:
 2. Generator services produce overlays only because Roma told them to.
 3. Tokyo stores those overlays/artifacts and is the canonical owner of whether they are actually ready.
 4. Consumers/editors read that actual ready truth; they do not infer it.
+5. Save-triggered overlay reconciliation is durable system work after the base commit, not inline request-path work.
 
 For locale, that means:
 - Roma decides and persists the desired locale overlay set.
@@ -181,12 +182,15 @@ These tenets are the architectural memory for PRD 070.
    - Implement locale only now.
    - Every future overlay dimension must still follow:
      - one desired state
+     - one convergence state for the current base fingerprint
      - one actual artifact truth
      - one reconciliation loop
 
 10. Consumer readiness must converge by write-path trigger, not by request-time cleverness
    - `readyLocales` is a point-in-time consumer projection of Tokyo truth.
    - Save-triggered overlay convergence must be durably enqueued and retried by the system; it must not depend on best-effort request callbacks.
+   - Base save success is independent from overlay enqueue success; save must not be reclassified as failed after canonical base truth has already been committed.
+   - Queue absence or enqueue failure must not create a second inline execution mode on the Save request path.
    - When a locale becomes ready for a published instance/current fingerprint, the system must trigger consumer-pointer reconciliation.
    - Venice must not query or reconstruct readiness dynamically at request time.
    - The embed must not wait for a future manual save to pick up already-ready locales.
@@ -205,6 +209,7 @@ In PRD 070:
 - `plan allowance` means what the tier/entitlements permit in principle
 - `allowed` means the saved Roma locale set that is permitted by entitlements and selected by the user
 - `ready` means Tokyo has the artifact for the exact current base fingerprint
+- `convergence state` means Tokyo-owned system status for the current `publicId + baseFingerprint` (`updating` or `failed`) while waiting for `ready`
 - `consumer pointer` means the ready-only locale policy used by embed/runtime consumers
 - `overlay` means any generated/stored variant layer whose desired state is Roma-owned and whose actual ready state is Tokyo-owned
 

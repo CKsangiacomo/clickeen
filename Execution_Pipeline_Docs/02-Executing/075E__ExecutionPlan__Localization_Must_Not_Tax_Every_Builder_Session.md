@@ -49,6 +49,10 @@ If implementation starts naming extra subsystems, extra preview paths, or generi
 18. If repo-level architecture docs still contradict `75E` at the end of execution, the slice is not done.
 19. Small text edits must not trigger whole-widget retranslation for locales that already have overlay ops. Save/sync must diff previous vs current saved bases and send only changed/removed translatable paths to San Francisco. Locales with no existing ops may still require a full first generation.
 20. Builder and embed must read the same current locale pointer truth. Builder differs only in when locale preview is enabled, not in a separate required pointer surface.
+21. Once the base widget save succeeds, Roma must return success even if overlay enqueue fails afterward.
+22. Queue absence or enqueue failure must not trigger inline overlay convergence on the Save request path.
+23. Overlay convergence for the current `publicId + baseFingerprint` must expose one honest system-owned state: `ok`, `updating`, or `failed`.
+24. Permanent queue failure must become durable system state, not a console-only event and not infinite `updating`.
 
 ### Discipline Checks
 
@@ -61,6 +65,8 @@ These checks are here to stop implementation drift:
 - If code makes the Translations panel render translated widget content itself, stop.
 - If code makes Bob responsible for translation truth instead of preview interaction, stop.
 - If code adds files outside the declared write set, justify them against product truth before proceeding.
+- If code tries to re-couple overlay generation back into the Save request path, stop.
+- If code handles queue failure only with logs and no durable state, stop.
 
 ---
 
@@ -139,7 +145,8 @@ make save follow the incremental translation contract already promised by the PR
 ### Product behavior after this phase
 
 - Save still means only `save this widget`.
-- Save still hands translation work off asynchronously, but it does so by durably enqueuing Tokyo overlay convergence before the request completes.
+- Save still hands translation work off asynchronously, but it does so by durably attempting to enqueue Tokyo overlay convergence before the request completes.
+- If enqueue fails after the base commit succeeded, Save still returns success and the system records overlay convergence as system-owned failure state for the current fingerprint.
 - Tokyo-worker can now compare the previous saved base against the new saved base.
 - Locales that already have overlay ops update only changed/removed translatable paths.
 - Locales that do not yet have overlay ops still get a full first generation.
@@ -218,6 +225,7 @@ Code this:
 Phase 0A is green only if all of the following are true:
 
 - save can durably enqueue overlay convergence with previous saved-base identity and locale intent
+- base save no longer returns failure after a successful base commit just because overlay enqueue failed afterward
 - Tokyo-worker diffs previous/current saved bases when that identity is available
 - locales with existing ops no longer require a full-widget translation request for tiny edits
 - locales without existing ops still get a full first generation
@@ -253,6 +261,7 @@ make Tokyo-worker and Roma return only the panel truth `75E` actually needs.
 - The route does not return translated output.
 - The route does not return activated-but-not-ready locales.
 - `readyLocales` contains only locales current for the current base fingerprint.
+- the route exposes honest convergence state for that current fingerprint: `ok`, `updating`, or `failed`
 - Opening `Translations` is a read-only status operation; it must not write or heal localization base/artifact state.
 
 ### Files To Change

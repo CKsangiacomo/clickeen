@@ -25,6 +25,7 @@ async function postAccountInstanceSync(args: {
   publicId: string;
   accountCapsule?: string | null;
   live?: boolean;
+  baseFingerprint?: string | null;
   previousBaseFingerprint?: string | null;
   l10nIntent: AccountInstanceSyncIntent;
 }): Promise<void> {
@@ -39,6 +40,9 @@ async function postAccountInstanceSync(args: {
     accessToken: args.accessToken,
     body: JSON.stringify({
       live: args.live === true,
+      ...(args.baseFingerprint
+        ? { baseFingerprint: args.baseFingerprint }
+        : {}),
       ...(args.previousBaseFingerprint
         ? { previousBaseFingerprint: args.previousBaseFingerprint }
         : {}),
@@ -60,6 +64,7 @@ export async function runAccountInstanceSync(args: {
   publicId: string;
   accountCapsule?: string | null;
   live?: boolean;
+  baseFingerprint?: string | null;
   previousBaseFingerprint?: string | null;
   l10nIntent: AccountInstanceSyncIntent;
 }): Promise<void> {
@@ -75,6 +80,7 @@ export async function enqueueAccountInstanceSync(args: {
   publicId: string;
   accountCapsule?: string | null;
   live?: boolean;
+  baseFingerprint?: string | null;
   previousBaseFingerprint?: string | null;
   l10nIntent: AccountInstanceSyncIntent;
 }): Promise<void> {

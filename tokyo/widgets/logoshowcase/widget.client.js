@@ -798,15 +798,23 @@
       typeof window.CK_PREVIEW_L10N.loadLocalizedState === 'function'
         ? window.CK_PREVIEW_L10N
         : null;
-    const localizedState = helper
-      ? await helper.loadLocalizedState({
+    let localizedState = state;
+    if (helper) {
+      try {
+        localizedState = await helper.loadLocalizedState({
           publicId: typeof publicId === 'string' ? publicId : resolvedPublicId,
           locale,
           baseLocale,
           previewMode,
           baseState: state,
-        })
-      : state;
+        });
+      } catch (error) {
+        if (requestId === previewLocaleRequest) {
+          console.error('[LogoShowcase] preview localization load failed', error);
+        }
+        return;
+      }
+    }
     if (requestId !== previewLocaleRequest) return;
     applyState(localizedState, { locale, previewMode });
   }

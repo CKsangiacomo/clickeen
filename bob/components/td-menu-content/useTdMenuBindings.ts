@@ -34,12 +34,24 @@ export function useTdMenuBindings(args: {
   lastUpdateRef: MutableRefObject<LastUpdate>;
   activePathRef: MutableRefObject<string | null>;
 }) {
+  const {
+    activePathRef,
+    applyOps,
+    compiled,
+    containerRef,
+    instanceData,
+    lastUpdateRef,
+    panelHtml,
+    renderKey,
+    requestUpsell,
+  } = args;
+
   useEffect(() => {
-    const container = args.containerRef.current;
+    const container = containerRef.current;
     if (!container) return;
 
     const applyExpandedOps = (ops: WidgetOp[]) =>
-      args.applyOps(expandLinkedOps({ compiled: args.compiled, instanceData: args.instanceData, ops }));
+      applyOps(expandLinkedOps({ compiled, instanceData, ops }));
 
     const applySet = (path: string, rawValue: unknown) => {
       const applied = applyExpandedOps([{ op: 'set', path, value: rawValue }]);
@@ -65,7 +77,7 @@ export function useTdMenuBindings(args: {
         detail && typeof detail.reasonKey === 'string' ? detail.reasonKey : 'coreui.upsell.reason.flagBlocked';
       const detailText = detail && typeof detail.detail === 'string' ? detail.detail : undefined;
       event.stopPropagation();
-      args.requestUpsell(reasonKey, detailText);
+      requestUpsell(reasonKey, detailText);
     };
 
     const handleContainerEvent = (event: Event) => {
@@ -94,7 +106,7 @@ export function useTdMenuBindings(args: {
       }
 
       const rawValue = target.value;
-      const currentValue = getAt(args.instanceData, path);
+      const currentValue = getAt(instanceData, path);
 
       if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
         const parsed = parseBobJsonValue(target, rawValue);
@@ -106,7 +118,7 @@ export function useTdMenuBindings(args: {
         }
         const applied = applyExpandedOps([{ op: 'set', path, value: parsed }]);
         if (!applied.ok) {
-          const previousValue = getAt<unknown>(args.instanceData, path);
+          const previousValue = getAt<unknown>(instanceData, path);
           const nextValue = serializeBobJsonFieldValue(target, previousValue);
           target.value = nextValue;
           target.dispatchEvent(
@@ -158,12 +170,12 @@ export function useTdMenuBindings(args: {
       const sizePresetMatch = path.match(/^typography\.roles\.([^.]+)\.sizePreset$/);
       if (sizePresetMatch && rawValue === 'custom') {
         const roleKey = sizePresetMatch[1];
-        const currentPreset = getAt<unknown>(args.instanceData, path);
+        const currentPreset = getAt<unknown>(instanceData, path);
         if (typeof currentPreset === 'string' && currentPreset.trim() && currentPreset !== 'custom') {
-          const scaleValue = getAt<unknown>(args.instanceData, `typography.roleScales.${roleKey}.${currentPreset}`);
+          const scaleValue = getAt<unknown>(instanceData, `typography.roleScales.${roleKey}.${currentPreset}`);
           const scalePx = coercePxNumber(scaleValue);
           if (scalePx != null) {
-            const applied = args.applyOps([
+            const applied = applyOps([
               { op: 'set', path: `typography.roles.${roleKey}.sizeCustom`, value: scalePx },
               { op: 'set', path, value: rawValue },
             ]);
@@ -189,10 +201,10 @@ export function useTdMenuBindings(args: {
       const path = field.getAttribute('data-bob-path');
       if (!path) return;
 
-      const value = getAt(args.instanceData, path);
+      const value = getAt(instanceData, path);
 
-      const isActive = args.activePathRef.current === path;
-      const lastUpdate = args.lastUpdateRef.current;
+      const isActive = activePathRef.current === path;
+      const lastUpdate = lastUpdateRef.current;
 
       if (field instanceof HTMLInputElement && field.type === 'radio') {
         const nextChecked = value != null && String(value) === field.value;
@@ -277,14 +289,14 @@ export function useTdMenuBindings(args: {
       container.removeEventListener('change', handleContainerEvent, true);
     };
   }, [
-    args.activePathRef,
-    args.applyOps,
-    args.compiled,
-    args.containerRef,
-    args.instanceData,
-    args.lastUpdateRef,
-    args.panelHtml,
-    args.renderKey,
-    args.requestUpsell,
+    activePathRef,
+    applyOps,
+    compiled,
+    containerRef,
+    instanceData,
+    lastUpdateRef,
+    panelHtml,
+    renderKey,
+    requestUpsell,
   ]);
 }

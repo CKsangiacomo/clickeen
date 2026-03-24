@@ -8,6 +8,7 @@ import { json } from '../http';
 import {
   deleteSavedRenderConfig,
   enqueueTokyoMirrorJob,
+  writeOverlayConvergenceStatus,
   readSavedRenderConfig,
   syncLiveSurface,
   writeConfigPack,
@@ -94,11 +95,23 @@ export async function tryHandleInternalRenderRoutes(
       body && Object.prototype.hasOwnProperty.call(body, 'previousBaseFingerprint')
         ? normalizeSha256Hex(body.previousBaseFingerprint)
         : null;
+    const requestedBaseFingerprint =
+      body && Object.prototype.hasOwnProperty.call(body, 'baseFingerprint')
+        ? normalizeSha256Hex(body.baseFingerprint)
+        : null;
     if (
       body &&
       Object.prototype.hasOwnProperty.call(body, 'previousBaseFingerprint') &&
       body.previousBaseFingerprint !== null &&
       !previousBaseFingerprint
+    ) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (
+      body &&
+      Object.prototype.hasOwnProperty.call(body, 'baseFingerprint') &&
+      body.baseFingerprint !== null &&
+      !requestedBaseFingerprint
     ) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
@@ -128,26 +141,73 @@ export async function tryHandleInternalRenderRoutes(
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
 
-    await enqueueTokyoMirrorJob(env, {
-      v: 1,
-      kind: 'sync-instance-overlays',
+    let resolvedBaseFingerprint = requestedBaseFingerprint;
+    if (!resolvedBaseFingerprint) {
+      const saved = await readSavedRenderConfig({ env, publicId: publicId!, accountId });
+      if (!saved.ok) {
+        return respond(
+          json(
+            { error: { kind: saved.kind, reasonKey: saved.reasonKey } },
+            { status: saved.kind === 'NOT_FOUND' ? 404 : 422 },
+          ),
+        );
+      }
+      resolvedBaseFingerprint = normalizeSha256Hex(saved.value.pointer.l10n?.baseFingerprint);
+    }
+    if (!resolvedBaseFingerprint) {
+      return respond(
+        json(
+          { error: { kind: 'VALIDATION', reasonKey: 'tokyo_saved_l10n_base_missing' } },
+          { status: 422 },
+        ),
+      );
+    }
+
+    await writeOverlayConvergenceStatus({
+      env,
       publicId: publicId!,
+      baseFingerprint: resolvedBaseFingerprint,
+      state: 'pending',
       accountId,
-      live,
-      ...(previousBaseFingerprint ? { previousBaseFingerprint } : {}),
-      accountAuthz: {
-        profile: capsule.profile,
-        role: capsule.role,
-        entitlements: capsule.entitlements ?? null,
-      },
-      l10nIntent: {
-        baseLocale: baseLocale.toLowerCase(),
-        desiredLocales: desiredLocales.map((locale) => locale.trim().toLowerCase()),
-        countryToLocale,
-      },
     });
 
-    return respond(json({ ok: true, queued: true, publicId, live }));
+    try {
+      await enqueueTokyoMirrorJob(env, {
+        v: 1,
+        kind: 'sync-instance-overlays',
+        publicId: publicId!,
+        accountId,
+        live,
+        baseFingerprint: resolvedBaseFingerprint,
+        ...(previousBaseFingerprint ? { previousBaseFingerprint } : {}),
+        accountAuthz: {
+          profile: capsule.profile,
+          role: capsule.role,
+          entitlements: capsule.entitlements ?? null,
+        },
+        l10nIntent: {
+          baseLocale: baseLocale.toLowerCase(),
+          desiredLocales: desiredLocales.map((locale) => locale.trim().toLowerCase()),
+          countryToLocale,
+        },
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      return respond(
+        json(
+          {
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: 'tokyo_overlay_sync_enqueue_failed',
+              detail,
+            },
+          },
+          { status: 503 },
+        ),
+      );
+    }
+
+    return respond(json({ ok: true, queued: true, publicId, live, baseFingerprint: resolvedBaseFingerprint }));
   }
 
   const internalRenderLivePointerMatch = pathname.match(

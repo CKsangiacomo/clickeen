@@ -47,6 +47,8 @@ It is part of the architecture:
 - locales that do not yet have overlay ops may still need a full first generation
 - unchanged locale ops/text packs must be reused instead of paying whole-widget translation cost again
 - post-save translation convergence must be durably enqueued and retried by Tokyo/Tokyo-worker; it must not depend on best-effort fire-and-forget callbacks from Roma
+- base save success is independent from overlay enqueue success; once the base widget commit succeeds, Save returns success and overlay convergence remains system-owned follow-up work
+- there is no inline fallback that runs overlay convergence on the Save request path when the queue is unavailable or enqueue fails
 - Builder/editor reads and preview must consume the same current locale artifact truth that embed/runtime uses; Builder differs only in interaction gating, not in a separate required pointer surface
 
 The widget/instance identity is locale-free.
@@ -143,6 +145,15 @@ If translation convergence is incomplete:
 - the preview locale-switcher and panel dropdown still expose only current/ready locales
 - incomplete locales are not selectable in Builder and are not exposed for runtime switching
 
+Overlay convergence for the current `publicId + baseFingerprint` must expose one honest system-owned lifecycle:
+
+- `ok` — every desired locale is current for the current base fingerprint
+- `updating` — convergence is pending/running for the current base fingerprint and no terminal failure is recorded
+- `failed` — the system recorded a terminal convergence failure for the current base fingerprint
+
+`failed` is not a customer repair workflow and not a fallback trigger.
+It exists so Builder stops lying with endless `updating` when the system already knows convergence failed.
+
 ---
 
 ## Product Scope
@@ -191,12 +202,14 @@ These guardrails exist to keep execution disciplined.
 - Overlay preview is enabled only when the Translations panel is open.
 - Builder consumers use `readyLocales`, never `activeLocales`, for preview/runtime selection.
 - Save writes base widget truth only.
+- Save success must not be rewritten into failure by downstream overlay enqueue problems after the base commit has already succeeded.
 - Translation, status, and runtime reads stay read-only.
 - Consumer paths do not `ensure`, backfill, or heal localization state.
 - The Translations panel owns no translation truth, no translated-content rendering, and no editing.
 - Builder preview and embed consume the same Tokyo-backed locale display truth.
 - If a locale is selectable in Builder or embed, its artifact exists and is current for the active base fingerprint.
 - Missing base/artifact state is a Tokyo/Tokyo-worker boundary failure, not a Builder/Roma coping workflow.
+- Queue availability and queue retry exhaustion are system/infrastructure concerns. They must surface as honest system-owned overlay convergence state, not as inline fallback execution and not as infinite `updating`.
 - Product docs should describe this as “overlay preview disabled/enabled,” not “Bob has multiple modes.”
 - Contradictory repo-level architecture docs are execution drift and must be closed before this slice is called done.
 

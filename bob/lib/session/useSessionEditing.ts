@@ -10,29 +10,31 @@ export function useSessionEditing(args: {
   setState: Dispatch<SetStateAction<SessionState>>;
   setMeta: Dispatch<SetStateAction<SessionMeta>>;
 }) {
+  const { state, setMeta, setState } = args;
+
   const applyOps = useCallback(
     (ops: WidgetOp[]): ApplyWidgetOpsResult => {
-      const compiled = args.state.compiled;
+      const compiled = state.compiled;
       if (!compiled) {
         const result: ApplyWidgetOpsResult = {
           ok: false,
           errors: [{ opIndex: 0, message: 'This widget is not open yet.' }],
         };
-        args.setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
+        setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
         return result;
       }
       const applied = applyWidgetOps({
-        data: args.state.instanceData,
+        data: state.instanceData,
         ops,
         controls: compiled.controls,
       });
 
       if (!applied.ok) {
-        args.setState((prev) => ({ ...prev, error: { source: 'ops', errors: applied.errors } }));
+        setState((prev) => ({ ...prev, error: { source: 'ops', errors: applied.errors } }));
         return applied;
       }
 
-      args.setState((prev) => ({
+      setState((prev) => ({
         ...prev,
         instanceData: applied.data,
         isDirty: serializeInstanceDataSignature(applied.data) !== prev.savedInstanceDataSignature,
@@ -46,12 +48,12 @@ export function useSessionEditing(args: {
 
       return applied;
     },
-    [args.setState, args.state],
+    [setState, state],
   );
 
   const setInstanceLabel = useCallback((label: string) => {
     const trimmed = String(label || '').trim();
-    args.setMeta((prev) => {
+    setMeta((prev) => {
       if (!prev) return prev;
       if (!trimmed) return prev;
       return {
@@ -59,7 +61,7 @@ export function useSessionEditing(args: {
         label: trimmed,
       };
     });
-  }, [args.setMeta]);
+  }, [setMeta]);
 
   return {
     applyOps,

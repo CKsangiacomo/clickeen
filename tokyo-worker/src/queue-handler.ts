@@ -3,6 +3,7 @@ import {
   enforceLiveSurface,
   isTokyoMirrorJob,
   syncLiveSurface,
+  writeOverlayConvergenceStatus,
   writeConfigPack,
   writeMetaPack,
   writeTextPack,
@@ -63,7 +64,36 @@ export async function handleTokyoQueue(
       const message = error instanceof Error ? error.message : String(error);
 
       if (attempt >= maxAttempts) {
-        console.error('[tokyo] queue job failed permanently', body.kind, publicId, message);
+        if (body.kind === 'sync-instance-overlays') {
+          try {
+            await writeOverlayConvergenceStatus({
+              env,
+              publicId,
+              baseFingerprint: body.baseFingerprint,
+              state: 'failed',
+              accountId: body.accountId,
+              detail: message,
+              attemptCount: attempt,
+            });
+          } catch (statusError) {
+            console.error(
+              '[tokyo] queue job failed permanently and could not persist overlay status',
+              body.kind,
+              publicId,
+              body.accountId,
+              message,
+              statusError instanceof Error ? statusError.message : String(statusError),
+            );
+          }
+        }
+        console.error(
+          '[tokyo] queue job failed permanently',
+          body.kind,
+          publicId,
+          body.kind === 'sync-instance-overlays' ? body.accountId : null,
+          `attempt=${attempt}`,
+          message,
+        );
         msg.ack();
         continue;
       }

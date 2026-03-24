@@ -9,6 +9,7 @@ export type AccountTranslationsPanelPayload = {
   baseLocale: string;
   readyLocales: string[];
   translationOk: boolean;
+  translationState: 'ok' | 'updating' | 'failed';
 };
 
 type RouteFailure = {
@@ -52,8 +53,14 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
         .filter((entry): entry is string => Boolean(entry))
     : [];
   const translationOk = typeof raw.translationOk === 'boolean' ? raw.translationOk : null;
+  const translationState =
+    raw.translationState === 'ok' || raw.translationState === 'updating' || raw.translationState === 'failed'
+      ? raw.translationState
+      : null;
 
-  if (!publicId || !widgetType || !baseLocale || translationOk === null) return null;
+  if (!publicId || !widgetType || !baseLocale || translationOk === null || !translationState) {
+    return null;
+  }
   if (!readyLocales.includes(baseLocale)) return null;
 
   return {
@@ -62,6 +69,7 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
     baseLocale,
     readyLocales: Array.from(new Set(readyLocales)),
     translationOk,
+    translationState,
   };
 }
 

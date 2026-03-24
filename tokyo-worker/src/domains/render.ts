@@ -98,6 +98,19 @@ export type MetaLivePointer = {
   updatedAt: string;
 };
 
+export type OverlayConvergenceState = 'pending' | 'failed';
+
+export type OverlayConvergenceStatus = {
+  v: 1;
+  publicId: string;
+  baseFingerprint: string;
+  state: OverlayConvergenceState;
+  updatedAt: string;
+  accountId?: string;
+  detail?: string;
+  attemptCount?: number;
+};
+
 export type WriteConfigPackJob = {
   v: 1;
   kind: 'write-config-pack';
@@ -155,6 +168,7 @@ export type SyncInstanceOverlaysJob = {
   publicId: string;
   accountId: string;
   live: boolean;
+  baseFingerprint: string;
   previousBaseFingerprint?: string | null;
   accountAuthz: {
     profile: RomaAccountAuthzCapsulePayload['profile'];
@@ -244,6 +258,10 @@ function l10nLivePointerKey(publicId: string, locale: string): string {
 
 function l10nTextPackKey(publicId: string, locale: string, textFp: string): string {
   return `l10n/instances/${publicId}/packs/${locale}/${textFp}.json`;
+}
+
+function overlayConvergenceStatusKey(publicId: string, baseFingerprint: string): string {
+  return `l10n/instances/${publicId}/status/${baseFingerprint}.json`;
 }
 
 async function putJson(env: Env, key: string, payload: unknown): Promise<void> {
@@ -648,6 +666,89 @@ function normalizeMetaPointer(raw: unknown): MetaLivePointer | null {
   const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
   if (!publicId || !locale || !metaFp || !updatedAt) return null;
   return { v: 1, publicId, locale, metaFp, updatedAt };
+}
+
+export function normalizeOverlayConvergenceStatus(raw: unknown): OverlayConvergenceStatus | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const payload = raw as Record<string, unknown>;
+  if (payload.v !== 1) return null;
+  const publicId = normalizePublicId(payload.publicId) ?? '';
+  const baseFingerprint = normalizeFingerprint(payload.baseFingerprint) ?? '';
+  const state =
+    payload.state === 'pending' || payload.state === 'failed' ? payload.state : null;
+  const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
+  const accountId = normalizePublicId(payload.accountId);
+  const detail =
+    typeof payload.detail === 'string' && payload.detail.trim() ? payload.detail.trim() : undefined;
+  const attemptCount =
+    typeof payload.attemptCount === 'number' && Number.isFinite(payload.attemptCount)
+      ? payload.attemptCount
+      : undefined;
+  if (!publicId || !baseFingerprint || !state || !updatedAt) return null;
+  return {
+    v: 1,
+    publicId,
+    baseFingerprint,
+    state,
+    updatedAt,
+    ...(accountId ? { accountId } : {}),
+    ...(detail ? { detail } : {}),
+    ...(attemptCount !== undefined ? { attemptCount } : {}),
+  };
+}
+
+export async function readOverlayConvergenceStatus(args: {
+  env: Env;
+  publicId: string;
+  baseFingerprint: string;
+}): Promise<OverlayConvergenceStatus | null> {
+  const publicId = normalizePublicId(args.publicId);
+  if (!publicId) throw new Error('[tokyo] read-overlay-convergence-status invalid publicId');
+  const baseFingerprint = normalizeFingerprint(args.baseFingerprint);
+  if (!baseFingerprint) throw new Error('[tokyo] read-overlay-convergence-status invalid baseFingerprint');
+  return normalizeOverlayConvergenceStatus(
+    await loadJson(args.env, overlayConvergenceStatusKey(publicId, baseFingerprint)),
+  );
+}
+
+export async function writeOverlayConvergenceStatus(args: {
+  env: Env;
+  publicId: string;
+  baseFingerprint: string;
+  state: OverlayConvergenceState;
+  accountId?: string | null;
+  detail?: string | null;
+  attemptCount?: number | null;
+}): Promise<void> {
+  const publicId = normalizePublicId(args.publicId);
+  if (!publicId) throw new Error('[tokyo] write-overlay-convergence-status invalid publicId');
+  const baseFingerprint = normalizeFingerprint(args.baseFingerprint);
+  if (!baseFingerprint) throw new Error('[tokyo] write-overlay-convergence-status invalid baseFingerprint');
+  const accountId = normalizePublicId(args.accountId);
+  await putJson(args.env, overlayConvergenceStatusKey(publicId, baseFingerprint), {
+    v: 1,
+    publicId,
+    baseFingerprint,
+    state: args.state,
+    updatedAt: new Date().toISOString(),
+    ...(accountId ? { accountId } : {}),
+    ...(typeof args.detail === 'string' && args.detail.trim() ? { detail: args.detail.trim() } : {}),
+    ...(typeof args.attemptCount === 'number' && Number.isFinite(args.attemptCount)
+      ? { attemptCount: args.attemptCount }
+      : {}),
+  } satisfies OverlayConvergenceStatus);
+}
+
+export async function clearOverlayConvergenceStatus(args: {
+  env: Env;
+  publicId: string;
+  baseFingerprint: string;
+}): Promise<void> {
+  const publicId = normalizePublicId(args.publicId);
+  if (!publicId) throw new Error('[tokyo] clear-overlay-convergence-status invalid publicId');
+  const baseFingerprint = normalizeFingerprint(args.baseFingerprint);
+  if (!baseFingerprint) throw new Error('[tokyo] clear-overlay-convergence-status invalid baseFingerprint');
+  await args.env.TOKYO_R2.delete(overlayConvergenceStatusKey(publicId, baseFingerprint));
 }
 
 async function writeMetaPointer(args: {
@@ -1157,8 +1258,8 @@ export {
   l10nTextPackKey,
   renderConfigPackKey,
   renderLivePointerKey,
-  renderSavedPointerKey,
-  renderSavedConfigPackKey,
   renderMetaLivePointerKey,
   renderMetaPackKey,
+  renderSavedConfigPackKey,
+  renderSavedPointerKey,
 };

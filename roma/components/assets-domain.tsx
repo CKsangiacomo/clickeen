@@ -255,7 +255,7 @@ export function AssetsDomain() {
         setDeletingAssetId(null);
       }
     },
-    [accountApi, accountId],
+    [accountApi, accountId, refreshAssets],
   );
 
   const handleConfirmDelete = useCallback(async () => {

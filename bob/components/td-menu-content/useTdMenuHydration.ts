@@ -30,15 +30,27 @@ export function useTdMenuHydration(args: {
   showIfEntriesRef: MutableRefObject<ShowIfEntry[]>;
   setRenderKey: Dispatch<SetStateAction<number>>;
 }) {
+  const {
+    accountAssets,
+    containerRef,
+    dieterAssets,
+    instanceDataRef,
+    panelHtml,
+    setRenderKey,
+    showIfEntriesRef,
+    widgetKey,
+    widgetName,
+  } = args;
+
   useEffect(() => {
     resetDieterAssetCaches();
-  }, [args.widgetKey]);
+  }, [widgetKey]);
 
   useEffect(() => {
-    const container = args.containerRef.current;
+    const container = containerRef.current;
     if (!container) return;
 
-    container.innerHTML = args.panelHtml || '';
+    container.innerHTML = panelHtml || '';
     autoNestShowIfDependentClusters(container);
     applyGroupHeaders(container);
     container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
@@ -46,20 +58,20 @@ export function useTdMenuHydration(args: {
       applyGroupHeaders(body ?? cluster);
     });
     const cleanupCollapse = installClusterCollapseBehavior(container);
-    args.showIfEntriesRef.current = buildShowIfEntries(container);
-    applyShowIfVisibility(args.showIfEntriesRef.current, args.instanceDataRef.current);
+    showIfEntriesRef.current = buildShowIfEntries(container);
+    applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
 
-    ensureAssets(args.dieterAssets)
+    ensureAssets(dieterAssets)
       .then(() => {
         if (!container) return;
-        runHydrators(container, { accountAssets: args.accountAssets });
-        applyI18nToDom(container, args.widgetName).catch((err) => {
+        runHydrators(container, { accountAssets });
+        applyI18nToDom(container, widgetName).catch((err) => {
           if (process.env.NODE_ENV === 'development') {
             console.warn('[TdMenuContent] i18n apply failed', err);
           }
         });
-        args.showIfEntriesRef.current = buildShowIfEntries(container);
-        args.setRenderKey((current) => current + 1);
+        showIfEntriesRef.current = buildShowIfEntries(container);
+        setRenderKey((current) => current + 1);
       })
       .catch((err) => {
         if (process.env.NODE_ENV === 'development') {
@@ -70,5 +82,5 @@ export function useTdMenuHydration(args: {
     return () => {
       cleanupCollapse();
     };
-  }, [args.accountAssets, args.containerRef, args.dieterAssets, args.instanceDataRef, args.panelHtml, args.setRenderKey, args.showIfEntriesRef, args.widgetName]);
+  }, [accountAssets, containerRef, dieterAssets, instanceDataRef, panelHtml, setRenderKey, showIfEntriesRef, widgetName]);
 }

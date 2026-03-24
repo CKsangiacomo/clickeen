@@ -28,6 +28,7 @@ import {
 } from './account-localization';
 import { upsertL10nOverlay } from './l10n-authoring';
 import {
+  clearOverlayConvergenceStatus,
   type SyncInstanceOverlaysJob,
   ensureSavedRenderL10nBase,
   loadSavedRenderL10nBase,
@@ -426,6 +427,27 @@ export async function runQueuedAccountInstanceSync(
   env: Env,
   job: SyncInstanceOverlaysJob,
 ): Promise<void> {
+  const current = await readSavedRenderConfig({
+    env,
+    publicId: job.publicId,
+    accountId: job.accountId,
+  });
+  if (!current.ok) {
+    throw new Error(current.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : current.reasonKey);
+  }
+  const currentBaseFingerprint = normalizeSha256Hex(current.value.pointer.l10n?.baseFingerprint);
+  if (!currentBaseFingerprint) {
+    throw new Error('tokyo_saved_l10n_base_missing');
+  }
+  if (currentBaseFingerprint !== job.baseFingerprint) {
+    await clearOverlayConvergenceStatus({
+      env,
+      publicId: job.publicId,
+      baseFingerprint: job.baseFingerprint,
+    });
+    return;
+  }
+
   await syncAccountInstance({
     env,
     accountId: job.accountId,
@@ -438,6 +460,11 @@ export async function runQueuedAccountInstanceSync(
       desiredLocales: job.l10nIntent.desiredLocales,
       countryToLocale: job.l10nIntent.countryToLocale,
     },
+  });
+  await clearOverlayConvergenceStatus({
+    env,
+    publicId: job.publicId,
+    baseFingerprint: job.baseFingerprint,
   });
 }
 

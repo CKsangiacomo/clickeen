@@ -16,21 +16,23 @@ export function useSessionSaving(args: {
   setState: Dispatch<SetStateAction<SessionState>>;
   executeAccountCommand: ExecuteAccountCommand;
 }) {
+  const { executeAccountCommand, metaRef, setState, setUpsell, stateRef } = args;
+
   const save = useCallback(async () => {
     // Save persists the one widget the customer is actively editing.
-    const snapshot = args.stateRef.current;
-    const meta = args.metaRef.current;
+    const snapshot = stateRef.current;
+    const meta = metaRef.current;
     const publicId = meta?.publicId ? String(meta.publicId) : '';
     const widgetType = meta?.widgetname ? String(meta.widgetname).trim() : '';
     if (!publicId) {
-      args.setState((prev) => ({
+      setState((prev) => ({
         ...prev,
         error: { source: 'save', message: 'Missing instance context for save.' },
       }));
       return;
     }
     if (!widgetType) {
-      args.setState((prev) => ({
+      setState((prev) => ({
         ...prev,
         error: { source: 'save', message: 'Missing widget type for save.' },
       }));
@@ -40,10 +42,10 @@ export function useSessionSaving(args: {
       return;
     }
 
-    args.setState((prev) => ({ ...prev, isSaving: true, error: null }));
+    setState((prev) => ({ ...prev, isSaving: true, error: null }));
 
     try {
-      const { ok, json } = await args.executeAccountCommand({
+      const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
         publicId,
         body: {
@@ -57,14 +59,14 @@ export function useSessionSaving(args: {
       if (!ok) {
         const err = json?.error;
         if (err?.kind === 'VALIDATION') {
-          args.setState((prev) => ({
+          setState((prev) => ({
             ...prev,
             isSaving: false,
             error: { source: 'save', message: err.reasonKey || 'Save failed.', paths: err.paths },
           }));
           return;
         }
-        args.setState((prev) => ({
+        setState((prev) => ({
           ...prev,
           isSaving: false,
           error: { source: 'save', message: err?.reasonKey || 'Save failed.' },
@@ -72,7 +74,7 @@ export function useSessionSaving(args: {
         return;
       }
 
-      const current = args.stateRef.current;
+      const current = stateRef.current;
       const savedInstanceDataSignature = serializeInstanceDataSignature(current.instanceData);
       const nextState: SessionState = {
         ...current,
@@ -81,19 +83,19 @@ export function useSessionSaving(args: {
         isSaving: false,
         error: null,
       };
-      args.setUpsell(null);
-      args.stateRef.current = nextState;
-      args.setState(nextState);
+      setUpsell(null);
+      stateRef.current = nextState;
+      setState(nextState);
     } catch (err) {
       const messageText = err instanceof Error ? err.message : String(err);
-      args.setState((prev) => ({ ...prev, isSaving: false, error: { source: 'save', message: messageText } }));
+      setState((prev) => ({ ...prev, isSaving: false, error: { source: 'save', message: messageText } }));
     }
   }, [
-    args.executeAccountCommand,
-    args.metaRef,
-    args.setState,
-    args.setUpsell,
-    args.stateRef,
+    executeAccountCommand,
+    metaRef,
+    setState,
+    setUpsell,
+    stateRef,
   ]);
 
   return {

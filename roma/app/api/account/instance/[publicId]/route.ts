@@ -264,6 +264,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       publicId,
       accountCapsule: current.value.authzToken,
       live: false,
+      baseFingerprint: result.baseFingerprint,
       previousBaseFingerprint: result.previousBaseFingerprint,
       l10nIntent: {
         baseLocale: accountLocalesState.policy.baseLocale,
@@ -275,20 +276,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       },
     });
   } catch (error) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail: error instanceof Error ? error.message : String(error),
-          },
-        },
-        { status: 502 },
-      ),
-      current.value.setCookies,
-    );
+    console.error('[roma account instance current route] overlay sync enqueue failed after save', {
+      accountId,
+      publicId,
+      detail: error instanceof Error ? error.message : String(error),
+    });
   }
 
   return withSession(

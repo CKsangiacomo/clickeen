@@ -12,6 +12,7 @@ import type { Env } from '../types';
 import {
   l10nLivePointerKey,
   loadSavedRenderL10nBase,
+  readOverlayConvergenceStatus,
   readSavedRenderPointer,
 } from './render';
 import {
@@ -324,6 +325,7 @@ export async function loadAccountTranslationsPanelData(args: {
   baseLocale: string;
   readyLocales: string[];
   translationOk: boolean;
+  translationState: 'ok' | 'updating' | 'failed';
 }> {
   const panel = await loadAccountTranslationsPanelContext({
     env: args.env,
@@ -338,13 +340,24 @@ export async function loadAccountTranslationsPanelData(args: {
     baseFingerprint: panel.baseFingerprint,
   });
   const readyLocaleSet = new Set(readyLocales);
+  const translationOk = panel.desiredLocales.every((locale) => readyLocaleSet.has(locale));
+  const convergenceStatus = await readOverlayConvergenceStatus({
+    env: args.env,
+    publicId: args.publicId,
+    baseFingerprint: panel.baseFingerprint,
+  });
 
   return {
     publicId: args.publicId,
     widgetType: panel.widgetType,
     baseLocale: panel.baseLocale,
     readyLocales: panel.desiredLocales.filter((locale) => readyLocaleSet.has(locale)),
-    translationOk: panel.desiredLocales.every((locale) => readyLocaleSet.has(locale)),
+    translationOk,
+    translationState: translationOk
+      ? 'ok'
+      : convergenceStatus?.state === 'failed'
+        ? 'failed'
+        : 'updating',
   };
 }
 

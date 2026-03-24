@@ -17,6 +17,7 @@ type TranslationsPanelData = {
   baseLocale: string;
   readyLocales: string[];
   translationOk: boolean;
+  translationState: 'ok' | 'updating' | 'failed';
 };
 
 type ErrorPayload = {
@@ -55,13 +56,20 @@ function normalizePanelData(payload: unknown): TranslationsPanelData | null {
       )
     : [];
   const translationOk = typeof record.translationOk === 'boolean' ? record.translationOk : null;
+  const translationState =
+    record.translationState === 'ok' ||
+    record.translationState === 'updating' ||
+    record.translationState === 'failed'
+      ? record.translationState
+      : null;
 
-  if (!baseLocale || translationOk === null) return null;
+  if (!baseLocale || translationOk === null || !translationState) return null;
   if (!readyLocales.includes(baseLocale)) return null;
   return {
     baseLocale,
     readyLocales,
     translationOk,
+    translationState,
   };
 }
 
@@ -254,16 +262,20 @@ export function TranslationsPanel({
     ? 'Checking translations'
     : error
       ? 'Translations unavailable'
-      : data?.translationOk
+      : data?.translationState === 'ok'
         ? 'Translations are ok'
-        : 'Translations are updating';
+        : data?.translationState === 'failed'
+          ? 'Translations failed'
+          : 'Translations are updating';
   const translationStatusBody = loading
     ? 'Builder is loading current translation status.'
     : error
       ? error
-      : data?.translationOk
+      : data?.translationState === 'ok'
         ? 'All selected locales are current for the latest saved widget state.'
-        : 'Only ready locales are previewable until background convergence finishes.';
+        : data?.translationState === 'failed'
+          ? 'Background convergence failed for the latest saved widget state. Only ready locales remain previewable.'
+          : 'Only ready locales are previewable until background convergence finishes.';
 
   if (!session.compiled) {
     return (
