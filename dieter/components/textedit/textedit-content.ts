@@ -46,7 +46,7 @@ export function syncPreview(state: TexteditState): void {
   const normalized = normalizeEditorValue(raw, state.allowLinks);
   replacePreviewText(state, normalized);
   state.hiddenInput.value = normalized;
-  state.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+  state.hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 function replacePreviewText(state: TexteditState, normalized: string): void {

@@ -569,7 +569,7 @@ function syncPreview(state: DropdownEditState) {
   }
 
   state.hiddenInput.value = sanitized;
-  state.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+  state.hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 function toPreviewText(sanitized: string) {

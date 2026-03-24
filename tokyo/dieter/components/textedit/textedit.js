@@ -67,7 +67,7 @@ var Dieter = (() => {
     const normalized = normalizeEditorValue(raw, state.allowLinks);
     replacePreviewText(state, normalized);
     state.hiddenInput.value = normalized;
-    state.hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+    state.hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
   }
   function replacePreviewText(state, normalized) {
     const sanitized = sanitizeInline(normalized, state.allowLinks);

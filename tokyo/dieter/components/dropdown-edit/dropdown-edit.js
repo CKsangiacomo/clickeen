@@ -658,7 +658,7 @@ var Dieter = (() => {
       target.textContent = target.dataset.placeholder ?? "";
     }
     state.hiddenInput.value = sanitized;
-    state.hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+    state.hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
   }
   function toPreviewText(sanitized) {
     const tmp = document.createElement("div");
