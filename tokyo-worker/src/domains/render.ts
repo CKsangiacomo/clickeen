@@ -98,17 +98,31 @@ export type MetaLivePointer = {
   updatedAt: string;
 };
 
-export type OverlayConvergenceState = 'pending' | 'failed';
+export type OverlayWorkItemState = 'pending' | 'running' | 'failed';
 
-export type OverlayConvergenceStatus = {
+export type OverlayWorkItem = {
   v: 1;
+  overlayType: 'locale';
   publicId: string;
+  accountId: string;
   baseFingerprint: string;
-  state: OverlayConvergenceState;
+  live: boolean;
+  accountAuthz: {
+    profile: RomaAccountAuthzCapsulePayload['profile'];
+    role: RomaAccountAuthzCapsulePayload['role'];
+    entitlements: RomaAccountAuthzCapsulePayload['entitlements'] | null;
+  };
+  baseLocale: string;
+  desiredLocales: string[];
+  countryToLocale: Record<string, string>;
+  state: OverlayWorkItemState;
+  attemptCount: number;
+  createdAt: string;
   updatedAt: string;
-  accountId?: string;
-  detail?: string;
-  attemptCount?: number;
+  previousBaseFingerprint?: string | null;
+  startedAt?: string;
+  failedAt?: string;
+  lastError?: string;
 };
 
 export type WriteConfigPackJob = {
@@ -166,20 +180,7 @@ export type SyncInstanceOverlaysJob = {
   v: 1;
   kind: 'sync-instance-overlays';
   publicId: string;
-  accountId: string;
-  live: boolean;
   baseFingerprint: string;
-  previousBaseFingerprint?: string | null;
-  accountAuthz: {
-    profile: RomaAccountAuthzCapsulePayload['profile'];
-    role: RomaAccountAuthzCapsulePayload['role'];
-    entitlements: RomaAccountAuthzCapsulePayload['entitlements'] | null;
-  };
-  l10nIntent: {
-    baseLocale: string;
-    desiredLocales: string[];
-    countryToLocale: Record<string, string>;
-  };
 };
 
 export type TokyoMirrorQueueJob =
@@ -224,6 +225,39 @@ function normalizeLocaleList(value: unknown): string[] {
   );
 }
 
+function normalizeCountryToLocaleMap(value: unknown): Record<string, string> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).flatMap(([country, locale]) => {
+      if (!/^[A-Z]{2}$/.test(country)) return [];
+      const normalized = normalizeLocale(locale);
+      return normalized ? [[country, normalized] as const] : [];
+    }),
+  );
+}
+
+function normalizeWorkItemAccountAuthz(
+  value: unknown,
+): OverlayWorkItem['accountAuthz'] | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const payload = value as Record<string, unknown>;
+  const profile =
+    typeof payload.profile === 'string' && payload.profile.trim()
+      ? (payload.profile.trim() as RomaAccountAuthzCapsulePayload['profile'])
+      : null;
+  const role =
+    payload.role === 'owner' || payload.role === 'admin' || payload.role === 'editor'
+      ? payload.role
+      : null;
+  const entitlements =
+    payload.entitlements === null ||
+    (payload.entitlements && typeof payload.entitlements === 'object' && !Array.isArray(payload.entitlements))
+      ? (payload.entitlements as RomaAccountAuthzCapsulePayload['entitlements'] | null)
+      : null;
+  if (!profile || !role) return null;
+  return { profile, role, entitlements };
+}
+
 function renderLivePointerKey(publicId: string): string {
   return `renders/instances/${publicId}/live/r.json`;
 }
@@ -260,8 +294,8 @@ function l10nTextPackKey(publicId: string, locale: string, textFp: string): stri
   return `l10n/instances/${publicId}/packs/${locale}/${textFp}.json`;
 }
 
-function overlayConvergenceStatusKey(publicId: string, baseFingerprint: string): string {
-  return `l10n/instances/${publicId}/status/${baseFingerprint}.json`;
+function overlayWorkItemKey(publicId: string, baseFingerprint: string): string {
+  return `l10n/instances/${publicId}/work/${baseFingerprint}.json`;
 }
 
 async function putJson(env: Env, key: string, payload: unknown): Promise<void> {
@@ -668,87 +702,228 @@ function normalizeMetaPointer(raw: unknown): MetaLivePointer | null {
   return { v: 1, publicId, locale, metaFp, updatedAt };
 }
 
-export function normalizeOverlayConvergenceStatus(raw: unknown): OverlayConvergenceStatus | null {
+export function normalizeOverlayWorkItem(raw: unknown): OverlayWorkItem | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const payload = raw as Record<string, unknown>;
   if (payload.v !== 1) return null;
+  if (payload.overlayType !== 'locale') return null;
   const publicId = normalizePublicId(payload.publicId) ?? '';
+  const accountId = normalizePublicId(payload.accountId) ?? '';
   const baseFingerprint = normalizeFingerprint(payload.baseFingerprint) ?? '';
   const state =
-    payload.state === 'pending' || payload.state === 'failed' ? payload.state : null;
-  const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
-  const accountId = normalizePublicId(payload.accountId);
-  const detail =
-    typeof payload.detail === 'string' && payload.detail.trim() ? payload.detail.trim() : undefined;
+    payload.state === 'pending' || payload.state === 'running' || payload.state === 'failed'
+      ? payload.state
+      : null;
+  const live = payload.live === true;
+  const accountAuthz = normalizeWorkItemAccountAuthz(payload.accountAuthz);
+  const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
+  const desiredLocales = normalizeLocaleList(payload.desiredLocales);
+  const countryToLocale = normalizeCountryToLocaleMap(payload.countryToLocale);
   const attemptCount =
-    typeof payload.attemptCount === 'number' && Number.isFinite(payload.attemptCount)
+    typeof payload.attemptCount === 'number' &&
+    Number.isFinite(payload.attemptCount) &&
+    payload.attemptCount >= 0
       ? payload.attemptCount
-      : undefined;
-  if (!publicId || !baseFingerprint || !state || !updatedAt) return null;
+      : null;
+  const createdAt = typeof payload.createdAt === 'string' ? payload.createdAt.trim() : '';
+  const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
+  const previousBaseFingerprint =
+    payload.previousBaseFingerprint === null
+      ? null
+      : normalizeFingerprint(payload.previousBaseFingerprint);
+  const startedAt = typeof payload.startedAt === 'string' ? payload.startedAt.trim() : '';
+  const failedAt = typeof payload.failedAt === 'string' ? payload.failedAt.trim() : '';
+  const lastError =
+    typeof payload.lastError === 'string' && payload.lastError.trim()
+      ? payload.lastError.trim()
+      : '';
+  if (
+    !publicId ||
+    !accountId ||
+    !baseFingerprint ||
+    !state ||
+    !accountAuthz ||
+    !baseLocale ||
+    !desiredLocales.length ||
+    attemptCount === null ||
+    !createdAt ||
+    !updatedAt
+  ) {
+    return null;
+  }
+  if (!desiredLocales.includes(baseLocale)) return null;
   return {
     v: 1,
+    overlayType: 'locale',
     publicId,
+    accountId,
     baseFingerprint,
+    live,
+    accountAuthz,
+    baseLocale,
+    desiredLocales,
+    countryToLocale,
     state,
+    attemptCount,
+    createdAt,
     updatedAt,
-    ...(accountId ? { accountId } : {}),
-    ...(detail ? { detail } : {}),
-    ...(attemptCount !== undefined ? { attemptCount } : {}),
+    ...(previousBaseFingerprint ? { previousBaseFingerprint } : {}),
+    ...(startedAt ? { startedAt } : {}),
+    ...(failedAt ? { failedAt } : {}),
+    ...(lastError ? { lastError } : {}),
   };
 }
 
-export async function readOverlayConvergenceStatus(args: {
+export async function readOverlayWorkItem(args: {
   env: Env;
   publicId: string;
   baseFingerprint: string;
-}): Promise<OverlayConvergenceStatus | null> {
+}): Promise<OverlayWorkItem | null> {
   const publicId = normalizePublicId(args.publicId);
-  if (!publicId) throw new Error('[tokyo] read-overlay-convergence-status invalid publicId');
+  if (!publicId) throw new Error('[tokyo] read-overlay-work-item invalid publicId');
   const baseFingerprint = normalizeFingerprint(args.baseFingerprint);
-  if (!baseFingerprint) throw new Error('[tokyo] read-overlay-convergence-status invalid baseFingerprint');
-  return normalizeOverlayConvergenceStatus(
-    await loadJson(args.env, overlayConvergenceStatusKey(publicId, baseFingerprint)),
+  if (!baseFingerprint) throw new Error('[tokyo] read-overlay-work-item invalid baseFingerprint');
+  return normalizeOverlayWorkItem(
+    await loadJson(args.env, overlayWorkItemKey(publicId, baseFingerprint)),
   );
 }
 
-export async function writeOverlayConvergenceStatus(args: {
+export async function writeOverlayWorkItem(args: {
   env: Env;
   publicId: string;
+  accountId: string;
   baseFingerprint: string;
-  state: OverlayConvergenceState;
-  accountId?: string | null;
-  detail?: string | null;
+  live: boolean;
+  accountAuthz: OverlayWorkItem['accountAuthz'];
+  baseLocale: string;
+  desiredLocales: string[];
+  countryToLocale?: Record<string, string> | null;
+  previousBaseFingerprint?: string | null;
+  state: OverlayWorkItemState;
   attemptCount?: number | null;
+  lastError?: string | null;
+  startedAt?: string | null;
+  failedAt?: string | null;
 }): Promise<void> {
   const publicId = normalizePublicId(args.publicId);
-  if (!publicId) throw new Error('[tokyo] write-overlay-convergence-status invalid publicId');
-  const baseFingerprint = normalizeFingerprint(args.baseFingerprint);
-  if (!baseFingerprint) throw new Error('[tokyo] write-overlay-convergence-status invalid baseFingerprint');
+  if (!publicId) throw new Error('[tokyo] write-overlay-work-item invalid publicId');
   const accountId = normalizePublicId(args.accountId);
-  await putJson(args.env, overlayConvergenceStatusKey(publicId, baseFingerprint), {
-    v: 1,
+  if (!accountId) throw new Error('[tokyo] write-overlay-work-item invalid accountId');
+  const baseFingerprint = normalizeFingerprint(args.baseFingerprint);
+  if (!baseFingerprint) throw new Error('[tokyo] write-overlay-work-item invalid baseFingerprint');
+  const accountAuthz = normalizeWorkItemAccountAuthz(args.accountAuthz);
+  if (!accountAuthz) throw new Error('[tokyo] write-overlay-work-item invalid accountAuthz');
+  const baseLocale = normalizeLocale(args.baseLocale);
+  if (!baseLocale) throw new Error('[tokyo] write-overlay-work-item invalid baseLocale');
+  const desiredLocales = normalizeLocaleList(args.desiredLocales);
+  if (!desiredLocales.length || !desiredLocales.includes(baseLocale)) {
+    throw new Error('[tokyo] write-overlay-work-item invalid desiredLocales');
+  }
+  const existing = await readOverlayWorkItem({
+    env: args.env,
     publicId,
     baseFingerprint,
+  });
+  const now = new Date().toISOString();
+  const attemptCount =
+    typeof args.attemptCount === 'number' &&
+    Number.isFinite(args.attemptCount) &&
+    args.attemptCount >= 0
+      ? args.attemptCount
+      : existing?.attemptCount ?? 0;
+  const previousBaseFingerprint =
+    args.previousBaseFingerprint === null
+      ? null
+      : normalizeFingerprint(args.previousBaseFingerprint) ?? existing?.previousBaseFingerprint;
+  const startedAt =
+    typeof args.startedAt === 'string' && args.startedAt.trim()
+      ? args.startedAt.trim()
+      : args.state === 'running'
+        ? existing?.startedAt ?? now
+        : existing?.startedAt;
+  const failedAt =
+    typeof args.failedAt === 'string' && args.failedAt.trim()
+      ? args.failedAt.trim()
+      : args.state === 'failed'
+        ? now
+        : undefined;
+  const lastError =
+    typeof args.lastError === 'string' && args.lastError.trim()
+      ? args.lastError.trim()
+      : args.state === 'failed'
+        ? existing?.lastError
+        : undefined;
+  await putJson(args.env, overlayWorkItemKey(publicId, baseFingerprint), {
+    v: 1,
+    overlayType: 'locale',
+    publicId,
+    accountId,
+    baseFingerprint,
+    live: args.live === true,
+    accountAuthz,
+    baseLocale,
+    desiredLocales,
+    countryToLocale: normalizeCountryToLocaleMap(args.countryToLocale),
     state: args.state,
-    updatedAt: new Date().toISOString(),
-    ...(accountId ? { accountId } : {}),
-    ...(typeof args.detail === 'string' && args.detail.trim() ? { detail: args.detail.trim() } : {}),
-    ...(typeof args.attemptCount === 'number' && Number.isFinite(args.attemptCount)
-      ? { attemptCount: args.attemptCount }
-      : {}),
-  } satisfies OverlayConvergenceStatus);
+    attemptCount,
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+    ...(previousBaseFingerprint ? { previousBaseFingerprint } : {}),
+    ...(startedAt ? { startedAt } : {}),
+    ...(failedAt ? { failedAt } : {}),
+    ...(lastError ? { lastError } : {}),
+  } satisfies OverlayWorkItem);
 }
 
-export async function clearOverlayConvergenceStatus(args: {
+export async function transitionOverlayWorkItemState(args: {
+  env: Env;
+  publicId: string;
+  baseFingerprint: string;
+  state: OverlayWorkItemState;
+  attemptCount?: number | null;
+  lastError?: string | null;
+}): Promise<OverlayWorkItem> {
+  const existing = await readOverlayWorkItem(args);
+  if (!existing) {
+    throw new Error('[tokyo] transition-overlay-work-item missing');
+  }
+  await writeOverlayWorkItem({
+    env: args.env,
+    publicId: existing.publicId,
+    accountId: existing.accountId,
+    baseFingerprint: existing.baseFingerprint,
+    live: existing.live,
+    accountAuthz: existing.accountAuthz,
+    baseLocale: existing.baseLocale,
+    desiredLocales: existing.desiredLocales,
+    countryToLocale: existing.countryToLocale,
+    previousBaseFingerprint: existing.previousBaseFingerprint ?? null,
+    state: args.state,
+    attemptCount:
+      typeof args.attemptCount === 'number' && Number.isFinite(args.attemptCount)
+        ? args.attemptCount
+        : existing.attemptCount,
+    lastError: args.lastError ?? existing.lastError ?? null,
+    startedAt: args.state === 'running' ? new Date().toISOString() : existing.startedAt ?? null,
+    failedAt: args.state === 'failed' ? new Date().toISOString() : null,
+  });
+  const updated = await readOverlayWorkItem(args);
+  if (!updated) {
+    throw new Error('[tokyo] transition-overlay-work-item persisted-invalid');
+  }
+  return updated;
+}
+
+export async function deleteOverlayWorkItem(args: {
   env: Env;
   publicId: string;
   baseFingerprint: string;
 }): Promise<void> {
   const publicId = normalizePublicId(args.publicId);
-  if (!publicId) throw new Error('[tokyo] clear-overlay-convergence-status invalid publicId');
+  if (!publicId) throw new Error('[tokyo] delete-overlay-work-item invalid publicId');
   const baseFingerprint = normalizeFingerprint(args.baseFingerprint);
-  if (!baseFingerprint) throw new Error('[tokyo] clear-overlay-convergence-status invalid baseFingerprint');
-  await args.env.TOKYO_R2.delete(overlayConvergenceStatusKey(publicId, baseFingerprint));
+  if (!baseFingerprint) throw new Error('[tokyo] delete-overlay-work-item invalid baseFingerprint');
+  await args.env.TOKYO_R2.delete(overlayWorkItemKey(publicId, baseFingerprint));
 }
 
 async function writeMetaPointer(args: {

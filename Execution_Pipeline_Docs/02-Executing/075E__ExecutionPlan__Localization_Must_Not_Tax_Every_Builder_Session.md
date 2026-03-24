@@ -51,8 +51,9 @@ If implementation starts naming extra subsystems, extra preview paths, or generi
 20. Builder and embed must read the same current locale pointer truth. Builder differs only in when locale preview is enabled, not in a separate required pointer surface.
 21. Once the base widget save succeeds, Roma must return success even if overlay enqueue fails afterward.
 22. Queue absence or enqueue failure must not trigger inline overlay convergence on the Save request path.
-23. Overlay convergence for the current `publicId + baseFingerprint` must expose one honest system-owned state: `ok`, `updating`, or `failed`.
-24. Permanent queue failure must become durable system state, not a console-only event and not infinite `updating`.
+23. Tokyo/Tokyo-worker must own one durable overlay work item for the current `publicId + baseFingerprint`; queue delivery is a trigger, not workflow truth.
+24. Builder must expose one honest system-owned state from that work item plus ready artifact truth: `ok`, `updating`, or `failed`.
+25. Permanent queue failure must become durable work-item state, not a console-only event and not infinite `updating`.
 
 ### Discipline Checks
 
@@ -67,6 +68,7 @@ These checks are here to stop implementation drift:
 - If code adds files outside the declared write set, justify them against product truth before proceeding.
 - If code tries to re-couple overlay generation back into the Save request path, stop.
 - If code handles queue failure only with logs and no durable state, stop.
+- If code treats the queue message itself as workflow truth instead of a trigger to process durable Tokyo work, stop.
 
 ---
 
@@ -145,8 +147,8 @@ make save follow the incremental translation contract already promised by the PR
 ### Product behavior after this phase
 
 - Save still means only `save this widget`.
-- Save still hands translation work off asynchronously, but it does so by durably attempting to enqueue Tokyo overlay convergence before the request completes.
-- If enqueue fails after the base commit succeeded, Save still returns success and the system records overlay convergence as system-owned failure state for the current fingerprint.
+- Save still hands translation work off asynchronously, but it does so by writing/updating one durable Tokyo overlay work item for the new `baseFingerprint` and then triggering queue delivery before the request completes.
+- If enqueue fails after the base commit succeeded, Save still returns success and the durable work item remains the system-owned source of follow-up convergence truth for the current fingerprint.
 - Tokyo-worker can now compare the previous saved base against the new saved base.
 - Locales that already have overlay ops update only changed/removed translatable paths.
 - Locales that do not yet have overlay ops still get a full first generation.
@@ -160,7 +162,7 @@ make save follow the incremental translation contract already promised by the PR
 Code this:
 
 - keep the one boring save boundary
-- pass previous saved-base identity plus deterministic locale intent into durable Tokyo overlay sync after a successful save
+- pass previous saved-base identity plus deterministic locale intent into durable Tokyo overlay work creation after a successful save
 
 Do not code:
 
@@ -182,8 +184,8 @@ Do not code:
 
 Code this:
 
-- thread optional previous saved-base identity and deterministic locale intent into the Tokyo sync request
-- support a durable enqueue path for background convergence and an inline path for explicit live publish
+- thread optional previous saved-base identity and deterministic locale intent into the Tokyo work-item request
+- keep Roma as the save-path trigger only; do not make Roma the owner of queue lifecycle or workflow truth
 
 Do not code:
 
@@ -195,7 +197,7 @@ Code this:
 
 - return previous saved-base identity from the saved-write route
 - accept optional previous saved-base identity and deterministic locale intent on the sync route
-- add a private enqueue route that writes a durable Tokyo queue job instead of relying on best-effort Roma callbacks
+- add a private enqueue route that writes/updates the durable Tokyo overlay work item and then enqueues only a locator job instead of relying on best-effort Roma callbacks
 
 #### 5. `tokyo-worker/src/domains/account-instance-sync.ts`
 
@@ -207,7 +209,7 @@ Code this:
 - ask San Francisco only for changed work for locales that already have ops
 - fall back to full generation only for locales that do not yet have ops or when previous diff input is genuinely unavailable
 - consume Roma-owned locale intent directly instead of live-reading Berlin on the sync path
-- expose the same convergence logic to both the inline route and the durable queue consumer
+- expose one shared convergence function that the durable queue consumer runs against the work item for the current fingerprint
 
 Do not code:
 
@@ -224,12 +226,13 @@ Code this:
 
 Phase 0A is green only if all of the following are true:
 
-- save can durably enqueue overlay convergence with previous saved-base identity and locale intent
+- save can durably create/update overlay work for the current fingerprint with previous saved-base identity and locale intent
 - base save no longer returns failure after a successful base commit just because overlay enqueue failed afterward
 - Tokyo-worker diffs previous/current saved bases when that identity is available
 - locales with existing ops no longer require a full-widget translation request for tiny edits
 - locales without existing ops still get a full first generation
 - Tokyo-worker sync no longer depends on Berlin reads or bearer-token auth on the sync path
+- queue delivery is no longer the workflow truth; the Tokyo work item is
 - Roma typecheck passes
 - Tokyo-worker typecheck passes
 

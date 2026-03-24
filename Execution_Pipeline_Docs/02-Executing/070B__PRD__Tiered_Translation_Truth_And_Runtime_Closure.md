@@ -70,7 +70,7 @@ There are only three product-truth questions in this PRD:
    - Owner: Tokyo/Tokyo-worker artifact truth
    - Contract:
      - `ready` means Tokyo has the exact current-fingerprint artifact.
-     - Overlay presence, queued jobs, prior-fingerprint artifacts, and account settings do not count as `ready`.
+     - Overlay presence, work items in `pending`/`running`, prior-fingerprint artifacts, and account settings do not count as `ready`.
      - No upstream or downstream surface may manufacture a second readiness definition.
 
 3. What locales should consumers and editors show?
@@ -182,13 +182,14 @@ These tenets are the architectural memory for PRD 070.
    - Implement locale only now.
    - Every future overlay dimension must still follow:
      - one desired state
-     - one convergence state for the current base fingerprint
+     - one durable overlay work item for the current base fingerprint
      - one actual artifact truth
      - one reconciliation loop
 
 10. Consumer readiness must converge by write-path trigger, not by request-time cleverness
    - `readyLocales` is a point-in-time consumer projection of Tokyo truth.
-   - Save-triggered overlay convergence must be durably enqueued and retried by the system; it must not depend on best-effort request callbacks.
+   - Save-triggered overlay convergence must be represented by one durable Tokyo-owned work item and retried by the system; it must not depend on best-effort request callbacks.
+   - Queue delivery is only a trigger to process that work item; the queue message is not workflow truth.
    - Base save success is independent from overlay enqueue success; save must not be reclassified as failed after canonical base truth has already been committed.
    - Queue absence or enqueue failure must not create a second inline execution mode on the Save request path.
    - When a locale becomes ready for a published instance/current fingerprint, the system must trigger consumer-pointer reconciliation.
@@ -209,7 +210,7 @@ In PRD 070:
 - `plan allowance` means what the tier/entitlements permit in principle
 - `allowed` means the saved Roma locale set that is permitted by entitlements and selected by the user
 - `ready` means Tokyo has the artifact for the exact current base fingerprint
-- `convergence state` means Tokyo-owned system status for the current `publicId + baseFingerprint` (`updating` or `failed`) while waiting for `ready`
+- `overlay work item` means the Tokyo-owned durable record for the current `publicId + baseFingerprint`, with internal states `pending`, `running`, or `failed`
 - `consumer pointer` means the ready-only locale policy used by embed/runtime consumers
 - `overlay` means any generated/stored variant layer whose desired state is Roma-owned and whose actual ready state is Tokyo-owned
 
@@ -236,7 +237,7 @@ This is intentionally binary.
 The following do not count as `Ready`:
 - the locale is allowed on the account
 - the locale appears in Roma or Bob
-- a job is queued or running
+- the current work item is `pending` or `running`
 - a translation exists for an old base fingerprint
 - a translation was generated but has not reached Tokyo for the current base fingerprint
 
@@ -411,7 +412,8 @@ Former concerns that are already closed and are not PRD 070 blockers:
      - Tokyo overlay/config writes
      - Tokyo live-pointer sync
    - PRD 070 must preserve and tighten this lane first.
-   - Do not invent a new queue/callback orchestration model just to close consumer-pointer convergence for the proof lane.
+   - Tightening this lane means Tokyo owns one durable overlay work item for the current base fingerprint and queue delivery only triggers that work.
+   - Do not invent a second orchestration mode where save falls back to inline overlay generation or where the queue message becomes workflow truth.
 
 2. Free-tier system locale must be materialized by the Roma locale-settings command before persistence.
    - Roma is the product control plane and must decide the one system-chosen additional locale.
@@ -475,7 +477,7 @@ Nothing else counts.
 Not enough:
 - locale allowed on account
 - locale listed in picker
-- locale job queued
+- locale work item is `pending`
 - locale overlay row exists
 - locale translation exists only for an old base fingerprint
 - locale translation was generated somewhere but is not in Tokyo for the current base fingerprint
@@ -540,7 +542,7 @@ Forbidden labels:
 - any marketing or product copy that uses account settings count as proof of delivery
 
 Internal/debug surfaces may additionally expose:
-- queued
+- pending
 - running
 - failed
 - superseded
@@ -816,7 +818,7 @@ Customer truth:
 - `Not ready`
 
 Internal execution states:
-- `queued`
+- `pending`
 - `running`
 - `failed`
 - `superseded`
@@ -830,6 +832,7 @@ Rules:
 - `Not ready` means Tokyo does not have it yet
 - customer/product surfaces must derive truth from `allowedCount` and `readyCount`
 - internal execution states must not be reused as product labels
+- queue delivery is a transport concern, not a product/system status
 
 ---
 
@@ -1304,7 +1307,7 @@ The following must be green on the only real proof lane:
 Required proof:
 1. enable locales in Roma
 2. save base FAQ
-3. non-base locales move through queued/running/succeeded rather than staying `Pending forever`
+3. non-base locales move through `pending`/`running`/`ready` rather than staying `Updating forever`
 4. Builder shows truthful `allowed` and `ready` counts
 5. Tokyo contains the non-base locale artifact for the current base fingerprint revision
 6. rendered non-base FAQ copy can be validated by a consumer without English fallback or stale-fingerprint ambiguity

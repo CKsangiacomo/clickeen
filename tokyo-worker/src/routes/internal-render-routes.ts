@@ -8,7 +8,7 @@ import { json } from '../http';
 import {
   deleteSavedRenderConfig,
   enqueueTokyoMirrorJob,
-  writeOverlayConvergenceStatus,
+  writeOverlayWorkItem,
   readSavedRenderConfig,
   syncLiveSurface,
   writeConfigPack,
@@ -163,12 +163,22 @@ export async function tryHandleInternalRenderRoutes(
       );
     }
 
-    await writeOverlayConvergenceStatus({
+    await writeOverlayWorkItem({
       env,
       publicId: publicId!,
-      baseFingerprint: resolvedBaseFingerprint,
-      state: 'pending',
       accountId,
+      baseFingerprint: resolvedBaseFingerprint,
+      live,
+      accountAuthz: {
+        profile: capsule.profile,
+        role: capsule.role,
+        entitlements: capsule.entitlements ?? null,
+      },
+      baseLocale: baseLocale.toLowerCase(),
+      desiredLocales: desiredLocales.map((locale) => locale.trim().toLowerCase()),
+      countryToLocale,
+      previousBaseFingerprint,
+      state: 'pending',
     });
 
     try {
@@ -176,20 +186,7 @@ export async function tryHandleInternalRenderRoutes(
         v: 1,
         kind: 'sync-instance-overlays',
         publicId: publicId!,
-        accountId,
-        live,
         baseFingerprint: resolvedBaseFingerprint,
-        ...(previousBaseFingerprint ? { previousBaseFingerprint } : {}),
-        accountAuthz: {
-          profile: capsule.profile,
-          role: capsule.role,
-          entitlements: capsule.entitlements ?? null,
-        },
-        l10nIntent: {
-          baseLocale: baseLocale.toLowerCase(),
-          desiredLocales: desiredLocales.map((locale) => locale.trim().toLowerCase()),
-          countryToLocale,
-        },
       });
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
