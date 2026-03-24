@@ -48,7 +48,7 @@ If implementation starts naming extra subsystems, extra preview paths, or generi
 17. `readyLocales` is the only Builder/embed consumer locale set for this slice. Do not reintroduce `activeLocales` on the consumer path.
 18. If repo-level architecture docs still contradict `75E` at the end of execution, the slice is not done.
 19. Small text edits must not trigger whole-widget retranslation for locales that already have overlay ops. Save/sync must diff previous vs current saved bases and send only changed/removed translatable paths to San Francisco. Locales with no existing ops may still require a full first generation.
-20. Saved/editor overlay pointers and public/live consumer pointers are different planes. Builder must read saved/editor truth; embed/runtime must read public/live truth.
+20. Builder and embed must read the same current locale pointer truth. Builder differs only in when locale preview is enabled, not in a separate required pointer surface.
 
 ### Discipline Checks
 

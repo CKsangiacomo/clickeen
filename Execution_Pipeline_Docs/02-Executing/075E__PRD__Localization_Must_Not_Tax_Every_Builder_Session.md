@@ -47,7 +47,7 @@ It is part of the architecture:
 - locales that do not yet have overlay ops may still need a full first generation
 - unchanged locale ops/text packs must be reused instead of paying whole-widget translation cost again
 - post-save translation convergence must be durably enqueued and retried by Tokyo/Tokyo-worker; it must not depend on best-effort fire-and-forget callbacks from Roma
-- Builder/editor reads and preview must consume the saved/editor overlay artifact plane for the current saved fingerprint; public embed/runtime consumes the public/live consumer-pointer plane only
+- Builder/editor reads and preview must consume the same current locale artifact truth that embed/runtime uses; Builder differs only in interaction gating, not in a separate required pointer surface
 
 The widget/instance identity is locale-free.
 The translation base is **not**.
@@ -245,10 +245,8 @@ This is why the workflow is incremental instead of “retranslate the whole widg
 - A locale is customer-ready only when Tokyo has the translation artifact for the current base fingerprint.
 - The base snapshot for that fingerprint must already exist before Builder or embed reads translation truth.
 - The saved widget plane in Tokyo carries the current `baseFingerprint` and the last synced locale-summary truth for that widget (`baseLocale` + desired locale set).
-- Tokyo maintains two consumer planes over the same canonical artifacts:
-  - saved/editor pointers for Builder/current-saved-fingerprint inspection
-  - public/live pointers for embed/runtime consumers
-- Builder and embed consume only customer-ready locales.
+- Tokyo maintains one current locale pointer truth per instance over the canonical artifacts.
+- Builder and embed consume only customer-ready locales from that same truth.
 - Queue state, attempts, pipeline stages, and other internal mechanics are not customer truth.
 - Bob does not own translation truth.
 - Roma does not invent translation truth.

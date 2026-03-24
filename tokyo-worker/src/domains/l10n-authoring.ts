@@ -256,7 +256,6 @@ export async function upsertL10nOverlay(args: {
       locale: args.layerKey,
       baseFingerprint: args.baseFingerprint,
       textPack,
-      plane: 'saved',
     });
   }
 
@@ -268,7 +267,6 @@ export async function upsertL10nOverlay(args: {
       publicId: args.publicId,
       locale: args.layerKey,
       metaPack,
-      plane: 'saved',
     });
   }
 }

@@ -79,8 +79,8 @@ There are only three product-truth questions in this PRD:
      - public consumer surfaces consume Tokyo/Venice ready truth only
    - Contract:
      - Bob and Venice are consumers of truth, not locale-policy interpreters.
-     - Builder/editor surfaces read Tokyo saved/editor artifact pointers for the current saved fingerprint.
-     - Public/runtime surfaces read Tokyo public/live consumer pointers only.
+     - Builder/editor and public/runtime surfaces read the same Tokyo current locale artifact pointers.
+     - Builder differs only in interaction gating, not by requiring a separate pointer surface.
      - Account-mode Bob may show `desired` and `ready`.
      - MiniBob/public Bob may show `ready` only.
      - Action gating comes from policy; locale visibility comes from truth.

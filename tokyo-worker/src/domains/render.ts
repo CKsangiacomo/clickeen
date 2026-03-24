@@ -114,7 +114,6 @@ export type WriteTextPackJob = {
   locale: string;
   baseFingerprint: string;
   textPack: Record<string, string>;
-  plane?: 'saved' | 'live';
 };
 
 export type WriteMetaPackJob = {
@@ -123,7 +122,6 @@ export type WriteMetaPackJob = {
   publicId: string;
   locale: string;
   metaPack: Record<string, unknown>;
-  plane?: 'saved' | 'live';
 };
 
 export type SyncLiveSurfaceJob = {
@@ -178,8 +176,6 @@ export type TokyoMirrorQueueJob =
   | EnforceLiveSurfaceJob
   | DeleteInstanceMirrorJob
   | SyncInstanceOverlaysJob;
-
-type L10nPointerPlane = 'saved' | 'live';
 
 function encodeStableJson(value: unknown): Uint8Array {
   return UTF8_ENCODER.encode(prettyStableJson(value));
@@ -238,24 +234,12 @@ function renderMetaLivePointerKey(publicId: string, locale: string): string {
   return `renders/instances/${publicId}/live/meta/${locale}.json`;
 }
 
-function renderMetaSavedPointerKey(publicId: string, locale: string): string {
-  return `renders/instances/${publicId}/saved/meta/${locale}.json`;
-}
-
 function renderMetaPackKey(publicId: string, locale: string, metaFp: string): string {
   return `renders/instances/${publicId}/meta/${locale}/${metaFp}.json`;
 }
 
-function l10nPointerKey(publicId: string, plane: L10nPointerPlane, locale: string): string {
-  return `l10n/instances/${publicId}/${plane}/${locale}.json`;
-}
-
 function l10nLivePointerKey(publicId: string, locale: string): string {
-  return l10nPointerKey(publicId, 'live', locale);
-}
-
-function l10nSavedPointerKey(publicId: string, locale: string): string {
-  return l10nPointerKey(publicId, 'saved', locale);
+  return `l10n/instances/${publicId}/live/${locale}.json`;
 }
 
 function l10nTextPackKey(publicId: string, locale: string, textFp: string): string {
@@ -639,13 +623,12 @@ export function normalizeTextPointer(raw: unknown): L10nLivePointer | null {
 
 async function writeTextPointer(args: {
   env: Env;
-  plane: L10nPointerPlane;
   publicId: string;
   locale: string;
   textFp: string;
   baseFingerprint: string;
 }): Promise<void> {
-  await putJson(args.env, l10nPointerKey(args.publicId, args.plane, args.locale), {
+  await putJson(args.env, l10nLivePointerKey(args.publicId, args.locale), {
     v: 1,
     publicId: args.publicId,
     locale: args.locale,
@@ -653,35 +636,6 @@ async function writeTextPointer(args: {
     baseFingerprint: args.baseFingerprint,
     updatedAt: new Date().toISOString(),
   } satisfies L10nLivePointer);
-}
-
-async function promoteSavedTextPointerToLive(args: {
-  env: Env;
-  publicId: string;
-  locale: string;
-}): Promise<void> {
-  const savedPointer = normalizeTextPointer(
-    await loadJson(args.env, l10nSavedPointerKey(args.publicId, args.locale)),
-  );
-  if (!savedPointer) {
-    throw new Error(`[tokyo] missing required saved text pointer (${l10nSavedPointerKey(args.publicId, args.locale)})`);
-  }
-  if (!savedPointer.baseFingerprint) {
-    throw new Error(`[tokyo] saved text pointer missing baseFingerprint (${l10nSavedPointerKey(args.publicId, args.locale)})`);
-  }
-  await ensureR2KeyExists(
-    args.env,
-    l10nTextPackKey(args.publicId, args.locale, savedPointer.textFp),
-    `text pack (${args.locale})`,
-  );
-  await writeTextPointer({
-    env: args.env,
-    plane: 'live',
-    publicId: args.publicId,
-    locale: args.locale,
-    textFp: savedPointer.textFp,
-    baseFingerprint: savedPointer.baseFingerprint,
-  });
 }
 
 function normalizeMetaPointer(raw: unknown): MetaLivePointer | null {
@@ -698,51 +652,17 @@ function normalizeMetaPointer(raw: unknown): MetaLivePointer | null {
 
 async function writeMetaPointer(args: {
   env: Env;
-  plane: 'saved' | 'live';
   publicId: string;
   locale: string;
   metaFp: string;
 }): Promise<void> {
-  await putJson(
-    args.env,
-    args.plane === 'saved'
-      ? renderMetaSavedPointerKey(args.publicId, args.locale)
-      : renderMetaLivePointerKey(args.publicId, args.locale),
-    {
-      v: 1,
-      publicId: args.publicId,
-      locale: args.locale,
-      metaFp: args.metaFp,
-      updatedAt: new Date().toISOString(),
-    } satisfies MetaLivePointer,
-  );
-}
-
-async function promoteSavedMetaPointerToLive(args: {
-  env: Env;
-  publicId: string;
-  locale: string;
-}): Promise<void> {
-  const savedPointer = normalizeMetaPointer(
-    await loadJson(args.env, renderMetaSavedPointerKey(args.publicId, args.locale)),
-  );
-  if (!savedPointer) {
-    throw new Error(
-      `[tokyo] missing required saved meta pointer (${renderMetaSavedPointerKey(args.publicId, args.locale)})`,
-    );
-  }
-  await ensureR2KeyExists(
-    args.env,
-    renderMetaPackKey(args.publicId, args.locale, savedPointer.metaFp),
-    `meta pack (${args.locale})`,
-  );
-  await writeMetaPointer({
-    env: args.env,
-    plane: 'live',
+  await putJson(args.env, renderMetaLivePointerKey(args.publicId, args.locale), {
+    v: 1,
     publicId: args.publicId,
     locale: args.locale,
-    metaFp: savedPointer.metaFp,
-  });
+    metaFp: args.metaFp,
+    updatedAt: new Date().toISOString(),
+  } satisfies MetaLivePointer);
 }
 
 export function isTokyoMirrorJob(value: unknown): value is TokyoMirrorQueueJob {
@@ -1068,7 +988,6 @@ export async function writeTextPack(env: Env, job: WriteTextPackJob): Promise<vo
 
   await writeTextPointer({
     env,
-    plane: job.plane === 'live' ? 'live' : 'saved',
     publicId,
     locale,
     textFp,
@@ -1094,7 +1013,6 @@ export async function writeMetaPack(env: Env, job: WriteMetaPackJob): Promise<vo
 
   await writeMetaPointer({
     env,
-    plane: job.plane === 'live' ? 'live' : 'saved',
     publicId,
     locale,
     metaFp,
@@ -1137,14 +1055,12 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
   const localePolicy = normalizeLocalePolicy(job.localePolicy);
   if (!localePolicy) throw new Error('[tokyo] sync-live-surface invalid localePolicy');
 
-  // Refuse to move the live pointer if the referenced saved/editor bytes aren't present yet.
+  // Refuse to move the live render pointer if the referenced current bytes aren't present yet.
   await ensureR2KeyExists(env, renderConfigPackKey(publicId, configFp), 'config pack');
   for (const locale of localePolicy.readyLocales) {
-    await ensureR2KeyExists(env, l10nSavedPointerKey(publicId, locale), `saved text pointer (${locale})`);
-    await promoteSavedTextPointerToLive({ env, publicId, locale });
+    await ensureR2KeyExists(env, l10nLivePointerKey(publicId, locale), `text pointer (${locale})`);
     if (job.seoGeo) {
-      await ensureR2KeyExists(env, renderMetaSavedPointerKey(publicId, locale), `saved meta pointer (${locale})`);
-      await promoteSavedMetaPointerToLive({ env, publicId, locale });
+      await ensureR2KeyExists(env, renderMetaLivePointerKey(publicId, locale), `meta pointer (${locale})`);
     }
   }
 
@@ -1238,13 +1154,11 @@ export async function deleteInstanceMirror(env: Env, publicId: string): Promise<
 
 export {
   l10nLivePointerKey,
-  l10nSavedPointerKey,
   l10nTextPackKey,
   renderConfigPackKey,
   renderLivePointerKey,
   renderSavedPointerKey,
   renderSavedConfigPackKey,
   renderMetaLivePointerKey,
-  renderMetaSavedPointerKey,
   renderMetaPackKey,
 };

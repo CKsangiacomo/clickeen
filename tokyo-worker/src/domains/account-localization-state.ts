@@ -10,7 +10,7 @@ import { normalizeLocaleToken, type AllowlistEntry } from '@clickeen/l10n';
 import { json } from '../http';
 import type { Env } from '../types';
 import {
-  l10nSavedPointerKey,
+  l10nLivePointerKey,
   loadSavedRenderL10nBase,
   readSavedRenderPointer,
 } from './render';
@@ -198,7 +198,7 @@ async function loadTokyoLocaleArtifactStates(args: {
   const states = await Promise.all(
     locales.map(async (locale) => {
       const payload = (await args.env.TOKYO_R2.get(
-        l10nSavedPointerKey(args.publicId, locale),
+        l10nLivePointerKey(args.publicId, locale),
       )) ?? null;
       const jsonPayload = (await payload?.json().catch(() => null)) as TokyoL10nLivePointerPayload | null;
       if (!jsonPayload) return [locale, null] as const;

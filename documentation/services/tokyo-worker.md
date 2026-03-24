@@ -94,10 +94,8 @@ Current runtime contract:
 - Product-path save writes/refreshes the current localization base snapshot/fingerprint on the saved widget pointer in Tokyo from `tokyo/widgets/{widgetType}/localization.json`.
 - Product-path save also writes the current saved-widget l10n summary (`baseLocale` + desired locale set) onto that same saved pointer so Builder reads one saved-widget truth plane immediately after save.
 - Explicit Tokyo-worker sync refreshes that saved-widget l10n summary, then converges overlay artifacts separately.
-- Tokyo maintains two consumer planes over those artifacts:
-  - saved/editor l10n pointers for Builder/current-saved-fingerprint reads
-  - public/live l10n pointers for Venice/embed consumers
-- Builder Translations reads consume that saved Tokyo l10n summary plus current saved/editor artifact state; they do not live-read Berlin on panel open and they do not read public/live pointers.
+- Tokyo maintains one current locale pointer truth over those artifacts.
+- Builder Translations reads consume that saved Tokyo l10n summary plus current locale artifact state; they do not live-read Berlin on panel open.
 - Bob/Roma product-path save does not inline l10n/live-surface convergence; it durably enqueues Tokyo overlay sync, and Tokyo-worker retries that work until convergence completes.
 - Bob/Roma product-path account reads use this Tokyo saved snapshot as the active open/save truth.
 - `GET /__internal/renders/instances/:publicId/saved.json` is the named saved-document read boundary for Builder. If the saved pointer/config is malformed, Tokyo-worker now returns a validation failure instead of hiding that state as a fake not-found.
@@ -151,7 +149,7 @@ Job kinds (v1):
 - `write-config-pack`
 - `write-text-pack`
 - `write-meta-pack` (only when entitled)
-- `sync-instance-overlays` (durable saved/editor overlay convergence after save/settings changes)
+- `sync-instance-overlays` (durable overlay convergence after save/settings changes)
 - `sync-live-surface` (moves `live/r.json`; cleans up removed locales/meta)
 - `delete-instance-mirror` (hard delete instance subtree in Tokyo)
 

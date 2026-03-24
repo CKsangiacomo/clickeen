@@ -79,7 +79,7 @@
     if (baseLocale && locale === baseLocale) return sourceState;
 
     const pointerRes = await fetch(
-      '/l10n/instances/' + encodeURIComponent(publicId) + '/saved/' + encodeURIComponent(locale) + '.json',
+      '/l10n/instances/' + encodeURIComponent(publicId) + '/live/' + encodeURIComponent(locale) + '.json',
       { method: 'GET', cache: 'no-store', credentials: 'omit' },
     ).catch(() => null);
     if (!pointerRes) throw new Error('ck_preview_l10n_pointer_request_failed');
