@@ -291,7 +291,6 @@ export async function POST(request: NextRequest) {
     publicId,
     widgetType: source.value.widgetType,
     berlinAccessToken: current.value.accessToken,
-    status: 'unpublished',
   });
   if (!createdRow.ok) {
     await rollbackDuplicateCreate({
@@ -396,7 +395,7 @@ export async function POST(request: NextRequest) {
         sourcePublicId,
         publicId: created.publicId,
         widgetType: created.widgetType,
-        status: created.status,
+        status: 'unpublished',
         source: source.value.source,
       },
       { status: 201 },

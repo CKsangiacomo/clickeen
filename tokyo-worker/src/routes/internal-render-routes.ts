@@ -6,8 +6,11 @@ import {
 import { assertRomaAccountCapsuleAuth, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '../auth';
 import { json } from '../http';
 import {
+  deleteStaleOverlayWorkItemsForPublicId,
   deleteSavedRenderConfig,
   enqueueTokyoMirrorJob,
+  readInstanceServeState,
+  transitionOverlayWorkItemState,
   writeOverlayWorkItem,
   readSavedRenderConfig,
   syncLiveSurface,
@@ -180,6 +183,11 @@ export async function tryHandleInternalRenderRoutes(
       previousBaseFingerprint,
       state: 'pending',
     });
+    await deleteStaleOverlayWorkItemsForPublicId({
+      env,
+      publicId: publicId!,
+      keepBaseFingerprint: resolvedBaseFingerprint,
+    });
 
     try {
       await enqueueTokyoMirrorJob(env, {
@@ -190,6 +198,24 @@ export async function tryHandleInternalRenderRoutes(
       });
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
+      try {
+        await transitionOverlayWorkItemState({
+          env,
+          publicId: publicId!,
+          baseFingerprint: resolvedBaseFingerprint,
+          state: 'failed',
+          attemptCount: 0,
+          lastError: detail,
+        });
+      } catch (statusError) {
+        console.error(
+          '[tokyo] overlay enqueue failed and work-item status could not be persisted',
+          publicId,
+          resolvedBaseFingerprint,
+          detail,
+          statusError instanceof Error ? statusError.message : String(statusError),
+        );
+      }
       return respond(
         json(
           {
@@ -205,6 +231,60 @@ export async function tryHandleInternalRenderRoutes(
     }
 
     return respond(json({ ok: true, queued: true, publicId, live, baseFingerprint: resolvedBaseFingerprint }));
+  }
+
+  if (pathname === '/__internal/renders/instances/serve-state.json') {
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isUuid(accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'POST') {
+      return respondMethodNotAllowed(respond);
+    }
+
+    const authErr = await authorizeSavedRenderControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const rawPublicIds = Array.isArray(body?.publicIds) ? body.publicIds : null;
+    if (!rawPublicIds) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+
+    const publicIds = Array.from(
+      new Set(
+        rawPublicIds
+          .filter((entry): entry is string => typeof entry === 'string')
+          .map((entry) => normalizePublicId(entry))
+          .filter((entry): entry is string => Boolean(entry)),
+      ),
+    );
+
+    if (publicIds.length !== rawPublicIds.length) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+
+    const serveEntries = await Promise.all(
+      publicIds.map(async (publicId) => [
+        publicId,
+        await readInstanceServeState({ env, publicId }),
+      ] as const),
+    );
+    const serveStates = Object.fromEntries(serveEntries);
+    const publishedCount = serveEntries.filter(([, state]) => state === 'published').length;
+
+    return respond(
+      json({
+        ok: true,
+        serveStates,
+        publishedCount,
+      }),
+    );
   }
 
   const internalRenderLivePointerMatch = pathname.match(

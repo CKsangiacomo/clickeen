@@ -1,31 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   normalizeCanonicalLocalesFile,
   normalizeLocaleToken,
   resolveLocaleLabel as resolveCanonicalLocaleLabel,
 } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
-import {
-  useWidgetSession,
-  useWidgetSessionChrome,
-  useWidgetSessionTransport,
-} from '../lib/session/useWidgetSession';
-
-type TranslationsPanelData = {
-  baseLocale: string;
-  readyLocales: string[];
-  translationOk: boolean;
-  translationState: 'ok' | 'updating' | 'failed';
-};
-
-type ErrorPayload = {
-  error?: {
-    reasonKey?: unknown;
-    detail?: unknown;
-  };
-};
+import { useWidgetSession } from '../lib/session/useWidgetSession';
+import type { TranslationsPreviewData } from './useTranslationsPreviewState';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
@@ -40,68 +23,6 @@ function resolveLocaleLabel(locale: string): string {
       targetLocale: normalized,
     }) || normalized
   );
-}
-
-function normalizePanelData(payload: unknown): TranslationsPanelData | null {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const record = payload as Record<string, unknown>;
-  const baseLocale = typeof record.baseLocale === 'string' ? record.baseLocale.trim() : '';
-  const readyLocales = Array.isArray(record.readyLocales)
-    ? Array.from(
-        new Set(
-          record.readyLocales
-            .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
-            .filter(Boolean),
-        ),
-      )
-    : [];
-  const translationOk = typeof record.translationOk === 'boolean' ? record.translationOk : null;
-  const translationState =
-    record.translationState === 'ok' ||
-    record.translationState === 'updating' ||
-    record.translationState === 'failed'
-      ? record.translationState
-      : null;
-
-  if (!baseLocale || translationOk === null || !translationState) return null;
-  if (!readyLocales.includes(baseLocale)) return null;
-  return {
-    baseLocale,
-    readyLocales,
-    translationOk,
-    translationState,
-  };
-}
-
-function resolveRouteErrorReason(payload: unknown): string | null {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const errorPayload = payload as ErrorPayload;
-  const reasonKey =
-    typeof errorPayload.error?.reasonKey === 'string' ? errorPayload.error.reasonKey.trim() : '';
-  if (reasonKey) return reasonKey;
-  const detail =
-    typeof errorPayload.error?.detail === 'string' ? errorPayload.error.detail.trim() : '';
-  return detail || null;
-}
-
-function resolveTranslationsErrorMessage(args: {
-  status?: number;
-  reasonKey?: string | null;
-  error?: unknown;
-}): string {
-  if (
-    args.reasonKey === 'tokyo_saved_l10n_summary_missing' ||
-    args.reasonKey === 'tokyo_saved_l10n_base_missing'
-  ) {
-    return 'Translations are not available for this widget yet.';
-  }
-  if (args.reasonKey === 'coreui.errors.translations.baseLocaleMismatch') {
-    return 'Translations are out of sync for this widget right now.';
-  }
-  if (args.status === 404) {
-    return 'This widget is not available for translation preview.';
-  }
-  return 'Builder could not load translations right now.';
 }
 
 function SelectField({
@@ -141,109 +62,30 @@ function SelectField({
 export function TranslationsPanel({
   overlayPreviewLocale,
   onOverlayPreviewLocaleChange,
+  translationsData,
+  translationsLoading,
+  translationsError,
 }: {
   overlayPreviewLocale: string;
   onOverlayPreviewLocaleChange: (locale: string) => void;
+  translationsData: TranslationsPreviewData | null;
+  translationsLoading: boolean;
+  translationsError: string | null;
 }) {
   const session = useWidgetSession();
-  const chrome = useWidgetSessionChrome();
-  const { loadTranslations } = useWidgetSessionTransport();
-  const publicId = chrome.meta?.publicId ?? '';
-  const bootBaseLocale = chrome.meta?.baseLocale ?? '';
-  const [data, setData] = useState<TranslationsPanelData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setData(null);
-    setError(null);
-  }, [publicId]);
-
-  useEffect(() => {
-    if (!publicId) return;
-    let cancelled = false;
-
-    setLoading(true);
-    setError(null);
-
-    loadTranslations({ publicId })
-      .then((response) => {
-        if (cancelled) return;
-        if (!response.ok) {
-          throw {
-            status: response.status,
-            reasonKey: resolveRouteErrorReason(response.json),
-          };
-        }
-        const payload = normalizePanelData(response.json);
-        if (!payload) throw new Error('coreui.errors.translations.invalid');
-        if (bootBaseLocale && payload.baseLocale !== bootBaseLocale) {
-          throw new Error('coreui.errors.translations.baseLocaleMismatch');
-        }
-        setData(payload);
-      })
-      .catch((caught) => {
-        if (cancelled) return;
-        setData(null);
-        if (caught instanceof Error) {
-          setError(resolveTranslationsErrorMessage({ reasonKey: caught.message, error: caught }));
-          return;
-        }
-        const status =
-          typeof (caught as { status?: unknown } | null | undefined)?.status === 'number'
-            ? (caught as { status: number }).status
-            : undefined;
-        const reasonKey =
-          typeof (caught as { reasonKey?: unknown } | null | undefined)?.reasonKey === 'string'
-            ? ((caught as { reasonKey: string }).reasonKey || null)
-            : null;
-        setError(resolveTranslationsErrorMessage({ status, reasonKey, error: caught }));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [bootBaseLocale, loadTranslations, publicId]);
 
   const localeOptions = useMemo(() => {
-    const locales = data?.readyLocales ?? [];
+    const locales = translationsData?.readyLocales ?? [];
     return locales.map((locale) => ({
       value: locale,
       label: resolveLocaleLabel(locale),
     }));
-  }, [data?.readyLocales]);
-
-  const resolvedBaseLocale = data?.baseLocale || bootBaseLocale || '';
+  }, [translationsData?.readyLocales]);
 
   const localeValue =
     overlayPreviewLocale && localeOptions.some((option) => option.value === overlayPreviewLocale)
       ? overlayPreviewLocale
-      : resolvedBaseLocale || localeOptions[0]?.value || '';
-
-  useEffect(() => {
-    if (!localeOptions.length) {
-      if (overlayPreviewLocale) onOverlayPreviewLocaleChange('');
-      return;
-    }
-    if (
-      overlayPreviewLocale &&
-      localeOptions.some((option) => option.value === overlayPreviewLocale)
-    ) {
-      return;
-    }
-    const nextLocale = resolvedBaseLocale || localeOptions[0]?.value || '';
-    if (nextLocale && nextLocale !== overlayPreviewLocale) {
-      onOverlayPreviewLocaleChange(nextLocale);
-    }
-  }, [
-    resolvedBaseLocale,
-    localeOptions,
-    onOverlayPreviewLocaleChange,
-    overlayPreviewLocale,
-  ]);
+      : translationsData?.baseLocale || localeOptions[0]?.value || '';
 
   const selectOptions =
     localeOptions.length > 0
@@ -251,29 +93,29 @@ export function TranslationsPanel({
       : [
           {
             value: '',
-            label: loading
+            label: translationsLoading
               ? 'Loading locales...'
-              : error
+              : translationsError
                 ? 'Translations unavailable'
-                : 'No locales available yet',
+              : 'No locales available yet',
           },
         ];
-  const translationStatusTitle = loading
+  const translationStatusTitle = translationsLoading
     ? 'Checking translations'
-    : error
+    : translationsError
       ? 'Translations unavailable'
-      : data?.translationState === 'ok'
+      : translationsData?.translationState === 'ok'
         ? 'Translations are ok'
-        : data?.translationState === 'failed'
+        : translationsData?.translationState === 'failed'
           ? 'Translations failed'
           : 'Translations are updating';
-  const translationStatusBody = loading
+  const translationStatusBody = translationsLoading
     ? 'Builder is loading current translation status.'
-    : error
-      ? error
-      : data?.translationState === 'ok'
+    : translationsError
+      ? translationsError
+      : translationsData?.translationState === 'ok'
         ? 'All selected locales are current for the latest saved widget state.'
-        : data?.translationState === 'failed'
+        : translationsData?.translationState === 'failed'
           ? 'Background convergence failed for the latest saved widget state. Only ready locales remain previewable.'
           : 'Only ready locales are previewable until background convergence finishes.';
 

@@ -87,7 +87,7 @@ Health contract:
 ## Rules
 - Reject invalid allowlist paths.
 - Active account-mode l10n returns set-only locale ops to Tokyo-worker; San Francisco does not own Tokyo overlay writes.
-- Agent writes must not touch layer=user; overrides remain in layer=user and are merged at publish time.
+- Agent writes must not invent or depend on a `layer=user` authoring surface. The active instance-localization path returns locale ops only; Tokyo/Tokyo-worker owns readiness and publication.
 
 ## Links
 - AI overview: `documentation/ai/overview.md`

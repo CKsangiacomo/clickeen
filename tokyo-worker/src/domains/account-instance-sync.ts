@@ -264,6 +264,7 @@ export async function syncAccountInstance(args: {
     (locale) => existingLocaleOverlays.get(locale)?.hasSourceOverlay !== true,
   );
   const generatedBaseOpsByLocale = new Map<string, LocalizationOp[]>();
+  const incompleteLocales = new Set<string>();
   const localeAllowlist = localizationAllowlist.map((entry) => ({
     path: entry.path,
     type: entry.type === 'richtext' ? 'richtext' : 'string',
@@ -296,6 +297,9 @@ export async function syncAccountInstance(args: {
     incremental.forEach((ops, locale) => {
       generatedBaseOpsByLocale.set(locale, ops);
     });
+    localesWithSourceOps
+      .filter((locale) => !incremental.has(locale))
+      .forEach((locale) => incompleteLocales.add(locale));
   } else {
     localesWithSourceOps.forEach((locale) => {
       generatedBaseOpsByLocale.set(locale, existingLocaleOverlays.get(locale)?.baseOps ?? []);
@@ -320,6 +324,9 @@ export async function syncAccountInstance(args: {
     full.forEach((ops, locale) => {
       generatedBaseOpsByLocale.set(locale, ops);
     });
+    localesNeedingFullGeneration
+      .filter((locale) => !full.has(locale))
+      .forEach((locale) => incompleteLocales.add(locale));
   }
 
   const policyResolved = resolvePolicyFromEntitlementsSnapshot({
@@ -333,12 +340,16 @@ export async function syncAccountInstance(args: {
     policyResolved.flags['embed.seoGeo.enabled'] === true &&
     seoGeoConfig?.enabled === true;
 
+  const readyLocales = desiredLocales.filter(
+    (locale) => locale === baseLocale || !incompleteLocales.has(locale),
+  );
+
   for (const locale of desiredLocales) {
+    if (locale !== baseLocale && incompleteLocales.has(locale)) {
+      continue;
+    }
     const existing = existingLocaleOverlays.get(locale);
-    const baseOps =
-      locale === baseLocale
-        ? []
-        : generatedBaseOpsByLocale.get(locale) ?? existing?.baseOps ?? [];
+    const baseOps = locale === baseLocale ? [] : generatedBaseOpsByLocale.get(locale) ?? existing?.baseOps ?? [];
 
     const mirror = buildLocaleMirrorPayload({
       widgetType: saved.value.pointer.widgetType,
@@ -399,7 +410,7 @@ export async function syncAccountInstance(args: {
 
     const localePolicy = buildLiveLocalePolicy({
       baseLocale,
-      readyLocales: desiredLocales,
+      readyLocales,
       countryToLocale: args.l10nIntent.countryToLocale,
       config: saved.value.config,
     });
@@ -420,7 +431,7 @@ export async function syncAccountInstance(args: {
     publicId: args.publicId,
     live: args.live,
     baseFingerprint,
-    readyLocales: desiredLocales,
+    readyLocales,
     ...(configFp ? { configFp } : {}),
   };
 }

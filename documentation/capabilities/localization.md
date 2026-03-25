@@ -91,7 +91,7 @@ Use `l10n` when the surface is “content inside an instance config” (copy, he
 
 **Tokyo output (served; PRD 54)**
 
-When an instance is live (`status=published`), Tokyo contains exactly two things for l10n:
+When Tokyo marks an instance as published/servable, Tokyo exposes exactly two public l10n outputs:
 
 - Full text pack (immutable):
   - `l10n/instances/<publicId>/packs/<locale>/<textFp>.json`
@@ -106,13 +106,13 @@ Rules:
 Where the write plane fits (current repo snapshot):
 - Tokyo/Tokyo-worker store editable overlay rows and base snapshots under `tokyo/l10n/instances/<publicId>/...`.
   - `layer=locale` = generated/managed translation ops
-  - legacy `layer=user` rows may still exist in Tokyo, but the active Builder authoring path no longer exposes or writes a user-layer surface
+  - legacy `layer=user` rows may still exist in Tokyo storage, but active product routes no longer expose or write a user-layer surface
 - Tokyo-worker still owns canonical overlay/artifact state, but Builder no longer mounts account-mode localization snapshot/status/user-layer flows as part of the active authoring loop.
 - Every overlay row is keyed by `baseFingerprint` (sha256 of the current allowlist snapshot).
 - Repo-authored admin-owned l10n source overlays, when kept in-repo, live under `tokyo/admin-owned/l10n/**` and build into `tokyo/l10n/**`.
 - Stale writes are rejected when `baseFingerprint` does not match.
 - These authoring records are **never** served publicly.
-- When overlay/base state changes and the instance is live, Tokyo-worker rebuilds the full text pack and publishes it:
+- When overlay/base state changes and the instance is published/servable, Tokyo-worker rebuilds the full text pack and publishes it:
   - `fullPack = baseSnapshot + localeOps`
 
 **Generation + mirroring (current after PRD 54)**
@@ -126,16 +126,26 @@ Where the write plane fits (current repo snapshot):
 - Product-path save writes the current saved-widget l10n summary (`baseLocale` + desired locale set) into the Tokyo saved widget plane alongside the current `baseFingerprint`.
 - Explicit sync refreshes that saved-widget l10n summary and converges locale artifacts against it.
 - Builder Translations reads consume that saved Tokyo summary plus current Tokyo artifact state; they do not live-recompute desired locales from Berlin on every panel open.
+- While the `Translations` panel is open, Bob reads one Roma same-origin translations route backed by Tokyo-worker. That payload is only `baseLocale`, `readyLocales`, `translationOk`, and `translationState`.
+- After Save succeeds, Bob may re-read that same route once to show current Tokyo truth. Builder does not own a background checking loop for localization convergence.
+- When a newer save writes a new current work item for the same instance, Tokyo deletes older work items for older `baseFingerprint` values instead of leaving them around as competing current-state candidates.
+- If Tokyo cannot hand follow-up localization work to the queue, Tokyo-worker marks the durable work item `failed` instead of leaving Builder stuck on fake `updating`.
+- If locale generation does not return current ops for a locale requested by the latest save, Tokyo-worker does not publish that locale as current-ready for the new `baseFingerprint`.
+- Builder preview locale selection uses that same `readyLocales` list. Incomplete locales never enter the Builder locale chooser.
 - On explicit Tokyo-worker sync, the pipeline reconciles Tokyo against that desired set for the current `baseFingerprint`:
   - if Tokyo already has the locale artifact for that exact fingerprint, skip
   - if Tokyo does not have it, generate and write it
-- If the instance is live:
+- If the instance is published/servable:
   - Tokyo-worker writes the locale text pack (full pack = base snapshot + locale ops + user ops).
+  - Tokyo-worker moves the public live locale policy with the current-ready locale subset only; missing locales stay out of public serving until they have current artifacts.
   - If SEO/GEO is entitled+enabled, Tokyo-worker also writes the locale meta pack.
 - Consumer/embed policy is built only from Tokyo-ready locales for the current `baseFingerprint`, never from the full desired/allowed set.
-- When an instance first goes live, Roma triggers Tokyo-worker sync for the desired locale set and Tokyo-worker exposes only the Tokyo-ready subset to consumers.
-- When account locale/policy changes, Roma triggers Tokyo-worker sync again and Tokyo-worker rebuilds the consumer-ready set from Tokyo truth.
-- Unpublish (`status=unpublished`) deletes the full `l10n/instances/<publicId>/...` subtree from Tokyo (mirror rule).
+- When an instance first becomes published/servable, Roma triggers Tokyo-worker sync for the desired locale set and Tokyo-worker exposes only the Tokyo-ready subset to consumers.
+- When account locale/policy changes, Roma fans that change out across all account-owned saved instances:
+  - published instances enqueue sync with `live: true`, so public serving truth refreshes too
+  - unpublished instances enqueue sync with `live: false`, so Builder/saved locale truth refreshes without turning public serving on
+  - curated starter instances are not part of that account locale fanout
+- Unpublish turns public serving off. It removes the public live/serve surfaces that Venice depends on, but it is not the definition of whether saved base state or internal overlay authoring state exists.
 
 **Widget allowlist (authoritative)**
 
@@ -148,13 +158,14 @@ Where the write plane fits (current repo snapshot):
 - Tokyo stores per-instance overlay rows for authoring/generation (write plane only).
   - Locale translations: `layer='locale'`, `layer_key=<locale>`, set-only ops, `base_fingerprint=<hash of base snapshot>`.
 - Historical `layer='user'` rows may still exist in Tokyo storage from older flows, but the active `75E` product path no longer writes or consumes them.
+- Public/product l10n control routes no longer admit `layer='user'`.
 - Tokyo-worker derives status from canonical Tokyo overlay/artifact state.
 - These authoring records are never served publicly.
 - Public embeds read only Tokyo packs + live pointers (`l10n/instances/.../live/*.json` and `l10n/instances/.../packs/...`).
 - `widget_instance_overlays` is not part of the active Michael schema in this repo snapshot.
 
 Notes:
-- `user_ops` is not used by PRD 54; overrides are stored as a separate `layer='user'` row so they can be reverted independently.
+- `user_ops` is not part of the active `75E` product path.
 - `geo_targets` is not used by PRD 54 public embed; IP mapping is driven by `localePolicy.ip.*` in `renders/.../live/r.json`.
 
 ### Prague localization (system-owned, Babel-aligned)
@@ -177,7 +188,7 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
   - validates index/overlay presence and schema
   - validates overlay fingerprint alignment
   - does not mutate files or enforce allowlist policy
-  - Default mode is **best-available**: it validates the currently published overlay fingerprints (from `index.json`) and will **warn** on missing locales instead of blocking builds.
+  - Default mode validates the currently published overlay fingerprints (from `index.json`) and will **warn** on missing locales instead of blocking builds.
   - Strict mode is `node scripts/prague-l10n/verify.mjs --strict-latest` (or `PRAGUE_L10N_VERIFY_STRICT=1`) and enforces “latest base fingerprint translated for all locales”.
 - `scripts/prague-sync.mjs` is the orchestrator used by CI: verify → (translate only if needed) → publish to Tokyo/R2.
   - To publish, pass `--publish` with an explicit target:
@@ -191,14 +202,14 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 **Strict rules**
 
 - Overlays are set-only ops and must include `baseFingerprint`.
-- Same staleness guard as instance overlays (`baseFingerprint`).
-- Best-available fallback is supported:
-  - Prague can apply stale overlays **safely** when the base value at a path is unchanged (using a base snapshot).
+- `baseFingerprint` is the consumer visibility guard.
+- Public/current consumer paths must not apply non-current overlays.
+- Prague snapshot/base-snapshot metadata may still exist for verification and publication repair work, but that is not the account/widget consumer contract and must not be copied into Builder/Venice product paths.
 
 **Base snapshots (Prague)**
 
 - `scripts/prague-l10n/translate.mjs` writes base snapshots to `tokyo/l10n/prague/{pageId}/bases/{baseFingerprint}.snapshot.json`.
-- Prague uses snapshots to safely apply stale overlays when page copy changes.
+- Prague retains snapshots for translation/publication tooling and diagnostics.
 
 ## Curated embeds (Prague visuals)
 
@@ -253,9 +264,8 @@ We use one staleness guard everywhere (Prague pages, curated instances, user ins
 - `baseFingerprint` is the canonical staleness guard.
 - Fresh overlays apply when:
   - `overlay.baseFingerprint === computeL10nFingerprint(baseConfig, allowlist)`.
-- Stale overlays may apply **partially** only in explicitly configured non-public paths:
-  - Safe stale apply compares current base values to the published base snapshot for the stale overlay fingerprint.
-- Venice public snapshot materialization does not use safe stale apply.
+- Consumer paths apply only current overlays for the active `baseFingerprint`.
+- Non-current overlays remain internal publication/control-plane state until regeneration converges them.
 
 This keeps “locale overlays” deterministic across file-based content (Prague pages) and service-backed content (instances).
 
@@ -333,8 +343,8 @@ Apply:
 
 User overrides (interactive):
 
-- Saved via Bob through Roma into Tokyo-worker-owned `layer=user` execution, which writes the canonical Tokyo-backed overlay store (`layerKey=<locale>`; optional `global` when supported by the endpoint).
-- Never written directly from Bob to public `tokyo/l10n/**`; Tokyo-worker publishes live text artifacts from canonical Tokyo-managed state.
+- Historical `layer=user` rows may still exist in Tokyo storage from older flows.
+- The active Builder product path does not expose or write a `layer=user` surface.
 
 ### 3) Consume overlays
 
@@ -342,9 +352,10 @@ User overrides (interactive):
 - Dynamic overlay composition is internal bypass behavior only (non-public).
 - Prague embeds the canonical locale-free `publicId` and passes locale via query param to Venice.
 
-## User-owned localization (current)
+## User-owned localization (historical / not active in current product path)
 
-Higher-tier accounts can edit per-field translations in Bob. These edits are stored as layer=user overlays in Paris's overlay store and persist across agent re-translation.
+Older flows stored user-authored translation overrides separately from system-generated locale ops.
+That model is not part of the active Builder authoring path in the current repo state.
 
 Non-goals for Phase 1:
 

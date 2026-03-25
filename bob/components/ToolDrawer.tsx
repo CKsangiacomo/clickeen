@@ -8,6 +8,7 @@ import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 import { SettingsPanel } from './SettingsPanel';
 import { TranslationsPanel } from './TranslationsPanel';
+import type { TranslationsPreviewData } from './useTranslationsPreviewState';
 
 const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to keep editing this widget.',
@@ -70,10 +71,16 @@ export function ToolDrawer({
   overlayPreviewLocale,
   onOverlayPreviewLocaleChange,
   onPreviewModeChange,
+  translationsData,
+  translationsLoading,
+  translationsError,
 }: {
   overlayPreviewLocale: string;
   onOverlayPreviewLocaleChange: (locale: string) => void;
   onPreviewModeChange: (mode: 'editing' | 'translations') => void;
+  translationsData: TranslationsPreviewData | null;
+  translationsLoading: boolean;
+  translationsError: string | null;
 }) {
   const session = useWidgetSession();
   const compiled = session.compiled;
@@ -128,6 +135,9 @@ export function ToolDrawer({
     <TranslationsPanel
       overlayPreviewLocale={overlayPreviewLocale}
       onOverlayPreviewLocaleChange={onOverlayPreviewLocaleChange}
+      translationsData={translationsData}
+      translationsLoading={translationsLoading}
+      translationsError={translationsError}
     />
   ) : (
     <TdMenuContent

@@ -157,7 +157,6 @@ export async function createAccountInstance(args: {
     publicId: args.publicId,
     widgetType: args.widgetType,
     berlinAccessToken: args.accessToken,
-    status: 'unpublished',
   });
   if (!createdRow.ok) {
     await rollbackCreate({

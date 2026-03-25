@@ -10,11 +10,13 @@ export function Workspace({
   previewMode,
   overlayPreviewLocale,
   onOverlayPreviewLocaleChange,
+  readyPreviewLocales,
 }: {
   baseLocale: string;
   previewMode: 'editing' | 'translations';
   overlayPreviewLocale: string;
   onOverlayPreviewLocaleChange: (locale: string) => void;
+  readyPreviewLocales: string[];
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
@@ -34,10 +36,26 @@ export function Workspace({
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
+  const effectiveReadyPreviewLocales = useMemo(() => {
+    const readyLocales = Array.from(
+      new Set(
+        readyPreviewLocales
+          .map((entry) => String(entry || '').trim())
+          .filter(Boolean),
+      ),
+    );
+    if (baseLocale && !readyLocales.includes(baseLocale)) {
+      return [baseLocale, ...readyLocales];
+    }
+    return readyLocales;
+  }, [baseLocale, readyPreviewLocales]);
+  const fallbackPreviewLocale = baseLocale || effectiveReadyPreviewLocales[0] || '';
   const effectivePreviewLocale =
     previewMode === 'translations'
-      ? (overlayPreviewLocale || baseLocale)
-      : baseLocale;
+      ? overlayPreviewLocale && effectiveReadyPreviewLocales.includes(overlayPreviewLocale)
+        ? overlayPreviewLocale
+        : fallbackPreviewLocale
+      : fallbackPreviewLocale;
   const latestRef = useRef({
     compiled,
     instanceData,
@@ -45,6 +63,7 @@ export function Workspace({
     baseLocale,
     previewMode,
     effectivePreviewLocale,
+    readyPreviewLocales: effectiveReadyPreviewLocales,
     device,
     theme,
   });
@@ -57,10 +76,21 @@ export function Workspace({
       baseLocale,
       previewMode,
       effectivePreviewLocale,
+      readyPreviewLocales: effectiveReadyPreviewLocales,
       device,
       theme,
     };
-  }, [compiled, instanceData, publicId, baseLocale, previewMode, effectivePreviewLocale, device, theme]);
+  }, [
+    compiled,
+    instanceData,
+    publicId,
+    baseLocale,
+    previewMode,
+    effectivePreviewLocale,
+    effectiveReadyPreviewLocales,
+    device,
+    theme,
+  ]);
 
   useEffect(() => {
     if (!switcherNotice) return undefined;
@@ -209,6 +239,9 @@ export function Workspace({
         if (!requestedLocale) return;
         if (latestRef.current.previewMode !== 'translations') {
           setSwitcherNotice(BLOCKED_SWITCHER_COPY);
+          return;
+        }
+        if (!latestRef.current.readyPreviewLocales.includes(requestedLocale)) {
           return;
         }
         onOverlayPreviewLocaleChange(requestedLocale);

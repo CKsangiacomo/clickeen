@@ -25,11 +25,12 @@ This doc describes the **current Venice runtime** after the PRD 54 pivot:
 
 **Purpose:** Public embed origin for third‑party sites.
 
-**Non‑negotiable contract (PRD 54):**
+**Non-negotiable contract (PRD 54):**
 - `GET /e/:publicId` and `GET /r/:publicId` do **0** calls to Paris/Supabase.
 - They serve **only** what is present in Tokyo/R2.
 - They do **no** request-time healing, fallback, or “deciding what should exist”.
 - `GET /api/instance/:publicId` is also Tokyo-only and public-live only.
+- `published` / `unpublished` is only Tokyo's per-instance serve flag. Venice cares only whether Tokyo says the instance is servable.
 
 **Venice reads these Tokyo files (v1):**
 - Live pointer: `renders/instances/<publicId>/live/r.json` (mutable, `no-store`)
@@ -63,14 +64,14 @@ Source of truth:
 
 ---
 
-## Core Concept: Venice serves what is live
+## Core Concept: Venice serves what Tokyo marks servable
 
 Venice does not “render from DB”.
 
-The only “truth” for public embeds is: **what Tokyo says is live** via the tiny live pointer file:
+The only public-serve truth for embeds is: **what Tokyo says is servable** via the tiny live pointer file:
 - `renders/instances/<publicId>/live/r.json`
 
-If that file is missing, the instance is not live → Venice returns `404`.
+If that file is missing, the instance is unpublished / unservable -> Venice returns `404`.
 
 ---
 

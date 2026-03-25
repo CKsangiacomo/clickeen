@@ -230,4 +230,4 @@ Required checks
 Manual smoke (fast)
 - Bob preview: each panel control updates the preview deterministically.
 - Venice embed: `/e/:publicId` loads without console errors.
-- Localization: switching locale uses best-available overlays without breaking runtime.
+- Localization: switching locale uses only current ready overlays for the active base fingerprint; missing current overlays fail visibly instead of silently falling back.

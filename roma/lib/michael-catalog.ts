@@ -13,7 +13,10 @@ import {
   type MichaelTemplateCatalogResult,
   type MichaelWidgetRow,
 } from './michael-shared';
-import { loadTokyoAccountInstanceDocument } from './account-instance-direct';
+import {
+  loadTokyoAccountInstanceDocument,
+  loadTokyoAccountInstanceServeStates,
+} from './account-instance-direct';
 
 export async function loadAccountWidgetCatalog(args: {
   accountId: string;
@@ -32,19 +35,17 @@ export async function loadAccountWidgetCatalog(args: {
     const [accountRows, curatedRows, widgetRows, containmentResponse] = await Promise.all([
       fetchMichaelListRows<{
         public_id?: unknown;
-        status?: unknown;
       }>({
         headers,
-        pathname: `/rest/v1/widget_instances?select=public_id,status&account_id=eq.${encodeFilterValue(args.accountId)}&order=created_at.desc,public_id.desc`,
+        pathname: `/rest/v1/widget_instances?select=public_id&account_id=eq.${encodeFilterValue(args.accountId)}&order=created_at.desc,public_id.desc`,
       }),
       fetchMichaelListRows<{
         public_id?: unknown;
         widget_type?: unknown;
-        status?: unknown;
         meta?: unknown;
       }>({
         headers,
-        pathname: `/rest/v1/curated_widget_instances?select=public_id,widget_type,status,meta&owner_account_id=eq.${encodeFilterValue(args.accountId)}&order=created_at.desc,public_id.desc`,
+        pathname: `/rest/v1/curated_widget_instances?select=public_id,widget_type,meta&owner_account_id=eq.${encodeFilterValue(args.accountId)}&order=created_at.desc,public_id.desc`,
       }),
       fetchMichaelListRows<MichaelWidgetRow>({
         headers,
@@ -70,6 +71,25 @@ export async function loadAccountWidgetCatalog(args: {
       if (!type || type === 'unknown') continue;
       widgetTypeSet.add(type.toLowerCase());
     }
+
+    const serveStatesResult = await loadTokyoAccountInstanceServeStates({
+      accountId: args.accountId,
+      publicIds: [
+        ...accountRows.rows.map((row) => asTrimmedString(row.public_id)),
+        ...curatedRows.rows.map((row) => asTrimmedString(row.public_id)),
+      ].filter((publicId): publicId is string => Boolean(publicId)),
+      tokyoAccessToken: args.tokyoAccessToken,
+      accountCapsule: args.accountCapsule,
+    });
+    if (!serveStatesResult.ok) {
+      return {
+        ok: false,
+        status: serveStatesResult.status,
+        reasonKey: serveStatesResult.error.reasonKey,
+        detail: serveStatesResult.error.detail,
+      };
+    }
+    const serveStates = serveStatesResult.value.serveStates;
 
     const accountIdentityResults = await Promise.all(
       accountRows.rows.map(async (row) => {
@@ -102,7 +122,7 @@ export async function loadAccountWidgetCatalog(args: {
             publicId: saved.value.row.publicId,
             widgetType,
             displayName: saved.value.row.displayName || 'Untitled widget',
-            status: row.status === 'published' ? 'published' as const : 'unpublished' as const,
+            status: serveStates[saved.value.row.publicId] ?? 'unpublished',
           },
         };
       }),
@@ -125,7 +145,7 @@ export async function loadAccountWidgetCatalog(args: {
         publicId,
         widgetType,
         displayName: formatCuratedDisplayName(row.meta, publicId),
-        status: row.status === 'unpublished' ? 'unpublished' : 'published',
+        status: serveStates[publicId] ?? 'unpublished',
       };
     });
 
@@ -177,7 +197,7 @@ export async function loadTemplateCatalog(
     }>({
       headers,
       pathname:
-        '/rest/v1/curated_widget_instances?select=public_id,widget_type,meta&status=eq.published&order=created_at.desc,public_id.desc',
+        '/rest/v1/curated_widget_instances?select=public_id,widget_type,meta&order=created_at.desc,public_id.desc',
     });
     if (!rows.ok) return rows;
 

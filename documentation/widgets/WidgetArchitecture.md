@@ -12,7 +12,7 @@ Related:
 ## System invariants
 - Widget files in Tokyo are the source of truth.
 - Orchestrators avoid widget-specific logic; they may apply generic, contract-driven transforms (e.g. overlay composition, snapshot patching).
-- Base-config contract violations must fail visibly (no silent fallback). Localization overlays are best-available and must never break runtime or lie about locale.
+- Base-config contract violations must fail visibly (no silent fallback). Localization overlays are consumer-visible only when current for the active base fingerprint; runtime must not substitute base, stale, or other-locale output and must not lie about locale.
 
 ---
 

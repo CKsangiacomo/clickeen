@@ -9,7 +9,7 @@ This is the technical reference for working in the Clickeen codebase. For strate
 1. Runtime code + `supabase/migrations/` — actual behavior + DB schema truth
 2. Deployed Cloudflare config — environment variables/bindings can differ by stage
 3. `documentation/services/` + `documentation/widgets/` — operational guides (kept in sync with runtime)
-4. `documentation/architecture/Overview.md` + `documentation/architecture/AssetManagement.md` + this file — concepts and glossary
+4. `documentation/architecture/Overview.md` + `documentation/architecture/AssetManagement.md` + `documentation/architecture/OverlayArchitecture.md` + this file — concepts and glossary
 
 Docs are the source of truth for intended behavior; runtime code + schema are the source of truth for what is running. Any mismatch is a P0 doc bug: update the docs immediately to match reality.
 
@@ -37,6 +37,17 @@ Non-negotiable negative truths:
 - Preview must reflect the same widget the customer is editing. Preview is **not** a second widget-shaped truth.
 - Invalid state must fail at the named boundary. Do not silently heal product truth into a new normal.
 - Non-account/helper/demo flows may exist in code while being reduced, but they do **not** define account authoring truth.
+
+### Publication / Serve-State Truth
+
+`published` / `unpublished` is intentionally narrow.
+
+- It is **instance state**, not widget-type state.
+- It is **Tokyo-owned**.
+- It means only: may Venice serve this instance publicly right now?
+- It exists to gate public serving and enforce lower-tier served-instance caps.
+- It does **not** mean draft state, overlay health, translation readiness, or broad business lifecycle.
+- Michael status columns may still exist in schema or route code during cutover, but they are not the surviving publish/unpublish authority.
 
 If code cannot be explained in that model, it is suspect by default.
 
@@ -88,7 +99,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Stored in Michael:
   - Clickeen-authored baseline + curated: `curated_widget_instances` with `widget_type`
   - User/account instances: `widget_instances` with `widget_id` (FK to `widgets`)
-- Product-path account open resolves the saved authoring revision from Tokyo; Michael remains the registry/shell/status plane and localization-overlay state is owned in the Tokyo/Tokyo-worker plane
+- Product-path account open resolves the saved authoring revision from Tokyo; Michael remains the registry/shell plane during cutover, while instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
 - On the active account authoring path, user-facing instance identity (`widgetType`, `displayName`, `source`, `meta`) is Tokyo-owned. Michael `widget_instances.display_name` may still exist as storage residue during cutover, but Widgets/Builder product contracts must not read or write identity truth from it.
 - Michael `widget_instances.config` may still exist as inert schema residue for user-instance rows, but the active product path must not persist or read a second live widget document there.
 - Bob holds working copy in memory as `instanceData` during editing
@@ -101,7 +112,7 @@ For the 075 authoring simplification track, this account-mode Roma -> Bob -> Tok
 
 1. **Open core instance**: `GET /api/builder/:publicId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads the saved authoring revision from Tokyo through the private product-control binding, and then sends Bob one `ck:open-editor` payload.
 2. **Save**: `PUT /api/account/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, carrying the current saved-document metadata (`widgetType`, `displayName`, `source`, `meta`) together with `config`, and return success immediately. The Tokyo commit is the save boundary.
-3. **Widgets list + rename identity**: Roma reads user-instance identity for `/widgets` from Tokyo saved documents, while Michael only provides the account row/status shell. Rename writes that Tokyo identity directly instead of patching Michael `display_name`.
+3. **Widgets list + rename identity**: Roma reads user-instance identity for `/widgets` from Tokyo saved documents. The surviving publish/unpublish authority is Tokyo's per-instance serve flag, not a Michael status row. Rename writes that Tokyo identity directly instead of patching Michael `display_name`.
 4. **Create/duplicate**: Roma writes the Tokyo saved document before creating the Michael row, so the product never exposes a Michael-visible account widget before the real Tokyo document exists.
 5. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute policy on each open/save call; the signed capsule carries stable authz truth, while live mutable counters are enforced at the canonical owner when needed.
 6. **Localization/live follow-up**: translation and locale convergence remain downstream work owned outside the Builder save loop. Product-path save does not own that work.
@@ -169,7 +180,7 @@ Examples:
   wgt_curated_faq_lightblurs_generic
 ```
 
-**Publishing semantics:** Curated/owned instances are always publishable. In Michael, `curated_widget_instances.status` defaults to `published` and is not used as a user-facing gate (publishing is only a user-instance workflow).
+**Publishing semantics:** `published` / `unpublished` is a Tokyo instance serve-state concept. Curated rows may still carry `status` residue in Michael schema during cutover, but that column is not canonical authority and not a user-facing gate.
 
 Curated metadata lives alongside the instance (not in the publicId):
 
@@ -203,9 +214,9 @@ curated_widget_instances.meta = {
 
 ## Glossary
 
-**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly. Bob does not own published/unpublished state changes; those remain in Roma widgets domain, and its copy-code affordance is only for getting website embed snippets. Bob is the real account authoring UI. Shared Bob code must model the account Builder product path, not preserve demo/funnel identities as co-equal editor modes. Copilot browser entrypoint is `POST /api/ai/widget-copilot`, and Roma resolves widget identity server-side from the instance being edited.
+**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly. Bob does not own serve-state changes; publish/unpublish toggles the Tokyo instance serve flag from Roma widgets-domain flows, and Bob's copy-code affordance is only for getting website embed snippets. Bob is the real account authoring UI. Shared Bob code must model the account Builder product path, not preserve demo/funnel identities as co-equal editor modes. Copilot browser entrypoint is `POST /api/ai/widget-copilot`, and Roma resolves widget identity server-side from the instance being edited.
 
-**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`bob:session-ready` -> `ck:open-editor` -> applied/fail), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and saves that one widget document back through the same account boundary. On the active Widgets/Builder path, Roma treats Tokyo as the user-facing instance identity owner and Michael as row/status shell only. Translation/live follow-up sits outside the Builder save loop; Roma no longer exposes a Builder-localization rehydrate/status subsystem on the active account path. Current Roma is a single-current-account customer shell and does not expose customer account switching. Roma is the real account/product boundary for Builder. It must not model a fake anonymous editor/account mode inside shared account truth. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
+**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`bob:session-ready` -> `ck:open-editor` -> applied/fail), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and saves that one widget document back through the same account boundary. On the active Widgets/Builder path, Roma treats Tokyo as the user-facing instance identity owner and canonical instance serve-state owner. Michael may still carry registry/status residue during cutover, but it is not the surviving publish/unpublish authority. In product terms, `Save` is one handoff of the instance to Tokyo-worker so Tokyo-worker can reconcile the instance and its derived artifacts. `Publish` / `Unpublish` remains the separate Widgets-domain action that flips whether Venice may publicly serve that instance. Current Roma is a single-current-account customer shell and does not expose customer account switching. Roma is the real account/product boundary for Builder. It must not model a fake anonymous editor/account mode inside shared account truth. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
 
 **DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, verification, and small local utility pages. The old local DevStudio widget-authoring lane is removed. DevStudio must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 
@@ -321,13 +332,14 @@ Locale is a runtime parameter and must not be encoded into instance identity (`p
 
 - UI strings use Tokyo-hosted `i18n` catalogs (`tokyo/i18n/**`).
 - Repo-authored admin-owned i18n source catalogs live under `tokyo/admin-owned/i18n/**` and build into `tokyo/i18n/**`.
-- Instance/content translation uses Tokyo-hosted published `l10n` artifacts (`tokyo/l10n/**`) at runtime. Public embeds read locale text packs + live pointers; layer=user authoring state is resolved before publication.
+- Instance/content translation uses Tokyo-hosted published `l10n` artifacts (`tokyo/l10n/**`) at runtime. Public embeds read locale text packs + live pointers. The active Builder product path does not expose a `layer=user` authoring surface.
 - Repo-authored admin-owned l10n source overlays live under `tokyo/admin-owned/l10n/**` and build into `tokyo/l10n/**`.
 - Prague marketing copy lives in `tokyo/widgets/*/pages/*.json` (single source) with layered ops overlays stored in Tokyo (`tokyo/l10n/prague/**`) and applied at runtime (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
-- Canonical overlay truth for instances lives in Tokyo/Tokyo-worker. Manual overrides live in layer=user and are merged into published text packs at publish/sync time.
+- Canonical overlay truth for instances lives in Tokyo/Tokyo-worker. Historical `layer=user` rows may still exist in Tokyo storage, but they are not part of the active Builder authoring flow.
 
 Canonical reference:
 
+- `documentation/architecture/OverlayArchitecture.md`
 - `documentation/capabilities/localization.md`
 
 ---

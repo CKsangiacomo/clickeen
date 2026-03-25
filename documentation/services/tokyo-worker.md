@@ -77,6 +77,7 @@ Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies
 - `PATCH /__internal/renders/instances/:publicId/saved.json`
 - `DELETE /__internal/renders/instances/:publicId/saved.json`
 - `POST /__internal/renders/instances/:publicId/sync`
+- `POST /__internal/renders/instances/serve-state.json`
 - `GET /__internal/l10n/instances/:publicId/translations`
 
 Current runtime contract:
@@ -96,7 +97,12 @@ Current runtime contract:
 - Explicit Tokyo-worker sync refreshes that saved-widget l10n summary, then converges overlay artifacts separately.
 - Tokyo maintains one current locale pointer truth over those artifacts.
 - Builder Translations reads consume that saved Tokyo l10n summary plus current locale artifact state; they do not live-read Berlin on panel open.
-- Bob/Roma product-path save does not inline l10n/live-surface convergence; it durably enqueues Tokyo overlay sync, and Tokyo-worker retries that work until convergence completes.
+- Bob/Roma product-path save does not inline l10n/live-surface convergence; it writes one durable Tokyo overlay work item and then triggers queue delivery. If queue handoff or later execution fails, Tokyo-worker persists that failure on the work item instead of leaving fake infinite `updating` state behind.
+- When a new save writes the current overlay work item for an instance, Tokyo-worker deletes older work items for that same instance so only the latest save remains current workflow truth.
+- If locale generation for the latest save does not return current ops for a requested locale, Tokyo-worker does not publish that locale as current-ready for the new `baseFingerprint`.
+- For published instances, Tokyo-worker advances the live locale policy with the current-ready locale subset only. A missing locale drops out of public serving until current artifacts exist again.
+- Publish is the explicit live flip boundary: Roma calls `POST /__internal/renders/instances/:publicId/sync` with `live: true` so Tokyo-worker materializes the current live surface before publish returns success.
+- The internal serve-state read boundary is `POST /__internal/renders/instances/serve-state.json`. Roma uses it for widgets status, publish caps, and save-aftermath routing; Michael status rows are not the canonical answer.
 - Bob/Roma product-path account reads use this Tokyo saved snapshot as the active open/save truth.
 - `GET /__internal/renders/instances/:publicId/saved.json` is the named saved-document read boundary for Builder. If the saved pointer/config is malformed, Tokyo-worker now returns a validation failure instead of hiding that state as a fake not-found.
 - Tokyo-worker now uses that same truthful saved-document read contract across Builder-open, explicit instance sync, and account-localization state. Invalid saved state is not silently collapsed into “missing” in sibling product flows.
@@ -151,7 +157,7 @@ Job kinds (v1):
 - `write-meta-pack` (only when entitled)
 - `sync-instance-overlays` (durable overlay convergence after save/settings changes)
 - `sync-live-surface` (moves `live/r.json`; cleans up removed locales/meta)
-- `delete-instance-mirror` (hard delete instance subtree in Tokyo)
+- `delete-instance-mirror` (hard delete instance subtree in Tokyo for instance deletion, not normal unpublish)
 
 Non-negotiable:
 
@@ -164,11 +170,14 @@ Source of truth:
 
 ---
 
-## Cleanup (Tokyo is a mirror, not an archive)
+## Cleanup (serve-state off vs delete)
 
-When an instance is unpublished (or deleted), Tokyo-worker must remove it from Tokyo:
+When an instance is unpublished, Tokyo-worker must remove the public live/serve surface in Tokyo so Venice stops serving it.
+When an instance is deleted, Tokyo-worker removes the full Tokyo subtree.
 
-- Deletes `renders/instances/<publicId>/...`
-- Deletes `l10n/instances/<publicId>/...`
+- Unpublish removes the live serve surface (`live/r.json` and public-live pointers that make Venice servable)
+- Delete removes `renders/instances/<publicId>/...`
+- Delete removes `l10n/instances/<publicId>/...`
 
-This prevents an R2 landfill and keeps “Venice is dumb” true forever.
+Unpublish is not a synonym for purging saved documents or internal overlay authoring state.
+Delete is the hard cleanup path.

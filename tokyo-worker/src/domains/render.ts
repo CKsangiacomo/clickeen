@@ -81,6 +81,8 @@ export type SavedRenderDocumentReadResult =
     }
   | SavedRenderDocumentReadFailure;
 
+export type InstanceServeState = 'published' | 'unpublished';
+
 export type L10nLivePointer = {
   v: 1;
   publicId: string;
@@ -294,8 +296,12 @@ function l10nTextPackKey(publicId: string, locale: string, textFp: string): stri
   return `l10n/instances/${publicId}/packs/${locale}/${textFp}.json`;
 }
 
+function overlayWorkItemPrefix(publicId: string): string {
+  return `l10n/instances/${publicId}/work/`;
+}
+
 function overlayWorkItemKey(publicId: string, baseFingerprint: string): string {
-  return `l10n/instances/${publicId}/work/${baseFingerprint}.json`;
+  return `${overlayWorkItemPrefix(publicId)}${baseFingerprint}.json`;
 }
 
 async function putJson(env: Env, key: string, payload: unknown): Promise<void> {
@@ -926,6 +932,45 @@ export async function deleteOverlayWorkItem(args: {
   await args.env.TOKYO_R2.delete(overlayWorkItemKey(publicId, baseFingerprint));
 }
 
+export async function deleteStaleOverlayWorkItemsForPublicId(args: {
+  env: Env;
+  publicId: string;
+  keepBaseFingerprint: string;
+}): Promise<string[]> {
+  const publicId = normalizePublicId(args.publicId);
+  if (!publicId) throw new Error('[tokyo] delete-stale-overlay-work-items invalid publicId');
+  const keepBaseFingerprint = normalizeFingerprint(args.keepBaseFingerprint);
+  if (!keepBaseFingerprint) {
+    throw new Error('[tokyo] delete-stale-overlay-work-items invalid keepBaseFingerprint');
+  }
+
+  const prefix = overlayWorkItemPrefix(publicId);
+  const staleKeys: string[] = [];
+  const deletedBaseFingerprints: string[] = [];
+  let cursor: string | undefined = undefined;
+
+  do {
+    const listed = await args.env.TOKYO_R2.list({ prefix, cursor });
+    for (const obj of listed.objects) {
+      const key = typeof obj.key === 'string' ? obj.key : '';
+      if (!key.startsWith(prefix) || !key.endsWith('.json')) continue;
+      const baseFingerprint = normalizeFingerprint(
+        key.slice(prefix.length, key.length - '.json'.length),
+      );
+      if (!baseFingerprint || baseFingerprint === keepBaseFingerprint) continue;
+      staleKeys.push(key);
+      deletedBaseFingerprints.push(baseFingerprint);
+    }
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+
+  if (staleKeys.length) {
+    await args.env.TOKYO_R2.delete(staleKeys);
+  }
+
+  return deletedBaseFingerprints;
+}
+
 async function writeMetaPointer(args: {
   env: Env;
   publicId: string;
@@ -1161,6 +1206,21 @@ export async function readSavedRenderConfig(args: {
     };
   }
   return { ok: true, value: { pointer, config } };
+}
+
+export async function readInstanceServeState(args: {
+  env: Env;
+  publicId: string;
+}): Promise<InstanceServeState> {
+  const publicId = normalizePublicId(args.publicId);
+  if (!publicId) {
+    throw new Error('tokyo.errors.render.invalid');
+  }
+
+  const pointer = normalizeLiveRenderPointer(
+    await loadJson<LiveRenderPointer>(args.env, renderLivePointerKey(publicId)),
+  );
+  return pointer ? 'published' : 'unpublished';
 }
 
 export async function writeSavedRenderL10nState(args: {

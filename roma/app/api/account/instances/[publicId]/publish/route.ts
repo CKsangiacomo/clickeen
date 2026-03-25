@@ -3,15 +3,17 @@ import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   loadTokyoAccountInstanceDocument,
   loadTokyoAccountInstanceLiveStatus,
+  loadTokyoAccountInstanceServeStates,
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
-import { runAccountInstanceSync } from '@roma/lib/account-instance-sync';
-import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import {
-  countPublishedAccountInstances,
+  syncAccountInstanceLiveSurface,
+  TokyoAccountInstanceSyncError,
+} from '@roma/lib/account-instance-sync';
+import {
+  listAccountInstancePublicIds,
   loadAccountPublishContainment,
-  updateAccountInstanceStatusRow,
 } from '@roma/lib/michael';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
@@ -82,8 +84,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const liveStatus = await loadTokyoAccountInstanceLiveStatus({
-    tokyoBaseUrl: resolveTokyoBaseUrl(),
+    accountId,
     publicId,
+    tokyoAccessToken: current.value.accessToken,
+    accountCapsule: current.value.authzToken,
   });
   if (!liveStatus.ok) {
     return withSession(
@@ -128,20 +132,46 @@ export async function POST(request: NextRequest, context: RouteContext) {
         current.value.setCookies,
       );
     }
-    const publishedCount = await countPublishedAccountInstances(accountId, current.value.accessToken);
-    if (!publishedCount.ok) {
-      const status = publishedCount.status === 401 ? 401 : publishedCount.status === 403 ? 403 : 502;
+    const accountInstancePublicIds = await listAccountInstancePublicIds(accountId, current.value.accessToken);
+    if (!accountInstancePublicIds.ok) {
+      const status =
+        accountInstancePublicIds.status === 401
+          ? 401
+          : accountInstancePublicIds.status === 403
+            ? 403
+            : 502;
       const kind = status === 401 ? 'AUTH' : status === 403 ? 'DENY' : 'UPSTREAM_UNAVAILABLE';
       return withSession(
         request,
         NextResponse.json(
-          { error: { kind, reasonKey: publishedCount.reasonKey, detail: publishedCount.detail } },
+          {
+            error: {
+              kind,
+              reasonKey: accountInstancePublicIds.reasonKey,
+              detail: accountInstancePublicIds.detail,
+            },
+          },
           { status },
         ),
         current.value.setCookies,
       );
     }
-    if (publishedCount.count >= publishedCap) {
+
+    const publishedStates = await loadTokyoAccountInstanceServeStates({
+      accountId,
+      publicIds: accountInstancePublicIds.publicIds,
+      tokyoAccessToken: current.value.accessToken,
+      accountCapsule: current.value.authzToken,
+    });
+    if (!publishedStates.ok) {
+      return withSession(
+        request,
+        NextResponse.json({ error: publishedStates.error }, { status: publishedStates.status }),
+        current.value.setCookies,
+      );
+    }
+
+    if (publishedStates.value.publishedCount >= publishedCap) {
       return withSession(
         request,
         NextResponse.json(
@@ -157,25 +187,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
         current.value.setCookies,
       );
     }
-  }
-
-  const publishWrite = await updateAccountInstanceStatusRow({
-    accountId,
-    publicId,
-    status: 'published',
-    berlinAccessToken: current.value.accessToken,
-  });
-  if (!publishWrite.ok) {
-    const status = publishWrite.status === 401 ? 401 : publishWrite.status === 404 ? 404 : 502;
-    const kind = status === 401 ? 'AUTH' : status === 404 ? 'NOT_FOUND' : 'UPSTREAM_UNAVAILABLE';
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind, reasonKey: publishWrite.reasonKey, detail: publishWrite.detail } },
-        { status },
-      ),
-      current.value.setCookies,
-    );
   }
 
   const accountLocalesState = await loadCurrentAccountLocalesState({
@@ -219,12 +230,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    await runAccountInstanceSync({
+    await syncAccountInstanceLiveSurface({
       accessToken: current.value.accessToken,
       accountId,
       publicId,
       accountCapsule: current.value.authzToken,
-      live: true,
       l10nIntent: {
         baseLocale: accountLocalesState.policy.baseLocale,
         desiredLocales: normalizeDesiredAccountLocales({
@@ -235,23 +245,45 @@ export async function POST(request: NextRequest, context: RouteContext) {
       },
     });
   } catch (error) {
-    await updateAccountInstanceStatusRow({
-      accountId,
-      publicId,
-      status: 'unpublished',
-      berlinAccessToken: current.value.accessToken,
-    }).catch(() => undefined);
+    const detail = error instanceof Error ? error.message : String(error);
+    const status =
+      error instanceof TokyoAccountInstanceSyncError
+        ? error.status === 401
+          ? 401
+          : error.status === 403
+            ? 403
+            : error.status === 404
+              ? 404
+              : error.status === 422
+                ? 422
+                : 502
+        : 502;
+    const kind =
+      status === 401
+        ? 'AUTH'
+        : status === 403
+          ? 'DENY'
+          : status === 404
+            ? 'NOT_FOUND'
+            : status === 422
+              ? 'VALIDATION'
+              : 'UPSTREAM_UNAVAILABLE';
     return withSession(
       request,
       NextResponse.json(
         {
           error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail: error instanceof Error ? error.message : String(error),
+            kind,
+            reasonKey:
+              status === 404
+                ? 'coreui.errors.instance.notFound'
+                : status === 422
+                  ? detail
+                  : 'coreui.errors.db.writeFailed',
+            detail,
           },
         },
-        { status: 502 },
+        { status },
       ),
       current.value.setCookies,
     );

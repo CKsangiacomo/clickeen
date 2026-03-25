@@ -157,9 +157,9 @@ tokyo/l10n/instances/<publicId>/
 **Key properties:**
 
 - `baseFingerprint`: The allowlist-scoped base fingerprint the overlay ops were generated from (sha256)
-- Fresh vs stale:
-  - **fresh:** `overlay.baseFingerprint === computeL10nFingerprint(baseConfig, allowlist)`
-  - **stale:** fingerprint mismatch; runtime may still apply the last published overlay **selectively** when safe (never clobbering user edits) while async generation catches up
+- Freshness rule:
+  - **current:** `overlay.baseFingerprint === computeL10nFingerprint(baseConfig, allowlist)`
+  - **non-current:** fingerprint mismatch; public/current consumer paths must not apply the overlay. Regeneration/publication must converge it before exposure
 - Allowlist contract lives in `tokyo/widgets/{widget}/localization.json` and `layers/*.allowlist.json` (validated at publish time)
 - `ops`: Array of JSONPatch-style operations (currently only "set" supported)
 
@@ -322,9 +322,9 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 
 **Index semantics:**
 
-- `index.json` may include `lastPublishedFingerprint` to reduce 404 misses.
-- Runtime prefers **fresh** overlays whose `overlay.baseFingerprint` matches the current base fingerprint.
-- Runtime may apply a **stale** locale overlay selectively when safe (requires a published base snapshot for the stale fingerprint). Other layers skip stale overlays by default.
+- `index.json` may include `lastPublishedFingerprint` for publication bookkeeping and diagnostics.
+- Runtime applies only overlays whose `overlay.baseFingerprint` matches the current base fingerprint.
+- Non-current overlays remain internal control-plane state until regeneration/publication converges them.
 
 **Composition algorithm:**
 
@@ -352,16 +352,8 @@ function composeVariant(
   for (const overlay of layers) {
     if (!overlay) continue;
 
-    // Fingerprint guard: fresh vs safe stale
+    // Fingerprint guard: only current overlays are consumer-visible
     if (overlay.baseFingerprint !== baseFingerprint) {
-      // Phase 1: safe-stale apply is only supported for locale overlays (instances).
-      if (overlay.layer === 'locale') {
-        const baseSnapshot = overlays.bases?.get(overlay.baseFingerprint);
-        if (baseSnapshot) {
-          const safeOps = filterSafeStaleOps(overlay.ops, baseConfig, baseSnapshot);
-          result = applyOps(result, safeOps);
-        }
-      }
       continue;
     }
 
@@ -385,9 +377,6 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
   return result;
 }
 
-// Stale-safe apply rule:
-// - For each `{ op: "set", path, value }`, only apply when `getValueAtPath(baseConfig, path)` equals the published
-//   base snapshot value for that path (prevents clobbering manual/base edits made after the overlay was generated).
 ```
 
 ---
@@ -418,7 +407,7 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 **Enforcement:**
 
 - Paris/San Francisco validate ops against the allowlist at publish/generation time.
-- Runtime enforces the staleness guard (fresh fingerprint match; plus safe stale apply where supported) and prohibited path segments.
+- Runtime enforces current-fingerprint match and prohibited path segments.
 
 ---
 

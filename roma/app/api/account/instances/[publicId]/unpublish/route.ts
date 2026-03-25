@@ -5,7 +5,6 @@ import {
   loadTokyoAccountInstanceLiveStatus,
 } from '@roma/lib/account-instance-direct';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
-import { updateAccountInstanceStatusRow } from '@roma/lib/michael';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -45,8 +44,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const liveStatus = await loadTokyoAccountInstanceLiveStatus({
-    tokyoBaseUrl: resolveTokyoBaseUrl(),
+    accountId,
     publicId,
+    tokyoAccessToken: current.value.accessToken,
+    accountCapsule: current.value.authzToken,
   });
   if (!liveStatus.ok) {
     return withSession(
@@ -64,25 +65,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const unpublishWrite = await updateAccountInstanceStatusRow({
-    accountId,
-    publicId,
-    status: 'unpublished',
-    berlinAccessToken: current.value.accessToken,
-  });
-  if (!unpublishWrite.ok) {
-    const status = unpublishWrite.status === 401 ? 401 : unpublishWrite.status === 404 ? 404 : 502;
-    const kind = status === 401 ? 'AUTH' : status === 404 ? 'NOT_FOUND' : 'UPSTREAM_UNAVAILABLE';
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind, reasonKey: unpublishWrite.reasonKey, detail: unpublishWrite.detail } },
-        { status },
-      ),
-      current.value.setCookies,
-    );
-  }
-
   try {
     await deleteLiveSurfaceFromTokyo({
       tokyoBaseUrl: resolveTokyoBaseUrl(),
@@ -92,13 +74,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
       accountCapsule: current.value.authzToken,
     });
   } catch (error) {
-    await updateAccountInstanceStatusRow({
-      accountId,
-      publicId,
-      status: 'published',
-      berlinAccessToken: current.value.accessToken,
-    }).catch(() => undefined);
-
     return withSession(
       request,
       NextResponse.json(

@@ -25,6 +25,16 @@ Translation is still background system work.
 The Translations panel is not a second editor.
 Bob still has one preview surface.
 
+## Publication Clarification (2026-03-24)
+
+For this PRD, `published` / `unpublished` means only the Tokyo-owned per-instance serve flag.
+
+- It is instance state, not widget-type state.
+- It tells Venice whether the instance may be served publicly.
+- It exists to limit public serving on lower tiers.
+- It is not overlay readiness, draft state, or general business lifecycle truth.
+- Unpublish turns public serving off. It does not define whether saved docs or internal overlay authoring state still exist.
+
 ---
 
 ## Non-Negotiable Tenet

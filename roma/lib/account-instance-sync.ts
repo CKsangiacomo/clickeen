@@ -9,6 +9,16 @@ export type AccountInstanceSyncIntent = {
   countryToLocale: Record<string, string>;
 };
 
+export class TokyoAccountInstanceSyncError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'TokyoAccountInstanceSyncError';
+    this.status = status;
+  }
+}
+
 function resolveTokyoSyncErrorDetail(payload: unknown, fallback: string): string {
   if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
     const error = (payload as { error?: { detail?: unknown; reasonKey?: unknown } }).error;
@@ -54,24 +64,11 @@ async function postAccountInstanceSync(args: {
     | { error?: { detail?: unknown; reasonKey?: unknown } }
     | null;
   if (!response.ok) {
-    throw new Error(resolveTokyoSyncErrorDetail(payload, `tokyo_instance_sync_http_${response.status}`));
+    throw new TokyoAccountInstanceSyncError(
+      response.status,
+      resolveTokyoSyncErrorDetail(payload, `tokyo_instance_sync_http_${response.status}`),
+    );
   }
-}
-
-export async function runAccountInstanceSync(args: {
-  accessToken: string;
-  accountId: string;
-  publicId: string;
-  accountCapsule?: string | null;
-  live?: boolean;
-  baseFingerprint?: string | null;
-  previousBaseFingerprint?: string | null;
-  l10nIntent: AccountInstanceSyncIntent;
-}): Promise<void> {
-  await postAccountInstanceSync({
-    ...args,
-    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/sync`,
-  });
 }
 
 export async function enqueueAccountInstanceSync(args: {
@@ -87,5 +84,20 @@ export async function enqueueAccountInstanceSync(args: {
   await postAccountInstanceSync({
     ...args,
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/sync/queue`,
+  });
+}
+
+export async function syncAccountInstanceLiveSurface(args: {
+  accessToken: string;
+  accountId: string;
+  publicId: string;
+  accountCapsule?: string | null;
+  previousBaseFingerprint?: string | null;
+  l10nIntent: AccountInstanceSyncIntent;
+}): Promise<void> {
+  await postAccountInstanceSync({
+    ...args,
+    live: true,
+    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/sync`,
   });
 }

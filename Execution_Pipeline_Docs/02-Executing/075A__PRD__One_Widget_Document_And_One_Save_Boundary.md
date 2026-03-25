@@ -208,7 +208,7 @@ Save does not mean:
 Any translation work happens after save. It is not part of the product meaning of Save.
 Builder no longer owns a localization authoring lane.
 The current save boundary carries the opened document metadata explicitly (`widgetType`, `displayName`, `source`, `meta`) and does not look backward at the previous saved row to recover sibling identity.
-Widgets-domain user-facing identity (`widgetType`, `displayName`) is now read from the same Tokyo saved document owner. Michael remains only the row/status shell on the active account path.
+Widgets-domain user-facing identity (`widgetType`, `displayName`) is now read from the same Tokyo saved document owner. Michael remains only registry residue on the active account path; canonical publish/unpublish truth belongs to Tokyo's per-instance serve flag.
 
 ### C. Roma will stay the only persisted-document authority
 

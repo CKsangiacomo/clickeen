@@ -136,12 +136,9 @@ export async function tryHandleInternalL10nRoutes(
   if (l10nOverlayMatch && (req.method === 'POST' || req.method === 'DELETE')) {
     const publicId = normalizePublicId(decodeURIComponent(l10nOverlayMatch[1]));
     const layerRaw = decodeURIComponent(l10nOverlayMatch[2]);
-    const layer = layerRaw === 'locale' || layerRaw === 'user' ? layerRaw : null;
+    const layer = layerRaw === 'locale' ? layerRaw : null;
     const layerKeyRaw = decodeURIComponent(l10nOverlayMatch[3]);
-    const layerKey =
-      layer === 'locale'
-        ? normalizeLocale(layerKeyRaw)
-        : normalizeLocale(layerKeyRaw) || (layerKeyRaw === 'global' ? 'global' : null);
+    const layerKey = layer === 'locale' ? normalizeLocale(layerKeyRaw) : null;
     const accountId = String(
       args.url.searchParams.get('accountId') || req.headers.get('x-account-id') || '',
     ).trim();

@@ -1,18 +1,55 @@
 # 075E Execution Plan - Localization Must Not Tax Every Builder Session
 
-Status: READY TO EXECUTE  
+Status: HOT PATH GREEN; MANUAL VERIFICATION NEXT  
 Date: 2026-03-23  
 Owner: Product Dev Team  
 References:
 - `Execution_Pipeline_Docs/02-Executing/075E__PRD__Localization_Must_Not_Tax_Every_Builder_Session.md`
 - `documentation/architecture/CONTEXT.md`
 - `documentation/services/roma.md`
+- `documentation/architecture/OverlayArchitecture.md`
+- `Execution_Pipeline_Docs/02-Executing/Overlay_Architecture_Contradiction_Inventory.md`
 
 ---
 
 ## What This Doc Is
 
 This file is the coding order for the current repo state.
+
+Update 2026-03-24:
+
+- Most Bob/Tokyo-worker execution work described below is already closed in code.
+- Treat the detailed phase/file notes below as execution history and residual implementation context, not as the current contradiction gate.
+- The current gate for forward overlay work is `Overlay_Architecture_Contradiction_Inventory.md`.
+- `published` / `unpublished` was clarified after this plan was written: it is only the Tokyo-owned per-instance serve flag that tells Venice whether the instance may be served publicly. It is not widget state, overlay health, or Michael row-status truth.
+- The serve-state authority closure is now implemented in product code:
+  - widgets/status reads use Tokyo serve-state, not Michael row status
+  - publish/unpublish mutate Tokyo live truth, not Michael row status
+  - save remains one handoff of the instance to Tokyo-worker; Tokyo-worker owns reconciliation of locales and R2/runtime artifacts
+  - account locale fanout now resolves all account-owned saved instances and sets `live` per Tokyo serve-state
+  - curated starter discovery no longer filters on `published`
+- The Builder consumer read slice is now implemented in product code:
+  - while `Translations` is open, Bob reads one Roma/Tokyo-backed translations status route
+  - successful Save bumps that same read so Builder rechecks current locale status after Tokyo-worker takes the save
+  - the Translations panel and preview locale selection now consume the same `readyLocales` set
+- The queue-handoff dead-flow is now closed in product code:
+  - if Tokyo cannot enqueue overlay work after writing the durable work item, Tokyo marks that work item `failed` immediately instead of leaving fake `pending/updating` state behind
+- The active deletion slice is now closed in product code:
+  - public/product l10n control routes no longer admit legacy `layer='user'`
+  - Michael core-row helpers no longer surface instance `status` as product truth
+- The latest-save localization truth slice is now implemented in product code:
+  - newer saves delete older overlay work items for the same instance
+  - current locale readiness no longer treats missing generation output as ready
+  - published live locale policy now advances with the current-ready locale subset only
+- The account-locale fanout slice is now implemented in product code:
+  - account locale changes fan out across all account-owned saved instances, not only published ones
+  - published instances enqueue sync with `live: true`; unpublished instances enqueue sync with `live: false`
+  - curated starter instances are no longer locale-fanout targets
+- The account-locale fail-open slice is now implemented in product code:
+  - one broken saved widget no longer blocks locale fanout for healthy widgets
+  - non-404 saved-document failures are now per-instance warnings
+  - 404 historical saved-document residue remains silent skip-only behavior
+- Because that reset slice is closed, the next code slice can return to narrower overlay/localization work.
 
 The PRD is still product truth.
 This file is narrower:
@@ -54,6 +91,10 @@ If implementation starts naming extra subsystems, extra preview paths, or generi
 23. Tokyo/Tokyo-worker must own one durable overlay work item for the current `publicId + baseFingerprint`; queue delivery is a trigger, not workflow truth.
 24. Builder must expose one honest system-owned state from that work item plus ready artifact truth: `ok`, `updating`, or `failed`.
 25. Permanent queue failure must become durable work-item state, not a console-only event and not infinite `updating`.
+26. `published` / `unpublished` in this slice means only Tokyo's per-instance serve flag.
+27. That serve flag is not widget-type state, draft state, or overlay health.
+28. Unpublish turns public serving off; it is not shorthand for purging saved docs or internal overlay authoring state.
+29. Any remaining Michael status usage is cutover residue, not an authority to preserve.
 
 ### Discipline Checks
 
@@ -77,11 +118,27 @@ These checks are here to stop implementation drift:
 These are current code truths. They are not planned work for `075E`.
 
 - `roma/app/api/account/instance/[publicId]/route.ts`
-  - Save already hands off async translation convergence with `runAccountInstanceSync(... live: false)` after successful save.
+  - Save still means only `save this widget`. Tokyo-worker owns the post-save reconciliation of locale and R2/runtime artifacts.
+- `roma/app/api/account/instances/[publicId]/publish/route.ts`
+  - Publish is now the explicit Tokyo live-plane boundary. It no longer writes Michael status rows.
+- `roma/app/api/account/instances/[publicId]/unpublish/route.ts`
+  - Unpublish now removes the Tokyo live surface only. It no longer writes Michael status rows or treats unpublish as delete.
+- `roma/lib/michael-catalog.ts`
+  - Widgets-domain status and account-locales fanout now derive `published` / `unpublished` from Tokyo serve-state instead of Michael row status.
+- `roma/app/api/account/templates/route.ts`
+  - The curated starter gallery now lists admin-owned curated instances without treating `published` as a starter-availability gate.
 - `bob/lib/session/WidgetDocumentSession.tsx`
   - `loadTranslations` already lives in transport context, not `WidgetDocumentSessionValue`.
 - `bob/lib/session/useWidgetSession.tsx`
   - already re-exports `useWidgetSessionTransport`.
+- `bob/components/BuilderApp.tsx`
+  - owns one shared translations snapshot while `Translations` is open and bumps it after successful Save.
+- `bob/components/useTranslationsPreviewState.ts`
+  - reads one Tokyo-backed translations status payload only when Builder opens `Translations` or explicitly refreshes after successful Save.
+- `bob/components/TranslationsPanel.tsx`
+  - is status + ready-locale inspection only; it no longer owns its own translations fetch loop.
+- `bob/components/Workspace.tsx`
+  - accepts only the shared `readyLocales` set for translation preview selection; stale or incomplete locales do not stay selectable.
 - `venice/app/e/[publicId]/route.ts`
   - remains the embed/reference truth for locale output semantics; do not fork Builder behavior away from it.
 
@@ -89,28 +146,126 @@ Do not turn any of the above into speculative cleanup.
 
 ---
 
-## Remaining Real Gaps
+## Current Status
 
-These are the actual remaining problems in the current codebase:
+The hot `75E` product path is green in code.
 
-1. The translations panel route still returns too much product surface: `inspectionLocale`, per-locale `localeStatuses`, `localeBehavior`, and `activeLocales` instead of current/ready locale truth.
-2. Bob is mid-rewire and not coherent:
-   - `BuilderApp.tsx` uses `inspectionLocale`
-   - `ToolDrawer.tsx` and `Workspace.tsx` still expect `previewLocale`
-   - `TranslationsPanel.tsx` calls `session.loadTranslations` from the wrong hook surface
-3. Bob does not yet carry explicit `baseLocale` bootstrap truth for preview locking; that truth currently lives in Roma current-account context and must be threaded once through the existing Bob open flow.
-4. The shared locale switcher in `tokyo/widgets/shared/localeSwitcher.js` still self-navigates the iframe URL.
-5. `tokyo/widgets/shared/previewL10n.js` still treats missing locale artifacts as normal consumer control flow instead of as an invariant break.
-6. `loadAccountLocalizationBaseContext()` still calls `ensureSavedRenderL10nBase()` on the read path, which can write missing base snapshot state during a panel/status read instead of failing at the Tokyo/Tokyo-worker boundary.
-7. The saved Tokyo widget pointer does not yet carry durable l10n summary truth for Builder (`baseFingerprint` + last synced desired locale set), so the panel route still reaches back into Berlin to rebuild that truth on read.
-8. Repo-level architecture docs still describe older locale behavior and best-available overlays, which will confuse implementation if left unresolved.
-9. Save/sync still fails the incremental overlay contract: Roma does not pass previous saved-base identity into sync, Tokyo-worker does not diff previous vs current saved bases, and San Francisco therefore falls back to whole-widget translation work even for tiny text edits.
+That means:
+
+- `Save` still means one handoff of the instance to Tokyo-worker.
+- Tokyo-worker owns post-save locale + runtime reconciliation.
+- `Publish` / `Unpublish` still means only Tokyo's per-instance serve flag for Venice.
+- Builder still has one read-only `Translations` surface with one overall status and one `readyLocales` set.
+- latest-save translation truth is closed:
+  - older work items are deleted when a newer save becomes current
+  - missing current generation output does not leak into `readyLocales`
+- account locale changes now fan out across all account-owned saved instances
+  - published instances refresh public serving truth too
+  - unpublished instances refresh Builder/saved locale truth only
+  - one broken saved widget no longer blocks healthy widgets
+
+## Remaining Drift
+
+The remaining drift is no longer the hot code path.
+
+It is:
+
+1. missing manual product verification for the latest-save and account-locale scenarios
+
+## Next Step
+
+Run the manual product checks before opening another feature slice:
+
+1. save once -> `Translations` reflects the current save
+2. save twice quickly -> only the newest save owns status/ready locales
+3. add/remove account locale -> unpublished widgets pick up the new locale set without a fake content save
+4. add/remove account locale -> published widgets refresh public serving truth too
+
+The historical phase notes below remain as execution archive only. They are not the current contradiction gate.
 
 ---
 
 ## Actual Write Set
+- `Execution_Pipeline_Docs/02-Executing/075E__ExecutionPlan__Localization_Must_Not_Tax_Every_Builder_Session.md`
+- `documentation/capabilities/localization.md`
+- `documentation/services/roma.md`
+- `documentation/services/tokyo-worker.md`
+- `bob/components/TranslationsPanel.tsx`
+- `roma/lib/account-locales-sync.ts`
+- `roma/app/api/account/instance/[publicId]/route.ts`
 
-This slice should stay inside this file set:
+Read-only:
+
+- `documentation/services/sanfrancisco.md`
+- `documentation/strategy/Clickeen-Babel.md`
+- `tokyo-worker/**`
+
+Default rule: this step is manual verification first. Do not touch product code unless a manual check fails and the failure points to one narrow contradiction.
+
+#### Current code truths to preserve
+
+- latest-save translation truth is already closed in Tokyo/Tokyo-worker
+- account locale fanout already reaches all account-owned saved instances
+- published/unpublished is already Tokyo serve-state only
+- Builder already reads one shared translations payload with one `readyLocales` set
+- non-canonical docs no longer teach dead `layer=user` or safe-stale runtime behavior as active truth
+
+Do not reopen or re-solve those.
+
+#### Real gaps this slice must close
+
+1. The current `75E` path is still mostly green only by static verification; the product scenarios above have not been run end to end.
+2. If any of those scenarios fail, the next slice must stay narrow and fix only the named contradiction exposed by that scenario.
+
+#### To-do list
+
+1. Run the four manual product scenarios listed above.
+2. Record whether each scenario is green or points at one narrow contradiction.
+3. If a contradiction appears, open the smallest possible follow-up slice against that one contradiction only.
+4. Keep the active canonical docs and hot-path code unchanged unless a scenario failure proves otherwise.
+
+#### Explicit deletions in this slice
+
+- Delete any remaining assumption that static `tsc`/lint success means the product path is fully green.
+
+#### Stop conditions
+
+Stop immediately if implementation starts doing any of the following:
+
+- touching Roma/Bob/Tokyo-worker product code before a manual scenario actually fails
+- reopening publish/unpublish semantics
+- reintroducing Michael status
+- reintroducing widget-catalog locale fanout
+- widening a failure investigation into a generic cleanup pass
+
+#### Done criteria
+
+This slice is done when all of these are true:
+
+- the next action is clearly manual verification, not speculative refactoring
+- the product team can run the four named scenarios without guessing what “green” means
+- any follow-up slice can be opened from one failed scenario instead of repo archaeology
+
+#### Verification
+
+Required verification for this slice:
+
+- `pnpm exec tsc -p roma/tsconfig.json --noEmit`
+- `pnpm exec tsc -p tokyo-worker/tsconfig.json --noEmit`
+- `pnpm --filter @clickeen/roma lint`
+
+Manual verification:
+
+- save once -> `Translations` reflects the current save
+- save twice quickly -> only the newest save owns status/ready locales
+- add/remove account locale -> unpublished widgets pick up the new locale set without a fake content save
+- add/remove account locale -> published widgets refresh public serving truth too
+
+---
+
+## Historical 75E Write Set
+
+This file set is now historical `75E` execution context, not the next immediate slice:
 
 - `tokyo-worker/src/domains/account-localization-state.ts`
 - `tokyo-worker/src/domains/account-instance-sync.ts`

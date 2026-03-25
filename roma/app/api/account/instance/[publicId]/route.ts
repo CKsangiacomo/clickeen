@@ -3,6 +3,7 @@ import { classifyWidgetPublicId, isUuid } from '@clickeen/ck-contracts';
 import {
   deleteLiveSurfaceFromTokyo,
   deleteSavedConfigFromTokyo,
+  loadTokyoAccountInstanceLiveStatus,
   saveAccountInstanceDirect,
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
@@ -257,13 +258,30 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
+  let live = false;
+  const liveStatus = await loadTokyoAccountInstanceLiveStatus({
+    accountId,
+    publicId,
+    tokyoAccessToken: current.value.accessToken,
+    accountCapsule: current.value.authzToken,
+  });
+  if (liveStatus.ok) {
+    live = liveStatus.value === 'published';
+  } else {
+    console.error('[roma account instance current route] serve-state lookup failed after save', {
+      accountId,
+      publicId,
+      detail: liveStatus.error.detail ?? liveStatus.error.reasonKey,
+    });
+  }
+
   try {
     await enqueueAccountInstanceSync({
       accessToken: current.value.accessToken,
       accountId,
       publicId,
       accountCapsule: current.value.authzToken,
-      live: false,
+      live,
       baseFingerprint: result.baseFingerprint,
       previousBaseFingerprint: result.previousBaseFingerprint,
       l10nIntent: {

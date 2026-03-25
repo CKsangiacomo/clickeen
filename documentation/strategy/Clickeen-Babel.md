@@ -513,9 +513,9 @@ tokyo/
 
 **Why this matters:**
 - Only translate what changed (cost optimization)
-- Detects stale overlays (fingerprint mismatch) and triggers regeneration; runtime keeps serving best-available overlays (fresh or safe-stale) without breaking surfaces
+- Detects stale overlays (fingerprint mismatch) and triggers regeneration; active consumer paths expose only current-ready overlays for the active fingerprint
 - Enables partial updates (ops overlay system)
-- User overrides preserved in layer=user (`user_ops` separate from AI ops)
+- Historical experiments separated operator-authored overrides from system ops, but the active Builder product path no longer exposes a `layer=user` surface
 
 **Cost comparison:**
 - Traditional: Re-translate entire document on any change → $50/language
@@ -534,15 +534,15 @@ tokyo/
 ```
 User visits: /e/wgt_curated_faq_lightblurs_generic?locale=fr
     ↓
-Venice receives request, resolves requested→resolved locale and selects **effective** locale (best available)
+Venice receives request and resolves the requested locale against Tokyo's current-ready locale policy
     ↓
-Loads base config from Paris/Michael (instance config)
+Loads the current live config pack from Tokyo
     ↓
-Loads best-available French overlay from Tokyo (fresh preferred; safe stale apply when needed)
+Loads the current-ready French overlay from Tokyo only when that locale is currently servable
     ↓
-Applies ops to base config (set-only; safe stale apply uses base snapshot to avoid clobbering edits)
+Applies ops to base config for the current fingerprint only
     ↓
-Renders widget in the effective locale and declares it (no lying)
+Renders widget in the resolved locale without stale-overlay fallback
     ↓
 Serves localized output
 ```
@@ -888,7 +888,7 @@ Clickeen serves:
 - Translations reference `baseFingerprint` of source content
 - If source unchanged → reuse existing translations (zero cost)
 - If source changed → only re-translate changed fields (incremental cost)
-- User overrides preserved separately in layer=user (`user_ops` vs `ops`)
+- Keeps locale ops bound to one exact source fingerprint and one current-ready consumer contract
 
 **Why Competitors Can't Copy:**
 - Requires content-addressed storage first (see Moat #1)
@@ -1564,29 +1564,15 @@ LOOP REPEATS (exponential growth)
 }
 ```
 
-#### User Overrides (Preserved Separately)
+#### Active Product Path
 
-```json
-{
-  "layer": "user",
-  "layer_key": "fr",
-  "baseFingerprint": "758d73cbaa0c39f2ea6d6b7523fb1734dc231a6bd7380a05cc6aeb2d1e6aa8b5",
-  "user_ops": [
-    {
-      "op": "set",
-      "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen transforme votre contenu en version multilingue de manière automatique."
-    }
-  ],
-  "v": 1
-}
-```
+The active Builder product path does not expose a `layer=user` authoring surface.
 
 **When rendering:**
 1. Load base config
-2. Apply locale-layer `ops` (translations)
-3. Apply layer=user ops (per-locale or global fallback)
-4. Result: User's custom translation preserved even when AI re-translates
+2. Apply locale-layer `ops` for the current `baseFingerprint`
+3. Expose that locale only when Tokyo marks it current-ready
+4. Result: users preview and consume only current locale output for the current save
 
 ### Translation Pipeline Implementation
 
@@ -1743,28 +1729,19 @@ export async function renderInstance(req: RenderRequest): Promise<string> {
   const { instanceId, locale, format } = req;
 
   // 1. Load base config
-  const baseConfig = await loadBaseConfigFromParis(instanceId);
+  const baseConfig = await loadBaseConfigFromTokyo(instanceId);
 
   // 2. Load localization overlay (if exists)
   const overlay = await loadLocalizationOverlay(instanceId, locale);
 
-  // 3. Load user overrides (layer=user, locale or global)
-  const userOverrides =
-    (await loadLayerOverlay(instanceId, 'user', locale)) ??
-    (await loadLayerOverlay(instanceId, 'user', 'global'));
-
-  // 4. Merge: base + overlay + userOverrides
+  // 3. Merge: base + overlay
   let config = { ...baseConfig };
 
   if (overlay) {
     config = applyOps(config, overlay.ops);
   }
 
-  if (userOverrides) {
-    config = applyOps(config, userOverrides.ops);
-  }
-
-  // 5. Render in target format
+  // 4. Render in target format
   switch (format) {
     case 'html':
       return renderAsHTML(config);
@@ -2328,7 +2305,7 @@ if (parseFloat(dailySpend || '0') >= DAILY_COST_CAP) {
 - Store translations as operational patches (ops) referencing fingerprint
 - On source content change, detect delta by comparing fingerprints
 - Re-translate only changed fields (not entire document)
-- Preserve user overrides in separate operational layer
+- Keep locale ops bound to exact source fingerprints and current-ready consumer exposure
 
 **Prior Art:** None known (traditional systems re-translate entire documents)
 

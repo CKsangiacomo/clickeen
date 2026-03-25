@@ -57,11 +57,13 @@ Mutable pointer  (tiny, always fetched fresh)
 
 | Domain       | Mutable pointer                                                        | Immutable artifact                                                                    |
 | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **Publish**  | `published.json` (`no-store`)                                          | Render artifacts at `/renders/instances/{publicId}/{fingerprint}/...` (cache forever) |
+| **Serve state** | Tokyo live pointer / serve flag (`no-store`)                           | Render artifacts at `/renders/instances/{publicId}/{fingerprint}/...` (cache forever) |
 | **Assets**   | _(authoring stores logical `assetId`; runtime serves `/assets/v/:assetRef`)_ | Asset bytes at `/assets/v/:assetRef`                                                  |
 | **Auth**     | JWT (short-lived, refreshable)                                         | userId claim (stable identity)                                                        |
 | **Authz**    | HMAC-signed capsule (expires)                                          | Role/account snapshot at issuance                                                     |
 | **Overlays** | Layer pointer in DB                                                    | Materialized overlay file on R2 (fingerprinted)                                       |
+
+For instance serving, `published` / `unpublished` is only the Tokyo-owned per-instance serve flag. It tells Venice whether public serving is allowed. It is not widget-type state, not overlay readiness, and not broad account/business lifecycle truth.
 
 ### Why this matters
 
@@ -213,7 +215,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - Current cloud-dev account rule:
   - Account creation is Berlin-owned; Paris no longer mounts account creation.
   - Instance routing uses `publicId` prefix: `wgt_main_*` marks the instance shown first in MiniBob, `wgt_curated_*` marks other starter instances, `wgt_*_u_*` marks instances in user accounts.
-- Product-path base-config writes persist through Bob/Roma same-origin routes to Tokyo; translation refresh and published-surface sync run through explicit Roma localization/widget routes that delegate execution to Tokyo-worker instead of the save response path.
+- Product-path base-config writes persist through Bob/Roma same-origin routes to Tokyo. In product terms, `Save` hands the instance to Tokyo-worker so Tokyo-worker can reconcile the instance and its derived artifacts. `Publish` / `Unpublish` remains the separate Widgets-domain action that flips whether Venice may publicly serve the instance.
 
 #### Venice (Workers)
 
@@ -582,14 +584,14 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 ## Venice Embed Architecture
 
-**Current Status:** Shipped DB-free public embed runtime. Venice assembles `/e/:publicId` from Tokyo-only bytes and published-only pointers. Submission routes are hard-cut; `/embed/pixel` remains a compatibility no-op (`204`).
+**Current Status:** Shipped DB-free public embed runtime. Venice assembles `/e/:publicId` from Tokyo-only bytes and Tokyo-owned serve pointers only. Submission routes are hard-cut; `/embed/pixel` remains a compatibility no-op (`204`).
 
 ### Endpoints
 
 | Route                                | Purpose                                   |
 | ------------------------------------ | ----------------------------------------- |
 | `GET /e/:publicId`                   | Embed shell HTML + runtime bootstrap      |
-| `GET /r/:publicId`                   | Published live pointer proxy (`no-store`) |
+| `GET /r/:publicId`                   | Live serve pointer proxy (`no-store`) |
 | `GET /r/:publicId?meta=1&locale=...` | SEO/GEO meta pointer proxy (`no-store`)   |
 | `/embed/latest/loader.js`            | Canonical loader alias                    |
 | `/embed/v2/loader.js`                | Versioned loader                          |

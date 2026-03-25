@@ -1,6 +1,6 @@
 # Michael — Database (Supabase)
 
-Michael is Clickeen’s **minimal** persistence layer. It stores exactly what we need to edit and serve widget instances, and nothing else.
+Michael is Clickeen’s **minimal** persistence layer. It stores account/registry data around widget instances. Public serving truth is not owned here.
 
 ## Authority
 
@@ -40,7 +40,7 @@ Core columns:
 - `public_id` (text) — the **only** identifier that crosses system boundaries
 - `display_name` (text, nullable) — account-facing instance label (defaults to `public_id` when missing)
 - `kind` (text) — `user` (curated/baseline live in `curated_widget_instances`)
-- `status` (text) — `published` | `unpublished`
+- `status` (text) — `published` | `unpublished` (schema residue during cutover; not canonical serve-state authority)
 - `config` (jsonb) — required object, no longer used as active product config truth
 
 Current cutover note:
@@ -49,6 +49,8 @@ Current cutover note:
 - Bob/Roma use Tokyo for normal authoring open/save and Michael for registry/shell metadata only.
 - `widget_instances.config` still exists because of current schema shape and historical rows, but it is not the active product-path source of truth.
 - Public runtime never reads this row directly.
+- Tokyo owns the per-instance `published` / `unpublished` serve flag. Michael status columns must not be treated as the canonical answer to whether Venice may serve an instance.
+- Roma's core Michael row helpers no longer surface instance `status` as product truth. Widgets status comes from Tokyo serve-state reads.
 
 Guardrails:
 
@@ -64,7 +66,7 @@ Core columns:
 - `public_id` (text) — the **only** identifier that crosses system boundaries
 - `widget_type` (text) — denormalized widget type (validated against Tokyo registry at write time)
 - `kind` (text) — `baseline` | `curated`
-- `status` (text) — `published` | `unpublished`
+- `status` (text) — `published` | `unpublished` (schema residue during cutover; not canonical serve-state authority)
 - `owner_account_id` (uuid) — FK to `accounts.id` (curated rows are owned by a platform account; runtime policy keys off `accounts.is_platform` plus row ownership, not a hardcoded seed id)
 - `config` (jsonb) — required object, no longer used as active product config truth
 
@@ -130,7 +132,7 @@ This table exists even if the full UI/UX ships later.
 ## Hard Invariants (strict editor philosophy)
 
 - **No partial configs**: `config` is required and must be a JSON object (not `null`, not an array).
-- **No legacy states**: only `published` / `unpublished` exist (no `draft`, no `inactive`).
+- **No legacy states**: if a Michael status column still exists during cutover, only `published` / `unpublished` are allowed values (no `draft`, no `inactive`). That column is not the canonical serve-state owner.
 - **No extra “template system”**: Michael does not have a templates table. “Templates” are instances.
 - **Account-owned uploads**: every uploaded asset manifest is account-scoped; ownership is never inferred from scope names.
 
@@ -215,13 +217,13 @@ It:
 - renames the known curated/main instances to the new prefixes, and
 - re-adds the `widget_instances_public_id_format` constraint to forbid locale suffixes going forward.
 
-## “Instances ARE Templates” (how templates work)
+## Curated Starter Instances
 
 Competitors build a separate “template system”.
 
 Clickeen does not.
 
-A “template” is just a curated `curated_widget_instances` row whose `public_id` uses the `wgt_curated_` form. The gallery is simply a filtered view of instances (later: in UI/service code).
+What the product surfaces as starter designs are curated instances owned by the admin account. They are `curated_widget_instances` rows whose `public_id` uses the `wgt_curated_` form. The gallery is simply a filtered view of those curated starter instances. It is not keyed off the Tokyo `published` / `unpublished` serve flag, because starter discovery is not public-serving authority.
 
 ## Local Dev (Docker Supabase)
 

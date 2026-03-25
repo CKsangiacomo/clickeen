@@ -3,18 +3,17 @@ import {
   asTrimmedString,
   createMichaelHeaders,
   encodeFilterValue,
+  fetchMichaelListRows,
   formatCuratedDisplayName,
   isRecord,
   michaelUnavailableResult,
   resolveMichaelAccessToken,
   resolveMichaelBaseUrlForTests,
   type MichaelAccountInstanceResult,
+  type MichaelAccountInstancePublicIdsResult,
   type MichaelAccountPublishContainmentResult,
   type MichaelCuratedInstanceRow,
   type MichaelDeleteInstanceResult,
-  type MichaelPublishedInstanceCountResult,
-  type MichaelRenameInstanceResult,
-  type MichaelStatusInstanceResult,
   type MichaelWidgetInstanceRow,
   type MichaelWidgetRow,
 } from './michael-shared';
@@ -73,7 +72,7 @@ export async function getAccountInstanceCoreRow(
 
     if (isCuratedOrMainWidgetPublicId(publicId)) {
       const instanceResponse = await fetch(
-        `${resolveMichaelBaseUrlForTests()}/rest/v1/curated_widget_instances?select=public_id,status,updated_at,widget_type,owner_account_id,meta&public_id=eq.${encodeFilterValue(publicId)}&limit=1`,
+        `${resolveMichaelBaseUrlForTests()}/rest/v1/curated_widget_instances?select=public_id,updated_at,widget_type,owner_account_id,meta&public_id=eq.${encodeFilterValue(publicId)}&limit=1`,
         {
           method: 'GET',
           headers,
@@ -118,7 +117,6 @@ export async function getAccountInstanceCoreRow(
         row: {
           publicId: asTrimmedString(instanceRow.public_id) ?? publicId,
           displayName: formatCuratedDisplayName(instanceRow.meta, publicId),
-          status: instanceRow.status === 'published' ? 'published' : 'unpublished',
           updatedAt: asTrimmedString(instanceRow.updated_at),
           widgetId: `curated:${widgetType}`,
           accountId: asTrimmedString(instanceRow.owner_account_id) ?? accountId,
@@ -130,7 +128,7 @@ export async function getAccountInstanceCoreRow(
     }
 
     const instanceResponse = await fetch(
-      `${resolveMichaelBaseUrlForTests()}/rest/v1/widget_instances?select=public_id,display_name,status,updated_at,widget_id,account_id&account_id=eq.${encodeFilterValue(accountId)}&public_id=eq.${encodeFilterValue(publicId)}&limit=1`,
+      `${resolveMichaelBaseUrlForTests()}/rest/v1/widget_instances?select=public_id,display_name,updated_at,widget_id,account_id&account_id=eq.${encodeFilterValue(accountId)}&public_id=eq.${encodeFilterValue(publicId)}&limit=1`,
       {
         method: 'GET',
         headers,
@@ -181,7 +179,6 @@ export async function getAccountInstanceCoreRow(
       row: {
         publicId: asTrimmedString(instanceRow.public_id) ?? publicId,
         displayName: asTrimmedString(instanceRow.display_name),
-        status: instanceRow.status === 'published' ? 'published' : 'unpublished',
         updatedAt: asTrimmedString(instanceRow.updated_at),
         widgetId,
         accountId: resolvedAccountId,
@@ -200,7 +197,6 @@ export async function createAccountInstanceRow(args: {
   publicId: string;
   widgetType: string;
   displayName?: string | null;
-  status?: 'published' | 'unpublished';
   meta?: Record<string, unknown> | null;
   berlinAccessToken: string;
 }): Promise<MichaelAccountInstanceResult> {
@@ -275,7 +271,8 @@ export async function createAccountInstanceRow(args: {
           account_id: args.accountId,
           widget_id: widgetId,
           public_id: args.publicId,
-          status: args.status === 'published' ? 'published' : 'unpublished',
+          // Michael still requires a status column, but serve-state truth lives in Tokyo.
+          status: 'unpublished',
           display_name: asTrimmedString(args.displayName) ?? 'Untitled widget',
           // Michael still requires config at the schema level, but the active
           // product document truth lives in Tokyo. Keep this as inert residue
@@ -325,7 +322,6 @@ export async function createAccountInstanceRow(args: {
       row: {
         publicId: asTrimmedString(instanceRow.public_id) ?? args.publicId,
         displayName: asTrimmedString(instanceRow.display_name),
-        status: instanceRow.status === 'published' ? 'published' : 'unpublished',
         updatedAt: asTrimmedString(instanceRow.updated_at),
         widgetId,
         accountId: resolvedAccountId,
@@ -441,10 +437,10 @@ export async function loadAccountPublishContainment(
   }
 }
 
-export async function countPublishedAccountInstances(
+export async function listAccountInstancePublicIds(
   accountId: string,
   berlinAccessToken: string,
-): Promise<MichaelPublishedInstanceCountResult> {
+): Promise<MichaelAccountInstancePublicIdsResult> {
   try {
     const michaelAccess = await resolveMichaelAccessToken(berlinAccessToken);
     if (!michaelAccess.ok) {
@@ -452,130 +448,19 @@ export async function countPublishedAccountInstances(
     }
 
     const headers = createMichaelHeaders(michaelAccess.accessToken);
-    headers.set('prefer', 'count=exact');
-
-    const response = await fetch(
-      `${resolveMichaelBaseUrlForTests()}/rest/v1/widget_instances?select=public_id&account_id=eq.${encodeFilterValue(accountId)}&status=eq.published&limit=1`,
-      {
-        method: 'GET',
-        headers,
-        cache: 'no-store',
-      },
-    );
-    const text = await response.text().catch(() => '');
-    if (!response.ok) {
-      return {
-        ok: false,
-        status: response.status,
-        reasonKey:
-          response.status === 401
-            ? 'coreui.errors.auth.required'
-            : response.status === 403
-              ? 'coreui.errors.auth.forbidden'
-              : 'coreui.errors.db.readFailed',
-        detail: text || undefined,
-      };
-    }
-    const range = response.headers.get('content-range') || '';
-    const match = range.match(/\/(\d+)$/);
-    if (match) {
-      return { ok: true, count: Number.parseInt(match[1] || '0', 10) };
-    }
-    const payload = text ? (JSON.parse(text) as unknown) : null;
-    const rows = Array.isArray(payload) ? payload : [];
-    return { ok: true, count: rows.length };
-  } catch (error) {
-    return michaelUnavailableResult(error);
-  }
-}
-
-async function patchAccountInstanceRow(args: {
-  accountId: string;
-  publicId: string;
-  berlinAccessToken: string;
-  body: Record<string, unknown>;
-}): Promise<MichaelRenameInstanceResult> {
-  const michaelAccess = await resolveMichaelAccessToken(args.berlinAccessToken);
-  if (!michaelAccess.ok) {
-    return michaelAccess;
-  }
-
-  const headers = createMichaelHeaders(michaelAccess.accessToken);
-  headers.set('content-type', 'application/json');
-  headers.set('prefer', 'return=representation');
-
-  const response = await fetch(
-    `${resolveMichaelBaseUrlForTests()}/rest/v1/widget_instances?account_id=eq.${encodeFilterValue(args.accountId)}&public_id=eq.${encodeFilterValue(args.publicId)}&select=public_id,display_name,status,updated_at,widget_id,account_id`,
-    {
-      method: 'PATCH',
+    const rows = await fetchMichaelListRows<{ public_id?: unknown }>({
       headers,
-      body: JSON.stringify(args.body),
-      cache: 'no-store',
-    },
-  );
-  const text = await response.text().catch(() => '');
-  const payload = text ? (JSON.parse(text) as unknown) : null;
-  if (!response.ok) {
-    return {
-      ok: false,
-      status: response.status,
-      reasonKey:
-        response.status === 401
-          ? 'coreui.errors.auth.required'
-          : 'coreui.errors.db.writeFailed',
-      detail: text || undefined,
-    };
-  }
-
-  const rows = Array.isArray(payload) ? (payload as MichaelWidgetInstanceRow[]) : [];
-  const row = rows[0] ?? null;
-  if (!row) {
-    return { ok: true, row: null };
-  }
-
-  const widgetId = asTrimmedString(row.widget_id);
-  const resolvedAccountId = asTrimmedString(row.account_id);
-  if (!widgetId || !resolvedAccountId) {
-    return {
-      ok: false,
-      status: 502,
-      reasonKey: 'coreui.errors.instance.invalidPayload',
-      detail: 'invalid widget_instances payload',
-    };
-  }
-
-  const widgetType = await resolveWidgetTypeById(headers, widgetId);
-  if (!widgetType.ok) {
-    return widgetType;
-  }
-
-  return {
-    ok: true,
-    row: {
-      publicId: asTrimmedString(row.public_id) ?? args.publicId,
-      displayName: asTrimmedString(row.display_name),
-      status: row.status === 'published' ? 'published' : 'unpublished',
-      updatedAt: asTrimmedString(row.updated_at),
-      widgetId,
-      accountId: resolvedAccountId,
-      widgetType: widgetType.widgetType,
-    },
-  };
-}
-
-export async function updateAccountInstanceStatusRow(args: {
-  accountId: string;
-  publicId: string;
-  status: 'published' | 'unpublished';
-  berlinAccessToken: string;
-}): Promise<MichaelStatusInstanceResult> {
-  try {
-    return await patchAccountInstanceRow({
-      accountId: args.accountId,
-      publicId: args.publicId,
-      berlinAccessToken: args.berlinAccessToken,
-      body: { status: args.status },
+      pathname: `/rest/v1/widget_instances?select=public_id&account_id=eq.${encodeFilterValue(accountId)}&order=created_at.desc,public_id.desc`,
     });
+    if (!rows.ok) {
+      return rows;
+    }
+    return {
+      ok: true,
+      publicIds: rows.rows
+        .map((row) => asTrimmedString(row.public_id))
+        .filter((publicId): publicId is string => Boolean(publicId)),
+    };
   } catch (error) {
     return michaelUnavailableResult(error);
   }

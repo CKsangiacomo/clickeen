@@ -3,7 +3,6 @@ import { resolveBerlinBaseUrl } from './env/berlin';
 export type MichaelWidgetInstanceRow = {
   public_id?: unknown;
   display_name?: unknown;
-  status?: unknown;
   updated_at?: unknown;
   widget_id?: unknown;
   account_id?: unknown;
@@ -16,7 +15,6 @@ export type MichaelWidgetRow = {
 
 export type MichaelCuratedInstanceRow = {
   public_id?: unknown;
-  status?: unknown;
   updated_at?: unknown;
   widget_type?: unknown;
   owner_account_id?: unknown;
@@ -29,7 +27,6 @@ export type MichaelAccountInstanceResult =
       row: {
         publicId: string;
         displayName: string | null;
-        status: 'published' | 'unpublished';
         updatedAt: string | null;
         widgetId: string;
         accountId: string;
@@ -44,28 +41,6 @@ export type MichaelAccountInstanceResult =
       reasonKey: string;
       detail?: string;
     };
-
-export type MichaelRenameInstanceResult =
-  | {
-      ok: true;
-      row: {
-        publicId: string;
-        displayName: string | null;
-        status: 'published' | 'unpublished';
-        updatedAt: string | null;
-        widgetId: string;
-        accountId: string;
-        widgetType: string;
-      } | null;
-    }
-  | {
-      ok: false;
-      status: number;
-      reasonKey: string;
-      detail?: string;
-    };
-
-export type MichaelStatusInstanceResult = MichaelRenameInstanceResult;
 
 export type MichaelAccountPublishContainmentRow = {
   account_id?: unknown;
@@ -87,10 +62,10 @@ export type MichaelAccountPublishContainmentResult =
       detail?: string;
     };
 
-export type MichaelPublishedInstanceCountResult =
+export type MichaelAccountInstancePublicIdsResult =
   | {
       ok: true;
-      count: number;
+      publicIds: string[];
     }
   | {
       ok: false;

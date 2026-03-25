@@ -462,7 +462,7 @@ See also:
 
 ## l10n (Instance content overlays)
 
-Builder no longer owns localization overlay authoring, localization snapshot rehydrate, localization status polling, or user-layer writes on the active account editing path.
+Builder no longer owns localization generation, localization overlay authoring, localization snapshot rehydrate, or user-layer writes on the active account editing path.
 
 Current product truth:
 
@@ -470,6 +470,9 @@ Current product truth:
 - Roma saves that one widget document.
 - Account locale policy/settings remain Roma-owned.
 - Translation and locale follow-up work happen downstream, outside the Builder save flow.
+- When `Translations` is open, Bob reads one Roma/Tokyo-backed translations status payload.
+- After Save succeeds, Bob may refresh that same payload once to show current Tokyo truth. Bob does not own localization convergence loops.
+- The Translations panel and translation preview locale selection consume the same `readyLocales` set.
 
 Reference:
 

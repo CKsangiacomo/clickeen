@@ -43,6 +43,11 @@ type TokyoSavedInstancePayload = {
   config?: unknown;
 };
 
+type TokyoServeStatesPayload = {
+  serveStates?: unknown;
+  publishedCount?: unknown;
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -362,48 +367,156 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
 }
 
 export async function loadTokyoAccountInstanceLiveStatus(args: {
-  tokyoBaseUrl: string;
+  accountId: string;
   publicId: string;
+  tokyoControlBaseUrl?: string;
+  tokyoAccessToken?: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
 }): Promise<
   | { ok: true; value: AccountInstanceLiveStatus }
   | RouteFailure
 > {
-  try {
-    const response = await fetch(
-      `${args.tokyoBaseUrl.replace(/\/+$/, '')}/renders/instances/${encodeURIComponent(args.publicId)}/live/r.json`,
-      {
-        method: 'GET',
-        headers: { accept: 'application/json' },
-        cache: 'no-store',
+  const states = await loadTokyoAccountInstanceServeStates({
+    accountId: args.accountId,
+    publicIds: [args.publicId],
+    tokyoControlBaseUrl: args.tokyoControlBaseUrl,
+    tokyoAccessToken: args.tokyoAccessToken,
+    accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
+  });
+  if (!states.ok) {
+    return states;
+  }
+
+  return {
+    ok: true,
+    value: states.value.serveStates[args.publicId] ?? 'unpublished',
+  };
+}
+
+export async function loadTokyoAccountInstanceServeStates(args: {
+  accountId: string;
+  publicIds: string[];
+  tokyoControlBaseUrl?: string;
+  tokyoAccessToken?: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+}): Promise<
+  | {
+      ok: true;
+      value: {
+        serveStates: Record<string, AccountInstanceLiveStatus>;
+        publishedCount: number;
+      };
+    }
+  | RouteFailure
+> {
+  const publicIds = Array.from(
+    new Set(
+      args.publicIds
+        .map((publicId) => String(publicId || '').trim())
+        .filter((publicId) => publicId.length > 0),
+    ),
+  );
+  if (!publicIds.length) {
+    return {
+      ok: true,
+      value: {
+        serveStates: {},
+        publishedCount: 0,
       },
-    );
-    if (!response.ok && response.status !== 404) {
+    };
+  }
+
+  const headers = buildTokyoProductControlHeaders({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    contentType: 'application/json',
+    internalServiceName: args.internalServiceName,
+  });
+
+  const response = await fetchTokyoProductControl({
+    path: '/__internal/renders/instances/serve-state.json',
+    method: 'POST',
+    headers,
+    baseUrl: args.tokyoControlBaseUrl,
+    accessToken: args.tokyoAccessToken,
+    body: JSON.stringify({ publicIds }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as TokyoServeStatesPayload | null;
+  if (!response.ok) {
+    const detail = resolveTokyoControlErrorDetail(payload, `tokyo_live_status_http_${response.status}`);
+    if (response.status === 401) {
       return {
         ok: false,
-        status: 502,
+        status: 401,
         error: {
-          kind: 'UPSTREAM_UNAVAILABLE',
-          reasonKey: 'coreui.errors.db.readFailed',
-          detail: `tokyo_live_pointer_http_${response.status}`,
+          kind: 'AUTH',
+          reasonKey: detail,
+          detail,
         },
       };
     }
-
-    return {
-      ok: true,
-      value: response.status === 404 ? 'unpublished' : 'published',
-    };
-  } catch (error) {
+    if (response.status === 403) {
+      return {
+        ok: false,
+        status: 403,
+        error: {
+          kind: 'DENY',
+          reasonKey: detail,
+          detail,
+        },
+      };
+    }
+    if (response.status === 422) {
+      return {
+        ok: false,
+        status: 422,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: detail,
+          detail,
+        },
+      };
+    }
     return {
       ok: false,
       status: 502,
       error: {
         kind: 'UPSTREAM_UNAVAILABLE',
         reasonKey: 'coreui.errors.db.readFailed',
-        detail: error instanceof Error ? error.message : String(error),
+        detail,
       },
     };
   }
+
+  const serveStatesRecord =
+    payload?.serveStates && typeof payload.serveStates === 'object' && !Array.isArray(payload.serveStates)
+      ? (payload.serveStates as Record<string, unknown>)
+      : {};
+
+  const serveStates = Object.fromEntries(
+    publicIds.map((publicId) => [
+      publicId,
+      serveStatesRecord[publicId] === 'published' ? 'published' : 'unpublished',
+    ]),
+  ) as Record<string, AccountInstanceLiveStatus>;
+
+  const publishedCountRaw = payload?.publishedCount;
+  const publishedCount =
+    typeof publishedCountRaw === 'number' && Number.isFinite(publishedCountRaw)
+      ? Math.max(0, Math.floor(publishedCountRaw))
+      : Object.values(serveStates).filter((state) => state === 'published').length;
+
+  return {
+    ok: true,
+    value: {
+      serveStates,
+      publishedCount,
+    },
+  };
 }
 
 export async function saveAccountInstanceDirect(args: {
