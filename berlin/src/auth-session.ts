@@ -85,7 +85,8 @@ export async function issueSession(env: Env, args: SessionIssueArgs): Promise<Se
     userId: args.userId,
     ver,
     revoked: false,
-    supabaseRefreshToken: args.supabaseRefreshToken,
+    supabaseRefreshToken: claimAsString(args.supabaseRefreshToken) || undefined,
+    supabaseSubject: claimAsString(args.supabaseSubject) || undefined,
     supabaseAccessToken: claimAsString(args.supabaseAccessToken) || undefined,
     supabaseAccessExp: args.supabaseAccessExp && args.supabaseAccessExp > nowSec ? args.supabaseAccessExp : undefined,
     createdAt: existing?.createdAt || nowMs,
@@ -140,12 +141,20 @@ export async function ensureSupabaseAccessToken(
   const nowSec = Math.floor(Date.now() / 1000);
   const currentAccess = claimAsString(session.supabaseAccessToken);
   const currentExp = claimAsNumber(session.supabaseAccessExp);
+  const supabaseRefreshToken = claimAsString(session.supabaseRefreshToken);
+
+  if (!supabaseRefreshToken) {
+    return {
+      ok: false,
+      response: authError('coreui.errors.auth.contextUnavailable', 503, 'supabase_session_unavailable'),
+    };
+  }
 
   if (currentAccess && currentExp && currentExp > nowSec + 60) {
     return { ok: true, session, accessToken: currentAccess };
   }
 
-  const grant = await requestSupabaseRefreshGrant(env, session.supabaseRefreshToken);
+  const grant = await requestSupabaseRefreshGrant(env, supabaseRefreshToken);
   if (!grant.ok) {
     await saveSessionState(env, { ...session, revoked: true });
     return { ok: false, response: authError('coreui.errors.auth.required', grant.status, grant.reason) };
@@ -154,7 +163,8 @@ export async function ensureSupabaseAccessToken(
   const refreshedUserId = resolveUserIdFromSupabaseResponse(grant.payload);
   const refreshedAccess = claimAsString(grant.payload.access_token);
   const refreshedRefresh = claimAsString(grant.payload.refresh_token);
-  if (!refreshedUserId || !refreshedAccess || !refreshedRefresh || refreshedUserId !== session.userId) {
+  const expectedSupabaseSubject = session.supabaseSubject || session.userId;
+  if (!refreshedUserId || !refreshedAccess || !refreshedRefresh || refreshedUserId !== expectedSupabaseSubject) {
     await saveSessionState(env, { ...session, revoked: true });
     return { ok: false, response: authError('coreui.errors.auth.required', 401, 'refresh_subject_mismatch') };
   }

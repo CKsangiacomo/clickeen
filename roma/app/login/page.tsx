@@ -23,8 +23,15 @@ function resolveErrorMessage(reasonKey: string | null): string {
   if (reasonKey === 'coreui.errors.auth.finish.invalidOrExpired') return 'Your sign-in session expired. Please try again.';
   if (reasonKey === 'coreui.errors.auth.finish.alreadyConsumed') return 'This sign-in callback was already used. Please start login again.';
   if (reasonKey === 'coreui.errors.auth.unavailable') return 'Auth service is temporarily unavailable. Please try again.';
+  if (reasonKey === 'coreui.errors.auth.provider.invalid') return 'Google login is not configured correctly for this environment.';
+  if (reasonKey === 'coreui.errors.auth.intent.invalid') return 'This sign-in link is invalid. Please start again.';
+  if (reasonKey === 'coreui.errors.auth.next.invalid') return 'This sign-in redirect is invalid. Please start again.';
   if (reasonKey === 'roma.errors.auth.config_missing') return 'Auth service is not configured for Roma.';
+  if (reasonKey === 'berlin.errors.auth.config_missing') return 'Auth service is not configured for this environment.';
   if (reasonKey === 'coreui.errors.account.createFailed') return 'Account setup failed. Please try again.';
+  if (reasonKey === 'coreui.errors.auth.contextUnavailable') return 'Account context is unavailable. Please try again.';
+  if (reasonKey === 'coreui.errors.db.writeFailed') return 'Account setup could not be saved. Please try again.';
+  if (reasonKey === 'coreui.errors.db.readFailed') return 'Account setup could not be loaded. Please try again.';
   if (reasonKey === 'coreui.errors.auth.login_failed') return 'Sign in failed. Try again.';
   if (reasonKey) return reasonKey;
   return 'Sign in failed. Try again.';
@@ -39,10 +46,12 @@ export default function RomaLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorReason, setErrorReason] = useState<string | null>(null);
 
   useEffect(() => {
     const reason = searchParams.get('error');
     if (!reason) return;
+    setErrorReason(reason);
     setError(resolveErrorMessage(reason));
   }, [searchParams]);
 
@@ -51,6 +60,7 @@ export default function RomaLoginPage() {
     if (loading) return;
     setLoading(true);
     setError(null);
+    setErrorReason(null);
 
     const response = await fetch('/api/session/login', {
       method: 'POST',
@@ -68,7 +78,9 @@ export default function RomaLoginPage() {
         typeof payload?.error === 'object' && payload.error
           ? (payload.error as Record<string, unknown>).reasonKey
           : payload?.error;
-      setError(resolveErrorMessage(typeof reasonKey === 'string' ? reasonKey : null));
+      const normalizedReason = typeof reasonKey === 'string' ? reasonKey : null;
+      setErrorReason(normalizedReason);
+      setError(resolveErrorMessage(normalizedReason));
       setLoading(false);
       return;
     }
@@ -92,7 +104,12 @@ export default function RomaLoginPage() {
               </button>
             </form>
           </div>
-          {error ? <p className="body-s" role="alert">{error}</p> : null}
+          {error ? (
+            <div className="body-s" role="alert">
+              <p style={{ margin: 0 }}>{error}</p>
+              {errorReason ? <p style={{ margin: '6px 0 0' }}>Error code: {errorReason}</p> : null}
+            </div>
+          ) : null}
           {SHOW_PASSWORD_LOGIN ? (
             <form className="roma-inline-stack" onSubmit={onSubmit}>
               <label className="label-s" htmlFor="roma-login-email">Email</label>

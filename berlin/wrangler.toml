@@ -14,7 +14,9 @@ head_sampling_rate = 1
 BERLIN_ISSUER = "https://berlin-dev.clickeen.workers.dev"
 BERLIN_AUDIENCE = "clickeen.product"
 BERLIN_LOGIN_CALLBACK_URL = "https://berlin-dev.clickeen.workers.dev/auth/login/provider/callback"
+BERLIN_GOOGLE_CALLBACK_URL = "https://berlin.dev.clickeen.com/auth/login/google/callback"
 BERLIN_FINISH_REDIRECT_URL = "https://roma.dev.clickeen.com/api/session/finish"
+BERLIN_ALLOWED_PROVIDERS = "google"
 ENV_STAGE = "cloud-dev"
 
 [[kv_namespaces]]
@@ -32,7 +34,7 @@ class_name = "BerlinAuthTicketDO"
 
 [env.local]
 name = "berlin-local"
-vars = { BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product", BERLIN_FINISH_REDIRECT_URL = "http://localhost:3000/api/session/finish", ENV_STAGE = "local" }
+vars = { BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product", BERLIN_GOOGLE_CALLBACK_URL = "http://localhost:3005/auth/login/google/callback", BERLIN_FINISH_REDIRECT_URL = "http://localhost:3000/api/session/finish", BERLIN_ALLOWED_PROVIDERS = "google", ENV_STAGE = "local" }
 
 [env.local.observability]
 enabled = true

@@ -19,12 +19,10 @@ import type {
   BerlinUserProfilePayload,
   WorkspaceTier,
 } from './account-state.types';
-import { ensureSupabaseAccessToken, toIdentityRecord } from './auth-session';
 import { loadUserContactMethods } from './contact-methods';
 import { internalError, validationError } from './helpers';
 import { resolveSigningContext } from './jwt-crypto';
 import { readSupabaseAdminListAll } from './supabase-list';
-import { requestSupabaseUser } from './supabase-client';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env, type SessionState } from './types';
 
@@ -87,6 +85,11 @@ type UserProfileSummaryRow = {
   email_verified?: unknown;
 };
 
+type LoginIdentityRow = {
+  id?: unknown;
+  provider?: unknown;
+  provider_subject?: unknown;
+};
 
 type NormalizedUserProfile = {
   profile: BerlinUserProfilePayload;
@@ -415,28 +418,46 @@ export async function loadPrincipalIdentities(args: {
   env: Env;
   session: SessionState;
 }): Promise<Result<BerlinIdentityPayload[]>> {
-  const ensured = await ensureSupabaseAccessToken(args.env, args.session);
-  if (!ensured.ok) return { ok: false, response: ensured.response };
+  const params = new URLSearchParams({
+    select: 'id,provider,provider_subject',
+    user_id: `eq.${args.session.userId}`,
+    order: 'provider.asc,id.asc',
+  });
+  const rows = await readSupabaseAdminListAll<LoginIdentityRow>({
+    env: args.env,
+    pathname: '/rest/v1/login_identities',
+    params,
+    pageSize: USER_PROFILE_QUERY_CHUNK_SIZE,
+  });
+  if (!rows.ok) return rows;
 
-  const userResponse = await requestSupabaseUser(args.env, ensured.accessToken);
-  if (!userResponse.ok) {
-    return {
-      ok: false,
-      response: internalError(
-        'coreui.errors.auth.contextUnavailable',
-        userResponse.detail || `supabase_user_status_${userResponse.status}`,
-      ),
-    };
-  }
-
-  const identities = (userResponse.user.identities ?? [])
-    .map((identity) => toIdentityRecord(identity))
+  const identities = rows.value
+    .map((row): BerlinIdentityPayload | null => {
+      const identityId = asTrimmedString(row.id);
+      const provider = asTrimmedString(row.provider)?.toLowerCase() || null;
+      if (!identityId || !provider) return null;
+      return {
+        identityId,
+        provider,
+        providerSubject: asTrimmedString(row.provider_subject),
+      };
+    })
     .filter((identity): identity is BerlinIdentityPayload => Boolean(identity))
     .sort((left, right) => {
       const providerCompare = left.provider.localeCompare(right.provider);
       if (providerCompare !== 0) return providerCompare;
       return left.identityId.localeCompare(right.identityId);
     });
+
+  if (identities.length === 0) {
+    return {
+      ok: false,
+      response: internalError(
+        'coreui.errors.auth.contextUnavailable',
+        'login_identity_missing_for_principal',
+      ),
+    };
+  }
 
   return { ok: true, value: identities };
 }

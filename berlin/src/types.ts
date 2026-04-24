@@ -9,6 +9,9 @@ export type Env = {
   BERLIN_ALLOWED_PROVIDERS?: string;
   BERLIN_LOGIN_CALLBACK_URL?: string;
   BERLIN_FINISH_REDIRECT_URL?: string;
+  BERLIN_GOOGLE_CLIENT_ID?: string;
+  BERLIN_GOOGLE_CLIENT_SECRET?: string;
+  BERLIN_GOOGLE_CALLBACK_URL?: string;
   BERLIN_ACCESS_PRIVATE_KEY_PEM?: string;
   BERLIN_ACCESS_PUBLIC_KEY_PEM?: string;
   BERLIN_ACCESS_PREVIOUS_PUBLIC_KEY_PEM?: string;
@@ -92,7 +95,8 @@ export type SessionState = {
   userId: string;
   ver: number;
   revoked: boolean;
-  supabaseRefreshToken: string;
+  supabaseRefreshToken?: string;
+  supabaseSubject?: string;
   supabaseAccessToken?: string;
   supabaseAccessExp?: number;
   createdAt: number;
@@ -110,6 +114,7 @@ export type OAuthTransaction = {
   userId?: string;
   intent?: LoginIntent;
   next?: string;
+  invitationId?: string;
 };
 
 export type LoginIntent = 'signin' | 'signup_prague';
@@ -134,7 +139,8 @@ export type SessionIssueArgs = {
   sid?: string;
   ver?: number;
   userId: string;
-  supabaseRefreshToken: string;
+  supabaseRefreshToken?: string | null;
+  supabaseSubject?: string | null;
   supabaseAccessToken?: string | null;
   supabaseAccessExp?: number | null;
 };

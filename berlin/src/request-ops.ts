@@ -85,6 +85,9 @@ function resolveRateLimitPolicy(method: string, path: string): RateLimitPolicy |
   if (method === 'POST' && path === '/auth/login/provider/start') {
     return { bucket: 'auth.login.provider.start', max: 12, windowSec: 60, vary: 'ip' };
   }
+  if (method === 'GET' && /^\/auth\/login\/[^/]+\/start$/.test(path)) {
+    return { bucket: 'auth.login.provider.start', max: 12, windowSec: 60, vary: 'ip' };
+  }
   if (method === 'POST' && path === '/auth/finish') {
     return { bucket: 'auth.finish', max: 20, windowSec: 60, vary: 'ip' };
   }

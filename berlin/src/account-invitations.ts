@@ -37,6 +37,12 @@ export type BerlinAccountInvitation = {
 
 type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
 
+export type InvitationAcceptOutcome = {
+  invitationId: string;
+  accountId: string;
+  role: AccountInvitationRole;
+};
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const INVITATION_PAGE_SIZE = 200;
@@ -474,33 +480,41 @@ async function ensureMembershipForAcceptedInvitation(args: {
   return supabaseAdminErrorResponse('coreui.errors.db.writeFailed', createResponse.status, createPayload);
 }
 
-export async function handleInvitationAccept(args: {
+export async function acceptInvitationForPrincipal(args: {
   env: Env;
   invitationId: string;
   principalUserId: string;
   principalEmail: string;
-  sessionRole: string | null;
-}): Promise<Response> {
+}): Promise<Result<InvitationAcceptOutcome>> {
   const invitationResult = await loadInvitationById(args.env, args.invitationId);
-  if (!invitationResult.ok) return invitationResult.response;
+  if (!invitationResult.ok) return invitationResult;
 
   const invitation = invitationResult.value;
   if (!invitation) {
-    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.invitationNotFound' } }, { status: 404 });
+    return {
+      ok: false,
+      response: json(
+        { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.invitationNotFound' } },
+        { status: 404 },
+      ),
+    };
   }
   if (invitation.revokedAt || invitation.acceptedAt || isInvitationExpired(invitation)) {
-    return json(
-      {
-        error: {
-          kind: 'AUTH',
-          reasonKey: 'coreui.errors.account.invitationInvalidOrExpired',
+    return {
+      ok: false,
+      response: json(
+        {
+          error: {
+            kind: 'AUTH',
+            reasonKey: 'coreui.errors.account.invitationInvalidOrExpired',
+          },
         },
-      },
-      { status: 410 },
-    );
+        { status: 410 },
+      ),
+    };
   }
   if (invitation.email !== args.principalEmail.toLowerCase()) {
-    return denyResponse();
+    return { ok: false, response: denyResponse() };
   }
 
   const membershipError = await ensureMembershipForAcceptedInvitation({
@@ -508,7 +522,7 @@ export async function handleInvitationAccept(args: {
     invitation,
     userId: args.principalUserId,
   });
-  if (membershipError) return membershipError;
+  if (membershipError) return { ok: false, response: membershipError };
 
   const accepted = await updateInvitation({
     env: args.env,
@@ -518,14 +532,39 @@ export async function handleInvitationAccept(args: {
       accepted_by_user_id: args.principalUserId,
     },
   });
-  if (!accepted.ok) return accepted.response;
+  if (!accepted.ok) return accepted;
 
   const persisted = await persistActiveAccountPreference({
     env: args.env,
     userId: args.principalUserId,
     accountId: invitation.accountId,
   });
-  if (!persisted.ok) return persisted.response;
+  if (!persisted.ok) return persisted;
+
+  return {
+    ok: true,
+    value: {
+      invitationId: invitation.invitationId,
+      accountId: invitation.accountId,
+      role: invitation.role,
+    },
+  };
+}
+
+export async function handleInvitationAccept(args: {
+  env: Env;
+  invitationId: string;
+  principalUserId: string;
+  principalEmail: string;
+  sessionRole: string | null;
+}): Promise<Response> {
+  const acceptedInvitation = await acceptInvitationForPrincipal({
+    env: args.env,
+    invitationId: args.invitationId,
+    principalUserId: args.principalUserId,
+    principalEmail: args.principalEmail,
+  });
+  if (!acceptedInvitation.ok) return acceptedInvitation.response;
 
   const state = await loadPrincipalAccountState({
     env: args.env,
@@ -534,7 +573,7 @@ export async function handleInvitationAccept(args: {
   });
   if (!state.ok) return state.response;
 
-  const account = findAccountContext(state.value, invitation.accountId);
+  const account = findAccountContext(state.value, acceptedInvitation.value.accountId);
   if (!account) {
     return json(
       {
@@ -550,7 +589,7 @@ export async function handleInvitationAccept(args: {
 
   return json({
     ok: true,
-    accountId: invitation.accountId,
+    accountId: acceptedInvitation.value.accountId,
     account,
     defaults: {
       accountId: state.value.defaultAccount?.accountId ?? null,

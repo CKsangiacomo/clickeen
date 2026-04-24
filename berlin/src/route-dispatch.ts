@@ -1,7 +1,13 @@
 import { BerlinAuthTicketDO } from './auth-ticket-store';
 import { internalError, json, methodNotAllowed } from './helpers';
 import { type Env } from './types';
-import { handleFinish, handlePasswordLogin, handleProviderLoginCallback, handleProviderLoginStart } from './routes-login';
+import {
+  handleFinish,
+  handlePasswordLogin,
+  handleProviderLoginCallback,
+  handleProviderLoginRedirectStart,
+  handleProviderLoginStart,
+} from './routes-login';
 import {
   handleAccountById,
   handleAccountCreate,
@@ -75,6 +81,18 @@ export async function dispatchBerlinRequest(request: Request, env: Env): Promise
   if (pathname === '/auth/login/provider/callback') {
     if (request.method !== 'GET') return methodNotAllowed();
     return await handleProviderLoginCallback(request, env);
+  }
+
+  const providerStartMatch = pathname.match(/^\/auth\/login\/([^/]+)\/start$/);
+  if (providerStartMatch) {
+    if (request.method !== 'GET') return methodNotAllowed();
+    return await handleProviderLoginRedirectStart(request, env, decodeURIComponent(providerStartMatch[1] || ''));
+  }
+
+  const providerCallbackMatch = pathname.match(/^\/auth\/login\/([^/]+)\/callback$/);
+  if (providerCallbackMatch) {
+    if (request.method !== 'GET') return methodNotAllowed();
+    return await handleProviderLoginCallback(request, env, decodeURIComponent(providerCallbackMatch[1] || ''));
   }
 
   if (pathname === '/auth/finish') {

@@ -19,11 +19,12 @@ function toSessionState(value: unknown): SessionState | null {
   const ver = claimAsNumber(record.ver);
   const revoked = Boolean(record.revoked);
   const supabaseRefreshToken = claimAsString(record.supabaseRefreshToken);
+  const supabaseSubject = claimAsString(record.supabaseSubject);
   const supabaseAccessToken = claimAsString(record.supabaseAccessToken);
   const supabaseAccessExp = claimAsNumber(record.supabaseAccessExp);
   const createdAt = claimAsNumber(record.createdAt) || Date.now();
   const updatedAt = claimAsNumber(record.updatedAt) || Date.now();
-  if (!sid || !currentRti || !userId || !ver || !supabaseRefreshToken) return null;
+  if (!sid || !currentRti || !userId || !ver) return null;
   const rtiRotatedAt = rtiRotatedAtRaw || updatedAt || createdAt;
   return {
     sid,
@@ -32,7 +33,8 @@ function toSessionState(value: unknown): SessionState | null {
     userId,
     ver,
     revoked,
-    supabaseRefreshToken,
+    supabaseRefreshToken: supabaseRefreshToken || undefined,
+    supabaseSubject: supabaseSubject || undefined,
     supabaseAccessToken: supabaseAccessToken || undefined,
     supabaseAccessExp: supabaseAccessExp || undefined,
     createdAt,

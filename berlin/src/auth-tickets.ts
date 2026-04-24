@@ -36,6 +36,7 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
   const userId = claimAsString(record.userId) || undefined;
   const intent = normalizeIntent(record.intent) || undefined;
   const next = normalizeNextPath(record.next) || undefined;
+  const invitationId = claimAsString(record.invitationId) || undefined;
 
   if (version !== 1) return null;
   if ((flow !== 'login' && flow !== 'link') || !provider || !codeVerifier) return null;
@@ -43,6 +44,12 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
   if (flow === 'link' && (!sid || !userId)) return null;
   if (record.intent !== undefined && !intent) return null;
   if (record.next !== undefined && !next) return null;
+  if (
+    record.invitationId !== undefined &&
+    (!invitationId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(invitationId))
+  ) {
+    return null;
+  }
 
   return {
     v: 1,
@@ -55,6 +62,7 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
     ...(userId ? { userId } : {}),
     ...(intent ? { intent } : {}),
     ...(next ? { next } : {}),
+    ...(invitationId ? { invitationId } : {}),
   };
 }
 
