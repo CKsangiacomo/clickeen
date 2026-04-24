@@ -33,6 +33,19 @@ type GoogleUserInfoResponse = {
   error_description?: unknown;
 };
 
+function normalizeProviderErrorCode(value: unknown): string | null {
+  const code = claimAsString(value)?.trim().toLowerCase();
+  if (!code || !/^[a-z0-9_.:-]{1,64}$/.test(code)) return null;
+  return code;
+}
+
+function providerFailureDetail(prefix: string, payload: { error?: unknown } | null, status: number, fallback: string): string {
+  const code = normalizeProviderErrorCode(payload?.error);
+  if (code) return `${prefix}_${code}`;
+  if (status >= 400 && status <= 599) return `${prefix}_http_${status}`;
+  return fallback;
+}
+
 function normalizeBoolean(value: unknown): boolean {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'string') {
@@ -127,10 +140,7 @@ export async function exchangeGoogleCallback(
       ok: false,
       status: tokenResponse.status === 400 || tokenResponse.status === 401 ? 401 : 502,
       reason: 'coreui.errors.auth.provider.exchangeFailed',
-      detail:
-        claimAsString(tokenPayload?.error_description) ||
-        claimAsString(tokenPayload?.error) ||
-        'google_token_exchange_failed',
+      detail: providerFailureDetail('google_token', tokenPayload, tokenResponse.status, 'google_token_exchange_failed'),
     };
   }
 
@@ -149,10 +159,7 @@ export async function exchangeGoogleCallback(
       ok: false,
       status: userInfoResponse.status === 401 ? 401 : 502,
       reason: 'coreui.errors.auth.provider.exchangeFailed',
-      detail:
-        claimAsString(userInfo?.error_description) ||
-        claimAsString(userInfo?.error) ||
-        'google_userinfo_failed',
+      detail: providerFailureDetail('google_userinfo', userInfo, userInfoResponse.status, 'google_userinfo_failed'),
     };
   }
 
