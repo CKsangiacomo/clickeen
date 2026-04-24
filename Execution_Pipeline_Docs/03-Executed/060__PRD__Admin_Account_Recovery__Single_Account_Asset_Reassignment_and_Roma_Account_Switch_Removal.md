@@ -189,7 +189,7 @@ Concrete code:
 The repo still contains scripts that assume:
 
 - test accounts can be created freely in cloud-dev
-- password login is part of the normal cloud flow
+- password login is part of the normal customer-facing cloud flow
 - live-toggle/status semantics are still product reality
 
 Those scripts are part of how the environment got polluted, so this PRD explicitly cleans them too.

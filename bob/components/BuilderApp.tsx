@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { TopDrawer } from './TopDrawer';
 import { ToolDrawer } from './ToolDrawer';
 import { UpsellPopup } from './UpsellPopup';
@@ -31,6 +31,7 @@ function BuilderShell() {
   const [previewMode, setPreviewMode] = useState<'editing' | 'translations'>('editing');
   const [overlayPreviewLocale, setOverlayPreviewLocale] = useState('');
   const [translationsRefreshVersion, setTranslationsRefreshVersion] = useState(0);
+  const translationRefreshAttemptsRef = useRef(0);
   const previousSavingRef = useRef(false);
   const translationsEnabled = Boolean(session.compiled && publicId && previewMode === 'translations');
   const {
@@ -48,6 +49,7 @@ function BuilderShell() {
     setPreviewMode('editing');
     setOverlayPreviewLocale('');
     setTranslationsRefreshVersion(0);
+    translationRefreshAttemptsRef.current = 0;
     previousSavingRef.current = false;
   }, [publicId]);
 
@@ -56,14 +58,36 @@ function BuilderShell() {
     previousSavingRef.current = session.isSaving;
     if (!justFinishedSave) return;
     if (session.error?.source === 'save') return;
+    translationRefreshAttemptsRef.current = 0;
     setTranslationsRefreshVersion((prev) => prev + 1);
   }, [session.error?.source, session.isSaving]);
 
   useEffect(() => {
-    if (!overlayPreviewLocale || !translationsData) return;
-    if (translationsData.readyLocales.includes(overlayPreviewLocale)) return;
+    if (!translationsEnabled || translationsLoading) return undefined;
+    if (translationsData?.translationState !== 'updating') {
+      translationRefreshAttemptsRef.current = 0;
+      return undefined;
+    }
+    if (translationRefreshAttemptsRef.current >= 4) return undefined;
+
+    const timer = window.setTimeout(() => {
+      translationRefreshAttemptsRef.current += 1;
+      setTranslationsRefreshVersion((prev) => prev + 1);
+    }, 2500);
+
+    return () => window.clearTimeout(timer);
+  }, [translationsData?.translationState, translationsEnabled, translationsLoading]);
+
+  const previewableTranslationLocales = useMemo(() => {
+    if (!translationsData?.translationOk) return [];
+    return translationsData.readyLocales;
+  }, [translationsData]);
+
+  useEffect(() => {
+    if (!overlayPreviewLocale) return;
+    if (previewableTranslationLocales.includes(overlayPreviewLocale)) return;
     setOverlayPreviewLocale('');
-  }, [overlayPreviewLocale, translationsData]);
+  }, [overlayPreviewLocale, previewableTranslationLocales]);
 
   return (
     <>
@@ -84,7 +108,7 @@ function BuilderShell() {
             previewMode={previewMode}
             overlayPreviewLocale={overlayPreviewLocale}
             onOverlayPreviewLocaleChange={setOverlayPreviewLocale}
-            readyPreviewLocales={translationsData?.readyLocales ?? []}
+            readyPreviewLocales={previewableTranslationLocales}
           />
         </div>
       </div>

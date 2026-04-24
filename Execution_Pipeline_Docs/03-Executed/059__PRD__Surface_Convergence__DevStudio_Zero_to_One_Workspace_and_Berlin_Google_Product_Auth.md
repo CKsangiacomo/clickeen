@@ -15,7 +15,7 @@ Context note:
 - Execution update (runtime): DevStudio local is being corrected to read and write the admin account’s instances directly through an explicit trusted local path. It must not depend on Roma starter discovery or product session auth just to read those instances.
 - Execution update (runtime): DevStudio local now also owns its asset route family (`/api/devstudio/assets*`) so Bob/Dieter inside DevStudio do not rely on product `/api/assets*` routes.
 - Execution update (runtime): DevStudio translation status is best-effort. If local San Francisco is unavailable, DevStudio returns `Unavailable` instead of surfacing hard `500` errors for the editor.
-- Execution update (runtime): Roma access is currently restored through Berlin-owned session endpoints for both Google and email/password. This is an access-unblock decision, not the final long-term auth/account architecture.
+- Superseded by PRD 076 for the customer-facing login surface: cloud-dev/prod UI now presents Berlin provider auth only, with Google as the enabled provider. The email/password route remains a hidden operational/smoke compatibility path until CI has a provider/finish test adapter.
 - Execution update (runtime contract): non-local Roma/Bob auth now forces HTTPS redirects and cookie security at the request boundary, so cloud-dev auth completion does not depend on proxy-presented internal scheme.
 - The two remaining cross-cutting issues are coupled:
   1. The DevStudio tool was replaced by a deprecation page, even though zero-to-one widget creation still needs a local authoring studio.
@@ -234,7 +234,7 @@ This is the supported product auth model for cloud-dev and the intended product 
 6. Paris/Tokyo-worker product-facing server routes trust Berlin bearer/session auth only.
 
 Product auth principles:
-- Current cloud-dev access may use Google or email/password if both converge into the same Berlin -> Roma session contract.
+- Current cloud-dev customer access uses Berlin provider auth. Email/password is a hidden operational/smoke compatibility route, not the customer-facing cloud login surface.
 - MiniBob publish/signup uses this same path.
 - No product auth flow uses `PARIS_DEV_JWT`.
 
@@ -271,7 +271,7 @@ PRD 59 does not attempt to finish the full auth/account platform.
 
 Current execution rule:
 - Roma cloud access must work now through Berlin-owned login paths.
-- Google and email/password are both acceptable current access modes if they converge into the same Roma session contract.
+- Customer-facing cloud access uses the Berlin provider-auth path, with Google as the enabled provider today. Email/password may remain only as a hidden operational/smoke compatibility route.
 - The future multi-provider / multi-user / paid-vs-free account model is a separate PRD.
 
 ---
@@ -482,7 +482,7 @@ Phase 2 gate:
 
 1. Make Roma cloud login work through Berlin-owned session endpoints.
 2. Confirm Roma finish remains the single server-side completion gate.
-3. Confirm Google and email/password both converge into the same Roma/Bob shared-cookie session model.
+3. Confirm provider login converges into the Roma/Bob shared-cookie session model.
 4. Keep the larger auth/account redesign out of PRD 59.
 
 Phase 3 gate:

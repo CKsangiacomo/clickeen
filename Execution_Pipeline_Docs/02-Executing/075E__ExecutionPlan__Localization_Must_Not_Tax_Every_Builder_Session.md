@@ -31,7 +31,10 @@ Update 2026-03-24:
 - The Builder consumer read slice is now implemented in product code:
   - while `Translations` is open, Bob reads one Roma/Tokyo-backed translations status route
   - successful Save bumps that same read so Builder rechecks current locale status after Tokyo-worker takes the save
-  - the Translations panel and preview locale selection now consume the same `readyLocales` set
+  - if translations are still preparing while the panel is open, Builder may perform a small bounded recheck of that same status read
+  - the Translations panel shows one global readiness answer; it does not show per-locale readiness
+  - the preview locale selection unlocks only when the current account locale set is fully ready for the latest saved widget
+  - lower-tier accounts see a policy-derived language upsell message in the panel
 - The queue-handoff dead-flow is now closed in product code:
   - if Tokyo cannot enqueue overlay work after writing the durable work item, Tokyo marks that work item `failed` immediately instead of leaving fake `pending/updating` state behind
 - The active deletion slice is now closed in product code:
@@ -134,11 +137,11 @@ These are current code truths. They are not planned work for `075E`.
 - `bob/components/BuilderApp.tsx`
   - owns one shared translations snapshot while `Translations` is open and bumps it after successful Save.
 - `bob/components/useTranslationsPreviewState.ts`
-  - reads one Tokyo-backed translations status payload only when Builder opens `Translations` or explicitly refreshes after successful Save.
+  - reads one Tokyo-backed translations status payload only when Builder opens `Translations`, after successful Save, or during a bounded preparing-state recheck while the panel is open.
 - `bob/components/TranslationsPanel.tsx`
-  - is status + ready-locale inspection only; it no longer owns its own translations fetch loop.
+  - is one global readiness answer + display-locale chooser + policy-derived lower-tier upsell; it does not expose per-locale readiness.
 - `bob/components/Workspace.tsx`
-  - accepts only the shared `readyLocales` set for translation preview selection; stale or incomplete locales do not stay selectable.
+  - accepts only the shared fully-ready locale set for translation preview selection; stale, partial, or incomplete locales do not stay selectable.
 - `venice/app/e/[publicId]/route.ts`
   - remains the embed/reference truth for locale output semantics; do not fork Builder behavior away from it.
 
@@ -155,7 +158,7 @@ That means:
 - `Save` still means one handoff of the instance to Tokyo-worker.
 - Tokyo-worker owns post-save locale + runtime reconciliation.
 - `Publish` / `Unpublish` still means only Tokyo's per-instance serve flag for Venice.
-- Builder still has one read-only `Translations` surface with one overall status and one `readyLocales` set.
+- Builder still has one read-only `Translations` surface with one overall status. `readyLocales` remains backend safety truth, but partial readiness is not a user-facing panel model.
 - latest-save translation truth is closed:
   - older work items are deleted when a newer save becomes current
   - missing current generation output does not leak into `readyLocales`
@@ -619,7 +622,8 @@ Code this:
 - read only the Phase 1 server contract
 - render one translation-health answer
 - render one locale dropdown
-- drive that dropdown from `readyLocales` only
+- unlock that dropdown only when `translationOk` is true; do not show partial per-locale readiness
+- show policy-derived lower-tier language upsell copy
 - change only Bob-local `overlayPreviewLocale`
 - stay read-only
 
@@ -827,6 +831,8 @@ These statements must all be true:
 - The panel does not render translated widget text as its own surface.
 - Outside `Translations`, the widget locale switcher is blocked with the exact product copy.
 - Inside `Translations`, the panel dropdown and widget switcher are two controls for one `overlayPreviewLocale`.
+- The panel does not show readiness by language; it shows whether translations are ready or not.
+- Lower-tier users see language upsell copy derived from account policy.
 - Builder preview uses the Tokyo/embed display path when locale switching is allowed.
 - incomplete locales are not selectable/renderable until Tokyo/Tokyo-worker mark them current for the active base fingerprint.
 - Save still means save.

@@ -209,12 +209,11 @@ V1 scope:
 
 How Google login works in cloud-dev (Roma on Cloudflare):
 1. Human clicks “Continue with Google” in Roma/Bob.
-2. Roma asks Berlin (Auth boundary) to start Google login and returns the Google URL.
+2. Roma asks Berlin (Auth boundary) to start Google login and redirects to the provider URL.
 3. Browser redirects to Google, user signs in/consents.
-4. Google redirects back to a Roma callback URL with `code` + `state`.
-5. Roma exchanges `code` + `state` with Berlin (server-to-server).
-6. Berlin returns a Clickeen session (access token + refresh token).
-7. Roma sets httpOnly cookies (`ck-access-token`, `ck-refresh-token`) and redirects the user back into the app.
+4. Google/Supabase redirects back to Berlin's provider callback with `code` + `state`.
+5. Berlin exchanges the provider code, reconciles the Clickeen user/account state, stores a short-lived finish ticket, and redirects to Roma `/api/session/finish`.
+6. Roma redeems the Berlin finish ticket, receives a Clickeen session, sets httpOnly cookies (`ck-access-token`, `ck-refresh-token`), and redirects the user back into the app.
 
 Non-negotiable:
 - Session tokens must not be handled in browser JS (no “copy token into localStorage”).

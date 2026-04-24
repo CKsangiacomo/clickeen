@@ -10,8 +10,8 @@ For the canonical target account-management boundary, see `documentation/archite
 Berlin is Clickeen's dedicated AuthN boundary and the canonical account-truth boundary after PRD 65 closure.
 
 Responsibilities:
-- Accept user credentials for sign-in (`/auth/login/password` in v1).
-- Orchestrate provider login OAuth start+callback (`/auth/login/provider/*`).
+- Orchestrate provider login OAuth start+callback (`/auth/login/provider/*`). This is the customer-facing cloud login/signup path; Google is the enabled cloud-dev provider today, and future Apple/Microsoft/etc providers must plug into this same Berlin-owned path.
+- Keep `POST /auth/login/password` available as an operational/smoke compatibility route until CI has a provider/finish test adapter. It is not the canonical customer-facing cloud login surface.
 - Reconcile first successful sign-in into canonical product account state (`user_profiles`, first account, first owner membership, active account preference) during PRD 65 execution.
 - First successful sign-in provisions a distinct first account/workspace id; Berlin must never reuse `user_id` as `account_id`.
 - Keep `GET /v1/session/bootstrap` read-only. Bootstrap reads canonical user/account state and mints session truth; it never repairs or provisions missing profile/membership state on the hot path.
@@ -45,6 +45,7 @@ Responsibilities:
 - Normalize provider linkage into the minimal connector reuse summary Berlin exposes today:
   - `linkedIdentities`
   - `traits.linkedProviders`
+- Berlin's current linked-identity source is Supabase Auth identities. Product shells may consume Berlin's normalized summary, but must not invent provider/account linkage outside Berlin.
 - Resolve the active account only from persisted active-account preference or deterministic real membership truth; Berlin must fail explicitly if no real user-associated account can be opened and must never open a privileged fallback account.
 - Missing canonical profile or membership state at bootstrap is a producer bug. Berlin surfaces it as an internal contract failure instead of reconciling it during bootstrap.
 - Invalid persisted profile/account locale-policy truth must fail explicitly in canonical product/account routes; Berlin logs the defect and does not silently default it away.
@@ -67,10 +68,10 @@ Non-responsibilities:
 ## Runtime surface (v1)
 
 Public:
-- `POST /auth/login/password`
 - `POST /auth/login/provider/start` (canonical callback->finish flow only)
 - `GET /auth/login/provider/callback`
 - `POST /auth/finish`
+- `POST /auth/login/password` (hidden operational/smoke compatibility route)
 - `GET /auth/session` (identity/session status only)
 - `GET /v1/me`
 - `PUT /v1/me`

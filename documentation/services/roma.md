@@ -72,10 +72,10 @@ Roma does not auto-bootstrap tool sessions; supported Roma runtimes always requi
 Roma does not bridge session tokens through browser JS. Builder relies on shared httpOnly cookies across Roma/Bob on a custom `*.clickeen.com` domain.
 Roma exposes explicit session endpoints for product auth UX:
 
-- `POST /api/session/login` (email/password -> Berlin auth login -> httpOnly session cookies)
-- `POST /api/session/logout` (best-effort Berlin logout + clears auth cookies)
-- `GET /api/session/login/google` (starts Google auth via Berlin)
+- `GET /api/session/login/google` (current customer-facing provider-auth start; Google is the enabled cloud-dev provider)
 - `GET /api/session/finish` (redeems Berlin `finishId`, sets shared httpOnly session cookies, then redirects into Roma)
+- `POST /api/session/logout` (best-effort Berlin logout + clears auth cookies)
+- `POST /api/session/login` (hidden operational/smoke compatibility path for email/password credentials; not the canonical customer-facing cloud login surface)
 - Roma renders a visible shell-level `Sign out` action in the domain nav and mobile drawer, backed by `POST /api/session/logout`, then hard-redirects to `/login`.
 
 Non-local auth rule:
@@ -221,7 +221,7 @@ Assets domain behavior:
 
 - Roma runtime target: `https://roma.dev.clickeen.com` (Pages `*.pages.dev` deploys are not supported for authenticated Builder because cookies cannot be shared to Bob).
 - Uses cloud-dev Berlin/Tokyo/Bob/San Francisco URLs from env/config.
-- Cloud product auth currently supports both Google and email/password through Berlin-owned session endpoints.
+- Cloud product auth currently presents Berlin provider auth only in customer UI, with Google as the enabled cloud-dev provider. The email/password session route remains available for hidden operational smoke use until CI has a provider/finish test adapter.
 - Cloud-dev currently runs as one effective product account: admin. Roma does not expose customer account switching there or in the normal Roma product shell.
 
 ## Operational notes

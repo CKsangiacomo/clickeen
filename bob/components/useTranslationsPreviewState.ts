@@ -116,6 +116,7 @@ export function useTranslationsPreviewState(args: {
 
     let cancelled = false;
     setLoading(true);
+    setData(null);
     setError(null);
 
     loadTranslations({ publicId: args.publicId })

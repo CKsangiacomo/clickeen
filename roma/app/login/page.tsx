@@ -4,6 +4,8 @@ import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+const SHOW_PASSWORD_LOGIN = process.env.NEXT_PUBLIC_ROMA_PASSWORD_LOGIN === '1';
+
 function resolveNextPath(value: string | null): string {
   const normalized = String(value || '').trim();
   if (!normalized.startsWith('/')) return '/home';
@@ -87,7 +89,7 @@ export default function RomaLoginPage() {
       <section className="rd-canvas">
         <article className="rd-canvas-module" style={{ maxWidth: 520 }}>
           <h1 className="heading-2" style={{ margin: 0 }}>Sign in to Roma</h1>
-          <p className="body-m">Use Google or email/password to sign in.</p>
+          <p className="body-m">Use your Google account to sign in.</p>
           <div style={{ marginBottom: 18 }}>
             <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
               <a aria-label="Continue with Google" className="diet-btn-txt" data-size="lg" data-variant="primary" href={googleLoginHref}>
@@ -95,34 +97,36 @@ export default function RomaLoginPage() {
               </a>
             </div>
           </div>
-          <form className="roma-inline-stack" onSubmit={onSubmit}>
-            <label className="label-s" htmlFor="roma-login-email">Email</label>
-            <input
-              id="roma-login-email"
-              className="roma-input"
-              type="email"
-              autoComplete="username"
-              value={email}
-              onChange={(event) => setEmail(event.currentTarget.value)}
-              required
-            />
-            <label className="label-s" htmlFor="roma-login-password">Password</label>
-            <input
-              id="roma-login-password"
-              className="roma-input"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.currentTarget.value)}
-              required
-            />
-            {error ? <p className="body-s" role="alert">{error}</p> : null}
-            <div className="rd-canvas-module__actions">
-              <button className="diet-btn-txt" data-size="lg" data-variant="primary" disabled={loading} type="submit">
-                <span className="diet-btn-txt__label body-l">{loading ? 'Signing in...' : 'Sign in'}</span>
-              </button>
-            </div>
-          </form>
+          {error ? <p className="body-s" role="alert">{error}</p> : null}
+          {SHOW_PASSWORD_LOGIN ? (
+            <form className="roma-inline-stack" onSubmit={onSubmit}>
+              <label className="label-s" htmlFor="roma-login-email">Email</label>
+              <input
+                id="roma-login-email"
+                className="roma-input"
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(event) => setEmail(event.currentTarget.value)}
+                required
+              />
+              <label className="label-s" htmlFor="roma-login-password">Password</label>
+              <input
+                id="roma-login-password"
+                className="roma-input"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.currentTarget.value)}
+                required
+              />
+              <div className="rd-canvas-module__actions">
+                <button className="diet-btn-txt" data-size="lg" data-variant="primary" disabled={loading} type="submit">
+                  <span className="diet-btn-txt__label body-l">{loading ? 'Signing in...' : 'Sign in'}</span>
+                </button>
+              </div>
+            </form>
+          ) : null}
         </article>
       </section>
     </main>

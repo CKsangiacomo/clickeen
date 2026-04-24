@@ -7,7 +7,7 @@ import {
   resolveLocaleLabel as resolveCanonicalLocaleLabel,
 } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
-import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import type { TranslationsPreviewData } from './useTranslationsPreviewState';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
@@ -73,14 +73,17 @@ export function TranslationsPanel({
   translationsError: string | null;
 }) {
   const session = useWidgetSession();
+  const chrome = useWidgetSessionChrome();
+  const localeCap = chrome.policy?.caps['l10n.locales.max'];
+  const showLocaleUpsell = typeof localeCap === 'number' && Number.isFinite(localeCap);
 
   const localeOptions = useMemo(() => {
-    const locales = translationsData?.readyLocales ?? [];
+    const locales = translationsData?.translationOk ? translationsData.readyLocales : [];
     return locales.map((locale) => ({
       value: locale,
       label: resolveLocaleLabel(locale),
     }));
-  }, [translationsData?.readyLocales]);
+  }, [translationsData]);
 
   const localeValue =
     overlayPreviewLocale && localeOptions.some((option) => option.value === overlayPreviewLocale)
@@ -94,30 +97,28 @@ export function TranslationsPanel({
           {
             value: '',
             label: translationsLoading
-              ? 'Loading locales...'
+              ? 'Checking translations...'
               : translationsError
                 ? 'Translations unavailable'
-              : 'No locales available yet',
+              : translationsData?.translationOk === false
+                ? 'Translations preparing'
+                : 'Translations not ready yet',
           },
         ];
   const translationStatusTitle = translationsLoading
     ? 'Checking translations'
     : translationsError
       ? 'Translations unavailable'
-      : translationsData?.translationState === 'ok'
-        ? 'Translations are ok'
-        : translationsData?.translationState === 'failed'
-          ? 'Translations failed'
-          : 'Translations are updating';
+      : translationsData?.translationOk
+        ? 'Translations are ready'
+        : 'Translations are preparing';
   const translationStatusBody = translationsLoading
-    ? 'Builder is loading current translation status.'
+    ? 'Builder is checking whether this widget is ready in your account languages.'
     : translationsError
       ? translationsError
-      : translationsData?.translationState === 'ok'
-        ? 'All selected locales are current for the latest saved widget state.'
-        : translationsData?.translationState === 'failed'
-          ? 'Background convergence failed for the latest saved widget state. Only ready locales remain previewable.'
-          : 'Only ready locales are previewable until background convergence finishes.';
+      : translationsData?.translationOk
+        ? 'Preview this widget in the languages available for this account.'
+        : 'Translations usually finish shortly after Save. Preview will unlock when the current widget is ready.';
 
   if (!session.compiled) {
     return (
@@ -138,12 +139,36 @@ export function TranslationsPanel({
           <div className="label-s label-muted">{translationStatusBody}</div>
         </div>
         <SelectField
-          label="Preview locale"
+          label="Display locale"
           value={localeValue}
           onChange={onOverlayPreviewLocaleChange}
           options={selectOptions}
           disabled={!selectOptions[0]?.value}
         />
+        {showLocaleUpsell ? (
+          <div className="settings-panel__note settings-panel__note--upsell">
+            <div>
+              <div className="label-s">More languages</div>
+              <div className="body-s">
+                Your current plan includes up to {localeCap} display languages. Upgrade to unlock more locales.
+              </div>
+            </div>
+            <button
+              type="button"
+              className="diet-btn-txt"
+              data-size="sm"
+              data-variant="neutral"
+              onClick={() =>
+                chrome.requestUpsell(
+                  'coreui.upsell.reason.capReached',
+                  `l10n.locales.max=${localeCap}`,
+                )
+              }
+            >
+              <span className="diet-btn-txt__label">Upgrade plan</span>
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
