@@ -139,6 +139,29 @@ function isTrustedInternalControlRequest(request: Request, env: Env): boolean {
   return token === expected;
 }
 
+function resolveInternalServiceHeaderToken(request: Request): string | null {
+  const raw = claimAsString(request.headers.get('x-ck-internal-token'));
+  if (!raw) return null;
+  return asBearerToken(raw) || raw;
+}
+
+function isTrustedRomaMichaelTokenRequest(request: Request, env: Env): boolean {
+  const expected =
+    typeof env.CK_INTERNAL_SERVICE_JWT === 'string' ? env.CK_INTERNAL_SERVICE_JWT.trim() : '';
+  if (!expected) return false;
+  const marker = String(request.headers.get('x-ck-internal-service') || '')
+    .trim()
+    .toLowerCase();
+  if (marker !== 'roma.edge') return false;
+  return resolveInternalServiceHeaderToken(request) === expected;
+}
+
+function resolveSupabaseServiceRoleKey(env: Env): string | null {
+  const key =
+    typeof env.SUPABASE_SERVICE_ROLE_KEY === 'string' ? env.SUPABASE_SERVICE_ROLE_KEY.trim() : '';
+  return key || null;
+}
+
 export async function handleInternalRevokeUserSessions(request: Request, env: Env, userId: string): Promise<Response> {
   if (!isTrustedInternalControlRequest(request, env)) {
     return authError('coreui.errors.auth.forbidden', 403, 'internal_control_auth_required');
@@ -156,17 +179,38 @@ export async function handleMichaelToken(request: Request, env: Env): Promise<Re
   const principal = await resolvePrincipalSession(request, env);
   if (!principal.ok) return principal.response;
 
-  const ensured = await ensureSupabaseAccessToken(env, principal.session);
-  if (!ensured.ok) return ensured.response;
+  const hasSupabaseSessionBridge = Boolean(claimAsString(principal.session.supabaseRefreshToken));
+  if (hasSupabaseSessionBridge) {
+    const ensured = await ensureSupabaseAccessToken(env, principal.session);
+    if (!ensured.ok) return ensured.response;
+
+    return json({
+      ok: true,
+      userId: principal.userId,
+      accessToken: ensured.accessToken,
+      expiresAt:
+        Number.isFinite(ensured.session.supabaseAccessExp) && (ensured.session.supabaseAccessExp as number) > 0
+          ? new Date((ensured.session.supabaseAccessExp as number) * 1000).toISOString()
+          : null,
+      tokenKind: 'supabase_user',
+    });
+  }
+
+  if (!isTrustedRomaMichaelTokenRequest(request, env)) {
+    return authError('coreui.errors.auth.contextUnavailable', 503, 'supabase_session_unavailable');
+  }
+
+  const serviceRoleKey = resolveSupabaseServiceRoleKey(env);
+  if (!serviceRoleKey) {
+    return authError('berlin.errors.auth.config_missing', 503, 'supabase_service_role_missing');
+  }
 
   return json({
     ok: true,
     userId: principal.userId,
-    accessToken: ensured.accessToken,
-    expiresAt:
-      Number.isFinite(ensured.session.supabaseAccessExp) && (ensured.session.supabaseAccessExp as number) > 0
-        ? new Date((ensured.session.supabaseAccessExp as number) * 1000).toISOString()
-        : null,
+    accessToken: serviceRoleKey,
+    expiresAt: null,
+    tokenKind: 'internal_service_role',
   });
 }
 

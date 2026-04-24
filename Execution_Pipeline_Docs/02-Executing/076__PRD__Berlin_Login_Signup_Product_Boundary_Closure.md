@@ -1,6 +1,6 @@
 # 076 PRD - Berlin-Owned Login Identity And Account Boundary Redo
 
-Status: CUT 1 GREEN; CUT 2 GREEN; CUT 3 CODE GREEN / PROVIDER CONFIG VERIFICATION BLOCKED
+Status: CUT 1 GREEN; CUT 2 GREEN; CUT 3 GREEN / CLOUD-DEV GOOGLE CONFIG VERIFIED; CUT 4 PENDING
 Owner: Berlin identity/account boundary, Roma login shell
 Date: 2026-04-24
 
@@ -44,7 +44,7 @@ This PRD follows `documentation/architecture/AccountManagement.md`.
 
 Hard truths:
 
-1. Berlin is the single identity and account-truth boundary.
+1. Berlin is the identity-to-session boundary and owns login-time account truth.
 2. A login identity is not a Clickeen user.
 3. A Clickeen user is not a Clickeen account.
 4. Account product state belongs to the account.
@@ -58,7 +58,12 @@ Hard truths:
 9. Prague may carry signup intent only.
 10. Supabase/Michael is persistence infrastructure, not the browser-visible identity owner.
 
-## Current Codebase Reality
+Clarification:
+
+- Berlin keeps provider identity mapping, first-login provisioning, invitation acceptance during login, active account session landing, session issuance, and bootstrap authz in the auth boundary.
+- Post-login account-management surfaces such as member CRUD, locale settings, contact-method management, governance, and invitation management are current Berlin residual surface, not the long-term Berlin mandate.
+
+## Codebase Reality At PRD Start
 
 ### Good Existing Pieces
 
@@ -539,9 +544,34 @@ Verification:
 - `corepack pnpm exec tsc -p berlin/tsconfig.json --noEmit` -> PASS
 - `git diff --check` -> PASS
 
-Blocker:
+Cloud-dev verification:
 
-- Direct Google cloud verification cannot run yet because provider secret/config verification is blocked on this machine.
-- No local env file contains `BERLIN_GOOGLE_CLIENT_ID` or `BERLIN_GOOGLE_CLIENT_SECRET`.
-- `wrangler secret list` for `berlin-dev` fails with Cloudflare API authentication error `code: 10000`, so this machine cannot verify whether those secrets already exist in Cloudflare.
-- Per this PRD's execution gate, Cut 4 must not start until Berlin's Google OAuth client id/secret are confirmed in Cloudflare and the Google OAuth client is confirmed to allow `https://berlin.dev.clickeen.com/auth/login/google/callback`.
+- Cloudflare `berlin-dev` now has `BERLIN_GOOGLE_CLIENT_ID`, `BERLIN_GOOGLE_CLIENT_SECRET`, `BERLIN_GOOGLE_CALLBACK_URL`, and `BERLIN_ALLOWED_PROVIDERS` configured.
+- The Berlin custom domain is configured as a Cloudflare Worker custom domain for `berlin.dev.clickeen.com`.
+- `https://berlin.dev.clickeen.com/auth/login/google/start?next=%2Fhome` redirects to Google.
+- Roma `GET /api/session/login/google` reaches the direct Google flow through Berlin.
+- Google token exchange initially failed with `google_token_invalid_client`; correcting the Google OAuth client secret in Cloudflare fixed the provider exchange.
+- Manual cloud-dev login with Google was reported working on 2026-04-24.
+
+Remaining:
+
+- Cut 4 is still pending because Roma's `/api/session/login/google` currently uses the legacy JSON start route (`POST /auth/login/provider/start`) instead of directly redirecting the browser to `GET /auth/login/google/start`.
+- Cut 5 remains the follow-up quarantine/removal of Supabase-browser OAuth compatibility paths and hidden password smoke dependency.
+
+## 2026-04-24 Post-Login Michael Bridge Patch
+
+Problem found after Google login succeeded:
+
+- Roma `/widgets` called `GET /api/account/widgets`.
+- That route still used Berlin `/auth/michael/token` to obtain a Michael/PostgREST token.
+- Berlin-owned Google sessions intentionally do not carry a Supabase Auth refresh token, so `/auth/michael/token` returned `coreui.errors.auth.contextUnavailable` / `supabase_session_unavailable`.
+
+Implemented:
+
+- Berlin keeps the old Supabase user-token path for sessions that still have a Supabase refresh bridge.
+- For Berlin-owned provider sessions, Berlin now returns a Michael service-role token only to the Roma server caller, guarded by:
+  - valid Berlin user access token
+  - `x-ck-internal-service: roma.edge`
+  - `x-ck-internal-token: Bearer ${CK_INTERNAL_SERVICE_JWT}`
+- Roma now sends those internal server identity headers when calling Berlin `/auth/michael/token`.
+- This is a residual server-side bridge only. It does not reintroduce Supabase Auth as login identity, and browser code must not call it.

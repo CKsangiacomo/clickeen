@@ -128,6 +128,7 @@ Client fetch behavior:
 - Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/account/widgets`, `/api/account/templates`, `/api/account/assets*`, `/api/account/team*`, `/api/account/locales`, Builder/account routes).
 - Roma -> Tokyo/Tokyo-worker product control calls now execute through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
 - Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`; Roma does not infer or probe internal service hosts.
+- Roma -> Berlin's residual Michael token bridge uses the Berlin access token plus explicit server identity headers (`x-ck-internal-service: roma.edge`, `x-ck-internal-token: Bearer ${CK_INTERNAL_SERVICE_JWT}`). This is only for server-side Roma account routes while Michael direct reads remain in Roma; browser code must not call Berlin's Michael token bridge.
 
 ## Bob orchestration contract (Roma Builder)
 

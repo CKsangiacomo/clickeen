@@ -10,6 +10,7 @@ For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./O
 Current status:
 - PRD 072 is the active Roma account-shell correction PRD.
 - PRD 068 is the latest completed account-management correction snapshot before PRD 072.
+- PRD 076 corrected Berlin's auth boundary: Berlin is the identity-to-session boundary and owns login-time account truth, not the permanent home for every account-management workflow.
 
 Historical snapshots:
 - [PRD 064](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/064__PRD__Berlin_Account_Management_Boundary__Single_Identity_And_Account_API.md)
@@ -21,7 +22,7 @@ Historical snapshots:
 
 ## Hard invariants
 
-1. Berlin is the single identity and account-truth boundary.
+1. Berlin is the identity-to-session boundary. It owns login-time account truth: provider identity mapping, first-login provisioning, invitation acceptance during login, active account session landing, session issuance, and session-bound authz bootstrap.
 2. Michael stores account data; it is not the product-facing account API.
 3. The canonical model is:
    - `User Profile` = the person
@@ -69,7 +70,7 @@ Base fields:
 
 Legacy compatibility residue such as `displayName` may remain in persistence during PRD 65 cutover, but it is not a customer-facing source-of-truth input.
 
-Berlin owns the profile boundary even as richer profile context is added later.
+Berlin owns profile truth needed for identity, login, and session bootstrap. General profile mutation routes may exist in Berlin during the current cutover, but they are not a reason to expand Berlin into a permanent account-management backend.
 
 ### Account
 
@@ -197,7 +198,7 @@ Rules:
 
 ### Switch Account
 
-Berlin still owns active-account resolution.
+Berlin owns active-account resolution for session landing and bootstrap.
 
 Rules:
 - Berlin persists the active-account preference on the canonical user-profile boundary; it does not live in Roma/Bob cookies or client-side overrides
@@ -235,13 +236,13 @@ Forbidden half-states:
 
 Invitation is the canonical way to grant access to a person who is not yet an attached member.
 
-Berlin owns:
-- issuance
-- persistence
-- expiry/revocation
-- acceptance
+Berlin owns invitation acceptance when it is part of the login/session boundary:
+- detect invitation context during login
 - dedupe against existing user profiles / linked identities
-- conversion into exactly one membership
+- convert acceptance into exactly one membership
+- land the session in the accepted account when appropriate
+
+Current Berlin routes may still host invitation issuance, listing, expiry, revocation, and related team-management workflows. Those post-login account-management surfaces are extraction targets. They must not be expanded in Berlin without a PRD.
 
 ### Multi-account people
 
@@ -290,7 +291,7 @@ Returns:
   - `traits.linkedProviders`
 - signed account capsule
 
-Canonical account API:
+Current account API surface:
 - `GET /v1/me`
 - `PUT /v1/me`
 - `POST /v1/me/email-change`
@@ -321,6 +322,7 @@ Rules:
 - `PATCH /v1/accounts/:id/members/:memberId` mutates membership only
 - `DELETE /v1/accounts/:id/members/:memberId` removes a non-owner member from the account
 - `GET /v1/me/identities` returns Berlin's minimal provider reuse summary; shells must not invent their own provider/account linkage model on top
+- Berlin currently hosts this API surface, but the corrected mandate keeps only login-time account truth in Berlin long term. Post-login account-management routes are extraction targets.
 
 ---
 
@@ -329,8 +331,11 @@ Rules:
 | Concern | Owner |
 |---|---|
 | Identity/session | Berlin |
-| User profile | Berlin |
-| Memberships/invitations/active account | Berlin |
+| Login-time provider identity mapping | Berlin |
+| Login-time account provisioning/invitation acceptance | Berlin |
+| Active account session landing/bootstrap | Berlin |
+| User profile needed for login/bootstrap | Berlin current boundary; richer mutation surface is an extraction target |
+| Post-login memberships/invitations/account management | Berlin current residual surface; extraction target |
 | Linked identities/provider reuse | Berlin |
 | Persistence | Michael |
 | Account/member UX | Roma |

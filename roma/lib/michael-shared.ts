@@ -1,4 +1,5 @@
 import { resolveBerlinBaseUrl } from './env/berlin';
+import { resolveInternalServiceJwt } from './env/internal-service';
 
 export type MichaelWidgetInstanceRow = {
   public_id?: unknown;
@@ -249,10 +250,25 @@ type MichaelAccessResolution =
 export async function resolveMichaelAccessToken(
   berlinAccessToken: string,
 ): Promise<MichaelAccessResolution> {
-  const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
+  let berlinBase = '';
+  let internalToken = '';
+  try {
+    berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
+    internalToken = resolveInternalServiceJwt('Roma -> Berlin Michael token bridge');
+  } catch (error) {
+    return {
+      ok: false,
+      status: 503,
+      reasonKey: 'roma.errors.auth.config_missing',
+      detail: error instanceof Error ? error.message : String(error),
+    };
+  }
+
   const headers = new Headers();
   headers.set('authorization', `Bearer ${berlinAccessToken}`);
   headers.set('accept', 'application/json');
+  headers.set('x-ck-internal-service', 'roma.edge');
+  headers.set('x-ck-internal-token', `Bearer ${internalToken}`);
 
   try {
     const response = await fetch(`${berlinBase}/auth/michael/token`, {
