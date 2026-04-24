@@ -35,13 +35,6 @@ export default function RomaLoginPage() {
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => resolveNextPath(searchParams.get('next')), [searchParams]);
   const intent = useMemo(() => String(searchParams.get('intent') || '').trim(), [searchParams]);
-  const googleLoginHref = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set('next', nextPath);
-    if (intent) params.set('intent', intent);
-    return `/api/session/login/google?${params.toString()}`;
-  }, [intent, nextPath]);
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -91,11 +84,13 @@ export default function RomaLoginPage() {
           <h1 className="heading-2" style={{ margin: 0 }}>Sign in to Roma</h1>
           <p className="body-m">Use your Google account to sign in.</p>
           <div style={{ marginBottom: 18 }}>
-            <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
-              <a aria-label="Continue with Google" className="diet-btn-txt" data-size="lg" data-variant="primary" href={googleLoginHref}>
+            <form action="/api/session/login/google" method="get" className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
+              <input name="next" type="hidden" value={nextPath} />
+              {intent ? <input name="intent" type="hidden" value={intent} /> : null}
+              <button aria-label="Continue with Google" className="diet-btn-txt" data-size="lg" data-variant="primary" type="submit">
                 <span className="diet-btn-txt__label body-l">Continue with Google</span>
-              </a>
-            </div>
+              </button>
+            </form>
           </div>
           {error ? <p className="body-s" role="alert">{error}</p> : null}
           {SHOW_PASSWORD_LOGIN ? (
