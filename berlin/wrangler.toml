@@ -3,7 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2025-12-28"
 workers_dev = true
 routes = [
-  { pattern = "berlin.dev.clickeen.com/*", zone_name = "clickeen.com" },
+  { pattern = "berlin.dev.clickeen.com", zone_name = "clickeen.com", custom_domain = true },
 ]
 
 [observability]
