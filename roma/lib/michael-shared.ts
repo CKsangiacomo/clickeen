@@ -1,5 +1,4 @@
 import { resolveBerlinBaseUrl } from './env/berlin';
-import { resolveInternalServiceJwt } from './env/internal-service';
 
 export type MichaelWidgetInstanceRow = {
   public_id?: unknown;
@@ -251,10 +250,8 @@ export async function resolveMichaelAccessToken(
   berlinAccessToken: string,
 ): Promise<MichaelAccessResolution> {
   let berlinBase = '';
-  let internalToken = '';
   try {
     berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
-    internalToken = resolveInternalServiceJwt('Roma -> Berlin Michael token bridge');
   } catch (error) {
     return {
       ok: false,
@@ -268,7 +265,11 @@ export async function resolveMichaelAccessToken(
   headers.set('authorization', `Bearer ${berlinAccessToken}`);
   headers.set('accept', 'application/json');
   headers.set('x-ck-internal-service', 'roma.edge');
-  headers.set('x-ck-internal-token', `Bearer ${internalToken}`);
+  const internalToken =
+    typeof process !== 'undefined' ? (process.env.CK_INTERNAL_SERVICE_JWT ?? '').trim() : '';
+  if (internalToken) {
+    headers.set('x-ck-internal-token', `Bearer ${internalToken}`);
+  }
 
   try {
     const response = await fetch(`${berlinBase}/auth/michael/token`, {

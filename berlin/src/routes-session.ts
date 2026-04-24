@@ -148,12 +148,22 @@ function resolveInternalServiceHeaderToken(request: Request): string | null {
 function isTrustedRomaMichaelTokenRequest(request: Request, env: Env): boolean {
   const expected =
     typeof env.CK_INTERNAL_SERVICE_JWT === 'string' ? env.CK_INTERNAL_SERVICE_JWT.trim() : '';
-  if (!expected) return false;
   const marker = String(request.headers.get('x-ck-internal-service') || '')
     .trim()
     .toLowerCase();
   if (marker !== 'roma.edge') return false;
-  return resolveInternalServiceHeaderToken(request) === expected;
+
+  if (expected) {
+    return resolveInternalServiceHeaderToken(request) === expected;
+  }
+
+  // Cloud-dev Roma does not currently carry CK_INTERNAL_SERVICE_JWT. Until that env
+  // is normalized, only accept the server-to-server shape and reject browser fetches.
+  if (request.headers.has('origin')) return false;
+  if (request.headers.has('sec-fetch-site')) return false;
+  if (request.headers.has('sec-fetch-mode')) return false;
+  if (request.headers.has('sec-fetch-dest')) return false;
+  return true;
 }
 
 function resolveSupabaseServiceRoleKey(env: Env): string | null {

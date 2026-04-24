@@ -572,6 +572,7 @@ Implemented:
 - For Berlin-owned provider sessions, Berlin now returns a Michael service-role token only to the Roma server caller, guarded by:
   - valid Berlin user access token
   - `x-ck-internal-service: roma.edge`
-  - `x-ck-internal-token: Bearer ${CK_INTERNAL_SERVICE_JWT}`
+  - `x-ck-internal-token: Bearer ${CK_INTERNAL_SERVICE_JWT}` when that env is configured
+- During cloud-dev env normalization, Berlin rejects browser fetch headers on this bridge when `CK_INTERNAL_SERVICE_JWT` is absent.
 - Roma now sends those internal server identity headers when calling Berlin `/auth/michael/token`.
 - This is a residual server-side bridge only. It does not reintroduce Supabase Auth as login identity, and browser code must not call it.

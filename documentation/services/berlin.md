@@ -191,7 +191,7 @@ Legacy compatibility dependencies:
 
 - Supabase Auth password grant remains only for `POST /auth/login/password` operational/smoke compatibility.
 - Supabase refresh grant state may remain in older session paths, but direct provider login does not use Supabase as the browser-visible OAuth hop.
-- `GET /auth/michael/token` is a residual server-only bridge for Roma routes that still read Michael/PostgREST directly. For Berlin-owned provider sessions that do not have a Supabase Auth refresh token, Berlin returns the Michael service-role token only when the caller also proves `x-ck-internal-service: roma.edge` with `x-ck-internal-token: Bearer ${CK_INTERNAL_SERVICE_JWT}`. Browser/client code must never call this route.
+- `GET /auth/michael/token` is a residual server-only bridge for Roma routes that still read Michael/PostgREST directly. For Berlin-owned provider sessions that do not have a Supabase Auth refresh token, Berlin returns the Michael service-role token only to the Roma server caller. When `CK_INTERNAL_SERVICE_JWT` is configured, Roma must also send `x-ck-internal-token: Bearer ${CK_INTERNAL_SERVICE_JWT}`. During cloud-dev env normalization, Berlin still requires `x-ck-internal-service: roma.edge` and rejects browser fetch headers. Browser/client code must never call this route.
 
 ## Environment
 
