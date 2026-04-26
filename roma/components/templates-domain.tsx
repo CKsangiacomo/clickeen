@@ -5,31 +5,26 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
-import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
+import { useRomaAccountContext } from './roma-account-context';
 import { buildBuilderRoute, DEFAULT_INSTANCE_DISPLAY_NAME } from './use-roma-widgets';
 import { normalizeRomaTemplatesSnapshot, type TemplateInstance } from './use-roma-templates';
 
 export function TemplatesDomain() {
   const router = useRouter();
-  const me = useRomaMe();
-  const accountApi = useRomaAccountApi(me.data);
+  const { accountContext } = useRomaAccountContext();
+  const accountApi = useRomaAccountApi();
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [templateInstances, setTemplateInstances] = useState<TemplateInstance[]>([]);
-  const [domainLoading, setDomainLoading] = useState(false);
+  const [domainLoading, setDomainLoading] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
-  const accountId = context.accountId;
+  const accountId = accountContext.accountId;
   const refreshTemplates = useCallback(async () => {
-    if (!accountId) return;
     setDomainLoading(true);
     setDataError(null);
     try {
-      const payload = await accountApi.fetchJson<unknown>(
-        `/api/account/templates`,
-        { method: 'GET' },
-      );
+      const payload = await accountApi.fetchJson<unknown>(`/api/account/templates`, { method: 'GET' });
       const normalized = normalizeRomaTemplatesSnapshot(payload);
       if (!normalized || normalized.accountId !== accountId) {
         throw new Error('coreui.errors.payload.invalid');
@@ -66,9 +61,7 @@ export function TemplatesDomain() {
   }, [templateInstances]);
 
   useEffect(() => {
-    const widgetTypes = groupedTemplates
-      .map((group) => group.widgetType)
-      .filter((widgetType) => widgetType !== 'unknown');
+    const widgetTypes = groupedTemplates.map((group) => group.widgetType).filter((widgetType) => widgetType !== 'unknown');
     widgetTypes.slice(0, 8).forEach((widgetType) => {
       void prefetchCompiledWidget(widgetType);
     });
@@ -83,16 +76,15 @@ export function TemplatesDomain() {
       try {
         const payload = await accountApi.fetchJson<{ publicId?: string }>(`/api/account/widgets/duplicate`, {
           method: 'POST',
-          headers: accountApi.buildHeaders({ contentType: 'application/json' }),
+          headers: accountApi.buildHeaders({
+            contentType: 'application/json',
+          }),
           body: JSON.stringify({
             sourcePublicId: instance.publicId,
           }),
         });
 
-        const createdPublicId =
-          payload && typeof payload.publicId === 'string' && payload.publicId.trim()
-            ? payload.publicId.trim()
-            : '';
+        const createdPublicId = payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
         if (!createdPublicId) {
           throw new Error('coreui.errors.payload.invalid');
         }
@@ -113,52 +105,24 @@ export function TemplatesDomain() {
     [accountApi, accountId, router],
   );
 
-  if (me.loading)
-    return <section className="rd-canvas-module body-m">Loading account context...</section>;
-  if (me.error || !me.data) {
-    return (
-      <section className="rd-canvas-module body-m">
-        {resolveAccountShellErrorCopy(
-          me.error ?? 'coreui.errors.auth.contextUnavailable',
-          'Templates are unavailable right now. Please try again.',
-        )}
-      </section>
-    );
-  }
-  if (!accountId) {
-    return (
-      <section className="rd-canvas-module body-m">
-        No account is available for templates right now.
-      </section>
-    );
-  }
-
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {context.accountName || 'Current account'}</p>
-        {context.accountSlug ? <p className="body-s">Slug: {context.accountSlug}</p> : null}
+        <p className="body-m">Account: {accountContext.accountName}</p>
+        <p className="body-s">Slug: {accountContext.accountSlug}</p>
         <p className="body-m">Showing all curated templates available.</p>
 
         {dataError ? (
           <div className="roma-inline-stack">
             <p className="body-m">{dataError}</p>
-            <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="line2"
-              type="button"
-              onClick={() => void refreshTemplates()}
-              disabled={domainLoading}
-            >
+            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshTemplates()} disabled={domainLoading}>
               <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
           </div>
         ) : null}
         {actionError ? <p className="body-m">{actionError}</p> : null}
-        {groupedTemplates.length === 0 ? (
-          <p className="body-m">No curated templates available yet.</p>
-        ) : null}
+        {domainLoading && groupedTemplates.length === 0 && !dataError ? <p className="body-m">Loading templates...</p> : null}
+        {!domainLoading && groupedTemplates.length === 0 ? <p className="body-m">No curated templates available yet.</p> : null}
       </section>
 
       {groupedTemplates.length > 0 ? (
@@ -169,8 +133,7 @@ export function TemplatesDomain() {
                 <div className="roma-toolbar">
                   <h2 className="heading-4">{group.widgetType}</h2>
                   <p className="body-s">
-                    {group.instances.length}{' '}
-                    {group.instances.length === 1 ? 'template' : 'templates'}
+                    {group.instances.length} {group.instances.length === 1 ? 'template' : 'templates'}
                   </p>
                 </div>
 
@@ -187,9 +150,7 @@ export function TemplatesDomain() {
                       const actionKey = `template:${instance.publicId}`;
                       return (
                         <tr key={instance.publicId}>
-                          <td className="body-s">
-                            {instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}
-                          </td>
+                          <td className="body-s">{instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}</td>
                           <td className="body-s">{instance.publicId}</td>
                           <td className="roma-cell-actions">
                             <button
@@ -200,9 +161,7 @@ export function TemplatesDomain() {
                               onClick={() => handleUseTemplate(instance)}
                               disabled={Boolean(activeActionKey)}
                             >
-                              <span className="diet-btn-txt__label body-m">
-                                {activeActionKey === actionKey ? 'Creating...' : 'Use template'}
-                              </span>
+                              <span className="diet-btn-txt__label body-m">{activeActionKey === actionKey ? 'Creating...' : 'Use template'}</span>
                             </button>
                           </td>
                         </tr>

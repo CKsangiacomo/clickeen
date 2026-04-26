@@ -1,59 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
-import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
-import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
+import { useRomaAccountContext } from './roma-account-context';
 
 export function HomeDomain() {
-  const me = useRomaMe();
-  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
-  const hasAccountContext = Boolean(context.accountId);
-
-  if (me.loading) {
-    return <section className="rd-canvas-module body-m">Loading identity and membership context...</section>;
-  }
-
-  if (me.error || !me.data) {
-    return (
-      <section className="rd-canvas-module">
-        <p className="body-m">
-          {resolveAccountShellErrorCopy(
-            me.error ?? 'coreui.errors.auth.contextUnavailable',
-            'Home is unavailable right now. Please try again.',
-          )}
-        </p>
-        <div className="rd-canvas-module__actions">
-          <button className="diet-btn-txt" data-size="md" data-variant="primary" onClick={() => void me.reload()} type="button">
-            <span className="diet-btn-txt__label body-m">Retry</span>
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  if (!hasAccountContext) {
-    return (
-      <section className="rd-canvas-module">
-        <p className="body-m">No account is available for this user right now.</p>
-        <div className="rd-canvas-module__actions">
-          <Link href="/settings" className="diet-btn-txt" data-size="md" data-variant="primary">
-            <span className="diet-btn-txt__label body-m">Open settings</span>
-          </Link>
-          <Link href="/team" className="diet-btn-txt" data-size="md" data-variant="line2">
-            <span className="diet-btn-txt__label body-m">Open team</span>
-          </Link>
-        </div>
-      </section>
-    );
-  }
+  const { accountContext } = useRomaAccountContext();
 
   return (
     <>
       <section className="rd-canvas-module">
         <p className="body-m">
-          Account: {context.accountName || 'Current account'}
-          {context.accountSlug ? ` (${context.accountSlug})` : ''}
+          Account: {accountContext.accountName} ({accountContext.accountSlug})
         </p>
       </section>
 

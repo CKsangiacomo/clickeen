@@ -6,14 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
-import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
-import {
-  buildBuilderRoute,
-  DEFAULT_INSTANCE_DISPLAY_NAME,
-  normalizeWidgetType,
-  normalizeRomaWidgetsResponse,
-  type WidgetInstance,
-} from './use-roma-widgets';
+import { useRomaAccountContext } from './roma-account-context';
+import { buildBuilderRoute, DEFAULT_INSTANCE_DISPLAY_NAME, normalizeWidgetType, normalizeRomaWidgetsResponse, type WidgetInstance } from './use-roma-widgets';
 
 type CreateInstanceArgs = {
   widgetType: string;
@@ -28,28 +22,26 @@ function buildMainPublicId(widgetType: string): string {
 export function WidgetsDomain() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const me = useRomaMe();
-  const accountApi = useRomaAccountApi(me.data);
-  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
+  const { accountContext } = useRomaAccountContext();
+  const accountApi = useRomaAccountApi();
   const autoCreateStartedRef = useRef(false);
 
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>([]);
   const [widgetTypes, setWidgetTypes] = useState<string[]>([]);
-  const [domainLoading, setDomainLoading] = useState(false);
+  const [domainLoading, setDomainLoading] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
   const [renamingPublicId, setRenamingPublicId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
 
-  const accountId = context.accountId;
+  const accountId = accountContext.accountId;
   const searchIntent = useMemo(() => (searchParams.get('intent') || '').trim().toLowerCase(), [searchParams]);
   const searchWidgetType = useMemo(() => normalizeWidgetType(searchParams.get('widgetType')), [searchParams]);
   const selectedPublicId = useMemo(() => (searchParams.get('selected') || '').trim(), [searchParams]);
 
   const refreshWidgets = useCallback(async () => {
-    if (!accountId) return;
     setDomainLoading(true);
     setDataError(null);
     try {
@@ -126,24 +118,21 @@ export function WidgetsDomain() {
       setCreateError(null);
       try {
         const sourcePublicId = buildMainPublicId(normalizedWidgetType);
-        const payload = await accountApi.fetchJson<{ publicId?: string; widgetType?: string }>(
-          `/api/account/widgets/duplicate`,
-          {
-            method: 'POST',
-            headers: accountApi.buildHeaders({ contentType: 'application/json' }),
-            body: JSON.stringify({
-              sourcePublicId,
-            }),
-          },
-        );
-        const createdPublicId =
-          payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
+        const payload = await accountApi.fetchJson<{
+          publicId?: string;
+          widgetType?: string;
+        }>(`/api/account/widgets/duplicate`, {
+          method: 'POST',
+          headers: accountApi.buildHeaders({ contentType: 'application/json' }),
+          body: JSON.stringify({
+            sourcePublicId,
+          }),
+        });
+        const createdPublicId = payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
         if (!createdPublicId) {
           throw new Error('coreui.errors.payload.invalid');
         }
-        const createdType = normalizeWidgetType(
-          payload && typeof payload.widgetType === 'string' ? payload.widgetType : normalizedWidgetType,
-        );
+        const createdType = normalizeWidgetType(payload && typeof payload.widgetType === 'string' ? payload.widgetType : normalizedWidgetType);
         await refreshWidgets();
         if (openBuilder) {
           router.push(
@@ -170,15 +159,17 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        const payload = await accountApi.fetchJson<{ publicId?: string; widgetType?: string }>(`/api/account/widgets/duplicate`, {
+        const payload = await accountApi.fetchJson<{
+          publicId?: string;
+          widgetType?: string;
+        }>(`/api/account/widgets/duplicate`, {
           method: 'POST',
           headers: accountApi.buildHeaders({ contentType: 'application/json' }),
           body: JSON.stringify({
             sourcePublicId: instance.publicId,
           }),
         });
-        const duplicatedPublicId =
-          payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
+        const duplicatedPublicId = payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
         if (!duplicatedPublicId) {
           throw new Error('coreui.errors.payload.invalid');
         }
@@ -200,12 +191,9 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        await accountApi.fetchJson<{ deleted?: boolean }>(
-          `/api/account/instance/${encodeURIComponent(instance.publicId)}?subject=account`,
-          {
-            method: 'DELETE',
-          },
-        );
+        await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instance/${encodeURIComponent(instance.publicId)}?subject=account`, {
+          method: 'DELETE',
+        });
         await refreshWidgets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -233,9 +221,7 @@ export function WidgetsDomain() {
         await refreshWidgets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setCreateError(
-          resolveAccountShellErrorCopy(message, 'Updating widget status failed. Please try again.'),
-        );
+        setCreateError(resolveAccountShellErrorCopy(message, 'Updating widget status failed. Please try again.'));
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -274,23 +260,18 @@ export function WidgetsDomain() {
       setCreateError(null);
       setRenameError(null);
       try {
-        const payload = await accountApi.fetchJson<{ publicId?: string; displayName?: string }>(
-          `/api/account/instances/${encodeURIComponent(instance.publicId)}/rename`,
-          {
-            method: 'POST',
-            headers: accountApi.buildHeaders({ contentType: 'application/json' }),
-            body: JSON.stringify({ displayName: nextDisplayName }),
-          },
-        );
-        const resolvedDisplayName =
-          typeof payload.displayName === 'string' && payload.displayName.trim()
-            ? payload.displayName.trim()
-            : nextDisplayName;
-        setWidgetInstances((prev) =>
-          prev.map((entry) =>
-            entry.publicId === instance.publicId ? { ...entry, displayName: resolvedDisplayName } : entry,
-          ),
-        );
+        const payload = await accountApi.fetchJson<{
+          publicId?: string;
+          displayName?: string;
+        }>(`/api/account/instances/${encodeURIComponent(instance.publicId)}/rename`, {
+          method: 'POST',
+          headers: accountApi.buildHeaders({
+            contentType: 'application/json',
+          }),
+          body: JSON.stringify({ displayName: nextDisplayName }),
+        });
+        const resolvedDisplayName = typeof payload.displayName === 'string' && payload.displayName.trim() ? payload.displayName.trim() : nextDisplayName;
+        setWidgetInstances((prev) => prev.map((entry) => (entry.publicId === instance.publicId ? { ...entry, displayName: resolvedDisplayName } : entry)));
         cancelRename();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -326,21 +307,6 @@ export function WidgetsDomain() {
     [createInstance],
   );
 
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading account context...</section>;
-  if (me.error || !me.data) {
-    return (
-      <section className="rd-canvas-module body-m">
-        {resolveAccountShellErrorCopy(
-          me.error ?? 'coreui.errors.auth.contextUnavailable',
-          'Widgets are unavailable right now. Please try again.',
-        )}
-      </section>
-    );
-  }
-  if (!accountId) {
-    return <section className="rd-canvas-module body-m">No account is available for widgets right now.</section>;
-  }
-
   return (
     <>
       {dataError || createError || groupedInstances.length === 0 ? (
@@ -348,14 +314,7 @@ export function WidgetsDomain() {
           {dataError ? (
             <div className="roma-inline-stack">
               <p className="body-m">{dataError}</p>
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="line2"
-                type="button"
-                onClick={() => void refreshWidgets()}
-                disabled={domainLoading}
-              >
+              <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshWidgets()} disabled={domainLoading}>
                 <span className="diet-btn-txt__label body-m">Retry</span>
               </button>
             </div>
@@ -363,7 +322,9 @@ export function WidgetsDomain() {
           {createError ? <p className="body-m">{createError}</p> : null}
           {renameError ? <p className="body-m">{renameError}</p> : null}
 
-          {groupedInstances.length === 0 ? (
+          {domainLoading && groupedInstances.length === 0 && !dataError ? <p className="body-m">Loading widgets...</p> : null}
+
+          {!domainLoading && groupedInstances.length === 0 ? (
             <div className="rd-canvas-module__actions">
               <p className="body-m">No editable instances yet. Use Templates to start from curated.</p>
               <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/templates">
@@ -452,9 +413,7 @@ export function WidgetsDomain() {
                                 onClick={() => void handleRenameInstance(instance)}
                                 disabled={Boolean(activeActionKey)}
                               >
-                                <span className="diet-btn-txt__label body-m">
-                                  {activeActionKey === renameActionKey ? 'Renaming...' : 'Rename'}
-                                </span>
+                                <span className="diet-btn-txt__label body-m">{activeActionKey === renameActionKey ? 'Renaming...' : 'Rename'}</span>
                               </button>
                             </div>
                           </div>
@@ -494,9 +453,7 @@ export function WidgetsDomain() {
                             onClick={() => void handleStatusChange(instance, 'unpublished')}
                             disabled={Boolean(activeActionKey) || !canUnpublish}
                           >
-                            <span className="diet-btn-txt__label body-m">
-                              {activeActionKey === unpublishActionKey ? 'Unpublishing...' : 'Unpublish'}
-                            </span>
+                            <span className="diet-btn-txt__label body-m">{activeActionKey === unpublishActionKey ? 'Unpublishing...' : 'Unpublish'}</span>
                           </button>
                         ) : null}
                         {instance.status === 'unpublished' && canPublish ? (
@@ -508,9 +465,7 @@ export function WidgetsDomain() {
                             onClick={() => void handleStatusChange(instance, 'published')}
                             disabled={Boolean(activeActionKey) || !canPublish}
                           >
-                            <span className="diet-btn-txt__label body-m">
-                              {activeActionKey === publishActionKey ? 'Publishing...' : 'Publish'}
-                            </span>
+                            <span className="diet-btn-txt__label body-m">{activeActionKey === publishActionKey ? 'Publishing...' : 'Publish'}</span>
                           </button>
                         ) : null}
                         {canRename ? (
@@ -533,9 +488,7 @@ export function WidgetsDomain() {
                           onClick={() => handleDuplicateInstance(instance)}
                           disabled={Boolean(activeActionKey) || !canDuplicate}
                         >
-                          <span className="diet-btn-txt__label body-m">
-                            {activeActionKey === duplicateActionKey ? 'Duplicating...' : 'Duplicate'}
-                          </span>
+                          <span className="diet-btn-txt__label body-m">{activeActionKey === duplicateActionKey ? 'Duplicating...' : 'Duplicate'}</span>
                         </button>
                         <button
                           className="diet-btn-txt"
@@ -545,9 +498,7 @@ export function WidgetsDomain() {
                           onClick={() => handleDeleteInstance(instance)}
                           disabled={Boolean(activeActionKey) || !canDelete}
                         >
-                          <span className="diet-btn-txt__label body-m">
-                            {activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}
-                          </span>
+                          <span className="diet-btn-txt__label body-m">{activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}</span>
                         </button>
                       </td>
                     </tr>
@@ -573,9 +524,7 @@ export function WidgetsDomain() {
                   disabled={Boolean(activeActionKey)}
                 >
                   <span className="diet-btn-txt__label body-m">
-                    {activeActionKey === createActionKey
-                      ? 'Creating...'
-                      : `Create ${group.widgetType} widget instance`}
+                    {activeActionKey === createActionKey ? 'Creating...' : `Create ${group.widgetType} widget instance`}
                   </span>
                 </button>
               </div>

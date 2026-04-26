@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { useRomaAccountApi } from './account-api';
-import { resolveAccountPolicyFromRomaAuthz, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
+import { useRomaAccountContext } from './roma-account-context';
 
 type TeamMemberProfile = {
   userId: string;
@@ -80,17 +80,12 @@ function formatCountryValue(value: string | null | undefined): string {
 }
 
 export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
-  const me = useRomaMe();
-  const accountApi = useRomaAccountApi(me.data);
+  const { accountContext, accountPolicy, reload } = useRomaAccountContext();
+  const accountApi = useRomaAccountApi();
   const router = useRouter();
-  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
-  const policy = useMemo(
-    () => (context.accountId ? resolveAccountPolicyFromRomaAuthz(me.data, context.accountId) : null),
-    [context.accountId, me.data],
-  );
-  const canManage = policy?.role === 'owner' || policy?.role === 'admin';
+  const canManage = accountPolicy.role === 'owner' || accountPolicy.role === 'admin';
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [member, setMember] = useState<TeamMemberResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -98,15 +93,9 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   const [removingMember, setRemovingMember] = useState(false);
   const [roleDraft, setRoleDraft] = useState('viewer');
 
-  const accountId = context.accountId;
+  const accountId = accountContext.accountId;
 
   const refreshMember = useCallback(async () => {
-    if (!accountId) {
-      setMember(null);
-      setError(null);
-      return;
-    }
-
     setLoading(true);
     setError(null);
     try {
@@ -131,7 +120,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     } finally {
       setLoading(false);
     }
-  }, [accountApi, accountId, memberId]);
+  }, [accountApi, memberId]);
 
   useEffect(() => {
     void refreshMember();
@@ -157,14 +146,14 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       }
       setMember(parsed);
       setRoleDraft(parsed.member.role);
-      await me.reload();
+      await reload();
     } catch (nextError) {
       const reason = nextError instanceof Error ? nextError.message : String(nextError);
       setMutationError(resolveTeamMemberErrorCopy(reason, 'Saving the membership failed. Please try again.'));
     } finally {
       setSavingRole(false);
     }
-  }, [accountApi, accountId, canManage, memberId, roleDraft, me]);
+  }, [accountApi, accountId, canManage, memberId, reload, roleDraft]);
 
   const removeMember = useCallback(async () => {
     if (!accountId || !canManage || !member || member.member.role === 'owner') return;
@@ -174,11 +163,13 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       const response = await accountApi.fetchRaw(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
         method: 'DELETE',
       });
-      const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
+      const payload = (await response.json().catch(() => null)) as {
+        error?: unknown;
+      } | null;
       if (!response.ok) {
         throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
       }
-      await me.reload();
+      await reload();
       router.push('/team');
       router.refresh();
     } catch (nextError) {
@@ -187,25 +178,13 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     } finally {
       setRemovingMember(false);
     }
-  }, [accountApi, accountId, canManage, member, memberId, me, router]);
-
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading team context...</section>;
-  if (me.error || !me.data) {
-    return (
-      <section className="rd-canvas-module body-m">
-        {resolveTeamMemberErrorCopy(me.error ?? 'coreui.errors.auth.contextUnavailable', 'Failed to load team context.')}
-      </section>
-    );
-  }
-  if (!accountId) {
-    return <section className="rd-canvas-module body-m">No account membership found for team controls.</section>;
-  }
+  }, [accountApi, accountId, canManage, member, memberId, reload, router]);
 
   return (
     <>
       <section className="rd-canvas-module roma-inline-stack" style={{ justifyContent: 'space-between', gap: '12px' }}>
         <div>
-          <p className="body-m">Account: {context.accountName || 'Current account'}</p>
+          <p className="body-m">Account: {accountContext.accountName}</p>
           <p className="body-s">Team manages memberships. Personal details stay with the member in User Settings.</p>
         </div>
         <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/team">
@@ -216,18 +195,13 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       {error ? (
         <section className="rd-canvas-module">
           <p className="body-m">{error}</p>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="line2"
-            type="button"
-            onClick={() => void refreshMember()}
-            disabled={loading}
-          >
+          <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshMember()} disabled={loading}>
             <span className="diet-btn-txt__label body-m">Retry</span>
           </button>
         </section>
       ) : null}
+
+      {loading && !member && !error ? <section className="rd-canvas-module body-m">Loading team member...</section> : null}
 
       {member ? (
         <>
@@ -305,9 +279,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
               </div>
               <div className="roma-field">
                 <span className="label-s">Email verified</span>
-                <p className="body-m">
-                  {member.member.profile ? (member.member.profile.emailVerified ? 'Yes' : 'No') : 'Not set'}
-                </p>
+                <p className="body-m">{member.member.profile ? (member.member.profile.emailVerified ? 'Yes' : 'No') : 'Not set'}</p>
               </div>
               <div className="roma-field">
                 <span className="label-s">Primary Language</span>

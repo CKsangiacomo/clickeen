@@ -3,10 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { normalizeAccountAssetRecord, type AccountAssetRecord } from '@clickeen/ck-contracts';
 import { formatBytes, formatNumber } from '../lib/format';
-import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { useRomaAccountApi, type RomaAccountApi } from './account-api';
 import { parseApiErrorReason } from './same-origin-json';
-import { resolveActiveRomaContext, useRomaMe } from './use-roma-me';
+import { useRomaAccountContext } from './roma-account-context';
 
 type DeleteAssetPayload = {
   accountId: string;
@@ -55,19 +54,14 @@ const DELETE_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to manage assets.',
   'coreui.errors.auth.forbidden': 'You do not have permission to manage this asset.',
   'coreui.errors.db.writeFailed': 'Asset delete failed on the server. Please try again.',
-  'coreui.errors.assets.integrity.dbPointerMissingBlob':
-    'Delete blocked: this asset points to missing blobs in storage. Resolve in Assets panel.',
-  'coreui.errors.assets.integrity.orphanBlob':
-    'Delete blocked: storage contains orphan blobs for this asset. Resolve in Assets panel.',
-  'coreui.errors.assets.integrity.blobMissingForAsset':
-    'Delete blocked: this asset has no storage blob key. Resolve in Assets panel.',
-  'coreui.errors.assets.integrityUnavailable':
-    'Delete blocked: asset integrity check is unavailable right now. Try again.',
+  'coreui.errors.assets.integrity.dbPointerMissingBlob': 'Delete blocked: this asset points to missing blobs in storage. Resolve in Assets panel.',
+  'coreui.errors.assets.integrity.orphanBlob': 'Delete blocked: storage contains orphan blobs for this asset. Resolve in Assets panel.',
+  'coreui.errors.assets.integrity.blobMissingForAsset': 'Delete blocked: this asset has no storage blob key. Resolve in Assets panel.',
+  'coreui.errors.assets.integrityUnavailable': 'Delete blocked: asset integrity check is unavailable right now. Try again.',
 };
 
 const ASSET_REASON_COPY: Record<string, string> = {
-  'coreui.upsell.reason.budgetExceeded':
-    'This upload would exceed your account storage limit. Delete assets or upgrade storage, then try again.',
+  'coreui.upsell.reason.budgetExceeded': 'This upload would exceed your account storage limit. Delete assets or upgrade storage, then try again.',
   'coreui.upsell.reason.capReached': 'This file exceeds the per-file upload limit.',
   'coreui.upsell.reason.platform.uploads': 'Uploads are not available for this account plan.',
   'coreui.errors.assets.uploadFailed': 'Asset upload failed. Please try again.',
@@ -95,18 +89,11 @@ function resolveDeleteErrorCopy(reason: string): string {
   return resolveAssetErrorCopy(normalized, 'Asset delete failed. Please try again.');
 }
 
-async function requestDeleteAsset(
-  accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
-  assetId: string,
-  confirmInUse: boolean,
-): Promise<DeleteAssetPayload> {
+async function requestDeleteAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, assetId: string, confirmInUse: boolean): Promise<DeleteAssetPayload> {
   const search = confirmInUse ? '?confirmInUse=1' : '';
-  const response = await accountApi.fetchRaw(
-    `/api/account/assets/${encodeURIComponent(assetId)}${search}`,
-    {
-      method: 'DELETE',
-    },
-  );
+  const response = await accountApi.fetchRaw(`/api/account/assets/${encodeURIComponent(assetId)}${search}`, {
+    method: 'DELETE',
+  });
   const payload = (await response.json().catch(() => null)) as DeleteAssetPayload | DeletePreconditionPayload | null;
   if (!response.ok) {
     const reason = parseApiErrorReason(payload, response.status);
@@ -118,11 +105,7 @@ async function requestDeleteAsset(
   return (payload as DeleteAssetPayload) ?? { accountId: '', assetId, deleted: true };
 }
 
-async function requestUploadAsset(
-  accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
-  file: File,
-  source: string,
-): Promise<AccountAssetRecord> {
+async function requestUploadAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, file: File, source: string): Promise<AccountAssetRecord> {
   const response = await accountApi.fetchRaw(`/api/account/assets/upload`, {
     method: 'POST',
     headers: {
@@ -142,14 +125,13 @@ async function requestUploadAsset(
 }
 
 export function AssetsDomain() {
-  const me = useRomaMe();
-  const accountApi = useRomaAccountApi(me.data);
+  const { accountContext, data } = useRomaAccountContext();
+  const accountApi = useRomaAccountApi();
   const singleUploadInputRef = useRef<HTMLInputElement | null>(null);
   const bulkUploadInputRef = useRef<HTMLInputElement | null>(null);
 
-  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
-  const accountId = context.accountId;
-  const entitlements = me.data?.authz?.entitlements ?? null;
+  const accountId = accountContext.accountId;
+  const entitlements = data.authz?.entitlements ?? null;
   const uploadSizeCapBytes = useMemo(() => {
     const raw = entitlements?.caps?.['uploads.size.max'];
     return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? Math.trunc(raw) : null;
@@ -170,36 +152,22 @@ export function AssetsDomain() {
   const [bulkItems, setBulkItems] = useState<BulkUploadItem[]>([]);
 
   const refreshAssets = useCallback(async () => {
-    if (!accountId) {
-      setAssets(null);
-      setStorageBytesUsed(null);
-      setError(null);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
       const assetsResponse = await accountApi.fetchRaw(`/api/account/assets`, {
         method: 'GET',
       });
-      const assetsPayload = (await assetsResponse.json().catch(() => null)) as
-        | AccountAssetsListResponse
-        | { error?: unknown }
-        | null;
+      const assetsPayload = (await assetsResponse.json().catch(() => null)) as AccountAssetsListResponse | { error?: unknown } | null;
       if (!assetsResponse.ok) {
         throw new Error(parseApiErrorReason(assetsPayload, assetsResponse.status));
       }
       const resolvedAssets =
         assetsPayload && typeof assetsPayload === 'object' && Array.isArray((assetsPayload as AccountAssetsListResponse).assets)
-          ? (assetsPayload as AccountAssetsListResponse).assets
-              .map(normalizeAccountAssetRecord)
-              .filter((asset): asset is AccountAssetRecord => Boolean(asset))
+          ? (assetsPayload as AccountAssetsListResponse).assets.map(normalizeAccountAssetRecord).filter((asset): asset is AccountAssetRecord => Boolean(asset))
           : [];
       const nextStorageBytesUsed =
-        assetsPayload &&
-        typeof assetsPayload === 'object' &&
-        typeof (assetsPayload as AccountAssetsListResponse).storageBytesUsed === 'number'
+        assetsPayload && typeof assetsPayload === 'object' && typeof (assetsPayload as AccountAssetsListResponse).storageBytesUsed === 'number'
           ? Math.max(0, Math.trunc((assetsPayload as AccountAssetsListResponse).storageBytesUsed ?? 0))
           : null;
 
@@ -212,7 +180,7 @@ export function AssetsDomain() {
     } finally {
       setLoading(false);
     }
-  }, [accountApi, accountId]);
+  }, [accountApi]);
 
   useEffect(() => {
     void refreshAssets();
@@ -243,9 +211,7 @@ export function AssetsDomain() {
             assetRef: asset.assetRef,
             filename: asset.filename,
             usageCount:
-              typeof typed.payload.usageCount === 'number' && Number.isFinite(typed.payload.usageCount)
-                ? Math.max(0, Math.trunc(typed.payload.usageCount))
-                : 0,
+              typeof typed.payload.usageCount === 'number' && Number.isFinite(typed.payload.usageCount) ? Math.max(0, Math.trunc(typed.payload.usageCount)) : 0,
           });
           return;
         }
@@ -369,56 +335,30 @@ export function AssetsDomain() {
     [runBulkUpload],
   );
 
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading account context...</section>;
-  if (me.error || !me.data) {
-    return (
-      <section className="rd-canvas-module body-m">
-        {resolveAccountShellErrorCopy(
-          me.error ?? 'coreui.errors.auth.contextUnavailable',
-          'Assets are unavailable right now. Please try again.',
-        )}
-      </section>
-    );
-  }
-  if (!accountId) {
-    return <section className="rd-canvas-module body-m">No account is available for assets right now.</section>;
-  }
-
   const successfulBulkCount = bulkItems.filter((item) => item.status === 'success').length;
   const failedBulkCount = bulkItems.filter((item) => item.status === 'failed').length;
   const storedAssetsLabel = assets == null ? (loading ? 'Loading...' : 'Unavailable') : formatNumber(assets.length);
-  const storageUsedLabel =
-    storageBytesUsed == null ? (loading ? 'Loading...' : 'Unavailable') : formatBytes(storageBytesUsed);
+  const storageUsedLabel = storageBytesUsed == null ? (loading ? 'Loading...' : 'Unavailable') : formatBytes(storageBytesUsed);
   const assetRows = assets ?? [];
 
   return (
     <>
       <section className="rd-canvas-module">
-        {context.accountName ? <p className="body-m">Account: {context.accountName}</p> : null}
+        <p className="body-m">Account: {accountContext.accountName}</p>
 
         {error ? (
           <div className="roma-inline-stack">
             <p className="body-m">{error}</p>
-            <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="line2"
-              type="button"
-              onClick={() => void refreshAssets()}
-              disabled={loading}
-            >
+            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshAssets()} disabled={loading}>
               <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
           </div>
         ) : null}
         <p className="body-m">Stored assets: {storedAssetsLabel}</p>
         <p className="body-m">
-          Storage used: {storageUsedLabel} /{' '}
-          {storageBudget?.max == null ? 'unlimited' : formatBytes(storageBudget.max)}
+          Storage used: {storageUsedLabel} / {storageBudget?.max == null ? 'unlimited' : formatBytes(storageBudget.max)}
         </p>
-        {uploadSizeCapBytes != null ? (
-          <p className="body-m">Per-file upload limit: {formatBytes(uploadSizeCapBytes)}</p>
-        ) : null}
+        {uploadSizeCapBytes != null ? <p className="body-m">Per-file upload limit: {formatBytes(uploadSizeCapBytes)}</p> : null}
 
         <div className="roma-toolbar">
           <button
@@ -453,21 +393,8 @@ export function AssetsDomain() {
           </button>
         </div>
 
-        <input
-          ref={singleUploadInputRef}
-          type="file"
-          hidden
-          onChange={handleSingleFileChange}
-          aria-label="Upload single asset"
-        />
-        <input
-          ref={bulkUploadInputRef}
-          type="file"
-          multiple
-          hidden
-          onChange={handleBulkFileChange}
-          aria-label="Upload multiple assets"
-        />
+        <input ref={singleUploadInputRef} type="file" hidden onChange={handleSingleFileChange} aria-label="Upload single asset" />
+        <input ref={bulkUploadInputRef} type="file" multiple hidden onChange={handleBulkFileChange} aria-label="Upload multiple assets" />
 
         {singleUploadError ? <p className="body-m">Upload failed: {singleUploadError}</p> : null}
         {deleteError ? <p className="body-m">Failed to delete asset: {deleteError}</p> : null}
@@ -500,9 +427,7 @@ export function AssetsDomain() {
                     onClick={() => handleDeleteAsset(asset)}
                     disabled={deletingAssetId === asset.assetId}
                   >
-                    <span className="diet-btn-txt__label body-m">
-                      {deletingAssetId === asset.assetId ? 'Deleting...' : 'Delete'}
-                    </span>
+                    <span className="diet-btn-txt__label body-m">{deletingAssetId === asset.assetId ? 'Deleting...' : 'Delete'}</span>
                   </button>
                 </td>
               </tr>
@@ -568,9 +493,7 @@ export function AssetsDomain() {
             <h2 id="roma-assets-bulk-title" className="heading-6">
               Bulk upload
             </h2>
-            <p className="body-m">
-              Upload multiple files in one run. Each file is processed independently and failures do not block other files.
-            </p>
+            <p className="body-m">Upload multiple files in one run. Each file is processed independently and failures do not block other files.</p>
             <div className="roma-inline-stack">
               <p className="body-s">Success: {successfulBulkCount}</p>
               <p className="body-s">Failed: {failedBulkCount}</p>

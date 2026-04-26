@@ -1,38 +1,31 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formatBytes } from '../lib/format';
-import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
-import { resolveActiveRomaAccount, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
+import { useRomaAccountContext } from './roma-account-context';
 
 type UsageStorageResponse = {
   storageBytesUsed?: number;
 };
 
 export function UsageDomain() {
-  const me = useRomaMe();
-  const accountApi = useRomaAccountApi(me.data);
-  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
-  const accountId = context.accountId;
-  const activeAccount = useMemo(() => resolveActiveRomaAccount(me.data), [me.data]);
-  const entitlements = me.data?.authz?.entitlements ?? null;
+  const { accountContext, activeAccount, data } = useRomaAccountContext();
+  const accountApi = useRomaAccountApi();
+  const accountId = accountContext.accountId;
+  const entitlements = data.authz?.entitlements ?? null;
   const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
+  const [storageLoading, setStorageLoading] = useState(true);
 
   const storageBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
   const storageLimitLabel =
-    typeof storageBudget?.max === 'number' && Number.isFinite(storageBudget.max) && storageBudget.max > 0
-      ? formatBytes(storageBudget.max)
-      : 'Unlimited';
-  const storageUsedLabel = storageBytesUsed == null ? 'Unavailable' : formatBytes(storageBytesUsed);
+    typeof storageBudget?.max === 'number' && Number.isFinite(storageBudget.max) && storageBudget.max > 0 ? formatBytes(storageBudget.max) : 'Unlimited';
+  const storageUsedLabel = storageLoading ? 'Loading...' : storageBytesUsed == null ? 'Unavailable' : formatBytes(storageBytesUsed);
 
   useEffect(() => {
     let cancelled = false;
     async function loadStorageUsage() {
-      if (!accountId) {
-        if (!cancelled) setStorageBytesUsed(null);
-        return;
-      }
+      setStorageLoading(true);
       try {
         const response = await accountApi.fetchRaw(`/api/account/usage`, {
           method: 'GET',
@@ -46,6 +39,8 @@ export function UsageDomain() {
         if (!cancelled) setStorageBytesUsed(next);
       } catch {
         if (!cancelled) setStorageBytesUsed(null);
+      } finally {
+        if (!cancelled) setStorageLoading(false);
       }
     }
     void loadStorageUsage();
@@ -54,26 +49,11 @@ export function UsageDomain() {
     };
   }, [accountApi, accountId]);
 
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading usage context...</section>;
-  if (me.error || !me.data) {
-    return (
-      <section className="rd-canvas-module body-m">
-        {resolveAccountShellErrorCopy(
-          me.error ?? 'coreui.errors.auth.contextUnavailable',
-          'Usage is unavailable right now. Please try again.',
-        )}
-      </section>
-    );
-  }
-  if (!accountId) {
-    return <section className="rd-canvas-module body-m">No account is available for usage right now.</section>;
-  }
-
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {context.accountName || 'Current account'}</p>
-        {context.accountSlug ? <p className="body-s">Slug: {context.accountSlug}</p> : null}
+        <p className="body-m">Account: {accountContext.accountName}</p>
+        <p className="body-s">Slug: {accountContext.accountSlug}</p>
         <p className="body-m">Detailed usage reporting is not available in Roma yet.</p>
       </section>
 
@@ -81,7 +61,7 @@ export function UsageDomain() {
         <div className="roma-grid roma-grid--three">
           <article className="roma-card">
             <h2 className="heading-6">Current plan</h2>
-            <p className="body-s">{activeAccount?.tier ?? 'unknown'}</p>
+            <p className="body-s">{activeAccount.tier}</p>
           </article>
           <article className="roma-card">
             <h2 className="heading-6">Storage used</h2>

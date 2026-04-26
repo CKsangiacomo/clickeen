@@ -8,7 +8,7 @@ import {
   userSettingsCountryRequiresTimezoneChoice,
 } from '@clickeen/ck-contracts';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRomaMe } from './use-roma-me';
+import { useRomaAccountContext } from './roma-account-context';
 
 type UserContactChannel = 'phone' | 'whatsapp';
 
@@ -111,18 +111,14 @@ function formatTimezoneLabel(timezone: string): string {
     .join(' / ');
 }
 
-function resolveContactMethodState(
-  profile: UserSettingsProfile | null | undefined,
-  channel: UserContactChannel,
-): UserContactMethodState {
+function resolveContactMethodState(profile: UserSettingsProfile | null | undefined, channel: UserContactChannel): UserContactMethodState {
   return profile?.contactMethods?.[channel] ?? EMPTY_CONTACT_METHOD;
 }
 
 function toContactDrafts(profile: UserSettingsProfile | null | undefined): ContactDrafts {
   return {
     phone: resolveContactMethodState(profile, 'phone').pendingValue || resolveContactMethodState(profile, 'phone').value || '',
-    whatsapp:
-      resolveContactMethodState(profile, 'whatsapp').pendingValue || resolveContactMethodState(profile, 'whatsapp').value || '',
+    whatsapp: resolveContactMethodState(profile, 'whatsapp').pendingValue || resolveContactMethodState(profile, 'whatsapp').value || '',
   };
 }
 
@@ -159,8 +155,8 @@ const USER_SETTINGS_COUNTRY_OPTIONS = listUserSettingsCountries()
   .sort((left, right) => left.label.localeCompare(right.label));
 
 export function ProfileDomain() {
-  const me = useRomaMe();
-  const profile = (me.data?.profile ?? null) as UserSettingsProfile | null;
+  const { data, reload } = useRomaAccountContext();
+  const profile = (data.profile ?? null) as UserSettingsProfile | null;
 
   const [draft, setDraft] = useState<ProfileDraft>(toDraft(profile));
   const [contactDrafts, setContactDrafts] = useState<ContactDrafts>(toContactDrafts(profile));
@@ -180,7 +176,7 @@ export function ProfileDomain() {
 
   const timezoneOptions = listUserSettingsTimezones(draft.country);
   const requiresTimezoneChoice = userSettingsCountryRequiresTimezoneChoice(draft.country);
-  const derivedTimezone = draft.country ? resolveUserSettingsTimezone(draft.country, draft.timezone, null) ?? '' : '';
+  const derivedTimezone = draft.country ? (resolveUserSettingsTimezone(draft.country, draft.timezone, null) ?? '') : '';
 
   useEffect(() => {
     setDraft(toDraft(profile));
@@ -212,12 +208,10 @@ export function ProfileDomain() {
           timezone: draft.country ? resolveUserSettingsTimezone(draft.country, draft.timezone || null, null) : null,
         }),
       });
-      const payload = (await response.json().catch(() => null)) as
-        | {
-            profile?: UserSettingsProfile | null;
-            error?: unknown;
-          }
-        | null;
+      const payload = (await response.json().catch(() => null)) as {
+        profile?: UserSettingsProfile | null;
+        error?: unknown;
+      } | null;
       if (!response.ok) {
         throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
       }
@@ -226,14 +220,14 @@ export function ProfileDomain() {
       }
       setDraft(toDraft(payload.profile));
       setSaveNotice('User settings saved.');
-      await me.reload();
+      await reload();
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       setSaveError(resolveUserSettingsErrorCopy(reason, 'Saving your settings failed. Please try again.'));
     } finally {
       setSaving(false);
     }
-  }, [draft, me, profile]);
+  }, [draft, profile, reload]);
 
   const requestEmailChange = useCallback(async () => {
     if (!profile) return;
@@ -247,14 +241,12 @@ export function ProfileDomain() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email: nextEmail }),
       });
-      const payload = (await response.json().catch(() => null)) as
-        | {
-            currentEmail?: string;
-            requestedEmail?: string;
-            status?: string;
-            error?: unknown;
-          }
-        | null;
+      const payload = (await response.json().catch(() => null)) as {
+        currentEmail?: string;
+        requestedEmail?: string;
+        status?: string;
+        error?: unknown;
+      } | null;
       if (!response.ok) {
         throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
       }
@@ -292,16 +284,14 @@ export function ProfileDomain() {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ value: draftValue }),
         });
-        const payload = (await response.json().catch(() => null)) as
-          | {
-              contactMethods?: UserSettingsProfile['contactMethods'];
-              delivery?: {
-                mode?: string;
-                previewCode?: string | null;
-              } | null;
-              error?: unknown;
-            }
-          | null;
+        const payload = (await response.json().catch(() => null)) as {
+          contactMethods?: UserSettingsProfile['contactMethods'];
+          delivery?: {
+            mode?: string;
+            previewCode?: string | null;
+          } | null;
+          error?: unknown;
+        } | null;
         if (!response.ok) {
           throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
         }
@@ -314,7 +304,7 @@ export function ProfileDomain() {
           pendingValue: draftValue,
         });
         setContactNotice(`${CONTACT_LABELS[channel]} verification code sent.`);
-        await me.reload();
+        await reload();
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         setContactError(resolveUserSettingsErrorCopy(reason, 'Verification is unavailable right now.'));
@@ -322,7 +312,7 @@ export function ProfileDomain() {
         setContactSavingChannel(null);
       }
     },
-    [contactDrafts, me],
+    [contactDrafts, reload],
   );
 
   const verifyContactMethod = useCallback(async () => {
@@ -337,12 +327,10 @@ export function ProfileDomain() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ code: verificationCode }),
       });
-      const payload = (await response.json().catch(() => null)) as
-        | {
-            contactMethods?: UserSettingsProfile['contactMethods'];
-            error?: unknown;
-          }
-        | null;
+      const payload = (await response.json().catch(() => null)) as {
+        contactMethods?: UserSettingsProfile['contactMethods'];
+        error?: unknown;
+      } | null;
       if (!response.ok) {
         throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
       }
@@ -350,23 +338,15 @@ export function ProfileDomain() {
       setVerificationModal(null);
       setVerificationCode('');
       setContactNotice(`${CONTACT_LABELS[verificationModal.channel]} verified.`);
-      await me.reload();
+      await reload();
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       setContactError(resolveUserSettingsErrorCopy(reason, 'Verification failed. Please try again.'));
     } finally {
       setVerificationSaving(false);
     }
-  }, [me, verificationCode, verificationModal]);
+  }, [reload, verificationCode, verificationModal]);
 
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading user settings...</section>;
-  if (me.error || !me.data) {
-    return (
-      <section className="rd-canvas-module body-m">
-        {resolveUserSettingsErrorCopy(me.error ?? 'coreui.errors.auth.contextUnavailable', 'User settings are unavailable right now.')}
-      </section>
-    );
-  }
   if (!profile) {
     return <section className="rd-canvas-module body-m">User settings are unavailable right now.</section>;
   }
@@ -385,7 +365,12 @@ export function ProfileDomain() {
             <input
               className="roma-input body-m"
               value={draft.firstName}
-              onChange={(event) => setDraft((current) => ({ ...current, firstName: event.target.value }))}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  firstName: event.target.value,
+                }))
+              }
               disabled={saving}
             />
           </label>
@@ -394,7 +379,12 @@ export function ProfileDomain() {
             <input
               className="roma-input body-m"
               value={draft.lastName}
-              onChange={(event) => setDraft((current) => ({ ...current, lastName: event.target.value }))}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  lastName: event.target.value,
+                }))
+              }
               disabled={saving}
             />
           </label>
@@ -403,7 +393,12 @@ export function ProfileDomain() {
             <input
               className="roma-input body-m"
               value={draft.primaryLanguage}
-              onChange={(event) => setDraft((current) => ({ ...current, primaryLanguage: event.target.value }))}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  primaryLanguage: event.target.value,
+                }))
+              }
               disabled={saving}
             />
           </label>
@@ -417,7 +412,7 @@ export function ProfileDomain() {
                 setDraft((current) => ({
                   ...current,
                   country: nextCountry,
-                  timezone: nextCountry ? resolveUserSettingsTimezone(nextCountry, current.timezone, null) ?? '' : '',
+                  timezone: nextCountry ? (resolveUserSettingsTimezone(nextCountry, current.timezone, null) ?? '') : '',
                 }));
               }}
               disabled={saving}
@@ -436,7 +431,12 @@ export function ProfileDomain() {
               <select
                 className="roma-input body-m"
                 value={draft.timezone}
-                onChange={(event) => setDraft((current) => ({ ...current, timezone: event.target.value }))}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    timezone: event.target.value,
+                  }))
+                }
                 disabled={saving || !draft.country}
               >
                 {timezoneOptions.map((timezone) => (
@@ -462,14 +462,7 @@ export function ProfileDomain() {
           </p>
         ) : null}
         <div className="roma-inline-stack" style={{ justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="solid"
-            type="button"
-            onClick={() => void saveProfile()}
-            disabled={saving}
-          >
+          <button className="diet-btn-txt" data-size="md" data-variant="solid" type="button" onClick={() => void saveProfile()} disabled={saving}>
             <span className="diet-btn-txt__label body-m">{saving ? 'Saving...' : 'Save settings'}</span>
           </button>
         </div>
@@ -511,7 +504,12 @@ export function ProfileDomain() {
 
       <section className="rd-canvas-module">
         <h2 className="heading-6">Contact methods</h2>
-        <div className="roma-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+        <div
+          className="roma-grid"
+          style={{
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          }}
+        >
           {(['phone', 'whatsapp'] as UserContactChannel[]).map((channel) => {
             const state = contactStates[channel];
             const pendingExpiry = formatChallengeExpiry(state.challengeExpiresAt);
@@ -537,7 +535,14 @@ export function ProfileDomain() {
                     placeholder="+1234567890"
                   />
                 </label>
-                <div className="roma-inline-stack" style={{ justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+                <div
+                  className="roma-inline-stack"
+                  style={{
+                    justifyContent: 'flex-end',
+                    gap: '12px',
+                    marginTop: '12px',
+                  }}
+                >
                   {state.pendingValue ? (
                     <button
                       className="diet-btn-txt"
@@ -618,9 +623,7 @@ export function ProfileDomain() {
           <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-contact-verification-title">
             <h2 id="roma-contact-verification-title">Verify {CONTACT_LABELS[verificationModal.channel]}</h2>
             <p className="body-m">Enter the 6-digit verification code for {verificationModal.pendingValue}.</p>
-            {verificationModal.previewCode ? (
-              <p className="body-s">Local preview code: {verificationModal.previewCode}</p>
-            ) : null}
+            {verificationModal.previewCode ? <p className="body-s">Local preview code: {verificationModal.previewCode}</p> : null}
             <label className="roma-field" style={{ marginTop: '12px' }}>
               <span className="label-s">Verification code</span>
               <input

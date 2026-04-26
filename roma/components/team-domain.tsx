@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
-import { resolveAccountPolicyFromRomaAuthz, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
+import { useRomaAccountContext } from './roma-account-context';
 
 type AccountMembersResponse = {
   accountId: string;
@@ -38,30 +38,20 @@ function resolveMemberLabel(member: AccountMembersResponse['members'][number]): 
 }
 
 export function TeamDomain() {
-  const me = useRomaMe();
-  const accountApi = useRomaAccountApi(me.data);
-  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
-  const policy = useMemo(
-    () => (context.accountId ? resolveAccountPolicyFromRomaAuthz(me.data, context.accountId) : null),
-    [context.accountId, me.data],
-  );
-  const canManage = policy?.role === 'owner' || policy?.role === 'admin';
+  const { accountContext, accountPolicy } = useRomaAccountContext();
+  const accountApi = useRomaAccountApi();
+  const canManage = accountPolicy.role === 'owner' || accountPolicy.role === 'admin';
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<AccountMembersResponse | null>(null);
   const [invitations, setInvitations] = useState<AccountInvitationsResponse | null>(null);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('viewer');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
-  const accountId = context.accountId;
+  const accountId = accountContext.accountId;
 
   const refreshMembers = useCallback(async () => {
-    if (!accountId) {
-      setMembers(null);
-      setError(null);
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
@@ -85,10 +75,10 @@ export function TeamDomain() {
     } finally {
       setLoading(false);
     }
-  }, [accountApi, accountId]);
+  }, [accountApi]);
 
   const refreshInvitations = useCallback(async () => {
-    if (!accountId || !canManage) {
+    if (!canManage) {
       setInvitations(null);
       setInviteError(null);
       return;
@@ -98,10 +88,7 @@ export function TeamDomain() {
       const response = await accountApi.fetchRaw(`/api/account/team/invitations`, {
         method: 'GET',
       });
-      const payload = (await response.json().catch(() => null)) as
-        | AccountInvitationsResponse
-        | { error?: unknown }
-        | null;
+      const payload = (await response.json().catch(() => null)) as AccountInvitationsResponse | { error?: unknown } | null;
       if (!response.ok) {
         throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
       }
@@ -116,7 +103,7 @@ export function TeamDomain() {
       setInvitations(null);
       setInviteError(resolveAccountShellErrorCopy(message, 'Failed to load invitations. Please try again.'));
     }
-  }, [accountApi, accountId, canManage]);
+  }, [accountApi, canManage]);
 
   useEffect(() => {
     void refreshMembers();
@@ -136,7 +123,9 @@ export function TeamDomain() {
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
       });
-      const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
+      const payload = (await response.json().catch(() => null)) as {
+        error?: unknown;
+      } | null;
       if (!response.ok) {
         throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
       }
@@ -160,7 +149,9 @@ export function TeamDomain() {
         const response = await accountApi.fetchRaw(`/api/account/team/invitations/${encodeURIComponent(invitationId)}`, {
           method: 'DELETE',
         });
-        const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
+        const payload = (await response.json().catch(() => null)) as {
+          error?: unknown;
+        } | null;
         if (!response.ok) {
           throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
         }
@@ -175,43 +166,23 @@ export function TeamDomain() {
     [accountApi, accountId, canManage, refreshInvitations],
   );
 
-  if (me.loading) return <section className="rd-canvas-module body-m">Loading team context...</section>;
-  if (me.error || !me.data) {
-    return (
-      <section className="rd-canvas-module body-m">
-        {resolveAccountShellErrorCopy(
-          me.error ?? 'coreui.errors.auth.contextUnavailable',
-          'Team is unavailable right now. Please try again.',
-        )}
-      </section>
-    );
-  }
-  if (!accountId) {
-    return <section className="rd-canvas-module body-m">No account is available for team controls right now.</section>;
-  }
-
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {context.accountName || 'Current account'}</p>
-        {context.accountSlug ? <p className="body-s">Slug: {context.accountSlug}</p> : null}
+        <p className="body-m">Account: {accountContext.accountName}</p>
+        <p className="body-s">Slug: {accountContext.accountSlug}</p>
 
         {error ? (
           <div className="roma-inline-stack">
             <p className="body-m">{error}</p>
-            <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="line2"
-              type="button"
-              onClick={() => void refreshMembers()}
-              disabled={loading}
-            >
+            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshMembers()} disabled={loading}>
               <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
           </div>
         ) : null}
       </section>
+
+      {loading && !members && !error ? <section className="rd-canvas-module body-m">Loading team members...</section> : null}
 
       {members ? (
         <section className="rd-canvas-module">
@@ -252,28 +223,16 @@ export function TeamDomain() {
         <>
           <section className="rd-canvas-module">
             <h2 className="heading-h4">Invite people</h2>
-            <p className="body-s">
-              Invitations are Berlin-owned. Team shows pending invitations here until the Berlin acceptance flow is completed.
-            </p>
+            <p className="body-s">Invitations are Berlin-owned. Team shows pending invitations here until the Berlin acceptance flow is completed.</p>
             {inviteError ? <p className="body-m">{inviteError}</p> : null}
             <div className="roma-form-grid">
               <label className="roma-field">
                 <span className="label-s">Email</span>
-                <input
-                  className="roma-input body-m"
-                  value={inviteEmail}
-                  onChange={(event) => setInviteEmail(event.target.value)}
-                  disabled={inviteLoading}
-                />
+                <input className="roma-input body-m" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} disabled={inviteLoading} />
               </label>
               <label className="roma-field">
                 <span className="label-s">Role</span>
-                <select
-                  className="roma-input body-m"
-                  value={inviteRole}
-                  onChange={(event) => setInviteRole(event.target.value)}
-                  disabled={inviteLoading}
-                >
+                <select className="roma-input body-m" value={inviteRole} onChange={(event) => setInviteRole(event.target.value)} disabled={inviteLoading}>
                   <option value="viewer">viewer</option>
                   <option value="editor">editor</option>
                   <option value="admin">admin</option>
@@ -326,7 +285,13 @@ export function TeamDomain() {
                     </td>
                   </tr>
                 ))}
-                {!invitations || invitations.invitations.length === 0 ? (
+                {!invitations ? (
+                  <tr>
+                    <td colSpan={4} className="body-s">
+                      Loading invitations...
+                    </td>
+                  </tr>
+                ) : invitations.invitations.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="body-s">
                       No pending invitations.

@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { useRomaAccountApi } from './account-api';
 import { AccountLocaleSettingsCard } from './account-locale-settings-card';
-import { resolveActiveRomaAccount, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
+import { useRomaAccountContext } from './roma-account-context';
 
 type AccountMembersResponse = {
   members: Array<{
@@ -46,11 +46,9 @@ function resolveSettingsErrorCopy(reason: string, fallback: string): string {
 }
 
 export function SettingsDomain() {
-  const me = useRomaMe();
-  const accountApi = useRomaAccountApi(me.data);
-  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
-  const activeAccountId = context.accountId;
-  const activeAccount = useMemo(() => resolveActiveRomaAccount(me.data), [me.data]);
+  const { activeAccount, accountContext, accountPolicy, data, reload } = useRomaAccountContext();
+  const accountApi = useRomaAccountApi();
+  const activeAccountId = accountContext.accountId;
 
   const [members, setMembers] = useState<AccountMembersResponse | null>(null);
   const [membersError, setMembersError] = useState<string | null>(null);
@@ -65,11 +63,6 @@ export function SettingsDomain() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadMembers = useCallback(async () => {
-    if (!activeAccountId) {
-      setMembers(null);
-      setMembersError(null);
-      return;
-    }
     setMembersLoading(true);
     setMembersError(null);
     try {
@@ -93,7 +86,7 @@ export function SettingsDomain() {
     } finally {
       setMembersLoading(false);
     }
-  }, [accountApi, activeAccountId]);
+  }, [accountApi]);
 
   useEffect(() => {
     if (activeAccount?.role === 'owner') {
@@ -111,7 +104,9 @@ export function SettingsDomain() {
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ nextOwnerUserId }),
       });
-      const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
+      const payload = (await response.json().catch(() => null)) as {
+        error?: unknown;
+      } | null;
       if (!response.ok) {
         throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
       }
@@ -134,7 +129,9 @@ export function SettingsDomain() {
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ confirmAccountId: activeAccountId }),
       });
-      const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
+      const payload = (await response.json().catch(() => null)) as {
+        error?: unknown;
+      } | null;
       if (!response.ok) {
         throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
       }
@@ -147,42 +144,9 @@ export function SettingsDomain() {
     }
   }, [accountApi, activeAccountId]);
 
-  if (me.loading) {
-    return <section className="rd-canvas-module body-m">Loading account context...</section>;
-  }
-
-  if (me.error || !me.data) {
-    return (
-      <section className="rd-canvas-module body-m">
-        {resolveSettingsErrorCopy(
-          me.error ?? 'coreui.errors.auth.contextUnavailable',
-          'Account settings are unavailable right now.',
-        )}
-      </section>
-    );
-  }
-
-  if (!activeAccountId || !activeAccount) {
-    return (
-      <section className="rd-canvas-module">
-        <p className="body-m">No account context is available.</p>
-        <button
-          className="diet-btn-txt"
-          data-size="md"
-          data-variant="primary"
-          type="button"
-          onClick={() => void me.reload()}
-        >
-          <span className="diet-btn-txt__label body-m">Reload</span>
-        </button>
-      </section>
-    );
-  }
-
   const canManageAccount = activeAccount.role === 'owner';
   const canEditLocales = activeAccount.role === 'owner' || activeAccount.role === 'admin';
-  const ownerCandidates =
-    members?.members.filter((member) => member.userId !== me.data?.user.id && member.role !== 'owner') ?? [];
+  const ownerCandidates = members?.members.filter((member) => member.userId !== data.user.id && member.role !== 'owner') ?? [];
   const deleteGuardMatches = deleteConfirm.trim() === activeAccount.slug;
 
   return (
@@ -211,16 +175,10 @@ export function SettingsDomain() {
       <section className="rd-canvas-module">
         <h2 className="heading-6">Plan</h2>
         <p className="body-m">Current plan: {activeAccount.tier}</p>
-        <p className="body-s">
-          Plan and billing changes are handled through the billing/commercial flow, not directly in Account Settings.
-        </p>
+        <p className="body-s">Plan and billing changes are handled through the billing/commercial flow, not directly in Account Settings.</p>
       </section>
 
-      <AccountLocaleSettingsCard
-        accountId={activeAccountId}
-        canEdit={canEditLocales}
-        onSaved={() => me.reload()}
-      />
+      <AccountLocaleSettingsCard accountId={activeAccountId} canEdit={canEditLocales} policyProfile={accountPolicy.profile} onSaved={() => reload()} />
 
       <section className="rd-canvas-module">
         <h2 className="heading-6">Ownership</h2>
@@ -237,10 +195,10 @@ export function SettingsDomain() {
           >
             <option value="">Select next owner</option>
             {ownerCandidates.map((member) => (
-            <option key={member.userId} value={member.userId}>
+              <option key={member.userId} value={member.userId}>
                 {resolvePersonLabel(member.profile, member.userId)} ({member.profile?.primaryEmail ?? member.userId})
-            </option>
-          ))}
+              </option>
+            ))}
           </select>
           <button
             className="diet-btn-txt"
@@ -250,14 +208,10 @@ export function SettingsDomain() {
             onClick={() => void transferOwner()}
             disabled={!canManageAccount || ownerTransferLoading || !nextOwnerUserId}
           >
-            <span className="diet-btn-txt__label body-m">
-              {ownerTransferLoading ? 'Transferring…' : 'Transfer ownership'}
-            </span>
+            <span className="diet-btn-txt__label body-m">{ownerTransferLoading ? 'Transferring…' : 'Transfer ownership'}</span>
           </button>
         </div>
-        {ownerCandidates.length === 0 && canManageAccount ? (
-          <p className="body-s">Add another member before transferring ownership.</p>
-        ) : null}
+        {ownerCandidates.length === 0 && canManageAccount ? <p className="body-s">Add another member before transferring ownership.</p> : null}
         {ownerTransferError ? <p className="body-m">{ownerTransferError}</p> : null}
       </section>
 
@@ -283,9 +237,7 @@ export function SettingsDomain() {
             onClick={() => void deleteAccount()}
             disabled={!canManageAccount || deleteLoading || !deleteGuardMatches}
           >
-            <span className="diet-btn-txt__label body-m">
-              {deleteLoading ? 'Deleting…' : 'Delete account'}
-            </span>
+            <span className="diet-btn-txt__label body-m">{deleteLoading ? 'Deleting…' : 'Delete account'}</span>
           </button>
         </div>
         {deleteError ? <p className="body-m">{deleteError}</p> : null}

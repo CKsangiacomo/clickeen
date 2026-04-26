@@ -5,7 +5,6 @@ import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel
 import localesJson from '@clickeen/l10n/locales.json';
 import type { PolicyProfile } from '@clickeen/ck-policy';
 import { useRomaAccountApi } from './account-api';
-import { useRomaMe } from './use-roma-me';
 import {
   materializeAccountAdditionalLocales,
   normalizeAdditionalAccountLocales,
@@ -58,15 +57,17 @@ const DEFAULT_COUNTRIES_BY_LOCALE: Record<string, string[]> = {
 
 function resolveLocaleUiLabel(code: string): string {
   const normalized = normalizeLocaleToken(code) ?? code;
-  const label = resolveLocaleLabel({ locales: CANONICAL_LOCALES, uiLocale: 'en', targetLocale: normalized });
+  const label = resolveLocaleLabel({
+    locales: CANONICAL_LOCALES,
+    uiLocale: 'en',
+    targetLocale: normalized,
+  });
   return `${label} (${normalized})`;
 }
 
 function buildDefaultCountryToLocale(args: { enabledLocales: string[]; baseLocale: string }): Record<string, string> {
   const baseLocale = normalizeLocaleToken(args.baseLocale);
-  const enabledSet = new Set(
-    args.enabledLocales.map((entry) => normalizeLocaleToken(entry)).filter((entry): entry is string => Boolean(entry)),
-  );
+  const enabledSet = new Set(args.enabledLocales.map((entry) => normalizeLocaleToken(entry)).filter((entry): entry is string => Boolean(entry)));
   const mapping: Record<string, string> = {};
 
   const prioritized = CANONICAL_LOCALES.map((entry) => entry.code).filter((code) => enabledSet.has(code) && code !== baseLocale);
@@ -90,8 +91,7 @@ const ACCOUNT_LOCALES_REASON_COPY: Record<string, string> = {
   'coreui.errors.payload.invalidJson': 'The account language request was invalid. Please try again.',
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
   'coreui.errors.account.locales.invalid': 'Account language settings are invalid. Please review the inputs and try again.',
-  'coreui.errors.account.locales.baseLocaleLocked':
-    'Base language is locked after your first widget save. Changing it later requires support/migration.',
+  'coreui.errors.account.locales.baseLocaleLocked': 'Base language is locked after your first widget save. Changing it later requires support/migration.',
   'coreui.upsell.reason.capReached': 'Your current plan cannot enable more languages.',
 };
 
@@ -107,29 +107,19 @@ function resolveAccountLocalesErrorCopy(reason: unknown, fallback: string): stri
 export function AccountLocaleSettingsCard(args: {
   accountId: string;
   canEdit: boolean;
+  policyProfile: PolicyProfile;
   onSaved?: (() => Promise<void> | void) | undefined;
 }) {
-  const me = useRomaMe();
-  const accountApi = useRomaAccountApi(me.data);
+  const accountApi = useRomaAccountApi();
   const [loading, setLoading] = useState(true);
+  const [settingsReady, setSettingsReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [baseLocaleLocked, setBaseLocaleLocked] = useState(false);
   const [draftBaseLocale, setDraftBaseLocale] = useState('en');
   const [draftAdditionalLocales, setDraftAdditionalLocales] = useState<string[]>([]);
-  const policyProfile = useMemo(() => {
-    const raw = typeof me.data?.authz?.profile === 'string' ? me.data.authz.profile.trim() : '';
-    switch (raw) {
-      case 'free':
-      case 'tier1':
-      case 'tier2':
-      case 'tier3':
-        return raw as PolicyProfile;
-      default:
-        return null;
-    }
-  }, [me.data]);
+  const policyProfile = args.policyProfile;
   const usesSystemLocale = usesSystemChosenAdditionalLocale(policyProfile);
 
   const loadSettings = useCallback(async () => {
@@ -152,8 +142,12 @@ export function AccountLocaleSettingsCard(args: {
       setDraftBaseLocale(baseLocale);
       setDraftAdditionalLocales(additionalLocales);
       setSuccess(null);
+      setSettingsReady(true);
     } catch (nextError) {
-      setError(resolveAccountLocalesErrorCopy(nextError instanceof Error ? nextError.message : nextError, 'Failed to load account languages. Please try again.'));
+      setSettingsReady(false);
+      setError(
+        resolveAccountLocalesErrorCopy(nextError instanceof Error ? nextError.message : nextError, 'Failed to load account languages. Please try again.'),
+      );
     } finally {
       setLoading(false);
     }
@@ -173,10 +167,7 @@ export function AccountLocaleSettingsCard(args: {
       }),
     [baseLocale, draftAdditionalLocales, policyProfile],
   );
-  const systemChosenLocale = useMemo(
-    () => (usesSystemLocale ? resolveSystemChosenAdditionalLocale({ baseLocale }) : null),
-    [baseLocale, usesSystemLocale],
-  );
+  const systemChosenLocale = useMemo(() => (usesSystemLocale ? resolveSystemChosenAdditionalLocale({ baseLocale }) : null), [baseLocale, usesSystemLocale]);
   const localeOptions = useMemo(
     () =>
       CANONICAL_LOCALES.filter((entry) => entry.code !== baseLocale).map((entry) => ({
@@ -206,7 +197,10 @@ export function AccountLocaleSettingsCard(args: {
         v: 1,
         baseLocale: normalizedBase,
         ip: {
-          countryToLocale: buildDefaultCountryToLocale({ enabledLocales, baseLocale: normalizedBase }),
+          countryToLocale: buildDefaultCountryToLocale({
+            enabledLocales,
+            baseLocale: normalizedBase,
+          }),
         },
       },
     };
@@ -222,122 +216,119 @@ export function AccountLocaleSettingsCard(args: {
       setSuccess('Saved languages.');
     } catch (nextError) {
       setError(
-        resolveAccountLocalesErrorCopy(
-          nextError instanceof Error ? nextError.message : nextError,
-          'Saving account languages failed. Please try again.',
-        ),
+        resolveAccountLocalesErrorCopy(nextError instanceof Error ? nextError.message : nextError, 'Saving account languages failed. Please try again.'),
       );
     } finally {
       setSaving(false);
     }
-  }, [
-    args,
-    accountApi,
-    draftAdditionalLocales,
-    draftBaseLocale,
-    loadSettings,
-    policyProfile,
-  ]);
+  }, [args, accountApi, draftAdditionalLocales, draftBaseLocale, loadSettings, policyProfile]);
 
   return (
     <section className="rd-canvas-module">
       <h2 className="heading-6">Languages</h2>
       <p className="body-m">These account languages drive automatic translation after Save for every widget in this account.</p>
       <p className="body-s">
-        Base language is the source language for translation overlays. It can be changed only before the first widget save in this account. After authoring starts, changing it becomes a support/migration operation.
+        Base language is the source language for translation overlays. It can be changed only before the first widget save in this account. After authoring
+        starts, changing it becomes a support/migration operation.
       </p>
       {!args.canEdit ? <p className="body-s">Read-only mode: language settings are disabled.</p> : null}
       {error ? <p className="body-m">{error}</p> : null}
       {success ? <p className="body-s">{success}</p> : null}
 
-      <div className="roma-inline-stack">
-        <label className="roma-inline-stack" htmlFor="roma-settings-base-locale">
-          <span className="label-s">Base language</span>
-          <select
-            id="roma-settings-base-locale"
-            className="roma-select"
-            value={baseLocale}
-            disabled={loading || saving || !args.canEdit || baseLocaleLocked}
-            onChange={(event) => {
-              const nextBase = normalizeLocaleToken(event.target.value) ?? 'en';
-              setDraftBaseLocale(nextBase);
-              setDraftAdditionalLocales((current) => current.filter((entry) => entry !== nextBase));
-            }}
-          >
-            {CANONICAL_LOCALES.map((entry) => (
-              <option key={entry.code} value={entry.code}>
-                {resolveLocaleUiLabel(entry.code)}
-              </option>
-            ))}
-          </select>
-          <span className="body-s">
-            {baseLocaleLocked
-              ? 'Base language is locked because this account already has saved widgets. Changing it later requires support/migration.'
-              : 'Choose the source language before the first widget save. After authoring starts, this setting locks.'}
-          </span>
-        </label>
-
+      {!settingsReady ? (
         <div className="roma-inline-stack">
-          <div className="label-s">Enabled languages</div>
-          <p className="body-s">
-            {usesSystemLocale
-              ? `Base language is always enabled. Free includes one system-selected additional language${systemChosenLocale ? `: ${resolveLocaleUiLabel(systemChosenLocale)}` : ''}.`
-              : 'Base language is always enabled. Add the other languages that should update automatically after Save.'}
-          </p>
-          <div className="roma-locale-settings__list">
-            {localeOptions.map((entry) => (
-              <label key={entry.code} className="roma-locale-settings__option">
-                <input
-                  type="checkbox"
-                  checked={entry.enabled}
-                  disabled={loading || saving || !args.canEdit || usesSystemLocale}
-                  onChange={(event) => {
-                    const nextChecked = event.target.checked;
-                    setDraftAdditionalLocales((current) => {
-                      const values = new Set(current);
-                      if (nextChecked) values.add(entry.code);
-                      else values.delete(entry.code);
-                      return Array.from(values).sort((a, b) => a.localeCompare(b));
-                    });
-                  }}
-                />
-                <span className="body-s">{entry.label}</span>
-              </label>
-            ))}
+          {!error ? <p className="body-m">Loading account languages...</p> : null}
+          <div className="rd-canvas-module__actions">
+            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
+              <span className="diet-btn-txt__label body-m">{loading ? 'Refreshing…' : 'Refresh'}</span>
+            </button>
           </div>
         </div>
+      ) : null}
 
+      {settingsReady ? (
         <div className="roma-inline-stack">
-          <div className="label-s">Widget locale behavior</div>
-          <p className="body-s">
-            Locale switcher visibility and IP-based locale behavior now belong to each widget in Builder.
-            Settings only decide which languages this account has available and keep the country-to-locale support map up to date.
-          </p>
-        </div>
+          <label className="roma-inline-stack" htmlFor="roma-settings-base-locale">
+            <span className="label-s">Base language</span>
+            <select
+              id="roma-settings-base-locale"
+              className="roma-select"
+              value={baseLocale}
+              disabled={loading || saving || !args.canEdit || baseLocaleLocked}
+              onChange={(event) => {
+                const nextBase = normalizeLocaleToken(event.target.value) ?? 'en';
+                setDraftBaseLocale(nextBase);
+                setDraftAdditionalLocales((current) => current.filter((entry) => entry !== nextBase));
+              }}
+            >
+              {CANONICAL_LOCALES.map((entry) => (
+                <option key={entry.code} value={entry.code}>
+                  {resolveLocaleUiLabel(entry.code)}
+                </option>
+              ))}
+            </select>
+            <span className="body-s">
+              {baseLocaleLocked
+                ? 'Base language is locked because this account already has saved widgets. Changing it later requires support/migration.'
+                : 'Choose the source language before the first widget save. After authoring starts, this setting locks.'}
+            </span>
+          </label>
 
-        <div className="rd-canvas-module__actions">
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="line2"
-            type="button"
-            disabled={loading || saving}
-            onClick={() => void loadSettings()}
-          >
-            <span className="diet-btn-txt__label body-m">{loading ? 'Refreshing…' : 'Refresh'}</span>
-          </button>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
-            type="button"
-            disabled={loading || saving || !args.canEdit}
-            onClick={() => void saveSettings()}
-          >
-            <span className="diet-btn-txt__label body-m">{saving ? 'Saving…' : 'Save languages'}</span>
-          </button>
+          <div className="roma-inline-stack">
+            <div className="label-s">Enabled languages</div>
+            <p className="body-s">
+              {usesSystemLocale
+                ? `Base language is always enabled. Free includes one system-selected additional language${systemChosenLocale ? `: ${resolveLocaleUiLabel(systemChosenLocale)}` : ''}.`
+                : 'Base language is always enabled. Add the other languages that should update automatically after Save.'}
+            </p>
+            <div className="roma-locale-settings__list">
+              {localeOptions.map((entry) => (
+                <label key={entry.code} className="roma-locale-settings__option">
+                  <input
+                    type="checkbox"
+                    checked={entry.enabled}
+                    disabled={loading || saving || !args.canEdit || usesSystemLocale}
+                    onChange={(event) => {
+                      const nextChecked = event.target.checked;
+                      setDraftAdditionalLocales((current) => {
+                        const values = new Set(current);
+                        if (nextChecked) values.add(entry.code);
+                        else values.delete(entry.code);
+                        return Array.from(values).sort((a, b) => a.localeCompare(b));
+                      });
+                    }}
+                  />
+                  <span className="body-s">{entry.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="roma-inline-stack">
+            <div className="label-s">Widget locale behavior</div>
+            <p className="body-s">
+              Locale switcher visibility and IP-based locale behavior now belong to each widget in Builder. Settings only decide which languages this account
+              has available and keep the country-to-locale support map up to date.
+            </p>
+          </div>
+
+          <div className="rd-canvas-module__actions">
+            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
+              <span className="diet-btn-txt__label body-m">{loading ? 'Refreshing…' : 'Refresh'}</span>
+            </button>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="primary"
+              type="button"
+              disabled={loading || saving || !args.canEdit}
+              onClick={() => void saveSettings()}
+            >
+              <span className="diet-btn-txt__label body-m">{saving ? 'Saving…' : 'Save languages'}</span>
+            </button>
+          </div>
         </div>
-      </div>
+      ) : null}
     </section>
   );
 }

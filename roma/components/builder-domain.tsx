@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRomaAccountApi } from './account-api';
 import { getCompiledWidget, normalizeCompiledWidgetType } from './compiled-widget-cache';
-import { resolveAccountPolicyFromRomaAuthz, resolveActiveRomaContext, useRomaMe } from './use-roma-me';
+import { useRomaAccountContext } from './roma-account-context';
 
 type BuilderDomainProps = {
   initialPublicId?: string;
@@ -36,12 +36,7 @@ type BobOpenEditorFailedMessage = {
   message?: string | null;
 };
 
-type BobAccountCommand =
-  | 'update-instance'
-  | AccountAssetHostCommand
-  | 'load-translations'
-  | 'run-copilot'
-  | 'attach-ai-outcome';
+type BobAccountCommand = 'update-instance' | AccountAssetHostCommand | 'load-translations' | 'run-copilot' | 'attach-ai-outcome';
 
 type BobAccountCommandMessage = {
   type: 'bob:account-command';
@@ -128,9 +123,7 @@ function resolveBobBaseUrl(): string {
   return 'https://bob.dev.clickeen.com';
 }
 
-function buildRomaBuilderRoute(args: {
-  publicId: string;
-}): string {
+function buildRomaBuilderRoute(args: { publicId: string }): string {
   return `/builder/${encodeURIComponent(args.publicId)}`;
 }
 
@@ -171,16 +164,12 @@ function resolveBobAccountCommandRequest(args: {
     case 'run-copilot':
       return {
         method: 'POST',
-        path: `/api/account/instances/${encodeURIComponent(
-          publicId,
-        )}/copilot`,
+        path: `/api/account/instances/${encodeURIComponent(publicId)}/copilot`,
       };
     case 'attach-ai-outcome':
       return {
         method: 'POST',
-        path: `/api/account/instances/${encodeURIComponent(
-          publicId,
-        )}/copilot/outcome`,
+        path: `/api/account/instances/${encodeURIComponent(publicId)}/copilot/outcome`,
       };
     default:
       return null;
@@ -198,8 +187,8 @@ function decodeBuilderPathPublicId(pathname: string): string {
 }
 
 export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
-  const me = useRomaMe();
-  const accountApi = useRomaAccountApi(me.data);
+  const { activeAccount, accountPolicy } = useRomaAccountContext();
+  const accountApi = useRomaAccountApi();
   const router = useRouter();
   const pathname = usePathname();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -212,8 +201,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
   });
   const [openError, setOpenError] = useState<string | null>(null);
 
-  const context = useMemo(() => resolveActiveRomaContext(me.data), [me.data]);
-  const accountId = context.accountId;
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
   const pathPublicId = useMemo(() => decodeBuilderPathPublicId(pathname), [pathname]);
@@ -243,21 +230,12 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
   }, [activePublicId, initialPublicId, pathPublicId]);
 
   const runBobAccountCommand = useCallback(
-    async (args: {
-      source: Window;
-      requestId: string;
-      command: BobAccountCommand;
-      publicId: string;
-      headers?: Record<string, string>;
-      body?: unknown;
-    }) => {
+    async (args: { source: Window; requestId: string; command: BobAccountCommand; publicId: string; headers?: Record<string, string>; body?: unknown }) => {
       const route = resolveBobAccountCommandRequest({
         command: args.command,
         publicId: args.publicId,
         body: args.body,
       });
-      const currentAccountId = String(context.accountId || '').trim();
-
       const reply = (payload: Omit<HostAccountCommandResultMessage, 'type'>) => {
         const message: HostAccountCommandResultMessage = {
           type: 'host:account-command-result',
@@ -265,18 +243,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         };
         args.source.postMessage(message, bobBaseUrl);
       };
-
-      if (!currentAccountId) {
-        reply({
-          requestId: args.requestId,
-          command: args.command,
-          publicId: args.publicId,
-          ok: false,
-          status: 409,
-          message: 'coreui.errors.auth.contextUnavailable',
-        });
-        return;
-      }
 
       if (!route) {
         reply({
@@ -337,7 +303,11 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
           message:
             response.ok || !payload || typeof payload !== 'object'
               ? undefined
-              : typeof (payload as { error?: { reasonKey?: unknown; message?: unknown } }).error?.message === 'string'
+              : typeof (
+                    payload as {
+                      error?: { reasonKey?: unknown; message?: unknown };
+                    }
+                  ).error?.message === 'string'
                 ? String((payload as { error?: { message?: unknown } }).error?.message)
                 : typeof (payload as { error?: { reasonKey?: unknown } }).error?.reasonKey === 'string'
                   ? String((payload as { error?: { reasonKey?: unknown } }).error?.reasonKey)
@@ -355,17 +325,11 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         });
       }
     },
-    [accountApi, bobBaseUrl, context.accountId],
+    [accountApi, bobBaseUrl],
   );
 
   const postOpenEditorAndWait = useCallback(
-    (
-      args: {
-        targetWindow: Window;
-        message: BobOpenEditorPayload;
-        openSeq: number;
-      },
-    ): Promise<void> => {
+    (args: { targetWindow: Window; message: BobOpenEditorPayload; openSeq: number }): Promise<void> => {
       const requestId = crypto.randomUUID();
       const payload: BobOpenEditorMessage = {
         ...args.message,
@@ -399,10 +363,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
           if (event.origin !== bobBaseUrl) return;
           const source = iframeRef.current?.contentWindow;
           if (!source || event.source !== source) return;
-          const data = event.data as
-            | BobOpenEditorAppliedMessage
-            | BobOpenEditorFailedMessage
-            | null;
+          const data = event.data as BobOpenEditorAppliedMessage | BobOpenEditorFailedMessage | null;
           if (!data || typeof data !== 'object') return;
           const dataRequestId = typeof data.requestId === 'string' ? data.requestId.trim() : '';
           if (dataRequestId !== requestId) return;
@@ -439,17 +400,14 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
 
   const openActiveInstanceInBob = useCallback(async () => {
     const targetWindow = iframeRef.current?.contentWindow;
-    if (!targetWindow || !context.accountId || !activePublicId) return;
-    if (me.loading) return;
+    if (!targetWindow || !activePublicId) return;
 
     const openSeq = ++openDispatchSeqRef.current;
     setOpenError(null);
 
     try {
       const compileFetchStartedAt = performance.now();
-      const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(
-        `/api/builder/${encodeURIComponent(activePublicId)}/open`,
-      );
+      const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(`/api/builder/${encodeURIComponent(activePublicId)}/open`);
       const widgetType = builderOpen.widgetType;
       const normalizedInstanceWidgetType = normalizeCompiledWidgetType(widgetType);
       const compiledResult = await getCompiledWidget(widgetType);
@@ -458,13 +416,9 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       if (openSeq !== openDispatchSeqRef.current) return;
 
       const resolvedPublicId = builderOpen.publicId;
-      const label =
-        typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim()
-          ? builderOpen.displayName.trim()
-          : resolvedPublicId;
+      const label = typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim() ? builderOpen.displayName.trim() : resolvedPublicId;
       const config = builderOpen.config as Record<string, unknown>;
-      const policy = resolveAccountPolicyFromRomaAuthz(me.data, context.accountId);
-      const baseLocale = parseAccountL10nPolicyStrict(me.data?.activeAccount?.l10nPolicy).baseLocale;
+      const baseLocale = parseAccountL10nPolicyStrict(activeAccount.l10nPolicy).baseLocale;
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
         publicId: resolvedPublicId,
@@ -475,7 +429,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         instanceData: config,
         source: builderOpen.source,
         meta: builderOpen.meta ?? null,
-        policy,
+        policy: accountPolicy,
       };
       await postOpenEditorAndWait({
         targetWindow,
@@ -497,18 +451,14 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [accountApi, activePublicId, context.accountId, me.data, me.loading, postOpenEditorAndWait]);
+  }, [accountApi, accountPolicy, activeAccount.l10nPolicy, activePublicId, postOpenEditorAndWait]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {
       if (event.origin !== bobBaseUrl) return;
       const source = iframeRef.current?.contentWindow;
       if (!source || event.source !== source) return;
-      const data = event.data as
-        | BobReadyMessage
-        | BobSwitchMessage
-        | BobAccountCommandMessage
-        | null;
+      const data = event.data as BobReadyMessage | BobSwitchMessage | BobAccountCommandMessage | null;
       if (!data || typeof data !== 'object') return;
       if (data.type === 'bob:session-ready') {
         bobReadyRef.current = true;
@@ -530,8 +480,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         const requestId = typeof message.requestId === 'string' ? message.requestId.trim() : '';
         const command = message.command ?? null;
         const publicId = typeof message.publicId === 'string' ? message.publicId.trim() : '';
-        const headers =
-          message.headers && typeof message.headers === 'object' ? message.headers : undefined;
+        const headers = message.headers && typeof message.headers === 'object' ? message.headers : undefined;
         if (!requestId || !command || !publicId) return;
         void runBobAccountCommand({
           source,
@@ -547,7 +496,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activePublicId, bobBaseUrl, context.accountId, openActiveInstanceInBob, runBobAccountCommand]);
+  }, [activePublicId, bobBaseUrl, openActiveInstanceInBob, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
@@ -564,38 +513,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
     void openActiveInstanceInBob();
   }, [activePublicId, openActiveInstanceInBob]);
 
-  const hasAccountId = Boolean(accountId);
-  const waitingForAccountContext = !hasAccountId && me.loading;
-  const builderContextErrorCopy = me.error
-    ? resolveBuilderErrorCopy(me.error, 'Builder is unavailable right now. Please try again.')
-    : null;
-  const builderOpenErrorCopy = resolveBuilderErrorCopy(
-    openError || '',
-    'Builder could not open this widget. Please try again.',
-  );
-
-  if (!hasAccountId) {
-    if (waitingForAccountContext) {
-      return (
-        <div className="rd-canvas-module">
-          <p className="body-m">Loading builder context…</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="rd-canvas-module">
-        <p className="body-m">
-          {builderContextErrorCopy || 'No account context is available for Builder right now.'}
-        </p>
-        <div className="rd-canvas-module__actions">
-          <Link className="diet-btn-txt" data-size="md" data-variant="primary" href="/settings">
-            <span className="diet-btn-txt__label body-m">Open settings</span>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
 
   if (!activePublicId) {
     return (

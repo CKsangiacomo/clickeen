@@ -12,14 +12,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
     return <TeamMemberDomain memberId={memberId} />;
   }
 
-  return (
-    <DomainPageShell
-      activeDomain="team"
-      title="Team"
-      fallback="Loading team member..."
-      Component={TeamMemberPageContent}
-    />
-  );
+  return <DomainPageShell activeDomain="team" title="Team" Component={TeamMemberPageContent} />;
 }
 
 export const runtime = 'edge';

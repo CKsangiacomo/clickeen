@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { RomaAuthRedirect } from '../../components/roma-auth-redirect';
+import { RomaAccountBoundary } from '../../components/roma-account-context';
 
 export default function AuthedLayout({ children }: { children: ReactNode }) {
-  return <RomaAuthRedirect>{children}</RomaAuthRedirect>;
+  return <RomaAccountBoundary>{children}</RomaAccountBoundary>;
 }
 
 export const runtime = 'edge';

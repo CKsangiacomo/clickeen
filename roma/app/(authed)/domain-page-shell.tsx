@@ -8,15 +8,14 @@ import { RomaDomainErrorBoundary } from '../../components/roma-domain-error-boun
 type DomainPageShellProps = {
   activeDomain: RomaDomainKey;
   title: string;
-  fallback: string;
   Component: ComponentType;
 };
 
-export function DomainPageShell({ activeDomain, title, fallback, Component }: DomainPageShellProps) {
+export function DomainPageShell({ activeDomain, title, Component }: DomainPageShellProps) {
   return (
     <RomaShell activeDomain={activeDomain} title={title} headerRight={<RomaShellDefaultActions />}>
       <RomaAccountNoticeModal />
-      <Suspense fallback={<section className="roma-module-surface">{fallback}</section>}>
+      <Suspense fallback={<section className="roma-module-surface">Loading domain...</section>}>
         <RomaDomainErrorBoundary domainLabel={title} resetKey={activeDomain}>
           <Component />
         </RomaDomainErrorBoundary>

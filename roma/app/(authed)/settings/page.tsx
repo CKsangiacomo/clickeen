@@ -2,7 +2,7 @@ import { SettingsDomain } from '../../../components/settings-domain';
 import { DomainPageShell } from '../domain-page-shell';
 
 export default function SettingsPage() {
-  return <DomainPageShell activeDomain="settings" title="Settings" fallback="Loading settings context..." Component={SettingsDomain} />;
+  return <DomainPageShell activeDomain="settings" title="Settings" Component={SettingsDomain} />;
 }
 
 export const runtime = 'edge';

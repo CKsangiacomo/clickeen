@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { fetchSameOriginJson } from './same-origin-json';
+import { useRomaAccountContext } from './roma-account-context';
 import type { RomaMeResponse } from './use-roma-me';
 
 type RomaAccountRequestInit = RequestInit & { timeoutMs?: number };
@@ -18,11 +19,7 @@ export function resolveRomaAccountCapsule(data: RomaMeResponse | null | undefine
   return value || null;
 }
 
-export function buildRomaAccountHeaders(args?: {
-  accountCapsule?: string | null;
-  headers?: HeadersInit;
-  contentType?: string | null;
-}): Headers | undefined {
+export function buildRomaAccountHeaders(args?: { accountCapsule?: string | null; headers?: HeadersInit; contentType?: string | null }): Headers | undefined {
   const headers = new Headers(args?.headers);
   const accountCapsule = typeof args?.accountCapsule === 'string' ? args.accountCapsule.trim() : '';
   if (accountCapsule) {
@@ -34,10 +31,7 @@ export function buildRomaAccountHeaders(args?: {
   return Array.from(headers.keys()).length > 0 ? headers : undefined;
 }
 
-export async function fetchRomaAccountJson<T = unknown>(
-  url: string,
-  init?: RomaAccountRequestInit & { accountCapsule?: string | null },
-): Promise<T> {
+export async function fetchRomaAccountJson<T = unknown>(url: string, init?: RomaAccountRequestInit & { accountCapsule?: string | null }): Promise<T> {
   const { accountCapsule, headers, ...rest } = init ?? {};
   return fetchSameOriginJson<T>(url, {
     ...rest,
@@ -45,7 +39,8 @@ export async function fetchRomaAccountJson<T = unknown>(
   });
 }
 
-export function useRomaAccountApi(data: RomaMeResponse | null | undefined): RomaAccountApi {
+export function useRomaAccountApi(): RomaAccountApi {
+  const { data } = useRomaAccountContext();
   const accountCapsule = useMemo(() => resolveRomaAccountCapsule(data), [data]);
 
   const buildHeaders = useCallback(
