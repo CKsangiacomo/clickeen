@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { collectConfigMediaAssetIds, materializeConfigMedia } from '@clickeen/ck-contracts';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 
@@ -20,7 +21,7 @@ export function Workspace({
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const { compiled, instanceData } = session;
+  const { accountAssets, compiled, instanceData } = session;
   const { preview, setPreview } = chrome;
   const publicId = chrome.meta?.publicId ?? '';
   const device = preview.device;
@@ -36,6 +37,7 @@ export function Workspace({
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
+  const [previewInstanceData, setPreviewInstanceData] = useState<Record<string, unknown>>(instanceData);
   const effectiveReadyPreviewLocales = useMemo(() => {
     const readyLocales = Array.from(
       new Set(
@@ -58,7 +60,7 @@ export function Workspace({
       : fallbackPreviewLocale;
   const latestRef = useRef({
     compiled,
-    instanceData,
+    instanceData: previewInstanceData,
     publicId,
     baseLocale,
     previewMode,
@@ -71,7 +73,7 @@ export function Workspace({
   useEffect(() => {
     latestRef.current = {
       compiled,
-      instanceData,
+      instanceData: previewInstanceData,
       publicId,
       baseLocale,
       previewMode,
@@ -82,7 +84,7 @@ export function Workspace({
     };
   }, [
     compiled,
-    instanceData,
+    previewInstanceData,
     publicId,
     baseLocale,
     previewMode,
@@ -91,6 +93,37 @@ export function Workspace({
     device,
     theme,
   ]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const assetIds = collectConfigMediaAssetIds(instanceData);
+    if (!assetIds.length) {
+      setPreviewInstanceData(instanceData);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void accountAssets
+      .resolveAssets(assetIds)
+      .then(({ assetsById }) => {
+        if (cancelled) return;
+        const materialized = materializeConfigMedia(instanceData, assetsById);
+        setPreviewInstanceData(
+          materialized && typeof materialized === 'object' && !Array.isArray(materialized)
+            ? (materialized as Record<string, unknown>)
+            : instanceData,
+        );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setPreviewInstanceData(instanceData);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accountAssets, instanceData]);
 
   useEffect(() => {
     if (!switcherNotice) return undefined;
@@ -104,7 +137,7 @@ export function Workspace({
   }, [hasWidget, compiled]);
 
   const iframeBackdrop = (() => {
-    const raw = (instanceData as any)?.stage?.background;
+    const raw = (previewInstanceData as any)?.stage?.background;
     if (typeof raw !== 'string') return undefined;
     const value = raw.trim();
     if (!value) return undefined;
@@ -196,7 +229,7 @@ export function Workspace({
       widgetname: compiled.widgetname,
       publicId,
       baseLocale,
-      state: instanceData,
+      state: previewInstanceData,
       locale: effectivePreviewLocale,
       previewMode,
       device,
@@ -208,7 +241,7 @@ export function Workspace({
     hasWidget,
     compiled,
     publicId,
-    instanceData,
+    previewInstanceData,
     effectivePreviewLocale,
     previewMode,
     baseLocale,
