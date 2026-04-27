@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
-const tokyoWidgetsDir = path.join(repoRoot, 'tokyo', 'widgets');
+const tokyoWidgetsDir = path.join(repoRoot, 'tokyo', 'product', 'widgets');
 
 const TEXT_EXTS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs', '.json', '.html', '.css', '.md']);
 const SKIP_DIRS = new Set([

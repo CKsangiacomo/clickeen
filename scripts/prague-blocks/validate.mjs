@@ -3,7 +3,7 @@ import path from 'node:path';
 import { globSync } from 'glob';
 
 const REPO_ROOT = path.resolve(new URL('../..', import.meta.url).pathname);
-const DEFAULT_INPUT = path.join(REPO_ROOT, 'tokyo', 'widgets');
+const DEFAULT_INPUT = path.join(REPO_ROOT, 'tokyo', 'prague', 'pages');
 
 const args = process.argv.slice(2);
 const getArg = (name, fallback) => {
@@ -13,7 +13,7 @@ const getArg = (name, fallback) => {
 };
 
 const inputRoot = getArg('--input', DEFAULT_INPUT);
-const pageFiles = globSync(path.join(inputRoot, '**/pages/*.json'), { nodir: true });
+const pageFiles = globSync(path.join(inputRoot, '**/*.json'), { nodir: true });
 
 const VALID_SPLIT_LAYOUTS = new Set(['visual-left', 'visual-right', 'stacked']);
 
