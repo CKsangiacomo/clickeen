@@ -65,10 +65,11 @@ jobs:
             fi
           elif [[ -n "${BEFORE_SHA:-}" && ! "${BEFORE_SHA:-}" =~ ^0+$ ]]; then
             if ! git cat-file -e "$BEFORE_SHA^{commit}"; then
-              echo "Unable to inspect before SHA ${BEFORE_SHA}; refusing to guess migration state." >&2
-              exit 1
-            fi
-            if git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -qE '^supabase/migrations/'; then
+              echo "Unable to inspect before SHA ${BEFORE_SHA}; falling back to HEAD^ for migration diff."
+              if git rev-parse HEAD^ >/dev/null 2>&1 && git diff --name-only HEAD^ HEAD | grep -qE '^supabase/migrations/'; then
+                MIGRATION_CHANGED=true
+              fi
+            elif git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -qE '^supabase/migrations/'; then
               MIGRATION_CHANGED=true
             fi
           fi
