@@ -1,6 +1,6 @@
 # 077 PRD - Berlin Auth Session And Internal Bridge Closure
 
-Status: CUT 5 CI VERIFICATION PENDING - DO NOT START CUT 6 UNTIL MIGRATION WORKFLOW IS GREEN
+Status: IN PROGRESS - CUT 6 STARTED AFTER CUT 5 CI GREEN
 Owner: Berlin identity/session boundary, Roma account shell
 Priority: P0
 Date: 2026-04-26
@@ -1065,7 +1065,7 @@ The RPC must rely on:
 
 ### 2026-04-26 Cut 5 Execution Notes
 
-Status: CI VERIFICATION PENDING - STOPPED BEFORE CUT 6
+Status: GREEN
 
 What changed:
 
@@ -1112,12 +1112,15 @@ git diff --check
 
 Both returned green.
 
-CI verification path:
+CI verification:
 
 - The full Cut 5 gate requires applying the Supabase migration.
 - This workspace does not have the Supabase CLI, `psql`, Docker, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD_CLOUD_DEV`, or `SUPABASE_PROJECT_REF_CLOUD_DEV` available to apply or verify the migration locally or against cloud-dev.
-- The accepted verification path is GitHub CI on `main`: `.github/workflows/cloud-dev-workers.yml` applies `supabase/migrations/**` through `supabase db push --linked --include-all --yes` before deploying Berlin.
-- Because the migration apply gate is not green yet, Cut 6 has not started.
+- The accepted verification path was GitHub CI on `main`: `.github/workflows/cloud-dev-workers.yml` applies `supabase/migrations/**` through `supabase db push --linked --include-all --yes` before deploying Berlin.
+- Commit `6d90405695171089b36a6176722bb0b9a09b29aa` pushed to `github/main`.
+- `cloud-dev workers deploy` completed successfully for that commit, proving migration apply and Berlin deploy passed.
+- `cloud-dev roma app verify` completed successfully for that commit.
+- Cut 6 may start.
 
 ---
 
@@ -1172,6 +1175,41 @@ Bootstrap is canonical account truth for Roma. It must be correct first, then fa
 - If caching is implemented, stale capsule cannot survive a role/tier/status/name/slug change.
 - `pnpm exec tsc -p berlin/tsconfig.json --noEmit`
 
+### 2026-04-27 Cut 6 Execution Notes
+
+Status: GREEN
+
+What changed:
+
+- Parallelized bootstrap principal state reads: profile, account memberships, and contact methods now start together.
+- Parallelized bootstrap identity loading and signing-key resolution.
+- Replaced membership-created-at `authzVersion` with a deterministic `authz:v2` hash over every signed authz input plus signing key id.
+- Did not add authz capsule caching, following PRD Tenet 9.
+
+Files changed:
+
+- `berlin/src/account-state.ts`
+
+Deletion/simplification proof:
+
+- Removed the sequential profile -> memberships -> contact-method waterfall in `loadPrincipalAccountState`.
+- Removed `activeAccount.membershipVersion || fallback` as the authz version source.
+- Kept bootstrap read-only and fail-fast.
+
+LOC proof:
+
+- Cut 6 touched files against `HEAD`: 86 insertions, 37 deletions.
+- Net positive is from the explicit stable authz hash helper; no cache or second bootstrap owner was added.
+
+Verification:
+
+```bash
+corepack pnpm exec tsc -p berlin/tsconfig.json --noEmit
+git diff --check
+```
+
+Both returned green.
+
 ---
 
 ## Cut 7 - Consolidate Profile Normalization And Remove Wasteful Re-Reads
@@ -1215,6 +1253,45 @@ There are duplicate profile row types and duplicate profile-location normalizati
 - `rg "function normalizeProfileLocation|type UserProfileRow" berlin/src` shows only intentional owners.
 - `pnpm exec tsc -p berlin/tsconfig.json --noEmit`
 
+### 2026-04-27 Cut 7 Execution Notes
+
+Status: GREEN
+
+What changed:
+
+- Added `berlin/src/profile-normalization.ts` as the single Berlin owner for profile row shape, boolean normalization, profile payload mapping, and profile country/timezone normalization.
+- Rewired account bootstrap state, account-member profile reads, and first-login account reconciliation to use that owner.
+- Changed profile update to return the patched profile from the authoritative `PATCH ... return=representation` result.
+- Removed the full `loadPrincipalAccountState` re-read after `/me` profile update; the route now returns the resolved current user plus the patched profile and unchanged contact methods.
+- Kept full account-state reloads for account create, owner transfer, and invitation accept because those writes change account context/authorization truth.
+
+Deletion/simplification proof:
+
+- Removed duplicate `UserProfileRow` and `UserProfileSummaryRow` shapes from `account-state`.
+- Removed duplicate `normalizeBoolean` and `normalizeProfileLocation` from `account-state`.
+- Removed duplicate profile-location normalization plus country/timezone helpers from `account-reconcile`.
+- Removed one wasteful post-profile-update principal-state reload from `routes-account`.
+
+LOC proof:
+
+- Tracked Cut 6+7 working diff at this checkpoint: 180 insertions, 170 deletions across tracked files.
+- New shared profile owner: 64 LOC, replacing duplicate row/normalization code in existing modules.
+
+Verification:
+
+```bash
+rg -n "function normalizeProfileLocation|type UserProfileRow" berlin/src
+corepack pnpm exec tsc -p berlin/tsconfig.json --noEmit
+git diff --check
+```
+
+All returned green. The `rg` ownership check now returns only:
+
+```text
+berlin/src/profile-normalization.ts:4:export type UserProfileRow = {
+berlin/src/profile-normalization.ts:33:export function normalizeProfileLocation(rawCountry: unknown, rawTimezone: unknown): {
+```
+
 ---
 
 ## Cut 8 - Replace Linear Route Dispatch With A Route Table
@@ -1250,6 +1327,38 @@ This is lower risk than the auth fixes, but it closes the maintainability issue 
 - No route is shadowed by a broader regex.
 - Health, JWKS, provider start/callback, finish, session, refresh, logout, bootstrap, and residual account routes still dispatch correctly.
 - `pnpm exec tsc -p berlin/tsconfig.json --noEmit`
+
+### 2026-04-27 Cut 8 Execution Notes
+
+Status: GREEN
+
+What changed:
+
+- Replaced the linear `if (pathname...)` dispatcher with one ordered `BERLIN_ROUTES` table in `berlin/src/route-dispatch.ts`.
+- Kept routing local to Berlin: no framework, no new package, no new abstraction outside this file.
+- Preserved the existing trailing-slash normalization, `methodNotAllowed()` behavior, URL parameter decoding, and `{ error: 'NOT_FOUND' }` fallback.
+- Kept the exact route order where shadowing matters, especially `/auth/login/provider/start` before `/auth/login/:provider/start` and account-member detail before account-member list.
+
+Deletion/simplification proof:
+
+- Deleted the old route-by-route conditional chain from `dispatchBerlinRequest`.
+- The surviving runtime surface is now visible as route data.
+- Removed password, Michael-token, Supabase-bridge, and V1 refresh surfaces were not reintroduced.
+
+LOC proof:
+
+- `berlin/src/route-dispatch.ts`: 207 insertions, 250 deletions.
+
+Verification:
+
+```bash
+rg -n "pathname ===|pathname\\.match|if \\(pathname|methodNotAllowed\\(" berlin/src/route-dispatch.ts
+rg -n "/auth/login/password|NEXT_PUBLIC_ROMA_PASSWORD_LOGIN|requestSupabasePasswordGrant|CLOUD_DEV_SMOKE_EMAIL|CLOUD_DEV_SMOKE_PASSWORD|/auth/michael/token|RefreshPayloadV1|payload\\.v === 1|version === 1|supabaseRefreshToken|supabase_bridge" berlin/src roma/app documentation/services documentation/architecture .github/workflows -g '!node_modules'
+corepack pnpm exec tsc -p berlin/tsconfig.json --noEmit
+git diff --check
+```
+
+All returned green. The structural route-dispatch check now returns only the table loop and the single generic method gate.
 
 ---
 
@@ -1300,6 +1409,30 @@ Run app/build commands required by touched areas. If route behavior or migration
 - No V1 refresh compatibility remains.
 - No implicit token-presence session-mode branch remains.
 - Final `git diff` shows deletions of the old mechanisms, not only additive wrappers.
+
+### 2026-04-27 Cut 9 Local Execution Notes
+
+Status: LOCAL GREEN - CLOUD VERIFICATION RUNS FROM THE PUSHED `main` COMMIT
+
+What changed:
+
+- Updated Berlin service docs to state that `CK_INTERNAL_SERVICE_JWT` is only for the explicit internal-control route, not product auth/bootstrap/Builder/account registry paths.
+- Updated the Cloudflare cloud-dev checklist to make the same product-runtime rule explicit while preserving San Francisco/internal-tooling secret ownership.
+- Confirmed Berlin and Roma service docs already describe the surviving provider-auth, bootstrap, registry, and no-password-login surfaces.
+
+Verification:
+
+```bash
+corepack pnpm exec tsc -p berlin/tsconfig.json --noEmit
+corepack pnpm exec tsc -p roma/tsconfig.json --noEmit
+PATH="/tmp/clickeen-pnpm-shim:$PATH" corepack pnpm lint
+PATH="/tmp/clickeen-pnpm-shim:$PATH" corepack pnpm typecheck
+COREPACK_ENABLE_DOWNLOAD_PROMPT=0 corepack pnpm --filter @clickeen/roma lint
+COREPACK_ENABLE_DOWNLOAD_PROMPT=0 NEXT_PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com corepack pnpm --filter @clickeen/roma build
+git diff --check
+```
+
+All returned green locally. The `/tmp/clickeen-pnpm-shim` entry is a temporary local PATH shim because this machine has `corepack pnpm` but no standalone `pnpm` binary for Turbo to spawn.
 
 ---
 

@@ -48,264 +48,221 @@ import {
 
 export { BerlinAuthTicketDO };
 
+type RouteHandlerContext = {
+  request: Request;
+  env: Env;
+  match: RegExpMatchArray;
+};
+
+type RouteHandler = (context: RouteHandlerContext) => Response | Promise<Response>;
+
+type BerlinRoute = {
+  pattern: RegExp;
+  methods: Partial<Record<string, RouteHandler>>;
+};
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function exact(pathname: string, methods: BerlinRoute['methods']): BerlinRoute {
+  return {
+    pattern: new RegExp(`^${escapeRegex(pathname)}$`),
+    methods,
+  };
+}
+
+function capture(match: RegExpMatchArray, index: number): string {
+  return decodeURIComponent(match[index] || '');
+}
+
+const BERLIN_ROUTES: BerlinRoute[] = [
+  exact('/internal/healthz', {
+    GET: () => handleHealthz(),
+  }),
+  {
+    pattern: /^\/internal\/control\/users\/([^/]+)\/revoke-sessions$/,
+    methods: {
+      POST: ({ request, env, match }) => handleInternalRevokeUserSessions(request, env, capture(match, 1)),
+    },
+  },
+  exact('/.well-known/jwks.json', {
+    GET: ({ env }) => handleJwks(env),
+  }),
+  exact('/auth/login/provider/start', {
+    POST: ({ request, env }) => handleProviderLoginStart(request, env),
+  }),
+  exact('/auth/login/provider/callback', {
+    GET: ({ request, env }) => handleProviderLoginCallback(request, env),
+  }),
+  {
+    pattern: /^\/auth\/login\/([^/]+)\/start$/,
+    methods: {
+      GET: ({ request, env, match }) => handleProviderLoginRedirectStart(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/auth\/login\/([^/]+)\/callback$/,
+    methods: {
+      GET: ({ request, env, match }) => handleProviderLoginCallback(request, env, capture(match, 1)),
+    },
+  },
+  exact('/auth/finish', {
+    POST: ({ request, env }) => handleFinish(request, env),
+  }),
+  exact('/auth/session', {
+    GET: ({ request, env }) => handleSession(request, env),
+  }),
+  exact('/v1/me', {
+    GET: ({ request, env }) => handleMe(request, env),
+    PUT: ({ request, env }) => handleMeUpdate(request, env),
+  }),
+  exact('/v1/me/email-change', {
+    POST: ({ request, env }) => handleMeEmailChange(request, env),
+  }),
+  {
+    pattern: /^\/v1\/me\/contact-methods\/([^/]+)\/start$/,
+    methods: {
+      POST: ({ request, env, match }) => handleMeContactMethodStart(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/me\/contact-methods\/([^/]+)\/verify$/,
+    methods: {
+      POST: ({ request, env, match }) => handleMeContactMethodVerify(request, env, capture(match, 1)),
+    },
+  },
+  exact('/v1/me/identities', {
+    GET: ({ request, env }) => handleMeIdentities(request, env),
+  }),
+  exact('/v1/accounts', {
+    GET: ({ request, env }) => handleAccounts(request, env),
+    POST: ({ request, env }) => handleAccountCreate(request, env),
+  }),
+  {
+    pattern: /^\/v1\/invitations\/([^/]+)\/accept$/,
+    methods: {
+      POST: ({ request, env, match }) => handleInvitationAccept(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/members\/([^/]+)$/,
+    methods: {
+      GET: ({ request, env, match }) => handleAccountMemberById(request, env, capture(match, 1), capture(match, 2)),
+      PATCH: ({ request, env, match }) => handleAccountMemberPatch(request, env, capture(match, 1), capture(match, 2)),
+      DELETE: ({ request, env, match }) =>
+        handleAccountMemberDeleteRoute(request, env, capture(match, 1), capture(match, 2)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/members$/,
+    methods: {
+      GET: ({ request, env, match }) => handleAccountMembers(request, env, capture(match, 1)),
+      POST: ({ request, env, match }) => handleAccountMembers(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/invitations\/([^/]+)$/,
+    methods: {
+      DELETE: ({ request, env, match }) =>
+        handleAccountInvitationDelete(request, env, capture(match, 1), capture(match, 2)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/invitations$/,
+    methods: {
+      GET: ({ request, env, match }) => handleAccountInvitations(request, env, capture(match, 1)),
+      POST: ({ request, env, match }) => handleAccountInvitations(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/widget-registry$/,
+    methods: {
+      GET: ({ request, env, match }) => handleAccountWidgetRegistry(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/instances\/public-ids$/,
+    methods: {
+      GET: ({ request, env, match }) => handleAccountInstancePublicIdsRegistry(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/instances\/registry$/,
+    methods: {
+      POST: ({ request, env, match }) => handleAccountInstanceRegistryCreate(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/instances\/([^/]+)\/registry$/,
+    methods: {
+      GET: ({ request, env, match }) =>
+        handleAccountInstanceRegistryByPublicId(request, env, capture(match, 1), capture(match, 2)),
+      DELETE: ({ request, env, match }) =>
+        handleAccountInstanceRegistryByPublicId(request, env, capture(match, 1), capture(match, 2)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/publish-containment$/,
+    methods: {
+      GET: ({ request, env, match }) => handleAccountPublishContainmentRegistry(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/locales$/,
+    methods: {
+      PUT: ({ request, env, match }) => handleAccountLocales(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/switch$/,
+    methods: {
+      POST: ({ request, env, match }) => handleAccountSwitch(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/lifecycle\/tier-drop\/dismiss$/,
+    methods: {
+      POST: ({ request, env, match }) => handleAccountLifecycleTierDropDismiss(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)\/owner-transfer$/,
+    methods: {
+      POST: ({ request, env, match }) => handleAccountOwnerTransfer(request, env, capture(match, 1)),
+    },
+  },
+  {
+    pattern: /^\/v1\/accounts\/([^/]+)$/,
+    methods: {
+      GET: ({ request, env, match }) => handleAccountById(request, env, capture(match, 1)),
+      DELETE: ({ request, env, match }) => handleAccountDelete(request, env, capture(match, 1)),
+    },
+  },
+  exact('/v1/session/bootstrap', {
+    GET: ({ request, env }) => handleSessionBootstrap(request, env),
+  }),
+  exact('/v1/templates/registry', {
+    GET: ({ request, env }) => handleTemplateRegistry(request, env),
+  }),
+  exact('/auth/refresh', {
+    POST: ({ request, env }) => handleRefresh(request, env),
+  }),
+  exact('/auth/logout', {
+    POST: ({ request, env }) => handleLogout(request, env),
+  }),
+];
+
 export async function dispatchBerlinRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
 
-  if (pathname === '/internal/healthz') {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return handleHealthz();
-  }
-
-  const internalRevokeSessionsMatch = pathname.match(/^\/internal\/control\/users\/([^/]+)\/revoke-sessions$/);
-  if (internalRevokeSessionsMatch) {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleInternalRevokeUserSessions(
-      request,
-      env,
-      decodeURIComponent(internalRevokeSessionsMatch[1] || ''),
-    );
-  }
-
-  if (pathname === '/.well-known/jwks.json') {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleJwks(env);
-  }
-
-  if (pathname === '/auth/login/provider/start') {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleProviderLoginStart(request, env);
-  }
-
-  if (pathname === '/auth/login/provider/callback') {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleProviderLoginCallback(request, env);
-  }
-
-  const providerStartMatch = pathname.match(/^\/auth\/login\/([^/]+)\/start$/);
-  if (providerStartMatch) {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleProviderLoginRedirectStart(request, env, decodeURIComponent(providerStartMatch[1] || ''));
-  }
-
-  const providerCallbackMatch = pathname.match(/^\/auth\/login\/([^/]+)\/callback$/);
-  if (providerCallbackMatch) {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleProviderLoginCallback(request, env, decodeURIComponent(providerCallbackMatch[1] || ''));
-  }
-
-  if (pathname === '/auth/finish') {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleFinish(request, env);
-  }
-
-  if (pathname === '/auth/session') {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleSession(request, env);
-  }
-
-  if (pathname === '/v1/me') {
-    if (request.method === 'GET') return await handleMe(request, env);
-    if (request.method === 'PUT') return await handleMeUpdate(request, env);
-    return methodNotAllowed();
-  }
-
-  if (pathname === '/v1/me/email-change') {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleMeEmailChange(request, env);
-  }
-
-  const meContactMethodMatch = pathname.match(/^\/v1\/me\/contact-methods\/([^/]+)\/(start|verify)$/);
-  if (meContactMethodMatch) {
-    const channel = decodeURIComponent(meContactMethodMatch[1] || '');
-    const action = meContactMethodMatch[2] || '';
-    if (request.method !== 'POST') return methodNotAllowed();
-    if (action === 'start') return await handleMeContactMethodStart(request, env, channel);
-    if (action === 'verify') return await handleMeContactMethodVerify(request, env, channel);
-    return methodNotAllowed();
-  }
-
-  if (pathname === '/v1/me/identities') {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleMeIdentities(request, env);
-  }
-
-  if (pathname === '/v1/accounts') {
-    if (request.method === 'GET') return await handleAccounts(request, env);
-    if (request.method === 'POST') return await handleAccountCreate(request, env);
-    return methodNotAllowed();
-  }
-
-  const invitationAcceptMatch = pathname.match(/^\/v1\/invitations\/([^/]+)\/accept$/);
-  if (invitationAcceptMatch) {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleInvitationAccept(request, env, decodeURIComponent(invitationAcceptMatch[1] || ''));
-  }
-
-  const accountMemberMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/members\/([^/]+)$/);
-  if (accountMemberMatch) {
-    if (request.method === 'GET') {
-      return await handleAccountMemberById(
-        request,
-        env,
-        decodeURIComponent(accountMemberMatch[1] || ''),
-        decodeURIComponent(accountMemberMatch[2] || ''),
-      );
-    }
-    if (request.method === 'PATCH') {
-      return await handleAccountMemberPatch(
-        request,
-        env,
-        decodeURIComponent(accountMemberMatch[1] || ''),
-        decodeURIComponent(accountMemberMatch[2] || ''),
-      );
-    }
-    if (request.method === 'DELETE') {
-      return await handleAccountMemberDeleteRoute(
-        request,
-        env,
-        decodeURIComponent(accountMemberMatch[1] || ''),
-        decodeURIComponent(accountMemberMatch[2] || ''),
-      );
-    }
-    return methodNotAllowed();
-  }
-
-  const accountMembersMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/members$/);
-  if (accountMembersMatch) {
-    if (request.method !== 'GET' && request.method !== 'POST') return methodNotAllowed();
-    return await handleAccountMembers(request, env, decodeURIComponent(accountMembersMatch[1] || ''));
-  }
-
-  const accountInvitationDeleteMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/invitations\/([^/]+)$/);
-  if (accountInvitationDeleteMatch) {
-    if (request.method !== 'DELETE') return methodNotAllowed();
-    return await handleAccountInvitationDelete(
-      request,
-      env,
-      decodeURIComponent(accountInvitationDeleteMatch[1] || ''),
-      decodeURIComponent(accountInvitationDeleteMatch[2] || ''),
-    );
-  }
-
-  const accountInvitationsMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/invitations$/);
-  if (accountInvitationsMatch) {
-    if (request.method !== 'GET' && request.method !== 'POST') return methodNotAllowed();
-    return await handleAccountInvitations(request, env, decodeURIComponent(accountInvitationsMatch[1] || ''));
-  }
-
-  const accountWidgetRegistryMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/widget-registry$/);
-  if (accountWidgetRegistryMatch) {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleAccountWidgetRegistry(
-      request,
-      env,
-      decodeURIComponent(accountWidgetRegistryMatch[1] || ''),
-    );
-  }
-
-  const accountInstancePublicIdsRegistryMatch = pathname.match(
-    /^\/v1\/accounts\/([^/]+)\/instances\/public-ids$/,
-  );
-  if (accountInstancePublicIdsRegistryMatch) {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleAccountInstancePublicIdsRegistry(
-      request,
-      env,
-      decodeURIComponent(accountInstancePublicIdsRegistryMatch[1] || ''),
-    );
-  }
-
-  const accountInstanceRegistryCreateMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/instances\/registry$/);
-  if (accountInstanceRegistryCreateMatch) {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleAccountInstanceRegistryCreate(
-      request,
-      env,
-      decodeURIComponent(accountInstanceRegistryCreateMatch[1] || ''),
-    );
-  }
-
-  const accountInstanceRegistryMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/instances\/([^/]+)\/registry$/);
-  if (accountInstanceRegistryMatch) {
-    if (request.method !== 'GET' && request.method !== 'DELETE') return methodNotAllowed();
-    return await handleAccountInstanceRegistryByPublicId(
-      request,
-      env,
-      decodeURIComponent(accountInstanceRegistryMatch[1] || ''),
-      decodeURIComponent(accountInstanceRegistryMatch[2] || ''),
-    );
-  }
-
-  const accountPublishContainmentRegistryMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/publish-containment$/);
-  if (accountPublishContainmentRegistryMatch) {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleAccountPublishContainmentRegistry(
-      request,
-      env,
-      decodeURIComponent(accountPublishContainmentRegistryMatch[1] || ''),
-    );
-  }
-
-  const accountLocalesMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/locales$/);
-  if (accountLocalesMatch) {
-    if (request.method !== 'PUT') return methodNotAllowed();
-    return await handleAccountLocales(request, env, decodeURIComponent(accountLocalesMatch[1] || ''));
-  }
-
-  const accountSwitchMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/switch$/);
-  if (accountSwitchMatch) {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleAccountSwitch(request, env, decodeURIComponent(accountSwitchMatch[1] || ''));
-  }
-
-  const accountTierDropDismissMatch = pathname.match(
-    /^\/v1\/accounts\/([^/]+)\/lifecycle\/tier-drop\/dismiss$/,
-  );
-  if (accountTierDropDismissMatch) {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleAccountLifecycleTierDropDismiss(
-      request,
-      env,
-      decodeURIComponent(accountTierDropDismissMatch[1] || ''),
-    );
-  }
-
-  const accountOwnerTransferMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/owner-transfer$/);
-  if (accountOwnerTransferMatch) {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleAccountOwnerTransfer(request, env, decodeURIComponent(accountOwnerTransferMatch[1] || ''));
-  }
-
-  const accountDetailMatch = pathname.match(/^\/v1\/accounts\/([^/]+)$/);
-  if (accountDetailMatch) {
-    if (request.method === 'GET') {
-      return await handleAccountById(request, env, decodeURIComponent(accountDetailMatch[1] || ''));
-    }
-    if (request.method === 'DELETE') {
-      return await handleAccountDelete(request, env, decodeURIComponent(accountDetailMatch[1] || ''));
-    }
-    return methodNotAllowed();
-  }
-
-  if (pathname === '/v1/session/bootstrap') {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleSessionBootstrap(request, env);
-  }
-
-  if (pathname === '/v1/templates/registry') {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleTemplateRegistry(request, env);
-  }
-
-  if (pathname === '/auth/refresh') {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleRefresh(request, env);
-  }
-
-  if (pathname === '/auth/logout') {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handleLogout(request, env);
+  for (const route of BERLIN_ROUTES) {
+    const match = pathname.match(route.pattern);
+    if (!match) continue;
+    const handler = route.methods[request.method];
+    if (!handler) return methodNotAllowed();
+    return await handler({ request, env, match });
   }
 
   return json({ error: 'NOT_FOUND' }, { status: 404 });

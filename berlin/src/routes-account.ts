@@ -134,23 +134,19 @@ export async function handleMeUpdate(request: Request, env: Env): Promise<Respon
   const parsed = parseUserProfilePatchPayload(payload);
   if (!parsed.ok) return parsed.response;
 
-  const writeError = await patchUserProfile({
+  const patched = await patchUserProfile({
     env,
     userId: resolved.principal.userId,
     patch: parsed.patch,
   });
-  if (writeError) return writeError;
-
-  const refreshed = await loadPrincipalAccountState({
-    env,
-    userId: resolved.principal.userId,
-    sessionRole: claimAsString(resolved.principal.claims.role),
-  });
-  if (!refreshed.ok) return refreshed.response;
+  if (!patched.ok) return patched.response;
 
   return json({
-    user: refreshed.value.user,
-    profile: refreshed.value.profile,
+    user: resolved.state.user,
+    profile: {
+      ...patched.profile,
+      contactMethods: resolved.state.profile.contactMethods,
+    },
   });
 }
 

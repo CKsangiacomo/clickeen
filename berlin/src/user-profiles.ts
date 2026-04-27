@@ -3,7 +3,10 @@ import {
   normalizeUserSettingsCountry,
   resolveUserSettingsTimezone,
 } from '@clickeen/ck-contracts';
+import type { BerlinUserProfilePayload } from './account-state.types';
 import { json, validationError } from './helpers';
+import { normalizeUserProfilePayload } from './profile-normalization';
+import type { UserProfileRow as BerlinUserProfileRow } from './profile-normalization';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env } from './types';
 
@@ -17,6 +20,10 @@ export type UserProfilePatch = {
 
 type ParseUserProfilePatchResult =
   | { ok: true; patch: UserProfilePatch }
+  | { ok: false; response: Response };
+
+type PatchUserProfileResult =
+  | { ok: true; profile: BerlinUserProfilePayload }
   | { ok: false; response: Response };
 
 function normalizeNullableField(value: unknown, maxLength: number): string | null | undefined {
@@ -131,12 +138,12 @@ export async function patchUserProfile(args: {
   env: Env;
   userId: string;
   patch: UserProfilePatch;
-}): Promise<Response | null> {
+}): Promise<PatchUserProfileResult> {
   const nextPatch: UserProfilePatch = { ...args.patch };
 
   if (args.patch.country !== undefined || args.patch.timezone !== undefined) {
     const current = await loadCurrentUserProfileRow(args);
-    if (!current.ok) return current.response;
+    if (!current.ok) return { ok: false, response: current.response };
 
     const currentCountry = normalizeUserSettingsCountry(current.row?.country);
     const currentTimezone = normalizeNullableField(current.row?.timezone, 120) ?? null;
@@ -144,7 +151,10 @@ export async function patchUserProfile(args: {
 
     if (!nextCountry) {
       if (args.patch.timezone !== undefined && args.patch.timezone !== null) {
-        return validationError('coreui.errors.payload.invalid', 'timezone requires country');
+        return {
+          ok: false,
+          response: validationError('coreui.errors.payload.invalid', 'timezone requires country'),
+        };
       }
       nextPatch.country = null;
       nextPatch.timezone = null;
@@ -155,7 +165,10 @@ export async function patchUserProfile(args: {
         requestedTimezone !== null &&
         !isUserSettingsTimezoneSupported(nextCountry, requestedTimezone)
       ) {
-        return validationError('coreui.errors.payload.invalid', 'timezone must match country');
+        return {
+          ok: false,
+          response: validationError('coreui.errors.payload.invalid', 'timezone must match country'),
+        };
       }
       nextPatch.country = nextCountry;
       nextPatch.timezone = resolveUserSettingsTimezone(nextCountry, requestedTimezone, currentTimezone);
@@ -170,24 +183,31 @@ export async function patchUserProfile(args: {
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(nextPatch),
   });
-  const payload = await readSupabaseAdminJson<Array<{ user_id?: unknown }> | Record<string, unknown>>(response);
+  const payload = await readSupabaseAdminJson<BerlinUserProfileRow[] | Record<string, unknown>>(response);
   if (!response.ok) {
-    return supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload);
+    return {
+      ok: false,
+      response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
+    };
   }
   const rows = Array.isArray(payload) ? payload : [];
-  if (!rows[0]?.user_id) {
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.auth.contextUnavailable',
-          detail: 'user profile missing',
+  const profile = normalizeUserProfilePayload(args.userId, rows[0] ?? null);
+  if (!profile) {
+    return {
+      ok: false,
+      response: json(
+        {
+          error: {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.auth.contextUnavailable',
+            detail: 'user profile missing',
+          },
         },
-      },
-      { status: 500 },
-    );
+        { status: 500 },
+      ),
+    };
   }
-  return null;
+  return { ok: true, profile };
 }
 
 export async function userProfileExists(args: {

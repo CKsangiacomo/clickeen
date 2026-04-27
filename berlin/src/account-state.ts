@@ -20,8 +20,10 @@ import type {
   WorkspaceTier,
 } from './account-state.types';
 import { loadUserContactMethods } from './contact-methods';
-import { internalError, validationError } from './helpers';
+import { enc, internalError, toBase64Url, validationError } from './helpers';
 import { resolveSigningContext } from './jwt-crypto';
+import { normalizeUserProfilePayload } from './profile-normalization';
+import type { UserProfileRow as BerlinUserProfileRow } from './profile-normalization';
 import { readSupabaseAdminListAll } from './supabase-list';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env, type SessionState } from './types';
@@ -31,18 +33,6 @@ const MEMBERSHIP_PAGE_SIZE = 200;
 const ACCOUNT_MEMBER_PAGE_SIZE = 200;
 const USER_PROFILE_QUERY_CHUNK_SIZE = 100;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-type UserProfileRow = {
-  user_id?: unknown;
-  primary_email?: unknown;
-  email_verified?: unknown;
-  given_name?: unknown;
-  family_name?: unknown;
-  primary_language?: unknown;
-  country?: unknown;
-  timezone?: unknown;
-  active_account_id?: unknown;
-};
 
 type AccountMembershipRow = {
   account_id?: unknown;
@@ -74,17 +64,6 @@ type AccountMemberRow = {
   created_at?: unknown;
 };
 
-type UserProfileSummaryRow = {
-  user_id?: unknown;
-  primary_email?: unknown;
-  given_name?: unknown;
-  family_name?: unknown;
-  primary_language?: unknown;
-  country?: unknown;
-  timezone?: unknown;
-  email_verified?: unknown;
-};
-
 type LoginIdentityRow = {
   id?: unknown;
   provider?: unknown;
@@ -110,16 +89,6 @@ function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
   return normalized || null;
-}
-
-function normalizeBoolean(value: unknown): boolean {
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
-    if (normalized === 'true') return true;
-    if (normalized === 'false') return false;
-  }
-  return false;
 }
 
 function normalizeRole(value: unknown): MemberRole | null {
@@ -204,20 +173,6 @@ function validateAccountLocaleState(rawLocales: unknown, rawPolicy: unknown, pat
   return issues;
 }
 
-function normalizeProfileLocation(rawCountry: unknown, rawTimezone: unknown): {
-  country: string | null;
-  timezone: string | null;
-} {
-  const country = normalizeUserSettingsCountry(rawCountry);
-  if (!country) return { country: null, timezone: null };
-
-  const timezone = asTrimmedString(rawTimezone);
-  return {
-    country,
-    timezone: timezone && isUserSettingsTimezoneSupported(country, timezone) ? timezone : null,
-  };
-}
-
 function resolveStage(env: Env): string {
   const stage = asTrimmedString(env.ENV_STAGE)?.toLowerCase();
   if (stage) return stage;
@@ -243,7 +198,7 @@ function selectDefaultAccount(
 async function loadUserProfileRow(
   env: Env,
   userId: string,
-): Promise<Result<UserProfileRow | null>> {
+): Promise<Result<BerlinUserProfileRow | null>> {
   const params = new URLSearchParams({
     select:
       'user_id,primary_email,email_verified,given_name,family_name,primary_language,country,timezone,active_account_id',
@@ -253,7 +208,7 @@ async function loadUserProfileRow(
   const response = await supabaseAdminFetch(env, `/rest/v1/user_profiles?${params.toString()}`, {
     method: 'GET',
   });
-  const payload = await readSupabaseAdminJson<UserProfileRow[] | Record<string, unknown>>(response);
+  const payload = await readSupabaseAdminJson<BerlinUserProfileRow[] | Record<string, unknown>>(response);
   if (!response.ok) {
     return {
       ok: false,
@@ -283,7 +238,7 @@ async function loadAccountMembershipRows(
 
 function normalizeUserProfile(
   userId: string,
-  row: UserProfileRow | null,
+  row: BerlinUserProfileRow | null,
 ): Result<NormalizedUserProfile | null> {
   const primaryEmail = asTrimmedString(row?.primary_email);
   if (!primaryEmail) return { ok: true, value: null };
@@ -291,21 +246,13 @@ function normalizeUserProfile(
   if (issues.length) {
     return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
   }
-  const location = normalizeProfileLocation(row?.country, row?.timezone);
+  const profile = normalizeUserProfilePayload(userId, row);
+  if (!profile) return { ok: true, value: null };
 
   return {
     ok: true,
     value: {
-      profile: {
-        userId,
-        primaryEmail,
-        emailVerified: normalizeBoolean(row?.email_verified),
-        givenName: asTrimmedString(row?.given_name),
-        familyName: asTrimmedString(row?.family_name),
-        primaryLanguage: asTrimmedString(row?.primary_language),
-        country: location.country,
-        timezone: location.timezone,
-      },
+      profile,
       activeAccountId: isUuid(asTrimmedString(row?.active_account_id))
         ? (asTrimmedString(row?.active_account_id) as string)
         : null,
@@ -359,18 +306,21 @@ export async function loadPrincipalAccountState(args: {
   userId: string;
   sessionRole: string | null;
 }): Promise<Result<PrincipalAccountState>> {
-  let profileResult = await loadUserProfileRow(args.env, args.userId);
+  const [profileResult, accountsResult, contactMethods] = await Promise.all([
+    loadUserProfileRow(args.env, args.userId),
+    loadAccountMembershipRows(args.env, args.userId),
+    loadUserContactMethods(args.env, args.userId),
+  ]);
   if (!profileResult.ok) return profileResult;
-
-  let accountsResult = await loadAccountMembershipRows(args.env, args.userId);
   if (!accountsResult.ok) return accountsResult;
+  if (!contactMethods.ok) return contactMethods;
 
-  let normalizedProfileResult = normalizeUserProfile(args.userId, profileResult.value);
+  const normalizedProfileResult = normalizeUserProfile(args.userId, profileResult.value);
   if (!normalizedProfileResult.ok) return normalizedProfileResult;
-  let normalizedProfile = normalizedProfileResult.value;
-  let normalizedAccountsResult = normalizeAccounts(accountsResult.value);
+  const normalizedProfile = normalizedProfileResult.value;
+  const normalizedAccountsResult = normalizeAccounts(accountsResult.value);
   if (!normalizedAccountsResult.ok) return normalizedAccountsResult;
-  let accounts = normalizedAccountsResult.value;
+  const accounts = normalizedAccountsResult.value;
 
   if (!normalizedProfile) {
     return {
@@ -379,8 +329,6 @@ export async function loadPrincipalAccountState(args: {
     };
   }
 
-  const contactMethods = await loadUserContactMethods(args.env, args.userId);
-  if (!contactMethods.ok) return contactMethods;
   normalizedProfile.profile.contactMethods = contactMethods.value;
 
   if (accounts.length === 0) {
@@ -485,6 +433,47 @@ export function findAccountContext(
   return state.accounts.find((entry) => entry.accountId === accountId) ?? null;
 }
 
+function stableJson(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map((entry) => stableJson(entry)).join(',')}]`;
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`)
+    .join(',')}}`;
+}
+
+async function resolveAuthzVersion(args: {
+  state: PrincipalAccountState;
+  activeAccount: BerlinAccountContext;
+  signingKid: string;
+  signedEntitlements: {
+    flags: Record<string, boolean>;
+    caps: Record<string, number | null>;
+    budgets: Record<string, { max: number | null }>;
+  };
+}): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    enc.encode(
+      stableJson({
+        userId: args.state.user.id,
+        accountId: args.activeAccount.accountId,
+        accountStatus: args.activeAccount.status,
+        accountIsPlatform: args.activeAccount.isPlatform,
+        accountName: args.activeAccount.name,
+        accountSlug: args.activeAccount.slug,
+        accountWebsiteUrl: args.activeAccount.websiteUrl,
+        role: args.activeAccount.role,
+        profile: args.activeAccount.tier,
+        entitlements: args.signedEntitlements,
+        signingKid: args.signingKid,
+      }),
+    ),
+  );
+  return `authz:v2:${toBase64Url(new Uint8Array(digest))}`;
+}
+
 export async function buildBootstrapPayload(args: {
   env: Env;
   state: PrincipalAccountState;
@@ -499,11 +488,11 @@ export async function buildBootstrapPayload(args: {
   }
 
   try {
-    const identities = await loadPrincipalIdentities({
+    const identitiesPromise = loadPrincipalIdentities({
       env: args.env,
       session: args.session,
     });
-    if (!identities.ok) return { ok: false, response: identities.response };
+    const signingContextPromise = resolveSigningContext(args.env);
 
     const policy = resolvePolicy({ profile: activeAccount.tier, role: activeAccount.role });
     const bootstrapEntitlements = {
@@ -521,10 +510,14 @@ export async function buildBootstrapPayload(args: {
 
     const nowSec = Math.floor(Date.now() / 1000);
     const expiresSec = nowSec + ROMA_AUTHZ_CAPSULE_TTL_SEC;
-    const authzVersion =
-      activeAccount.membershipVersion ||
-      `account:${activeAccount.accountId}:role:${activeAccount.role}:profile:${activeAccount.tier}`;
-    const signingContext = await resolveSigningContext(args.env);
+    const [identities, signingContext] = await Promise.all([identitiesPromise, signingContextPromise]);
+    if (!identities.ok) return { ok: false, response: identities.response };
+    const authzVersion = await resolveAuthzVersion({
+      state: args.state,
+      activeAccount,
+      signingKid: signingContext.kid,
+      signedEntitlements,
+    });
 
     const capsule = await mintRomaAccountAuthzCapsule(
       {
@@ -532,20 +525,20 @@ export async function buildBootstrapPayload(args: {
         privateKey: signingContext.privateKey,
       },
       {
-      sub: args.state.user.id,
-      userId: args.state.user.id,
-      accountId: activeAccount.accountId,
-      accountStatus: activeAccount.status,
-      accountIsPlatform: activeAccount.isPlatform,
-      accountName: activeAccount.name,
-      accountSlug: activeAccount.slug,
-      accountWebsiteUrl: activeAccount.websiteUrl,
-      entitlements: signedEntitlements,
-      role: activeAccount.role,
-      profile: activeAccount.tier,
-      authzVersion,
-      iat: nowSec,
-      exp: expiresSec,
+        sub: args.state.user.id,
+        userId: args.state.user.id,
+        accountId: activeAccount.accountId,
+        accountStatus: activeAccount.status,
+        accountIsPlatform: activeAccount.isPlatform,
+        accountName: activeAccount.name,
+        accountSlug: activeAccount.slug,
+        accountWebsiteUrl: activeAccount.websiteUrl,
+        entitlements: signedEntitlements,
+        role: activeAccount.role,
+        profile: activeAccount.tier,
+        authzVersion,
+        iat: nowSec,
+        exp: expiresSec,
       },
     );
 
@@ -600,7 +593,7 @@ async function loadUserProfilesByIds(
     const response = await supabaseAdminFetch(env, `/rest/v1/user_profiles?${params.toString()}`, {
       method: 'GET',
     });
-    const payload = await readSupabaseAdminJson<UserProfileSummaryRow[] | Record<string, unknown>>(response);
+    const payload = await readSupabaseAdminJson<BerlinUserProfileRow[] | Record<string, unknown>>(response);
     if (!response.ok) {
       return {
         ok: false,
@@ -610,23 +603,14 @@ async function loadUserProfilesByIds(
 
     for (const row of Array.isArray(payload) ? payload : []) {
       const userId = asTrimmedString(row.user_id);
-      const primaryEmail = asTrimmedString(row.primary_email);
-      if (!userId || !primaryEmail) continue;
+      if (!userId) continue;
       const issues = validateProfileLocation(row.country, row.timezone, `user_profiles.${userId}`);
       if (issues.length) {
         return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
       }
-      const location = normalizeProfileLocation(row.country, row.timezone);
-      map.set(userId, {
-        userId,
-        primaryEmail,
-        emailVerified: normalizeBoolean(row.email_verified),
-        givenName: asTrimmedString(row.given_name),
-        familyName: asTrimmedString(row.family_name),
-        primaryLanguage: asTrimmedString(row.primary_language),
-        country: location.country,
-        timezone: location.timezone,
-      });
+      const profile = normalizeUserProfilePayload(userId, row);
+      if (!profile) continue;
+      map.set(userId, profile);
     }
   }
 

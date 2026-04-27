@@ -1,6 +1,6 @@
-import { isUserSettingsTimezoneSupported, normalizeUserSettingsCountry } from '@clickeen/ck-contracts';
 import { acceptInvitationForPrincipal } from './account-invitations';
 import { internalError } from './helpers';
+import { normalizeProfileLocation } from './profile-normalization';
 import { readSupabaseAdminListAll } from './supabase-list';
 import { readSupabaseAdminJson, supabaseAdminFetch, supabaseAdminErrorResponse } from './supabase-admin';
 import { type Env } from './types';
@@ -90,20 +90,9 @@ function normalizeUuid(value: unknown): string | null {
     : null;
 }
 
-function normalizeCountry(value: unknown): string | null {
-  const country = asTrimmedString(value);
-  if (!country) return null;
-  const normalized = country.toUpperCase();
-  return /^[A-Z]{2}$/.test(normalized) ? normalized : null;
-}
-
 function normalizePrimaryLanguage(value: unknown): string | null {
   const locale = asTrimmedString(value);
   return locale ? locale.toLowerCase() : null;
-}
-
-function normalizeTimezone(value: unknown): string | null {
-  return asTrimmedString(value);
 }
 
 function normalizeRole(value: unknown): 'viewer' | 'editor' | 'admin' | 'owner' | null {
@@ -134,20 +123,6 @@ function roleRank(value: unknown): number {
   }
 }
 
-function normalizeProfileLocation(rawCountry: unknown, rawTimezone: unknown): {
-  country: string | null;
-  timezone: string | null;
-} {
-  const country = normalizeUserSettingsCountry(rawCountry);
-  if (!country) return { country: null, timezone: null };
-
-  const timezone = normalizeTimezone(rawTimezone);
-  return {
-    country,
-    timezone: timezone && isUserSettingsTimezoneSupported(country, timezone) ? timezone : null,
-  };
-}
-
 function toUserProfileSeed(identity: ProviderIdentity): UserProfileSeed | null {
   const primaryEmail = normalizeEmail(identity.email);
   if (!primaryEmail) return null;
@@ -159,10 +134,7 @@ function toUserProfileSeed(identity: ProviderIdentity): UserProfileSeed | null {
     givenName: asTrimmedString(identity.givenName),
     familyName: asTrimmedString(identity.familyName),
     primaryLanguage: normalizePrimaryLanguage(identity.primaryLanguage),
-    ...normalizeProfileLocation(
-      normalizeCountry(identity.country),
-      identity.timezone,
-    ),
+    ...normalizeProfileLocation(identity.country, identity.timezone),
   };
 }
 

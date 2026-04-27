@@ -16,6 +16,7 @@ Rules:
 - DevStudio is local-only and is not part of the Cloudflare Pages `cloud-dev` contract.
 - GitHub runtime verification stays unauthenticated until a real provider-based test adapter exists; do not keep public password login for smoke coverage.
 - Authenticated cloud-dev smoke is manual Google login, Roma bootstrap, Builder open/save, Widgets/Templates read, locales, assets, and logout.
+- Berlin/Roma product auth, bootstrap, Builder, account registry, Tokyo, and Tokyo-worker account-control paths must not require `CK_INTERNAL_SERVICE_JWT`. That shared secret is only for explicitly documented internal San Francisco/tooling surfaces.
 
 ## Bob
 

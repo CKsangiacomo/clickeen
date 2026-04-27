@@ -228,7 +228,7 @@ Recommended:
 - `BERLIN_ALLOWED_PROVIDERS` (default: `google`)
 - `BERLIN_FINISH_REDIRECT_URL` (cloud-dev points at Roma `/api/session/finish`)
 - `ENV_STAGE`
-- `CK_INTERNAL_SERVICE_JWT` only for explicit local/internal control tooling, not for Berlin/Roma Cloudflare product paths.
+- `CK_INTERNAL_SERVICE_JWT` only for the explicit internal-control route, not for Berlin/Roma Cloudflare product auth, bootstrap, Builder, or account registry paths.
 
 Legacy/compatibility:
 
