@@ -93,12 +93,12 @@ Current runtime contract:
 - Product-path save does not read the previous saved pointer to recover sibling metadata. Roma sends the current saved-pointer metadata explicitly on save, and Tokyo-worker writes that payload directly.
 - Product-path saved-config validation is owned once at the Tokyo-worker save helper boundary. The internal route does not keep a second parallel save-validity story for the same widget payload.
 - Product-path save writes/refreshes the current localization base snapshot/fingerprint on the saved widget pointer in Tokyo from `tokyo/widgets/{widgetType}/localization.json`.
-- Product-path save also writes the current saved-widget l10n summary (`baseLocale` + desired locale set) onto that same saved pointer and requires Tokyo-worker to accept one current widget translation state for that saved revision before Roma reports success.
-- Explicit Tokyo-worker sync converges overlay artifacts from that translation state.
+- Product-path save also writes the current saved-widget l10n summary (`baseLocale` + desired locale set), `generationId`, and translation `status` onto that same saved pointer before Roma reports success.
+- Explicit Tokyo-worker sync converges overlay artifacts from that saved widget `l10n` block.
 - Tokyo maintains current locale artifacts, but Builder readiness does not infer truth from public/live pointers.
-- Builder Translations reads consume the current Tokyo-worker translation state. If an older saved widget predates that state file, Tokyo-worker bootstraps it once from the Tokyo saved pointer plus matching text pointers, persists the new state, and then serves that state. Reads do not live-read Berlin or queue internals on panel open.
-- Bob/Roma product-path save does not inline LLM generation or live-surface convergence. It durably accepts translation state and then triggers queue delivery. If queue handoff or later execution fails, Tokyo-worker persists `failed` on the current translation state instead of leaving fake infinite progress behind.
-- When a new save writes the current translation state for an instance, queued older generations are ignored by `generationId`.
+- Builder Translations reads consume only the saved widget `l10n` block plus matching current text pointers for the same `baseFingerprint`. Reads do not live-read Berlin or queue internals on panel open.
+- Bob/Roma product-path save does not inline LLM generation or live-surface convergence. It records saved widget `l10n.status` and then triggers queue delivery. If queue handoff or later execution fails, Tokyo-worker persists `failed` on that saved pointer instead of leaving fake infinite progress behind.
+- When a new save writes a new `generationId` for an instance, queued older generations are ignored.
 - If locale generation for the latest save does not return current ops for a requested locale, Tokyo-worker does not publish that locale as current-ready for the new `baseFingerprint`.
 - For published instances, Tokyo-worker advances the live locale policy with the current-ready locale subset only. A missing locale drops out of public serving until current artifacts exist again.
 - Publish is the explicit live flip boundary: Roma calls `POST /__internal/renders/instances/:publicId/sync` with `live: true` so Tokyo-worker materializes the current live surface before publish returns success.
@@ -107,7 +107,7 @@ Current runtime contract:
 - `GET /__internal/renders/instances/:publicId/saved.json` is the named saved-document read boundary for Builder. If the saved pointer/config is malformed, Tokyo-worker now returns a validation failure instead of hiding that state as a fake not-found.
 - Tokyo-worker now uses that same truthful saved-document read contract across Builder-open, explicit instance sync, and account-localization state. Invalid saved state is not silently collapsed into “missing” in sibling product flows.
 - Localization overlay authoring/readback remains part of the Tokyo/Tokyo-worker l10n plane. It is no longer a Builder-localization control loop on the active account authoring path.
-- The old Builder-era l10n snapshot/status/user-layer control surface is removed. Builder now reads only the narrow translations panel truth from Tokyo-worker translation state.
+- The old Builder-era l10n snapshot/status/user-layer control surface is removed. Builder now reads only the narrow translations panel truth from the Tokyo saved widget `l10n` block.
 - Public MiniBob payload assembly also executes on Tokyo-worker from live Tokyo truth; Venice proxies that payload instead of reconstructing it locally.
 - The Tokyo account-localization implementation is now split by Tokyo-owned responsibilities (`state`, `mirror`, `utils`) behind this same domain surface.
 

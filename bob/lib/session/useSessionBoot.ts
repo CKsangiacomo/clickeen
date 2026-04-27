@@ -11,6 +11,7 @@ import {
   type SessionState,
   serializeInstanceDataSignature,
 } from './sessionTypes';
+import { normalizeSessionConfig } from './normalizeSessionConfig';
 
 export function useSessionBoot(args: {
   setState: Dispatch<SetStateAction<SessionState>>;
@@ -40,7 +41,10 @@ export function useSessionBoot(args: {
             error: 'coreui.errors.instance.config.invalid',
           };
         }
-        const resolved = structuredClone(rawInstanceData as Record<string, unknown>);
+        const resolved = normalizeSessionConfig({
+          compiled,
+          config: rawInstanceData as Record<string, unknown>,
+        });
         const savedInstanceDataSignature = serializeInstanceDataSignature(resolved);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
 

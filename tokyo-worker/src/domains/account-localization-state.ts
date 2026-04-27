@@ -10,13 +10,15 @@ import { normalizeLocaleToken, type AllowlistEntry } from '@clickeen/l10n';
 import { json } from '../http';
 import type { Env } from '../types';
 import {
-  bootstrapCurrentWidgetTranslationStateFromSavedRender,
-  readCurrentWidgetTranslationState,
-} from './translation-state';
+  l10nLivePointerKey,
+  normalizeTextPointer,
+  readSavedRenderConfig,
+} from './render';
 import {
   asTrimmedString,
   filterAllowlistedOps,
   isRecord,
+  normalizeReadyLocales,
   resolveTokyoControlErrorDetail,
 } from './account-localization-utils';
 
@@ -182,35 +184,80 @@ export async function loadAccountTranslationsPanelData(args: {
   generationId: string;
   updatedAt: string;
 }> {
-  const state =
-    (await readCurrentWidgetTranslationState({
-      env: args.env,
-      accountId: args.accountId,
-      publicId: args.publicId,
-    })) ??
-    (await bootstrapCurrentWidgetTranslationStateFromSavedRender({
-      env: args.env,
-      accountId: args.accountId,
-      publicId: args.publicId,
-    }));
-  if (!state) throw new Error('tokyo_translation_state_missing');
+  const saved = await readSavedRenderConfig({
+    env: args.env,
+    accountId: args.accountId,
+    publicId: args.publicId,
+  });
+  if (!saved.ok) {
+    throw new Error(saved.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : saved.reasonKey);
+  }
+
+  const l10n = saved.value.pointer.l10n;
+  const baseFingerprint = asTrimmedString(l10n?.baseFingerprint);
+  const summaryBaseLocale = normalizeLocaleToken(l10n?.summary?.baseLocale);
+  const requestedLocales = normalizeReadyLocales({
+    baseLocale: summaryBaseLocale ?? '',
+    locales: l10n?.summary?.desiredLocales ?? [],
+  });
+  if (!l10n || !baseFingerprint || !summaryBaseLocale || !requestedLocales.includes(summaryBaseLocale)) {
+    throw new Error('tokyo_saved_l10n_summary_missing');
+  }
+
+  const textPointerLocales = await Promise.all(
+    requestedLocales.map(async (locale) => {
+      if (locale === summaryBaseLocale) return locale;
+      const raw = await args.env.TOKYO_R2
+        .get(l10nLivePointerKey(args.publicId, locale))
+        .then((obj) => obj?.json().catch(() => null) ?? null);
+      const pointer = normalizeTextPointer(raw);
+      return pointer?.baseFingerprint === baseFingerprint ? locale : null;
+    }),
+  );
+  const readyLocales = normalizeReadyLocales({
+    baseLocale: summaryBaseLocale,
+    locales: [
+      ...(l10n.readyLocales ?? []),
+      ...textPointerLocales.filter((locale): locale is string => Boolean(locale)),
+    ],
+  }).filter((locale) => requestedLocales.includes(locale));
+  const readySet = new Set(readyLocales);
+  const missingLocales = requestedLocales.filter(
+    (locale) => locale !== summaryBaseLocale && !readySet.has(locale),
+  );
+  const storedStatus = l10n.status;
+  const status =
+    missingLocales.length === 0
+      ? 'ready'
+      : storedStatus === 'accepted' || storedStatus === 'working'
+        ? storedStatus
+        : 'failed';
+  const failedLocales =
+    status === 'failed'
+      ? (l10n.failedLocales?.length
+          ? l10n.failedLocales.filter((failure) => requestedLocales.includes(failure.locale))
+          : missingLocales.map((locale) => ({
+              locale,
+              reasonKey: 'tokyo_translation_locale_not_ready',
+            })))
+      : [];
 
   return {
     publicId: args.publicId,
-    widgetType: state.widgetType,
-    baseLocale: state.baseLocale,
-    requestedLocales: state.requestedLocales,
-    readyLocales: state.readyLocales,
-    status: state.status,
-    failedLocales: state.failedLocales,
-    baseFingerprint: state.baseFingerprint,
-    generationId: state.generationId,
-    updatedAt: state.updatedAt,
+    widgetType: saved.value.pointer.widgetType,
+    baseLocale: summaryBaseLocale,
+    requestedLocales,
+    readyLocales,
+    status,
+    failedLocales,
+    baseFingerprint,
+    generationId: l10n.generationId ?? `saved-${baseFingerprint.slice(0, 12)}`,
+    updatedAt: l10n.updatedAt ?? saved.value.pointer.updatedAt,
   };
 }
 
 function buildTranslationsPanelReadErrorResponse(detail: string): Response {
-  if (detail === 'tokyo_saved_not_found' || detail === 'tokyo_translation_state_missing') {
+  if (detail === 'tokyo_saved_not_found') {
     return json(
       { error: { kind: 'NOT_FOUND', reasonKey: detail, detail } },
       { status: 404 },

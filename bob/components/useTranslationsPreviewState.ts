@@ -92,11 +92,6 @@ function resolveTranslationsErrorMessage(args: {
   status?: number;
   reasonKey?: string | null;
 }): string {
-  if (
-    args.reasonKey === 'tokyo_translation_state_missing'
-  ) {
-    return 'Translations are not available for this widget yet.';
-  }
   if (args.reasonKey === 'coreui.errors.translations.baseLocaleMismatch') {
     return 'Translations are out of sync for this widget right now.';
   }

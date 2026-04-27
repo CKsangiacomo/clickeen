@@ -13,12 +13,9 @@ import {
   syncLiveSurface,
   writeConfigPack,
   writeSavedRenderConfig,
+  writeSavedRenderL10nStatus,
 } from '../domains/render';
 import { handleSyncAccountInstance } from '../domains/account-instance-sync';
-import {
-  acceptWidgetTranslationState,
-  markWidgetTranslationFailed,
-} from '../domains/translation-state';
 import {
   authorizeRomaAccountScopedRequest,
   authorizeSavedRenderControlRequest,
@@ -168,17 +165,44 @@ export async function tryHandleInternalRenderRoutes(
       return respondValidation(respond, 'tokyo.errors.render.staleBaseFingerprint');
     }
 
-    const translation = await acceptWidgetTranslationState({
+    const normalizedBaseLocale = baseLocale.toLowerCase();
+    const requestedLocales = Array.from(
+      new Set([
+        normalizedBaseLocale,
+        ...desiredLocales.map((locale) => locale.trim().toLowerCase()).filter(Boolean),
+      ]),
+    );
+    const generationId = crypto.randomUUID();
+    const nonBaseLocales = requestedLocales.filter((locale) => locale !== normalizedBaseLocale);
+    const translationStatus = nonBaseLocales.length > 0 ? 'accepted' : 'ready';
+    const finishedAt = translationStatus === 'ready' ? new Date().toISOString() : null;
+
+    const statusPointer = await writeSavedRenderL10nStatus({
       env,
       publicId: publicId!,
       accountId,
-      widgetType: saved.value.pointer.widgetType,
+      generationId,
+      status: translationStatus,
       baseFingerprint: resolvedBaseFingerprint,
-      baseLocale: baseLocale.toLowerCase(),
-      requestedLocales: desiredLocales.map((locale) => locale.trim().toLowerCase()),
+      readyLocales: [normalizedBaseLocale],
+      failedLocales: [],
+      finishedAt,
     });
 
-    const shouldQueue = translation.status !== 'ready';
+    const translation = {
+      publicId: publicId!,
+      widgetType: saved.value.pointer.widgetType,
+      baseFingerprint: resolvedBaseFingerprint,
+      baseLocale: normalizedBaseLocale,
+      requestedLocales,
+      readyLocales: [normalizedBaseLocale],
+      status: translationStatus,
+      failedLocales: [],
+      generationId,
+      updatedAt: statusPointer?.l10n?.updatedAt ?? new Date().toISOString(),
+    };
+
+    const shouldQueue = nonBaseLocales.length > 0;
     try {
       if (shouldQueue) {
         await enqueueTokyoMirrorJob(env, {
@@ -187,28 +211,37 @@ export async function tryHandleInternalRenderRoutes(
           publicId: publicId!,
           accountId,
           baseFingerprint: resolvedBaseFingerprint,
-          generationId: translation.generationId,
+          generationId,
           live,
           accountAuthz: {
             profile: capsule.profile,
             role: capsule.role,
             entitlements: capsule.entitlements ?? null,
           },
-          baseLocale: baseLocale.toLowerCase(),
-          desiredLocales: desiredLocales.map((locale) => locale.trim().toLowerCase()),
+          baseLocale: normalizedBaseLocale,
+          desiredLocales: requestedLocales,
           countryToLocale,
           previousBaseFingerprint,
         });
       }
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      await markWidgetTranslationFailed({
+      await writeSavedRenderL10nStatus({
         env,
         publicId: publicId!,
         accountId,
-        generationId: translation.generationId,
-        reasonKey: 'tokyo_translation_enqueue_failed',
-        detail,
+        generationId,
+        status: 'failed',
+        baseFingerprint: resolvedBaseFingerprint,
+        readyLocales: [normalizedBaseLocale],
+        failedLocales: nonBaseLocales.map((locale) => ({
+          locale,
+          reasonKey: 'tokyo_translation_enqueue_failed',
+          detail,
+        })),
+        lastError: detail,
+        finishedAt: new Date().toISOString(),
+        guardCurrentGeneration: true,
       });
       return respond(
         json(

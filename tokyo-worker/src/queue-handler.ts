@@ -3,12 +3,12 @@ import {
   enforceLiveSurface,
   isTokyoMirrorJob,
   syncLiveSurface,
+  writeSavedRenderL10nStatus,
   writeConfigPack,
   writeMetaPack,
   writeTextPack,
 } from './domains/render';
 import { runQueuedAccountInstanceSync } from './domains/account-instance-sync';
-import { markWidgetTranslationFailed } from './domains/translation-state';
 import type { Env } from './types';
 
 function retryDelaySeconds(attempt: number, baseSeconds: number, capSeconds: number): number {
@@ -71,13 +71,24 @@ export async function handleTokyoQueue(
       if (attempt >= maxAttempts) {
         if (body.kind === 'sync-instance-overlays') {
           try {
-            await markWidgetTranslationFailed({
+            await writeSavedRenderL10nStatus({
               env,
               publicId,
               accountId: body.accountId,
               generationId: body.generationId,
-              reasonKey: 'tokyo_translation_generation_failed',
-              detail: message,
+              status: 'failed',
+              baseFingerprint: body.baseFingerprint,
+              readyLocales: [body.baseLocale],
+              failedLocales: body.desiredLocales
+                .filter((locale) => locale !== body.baseLocale)
+                .map((locale) => ({
+                  locale,
+                  reasonKey: 'tokyo_translation_generation_failed',
+                  detail: message,
+                })),
+              lastError: message,
+              finishedAt: new Date().toISOString(),
+              guardCurrentGeneration: true,
             });
           } catch (statusError) {
             console.error(

@@ -29,21 +29,17 @@ import {
 import { upsertL10nOverlay } from './l10n-authoring';
 import {
   type SyncInstanceOverlaysJob,
+  type SavedRenderL10nFailure,
   ensureSavedRenderL10nBase,
   loadSavedRenderL10nBase,
   readSavedRenderConfig,
   resolveTokyoPublicBaseUrl,
   syncLiveSurface,
   writeSavedRenderL10nState,
+  writeSavedRenderL10nStatus,
   writeConfigPack,
   type LocalePolicy,
 } from './render';
-import {
-  acceptWidgetTranslationState,
-  isCurrentWidgetTranslationGeneration,
-  markWidgetTranslationFinished,
-  markWidgetTranslationWorking,
-} from './translation-state';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
@@ -87,6 +83,24 @@ function normalizeSyncL10nIntent(raw: unknown): SyncL10nIntent | null {
     baseLocale,
     desiredLocales,
     countryToLocale,
+  };
+}
+
+function resolveTranslationCompletion(args: {
+  baseLocale: string;
+  desiredLocales: string[];
+  readyLocales: string[];
+}): { status: 'ready' | 'failed'; failedLocales: SavedRenderL10nFailure[] } {
+  const ready = new Set(args.readyLocales);
+  const failedLocales = args.desiredLocales
+    .filter((locale) => locale !== args.baseLocale && !ready.has(locale))
+    .map((locale) => ({
+      locale,
+      reasonKey: 'tokyo_translation_locale_not_ready',
+    }));
+  return {
+    status: failedLocales.length > 0 ? 'failed' : 'ready',
+    failedLocales,
   };
 }
 
@@ -446,15 +460,6 @@ export async function runQueuedAccountInstanceSync(
   job: SyncInstanceOverlaysJob,
   _args?: { attempt?: number | null },
 ): Promise<void> {
-  const currentGeneration = await isCurrentWidgetTranslationGeneration({
-    env,
-    publicId: job.publicId,
-    accountId: job.accountId,
-    generationId: job.generationId,
-  });
-  if (!currentGeneration) {
-    return;
-  }
   const current = await readSavedRenderConfig({
     env,
     publicId: job.publicId,
@@ -467,15 +472,24 @@ export async function runQueuedAccountInstanceSync(
   if (!currentBaseFingerprint) {
     throw new Error('tokyo_saved_l10n_base_missing');
   }
+  if (current.value.pointer.l10n?.generationId !== job.generationId) {
+    return;
+  }
   if (currentBaseFingerprint !== job.baseFingerprint) {
     return;
   }
 
-  await markWidgetTranslationWorking({
+  await writeSavedRenderL10nStatus({
     env,
     publicId: job.publicId,
     accountId: job.accountId,
     generationId: job.generationId,
+    status: 'working',
+    baseFingerprint: job.baseFingerprint,
+    readyLocales: [job.baseLocale],
+    failedLocales: [],
+    startedAt: new Date().toISOString(),
+    guardCurrentGeneration: true,
   });
 
   const result = await syncAccountInstance({
@@ -491,12 +505,22 @@ export async function runQueuedAccountInstanceSync(
       countryToLocale: job.countryToLocale,
     },
   });
-  await markWidgetTranslationFinished({
+  const completion = resolveTranslationCompletion({
+    baseLocale: job.baseLocale,
+    desiredLocales: job.desiredLocales,
+    readyLocales: result.readyLocales,
+  });
+  await writeSavedRenderL10nStatus({
     env,
     publicId: job.publicId,
     accountId: job.accountId,
     generationId: job.generationId,
+    status: completion.status,
+    baseFingerprint: result.baseFingerprint,
     readyLocales: result.readyLocales,
+    failedLocales: completion.failedLocales,
+    finishedAt: new Date().toISOString(),
+    guardCurrentGeneration: true,
   });
 }
 
@@ -560,21 +584,22 @@ export async function handleSyncAccountInstance(
       },
       l10nIntent,
     });
-    const accepted = await acceptWidgetTranslationState({
-      env,
-      publicId,
-      accountId,
-      widgetType: result.widgetType,
+    const generationId = crypto.randomUUID();
+    const completion = resolveTranslationCompletion({
       baseLocale: l10nIntent.baseLocale,
-      requestedLocales: l10nIntent.desiredLocales,
-      baseFingerprint: result.baseFingerprint,
+      desiredLocales: l10nIntent.desiredLocales,
+      readyLocales: result.readyLocales,
     });
-    await markWidgetTranslationFinished({
+    await writeSavedRenderL10nStatus({
       env,
       publicId,
       accountId,
-      generationId: accepted.generationId,
+      generationId,
+      status: completion.status,
+      baseFingerprint: result.baseFingerprint,
       readyLocales: result.readyLocales,
+      failedLocales: completion.failedLocales,
+      finishedAt: new Date().toISOString(),
     });
     return json(result);
   } catch (error) {

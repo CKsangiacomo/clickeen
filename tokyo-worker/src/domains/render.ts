@@ -28,6 +28,14 @@ export type LocalePolicy = {
   };
 };
 
+export type SavedRenderL10nStatus = 'accepted' | 'working' | 'ready' | 'failed';
+
+export type SavedRenderL10nFailure = {
+  locale: string;
+  reasonKey: string;
+  detail?: string;
+};
+
 export type LiveRenderPointer = {
   v: 1;
   publicId: string;
@@ -60,6 +68,14 @@ export type SavedRenderPointer = {
       baseLocale: string;
       desiredLocales: string[];
     };
+    generationId?: string;
+    status?: SavedRenderL10nStatus;
+    readyLocales?: string[];
+    failedLocales?: SavedRenderL10nFailure[];
+    updatedAt?: string;
+    startedAt?: string;
+    finishedAt?: string;
+    lastError?: string;
   };
 };
 
@@ -210,6 +226,26 @@ function normalizeLocaleList(value: unknown): string[] {
         .filter((entry): entry is string => Boolean(entry)),
     ),
   );
+}
+
+function normalizeSavedL10nStatus(value: unknown): SavedRenderL10nStatus | null {
+  return value === 'accepted' || value === 'working' || value === 'ready' || value === 'failed'
+    ? value
+    : null;
+}
+
+function normalizeSavedL10nFailures(value: unknown): SavedRenderL10nFailure[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return [];
+    const payload = entry as Record<string, unknown>;
+    const locale = normalizeLocale(payload.locale);
+    const reasonKey =
+      typeof payload.reasonKey === 'string' ? payload.reasonKey.trim() : '';
+    if (!locale || !reasonKey) return [];
+    const detail = typeof payload.detail === 'string' ? payload.detail.trim() : '';
+    return [{ locale, reasonKey, ...(detail ? { detail } : {}) }];
+  });
 }
 
 function renderLivePointerKey(publicId: string): string {
@@ -419,9 +455,35 @@ export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | 
           desiredLocales: summaryDesiredLocales,
         }
       : null;
+  const generationId =
+    typeof l10nRaw?.generationId === 'string' ? l10nRaw.generationId.trim() : '';
+  const status = normalizeSavedL10nStatus(l10nRaw?.status);
+  const readyLocales = normalizeLocaleList(l10nRaw?.readyLocales);
+  const failedLocales = normalizeSavedL10nFailures(l10nRaw?.failedLocales);
+  const l10nUpdatedAt =
+    typeof l10nRaw?.updatedAt === 'string' ? l10nRaw.updatedAt.trim() : '';
+  const l10nStartedAt =
+    typeof l10nRaw?.startedAt === 'string' ? l10nRaw.startedAt.trim() : '';
+  const l10nFinishedAt =
+    typeof l10nRaw?.finishedAt === 'string' ? l10nRaw.finishedAt.trim() : '';
+  const lastError =
+    typeof l10nRaw?.lastError === 'string' ? l10nRaw.lastError.trim() : '';
   const configFp = normalizeFingerprint(payload.configFp) ?? '';
   const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
   if (!publicId || !accountId || !widgetType || !source || !configFp || !updatedAt) return null;
+  const l10nStatus =
+    baseFingerprint && generationId && status && l10nUpdatedAt
+      ? {
+          generationId,
+          status,
+          readyLocales,
+          failedLocales,
+          updatedAt: l10nUpdatedAt,
+          ...(l10nStartedAt ? { startedAt: l10nStartedAt } : {}),
+          ...(l10nFinishedAt ? { finishedAt: l10nFinishedAt } : {}),
+          ...(lastError ? { lastError } : {}),
+        }
+      : null;
   return {
     v: 1,
     publicId,
@@ -437,6 +499,7 @@ export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | 
           l10n: {
             baseFingerprint,
             ...(summary ? { summary } : {}),
+            ...(l10nStatus ?? {}),
           },
         }
       : {}),
@@ -928,8 +991,74 @@ export async function writeSavedRenderL10nState(args: {
   const pointer: SavedRenderPointer = {
     ...pointerResult.value,
     l10n: {
+      ...(pointerResult.value.l10n ?? {}),
       baseFingerprint: args.baseFingerprint,
       ...(args.summary ? { summary: args.summary } : {}),
+    },
+  };
+  await putJson(args.env, renderSavedPointerKey(args.publicId), pointer);
+  return pointer;
+}
+
+export async function writeSavedRenderL10nStatus(args: {
+  env: Env;
+  publicId: string;
+  accountId: string;
+  generationId: string;
+  status: SavedRenderL10nStatus;
+  baseFingerprint?: string | null;
+  readyLocales?: string[];
+  failedLocales?: SavedRenderL10nFailure[];
+  lastError?: string | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  guardCurrentGeneration?: boolean;
+}): Promise<SavedRenderPointer | null> {
+  const pointerResult = await readSavedRenderPointer({
+    env: args.env,
+    publicId: args.publicId,
+    accountId: args.accountId,
+  });
+  if (!pointerResult.ok) {
+    throw new Error(
+      pointerResult.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : pointerResult.reasonKey,
+    );
+  }
+
+  const current = pointerResult.value.l10n;
+  const baseFingerprint = normalizeFingerprint(args.baseFingerprint) ?? current?.baseFingerprint ?? '';
+  const generationId = typeof args.generationId === 'string' ? args.generationId.trim() : '';
+  if (!current || !baseFingerprint || !generationId) {
+    throw new Error('tokyo_saved_l10n_base_missing');
+  }
+  if (args.guardCurrentGeneration === true && current.generationId !== generationId) {
+    return null;
+  }
+
+  const now = new Date().toISOString();
+  const readyLocales = args.readyLocales
+    ? normalizeLocaleList(args.readyLocales)
+    : current.readyLocales ?? [];
+  const failedLocales = args.failedLocales
+    ? normalizeSavedL10nFailures(args.failedLocales)
+    : current.failedLocales ?? [];
+  const lastError = typeof args.lastError === 'string' ? args.lastError.trim() : '';
+  const startedAt = typeof args.startedAt === 'string' ? args.startedAt.trim() : '';
+  const finishedAt = typeof args.finishedAt === 'string' ? args.finishedAt.trim() : '';
+
+  const pointer: SavedRenderPointer = {
+    ...pointerResult.value,
+    l10n: {
+      baseFingerprint,
+      ...(current.summary ? { summary: current.summary } : {}),
+      generationId,
+      status: args.status,
+      readyLocales,
+      failedLocales,
+      updatedAt: now,
+      ...(startedAt ? { startedAt } : {}),
+      ...(finishedAt ? { finishedAt } : {}),
+      ...(lastError ? { lastError } : {}),
     },
   };
   await putJson(args.env, renderSavedPointerKey(args.publicId), pointer);

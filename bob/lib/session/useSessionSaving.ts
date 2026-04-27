@@ -8,6 +8,7 @@ import {
   type SessionUpsell,
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
+import { normalizeSessionConfig } from './normalizeSessionConfig';
 
 export function useSessionSaving(args: {
   stateRef: MutableRefObject<SessionState>;
@@ -41,16 +42,27 @@ export function useSessionSaving(args: {
     if (!snapshot.isDirty) {
       return;
     }
+    if (!snapshot.compiled) {
+      setState((prev) => ({
+        ...prev,
+        error: { source: 'save', message: 'Missing widget compiler context for save.' },
+      }));
+      return;
+    }
 
     setState((prev) => ({ ...prev, isSaving: true, error: null }));
 
     try {
+      const normalizedConfig = normalizeSessionConfig({
+        compiled: snapshot.compiled,
+        config: snapshot.instanceData,
+      });
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
         publicId,
         body: {
           widgetType,
-          config: snapshot.instanceData,
+          config: normalizedConfig,
           displayName: meta?.label ?? null,
           source: meta?.source,
           meta: meta?.meta ?? null,
@@ -75,9 +87,10 @@ export function useSessionSaving(args: {
       }
 
       const current = stateRef.current;
-      const savedInstanceDataSignature = serializeInstanceDataSignature(current.instanceData);
+      const savedInstanceDataSignature = serializeInstanceDataSignature(normalizedConfig);
       const nextState: SessionState = {
         ...current,
+        instanceData: normalizedConfig,
         savedInstanceDataSignature,
         isDirty: false,
         isSaving: false,
