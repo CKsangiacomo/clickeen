@@ -23,7 +23,7 @@ For system context, see [CONTEXT.md](./CONTEXT.md), [BabelProtocol.md](./BabelPr
 9. A layer is selectable only when its artifact is current for the active `baseFingerprint`.
 10. If a selectable overlay artifact is missing for the active `baseFingerprint`, that is a named system failure at the owning boundary.
 11. System-generated overlay convergence is Tokyo/Tokyo-worker owned. Queue delivery is a trigger, not workflow truth.
-12. Operator-authored and user-authored layers still publish through Tokyo/Tokyo-worker and obey the same fingerprint/readiness rules, but they do not automatically get queue/work-item orchestration.
+12. Operator-authored and user-authored layers still publish through Tokyo/Tokyo-worker and obey the same fingerprint/readiness rules, but they do not automatically get async convergence orchestration.
 13. Tokyo/Tokyo-worker publish one composition contract for the active base. Consumers must not fork selection, readiness, or precedence logic.
 14. No new overlay layer may ship without a declared selector, allowlist, precedence, readiness rule, publication contract, and lifecycle model.
 
@@ -115,13 +115,13 @@ It defines:
 
 Consumers may resolve raw request context locally, but they must not invent independent selection, readiness, or precedence rules.
 
-### Work Item
+### Async Convergence State
 
-The durable Tokyo/Tokyo-worker record that owns convergence of overlay artifacts for the current base.
+The durable Tokyo/Tokyo-worker state that owns convergence of overlay artifacts for the current base.
 
-Only system-generated layers use durable convergence work items by default.
+Only system-generated layers use durable async convergence state by default.
 
-Operator-authored and user-authored layers still use the same base fingerprint, allowlist, publication, and readiness rules, but they do not inherit queue/work-item orchestration unless a PRD explicitly requires it.
+Operator-authored and user-authored layers still use the same base fingerprint, allowlist, publication, and readiness rules, but they do not inherit async convergence orchestration unless a PRD explicitly requires it.
 
 ---
 
@@ -153,7 +153,7 @@ Systems:
 Responsibilities:
 - compute or validate `baseFingerprint`
 - store canonical overlay rows/artifacts
-- own durable work items for system-generated layers
+- own durable async convergence state for system-generated layers
 - publish runtime-consumable overlay artifacts
 - publish one composition contract consumed by all runtime surfaces
 - expose ready/current keys to consumers
@@ -220,7 +220,7 @@ Every layer must declare these fields before implementation:
    - Prague/runtime content
 11. lifecycle model:
    - direct publication on write
-   - system-generated convergence via durable work item
+   - system-generated convergence via durable async state
 
 If any of those are unclear, the layer is not ready to implement.
 
@@ -275,14 +275,14 @@ This means current implementation work should generalize the platform contract w
 2. Roma saves the base document to Tokyo.
 3. Tokyo/Tokyo-worker compute or validate the current `baseFingerprint`.
 4. Tokyo/Tokyo-worker determine which active overlay layers now require convergence.
-5. Tokyo/Tokyo-worker write or update durable work items for those layers.
+5. Tokyo/Tokyo-worker write or update durable async convergence state for those layers.
 
 Base save success is base success.
 Overlay convergence is follow-up system work unless a PRD defines a stricter publish boundary.
 
 ### Overlay Convergence
 
-1. Worker reads the durable work item.
+1. Worker reads the durable async convergence state.
 2. Worker compares the current base with the overlay artifact’s required base.
 3. Worker generates or validates the next overlay artifact for the exact `baseFingerprint`.
 4. Worker publishes the runtime-consumable artifact.
@@ -297,7 +297,7 @@ For operator-authored and user-authored layers:
 3. Tokyo/Tokyo-worker publish the runtime-consumable artifact at the named boundary.
 4. The layer becomes selectable only after the published/current artifact exists.
 
-No queue/work-item pipeline is implied unless a PRD explicitly requires asynchronous convergence.
+No queue-driven convergence pipeline is implied unless a PRD explicitly requires asynchronous convergence.
 
 ### Consumption
 
@@ -320,7 +320,7 @@ No “best available” fallback.
 - Do not let any layer create a second widget identity.
 - Do not let Builder own per-layer truth that Tokyo/Tokyo-worker should own.
 - Do not let a new layer invent a new storage plane if Tokyo/Tokyo-worker should own it.
-- Do not create queue/work-item scaffolding for operator-authored or user-authored layers unless a PRD explicitly requires asynchronous convergence.
+- Do not create queue-driven convergence scaffolding for operator-authored or user-authored layers unless a PRD explicitly requires asynchronous convergence.
 - Do not build generic overlay machinery that current product layers do not need yet.
 - Do not preserve l10n-specific names as permanent architecture just because localization shipped first.
 

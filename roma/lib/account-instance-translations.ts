@@ -7,9 +7,13 @@ export type AccountTranslationsPanelPayload = {
   publicId: string;
   widgetType: string;
   baseLocale: string;
+  requestedLocales: string[];
   readyLocales: string[];
-  translationOk: boolean;
-  translationState: 'ok' | 'updating' | 'failed';
+  status: 'accepted' | 'working' | 'ready' | 'failed';
+  failedLocales: Array<{ locale: string; reasonKey: string; detail?: string }>;
+  baseFingerprint: string;
+  generationId: string;
+  updatedAt: string;
 };
 
 type RouteFailure = {
@@ -47,18 +51,35 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
   const publicId = asTrimmedString(raw.publicId);
   const widgetType = asTrimmedString(raw.widgetType);
   const baseLocale = asTrimmedString(raw.baseLocale);
+  const requestedLocales = Array.isArray(raw.requestedLocales)
+    ? raw.requestedLocales
+        .map((entry) => asTrimmedString(entry))
+        .filter((entry): entry is string => Boolean(entry))
+    : [];
   const readyLocales = Array.isArray(raw.readyLocales)
     ? raw.readyLocales
         .map((entry) => asTrimmedString(entry))
         .filter((entry): entry is string => Boolean(entry))
     : [];
-  const translationOk = typeof raw.translationOk === 'boolean' ? raw.translationOk : null;
-  const translationState =
-    raw.translationState === 'ok' || raw.translationState === 'updating' || raw.translationState === 'failed'
-      ? raw.translationState
+  const status =
+    raw.status === 'accepted' || raw.status === 'working' || raw.status === 'ready' || raw.status === 'failed'
+      ? raw.status
       : null;
+  const failedLocales = Array.isArray(raw.failedLocales)
+    ? raw.failedLocales.flatMap((entry) => {
+        if (!isRecord(entry)) return [];
+        const locale = asTrimmedString(entry.locale);
+        const reasonKey = asTrimmedString(entry.reasonKey);
+        if (!locale || !reasonKey) return [];
+        const detail = asTrimmedString(entry.detail);
+        return [{ locale, reasonKey, ...(detail ? { detail } : {}) }];
+      })
+    : [];
+  const baseFingerprint = asTrimmedString(raw.baseFingerprint);
+  const generationId = asTrimmedString(raw.generationId);
+  const updatedAt = asTrimmedString(raw.updatedAt);
 
-  if (!publicId || !widgetType || !baseLocale || translationOk === null || !translationState) {
+  if (!publicId || !widgetType || !baseLocale || !requestedLocales.includes(baseLocale) || !status || !baseFingerprint || !generationId || !updatedAt) {
     return null;
   }
   if (!readyLocales.includes(baseLocale)) return null;
@@ -67,9 +88,13 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
     publicId,
     widgetType,
     baseLocale,
+    requestedLocales: Array.from(new Set(requestedLocales)),
     readyLocales: Array.from(new Set(readyLocales)),
-    translationOk,
-    translationState,
+    status,
+    failedLocales,
+    baseFingerprint,
+    generationId,
+    updatedAt,
   };
 }
 

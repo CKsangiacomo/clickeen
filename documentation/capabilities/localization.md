@@ -124,16 +124,17 @@ Where the write plane fits (current repo snapshot):
 - Tokyo-worker persists those overlay rows in the canonical Tokyo l10n plane.
 - Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane, and Tokyo-worker reads that account-locale truth directly from Berlin during explicit sync execution.
 - Product-path save writes the current saved-widget l10n summary (`baseLocale` + desired locale set) into the Tokyo saved widget plane alongside the current `baseFingerprint`.
-- Explicit sync refreshes that saved-widget l10n summary and converges locale artifacts against it.
-- Builder Translations reads consume that saved Tokyo summary plus current Tokyo artifact state; they do not live-recompute desired locales from Berlin on every panel open.
-- While the `Translations` panel is open, Bob reads one Roma same-origin translations route backed by Tokyo-worker. That payload is only `baseLocale`, `readyLocales`, `translationOk`, and `translationState`.
+- Product-path save also requires Tokyo-worker to durably accept one current widget translation state for that saved revision before Roma reports save success.
+- Explicit sync converges locale artifacts against that Tokyo-worker translation state.
+- Builder Translations reads consume only the current Tokyo-worker translation state; they do not infer readiness from saved summaries, queue internals, or public/live artifact pointers.
+- While the `Translations` panel is open, Bob reads one Roma same-origin translations route backed by Tokyo-worker. That payload is `baseLocale`, `requestedLocales`, `readyLocales`, `status`, `failedLocales`, `baseFingerprint`, `generationId`, and `updatedAt`.
 - After Save succeeds, Bob may re-read that same route once to show current Tokyo truth.
 - Builder does not own an always-on localization convergence loop. If the Translations panel is open and the route says translations are still preparing, Builder may perform a small bounded recheck of that same Tokyo-backed status read.
-- The Translations panel presents one global readiness answer. It does not show per-locale readiness.
-- The panel locale chooser represents the account's current display languages only after `translationOk` is true. Partial current-ready locale sets remain backend safety state, not user-facing product state.
+- The Translations panel presents one global readiness answer from `status`.
+- The panel locale chooser represents the account's current display languages only when `status` is `ready`. Partial current-ready locale sets remain backend safety state, not user-facing product state.
 - Lower-tier language upsell copy in Builder comes from the policy cap carried in the Roma open-editor payload.
-- When a newer save writes a new current work item for the same instance, Tokyo deletes older work items for older `baseFingerprint` values instead of leaving them around as competing current-state candidates.
-- If Tokyo cannot hand follow-up localization work to the queue, Tokyo-worker marks the durable work item `failed` instead of leaving Builder stuck on fake `updating`.
+- When a newer save writes a new current translation state for the same instance, queued older generations are ignored by `generationId`.
+- If Tokyo cannot hand follow-up localization work to the queue, Tokyo-worker marks the current translation state `failed` instead of letting Builder show fake progress.
 - If locale generation does not return current ops for a locale requested by the latest save, Tokyo-worker does not publish that locale as current-ready for the new `baseFingerprint`.
 - Builder preview locale selection uses the same readiness truth. Incomplete locale sets never enter the Builder locale chooser as a partial readiness list.
 - On explicit Tokyo-worker sync, the pipeline reconciles Tokyo against that desired set for the current `baseFingerprint`:

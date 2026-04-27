@@ -281,20 +281,38 @@ export async function PUT(request: NextRequest) {
         current.value.setCookies,
       );
     }
-    const syncWarnings = await runAccountLocalesSync({
-      accountId: current.value.authzPayload.accountId,
-      accessToken: current.value.accessToken,
-      accountCapsule: current.value.authzToken,
-      l10nIntent: {
-        baseLocale: refreshedAccountState.policy.baseLocale,
-        desiredLocales: normalizeDesiredAccountLocales({
+    try {
+      await runAccountLocalesSync({
+        accountId: current.value.authzPayload.accountId,
+        accessToken: current.value.accessToken,
+        accountCapsule: current.value.authzToken,
+        l10nIntent: {
           baseLocale: refreshedAccountState.policy.baseLocale,
-          locales: refreshedAccountState.locales,
-        }),
-        countryToLocale: refreshedAccountState.policy.ip.countryToLocale,
-      },
-    });
-    const mergedWarnings = Array.from(new Set([...warnings, ...syncWarnings]));
+          desiredLocales: normalizeDesiredAccountLocales({
+            baseLocale: refreshedAccountState.policy.baseLocale,
+            locales: refreshedAccountState.locales,
+          }),
+          countryToLocale: refreshedAccountState.policy.ip.countryToLocale,
+        },
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.translations.acceptanceFailed',
+              detail,
+            },
+          },
+          { status: 502 },
+        ),
+        current.value.setCookies,
+      );
+    }
+    const mergedWarnings = Array.from(new Set(warnings));
 
     const responsePayload = isRecord(upstreamPayload)
       ? {

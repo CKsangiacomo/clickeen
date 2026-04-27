@@ -78,7 +78,7 @@ export function TranslationsPanel({
   const showLocaleUpsell = typeof localeCap === 'number' && Number.isFinite(localeCap);
 
   const localeOptions = useMemo(() => {
-    const locales = translationsData?.translationOk ? translationsData.readyLocales : [];
+    const locales = translationsData?.status === 'ready' ? translationsData.readyLocales : [];
     return locales.map((locale) => ({
       value: locale,
       label: resolveLocaleLabel(locale),
@@ -100,25 +100,31 @@ export function TranslationsPanel({
               ? 'Checking translations...'
               : translationsError
                 ? 'Translations unavailable'
-              : translationsData?.translationOk === false
+              : translationsData?.status === 'accepted' || translationsData?.status === 'working'
                 ? 'Translations preparing'
-                : 'Translations not ready yet',
+                : translationsData?.status === 'failed'
+                  ? 'Translations failed'
+                  : 'Translations not ready yet',
           },
         ];
   const translationStatusTitle = translationsLoading
     ? 'Checking translations'
     : translationsError
       ? 'Translations unavailable'
-      : translationsData?.translationOk
+      : translationsData?.status === 'ready'
         ? 'Translations are ready'
-        : 'Translations are preparing';
+        : translationsData?.status === 'failed'
+          ? 'Translations failed'
+          : 'Translations are preparing';
   const translationStatusBody = translationsLoading
     ? 'Builder is checking whether this widget is ready in your account languages.'
     : translationsError
       ? translationsError
-      : translationsData?.translationOk
+      : translationsData?.status === 'ready'
         ? 'Preview this widget in the languages available for this account.'
-        : 'Translations usually finish shortly after Save. Preview will unlock when the current widget is ready.';
+        : translationsData?.status === 'failed'
+          ? 'Save again to request translation for the current widget state.'
+          : 'Translations are queued for the current widget state. Preview will unlock when they are ready.';
 
   if (!session.compiled) {
     return (

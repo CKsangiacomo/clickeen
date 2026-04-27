@@ -28,9 +28,6 @@ import {
 } from './account-localization';
 import { upsertL10nOverlay } from './l10n-authoring';
 import {
-  deleteOverlayWorkItem,
-  readOverlayWorkItem,
-  transitionOverlayWorkItemState,
   type SyncInstanceOverlaysJob,
   ensureSavedRenderL10nBase,
   loadSavedRenderL10nBase,
@@ -41,6 +38,12 @@ import {
   writeConfigPack,
   type LocalePolicy,
 } from './render';
+import {
+  acceptWidgetTranslationState,
+  isCurrentWidgetTranslationGeneration,
+  markWidgetTranslationFinished,
+  markWidgetTranslationWorking,
+} from './translation-state';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
@@ -181,6 +184,7 @@ export async function syncAccountInstance(args: {
 }): Promise<{
   ok: true;
   publicId: string;
+  widgetType: string;
   live: boolean;
   baseFingerprint: string;
   readyLocales: string[];
@@ -429,6 +433,7 @@ export async function syncAccountInstance(args: {
   return {
     ok: true,
     publicId: args.publicId,
+    widgetType: saved.value.pointer.widgetType,
     live: args.live,
     baseFingerprint,
     readyLocales,
@@ -439,20 +444,21 @@ export async function syncAccountInstance(args: {
 export async function runQueuedAccountInstanceSync(
   env: Env,
   job: SyncInstanceOverlaysJob,
-  args?: { attempt?: number | null },
+  _args?: { attempt?: number | null },
 ): Promise<void> {
-  const workItem = await readOverlayWorkItem({
+  const currentGeneration = await isCurrentWidgetTranslationGeneration({
     env,
     publicId: job.publicId,
-    baseFingerprint: job.baseFingerprint,
+    accountId: job.accountId,
+    generationId: job.generationId,
   });
-  if (!workItem) {
+  if (!currentGeneration) {
     return;
   }
   const current = await readSavedRenderConfig({
     env,
     publicId: job.publicId,
-    accountId: workItem.accountId,
+    accountId: job.accountId,
   });
   if (!current.ok) {
     throw new Error(current.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : current.reasonKey);
@@ -462,43 +468,35 @@ export async function runQueuedAccountInstanceSync(
     throw new Error('tokyo_saved_l10n_base_missing');
   }
   if (currentBaseFingerprint !== job.baseFingerprint) {
-    await deleteOverlayWorkItem({
-      env,
-      publicId: job.publicId,
-      baseFingerprint: job.baseFingerprint,
-    });
     return;
   }
 
-  await transitionOverlayWorkItemState({
+  await markWidgetTranslationWorking({
     env,
     publicId: job.publicId,
-    baseFingerprint: job.baseFingerprint,
-    state: 'running',
-    attemptCount:
-      typeof args?.attempt === 'number' && Number.isFinite(args.attempt)
-        ? args.attempt
-        : workItem.attemptCount,
-    lastError: null,
+    accountId: job.accountId,
+    generationId: job.generationId,
   });
 
-  await syncAccountInstance({
+  const result = await syncAccountInstance({
     env,
-    accountId: workItem.accountId,
+    accountId: job.accountId,
     publicId: job.publicId,
-    live: workItem.live === true,
-    previousBaseFingerprint: workItem.previousBaseFingerprint ?? null,
-    accountAuthz: workItem.accountAuthz,
+    live: job.live === true,
+    previousBaseFingerprint: job.previousBaseFingerprint ?? null,
+    accountAuthz: job.accountAuthz,
     l10nIntent: {
-      baseLocale: workItem.baseLocale,
-      desiredLocales: workItem.desiredLocales,
-      countryToLocale: workItem.countryToLocale,
+      baseLocale: job.baseLocale,
+      desiredLocales: job.desiredLocales,
+      countryToLocale: job.countryToLocale,
     },
   });
-  await deleteOverlayWorkItem({
+  await markWidgetTranslationFinished({
     env,
     publicId: job.publicId,
-    baseFingerprint: job.baseFingerprint,
+    accountId: job.accountId,
+    generationId: job.generationId,
+    readyLocales: result.readyLocales,
   });
 }
 
@@ -561,6 +559,22 @@ export async function handleSyncAccountInstance(
         entitlements: accountAuthz.entitlements ?? null,
       },
       l10nIntent,
+    });
+    const accepted = await acceptWidgetTranslationState({
+      env,
+      publicId,
+      accountId,
+      widgetType: result.widgetType,
+      baseLocale: l10nIntent.baseLocale,
+      requestedLocales: l10nIntent.desiredLocales,
+      baseFingerprint: result.baseFingerprint,
+    });
+    await markWidgetTranslationFinished({
+      env,
+      publicId,
+      accountId,
+      generationId: accepted.generationId,
+      readyLocales: result.readyLocales,
     });
     return json(result);
   } catch (error) {

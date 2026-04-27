@@ -102,14 +102,14 @@ export async function runAccountLocalesSync(args: {
   accessToken: string;
   accountCapsule?: string | null;
   l10nIntent: AccountInstanceSyncIntent;
-}): Promise<string[]> {
+}): Promise<void> {
   const targets = await loadAccountLocaleSyncTargets({
     accountId: args.accountId,
     accessToken: args.accessToken,
     accountCapsule: args.accountCapsule,
   });
   if (!targets.ok) {
-    return [targets.warning];
+    throw new Error(targets.warning);
   }
 
   const syncTargets = Array.from(
@@ -118,27 +118,18 @@ export async function runAccountLocalesSync(args: {
     ).values(),
   );
 
-  const warnings = [...targets.warnings];
-  for (const instance of syncTargets) {
-    try {
-      await enqueueAccountInstanceSync({
-        accessToken: args.accessToken,
-        accountId: args.accountId,
-        publicId: instance.publicId,
-        accountCapsule: args.accountCapsule,
-        live: instance.live,
-        l10nIntent: args.l10nIntent,
-      });
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      warnings.push(
-        formatWarning(
-          `account_locales_sync_failed:${instance.publicId}`,
-          detail,
-        ),
-      );
-    }
+  if (targets.warnings.length) {
+    throw new Error(targets.warnings.join(';'));
   }
 
-  return warnings;
+  for (const instance of syncTargets) {
+    await enqueueAccountInstanceSync({
+      accessToken: args.accessToken,
+      accountId: args.accountId,
+      publicId: instance.publicId,
+      accountCapsule: args.accountCapsule,
+      live: instance.live,
+      l10nIntent: args.l10nIntent,
+    });
+  }
 }

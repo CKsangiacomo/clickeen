@@ -8,7 +8,10 @@ import {
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
-import { enqueueAccountInstanceSync } from '@roma/lib/account-instance-sync';
+import {
+  enqueueAccountInstanceSync,
+  TokyoAccountInstanceSyncError,
+} from '@roma/lib/account-instance-sync';
 import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { deleteAccountInstanceRow, getAccountInstanceCoreRow } from '@roma/lib/michael';
 import {
@@ -294,11 +297,26 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       },
     });
   } catch (error) {
-    console.error('[roma account instance current route] overlay sync enqueue failed after save', {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error('[roma account instance current route] translation acceptance failed after save', {
       accountId,
       publicId,
-      detail: error instanceof Error ? error.message : String(error),
+      detail,
     });
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.translations.acceptanceFailed',
+            detail,
+          },
+        },
+        { status: error instanceof TokyoAccountInstanceSyncError ? error.status : 502 },
+      ),
+      current.value.setCookies,
+    );
   }
 
   return withSession(

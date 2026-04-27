@@ -3,13 +3,12 @@ import {
   enforceLiveSurface,
   isTokyoMirrorJob,
   syncLiveSurface,
-  readOverlayWorkItem,
-  transitionOverlayWorkItemState,
   writeConfigPack,
   writeMetaPack,
   writeTextPack,
 } from './domains/render';
 import { runQueuedAccountInstanceSync } from './domains/account-instance-sync';
+import { markWidgetTranslationFailed } from './domains/translation-state';
 import type { Env } from './types';
 
 function retryDelaySeconds(attempt: number, baseSeconds: number, capSeconds: number): number {
@@ -72,17 +71,17 @@ export async function handleTokyoQueue(
       if (attempt >= maxAttempts) {
         if (body.kind === 'sync-instance-overlays') {
           try {
-            await transitionOverlayWorkItemState({
+            await markWidgetTranslationFailed({
               env,
               publicId,
-              baseFingerprint: body.baseFingerprint,
-              state: 'failed',
-              attemptCount: attempt,
-              lastError: message,
+              accountId: body.accountId,
+              generationId: body.generationId,
+              reasonKey: 'tokyo_translation_generation_failed',
+              detail: message,
             });
           } catch (statusError) {
             console.error(
-              '[tokyo] queue job failed permanently and could not persist overlay status',
+              '[tokyo] queue job failed permanently and could not persist translation status',
               body.kind,
               publicId,
               message,
@@ -104,33 +103,6 @@ export async function handleTokyoQueue(
       const delaySeconds = shouldRetryMissingPrereqs(error)
         ? retryDelaySeconds(attempt, 2, 30)
         : retryDelaySeconds(attempt, 5, 60);
-      if (body.kind === 'sync-instance-overlays') {
-        try {
-          const workItem = await readOverlayWorkItem({
-            env,
-            publicId,
-            baseFingerprint: body.baseFingerprint,
-          });
-          if (workItem) {
-            await transitionOverlayWorkItemState({
-              env,
-              publicId,
-              baseFingerprint: body.baseFingerprint,
-              state: 'pending',
-              attemptCount: attempt,
-              lastError: message,
-            });
-          }
-        } catch (statusError) {
-          console.error(
-            '[tokyo] queue job failed and could not persist pending overlay work state',
-            body.kind,
-            publicId,
-            message,
-            statusError instanceof Error ? statusError.message : String(statusError),
-          );
-        }
-      }
       console.warn(
         '[tokyo] queue job failed, retrying',
         body.kind,

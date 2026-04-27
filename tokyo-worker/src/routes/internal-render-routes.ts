@@ -6,18 +6,19 @@ import {
 import { assertRomaAccountCapsuleAuth, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '../auth';
 import { json } from '../http';
 import {
-  deleteStaleOverlayWorkItemsForPublicId,
   deleteSavedRenderConfig,
   enqueueTokyoMirrorJob,
   readInstanceServeState,
-  transitionOverlayWorkItemState,
-  writeOverlayWorkItem,
   readSavedRenderConfig,
   syncLiveSurface,
   writeConfigPack,
   writeSavedRenderConfig,
 } from '../domains/render';
 import { handleSyncAccountInstance } from '../domains/account-instance-sync';
+import {
+  acceptWidgetTranslationState,
+  markWidgetTranslationFailed,
+} from '../domains/translation-state';
 import {
   authorizeRomaAccountScopedRequest,
   authorizeSavedRenderControlRequest,
@@ -144,19 +145,17 @@ export async function tryHandleInternalRenderRoutes(
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
 
-    let resolvedBaseFingerprint = requestedBaseFingerprint;
-    if (!resolvedBaseFingerprint) {
-      const saved = await readSavedRenderConfig({ env, publicId: publicId!, accountId });
-      if (!saved.ok) {
-        return respond(
-          json(
-            { error: { kind: saved.kind, reasonKey: saved.reasonKey } },
-            { status: saved.kind === 'NOT_FOUND' ? 404 : 422 },
-          ),
-        );
-      }
-      resolvedBaseFingerprint = normalizeSha256Hex(saved.value.pointer.l10n?.baseFingerprint);
+    const saved = await readSavedRenderConfig({ env, publicId: publicId!, accountId });
+    if (!saved.ok) {
+      return respond(
+        json(
+          { error: { kind: saved.kind, reasonKey: saved.reasonKey } },
+          { status: saved.kind === 'NOT_FOUND' ? 404 : 422 },
+        ),
+      );
     }
+    const savedBaseFingerprint = normalizeSha256Hex(saved.value.pointer.l10n?.baseFingerprint);
+    const resolvedBaseFingerprint = requestedBaseFingerprint ?? savedBaseFingerprint;
     if (!resolvedBaseFingerprint) {
       return respond(
         json(
@@ -165,57 +164,52 @@ export async function tryHandleInternalRenderRoutes(
         ),
       );
     }
+    if (requestedBaseFingerprint && savedBaseFingerprint && requestedBaseFingerprint !== savedBaseFingerprint) {
+      return respondValidation(respond, 'tokyo.errors.render.staleBaseFingerprint');
+    }
 
-    await writeOverlayWorkItem({
+    const translation = await acceptWidgetTranslationState({
       env,
       publicId: publicId!,
       accountId,
+      widgetType: saved.value.pointer.widgetType,
       baseFingerprint: resolvedBaseFingerprint,
-      live,
-      accountAuthz: {
-        profile: capsule.profile,
-        role: capsule.role,
-        entitlements: capsule.entitlements ?? null,
-      },
       baseLocale: baseLocale.toLowerCase(),
-      desiredLocales: desiredLocales.map((locale) => locale.trim().toLowerCase()),
-      countryToLocale,
-      previousBaseFingerprint,
-      state: 'pending',
-    });
-    await deleteStaleOverlayWorkItemsForPublicId({
-      env,
-      publicId: publicId!,
-      keepBaseFingerprint: resolvedBaseFingerprint,
+      requestedLocales: desiredLocales.map((locale) => locale.trim().toLowerCase()),
     });
 
+    const shouldQueue = translation.status !== 'ready';
     try {
-      await enqueueTokyoMirrorJob(env, {
-        v: 1,
-        kind: 'sync-instance-overlays',
-        publicId: publicId!,
-        baseFingerprint: resolvedBaseFingerprint,
-      });
+      if (shouldQueue) {
+        await enqueueTokyoMirrorJob(env, {
+          v: 1,
+          kind: 'sync-instance-overlays',
+          publicId: publicId!,
+          accountId,
+          baseFingerprint: resolvedBaseFingerprint,
+          generationId: translation.generationId,
+          live,
+          accountAuthz: {
+            profile: capsule.profile,
+            role: capsule.role,
+            entitlements: capsule.entitlements ?? null,
+          },
+          baseLocale: baseLocale.toLowerCase(),
+          desiredLocales: desiredLocales.map((locale) => locale.trim().toLowerCase()),
+          countryToLocale,
+          previousBaseFingerprint,
+        });
+      }
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      try {
-        await transitionOverlayWorkItemState({
-          env,
-          publicId: publicId!,
-          baseFingerprint: resolvedBaseFingerprint,
-          state: 'failed',
-          attemptCount: 0,
-          lastError: detail,
-        });
-      } catch (statusError) {
-        console.error(
-          '[tokyo] overlay enqueue failed and work-item status could not be persisted',
-          publicId,
-          resolvedBaseFingerprint,
-          detail,
-          statusError instanceof Error ? statusError.message : String(statusError),
-        );
-      }
+      await markWidgetTranslationFailed({
+        env,
+        publicId: publicId!,
+        accountId,
+        generationId: translation.generationId,
+        reasonKey: 'tokyo_translation_enqueue_failed',
+        detail,
+      });
       return respond(
         json(
           {
@@ -230,7 +224,16 @@ export async function tryHandleInternalRenderRoutes(
       );
     }
 
-    return respond(json({ ok: true, queued: true, publicId, live, baseFingerprint: resolvedBaseFingerprint }));
+    return respond(
+      json({
+        ok: true,
+        queued: shouldQueue,
+        publicId,
+        live,
+        baseFingerprint: resolvedBaseFingerprint,
+        translation,
+      }),
+    );
   }
 
   if (pathname === '/__internal/renders/instances/serve-state.json') {

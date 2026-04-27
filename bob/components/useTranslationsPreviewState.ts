@@ -5,9 +5,10 @@ import { useWidgetSessionTransport } from '../lib/session/useWidgetSession';
 
 export type TranslationsPreviewData = {
   baseLocale: string;
+  requestedLocales: string[];
   readyLocales: string[];
-  translationOk: boolean;
-  translationState: 'ok' | 'updating' | 'failed';
+  status: 'accepted' | 'working' | 'ready' | 'failed';
+  failedLocales: Array<{ locale: string; reasonKey: string; detail?: string }>;
 };
 
 type ErrorPayload = {
@@ -27,6 +28,15 @@ function normalizePreviewData(payload: unknown): TranslationsPreviewData | null 
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
   const record = payload as Record<string, unknown>;
   const baseLocale = asTrimmedString(record.baseLocale) ?? '';
+  const requestedLocales = Array.isArray(record.requestedLocales)
+    ? Array.from(
+        new Set(
+          record.requestedLocales
+            .map((entry) => asTrimmedString(entry))
+            .filter((entry): entry is string => Boolean(entry)),
+        ),
+      )
+    : [];
   const readyLocales = Array.isArray(record.readyLocales)
     ? Array.from(
         new Set(
@@ -36,22 +46,34 @@ function normalizePreviewData(payload: unknown): TranslationsPreviewData | null 
         ),
       )
     : [];
-  const translationOk = typeof record.translationOk === 'boolean' ? record.translationOk : null;
-  const translationState =
-    record.translationState === 'ok' ||
-    record.translationState === 'updating' ||
-    record.translationState === 'failed'
-      ? record.translationState
+  const status =
+    record.status === 'accepted' ||
+    record.status === 'working' ||
+    record.status === 'ready' ||
+    record.status === 'failed'
+      ? record.status
       : null;
+  const failedLocales = Array.isArray(record.failedLocales)
+    ? record.failedLocales.flatMap((entry) => {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return [];
+        const payload = entry as Record<string, unknown>;
+        const locale = asTrimmedString(payload.locale);
+        const reasonKey = asTrimmedString(payload.reasonKey);
+        if (!locale || !reasonKey) return [];
+        const detail = asTrimmedString(payload.detail);
+        return [{ locale, reasonKey, ...(detail ? { detail } : {}) }];
+      })
+    : [];
 
-  if (!baseLocale || translationOk === null || !translationState) return null;
+  if (!baseLocale || !requestedLocales.includes(baseLocale) || !status) return null;
   if (!readyLocales.includes(baseLocale)) return null;
 
   return {
     baseLocale,
+    requestedLocales,
     readyLocales,
-    translationOk,
-    translationState,
+    status,
+    failedLocales,
   };
 }
 
@@ -71,8 +93,7 @@ function resolveTranslationsErrorMessage(args: {
   reasonKey?: string | null;
 }): string {
   if (
-    args.reasonKey === 'tokyo_saved_l10n_summary_missing' ||
-    args.reasonKey === 'tokyo_saved_l10n_base_missing'
+    args.reasonKey === 'tokyo_translation_state_missing'
   ) {
     return 'Translations are not available for this widget yet.';
   }

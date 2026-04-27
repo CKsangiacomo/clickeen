@@ -64,7 +64,7 @@ function BuilderShell() {
 
   useEffect(() => {
     if (!translationsEnabled || translationsLoading) return undefined;
-    if (translationsData?.translationState !== 'updating') {
+    if (translationsData?.status !== 'accepted' && translationsData?.status !== 'working') {
       translationRefreshAttemptsRef.current = 0;
       return undefined;
     }
@@ -76,10 +76,10 @@ function BuilderShell() {
     }, 2500);
 
     return () => window.clearTimeout(timer);
-  }, [translationsData?.translationState, translationsEnabled, translationsLoading]);
+  }, [translationsData?.status, translationsEnabled, translationsLoading]);
 
   const previewableTranslationLocales = useMemo(() => {
-    if (!translationsData?.translationOk) return [];
+    if (translationsData?.status !== 'ready') return [];
     return translationsData.readyLocales;
   }, [translationsData]);
 
