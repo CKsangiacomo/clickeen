@@ -27,6 +27,10 @@ function resolvePublicProjectionL10nKey(key: string): string {
 }
 
 export async function handleGetL10nAsset(env: TokyoR2Env, key: string): Promise<Response> {
+  if (key.replace(/^\/+/, '') === 'l10n/manifest.json') {
+    return new Response('Not found', { status: 404 });
+  }
+
   const projectionKey = resolvePublicProjectionL10nKey(key);
   const obj = await env.TOKYO_R2.get(projectionKey);
   if (!obj) return new Response('Not found', { status: 404 });
