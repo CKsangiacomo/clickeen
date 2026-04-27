@@ -36,9 +36,9 @@ How it differs from other widgets:
 ## Entitlements + limits (v1)
 
 Notes:
-- This widget is not yet a Tokyo widget package in this repo; exact state paths are TBD until `tokyo/widgets/<widgetType>/spec.json` exists (`widgetType=instagramfeed` when this ships).
+- This widget is not yet a Tokyo widget package in this repo; exact state paths are TBD until `tokyo/product/widgets/<widgetType>/spec.json` exists (`widgetType=instagramfeed` when this ships).
 - Tier values live in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
-- Widget enforcement lives in `tokyo/widgets/<widgetType>/limits.json` (create this when the widget ships).
+- Widget enforcement lives in `tokyo/product/widgets/<widgetType>/limits.json` (create this when the widget ships).
 - The PRD lists entitlement keys and how they map to state paths; do not repeat per-tier matrices here.
 
 ### Limits mapping (initial / TBD)
@@ -68,7 +68,7 @@ Display Instagram posts from a public profile. Follows Behold.so's simpler model
 | Tenet | Application |
 |-------|-------------|
 | **No Fallbacks** | widget.client.js throws errors on missing data |
-| **Widget Files = Truth** | Core runtime files + contracts in tokyo/widgets/instagramfeed/ |
+| **Widget Files = Truth** | Core runtime files + contracts in tokyo/product/widgets/instagramfeed/ |
 | **Dieter Tokens** | All colors use Dieter tokens by default |
 | **Venice = Dumb Pipe** | Venice fetches and combines, doesn't transform |
 
@@ -682,8 +682,8 @@ Display Instagram posts from a public profile in grid, carousel, or masonry layo
 | Dependency | Purpose |
 |------------|---------|
 | Paris API routes (TBD; not implemented yet) | API endpoints for fetching public profiles |
-| `tokyo/widgets/shared/typography.js` | Typography module |
-| `tokyo/widgets/shared/stagePod.js` | Stage/Pod module |
+| `tokyo/product/widgets/shared/typography.js` | Typography module |
+| `tokyo/product/widgets/shared/stagePod.js` | Stage/Pod module |
 
 ---
 

@@ -5,8 +5,8 @@ import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
-const srcRoot = path.join(repoRoot, 'tokyo', 'admin-owned', 'i18n');
-const outRoot = path.join(repoRoot, 'tokyo', 'i18n');
+const srcRoot = path.join(repoRoot, 'tokyo', 'roma', 'i18n', 'source');
+const outRoot = path.join(repoRoot, 'tokyo', 'roma', 'i18n', 'public');
 const canonicalLocalesPath = path.join(repoRoot, 'packages', 'l10n', 'locales.json');
 
 function stableStringify(value) {
@@ -36,7 +36,7 @@ function tryGetGitSha() {
   if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
 
   try {
-    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'tokyo/admin-owned/i18n', 'packages/l10n/locales.json', 'scripts/i18n/build.mjs'], {
+    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'tokyo/roma/i18n/source', 'packages/l10n/locales.json', 'scripts/i18n/build.mjs'], {
       cwd: repoRoot,
       encoding: 'utf8',
     });
@@ -184,7 +184,7 @@ function main() {
   }
 
   fs.writeFileSync(path.join(outRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-  console.log(`[i18n] Built ${supportedLocales.length} locale(s) → tokyo/i18n (gitSha=${manifest.gitSha})`);
+  console.log(`[i18n] Built ${supportedLocales.length} locale(s) -> tokyo/roma/i18n/public (gitSha=${manifest.gitSha})`);
 }
 
 main();

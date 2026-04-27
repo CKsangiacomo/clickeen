@@ -7,8 +7,7 @@
       "useThisWidgetOnYourWebsite": "Use this widget on your website"
     },
     "cta": {
-      "createFree": "Create free",
-      "seeTemplates": "See templates"
+      "createFree": "Create free"
     },
     "localeShowcase": {
       "subtitle": "Same curated widget. Three locales. One codepath.",
@@ -36,8 +35,8 @@
       "messenger": "Messenger",
       "more": "More",
       "reddit": "Reddit",
-      "sectionMessageTitle": "Send this widget template as message",
-      "sectionSocialTitle": "Share this widget template on social",
+      "sectionMessageTitle": "Send this widget as message",
+      "sectionSocialTitle": "Share this widget on social",
       "share": "Share",
       "signal": "Signal",
       "slack": "Slack",
@@ -55,8 +54,7 @@
       "examples": "Examples",
       "features": "Features",
       "overview": "Overview",
-      "pricing": "Pricing",
-      "templates": "Templates"
+      "pricing": "Pricing"
     },
     "hero": {
       "overview": {

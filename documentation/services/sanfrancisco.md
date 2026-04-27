@@ -81,7 +81,7 @@ Health contract:
 - Used by `scripts/prague-l10n/translate.mjs` to translate Prague base content.
 - Prague-string prompts preserve source acronym style and do not add parenthetical acronym expansions that are absent in source text.
 - Prague-string safety validation enforces placeholder parity, HTML tag parity, and anchor integrity for richtext items.
-- Returns translated items; the caller writes overlay files under `tokyo/l10n/prague/**`.
+- Returns translated items; the caller writes overlay files under `tokyo/prague/l10n/**`.
 - Provider: OpenAI via shared policy router (curated profile default: `gpt-5.2`; env overrides still apply).
 
 ## Rules

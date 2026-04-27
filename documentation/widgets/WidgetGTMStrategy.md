@@ -42,11 +42,11 @@ Required input set for any widget:
 | Input | Source | Why needed |
 | --- | --- | --- |
 | Widget visitor problem | widget PRD | Core value proposition |
-| Widget actions (what it actually does) | widget PRD + `tokyo/widgets/{widgetType}/` | Prevent fake claims |
+| Widget actions (what it actually does) | widget PRD + `tokyo/product/widgets/{widgetType}/` | Prevent fake claims |
 | Supported layouts and visual range | `spec.json`, `widget.css`, pages | Templates/examples accuracy |
 | Localization behavior | `localization.json`, l10n docs/contracts | Correct language claims |
 | Embed/runtime behavior | architecture docs + runtime code | Infra claims |
-| Curated instance references | `tokyo/widgets/{widgetType}/pages/*.json` | Visual proof on Prague pages |
+| Curated instance references | `tokyo/prague/pages/{widgetType}/*.json` | Visual proof on Prague pages |
 
 If any required input is missing, stop and resolve before generating copy.
 
@@ -341,10 +341,10 @@ For each widget, AI should produce:
 - scenario mapping (`context -> widget action -> visible result`)
 
 3. Final page JSON content for:
-- `tokyo/widgets/{widgetType}/pages/overview.json`
-- `tokyo/widgets/{widgetType}/pages/templates.json`
-- `tokyo/widgets/{widgetType}/pages/examples.json`
-- `tokyo/widgets/{widgetType}/pages/features.json`
+- `tokyo/prague/pages/{widgetType}/overview.json`
+- `tokyo/prague/pages/{widgetType}/templates.json`
+- `tokyo/prague/pages/{widgetType}/examples.json`
+- `tokyo/prague/pages/{widgetType}/features.json`
 
 4. A brief validation note:
 - Which claims are numeric vs non-numeric

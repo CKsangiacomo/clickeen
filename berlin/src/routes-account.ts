@@ -14,7 +14,6 @@ import {
   listAccountInstanceRegistryPublicIds,
   loadAccountPublishContainment,
   loadAccountWidgetRegistry,
-  loadTemplateRegistry,
 } from './account-instance-registry';
 import {
   handleAccountMemberCreate,
@@ -469,16 +468,6 @@ export async function handleAccountWidgetRegistry(
     accountId,
     ...registry.value,
   });
-}
-
-export async function handleTemplateRegistry(request: Request, env: Env): Promise<Response> {
-  const resolved = await resolvePrincipalState(request, env);
-  if (!resolved.ok) return resolved.response;
-
-  const registry = await loadTemplateRegistry(env);
-  if (!registry.ok) return registry.response;
-
-  return json(registry.value);
 }
 
 export async function handleAccountPublishContainmentRegistry(

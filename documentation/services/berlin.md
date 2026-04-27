@@ -119,7 +119,6 @@ Residual public account-management routes:
 - `GET /v1/accounts/:id/instances/:publicId/registry`
 - `DELETE /v1/accounts/:id/instances/:publicId/registry`
 - `GET /v1/accounts/:id/publish-containment`
-- `GET /v1/templates/registry`
 
 Internal routes:
 

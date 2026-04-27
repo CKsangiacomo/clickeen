@@ -7,14 +7,14 @@ import { json } from '../http';
 import type { Env } from '../types';
 import {
   type LocalePolicy,
-  l10nLivePointerKey,
-  l10nTextPackKey,
   loadWidgetLocalizationAllowlist,
   normalizeLiveRenderPointer,
   normalizeLocalePolicy,
   normalizeTextPointer,
-  renderConfigPackKey,
-  renderLivePointerKey,
+  publicProjectionL10nLivePointerKey,
+  publicProjectionL10nTextPackKey,
+  publicProjectionRenderConfigPackKey,
+  publicProjectionRenderLivePointerKey,
 } from './render';
 
 type TextPointerPayload = {
@@ -128,7 +128,7 @@ async function loadPublicLocalizationSnapshot(args: {
   const overlayEntries = await Promise.all(
     nonBaseReadyLocales.map(async (locale) => {
       const pointer = normalizeTextPointer(
-        await loadJson<TextPointerPayload>(args.env, l10nLivePointerKey(args.publicId, locale)),
+        await loadJson<TextPointerPayload>(args.env, publicProjectionL10nLivePointerKey(args.publicId, locale)),
       );
       if (!pointer || !pointer.textFp || pointer.baseFingerprint !== baseFingerprint) {
         throw new Error(`live_locale_pointer_invalid:${locale}`);
@@ -137,7 +137,7 @@ async function loadPublicLocalizationSnapshot(args: {
       const textPack = readTextPack(
         await loadJson<Record<string, unknown>>(
           args.env,
-          l10nTextPackKey(args.publicId, locale, pointer.textFp),
+          publicProjectionL10nTextPackKey(args.publicId, locale, pointer.textFp),
         ),
       );
       if (!textPack) {
@@ -196,7 +196,7 @@ function buildLocaleLabels(locales: string[]): Record<string, string> {
 
 export async function handleGetPublicInstance(env: Env, publicId: string): Promise<Response> {
   const livePointer = normalizeLiveRenderPointer(
-    await loadJson(env, renderLivePointerKey(publicId)),
+    await loadJson(env, publicProjectionRenderLivePointerKey(publicId)),
   );
   if (!livePointer) {
     return ckError('NOT_FOUND', 'coreui.errors.instance.notFound', 404);
@@ -205,7 +205,7 @@ export async function handleGetPublicInstance(env: Env, publicId: string): Promi
   const config = readConfigPack(
     await loadJson<Record<string, unknown>>(
       env,
-      renderConfigPackKey(publicId, livePointer.configFp),
+      publicProjectionRenderConfigPackKey(publicId, livePointer.configFp),
     ),
   );
   if (!config) {

@@ -35,7 +35,7 @@ The GTM Agent learns:
 Every widget has a `gtm.json` file that contains everything needed to market it:
 
 ```json
-// tokyo/widgets/faq/gtm.json
+// tokyo/product/widgets/faq/gtm.json
 {
   "widgetSlug": "faq",
   "displayName": "FAQ Widget",
@@ -485,7 +485,7 @@ crons = ["0 2 * * 0"]  # Every Sunday at 2am UTC
 │   GTM Agent outputs GTM JSON                                                │
 │          │                                                                  │
 │          ▼                                                                  │
-│   Human reviews (optional) → copies to tokyo/widgets/{widget}/gtm.json      │
+│   Human reviews (optional) → copies to tokyo/product/widgets/{widget}/gtm.json      │
 │          │                                                                  │
 │          ▼                                                                  │
 │   Prague builds pages from GTM JSON                                         │
@@ -558,7 +558,7 @@ crons = ["0 2 * * 0"]  # Every Sunday at 2am UTC
 │                                                                             │
 │  1. Read strategy.md and changes.md                                         │
 │  2. Review proposed gtm.json                                                │
-│  3. Accept: copy gtm.json → tokyo/widgets/{widget}/gtm.json                 │
+│  3. Accept: copy gtm.json → tokyo/product/widgets/{widget}/gtm.json                 │
 │     OR modify: edit and then copy                                           │
 │     OR reject: don't copy, agent will try again next run                    │
 │  4. Commit to git                                                           │
@@ -661,7 +661,7 @@ services/
     wrangler.toml
     package.json
 
-tokyo/widgets/
+tokyo/product/widgets/
   faq/
     spec.json
     agent.md

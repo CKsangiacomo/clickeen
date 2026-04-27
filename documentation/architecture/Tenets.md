@@ -101,7 +101,7 @@ Note: localization overlays are **not** “fallbacks for config.” The base con
 Every widget is defined by **core runtime files + contract files** in Tokyo:
 
 ```
-tokyo/widgets/{widgetname}/
+tokyo/product/widgets/{widgetname}/
 ├── spec.json              ← Schema + defaults + ToolDrawer panels
 ├── widget.html            ← HTML structure
 ├── widget.css             ← All styling

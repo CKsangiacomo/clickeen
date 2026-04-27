@@ -39,7 +39,7 @@ Core columns:
 - `account_id` (uuid) — FK to `accounts.id` (instances are account-owned)
 - `public_id` (text) — the **only** identifier that crosses system boundaries
 - `display_name` (text, nullable) — account-facing instance label (defaults to `public_id` when missing)
-- `kind` (text) — `user` (curated/baseline live in `curated_widget_instances`)
+- `kind` (text) — `user` (listed starter/baseline cutover rows still live in `curated_widget_instances`)
 - `status` (text) — `published` | `unpublished` (schema residue during cutover; not canonical serve-state authority)
 - `config` (jsonb) — required object, no longer used as active product config truth
 
@@ -56,18 +56,18 @@ Guardrails:
 
 - `widget_instances_user_public_id_only` constraint (NOT VALID) blocks new `wgt_main_*` / `wgt_curated_*` writes.
 
-### `curated_widget_instances`
+### `curated_widget_instances` (starter registry residue)
 
-One row per **Clickeen-authored** instance (baseline + curated).
+One row per **Clickeen-authored** starter/baseline instance during the current cutover.
 
 Core columns:
 
 - `id` (uuid) — internal (never exposed outside DB/services)
 - `public_id` (text) — the **only** identifier that crosses system boundaries
 - `widget_type` (text) — denormalized widget type (validated against Tokyo registry at write time)
-- `kind` (text) — `baseline` | `curated`
+- `kind` (text) — `baseline` | `curated` (legacy enum names; product language is listed starter/baseline)
 - `status` (text) — `published` | `unpublished` (schema residue during cutover; not canonical serve-state authority)
-- `owner_account_id` (uuid) — FK to `accounts.id` (curated rows are owned by a platform account; runtime policy keys off `accounts.is_platform` plus row ownership, not a hardcoded seed id)
+- `owner_account_id` (uuid) — FK to `accounts.id` (starter rows are owned by a platform account; runtime policy keys off `accounts.is_platform` plus row ownership, not a hardcoded seed id)
 - `config` (jsonb) — required object, no longer used as active product config truth
 
 ### `accounts`
@@ -133,7 +133,7 @@ This table exists even if the full UI/UX ships later.
 
 - **No partial configs**: `config` is required and must be a JSON object (not `null`, not an array).
 - **No legacy states**: if a Michael status column still exists during cutover, only `published` / `unpublished` are allowed values (no `draft`, no `inactive`). That column is not the canonical serve-state owner.
-- **No extra “template system”**: Michael does not have a templates table. “Templates” are instances.
+- **No separate starter content model**: starter designs are instances. The remaining `curated_widget_instances` table is cutover residue, not a surviving product noun.
 - **Account-owned uploads**: every uploaded asset manifest is account-scoped; ownership is never inferred from scope names.
 
 ## Instance Taxonomy (3 kinds of instances)
@@ -161,7 +161,7 @@ Examples:
 
 - `wgt_main_faq`
 
-### B) Curated instance (Clickeen-authored)
+### B) Listed starter instance (Clickeen-authored)
 
 These are instances created by Clickeen (via Bob) that serve as starter designs **and** Prague embeds.
 
@@ -181,7 +181,7 @@ Examples:
 - `wgt_curated_logoshowcase_brutalist`
 
 **Metadata**
-Curated instances also store metadata in `curated_widget_instances.meta`:
+Starter instances also store metadata in `curated_widget_instances.meta` during the cutover:
 
 ```
 {
@@ -194,7 +194,7 @@ Metadata is used for DevStudio display + filtering; the `public_id` is still the
 
 ### C) User instance
 
-Instances created by users (usually by cloning either a `main` instance or a curated instance).
+Instances created by users (usually by duplicating either a `main` instance or a listed starter instance).
 
 **Naming**
 
@@ -217,13 +217,11 @@ It:
 - renames the known curated/main instances to the new prefixes, and
 - re-adds the `widget_instances_public_id_format` constraint to forbid locale suffixes going forward.
 
-## Curated Starter Instances
-
-Competitors build a separate “template system”.
+## Listed Starter Instances
 
 Clickeen does not.
 
-What the product surfaces as starter designs are curated instances owned by the admin account. They are `curated_widget_instances` rows whose `public_id` uses the `wgt_curated_` form. The gallery is simply a filtered view of those curated starter instances. It is not keyed off the Tokyo `published` / `unpublished` serve flag, because starter discovery is not public-serving authority.
+What the product surfaces as starter designs are account-owned instances from the admin/platform account. During the current Michael cutover, the DB registry residue for those rows is `curated_widget_instances`, but the product model is still listed/duplicable instances. The gallery is simply a filtered view of those listed starter instances. It is not keyed off the Tokyo `published` / `unpublished` serve flag, because starter discovery is not public-serving authority.
 
 ## Local Dev (Docker Supabase)
 
@@ -241,14 +239,14 @@ Local DB is Supabase CLI + Docker:
   - `widget_instances.config` (legacy schema column, not active product config truth)
 - The durable contract for uploaded assets is:
   - logical `assetId` references for migrated media surfaces in instance config
-  - blob bytes under `assets/versions/{accountId}/...` in Tokyo R2
-  - per-asset manifest metadata under `assets/meta/accounts/{accountId}/assets/{assetId}.json`
+  - blob bytes under `accounts/{accountId}/assets/versions/{assetId}/{sha256}/{filename}` in Tokyo R2
+  - per-asset manifest metadata under `accounts/{accountId}/assets/meta/{assetId}.json`
 
 ## What Michael Does NOT Do (by design)
 
 - No billing tables (Stripe, invoices, etc.)
 - No embed tokens table (yet)
-- No schema/template migration system (templates are instances)
+- No separate starter-content migration system (starter designs are instances)
 
 Those concerns are intentionally outside Michael’s scope right now so the editor stays strict and the platform stays simple.
 
@@ -260,6 +258,6 @@ Michael seeds one deterministic platform account:
 
 Today this seeded platform account owns:
 
-- `curated_widget_instances` (baseline + curated starter designs)
+- `curated_widget_instances` cutover residue (baseline + listed starter designs)
 - local platform verification/state used by internal tooling
 - the current cloud-dev product/runtime account context after PRD 60

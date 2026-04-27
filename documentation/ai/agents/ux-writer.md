@@ -226,8 +226,8 @@ crons = ["0 3 * * 0"]  # Every Sunday at 3am UTC
 **Task flow**:
 1. Orchestrator enqueues `{ type: "audit", locale, widgetName }` for each combo
 2. Worker loads our catalogs via Tokyo i18n manifest:
-   - Fetch `tokyo/i18n/manifest.json`
-   - Fetch `tokyo/i18n/{locale}/{bundle}.{hash}.json` for `coreui` + `{widgetName}`
+   - Fetch `tokyo/roma/i18n/public/manifest.json`
+   - Fetch `tokyo/roma/i18n/public/{locale}/{bundle}.{hash}.json` for `coreui` + `{widgetName}`
 3. Worker loads relevant patterns from D1
 4. Worker calls LLM to compare and identify issues
 5. Worker stores findings in D1 `audit_findings`
@@ -345,8 +345,8 @@ Orchestrator exposes `getStatus()`:
 │  1. Read report.md (summary, top issues, reasoning)             │
 │  2. Review diffs/*.diff (quick scan per locale)                 │
 │  3. Accept:                                                     │
-│     - Apply proposed changes to source catalogs in `tokyo/admin-owned/i18n/{locale}/`│
-│     - Run `pnpm build:i18n` to regenerate `tokyo/i18n/*` outputs │
+│     - Apply proposed changes to source catalogs in `tokyo/roma/i18n/source/{locale}/`│
+│     - Run `pnpm build:i18n` to regenerate `tokyo/roma/i18n/public/*` outputs │
 │     - OR cherry-pick specific changes                           │
 │  4. Commit to git                                               │
 │  5. Mark findings as "accepted" or "rejected" in D1 (feedback)  │
@@ -440,4 +440,4 @@ documentation/
 | Cloudflare D1 | Structured storage (patterns, findings, history) |
 | Cloudflare R2 | Object storage (reports, proposed files, cache) |
 | OpenAI API (or similar) | LLM for extraction, comparison, generation |
-| i18n system (tokyo/i18n/) | Source catalogs to audit |
+| i18n system (tokyo/roma/i18n/public/) | Source catalogs to audit |

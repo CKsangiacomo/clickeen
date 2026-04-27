@@ -35,7 +35,6 @@ import {
   handleMeIdentities,
   handleMeUpdate,
   handleSessionBootstrap,
-  handleTemplateRegistry,
 } from './routes-account';
 import {
   handleHealthz,
@@ -241,9 +240,6 @@ const BERLIN_ROUTES: BerlinRoute[] = [
   },
   exact('/v1/session/bootstrap', {
     GET: ({ request, env }) => handleSessionBootstrap(request, env),
-  }),
-  exact('/v1/templates/registry', {
-    GET: ({ request, env }) => handleTemplateRegistry(request, env),
   }),
   exact('/auth/refresh', {
     POST: ({ request, env }) => handleRefresh(request, env),

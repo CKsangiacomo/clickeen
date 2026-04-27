@@ -17,7 +17,7 @@ Related:
 ---
 
 ## Widget definition (Tokyo)
-Location: `tokyo/widgets/{widgetType}/`
+Location: `tokyo/product/widgets/{widgetType}/`
 
 Files:
 - `spec.json` (defaults + ToolDrawer markup)
@@ -95,7 +95,7 @@ postMessage payload (Bob -> preview):
 ---
 
 ## Runtime modules (shared)
-Location: `tokyo/widgets/shared/`
+Location: `tokyo/product/widgets/shared/`
 
 | Module | Export | Purpose |
 | --- | --- | --- |

@@ -3,7 +3,7 @@
 Purpose: define the **only** copy fields the SDR acquisition agent may personalize.
 
 Location:
-`tokyo/widgets/{widgetType}/sdr.allowlist.json`
+`tokyo/product/widgets/{widgetType}/sdr.allowlist.json`
 
 Schema:
 ```json

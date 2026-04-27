@@ -102,22 +102,21 @@ function isRealWidgetDir(name: string): boolean {
   return true;
 }
 
-const TOKYO_WIDGET_PAGE_GLOB = import.meta.glob('../../../tokyo/widgets/**/pages/*.json', { import: 'default' });
+const TOKYO_PRAGUE_PAGE_GLOB = import.meta.glob('../../../tokyo/prague/pages/**/*.json', { import: 'default' });
 const WIDGET_PAGE_LOADERS = new Map<string, () => Promise<unknown>>();
 const WIDGET_SET = new Set<string>();
 
-for (const [filePath, loader] of Object.entries(TOKYO_WIDGET_PAGE_GLOB)) {
+for (const [filePath, loader] of Object.entries(TOKYO_PRAGUE_PAGE_GLOB)) {
   const normalized = filePath.replace(/\\/g, '/');
-  const marker = '/tokyo/widgets/';
+  const marker = '/tokyo/prague/pages/';
   const markerIndex = normalized.lastIndexOf(marker);
   if (markerIndex === -1) continue;
   const rest = normalized.slice(markerIndex + marker.length);
   const parts = rest.split('/');
-  if (parts.length < 3) continue;
-  if (parts[1] !== 'pages') continue;
+  if (parts.length < 2) continue;
   const widget = parts[0];
   if (!isRealWidgetDir(widget)) continue;
-  const pageFile = parts[2];
+  const pageFile = parts[1];
   if (!pageFile.endsWith('.json')) continue;
   const page = pageFile.slice(0, -'.json'.length);
   const key = `${widget}/${page}`;
@@ -143,7 +142,7 @@ export async function loadWidgetPageJsonForLocale(
   if (!pageJson) return null;
 
   const pagePath = buildWidgetPagePath(opts.widget, opts.page);
-  const pageFilePath = `tokyo/widgets/${opts.widget}/pages/${opts.page}.json`;
+  const pageFilePath = `tokyo/prague/pages/${opts.widget}/${opts.page}.json`;
   if (!pageJson || typeof pageJson !== 'object' || Array.isArray(pageJson)) {
     throw new Error(`[prague] Invalid base JSON for ${pageFilePath}`);
   }
@@ -198,7 +197,7 @@ export async function loadWidgetPageJsonForLocaleWithOverlayMeta(
   if (!pageJson) return null;
 
   const pagePath = buildWidgetPagePath(opts.widget, opts.page);
-  const pageFilePath = `tokyo/widgets/${opts.widget}/pages/${opts.page}.json`;
+  const pageFilePath = `tokyo/prague/pages/${opts.widget}/${opts.page}.json`;
   if (!pageJson || typeof pageJson !== 'object' || Array.isArray(pageJson)) {
     throw new Error(`[prague] Invalid base JSON for ${pageFilePath}`);
   }
@@ -251,7 +250,7 @@ export async function loadRequiredWidgetPageJsonForLocaleWithOverlayMeta(
 ): Promise<{ json: unknown; overlay: PragueOverlayMeta }> {
   const result = await loadWidgetPageJsonForLocaleWithOverlayMeta(opts);
   if (!result) {
-    throw new Error(`[prague] Missing tokyo/widgets/${opts.widget}/pages/${opts.page}.json (required)`);
+    throw new Error(`[prague] Missing tokyo/prague/pages/${opts.widget}/${opts.page}.json (required)`);
   }
   return result;
 }
@@ -261,7 +260,7 @@ export async function loadRequiredWidgetPageJsonForLocale(
 ): Promise<unknown> {
   const json = await loadWidgetPageJsonForLocale(opts);
   if (!json) {
-    throw new Error(`[prague] Missing tokyo/widgets/${opts.widget}/pages/${opts.page}.json (required)`);
+    throw new Error(`[prague] Missing tokyo/prague/pages/${opts.widget}/${opts.page}.json (required)`);
   }
   return json;
 }
@@ -275,5 +274,5 @@ export async function listWidgetPages(widget: string): Promise<string[]> {
     throw new Error(`[prague] Invalid widget directory: ${widget}`);
   }
   // Prague subpages are a fixed product surface (no markdown scanning).
-  return ['templates', 'examples', 'features', 'pricing'];
+  return ['examples', 'features', 'pricing'];
 }

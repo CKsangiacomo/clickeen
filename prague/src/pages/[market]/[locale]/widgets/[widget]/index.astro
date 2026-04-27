@@ -83,7 +83,7 @@ try {
   pageTitle = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).title ?? '') : '';
   pageDescription = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).description ?? '') : '';
   if (!pageTitle || !pageDescription) {
-    throw new Error(`[prague] Invalid tokyo/widgets/${widgetKey}/pages/overview.json (page-meta.copy.title/description required)`);
+    throw new Error(`[prague] Invalid tokyo/prague/pages/${widgetKey}/overview.json (page-meta.copy.title/description required)`);
   }
   const widgetDisplayName = titleCaseWidget(widgetKey);
   createFreeLabel = `Create a free ${widgetDisplayName} widget`;

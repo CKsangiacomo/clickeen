@@ -258,7 +258,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
           });
           const widgetHtml = await widgetRes.text().catch(() => '');
           if (!widgetRes.ok || !widgetHtml) {
-            showError('Widget unavailable', 'Widget template missing.', 'widgetType=' + widgetType);
+            showError('Widget unavailable', 'Widget software missing.', 'widgetType=' + widgetType);
             return;
           }
 

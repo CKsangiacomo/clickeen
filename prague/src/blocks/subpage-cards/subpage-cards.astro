@@ -7,7 +7,7 @@ import { resolvePragueHref } from '../../lib/links';
 type CardCopy = { title: string; body: string };
 
 type LinkItem = {
-  page: 'templates' | 'examples' | 'features';
+  page: 'examples' | 'features' | 'pricing';
   iconName?: string;
 };
 
@@ -45,8 +45,8 @@ function pageHref(page: LinkItem['page']): string {
 }
 
 function pageLabel(page: LinkItem['page']): string {
-  if (page === 'templates') return 'Templates';
   if (page === 'examples') return 'Examples';
+  if (page === 'pricing') return 'Pricing';
   return 'Features';
 }
 
@@ -64,7 +64,7 @@ function ctaLabel(page: LinkItem['page']): string {
     <div class="ck-row ck-subpageCards__row" aria-label={title}>
       {items.map((card, i) => {
         const link = links?.[i];
-        const page = link?.page ?? (i === 0 ? 'templates' : i === 1 ? 'examples' : 'features');
+        const page = link?.page ?? (i === 0 ? 'examples' : i === 1 ? 'features' : 'pricing');
         const href = pageHref(page);
         const iconName = typeof link?.iconName === 'string' ? link.iconName.trim() : '';
 

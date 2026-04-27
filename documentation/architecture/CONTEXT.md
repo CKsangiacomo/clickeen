@@ -2,7 +2,7 @@
 
 This is the technical reference for working in the Clickeen codebase. For strategy and vision, see `documentation/strategy/WhyClickeen.md`.
 
-**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, ad‑hoc fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Locale overlays are exposed only when current for the active base fingerprint; missing current overlays are system failures, not something runtime consumers soften or hide. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/widgets/*`), defaults (`spec.json` → `defaults`), and curated local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high‑impact changes, still use safety rails (feature flags, rollback switches, and data‑safety checks) when a change can affect runtime behavior.
+**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, ad‑hoc fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Locale overlays are exposed only when current for the active base fingerprint; missing current overlays are system failures, not something runtime consumers soften or hide. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/product/widgets/*`), defaults (`spec.json` -> `defaults`), and curated local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high‑impact changes, still use safety rails (feature flags, rollback switches, and data‑safety checks) when a change can affect runtime behavior.
 
 **Debugging order (when something is unclear):**
 
@@ -23,20 +23,22 @@ Clickeen is a simple product.
 
 The real product path is:
 
-1. A real account owns widgets and assets.
+1. A real account owns widget instances and assets.
 2. A real user in that account opens Builder in Roma.
-3. Bob edits one widget in memory.
-4. Roma saves that widget to Tokyo.
+3. Bob edits one instance of one widget type in memory.
+4. Roma saves that instance to Tokyo.
 5. Entitlements from the account are the only source of limits, caps, budgets, and upsell.
 
 Non-negotiable negative truths:
 
 - Builder is the only real authoring surface.
 - Minibob is a demo/funnel surface. It may preview, collect intent, and hand off to signup. It is **not** a user, account, editor identity, policy profile, or save-capable product mode.
-- Builder authoring happens on one widget in the account `baseLocale`. Translation is async follow-up work after save. Locale overlay preview is read-only inspection enabled only from the Translations panel.
-- Preview must reflect the same widget the customer is editing. Preview is **not** a second widget-shaped truth.
+- Builder authoring happens on one account-owned instance in the account `baseLocale`. Translation is async follow-up work after save. Locale overlay preview is read-only inspection enabled only from the Translations panel.
+- Preview must reflect the same instance the customer is editing. Preview is **not** a second widget-shaped truth.
 - Invalid state must fail at the named boundary. Do not silently heal product truth into a new normal.
 - Non-account/helper/demo flows may exist in code while being reduced, but they do **not** define account authoring truth.
+- Admin is a normal account with broader permissions. Admin instances are normal account-owned instances and must not get a separate admin storage lane.
+- Starter/example content is a listed and duplicable instance, not a separate architecture, storage, API, or type model.
 
 ### Publication / Serve-State Truth
 
@@ -83,26 +85,40 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 ## Canonical Concepts
 
-### Widget Definition vs Widget Instance
+### Widget vs Instance vs Account
 
-**Widget Definition** (Tokyo widget folder) = THE SOFTWARE
+**Widget** = THE SOFTWARE
 
 - Complete functional software for a widget type (e.g. FAQ)
-- Lives in `tokyo/widgets/{widgetType}/`
+- Surviving repo source lives in `tokyo/product/widgets/{widgetType}/`
 - Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
-- Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
+- Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `limits.json`, `localization.json`, `layers/*.allowlist.json`
 - Platform-controlled; **not stored in Michael** and **not served from Paris**
 
-**Widget Instance** = THE DATA
+**Instance** = THE ACCOUNT-OWNED DATA
 
-- Instance configuration data (curated or user-owned)
+- One saved configured widget owned by one account
+- Owns saved config, display metadata, asset refs, base locale, l10n state, overlay ops, generated packs, and publish/live state
 - Stored in Michael:
-  - Clickeen-authored baseline + curated: `curated_widget_instances` with `widget_type`
-  - User/account instances: `widget_instances` with `widget_id` (FK to `widgets`)
+  - Account registry residue: `widget_instances` with `widget_id` (FK to `widgets`)
+  - Clickeen-listed starter residue during cutover: `curated_widget_instances` with `widget_type`
 - Product-path account open resolves the saved authoring revision from Tokyo; Michael remains the registry/shell plane during cutover, while instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
 - On the active account authoring path, user-facing instance identity (`widgetType`, `displayName`, `source`, `meta`) is Tokyo-owned. Michael `widget_instances.display_name` may still exist as storage residue during cutover, but Widgets/Builder product contracts must not read or write identity truth from it.
 - Michael `widget_instances.config` may still exist as inert schema residue for user-instance rows, but the active product path must not persist or read a second live widget document there.
 - Bob holds working copy in memory as `instanceData` during editing
+
+**Account** = THE OWNERSHIP BOUNDARY
+
+- Owns instances, assets, usage, billing, permissions, export, and deletion
+- Admin is just an account with broader permissions
+- Account-owned runtime truth belongs under account-first Tokyo-worker storage, not in repo folders
+
+**Listed/Duplicable Instance** = STARTER CONTENT
+
+- A normal account-owned instance with metadata like `listed: true` and `duplicable: true`
+- Prague may display listed admin-account instances; Roma may duplicate them into a customer account
+- Copying a starter creates a new instance under the destination account
+- There is no surviving separate preset model, route authority, folder authority, or type authority
 
 ### Product-Path Account Editing (Current PRD 61 Cutover)
 
@@ -150,16 +166,16 @@ Between open and save:
 | `spec.json`    | Defaults + ToolDrawer markup; compiled by Bob                                                            |
 | `agent.md`     | AI contract documenting editable paths and semantics                                                     |
 
-### Starter Designs (Curated Instances)
+### Starter Designs (Listed/Duplicable Instances)
 
-**Clickeen does not have a separate gallery-preset content model.** "Starter designs" are Clickeen-authored instances stored in `curated_widget_instances` and exposed in the gallery.
+**Clickeen does not have a separate gallery-preset content model.** "Starter designs" are Clickeen-authored account instances marked as listed and duplicable.
 
 **How it works:**
 
-1. Clickeen team authors the starter instances in DevStudio.
+1. Clickeen team authors the starter instances in Builder, under the admin account.
 2. One instance per widget may be shown first in MiniBob (`wgt_main_{widgetType}` in current runtime naming).
 3. Other starter instances use `wgt_curated_{widgetType}_{styleSlug}` in current runtime naming.
-4. These instances are published one-way to cloud-dev and surfaced in the gallery.
+4. These instances are published/listed and surfaced as starters.
 5. User browses gallery -> clicks "Use this" -> clones to their account as a user instance.
 6. User customizes their copy freely (full ToolDrawer access).
 
@@ -167,8 +183,8 @@ Between open and save:
 
 - **One editor**: Clickeen and users author in Bob; same config schema.
 - **One instance set**: the same instances appear as Roma starters, local internal verification targets, and Prague embeds.
-- **Deterministic publish**: Clickeen-authored instances are one-way (local -> cloud-dev).
-- **Scales to marketplace**: Curated instances remain shareable configs, not a new content type.
+- **No special owner lane**: admin starters live under the admin account like every other account-owned instance.
+- **Scales to marketplace**: listed instances remain shareable configs, not a new content type.
 
 **Naming convention for Clickeen starters:**
 
@@ -182,10 +198,13 @@ Examples:
 
 **Publishing semantics:** `published` / `unpublished` is a Tokyo instance serve-state concept. Curated rows may still carry `status` residue in Michael schema during cutover, but that column is not canonical authority and not a user-facing gate.
 
-Curated metadata lives alongside the instance (not in the publicId):
+Listed metadata lives alongside the instance (not in the publicId):
 
 ```
-curated_widget_instances.meta = {
+instance.meta = {
+  listed: true,
+  duplicable: true,
+  listedSurfaces: ["prague", "roma"],
   styleName: "lightblurs.generic",
   styleSlug: "lightblurs_generic"
 }
@@ -216,7 +235,7 @@ curated_widget_instances.meta = {
 
 **Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly. Bob does not own serve-state changes; publish/unpublish toggles the Tokyo instance serve flag from Roma widgets-domain flows, and Bob's copy-code affordance is only for getting website embed snippets. Bob is the real account authoring UI. Shared Bob code must model the account Builder product path, not preserve demo/funnel identities as co-equal editor modes. Copilot browser entrypoint is `POST /api/ai/widget-copilot`, and Roma resolves widget identity server-side from the instance being edited.
 
-**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/templates`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`bob:session-ready` -> `ck:open-editor` -> applied/fail), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and saves that one widget document back through the same account boundary. Roma's authed shell owns account bootstrap, auth-required redirect, account-context failure, and the ready account context exposed to domains; individual domain pages must not render their own account-loading, account-error, no-account, or default fake account states. On the active Widgets/Builder path, Roma treats Tokyo as the user-facing instance identity owner and canonical instance serve-state owner. Michael may still carry registry/status residue during cutover, but it is not the surviving publish/unpublish authority. In product terms, `Save` is one handoff of the instance to Tokyo-worker so Tokyo-worker can reconcile the instance and its derived artifacts. `Publish` / `Unpublish` remains the separate Widgets-domain action that flips whether Venice may publicly serve that instance. Current Roma is a single-current-account customer shell and does not expose customer account switching. Roma is the real account/product boundary for Builder. It must not model a fake anonymous editor/account mode inside shared account truth. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
+**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps a short-lived account authz capsule for server-verifiable session authz, opens Bob through explicit message boot (`bob:session-ready` -> `ck:open-editor` -> applied/fail), reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and saves that one widget document back through the same account boundary. Roma's authed shell owns account bootstrap, auth-required redirect, account-context failure, and the ready account context exposed to domains; individual domain pages must not render their own account-loading, account-error, no-account, or default fake account states. On the active Widgets/Builder path, Roma treats Tokyo as the user-facing instance identity owner and canonical instance serve-state owner. Michael may still carry registry/status residue during cutover, but it is not the surviving publish/unpublish authority. In product terms, `Save` is one handoff of the instance to Tokyo-worker so Tokyo-worker can reconcile the instance and its derived artifacts. `Publish` / `Unpublish` remains the separate Widgets-domain action that flips whether Venice may publicly serve that instance. Current Roma is a single-current-account customer shell and does not expose customer account switching. Roma is the real account/product boundary for Builder. It must not model a fake anonymous editor/account mode inside shared account truth. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
 
 **DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, verification, and small local utility pages. The old local DevStudio widget-authoring lane is removed. DevStudio must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 
@@ -226,9 +245,9 @@ curated_widget_instances.meta = {
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
-**Michael** — Supabase PostgreSQL database. Stores curated instances (`curated_widget_instances`), user instances (`widget_instances`), submissions, users, usage events. RLS enforced for user tables; curated rows are global. Starters use `wgt_main_*` and `wgt_curated_*`.
+**Michael** — Supabase PostgreSQL database. Stores user/account instance registry rows (`widget_instances`), transitional listed starter registry rows (`curated_widget_instances` during cutover), submissions, users, usage events. RLS enforced for user tables. Starters use `wgt_main_*` and `wgt_curated_*` in current naming, but the surviving product model is listed/duplicable instances, not a separate content class.
 
-**Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and account-owned upload blobs.
+**Tokyo** — Asset storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, public projections, and account-owned upload blobs.
 
 **Tokyo Worker** — Cloudflare Worker that serves immutable account asset paths (`/assets/v/:assetRef`), exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, durably reconciles widget overlay artifacts after save/settings changes, keeps Builder and Venice on the same current locale truth while gating Builder interaction separately, and publishes Venice render snapshots.
 
@@ -238,7 +257,7 @@ curated_widget_instances.meta = {
 - Fill/media authoring config now stores logical asset identity (`assetId`, optional `posterAssetId`) while runtime/materialized config packs resolve those ids to canonical root-relative paths: `/assets/v/:assetRef`.
 - Logo/media authoring surfaces use the same split: uploaded logos persist `asset.assetId` plus editor metadata, while runtime consumes only the materialized `logoFill`.
 - Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and `/assets/v/*`-backed `logoFill` strings) are outside contract and rejected on write.
-- Legacy `/arsenale/a/**` and `/arsenale/o/**` paths are outside the runtime contract and are rejected on new writes.
+- Legacy non-account media paths are outside the runtime contract and are rejected on new writes.
 - `DELETE` on an account asset is synchronous in the delete path (metadata + blob) with no snapshot rebuild/healing side effects; subsequent `/assets/v/**` reads return unavailable.
 - Managed asset APIs expose explicit integrity checks (`/assets/integrity/:accountId` and `/assets/integrity/:accountId/:assetId`) so Roma can surface DB↔R2 mismatch states.
 - Runtime does not rely on `CK_ASSET_ORIGIN`; asset paths remain canonical root-relative and environment portability is provided by Bob/Venice proxy routes.
@@ -257,7 +276,7 @@ curated_widget_instances.meta = {
 ### Tokyo Widget Folder Structure
 
 ```
-tokyo/widgets/{widgetType}/
+tokyo/product/widgets/{widgetType}/
 ├── spec.json          # Defaults + ToolDrawer markup (<bob-panel> + <tooldrawer-field>)
 ├── widget.html        # Semantic HTML with data-role attributes
 ├── widget.css         # Scoped styles using Dieter tokens
@@ -265,13 +284,14 @@ tokyo/widgets/{widgetType}/
 ├── agent.md           # AI contract (required for AI editing)
 ├── limits.json        # Entitlements caps/flags consumed by shared policy enforcement
 ├── localization.json  # Locale-layer allowlist (translatable paths)
-├── layers/            # Per-layer allowlists (e.g. user.allowlist.json)
-└── pages/             # Prague marketing pages (overview/features/examples/pricing)
+└── layers/            # Per-layer allowlists
 ```
+
+Prague marketing/showcase page source is not widget software and belongs under `tokyo/prague/pages/{widgetType}/`.
 
 ### Shared Runtime Modules
 
-All widgets use shared modules from `tokyo/widgets/shared/`:
+All widgets use shared modules from `tokyo/product/widgets/shared/`:
 
 | Module          | Global                                                                        | Purpose                                                                          |
 | --------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
@@ -330,12 +350,11 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 
 Locale is a runtime parameter and must not be encoded into instance identity (`publicId`).
 
-- UI strings use Tokyo-hosted `i18n` catalogs (`tokyo/i18n/**`).
-- Repo-authored admin-owned i18n source catalogs live under `tokyo/admin-owned/i18n/**` and build into `tokyo/i18n/**`.
-- Instance/content translation uses Tokyo-hosted published `l10n` artifacts (`tokyo/l10n/**`) at runtime. Public embeds read locale text packs + live pointers. The active Builder product path does not expose a `layer=user` authoring surface.
-- Repo-authored admin-owned l10n source overlays live under `tokyo/admin-owned/l10n/**` and build into `tokyo/l10n/**`.
-- Prague marketing copy lives in `tokyo/widgets/*/pages/*.json` (single source) with layered ops overlays stored in Tokyo (`tokyo/l10n/prague/**`) and applied at runtime (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
-- Canonical overlay truth for instances lives in Tokyo/Tokyo-worker. Historical `layer=user` rows may still exist in Tokyo storage, but they are not part of the active Builder authoring flow.
+- Roma/account product UI strings live under `tokyo/roma/i18n/**` and are served through Tokyo as product UI catalogs.
+- Prague marketing/showcase copy and localization source live under `tokyo/prague/**`.
+- Instance/content translation truth lives under the owning account's instance in Tokyo-worker storage. Public embeds read only public projections of locale packs + live pointers.
+- There is no repo-authored admin l10n lane and no repo-local instance overlay truth.
+- Canonical overlay truth for instances lives in account-first Tokyo/Tokyo-worker storage. Historical `layer=user` rows may still exist in old storage during cutover, but they are not part of the active Builder authoring flow.
 
 Canonical reference:
 
@@ -351,7 +370,7 @@ Canonical reference:
 | System  | Status    | Notes                                                                                                         |
 | ------- | --------- | ------------------------------------------------------------------------------------------------------------- |
 | Bob     | ✅ Active | Compiler, ToolDrawer, Account, Ops engine                                                                     |
-| Roma    | ✅ Active | Domain shell, account bootstrap, widgets/templates/builder orchestration                                      |
+| Roma    | ✅ Active | Domain shell, account bootstrap, widgets/builder orchestration                                                |
 | Tokyo   | ✅ Active | FAQ widget with shared modules                                                                                |
 | Paris   | ✅ Active | Residual health stub and non-product residue only                                                             |
 | Venice  | ✅ Active | SSR embed runtime (published-only), loader, asset proxy (usage/submissions are stubbed in this repo snapshot) |
@@ -362,9 +381,9 @@ Canonical reference:
 
 | Widget        | Status    | Components Used                                                                                                                               |
 | ------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| FAQ           | ✅ Active | See `tokyo/widgets/faq/spec.json` (object-manager, repeater, dropdown-edit, toggle, textfield, dropdown-fill, dropdown-actions, choice-tiles) |
-| Countdown     | ✅ Active | See `tokyo/widgets/countdown/spec.json`                                                                                                       |
-| Logo Showcase | ✅ Active | See `tokyo/widgets/logoshowcase/spec.json`                                                                                                    |
+| FAQ           | ✅ Active | See `tokyo/product/widgets/faq/spec.json` (object-manager, repeater, dropdown-edit, toggle, textfield, dropdown-fill, dropdown-actions, choice-tiles) |
+| Countdown     | ✅ Active | See `tokyo/product/widgets/countdown/spec.json`                                                                                        |
+| Logo Showcase | ✅ Active | See `tokyo/product/widgets/logoshowcase/spec.json`                                                                                     |
 
 ### Dieter Components
 
@@ -439,7 +458,7 @@ Pages deploy rule:
 
 ### Deterministic compilation contract (anti-drift)
 
-- **Dieter bundling manifest (authoritative)**: `tokyo/dieter/manifest.json`
+- **Dieter bundling manifest (authoritative)**: `tokyo/product/dieter/manifest.json` after PRD 79 Phase 1 (public `/dieter/**` can remain a serving route)
 - **Rule**: ToolDrawer `type="..."` drives required bundles; CSS classnames never add bundles.
 - **Verification plane**: compilation discipline is enforced through repo typecheck/build and Cloudflare verification, not a localhost Bob HTTP gate.
 

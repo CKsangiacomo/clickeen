@@ -1,7 +1,7 @@
 # Widget Compliance Steps (AI)
 
 Purpose: the execution checklist for building/refactoring a widget definition folder in
-`tokyo/widgets/{widgetType}/` so it is compliant with the **shipped** platform.
+`tokyo/product/widgets/{widgetType}/` so it is compliant with the **shipped** platform.
 
 Canonical contracts (must match runtime):
 - `documentation/widgets/WidgetBuildContract.md`
@@ -15,7 +15,7 @@ INPUTS
 - Entitlements keys from `packages/ck-policy/entitlements.matrix.json`
 
 OUTPUTS
-- A compliant widget definition folder in `tokyo/widgets/{widgetType}/`.
+- A compliant widget definition folder in `tokyo/product/widgets/{widgetType}/`.
 
 ---
 
@@ -27,7 +27,7 @@ OUTPUT
 
 STOP / ASK (do not proceed blindly)
 - Change requires a new Dieter primitive/token.
-- Change requires `tokyo/widgets/shared/*` edits.
+- Change requires `tokyo/product/widgets/shared/*` edits.
 - Change requires Bob/Roma/Tokyo-worker/Venice/Prague edits and you don’t have an explicit PRD direction.
 
 GATE
@@ -49,7 +49,7 @@ cap.group.items.large.max | cap | sections[].faqs[]     | count-total          |
 ```
 
 NOTES
-- Every row must correspond to an entry in `tokyo/widgets/{widgetType}/limits.json`; shared policy/ops/publish enforcement consumes that mapping.
+- Every row must correspond to an entry in `tokyo/product/widgets/{widgetType}/limits.json`; shared policy/ops/publish enforcement consumes that mapping.
 - If the PRD expects UI gating (e.g. disabling a control), it must be explicit; otherwise keep UI generic and rely on shared policy plus owner-correct server enforcement.
 
 GATE
@@ -191,7 +191,7 @@ GATE
 
 ## Step 7.1 - Prague pages + l10n pipeline
 OUTPUT
-- `tokyo/widgets/{widgetType}/pages/*.json` exist and contain valid `blocks[]`.
+- `tokyo/prague/pages/{widgetType}/*.json` exist and contain valid `blocks[]`.
 - `curatedRef.publicId` references a real curated instance.
 - Page copy is compatible with Prague l10n allowlists.
 

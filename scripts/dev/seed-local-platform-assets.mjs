@@ -22,7 +22,7 @@ const DEFAULT_PLATFORM_ACCOUNT_ID =
 const DEFAULT_PAGE_SIZE = 500;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
-const ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/[^/]+$/;
+const ASSET_VERSION_KEY_RE = /^accounts\/([^/]+)\/assets\/versions\/([^/]+)\/[a-f0-9]{64}\/[^/]+$/i;
 
 function printUsage() {
   console.log(`Usage: node scripts/dev/seed-local-platform-assets.mjs [options]
@@ -325,7 +325,7 @@ function classifyAssetType(contentType, filename) {
 }
 
 function manifestR2Key(accountId, assetId) {
-  return `assets/meta/accounts/${accountId}/assets/${assetId}.json`;
+  return `accounts/${accountId}/assets/meta/${assetId}.json`;
 }
 
 function putLocalR2Object({ bucket, persistTo, key, filePath }) {

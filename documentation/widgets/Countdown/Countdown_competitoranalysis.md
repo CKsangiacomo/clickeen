@@ -14,7 +14,7 @@ Canonical Clickeen PRD (implementation truth + next iterations): `documentation/
 - **Category:** Content Display / Marketing / Urgency
 - **Competitive Target:** Complete Elfsight Countdown Timer feature set (70%+ coverage)
 - **Performance Target:** <6KB SSR (vs Elfsight 80KB+ client JS)
-- **Renderer:** Countdown widget package is shipped in `tokyo/widgets/countdown/`; Venice SSR embed routes are live.
+- **Renderer:** Countdown widget package is shipped in `tokyo/product/widgets/countdown/`; Venice SSR embed routes are live.
 - **Dieter Components:** Custom timer display (new component needed)
 
 ### 🎯 Feature Coverage Goal: 70%+ of Elfsight
@@ -1711,11 +1711,11 @@ Vertical stack of four Dieter icon buttons:
 
 ## Implementation Phases
 
-Historical planning snapshot from pre-ship discovery. Current implementation truth is `Countdown_PRD.md` + `tokyo/widgets/countdown/*`.
+Historical planning snapshot from pre-ship discovery. Current implementation truth is `Countdown_PRD.md` + `tokyo/product/widgets/countdown/*`.
 
 ### Phase 1: Timer Core & Modes (4-5 days)
 - [ ] Schema implementation in Supabase
-- [ ] Countdown renderer base structure (historical pre-ship note; renderer now exists in `tokyo/widgets/countdown/`)
+- [ ] Countdown renderer base structure (historical pre-ship note; renderer now exists in `tokyo/product/widgets/countdown/`)
 - [ ] Personal Countdown mode (localStorage persistence)
 - [ ] Countdown to Date mode (timezone support)
 - [ ] Number Counter mode (count-up animation)
@@ -1836,7 +1836,7 @@ Historical planning snapshot from pre-ship discovery. Current implementation tru
 Tokenization patterns
 - `documentation/services/bob.md` - Preview system architecture
 - `documentation/widgets/WidgetArchitecture.md` - Canonical widget + editor contracts
-- `tokyo/widgets/faq/spec.json` - Reference widget definition patterns (repeaters, clusters, strict controls)
+- `tokyo/product/widgets/faq/spec.json` - Reference widget definition patterns (repeaters, clusters, strict controls)
 - `documentation/widgets/LogoShowcase/LogoShowcase_PRD.md` - Color picker, themes
 
 **Implementation Critical Points:**

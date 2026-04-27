@@ -35,7 +35,7 @@ const alternates = [
 
 const widgets = await listWidgets();
 if (!widgets.length) {
-  throw new Error('[prague] No widgets found in tokyo/widgets (expected at least one)');
+  throw new Error('[prague] No widget pages found in tokyo/prague/pages (expected at least one)');
 }
 
 const widgetCards = await Promise.all(
@@ -53,7 +53,7 @@ const widgetCards = await Promise.all(
     const subheadline = copy && typeof copy === 'object' ? String((copy as any).subheadline ?? '') : '';
     if (!headline || !subheadline) {
       throw new Error(
-        `[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (hero.copy.headline/subheadline required)`,
+        `[prague] Invalid tokyo/prague/pages/${widget}/overview.json (hero.copy.headline/subheadline required)`,
       );
     }
     return { widget, headline, subheadline };
@@ -78,7 +78,7 @@ const widgetCardsSafe = widgetCards.filter(Boolean) as NonNullable<(typeof widge
           <div class="ck-stack" style="gap: var(--space-2);">
             <h1 class="heading-1" style="margin: 0; letter-spacing: -0.02em;">Widgets</h1>
             <p class="body-xxl" style="margin: 0; color: color-mix(in oklab, var(--color-system-black), transparent 56%);">
-              Pick a widget to explore templates, pricing, and try it live.
+              Pick a widget to explore examples, pricing, and try it live.
             </p>
           </div>
 

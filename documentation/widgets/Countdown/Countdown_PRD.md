@@ -14,7 +14,7 @@ Renders a configurable countdown / personal countdown / number counter with opti
 ## Entitlements + limits (v1)
 
 - Tier values live in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
-- Widget enforcement lives in `tokyo/widgets/countdown/limits.json`.
+- Widget enforcement lives in `tokyo/product/widgets/countdown/limits.json`.
 - The PRD lists entitlement keys and how they map to state paths; do not repeat per-tier matrices here.
 
 ### Limits mapping (initial)
@@ -32,7 +32,7 @@ Budgets are global usage counters (no per-widget matrices):
 If Countdown needs tier packaging beyond usage/caps, prefer caps/budgets first; only introduce new flags when the capability is truly binary and user-visible.
 
 ## 1) Where the widget lives (authoritative)
-Widget definition (the software): `tokyo/widgets/countdown/`
+Widget definition (the software): `tokyo/product/widgets/countdown/`
 - `spec.json` — defaults + ToolDrawer markup
 - `widget.html` — semantic scaffold + stable `data-role` hooks
 - `widget.css` — scoped styles (Dieter tokens)
@@ -159,7 +159,7 @@ ToolDrawer spacing rule (authoring):
   - Borders/shadows: Timer tile radius/border/shadow + pod border.
   - Animations: Fade only.
 ## 7) Defaults (authoritative `spec.json` → `defaults`)
-The implementer must translate this PRD into a complete defaults object in `tokyo/widgets/countdown/spec.json`.
+The implementer must translate this PRD into a complete defaults object in `tokyo/product/widgets/countdown/spec.json`.
 Defaults must include:
 - `seoGeo: { enabled: false }`
 - `behavior: { showBacklink: true }`

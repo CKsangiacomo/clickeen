@@ -9,7 +9,7 @@ For the canonical account-management model Roma must converge to, see `documenta
 
 Roma is the authenticated product shell for account users. It owns:
 
-- Domain navigation (`/home`, `/profile`, `/widgets`, `/templates`, `/builder`, etc.)
+- Domain navigation (`/home`, `/profile`, `/widgets`, `/builder`, `/assets`, `/team`, `/billing`, `/usage`, `/ai`, `/settings`)
 - Person-scoped User Settings UI over Berlin-owned profile contracts
 - Active account context resolution
 - Account-scoped Team list and member-detail UI over Berlin-owned membership contracts
@@ -42,7 +42,6 @@ For the 075 authoring simplification track, Roma's governing authoring path is o
   - `/home`
   - `/profile`
   - `/widgets`
-  - `/templates`
   - `/assets`
   - `/team`
   - `/billing`
@@ -124,7 +123,7 @@ Client fetch behavior:
 - Browser code calls same-origin Roma routes only.
 - `fetchSameOriginJson` in the browser is just a no-store fetch + timeout/reason wrapper.
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
-- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/account/widgets`, `/api/account/templates`, `/api/account/assets*`, `/api/account/team*`, `/api/account/locales`, Builder/account routes).
+- Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/account/widgets`, `/api/account/assets*`, `/api/account/team*`, `/api/account/locales`, Builder/account routes).
 - Roma -> Tokyo/Tokyo-worker product control calls now execute through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
 - Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`; Roma does not infer or probe internal service hosts.
 - Roma no longer calls Berlin for a Michael/PostgREST token. Account registry reads/writes go through Berlin product endpoints with the current Berlin bearer, while Tokyo/Tokyo-worker remain the saved-document and serve-state owners.
@@ -177,15 +176,14 @@ Roma `widgets` is the product surface that brokers per-instance serve-state chan
 - `/widgets` reads account-instance identity from Tokyo and must converge to Tokyo serve-state truth for publish/unpublish. Michael status residue is not the target architecture.
 - `Publish` is the explicit serve-on boundary in Widgets: Roma tells Tokyo-worker to make the instance publicly servable, then returns success.
 - `Unpublish` removes the Tokyo live surface so Venice stops serving the instance, without deleting saved or internal overlay state.
-- Duplicate-from-widget and duplicate-from-curated-instance create account-owned instances through Roma same-origin routes that commit the canonical Tokyo-backed authoring state
+- Duplicate-from-widget and duplicate-from-listed-instance create account-owned instances through Roma same-origin routes that commit the canonical Tokyo-backed authoring state
 - The old settings-level “unpublish all instances” product action is not part of the active product surface
 
 ## Data domains and caches (client-side)
 
 - `useRomaWidgets`: account list cache + in-flight dedupe.
-- `useRomaTemplates`: template list cache + in-flight dedupe.
 - `compiled-widget-cache`: per widget compiled payload cache.
-- Widgets/Templates prefetch compiled payloads only; Builder open itself is one Roma route.
+- Widgets prefetch compiled payloads only; Builder open itself is one Roma route.
 
 Usage, billing, and AI domain behavior:
 
@@ -199,7 +197,7 @@ Assets domain behavior:
 - Roma exposes account-level asset routes (`/api/account/assets`, `/api/account/assets/resolve`, `/api/account/assets/:assetId`, `/api/account/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
 - On the active Builder path, Bob delegates asset list/resolve/upload back to these same Roma routes through the normal host account-command seam. Bob owns the explicit asset transport; Roma owns the direct current-account route handling for those commands.
 - `/api/account/usage` remains the Usage domain surface, but it now reads storage bytes from the same Tokyo-worker asset authority as `/api/account/assets`. Assets does not double-read storage truth from both routes on the same screen.
-- Roma widget/template/assets list surfaces no longer rely on fixed client-side `200/500` caps; Michael pages account/template catalogs internally and Tokyo-worker asset inventory already returns the full account manifest.
+- Roma widget/assets list surfaces no longer rely on fixed client-side `200/500` caps; Michael pages account widget catalogs internally and Tokyo-worker asset inventory already returns the full account manifest.
 - Account asset upload is same-origin Roma product traffic. The active product path no longer exposes wildcard CORS on `/api/account/assets/upload`.
 - Roma exposes private non-asset product control routes to Tokyo-worker through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Public Tokyo HTTP is no longer the Builder open/save authoring seam.
 - Asset inventory/upload payloads expose `assetId` and canonical `assetRef` only; delivery URL comes from `/api/account/assets/resolve`, and Roma delete uses `assetId` directly instead of reverse-parsing it from the ref.

@@ -4,7 +4,7 @@ Tier values live in **one global matrix**:
 - `packages/ck-policy/entitlements.matrix.json`
 
 Each widget maps those keys to its state in:
-- `tokyo/widgets/{widget}/limits.json`
+- `tokyo/product/widgets/{widget}/limits.json`
 
 Use a fixed-width mapping table in a code block so it reads cleanly.
 

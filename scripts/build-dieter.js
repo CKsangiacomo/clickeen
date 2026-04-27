@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- Build @ck/dieter artifacts directly into tokyo/dieter:
+ Build @ck/dieter artifacts directly into tokyo/product/dieter:
  - Normalize SVGs to fill="currentColor" (scripts/process-svgs.js)
  - Verify SVGs (scripts/verify-svgs.js)
  - Copy tokens/* -> dist/tokens/*
@@ -27,7 +27,7 @@ function tryGetGitSha(repoRoot) {
 
   try {
     // Prefer a commit SHA that changes only when Dieter inputs change, so local installs/builds
-    // don't dirty `tokyo/dieter/manifest.json` on every unrelated commit.
+    // don't dirty `tokyo/product/dieter/manifest.json` on every unrelated commit.
     const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'dieter', 'scripts/build-dieter.js'], {
       cwd: repoRoot,
       encoding: 'utf8',
@@ -239,7 +239,7 @@ function assertExists(label, filePath) {
 async function main() {
   const repoRoot = path.resolve(__dirname, '..');
   const dieterRoot = path.resolve(repoRoot, 'dieter');
-  const dist = path.join(repoRoot, 'tokyo', 'dieter');
+  const dist = path.join(repoRoot, 'tokyo', 'product', 'dieter');
   const componentsSrc = path.join(dieterRoot, 'components');
   const foundationsSrc = path.join(dieterRoot, 'foundations');
 

@@ -58,7 +58,7 @@ The Babel Protocol is Clickeen's internal specification for **multi-dimensional 
 ```
 Tokyo (repo/CDN/R2)
 ├── renders/instances/{publicId}/saved.json   # saved authoring revision + editor metadata
-└── tokyo/widgets/{widget}/pages/*.json       # Prague marketing base copy
+└── tokyo/prague/pages/{widget}/*.json       # Prague marketing base copy
 
 Michael (Supabase)
 ├── widget_instances                          # user-instance registry metadata
@@ -68,7 +68,7 @@ Michael (Supabase)
 **Widget software plane (separate, still content-addressed):**
 
 ```
-tokyo/widgets/{widget}/
+tokyo/product/widgets/{widget}/
 ├── spec.json
 ├── widget.html
 ├── widget.css
@@ -121,15 +121,16 @@ Request-time composition is one valid execution model, but it is not the definit
 **Structure (deterministic paths):**
 
 ```
-tokyo/l10n/instances/<publicId>/
+accounts/<accountId>/instances/<publicId>/l10n/
 ├── index.json
 ├── bases/<baseFingerprint>.snapshot.json
-├── locale/<locale>/<baseFingerprint>.ops.json
-├── geo/<geo>/<baseFingerprint>.ops.json
-├── industry/<industry>/<baseFingerprint>.ops.json
-├── experiment/<expKey>/<baseFingerprint>.ops.json
-├── account/<accountKey>/<baseFingerprint>.ops.json
-└── behavior/<behaviorKey>/<baseFingerprint>.ops.json
+└── overlays/
+    ├── locale/<locale>/<baseFingerprint>.ops.json
+    ├── geo/<geo>/<baseFingerprint>.ops.json
+    ├── industry/<industry>/<baseFingerprint>.ops.json
+    ├── experiment/<expKey>/<baseFingerprint>.ops.json
+    ├── account/<accountKey>/<baseFingerprint>.ops.json
+    └── behavior/<behaviorKey>/<baseFingerprint>.ops.json
 ```
 
 **One valid overlay artifact shape (ops-based authoring layer):**
@@ -160,7 +161,7 @@ tokyo/l10n/instances/<publicId>/
 - Freshness rule:
   - **current:** `overlay.baseFingerprint === computeL10nFingerprint(baseConfig, allowlist)`
   - **non-current:** fingerprint mismatch; public/current consumer paths must not apply the overlay. Regeneration/publication must converge it before exposure
-- Allowlist contract lives in `tokyo/widgets/{widget}/localization.json` and `layers/*.allowlist.json` (validated at publish time)
+- Allowlist contract lives in `tokyo/product/widgets/{widget}/localization.json` and `layers/*.allowlist.json` (validated at publish time)
 - `ops`: Array of JSONPatch-style operations (currently only "set" supported)
 
 ---
@@ -389,8 +390,8 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 
 **Authoritative allowlists:**
 
-- Locale layer: `tokyo/widgets/{widget}/localization.json`
-- Non-locale layers: `tokyo/widgets/{widget}/layers/{layer}.allowlist.json`
+- Locale layer: `tokyo/product/widgets/{widget}/localization.json`
+- Non-locale layers: `tokyo/product/widgets/{widget}/layers/{layer}.allowlist.json`
 
 **Allowlist shape (example):**
 
@@ -465,12 +466,13 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 
 ```typescript
 async function generateLocaleOverlay(args: {
+  accountId: string;
   publicId: string;
   baseConfig: object;
   targetLocale: string;
   allowlist: Allowlist;
 }): Promise<LocaleOverlay> {
-  const { publicId, baseConfig, targetLocale, allowlist } = args;
+  const { accountId, publicId, baseConfig, targetLocale, allowlist } = args;
 
   // 1. Build translatable snapshot + fingerprint (allowlist-scoped)
   const snapshot = buildL10nSnapshot(baseConfig, allowlist);
@@ -495,7 +497,7 @@ async function generateLocaleOverlay(args: {
 
   // 4. Store in R2 (content-addressed)
   await storeOverlay(
-    `l10n/instances/${publicId}/locale/${targetLocale}/${baseFingerprint}.ops.json`,
+    `accounts/${accountId}/instances/${publicId}/l10n/overlays/locale/${targetLocale}/${baseFingerprint}.ops.json`,
     overlay,
   );
 
@@ -668,7 +670,7 @@ function checkEntitlement(tier: Tier, dimension: string, count: number): boolean
 - Content-addressed storage: `/documentation/architecture/CONTEXT.md`
 - Localization system: `/documentation/capabilities/localization.md`
 - Agent system: `/sanfrancisco/README.md`
-- Widget specification: `/tokyo/widgets/*/spec.json`
+- Widget specification: `/tokyo/product/widgets/*/spec.json`
 
 ---
 

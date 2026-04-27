@@ -1,7 +1,7 @@
-# System: Tokyo Worker — Assets + Tokyo Mirror Jobs (PRD 54)
+# System: Tokyo Worker - Account Storage + Public Projections
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
-Last updated: 2026-03-18 (PRD 73 public payload + request-boundary closure)
+Last updated: 2026-04-27 (PRD 79 account-first storage)
 
 Tokyo-worker has five responsibilities:
 
@@ -40,10 +40,10 @@ Current auth rule:
 - Local internal tool routes may use `TOKYO_DEV_JWT` only when they also send an explicit allowed `x-ck-internal-service`.
 - There is no generic trusted-token bypass on account routes.
 
-Asset metadata model (current repo snapshot):
+Asset metadata model:
 
-- Blob bytes live in Tokyo R2 under `assets/versions/{accountId}/...`.
-- Per-asset manifest JSON lives in Tokyo R2 under `assets/meta/accounts/{accountId}/assets/{assetId}.json`.
+- Blob bytes live in Tokyo R2 under `accounts/{accountId}/assets/versions/{assetId}/{sha256}/{filename}`.
+- Per-asset manifest JSON lives in Tokyo R2 under `accounts/{accountId}/assets/meta/{assetId}.json`.
 - Manifest stores one canonical immutable blob key (`assetRef`) per asset.
 - There is no Michael/Supabase asset table contract in the active runtime.
 - Upload contract rejects legacy variant mode (`x-variant` -> `422 coreui.errors.assets.variantUnsupported`).
@@ -84,15 +84,16 @@ Current runtime contract:
 
 - This surface is editor-only and requires Roma internal service auth plus a valid Roma account authz capsule (`viewer+` for read, `editor+` for write).
 - Local internal repair/tool flows may use `TOKYO_DEV_JWT` only with an explicit allowed `x-ck-internal-service`; Tokyo does not accept a bare dev token as a universal saved-render bypass.
-- It stores the latest saved **user-instance** config in Tokyo under:
-  - pointer: `renders/instances/<publicId>/saved/r.json`
-  - pack: `renders/instances/<publicId>/saved/config/<configFp>.json`
+- It stores the latest saved **account instance** config in Tokyo under:
+  - pointer: `accounts/<accountId>/instances/<publicId>/saved/pointer.json`
+  - pack: `accounts/<accountId>/instances/<publicId>/saved/config/<configFp>.json`
 - Local `dev-up` may also use this surface once, explicitly, to repair missing saved authoring snapshots for historical curated/main rows before Roma/Bob reads need them. Editor reads never backfill on demand.
 - The saved pointer also carries editor-facing metadata needed on the normal open path (`widgetType`, `displayName`, `source`, `accountId`, `updatedAt`).
 - Bob/Roma product-path save writes this snapshot synchronously before returning success.
 - Product-path save does not read the previous saved pointer to recover sibling metadata. Roma sends the current saved-pointer metadata explicitly on save, and Tokyo-worker writes that payload directly.
 - Product-path saved-config validation is owned once at the Tokyo-worker save helper boundary. The internal route does not keep a second parallel save-validity story for the same widget payload.
-- Product-path save writes/refreshes the current localization base snapshot/fingerprint on the saved widget pointer in Tokyo from `tokyo/widgets/{widgetType}/localization.json`.
+- Product-path save writes/refreshes the current localization base snapshot/fingerprint on the saved widget pointer in Tokyo from `tokyo/product/widgets/{widgetType}/localization.json` through the public `/widgets/**` serving projection.
+- Localization bases, overlays, generated text packs, generated meta packs, and account live pointers are stored under `accounts/<accountId>/instances/<publicId>/l10n/**` and `accounts/<accountId>/instances/<publicId>/render/**`.
 - Product-path save also writes the current saved-widget l10n summary (`baseLocale` + desired locale set), `generationId`, and translation `status` onto that same saved pointer before Roma reports success.
 - Explicit Tokyo-worker sync converges overlay artifacts from that saved widget `l10n` block.
 - Tokyo maintains current locale artifacts, but Builder readiness does not infer truth from public/live pointers.
@@ -113,27 +114,39 @@ Current runtime contract:
 
 ---
 
-## PRD 54 mirror model (what Tokyo-worker writes)
+## Runtime storage model
 
-Tokyo-worker writes two kinds of files:
+Tokyo-worker writes account truth first, then public projections.
 
-1. **Fingerprinted packs** (immutable)
+1. **Account-owned truth**
 
-- Config pack: `renders/instances/<publicId>/config/<configFp>/config.json`
-- Text pack: `l10n/instances/<publicId>/packs/<locale>/<textFp>.json`
-- Meta pack (tier-gated): `renders/instances/<publicId>/meta/<locale>/<metaFp>.json`
+- Saved pointer: `accounts/<accountId>/instances/<publicId>/saved/pointer.json`
+- Saved config pack: `accounts/<accountId>/instances/<publicId>/saved/config/<configFp>.json`
+- Render config pack: `accounts/<accountId>/instances/<publicId>/render/config/<configFp>.json`
+- Account render live pointer: `accounts/<accountId>/instances/<publicId>/render/live/pointer.json`
+- L10n base snapshot: `accounts/<accountId>/instances/<publicId>/l10n/bases/<baseFingerprint>.snapshot.json`
+- L10n overlay ops: `accounts/<accountId>/instances/<publicId>/l10n/overlays/<layer>/<layerKey>/<baseFingerprint>.ops.json`
+- L10n text pack: `accounts/<accountId>/instances/<publicId>/l10n/packs/<locale>/<textFp>.json`
+- L10n live pointer: `accounts/<accountId>/instances/<publicId>/l10n/live/<locale>.json`
+- Meta pack: `accounts/<accountId>/instances/<publicId>/render/meta/<locale>/<metaFp>.json`
+- Meta live pointer: `accounts/<accountId>/instances/<publicId>/render/meta/<locale>/live.json`
 
-2. **Live pointers** (tiny, mutable, `no-store`)
+2. **Public serving projections**
 
-- Render pointer: `renders/instances/<publicId>/live/r.json`
-- Text pointer: `l10n/instances/<publicId>/live/<locale>.json`
-- Meta pointer (tier-gated): `renders/instances/<publicId>/live/meta/<locale>.json`
+- Public render live pointer: `public/instances/<publicId>/live.json`
+- Public render config pack: `public/instances/<publicId>/config/<configFp>.json`
+- Public l10n live pointer: `public/instances/<publicId>/l10n/live/<locale>.json`
+- Public l10n text pack: `public/instances/<publicId>/l10n/packs/<locale>/<textFp>.json`
+- Public meta live pointer: `public/instances/<publicId>/meta/live/<locale>.json`
+- Public meta pack: `public/instances/<publicId>/meta/<locale>/<metaFp>.json`
 
-Rule: **write packs first, move pointers last.**
+Public HTTP routes such as `/renders/instances/...` and `/l10n/instances/...` are serving URLs only. They read the `public/instances/...` projection and must not become account truth.
+
+Rule: **write account packs first, project public packs second, move pointers last.**
 
 Safety gate (PRD 54):
 
-- `sync-live-surface` refuses to advance `renders/instances/<publicId>/live/r.json` unless:
+- `sync-live-surface` refuses to advance `accounts/<accountId>/instances/<publicId>/render/live/pointer.json` and `public/instances/<publicId>/live.json` unless:
   - the referenced config pack exists, and
   - **every locale** in `localePolicy.readyLocales` has a live text pointer, and
   - when `seoGeo=true`, every locale in that same ready set also has a live meta pointer.
@@ -156,13 +169,13 @@ Job kinds (v1):
 - `write-text-pack`
 - `write-meta-pack` (only when entitled)
 - `sync-instance-overlays` (durable overlay convergence after save/settings changes)
-- `sync-live-surface` (moves `live/r.json`; cleans up removed locales/meta)
+- `sync-live-surface` (projects account truth to public serving keys; cleans up removed locales/meta)
 - `delete-instance-mirror` (hard delete instance subtree in Tokyo for instance deletion, not normal unpublish)
 
 Non-negotiable:
 
 - Mirror jobs are **DB-free**. Tokyo-worker must not read Supabase to “discover state”.
-- For l10n, Tokyo-worker writes public packs/live pointers from its own explicit instance-sync execution plus canonical Tokyo overlay state.
+- For l10n, Tokyo-worker writes account packs/live pointers from its own explicit instance-sync execution plus canonical Tokyo overlay state, then projects only publishable bytes to public serving keys.
 
 Source of truth:
 
@@ -172,12 +185,12 @@ Source of truth:
 
 ## Cleanup (serve-state off vs delete)
 
-When an instance is unpublished, Tokyo-worker must remove the public live/serve surface in Tokyo so Venice stops serving it.
-When an instance is deleted, Tokyo-worker removes the full Tokyo subtree.
+When an instance is unpublished, Tokyo-worker removes the public live/serve surface in Tokyo so Venice stops serving it.
+When an instance is deleted, Tokyo-worker removes both the account-owned instance subtree and its public projection subtree.
 
-- Unpublish removes the live serve surface (`live/r.json` and public-live pointers that make Venice servable)
-- Delete removes `renders/instances/<publicId>/...`
-- Delete removes `l10n/instances/<publicId>/...`
+- Unpublish removes `public/instances/<publicId>/live.json` and public live pointers that make Venice servable; account saved/editing state remains.
+- Delete removes `accounts/<accountId>/instances/<publicId>/...`
+- Delete removes `public/instances/<publicId>/...`
 
 Unpublish is not a synonym for purging saved documents or internal overlay authoring state.
 Delete is the hard cleanup path.

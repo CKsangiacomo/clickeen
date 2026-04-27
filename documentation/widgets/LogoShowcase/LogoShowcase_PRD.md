@@ -10,7 +10,7 @@ LogoShowcase renders a **header** + one or more **strips** of logos (each strip 
 Tier values are defined globally in `packages/ck-policy/entitlements.matrix.json`.
 
 Widget-specific enforcement lives in:
-- `tokyo/widgets/logoshowcase/limits.json`
+- `tokyo/product/widgets/logoshowcase/limits.json`
 
 Use the limits mapping for paths + metrics; do not duplicate per-tier matrices here.
 
@@ -38,14 +38,14 @@ These are required patterns to keep editor UX deterministic and prevent dead con
 
 ### What ships (authoritative widget definition)
 The widget must be implemented as the standard Tokyo package (core runtime + contracts):
-- `tokyo/widgets/logoshowcase/spec.json`
-- `tokyo/widgets/logoshowcase/widget.html`
-- `tokyo/widgets/logoshowcase/widget.css`
-- `tokyo/widgets/logoshowcase/widget.client.js`
-- `tokyo/widgets/logoshowcase/agent.md`
-- `tokyo/widgets/logoshowcase/limits.json`
-- `tokyo/widgets/logoshowcase/localization.json`
-- `tokyo/widgets/logoshowcase/layers/*.allowlist.json`
+- `tokyo/product/widgets/logoshowcase/spec.json`
+- `tokyo/product/widgets/logoshowcase/widget.html`
+- `tokyo/product/widgets/logoshowcase/widget.css`
+- `tokyo/product/widgets/logoshowcase/widget.client.js`
+- `tokyo/product/widgets/logoshowcase/agent.md`
+- `tokyo/product/widgets/logoshowcase/limits.json`
+- `tokyo/product/widgets/logoshowcase/localization.json`
+- `tokyo/product/widgets/logoshowcase/layers/*.allowlist.json`
 
 ### Non-negotiable platform constraints
 - **No fallbacks**: `widget.client.js` must not merge defaults. Missing required state must throw a clear error.
@@ -53,7 +53,7 @@ The widget must be implemented as the standard Tokyo package (core runtime + con
 - **Always apply platform globals**:
   - `CKStagePod.applyStagePod(state.stage, state.pod, root)`
   - `CKTypography.applyTypography(state.typography, root, roleMap)`
-- **Branding**: handled by `tokyo/widgets/shared/branding.js` (injects/toggles backlink via `state.behavior.showBacklink`; no widget-specific call required).
+- **Branding**: handled by `tokyo/product/widgets/shared/branding.js` (injects/toggles backlink via `state.behavior.showBacklink`; no widget-specific call required).
 - **Width is Stage/Pod**: do not add a custom “widget width” control. Pod width mode/content width covers this.
 - **Desktop/Mobile contract**: Pod settings frame the experience (width mode, padding, content width, radius), but **responsive behavior must still be explicitly defined by the widget** in `widget.html` + `widget.css` for arrays/items/subparts.
 

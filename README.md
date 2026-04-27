@@ -13,8 +13,8 @@ This repo contains the full Clickeen widget platform:
 ## Architecture (high level)
 
 1) **Widgets live in Tokyo**
-   - Each widget has `tokyo/widgets/<name>/spec.json` and built assets (`widget.html/css/js`).
-   - Dieter component stencils/specs live under `tokyo/dieter/components`.
+   - Each widget has `tokyo/product/widgets/<name>/spec.json` and built assets (`widget.html/css/js`).
+   - Dieter component stencils/specs live under `tokyo/product/dieter/components`.
 
 2) **Server-side expansion**
    - Bob’s compile API (`/api/widgets/[widgetname]/compiled`) reads the widget spec and expands `<tooldrawer-field>` using Dieter templates/specs.
@@ -31,7 +31,7 @@ This repo contains the full Clickeen widget platform:
 
 ```bash
 pnpm install
-pnpm build:dieter       # builds Dieter into tokyo/dieter
+pnpm build:dieter       # builds Dieter into tokyo/product/dieter
 ./scripts/dev-up.sh     # starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790), (+ SF 3002 when enabled)
 ```
 
@@ -49,7 +49,7 @@ Useful scripts:
 ## Notes
 
 - Bob runs fully client-side rendering of already-expanded panels; no runtime template fetching.
-- Icons must exist in `tokyo/dieter/icons/icons.json`; missing icons fail compilation.
+- Icons must exist in `tokyo/product/dieter/icons/icons.json`; missing icons fail compilation.
 - Widget data paths: `stage.background` and `pod.background` are the canonical fill keys.
 
 ## License

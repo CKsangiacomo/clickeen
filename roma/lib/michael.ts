@@ -6,5 +6,4 @@ export type {
   MichaelAccountPublishContainmentResult,
   MichaelAccountWidgetCatalogResult,
   MichaelDeleteInstanceResult,
-  MichaelTemplateCatalogResult,
 } from './michael-shared';

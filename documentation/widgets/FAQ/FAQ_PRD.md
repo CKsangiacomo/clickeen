@@ -35,11 +35,11 @@ Layout choices (inside the same Type):
 Tier values are defined globally in `packages/ck-policy/entitlements.matrix.json`.
 
 Widget-specific enforcement lives in:
-- `tokyo/widgets/faq/limits.json`
+- `tokyo/product/widgets/faq/limits.json`
 
 Use the limits mapping for paths + metrics; do not duplicate per-tier matrices here.
 
-Entitlements mapping (must match `tokyo/widgets/faq/limits.json`):
+Entitlements mapping (must match `tokyo/product/widgets/faq/limits.json`):
 
 ```text
 Key                      | Kind | Path(s)                    | Metric/Mode            | Enforcement        | Notes
@@ -51,7 +51,7 @@ cap.group.items.large.max  | cap  | sections[].faqs[]          | count-total    
 ```
 
 ## 1) Where the widget lives
-Widget definition (the software): `tokyo/widgets/faq/`
+Widget definition (the software): `tokyo/product/widgets/faq/`
 - `spec.json` — defaults + ToolDrawer markup
 - `widget.html` — semantic scaffold
 - `widget.css` — scoped styles (Dieter tokens)
@@ -61,7 +61,7 @@ Widget definition (the software): `tokyo/widgets/faq/`
 - `localization.json` — locale-layer allowlist
 - `layers/*.allowlist.json` — non-locale layer allowlists (when used)
 
-Source of truth for editor state is `tokyo/widgets/faq/spec.json` → `defaults`.
+Source of truth for editor state is `tokyo/product/widgets/faq/spec.json` → `defaults`.
 
 ## 2) Functional spec
 
@@ -128,7 +128,7 @@ Icons are Dieter icons and should be rendered as `diet-btn-ic` (neutral).
 Icon color is controlled via `appearance.iconColor` (color fill).
 
 ## 4) Canonical state (current)
-Grouped state (source of truth: `tokyo/widgets/faq/spec.json`):
+Grouped state (source of truth: `tokyo/product/widgets/faq/spec.json`):
 - `sections[]` — content tree (section title + list of Q/A items)
 - `layout.*` — layout type, responsive columns, gap
 - `appearance.*` — link styling + accordion icon choice/color + Q&A card styling (background/border/radius/shadow) + pod border + `appearance.theme` (global theme selector stored in the canonical authored document; runtime ignores it)
@@ -139,7 +139,7 @@ Grouped state (source of truth: `tokyo/widgets/faq/spec.json`):
 - `stage.*` + `pod.*` — stage/pod layout and appearance (including pod shadow)
 
 ## 5) ToolDrawer panels (current)
-Panels defined in `tokyo/widgets/faq/spec.json`:
+Panels defined in `tokyo/product/widgets/faq/spec.json`:
 - `content` — section manager + Q/A editing + global header controls (compiler-injected)
 - `layout` — widget layout + accordion behaviors + responsive columns (+ shared stage/pod layout injected by compiler)
 - `appearance` — theme dropdown (global) + widget appearance + stage/pod appearance
@@ -153,7 +153,7 @@ ToolDrawer spacing rule (authoring):
 This section is the “what goes where” contract. If controls drift across panels, AIs will make incorrect edits.
 
 ### Panel: Content (`content`)
-Source: `tokyo/widgets/faq/spec.json`
+Source: `tokyo/product/widgets/faq/spec.json`
 
 Controls:
 - `sections[]` (object manager)
@@ -174,7 +174,7 @@ Controls:
 
 Localization:
 - Localization/translation UI lives in Content (Translate mode).
-- The allowlist is `tokyo/widgets/faq/localization.json`.
+- The allowlist is `tokyo/product/widgets/faq/localization.json`.
   - `header.title` (richtext)
   - `header.subtitleHtml` (richtext)
   - `cta.label` (string)
@@ -183,7 +183,7 @@ Localization:
   - `sections.*.faqs.*.answer` (richtext)
 
 ### Panel: Layout (`layout`)
-Source: `tokyo/widgets/faq/spec.json` + compiler injection
+Source: `tokyo/product/widgets/faq/spec.json` + compiler injection
 
 Widget layout controls (spec-defined):
 - `layout.type` (choice tiles): `accordion | list | multicolumn`
@@ -218,7 +218,7 @@ Stage/Pod layout controls (compiler-injected for all widgets):
 - `stage.padding.desktop.*`, `stage.padding.mobile.*`
 
 ### Panel: Appearance (`appearance`)
-Source: `tokyo/widgets/faq/spec.json` + compiler injection
+Source: `tokyo/product/widgets/faq/spec.json` + compiler injection
 
 Widget appearance controls (spec-defined):
 - `appearance.theme` (canonical authoring theme selector; runtime ignores it)
@@ -259,7 +259,7 @@ Typography note:
 - Text styling (fonts + text colors) is only in the Typography panel (see below). Do not duplicate text controls into Appearance.
 
 ### Panel: Settings (`settings`)
-Source: `tokyo/widgets/faq/spec.json`
+Source: `tokyo/product/widgets/faq/spec.json`
 
 Controls:
 - Copilot context:
@@ -273,7 +273,7 @@ Controls:
   - `behavior.showBacklink`
 
 Entitlements enforcement:
-- Enforced by `tokyo/widgets/faq/limits.json`; Bob uses policy/limits for UX gating and Roma validates saved config before Tokyo writes.
+- Enforced by `tokyo/product/widgets/faq/limits.json`; Bob uses policy/limits for UX gating and Roma validates saved config before Tokyo writes.
 
 ### Panel: Typography (`typography`, compiler-injected)
 Why it exists:
@@ -307,7 +307,7 @@ Compiler-injected (because defaults include `typography.roles`):
   - FAQ runtime must not depend on either field
 
 ## 6) Runtime requirements
-Widget runtime (`tokyo/widgets/faq/widget.client.js`) must:
+Widget runtime (`tokyo/product/widgets/faq/widget.client.js`) must:
 - Render from state deterministically (no default merges; missing required state is an editor bug)
 - Sanitize any inline HTML allowed in questions/answers
 - Convert URLs in answers to links only (no media embedding)
@@ -319,10 +319,10 @@ Saved/open boundary requirements:
 
 ## 7) Gold standard checklist (AI)
 When changing FAQ state/controls/runtime, keep the system coherent:
-1. `tokyo/widgets/faq/spec.json`: update defaults + panel controls (do not duplicate Typography controls into Appearance).
-2. `tokyo/widgets/faq/widget.client.js`: update `assertFaqState(...)` + `applyState(...)` so every control has a deterministic effect.
-3. `tokyo/widgets/faq/agent.md`: update the Editable Schema + Binding Map rows for any new/changed paths (no dead controls).
-4. `tokyo/widgets/faq/localization.json`: update allowlist if you add/move any localized content fields.
-5. `tokyo/widgets/faq/limits.json`: update entitlements limits if you add gated controls/metrics.
+1. `tokyo/product/widgets/faq/spec.json`: update defaults + panel controls (do not duplicate Typography controls into Appearance).
+2. `tokyo/product/widgets/faq/widget.client.js`: update `assertFaqState(...)` + `applyState(...)` so every control has a deterministic effect.
+3. `tokyo/product/widgets/faq/agent.md`: update the Editable Schema + Binding Map rows for any new/changed paths (no dead controls).
+4. `tokyo/product/widgets/faq/localization.json`: update allowlist if you add/move any localized content fields.
+5. `tokyo/product/widgets/faq/limits.json`: update entitlements limits if you add gated controls/metrics.
 6. Venice SEO/GEO: update `venice/lib/schema/faq.ts` (schema + excerpt) if SEO/GEO outputs change.
 7. Verify with repo typecheck/build and the relevant Cloudflare verification; do not use a localhost Bob HTTP compile gate.

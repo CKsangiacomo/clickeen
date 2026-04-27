@@ -11,7 +11,7 @@ export const WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN = '^wgt_(curated|main)_[a-
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
 export const ASSET_VERSION_PATH_PATTERN = '^/assets/v/([^/?#]+)$';
-const ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/[^/]+$/;
+const ASSET_VERSION_KEY_RE = /^accounts\/([^/]+)\/assets\/versions\/([^/]+)\/[a-f0-9]{64}\/[^/]+$/i;
 
 export const CK_ERROR_CODE = Object.freeze({
   VALIDATION: 'VALIDATION',

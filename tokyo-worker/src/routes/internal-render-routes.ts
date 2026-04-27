@@ -308,7 +308,7 @@ export async function tryHandleInternalRenderRoutes(
     const serveEntries = await Promise.all(
       publicIds.map(async (publicId) => [
         publicId,
-        await readInstanceServeState({ env, publicId }),
+        await readInstanceServeState({ env, accountId, publicId }),
       ] as const),
     );
     const serveStates = Object.fromEntries(serveEntries);
@@ -355,6 +355,7 @@ export async function tryHandleInternalRenderRoutes(
       v: 1,
       kind: 'sync-live-surface',
       publicId: publicId!,
+      accountId,
       live: true,
       widgetType,
       configFp,
@@ -395,6 +396,7 @@ export async function tryHandleInternalRenderRoutes(
       v: 1,
       kind: 'sync-live-surface',
       publicId: publicId!,
+      accountId,
       live: false,
     });
     return respond(json({ ok: true, publicId, live: false }));
@@ -548,6 +550,7 @@ export async function tryHandleInternalRenderRoutes(
       v: 1,
       kind: 'write-config-pack',
       publicId: publicId!,
+      accountId,
       widgetType,
       configFp,
       configPack,

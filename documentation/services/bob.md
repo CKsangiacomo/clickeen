@@ -40,7 +40,7 @@ The Settings panel is widget-defined behavior controls; it must not contain embe
 
 ### Spec-driven + control-driven (not UI-driven)
 
-The widget definition (`tokyo/widgets/{widget}/spec.json`) is the editor source of truth for:
+The widget definition (`tokyo/product/widgets/{widget}/spec.json`) is the editor source of truth for:
 
 - Defaults (`defaults`)
 - Editor UI structure (`html[]` using `<bob-panel>` + `<tooldrawer-*>` DSL)
@@ -58,7 +58,7 @@ Bob compiles the spec into a deterministic contract:
 ### Entitlements + limits (v1)
 
 - Product/backend grant issuers resolve entitlements from the global matrix (`packages/ck-policy/entitlements.matrix.json`).
-- Widget-specific limits live in `tokyo/widgets/{widget}/limits.json` and are loaded with the compiled payload.
+- Widget-specific limits live in `tokyo/product/widgets/{widget}/limits.json` and are loaded with the compiled payload.
 - Bob may surface UX guidance from policy, but the account save/open boundary belongs to Roma. Bob does not run a second authoritative save gate on the hot edit path.
 
 ---
@@ -160,7 +160,7 @@ Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by
 Each widget lives at:
 
 ```
-tokyo/widgets/{widget}/
+tokyo/product/widgets/{widget}/
   spec.json
   widget.html
   widget.css
@@ -194,7 +194,7 @@ Preview readiness behavior:
 - Bob keeps the preview in a loading state until runtime sends `ck:ready`.
 - A bounded fallback timer reveals the iframe even if `ck:ready` is delayed, to avoid permanent blank-canvas states.
 
-Widget runtime code (`tokyo/widgets/{widget}/widget.client.js`) must:
+Widget runtime code (`tokyo/product/widgets/{widget}/widget.client.js`) must:
 
 - Resolve a widget root (scoped; no global selectors for internals).
 - Listen for `ck:state-update` and apply state deterministically.
@@ -244,7 +244,7 @@ Requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin
 1. Builds final `html[]` with injected global modules (Stage/Pod + Typography panels).
 2. Parses `<bob-panel>` blocks into `compiled.panels[]`.
 3. Expands `<tooldrawer-field ...>` macros into Dieter component markup using stencils:
-   - Stencil HTML lives in `tokyo/dieter/components/{component}/{component}.html`
+   - Stencil HTML lives in `tokyo/product/dieter/components/{component}/{component}.html`
 4. Emits `compiled.controls[]` by walking spec markup + stencils.
 5. Builds `compiled.assets`:
    - Widget runtime URLs (`widget.html`, `widget.css`, `widget.client.js`)
@@ -509,7 +509,7 @@ Reference:
 
 Important boundary:
 
-- Roma product starter discovery is Roma-owned (`/api/account/widgets`, `/api/account/templates`).
+- Roma product starter/listed-instance discovery is Roma-owned through `/api/account/widgets`.
 - DevStudio local must not use Roma starter routes for instance discovery.
 
 Bob editor routes are explicit and non-`/api/paris`:
@@ -537,9 +537,9 @@ bash scripts/dev-up.sh
 
 It:
 
-- Builds Dieter into `tokyo/dieter`
-- Builds i18n bundles from `tokyo/admin-owned/i18n` into `tokyo/i18n`
-- Verifies Prague l10n overlays (repo base + `tokyo/l10n/prague/**`); if stale and San Francisco is available, auto-runs translate + verify in background
+- Builds Dieter into `tokyo/product/dieter`
+- Builds i18n bundles from `tokyo/roma/i18n/source` into `tokyo/roma/i18n/public`
+- Verifies Prague l10n overlays (repo base + `tokyo/prague/l10n/**`); if stale and San Francisco is available, auto-runs translate + verify in background
 - Clears stale Next chunks (`bob/.next`)
 - Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)
 - Uses **local Supabase by default**; to point the local stack at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`
@@ -553,7 +553,7 @@ Bob compilation must remain deterministic (no classname heuristics). The contrac
 
 **Bundling contract (executed):**
 
-- Dieter emits `tokyo/dieter/manifest.json` with `components[]`, `helpers[]`, `aliases{}`, and `deps{}`.
+- Dieter emits `tokyo/product/dieter/manifest.json` with `components[]`, `helpers[]`, `aliases{}`, and `deps{}`.
 - Bob compiler consumes this manifest to build Dieter asset lists.
 
 ---

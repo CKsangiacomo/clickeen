@@ -41,7 +41,7 @@ type Props = {
   widget: string;
   market: string;
   locale: string;
-  activeSubpage?: 'overview' | 'templates' | 'examples' | 'features' | 'pricing';
+  activeSubpage?: 'overview' | 'examples' | 'features' | 'pricing';
   primaryCta: { label: string; href: string };
 };
 
@@ -330,7 +330,7 @@ const localCuratedSlotCount = localCuratedBlocks.reduce((sum, block) => sum + bl
           title={String(copy.title ?? '')}
           subhead={typeof copy.subhead === 'string' ? copy.subhead : undefined}
           items={(copy.items ?? []) as { title: string; body: string }[]}
-          links={links as { page: 'templates' | 'examples' | 'features'; iconName?: string }[]}
+          links={links as { page: 'examples' | 'features' | 'pricing'; iconName?: string }[]}
         />
       );
       break;

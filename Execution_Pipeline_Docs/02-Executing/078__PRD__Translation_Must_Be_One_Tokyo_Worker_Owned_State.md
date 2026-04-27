@@ -59,4 +59,4 @@ The implementation is green only when:
 - Tokyo-worker typecheck passes.
 - Bob typecheck passes.
 - The Bob runtime receives widget configs merged with widget defaults before preview and save.
-- Roma Builder translations for admin-owned widgets use the same path as all other widgets.
+- Roma Builder translations for admin account widgets use the same path as all other widgets.

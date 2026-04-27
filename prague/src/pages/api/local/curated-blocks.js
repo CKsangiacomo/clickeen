@@ -1,13 +1,12 @@
 import {
   isCuratedOrMainWidgetPublicId,
-  isMainWidgetPublicId,
   normalizeWidgetPublicId,
 } from '@clickeen/ck-contracts';
 
 export const prerender = false;
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
-const PAGE_KEYS = new Set(['overview', 'templates', 'examples', 'features', 'pricing']);
+const PAGE_KEYS = new Set(['overview', 'examples', 'features', 'pricing']);
 const WIDGET_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
 function json(payload, status = 200) {
@@ -48,57 +47,9 @@ async function parseBody(request) {
   }
 }
 
-function sortInstances(instances) {
-  instances.sort((a, b) => {
-    const byLabel = String(a.displayName || '').localeCompare(String(b.displayName || ''));
-    if (byLabel !== 0) return byLabel;
-    return String(a.publicId || '').localeCompare(String(b.publicId || ''));
-  });
-  return instances;
-}
-
-function resolveWidgetTypeFromPublicId(publicId) {
-  const value = asPublicId(publicId);
-  if (!value) return '';
-
-  if (isMainWidgetPublicId(value)) {
-    return asSlug(value.slice('wgt_main_'.length));
-  }
-
-  if (value.startsWith('wgt_curated_')) {
-    const rest = value.slice('wgt_curated_'.length);
-    const widget = rest.split('_')[0] || '';
-    return asSlug(widget);
-  }
-
-  return '';
-}
-
 async function readCuratedInstancesFromLocalTokyo(widget) {
-  try {
-    const fs = await import('node:fs/promises');
-    const instancesRoot = new URL('../../../../../tokyo/l10n/instances/', import.meta.url);
-    const entries = await fs.readdir(instancesRoot, { withFileTypes: true });
-    const instances = entries
-      .filter((entry) => entry && entry.isDirectory())
-      .map((entry) => {
-        const publicId = asPublicId(entry.name);
-        if (!publicId) return null;
-        const widgetType = resolveWidgetTypeFromPublicId(publicId);
-        if (!widgetType) return null;
-        return {
-          publicId,
-          widgetType,
-          displayName: publicId,
-        };
-      })
-      .filter((entry) => Boolean(entry));
-
-    const filtered = widget ? instances.filter((entry) => entry.widgetType === widget) : instances;
-    return sortInstances(filtered);
-  } catch {
-    return [];
-  }
+  void widget;
+  return [];
 }
 
 function ensureBlockArray(pageJson) {
@@ -202,7 +153,7 @@ export async function POST({ request }) {
 
   try {
     const fs = await import('node:fs/promises');
-    const pageFileUrl = new URL(`../../../../../tokyo/widgets/${widget}/pages/${page}.json`, import.meta.url);
+    const pageFileUrl = new URL(`../../../../../tokyo/prague/pages/${widget}/${page}.json`, import.meta.url);
     const raw = await fs.readFile(pageFileUrl, 'utf8');
     const pageJson = JSON.parse(raw);
     const blocks = ensureBlockArray(pageJson);
@@ -219,7 +170,7 @@ export async function POST({ request }) {
 
     return json({
       ok: true,
-      file: `tokyo/widgets/${widget}/pages/${page}.json`,
+      file: `tokyo/prague/pages/${widget}/${page}.json`,
       blockId,
       target,
       itemIndex,

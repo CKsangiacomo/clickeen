@@ -2,7 +2,7 @@
 
 This doc is the **implementation contract** for building Prague pages at 100⁵ scale.
 
-Goal: a small, reusable set of **primitives** and **blocks** that can compose all Prague page types (landing, features, templates, examples, pricing, create/install, platform pages).
+Goal: a small, reusable set of **primitives** and **blocks** that can compose all Prague page types (landing, features, examples, pricing, create/install, platform pages).
 
 ## 1) Primitives (must be reusable everywhere)
 
@@ -113,13 +113,13 @@ prague/src/blocks/cta/cta.astro
   - “View all widgets” CTA links to `/{market}/{locale}/` (directory page)
 - Widget secondary tabs are also derived from the URL:
   - `/[market]/[locale]/widgets/[widget]` → Overview
-  - `/[market]/[locale]/widgets/[widget]/templates|examples|features|pricing`
+  - `/[market]/[locale]/widgets/[widget]/examples|features|pricing`
 
 `site/nav/widgetsMegaMenu.ts`
 - Resolves mega menu content from the canonical widget registry + each widget’s localized page JSON:
   - `title` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.title`
   - `description` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.description`
-  - Source: `tokyo/widgets/{widget}/pages/overview.json` + localized overlays (`tokyo/l10n/prague/**`)
+  - Source: `tokyo/prague/pages/{widget}/overview.json` + localized overlays (`tokyo/prague/l10n/**`)
 
 `site/footer`
 - Props: `{ market: string, locale: string }`
@@ -181,11 +181,11 @@ Copy contract:
 - `title` (required by registry, used as section heading)
 - `items[]` (mapped to `steps[]`)
 
-### 2.6 Split Carousel (Templates)
+### 2.6 Split Carousel
 
 `blocks/split-carousel/SplitCarousel.astro`
 - Props: `{ headline: string, subheadline?: string, layout: 'visual-left' | 'visual-right' | 'stacked', items: any[] }`
-- Used for: templates pages where the “visual” side is a carousel of curated embeds.
+- Used for: visual comparison sections where one side is a carousel of curated embeds.
 
 Copy contract:
 - `headline`, `subheadline`
@@ -193,8 +193,8 @@ Copy contract:
 ### 2.7 Subpage Cards (Overview navigation)
 
 `blocks/subpage-cards/subpage-cards`
-- Props: `{ title: string, subhead?: string, items: { title: string, body: string }[], links?: { page: 'templates'|'examples'|'features', iconName?: string }[] }`
-- Used for: Overview pages to deep-link into Templates/Examples/Features.
+- Props: `{ title: string, subhead?: string, items: { title: string, body: string }[], links?: { page: 'examples'|'features'|'pricing', iconName?: string }[] }`
+- Used for: Overview pages to deep-link into Examples/Features/Pricing.
 
 Copy contract:
 - `title`, `items[]` (and optional `subhead`)
@@ -270,9 +270,9 @@ Copy contract:
   - It must not boot Bob or start a draft handoff flow.
   - `publicId` is always derived as `wgt_main_{widget}` (no override).
 
-## 3) Page templates (composition)
+## 3) Page Composition
 
-Page templates are just a list of blocks in a fixed order. Example (widget landing):
+Pages are lists of blocks in a fixed order. Example (widget landing):
 - site/nav (global chrome)
 - hero
 - minibob
@@ -287,11 +287,11 @@ Page templates are just a list of blocks in a fixed order. Example (widget landi
 Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 
 - Canonical widget pages:
-  - Source of truth: `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
+  - Source of truth: `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`
   - Prague renders `blocks[]` by `type` and embeds curated instances only when `curatedRef.publicId` is present.
   - Prague validates `curatedRef.publicId` during page load; missing curated instances fail fast in dev/build.
   - Page JSON is layout + base copy; Tokyo overlays overwrite `blocks[].copy` at runtime.
-  - Copy is loaded from page JSON and Tokyo overlays `tokyo/l10n/prague/**`, then merged into `copy`.
+  - Copy is loaded from page JSON and Tokyo overlays `tokyo/prague/l10n/**`, then merged into `copy`.
   - Runtime overlays are deterministic for canonical pages (locale + market-bound geo); composition stays static.
 - Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[market]/[locale]/widgets/[widget]/index.astro`.
 

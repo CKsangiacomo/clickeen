@@ -664,7 +664,6 @@ Representative shape:
 
 - `GET /api/account/widgets`
 - `POST /api/account/widgets/duplicate`
-- `GET /api/account/templates`
 - `GET /api/account/assets`
 - `POST /api/account/assets/upload`
 - `DELETE /api/account/assets/:assetId`
@@ -854,7 +853,6 @@ Implementation rule for Slice 1:
 
 Required Slice 1 routes include:
 - `GET /api/account/widgets`
-- `GET /api/account/templates`
 - `GET /api/account/assets`
 - `POST /api/account/assets/upload`
 - `DELETE /api/account/assets/:assetId`

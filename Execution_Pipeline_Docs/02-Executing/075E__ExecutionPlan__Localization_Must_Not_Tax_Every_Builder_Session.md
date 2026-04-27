@@ -128,8 +128,8 @@ These are current code truths. They are not planned work for `075E`.
   - Unpublish now removes the Tokyo live surface only. It no longer writes Michael status rows or treats unpublish as delete.
 - `roma/lib/michael-catalog.ts`
   - Widgets-domain status and account-locales fanout now derive `published` / `unpublished` from Tokyo serve-state instead of Michael row status.
-- `roma/app/api/account/templates/route.ts`
-  - The curated starter gallery now lists admin-owned curated instances without treating `published` as a starter-availability gate.
+- `roma/app/api/account/widgets/route.ts`
+  - Starter/listed instance discovery now lives with the widget list and does not treat `published` as a starter-availability gate.
 - `bob/lib/session/WidgetDocumentSession.tsx`
   - `loadTranslations` already lives in transport context, not `WidgetDocumentSessionValue`.
 - `bob/lib/session/useWidgetSession.tsx`

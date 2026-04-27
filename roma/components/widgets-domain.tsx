@@ -326,10 +326,7 @@ export function WidgetsDomain() {
 
           {!domainLoading && groupedInstances.length === 0 ? (
             <div className="rd-canvas-module__actions">
-              <p className="body-m">No editable instances yet. Use Templates to start from curated.</p>
-              <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/templates">
-                <span className="diet-btn-txt__label body-m">Open templates</span>
-              </Link>
+              <p className="body-m">No editable instances yet. Create a widget from the available widget types.</p>
             </div>
           ) : null}
         </section>

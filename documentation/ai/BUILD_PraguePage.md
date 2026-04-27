@@ -26,7 +26,7 @@ Only read these:
 - `documentation/services/prague/blocks.md`
 - `documentation/capabilities/localization.md`
 - `prague/src/lib/blockRegistry.ts` (required keys + meta fields)
-- `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
+- `tokyo/prague/pages/{widget}/{overview|templates|examples|features|pricing}.json`
 - `prague/content/allowlists/v1/**`
 
 Do **not** repo-grep or read other folders unless explicitly instructed.
@@ -36,13 +36,13 @@ Do **not** repo-grep or read other folders unless explicitly instructed.
 ## 2) Allowed Outputs (files you may edit)
 
 Default scope:
-- `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
+- `tokyo/prague/pages/{widget}/{overview|templates|examples|features|pricing}.json`
 
 Only if the PRD explicitly requires new string keys:
 - `prague/content/allowlists/v1/blocks/{blockKind}.allowlist.json`
 
 Do **not** edit:
-- `tokyo/l10n/prague/**` (generated overlays)
+- `tokyo/prague/l10n/**` (generated overlays)
 
 ---
 
@@ -73,7 +73,7 @@ If a required block is missing or the block type does not exist, stop and ask.
 ### Step 2 — Update page JSON (layout + base copy)
 
 File:
-- `tokyo/widgets/{widget}/pages/{page}.json`
+- `tokyo/prague/pages/{widget}/{page}.json`
 
 Rules:
 - Layout + copy: `blocks[]` contains `id`, `type`, `copy`, and allowed meta fields (e.g. `visual`).

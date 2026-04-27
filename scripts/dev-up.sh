@@ -263,7 +263,7 @@ prewarm_bob_routes() {
   fi
 
   local bob_base="http://localhost:3000"
-  local widgets_dir="$ROOT_DIR/tokyo/widgets"
+  local widgets_dir="$ROOT_DIR/tokyo/product/widgets"
   local failed=0
   local widget_dir widget
 
@@ -275,7 +275,7 @@ prewarm_bob_routes() {
   for widget_dir in "$widgets_dir"/*; do
     [ -d "$widget_dir" ] || continue
     widget="$(basename "$widget_dir")"
-    # Skip non-widget support folders in tokyo/widgets.
+    # Skip non-widget support folders in tokyo/product/widgets.
     if [[ "$widget" == _* ]] || [ "$widget" = "shared" ]; then
       continue
     fi

@@ -20,8 +20,8 @@ For platform context see [Overview.md](./Overview.md), [CONTEXT.md](./CONTEXT.md
 
 ## Canonical model
 
-- Blob bytes: `assets/versions/{accountId}/{assetId}/{filename}` in Tokyo R2.
-- Manifest metadata: `assets/meta/accounts/{accountId}/assets/{assetId}.json` in Tokyo R2.
+- Blob bytes: `accounts/{accountId}/assets/versions/{assetId}/{sha256}/{filename}` in Tokyo R2.
+- Manifest metadata: `accounts/{accountId}/assets/meta/{assetId}.json` in Tokyo R2.
 - Canonical immutable read path: `/assets/v/:assetRef` (derived from stored key).
 - Authoring media surfaces reference logical asset identity (`assetId`, optional `posterAssetId`).
 - Logo/media authoring controls persist `asset.assetId` plus editor metadata where needed; they do not persist Tokyo storage refs.

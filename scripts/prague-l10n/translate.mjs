@@ -20,8 +20,8 @@ import {
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const ALLOWLIST_ROOT = path.join(REPO_ROOT, 'prague', 'content', 'allowlists', 'v1');
-const TOKYO_PRAGUE_ROOT = path.join(REPO_ROOT, 'tokyo', 'l10n', 'prague');
-const TOKYO_WIDGETS_ROOT = path.join(REPO_ROOT, 'tokyo', 'widgets');
+const TOKYO_PRAGUE_ROOT = path.join(REPO_ROOT, 'tokyo', 'prague', 'l10n');
+const TOKYO_PRAGUE_PAGES_ROOT = path.join(REPO_ROOT, 'tokyo', 'prague', 'pages');
 const CHROME_BASE_PATH = path.join(REPO_ROOT, 'prague', 'content', 'base', 'v1', 'chrome.json');
 const LOCALES_PATH = path.join(REPO_ROOT, 'packages', 'l10n', 'locales.json');
 const DOTENV_LOCAL = path.join(REPO_ROOT, '.env.local');
@@ -144,16 +144,15 @@ function pageIdFromWidgetPage({ widget, page }) {
 
 function parseWidgetPageFile(filePath) {
   const normalized = ensurePosixPath(filePath);
-  const marker = '/tokyo/widgets/';
+  const marker = '/tokyo/prague/pages/';
   const idx = normalized.lastIndexOf(marker);
   if (idx === -1) return null;
   const rest = normalized.slice(idx + marker.length);
   const parts = rest.split('/');
-  if (parts.length !== 3) return null;
-  if (parts[1] !== 'pages') return null;
+  if (parts.length !== 2) return null;
   const widget = parts[0];
   if (!isRealWidgetDir(widget)) return null;
-  const file = parts[2];
+  const file = parts[1];
   if (!file.endsWith('.json')) return null;
   const page = file.slice(0, -'.json'.length);
   const pageId = pageIdFromWidgetPage({ widget, page });
@@ -161,7 +160,7 @@ function parseWidgetPageFile(filePath) {
 }
 
 async function listWidgetPageFiles() {
-  const all = await listJsonFiles(TOKYO_WIDGETS_ROOT);
+  const all = await listJsonFiles(TOKYO_PRAGUE_PAGES_ROOT);
   return all
     .map((filePath) => {
       const parsed = parseWidgetPageFile(filePath);
@@ -178,17 +177,17 @@ async function loadWidgetPageJson(args) {
   }
   const blocks = json.blocks;
   if (!Array.isArray(blocks)) {
-    throw new Error(`[prague-l10n] tokyo/widgets/${args.widget}/pages/${args.page}.json missing blocks[]`);
+    throw new Error(`[prague-l10n] tokyo/prague/pages/${args.widget}/${args.page}.json missing blocks[]`);
   }
   const blockTypeMap = new Map();
   for (const block of blocks) {
     if (!block || typeof block !== 'object' || Array.isArray(block)) {
-      throw new Error(`[prague-l10n] Invalid block entry in tokyo/widgets/${args.widget}/pages/${args.page}.json`);
+      throw new Error(`[prague-l10n] Invalid block entry in tokyo/prague/pages/${args.widget}/${args.page}.json`);
     }
     const id = String(block.id || '').trim();
     const type = String(block.type || '').trim();
     if (!id || !type) {
-      throw new Error(`[prague-l10n] tokyo/widgets/${args.widget}/pages/${args.page}.json missing block id/type`);
+      throw new Error(`[prague-l10n] tokyo/prague/pages/${args.widget}/${args.page}.json missing block id/type`);
     }
     blockTypeMap.set(id, type);
   }

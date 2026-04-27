@@ -4,7 +4,7 @@ STATUS: CANONICAL (AI-executable)
 OWNER: Platform / Widget System
 
 SCOPE
-- This contract applies to widget definitions in `tokyo/widgets/{widgetType}/`.
+- This contract applies to widget definitions in `tokyo/product/widgets/{widgetType}/`.
 
 INPUTS
 - `widgetType` (explicit)
@@ -25,7 +25,7 @@ STOP CONDITIONS
 - `widgetType` not explicit
 - PRD missing or conflicts with this contract
 - change requires new Dieter primitive/token
-- change requires `tokyo/widgets/shared/*`
+- change requires `tokyo/product/widgets/shared/*`
 - change requires Bob/Paris/Venice/Prague/Dieter edits
 - cannot enumerate final state paths before ToolDrawer
 - cannot provide Binding Map rows for all new controls
@@ -78,7 +78,7 @@ If a widget needs anything outside this rule, it must be explicitly required by 
 
 ### 2.2) Card wrapper (optional global primitive)
 If a widget exposes `appearance.cardwrapper.*` controls (border/shadow/radius for cards), it MUST use the shared Surface primitive:
-- Runtime: `tokyo/widgets/shared/surface.js` (`window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, scopeEl)`)
+- Runtime: `tokyo/product/widgets/shared/surface.js` (`window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, scopeEl)`)
 - CSS vars set on `scopeEl`:
   - `--ck-cardwrapper-border-width`
   - `--ck-cardwrapper-border-color`
@@ -107,8 +107,8 @@ MUST NOT
 
 ### 3.1) Header (optional global primitive)
 If a widget needs a reusable title/subtitle/CTA “header block”, it MUST use the shared Header primitive:
-- Runtime: `tokyo/widgets/shared/header.js` (`window.CKHeader.applyHeader(state, widgetRoot)`)
-- Styles: `tokyo/widgets/shared/header.css` (loaded in `widget.html`)
+- Runtime: `tokyo/product/widgets/shared/header.js` (`window.CKHeader.applyHeader(state, widgetRoot)`)
+- Styles: `tokyo/product/widgets/shared/header.css` (loaded in `widget.html`)
 
 MUST
 - Declare these state paths in `defaults` (strict; no fallbacks):

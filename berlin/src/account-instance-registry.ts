@@ -66,11 +66,6 @@ export type BerlinAccountWidgetRegistry = {
   };
 };
 
-export type BerlinTemplateRegistry = {
-  instances: BerlinListedRegistryInstance[];
-  widgetTypes: string[];
-};
-
 function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
@@ -265,46 +260,6 @@ export async function loadAccountWidgetRegistry(args: {
       curatedInstances,
       widgetTypes: Array.from(typeSet).sort((a, b) => a.localeCompare(b)),
       containment: containment.value,
-    },
-  };
-}
-
-export async function loadTemplateRegistry(env: Env): Promise<Result<BerlinTemplateRegistry>> {
-  const [curatedRows, widgetTypes] = await Promise.all([
-    readSupabaseAdminListAll<CuratedInstanceRow>({
-      env,
-      pathname: '/rest/v1/curated_widget_instances',
-      params: new URLSearchParams({
-        select: 'public_id,widget_type,meta',
-        order: 'created_at.desc,public_id.desc',
-      }),
-      pageSize: REGISTRY_PAGE_SIZE,
-    }),
-    listWidgetTypes(env),
-  ]);
-  if (!curatedRows.ok) return curatedRows;
-  if (!widgetTypes.ok) return widgetTypes;
-
-  const typeSet = new Set(widgetTypes.value);
-  const instances = curatedRows.value.flatMap((row) => {
-    const publicId = asTrimmedString(row.public_id);
-    if (!publicId) return [];
-    const widgetType = asTrimmedString(row.widget_type) ?? 'unknown';
-    if (widgetType !== 'unknown') typeSet.add(widgetType.toLowerCase());
-    return [
-      {
-        publicId,
-        widgetType,
-        displayName: formatCuratedDisplayName(row.meta, publicId),
-      },
-    ];
-  });
-
-  return {
-    ok: true,
-    value: {
-      instances,
-      widgetTypes: Array.from(typeSet).sort((a, b) => a.localeCompare(b)),
     },
   };
 }

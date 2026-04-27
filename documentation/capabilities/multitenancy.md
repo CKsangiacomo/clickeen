@@ -13,7 +13,7 @@ Clickeen is multi-tenant from day 1 with no artificial caps on collaboration. Th
 
 This doc mixes shipped behavior with target packaging. Shipped enforcement today is limited to:
 - Global entitlements matrix: `packages/ck-policy/entitlements.matrix.json`
-- Per-widget limits mapping: `tokyo/widgets/{widget}/limits.json` (ops + publish reject; load sanitize for blocked flags)
+- Per-widget limits mapping: `tokyo/product/widgets/{widget}/limits.json` (ops + publish reject; load sanitize for blocked flags)
 - Comments collaboration is target packaging only right now (comment APIs/UI are not shipped in this repo snapshot).
 - Cloud-dev is intentionally collapsed to the seeded platform-owned account after PRD 60. The schema remains account-scoped, but Roma does not expose cross-account switching there.
 
@@ -302,7 +302,7 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 **How this appears in widget PRDs (required):**
 - PRDs list **which entitlement keys** a widget uses and **how they map** to widget state (paths + metrics).
 - Tier values live only in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
-- Widget enforcement lives in `tokyo/widgets/{widget}/limits.json` (flags/caps). Budgets are global and metered server-side.
+- Widget enforcement lives in `tokyo/product/widgets/{widget}/limits.json` (flags/caps). Budgets are global and metered server-side.
 - Template: `documentation/widgets/_templates/SubjectPolicyMatrices.md` (no per-widget tier matrices).
 
 **Upsell popup standard (durable):**

@@ -20,7 +20,7 @@ export async function resolveWidgetsMegaMenu(params: { market: string; locale: s
     const title = copy && typeof copy === 'object' ? String((copy as any).title ?? '') : '';
     const description = copy && typeof copy === 'object' ? String((copy as any).description ?? '') : '';
     if (!title || !description) {
-      throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (navmeta.copy.title/description required)`);
+      throw new Error(`[prague] Invalid tokyo/prague/pages/${widget}/overview.json (navmeta.copy.title/description required)`);
     }
     items.push({
       widget,

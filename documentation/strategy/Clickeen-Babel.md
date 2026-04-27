@@ -1467,7 +1467,7 @@ LOOP REPEATS (exponential growth)
 │  • Detect translatable fields (title, body, cta, etc.)      │
 │  • Check existing translations (baseFingerprint match?)     │
 │  • If fingerprint changed → translate delta only            │
-│  • Store as ops overlay (tokyo/l10n/instances/{publicId}/locale/{locale}/{baseFingerprint}.ops.json) │
+│  • Store as account ops overlay (accounts/{accountId}/instances/{publicId}/l10n/overlays/locale/{locale}/{baseFingerprint}.ops.json) │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -1783,14 +1783,15 @@ function setValueAtPath(obj: any, path: string, value: any): void {
 }
 
 async function loadLocalizationOverlay(
+  accountId: string,
   instanceId: string,
   locale: string
 ): Promise<LocalizationOverlay | null> {
-  const index = await fetchFromStorage(`l10n/instances/${instanceId}/index.json`);
+  const index = await fetchFromStorage(`accounts/${accountId}/instances/${instanceId}/l10n/index.json`);
   const fingerprint = index?.layers?.locale?.lastPublishedFingerprint?.[locale];
   if (!fingerprint) return null;
 
-  const overlayPath = `l10n/instances/${instanceId}/locale/${locale}/${fingerprint}.ops.json`;
+  const overlayPath = `accounts/${accountId}/instances/${instanceId}/l10n/overlays/locale/${locale}/${fingerprint}.ops.json`;
   const overlay = await fetchFromStorage(overlayPath);
   return overlay ? JSON.parse(overlay) : null;
 }

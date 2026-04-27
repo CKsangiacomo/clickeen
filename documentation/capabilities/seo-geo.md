@@ -40,11 +40,11 @@ SEO/GEO embed is **tier-gated**.
 
 Source of truth:
 - Entitlement flag: `embed.seoGeo.enabled` in `packages/ck-policy/entitlements.matrix.json`
-- Live pointer contract: `renders/instances/<publicId>/live/r.json` includes `seoGeo` bases **only when entitled**
+- Public live pointer contract: `/renders/instances/<publicId>/live/r.json` includes `seoGeo` bases **only when entitled**. That URL serves the `public/instances/<publicId>/live.json` projection.
 
 Non-entitled tiers:
 - Bob must not offer the SEO/GEO snippet.
-- Tokyo must not store meta pointers/packs under `renders/instances/<publicId>/live/meta/...` or `renders/instances/<publicId>/meta/...`.
+- Tokyo must not publish meta projections under `public/instances/<publicId>/meta/...`.
 
 ---
 

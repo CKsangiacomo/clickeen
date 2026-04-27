@@ -2,7 +2,7 @@
 
 STATUS: Runtime reality (this repo)
 Created: 2024-12-27
-Last updated: 2026-03-18
+Last updated: 2026-04-27
 
 ---
 
@@ -20,10 +20,10 @@ Deploy contract:
   - output: `prague/dist`
 - Manual Cloudflare project/env alignment is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` (single source of layout + base copy) and localized via Tokyo overlays (R2 keys under `tokyo/l10n/prague/**`, fetched at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
+In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy) and localized via Tokyo overlays (R2 keys under `tokyo/prague/l10n/**`, fetched at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 At build time, Prague:
-- enumerates widgets by scanning `tokyo/widgets/*` (excluding `_*/` and `shared/`)
+- enumerates widgets by scanning `tokyo/product/widgets/*` (excluding `_*/` and `shared/`)
 - enumerates locales via `prague/src/lib/locales.ts`
 - renders a fixed set of routes under `prague/src/pages/**`
 - fails fast if required widget page JSON files are missing
@@ -57,7 +57,7 @@ There is currently no dedicated `/{market}/{locale}/widgets/` index route in thi
 ### 1.2 Widget overview
 
 - `/{market}/{locale}/widgets/{widget}` — Widget landing page (overview). Renders the full landing block stack from:
-  - `tokyo/widgets/{widget}/pages/overview.json`
+  - `tokyo/prague/pages/{widget}/overview.json`
 
 This route is strict: it throws at build time if `overview.json` is missing required blocks/copy fields.
 
@@ -71,11 +71,11 @@ Overview hero runtime behavior:
 
 ### 1.3 Widget subpages
 
-- `/{market}/{locale}/widgets/{widget}/{page}` where `page ∈ { templates, examples, features, pricing }`
+- `/{market}/{locale}/widgets/{widget}/{page}` where `page ∈ { examples, features, pricing }`
 
 Current repo behavior:
 - these pages render blocks from JSON like overview; in this snapshot many subpages are intentionally minimal (typically `page-meta` + `hero`) until richer stacks are authored
-- source: `tokyo/widgets/{widget}/pages/{templates|examples|features|pricing}.json`
+- source: `tokyo/prague/pages/{widget}/{examples|features|pricing}.json`
 
 ---
 
@@ -94,15 +94,15 @@ Prague widget pages are rendered from **block JSON** in Tokyo and localized via 
 
 1) **Renderer** (Astro): `prague/src/blocks/**` + `prague/src/lib/blockRegistry.ts`
 2) **Allowlist** (l10n contract): `prague/content/allowlists/v1/blocks/{blockType}.allowlist.json`
-3) **Base copy** (EN source): `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
-4) **Overlays** (generated): `tokyo/l10n/prague/**`
+3) **Base copy** (EN source): `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`
+4) **Overlays** (generated): `tokyo/prague/l10n/**`
 
 ### Add a new block type
 
 - Add the renderer: `prague/src/blocks/{blockType}/{blockType}.astro`
 - Register it: `prague/src/lib/blockRegistry.ts`
 - Add its allowlist: `prague/content/allowlists/v1/blocks/{blockType}.allowlist.json`
-- Use it in a page JSON: `tokyo/widgets/{widget}/pages/*.json` (ensure each block has `{ id, type, copy: {...} }`)
+- Use it in a page JSON: `tokyo/prague/pages/{widget}/*.json` (ensure each block has `{ id, type, copy: {...} }`)
 - Validate contracts locally:
   - `node scripts/prague-l10n/verify.mjs` (best-available; warns instead of blocking)
   - `node scripts/prague-sync.mjs --strict-latest` (forces latest overlays, translates if needed)
@@ -120,11 +120,10 @@ Prague widget pages are rendered from **block JSON** in Tokyo and localized via 
 ### 2.1 Canonical page JSONs (required)
 
 Each marketed widget must ship:
-- `tokyo/widgets/{widget}/pages/overview.json`
-- `tokyo/widgets/{widget}/pages/templates.json`
-- `tokyo/widgets/{widget}/pages/examples.json`
-- `tokyo/widgets/{widget}/pages/features.json`
-- `tokyo/widgets/{widget}/pages/pricing.json`
+- `tokyo/prague/pages/{widget}/overview.json`
+- `tokyo/prague/pages/{widget}/examples.json`
+- `tokyo/prague/pages/{widget}/features.json`
+- `tokyo/prague/pages/{widget}/pricing.json`
 
 The widget overview page uses `blocks[]` to render a deterministic layout. Example schema (shape, not a full spec):
 ```json
@@ -147,8 +146,8 @@ Notes:
 - Visual embeds are explicit: use `curatedRef.publicId` on blocks that should embed a curated instance.
 
 Localization is applied via page JSON + ops overlays:
-- overlays: `tokyo/l10n/prague/widgets/{widget}/locale/{locale}/{baseFingerprint}.ops.json`
-- overlays (subpages): `tokyo/l10n/prague/widgets/{widget}/{page}/locale/{locale}/{baseFingerprint}.ops.json`
+- overlays: `tokyo/prague/l10n/widgets/{widget}/locale/{locale}/{baseFingerprint}.ops.json`
+- overlays (subpages): `tokyo/prague/l10n/widgets/{widget}/{page}/locale/{locale}/{baseFingerprint}.ops.json`
 - Prague merges localized overlays into `blocks[].copy` at load time
 - Overlays are **set-only ops** gated by `baseFingerprint` and indexed via `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/{pageId}/index.json` (deterministic, no manifest fan‑out in app code).
 - Manual locale base variants are **not** part of the runtime contract in this repo snapshot; localization is overlay‑only.
@@ -199,7 +198,7 @@ Demo locale visibility contract:
 
 The following ideas are intentionally not implemented here and must not be treated as executed behavior:
 - long-tail hubs/spokes/comparisons pages
-- any markdown-driven widget page pipeline under `tokyo/widgets/*/pages/**/*.md`
+- any markdown-driven widget page pipeline under `tokyo/prague/pages/*/**/*.md`
 - acquisition personalization preview / “Make this widget yours”
 
 If/when long-tail SEO is reintroduced, it should ship behind a PRD with a deterministic contract (and this doc should be updated at the same time).

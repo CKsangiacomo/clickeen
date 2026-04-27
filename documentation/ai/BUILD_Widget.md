@@ -13,7 +13,7 @@ If anything is unclear or missing, stop and ask the human.
 Stop and ask if:
 - The widget type (e.g. `faq`, `logoshowcase`) is not explicitly provided.
 - There is no widget PRD or the PRD conflicts with these contracts.
-- The request requires changing shared runtime, Bob, Paris, Venice, Prague, Dieter, or any file outside `tokyo/widgets/{widgetType}/`.
+- The request requires changing shared runtime, Bob, Paris, Venice, Prague, Dieter, or any file outside `tokyo/product/widgets/{widgetType}/`.
 - You need new UI primitives or tokens (must go through Dieter PRD first).
 
 ---
@@ -25,21 +25,21 @@ Only read these:
 - `documentation/strategy/WhyClickeen.md`
 - `documentation/widgets/WidgetBuildContract.md`
 - `documentation/widgets/WidgetArchitecture.md`
-- `tokyo/widgets/{widgetType}/spec.json`
-- `tokyo/widgets/{widgetType}/widget.html`
-- `tokyo/widgets/{widgetType}/widget.css`
-- `tokyo/widgets/{widgetType}/widget.client.js`
-- `tokyo/widgets/{widgetType}/agent.md`
-- `tokyo/widgets/shared/stagePod.js`
-- `tokyo/widgets/shared/typography.js`
-- `tokyo/widgets/shared/branding.js`
-- `tokyo/widgets/shared/fill.js`
-- `tokyo/widgets/shared/header.js`
-- `tokyo/widgets/shared/header.css`
-- `tokyo/widgets/shared/surface.js`
-- `tokyo/widgets/{widgetType}/limits.json` (read-only unless PRD requires edits)
-- `tokyo/widgets/{widgetType}/localization.json` (read-only unless PRD requires edits)
-- `tokyo/widgets/{widgetType}/layers/*.allowlist.json` (read-only unless PRD requires edits)
+- `tokyo/product/widgets/{widgetType}/spec.json`
+- `tokyo/product/widgets/{widgetType}/widget.html`
+- `tokyo/product/widgets/{widgetType}/widget.css`
+- `tokyo/product/widgets/{widgetType}/widget.client.js`
+- `tokyo/product/widgets/{widgetType}/agent.md`
+- `tokyo/product/widgets/shared/stagePod.js`
+- `tokyo/product/widgets/shared/typography.js`
+- `tokyo/product/widgets/shared/branding.js`
+- `tokyo/product/widgets/shared/fill.js`
+- `tokyo/product/widgets/shared/header.js`
+- `tokyo/product/widgets/shared/header.css`
+- `tokyo/product/widgets/shared/surface.js`
+- `tokyo/product/widgets/{widgetType}/limits.json` (read-only unless PRD requires edits)
+- `tokyo/product/widgets/{widgetType}/localization.json` (read-only unless PRD requires edits)
+- `tokyo/product/widgets/{widgetType}/layers/*.allowlist.json` (read-only unless PRD requires edits)
 
 Do **not** repo-grep or read other folders unless explicitly instructed.
 
@@ -48,24 +48,24 @@ Do **not** repo-grep or read other folders unless explicitly instructed.
 ## 2) Allowed Outputs (files you may edit)
 
 Default scope:
-- `tokyo/widgets/{widgetType}/spec.json`
-- `tokyo/widgets/{widgetType}/widget.html`
-- `tokyo/widgets/{widgetType}/widget.css`
-- `tokyo/widgets/{widgetType}/widget.client.js`
-- `tokyo/widgets/{widgetType}/agent.md`
+- `tokyo/product/widgets/{widgetType}/spec.json`
+- `tokyo/product/widgets/{widgetType}/widget.html`
+- `tokyo/product/widgets/{widgetType}/widget.css`
+- `tokyo/product/widgets/{widgetType}/widget.client.js`
+- `tokyo/product/widgets/{widgetType}/agent.md`
 
 Only if the PRD explicitly says so:
-- `tokyo/widgets/{widgetType}/limits.json`
-- `tokyo/widgets/{widgetType}/localization.json`
-- `tokyo/widgets/{widgetType}/layers/*.allowlist.json`
+- `tokyo/product/widgets/{widgetType}/limits.json`
+- `tokyo/product/widgets/{widgetType}/localization.json`
+- `tokyo/product/widgets/{widgetType}/layers/*.allowlist.json`
 
-Do **not** create new files outside `tokyo/widgets/{widgetType}/`.
+Do **not** create new files outside `tokyo/product/widgets/{widgetType}/`.
 
 ---
 
 ## 3) Forbidden Actions (non-negotiable)
 
-- Do not edit shared runtime (`tokyo/widgets/shared/*`).
+- Do not edit shared runtime (`tokyo/product/widgets/shared/*`).
 - Do not touch Bob/Paris/Venice/Prague/Dieter code.
 - Do not add new fonts, colors, or tokens.
 - Do not introduce locale into any IDs or filenames.

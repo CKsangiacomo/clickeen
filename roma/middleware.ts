@@ -10,7 +10,6 @@ const AUTHED_PREFIXES = [
   '/billing',
   '/settings',
   '/team',
-  '/templates',
   '/usage',
   '/widgets',
   '/ai',

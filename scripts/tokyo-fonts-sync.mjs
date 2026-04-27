@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const scriptPath = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(scriptPath), '..');
-const tokyoFontsRoot = path.join(repoRoot, 'tokyo', 'fonts');
+const tokyoFontsRoot = path.join(repoRoot, 'tokyo', 'product', 'fonts');
 const tokyoWorkerRoot = path.join(repoRoot, 'tokyo-worker');
 
 const args = new Set(process.argv.slice(2));
@@ -98,7 +98,7 @@ async function main() {
   }
 
   if (!files.length) {
-    console.log('[tokyo-fonts-sync] No files found under tokyo/fonts; nothing to sync.');
+    console.log('[tokyo-fonts-sync] No files found under tokyo/product/fonts; nothing to sync.');
     return;
   }
 

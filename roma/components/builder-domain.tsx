@@ -519,13 +519,10 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
     return (
       <div className="rd-canvas-module">
         <p className="body-m">No instance selected for Builder.</p>
-        <p className="body-m">Select a concrete instance from Widgets or Templates and open Edit.</p>
+        <p className="body-m">Select a concrete instance from Widgets and open Edit.</p>
         <div className="rd-canvas-module__actions">
           <Link className="diet-btn-txt" data-size="md" data-variant="primary" href="/widgets">
             <span className="diet-btn-txt__label body-m">Open widgets</span>
-          </Link>
-          <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/templates">
-            <span className="diet-btn-txt__label body-m">Open templates</span>
           </Link>
         </div>
       </div>

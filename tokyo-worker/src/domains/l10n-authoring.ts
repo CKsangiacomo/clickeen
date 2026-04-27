@@ -24,25 +24,26 @@ function encodeJson(payload: unknown): Uint8Array {
   return UTF8_ENCODER.encode(JSON.stringify(payload));
 }
 
-function layerIndexKey(publicId: string): string {
-  return `l10n/instances/${publicId}/index.json`;
+function layerIndexKey(accountId: string, publicId: string): string {
+  return `accounts/${accountId}/instances/${publicId}/l10n/index.json`;
 }
 
-function layerBaseSnapshotKey(publicId: string, baseFingerprint: string): string {
-  return `l10n/instances/${publicId}/bases/${baseFingerprint}.snapshot.json`;
+function layerBaseSnapshotKey(accountId: string, publicId: string, baseFingerprint: string): string {
+  return `accounts/${accountId}/instances/${publicId}/l10n/bases/${baseFingerprint}.snapshot.json`;
 }
 
-function layerOverlayPrefix(publicId: string, layer: LayerKind, layerKey: string): string {
-  return `l10n/instances/${publicId}/${layer}/${layerKey}/`;
+function layerOverlayPrefix(accountId: string, publicId: string, layer: LayerKind, layerKey: string): string {
+  return `accounts/${accountId}/instances/${publicId}/l10n/overlays/${layer}/${layerKey}/`;
 }
 
 function layerOverlayKey(
+  accountId: string,
   publicId: string,
   layer: LayerKind,
   layerKey: string,
   baseFingerprint: string,
 ): string {
-  return `${layerOverlayPrefix(publicId, layer, layerKey)}${baseFingerprint}.ops.json`;
+  return `${layerOverlayPrefix(accountId, publicId, layer, layerKey)}${baseFingerprint}.ops.json`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -192,20 +193,20 @@ function normalizeIndex(raw: unknown, publicId: string): LayerIndex {
   return out;
 }
 
-async function loadIndex(env: Env, publicId: string): Promise<LayerIndex> {
-  const payload = await loadJson<LayerIndex>(env, layerIndexKey(publicId));
+async function loadIndex(env: Env, accountId: string, publicId: string): Promise<LayerIndex> {
+  const payload = await loadJson<LayerIndex>(env, layerIndexKey(accountId, publicId));
   return normalizeIndex(payload, publicId);
 }
 
-async function writeIndex(env: Env, index: LayerIndex): Promise<void> {
+async function writeIndex(env: Env, accountId: string, index: LayerIndex): Promise<void> {
   const nextLayers = Object.fromEntries(
     Object.entries(index.layers).filter(([, entry]) => Array.isArray(entry?.keys) && entry.keys.length > 0),
   ) as LayerIndex['layers'];
   if (Object.keys(nextLayers).length === 0) {
-    await env.TOKYO_R2.delete(layerIndexKey(index.publicId));
+    await env.TOKYO_R2.delete(layerIndexKey(accountId, index.publicId));
     return;
   }
-  await putJson(env, layerIndexKey(index.publicId), {
+  await putJson(env, layerIndexKey(accountId, index.publicId), {
     v: 1,
     publicId: index.publicId,
     layers: nextLayers,
@@ -214,6 +215,7 @@ async function writeIndex(env: Env, index: LayerIndex): Promise<void> {
 
 export async function upsertL10nOverlay(args: {
   env: Env;
+  accountId: string;
   publicId: string;
   layer: LayerKind;
   layerKey: string;
@@ -224,16 +226,16 @@ export async function upsertL10nOverlay(args: {
   textPack?: Record<string, string> | null;
   metaPack?: Record<string, unknown> | null;
 }): Promise<void> {
-  const overlayKey = layerOverlayKey(args.publicId, args.layer, args.layerKey, args.baseFingerprint);
+  const overlayKey = layerOverlayKey(args.accountId, args.publicId, args.layer, args.layerKey, args.baseFingerprint);
   await putJson(args.env, overlayKey, {
     v: 1,
     baseFingerprint: args.baseFingerprint,
     baseUpdatedAt: asTrimmedString(args.baseUpdatedAt),
     ops: args.ops,
   });
-  await deletePrefix(args.env, layerOverlayPrefix(args.publicId, args.layer, args.layerKey), overlayKey);
+  await deletePrefix(args.env, layerOverlayPrefix(args.accountId, args.publicId, args.layer, args.layerKey), overlayKey);
 
-  const index = await loadIndex(args.env, args.publicId);
+  const index = await loadIndex(args.env, args.accountId, args.publicId);
   const currentEntry = index.layers[args.layer] ?? { keys: [] };
   const nextKeys = Array.from(new Set([...(currentEntry.keys || []), args.layerKey])).sort((left, right) =>
     left.localeCompare(right),
@@ -245,7 +247,7 @@ export async function upsertL10nOverlay(args: {
     if (Object.keys(nextGeoTargets).length > 0) nextEntry.geoTargets = nextGeoTargets;
   }
   index.layers[args.layer] = nextEntry;
-  await writeIndex(args.env, index);
+  await writeIndex(args.env, args.accountId, index);
 
   const textPack = normalizeTextPack(args.textPack);
   if (textPack) {
@@ -253,6 +255,7 @@ export async function upsertL10nOverlay(args: {
       v: 1,
       kind: 'write-text-pack',
       publicId: args.publicId,
+      accountId: args.accountId,
       locale: args.layerKey,
       baseFingerprint: args.baseFingerprint,
       textPack,
@@ -265,6 +268,7 @@ export async function upsertL10nOverlay(args: {
       v: 1,
       kind: 'write-meta-pack',
       publicId: args.publicId,
+      accountId: args.accountId,
       locale: args.layerKey,
       metaPack,
     });
@@ -273,6 +277,7 @@ export async function upsertL10nOverlay(args: {
 
 export async function deleteL10nOverlay(args: {
   env: Env;
+  accountId: string;
   publicId: string;
   layer: LayerKind;
   layerKey: string;
@@ -280,9 +285,9 @@ export async function deleteL10nOverlay(args: {
   textPack?: Record<string, string> | null;
   metaPack?: Record<string, unknown> | null;
 }): Promise<void> {
-  await deletePrefix(args.env, layerOverlayPrefix(args.publicId, args.layer, args.layerKey));
+  await deletePrefix(args.env, layerOverlayPrefix(args.accountId, args.publicId, args.layer, args.layerKey));
 
-  const index = await loadIndex(args.env, args.publicId);
+  const index = await loadIndex(args.env, args.accountId, args.publicId);
   const currentEntry = index.layers[args.layer];
   if (currentEntry) {
     const nextKeys = currentEntry.keys.filter((value) => value !== args.layerKey);
@@ -297,7 +302,7 @@ export async function deleteL10nOverlay(args: {
       }
       index.layers[args.layer] = nextEntry;
     }
-    await writeIndex(args.env, index);
+    await writeIndex(args.env, args.accountId, index);
   }
 
   const textPack = normalizeTextPack(args.textPack);
@@ -307,6 +312,7 @@ export async function deleteL10nOverlay(args: {
       v: 1,
       kind: 'write-text-pack',
       publicId: args.publicId,
+      accountId: args.accountId,
       locale: args.layerKey,
       baseFingerprint,
       textPack,
@@ -319,6 +325,7 @@ export async function deleteL10nOverlay(args: {
       v: 1,
       kind: 'write-meta-pack',
       publicId: args.publicId,
+      accountId: args.accountId,
       locale: args.layerKey,
       metaPack,
     });
@@ -328,6 +335,7 @@ export async function deleteL10nOverlay(args: {
 export async function handleWriteL10nBaseSnapshot(
   req: Request,
   env: Env,
+  accountId: string,
   publicId: string,
   baseFingerprint: string,
 ): Promise<Response> {
@@ -353,7 +361,7 @@ export async function handleWriteL10nBaseSnapshot(
     normalizedSnapshot[normalizedPath] = value;
   }
 
-  await putJson(env, layerBaseSnapshotKey(publicId, baseFingerprint), {
+  await putJson(env, layerBaseSnapshotKey(accountId, publicId, baseFingerprint), {
     v: 1,
     publicId,
     baseFingerprint,
@@ -366,6 +374,7 @@ export async function handleWriteL10nBaseSnapshot(
 export async function handleUpsertL10nOverlay(
   req: Request,
   env: Env,
+  accountId: string,
   publicId: string,
   layer: LayerKind,
   layerKey: string,
@@ -402,6 +411,7 @@ export async function handleUpsertL10nOverlay(
   const geoTargets = layer === 'locale' ? normalizeGeoTargets(payload.geoTargets) : null;
   await upsertL10nOverlay({
     env,
+    accountId,
     publicId,
     layer,
     layerKey,
@@ -425,6 +435,7 @@ export async function handleUpsertL10nOverlay(
 export async function handleDeleteL10nOverlay(
   req: Request,
   env: Env,
+  accountId: string,
   publicId: string,
   layer: LayerKind,
   layerKey: string,
@@ -434,6 +445,7 @@ export async function handleDeleteL10nOverlay(
     : null;
   await deleteL10nOverlay({
     env,
+    accountId,
     publicId,
     layer,
     layerKey,

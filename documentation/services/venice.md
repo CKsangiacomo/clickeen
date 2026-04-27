@@ -3,7 +3,7 @@
 STATUS: REFERENCE — MUST MATCH RUNTIME  
 Last updated: 2026-03-18 (PRD 73 Tokyo-owned public payload closure)
 
-This doc describes the **current Venice runtime** after the PRD 54 pivot:
+This doc describes the **current Venice runtime** after the PRD 79 storage pivot:
 - Venice public routes are **Tokyo-only** and **DB-free**.
 - Most public bytes are direct Tokyo/R2 reads; `GET /api/instance/:publicId` now proxies a Tokyo-worker assembled public-live payload.
 - If the bytes are not in Tokyo, Venice returns an explicit “not live / not available” response.
@@ -32,13 +32,15 @@ This doc describes the **current Venice runtime** after the PRD 54 pivot:
 - `GET /api/instance/:publicId` is also Tokyo-only and public-live only.
 - `published` / `unpublished` is only Tokyo's per-instance serve flag. Venice cares only whether Tokyo says the instance is servable.
 
-**Venice reads these Tokyo files (v1):**
-- Live pointer: `renders/instances/<publicId>/live/r.json` (mutable, `no-store`)
-- Config pack: `renders/instances/<publicId>/config/<configFp>/config.json` (immutable)
-- Locale pointer: `l10n/instances/<publicId>/live/<locale>.json` (mutable, `no-store`)
-- Text pack: `l10n/instances/<publicId>/packs/<locale>/<textFp>.json` (immutable)
-- (Tier-gated) Meta pointer: `renders/instances/<publicId>/live/meta/<locale>.json` (mutable, `no-store`)
-- (Tier-gated) Meta pack: `renders/instances/<publicId>/meta/<locale>/<metaFp>.json` (immutable)
+**Venice reads these Tokyo public serving URLs:**
+- Live pointer: `/renders/instances/<publicId>/live/r.json` (mutable, `no-store`)
+- Config pack: `/renders/instances/<publicId>/config/<configFp>/config.json` (immutable)
+- Locale pointer: `/l10n/instances/<publicId>/live/<locale>.json` (mutable, `no-store`)
+- Text pack: `/l10n/instances/<publicId>/packs/<locale>/<textFp>.json` (immutable)
+- (Tier-gated) Meta pointer: `/renders/instances/<publicId>/live/meta/<locale>.json` (mutable, `no-store`)
+- (Tier-gated) Meta pack: `/renders/instances/<publicId>/meta/<locale>/<metaFp>.json` (immutable)
+
+Tokyo-worker stores those bytes under `public/instances/<publicId>/...`. Venice never reads `accounts/<accountId>/...` account truth.
 
 **Shipped routes (this repo snapshot):**
 - `GET /e/:publicId` — iframe UI shell + bootstrap (Tokyo-only)
@@ -68,8 +70,8 @@ Source of truth:
 
 Venice does not “render from DB”.
 
-The only public-serve truth for embeds is: **what Tokyo says is servable** via the tiny live pointer file:
-- `renders/instances/<publicId>/live/r.json`
+The only public-serve truth for embeds is: **what Tokyo says is servable** via the tiny live pointer URL:
+- `/renders/instances/<publicId>/live/r.json` (backed by `public/instances/<publicId>/live.json`)
 
 If that file is missing, the instance is unpublished / unservable -> Venice returns `404`.
 
@@ -80,7 +82,7 @@ If that file is missing, the instance is unpublished / unservable -> Venice retu
 ### `GET /r/:publicId` (live pointer; always DB-free)
 
 Returns the bytes of:
-- `renders/instances/<publicId>/live/r.json`
+- `/renders/instances/<publicId>/live/r.json`
 
 Headers:
 - `cache-control: no-store`
@@ -90,7 +92,7 @@ Headers:
 ### `GET /r/:publicId?meta=1&locale=...` (meta pointer; tier-gated)
 
 Returns the bytes of the meta pointer file:
-- `renders/instances/<publicId>/live/meta/<locale>.json`
+- `/renders/instances/<publicId>/live/meta/<locale>.json`
 
 Notes:
 - If the account/tier is not entitled, meta pointers do not exist in Tokyo, so this returns `404`.

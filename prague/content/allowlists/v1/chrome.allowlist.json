@@ -13,10 +13,6 @@
       "type": "string"
     },
     {
-      "path": "strings.tabs.templates",
-      "type": "string"
-    },
-    {
       "path": "strings.tabs.examples",
       "type": "string"
     },
@@ -30,10 +26,6 @@
     },
     {
       "path": "strings.cta.createFree",
-      "type": "string"
-    },
-    {
-      "path": "strings.cta.seeTemplates",
       "type": "string"
     },
     {

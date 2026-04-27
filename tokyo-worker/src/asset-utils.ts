@@ -59,10 +59,15 @@ export function validateUploadFilename(
   return { ok: true, filename: raw };
 }
 
-const ACCOUNT_ASSET_CANONICAL_PREFIX = 'assets/versions/';
+const ACCOUNT_ASSET_CANONICAL_PREFIX = 'accounts/';
 
-export function buildAccountAssetKey(accountId: string, assetId: string, filename: string): string {
-  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
+export function buildAccountAssetKey(
+  accountId: string,
+  assetId: string,
+  versionFingerprint: string,
+  filename: string,
+): string {
+  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/assets/versions/${assetId}/${versionFingerprint}/${filename}`;
 }
 
 function normalizeCanonicalAccountAssetSuffix(suffix: string): string | null {
@@ -70,11 +75,13 @@ function normalizeCanonicalAccountAssetSuffix(suffix: string): string | null {
     .split('/')
     .map((entry) => entry.trim())
     .filter(Boolean);
-  if (parts.length !== 3) return null;
-  const [accountId, assetId, filename] = parts;
-  if (!accountId || !assetId || !filename) return null;
+  if (parts.length !== 6) return null;
+  const [accountId, assetsSegment, versionsSegment, assetId, versionFingerprint, filename] = parts;
+  if (assetsSegment !== 'assets' || versionsSegment !== 'versions') return null;
+  if (!accountId || !assetId || !versionFingerprint || !filename) return null;
   if (!/^[0-9a-f-]{36}$/i.test(accountId) || !/^[0-9a-f-]{36}$/i.test(assetId)) return null;
-  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${filename}`;
+  if (!/^[a-f0-9]{64}$/i.test(versionFingerprint)) return null;
+  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/assets/versions/${assetId}/${versionFingerprint}/${filename}`;
 }
 
 export function normalizeAccountAssetReadKey(pathname: string): string | null {
@@ -96,9 +103,9 @@ export function parseAccountAssetIdentityFromKey(key: string): AccountAssetIdent
   if (!normalized) return null;
   const suffix = normalized.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length);
   const parts = suffix.split('/').filter(Boolean);
-  if (parts.length !== 3) return null;
+  if (parts.length !== 6) return null;
   const accountId = parts[0];
-  const assetId = parts[1];
+  const assetId = parts[3];
   if (!accountId || !assetId || !/^[0-9a-f-]{36}$/i.test(accountId) || !/^[0-9a-f-]{36}$/i.test(assetId)) {
     return null;
   }

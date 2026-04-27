@@ -90,7 +90,7 @@ Use `documentation/` for authoritative behavior; use `Execution_Pipeline_Docs/` 
 
 This repo is operated by **1 human architect + multiple AI dev teams**. The system is modular and contract-driven so AIs can work in parallel safely.
 
-- **Modular surfaces:** widgets in `tokyo/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `paris/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
+- **Modular surfaces:** widgets in `tokyo/product/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `paris/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
 - **Explicit contracts:** `spec.json`, `agent.md`, `*.allowlist.json`, PRDs, and service docs define what is safe to change. If it is not in a contract, assume it is unsafe.
 - **Automation intent:** local changes are designed to propagate through the local DevStudio operating lane automatically. Cloud-dev propagation is explicit (promote/deploy).
 - **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.
@@ -106,7 +106,7 @@ Local runtime:
 
 ### A) Widget definition path (local)
 
-Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
+Source of truth: `tokyo/product/widgets/{widget}/` (spec + runtime + marketing JSON).
 
 1. **Local Tokyo CDN stub** serves the widget folder (optional local debug path):
    - `tokyo/dev-server.mjs` -> `http://localhost:4000`

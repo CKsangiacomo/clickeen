@@ -154,14 +154,14 @@ export function sumAccountAssetManifestSizeBytes(manifests: AccountAssetManifest
   return manifests.reduce((total, manifest) => total + normalizeNonNegativeInt(manifest.sizeBytes), 0);
 }
 
-const ACCOUNT_ASSET_META_PREFIX = 'assets/meta/accounts';
+const ACCOUNT_ASSET_META_PREFIX = 'accounts';
 
 function accountAssetManifestKey(accountId: string, assetId: string): string {
-  return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/${assetId}.json`;
+  return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/meta/${assetId}.json`;
 }
 
 function accountAssetManifestPrefix(accountId: string): string {
-  return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/`;
+  return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/meta/`;
 }
 
 function normalizeAssetManifestKey(row: Record<string, unknown>): string | null {

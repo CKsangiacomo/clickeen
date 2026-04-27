@@ -49,7 +49,7 @@ export async function handleTokyoQueue(
           await enforceLiveSurface(env, body);
           break;
         case 'delete-instance-mirror':
-          await deleteInstanceMirror(env, body.publicId);
+          await deleteInstanceMirror(env, body.publicId, body.accountId);
           break;
         case 'sync-instance-overlays':
           await runQueuedAccountInstanceSync(env, body, {

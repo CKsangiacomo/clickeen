@@ -79,9 +79,9 @@ Use `i18n` when the surface is UI chrome / labels:
 
 **Tokyo output**
 
-- `tokyo/i18n/manifest.json`
-- `tokyo/i18n/{locale}/{bundle}.{hash}.json`
-- Admin-owned authored source: `tokyo/admin-owned/i18n/{locale}/{bundle}.json`
+- `tokyo/roma/i18n/public/manifest.json`
+- `tokyo/roma/i18n/public/{locale}/{bundle}.{hash}.json`
+- Roma authored source: `tokyo/roma/i18n/source/{locale}/{bundle}.json`
 
 Rule: catalogs are content-hashed and cacheable; the manifest is the indirection layer.
 
@@ -89,9 +89,9 @@ Rule: catalogs are content-hashed and cacheable; the manifest is the indirection
 
 Use `l10n` when the surface is “content inside an instance config” (copy, headings, CTA labels, etc.).
 
-**Tokyo output (served; PRD 54)**
+**Tokyo output (served; PRD 79)**
 
-When Tokyo marks an instance as published/servable, Tokyo exposes exactly two public l10n outputs:
+When Tokyo marks an instance as published/servable, Tokyo projects account-owned l10n truth to two public l10n outputs:
 
 - Full text pack (immutable):
   - `l10n/instances/<publicId>/packs/<locale>/<textFp>.json`
@@ -104,12 +104,11 @@ Rules:
 - Text packs are **full packs** (not diffs). They contain only allowlisted keys.
 
 Where the write plane fits (current repo snapshot):
-- Tokyo/Tokyo-worker store editable overlay rows and base snapshots under `tokyo/l10n/instances/<publicId>/...`.
+- Tokyo-worker stores editable overlay rows and base snapshots under `accounts/<accountId>/instances/<publicId>/l10n/...`.
   - `layer=locale` = generated/managed translation ops
-  - legacy `layer=user` rows may still exist in Tokyo storage, but active product routes no longer expose or write a user-layer surface
 - Tokyo-worker still owns canonical overlay/artifact state, but Builder no longer mounts account-mode localization snapshot/status/user-layer flows as part of the active authoring loop.
 - Every overlay row is keyed by `baseFingerprint` (sha256 of the current allowlist snapshot).
-- Repo-authored admin-owned l10n source overlays, when kept in-repo, live under `tokyo/admin-owned/l10n/**` and build into `tokyo/l10n/**`.
+- Repo-owned account instance l10n is forbidden by PRD 79. Account instance overlays belong under account-first Tokyo-worker storage; Prague website overlays live under `tokyo/prague/l10n/**`.
 - Stale writes are rejected when `baseFingerprint` does not match.
 - These authoring records are **never** served publicly.
 - When overlay/base state changes and the instance is published/servable, Tokyo-worker rebuilds the full text pack and publishes it:
@@ -117,7 +116,7 @@ Where the write plane fits (current repo snapshot):
 
 **Generation + mirroring (current after PRD 54)**
 
-- Tokyo computes the canonical base text snapshot/fingerprint from the widget allowlist (`tokyo/widgets/<widgetType>/localization.json`) when the saved authoring config is written.
+- Tokyo computes the canonical base text snapshot/fingerprint from the widget allowlist (`tokyo/product/widgets/<widgetType>/localization.json`) when the saved authoring config is written.
 - Tokyo-worker reads Tokyo-owned l10n identity/artifact state and calls San Francisco `POST /v1/l10n/account/ops/generate` only when explicit instance sync needs new locale ops.
 - Roma forwards the caller capsule/bearer to Tokyo-worker; Tokyo-worker sends the already-minted account `policyProfile` with the San Francisco request, and San Francisco derives the `l10n.instance.v1` AI profile/provider lane from `@clickeen/ck-policy` rather than defaulting to a generic paid path.
 - San Francisco returns set-only locale ops.
@@ -153,8 +152,8 @@ Where the write plane fits (current repo snapshot):
 
 **Widget allowlist (authoritative)**
 
-- Locale layer allowlist: `tokyo/widgets/{widgetType}/localization.json`
-- Non-locale layer allowlists: `tokyo/widgets/{widgetType}/layers/{layer}.allowlist.json` (404 = no allowed paths)
+- Locale layer allowlist: `tokyo/product/widgets/{widgetType}/localization.json`
+- Non-locale layer allowlists: `tokyo/product/widgets/{widgetType}/layers/{layer}.allowlist.json` (404 = no allowed paths)
 - Agents must not mutate paths outside the relevant allowlist.
 
 **Canonical write-plane store (Tokyo/Tokyo-worker runtime)**
@@ -178,16 +177,16 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 
 **Filesystem layout**
 
-- Base copy: `tokyo/widgets/*/pages/*.json`
+- Base copy: `tokyo/prague/pages/*/*.json`
 - Chrome base: `prague/content/base/v1/chrome.json`
 - Allowlists: `prague/content/allowlists/v1/**`
-- Overlays: `tokyo/l10n/prague/{pageId}/locale/{locale}/{baseFingerprint}.ops.json`
+- Overlays: `tokyo/prague/l10n/{pageId}/locale/{locale}/{baseFingerprint}.ops.json`
 
 **Pipeline**
 
 - Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires `CK_INTERNAL_SERVICE_JWT`).
 - Provider: OpenAI for Prague strings (system-owned); instance l10n agents follow the **Tiered AI Profile** (DeepSeek for Free, OpenAI/Anthropic for Paid).
-- `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/l10n/prague/**`.
+- `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/prague/l10n/**`.
 - `scripts/prague-l10n/verify.mjs` is a read-only artifact validator:
   - validates index/overlay presence and schema
   - validates overlay fingerprint alignment
@@ -212,7 +211,7 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 
 **Base snapshots (Prague)**
 
-- `scripts/prague-l10n/translate.mjs` writes base snapshots to `tokyo/l10n/prague/{pageId}/bases/{baseFingerprint}.snapshot.json`.
+- `scripts/prague-l10n/translate.mjs` writes base snapshots to `tokyo/prague/l10n/{pageId}/bases/{baseFingerprint}.snapshot.json`.
 - Prague retains snapshots for translation/publication tooling and diagnostics.
 
 ## Curated embeds (Prague visuals)
@@ -234,14 +233,16 @@ There is exactly **one** instance row per curated embed in Michael. Locale selec
 
 Tokyo write-plane storage:
 
-- Overlay row: `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`
-- Base snapshots: `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`
+- Overlay row: `accounts/<accountId>/instances/<publicId>/l10n/overlays/<layer>/<layerKey>/<baseFingerprint>.ops.json`
+- Base snapshots: `accounts/<accountId>/instances/<publicId>/l10n/bases/<baseFingerprint>.snapshot.json`
+- Text pack: `accounts/<accountId>/instances/<publicId>/l10n/packs/<locale>/<textFp>.json`
+- Live locale pointer: `accounts/<accountId>/instances/<publicId>/l10n/live/<locale>.json`
 
 Public Tokyo output:
 
-- Text pack: `tokyo/l10n/instances/<publicId>/packs/<locale>/<textFp>.json`
-- Live locale pointer: `tokyo/l10n/instances/<publicId>/live/<locale>.json`
-- Optional base snapshots for diagnostics/non-public tooling: `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`
+- Text pack projection: `public/instances/<publicId>/l10n/packs/<locale>/<textFp>.json`
+- Live locale pointer projection: `public/instances/<publicId>/l10n/live/<locale>.json`
+- Public HTTP `/l10n/instances/...` URLs read these projection keys. They are not storage truth.
 
 Example:
 
@@ -311,14 +312,14 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
 
 ### 0) Prague localization (system-owned)
 
-1. Author base copy in `tokyo/widgets/*/pages/*.json`.
+1. Author base copy in `tokyo/prague/pages/*/*.json`.
 2. Update allowlists under `prague/content/allowlists/v1/**` when new copy paths are added.
 3. Generate overlays via `node scripts/prague-l10n/translate.mjs` (requires San Francisco; local uses `sanfrancisco-local`, cloud-dev uses `sanfrancisco-dev` with `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`).
 4. Verify overlays via `pnpm prague:l10n:verify`.
 5. Publish overlays to Tokyo/R2:
    - Cloud-dev/prod (remote R2): `node scripts/prague-sync.mjs --publish --remote`
    - Local dev (wrangler local R2): `node scripts/prague-sync.mjs --publish --local`
-6. Prague reads page JSON base copy + Tokyo overlays from `tokyo/l10n/prague/**` (repo output) and fetches them at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/...` (cache-busted; token optional in local dev; `<build-token>` resolves to `CF_PAGES_COMMIT_SHA` unless `PUBLIC_PRAGUE_BUILD_ID` is set).
+6. Prague reads page JSON base copy + Tokyo overlays from `tokyo/prague/l10n/**` (repo output) and fetches them at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/...` (cache-busted; token optional in local dev; `<build-token>` resolves to `CF_PAGES_COMMIT_SHA` unless `PUBLIC_PRAGUE_BUILD_ID` is set).
 
 ### 1) Enforce locale-free curated/main IDs in Michael (current migration set)
 

@@ -5,11 +5,11 @@
  *
  * Serves:
  *   - GET /healthz        → 200 ok
- *   - GET /dieter/**      → static files from tokyo/dieter/**
- *   - GET /i18n/**        → static files from tokyo/i18n/**
- *   - GET /fonts/**       → static files from tokyo/fonts/**
- *   - GET /themes/**      → static files from tokyo/themes/**
- *   - GET /widgets/**     → static files from tokyo/widgets/**
+ *   - GET /dieter/**      → static files from tokyo/product/dieter/**
+ *   - GET /i18n/**        → static files from tokyo/roma/i18n/public/**
+ *   - GET /fonts/**       → static files from tokyo/product/fonts/**
+ *   - GET /themes/**      → static files from tokyo/product/themes/**
+ *   - GET /widgets/**     → static files from tokyo/product/widgets/**
  *   - GET /assets/v/**    → proxy to tokyo-worker canonical account assets
  *
  * This lets Bob and other surfaces talk to a CDN-style base URL
@@ -27,7 +27,7 @@ const WIDGET_PUBLIC_ID_RE =
   /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
-const ASSET_VERSION_KEY_RE = /^assets\/versions\/([^/]+)\/([^/]+)\/[^/]+$/;
+const ASSET_VERSION_KEY_RE = /^accounts\/([^/]+)\/assets\/versions\/([^/]+)\/[a-f0-9]{64}\/[^/]+$/i;
 
 function normalizeWidgetPublicId(raw) {
   const value = typeof raw === 'string' ? raw.trim() : '';
@@ -103,6 +103,9 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 
 const baseDir = __dirname;
+const productDir = path.join(baseDir, 'product');
+const pragueDir = path.join(baseDir, 'prague');
+const romaDir = path.join(baseDir, 'roma');
 const tokyoWorkerBase = String(process.env.TOKYO_WORKER_BASE_URL || 'http://localhost:8791')
   .trim()
   .replace(/\/+$/, '');
@@ -176,233 +179,6 @@ function normalizePublicId(raw) {
   return normalizeWidgetPublicId(raw);
 }
 
-function normalizeLocale(raw) {
-  const v = String(raw || '').trim().toLowerCase().replace(/_/g, '-');
-  if (!v) return null;
-  if (!/^[a-z]{2,3}(?:-[a-z0-9]+)*$/.test(v)) return null;
-  return v;
-}
-
-const L10N_LAYER_ALLOWED = new Set(['locale', 'geo', 'industry', 'experiment', 'account', 'behavior', 'user']);
-const LAYER_KEY_SLUG = /^[a-z0-9][a-z0-9_-]*$/;
-const LAYER_KEY_EXPERIMENT = /^exp_[a-z0-9][a-z0-9_-]*:[a-z0-9][a-z0-9_-]*$/;
-const LAYER_KEY_BEHAVIOR = /^behavior_[a-z0-9][a-z0-9_-]*$/;
-
-function normalizeLayer(raw) {
-  const value = String(raw || '').trim().toLowerCase();
-  if (!value || !L10N_LAYER_ALLOWED.has(value)) return null;
-  return value;
-}
-
-function normalizeLayerKey(layer, raw) {
-  const value = String(raw || '').trim();
-  if (!value) return null;
-  if (layer === 'locale') return normalizeLocale(value);
-  if (layer === 'geo') {
-    const upper = value.toUpperCase();
-    return /^[A-Z]{2}$/.test(upper) ? upper : null;
-  }
-  if (layer === 'industry') {
-    const lower = value.toLowerCase();
-    return LAYER_KEY_SLUG.test(lower) ? lower : null;
-  }
-  if (layer === 'experiment') {
-    const lower = value.toLowerCase();
-    return LAYER_KEY_EXPERIMENT.test(lower) ? lower : null;
-  }
-  if (layer === 'account') {
-    const lower = value.toLowerCase();
-    return LAYER_KEY_SLUG.test(lower) ? lower : null;
-  }
-  if (layer === 'behavior') {
-    const lower = value.toLowerCase();
-    return LAYER_KEY_BEHAVIOR.test(lower) ? lower : null;
-  }
-  if (layer === 'user') {
-    if (value === 'global') return 'global';
-    return normalizeLocale(value);
-  }
-  return null;
-}
-
-function normalizeGeoCountries(raw) {
-  if (!Array.isArray(raw)) return null;
-  const list = raw
-    .map((code) => String(code || '').trim().toUpperCase())
-    .filter((code) => /^[A-Z]{2}$/.test(code));
-  if (!list.length) return null;
-  return Array.from(new Set(list));
-}
-
-const L10N_PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
-
-function hasProhibitedSegment(pathStr) {
-  return String(pathStr || '')
-    .split('.')
-    .some((seg) => seg && L10N_PROHIBITED_SEGMENTS.has(seg));
-}
-
-function stableStringify(value) {
-  if (value == null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
-  const keys = Object.keys(value).sort();
-  const body = keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',');
-  return `{${body}}`;
-}
-
-function prettyStableJson(value) {
-  const parsed = JSON.parse(stableStringify(value));
-  return `${JSON.stringify(parsed, null, 2)}\n`;
-}
-
-function loadLayerIndex(publicId) {
-  const indexPath = path.join(baseDir, 'l10n', 'instances', publicId, 'index.json');
-  if (!fs.existsSync(indexPath)) return null;
-  const json = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
-  if (!json || typeof json !== 'object' || json.v !== 1) {
-    throw new Error('[tokyo-dev] invalid l10n index');
-  }
-  if (json.layers && typeof json.layers === 'object') {
-    return json;
-  }
-  throw new Error('[tokyo-dev] invalid l10n index');
-}
-
-function writeLayerIndex(publicId, layers) {
-  const indexDir = path.join(baseDir, 'l10n', 'instances', publicId);
-  ensureDir(indexDir);
-  const payload = { v: 1, publicId, layers };
-  fs.writeFileSync(path.join(indexDir, 'index.json'), prettyStableJson(payload), 'utf8');
-}
-
-function deleteLayerIndex(publicId) {
-  const indexPath = path.join(baseDir, 'l10n', 'instances', publicId, 'index.json');
-  if (fs.existsSync(indexPath)) fs.unlinkSync(indexPath);
-}
-
-function normalizeLayerIndex(payload, publicId) {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    throw new Error('[tokyo-dev] index must be an object');
-  }
-  if (payload.v !== 1) throw new Error('[tokyo-dev] index.v must be 1');
-  if (payload.publicId && String(payload.publicId) !== publicId) {
-    throw new Error('[tokyo-dev] index.publicId mismatch');
-  }
-
-  const layers = {};
-  if (payload.layers && typeof payload.layers === 'object') {
-    for (const [layer, entry] of Object.entries(payload.layers)) {
-      const normalizedLayer = normalizeLayer(layer);
-      if (!normalizedLayer || !entry || typeof entry !== 'object') continue;
-      const keys = Array.isArray(entry.keys) ? entry.keys : [];
-      const normalizedKeys = [];
-      for (const key of keys) {
-        const normalizedKey = normalizeLayerKey(normalizedLayer, key);
-        if (normalizedKey && !normalizedKeys.includes(normalizedKey)) normalizedKeys.push(normalizedKey);
-      }
-      if (!normalizedKeys.length) continue;
-      const nextEntry = { keys: normalizedKeys.sort((a, b) => a.localeCompare(b)) };
-      if (normalizedLayer === 'locale' && entry.geoTargets && typeof entry.geoTargets === 'object') {
-        const geoTargets = {};
-        for (const [key, countries] of Object.entries(entry.geoTargets)) {
-          const normalizedKey = normalizeLayerKey('locale', key);
-          const normalizedGeo = normalizeGeoCountries(countries);
-          if (normalizedKey && normalizedGeo) geoTargets[normalizedKey] = normalizedGeo;
-        }
-        if (Object.keys(geoTargets).length) nextEntry.geoTargets = geoTargets;
-      }
-      layers[normalizedLayer] = nextEntry;
-    }
-  } else {
-    throw new Error('[tokyo-dev] index.layers must be an object');
-  }
-
-  return { v: 1, publicId, layers };
-}
-
-function updateLayerIndexEntry(publicId, layer, layerKey, geoTargets) {
-  const normalizedLayer = normalizeLayer(layer);
-  const normalizedKey = normalizedLayer ? normalizeLayerKey(normalizedLayer, layerKey) : null;
-  if (!normalizedLayer || !normalizedKey) return;
-  const existing = loadLayerIndex(publicId);
-  const layers = existing?.layers ? { ...existing.layers } : {};
-  const entry = layers[normalizedLayer] ? { ...layers[normalizedLayer] } : { keys: [] };
-  entry.keys = (entry.keys || []).filter((key) => key !== normalizedKey);
-  entry.keys.push(normalizedKey);
-  entry.keys.sort((a, b) => a.localeCompare(b));
-  if (normalizedLayer === 'locale') {
-    const normalizedGeo = normalizeGeoCountries(geoTargets);
-    if (normalizedGeo) {
-      entry.geoTargets = entry.geoTargets ? { ...entry.geoTargets } : {};
-      entry.geoTargets[normalizedKey] = normalizedGeo;
-    }
-  }
-  layers[normalizedLayer] = entry;
-  writeLayerIndex(publicId, layers);
-}
-
-function removeLayerIndexEntry(publicId, layer, layerKey) {
-  const normalizedLayer = normalizeLayer(layer);
-  const normalizedKey = normalizedLayer ? normalizeLayerKey(normalizedLayer, layerKey) : null;
-  if (!normalizedLayer || !normalizedKey) return;
-  const existing = loadLayerIndex(publicId);
-  if (!existing?.layers) return;
-  const layers = { ...existing.layers };
-  const entry = layers[normalizedLayer];
-  if (!entry || !Array.isArray(entry.keys)) return;
-  const nextKeys = entry.keys.filter((key) => key !== normalizedKey);
-  if (!nextKeys.length) {
-    delete layers[normalizedLayer];
-  } else {
-    layers[normalizedLayer] = { ...entry, keys: nextKeys };
-  }
-  if (!Object.keys(layers).length) {
-    deleteLayerIndex(publicId);
-    return;
-  }
-  writeLayerIndex(publicId, layers);
-}
-
-function assertOverlayShape(payload) {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    throw new Error('[tokyo-dev] overlay must be an object');
-  }
-  if (payload.v !== 1) throw new Error('[tokyo-dev] overlay.v must be 1');
-  if (!Array.isArray(payload.ops)) throw new Error('[tokyo-dev] overlay.ops must be an array');
-
-  const ops = payload.ops.map((op, index) => {
-    if (!op || typeof op !== 'object' || Array.isArray(op)) {
-      throw new Error(`[tokyo-dev] overlay.ops[${index}] must be an object`);
-    }
-    if (op.op !== 'set') throw new Error(`[tokyo-dev] overlay.ops[${index}].op must be "set"`);
-    const path = typeof op.path === 'string' ? op.path.trim() : '';
-    if (!path) throw new Error(`[tokyo-dev] overlay.ops[${index}].path is required`);
-    if (hasProhibitedSegment(path)) throw new Error(`[tokyo-dev] overlay.ops[${index}].path contains prohibited segment`);
-    if (!('value' in op)) throw new Error(`[tokyo-dev] overlay.ops[${index}].value is required`);
-    return { op: 'set', path, value: op.value };
-  });
-
-  const baseUpdatedAt = typeof payload.baseUpdatedAt === 'string' ? payload.baseUpdatedAt : null;
-  const rawFingerprint = typeof payload.baseFingerprint === 'string' ? payload.baseFingerprint.trim() : '';
-  if (!/^[a-f0-9]{64}$/i.test(rawFingerprint)) {
-    throw new Error('[tokyo-dev] overlay.baseFingerprint must be a sha256 hex string');
-  }
-  const baseFingerprint = rawFingerprint;
-
-  return { v: 1, baseUpdatedAt, baseFingerprint, ops };
-}
-
-function cleanOldL10nOutputs(outDir, keepFile) {
-  if (!fs.existsSync(outDir)) return;
-  const files = fs.readdirSync(outDir, { withFileTypes: true }).filter((d) => d.isFile()).map((d) => d.name);
-  for (const file of files) {
-    if (file === keepFile) continue;
-    if (file.endsWith('.ops.json')) {
-      fs.unlinkSync(path.join(outDir, file));
-    }
-  }
-}
-
 function pickExtension({ filename, contentType }) {
   const fromName = (() => {
     const base = String(filename || '').trim();
@@ -450,10 +226,9 @@ function isTokyoWorkerBridgeRequest(req) {
 
 function shouldProxyMutableToWorker(req, pathname) {
   if (isTokyoWorkerBridgeRequest(req)) return false;
-  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/l10n/instances/')) {
-    return true;
-  }
-  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/fonts/')) {
+  const isAccountInstanceL10nRead =
+    pathname.startsWith('/l10n/instances/') || /^\/l10n\/v\/[^/]+\/instances\//.test(pathname);
+  if ((req.method === 'GET' || req.method === 'HEAD') && isAccountInstanceL10nRead) {
     return true;
   }
   if (
@@ -524,6 +299,30 @@ async function proxyMutableToWorker(req, res) {
   res.end(bytes);
 }
 
+function resolveStaticRoot(prefix, relativePathPosix) {
+  if (prefix === '/dieter/') return { root: path.join(productDir, 'dieter'), relativePathPosix };
+  if (prefix === '/i18n/') return { root: path.join(romaDir, 'i18n', 'public'), relativePathPosix };
+  if (prefix === '/fonts/') return { root: path.join(productDir, 'fonts'), relativePathPosix };
+  if (prefix === '/themes/') return { root: path.join(productDir, 'themes'), relativePathPosix };
+  if (prefix === '/widgets/') {
+    const praguePageMatch = relativePathPosix.match(/^([^/]+)\/pages\/(.+)$/);
+    if (praguePageMatch) {
+      return {
+        root: path.join(pragueDir, 'pages'),
+        relativePathPosix: `${praguePageMatch[1]}/${praguePageMatch[2]}`,
+      };
+    }
+    return { root: path.join(productDir, 'widgets'), relativePathPosix };
+  }
+  if (prefix === '/l10n/') {
+    if (relativePathPosix.startsWith('prague/')) {
+      return { root: path.join(pragueDir, 'l10n'), relativePathPosix: relativePathPosix.slice('prague/'.length) };
+    }
+    return { root: path.join(pragueDir, 'l10n'), relativePathPosix: '__not_found__' };
+  }
+  return { root: baseDir, relativePathPosix };
+}
+
 function serveStatic(req, res, prefix) {
   const parsed = url.parse(req.url || '/');
   const pathname = parsed.pathname || '/';
@@ -532,11 +331,15 @@ function serveStatic(req, res, prefix) {
     return false;
   }
 
-  let relativePathPosix = pathname.slice(1); // drop leading "/"
+  let relativePathPosix = pathname.slice(prefix.length);
   if (prefix === '/l10n/' && relativePathPosix.startsWith('l10n/v/')) {
     relativePathPosix = relativePathPosix.replace(/^l10n\/v\/[^/]+\//, 'l10n/');
   }
-  const relativePath = relativePathPosix; // keep naming for existing logic
+  if (prefix === '/l10n/' && relativePathPosix.startsWith('v/')) {
+    relativePathPosix = relativePathPosix.replace(/^v\/[^/]+\//, '');
+  }
+  const resolvedStatic = resolveStaticRoot(prefix, relativePathPosix);
+  const relativePath = resolvedStatic.relativePathPosix;
   const cacheControlFor = () => {
     // Cache policy:
     // - i18n bundles are content-hashed; cache aggressively (manifest is the short-TTL indirection layer).
@@ -558,7 +361,15 @@ function serveStatic(req, res, prefix) {
     return 'public, max-age=0, must-revalidate';
   };
 
-  const filePath = path.join(baseDir, relativePath);
+  const filePath = path.join(resolvedStatic.root, relativePath);
+  const normalizedRoot = path.resolve(resolvedStatic.root);
+  const normalizedFile = path.resolve(filePath);
+  if (normalizedFile !== normalizedRoot && !normalizedFile.startsWith(`${normalizedRoot}${path.sep}`)) {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.end('Bad request');
+    return true;
+  }
 
   fs.stat(filePath, (err, stat) => {
     if (err || !stat.isFile()) {
@@ -656,197 +467,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === 'DELETE' && pathname.startsWith('/l10n/instances/')) {
-    (async () => {
-      const indexMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/index$/);
-      if (indexMatch) {
-        const publicId = normalizePublicId(decodeURIComponent(indexMatch[1]));
-        if (!publicId) {
-          sendJson(res, 422, { error: 'INVALID_PUBLIC_ID' });
-          return;
-        }
-        deleteLayerIndex(publicId);
-        sendJson(res, 200, { publicId, deleted: true });
-        return;
-      }
-
-      const match = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/);
-      if (!match) {
-        sendJson(res, 404, { error: 'NOT_FOUND' });
-        return;
-      }
-      const publicId = normalizePublicId(decodeURIComponent(match[1]));
-      const layer = normalizeLayer(decodeURIComponent(match[2]));
-      const layerKey = layer ? normalizeLayerKey(layer, decodeURIComponent(match[3])) : null;
-      if (!publicId || !layer || !layerKey) {
-        sendJson(res, 422, { error: 'INVALID_L10N_PATH' });
-        return;
-      }
-
-      const localeDir = path.join(baseDir, 'l10n', 'instances', publicId, layer, layerKey);
-      let removed = false;
-      if (fs.existsSync(localeDir)) {
-        const files = fs.readdirSync(localeDir, { withFileTypes: true }).filter((d) => d.isFile()).map((d) => d.name);
-        for (const file of files) {
-          if (file.endsWith('.ops.json')) {
-            fs.unlinkSync(path.join(localeDir, file));
-            removed = true;
-          }
-        }
-        if (fs.readdirSync(localeDir).length === 0) {
-          fs.rmdirSync(localeDir);
-        }
-      }
-
-      removeLayerIndexEntry(publicId, layer, layerKey);
-
-      sendJson(res, 200, { publicId, layer, layerKey, deleted: removed });
-    })().catch((err) => {
-      res.statusCode = 500;
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.end(err instanceof Error ? err.message : 'Internal server error');
-    });
-    return;
-  }
-
-  if (req.method === 'POST' && pathname.startsWith('/l10n/instances/')) {
-    (async () => {
-      const indexMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/index$/);
-      if (indexMatch) {
-        const publicId = normalizePublicId(decodeURIComponent(indexMatch[1]));
-        if (!publicId) {
-          sendJson(res, 422, { error: 'INVALID_PUBLIC_ID' });
-          return;
-        }
-        let payload;
-        try {
-          const body = await readRequestBody(req);
-          payload = JSON.parse(body.toString('utf8'));
-        } catch (err) {
-          sendJson(res, 422, { error: 'INVALID_JSON' });
-          return;
-        }
-
-        let index;
-        try {
-          index = normalizeLayerIndex(payload, publicId);
-        } catch (err) {
-          sendJson(res, 422, { error: 'INVALID_INDEX', detail: err instanceof Error ? err.message : String(err) });
-          return;
-        }
-
-        if (!Object.keys(index.layers || {}).length) {
-          deleteLayerIndex(publicId);
-          sendJson(res, 200, { publicId, layers: {} });
-          return;
-        }
-
-        writeLayerIndex(publicId, index.layers);
-        sendJson(res, 200, { publicId, layers: index.layers });
-        return;
-      }
-
-      const baseSnapshotMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/bases\/([^/]+)$/);
-      if (baseSnapshotMatch) {
-        const publicId = normalizePublicId(decodeURIComponent(baseSnapshotMatch[1]));
-        const baseFingerprint = String(decodeURIComponent(baseSnapshotMatch[2]) || '').trim().toLowerCase();
-        if (!publicId || !/^[a-f0-9]{64}$/i.test(baseFingerprint)) {
-          sendJson(res, 422, { error: 'INVALID_BASE_SNAPSHOT_PATH' });
-          return;
-        }
-
-        let payload;
-        try {
-          const body = await readRequestBody(req);
-          payload = JSON.parse(body.toString('utf8'));
-        } catch (err) {
-          sendJson(res, 422, { error: 'INVALID_JSON' });
-          return;
-        }
-
-        if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-          sendJson(res, 422, { error: 'INVALID_PAYLOAD' });
-          return;
-        }
-        if (payload.v !== 1) {
-          sendJson(res, 422, { error: 'INVALID_SNAPSHOT', detail: 'snapshot.v must be 1' });
-          return;
-        }
-        if (payload.publicId && String(payload.publicId) !== publicId) {
-          sendJson(res, 422, { error: 'INVALID_SNAPSHOT', detail: 'snapshot.publicId mismatch' });
-          return;
-        }
-        if (payload.baseFingerprint && String(payload.baseFingerprint).toLowerCase() !== baseFingerprint) {
-          sendJson(res, 422, { error: 'INVALID_SNAPSHOT', detail: 'snapshot.baseFingerprint mismatch' });
-          return;
-        }
-        if (!payload.snapshot || typeof payload.snapshot !== 'object' || Array.isArray(payload.snapshot)) {
-          sendJson(res, 422, { error: 'INVALID_SNAPSHOT', detail: 'snapshot.snapshot must be an object' });
-          return;
-        }
-
-        const snapshot = {};
-        for (const [key, value] of Object.entries(payload.snapshot)) {
-          if (typeof value !== 'string') continue;
-          snapshot[String(key)] = value;
-        }
-
-        const stable = prettyStableJson({ v: 1, publicId, baseFingerprint, snapshot });
-        const outName = `${baseFingerprint}.snapshot.json`;
-        const outDir = path.join(baseDir, 'l10n', 'instances', publicId, 'bases');
-        ensureDir(outDir);
-        fs.writeFileSync(path.join(outDir, outName), stable, 'utf8');
-        sendJson(res, 200, { publicId, baseFingerprint, file: outName });
-        return;
-      }
-
-      const match = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/);
-      if (!match) {
-        sendJson(res, 404, { error: 'NOT_FOUND' });
-        return;
-      }
-      const publicId = normalizePublicId(decodeURIComponent(match[1]));
-      const layer = normalizeLayer(decodeURIComponent(match[2]));
-      const layerKey = layer ? normalizeLayerKey(layer, decodeURIComponent(match[3])) : null;
-      if (!publicId || !layer || !layerKey) {
-        sendJson(res, 422, { error: 'INVALID_L10N_PATH' });
-        return;
-      }
-
-      let payload;
-      try {
-        const body = await readRequestBody(req);
-        payload = JSON.parse(body.toString('utf8'));
-      } catch (err) {
-        sendJson(res, 422, { error: 'INVALID_JSON' });
-        return;
-      }
-
-      let overlay;
-      try {
-        overlay = assertOverlayShape(payload);
-      } catch (err) {
-        sendJson(res, 422, { error: 'INVALID_OVERLAY', detail: err instanceof Error ? err.message : String(err) });
-        return;
-      }
-
-      const stable = prettyStableJson(overlay);
-      const outName = `${overlay.baseFingerprint}.ops.json`;
-      const localeDir = path.join(baseDir, 'l10n', 'instances', publicId, layer, layerKey);
-      ensureDir(localeDir);
-      fs.writeFileSync(path.join(localeDir, outName), stable, 'utf8');
-      cleanOldL10nOutputs(localeDir, outName);
-      updateLayerIndexEntry(publicId, layer, layerKey, payload.geoTargets ?? payload.geoCountries);
-
-      sendJson(res, 200, { publicId, layer, layerKey, file: outName });
-    })().catch((err) => {
-      res.statusCode = 500;
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.end(err instanceof Error ? err.message : 'Internal server error');
-    });
-    return;
-  }
-
   if (req.method === 'POST' && pathname === '/widgets/upload') {
     (async () => {
       const widgetType = normalizeWidgetType(req.headers['x-widget-type']);
@@ -866,16 +486,17 @@ const server = http.createServer((req, res) => {
 
       const ext = pickExtension({ filename, contentType: req.headers['content-type'] });
       const safeFilename = sanitizeUploadFilename(filename, ext);
-      const baseRel = path.posix.join('widgets', widgetType, 'assets', 'uploads', assetId);
-      const relativePath = path.posix.join(baseRel, safeFilename);
-      const absDir = path.join(baseDir, baseRel);
-      const absPath = path.join(baseDir, relativePath);
+      const storageBaseRel = path.posix.join('product', 'widgets', widgetType, 'assets', 'uploads', assetId);
+      const storageRelativePath = path.posix.join(storageBaseRel, safeFilename);
+      const publicRelativePath = path.posix.join('widgets', widgetType, 'assets', 'uploads', assetId, safeFilename);
+      const absDir = path.join(baseDir, storageBaseRel);
+      const absPath = path.join(baseDir, storageRelativePath);
       ensureDir(absDir);
       fs.writeFileSync(absPath, body);
 
       const host = req.headers.host || `localhost:${port}`;
-      const publicUrl = `http://${host}/${relativePath}`;
-      sendJson(res, 200, { widgetType, assetId, ext, relativePath, url: publicUrl });
+      const publicUrl = `http://${host}/${publicRelativePath}`;
+      sendJson(res, 200, { widgetType, assetId, ext, relativePath: publicRelativePath, url: publicUrl });
     })().catch((err) => {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');

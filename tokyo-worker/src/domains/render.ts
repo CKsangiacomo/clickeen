@@ -120,6 +120,7 @@ export type WriteConfigPackJob = {
   v: 1;
   kind: 'write-config-pack';
   publicId: string;
+  accountId: string;
   widgetType: string;
   configFp: string;
   configPack: unknown;
@@ -129,6 +130,7 @@ export type WriteTextPackJob = {
   v: 1;
   kind: 'write-text-pack';
   publicId: string;
+  accountId: string;
   locale: string;
   baseFingerprint: string;
   textPack: Record<string, string>;
@@ -138,6 +140,7 @@ export type WriteMetaPackJob = {
   v: 1;
   kind: 'write-meta-pack';
   publicId: string;
+  accountId: string;
   locale: string;
   metaPack: Record<string, unknown>;
 };
@@ -146,6 +149,7 @@ export type SyncLiveSurfaceJob = {
   v: 1;
   kind: 'sync-live-surface';
   publicId: string;
+  accountId: string;
   live: boolean;
   widgetType?: string;
   configFp?: string;
@@ -157,6 +161,7 @@ export type EnforceLiveSurfaceJob = {
   v: 1;
   kind: 'enforce-live-surface';
   publicId: string;
+  accountId: string;
   localePolicy: LocalePolicy;
   seoGeo: boolean;
 };
@@ -165,6 +170,7 @@ export type DeleteInstanceMirrorJob = {
   v: 1;
   kind: 'delete-instance-mirror';
   publicId: string;
+  accountId: string;
 };
 
 export type SyncInstanceOverlaysJob = {
@@ -248,40 +254,72 @@ function normalizeSavedL10nFailures(value: unknown): SavedRenderL10nFailure[] {
   });
 }
 
-function renderLivePointerKey(publicId: string): string {
-  return `renders/instances/${publicId}/live/r.json`;
+function accountInstanceRoot(accountId: string, publicId: string): string {
+  return `accounts/${accountId}/instances/${publicId}`;
 }
 
-function renderConfigPackKey(publicId: string, configFp: string): string {
-  return `renders/instances/${publicId}/config/${configFp}/config.json`;
+function accountInstanceRenderLivePointerKey(accountId: string, publicId: string): string {
+  return `${accountInstanceRoot(accountId, publicId)}/render/live/pointer.json`;
 }
 
-function renderSavedPointerKey(publicId: string): string {
-  return `renders/instances/${publicId}/saved/r.json`;
+function accountInstanceRenderConfigPackKey(accountId: string, publicId: string, configFp: string): string {
+  return `${accountInstanceRoot(accountId, publicId)}/render/config/${configFp}.json`;
 }
 
-function renderSavedConfigPackKey(publicId: string, configFp: string): string {
-  return `renders/instances/${publicId}/saved/config/${configFp}.json`;
+function accountInstanceSavedPointerKey(accountId: string, publicId: string): string {
+  return `${accountInstanceRoot(accountId, publicId)}/saved/pointer.json`;
 }
 
-function l10nBaseSnapshotKey(publicId: string, baseFingerprint: string): string {
-  return `l10n/instances/${publicId}/bases/${baseFingerprint}.snapshot.json`;
+function accountInstanceSavedConfigPackKey(accountId: string, publicId: string, configFp: string): string {
+  return `${accountInstanceRoot(accountId, publicId)}/saved/config/${configFp}.json`;
 }
 
-function renderMetaLivePointerKey(publicId: string, locale: string): string {
-  return `renders/instances/${publicId}/live/meta/${locale}.json`;
+function accountInstanceL10nBaseSnapshotKey(accountId: string, publicId: string, baseFingerprint: string): string {
+  return `${accountInstanceRoot(accountId, publicId)}/l10n/bases/${baseFingerprint}.snapshot.json`;
 }
 
-function renderMetaPackKey(publicId: string, locale: string, metaFp: string): string {
-  return `renders/instances/${publicId}/meta/${locale}/${metaFp}.json`;
+function accountInstanceRenderMetaLivePointerKey(accountId: string, publicId: string, locale: string): string {
+  return `${accountInstanceRoot(accountId, publicId)}/render/meta/${locale}/live.json`;
 }
 
-function l10nLivePointerKey(publicId: string, locale: string): string {
-  return `l10n/instances/${publicId}/live/${locale}.json`;
+function accountInstanceRenderMetaPackKey(accountId: string, publicId: string, locale: string, metaFp: string): string {
+  return `${accountInstanceRoot(accountId, publicId)}/render/meta/${locale}/${metaFp}.json`;
 }
 
-function l10nTextPackKey(publicId: string, locale: string, textFp: string): string {
-  return `l10n/instances/${publicId}/packs/${locale}/${textFp}.json`;
+function accountInstanceL10nLivePointerKey(accountId: string, publicId: string, locale: string): string {
+  return `${accountInstanceRoot(accountId, publicId)}/l10n/live/${locale}.json`;
+}
+
+function accountInstanceL10nTextPackKey(accountId: string, publicId: string, locale: string, textFp: string): string {
+  return `${accountInstanceRoot(accountId, publicId)}/l10n/packs/${locale}/${textFp}.json`;
+}
+
+function publicProjectionRoot(publicId: string): string {
+  return `public/instances/${publicId}`;
+}
+
+function publicProjectionRenderLivePointerKey(publicId: string): string {
+  return `${publicProjectionRoot(publicId)}/live.json`;
+}
+
+function publicProjectionRenderConfigPackKey(publicId: string, configFp: string): string {
+  return `${publicProjectionRoot(publicId)}/config/${configFp}.json`;
+}
+
+function publicProjectionRenderMetaLivePointerKey(publicId: string, locale: string): string {
+  return `${publicProjectionRoot(publicId)}/meta/live/${locale}.json`;
+}
+
+function publicProjectionRenderMetaPackKey(publicId: string, locale: string, metaFp: string): string {
+  return `${publicProjectionRoot(publicId)}/meta/${locale}/${metaFp}.json`;
+}
+
+function publicProjectionL10nLivePointerKey(publicId: string, locale: string): string {
+  return `${publicProjectionRoot(publicId)}/l10n/live/${locale}.json`;
+}
+
+function publicProjectionL10nTextPackKey(publicId: string, locale: string, textFp: string): string {
+  return `${publicProjectionRoot(publicId)}/l10n/packs/${locale}/${textFp}.json`;
 }
 
 async function putJson(env: Env, key: string, payload: unknown): Promise<void> {
@@ -583,6 +621,7 @@ function normalizeSavedL10nSnapshot(raw: unknown): Record<string, string> | null
 
 export async function loadSavedRenderL10nBase(args: {
   env: Env;
+  accountId: string;
   publicId: string;
   widgetType: string;
   baseFingerprint?: string | null;
@@ -592,7 +631,9 @@ export async function loadSavedRenderL10nBase(args: {
   allowlist: AllowlistEntry[];
 } | null> {
   const publicId = normalizePublicId(args.publicId);
+  const accountId = normalizePublicId(args.accountId);
   if (!publicId) throw new Error('[tokyo] load-saved-render-l10n-base invalid publicId');
+  if (!accountId) throw new Error('[tokyo] load-saved-render-l10n-base invalid accountId');
   const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
   if (!widgetType) throw new Error('[tokyo] load-saved-render-l10n-base missing widgetType');
 
@@ -605,7 +646,7 @@ export async function loadSavedRenderL10nBase(args: {
 
   const existing = await loadJson<{ snapshot?: unknown }>(
     args.env,
-    l10nBaseSnapshotKey(publicId, baseFingerprint),
+    accountInstanceL10nBaseSnapshotKey(accountId, publicId, baseFingerprint),
   );
   const existingSnapshot = normalizeSavedL10nSnapshot(existing?.snapshot);
   if (!existingSnapshot) return null;
@@ -619,6 +660,7 @@ export async function loadSavedRenderL10nBase(args: {
 
 export async function ensureSavedRenderL10nBase(args: {
   env: Env;
+  accountId: string;
   publicId: string;
   widgetType: string;
   config: Record<string, unknown>;
@@ -629,7 +671,9 @@ export async function ensureSavedRenderL10nBase(args: {
   allowlist: AllowlistEntry[];
 }> {
   const publicId = normalizePublicId(args.publicId);
+  const accountId = normalizePublicId(args.accountId);
   if (!publicId) throw new Error('[tokyo] ensure-saved-render-l10n-base invalid publicId');
+  if (!accountId) throw new Error('[tokyo] ensure-saved-render-l10n-base invalid accountId');
   const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
   if (!widgetType) throw new Error('[tokyo] ensure-saved-render-l10n-base missing widgetType');
 
@@ -645,6 +689,7 @@ export async function ensureSavedRenderL10nBase(args: {
   if (existingBaseFingerprint && existingBaseFingerprint === baseFingerprint) {
     const existing = await loadSavedRenderL10nBase({
       env: args.env,
+      accountId,
       publicId,
       widgetType,
       baseFingerprint,
@@ -656,6 +701,7 @@ export async function ensureSavedRenderL10nBase(args: {
 
   const existingCurrent = await loadSavedRenderL10nBase({
     env: args.env,
+    accountId,
     publicId,
     widgetType,
     baseFingerprint,
@@ -664,7 +710,7 @@ export async function ensureSavedRenderL10nBase(args: {
     return existingCurrent;
   }
 
-  await putJson(args.env, l10nBaseSnapshotKey(publicId, baseFingerprint), {
+  await putJson(args.env, accountInstanceL10nBaseSnapshotKey(accountId, publicId, baseFingerprint), {
     v: 1,
     publicId,
     baseFingerprint,
@@ -688,12 +734,13 @@ export function normalizeTextPointer(raw: unknown): L10nLivePointer | null {
 
 async function writeTextPointer(args: {
   env: Env;
+  accountId: string;
   publicId: string;
   locale: string;
   textFp: string;
   baseFingerprint: string;
 }): Promise<void> {
-  await putJson(args.env, l10nLivePointerKey(args.publicId, args.locale), {
+  await putJson(args.env, accountInstanceL10nLivePointerKey(args.accountId, args.publicId, args.locale), {
     v: 1,
     publicId: args.publicId,
     locale: args.locale,
@@ -717,11 +764,12 @@ function normalizeMetaPointer(raw: unknown): MetaLivePointer | null {
 
 async function writeMetaPointer(args: {
   env: Env;
+  accountId: string;
   publicId: string;
   locale: string;
   metaFp: string;
 }): Promise<void> {
-  await putJson(args.env, renderMetaLivePointerKey(args.publicId, args.locale), {
+  await putJson(args.env, accountInstanceRenderMetaLivePointerKey(args.accountId, args.publicId, args.locale), {
     v: 1,
     publicId: args.publicId,
     locale: args.locale,
@@ -737,6 +785,7 @@ export function isTokyoMirrorJob(value: unknown): value is TokyoMirrorQueueJob {
   if (typeof job.kind !== 'string') return false;
   if (!job.kind) return false;
   if (typeof job.publicId !== 'string') return false;
+  if (typeof job.accountId !== 'string') return false;
   return (
     job.kind === 'write-config-pack' ||
     job.kind === 'write-text-pack' ||
@@ -807,7 +856,7 @@ export async function writeSavedRenderConfig(args: {
   const widgetType = args.widgetType;
 
   const configFp = await jsonSha256Hex(config);
-  const packKey = renderSavedConfigPackKey(publicId, configFp);
+  const packKey = accountInstanceSavedConfigPackKey(accountId, publicId, configFp);
   await putJson(args.env, packKey, config);
 
   const displayName =
@@ -821,11 +870,12 @@ export async function writeSavedRenderConfig(args: {
         ? (args.meta as Record<string, unknown>)
         : null;
   const existingPointer = normalizeSavedRenderPointer(
-    await loadJson(args.env, renderSavedPointerKey(publicId)),
+    await loadJson(args.env, accountInstanceSavedPointerKey(accountId, publicId)),
   );
   const previousBaseFingerprint = existingPointer?.l10n?.baseFingerprint ?? null;
   const l10nBase = await ensureSavedRenderL10nBase({
     env: args.env,
+    accountId,
     publicId,
     widgetType,
     config,
@@ -856,7 +906,7 @@ export async function writeSavedRenderConfig(args: {
     updatedAt: new Date().toISOString(),
     l10n,
   };
-  await putJson(args.env, renderSavedPointerKey(publicId), pointer);
+  await putJson(args.env, accountInstanceSavedPointerKey(accountId, publicId), pointer);
   return {
     pointer,
     previousBaseFingerprint,
@@ -884,7 +934,7 @@ export async function readSavedRenderPointer(args: {
     };
   }
 
-  const pointerRaw = await loadJson(args.env, renderSavedPointerKey(publicId));
+  const pointerRaw = await loadJson(args.env, accountInstanceSavedPointerKey(accountId, publicId));
   if (!pointerRaw) {
     return {
       ok: false,
@@ -940,7 +990,7 @@ export async function readSavedRenderConfig(args: {
   const config =
     (await loadJson<Record<string, unknown>>(
       args.env,
-      renderSavedConfigPackKey(publicId, pointer.configFp),
+      accountInstanceSavedConfigPackKey(accountId, publicId, pointer.configFp),
     )) ?? null;
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
     return {
@@ -954,15 +1004,20 @@ export async function readSavedRenderConfig(args: {
 
 export async function readInstanceServeState(args: {
   env: Env;
+  accountId: string;
   publicId: string;
 }): Promise<InstanceServeState> {
   const publicId = normalizePublicId(args.publicId);
+  const accountId = normalizePublicId(args.accountId);
   if (!publicId) {
+    throw new Error('tokyo.errors.render.invalid');
+  }
+  if (!accountId) {
     throw new Error('tokyo.errors.render.invalid');
   }
 
   const pointer = normalizeLiveRenderPointer(
-    await loadJson<LiveRenderPointer>(args.env, renderLivePointerKey(publicId)),
+    await loadJson<LiveRenderPointer>(args.env, accountInstanceRenderLivePointerKey(accountId, publicId)),
   );
   return pointer ? 'published' : 'unpublished';
 }
@@ -996,7 +1051,7 @@ export async function writeSavedRenderL10nState(args: {
       ...(args.summary ? { summary: args.summary } : {}),
     },
   };
-  await putJson(args.env, renderSavedPointerKey(args.publicId), pointer);
+  await putJson(args.env, accountInstanceSavedPointerKey(args.accountId, args.publicId), pointer);
   return pointer;
 }
 
@@ -1061,7 +1116,7 @@ export async function writeSavedRenderL10nStatus(args: {
       ...(lastError ? { lastError } : {}),
     },
   };
-  await putJson(args.env, renderSavedPointerKey(args.publicId), pointer);
+  await putJson(args.env, accountInstanceSavedPointerKey(args.accountId, args.publicId), pointer);
   return pointer;
 }
 
@@ -1087,8 +1142,8 @@ export async function deleteSavedRenderConfig(args: {
   if (!saved.ok) return saved;
 
   await Promise.all([
-    args.env.TOKYO_R2.delete(renderSavedPointerKey(publicId)),
-    args.env.TOKYO_R2.delete(renderSavedConfigPackKey(publicId, saved.value.pointer.configFp)),
+    args.env.TOKYO_R2.delete(accountInstanceSavedPointerKey(accountId, publicId)),
+    args.env.TOKYO_R2.delete(accountInstanceSavedConfigPackKey(accountId, publicId, saved.value.pointer.configFp)),
   ]);
   return { ok: true, deleted: true };
 }
@@ -1096,6 +1151,8 @@ export async function deleteSavedRenderConfig(args: {
 export async function writeConfigPack(env: Env, job: WriteConfigPackJob): Promise<void> {
   const publicId = normalizePublicId(job.publicId);
   if (!publicId) throw new Error('[tokyo] write-config-pack missing publicId');
+  const accountId = normalizePublicId(job.accountId);
+  if (!accountId) throw new Error('[tokyo] write-config-pack missing accountId');
   const configFp = normalizeFingerprint(job.configFp);
   if (!configFp) throw new Error('[tokyo] write-config-pack invalid configFp');
   const widgetType = typeof job.widgetType === 'string' ? job.widgetType.trim() : '';
@@ -1109,7 +1166,7 @@ export async function writeConfigPack(env: Env, job: WriteConfigPackJob): Promis
   }
 
   const bytes = encodeStableJson(job.configPack);
-  await env.TOKYO_R2.put(renderConfigPackKey(publicId, configFp), bytes, {
+  await env.TOKYO_R2.put(accountInstanceRenderConfigPackKey(accountId, publicId, configFp), bytes, {
     httpMetadata: { contentType: 'application/json; charset=utf-8' },
   });
 }
@@ -1117,6 +1174,8 @@ export async function writeConfigPack(env: Env, job: WriteConfigPackJob): Promis
 export async function writeTextPack(env: Env, job: WriteTextPackJob): Promise<void> {
   const publicId = normalizePublicId(job.publicId);
   if (!publicId) throw new Error('[tokyo] write-text-pack missing publicId');
+  const accountId = normalizePublicId(job.accountId);
+  if (!accountId) throw new Error('[tokyo] write-text-pack missing accountId');
   const locale = normalizeLocale(job.locale);
   if (!locale) throw new Error('[tokyo] write-text-pack invalid locale');
   const baseFingerprint = normalizeFingerprint(job.baseFingerprint);
@@ -1127,13 +1186,14 @@ export async function writeTextPack(env: Env, job: WriteTextPackJob): Promise<vo
 
   const textFp = await jsonSha256Hex(job.textPack);
   const packBytes = encodeStableJson(job.textPack);
-  const packKey = l10nTextPackKey(publicId, locale, textFp);
+  const packKey = accountInstanceL10nTextPackKey(accountId, publicId, locale, textFp);
   await env.TOKYO_R2.put(packKey, packBytes, {
     httpMetadata: { contentType: 'application/json; charset=utf-8' },
   });
 
   await writeTextPointer({
     env,
+    accountId,
     publicId,
     locale,
     textFp,
@@ -1144,6 +1204,8 @@ export async function writeTextPack(env: Env, job: WriteTextPackJob): Promise<vo
 export async function writeMetaPack(env: Env, job: WriteMetaPackJob): Promise<void> {
   const publicId = normalizePublicId(job.publicId);
   if (!publicId) throw new Error('[tokyo] write-meta-pack missing publicId');
+  const accountId = normalizePublicId(job.accountId);
+  if (!accountId) throw new Error('[tokyo] write-meta-pack missing accountId');
   const locale = normalizeLocale(job.locale);
   if (!locale) throw new Error('[tokyo] write-meta-pack invalid locale');
   if (!job.metaPack || typeof job.metaPack !== 'object' || Array.isArray(job.metaPack)) {
@@ -1152,44 +1214,84 @@ export async function writeMetaPack(env: Env, job: WriteMetaPackJob): Promise<vo
 
   const metaFp = await jsonSha256Hex(job.metaPack);
   const packBytes = encodeStableJson(job.metaPack);
-  const packKey = renderMetaPackKey(publicId, locale, metaFp);
+  const packKey = accountInstanceRenderMetaPackKey(accountId, publicId, locale, metaFp);
   await env.TOKYO_R2.put(packKey, packBytes, {
     httpMetadata: { contentType: 'application/json; charset=utf-8' },
   });
 
   await writeMetaPointer({
     env,
+    accountId,
     publicId,
     locale,
     metaFp,
   });
 }
 
-async function ensureR2KeyExists(env: Env, key: string, label: string): Promise<void> {
-  const obj = await env.TOKYO_R2.head(key);
-  if (!obj) throw new Error(`[tokyo] missing required ${label} (${key})`);
+async function copyJsonProjection(env: Env, sourceKey: string, targetKey: string, label: string): Promise<void> {
+  const payload = await loadJson(env, sourceKey);
+  if (payload == null) throw new Error(`[tokyo] missing required ${label} (${sourceKey})`);
+  await putJson(env, targetKey, payload);
 }
 
-async function deleteLocaleTextMirror(env: Env, publicId: string, locale: string): Promise<void> {
-  const pointerKey = l10nLivePointerKey(publicId, locale);
-  await env.TOKYO_R2.delete(pointerKey);
+async function projectAccountLocaleText(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  locale: string;
+}): Promise<void> {
+  const pointerKey = accountInstanceL10nLivePointerKey(args.accountId, args.publicId, args.locale);
+  const pointer = normalizeTextPointer(await loadJson(args.env, pointerKey));
+  if (!pointer) throw new Error(`[tokyo] missing required text pointer (${args.locale}) (${pointerKey})`);
+  await copyJsonProjection(
+    args.env,
+    accountInstanceL10nTextPackKey(args.accountId, args.publicId, args.locale, pointer.textFp),
+    publicProjectionL10nTextPackKey(args.publicId, args.locale, pointer.textFp),
+    `text pack (${args.locale})`,
+  );
+  await putJson(args.env, publicProjectionL10nLivePointerKey(args.publicId, args.locale), pointer);
 }
 
-async function deleteLocaleMetaMirror(env: Env, publicId: string, locale: string): Promise<void> {
-  const pointerKey = renderMetaLivePointerKey(publicId, locale);
-  await env.TOKYO_R2.delete(pointerKey);
+async function projectAccountLocaleMeta(args: {
+  env: Env;
+  accountId: string;
+  publicId: string;
+  locale: string;
+}): Promise<void> {
+  const pointerKey = accountInstanceRenderMetaLivePointerKey(args.accountId, args.publicId, args.locale);
+  const pointer = normalizeMetaPointer(await loadJson(args.env, pointerKey));
+  if (!pointer) throw new Error(`[tokyo] missing required meta pointer (${args.locale}) (${pointerKey})`);
+  await copyJsonProjection(
+    args.env,
+    accountInstanceRenderMetaPackKey(args.accountId, args.publicId, args.locale, pointer.metaFp),
+    publicProjectionRenderMetaPackKey(args.publicId, args.locale, pointer.metaFp),
+    `meta pack (${args.locale})`,
+  );
+  await putJson(args.env, publicProjectionRenderMetaLivePointerKey(args.publicId, args.locale), pointer);
+}
+
+async function deletePublicProjectionLocaleText(env: Env, publicId: string, locale: string): Promise<void> {
+  await env.TOKYO_R2.delete(publicProjectionL10nLivePointerKey(publicId, locale));
+}
+
+async function deletePublicProjectionLocaleMeta(env: Env, publicId: string, locale: string): Promise<void> {
+  await env.TOKYO_R2.delete(publicProjectionRenderMetaLivePointerKey(publicId, locale));
 }
 
 export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promise<void> {
   const publicId = normalizePublicId(job.publicId);
   if (!publicId) throw new Error('[tokyo] sync-live-surface missing publicId');
-  const key = renderLivePointerKey(publicId);
+  const accountId = normalizePublicId(job.accountId);
+  if (!accountId) throw new Error('[tokyo] sync-live-surface missing accountId');
+  const accountLivePointerKey = accountInstanceRenderLivePointerKey(accountId, publicId);
+  const publicLivePointerKey = publicProjectionRenderLivePointerKey(publicId);
 
   if (!job.live) {
     await Promise.all([
-      env.TOKYO_R2.delete(key),
-      deletePrefix(env, `l10n/instances/${publicId}/live/`),
-      deletePrefix(env, `renders/instances/${publicId}/live/meta/`),
+      env.TOKYO_R2.delete(accountLivePointerKey),
+      env.TOKYO_R2.delete(publicLivePointerKey),
+      deletePrefix(env, `${publicProjectionRoot(publicId)}/l10n/live/`),
+      deletePrefix(env, `${publicProjectionRoot(publicId)}/meta/live/`),
     ]);
     return;
   }
@@ -1201,16 +1303,21 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
   const localePolicy = normalizeLocalePolicy(job.localePolicy);
   if (!localePolicy) throw new Error('[tokyo] sync-live-surface invalid localePolicy');
 
-  // Refuse to move the live render pointer if the referenced current bytes aren't present yet.
-  await ensureR2KeyExists(env, renderConfigPackKey(publicId, configFp), 'config pack');
+  // Refuse to move the live render pointer if account-owned bytes aren't present yet.
+  await copyJsonProjection(
+    env,
+    accountInstanceRenderConfigPackKey(accountId, publicId, configFp),
+    publicProjectionRenderConfigPackKey(publicId, configFp),
+    'config pack',
+  );
   for (const locale of localePolicy.readyLocales) {
-    await ensureR2KeyExists(env, l10nLivePointerKey(publicId, locale), `text pointer (${locale})`);
+    await projectAccountLocaleText({ env, accountId, publicId, locale });
     if (job.seoGeo) {
-      await ensureR2KeyExists(env, renderMetaLivePointerKey(publicId, locale), `meta pointer (${locale})`);
+      await projectAccountLocaleMeta({ env, accountId, publicId, locale });
     }
   }
 
-  const previous = normalizeLiveRenderPointer(await loadJson(env, key));
+  const previous = normalizeLiveRenderPointer(await loadJson(env, accountLivePointerKey));
   const previousConfigFp = previous?.configFp ?? null;
   const previousLocales = previous?.localePolicy.readyLocales ?? [];
   const previousSeoGeoEnabled = Boolean(previous?.seoGeo);
@@ -1222,35 +1329,38 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
     configFp,
     localePolicy,
     l10n: {
-      liveBase: `l10n/instances/${publicId}/live`,
-      packsBase: `l10n/instances/${publicId}/packs`,
+      liveBase: `${publicProjectionRoot(publicId)}/l10n/live`,
+      packsBase: `${publicProjectionRoot(publicId)}/l10n/packs`,
     },
     seoGeo: job.seoGeo
       ? {
-          metaLiveBase: `renders/instances/${publicId}/live/meta`,
-          metaPacksBase: `renders/instances/${publicId}/meta`,
+          metaLiveBase: `${publicProjectionRoot(publicId)}/meta/live`,
+          metaPacksBase: `${publicProjectionRoot(publicId)}/meta`,
         }
       : undefined,
   };
 
-  await putJson(env, key, next);
+  await Promise.all([
+    putJson(env, accountLivePointerKey, next),
+    putJson(env, publicLivePointerKey, next),
+  ]);
 
   if (previousConfigFp && previousConfigFp !== configFp) {
-    await env.TOKYO_R2.delete(renderConfigPackKey(publicId, previousConfigFp));
+    await env.TOKYO_R2.delete(publicProjectionRenderConfigPackKey(publicId, previousConfigFp));
   }
 
   const nextLocales = new Set(localePolicy.readyLocales);
   const removedLocales = previousLocales.filter((locale) => !nextLocales.has(locale));
   for (const locale of removedLocales) {
-    await deleteLocaleTextMirror(env, publicId, locale);
+    await deletePublicProjectionLocaleText(env, publicId, locale);
     if (previousSeoGeoEnabled) {
-      await deleteLocaleMetaMirror(env, publicId, locale);
+      await deletePublicProjectionLocaleMeta(env, publicId, locale);
     }
   }
 
   if (previousSeoGeoEnabled && !job.seoGeo) {
     for (const locale of previousLocales) {
-      await deleteLocaleMetaMirror(env, publicId, locale);
+      await deletePublicProjectionLocaleMeta(env, publicId, locale);
     }
   }
 }
@@ -1258,19 +1368,21 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
 export async function enforceLiveSurface(env: Env, job: EnforceLiveSurfaceJob): Promise<void> {
   const publicId = normalizePublicId(job.publicId);
   if (!publicId) throw new Error('[tokyo] enforce-live-surface missing publicId');
+  const accountId = normalizePublicId(job.accountId);
+  if (!accountId) throw new Error('[tokyo] enforce-live-surface missing accountId');
 
   const localePolicy = normalizeLocalePolicy(job.localePolicy);
   if (!localePolicy) throw new Error('[tokyo] enforce-live-surface invalid localePolicy');
   const seoGeo = job.seoGeo === true;
 
-  const key = renderLivePointerKey(publicId);
+  const key = accountInstanceRenderLivePointerKey(accountId, publicId);
   const existing = normalizeLiveRenderPointer(await loadJson(env, key));
   if (!existing) {
-    // Nothing is live in Tokyo; best-effort cleanup of SEO/meta prefixes to avoid drift.
+    // Nothing is live in account truth; best-effort cleanup of public SEO/meta projections to avoid drift.
     if (!seoGeo) {
       await Promise.all([
-        deletePrefix(env, `renders/instances/${publicId}/live/meta/`),
-        deletePrefix(env, `renders/instances/${publicId}/meta/`),
+        deletePrefix(env, `${publicProjectionRoot(publicId)}/meta/live/`),
+        deletePrefix(env, `${publicProjectionRoot(publicId)}/meta/`),
       ]);
     }
     return;
@@ -1280,6 +1392,7 @@ export async function enforceLiveSurface(env: Env, job: EnforceLiveSurfaceJob): 
     v: 1,
     kind: 'sync-live-surface',
     publicId,
+    accountId,
     live: true,
     widgetType: existing.widgetType,
     configFp: existing.configFp,
@@ -1288,23 +1401,32 @@ export async function enforceLiveSurface(env: Env, job: EnforceLiveSurfaceJob): 
   });
 }
 
-export async function deleteInstanceMirror(env: Env, publicId: string): Promise<void> {
+export async function deleteInstanceMirror(env: Env, publicId: string, accountId: string): Promise<void> {
   const normalized = normalizePublicId(publicId);
   if (!normalized) throw new Error('[tokyo] delete-instance-mirror missing publicId');
+  const normalizedAccount = normalizePublicId(accountId);
+  if (!normalizedAccount) throw new Error('[tokyo] delete-instance-mirror missing accountId');
   // Tokyo is a mirror, not an archive: if an instance is not live, its bytes must not exist.
   await Promise.all([
-    deletePrefix(env, `renders/instances/${normalized}/`),
-    deletePrefix(env, `l10n/instances/${normalized}/`),
+    deletePrefix(env, accountInstanceRoot(normalizedAccount, normalized)),
+    deletePrefix(env, publicProjectionRoot(normalized)),
   ]);
 }
 
 export {
-  l10nLivePointerKey,
-  l10nTextPackKey,
-  renderConfigPackKey,
-  renderLivePointerKey,
-  renderMetaLivePointerKey,
-  renderMetaPackKey,
-  renderSavedConfigPackKey,
-  renderSavedPointerKey,
+  accountInstanceL10nBaseSnapshotKey,
+  accountInstanceL10nLivePointerKey,
+  accountInstanceL10nTextPackKey,
+  accountInstanceRenderConfigPackKey,
+  accountInstanceRenderLivePointerKey,
+  accountInstanceRenderMetaLivePointerKey,
+  accountInstanceRenderMetaPackKey,
+  accountInstanceSavedConfigPackKey,
+  accountInstanceSavedPointerKey,
+  publicProjectionL10nLivePointerKey,
+  publicProjectionL10nTextPackKey,
+  publicProjectionRenderConfigPackKey,
+  publicProjectionRenderLivePointerKey,
+  publicProjectionRenderMetaLivePointerKey,
+  publicProjectionRenderMetaPackKey,
 };

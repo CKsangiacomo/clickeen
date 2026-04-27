@@ -215,6 +215,7 @@ export async function syncAccountInstance(args: {
 
   const l10nBase = await ensureSavedRenderL10nBase({
     env: args.env,
+    accountId: args.accountId,
     publicId: args.publicId,
     widgetType: saved.value.pointer.widgetType,
     config: saved.value.config,
@@ -231,6 +232,7 @@ export async function syncAccountInstance(args: {
     sourceBaseFingerprint !== baseFingerprint
       ? await loadSavedRenderL10nBase({
           env: args.env,
+          accountId: args.accountId,
           publicId: args.publicId,
           widgetType: saved.value.pointer.widgetType,
           baseFingerprint: sourceBaseFingerprint,
@@ -258,6 +260,7 @@ export async function syncAccountInstance(args: {
       nonBaseLocales.map(async (locale) => {
         const baseOverlay = await loadOverlayOps({
           env: args.env,
+          accountId: args.accountId,
           publicId: args.publicId,
           layer: 'locale',
           layerKey: locale,
@@ -381,6 +384,7 @@ export async function syncAccountInstance(args: {
 
     await upsertL10nOverlay({
       env: args.env,
+      accountId: args.accountId,
       publicId: args.publicId,
       layer: 'locale',
       layerKey: locale,
@@ -419,6 +423,7 @@ export async function syncAccountInstance(args: {
         v: 1,
         kind: 'write-config-pack',
         publicId: args.publicId,
+        accountId: args.accountId,
         widgetType: saved.value.pointer.widgetType,
         configFp: nextConfigFp,
         configPack: runtimeConfigPack,
@@ -436,6 +441,7 @@ export async function syncAccountInstance(args: {
       v: 1,
       kind: 'sync-live-surface',
       publicId: args.publicId,
+      accountId: args.accountId,
       live: true,
       widgetType: saved.value.pointer.widgetType,
       configFp,

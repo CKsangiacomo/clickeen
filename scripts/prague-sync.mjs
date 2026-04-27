@@ -11,7 +11,7 @@ const scriptPath = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(__filename, '..');
 
 const TOKYO_ROOT = path.join(repoRoot, 'tokyo');
-const PRAGUE_L10N_ROOT = path.join(TOKYO_ROOT, 'l10n', 'prague');
+const PRAGUE_L10N_ROOT = path.join(TOKYO_ROOT, 'prague', 'l10n');
 const TOKYO_WORKER_ROOT = path.join(repoRoot, 'tokyo-worker');
 const VERIFY_SCRIPT = path.join(repoRoot, 'scripts', 'prague-l10n', 'verify.mjs');
 const TRANSLATE_SCRIPT = path.join(repoRoot, 'scripts', 'prague-l10n', 'translate.mjs');
@@ -204,8 +204,8 @@ async function publishOverlays() {
   files.sort();
   const modeFlag = publishRemote ? '--remote' : '--local';
   const tasks = files.map((filePath) => {
-    const relFromTokyo = path.relative(TOKYO_ROOT, filePath).replace(/\\/g, '/');
-    const key = relFromTokyo; // e.g. l10n/prague/...
+    const relFromPragueL10n = path.relative(PRAGUE_L10N_ROOT, filePath).replace(/\\/g, '/');
+    const key = path.posix.join('l10n', 'prague', relFromPragueL10n);
     const objectPath = `${R2_BUCKET}/${key}`;
     return { key, objectPath, filePath, modeFlag };
   });

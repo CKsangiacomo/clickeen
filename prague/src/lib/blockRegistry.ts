@@ -243,9 +243,9 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
         throw new Error(`[prague] ${pagePath}: block "${type}" links[${i}].page must be a string`);
       }
       const value = page.trim();
-      if (value !== 'templates' && value !== 'examples' && value !== 'features') {
+      if (value !== 'examples' && value !== 'features' && value !== 'pricing') {
         throw new Error(
-          `[prague] ${pagePath}: block "${type}" links[${i}].page must be "templates", "examples", or "features"`,
+          `[prague] ${pagePath}: block "${type}" links[${i}].page must be "examples", "features", or "pricing"`,
         );
       }
 

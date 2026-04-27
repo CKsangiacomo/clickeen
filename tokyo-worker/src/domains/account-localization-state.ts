@@ -10,7 +10,7 @@ import { normalizeLocaleToken, type AllowlistEntry } from '@clickeen/l10n';
 import { json } from '../http';
 import type { Env } from '../types';
 import {
-  l10nLivePointerKey,
+  accountInstanceL10nLivePointerKey,
   normalizeTextPointer,
   readSavedRenderConfig,
 } from './render';
@@ -64,13 +64,14 @@ export async function loadBerlinAccountL10nState(args: {
 }
 export async function loadOverlayOps(args: {
   env: Env;
+  accountId: string;
   publicId: string;
   layer: 'locale';
   layerKey: string;
   baseFingerprint: string;
   allowlist: AllowlistEntry[];
 }): Promise<{ ops: LocalizationOp[]; baseUpdatedAt: string | null }> {
-  const key = `l10n/instances/${args.publicId}/${args.layer}/${args.layerKey}/${args.baseFingerprint}.ops.json`;
+  const key = `accounts/${args.accountId}/instances/${args.publicId}/l10n/overlays/${args.layer}/${args.layerKey}/${args.baseFingerprint}.ops.json`;
   const obj = await args.env.TOKYO_R2.get(key);
   if (!obj) {
     return { ops: [], baseUpdatedAt: null };
@@ -208,7 +209,7 @@ export async function loadAccountTranslationsPanelData(args: {
     requestedLocales.map(async (locale) => {
       if (locale === summaryBaseLocale) return locale;
       const raw = await args.env.TOKYO_R2
-        .get(l10nLivePointerKey(args.publicId, locale))
+        .get(accountInstanceL10nLivePointerKey(args.accountId, args.publicId, locale))
         .then((obj) => obj?.json().catch(() => null) ?? null);
       const pointer = normalizeTextPointer(raw);
       return pointer?.baseFingerprint === baseFingerprint ? locale : null;

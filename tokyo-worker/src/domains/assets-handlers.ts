@@ -48,7 +48,7 @@ import {
   sumAccountAssetManifestSizeBytes,
 } from './assets';
 
-const ACCOUNT_ASSET_NAMESPACE_PREFIX = 'assets/versions/';
+const ACCOUNT_ASSET_NAMESPACE_PREFIX = 'accounts/';
 const ACCOUNT_ASSET_R2_LIST_PAGE_SIZE = 1000;
 const ASSET_INTEGRITY_SAMPLE_LIMIT = 50;
 const ASSET_IDENTITY_INTEGRITY_SAMPLE_LIMIT = 50;
@@ -207,7 +207,7 @@ async function enforceAccountStorageLimit(args: {
 }
 
 function resolveAccountAssetNamespacePrefix(accountId: string): string {
-  return `${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/`;
+  return `${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/assets/versions/`;
 }
 
 function resolveAccountAssetIdentityPrefix(accountId: string, assetId: string): string {
@@ -484,7 +484,8 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   if (!budgetResult.ok) return budgetResult.response;
 
   const assetId = crypto.randomUUID();
-  const key = buildAccountAssetKey(accountId, assetId, filename);
+  const bodySha256 = await sha256Hex(body);
+  const key = buildAccountAssetKey(accountId, assetId, bodySha256, filename);
   await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
 
   try {
@@ -499,7 +500,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       contentType,
       assetType,
       sizeBytes: body.byteLength,
-      sha256: await sha256Hex(body),
+      sha256: bodySha256,
     });
   } catch (error) {
     await env.TOKYO_R2.delete(key);

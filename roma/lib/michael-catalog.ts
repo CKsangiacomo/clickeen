@@ -4,7 +4,6 @@ import {
   michaelUnavailableResult,
   type MichaelAccountWidgetCatalogResult,
   type MichaelListedWidgetInstance,
-  type MichaelTemplateCatalogResult,
 } from './michael-shared';
 import {
   loadTokyoAccountInstanceDocument,
@@ -143,58 +142,6 @@ export async function loadAccountWidgetCatalog(args: {
       curatedInstances,
       widgetTypes: Array.from(widgetTypeSet).sort((a, b) => a.localeCompare(b)),
       containment,
-    };
-  } catch (error) {
-    return michaelUnavailableResult(error);
-  }
-}
-
-export async function loadTemplateCatalog(
-  berlinAccessToken: string,
-): Promise<MichaelTemplateCatalogResult> {
-  try {
-    const registry = await fetchBerlinProductJson<{
-      instances?: unknown;
-      widgetTypes?: unknown;
-    }>({
-      accessToken: berlinAccessToken,
-      path: '/v1/templates/registry',
-    });
-    if (!registry.ok) return registry;
-
-    const widgetTypeSet = new Set<string>();
-    const registryWidgetTypes = Array.isArray(registry.value.widgetTypes)
-      ? registry.value.widgetTypes
-      : [];
-    for (const typeRaw of registryWidgetTypes) {
-      const type = asTrimmedString(typeRaw);
-      if (type && type !== 'unknown') widgetTypeSet.add(type.toLowerCase());
-    }
-    const rows = Array.isArray(registry.value.instances)
-      ? (registry.value.instances as Array<{
-          publicId?: unknown;
-          widgetType?: unknown;
-          displayName?: unknown;
-        }>)
-      : [];
-    const instances = rows
-      .map((row) => {
-        const publicId = asTrimmedString(row.publicId);
-        if (!publicId) return null;
-        const widgetType = asTrimmedString(row.widgetType) ?? 'unknown';
-        if (widgetType !== 'unknown') widgetTypeSet.add(widgetType.toLowerCase());
-        return {
-          publicId,
-          widgetType,
-          displayName: asTrimmedString(row.displayName) ?? publicId,
-        };
-      })
-      .filter((row): row is NonNullable<typeof row> => Boolean(row));
-
-    return {
-      ok: true,
-      instances,
-      widgetTypes: Array.from(widgetTypeSet).sort((a, b) => a.localeCompare(b)),
     };
   } catch (error) {
     return michaelUnavailableResult(error);

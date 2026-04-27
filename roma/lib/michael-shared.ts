@@ -73,23 +73,6 @@ export type MichaelAccountWidgetCatalogResult =
       detail?: string;
     };
 
-export type MichaelTemplateCatalogResult =
-  | {
-      ok: true;
-      instances: Array<{
-        publicId: string;
-        widgetType: string;
-        displayName: string;
-      }>;
-      widgetTypes: string[];
-    }
-  | {
-      ok: false;
-      status: number;
-      reasonKey: string;
-      detail?: string;
-    };
-
 export type MichaelDeleteInstanceResult =
   | {
       ok: true;

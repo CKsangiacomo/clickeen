@@ -37,7 +37,7 @@ export async function tryHandleInternalL10nRoutes(
     });
     if (authErr) return respond(authErr);
     return respond(
-      await handleWriteL10nBaseSnapshot(req, env, publicId, baseFingerprint),
+      await handleWriteL10nBaseSnapshot(req, env, accountId, publicId, baseFingerprint),
     );
   }
 
@@ -85,9 +85,9 @@ export async function tryHandleInternalL10nRoutes(
     });
     if (authErr) return respond(authErr);
     if (req.method === 'POST') {
-      return respond(await handleUpsertL10nOverlay(req, env, publicId, layer, layerKey));
+      return respond(await handleUpsertL10nOverlay(req, env, accountId, publicId, layer, layerKey));
     }
-    return respond(await handleDeleteL10nOverlay(req, env, publicId, layer, layerKey));
+    return respond(await handleDeleteL10nOverlay(req, env, accountId, publicId, layer, layerKey));
   }
 
   const l10nVersionedMatch = pathname.match(/^\/l10n\/v\/[^/]+\/(.+)$/);

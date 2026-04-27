@@ -4,8 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "tokyo/widgets/**/pages/*.json"
-      - "tokyo/l10n/prague/**"
+      - "tokyo/prague/pages/**/*.json"
+      - "tokyo/prague/l10n/**"
+      - "tokyo/prague/assets/**"
       - "prague/content/**"
       - "packages/l10n/locales.json"
       - "scripts/prague-sync.mjs"

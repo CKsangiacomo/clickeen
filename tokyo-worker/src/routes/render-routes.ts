@@ -5,10 +5,10 @@ import { handleGetAccountAsset } from '../domains/assets';
 import { handleGetPublicInstance } from '../domains/public-instance';
 import {
   handleGetR2Object,
-  renderConfigPackKey,
-  renderLivePointerKey,
-  renderMetaLivePointerKey,
-  renderMetaPackKey,
+  publicProjectionRenderConfigPackKey,
+  publicProjectionRenderLivePointerKey,
+  publicProjectionRenderMetaLivePointerKey,
+  publicProjectionRenderMetaPackKey,
 } from '../domains/render';
 import {
   respondInternalOnly,
@@ -32,7 +32,7 @@ export async function tryHandlePublicRenderRoutes(
     }
     if (req.method === 'GET') {
       return respond(
-        await handleGetR2Object(env, renderLivePointerKey(publicId), 'no-store'),
+        await handleGetR2Object(env, publicProjectionRenderLivePointerKey(publicId), 'no-store'),
       );
     }
     if (req.method === 'POST') {
@@ -103,7 +103,7 @@ export async function tryHandlePublicRenderRoutes(
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
     return respond(
-      await handleGetR2Object(env, renderMetaLivePointerKey(publicId, locale), 'no-store'),
+        await handleGetR2Object(env, publicProjectionRenderMetaLivePointerKey(publicId, locale), 'no-store'),
     );
   }
 
@@ -138,7 +138,7 @@ export async function tryHandlePublicRenderRoutes(
     return respond(
       await handleGetR2Object(
         env,
-        renderConfigPackKey(publicId, configFp),
+        publicProjectionRenderConfigPackKey(publicId, configFp),
         'public, max-age=31536000, immutable',
       ),
     );
@@ -158,7 +158,7 @@ export async function tryHandlePublicRenderRoutes(
     return respond(
       await handleGetR2Object(
         env,
-        renderMetaPackKey(publicId, locale, metaFp),
+        publicProjectionRenderMetaPackKey(publicId, locale, metaFp),
         'public, max-age=31536000, immutable',
       ),
     );

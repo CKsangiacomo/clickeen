@@ -1,142 +1,148 @@
-# System: Tokyo — Asset Storage & CDN
+# System: Tokyo - Product Static Resources, Account Storage, And Public Projections
+
+STATUS: PRD 79 TARGET MODEL
+Runtime code is being migrated to this model by PRD 79. Current residue is listed in `Execution_Pipeline_Docs/02-Executing/079A__Audit__Tokyo_Account_First_Taxonomy_Deletion_Map.md`.
 
 ## Identity
+
 - Tier: Supporting
-- Purpose: File and asset storage with CDN delivery
+- Purpose: product static resource hosting, account-owned asset/instance storage through Tokyo-worker, and public CDN projections
+- Runtime: Cloudflare R2 plus Tokyo Worker
+
+## Product Model
+
+Tokyo must keep three planes separate:
+
+- **Product source/static plane**: widget software, Dieter output, fonts, themes, Roma UI catalogs, Prague page/assets source.
+- **Account truth plane**: account-owned assets, saved instance documents, instance l10n, render state, usage/index data.
+- **Public projection plane**: cacheable public reads for embeds, assets, and localization. Public projections are generated from account truth and never own account state.
+
+The ownership boundary is always the account. A widget is software. An instance is the saved account-owned widget data.
+
+Forbidden architecture/storage concepts:
+
+- separate admin storage lanes
+- separate starter/preset storage classes
+- repo-owned instance l10n
+- owner-specific translation flow
+
+Admin starter content is normal account-owned instance data under the admin account with listed/duplicable metadata.
+
+## Repo Taxonomy
+
+The Git repo `tokyo/` contains product source and authored static resources only:
+
+```txt
+tokyo/
+  product/
+    widgets/
+    dieter/
+    fonts/
+    themes/
+  roma/
+    i18n/
+  prague/
+    pages/
+    i18n/
+    l10n/
+    assets/
+  accounts/
+    README.md
+```
+
+Rules:
+
+- Widget source belongs under `tokyo/product/widgets/{widgetType}/`.
+- Widget folders contain widget software and contracts only. Prague page source belongs under `tokyo/prague/pages/{widgetType}/`.
+- Roma product/account UI catalogs belong under `tokyo/roma/i18n/**`.
+- Prague website copy, l10n source, and website assets belong under `tokyo/prague/**`.
+- `accounts/` in Git is documentation/fixture-only. Real account data lives in Tokyo-worker storage.
+- Public HTTP routes like `/widgets/**`, `/dieter/**`, `/fonts/**`, `/themes/**`, and `/i18n/**` may remain stable serving URLs, but they must not imply old repo source paths.
+
+## Account-First Storage
+
+Runtime/account data must be keyed by account first:
+
+```txt
+accounts/
+  <accountId>/
+    assets/
+    instances/
+      <publicId>/
+        saved/
+        l10n/
+        render/
+    indexes/
+```
+
+Rules:
+
+- `publicId` alone is not an ownership boundary.
+- Saved config, l10n, render state, translation status, and overlay ops belong under the owning account's instance.
+- Assets belong under the owning account.
+- Account export/delete/usage can be answered from `accounts/<accountId>`.
+- Product reads must not fall back to old root-level instance keys after the migration gate.
+
+## Public Projections
+
+Public embeds need fast paths, but those paths are projections:
+
+```txt
+public/
+  assets/
+    v/
+  instances/
+    <publicId>/
+      live.json
+      config/
+      l10n/
+      meta/
+```
+
+Rules:
+
+- Venice and public embeds read projections only.
+- Publishing writes account truth first, then projection.
+- Unpublishing/deleting removes or invalidates projections.
+- Projection helper names must say `publicProjection` so source truth and serving output are not confused.
 
 ## Interfaces
-- Upload APIs, signed URLs
-- Serves widget definitions/assets (core runtime + contract files):
-  - `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
-  - `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
-- Serves published localization artifacts for instances (`tokyo/l10n/**`) written by Roma/Tokyo-worker
-- Serves published render snapshots for Venice (`tokyo/renders/instances/**`) materialized by `tokyo-worker` (PRD 38)
-- Prague website base copy is repo-local in `tokyo/widgets/*/pages/*.json`; localized overlays are stored under `tokyo/l10n/prague/**` and fetched by Prague from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/**` (Chrome UI strings remain in `prague/content/base/v1/chrome.json`; build token defaults to `CF_PAGES_COMMIT_SHA`, with `PUBLIC_PRAGUE_BUILD_ID` as optional override).
 
-## Dependencies
-- Used by: Venice, Bob, Prague
+Tokyo serves:
 
-## Deployment
-- Cloudflare R2 (zero egress)
+- Widget software and contracts for Bob/Roma/Venice/Prague.
+- Dieter bundles and manifest.
+- Roma UI localization catalogs.
+- Prague website/static resources.
+- Immutable public asset reads.
+- Public embed render/config/l10n projections.
 
-## Rules
-- Public assets cacheable; private assets signed, time-limited
+Tokyo-worker owns private account-control routes through Cloudflare service bindings:
 
-## Canonical URLs (executed)
+- account asset upload/list/resolve/delete
+- saved instance open/save/delete
+- render config/live/meta writes
+- l10n base/overlay/pack/live writes
+- account usage/integrity/index reads
 
-- **Local**: `http://localhost:4000` (local Tokyo dev server + local Tokyo-worker path).
-- **Cloud-dev**: `https://tokyo.dev.clickeen.com` (Cloudflare dev)
-- **UAT / Limited GA / GA**: `https://tokyo.clickeen.com` (release stages share prod infra)
+Browser product traffic must go through Roma same-origin routes. Public Tokyo HTTP is not the account save/control boundary.
 
-Consumers should treat Tokyo as the **software plane**:
-- Widget definitions are fetched over HTTP using `NEXT_PUBLIC_TOKYO_URL` (local Tokyo in canonical local development)
-- Dieter build artifacts are served from Tokyo (`tokyo/dieter/**`)
-- i18n bundles are served from Tokyo (`tokyo/i18n/**`)
-- Admin-owned authored i18n source catalogs live under `tokyo/admin-owned/i18n/**` and are built into `tokyo/i18n/**`
-- Admin-owned authored l10n source overlays live under `tokyo/admin-owned/l10n/**` and are built into `tokyo/l10n/**`
-- Roma account asset control-plane calls use the private `TOKYO_ASSET_CONTROL` Cloudflare service binding; `NEXT_PUBLIC_TOKYO_URL` is not the product asset control seam.
+## Canonical URLs
 
-## Dieter bundling manifest (executed)
+- **Local**: `http://localhost:4000` (local Tokyo dev server + local Tokyo-worker path)
+- **Cloud-dev**: `https://tokyo.dev.clickeen.com`
+- **UAT / Limited GA / GA**: `https://tokyo.clickeen.com`
 
-Dieter emits a bundling manifest at:
-- `tokyo/dieter/manifest.json`
+## Security Rules
 
-This is the authoritative contract Bob uses to determine which Dieter bundles are real and which classnames are helpers.
-
-Shape (as implemented today):
-- `v`: schema version (number)
-- `gitSha`: build fingerprint
-- `components`: string[] (valid component bundles)
-- `componentsWithJs`: string[] (bundles that ship a `.js`)
-- `aliases`: Record<string,string> (optional hint mapping)
-- `helpers`: string[] (classnames that must never be treated as bundles)
-- `deps`: Record<string,string[]> (explicit component dependencies)
-
-## Determinism rule (anti-drift)
-
-- ToolDrawer `type="..."` drives required bundles.
-- CSS classnames never add bundles (classnames are not a dependency graph).
-
-## i18n bundles (executed)
-
-Tokyo serves built localization catalogs for editor/runtime surfaces:
-- Build output path: `tokyo/i18n/{locale}/{bundle}.{hash}.json`
-- Manifest: `tokyo/i18n/manifest.json`
-- Admin-owned authored source path: `tokyo/admin-owned/i18n/{locale}/{bundle}.json`
-
-Rules:
-- Catalog filenames are content-hashed (safe for `Cache-Control: immutable` at the CDN).
-- `manifest.json` is the indirection layer that maps `{ locale, bundle } → filename` and is intended to be short-TTL.
-- Bundles are scoped by namespace:
-  - `coreui.*` (shared product/editor chrome)
-  - `{widgetName}.*` (widget-specific terminology/labels)
-
-Local dev:
-- `tokyo/dev-server.mjs` serves `/i18n/*` from `tokyo/i18n/*`.
-- `tokyo/dev-server.mjs` proxies canonical account asset reads (`/assets/v/*`) directly to `tokyo-worker` (no local mirror mode).
-- `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
-- `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` with forwarded auth headers (so DevStudio/Venice can read the same saved/live render surfaces from the same Tokyo origin).
-- `tokyo/dev-server.mjs` proxies instance-backed `GET /l10n/instances/*` reads to `tokyo-worker`; repo-local Prague/admin-owned l10n content still serves directly from `tokyo/l10n/*`.
-- `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
-- Local asset management does not go through `tokyo/dev-server.mjs`.
-  - Roma product uploads use `/api/account/assets/upload`.
-  - Local verification of canonical asset delivery uses `/assets/v/*`; the dev server is not a separate widget-scoped asset upload boundary.
-- `scripts/dev-up.sh` starts the local Tokyo dev server + Tokyo-worker as part of the local DevStudio operating lane, builds Dieter + i18n, and seeds required local platform state through the canonical seed scripts before completion.
-- Explicit rerun commands:
-  - `pnpm dev:seed:platform`
-- Account asset state is manifest-backed product truth. It must not be “repaired” by boot scripts with blob-only sync logic.
-
-## l10n published artifacts (executed)
-
-Tokyo serves **published instance localization artifacts**:
-
-- Text pack: `tokyo/l10n/instances/<publicId>/packs/<locale>/<textFp>.json`
-- Live locale pointer: `tokyo/l10n/instances/<publicId>/live/<locale>.json`
-- Base snapshots for diagnostics/non-public tooling: `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`
-
-Rules:
-- Instance identity is locale-free (`publicId` never contains locale).
-- Public runtime reads packs + live pointers only.
-- Authoring overlay state is stored in Tokyo/Tokyo-worker under the canonical `l10n/instances/**` plane.
-- Fingerprinted packs are immutable/cacheable; live pointers are tiny mutable `no-store` files.
-
-Admin-owned repo-local l10n source overlays live under:
-
-- `tokyo/admin-owned/l10n/instances/<publicId>/<layer>/<layerKey>.ops.json`
-
-Cloud-dev:
-- `tokyo-worker` provides a Cloudflare Worker for account-owned asset uploads + serving:
-  - `POST /__internal/assets/upload` (private Roma service-binding path; requires `x-account-id`, Roma `x-ck-authz-capsule`, optional `x-source`)
-  - `GET /__internal/assets/account/:accountId` (private Roma service-binding path; member-scoped list)
-  - `POST /__internal/assets/account/:accountId/resolve` (private Roma service-binding path; resolves logical `assetId` values to canonical immutable asset reads for runtime materialization)
-  - `DELETE /__internal/assets/:accountId/:assetId` (private Roma service-binding path; editor+-scoped hard delete path)
-  - `GET|PUT|PATCH|DELETE /__internal/renders/instances/:publicId/saved.json` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; account-scoped saved authoring revision)
-  - `POST /__internal/renders/instances/:publicId/config-pack` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; writes revisioned runtime config pack)
-  - `POST /__internal/renders/instances/:publicId/live/r.json` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; syncs live render pointer)
-  - `DELETE /__internal/renders/instances/:publicId/live.json` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; clears live render pointer)
-  - `POST /__internal/l10n/instances/:publicId/bases/:baseFingerprint` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; writes base snapshot)
-  - `POST|DELETE /__internal/l10n/instances/:publicId/:layer/:layerKey` (private Roma service-binding path via `TOKYO_PRODUCT_CONTROL`; upserts/deletes overlay authoring state)
-  - `GET /assets/integrity/:accountId` (local internal only: `Authorization: Bearer ${TOKYO_DEV_JWT}` + allowed `x-ck-internal-service`)
-  - `GET /assets/integrity/:accountId/:assetId` (local internal only: `Authorization: Bearer ${TOKYO_DEV_JWT}` + allowed `x-ck-internal-service`)
-  - `GET /assets/v/:assetRef` (public, immutable, cacheable; canonical account-owned asset reads)
-  - `GET /renders/instances/:publicId/live/r.json` (public; mutable live pointer read only)
-  - `GET /l10n/**` (public; serves published instance packs/live pointers plus Prague overlays)
-  - `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague)
-
-Security rule (executed):
-- `TOKYO_DEV_JWT` must never be used from a browser. Browser product uploads go through same-origin Roma routes using Berlin session auth plus Roma `x-ck-authz-capsule`.
-- Asset control routes execute from Roma through a private Cloudflare service binding and Roma-minted `x-ck-authz-capsule`; Tokyo-worker does not rediscover account truth from Supabase or end-user JWTs on those paths.
-- Product render/l10n control routes execute from Roma through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding and Roma-minted `x-ck-authz-capsule`; public Tokyo HTTP is no longer the saved authoring control seam.
-- `TOKYO_DEV_JWT` is not a universal bypass. Local internal callers must identify themselves explicitly with `x-ck-internal-service`, and Tokyo only honors the specific service ids wired into the route.
-
-Asset-domain note:
-- Tokyo upload metadata is ownership/file-centric and stored as per-asset manifest JSON in Tokyo R2.
-- Upload/list payloads expose inventory truth only: logical identity (`assetId`) plus canonical storage identity (`assetRef`).
-- Delivery URL is resolve-only: `/__internal/assets/account/:accountId/resolve` is the path that returns canonical `/assets/v/...` reads.
-- Tokyo runtime materialization resolves logical `assetId` values into canonical `/assets/v/...` reads before config packs are written.
-- The current repo snapshot does not persist a canonical "where used" index in Michael/Supabase.
+- Private account-control routes require Roma's service binding plus Roma-minted account authz capsule.
+- Public projection routes are read-only.
+- `TOKYO_DEV_JWT` is local/internal only and must never be used from a browser.
+- Tokyo-worker must not rediscover account truth from end-user JWTs on product control paths; Roma carries the verified account context.
 
 ## Links
-- Back: ../../CONTEXT.md
-- Tokyo Worker: documentation/services/tokyo-worker.md
-- Localization contract: documentation/capabilities/localization.md
+
+- Back: `../architecture/CONTEXT.md`
+- Tokyo Worker: `documentation/services/tokyo-worker.md`
+- Localization contract: `documentation/capabilities/localization.md`
+- PRD 79: `Execution_Pipeline_Docs/02-Executing/079__PRD__Tokyo_Account_First_Storage_And_Surface_Taxonomy.md`

@@ -34,7 +34,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | Principle                      | Rule                                                                                                                                                                                                                     |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **No Fallbacks**               | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Public renders must be revision-coherent (single published revision; missing locale artifacts fail visibly). |
-| **Widget Files = Truth**       | Core runtime files + contract files in `tokyo/widgets/{name}/` define widget behavior and validation.                                                                                                                    |
+| **Widget Files = Truth**       | Core runtime files + contract files in `tokyo/product/widgets/{name}/` define widget behavior and validation.                                                                                                                    |
 | **Orchestrators = Dumb Pipes** | Bob/Roma/Tokyo-worker/Venice avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. overlay composition, artifact materialization) but must not “fix” state ad hoc.                    |
 | **Dieter Tokens**              | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB.                                                                                                                   |
 | **Locale Is Not Identity**     | Locale is a runtime parameter. IDs (`publicId`) must be locale-free; localization is applied via overlays, not DB fan-out.                                                                                               |
@@ -184,7 +184,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 #### Roma (Pages)
 
-- Roma is the domain shell (`/home`, `/profile`, `/widgets`, `/templates`, `/builder`, ...).
+- Roma is the domain shell (`/home`, `/profile`, `/widgets`, `/builder`, `/assets`, `/team`, `/billing`, `/usage`, `/ai`, `/settings`).
 - Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Berlin `GET /v1/session/bootstrap`), including an account authz capsule and an account entitlement snapshot.
 - Roma exposes person-scoped User Settings through `/profile`, using Berlin-owned `/api/me` same-origin routes.
 - Current Roma resolves one effective active account context per session and does not expose customer account switching. Cloud-dev still usually collapses to the seeded platform-owned account, while any internal account switching belongs to DevStudio and future customer multi-account switching belongs to a separate Roma-for-agency product.
@@ -208,7 +208,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
   - Health only: `GET /api/healthz`
   - Core account instance open/save now lives only in Bob/Roma same-origin routes; Paris no longer exposes customer account instance routes.
   - Locale/editor endpoints are Roma-owned and are not mounted in Paris.
-  - Roma starter discovery is Roma-owned (`GET /api/account/widgets`, `GET /api/account/templates`); Paris no longer mounts those routes.
+  - Roma starter/listed-instance discovery is Roma-owned through `GET /api/account/widgets`; Paris no longer mounts those routes.
   - Roma widget commands stay explicit (`POST /api/account/widgets/duplicate`, `DELETE /api/account/instance/:publicId`).
   - Paris no longer mounts AI endpoints in the product path under 070A.
   - Venice serves the public instance payload route (`GET /api/instance/:publicId`) for public live/demo use, assembled by Tokyo-worker from Tokyo live truth.
@@ -229,20 +229,20 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 #### Tokyo (R2)
 
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
-- **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
+- **Deterministic compilation contract** depends on `tokyo/product/dieter/manifest.json`.
 - Serves published instance l10n artifacts (`/l10n/**`) written by Roma/Tokyo-worker, including text packs, live pointers, and per-fingerprint base snapshots for diagnostics/non-public tooling.
-- Prague website base copy lives in `tokyo/widgets/*/pages/*.json` (single source per page), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
+- Prague website base copy lives in `tokyo/prague/pages/*/*.json` (single source per page), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 #### Tokyo Worker (Workers + Queues)
 
 - Canonical asset management contract (cross-surface behavior): [AssetManagement.md](./AssetManagement.md)
 - Handles private Roma-bound account asset authority routes and stores asset bytes + manifest metadata in Tokyo R2.
 - Tokyo-worker validates/materializes account-owned asset refs during instance sync and runtime-pack assembly, but this repo snapshot does not persist a canonical "where used" table in Michael.
-- Serves immutable account asset reads (`GET /assets/v/:assetRef`); legacy `/arsenale/*` paths are hard-failed.
+- Serves immutable account asset reads (`GET /assets/v/:assetRef`); legacy non-account asset paths are hard-failed.
 - Asset delete is synchronous hard delete (`metadata + blob delete`) with no snapshot rebuild enqueue or runtime healing.
 - Tokyo-worker exposes integrity endpoints for managed surfaces (`GET /assets/integrity/:accountId`, `GET /assets/integrity/:accountId/:assetId`).
-- Writes l10n text/meta/config packs and live pointers to Tokyo/R2 from explicit Tokyo-worker instance-sync execution triggered by Roma widget/localization routes; Tokyo-worker does not read Michael/Supabase to discover overlay state.
-- Materializes render snapshots under `tokyo/renders/instances/**` for Venice snapshot fast-path using revisioned indices + atomic published pointer flip.
+- Writes account-instance l10n text/meta/config packs and live pointers to Tokyo/R2 from explicit Tokyo-worker instance-sync execution triggered by Roma widget/localization routes; Tokyo-worker does not read Michael/Supabase to discover overlay state.
+- Materializes render snapshots under account-first instance storage, then publishes public projection pointers for Venice fast-path serving.
 
 #### Asset ownership model (canonical)
 
@@ -457,7 +457,7 @@ Preview reflects the widget Bob is editing. It is not a second widget-shaped sta
 Each widget type has a complete definition in Tokyo:
 
 ```
-tokyo/widgets/{widgetType}/
+tokyo/product/widgets/{widgetType}/
 ├── spec.json          # Defaults + ToolDrawer DSL
 ├── widget.html        # Semantic HTML with data-role attributes
 ├── widget.css         # Scoped styles using Dieter tokens
@@ -467,7 +467,7 @@ tokyo/widgets/{widgetType}/
 
 ### Shared Runtime Modules
 
-All widgets use shared modules from `tokyo/widgets/shared/`:
+All widgets use shared modules from `tokyo/product/widgets/shared/`:
 
 | Module          | Global Function                                                               | Purpose                                                                                                                                                              |
 | --------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -549,8 +549,8 @@ Located in `bob/lib/compiler/modules/`:
 
 `<tooldrawer-field>` macros are expanded using Dieter component stencils:
 
-- Stencil HTML: `tokyo/dieter/components/{component}/{component}.html`
-- Specs: `tokyo/dieter/components/{component}/{component}.spec.json`
+- Stencil HTML: `tokyo/product/dieter/components/{component}/{component}.html`
+- Specs: `tokyo/product/dieter/components/{component}/{component}.spec.json`
 - Adds `data-bob-path` for binding, `data-bob-showif` for conditionals
 
 ---
