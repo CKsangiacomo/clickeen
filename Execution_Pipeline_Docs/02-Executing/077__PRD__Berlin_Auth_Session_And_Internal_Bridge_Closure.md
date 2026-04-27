@@ -1122,6 +1122,25 @@ CI verification:
 - `cloud-dev roma app verify` completed successfully for that commit.
 - Cut 6 may start.
 
+### 2026-04-27 Cut 5 Correction And Login Repair
+
+Status: HOTFIX APPLIED
+
+The previous CI note was wrong. GitHub checked out a shallow history, so the migration-detection step could not inspect the previous SHA and skipped Supabase migration apply while still deploying Berlin. The live PostgREST schema therefore did not expose `public.resolve_login_identity(...)`, and login failed with `PGRST202`.
+
+Repair:
+
+- Berlin login no longer calls `/rest/v1/rpc/resolve_login_identity`.
+- Berlin resolves login identity through the already-live `login_identities` and `user_profiles` tables using its existing service-role boundary.
+- The workflow checkout now uses full history and refuses to guess migration state if the previous SHA is unavailable.
+- Berlin docs were updated so runtime and documentation match.
+
+Verification:
+
+- Live Supabase `login_identities` table read returned `200`.
+- Live Supabase `user_profiles` table read returned `200`.
+- `corepack pnpm exec tsc -p berlin/tsconfig.json --noEmit` returned green.
+
 ---
 
 ## Cut 6 - Make Bootstrap Faster Without Weakening Authz

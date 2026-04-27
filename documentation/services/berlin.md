@@ -26,7 +26,7 @@ Berlin must keep that login-time truth boring, explicit, and session-scoped. Ric
 Berlin permanently owns:
 
 - OAuth PKCE start/callback flows for login providers.
-- Provider identity to Clickeen user mapping through the `resolve_login_identity` RPC and `login_identities`.
+- Provider identity to Clickeen user mapping through `login_identities` and `user_profiles` at Berlin's service-role boundary.
 - First-login account provisioning when no invitation or existing membership applies.
 - Invitation acceptance at login time when the login flow carries an invitation context.
 - Active account resolution for session landing.
@@ -44,7 +44,7 @@ The signed account authz capsule carries stable account authz truth only. Mutabl
 
 - Direct provider login is the canonical cloud path: `Roma -> Berlin -> provider -> Berlin -> Roma`.
 - Supabase Auth provider redirects are legacy residue and must not be reintroduced as the browser-visible customer login path.
-- The current linked-identity source is `public.login_identities`, with first-login provider races resolved by the database-owned `resolve_login_identity` RPC. Supabase Auth identities may exist as legacy migration residue, but product shells must not consume them as provider/account truth.
+- The current linked-identity source is `public.login_identities`; Berlin writes provider/profile state through its service-role boundary and product shells must not consume Supabase Auth identities as provider/account truth.
 - Bootstrap is read-only. It resolves real user/account state and mints session/bootstrap truth; it must not silently repair missing profile, membership, or account state on the hot path.
 - Missing canonical profile, membership, or active account state at bootstrap is a producer bug and must fail explicitly.
 - Active account resolution comes only from persisted active-account preference or deterministic real membership truth. Berlin must never open a privileged fallback account.
@@ -143,7 +143,7 @@ Canonical Google login currently works like this:
 6. Berlin consumes the OAuth state ticket once.
 7. Berlin exchanges the Google code directly with Google.
 8. Berlin normalizes the Google userinfo response into a provider identity.
-9. Berlin resolves or creates the Clickeen user/profile/account landing state through the DB-owned `resolve_login_identity` RPC, `login_identities`, and account membership truth.
+9. Berlin resolves or creates the Clickeen user/profile/account landing state through `login_identities`, `user_profiles`, and account membership truth.
 10. Berlin issues the Clickeen session.
 11. Berlin stores a short-lived one-time finish transaction in `BERLIN_AUTH_TICKETS`.
 12. Berlin redirects the browser to Roma's finish route with only a `finishId`.
@@ -195,7 +195,7 @@ Primary runtime dependencies:
 - `BERLIN_AUTH_TICKETS` Durable Object for OAuth state and finish transactions.
 - `BERLIN_SESSION_KV` for session state and auth/session mutation rate-limit buckets.
 - Google OAuth/OIDC for the enabled cloud-dev login provider.
-- Supabase/Michael persistence through Berlin's service-role boundary for user profile, login identity, account, membership, invitation state, and the `resolve_login_identity` RPC.
+- Supabase/Michael persistence through Berlin's service-role boundary for user profile, login identity, account, membership, and invitation state.
 
 Registry/account product dependencies:
 

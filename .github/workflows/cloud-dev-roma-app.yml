@@ -38,6 +38,8 @@ jobs:
       SANFRANCISCO_BASE_URL: https://sanfrancisco.dev.clickeen.com
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
         with: {}
@@ -56,21 +58,28 @@ jobs:
           set -euo pipefail
           BEFORE_SHA="${{ github.event.before }}"
           AFTER_SHA="${{ github.sha }}"
+          MIGRATION_CHANGED=false
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             if git rev-parse HEAD^ >/dev/null 2>&1; then
-              if ! git diff --name-only HEAD^ HEAD | grep -qE '^supabase/migrations/'; then
-                echo "No supabase/migrations changes in current HEAD; skipping cloud-dev migration apply."
-                exit 0
+              if git diff --name-only HEAD^ HEAD | grep -qE '^supabase/migrations/'; then
+                MIGRATION_CHANGED=true
               fi
             else
               echo "No parent commit available for workflow_dispatch; skipping cloud-dev migration apply."
               exit 0
             fi
           elif [[ -n "${BEFORE_SHA:-}" && ! "${BEFORE_SHA:-}" =~ ^0+$ ]]; then
-            if ! git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -qE '^supabase/migrations/'; then
-              echo "No supabase/migrations changes in this push; skipping cloud-dev migration apply."
-              exit 0
+            if ! git cat-file -e "$BEFORE_SHA^{commit}"; then
+              echo "Unable to inspect before SHA ${BEFORE_SHA}; refusing to guess migration state." >&2
+              exit 1
             fi
+            if git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" | grep -qE '^supabase/migrations/'; then
+              MIGRATION_CHANGED=true
+            fi
+          fi
+          if [[ "$MIGRATION_CHANGED" != "true" ]]; then
+            echo "No supabase/migrations changes in this push; skipping cloud-dev migration apply."
+            exit 0
           fi
           PROJECT_REF="${SUPABASE_PROJECT_REF:-$(cat supabase/.temp/project-ref 2>/dev/null || true)}"
           if [[ -z "${SUPABASE_ACCESS_TOKEN:-}" ]]; then

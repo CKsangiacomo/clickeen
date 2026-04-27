@@ -1,11 +1,12 @@
 import { acceptInvitationForPrincipal } from './account-invitations';
 import { internalError } from './helpers';
-import { normalizeProfileLocation } from './profile-normalization';
+import { normalizeProfileLocation, type UserProfileRow } from './profile-normalization';
 import { readSupabaseAdminListAll } from './supabase-list';
 import { readSupabaseAdminJson, supabaseAdminFetch, supabaseAdminErrorResponse } from './supabase-admin';
 import { type Env } from './types';
 
 type UserProfileSeed = {
+  userId: string;
   primaryEmail: string;
   emailVerified: boolean;
   displayName: string | null;
@@ -22,6 +23,13 @@ type MembershipRow = {
   created_at?: unknown;
 };
 
+type LoginIdentityRow = {
+  id?: unknown;
+  user_id?: unknown;
+  provider?: unknown;
+  provider_subject?: unknown;
+};
+
 export type ProviderIdentity = {
   provider: string;
   providerSubject: string;
@@ -35,14 +43,6 @@ export type ProviderIdentity = {
   country?: string | null;
   timezone?: string | null;
   legacyUserId?: string | null;
-};
-
-type ResolveLoginIdentityRpcRow = {
-  user_id?: unknown;
-  login_identity_id?: unknown;
-  created_user?: unknown;
-  created_identity?: unknown;
-  active_account_id?: unknown;
 };
 
 type ReconcileResult =
@@ -123,11 +123,12 @@ function roleRank(value: unknown): number {
   }
 }
 
-function toUserProfileSeed(identity: ProviderIdentity): UserProfileSeed | null {
+function toUserProfileSeed(userId: string, identity: ProviderIdentity): UserProfileSeed | null {
   const primaryEmail = normalizeEmail(identity.email);
-  if (!primaryEmail) return null;
+  if (!userId || !primaryEmail) return null;
 
   return {
+    userId,
     primaryEmail,
     emailVerified: identity.emailVerified,
     displayName: asTrimmedString(identity.displayName),
@@ -144,6 +145,137 @@ function resolveAccountSlug(accountId: string, attempt = 0): string {
   return attempt > 0 ? `${base}-${attempt + 1}` : base;
 }
 
+async function loadExistingUserProfile(
+  env: Env,
+  userId: string,
+): Promise<{ ok: true; row: UserProfileRow | null } | { ok: false; response: Response }> {
+  const params = new URLSearchParams({
+    select:
+      'user_id,primary_email,email_verified,display_name,given_name,family_name,primary_language,country,timezone,active_account_id',
+    user_id: `eq.${userId}`,
+    limit: '1',
+  });
+  const response = await supabaseAdminFetch(env, `/rest/v1/user_profiles?${params.toString()}`, { method: 'GET' });
+  const payload = await readSupabaseAdminJson<UserProfileRow[] | Record<string, unknown>>(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
+    };
+  }
+  return { ok: true, row: Array.isArray(payload) ? payload[0] || null : null };
+}
+
+async function upsertUserProfile(
+  env: Env,
+  profile: UserProfileSeed,
+): Promise<
+  | { ok: true; created: boolean; activeAccountId: string | null }
+  | { ok: false; response: Response }
+> {
+  const existingProfile = await loadExistingUserProfile(env, profile.userId);
+  if (!existingProfile.ok) return existingProfile;
+  const existingLocation = normalizeProfileLocation(existingProfile.row?.country, existingProfile.row?.timezone);
+
+  const response = await supabaseAdminFetch(
+    env,
+    `/rest/v1/user_profiles?on_conflict=${encodeURIComponent('user_id')}`,
+    {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({
+        user_id: profile.userId,
+        primary_email: profile.primaryEmail,
+        email_verified: profile.emailVerified,
+        display_name: asTrimmedString(existingProfile.row?.display_name) || profile.displayName,
+        given_name: asTrimmedString(existingProfile.row?.given_name) || profile.givenName,
+        family_name: asTrimmedString(existingProfile.row?.family_name) || profile.familyName,
+        primary_language: normalizePrimaryLanguage(existingProfile.row?.primary_language) || profile.primaryLanguage,
+        country: existingLocation.country || profile.country,
+        timezone: existingLocation.timezone || profile.timezone,
+      }),
+    },
+  );
+  const payload = await readSupabaseAdminJson<UserProfileRow[] | Record<string, unknown>>(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
+    };
+  }
+  const row = Array.isArray(payload) ? payload[0] || existingProfile.row : existingProfile.row;
+  return {
+    ok: true,
+    created: !existingProfile.row,
+    activeAccountId: normalizeUuid(row?.active_account_id),
+  };
+}
+
+async function loadLoginIdentity(
+  env: Env,
+  identity: ProviderIdentity,
+): Promise<{ ok: true; row: LoginIdentityRow | null } | { ok: false; response: Response }> {
+  const params = new URLSearchParams({
+    select: 'id,user_id,provider,provider_subject',
+    provider: `eq.${identity.provider}`,
+    provider_subject: `eq.${identity.providerSubject}`,
+    limit: '1',
+  });
+  const response = await supabaseAdminFetch(env, `/rest/v1/login_identities?${params.toString()}`, { method: 'GET' });
+  const payload = await readSupabaseAdminJson<LoginIdentityRow[] | Record<string, unknown>>(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
+    };
+  }
+  return { ok: true, row: Array.isArray(payload) ? payload[0] || null : null };
+}
+
+async function writeLoginIdentity(args: {
+  env: Env;
+  userId: string;
+  identity: ProviderIdentity;
+  existingIdentityId?: string | null;
+}): Promise<{ ok: true } | { ok: false; response: Response }> {
+  const metadataPatch = {
+    email: normalizeEmail(args.identity.email),
+    email_verified: args.identity.emailVerified,
+    display_name: asTrimmedString(args.identity.displayName),
+    given_name: asTrimmedString(args.identity.givenName),
+    family_name: asTrimmedString(args.identity.familyName),
+    avatar_url: asTrimmedString(args.identity.avatarUrl),
+    last_used_at: new Date().toISOString(),
+  };
+  const existingIdentityId = asTrimmedString(args.existingIdentityId);
+  const response = existingIdentityId
+    ? await supabaseAdminFetch(args.env, `/rest/v1/login_identities?id=eq.${encodeURIComponent(existingIdentityId)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify(metadataPatch),
+      })
+    : await supabaseAdminFetch(args.env, '/rest/v1/login_identities', {
+        method: 'POST',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          user_id: args.userId,
+          provider: args.identity.provider,
+          provider_subject: args.identity.providerSubject,
+          ...metadataPatch,
+        }),
+      });
+  if (response.ok) return { ok: true };
+  const payload = await readSupabaseAdminJson<Record<string, unknown>>(response);
+  return {
+    ok: false,
+    response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
+  };
+}
+
+function resolveNewProductUserId(identity: ProviderIdentity): string {
+  return normalizeUuid(identity.legacyUserId) || crypto.randomUUID();
+}
+
 async function resolveProductUserForIdentity(
   env: Env,
   identity: ProviderIdentity,
@@ -157,7 +289,12 @@ async function resolveProductUserForIdentity(
     }
   | { ok: false; response: Response }
 > {
-  const profile = toUserProfileSeed(identity);
+  const existingIdentity = await loadLoginIdentity(env, identity);
+  if (!existingIdentity.ok) return existingIdentity;
+
+  const userId = normalizeUuid(existingIdentity.row?.user_id) || resolveNewProductUserId(identity);
+  const identityId = asTrimmedString(existingIdentity.row?.id);
+  const profile = toUserProfileSeed(userId, identity);
   if (!profile) {
     return {
       ok: false,
@@ -165,45 +302,50 @@ async function resolveProductUserForIdentity(
     };
   }
 
-  const response = await supabaseAdminFetch(env, '/rest/v1/rpc/resolve_login_identity', {
-    method: 'POST',
-    body: JSON.stringify({
-      p_provider: identity.provider,
-      p_provider_subject: identity.providerSubject,
-      p_primary_email: profile.primaryEmail,
-      p_email_verified: profile.emailVerified,
-      p_display_name: profile.displayName,
-      p_given_name: profile.givenName,
-      p_family_name: profile.familyName,
-      p_avatar_url: asTrimmedString(identity.avatarUrl),
-      p_primary_language: profile.primaryLanguage,
-      p_country: profile.country,
-      p_timezone: profile.timezone,
-      p_legacy_user_id: normalizeUuid(identity.legacyUserId),
-    }),
-  });
-  const payload = await readSupabaseAdminJson<ResolveLoginIdentityRpcRow[] | Record<string, unknown>>(response);
-  if (!response.ok) {
-    return {
-      ok: false,
-      response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
-    };
+  const profileWrite = await upsertUserProfile(env, profile);
+  if (!profileWrite.ok) return profileWrite;
+
+  const identityWrite = await writeLoginIdentity({ env, userId, identity, existingIdentityId: identityId });
+  if (!identityWrite.ok) {
+    const racedIdentity = await loadLoginIdentity(env, identity);
+    if (!existingIdentity.row && racedIdentity.ok && racedIdentity.row) {
+      const racedUserId = normalizeUuid(racedIdentity.row.user_id);
+      const racedIdentityId = asTrimmedString(racedIdentity.row.id);
+      if (racedUserId && racedIdentityId) {
+        const racedProfile = toUserProfileSeed(racedUserId, identity);
+        if (!racedProfile) {
+          return {
+            ok: false,
+            response: internalError('coreui.errors.auth.login_failed', 'missing_provider_profile_seed'),
+          };
+        }
+        const racedProfileWrite = await upsertUserProfile(env, racedProfile);
+        if (!racedProfileWrite.ok) return racedProfileWrite;
+        const racedIdentityWrite = await writeLoginIdentity({
+          env,
+          userId: racedUserId,
+          identity,
+          existingIdentityId: racedIdentityId,
+        });
+        if (!racedIdentityWrite.ok) return racedIdentityWrite;
+        return {
+          ok: true,
+          userId: racedUserId,
+          createdUser: false,
+          createdIdentity: false,
+          activeAccountId: racedProfileWrite.activeAccountId,
+        };
+      }
+    }
+    return identityWrite;
   }
 
-  const row = Array.isArray(payload) ? payload[0] : null;
-  const userId = normalizeUuid(row?.user_id);
-  if (!userId) {
-    return {
-      ok: false,
-      response: internalError('coreui.errors.db.writeFailed', 'resolve_login_identity_missing_user_id'),
-    };
-  }
   return {
     ok: true,
     userId,
-    createdUser: row?.created_user === true,
-    createdIdentity: row?.created_identity === true,
-    activeAccountId: normalizeUuid(row?.active_account_id),
+    createdUser: profileWrite.created,
+    createdIdentity: !existingIdentity.row,
+    activeAccountId: profileWrite.activeAccountId,
   };
 }
 
