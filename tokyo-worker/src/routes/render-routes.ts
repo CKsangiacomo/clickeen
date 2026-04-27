@@ -16,11 +16,15 @@ import {
   respondValidation,
   type TokyoRouteArgs,
 } from '../route-helpers';
+import { tryHandlePlatformAccountRepairRoute } from './platform-account-repair-routes';
 
 export async function tryHandlePublicRenderRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
   const { req, env, pathname, url, respond } = args;
+
+  const platformRepairResponse = await tryHandlePlatformAccountRepairRoute(args);
+  if (platformRepairResponse) return platformRepairResponse;
 
   const renderLivePointerMatch = pathname.match(
     /^\/renders\/instances\/([^/]+)\/live\/r\.json$/,
