@@ -57,7 +57,8 @@ Rules:
 - Roma product/account UI catalogs belong under `tokyo/roma/i18n/**`.
 - Prague website copy, l10n source, and website assets belong under `tokyo/prague/**`.
 - `accounts/` in Git is documentation/fixture-only. Real account data lives in Tokyo-worker storage.
-- Public HTTP routes like `/widgets/**`, `/dieter/**`, `/fonts/**`, `/themes/**`, and `/i18n/**` may remain stable serving URLs, but they must not imply old repo source paths.
+- Public HTTP routes like `/widgets/**`, `/dieter/**`, `/themes/**`, and `/i18n/**` remain stable serving URLs through `tokyo/_redirects`, but they map into the account-first repo taxonomy instead of recreating old root folders.
+- `/fonts/**` is served through Tokyo-worker from synced R2 font objects.
 
 ## Account-First Storage
 

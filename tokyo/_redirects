@@ -1,0 +1,4 @@
+/widgets/* /product/widgets/:splat 200
+/dieter/* /product/dieter/:splat 200
+/i18n/* /roma/i18n/public/:splat 200
+/themes/* /product/themes/:splat 200

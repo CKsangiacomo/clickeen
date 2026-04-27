@@ -8,6 +8,7 @@ on:
       - "roma/**"
       - "bob/**"
       - "tokyo/dev-server.mjs"
+      - "tokyo/_redirects"
       - "tokyo/product/**"
       - "tokyo/roma/**"
       - "tokyo/prague/**"

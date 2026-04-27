@@ -7,6 +7,7 @@ on:
       - "roma/**"
       - "bob/**"
       - "tokyo/dev-server.mjs"
+      - "tokyo/_redirects"
       - "tokyo/product/widgets/**"
       - "tokyo/product/dieter/**"
       - "tokyo/product/fonts/**"
