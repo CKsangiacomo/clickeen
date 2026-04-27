@@ -1,6 +1,11 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { normalizePublicId, normalizeSha256Hex, prettyStableJson } from '../asset-utils';
 import type { Env } from '../types';
+import {
+  l10nLivePointerKey,
+  normalizeTextPointer,
+  readSavedRenderConfig,
+} from './render';
 
 const UTF8_ENCODER = new TextEncoder();
 
@@ -193,6 +198,84 @@ export async function readCurrentWidgetTranslationState(args: {
   );
   if (!state || state.accountId !== accountId) return null;
   return state;
+}
+
+async function localeHasCurrentTextPointer(args: {
+  env: Env;
+  publicId: string;
+  locale: string;
+  baseFingerprint: string;
+}): Promise<boolean> {
+  const pointer = normalizeTextPointer(
+    await loadJson(args.env, l10nLivePointerKey(args.publicId, args.locale)),
+  );
+  return Boolean(pointer && pointer.baseFingerprint === args.baseFingerprint);
+}
+
+export async function bootstrapCurrentWidgetTranslationStateFromSavedRender(args: {
+  env: Env;
+  publicId: string;
+  accountId: string;
+}): Promise<WidgetTranslationState | null> {
+  const current = await readCurrentWidgetTranslationState(args);
+  if (current) return current;
+
+  const publicId = normalizePublicId(args.publicId);
+  const accountId = normalizePublicId(args.accountId);
+  if (!publicId || !accountId) return null;
+
+  const saved = await readSavedRenderConfig({
+    env: args.env,
+    publicId,
+    accountId,
+  });
+  if (!saved.ok) return null;
+
+  const l10n = saved.value.pointer.l10n;
+  const baseFingerprint = normalizeSha256Hex(l10n?.baseFingerprint) ?? '';
+  const baseLocale = normalizeLocaleToken(l10n?.summary?.baseLocale) ?? '';
+  const requestedLocales = normalizeRequestedLocales({
+    baseLocale,
+    requestedLocales: l10n?.summary?.desiredLocales,
+  });
+  if (!baseFingerprint || !baseLocale || !requestedLocales.length) return null;
+
+  const readyNonBaseLocales = (
+    await Promise.all(
+      requestedLocales
+        .filter((locale) => locale !== baseLocale)
+        .map(async (locale) => ({
+          locale,
+          ready: await localeHasCurrentTextPointer({
+            env: args.env,
+            publicId,
+            locale,
+            baseFingerprint,
+          }),
+        })),
+    )
+  )
+    .filter((entry) => entry.ready)
+    .map((entry) => entry.locale);
+
+  const accepted = await acceptWidgetTranslationState({
+    env: args.env,
+    publicId,
+    accountId,
+    widgetType: saved.value.pointer.widgetType,
+    baseLocale,
+    requestedLocales,
+    baseFingerprint,
+  });
+  return (
+    await markWidgetTranslationFinished({
+      env: args.env,
+      publicId,
+      accountId,
+      generationId: accepted.generationId,
+      readyLocales: [baseLocale, ...readyNonBaseLocales],
+    })
+  ) ?? accepted;
 }
 
 export async function acceptWidgetTranslationState(args: {

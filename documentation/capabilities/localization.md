@@ -126,7 +126,7 @@ Where the write plane fits (current repo snapshot):
 - Product-path save writes the current saved-widget l10n summary (`baseLocale` + desired locale set) into the Tokyo saved widget plane alongside the current `baseFingerprint`.
 - Product-path save also requires Tokyo-worker to durably accept one current widget translation state for that saved revision before Roma reports save success.
 - Explicit sync converges locale artifacts against that Tokyo-worker translation state.
-- Builder Translations reads consume only the current Tokyo-worker translation state; they do not infer readiness from saved summaries, queue internals, or public/live artifact pointers.
+- Builder Translations reads consume only the current Tokyo-worker translation state. Older saved widgets that predate the state file are bootstrapped once from Tokyo's saved pointer and matching text pointers, then the bootstrapped state is persisted as the current state.
 - While the `Translations` panel is open, Bob reads one Roma same-origin translations route backed by Tokyo-worker. That payload is `baseLocale`, `requestedLocales`, `readyLocales`, `status`, `failedLocales`, `baseFingerprint`, `generationId`, and `updatedAt`.
 - After Save succeeds, Bob may re-read that same route once to show current Tokyo truth.
 - Builder does not own an always-on localization convergence loop. If the Translations panel is open and the route says translations are still preparing, Builder may perform a small bounded recheck of that same Tokyo-backed status read.

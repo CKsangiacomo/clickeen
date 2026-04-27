@@ -9,7 +9,10 @@ import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import { normalizeLocaleToken, type AllowlistEntry } from '@clickeen/l10n';
 import { json } from '../http';
 import type { Env } from '../types';
-import { readCurrentWidgetTranslationState } from './translation-state';
+import {
+  bootstrapCurrentWidgetTranslationStateFromSavedRender,
+  readCurrentWidgetTranslationState,
+} from './translation-state';
 import {
   asTrimmedString,
   filterAllowlistedOps,
@@ -179,11 +182,17 @@ export async function loadAccountTranslationsPanelData(args: {
   generationId: string;
   updatedAt: string;
 }> {
-  const state = await readCurrentWidgetTranslationState({
-    env: args.env,
-    accountId: args.accountId,
-    publicId: args.publicId,
-  });
+  const state =
+    (await readCurrentWidgetTranslationState({
+      env: args.env,
+      accountId: args.accountId,
+      publicId: args.publicId,
+    })) ??
+    (await bootstrapCurrentWidgetTranslationStateFromSavedRender({
+      env: args.env,
+      accountId: args.accountId,
+      publicId: args.publicId,
+    }));
   if (!state) throw new Error('tokyo_translation_state_missing');
 
   return {

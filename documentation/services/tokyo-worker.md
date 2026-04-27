@@ -96,7 +96,7 @@ Current runtime contract:
 - Product-path save also writes the current saved-widget l10n summary (`baseLocale` + desired locale set) onto that same saved pointer and requires Tokyo-worker to accept one current widget translation state for that saved revision before Roma reports success.
 - Explicit Tokyo-worker sync converges overlay artifacts from that translation state.
 - Tokyo maintains current locale artifacts, but Builder readiness does not infer truth from public/live pointers.
-- Builder Translations reads consume the current Tokyo-worker translation state; they do not live-read Berlin, saved summaries, queue internals, or public artifact pointers on panel open.
+- Builder Translations reads consume the current Tokyo-worker translation state. If an older saved widget predates that state file, Tokyo-worker bootstraps it once from the Tokyo saved pointer plus matching text pointers, persists the new state, and then serves that state. Reads do not live-read Berlin or queue internals on panel open.
 - Bob/Roma product-path save does not inline LLM generation or live-surface convergence. It durably accepts translation state and then triggers queue delivery. If queue handoff or later execution fails, Tokyo-worker persists `failed` on the current translation state instead of leaving fake infinite progress behind.
 - When a new save writes the current translation state for an instance, queued older generations are ignored by `generationId`.
 - If locale generation for the latest save does not return current ops for a requested locale, Tokyo-worker does not publish that locale as current-ready for the new `baseFingerprint`.

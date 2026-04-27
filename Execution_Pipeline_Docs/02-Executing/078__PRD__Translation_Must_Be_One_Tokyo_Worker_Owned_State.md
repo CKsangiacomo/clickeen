@@ -111,6 +111,7 @@ When a user opens Builder:
 
 - Bob asks Tokyo-worker for translation state.
 - Bob does not infer readiness from live pointers, queue rows, saved l10n summaries, or local guesses.
+- Older saved widgets that existed before this state file must not show fake unavailable. Tokyo-worker may bootstrap the missing state once from its own saved pointer plus matching text pointers, persist that state, and then return the state.
 - If translation is accepted or working, the panel shows that state.
 - If translation failed, the panel shows a clean failure state.
 - If translation is ready, locales are available.
