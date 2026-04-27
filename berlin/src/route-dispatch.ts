@@ -3,7 +3,6 @@ import { internalError, json, methodNotAllowed } from './helpers';
 import { type Env } from './types';
 import {
   handleFinish,
-  handlePasswordLogin,
   handleProviderLoginCallback,
   handleProviderLoginRedirectStart,
   handleProviderLoginStart,
@@ -14,6 +13,9 @@ import {
   handleAccountDelete,
   handleAccountInvitationDelete,
   handleAccountInvitations,
+  handleAccountInstancePublicIdsRegistry,
+  handleAccountInstanceRegistryByPublicId,
+  handleAccountInstanceRegistryCreate,
   handleAccountLocales,
   handleAccountLifecycleTierDropDismiss,
   handleAccountMemberById,
@@ -21,8 +23,10 @@ import {
   handleAccountMemberPatch,
   handleAccountMembers,
   handleAccountOwnerTransfer,
+  handleAccountPublishContainmentRegistry,
   handleAccounts,
   handleAccountSwitch,
+  handleAccountWidgetRegistry,
   handleInvitationAccept,
   handleMe,
   handleMeContactMethodStart,
@@ -31,13 +35,13 @@ import {
   handleMeIdentities,
   handleMeUpdate,
   handleSessionBootstrap,
+  handleTemplateRegistry,
 } from './routes-account';
 import {
   handleHealthz,
   handleInternalRevokeUserSessions,
   handleJwks,
   handleLogout,
-  handleMichaelToken,
   handleRefresh,
   handleSession,
 } from './routes-session';
@@ -66,11 +70,6 @@ export async function dispatchBerlinRequest(request: Request, env: Env): Promise
   if (pathname === '/.well-known/jwks.json') {
     if (request.method !== 'GET') return methodNotAllowed();
     return await handleJwks(env);
-  }
-
-  if (pathname === '/auth/login/password') {
-    if (request.method !== 'POST') return methodNotAllowed();
-    return await handlePasswordLogin(request, env);
   }
 
   if (pathname === '/auth/login/provider/start') {
@@ -195,6 +194,59 @@ export async function dispatchBerlinRequest(request: Request, env: Env): Promise
     return await handleAccountInvitations(request, env, decodeURIComponent(accountInvitationsMatch[1] || ''));
   }
 
+  const accountWidgetRegistryMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/widget-registry$/);
+  if (accountWidgetRegistryMatch) {
+    if (request.method !== 'GET') return methodNotAllowed();
+    return await handleAccountWidgetRegistry(
+      request,
+      env,
+      decodeURIComponent(accountWidgetRegistryMatch[1] || ''),
+    );
+  }
+
+  const accountInstancePublicIdsRegistryMatch = pathname.match(
+    /^\/v1\/accounts\/([^/]+)\/instances\/public-ids$/,
+  );
+  if (accountInstancePublicIdsRegistryMatch) {
+    if (request.method !== 'GET') return methodNotAllowed();
+    return await handleAccountInstancePublicIdsRegistry(
+      request,
+      env,
+      decodeURIComponent(accountInstancePublicIdsRegistryMatch[1] || ''),
+    );
+  }
+
+  const accountInstanceRegistryCreateMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/instances\/registry$/);
+  if (accountInstanceRegistryCreateMatch) {
+    if (request.method !== 'POST') return methodNotAllowed();
+    return await handleAccountInstanceRegistryCreate(
+      request,
+      env,
+      decodeURIComponent(accountInstanceRegistryCreateMatch[1] || ''),
+    );
+  }
+
+  const accountInstanceRegistryMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/instances\/([^/]+)\/registry$/);
+  if (accountInstanceRegistryMatch) {
+    if (request.method !== 'GET' && request.method !== 'DELETE') return methodNotAllowed();
+    return await handleAccountInstanceRegistryByPublicId(
+      request,
+      env,
+      decodeURIComponent(accountInstanceRegistryMatch[1] || ''),
+      decodeURIComponent(accountInstanceRegistryMatch[2] || ''),
+    );
+  }
+
+  const accountPublishContainmentRegistryMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/publish-containment$/);
+  if (accountPublishContainmentRegistryMatch) {
+    if (request.method !== 'GET') return methodNotAllowed();
+    return await handleAccountPublishContainmentRegistry(
+      request,
+      env,
+      decodeURIComponent(accountPublishContainmentRegistryMatch[1] || ''),
+    );
+  }
+
   const accountLocalesMatch = pathname.match(/^\/v1\/accounts\/([^/]+)\/locales$/);
   if (accountLocalesMatch) {
     if (request.method !== 'PUT') return methodNotAllowed();
@@ -241,6 +293,11 @@ export async function dispatchBerlinRequest(request: Request, env: Env): Promise
     return await handleSessionBootstrap(request, env);
   }
 
+  if (pathname === '/v1/templates/registry') {
+    if (request.method !== 'GET') return methodNotAllowed();
+    return await handleTemplateRegistry(request, env);
+  }
+
   if (pathname === '/auth/refresh') {
     if (request.method !== 'POST') return methodNotAllowed();
     return await handleRefresh(request, env);
@@ -249,11 +306,6 @@ export async function dispatchBerlinRequest(request: Request, env: Env): Promise
   if (pathname === '/auth/logout') {
     if (request.method !== 'POST') return methodNotAllowed();
     return await handleLogout(request, env);
-  }
-
-  if (pathname === '/auth/michael/token') {
-    if (request.method !== 'GET') return methodNotAllowed();
-    return await handleMichaelToken(request, env);
   }
 
   return json({ error: 'NOT_FOUND' }, { status: 404 });

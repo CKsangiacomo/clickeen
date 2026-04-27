@@ -1,10 +1,10 @@
 import { asBearerToken, authError, claimAsNumber, claimAsString, json } from './helpers';
 import { readJsonBody, resolveRefreshTokenFromRequest } from './auth-request';
-import { ensureSupabaseAccessToken, rotateRefreshRti, resolvePrincipalSession } from './auth-session';
-import { addUserSessionId, loadSessionState, revokeSessionBySid, revokeSessionsByUserId, saveSessionState } from './session-kv';
+import { rotateRefreshRti, resolvePrincipalSession } from './auth-session';
+import { loadSessionState, revokeSessionBySid, revokeSessionsByUserId, saveSessionState } from './session-kv';
 import { resolveSigningContext, signAccessToken, signRefreshToken, verifyRefreshToken } from './jwt-crypto';
 import { resolveAudience, resolveIssuer } from './auth-config';
-import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS, type AccessClaims, type Env, type RefreshPayloadV2, type SessionState } from './types';
+import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS, type AccessClaims, type Env, type RefreshPayloadV2 } from './types';
 
 export async function handleRefresh(request: Request, env: Env): Promise<Response> {
   const body = await readJsonBody(request);
@@ -15,24 +15,7 @@ export async function handleRefresh(request: Request, env: Env): Promise<Respons
   if (!verified.ok) return authError('coreui.errors.auth.required', 401, verified.reason);
 
   const payload = verified.payload;
-  let state = await loadSessionState(env, payload.sid);
-
-  if (!state && payload.v === 1) {
-    const nowMs = Date.now();
-    state = {
-      sid: payload.sid,
-      currentRti: payload.rti,
-      rtiRotatedAt: nowMs,
-      userId: payload.userId,
-      ver: payload.ver,
-      revoked: false,
-      supabaseRefreshToken: payload.supabaseRefreshToken,
-      createdAt: nowMs,
-      updatedAt: nowMs,
-    };
-    await saveSessionState(env, state);
-    await addUserSessionId(env, state.userId, state.sid);
-  }
+  const state = await loadSessionState(env, payload.sid);
 
   if (!state) return authError('coreui.errors.auth.required', 401, 'session_not_found');
   if (state.revoked) return authError('coreui.errors.auth.required', 401, 'session_revoked');
@@ -139,39 +122,6 @@ function isTrustedInternalControlRequest(request: Request, env: Env): boolean {
   return token === expected;
 }
 
-function resolveInternalServiceHeaderToken(request: Request): string | null {
-  const raw = claimAsString(request.headers.get('x-ck-internal-token'));
-  if (!raw) return null;
-  return asBearerToken(raw) || raw;
-}
-
-function isTrustedRomaMichaelTokenRequest(request: Request, env: Env): boolean {
-  const expected =
-    typeof env.CK_INTERNAL_SERVICE_JWT === 'string' ? env.CK_INTERNAL_SERVICE_JWT.trim() : '';
-  const marker = String(request.headers.get('x-ck-internal-service') || '')
-    .trim()
-    .toLowerCase();
-  if (marker !== 'roma.edge') return false;
-
-  if (expected) {
-    return resolveInternalServiceHeaderToken(request) === expected;
-  }
-
-  // Cloud-dev Roma does not currently carry CK_INTERNAL_SERVICE_JWT. Until that env
-  // is normalized, only accept the server-to-server shape and reject browser fetches.
-  if (request.headers.has('origin')) return false;
-  if (request.headers.has('sec-fetch-site')) return false;
-  if (request.headers.has('sec-fetch-mode')) return false;
-  if (request.headers.has('sec-fetch-dest')) return false;
-  return true;
-}
-
-function resolveSupabaseServiceRoleKey(env: Env): string | null {
-  const key =
-    typeof env.SUPABASE_SERVICE_ROLE_KEY === 'string' ? env.SUPABASE_SERVICE_ROLE_KEY.trim() : '';
-  return key || null;
-}
-
 export async function handleInternalRevokeUserSessions(request: Request, env: Env, userId: string): Promise<Response> {
   if (!isTrustedInternalControlRequest(request, env)) {
     return authError('coreui.errors.auth.forbidden', 403, 'internal_control_auth_required');
@@ -182,45 +132,6 @@ export async function handleInternalRevokeUserSessions(request: Request, env: En
     ok: true,
     userId,
     revokedCount,
-  });
-}
-
-export async function handleMichaelToken(request: Request, env: Env): Promise<Response> {
-  const principal = await resolvePrincipalSession(request, env);
-  if (!principal.ok) return principal.response;
-
-  const hasSupabaseSessionBridge = Boolean(claimAsString(principal.session.supabaseRefreshToken));
-  if (hasSupabaseSessionBridge) {
-    const ensured = await ensureSupabaseAccessToken(env, principal.session);
-    if (!ensured.ok) return ensured.response;
-
-    return json({
-      ok: true,
-      userId: principal.userId,
-      accessToken: ensured.accessToken,
-      expiresAt:
-        Number.isFinite(ensured.session.supabaseAccessExp) && (ensured.session.supabaseAccessExp as number) > 0
-          ? new Date((ensured.session.supabaseAccessExp as number) * 1000).toISOString()
-          : null,
-      tokenKind: 'supabase_user',
-    });
-  }
-
-  if (!isTrustedRomaMichaelTokenRequest(request, env)) {
-    return authError('coreui.errors.auth.contextUnavailable', 503, 'supabase_session_unavailable');
-  }
-
-  const serviceRoleKey = resolveSupabaseServiceRoleKey(env);
-  if (!serviceRoleKey) {
-    return authError('berlin.errors.auth.config_missing', 503, 'supabase_service_role_missing');
-  }
-
-  return json({
-    ok: true,
-    userId: principal.userId,
-    accessToken: serviceRoleKey,
-    expiresAt: null,
-    tokenKind: 'internal_service_role',
   });
 }
 

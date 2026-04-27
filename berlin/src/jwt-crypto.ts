@@ -10,7 +10,6 @@ import {
   type Env,
   type JwtHeader,
   type RefreshPayload,
-  type RefreshPayloadV1,
   type RefreshPayloadV2,
   type RefreshResult,
   type SigningContext,
@@ -219,18 +218,6 @@ export async function verifyRefreshToken(token: string, env: Env, options: { all
   const parsed = decodeJsonBase64Url<RefreshPayload>(body);
   if (!parsed || typeof parsed !== 'object') return { ok: false, reason: 'payload' };
   const version = claimAsNumber(parsed.v);
-  if (version === 1) {
-    const payload = parsed as RefreshPayload;
-    if (!claimAsString(payload.sid) || !claimAsString(payload.rti) || !claimAsNumber(payload.ver) || !claimAsString(payload.userId)) {
-      return { ok: false, reason: 'payload' };
-    }
-    if (!claimAsString((parsed as RefreshPayloadV1).supabaseRefreshToken)) return { ok: false, reason: 'payload' };
-    const exp = claimAsNumber(payload.exp);
-    if (!exp) return { ok: false, reason: 'payload' };
-    if (!options.allowExpired && exp <= Math.floor(Date.now() / 1000)) return { ok: false, reason: 'expired' };
-    return { ok: true, payload };
-  }
-
   if (version !== 2) return { ok: false, reason: 'version' };
   const payload = parsed as RefreshPayload;
   if (!claimAsString(payload.sid) || !claimAsString(payload.rti) || !claimAsNumber(payload.ver) || !claimAsString(payload.userId)) {

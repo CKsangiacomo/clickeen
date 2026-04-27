@@ -26,7 +26,7 @@ Berlin must keep that login-time truth boring, explicit, and session-scoped. Ric
 Berlin permanently owns:
 
 - OAuth PKCE start/callback flows for login providers.
-- Provider identity to Clickeen user mapping through `login_identities`.
+- Provider identity to Clickeen user mapping through the `resolve_login_identity` RPC and `login_identities`.
 - First-login account provisioning when no invitation or existing membership applies.
 - Invitation acceptance at login time when the login flow carries an invitation context.
 - Active account resolution for session landing.
@@ -44,7 +44,7 @@ The signed account authz capsule carries stable account authz truth only. Mutabl
 
 - Direct provider login is the canonical cloud path: `Roma -> Berlin -> provider -> Berlin -> Roma`.
 - Supabase Auth provider redirects are legacy residue and must not be reintroduced as the browser-visible customer login path.
-- The current linked-identity source is `public.login_identities`. Supabase Auth identities may exist as legacy migration residue, but product shells must not consume them as provider/account truth.
+- The current linked-identity source is `public.login_identities`, with first-login provider races resolved by the database-owned `resolve_login_identity` RPC. Supabase Auth identities may exist as legacy migration residue, but product shells must not consume them as provider/account truth.
 - Bootstrap is read-only. It resolves real user/account state and mints session/bootstrap truth; it must not silently repair missing profile, membership, or account state on the hot path.
 - Missing canonical profile, membership, or active account state at bootstrap is a producer bug and must fail explicitly.
 - Active account resolution comes only from persisted active-account preference or deterministic real membership truth. Berlin must never open a privileged fallback account.
@@ -87,7 +87,6 @@ Legacy/compatibility auth routes:
 
 - `POST /auth/login/provider/start`
 - `GET /auth/login/provider/callback`
-- `POST /auth/login/password`
 
 Residual public account-management routes:
 
@@ -114,13 +113,19 @@ Residual public account-management routes:
 - `POST /v1/invitations/:token/accept`
 - `POST /v1/accounts/:id/switch`
 - `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
+- `GET /v1/accounts/:id/widget-registry`
+- `GET /v1/accounts/:id/instances/public-ids`
+- `POST /v1/accounts/:id/instances/registry`
+- `GET /v1/accounts/:id/instances/:publicId/registry`
+- `DELETE /v1/accounts/:id/instances/:publicId/registry`
+- `GET /v1/accounts/:id/publish-containment`
+- `GET /v1/templates/registry`
 
 Internal routes:
 
 - `GET /.well-known/jwks.json`
 - `GET /internal/healthz`
 - `POST /internal/control/users/:userId/revoke-sessions`
-- `GET /auth/michael/token`
 
 Health contract:
 
@@ -138,7 +143,7 @@ Canonical Google login currently works like this:
 6. Berlin consumes the OAuth state ticket once.
 7. Berlin exchanges the Google code directly with Google.
 8. Berlin normalizes the Google userinfo response into a provider identity.
-9. Berlin resolves or creates the Clickeen user/profile/account landing state through `login_identities` and account membership truth.
+9. Berlin resolves or creates the Clickeen user/profile/account landing state through the DB-owned `resolve_login_identity` RPC, `login_identities`, and account membership truth.
 10. Berlin issues the Clickeen session.
 11. Berlin stores a short-lived one-time finish transaction in `BERLIN_AUTH_TICKETS`.
 12. Berlin redirects the browser to Roma's finish route with only a `finishId`.
@@ -154,6 +159,7 @@ The browser is a redirect courier. It must never receive session material in the
   - the first valid `/auth/refresh` rotates the session RTI and returns the next refresh token
   - one grace-window retry using the immediately previous refresh token is allowed so concurrent refresh attempts converge on the same next RTI instead of revoking a healthy session
   - replay of an old refresh token after the grace window is treated as reuse and revokes the session
+  - refresh payload version `2` is the only accepted shape; old V1 refresh tokens force normal login
   - `POST /auth/logout` with `scope=user` revokes every session for the current user
   - logout with a specific refresh token revokes only that session
 - Session cookies used by Roma/Bob:
@@ -163,6 +169,10 @@ The browser is a redirect courier. It must never receive session material in the
 Session state persistence:
 
 - `BERLIN_SESSION_KV` is authoritative state in cloud-dev/prod and local-bound in local env.
+- Valid session state must carry explicit `authMode`.
+- `direct_provider` is the canonical Google/provider session mode.
+- Supabase-bridge sessions are deleted; password login no longer creates Berlin product sessions.
+- Old KV rows without `authMode` are invalid and force normal login.
 - In-memory cache is a runtime optimization.
 - Signing/HMAC key imports are cached on `globalThis` under the Cloudflare Workers isolate model.
 
@@ -185,20 +195,19 @@ Primary runtime dependencies:
 - `BERLIN_AUTH_TICKETS` Durable Object for OAuth state and finish transactions.
 - `BERLIN_SESSION_KV` for session state and auth/session mutation rate-limit buckets.
 - Google OAuth/OIDC for the enabled cloud-dev login provider.
-- Supabase/Michael persistence through Berlin's service-role boundary for user profile, login identity, account, membership, and invitation state.
+- Supabase/Michael persistence through Berlin's service-role boundary for user profile, login identity, account, membership, invitation state, and the `resolve_login_identity` RPC.
 
-Legacy compatibility dependencies:
+Registry/account product dependencies:
 
-- Supabase Auth password grant remains only for `POST /auth/login/password` operational/smoke compatibility.
-- Supabase refresh grant state may remain in older session paths, but direct provider login does not use Supabase as the browser-visible OAuth hop.
-- `GET /auth/michael/token` is a residual server-only bridge for Roma routes that still read Michael/PostgREST directly. For Berlin-owned provider sessions that do not have a Supabase Auth refresh token, Berlin returns the Michael service-role token only to the Roma server caller. When `CK_INTERNAL_SERVICE_JWT` is configured, Roma must also send `x-ck-internal-token: Bearer ${CK_INTERNAL_SERVICE_JWT}`. During cloud-dev env normalization, Berlin still requires `x-ck-internal-service: roma.edge` and rejects browser fetch headers. Browser/client code must never call this route.
+- Roma no longer receives a Michael/PostgREST token from Berlin.
+- Berlin owns the residual account registry product endpoints listed above and reads Michael internally through its service-role boundary.
+- Roma combines those registry responses with Tokyo/Tokyo-worker saved-document and serve-state truth.
 
 ## Environment
 
 Required:
 
 - `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `BERLIN_AUTH_TICKETS` (Wrangler Durable Object binding)
 - `BERLIN_SESSION_KV` (Wrangler KV binding)
@@ -219,7 +228,7 @@ Recommended:
 - `BERLIN_ALLOWED_PROVIDERS` (default: `google`)
 - `BERLIN_FINISH_REDIRECT_URL` (cloud-dev points at Roma `/api/session/finish`)
 - `ENV_STAGE`
-- `CK_INTERNAL_SERVICE_JWT` (required for residual internal service auth on non-product paths)
+- `CK_INTERNAL_SERVICE_JWT` only for explicit local/internal control tooling, not for Berlin/Roma Cloudflare product paths.
 
 Legacy/compatibility:
 

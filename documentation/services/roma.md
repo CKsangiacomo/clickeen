@@ -75,7 +75,6 @@ Roma exposes explicit session endpoints for product auth UX:
 - `GET /api/session/login/google` (current customer-facing provider-auth start; Google is the enabled cloud-dev provider)
 - `GET /api/session/finish` (redeems Berlin `finishId`, sets shared httpOnly session cookies, then redirects into Roma)
 - `POST /api/session/logout` (best-effort Berlin logout + clears auth cookies)
-- `POST /api/session/login` (hidden operational/smoke compatibility path for email/password credentials; not the canonical customer-facing cloud login surface)
 - Roma renders a visible shell-level `Sign out` action in the domain nav and mobile drawer, backed by `POST /api/session/logout`, then hard-redirects to `/login`.
 
 Non-local auth rule:
@@ -128,7 +127,7 @@ Client fetch behavior:
 - Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/account/widgets`, `/api/account/templates`, `/api/account/assets*`, `/api/account/team*`, `/api/account/locales`, Builder/account routes).
 - Roma -> Tokyo/Tokyo-worker product control calls now execute through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
 - Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`; Roma does not infer or probe internal service hosts.
-- Roma -> Berlin's residual Michael token bridge uses the Berlin access token plus explicit server identity header `x-ck-internal-service: roma.edge`; when `CK_INTERNAL_SERVICE_JWT` is configured, Roma also sends `x-ck-internal-token: Bearer ${CK_INTERNAL_SERVICE_JWT}`. This is only for server-side Roma account routes while Michael direct reads remain in Roma; browser code must not call Berlin's Michael token bridge.
+- Roma no longer calls Berlin for a Michael/PostgREST token. Account registry reads/writes go through Berlin product endpoints with the current Berlin bearer, while Tokyo/Tokyo-worker remain the saved-document and serve-state owners.
 
 ## Bob orchestration contract (Roma Builder)
 
@@ -162,7 +161,7 @@ Notes:
 - In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
 - Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/account/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Tokyo-worker-owned downstream locale/live work.
 - Team is now a real account domain in Roma: `/team` lists account members from Berlin and `/team/:memberId` drills into Berlin-owned member detail. Role changes and non-owner member removal route through Roma same-origin APIs backed by Berlin (`/api/account/team/members/:memberId`), while person-scoped profile edits stay with the member in User Settings.
-- Roma now exposes a dedicated person-scoped User Settings domain at `/profile`. It renders canonical person data from bootstrap, writes self-profile updates through `/api/me` -> Berlin `PUT /v1/me`, initiates auth-owned email change through `/api/me/email-change` -> Berlin `POST /v1/me/email-change`, and runs phone/WhatsApp verification through same-origin relays to Berlin (`/api/me/contact-methods/:channel/start|verify`). Linked identities stay internal and are not part of the standard customer-facing surface.
+- Roma now exposes a dedicated person-scoped User Settings domain at `/profile`. It renders canonical person data from bootstrap, writes self-profile updates through `/api/me` -> Berlin `PUT /v1/me`, and runs phone/WhatsApp verification through same-origin relays to Berlin (`/api/me/contact-methods/:channel/start|verify`). Provider-managed email is display-only in Roma until a Berlin-owned contact-email product flow exists. Linked identities stay internal and are not part of the standard customer-facing surface.
 - Roma Team now also exposes Berlin-backed invitation issue/list/revoke flows through `/api/account/team/invitations` and `/api/account/team/invitations/:invitationId`. Team does not expose raw accept tokens or shareable acceptance paths as normal invitation metadata.
 - Roma exposes `/accept-invite/:token` as the explicit invitation-accept handoff. If the visitor is not signed in, the page routes them to `/login?next=...`; if signed in, it proxies acceptance to Berlin through `/api/invitations/:token/accept`.
 - Roma Settings now exposes owner-only final account-holder actions through Berlin-backed same-origin routes: `/api/account/owner-transfer` and `DELETE /api/account`. Tier, locales, ownership, and delete-account controls now sit on the same Berlin-owned account boundary.
@@ -222,7 +221,7 @@ Assets domain behavior:
 
 - Roma runtime target: `https://roma.dev.clickeen.com` (Pages `*.pages.dev` deploys are not supported for authenticated Builder because cookies cannot be shared to Bob).
 - Uses cloud-dev Berlin/Tokyo/Bob/San Francisco URLs from env/config.
-- Cloud product auth currently presents Berlin provider auth only in customer UI, with Google as the enabled cloud-dev provider. The email/password session route remains available for hidden operational smoke use until CI has a provider/finish test adapter.
+- Cloud product auth presents Berlin provider auth only in customer UI, with Google as the enabled cloud-dev provider. Roma no longer carries a hidden email/password session route for CI smoke.
 - Cloud-dev currently runs as one effective product account: admin. Roma does not expose customer account switching there or in the normal Roma product shell.
 
 ## Operational notes

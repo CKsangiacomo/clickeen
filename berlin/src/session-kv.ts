@@ -1,4 +1,10 @@
-import { REFRESH_TOKEN_TTL_SECONDS, SESSION_KV_PREFIX, USER_INDEX_KV_PREFIX, type Env, type SessionState } from './types';
+import {
+  REFRESH_TOKEN_TTL_SECONDS,
+  SESSION_KV_PREFIX,
+  USER_INDEX_KV_PREFIX,
+  type Env,
+  type SessionState,
+} from './types';
 import { claimAsNumber, claimAsString } from './helpers';
 
 function sessionKvKey(sid: string): string {
@@ -18,13 +24,11 @@ function toSessionState(value: unknown): SessionState | null {
   const userId = claimAsString(record.userId);
   const ver = claimAsNumber(record.ver);
   const revoked = Boolean(record.revoked);
-  const supabaseRefreshToken = claimAsString(record.supabaseRefreshToken);
-  const supabaseSubject = claimAsString(record.supabaseSubject);
-  const supabaseAccessToken = claimAsString(record.supabaseAccessToken);
-  const supabaseAccessExp = claimAsNumber(record.supabaseAccessExp);
+  const authMode = claimAsString(record.authMode);
   const createdAt = claimAsNumber(record.createdAt) || Date.now();
   const updatedAt = claimAsNumber(record.updatedAt) || Date.now();
   if (!sid || !currentRti || !userId || !ver) return null;
+  if (authMode !== 'direct_provider') return null;
   const rtiRotatedAt = rtiRotatedAtRaw || updatedAt || createdAt;
   return {
     sid,
@@ -33,10 +37,7 @@ function toSessionState(value: unknown): SessionState | null {
     userId,
     ver,
     revoked,
-    supabaseRefreshToken: supabaseRefreshToken || undefined,
-    supabaseSubject: supabaseSubject || undefined,
-    supabaseAccessToken: supabaseAccessToken || undefined,
-    supabaseAccessExp: supabaseAccessExp || undefined,
+    authMode,
     createdAt,
     updatedAt,
   };

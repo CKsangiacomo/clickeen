@@ -7,42 +7,15 @@ import {
   type SessionIssueArgs,
   type SessionIssueResult,
   type SessionState,
-  type SupabaseIdentity,
-  type SupabaseTokenResponse,
 } from './types';
 import {
   authError,
-  claimAsNumber,
   claimAsString,
-  decodeJsonBase64Url,
 } from './helpers';
 import { addUserSessionId, loadSessionState, saveSessionState } from './session-kv';
 import { deriveNextRti, signAccessToken, signRefreshToken, verifyAccessToken } from './jwt-crypto';
-import { requestSupabaseRefreshGrant } from './supabase-client';
 import { resolveAccessTokenFromRequest } from './auth-request';
 import { resolveAudience, resolveIssuer } from './auth-config';
-
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  const parts = token.split('.');
-  if (parts.length !== 3) return null;
-  return decodeJsonBase64Url<Record<string, unknown>>(parts[1] || '');
-}
-
-export function resolveUserIdFromSupabaseResponse(payload: SupabaseTokenResponse): string | null {
-  const fromUser = claimAsString(payload.user?.id);
-  if (fromUser) return fromUser;
-  const accessToken = claimAsString(payload.access_token);
-  if (!accessToken) return null;
-  const decoded = decodeJwtPayload(accessToken);
-  if (!decoded) return null;
-  return claimAsString(decoded.sub);
-}
-
-export function resolveSupabaseAccessExp(nowSec: number, payload: SupabaseTokenResponse): number | null {
-  const expiresIn = claimAsNumber(payload.expires_in);
-  if (!expiresIn || expiresIn <= 0) return null;
-  return nowSec + expiresIn;
-}
 
 export async function issueSession(env: Env, args: SessionIssueArgs): Promise<SessionIssueResult> {
   const nowSec = Math.floor(Date.now() / 1000);
@@ -78,19 +51,20 @@ export async function issueSession(env: Env, args: SessionIssueArgs): Promise<Se
     signRefreshToken(refreshPayload, env),
   ]);
 
-  const nextState: SessionState = {
+  const baseState = {
     sid,
     currentRti: rti,
     rtiRotatedAt: nowMs,
     userId: args.userId,
     ver,
     revoked: false,
-    supabaseRefreshToken: claimAsString(args.supabaseRefreshToken) || undefined,
-    supabaseSubject: claimAsString(args.supabaseSubject) || undefined,
-    supabaseAccessToken: claimAsString(args.supabaseAccessToken) || undefined,
-    supabaseAccessExp: args.supabaseAccessExp && args.supabaseAccessExp > nowSec ? args.supabaseAccessExp : undefined,
+    authMode: args.authMode,
     createdAt: existing?.createdAt || nowMs,
     updatedAt: nowMs,
+  };
+  const nextState: SessionState = {
+    ...baseState,
+    authMode: 'direct_provider',
   };
 
   await saveSessionState(env, nextState);
@@ -129,69 +103,6 @@ export async function resolvePrincipalSession(
   if (session.userId !== userId) return { ok: false, response: authError('coreui.errors.auth.required', 401, 'session_subject_mismatch') };
 
   return { ok: true, userId, sid, session, claims: verified.claims };
-}
-
-export async function ensureSupabaseAccessToken(
-  env: Env,
-  session: SessionState,
-): Promise<
-  | { ok: true; session: SessionState; accessToken: string }
-  | { ok: false; response: Response }
-> {
-  const nowSec = Math.floor(Date.now() / 1000);
-  const currentAccess = claimAsString(session.supabaseAccessToken);
-  const currentExp = claimAsNumber(session.supabaseAccessExp);
-  const supabaseRefreshToken = claimAsString(session.supabaseRefreshToken);
-
-  if (!supabaseRefreshToken) {
-    return {
-      ok: false,
-      response: authError('coreui.errors.auth.contextUnavailable', 503, 'supabase_session_unavailable'),
-    };
-  }
-
-  if (currentAccess && currentExp && currentExp > nowSec + 60) {
-    return { ok: true, session, accessToken: currentAccess };
-  }
-
-  const grant = await requestSupabaseRefreshGrant(env, supabaseRefreshToken);
-  if (!grant.ok) {
-    await saveSessionState(env, { ...session, revoked: true });
-    return { ok: false, response: authError('coreui.errors.auth.required', grant.status, grant.reason) };
-  }
-
-  const refreshedUserId = resolveUserIdFromSupabaseResponse(grant.payload);
-  const refreshedAccess = claimAsString(grant.payload.access_token);
-  const refreshedRefresh = claimAsString(grant.payload.refresh_token);
-  const expectedSupabaseSubject = session.supabaseSubject || session.userId;
-  if (!refreshedUserId || !refreshedAccess || !refreshedRefresh || refreshedUserId !== expectedSupabaseSubject) {
-    await saveSessionState(env, { ...session, revoked: true });
-    return { ok: false, response: authError('coreui.errors.auth.required', 401, 'refresh_subject_mismatch') };
-  }
-
-  const refreshedExp = resolveSupabaseAccessExp(nowSec, grant.payload);
-  const nextSession: SessionState = {
-    ...session,
-    supabaseRefreshToken: refreshedRefresh,
-    supabaseAccessToken: refreshedAccess,
-    supabaseAccessExp: refreshedExp || undefined,
-    updatedAt: Date.now(),
-  };
-  await saveSessionState(env, nextSession);
-
-  return { ok: true, session: nextSession, accessToken: refreshedAccess };
-}
-
-export function toIdentityRecord(identity: SupabaseIdentity): { identityId: string; provider: string; providerSubject: string | null } | null {
-  const identityId = claimAsString(identity.identity_id) || claimAsString(identity.id);
-  const provider = typeof identity.provider === 'string' ? identity.provider.trim().toLowerCase() : null;
-  const providerSubject = claimAsString(identity.identity_data?.sub);
-  if (!identityId || !provider) return null;
-  return {
-    identityId,
-    provider,
-    providerSubject,
-  };
 }
 
 export async function rotateRefreshRti(

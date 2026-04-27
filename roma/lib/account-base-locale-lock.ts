@@ -1,11 +1,6 @@
 import { loadTokyoAccountInstanceDocument } from './account-instance-direct';
-import {
-  createMichaelHeaders,
-  encodeFilterValue,
-  fetchMichaelListRows,
-  michaelUnavailableResult,
-  resolveMichaelAccessToken,
-} from './michael-shared';
+import { listAccountInstancePublicIds } from './michael-instance-rows';
+import { michaelUnavailableResult } from './michael-shared';
 
 type AccountBaseLocaleLockResult =
   | {
@@ -26,25 +21,10 @@ export async function loadAccountBaseLocaleLockState(args: {
   accountCapsule?: string | null;
 }): Promise<AccountBaseLocaleLockResult> {
   try {
-    const michaelAccess = await resolveMichaelAccessToken(args.berlinAccessToken);
-    if (!michaelAccess.ok) {
-      return michaelAccess;
-    }
+    const publicIds = await listAccountInstancePublicIds(args.accountId, args.berlinAccessToken);
+    if (!publicIds.ok) return publicIds;
 
-    const headers = createMichaelHeaders(michaelAccess.accessToken);
-    const rows = await fetchMichaelListRows<{ public_id?: unknown }>({
-      headers,
-      pathname: `/rest/v1/widget_instances?select=public_id&account_id=eq.${encodeFilterValue(args.accountId)}&order=created_at.desc,public_id.desc`,
-      pageSize: 200,
-    });
-    if (!rows.ok) {
-      return rows;
-    }
-
-    for (const row of rows.rows) {
-      const publicId = typeof row.public_id === 'string' ? row.public_id.trim() : '';
-      if (!publicId) continue;
-
+    for (const publicId of publicIds.publicIds) {
       const saved = await loadTokyoAccountInstanceDocument({
         accountId: args.accountId,
         publicId,

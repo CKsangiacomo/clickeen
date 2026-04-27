@@ -3,10 +3,9 @@ import { acceptInvitationForPrincipal } from './account-invitations';
 import { internalError } from './helpers';
 import { readSupabaseAdminListAll } from './supabase-list';
 import { readSupabaseAdminJson, supabaseAdminFetch, supabaseAdminErrorResponse } from './supabase-admin';
-import { type Env, type SupabaseIdentity, type SupabaseUserResponse } from './types';
+import { type Env } from './types';
 
 type UserProfileSeed = {
-  userId: string;
   primaryEmail: string;
   emailVerified: boolean;
   displayName: string | null;
@@ -21,19 +20,6 @@ type MembershipRow = {
   account_id?: unknown;
   role?: unknown;
   created_at?: unknown;
-};
-
-type UserProfileRow = {
-  user_id?: unknown;
-  primary_email?: unknown;
-  email_verified?: unknown;
-  display_name?: unknown;
-  given_name?: unknown;
-  family_name?: unknown;
-  primary_language?: unknown;
-  country?: unknown;
-  timezone?: unknown;
-  active_account_id?: unknown;
 };
 
 export type ProviderIdentity = {
@@ -51,11 +37,12 @@ export type ProviderIdentity = {
   legacyUserId?: string | null;
 };
 
-type LoginIdentityRow = {
-  id?: unknown;
+type ResolveLoginIdentityRpcRow = {
   user_id?: unknown;
-  provider?: unknown;
-  provider_subject?: unknown;
+  login_identity_id?: unknown;
+  created_user?: unknown;
+  created_identity?: unknown;
+  active_account_id?: unknown;
 };
 
 type ReconcileResult =
@@ -72,10 +59,6 @@ const DEFAULT_ACCOUNT_L10N_POLICY = {
   ip: { countryToLocale: {} },
 } as const;
 const USER_MEMBERSHIP_PAGE_SIZE = 200;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -99,14 +82,12 @@ function normalizeProviderSubject(value: unknown): string | null {
   return subject && subject.length <= 512 ? subject : null;
 }
 
-function normalizeBoolean(value: unknown): boolean {
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
-    if (normalized === 'true') return true;
-    if (normalized === 'false') return false;
-  }
-  return false;
+function normalizeUuid(value: unknown): string | null {
+  const normalized = asTrimmedString(value);
+  if (!normalized) return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalized)
+    ? normalized
+    : null;
 }
 
 function normalizeCountry(value: unknown): string | null {
@@ -167,75 +148,11 @@ function normalizeProfileLocation(rawCountry: unknown, rawTimezone: unknown): {
   };
 }
 
-function selectSupabaseIdentity(user: SupabaseUserResponse): SupabaseIdentity | null {
-  const identities = Array.isArray(user.identities) ? user.identities : [];
-  return identities.find((identity) => normalizeLoginProvider(identity.provider) !== 'email') || identities[0] || null;
-}
-
-function toProviderIdentityFromSupabaseUser(user: SupabaseUserResponse): ProviderIdentity | null {
-  const legacyUserId = asTrimmedString(user.id);
-  const identity = selectSupabaseIdentity(user);
-  const identityData = isRecord(identity?.identity_data) ? identity?.identity_data : {};
-  const metadata = isRecord(user.user_metadata) ? user.user_metadata : {};
-
-  const provider = normalizeLoginProvider(identity?.provider) || 'email';
-  const providerSubject =
-    normalizeProviderSubject(identityData.sub) ||
-    normalizeProviderSubject(identity?.identity_id) ||
-    normalizeProviderSubject(identity?.id) ||
-    normalizeProviderSubject(legacyUserId);
-  if (!provider || !providerSubject) return null;
-
-  const email = normalizeEmail(identityData.email) || normalizeEmail(user.email);
-  const displayName =
-    asTrimmedString(identityData.full_name) ||
-    asTrimmedString(identityData.name) ||
-    asTrimmedString(metadata.full_name) ||
-    asTrimmedString(metadata.name);
-  const givenName =
-    asTrimmedString(identityData.given_name) ||
-    asTrimmedString(identityData.first_name) ||
-    asTrimmedString(identityData.givenName) ||
-    asTrimmedString(metadata.given_name) ||
-    asTrimmedString(metadata.first_name) ||
-    asTrimmedString(metadata.givenName);
-  const familyName =
-    asTrimmedString(identityData.family_name) ||
-    asTrimmedString(identityData.last_name) ||
-    asTrimmedString(identityData.familyName) ||
-    asTrimmedString(metadata.family_name) ||
-    asTrimmedString(metadata.last_name) ||
-    asTrimmedString(metadata.familyName);
-
-  const country = normalizeCountry(identityData.country) || normalizeCountry(metadata.country);
-  const location = normalizeProfileLocation(country, identityData.timezone || metadata.timezone);
-
-  return {
-    provider,
-    providerSubject,
-    email,
-    emailVerified: normalizeBoolean(identityData.email_verified) || Boolean(asTrimmedString(user.email_confirmed_at)),
-    displayName,
-    givenName,
-    familyName,
-    avatarUrl: asTrimmedString(identityData.avatar_url) || asTrimmedString(identityData.picture),
-    primaryLanguage:
-      normalizePrimaryLanguage(identityData.locale) ||
-      normalizePrimaryLanguage(identityData.language) ||
-      normalizePrimaryLanguage(metadata.locale) ||
-      normalizePrimaryLanguage(metadata.language),
-    country: location.country,
-    timezone: location.timezone,
-    legacyUserId,
-  };
-}
-
-function toUserProfileSeed(userId: string, identity: ProviderIdentity): UserProfileSeed | null {
+function toUserProfileSeed(identity: ProviderIdentity): UserProfileSeed | null {
   const primaryEmail = normalizeEmail(identity.email);
-  if (!userId || !primaryEmail) return null;
+  if (!primaryEmail) return null;
 
   return {
-    userId,
     primaryEmail,
     emailVerified: identity.emailVerified,
     displayName: asTrimmedString(identity.displayName),
@@ -255,153 +172,20 @@ function resolveAccountSlug(accountId: string, attempt = 0): string {
   return attempt > 0 ? `${base}-${attempt + 1}` : base;
 }
 
-async function upsertUserProfile(
-  env: Env,
-  profile: UserProfileSeed,
-): Promise<{ ok: true } | { ok: false; response: Response }> {
-  const existingProfile = await loadExistingUserProfile(env, profile.userId);
-  if (!existingProfile.ok) return existingProfile;
-  const existingLocation = normalizeProfileLocation(existingProfile.row?.country, existingProfile.row?.timezone);
-
-  const response = await supabaseAdminFetch(
-    env,
-    `/rest/v1/user_profiles?on_conflict=${encodeURIComponent('user_id')}`,
-    {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify({
-        user_id: profile.userId,
-        primary_email: profile.primaryEmail,
-        email_verified: profile.emailVerified,
-        display_name: asTrimmedString(existingProfile.row?.display_name) || profile.displayName,
-        given_name: asTrimmedString(existingProfile.row?.given_name) || profile.givenName,
-        family_name: asTrimmedString(existingProfile.row?.family_name) || profile.familyName,
-        primary_language:
-          normalizePrimaryLanguage(existingProfile.row?.primary_language) || profile.primaryLanguage,
-        country: existingLocation.country || profile.country,
-        timezone: existingLocation.timezone || profile.timezone,
-      }),
-    },
-  );
-  if (response.ok) return { ok: true };
-  const payload = await readSupabaseAdminJson<Record<string, unknown>>(response);
-  return {
-    ok: false,
-    response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
-  };
-}
-
-async function loadExistingUserProfile(
-  env: Env,
-  userId: string,
-): Promise<{ ok: true; row: UserProfileRow | null } | { ok: false; response: Response }> {
-  const params = new URLSearchParams({
-    select:
-      'user_id,primary_email,email_verified,display_name,given_name,family_name,primary_language,country,timezone,active_account_id',
-    user_id: `eq.${userId}`,
-    limit: '1',
-  });
-  const response = await supabaseAdminFetch(env, `/rest/v1/user_profiles?${params.toString()}`, { method: 'GET' });
-  const payload = await readSupabaseAdminJson<UserProfileRow[] | Record<string, unknown>>(response);
-  if (!response.ok) {
-    return {
-      ok: false,
-      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
-    };
-  }
-  return { ok: true, row: Array.isArray(payload) ? payload[0] || null : null };
-}
-
-async function loadLoginIdentity(
-  env: Env,
-  identity: ProviderIdentity,
-): Promise<{ ok: true; row: LoginIdentityRow | null } | { ok: false; response: Response }> {
-  const params = new URLSearchParams({
-    select: 'id,user_id,provider,provider_subject',
-    provider: `eq.${identity.provider}`,
-    provider_subject: `eq.${identity.providerSubject}`,
-    limit: '1',
-  });
-  const response = await supabaseAdminFetch(env, `/rest/v1/login_identities?${params.toString()}`, { method: 'GET' });
-  const payload = await readSupabaseAdminJson<LoginIdentityRow[] | Record<string, unknown>>(response);
-  if (!response.ok) {
-    return {
-      ok: false,
-      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
-    };
-  }
-  return { ok: true, row: Array.isArray(payload) ? payload[0] || null : null };
-}
-
-async function writeLoginIdentity(args: {
-  env: Env;
-  userId: string;
-  identity: ProviderIdentity;
-  existingIdentityId?: string | null;
-}): Promise<{ ok: true } | { ok: false; response: Response }> {
-  const metadataPatch = {
-    email: normalizeEmail(args.identity.email),
-    email_verified: args.identity.emailVerified,
-    display_name: asTrimmedString(args.identity.displayName),
-    given_name: asTrimmedString(args.identity.givenName),
-    family_name: asTrimmedString(args.identity.familyName),
-    avatar_url: asTrimmedString(args.identity.avatarUrl),
-    last_used_at: new Date().toISOString(),
-  };
-  const existingIdentityId = asTrimmedString(args.existingIdentityId);
-  const response = existingIdentityId
-    ? await supabaseAdminFetch(
-        args.env,
-        `/rest/v1/login_identities?id=eq.${encodeURIComponent(existingIdentityId)}`,
-        {
-          method: 'PATCH',
-          headers: { Prefer: 'return=minimal' },
-          body: JSON.stringify(metadataPatch),
-        },
-      )
-    : await supabaseAdminFetch(
-        args.env,
-        '/rest/v1/login_identities',
-        {
-          method: 'POST',
-          headers: { Prefer: 'return=minimal' },
-          body: JSON.stringify({
-            user_id: args.userId,
-            provider: args.identity.provider,
-            provider_subject: args.identity.providerSubject,
-            ...metadataPatch,
-          }),
-        },
-      );
-  if (response.ok) return { ok: true };
-  const payload = await readSupabaseAdminJson<Record<string, unknown>>(response);
-  return {
-    ok: false,
-    response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
-  };
-}
-
-function resolveNewProductUserId(identity: ProviderIdentity): string {
-  const legacyUserId = asTrimmedString(identity.legacyUserId);
-  if (
-    legacyUserId &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(legacyUserId)
-  ) {
-    return legacyUserId;
-  }
-  return crypto.randomUUID();
-}
-
 async function resolveProductUserForIdentity(
   env: Env,
   identity: ProviderIdentity,
-): Promise<{ ok: true; userId: string; createdUser: boolean; profileRow: UserProfileRow | null } | { ok: false; response: Response }> {
-  const existingIdentity = await loadLoginIdentity(env, identity);
-  if (!existingIdentity.ok) return existingIdentity;
-
-  const userId = asTrimmedString(existingIdentity.row?.user_id) || resolveNewProductUserId(identity);
-  const identityId = asTrimmedString(existingIdentity.row?.id);
-  const profile = toUserProfileSeed(userId, identity);
+): Promise<
+  | {
+      ok: true;
+      userId: string;
+      createdUser: boolean;
+      createdIdentity: boolean;
+      activeAccountId: string | null;
+    }
+  | { ok: false; response: Response }
+> {
+  const profile = toUserProfileSeed(identity);
   if (!profile) {
     return {
       ok: false,
@@ -409,53 +193,45 @@ async function resolveProductUserForIdentity(
     };
   }
 
-  const profileWrite = await upsertUserProfile(env, profile);
-  if (!profileWrite.ok) return profileWrite;
-
-  const identityWrite = await writeLoginIdentity({ env, userId, identity, existingIdentityId: identityId });
-  if (!identityWrite.ok) {
-    const racedIdentity = await loadLoginIdentity(env, identity);
-    if (!existingIdentity.row && racedIdentity.ok && racedIdentity.row) {
-      const racedUserId = asTrimmedString(racedIdentity.row.user_id);
-      const racedIdentityId = asTrimmedString(racedIdentity.row.id);
-      if (racedUserId && racedIdentityId) {
-        const racedProfile = toUserProfileSeed(racedUserId, identity);
-        if (!racedProfile) {
-          return {
-            ok: false,
-            response: internalError('coreui.errors.auth.login_failed', 'missing_provider_profile_seed'),
-          };
-        }
-        const racedProfileWrite = await upsertUserProfile(env, racedProfile);
-        if (!racedProfileWrite.ok) return racedProfileWrite;
-        const racedIdentityWrite = await writeLoginIdentity({
-          env,
-          userId: racedUserId,
-          identity,
-          existingIdentityId: racedIdentityId,
-        });
-        if (!racedIdentityWrite.ok) return racedIdentityWrite;
-        const racedProfileRow = await loadExistingUserProfile(env, racedUserId);
-        if (!racedProfileRow.ok) return racedProfileRow;
-        return {
-          ok: true,
-          userId: racedUserId,
-          createdUser: false,
-          profileRow: racedProfileRow.row,
-        };
-      }
-    }
-    return identityWrite;
+  const response = await supabaseAdminFetch(env, '/rest/v1/rpc/resolve_login_identity', {
+    method: 'POST',
+    body: JSON.stringify({
+      p_provider: identity.provider,
+      p_provider_subject: identity.providerSubject,
+      p_primary_email: profile.primaryEmail,
+      p_email_verified: profile.emailVerified,
+      p_display_name: profile.displayName,
+      p_given_name: profile.givenName,
+      p_family_name: profile.familyName,
+      p_avatar_url: asTrimmedString(identity.avatarUrl),
+      p_primary_language: profile.primaryLanguage,
+      p_country: profile.country,
+      p_timezone: profile.timezone,
+      p_legacy_user_id: normalizeUuid(identity.legacyUserId),
+    }),
+  });
+  const payload = await readSupabaseAdminJson<ResolveLoginIdentityRpcRow[] | Record<string, unknown>>(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
+    };
   }
 
-  const profileRow = await loadExistingUserProfile(env, userId);
-  if (!profileRow.ok) return profileRow;
-
+  const row = Array.isArray(payload) ? payload[0] : null;
+  const userId = normalizeUuid(row?.user_id);
+  if (!userId) {
+    return {
+      ok: false,
+      response: internalError('coreui.errors.db.writeFailed', 'resolve_login_identity_missing_user_id'),
+    };
+  }
   return {
     ok: true,
     userId,
-    createdUser: !existingIdentity.row,
-    profileRow: profileRow.row,
+    createdUser: row?.created_user === true,
+    createdIdentity: row?.created_identity === true,
+    activeAccountId: normalizeUuid(row?.active_account_id),
   };
 }
 
@@ -679,7 +455,7 @@ export async function ensureProductAccountStateForIdentity(
   const memberships = await listMembershipsForUser(env, resolvedUser.userId);
   if (!memberships.ok) return memberships;
   if (memberships.memberships.length > 0) {
-    const activeAccountId = asTrimmedString(resolvedUser.profileRow?.active_account_id);
+    const activeAccountId = resolvedUser.activeAccountId;
     const primaryAccountId = pickPrimaryAccountId(memberships.memberships, activeAccountId);
     if (primaryAccountId && activeAccountId !== primaryAccountId) {
       const activePreference = await setActiveAccountPreference(env, resolvedUser.userId, primaryAccountId);
@@ -708,19 +484,4 @@ export async function ensureProductAccountStateForIdentity(
     primaryAccountId: provisioned.accountId,
     createdAccount: provisioned.created,
   };
-}
-
-export async function ensureProductAccountState(
-  env: Env,
-  user: SupabaseUserResponse,
-  options: { invitationId?: string | null } = {},
-): Promise<ReconcileResult> {
-  const identity = toProviderIdentityFromSupabaseUser(user);
-  if (!identity) {
-    return {
-      ok: false,
-      response: internalError('coreui.errors.auth.login_failed', 'missing_provider_identity'),
-    };
-  }
-  return ensureProductAccountStateForIdentity(env, identity, options);
 }

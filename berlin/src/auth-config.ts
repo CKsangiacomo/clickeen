@@ -95,15 +95,3 @@ export function resolveAudience(env: Env): string {
   const configured = typeof env.BERLIN_AUDIENCE === 'string' ? env.BERLIN_AUDIENCE.trim() : '';
   return configured || DEFAULT_AUDIENCE;
 }
-
-export function normalizeEmail(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim().toLowerCase();
-  return normalized || null;
-}
-
-export function normalizePassword(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}

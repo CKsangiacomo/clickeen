@@ -79,9 +79,6 @@ export function createBerlinRequestContext(request: Request, env: Env): BerlinRe
 }
 
 function resolveRateLimitPolicy(method: string, path: string): RateLimitPolicy | null {
-  if (method === 'POST' && path === '/auth/login/password') {
-    return { bucket: 'auth.login.password', max: 8, windowSec: 60, vary: 'ip' };
-  }
   if (method === 'POST' && path === '/auth/login/provider/start') {
     return { bucket: 'auth.login.provider.start', max: 12, windowSec: 60, vary: 'ip' };
   }

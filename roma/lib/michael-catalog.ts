@@ -1,17 +1,10 @@
 import {
   asTrimmedString,
-  createMichaelHeaders,
-  encodeFilterValue,
-  fetchMichaelListRows,
-  formatCuratedDisplayName,
+  fetchBerlinProductJson,
   michaelUnavailableResult,
-  parseJsonTextOrNull,
-  resolveMichaelAccessToken,
-  resolveMichaelBaseUrlForTests,
   type MichaelAccountWidgetCatalogResult,
   type MichaelListedWidgetInstance,
   type MichaelTemplateCatalogResult,
-  type MichaelWidgetRow,
 } from './michael-shared';
 import {
   loadTokyoAccountInstanceDocument,
@@ -25,59 +18,46 @@ export async function loadAccountWidgetCatalog(args: {
   accountCapsule?: string | null;
 }): Promise<MichaelAccountWidgetCatalogResult> {
   try {
-    const michaelAccess = await resolveMichaelAccessToken(args.berlinAccessToken);
-    if (!michaelAccess.ok) {
-      return michaelAccess;
-    }
-
-    const headers = createMichaelHeaders(michaelAccess.accessToken);
-
-    const [accountRows, curatedRows, widgetRows, containmentResponse] = await Promise.all([
-      fetchMichaelListRows<{
-        public_id?: unknown;
-      }>({
-        headers,
-        pathname: `/rest/v1/widget_instances?select=public_id&account_id=eq.${encodeFilterValue(args.accountId)}&order=created_at.desc,public_id.desc`,
-      }),
-      fetchMichaelListRows<{
-        public_id?: unknown;
-        widget_type?: unknown;
-        meta?: unknown;
-      }>({
-        headers,
-        pathname: `/rest/v1/curated_widget_instances?select=public_id,widget_type,meta&owner_account_id=eq.${encodeFilterValue(args.accountId)}&order=created_at.desc,public_id.desc`,
-      }),
-      fetchMichaelListRows<MichaelWidgetRow>({
-        headers,
-        pathname: '/rest/v1/widgets?select=id,type&order=type.asc,id.asc',
-      }),
-      fetch(
-        `${resolveMichaelBaseUrlForTests()}/rest/v1/account_publish_containment?select=account_id,reason&account_id=eq.${encodeFilterValue(args.accountId)}&limit=1`,
-        {
-          method: 'GET',
-          headers,
-          cache: 'no-store',
-        },
-      ),
-    ]);
-
-    if (!accountRows.ok) return accountRows;
-    if (!curatedRows.ok) return curatedRows;
-    if (!widgetRows.ok) return widgetRows;
+    const registry = await fetchBerlinProductJson<{
+      accountPublicIds?: unknown;
+      curatedInstances?: unknown;
+      widgetTypes?: unknown;
+      containment?: unknown;
+    }>({
+      accessToken: args.berlinAccessToken,
+      path: `/v1/accounts/${encodeURIComponent(args.accountId)}/widget-registry`,
+    });
+    if (!registry.ok) return registry;
 
     const widgetTypeSet = new Set<string>();
-    for (const row of widgetRows.rows) {
-      const type = asTrimmedString(row.type);
-      if (!type || type === 'unknown') continue;
-      widgetTypeSet.add(type.toLowerCase());
+    const registryWidgetTypes = Array.isArray(registry.value.widgetTypes)
+      ? registry.value.widgetTypes
+      : [];
+    for (const typeRaw of registryWidgetTypes) {
+      const type = asTrimmedString(typeRaw);
+      if (type && type !== 'unknown') widgetTypeSet.add(type.toLowerCase());
     }
+    const accountPublicIds = Array.isArray(registry.value.accountPublicIds)
+      ? registry.value.accountPublicIds
+          .map((publicId) => asTrimmedString(publicId))
+          .filter((publicId): publicId is string => Boolean(publicId))
+      : [];
+    const registryCuratedInstances = Array.isArray(registry.value.curatedInstances)
+      ? (registry.value.curatedInstances as Array<{
+          publicId?: unknown;
+          widgetType?: unknown;
+          displayName?: unknown;
+        }>)
+      : [];
 
     const serveStatesResult = await loadTokyoAccountInstanceServeStates({
       accountId: args.accountId,
       publicIds: [
-        ...accountRows.rows.map((row) => asTrimmedString(row.public_id)),
-        ...curatedRows.rows.map((row) => asTrimmedString(row.public_id)),
-      ].filter((publicId): publicId is string => Boolean(publicId)),
+        ...accountPublicIds,
+        ...registryCuratedInstances
+          .map((row) => asTrimmedString(row.publicId))
+          .filter((publicId): publicId is string => Boolean(publicId)),
+      ],
       tokyoAccessToken: args.tokyoAccessToken,
       accountCapsule: args.accountCapsule,
     });
@@ -92,10 +72,7 @@ export async function loadAccountWidgetCatalog(args: {
     const serveStates = serveStatesResult.value.serveStates;
 
     const accountIdentityResults = await Promise.all(
-      accountRows.rows.map(async (row) => {
-        const publicId = asTrimmedString(row.public_id);
-        if (!publicId) return { ok: true as const, value: null };
-
+      accountPublicIds.map(async (publicId) => {
         const saved = await loadTokyoAccountInstanceDocument({
           accountId: args.accountId,
           publicId,
@@ -137,36 +114,28 @@ export async function loadAccountWidgetCatalog(args: {
       result.ok && result.value ? [result.value] : [],
     );
 
-    const curatedInstances: MichaelListedWidgetInstance[] = curatedRows.rows.map((row) => {
-      const publicId = asTrimmedString(row.public_id) ?? 'unknown';
-      const widgetType = asTrimmedString(row.widget_type) ?? 'unknown';
-      if (widgetType !== 'unknown') widgetTypeSet.add(widgetType);
+    const curatedInstances: MichaelListedWidgetInstance[] = registryCuratedInstances.map((row) => {
+      const publicId = asTrimmedString(row.publicId) ?? 'unknown';
+      const widgetType = asTrimmedString(row.widgetType) ?? 'unknown';
+      if (widgetType !== 'unknown') widgetTypeSet.add(widgetType.toLowerCase());
       return {
         publicId,
         widgetType,
-        displayName: formatCuratedDisplayName(row.meta, publicId),
+        displayName: asTrimmedString(row.displayName) ?? publicId,
         status: serveStates[publicId] ?? 'unpublished',
       };
     });
 
-    const containmentText = await containmentResponse.text().catch(() => '');
-    const containmentPayload = parseJsonTextOrNull(containmentText);
-    const containment =
-      containmentResponse.ok && Array.isArray(containmentPayload)
-        ? {
-            active: Boolean(
-              asTrimmedString(
-                (containmentPayload[0] as { account_id?: unknown } | undefined)?.account_id,
-              ),
-            ),
-            reason: asTrimmedString(
-              (containmentPayload[0] as { reason?: unknown } | undefined)?.reason,
-            ),
-          }
-        : {
-            active: true,
-            reason: 'account_publish_containment_unavailable',
-          };
+    const containmentRecord =
+      registry.value.containment &&
+      typeof registry.value.containment === 'object' &&
+      !Array.isArray(registry.value.containment)
+        ? (registry.value.containment as { active?: unknown; reason?: unknown })
+        : null;
+    const containment = {
+      active: Boolean(containmentRecord?.active),
+      reason: asTrimmedString(containmentRecord?.reason),
+    };
 
     return {
       ok: true,
@@ -184,34 +153,40 @@ export async function loadTemplateCatalog(
   berlinAccessToken: string,
 ): Promise<MichaelTemplateCatalogResult> {
   try {
-    const michaelAccess = await resolveMichaelAccessToken(berlinAccessToken);
-    if (!michaelAccess.ok) {
-      return michaelAccess;
-    }
-
-    const headers = createMichaelHeaders(michaelAccess.accessToken);
-    const rows = await fetchMichaelListRows<{
-      public_id?: unknown;
-      widget_type?: unknown;
-      meta?: unknown;
+    const registry = await fetchBerlinProductJson<{
+      instances?: unknown;
+      widgetTypes?: unknown;
     }>({
-      headers,
-      pathname:
-        '/rest/v1/curated_widget_instances?select=public_id,widget_type,meta&order=created_at.desc,public_id.desc',
+      accessToken: berlinAccessToken,
+      path: '/v1/templates/registry',
     });
-    if (!rows.ok) return rows;
+    if (!registry.ok) return registry;
 
     const widgetTypeSet = new Set<string>();
-    const instances = rows.rows
+    const registryWidgetTypes = Array.isArray(registry.value.widgetTypes)
+      ? registry.value.widgetTypes
+      : [];
+    for (const typeRaw of registryWidgetTypes) {
+      const type = asTrimmedString(typeRaw);
+      if (type && type !== 'unknown') widgetTypeSet.add(type.toLowerCase());
+    }
+    const rows = Array.isArray(registry.value.instances)
+      ? (registry.value.instances as Array<{
+          publicId?: unknown;
+          widgetType?: unknown;
+          displayName?: unknown;
+        }>)
+      : [];
+    const instances = rows
       .map((row) => {
-        const publicId = asTrimmedString(row.public_id);
+        const publicId = asTrimmedString(row.publicId);
         if (!publicId) return null;
-        const widgetType = asTrimmedString(row.widget_type) ?? 'unknown';
-        if (widgetType !== 'unknown') widgetTypeSet.add(widgetType);
+        const widgetType = asTrimmedString(row.widgetType) ?? 'unknown';
+        if (widgetType !== 'unknown') widgetTypeSet.add(widgetType.toLowerCase());
         return {
           publicId,
           widgetType,
-          displayName: formatCuratedDisplayName(row.meta, publicId),
+          displayName: asTrimmedString(row.displayName) ?? publicId,
         };
       })
       .filter((row): row is NonNullable<typeof row> => Boolean(row));

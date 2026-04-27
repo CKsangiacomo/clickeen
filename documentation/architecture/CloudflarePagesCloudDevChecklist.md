@@ -14,6 +14,8 @@ Rules:
 - Bob and Roma `wrangler.toml` files must stay within the Pages-supported schema. Worker-only blocks such as top-level `observability` or named environments like `local` are not valid Pages config.
 - Venice and Prague keep runtime vars in the Cloudflare Pages dashboard because they do not use app-local Wrangler config today.
 - DevStudio is local-only and is not part of the Cloudflare Pages `cloud-dev` contract.
+- GitHub runtime verification stays unauthenticated until a real provider-based test adapter exists; do not keep public password login for smoke coverage.
+- Authenticated cloud-dev smoke is manual Google login, Roma bootstrap, Builder open/save, Widgets/Templates read, locales, assets, and logout.
 
 ## Bob
 
@@ -147,7 +149,7 @@ Dashboard action:
 These values remain outside git by design. Keep the inventory true; do not store secret values in repo files.
 
 Worker secrets:
-- Berlin: `SUPABASE_SERVICE_ROLE_KEY`, `CK_INTERNAL_SERVICE_JWT`
+- Berlin: `SUPABASE_SERVICE_ROLE_KEY`
 - Tokyo-worker: `CK_INTERNAL_SERVICE_JWT`
 - San Francisco: `AI_GRANT_HMAC_SECRET`, `CK_INTERNAL_SERVICE_JWT`
 
@@ -160,8 +162,6 @@ CI secrets/vars:
 - `SUPABASE_ACCESS_TOKEN`
 - `SUPABASE_DB_PASSWORD_CLOUD_DEV`
 - `SUPABASE_PROJECT_REF_CLOUD_DEV`
-- `CLOUD_DEV_SMOKE_EMAIL`
-- `CLOUD_DEV_SMOKE_PASSWORD`
 
 Rules:
 - Bob and Roma host/base-URL vars belong in app-local `wrangler.toml`.

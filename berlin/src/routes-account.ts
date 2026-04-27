@@ -1,3 +1,4 @@
+import { can, resolvePolicy, type MemberRole, type PolicyProfile } from '@clickeen/ck-policy';
 import { claimAsString, internalError, json, validationError } from './helpers';
 import { handleAccountDelete as applyAccountDelete, handleOwnerTransfer as applyOwnerTransfer } from './account-governance';
 import {
@@ -7,6 +8,15 @@ import {
   handleInvitationAccept as applyInvitationAccept,
 } from './account-invitations';
 import {
+  createAccountInstanceRegistryRow,
+  deleteAccountInstanceRegistryRow,
+  getAccountInstanceRegistryRow,
+  listAccountInstanceRegistryPublicIds,
+  loadAccountPublishContainment,
+  loadAccountWidgetRegistry,
+  loadTemplateRegistry,
+} from './account-instance-registry';
+import {
   handleAccountMemberCreate,
   handleAccountMemberDelete,
   handleAccountMemberUpdate,
@@ -15,7 +25,7 @@ import {
   handleAccountTierDropDismiss as applyAccountTierDropDismiss,
 } from './account-lifecycle';
 import { handleAccountLocalesUpdate } from './account-locales';
-import { ensureSupabaseAccessToken, resolvePrincipalSession } from './auth-session';
+import { resolvePrincipalSession } from './auth-session';
 import {
   buildBootstrapPayload,
   findAccountContext,
@@ -28,7 +38,6 @@ import {
 } from './account-state';
 import { provisionOwnedAccount } from './account-reconcile';
 import { startUserContactVerification, verifyUserContactMethod, type UserContactChannel } from './contact-methods';
-import { requestSupabaseUpdateUserEmail } from './supabase-client';
 import { type Env } from './types';
 import { parseUserProfilePatchPayload, patchUserProfile } from './user-profiles';
 
@@ -52,14 +61,6 @@ function normalizeUuid(value: string): string | null {
   return normalized;
 }
 
-function normalizeEmail(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim().toLowerCase();
-  if (!normalized) return null;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) return null;
-  return normalized;
-}
-
 function parseAccountName(value: unknown): string | null {
   if (value == null) return 'New account';
   if (typeof value !== 'string') return null;
@@ -77,6 +78,22 @@ function normalizeContactChannel(value: string): UserContactChannel | null {
 
 function canDismissTierDropNotice(role: string): boolean {
   return role === 'owner' || role === 'admin';
+}
+
+function canMutateInstanceRegistry(account: { tier: PolicyProfile; role: MemberRole }, action: 'instance.create' | 'instance.update'): Response | null {
+  const policy = resolvePolicy({ profile: account.tier, role: account.role });
+  const decision = can(policy, action);
+  if (decision.allow) return null;
+  return json(
+    {
+      error: {
+        kind: 'DENY',
+        reasonKey: decision.reasonKey,
+        ...(decision.detail ? { detail: decision.detail } : {}),
+      },
+    },
+    { status: 403 },
+  );
 }
 
 async function resolvePrincipalState(request: Request, env: Env) {
@@ -137,62 +154,18 @@ export async function handleMeUpdate(request: Request, env: Env): Promise<Respon
   });
 }
 
-export async function handleMeEmailChange(request: Request, env: Env): Promise<Response> {
-  const resolved = await resolvePrincipalState(request, env);
+export async function handleMeEmailChange(_request: Request, env: Env): Promise<Response> {
+  const resolved = await resolvePrincipalState(_request, env);
   if (!resolved.ok) return resolved.response;
-
-  let payload: unknown = null;
-  try {
-    payload = await request.json();
-  } catch {
-    payload = null;
-  }
-
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return validationError('coreui.errors.payload.invalid');
-  }
-
-  const email = normalizeEmail((payload as { email?: unknown }).email);
-  if (!email) {
-    return validationError('coreui.errors.user.email.invalid', 'email must be a valid address');
-  }
-
-  if (email === resolved.state.profile.primaryEmail.trim().toLowerCase()) {
-    return validationError('coreui.errors.user.email.sameAsCurrent');
-  }
-
-  const ensured = await ensureSupabaseAccessToken(env, resolved.principal.session);
-  if (!ensured.ok) return ensured.response;
-
-  const changed = await requestSupabaseUpdateUserEmail(env, ensured.accessToken, email);
-  if (!changed.ok) {
-    const reasonKey =
-      changed.reason === 'berlin.errors.auth.config_missing'
-        ? 'coreui.errors.auth.contextUnavailable'
-        : changed.reason;
-    if (changed.status === 401) {
-      return json({ error: { kind: 'AUTH', reasonKey, ...(changed.detail ? { detail: changed.detail } : {}) } }, { status: 401 });
-    }
-    if (changed.status === 409) {
-      return json(
-        { error: { kind: 'CONFLICT', reasonKey, ...(changed.detail ? { detail: changed.detail } : {}) } },
-        { status: 409 },
-      );
-    }
-    if (changed.status === 422) {
-      return validationError(reasonKey, changed.detail);
-    }
-    return internalError(reasonKey, changed.detail);
-  }
-
   return json(
     {
-      ok: true,
-      currentEmail: resolved.state.profile.primaryEmail,
-      requestedEmail: email,
-      status: 'confirmation_required',
+      error: {
+        kind: 'UNSUPPORTED',
+        reasonKey: 'coreui.errors.user.email.providerManaged',
+        detail: 'provider_managed_email',
+      },
     },
-    { status: 202 },
+    { status: 409 },
   );
 }
 
@@ -477,6 +450,158 @@ export async function handleAccountLocales(
     env,
     account,
   });
+}
+
+export async function handleAccountWidgetRegistry(
+  request: Request,
+  env: Env,
+  accountIdRaw: string,
+): Promise<Response> {
+  const accountId = normalizeUuid(accountIdRaw);
+  if (!accountId) return validationError('coreui.errors.accountId.invalid');
+
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
+
+  const account = findAccountContext(resolved.state, accountId);
+  if (!account) return denyResponse();
+
+  const registry = await loadAccountWidgetRegistry({ env, account });
+  if (!registry.ok) return registry.response;
+
+  return json({
+    accountId,
+    ...registry.value,
+  });
+}
+
+export async function handleTemplateRegistry(request: Request, env: Env): Promise<Response> {
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
+
+  const registry = await loadTemplateRegistry(env);
+  if (!registry.ok) return registry.response;
+
+  return json(registry.value);
+}
+
+export async function handleAccountPublishContainmentRegistry(
+  request: Request,
+  env: Env,
+  accountIdRaw: string,
+): Promise<Response> {
+  const accountId = normalizeUuid(accountIdRaw);
+  if (!accountId) return validationError('coreui.errors.accountId.invalid');
+
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
+
+  const account = findAccountContext(resolved.state, accountId);
+  if (!account) return denyResponse();
+
+  const containment = await loadAccountPublishContainment({ env, account });
+  if (!containment.ok) return containment.response;
+
+  return json({ accountId, containment: containment.value });
+}
+
+export async function handleAccountInstancePublicIdsRegistry(
+  request: Request,
+  env: Env,
+  accountIdRaw: string,
+): Promise<Response> {
+  const accountId = normalizeUuid(accountIdRaw);
+  if (!accountId) return validationError('coreui.errors.accountId.invalid');
+
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
+
+  const account = findAccountContext(resolved.state, accountId);
+  if (!account) return denyResponse();
+
+  const publicIds = await listAccountInstanceRegistryPublicIds({ env, account });
+  if (!publicIds.ok) return publicIds.response;
+
+  return json({ accountId, publicIds: publicIds.value });
+}
+
+export async function handleAccountInstanceRegistryCreate(
+  request: Request,
+  env: Env,
+  accountIdRaw: string,
+): Promise<Response> {
+  const accountId = normalizeUuid(accountIdRaw);
+  if (!accountId) return validationError('coreui.errors.accountId.invalid');
+
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
+
+  const account = findAccountContext(resolved.state, accountId);
+  if (!account) return denyResponse();
+
+  const deny = canMutateInstanceRegistry(account, 'instance.create');
+  if (deny) return deny;
+
+  let payload: unknown = null;
+  try {
+    payload = await request.json();
+  } catch {
+    payload = null;
+  }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return validationError('coreui.errors.payload.invalid');
+  }
+
+  const publicId = claimAsString((payload as { publicId?: unknown }).publicId);
+  const widgetType = claimAsString((payload as { widgetType?: unknown }).widgetType);
+  if (!publicId || !widgetType) return validationError('coreui.errors.payload.invalid');
+
+  const created = await createAccountInstanceRegistryRow({
+    env,
+    account,
+    publicId,
+    widgetType,
+    displayName: claimAsString((payload as { displayName?: unknown }).displayName),
+  });
+  if (!created.ok) return created.response;
+
+  return json({ row: created.value });
+}
+
+export async function handleAccountInstanceRegistryByPublicId(
+  request: Request,
+  env: Env,
+  accountIdRaw: string,
+  publicIdRaw: string,
+): Promise<Response> {
+  const accountId = normalizeUuid(accountIdRaw);
+  if (!accountId) return validationError('coreui.errors.accountId.invalid');
+
+  const publicId = claimAsString(publicIdRaw);
+  if (!publicId) return validationError('coreui.errors.payload.invalid', 'publicId required');
+
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved.response;
+
+  const account = findAccountContext(resolved.state, accountId);
+  if (!account) return denyResponse();
+
+  if (request.method === 'GET') {
+    const row = await getAccountInstanceRegistryRow({ env, account, publicId });
+    if (!row.ok) return row.response;
+    return json({ row: row.value });
+  }
+
+  if (request.method === 'DELETE') {
+    const deny = canMutateInstanceRegistry(account, 'instance.update');
+    if (deny) return deny;
+
+    const deleted = await deleteAccountInstanceRegistryRow({ env, account, publicId });
+    if (!deleted.ok) return deleted.response;
+    return json({ ok: true });
+  }
+
+  return validationError('coreui.errors.payload.invalid');
 }
 
 export async function handleAccountMemberById(

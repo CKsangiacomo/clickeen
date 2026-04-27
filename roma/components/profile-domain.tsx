@@ -68,10 +68,6 @@ const USER_SETTINGS_REASON_COPY: Record<string, string> = {
   'coreui.errors.db.writeFailed': 'Saving your settings failed. Please try again.',
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
   'coreui.errors.payload.invalid': 'The settings request was invalid. Please try again.',
-  'coreui.errors.user.email.invalid': 'Enter a valid email address to continue.',
-  'coreui.errors.user.email.sameAsCurrent': 'Enter a different email address to change your sign-in email.',
-  'coreui.errors.user.email.conflict': 'That email address is already in use.',
-  'coreui.errors.user.email.changeFailed': 'Changing your email failed. Please try again.',
   'coreui.errors.user.contact.invalid': 'Enter a valid contact number including country code.',
   'coreui.errors.user.contact.unavailable': 'Verification is unavailable right now.',
   'coreui.errors.user.contact.challengeMissing': 'Request a new verification code to continue.',
@@ -160,13 +156,9 @@ export function ProfileDomain() {
 
   const [draft, setDraft] = useState<ProfileDraft>(toDraft(profile));
   const [contactDrafts, setContactDrafts] = useState<ContactDrafts>(toContactDrafts(profile));
-  const [nextEmail, setNextEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
-  const [emailSaving, setEmailSaving] = useState(false);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [emailNotice, setEmailNotice] = useState<string | null>(null);
   const [contactSavingChannel, setContactSavingChannel] = useState<UserContactChannel | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
   const [contactNotice, setContactNotice] = useState<string | null>(null);
@@ -228,43 +220,6 @@ export function ProfileDomain() {
       setSaving(false);
     }
   }, [draft, profile, reload]);
-
-  const requestEmailChange = useCallback(async () => {
-    if (!profile) return;
-    setEmailSaving(true);
-    setEmailError(null);
-    setEmailNotice(null);
-
-    try {
-      const response = await fetch('/api/me/email-change', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email: nextEmail }),
-      });
-      const payload = (await response.json().catch(() => null)) as {
-        currentEmail?: string;
-        requestedEmail?: string;
-        status?: string;
-        error?: unknown;
-      } | null;
-      if (!response.ok) {
-        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
-      }
-
-      const requestedEmail = String(payload?.requestedEmail || '').trim();
-      setNextEmail('');
-      setEmailNotice(
-        requestedEmail
-          ? `Confirmation sent. Check ${profile.primaryEmail} and ${requestedEmail} to finish the email change.`
-          : 'Confirmation sent. Check your email to finish the email change.',
-      );
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      setEmailError(resolveUserSettingsErrorCopy(reason, 'Changing your email failed. Please try again.'));
-    } finally {
-      setEmailSaving(false);
-    }
-  }, [nextEmail, profile]);
 
   const startContactVerification = useCallback(
     async (channel: UserContactChannel) => {
@@ -472,34 +427,6 @@ export function ProfileDomain() {
         <h2 className="heading-6">Email</h2>
         <p className="body-s">Primary email: {profile.primaryEmail}</p>
         <p className="body-s">Email verified: {profile.emailVerified ? 'yes' : 'no'}</p>
-        <p className="body-s" style={{ marginTop: '8px' }}>
-          Changing your email is an account-security flow. The new email does not become primary until confirmation is completed.
-        </p>
-        <div className="roma-form-grid" style={{ marginTop: '12px' }}>
-          <label className="roma-field">
-            <span className="label-s">New email</span>
-            <input
-              className="roma-input body-m"
-              type="email"
-              inputMode="email"
-              value={nextEmail}
-              onChange={(event) => setNextEmail(event.target.value)}
-              disabled={emailSaving}
-            />
-          </label>
-        </div>
-        <div className="roma-inline-stack" style={{ justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="solid"
-            type="button"
-            onClick={() => void requestEmailChange()}
-            disabled={emailSaving || !nextEmail.trim()}
-          >
-            <span className="diet-btn-txt__label body-m">{emailSaving ? 'Sending...' : 'Change email'}</span>
-          </button>
-        </div>
       </section>
 
       <section className="rd-canvas-module">
@@ -591,18 +518,6 @@ export function ProfileDomain() {
       {saveNotice ? (
         <section className="rd-canvas-module">
           <p className="body-m">{saveNotice}</p>
-        </section>
-      ) : null}
-
-      {emailError ? (
-        <section className="rd-canvas-module">
-          <p className="body-m">{emailError}</p>
-        </section>
-      ) : null}
-
-      {emailNotice ? (
-        <section className="rd-canvas-module">
-          <p className="body-m">{emailNotice}</p>
         </section>
       ) : null}
 

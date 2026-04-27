@@ -1,6 +1,5 @@
 export type Env = {
   SUPABASE_URL?: string;
-  SUPABASE_ANON_KEY?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   ENV_STAGE?: string;
   BERLIN_ISSUER?: string;
@@ -39,44 +38,6 @@ export type AccessClaims = Record<string, unknown> & {
   aud?: string | string[];
 };
 
-export type SupabaseIdentity = {
-  id?: string;
-  identity_id?: string;
-  provider?: string;
-  identity_data?: Record<string, unknown> & {
-    sub?: string;
-  };
-};
-
-export type SupabaseUser = {
-  id?: string;
-  email?: string;
-  role?: string;
-  email_confirmed_at?: string | null;
-  user_metadata?: Record<string, unknown> | null;
-  app_metadata?: Record<string, unknown> | null;
-  identities?: SupabaseIdentity[];
-};
-
-export type SupabaseTokenResponse = {
-  access_token?: string;
-  refresh_token?: string;
-  expires_in?: number;
-  user?: SupabaseUser;
-};
-
-export type SupabaseUserResponse = SupabaseUser;
-
-export type RefreshPayloadV1 = {
-  v: 1;
-  sid: string;
-  rti: string;
-  ver: number;
-  userId: string;
-  supabaseRefreshToken: string;
-  exp: number;
-};
-
 export type RefreshPayloadV2 = {
   v: 2;
   sid: string;
@@ -86,22 +47,27 @@ export type RefreshPayloadV2 = {
   exp: number;
 };
 
-export type RefreshPayload = RefreshPayloadV1 | RefreshPayloadV2;
+export type RefreshPayload = RefreshPayloadV2;
 
-export type SessionState = {
+export type AuthMode = 'direct_provider';
+
+type BaseSessionState = {
   sid: string;
   currentRti: string;
   rtiRotatedAt: number;
   userId: string;
   ver: number;
   revoked: boolean;
-  supabaseRefreshToken?: string;
-  supabaseSubject?: string;
-  supabaseAccessToken?: string;
-  supabaseAccessExp?: number;
+  authMode: AuthMode;
   createdAt: number;
   updatedAt: number;
 };
+
+export type DirectProviderSessionState = BaseSessionState & {
+  authMode: 'direct_provider';
+};
+
+export type SessionState = DirectProviderSessionState;
 
 export type OAuthTransaction = {
   v: 1;
@@ -139,10 +105,7 @@ export type SessionIssueArgs = {
   sid?: string;
   ver?: number;
   userId: string;
-  supabaseRefreshToken?: string | null;
-  supabaseSubject?: string | null;
-  supabaseAccessToken?: string | null;
-  supabaseAccessExp?: number | null;
+  authMode: 'direct_provider';
 };
 
 export type SessionIssueResult = {

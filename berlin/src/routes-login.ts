@@ -1,10 +1,8 @@
 import { authError, claimAsString, conflictError, json, redirect, validationError } from './helpers';
 import { readJsonBody } from './auth-request';
 import {
-  normalizeEmail,
   normalizeIntent,
   normalizeNextPath,
-  normalizePassword,
   normalizeProvider,
   parseAllowedProviders,
   resolveFinishRedirectUrl,
@@ -22,11 +20,10 @@ import {
   saveOauthFinishTransaction,
   saveOauthTransaction,
 } from './auth-tickets';
-import { issueSession, resolveSupabaseAccessExp, resolveUserIdFromSupabaseResponse } from './auth-session';
-import { requestSupabasePasswordGrant, requestSupabaseUser } from './supabase-client';
-import { OAUTH_FINISH_TTL_SECONDS, OAUTH_STATE_TTL_SECONDS, type Env, type OAuthFinishTransaction, type OAuthTransaction, type SupabaseTokenResponse } from './types';
+import { issueSession } from './auth-session';
+import { OAUTH_FINISH_TTL_SECONDS, OAUTH_STATE_TTL_SECONDS, type Env, type OAuthFinishTransaction, type OAuthTransaction } from './types';
 import { loadSessionState } from './session-kv';
-import { ensureProductAccountState, ensureProductAccountStateForIdentity, type ProviderIdentity } from './account-reconcile';
+import { ensureProductAccountStateForIdentity, type ProviderIdentity } from './account-reconcile';
 import { buildGoogleAuthorizeUrl, exchangeGoogleCallback } from './provider-google';
 
 type AuthLogLevel = 'info' | 'warn' | 'error';
@@ -67,54 +64,6 @@ function logAuthFlow(
   console.info(serialized);
 }
 
-async function issueProductSessionFromGrant(
-  env: Env,
-  payload: SupabaseTokenResponse,
-  failureReasonKey: string,
-  options: { invitationId?: string | null } = {},
-): Promise<{ ok: true; session: Awaited<ReturnType<typeof issueSession>>; userId: string } | { ok: false; response: Response }> {
-  try {
-    const nowSec = Math.floor(Date.now() / 1000);
-    const supabaseAccessToken = claimAsString(payload.access_token);
-    const supabaseRefreshToken = claimAsString(payload.refresh_token);
-    const userId = resolveUserIdFromSupabaseResponse(payload);
-    if (!supabaseAccessToken || !supabaseRefreshToken || !userId) {
-      return { ok: false, response: authError(failureReasonKey, 502, 'missing_supabase_grant_payload') };
-    }
-
-    const userRes = await requestSupabaseUser(env, supabaseAccessToken);
-    if (!userRes.ok) {
-      return { ok: false, response: authError(failureReasonKey, userRes.status, userRes.detail || 'supabase_user_unavailable') };
-    }
-
-    const reconciled = await ensureProductAccountState(env, userRes.user, options);
-    if (!reconciled.ok) {
-      return { ok: false, response: reconciled.response };
-    }
-
-    const session = await issueSession(env, {
-      userId: reconciled.userId,
-      supabaseRefreshToken,
-      supabaseSubject: userId,
-      supabaseAccessToken,
-      supabaseAccessExp: resolveSupabaseAccessExp(nowSec, payload),
-    });
-
-    return { ok: true, session, userId: reconciled.userId };
-  } catch (error) {
-    console.error(
-      JSON.stringify({
-        event: 'auth.session.issue.unexpected',
-        service: 'berlin',
-        component: 'auth',
-        reasonKey: failureReasonKey,
-        errorDetail: error instanceof Error ? error.message : String(error),
-      }),
-    );
-    return { ok: false, response: authError(failureReasonKey, 500, 'account_reconcile_failed') };
-  }
-}
-
 async function issueProductSessionFromProviderIdentity(
   env: Env,
   identity: ProviderIdentity,
@@ -129,6 +78,7 @@ async function issueProductSessionFromProviderIdentity(
 
     const session = await issueSession(env, {
       userId: reconciled.userId,
+      authMode: 'direct_provider',
     });
 
     return { ok: true, session, userId: reconciled.userId };
@@ -150,32 +100,6 @@ function resolveInvitationIdFromNextPath(nextPath: string | null): string | null
   const normalized = String(nextPath || '').trim();
   const match = normalized.match(INVITE_NEXT_PATTERN);
   return match?.[1] || null;
-}
-
-export async function handlePasswordLogin(request: Request, env: Env): Promise<Response> {
-  const body = await readJsonBody(request);
-  const email = normalizeEmail(body?.email);
-  const password = normalizePassword(body?.password);
-  if (!email || !password) {
-    return validationError('coreui.errors.auth.invalid_credentials');
-  }
-
-  const grant = await requestSupabasePasswordGrant(env, email, password);
-  if (!grant.ok) return authError(grant.reason, grant.status, grant.detail);
-  const issued = await issueProductSessionFromGrant(env, grant.payload, 'coreui.errors.auth.login_failed');
-  if (!issued.ok) return issued.response;
-  const { session, userId } = issued;
-
-  return json({
-    ok: true,
-    sessionId: session.sid,
-    userId,
-    accessToken: session.accessToken,
-    refreshToken: session.refreshToken,
-    accessTokenMaxAge: session.accessTokenMaxAge,
-    refreshTokenMaxAge: session.refreshTokenMaxAge,
-    expiresAt: session.expiresAt,
-  });
 }
 
 function buildProviderAuthorizeUrl(
