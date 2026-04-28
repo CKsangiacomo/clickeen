@@ -11,19 +11,16 @@ export type TranslationItem = {
   promptType?: AllowlistEntry['type'];
 };
 
-type RichtextTagPlaceholder = { placeholder: string; tag: string };
-export type RichtextMaskPlan = {
-  path: string;
-  source: string;
-  masked: string;
-  tags: RichtextTagPlaceholder[];
-};
 type RichtextSegmentPart =
   | { kind: 'tag'; value: string }
   | { kind: 'text'; value: string; segmentPath: string | null };
-type RichtextSegmentPlan = {
+export type RichtextSegmentPlan = {
   parts: RichtextSegmentPart[];
   segments: TranslationItem[];
+};
+export type StructuredTranslationPlan = {
+  modelEntries: TranslationItem[];
+  richtextPlansByPath: Map<string, RichtextSegmentPlan>;
 };
 type RichtextAnchorSignature = {
   href: string | null;
@@ -82,8 +79,7 @@ export function buildSystemPrompt(args: {
     '- Keep the same item count and order as input.',
     '- Preserve paths exactly.',
     '- Preserve URLs, emails, brand names, and placeholders (e.g. {token}, {{token}}, :token).',
-    '- For richtext values, preserve existing HTML tags and attributes; do not add new tags.',
-    '- For richtext links, keep every meaningful linked phrase as linked text in output (do not move link text outside <a> tags).',
+    '- For richtext values, translate only the provided visible text. Do not add HTML tags.',
     '- Write in natural, native product/UI copy for the target locale (not literal translation).',
     '- If literal wording sounds awkward, rewrite idiomatically while preserving intent.',
     '- Prefer concise, fluent phrasing that reads as originally written in the locale.',
@@ -94,7 +90,7 @@ export function buildSystemPrompt(args: {
       ? '- For string fields, write concise UI/product copy suitable for labels, headings, questions, and CTAs.'
       : null,
     hasRichtextItems
-      ? '- For richtext fields, write fluent longer-form copy while preserving the existing HTML structure.'
+      ? '- For richtext fields, write fluent longer-form copy for the provided text segments.'
       : null,
   ]
     .filter((line): line is string => Boolean(line))
@@ -288,43 +284,6 @@ function extractTagTokens(value: string): string[] {
     .filter((token): token is string => Boolean(token));
 }
 
-export function buildRichtextMaskPlan(entry: TranslationItem): RichtextMaskPlan | null {
-  if (entry.type !== 'richtext') return null;
-  let index = 0;
-  const tags: RichtextTagPlaceholder[] = [];
-  const masked = entry.value.replace(HTML_TAG_PATTERN, (tag) => {
-    const placeholder = `{{__CK_L10N_TAG_${index}__}}`;
-    index += 1;
-    tags.push({ placeholder, tag });
-    return placeholder;
-  });
-  if (!tags.length) return null;
-  return {
-    path: entry.path,
-    source: entry.value,
-    masked,
-    tags,
-  };
-}
-
-export function normalizeMaskedTagPlaceholders(value: string, tags: RichtextTagPlaceholder[]): string {
-  let normalized = value;
-  tags.forEach(({ placeholder }) => {
-    const inner = placeholder.slice(2, -2);
-    const pattern = new RegExp(`\\{\\{\\s*${escapeRegExp(inner)}\\s*\\}\\}`, 'g');
-    normalized = normalized.replace(pattern, placeholder);
-  });
-  return normalized;
-}
-
-export function restoreMaskedRichtextTags(value: string, tags: RichtextTagPlaceholder[]): string {
-  let restored = value;
-  tags.forEach(({ placeholder, tag }) => {
-    restored = restored.split(placeholder).join(tag);
-  });
-  return restored;
-}
-
 function buildRichtextSegmentPlan(entry: TranslationItem): RichtextSegmentPlan {
   const parts: RichtextSegmentPart[] = [];
   const segments: TranslationItem[] = [];
@@ -374,6 +333,7 @@ function buildRichtextSegmentPlan(entry: TranslationItem): RichtextSegmentPlan {
 function rebuildRichtextFromSegments(
   plan: RichtextSegmentPlan,
   translatedSegments: Map<string, string>,
+  provider = 'deepseek',
 ): string {
   return plan.parts
     .map((part) => {
@@ -383,13 +343,66 @@ function rebuildRichtextFromSegments(
       if (typeof translated !== 'string') {
         throw new HttpError(502, {
           code: 'PROVIDER_ERROR',
-          provider: 'deepseek',
+          provider,
           message: `Missing translated richtext segment: ${part.segmentPath}`,
         });
       }
       return translated;
     })
     .join('');
+}
+
+export function buildStructuredTranslationPlan(entries: TranslationItem[]): StructuredTranslationPlan {
+  const modelEntries: TranslationItem[] = [];
+  const richtextPlansByPath = new Map<string, RichtextSegmentPlan>();
+
+  entries.forEach((entry) => {
+    if (entry.type !== 'richtext') {
+      modelEntries.push(entry);
+      return;
+    }
+
+    const plan = buildRichtextSegmentPlan(entry);
+    if (!plan.segments.length) return;
+    richtextPlansByPath.set(entry.path, plan);
+    modelEntries.push(...plan.segments);
+  });
+
+  return { modelEntries, richtextPlansByPath };
+}
+
+export function restoreStructuredTranslationResults(args: {
+  entries: TranslationItem[];
+  plan: StructuredTranslationPlan;
+  translatedItems: Array<{ path: string; value: string }>;
+  provider?: string;
+}): Array<{ path: string; value: string }> {
+  const provider = args.provider || 'deepseek';
+  const translatedByPath = new Map(args.translatedItems.map((item) => [item.path, item.value]));
+
+  return args.entries
+    .map((entry) => {
+      if (entry.type !== 'richtext') {
+        const translated = translatedByPath.get(entry.path);
+        if (typeof translated !== 'string') {
+          throw new HttpError(502, {
+            code: 'PROVIDER_ERROR',
+            provider,
+            message: `Missing translated value for path: ${entry.path}`,
+          });
+        }
+        const normalized = normalizeBracePlaceholderSpacing(entry.value, translated);
+        assertTranslationSafety(entry, normalized, provider);
+        return { path: entry.path, value: normalized };
+      }
+
+      const richtextPlan = args.plan.richtextPlansByPath.get(entry.path);
+      if (!richtextPlan) return null;
+      const restored = rebuildRichtextFromSegments(richtextPlan, translatedByPath, provider);
+      assertTranslationSafety(entry, restored, provider);
+      return { path: entry.path, value: restored };
+    })
+    .filter((item): item is { path: string; value: string } => Boolean(item));
 }
 
 function assertPlaceholderParity(args: {
@@ -660,48 +673,4 @@ export function parseTranslationResult(
     assertTranslationSafety(item, normalizedValue, provider);
     return { path: item.path, value: normalizedValue };
   });
-}
-
-export async function translateRichtextWithSegmentFallback(args: {
-  env: Env;
-  grant: AIGrant;
-  agentId: string;
-  locale: string;
-  widgetType?: string | null;
-  expected: TranslationItem;
-}): Promise<{ value: string; usage?: Usage }> {
-  const plan = buildRichtextSegmentPlan(args.expected);
-  if (plan.segments.length === 0) {
-    return { value: args.expected.value };
-  }
-  const system = buildSystemPrompt({ locale: args.locale, widgetType: args.widgetType, items: plan.segments });
-  const batches = chunkTranslationEntries(plan.segments);
-  const translatedSegments = new Map<string, string>();
-  let usage: Usage | undefined;
-
-  for (const batch of batches) {
-    const user = buildUserPrompt(batch);
-    const result = await executeTranslationModel({
-      env: args.env,
-      grant: args.grant,
-      agentId: args.agentId,
-      system,
-      user,
-    });
-    usage = mergeUsage(usage, result.usage);
-    const translated = parseTranslationResult(
-      result.content,
-      batch,
-      result.usage.provider || 'deepseek',
-    );
-    translated.forEach((item) => translatedSegments.set(item.path, item.value));
-  }
-
-  const restored = rebuildRichtextFromSegments(plan, translatedSegments);
-  assertTranslationSafety(
-    args.expected,
-    restored,
-    usage?.provider || 'deepseek',
-  );
-  return { value: restored, usage };
 }

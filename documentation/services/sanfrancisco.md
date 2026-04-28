@@ -77,7 +77,7 @@ Health contract:
 - Incremental generation translates only changed current item paths when possible and preserves existing ops for unchanged current paths.
 - Returns set-only locale ops to Tokyo-worker.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
-- Richtext safety validation enforces placeholder parity, HTML tag parity, and anchor integrity (text-bearing link + href parity); failed richtext parity falls back to segment translation.
+- Richtext translation uses one structured path: San Francisco extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.
 - l10n translation calls go through the shared policy router via `callChatCompletion` (same budget enforcement + provider allowlist).
 - Cost budgets (`maxCostUsd`) use the `AI_PRICE_TABLE_JSON` env var; a default deepseek price table is provided when unset.
 

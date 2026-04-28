@@ -15,9 +15,8 @@ import type { AIGrant, Env, Usage } from './types';
 import {
   MAX_TOTAL_INPUT_CHARS,
   MAX_TOTAL_ITEMS,
-  assertTranslationSafety,
-  buildRichtextMaskPlan,
   buildSystemPrompt,
+  buildStructuredTranslationPlan,
   buildUserPrompt,
   chunkTranslationEntries,
   executeTranslationModel,
@@ -25,11 +24,8 @@ import {
   expandPathPatterns,
   isLikelyNonTranslatableLiteral,
   mergeUsage,
-  normalizeMaskedTagPlaceholders,
   parseTranslationResult,
-  restoreMaskedRichtextTags,
-  translateRichtextWithSegmentFallback,
-  type RichtextMaskPlan,
+  restoreStructuredTranslationResults,
   type TranslationItem,
 } from './agents/l10nTranslationCore';
 
@@ -238,7 +234,6 @@ export async function generateAccountWidgetLocaleOps(args: {
     : expandedChangedPaths;
 
   const translateEntries: TranslationItem[] = [];
-  const richtextMaskPlans = new Map<string, RichtextMaskPlan>();
   const directOps: LocalizationOp[] = [];
 
   targetPaths.forEach((path) => {
@@ -255,25 +250,20 @@ export async function generateAccountWidgetLocaleOps(args: {
       directOps.push({ op: 'set', path: entry.path, value: entry.value });
       return;
     }
-    if (entry.type === 'richtext') {
-      const maskPlan = buildRichtextMaskPlan(entry);
-      if (maskPlan) {
-        richtextMaskPlans.set(entry.path, maskPlan);
-        translateEntries.push({ path: entry.path, type: 'string', value: maskPlan.masked });
-        return;
-      }
-    }
     translateEntries.push(entry);
   });
 
-  if (translateEntries.length > MAX_TOTAL_ITEMS) {
+  const structuredPlan = buildStructuredTranslationPlan(translateEntries);
+  const modelEntries = structuredPlan.modelEntries;
+
+  if (modelEntries.length > MAX_TOTAL_ITEMS) {
     throw new HttpError(400, {
       code: 'BAD_REQUEST',
-      message: `Too many translatable items (${translateEntries.length})`,
+      message: `Too many translatable items (${modelEntries.length})`,
     });
   }
 
-  const totalChars = translateEntries.reduce((sum, item) => sum + item.value.length, 0);
+  const totalChars = modelEntries.reduce((sum, item) => sum + item.value.length, 0);
   if (totalChars > MAX_TOTAL_INPUT_CHARS) {
     throw new HttpError(400, {
       code: 'BAD_REQUEST',
@@ -284,13 +274,15 @@ export async function generateAccountWidgetLocaleOps(args: {
   const translatedOps: LocalizationOp[] = [];
   let usage: Usage | undefined;
 
-  if (translateEntries.length > 0) {
+  if (modelEntries.length > 0) {
     const system = buildSystemPrompt({
       locale: args.locale,
       widgetType: args.widgetType,
-      items: translateEntries,
+      items: modelEntries,
     });
-    const batches = chunkTranslationEntries(translateEntries);
+    const batches = chunkTranslationEntries(modelEntries);
+    const translatedItems: Array<{ path: string; value: string }> = [];
+    let provider = 'deepseek';
 
     for (const batch of batches) {
       const user = buildUserPrompt(batch);
@@ -302,41 +294,24 @@ export async function generateAccountWidgetLocaleOps(args: {
         user,
       });
       usage = mergeUsage(usage, result.usage);
+      provider = result.usage.provider || provider;
       const translated = parseTranslationResult(
         result.content,
         batch,
         result.usage.provider || 'deepseek',
       );
-
-      for (const item of translated) {
-        const maskPlan = richtextMaskPlans.get(item.path);
-        if (!maskPlan) {
-          translatedOps.push({ op: 'set', path: item.path, value: item.value });
-          continue;
-        }
-
-        const normalizedMasked = normalizeMaskedTagPlaceholders(item.value, maskPlan.tags);
-        const restored = restoreMaskedRichtextTags(normalizedMasked, maskPlan.tags);
-        const expected = entryMap.get(item.path);
-        if (!expected) continue;
-
-        try {
-          assertTranslationSafety(expected, restored, result.usage.provider || 'deepseek');
-          translatedOps.push({ op: 'set', path: item.path, value: restored });
-        } catch {
-          const fallback = await translateRichtextWithSegmentFallback({
-            env: args.env,
-            grant: args.grant,
-            agentId: 'l10n.instance.v1',
-            locale: args.locale,
-            widgetType: args.widgetType,
-            expected,
-          });
-          if (fallback.usage) usage = mergeUsage(usage, fallback.usage);
-          translatedOps.push({ op: 'set', path: item.path, value: fallback.value });
-        }
-      }
+      translatedItems.push(...translated);
     }
+
+    const restoredItems = restoreStructuredTranslationResults({
+      entries: translateEntries,
+      plan: structuredPlan,
+      translatedItems,
+      provider,
+    });
+    restoredItems.forEach((item) => {
+      translatedOps.push({ op: 'set', path: item.path, value: item.value });
+    });
   }
 
   const merged = new Map<string, string>();

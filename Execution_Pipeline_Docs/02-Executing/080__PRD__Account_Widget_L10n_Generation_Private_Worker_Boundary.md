@@ -343,7 +343,7 @@ Rules:
 
 - The method accepts only approved items.
 - The method returns locale results.
-- The method uses existing translation core and richtext safety.
+- The method uses one structured richtext translation path: extract visible text segments, translate strings only, rebuild original HTML, then validate.
 - The method does not touch Tokyo storage.
 - The method is not mounted in San Francisco public fetch routing.
 - Prefer the smallest Cloudflare service-binding implementation. Typed RPC is optional, not required.
