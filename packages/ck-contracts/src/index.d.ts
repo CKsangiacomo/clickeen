@@ -3,20 +3,20 @@ export declare const WIDGET_PUBLIC_ID_CURATED_RE: RegExp;
 export declare const WIDGET_PUBLIC_ID_USER_RE: RegExp;
 export declare const WIDGET_PUBLIC_ID_RE: RegExp;
 export declare const UUID_RE: RegExp;
-export declare const ASSET_VERSION_PATH_RE: RegExp;
+export declare const ACCOUNT_ASSET_PATH_RE: RegExp;
 
 export declare const WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN: string;
-export declare const ASSET_VERSION_PATH_PATTERN: string;
+export declare const ACCOUNT_ASSET_PATH_PATTERN: string;
 
 export type WidgetPublicIdKind = 'main' | 'curated' | 'user';
-export type AssetRefKind = 'version';
+export type AssetRefKind = 'account';
 export type AssetRef = {
   accountId: string;
   assetId: string;
   kind: AssetRefKind;
+  filename: string;
+  key: string;
   pathname: string;
-  versionToken: string;
-  versionKey: string;
 };
 
 export type ResolvedAssetMaterialization = {
@@ -120,10 +120,11 @@ export declare function isUserWidgetPublicId(raw: unknown): boolean;
 export declare function isUuid(raw: unknown): boolean;
 export declare function normalizeAccountAssetRecord(raw: unknown): AccountAssetRecord | null;
 export declare function normalizeResolvedAccountAsset(raw: unknown): ResolvedAccountAsset | null;
-export declare function parseCanonicalAssetRef(raw: unknown): AssetRef | null;
-export declare function isCanonicalAssetVersionRef(raw: unknown): boolean;
-export declare function isCanonicalAssetRef(raw: unknown): boolean;
-export declare function toCanonicalAssetVersionPath(versionKey: unknown): string | null;
+export declare function parseAccountAssetRef(raw: unknown): AssetRef | null;
+export declare function parseAccountAssetBlobKey(raw: unknown): AssetRef | null;
+export declare function isAccountAssetRef(raw: unknown): boolean;
+export declare function isAccountAssetBlobKey(raw: unknown): boolean;
+export declare function toAccountAssetPublicPath(assetKey: unknown): string | null;
 export declare function parseAccountLocaleListStrict(value: unknown): string[];
 export declare function parseAccountL10nPolicyStrict(raw: unknown): AccountL10nPolicy;
 export declare function normalizeLocalizationOps(raw: unknown): LocalizationOp[];

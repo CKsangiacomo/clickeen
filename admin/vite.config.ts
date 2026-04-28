@@ -363,11 +363,11 @@ export default defineConfig({
               const isLegacyPath = (candidate: string): boolean => {
                 const trimmed = String(candidate || '').trim();
                 if (!trimmed) return false;
-                if (/^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(trimmed))
+                if (/^\/(?:workspace-assets|curated-assets|assets\/accounts|assets\/v)\//i.test(trimmed))
                   return true;
                 if (!/^https?:\/\//i.test(trimmed)) return false;
                 try {
-                  return /^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(
+                  return /^\/(?:workspace-assets|curated-assets|assets\/accounts|assets\/v)\//i.test(
                     new URL(trimmed).pathname,
                   );
                 } catch {
@@ -393,7 +393,7 @@ export default defineConfig({
                   issues.push({
                     path: nodePath,
                     message:
-                      'legacy Tokyo asset URL found. Use canonical /assets/v/{token} URLs only.',
+                      'legacy Tokyo asset URL found. Use canonical /assets/account/{accountId}/{assetId}/{filename} URLs only.',
                   });
                 }
                 return;

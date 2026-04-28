@@ -9,9 +9,9 @@ export const WIDGET_PUBLIC_ID_RE =
 
 export const WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN = '^wgt_(curated|main)_[a-z0-9][a-z0-9_-]*$';
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-export const ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
-export const ASSET_VERSION_PATH_PATTERN = '^/assets/v/([^/?#]+)$';
-const ASSET_VERSION_KEY_RE = /^accounts\/([^/]+)\/assets\/versions\/([^/]+)\/[a-f0-9]{64}\/[^/]+$/i;
+export const ACCOUNT_ASSET_PATH_RE = /^\/assets\/account\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)$/;
+export const ACCOUNT_ASSET_PATH_PATTERN = '^/assets/account/([^/?#]+)/([^/?#]+)/([^/?#]+)$';
+const ACCOUNT_ASSET_KEY_RE = /^accounts\/([^/]+)\/assets\/([^/]+)\/blob\/([^/]+)$/i;
 
 export const CK_ERROR_CODE = Object.freeze({
   VALIDATION: 'VALIDATION',
@@ -120,18 +120,6 @@ function pathnameFromRawAssetRef(raw) {
   }
 }
 
-function decodeAssetVersionToken(raw) {
-  const token = decodePathPart(raw);
-  if (!token) return null;
-  try {
-    const key = decodeURIComponent(token).trim();
-    if (!key || key.startsWith('/') || key.includes('..')) return null;
-    return key;
-  } catch {
-    return null;
-  }
-}
-
 export function isUuid(raw) {
   const value = typeof raw === 'string' ? raw.trim() : '';
   return Boolean(value && UUID_RE.test(value));
@@ -167,46 +155,59 @@ export function normalizeResolvedAccountAsset(raw) {
   return { assetId, assetRef, url };
 }
 
-export function parseCanonicalAssetRef(raw) {
+export function parseAccountAssetRef(raw) {
   const pathname = pathnameFromRawAssetRef(raw);
   if (!pathname) return null;
 
-  const version = pathname.match(ASSET_VERSION_PATH_RE);
-  if (!version) return null;
-
-  const versionToken = decodePathPart(version[1]);
-  const versionKey = decodeAssetVersionToken(versionToken);
-  if (!versionKey) return null;
-
-  const keyMatch = versionKey.match(ASSET_VERSION_KEY_RE);
-  if (!keyMatch) return null;
-  const accountId = decodePathPart(keyMatch[1]);
-  const assetId = decodePathPart(keyMatch[2]);
+  const publicMatch = pathname.match(ACCOUNT_ASSET_PATH_RE);
+  if (!publicMatch) return null;
+  const accountId = decodePathPart(publicMatch[1]);
+  const assetId = decodePathPart(publicMatch[2]);
+  const filename = decodePathPart(publicMatch[3]);
   if (!isUuid(accountId) || !isUuid(assetId)) return null;
+  if (!filename || filename === '.' || filename === '..' || filename.includes('/')) return null;
 
   return {
     accountId,
     assetId,
-    kind: 'version',
+    filename,
+    key: `accounts/${accountId}/assets/${assetId}/blob/${filename}`,
+    kind: 'account',
     pathname,
-    versionToken,
-    versionKey,
   };
 }
 
-export function isCanonicalAssetVersionRef(raw) {
-  const parsed = parseCanonicalAssetRef(raw);
-  return parsed ? parsed.kind === 'version' : false;
+export function parseAccountAssetBlobKey(raw) {
+  const key = typeof raw === 'string' ? raw.trim().replace(/^\/+/, '') : '';
+  if (!key || key.includes('..')) return null;
+  const match = key.match(ACCOUNT_ASSET_KEY_RE);
+  if (!match) return null;
+  const accountId = decodePathPart(match[1]);
+  const assetId = decodePathPart(match[2]);
+  const filename = decodePathPart(match[3]);
+  if (!isUuid(accountId) || !isUuid(assetId)) return null;
+  if (!filename || filename === '.' || filename === '..' || filename.includes('/')) return null;
+  return {
+    accountId,
+    assetId,
+    filename,
+    key: `accounts/${accountId}/assets/${assetId}/blob/${filename}`,
+    kind: 'account',
+    pathname: `/assets/account/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}/${encodeURIComponent(filename)}`,
+  };
 }
 
-export function isCanonicalAssetRef(raw) {
-  return parseCanonicalAssetRef(raw) != null;
+export function isAccountAssetRef(raw) {
+  return parseAccountAssetRef(raw) != null;
 }
 
-export function toCanonicalAssetVersionPath(versionKey) {
-  const key = typeof versionKey === 'string' ? versionKey.trim() : '';
-  if (!key || key.startsWith('/') || key.includes('..') || !ASSET_VERSION_KEY_RE.test(key)) return null;
-  return `/assets/v/${encodeURIComponent(key)}`;
+export function isAccountAssetBlobKey(raw) {
+  return parseAccountAssetBlobKey(raw) != null;
+}
+
+export function toAccountAssetPublicPath(assetKey) {
+  const parsed = parseAccountAssetBlobKey(assetKey);
+  return parsed ? parsed.pathname : null;
 }
 
 export function parseAccountLocaleListStrict(value) {
@@ -337,23 +338,22 @@ function normalizeResolvedAssetSource(entry) {
   if (!isRecord(entry)) return null;
   const directUrl = typeof entry.url === 'string' ? entry.url.trim() : '';
   if (directUrl) {
-    const parsed = parseCanonicalAssetRef(directUrl);
-    if (parsed && parsed.kind === 'version') {
+    const parsed = parseAccountAssetRef(directUrl);
+    if (parsed) {
       return {
         assetId: parsed.assetId,
-        assetRef: parsed.versionKey,
+        assetRef: parsed.key,
         url: parsed.pathname,
       };
     }
   }
 
   const assetRef = typeof entry.assetRef === 'string' ? entry.assetRef.trim() : '';
-  const canonicalPath = assetRef ? toCanonicalAssetVersionPath(assetRef) : null;
-  const parsed = canonicalPath ? parseCanonicalAssetRef(canonicalPath) : null;
-  if (!parsed || parsed.kind !== 'version') return null;
+  const parsed = assetRef ? parseAccountAssetBlobKey(assetRef) : null;
+  if (!parsed) return null;
   return {
     assetId: parsed.assetId,
-    assetRef: parsed.versionKey,
+    assetRef: parsed.key,
     url: directUrl || parsed.pathname,
   };
 }

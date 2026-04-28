@@ -239,8 +239,8 @@ Local DB is Supabase CLI + Docker:
   - `widget_instances.config` (legacy schema column, not active product config truth)
 - The durable contract for uploaded assets is:
   - logical `assetId` references for migrated media surfaces in instance config
-  - blob bytes under `accounts/{accountId}/assets/versions/{assetId}/{sha256}/{filename}` in Tokyo R2
-  - per-asset manifest metadata under `accounts/{accountId}/assets/meta/{assetId}.json`
+  - blob bytes under `accounts/{accountId}/assets/{assetId}/blob/{filename}` in Tokyo R2
+  - per-asset manifest metadata under `accounts/{accountId}/assets/{assetId}/manifest.json`
 
 ## What Michael Does NOT Do (by design)
 

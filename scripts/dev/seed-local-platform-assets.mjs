@@ -21,8 +21,8 @@ const DEFAULT_PLATFORM_ACCOUNT_ID =
   process.env.CK_PLATFORM_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100';
 const DEFAULT_PAGE_SIZE = 500;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ASSET_VERSION_PATH_RE = /^\/assets\/v\/([^/?#]+)$/;
-const ASSET_VERSION_KEY_RE = /^accounts\/([^/]+)\/assets\/versions\/([^/]+)\/[a-f0-9]{64}\/[^/]+$/i;
+const ACCOUNT_ASSET_PATH_RE = /^\/assets\/account\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)$/;
+const ACCOUNT_ASSET_KEY_RE = /^accounts\/([^/]+)\/assets\/([^/]+)\/blob\/([^/]+)$/i;
 
 function printUsage() {
   console.log(`Usage: node scripts/dev/seed-local-platform-assets.mjs [options]
@@ -147,86 +147,80 @@ function pathnameFromRawAssetRef(raw) {
   }
 }
 
-function decodeAssetVersionToken(raw) {
-  const token = decodePathPart(raw);
-  if (!token) return null;
-  try {
-    const key = decodeURIComponent(token).trim();
-    if (!key || key.startsWith('/') || key.includes('..')) return null;
-    return key;
-  } catch {
-    return null;
-  }
-}
-
-function parseCanonicalAssetRef(raw) {
+function parseAccountAssetRef(raw) {
   const pathname = pathnameFromRawAssetRef(raw);
   if (!pathname) return null;
 
-  const version = pathname.match(ASSET_VERSION_PATH_RE);
-  if (!version) return null;
-
-  const versionToken = decodePathPart(version[1]);
-  const versionKey = decodeAssetVersionToken(versionToken);
-  if (!versionKey) return null;
-
-  const keyMatch = versionKey.match(ASSET_VERSION_KEY_RE);
-  if (!keyMatch) return null;
-  const accountId = decodePathPart(keyMatch[1]);
-  const assetId = decodePathPart(keyMatch[2]);
+  const match = pathname.match(ACCOUNT_ASSET_PATH_RE);
+  if (!match) return null;
+  const accountId = decodePathPart(match[1]);
+  const assetId = decodePathPart(match[2]);
+  const filename = decodePathPart(match[3]);
   if (!isUuid(accountId) || !isUuid(assetId)) return null;
+  if (!filename || filename === '.' || filename === '..' || filename.includes('/')) return null;
 
   return {
     accountId,
     assetId,
-    kind: 'version',
+    filename,
+    key: `accounts/${accountId}/assets/${assetId}/blob/${filename}`,
+    kind: 'account',
     pathname,
-    versionToken,
-    versionKey,
   };
 }
 
-function toCanonicalAssetVersionPath(versionKey) {
-  const key = typeof versionKey === 'string' ? versionKey.trim() : '';
-  if (!key || key.startsWith('/') || key.includes('..') || !ASSET_VERSION_KEY_RE.test(key)) {
-    return null;
-  }
-  return `/assets/v/${encodeURIComponent(key)}`;
+function parseAccountAssetBlobKey(raw) {
+  const key = typeof raw === 'string' ? raw.trim().replace(/^\/+/, '') : '';
+  if (!key || key.includes('..')) return null;
+  const match = key.match(ACCOUNT_ASSET_KEY_RE);
+  if (!match) return null;
+  const accountId = decodePathPart(match[1]);
+  const assetId = decodePathPart(match[2]);
+  const filename = decodePathPart(match[3]);
+  if (!isUuid(accountId) || !isUuid(assetId)) return null;
+  if (!filename || filename === '.' || filename === '..' || filename.includes('/')) return null;
+  return {
+    accountId,
+    assetId,
+    filename,
+    key: `accounts/${accountId}/assets/${assetId}/blob/${filename}`,
+    kind: 'account',
+    pathname: `/assets/account/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}/${encodeURIComponent(filename)}`,
+  };
 }
 
-function extractCanonicalAssetRef(raw) {
+function extractAccountAssetRef(raw) {
   const direct = String(raw || '').trim();
   if (!direct) return null;
-  const directPath = parseCanonicalAssetRef(direct);
+  const directPath = parseAccountAssetRef(direct);
   if (directPath) return directPath;
-  const canonicalPath = toCanonicalAssetVersionPath(direct);
-  return canonicalPath ? parseCanonicalAssetRef(canonicalPath) : null;
+  return parseAccountAssetBlobKey(direct);
 }
 
-function collectLegacyAssetRefs(node, provenance, found, pathPrefix = '') {
+function collectAccountAssetRefs(node, provenance, found, pathPrefix = '') {
   if (!node || typeof node !== 'object') return;
   if (Array.isArray(node)) {
     node.forEach((entry, index) =>
-      collectLegacyAssetRefs(entry, provenance, found, `${pathPrefix}[${index}]`),
+      collectAccountAssetRefs(entry, provenance, found, `${pathPrefix}[${index}]`),
     );
     return;
   }
   for (const [key, value] of Object.entries(node)) {
     const currentPath = pathPrefix ? `${pathPrefix}.${key}` : key;
     if (key === 'ref' && typeof value === 'string') {
-      const parsed = extractCanonicalAssetRef(value);
+      const parsed = extractAccountAssetRef(value);
       if (parsed) {
-        if (!found.has(parsed.versionKey)) {
-          found.set(parsed.versionKey, {
+        if (!found.has(parsed.key)) {
+          found.set(parsed.key, {
             ...provenance,
             path: currentPath,
-            ref: parsed.versionKey,
+            ref: parsed.key,
           });
         }
       }
       continue;
     }
-    collectLegacyAssetRefs(value, provenance, found, currentPath);
+    collectAccountAssetRefs(value, provenance, found, currentPath);
   }
 }
 
@@ -325,7 +319,7 @@ function classifyAssetType(contentType, filename) {
 }
 
 function manifestR2Key(accountId, assetId) {
-  return `accounts/${accountId}/assets/meta/${assetId}.json`;
+  return `accounts/${accountId}/assets/${assetId}/manifest.json`;
 }
 
 function putLocalR2Object({ bucket, persistTo, key, filePath }) {
@@ -367,7 +361,7 @@ async function fetchRemoteAsset(remoteBase, canonicalPath) {
 }
 
 function buildManifest(parsed, provenance, contentType, bodyBytes, originalFilename = null) {
-  const filename = originalFilename || parsed.versionKey.split('/').pop() || 'upload.bin';
+  const filename = originalFilename || parsed.filename || 'upload.bin';
   const nowIso = new Date().toISOString();
   return {
     assetId: parsed.assetId,
@@ -383,7 +377,7 @@ function buildManifest(parsed, provenance, contentType, bodyBytes, originalFilen
     sha256: crypto.createHash('sha256').update(bodyBytes).digest('hex'),
     createdAt: nowIso,
     updatedAt: nowIso,
-    key: parsed.versionKey,
+    key: parsed.key,
   };
 }
 
@@ -526,7 +520,7 @@ async function resolveRemoteAssetsBySavedSnapshots(remoteBase, accountId, rows, 
     const remoteConfig = await loadRemoteSavedConfig(remoteBase, accountId, row.publicId);
     if (!remoteConfig) continue;
     const remoteRefs = new Map();
-    collectLegacyAssetRefs(
+    collectAccountAssetRefs(
       remoteConfig,
       {
         source: row.source,
@@ -537,14 +531,13 @@ async function resolveRemoteAssetsBySavedSnapshots(remoteBase, accountId, rows, 
       remoteRefs,
     );
 
-    for (const [versionKey] of remoteRefs.entries()) {
-      const canonicalPath = toCanonicalAssetVersionPath(versionKey);
-      const parsed = canonicalPath ? parseCanonicalAssetRef(canonicalPath) : null;
+    for (const [assetKey] of remoteRefs.entries()) {
+      const parsed = parseAccountAssetBlobKey(assetKey);
       if (!parsed) continue;
       if (!neededAssetIds.has(parsed.assetId) || assetsById.has(parsed.assetId)) continue;
       assetsById.set(parsed.assetId, {
         assetId: parsed.assetId,
-        assetRef: parsed.versionKey,
+        assetRef: parsed.key,
       });
     }
   }
@@ -560,10 +553,10 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const client = createSupabaseClient({ preferLocal: true });
   const rows = await loadPlatformRows(client, args.platformAccountId);
-  const legacyRefs = new Map();
+  const accountAssetRefs = new Map();
   const logicalAssetIds = new Map();
   for (const row of rows) {
-    collectLegacyAssetRefs(
+    collectAccountAssetRefs(
       row.config,
       {
         source: row.source,
@@ -571,7 +564,7 @@ async function main() {
         widgetType: row.widgetType,
         displayName: row.displayName,
       },
-      legacyRefs,
+      accountAssetRefs,
     );
     collectLogicalAssetIds(
       row.config,
@@ -628,7 +621,7 @@ async function main() {
   }
 
   console.log(
-    `[seed-local-platform-assets] found ${logicalAssetIds.size} logical asset id(s) and ${legacyRefs.size} legacy asset ref(s) across ${rows.length} platform-owned row(s)`,
+    `[seed-local-platform-assets] found ${logicalAssetIds.size} logical asset id(s) and ${accountAssetRefs.size} account asset ref(s) across ${rows.length} platform-owned row(s)`,
   );
 
   let seeded = 0;
@@ -653,9 +646,8 @@ async function main() {
       }
       const resolved = resolvedRemoteAssets.get(assetId);
       const rawRef = typeof resolved?.assetRef === 'string' ? resolved.assetRef.trim() : '';
-      const canonicalPath = rawRef ? toCanonicalAssetVersionPath(rawRef) : '';
-      const parsed = canonicalPath ? parseCanonicalAssetRef(canonicalPath) : null;
-      if (!canonicalPath || !parsed) {
+      const parsed = rawRef ? parseAccountAssetBlobKey(rawRef) : null;
+      if (!parsed) {
         failures += 1;
         issues.push(`invalid resolved asset ref ${assetId} (${provenance.publicId}:${provenance.path})`);
         continue;
@@ -676,7 +668,7 @@ async function main() {
       }
       workItems.push({
         parsed,
-        canonicalPath,
+        canonicalPath: parsed.pathname,
         provenance,
         originalFilename:
           typeof resolved?.originalFilename === 'string' && resolved.originalFilename.trim()
@@ -685,12 +677,11 @@ async function main() {
       });
     }
 
-    for (const [versionKey, provenance] of legacyRefs) {
-      const canonicalPath = toCanonicalAssetVersionPath(versionKey);
-      const parsed = canonicalPath ? parseCanonicalAssetRef(canonicalPath) : null;
-      if (!canonicalPath || !parsed) {
+    for (const [assetKey, provenance] of accountAssetRefs) {
+      const parsed = parseAccountAssetBlobKey(assetKey);
+      if (!parsed) {
         failures += 1;
-        issues.push(`invalid ref ${versionKey} (${provenance.publicId}:${provenance.path})`);
+        issues.push(`invalid ref ${assetKey} (${provenance.publicId}:${provenance.path})`);
         continue;
       }
       if (logicalAssetIds.has(parsed.assetId)) {
@@ -699,30 +690,30 @@ async function main() {
       if (parsed.accountId !== args.platformAccountId) {
         failures += 1;
         issues.push(
-          `unexpected owner ${parsed.accountId} for ${provenance.publicId}:${provenance.path} (${versionKey})`,
+          `unexpected owner ${parsed.accountId} for ${provenance.publicId}:${provenance.path} (${assetKey})`,
         );
         continue;
       }
       if (/^00000000-0000-0000-0000-000000000000$/i.test(parsed.assetId)) {
         failures += 1;
         issues.push(
-          `zero asset id in ${provenance.publicId}:${provenance.path} (${versionKey})`,
+          `zero asset id in ${provenance.publicId}:${provenance.path} (${assetKey})`,
         );
         continue;
       }
       workItems.push({
         parsed,
-        canonicalPath,
+        canonicalPath: parsed.pathname,
         provenance,
         originalFilename: null,
       });
     }
 
-    const seenVersionKeys = new Set();
+    const seenAssetKeys = new Set();
     for (const item of workItems) {
       if (seeded >= args.max) break;
-      if (seenVersionKeys.has(item.parsed.versionKey)) continue;
-      seenVersionKeys.add(item.parsed.versionKey);
+      if (seenAssetKeys.has(item.parsed.key)) continue;
+      seenAssetKeys.add(item.parsed.key);
 
       const remote = await fetchRemoteAsset(args.remoteBase, item.canonicalPath);
       if (!remote.ok || !remote.bytes) {
@@ -749,7 +740,7 @@ async function main() {
         putLocalR2Object({
           bucket: args.bucket,
           persistTo: args.persistTo,
-          key: item.parsed.versionKey,
+          key: item.parsed.key,
           filePath: blobPath,
         });
         putLocalR2Object({
@@ -778,7 +769,7 @@ async function main() {
   console.log('[seed-local-platform-assets] done');
   console.log(`  rows=${rows.length}`);
   console.log(`  logical_asset_ids=${logicalAssetIds.size}`);
-  console.log(`  legacy_refs=${legacyRefs.size}`);
+  console.log(`  account_asset_refs=${accountAssetRefs.size}`);
   console.log(`  remote_saved_snapshot_fallback=${usedSavedSnapshotFallback ? 'yes' : 'no'}`);
   console.log(`  seeded=${seeded}`);
   console.log(`  failures=${failures}`);

@@ -56,7 +56,7 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isL10nPack = isL10n && /^\/l10n\/instances\/[^/]+\/packs\/[^/]+\/[a-f0-9]{64}\.json$/i.test(normalized);
   const isI18n = normalized.startsWith('/i18n/');
   const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
-  const isAccountAssetVersion = normalized.startsWith('/assets/v/');
+  const isAccountAsset = normalized.startsWith('/assets/account/');
   const isRender = normalized.startsWith('/renders/');
   const isRenderLivePointer = isRender && /^\/renders\/instances\/[^/]+\/live\//i.test(normalized);
   const isRenderConfigPack =
@@ -71,7 +71,7 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   if (isL10nLivePointer || isRenderLivePointer) {
     return { cache: 'no-store' };
   }
-  if (isL10nOverlay || isL10nBaseSnapshot || isL10nPack || isAccountAssetVersion || isRenderPack) {
+  if (isL10nOverlay || isL10nBaseSnapshot || isL10nPack || isAccountAsset || isRenderPack) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
   if (isI18n && !isI18nManifest) {

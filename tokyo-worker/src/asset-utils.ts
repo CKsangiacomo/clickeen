@@ -1,6 +1,8 @@
 import {
   normalizeWidgetPublicId,
-  toCanonicalAssetVersionPath,
+  parseAccountAssetBlobKey,
+  parseAccountAssetRef,
+  toAccountAssetPublicPath,
 } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import type { Env } from './types';
@@ -64,52 +66,33 @@ const ACCOUNT_ASSET_CANONICAL_PREFIX = 'accounts/';
 export function buildAccountAssetKey(
   accountId: string,
   assetId: string,
-  versionFingerprint: string,
   filename: string,
 ): string {
-  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/assets/versions/${assetId}/${versionFingerprint}/${filename}`;
-}
-
-function normalizeCanonicalAccountAssetSuffix(suffix: string): string | null {
-  const parts = String(suffix || '')
-    .split('/')
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-  if (parts.length !== 6) return null;
-  const [accountId, assetsSegment, versionsSegment, assetId, versionFingerprint, filename] = parts;
-  if (assetsSegment !== 'assets' || versionsSegment !== 'versions') return null;
-  if (!accountId || !assetId || !versionFingerprint || !filename) return null;
-  if (!/^[0-9a-f-]{36}$/i.test(accountId) || !/^[0-9a-f-]{36}$/i.test(assetId)) return null;
-  if (!/^[a-f0-9]{64}$/i.test(versionFingerprint)) return null;
-  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/assets/versions/${assetId}/${versionFingerprint}/${filename}`;
+  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/assets/${assetId}/blob/${filename}`;
 }
 
 export function normalizeAccountAssetReadKey(pathname: string): string | null {
-  const key = String(pathname || '').replace(/^\/+/, '');
-  if (!key.startsWith(ACCOUNT_ASSET_CANONICAL_PREFIX)) return null;
-  return normalizeCanonicalAccountAssetSuffix(key.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length));
+  const raw = String(pathname || '').trim();
+  if (!raw) return null;
+  const publicRef = parseAccountAssetRef(raw);
+  if (publicRef) return publicRef.key;
+  const keyRef = parseAccountAssetBlobKey(raw.replace(/^\/+/, ''));
+  return keyRef ? keyRef.key : null;
 }
 
 type AccountAssetIdentity = { accountId: string; assetId: string };
 
-export function buildAccountAssetVersionPath(versionKey: string): string {
-  const versionPath = toCanonicalAssetVersionPath(versionKey);
-  if (!versionPath) throw new Error('[tokyo] invalid account asset version key');
-  return versionPath;
+export function buildAccountAssetPublicPath(assetKey: string): string {
+  const publicPath = toAccountAssetPublicPath(assetKey);
+  if (!publicPath) throw new Error('[tokyo] invalid account asset key');
+  return publicPath;
 }
 
 export function parseAccountAssetIdentityFromKey(key: string): AccountAssetIdentity | null {
-  const normalized = normalizeAccountAssetReadKey(key.startsWith('/') ? key : `/${key}`);
+  const normalized = normalizeAccountAssetReadKey(key);
   if (!normalized) return null;
-  const suffix = normalized.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length);
-  const parts = suffix.split('/').filter(Boolean);
-  if (parts.length !== 6) return null;
-  const accountId = parts[0];
-  const assetId = parts[3];
-  if (!accountId || !assetId || !/^[0-9a-f-]{36}$/i.test(accountId) || !/^[0-9a-f-]{36}$/i.test(assetId)) {
-    return null;
-  }
-  return { accountId, assetId };
+  const parsed = parseAccountAssetBlobKey(normalized);
+  return parsed ? { accountId: parsed.accountId, assetId: parsed.assetId } : null;
 }
 
 export function guessContentTypeFromExt(ext: string): string {

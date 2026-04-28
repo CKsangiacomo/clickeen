@@ -250,16 +250,16 @@ instance.meta = {
 
 **Tokyo** — Asset storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, public projections, and account-owned upload blobs.
 
-**Tokyo Worker** — Cloudflare Worker that serves immutable account asset paths (`/assets/v/:assetRef`), exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, durably reconciles widget overlay artifacts after save/settings changes, keeps Builder and Venice on the same current locale truth while gating Builder interaction separately, and publishes Venice render snapshots.
+**Tokyo Worker** — Cloudflare Worker that serves immutable account asset paths (`/assets/account/{accountId}/{assetId}/{filename}`), exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, durably reconciles widget overlay artifacts after save/settings changes, keeps Builder and Venice on the same current locale truth while gating Builder interaction separately, and publishes Venice render snapshots.
 
 **Asset URL contract (pre-GA strict):**
 
 - Full canonical contract: [AssetManagement.md](./AssetManagement.md)
-- Fill/media authoring config now stores logical asset identity (`assetId`, optional `posterAssetId`) while runtime/materialized config packs resolve those ids to canonical root-relative paths: `/assets/v/:assetRef`.
+- Fill/media authoring config now stores logical asset identity (`assetId`, optional `posterAssetId`) while runtime/materialized config packs resolve those ids to canonical root-relative paths: `/assets/account/{accountId}/{assetId}/{filename}`.
 - Logo/media authoring surfaces use the same split: uploaded logos persist `asset.assetId` plus editor metadata, while runtime consumes only the materialized `logoFill`.
-- Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and `/assets/v/*`-backed `logoFill` strings) are outside contract and rejected on write.
+- Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and persisted account-asset URL backed `logoFill` strings) are outside contract and rejected on write.
 - Legacy non-account media paths are outside the runtime contract and are rejected on new writes.
-- `DELETE` on an account asset is synchronous in the delete path (metadata + blob) with no snapshot rebuild/healing side effects; subsequent `/assets/v/**` reads return unavailable.
+- `DELETE` on an account asset is synchronous in the delete path (metadata + blob) with no snapshot rebuild/healing side effects; subsequent `/assets/account/**` reads return unavailable.
 - Managed asset APIs expose explicit integrity checks (`/assets/integrity/:accountId` and `/assets/integrity/:accountId/:assetId`) so Roma can surface DB↔R2 mismatch states.
 - Runtime does not rely on `CK_ASSET_ORIGIN`; asset paths remain canonical root-relative and environment portability is provided by Bob/Venice proxy routes.
 - Legacy host-pinned/legacy paths (for example `/curated-assets/**`) are not supported.

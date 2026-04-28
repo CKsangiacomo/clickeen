@@ -58,7 +58,7 @@ Mutable pointer  (tiny, always fetched fresh)
 | Domain       | Mutable pointer                                                        | Immutable artifact                                                                    |
 | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | **Serve state** | Tokyo live pointer / serve flag (`no-store`)                           | Render artifacts at `/renders/instances/{publicId}/{fingerprint}/...` (cache forever) |
-| **Assets**   | _(authoring stores logical `assetId`; runtime serves `/assets/v/:assetRef`)_ | Asset bytes at `/assets/v/:assetRef`                                                  |
+| **Assets**   | _(authoring stores logical `assetId`; runtime serves `/assets/account/{accountId}/{assetId}/{filename}`)_ | Asset bytes at `/assets/account/{accountId}/{assetId}/{filename}`                                                  |
 | **Auth**     | JWT (short-lived, refreshable)                                         | userId claim (stable identity)                                                        |
 | **Authz**    | HMAC-signed capsule (expires)                                          | Role/account snapshot at issuance                                                     |
 | **Overlays** | Layer pointer in DB                                                    | Materialized overlay file on R2 (fingerprinted)                                       |
@@ -238,7 +238,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - Canonical asset management contract (cross-surface behavior): [AssetManagement.md](./AssetManagement.md)
 - Handles private Roma-bound account asset authority routes and stores asset bytes + manifest metadata in Tokyo R2.
 - Tokyo-worker validates/materializes account-owned asset refs during instance sync and runtime-pack assembly, but this repo snapshot does not persist a canonical "where used" table in Michael.
-- Serves immutable account asset reads (`GET /assets/v/:assetRef`); legacy non-account asset paths are hard-failed.
+- Serves immutable account asset reads (`GET /assets/account/{accountId}/{assetId}/{filename}`); legacy non-account asset paths are hard-failed.
 - Asset delete is synchronous hard delete (`metadata + blob delete`) with no snapshot rebuild enqueue or runtime healing.
 - Tokyo-worker exposes integrity endpoints for managed surfaces (`GET /assets/integrity/:accountId`, `GET /assets/integrity/:accountId/:assetId`).
 - Writes account-instance l10n text/meta/config packs and live pointers to Tokyo/R2 from explicit Tokyo-worker instance-sync execution triggered by Roma widget/localization routes; Tokyo-worker does not read Michael/Supabase to discover overlay state.
@@ -249,7 +249,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - Ownership boundary is account (`account_id`).
 - End-to-end flow:
   1. Bob uploads through Roma (`POST /api/account/assets/upload`), and Roma forwards to Tokyo-worker over the `TOKYO_ASSET_CONTROL` Cloudflare service binding with optional public/widget trace headers.
-  2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable URL (`/assets/v/:assetRef`).
+  2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable URL (`/assets/account/{accountId}/{assetId}/{filename}`).
   3. Roma validates account commands at the product boundary and Tokyo/Tokyo-worker enforce canonical asset/config contracts on write.
   4. Roma Assets reads/deletes via Roma asset routes (`/api/account/assets*`) which forward to Tokyo-worker through the private service binding plus the Roma account capsule; Tokyo-worker enforces account membership role.
 

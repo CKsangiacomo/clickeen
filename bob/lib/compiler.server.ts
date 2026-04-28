@@ -460,7 +460,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function isTokyoAssetPath(pathname: string): boolean {
   return (
-    pathname.startsWith('/assets/v/') ||
+    pathname.startsWith('/assets/account/') ||
     pathname.startsWith('/widgets/') ||
     pathname.startsWith('/themes/') ||
     pathname.startsWith('/dieter/')

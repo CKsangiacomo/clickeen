@@ -24,7 +24,7 @@ Cloudflare Workers observability is the first boring production sink for Tokyo-w
 - `GET /__internal/assets/account/:accountId` (private Roma service-binding path; member-scoped asset manifest list)
 - `GET /__internal/assets/account/:accountId/usage` (private Roma service-binding path; manifest-authoritative storage-bytes read)
 - `POST /__internal/assets/account/:accountId/resolve` (private Roma service-binding path; runtime materialization helper)
-- `GET /assets/v/:assetRef` (public; immutable)
+- `GET /assets/account/:accountId/:assetId/:filename` (public; immutable)
 - `DELETE /__internal/assets/:accountId/:assetId` (private Roma service-binding path; editor+ hard delete metadata + blobs)
 - `GET /healthz` (public worker health on `tokyo.dev.clickeen.com/healthz`)
 - Integrity tools (dev/internal):
@@ -43,8 +43,8 @@ Current auth rule:
 
 Asset metadata model:
 
-- Blob bytes live in Tokyo R2 under `accounts/{accountId}/assets/versions/{assetId}/{sha256}/{filename}`.
-- Per-asset manifest JSON lives in Tokyo R2 under `accounts/{accountId}/assets/meta/{assetId}.json`.
+- Blob bytes live in Tokyo R2 under `accounts/{accountId}/assets/{assetId}/blob/{filename}`.
+- Per-asset manifest JSON lives in Tokyo R2 under `accounts/{accountId}/assets/{assetId}/manifest.json`.
 - Manifest stores one canonical immutable blob key (`assetRef`) per asset.
 - There is no Michael/Supabase asset table contract in the active runtime.
 - Upload contract rejects legacy variant mode (`x-variant` -> `422 coreui.errors.assets.variantUnsupported`).
@@ -53,7 +53,7 @@ Asset metadata model:
 Health contract:
 
 - Worker health URL: `https://tokyo.dev.clickeen.com/healthz` -> `{ "up": true }`
-- `https://tokyo.dev.clickeen.com` intentionally exposes only `/healthz`, `/assets/v/*`, `/fonts/*`, `/l10n/*`, and `/renders/*`. Asset control-plane paths are not publicly routed.
+- `https://tokyo.dev.clickeen.com` intentionally exposes only `/healthz`, `/assets/account/*`, `/fonts/*`, `/l10n/*`, and `/renders/*`. Asset control-plane paths are not publicly routed.
 
 Storage usage truth:
 

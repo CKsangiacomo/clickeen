@@ -157,11 +157,11 @@ export function sumAccountAssetManifestSizeBytes(manifests: AccountAssetManifest
 const ACCOUNT_ASSET_META_PREFIX = 'accounts';
 
 function accountAssetManifestKey(accountId: string, assetId: string): string {
-  return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/meta/${assetId}.json`;
+  return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/${assetId}/manifest.json`;
 }
 
 function accountAssetManifestPrefix(accountId: string): string {
-  return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/meta/`;
+  return `${ACCOUNT_ASSET_META_PREFIX}/${accountId}/assets/`;
 }
 
 function normalizeAssetManifestKey(row: Record<string, unknown>): string | null {
@@ -260,7 +260,7 @@ export async function listAccountAssetManifestsByAccount(
     const batch = await Promise.all(
       listed.objects.map(async (entry: { key?: string }) => {
         const key = typeof entry.key === 'string' ? entry.key.trim() : '';
-        if (!key || !key.endsWith('.json')) return null;
+        if (!key || !key.endsWith('/manifest.json')) return null;
         const obj = await env.TOKYO_R2.get(key);
         if (!obj) return null;
         const payload = (await obj.json().catch(() => null)) as unknown;

@@ -11,7 +11,7 @@ import {
   normalizeWidgetLocaleSwitcherSettings,
 } from '@clickeen/ck-contracts';
 import {
-  buildAccountAssetVersionPath,
+  buildAccountAssetPublicPath,
   normalizePublicId,
   normalizeSha256Hex,
   prettyStableJson,
@@ -192,7 +192,7 @@ async function materializeRuntimeConfigPack(args: {
     assetsById.set(assetId, {
       assetId,
       assetRef: manifest.key,
-      url: `${publicBaseUrl}${buildAccountAssetVersionPath(manifest.key)}`,
+      url: `${publicBaseUrl}${buildAccountAssetPublicPath(manifest.key)}`,
     });
   }
 

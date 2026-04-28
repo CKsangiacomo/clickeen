@@ -1,4 +1,4 @@
-import { isUuid, parseCanonicalAssetRef } from '@clickeen/ck-contracts';
+import { isUuid, parseAccountAssetRef } from '@clickeen/ck-contracts';
 import { normalizeLocale, normalizePublicId, normalizeSha256Hex } from '../asset-utils';
 import { handleGetTokyoFontAsset } from '../asset-utils';
 import { handleGetAccountAsset } from '../domains/assets';
@@ -186,12 +186,12 @@ export async function tryHandlePublicRenderRoutes(
     );
   }
 
-  const accountAssetVersion = parseCanonicalAssetRef(pathname);
-  if (accountAssetVersion) {
+  const accountAsset = parseAccountAssetRef(pathname);
+  if (accountAsset) {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       return respondMethodNotAllowed(respond);
     }
-    const response = await handleGetAccountAsset(env, accountAssetVersion.versionKey);
+    const response = await handleGetAccountAsset(env, accountAsset.key);
     if (req.method === 'HEAD') {
       return respond(
         new Response(null, { status: response.status, headers: response.headers }),

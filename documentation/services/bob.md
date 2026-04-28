@@ -316,7 +316,7 @@ Asset authoring is restored on the active account Builder path through one curre
 - Authored media identity stays logical (`assetId`, optional `posterAssetId`). Bob/Dieter resolve those ids through the Roma account asset boundary for editor preview and assignment.
 - `dropdown-upload` is asset-backed only. It requires `meta-path`, persists logical asset identity in meta only, and uses resolved URLs for preview without writing the uploaded delivery URL back into widget state.
 - Asset resolve now uses one shared Builder helper, and asset denial now uses one shared `bob-upsell` emitter path. Builder no longer emits a parallel host-only asset denial event.
-- Assets remain immutable on this path. Upload creates a new asset identity, canonical `/assets/v/:assetRef` delivery stays aggressively cacheable, and delete is the only destructive lifecycle action.
+- Assets remain immutable on this path. Upload creates a new asset identity, canonical `/assets/account/{accountId}/{assetId}/{filename}` delivery stays aggressively cacheable, and delete is the only destructive lifecycle action.
 
 Operational baseline (local smoke, 2026-02-17):
 

@@ -20,12 +20,12 @@ For platform context see [Overview.md](./Overview.md), [CONTEXT.md](./CONTEXT.md
 
 ## Canonical model
 
-- Blob bytes: `accounts/{accountId}/assets/versions/{assetId}/{sha256}/{filename}` in Tokyo R2.
-- Manifest metadata: `accounts/{accountId}/assets/meta/{assetId}.json` in Tokyo R2.
-- Canonical immutable read path: `/assets/v/:assetRef` (derived from stored key).
+- Blob bytes: `accounts/{accountId}/assets/{assetId}/blob/{filename}` in Tokyo R2.
+- Manifest metadata: `accounts/{accountId}/assets/{assetId}/manifest.json` in Tokyo R2.
+- Canonical immutable read path: `/assets/account/{accountId}/{assetId}/{filename}`.
 - Authoring media surfaces reference logical asset identity (`assetId`, optional `posterAssetId`).
 - Logo/media authoring controls persist `asset.assetId` plus editor metadata where needed; they do not persist Tokyo storage refs.
-- Runtime/materialized config packs resolve those logical ids to immutable `/assets/v/:assetRef` paths.
+- Runtime/materialized config packs resolve those logical ids to immutable `/assets/account/{accountId}/{assetId}/{filename}` paths.
 
 Manifest must carry:
 - `assetId` (immutable identity)
@@ -43,7 +43,7 @@ Manifest must carry:
 
 Tokyo-worker authoritative endpoints:
 - `POST /__internal/assets/upload` (private Roma service-binding path)
-- `GET /assets/v/:assetRef`
+- `GET /assets/account/:accountId/:assetId/:filename`
 - `GET /__internal/assets/account/:accountId` (private Roma service-binding path)
 - `GET /__internal/assets/account/:accountId/usage` (private Roma service-binding path)
 - `POST /__internal/assets/account/:accountId/resolve` (private Roma service-binding path)
@@ -80,7 +80,7 @@ Rules:
    - no rename/rewrite policy is applied server-side
 4. Blob is written once; manifest is written once.
 5. Upload response returns immutable asset identity (`assetId` + canonical `assetRef`), exact size (`sizeBytes`), MIME (`contentType`), and `assetType`.
-6. Tokyo owns runtime asset resolution (`assetId -> assetRef -> /assets/v/...`) for materialized config packs and other runtime artifacts.
+6. Tokyo owns runtime asset resolution (`assetId -> assetRef -> /assets/account/...`) for materialized config packs and other runtime artifacts.
 
 ---
 

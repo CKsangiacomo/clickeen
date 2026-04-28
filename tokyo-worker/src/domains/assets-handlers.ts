@@ -4,7 +4,7 @@ import {
 } from '@clickeen/ck-policy';
 import {
   buildAccountAssetKey,
-  buildAccountAssetVersionPath,
+  buildAccountAssetPublicPath,
   classifyAccountAssetType,
   guessContentTypeFromExt,
   normalizeAccountAssetReadKey,
@@ -207,11 +207,17 @@ async function enforceAccountStorageLimit(args: {
 }
 
 function resolveAccountAssetNamespacePrefix(accountId: string): string {
-  return `${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/assets/versions/`;
+  return `${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/assets/`;
 }
 
 function resolveAccountAssetIdentityPrefix(accountId: string, assetId: string): string {
-  return `${resolveAccountAssetNamespacePrefix(accountId)}${assetId}/`;
+  return `${resolveAccountAssetNamespacePrefix(accountId)}${assetId}/blob/`;
+}
+
+function isAccountAssetBlobKeyForAccount(key: string, accountId: string): boolean {
+  const canonical = normalizeAccountAssetReadKey(key);
+  if (!canonical) return false;
+  return canonical.startsWith(`${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/assets/`) && canonical.includes('/blob/');
 }
 
 function serializeAccountAssetRecord(
@@ -236,7 +242,7 @@ function serializeResolvedAccountAsset(
   const assetRef = String(manifest.key || '').trim();
   return {
     ...serializeAccountAssetRecord(manifest),
-    url: `${origin}${buildAccountAssetVersionPath(assetRef)}`,
+    url: `${origin}${buildAccountAssetPublicPath(assetRef)}`,
   };
 }
 
@@ -252,7 +258,7 @@ async function listAccountAssetR2Keys(env: Env, accountId: string): Promise<stri
     });
     listed.objects.forEach((obj: { key?: string }) => {
       const key = typeof obj.key === 'string' ? obj.key.trim() : '';
-      if (key) keys.push(key);
+      if (key && isAccountAssetBlobKeyForAccount(key, accountId)) keys.push(key);
     });
     cursor = listed.truncated ? listed.cursor : undefined;
   } while (cursor);
@@ -485,7 +491,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
 
   const assetId = crypto.randomUUID();
   const bodySha256 = await sha256Hex(body);
-  const key = buildAccountAssetKey(accountId, assetId, bodySha256, filename);
+  const key = buildAccountAssetKey(accountId, assetId, filename);
   await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
 
   try {

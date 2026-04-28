@@ -111,7 +111,7 @@ Location: `tokyo/product/widgets/shared/`
 
 ## Asset origin
 Widgets must use canonical root-relative asset paths:
-- `/assets/v/*` for account-owned immutable assets
+- `/assets/account/*` for account-owned immutable assets
 - `/dieter/*` for design-system assets
 - `/widgets/*` for widget package assets
 

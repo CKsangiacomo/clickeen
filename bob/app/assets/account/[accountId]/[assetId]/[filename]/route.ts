@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveTokyoBaseUrl } from '../../../../lib/env/tokyo';
+import { resolveTokyoBaseUrl } from '../../../../../../lib/env/tokyo';
 
 export const runtime = 'edge';
 
@@ -21,40 +21,20 @@ function copyUpstreamHeaders(res: Response): Headers {
   return headers;
 }
 
-function resolveOpaqueAssetSuffix(request: NextRequest): string {
-  const marker = '/assets/v/';
-  const pathname = request.nextUrl.pathname || '';
-  const markerIndex = pathname.indexOf(marker);
-  if (markerIndex < 0) {
+function assertSafeSegment(raw: string): string {
+  const value = String(raw || '').trim();
+  if (!value || value === '.' || value === '..' || value.includes('/') || value.includes('\\')) {
     throw new Error('Invalid path');
   }
-
-  const suffix = pathname.slice(markerIndex + marker.length).replace(/^\/+/, '');
-  if (!suffix) {
-    throw new Error('Invalid path');
-  }
-
-  const segments = suffix.split('/');
-  for (const segment of segments) {
-    if (!segment) continue;
-    let decoded = '';
-    try {
-      decoded = decodeURIComponent(segment);
-    } catch {
-      throw new Error('Invalid path');
-    }
-    if (decoded === '.' || decoded === '..') {
-      throw new Error('Invalid path');
-    }
-  }
-
-  return suffix;
+  return encodeURIComponent(value);
 }
 
-function buildTokyoUrl(request: NextRequest, prefix: string): string {
+function buildTokyoUrl(request: NextRequest, params: { accountId: string; assetId: string; filename: string }): string {
   const base = resolveTokyoBaseUrl().replace(/\/+$/, '');
-  const suffix = resolveOpaqueAssetSuffix(request);
-  const url = `${base}/${prefix}/${suffix}`;
+  const accountId = assertSafeSegment(params.accountId);
+  const assetId = assertSafeSegment(params.assetId);
+  const filename = assertSafeSegment(params.filename);
+  const url = `${base}/assets/account/${accountId}/${assetId}/${filename}`;
   const qs = request.nextUrl.search;
   return qs ? `${url}${qs}` : url;
 }
@@ -69,10 +49,14 @@ function buildConditionalHeaders(request: NextRequest): Headers {
   return headers;
 }
 
-async function proxy(request: NextRequest, prefix: string, method: 'GET' | 'HEAD') {
+async function proxy(
+  request: NextRequest,
+  params: { accountId: string; assetId: string; filename: string },
+  method: 'GET' | 'HEAD',
+) {
   let url: string;
   try {
-    url = buildTokyoUrl(request, prefix);
+    url = buildTokyoUrl(request, params);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (message === 'Invalid path') {
@@ -90,22 +74,21 @@ async function proxy(request: NextRequest, prefix: string, method: 'GET' | 'HEAD
   const res = await fetch(url, fetchInit);
   const headers = copyUpstreamHeaders(res);
 
-  if (cacheBust) {
-    headers.set('Cache-Control', 'no-store');
-  }
-
-  if (method === 'HEAD') {
-    return new NextResponse(null, { status: res.status, headers });
-  }
+  if (cacheBust) headers.set('Cache-Control', 'no-store');
+  if (method === 'HEAD') return new NextResponse(null, { status: res.status, headers });
   return new NextResponse(res.body, { status: res.status, headers });
 }
 
-export async function GET(request: NextRequest, ctx: { params: Promise<{ path?: string[] }> }) {
-  await ctx.params;
-  return proxy(request, 'assets/v', 'GET');
+export async function GET(
+  request: NextRequest,
+  ctx: { params: Promise<{ accountId: string; assetId: string; filename: string }> },
+) {
+  return proxy(request, await ctx.params, 'GET');
 }
 
-export async function HEAD(request: NextRequest, ctx: { params: Promise<{ path?: string[] }> }) {
-  await ctx.params;
-  return proxy(request, 'assets/v', 'HEAD');
+export async function HEAD(
+  request: NextRequest,
+  ctx: { params: Promise<{ accountId: string; assetId: string; filename: string }> },
+) {
+  return proxy(request, await ctx.params, 'HEAD');
 }
