@@ -1,4 +1,4 @@
-import { json } from './helpers';
+import { json } from './http';
 import { type Env } from './types';
 
 const RATE_LIMIT_PREFIX = 'berlin:ratelimit:v1';

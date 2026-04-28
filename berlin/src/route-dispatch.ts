@@ -1,5 +1,5 @@
 import { BerlinAuthTicketDO } from './auth-ticket-store';
-import { internalError, json, methodNotAllowed } from './helpers';
+import { internalError, json, methodNotAllowed } from './http';
 import { type Env } from './types';
 import {
   handleFinish,

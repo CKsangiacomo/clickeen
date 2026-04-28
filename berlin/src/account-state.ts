@@ -20,11 +20,12 @@ import type {
   WorkspaceTier,
 } from './account-state.types';
 import { loadUserContactMethods } from './contact-methods';
-import { enc, internalError, toBase64Url, validationError } from './helpers';
+import { enc, toBase64Url } from './helpers';
+import { internalError, validationError } from './http';
 import { resolveSigningContext } from './jwt-crypto';
 import { normalizeUserProfilePayload } from './profile-normalization';
 import type { UserProfileRow as BerlinUserProfileRow } from './profile-normalization';
-import { readSupabaseAdminListAll } from './supabase-list';
+import { readSupabaseAdminListAll } from './supabase-admin';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env, type SessionState } from './types';
 

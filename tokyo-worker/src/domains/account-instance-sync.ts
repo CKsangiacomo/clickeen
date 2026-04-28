@@ -20,12 +20,14 @@ import {
 import { json } from '../http';
 import type { Env } from '../types';
 import { loadAccountAssetManifestByIdentity } from './assets';
+import { buildLocaleMirrorPayload } from './account-localization-mirror';
 import {
-  buildLocaleMirrorPayload,
   generateAccountWidgetL10nOps,
   loadOverlayOps,
+} from './account-localization-state';
+import {
   normalizeReadyLocales,
-} from './account-localization';
+} from './account-localization-utils';
 import { upsertL10nOverlay } from './l10n-authoring';
 import {
   type SyncInstanceOverlaysJob,

@@ -1,4 +1,5 @@
-import { asBearerToken, authError, claimAsNumber, claimAsString, json } from './helpers';
+import { asBearerToken, claimAsNumber, claimAsString } from './helpers';
+import { authError, json } from './http';
 import { readJsonBody, resolveRefreshTokenFromRequest } from './auth-request';
 import { rotateRefreshRti, resolvePrincipalSession } from './auth-session';
 import { loadSessionState, revokeSessionBySid, revokeSessionsByUserId, saveSessionState } from './session-kv';

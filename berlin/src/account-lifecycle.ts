@@ -1,4 +1,4 @@
-import { json } from './helpers';
+import { json } from './http';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
 import { type Env } from './types';
 

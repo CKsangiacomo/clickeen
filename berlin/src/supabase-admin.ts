@@ -1,5 +1,8 @@
-import { claimAsString, internalError } from './helpers';
+import { claimAsString } from './helpers';
+import { internalError } from './http';
 import { type Env } from './types';
+
+type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
 
 function resolveSupabaseAdminConfig(env: Env): { baseUrl: string; serviceRoleKey: string } | null {
   const baseUrl = (typeof env.SUPABASE_URL === 'string' ? env.SUPABASE_URL.trim() : '').replace(/\/+$/, '');
@@ -54,4 +57,39 @@ export function supabaseAdminErrorResponse(
         claimAsString((payload as Record<string, unknown>).error)
       : null;
   return internalError(reasonKey, detail || `supabase_status_${status}`);
+}
+
+export async function readSupabaseAdminListAll<T>(args: {
+  env: Env;
+  pathname: string;
+  params: URLSearchParams;
+  pageSize?: number;
+  reasonKey?: string;
+}): Promise<Result<T[]>> {
+  const pageSize = Math.max(1, Math.min(args.pageSize ?? 200, 1000));
+  const reasonKey = args.reasonKey ?? 'coreui.errors.db.readFailed';
+  const rows: T[] = [];
+
+  for (let offset = 0; ; offset += pageSize) {
+    const pageParams = new URLSearchParams(args.params);
+    pageParams.set('limit', String(pageSize));
+    pageParams.set('offset', String(offset));
+
+    const response = await supabaseAdminFetch(args.env, `${args.pathname}?${pageParams.toString()}`, {
+      method: 'GET',
+    });
+    const payload = await readSupabaseAdminJson<T[] | Record<string, unknown>>(response);
+    if (!response.ok) {
+      return {
+        ok: false,
+        response: supabaseAdminErrorResponse(reasonKey, response.status, payload),
+      };
+    }
+
+    const pageRows = Array.isArray(payload) ? payload : [];
+    rows.push(...pageRows);
+    if (pageRows.length < pageSize) break;
+  }
+
+  return { ok: true, value: rows };
 }

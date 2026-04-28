@@ -1,75 +1,7 @@
-import { CACHE_HEADERS, REDIRECT_CACHE_HEADERS } from './types';
-
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
 export { enc, dec };
-
-export function json(payload: unknown, init?: ResponseInit): Response {
-  return new Response(JSON.stringify(payload), {
-    ...init,
-    headers: {
-      ...CACHE_HEADERS,
-      ...(init?.headers || {}),
-    },
-  });
-}
-
-export function authError(reasonKey: string, status = 401, detail?: string): Response {
-  return json(
-    {
-      error: {
-        kind: 'AUTH',
-        reasonKey,
-        ...(detail ? { detail } : {}),
-      },
-    },
-    { status },
-  );
-}
-
-export function validationError(reasonKey: string, detail?: string): Response {
-  return json(
-    {
-      error: {
-        kind: 'VALIDATION',
-        reasonKey,
-        ...(detail ? { detail } : {}),
-      },
-    },
-    { status: 422 },
-  );
-}
-
-export function conflictError(reasonKey: string, detail?: string): Response {
-  return json(
-    {
-      error: {
-        kind: 'AUTH',
-        reasonKey,
-        ...(detail ? { detail } : {}),
-      },
-    },
-    { status: 409 },
-  );
-}
-
-export function internalError(reasonKey: string, detail?: string): Response {
-  return json(
-    {
-      error: {
-        kind: 'INTERNAL',
-        reasonKey,
-        ...(detail ? { detail } : {}),
-      },
-    },
-    { status: 500 },
-  );
-}
-
-export function methodNotAllowed(): Response {
-  return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-}
 
 export function asBearerToken(header: string | null): string | null {
   if (!header) return null;
@@ -170,14 +102,4 @@ export function audienceMatches(claim: unknown, expected: string): boolean {
   if (typeof claim === 'string') return claim === expected;
   if (Array.isArray(claim)) return claim.some((entry) => typeof entry === 'string' && entry === expected);
   return false;
-}
-
-export function redirect(location: string, status = 302): Response {
-  return new Response(null, {
-    status,
-    headers: {
-      location,
-      ...REDIRECT_CACHE_HEADERS,
-    },
-  });
 }

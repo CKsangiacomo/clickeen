@@ -1,7 +1,7 @@
 import { acceptInvitationForPrincipal } from './account-invitations';
-import { internalError } from './helpers';
+import { internalError } from './http';
 import { normalizeProfileLocation, type UserProfileRow } from './profile-normalization';
-import { readSupabaseAdminListAll } from './supabase-list';
+import { readSupabaseAdminListAll } from './supabase-admin';
 import { readSupabaseAdminJson, supabaseAdminFetch, supabaseAdminErrorResponse } from './supabase-admin';
 import { type Env } from './types';
 

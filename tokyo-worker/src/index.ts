@@ -1,7 +1,6 @@
 import { dispatchTokyoRoute } from './route-dispatch';
-import { json } from './http';
+import { createTokyoRequestContext, finalizeTokyoObservedResponse, json } from './http';
 import { handleTokyoQueue } from './queue-handler';
-import { createTokyoRequestContext, finalizeTokyoObservedResponse } from './request-ops';
 import type { Env } from './types';
 
 export default {

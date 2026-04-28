@@ -1,8 +1,6 @@
 import { isUuid } from '@clickeen/ck-contracts';
 import { normalizeLocale, normalizePublicId, normalizeSha256Hex } from '../asset-utils';
-import {
-  handleGetAccountTranslationsPanel,
-} from '../domains/account-localization';
+import { handleGetAccountTranslationsPanel } from '../domains/account-localization-state';
 import { handleGetL10nAsset } from '../domains/l10n-read';
 import {
   handleDeleteL10nOverlay,

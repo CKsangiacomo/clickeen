@@ -1,7 +1,7 @@
 import { classifyWidgetPublicId } from '@clickeen/ck-contracts';
 import { type BerlinAccountContext } from './account-state.types';
-import { internalError, json } from './helpers';
-import { readSupabaseAdminListAll } from './supabase-list';
+import { internalError, json } from './http';
+import { readSupabaseAdminListAll } from './supabase-admin';
 import {
   readSupabaseAdminJson,
   supabaseAdminErrorResponse,

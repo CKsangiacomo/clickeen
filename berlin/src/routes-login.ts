@@ -1,4 +1,5 @@
-import { authError, claimAsString, conflictError, json, redirect, validationError } from './helpers';
+import { claimAsString } from './helpers';
+import { authError, conflictError, json, redirect, validationError } from './http';
 import { readJsonBody } from './auth-request';
 import {
   normalizeIntent,

@@ -8,10 +8,8 @@ import {
   type SessionIssueResult,
   type SessionState,
 } from './types';
-import {
-  authError,
-  claimAsString,
-} from './helpers';
+import { claimAsString } from './helpers';
+import { authError } from './http';
 import { addUserSessionId, loadSessionState, saveSessionState } from './session-kv';
 import { deriveNextRti, signAccessToken, signRefreshToken, verifyAccessToken } from './jwt-crypto';
 import { resolveAccessTokenFromRequest } from './auth-request';

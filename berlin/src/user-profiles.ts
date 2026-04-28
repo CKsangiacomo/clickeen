@@ -4,7 +4,7 @@ import {
   resolveUserSettingsTimezone,
 } from '@clickeen/ck-contracts';
 import type { BerlinUserProfilePayload } from './account-state.types';
-import { json, validationError } from './helpers';
+import { json, validationError } from './http';
 import { normalizeUserProfilePayload } from './profile-normalization';
 import type { UserProfileRow as BerlinUserProfileRow } from './profile-normalization';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from './supabase-admin';
