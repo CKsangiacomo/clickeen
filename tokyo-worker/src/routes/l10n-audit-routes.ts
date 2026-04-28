@@ -72,6 +72,12 @@ function uniqueLocales(locales: unknown[]): string[] {
   return out;
 }
 
+function legacyLocaleKeyCandidates(locale: string): string[] {
+  if (locale === 'zh-hans') return ['zh-hans', 'zh-Hans'];
+  if (locale === 'zh-tw') return ['zh-tw', 'zh-TW'];
+  return [locale];
+}
+
 function compactPointerSummary(raw: unknown): unknown {
   const saved = normalizeSavedRenderPointer(raw);
   if (saved) {
@@ -157,6 +163,14 @@ async function copyR2Object(args: {
     httpMetadata: object.httpMetadata,
   });
   return { ok: true };
+}
+
+async function findExistingKey(env: Env, keys: string[]): Promise<string | null> {
+  for (const key of keys) {
+    const head = await env.TOKYO_R2.head(key);
+    if (head) return key;
+  }
+  return null;
 }
 
 function withReadyLocales(pointer: unknown, readyLocales: string[]): unknown {
@@ -333,10 +347,16 @@ async function repairInstanceFromLegacyL10n(args: {
   const readyLocales = new Set<string>([baseLocale]);
   for (const locale of desiredLocales) {
     if (locale === baseLocale) continue;
-    const legacyPointerKey = `l10n/instances/${args.publicId}/live/${locale}.json`;
-    const legacyPointer = normalizeTextPointer(
-      await readJson(args.env, legacyPointerKey),
-    );
+    let legacyLocaleKey: string | null = null;
+    let legacyPointer = null;
+    for (const candidate of legacyLocaleKeyCandidates(locale)) {
+      const key = `l10n/instances/${args.publicId}/live/${candidate}.json`;
+      legacyPointer = normalizeTextPointer(await readJson(args.env, key));
+      if (legacyPointer) {
+        legacyLocaleKey = candidate;
+        break;
+      }
+    }
     if (!legacyPointer) {
       skipped.push({ locale, reason: 'legacy_pointer_missing' });
       continue;
@@ -350,7 +370,19 @@ async function repairInstanceFromLegacyL10n(args: {
       continue;
     }
 
-    const legacyPackKey = `l10n/instances/${args.publicId}/packs/${locale}/${legacyPointer.textFp}.json`;
+    const legacyPackKey = await findExistingKey(
+      args.env,
+      legacyLocaleKeyCandidates(locale)
+        .concat(legacyLocaleKey ? [legacyLocaleKey] : [])
+        .map(
+          (candidate) =>
+            `l10n/instances/${args.publicId}/packs/${candidate}/${legacyPointer.textFp}.json`,
+        ),
+    );
+    if (!legacyPackKey) {
+      skipped.push({ locale, reason: 'legacy_pack_missing' });
+      continue;
+    }
     const accountPackKey = accountInstanceL10nTextPackKey(
       args.accountId,
       args.publicId,
