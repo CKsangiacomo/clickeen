@@ -1,6 +1,7 @@
 import { tryHandleAssetRoutes } from './routes/asset-routes';
 import { tryHandleInternalL10nRoutes } from './routes/l10n-routes';
 import { tryHandleInternalRenderRoutes } from './routes/internal-render-routes';
+import { tryHandleL10nAuditRoutes } from './routes/l10n-audit-routes';
 import { tryHandlePublicRenderRoutes } from './routes/render-routes';
 import { json } from './http';
 import type { TokyoRouteArgs } from './route-helpers';
@@ -11,6 +12,7 @@ export async function dispatchTokyoRoute(args: TokyoRouteArgs): Promise<Response
   }
 
   const routeGroups = [
+    tryHandleL10nAuditRoutes,
     tryHandleInternalRenderRoutes,
     tryHandleInternalL10nRoutes,
     tryHandleAssetRoutes,
